@@ -82,16 +82,16 @@ timeout(time: 12, unit: 'HOURS') {
             sh('rm -rf "${WORKSPACE}/versions/"*')
             sh('mkdir -p "${WORKSPACE}/versions"')
         }
-    
+
         stage('Checkout sources') {
             /// takes place as regular Jenkins user
             dir(SOURCE_DIR) {
                 checkout_git(scm, VERSION)
-    
+
                 // Clean up left overs from previous runs, but keep previously
                 // created virtual environments to save some time
                 sh("make buildclean")
-    
+
                 // Load libraries
                 versioning = load 'buildscripts/scripts/lib/versioning.groovy'
                 windows = load 'buildscripts/scripts/lib/windows.groovy'
@@ -99,21 +99,21 @@ timeout(time: 12, unit: 'HOURS') {
                 notify = load 'buildscripts/scripts/lib/notify.groovy'
                 upload_artifacts = load 'buildscripts/scripts/lib/upload_artifacts.groovy'
                 docker_util = load 'buildscripts/scripts/lib/docker_util.groovy'
-    
+
                 docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
                     def BUILD_IMAGE = docker.build("build-image:${env.BUILD_ID}", "--pull ${WORKSPACE}/git/buildscripts/docker_image_aliases/IMAGE_TESTING")
                     BUILD_IMAGE.inside(DOCKER_ARGS) {
-    
+
                         withFolderProperties{
                             DOCKER_TAG = versioning.select_docker_tag(BRANCH, DOCKER_TAG_BUILD, DOCKER_TAG_DEFAULT)
                         }
-    
+
                         versioning.patch_git_after_checkout(EDITION, CMK_VERS)
                         BRANCH_VERSION = versioning.get_branch_version()
-    
+
                         DOCKER_REGISTRY_NO_HTTP = str_mod.strip_protocol_from_url(DOCKER_REGISTRY)
                     }
-    
+
                     // Get the ID of the docker group from the node(!). This must not be
                     // executed inside the container (as long as the IDs are different)
                     DOCKER_GROUP_ID = docker_util.get_docker_group_id()
@@ -133,7 +133,7 @@ timeout(time: 12, unit: 'HOURS') {
                             def FOLDER_ID = currentBuild.fullProjectName.split('/')[0]
                             def WIN_PROJECT = "${FOLDER_ID}/windows-agent-build"
                             def WIN_PY_PROJECT = "${FOLDER_ID}/Windows-Python-Build"
-    
+
                             def WIN_BUILD = build(job: WIN_PROJECT, parameters: [string(name: 'VERSION', value: VERSION)])
                             copyArtifacts(
                                 projectName: WIN_PROJECT,
@@ -141,7 +141,7 @@ timeout(time: 12, unit: 'HOURS') {
                                 target: 'agents',
                                 fingerprintArtifacts: true
                             )
-    
+
                             def WIN_PY_BUILD = build(job: WIN_PY_PROJECT, parameters: [string(name: 'VERSION', value: VERSION)])
                             copyArtifacts(
                                 projectName: WIN_PY_PROJECT,
@@ -149,7 +149,7 @@ timeout(time: 12, unit: 'HOURS') {
                                 target: 'agents',
                                 fingerprintArtifacts: true
                             )
-    
+
                         }
                         else if (EDITION != 'raw') {
                             docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
@@ -173,16 +173,16 @@ timeout(time: 12, unit: 'HOURS') {
             def BUILD_IMAGE = docker.build("build-image:${env.BUILD_ID}", "--pull ${WORKSPACE}/git/buildscripts/docker_image_aliases/IMAGE_TESTING")
             BUILD_IMAGE.inside(DOCKER_ARGS) {
                 create_source_package(WORKSPACE, CMK_VERS)
-    
+
                 def SOURCE_PACKAGE_NAME = get_source_package_name(WORKSPACE, EDITION, CMK_VERS)
                 def BUILD_SOURCE_PACKAGE_PATH = SOURCE_DIR + "/" + SOURCE_PACKAGE_NAME
                 def FINAL_SOURCE_PACKAGE_PATH = get_versions_dir(WORKSPACE, CMK_VERS) + "/" + SOURCE_PACKAGE_NAME
-    
+
                 copy_source_package(BUILD_SOURCE_PACKAGE_PATH, FINAL_SOURCE_PACKAGE_PATH)
-    
+
                 cleanup_source_package(WORKSPACE, FINAL_SOURCE_PACKAGE_PATH)
                 test_package(FINAL_SOURCE_PACKAGE_PATH, "source", WORKSPACE, SOURCE_DIR, CMK_VERS)
-    
+
                 upload_artifacts.upload(
                     NAME: "source",
                     FILE_PATH: FINAL_SOURCE_PACKAGE_PATH,
@@ -193,7 +193,7 @@ timeout(time: 12, unit: 'HOURS') {
                 )
             }
         }
-    
+
         try {
             DISTRO_LIST.each { DISTRO ->
                 PACKAGE_BUILDS[DISTRO] = {
@@ -209,26 +209,26 @@ timeout(time: 12, unit: 'HOURS') {
                     node(NODE) {
                         docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
                             def DISTRO_DIR = WORKSPACE + "/git"
-    
+
                             docker.image(DISTRO + ':' + DOCKER_TAG).inside(DOCKER_ARGS + " -v ${SOURCE_DIR}:${SOURCE_DIR}:ro --hostname ${DISTRO}") {
                                 initialize_workspace(DISTRO, SOURCE_DIR, DISTRO_DIR)
-    
+
                                 withCredentials([usernamePassword(credentialsId: 'nexus', passwordVariable: 'NEXUS_PASSWORD', usernameVariable: 'NEXUS_USERNAME')]) {
                                     versioning.print_image_tag()
                                     build_package(DISTRO, OMD_ENV_VARS)
                                 }
                             }
-    
+
                             def BUILD_IMAGE = docker.build("build-image:${env.BUILD_ID}", "--pull ${WORKSPACE}/git/buildscripts/docker_image_aliases/IMAGE_TESTING")
                             BUILD_IMAGE.inside(DOCKER_ARGS + " -v ${SOURCE_DIR}:${SOURCE_DIR}:ro") {
                                 def PACKAGE_NAME = get_package_name(WORKSPACE, DISTRO, CMK_VERS)
                                 def BUILD_PACKAGE_PATH = DISTRO_DIR + "/" + PACKAGE_NAME
                                 def FINAL_PACKAGE_PATH = get_versions_dir(WORKSPACE, CMK_VERS) + "/" + PACKAGE_NAME
-    
+
                                 sign_package(BUILD_PACKAGE_PATH, DISTRO, WORKSPACE)
                                 test_package(BUILD_PACKAGE_PATH, DISTRO, WORKSPACE, SOURCE_DIR, CMK_VERS)
                                 copy_package(BUILD_PACKAGE_PATH, DISTRO, FINAL_PACKAGE_PATH)
-    
+
                                 upload_artifacts.upload(
                                     NAME: DISTRO,
                                     FILE_PATH: FINAL_PACKAGE_PATH,
@@ -237,7 +237,7 @@ timeout(time: 12, unit: 'HOURS') {
                                     UPLOAD_DEST: INTERNAL_UPLOAD_DEST,
                                     PORT: INTERNAL_DEPLOY_PORT,
                                 )
-    
+
                             }
                         }
                     }

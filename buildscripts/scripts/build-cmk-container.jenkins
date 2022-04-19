@@ -41,7 +41,7 @@ timeout(time: 12, unit: 'HOURS') {
     node (NODE) {
         def PACKAGE_DIR = WORKSPACE + '/download'
         def DOCKER_GROUP_ID = ''
-    
+
         stage('checkout sources') {
             checkout(scm)
         }
@@ -73,7 +73,7 @@ timeout(time: 12, unit: 'HOURS') {
 
                         upload.download_deb(INTERNAL_DEPLOY_DEST, INTERNAL_DEPLOY_PORT, CMK_VERS, PACKAGE_DIR + "/" + CMK_VERS, EDITION, "buster")
                         upload.download_source_tar(INTERNAL_DEPLOY_DEST, INTERNAL_DEPLOY_PORT, CMK_VERS, PACKAGE_DIR + "/" + CMK_VERS, EDITION)
-    
+
                         withCredentials([
                             usernamePassword(credentialsId: CREDENTIALS_ID, passwordVariable: 'DOCKER_PASSPHRASE', usernameVariable: 'DOCKER_USERNAME'),
                             usernamePassword(credentialsId: 'nexus', passwordVariable: 'NEXUS_PASSWORD', usernameVariable: 'NEXUS_USERNAME')]) {

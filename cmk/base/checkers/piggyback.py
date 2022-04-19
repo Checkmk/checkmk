@@ -44,7 +44,7 @@ class PiggybackSource(AgentSource):
     def _make_file_cache(self) -> NoCache:
         return NoCacheFactory(
             base_path=self.file_cache_base_path,
-            simulation=config.simulation_mode,
+            simulation=False,  # TODO Quickfix for SUP-9912, should be handled in a better way
             max_age=self.file_cache_max_age,
         ).make()
 

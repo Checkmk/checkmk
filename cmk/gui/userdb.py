@@ -14,6 +14,7 @@ import time
 import traceback
 from contextlib import suppress
 from dataclasses import asdict, dataclass
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import (
     Any,
@@ -1528,12 +1529,12 @@ class UserProfileCleanupBackgroundJob(gui_background_job.GUIBackgroundJob):
 
     def do_execute(self, job_interface: background_job.BackgroundProcessInterface) -> None:
         try:
-            self._do_cleanup()
+            self._do_cleanup(datetime.now(), timedelta(days=30))
             job_interface.send_result_message(_("Job finished"))
         finally:
             UserProfileCleanupBackgroundJob.last_run_path().touch(exist_ok=True)
 
-    def _do_cleanup(self) -> None:
+    def _do_cleanup(self, now: datetime, max_age: timedelta) -> None:
         """Cleanup abandoned profile directories
 
         The cleanup is done like this:
@@ -1568,8 +1569,10 @@ class UserProfileCleanupBackgroundJob(gui_background_job.GUIBackgroundJob):
 
         for profile_name in abandoned_profiles:
             profile_dir = profile_base_dir / profile_name
-            last_mtime = max((p.stat().st_mtime for p in profile_dir.glob("*.mk")), default=0.0)
-            if time.time() - last_mtime > 2592000:
+            last_mtime = datetime.fromtimestamp(
+                max((p.stat().st_mtime for p in profile_dir.glob("*.mk")), default=0.0)
+            )
+            if now - last_mtime > max_age:
                 try:
                     self._logger.info("Removing abandoned profile directory: %s", profile_name)
                     shutil.rmtree(profile_dir)

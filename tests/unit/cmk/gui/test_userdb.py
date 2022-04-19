@@ -7,6 +7,7 @@
 import os
 import time
 from dataclasses import asdict
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Iterator
 
@@ -657,13 +658,13 @@ def test_load_custom_attr_convert(user_id: UserId) -> None:
 def test_cleanup_user_profiles_keep_recently_updated(user_id: UserId) -> None:
     (profile := cmk.utils.paths.profile_dir.joinpath("profile")).mkdir()
     (profile / "bla.mk").touch()
-    userdb.UserProfileCleanupBackgroundJob()._do_cleanup()
+    userdb.UserProfileCleanupBackgroundJob()._do_cleanup(datetime.now(), timedelta(days=30))
     assert profile.exists()
 
 
 def test_cleanup_user_profiles_remove_empty(user_id: UserId) -> None:
     (profile := cmk.utils.paths.profile_dir.joinpath("profile")).mkdir()
-    userdb.UserProfileCleanupBackgroundJob()._do_cleanup()
+    userdb.UserProfileCleanupBackgroundJob()._do_cleanup(datetime.now(), timedelta(days=30))
     assert not profile.exists()
 
 
@@ -672,13 +673,13 @@ def test_cleanup_user_profiles_remove_abandoned(user_id: UserId) -> None:
     (bla := profile / "bla.mk").touch()
     with on_time("2018-04-15 16:50", "CET"):
         os.utime(bla, (time.time(), time.time()))
-    userdb.UserProfileCleanupBackgroundJob()._do_cleanup()
+    userdb.UserProfileCleanupBackgroundJob()._do_cleanup(datetime.now(), timedelta(days=30))
     assert not profile.exists()
 
 
 def test_cleanup_user_profiles_keep_active_profile(user_id: UserId) -> None:
     assert cmk.utils.paths.profile_dir.joinpath(user_id).exists()
-    userdb.UserProfileCleanupBackgroundJob()._do_cleanup()
+    userdb.UserProfileCleanupBackgroundJob()._do_cleanup(datetime.now(), timedelta(days=30))
     assert cmk.utils.paths.profile_dir.joinpath(user_id).exists()
 
 
@@ -691,7 +692,7 @@ def test_cleanup_user_profiles_keep_active_profile_old(user_id: UserId) -> None:
         for file_path in profile_dir.glob("*.mk"):
             os.utime(file_path, (time.time(), time.time()))
 
-    userdb.UserProfileCleanupBackgroundJob()._do_cleanup()
+    userdb.UserProfileCleanupBackgroundJob()._do_cleanup(datetime.now(), timedelta(days=30))
     assert cmk.utils.paths.profile_dir.joinpath(user_id).exists()
 
 

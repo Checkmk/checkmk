@@ -29,7 +29,7 @@ def _get_current_theme_titel() -> str:
 def _get_sidebar_position() -> str:
     assert user.id is not None
     sidebar_position = userdb.load_custom_attr(
-        user.id, "ui_sidebar_position", lambda x: None if x == "None" else "left"
+        user_id=user.id, key="ui_sidebar_position", parser=lambda x: None if x == "None" else "left"
     )
 
     return sidebar_position or "right"

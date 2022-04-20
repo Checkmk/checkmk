@@ -140,7 +140,7 @@ def _load_serial(username: UserId) -> int:
     Better use the value from the "serials.mk" file, instead of loading the whole user database via
     load_users() for performance reasons.
     """
-    return userdb.load_custom_attr(username, "serial", int, 0)
+    return userdb.load_custom_attr(user_id=username, key="serial", parser=int, default=0)
 
 
 def _generate_auth_hash(username: UserId, session_id: str) -> str:

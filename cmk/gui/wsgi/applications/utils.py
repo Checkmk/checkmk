@@ -52,7 +52,9 @@ def ensure_authentication(func: pages.PageHandlerFunc) -> Callable[[], Response]
             # Update the UI theme with the attribute configured by the user.
             # Returns None on first load
             assert user.id is not None
-            theme.set(cmk.gui.userdb.load_custom_attr(user.id, "ui_theme", lambda x: x))
+            theme.set(
+                cmk.gui.userdb.load_custom_attr(user_id=user.id, key="ui_theme", parser=lambda x: x)
+            )
 
             func()
 

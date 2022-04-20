@@ -635,24 +635,27 @@ def test_check_credentials_managed_wrong_customer_user_is_denied(
 
 
 def test_load_custom_attr_not_existing(user_id: UserId) -> None:
-    assert userdb.load_custom_attr(user_id, "a", conv_func=str) is None
+    assert userdb.load_custom_attr(user_id=user_id, key="a", parser=str) is None
 
 
 def test_load_custom_attr_not_existing_with_default(user_id: UserId) -> None:
-    assert userdb.load_custom_attr(user_id, "a", conv_func=str, default="deflt") == "deflt"
+    assert userdb.load_custom_attr(user_id=user_id, key="a", parser=str, default="deflt") == "deflt"
 
 
 def test_load_custom_attr_from_file(user_id: UserId) -> None:
     with Path(userdb.custom_attr_path(user_id, "a")).open("w") as f:
         f.write("xyz\n")
-    assert userdb.load_custom_attr(user_id, "a", conv_func=str) == "xyz"
+    assert userdb.load_custom_attr(user_id=user_id, key="a", parser=str) == "xyz"
 
 
 def test_load_custom_attr_convert(user_id: UserId) -> None:
     with Path(userdb.custom_attr_path(user_id, "a")).open("w") as f:
         f.write("xyz\n")
     assert (
-        userdb.load_custom_attr(user_id, "a", conv_func=lambda x: "a" if x == "xyz" else "b") == "a"
+        userdb.load_custom_attr(
+            user_id=user_id, key="a", parser=lambda x: "a" if x == "xyz" else "b"
+        )
+        == "a"
     )
 
 

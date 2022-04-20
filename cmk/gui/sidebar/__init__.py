@@ -377,7 +377,9 @@ class SidebarRenderer:
 
         assert user.id is not None
         sidebar_position = cmk.gui.userdb.load_custom_attr(
-            user.id, "ui_sidebar_position", lambda x: None if x == "None" else "left"
+            user_id=user.id,
+            key="ui_sidebar_position",
+            parser=lambda x: None if x == "None" else "left",
         )
         html.open_div(id_="check_mk_sidebar", class_=[sidebar_position])
 

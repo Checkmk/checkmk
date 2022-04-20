@@ -201,7 +201,9 @@ def _user_exists_according_to_profile(username: UserId) -> bool:
 
 
 def _login_timed_out(username: UserId, last_activity: int) -> bool:
-    idle_timeout = load_custom_attr(username, "idle_timeout", _convert_idle_timeout, None)
+    idle_timeout = load_custom_attr(
+        user_id=username, key="idle_timeout", parser=_convert_idle_timeout, default=None
+    )
     if idle_timeout is None:
         idle_timeout = active_config.user_idle_timeout
 
@@ -220,7 +222,7 @@ def _reset_failed_logins(username: UserId) -> None:
 
 
 def _load_failed_logins(username: UserId) -> int:
-    return load_custom_attr(username, "num_failed_logins", utils.saveint)
+    return load_custom_attr(user_id=username, key="num_failed_logins", parser=utils.saveint)
 
 
 def _save_failed_logins(username: UserId, count: int) -> None:
@@ -233,10 +235,10 @@ def need_to_change_pw(username: UserId) -> Union[bool, str]:
     if not _is_local_user(username):
         return False
 
-    if load_custom_attr(username, "enforce_pw_change", utils.saveint) == 1:
+    if load_custom_attr(user_id=username, key="enforce_pw_change", parser=utils.saveint) == 1:
         return "enforced"
 
-    last_pw_change = load_custom_attr(username, "last_pw_change", utils.saveint)
+    last_pw_change = load_custom_attr(user_id=username, key="last_pw_change", parser=utils.saveint)
     max_pw_age = active_config.password_policy.get("max_age")
     if max_pw_age:
         if not last_pw_change:
@@ -273,9 +275,9 @@ def set_two_factor_completed() -> None:
 
 def load_two_factor_credentials(user_id: UserId, lock: bool = False) -> TwoFactorCredentials:
     return load_custom_attr(
-        user_id,
-        "two_factor_credentials",
-        conv_func=ast.literal_eval,
+        user_id=user_id,
+        key="two_factor_credentials",
+        parser=ast.literal_eval,
         default=TwoFactorCredentials(
             {
                 "webauthn_credentials": {},
@@ -625,7 +627,12 @@ def _save_session_infos(username: UserId, session_infos: Dict[str, SessionInfo])
 
 def _load_session_infos(username: UserId, lock: bool = False) -> Dict[str, SessionInfo]:
     """Returns the stored sessions of the given user"""
-    return load_custom_attr(username, "session_info", _convert_session_info, lock=lock) or {}
+    return (
+        load_custom_attr(
+            user_id=username, key="session_info", parser=_convert_session_info, lock=lock
+        )
+        or {}
+    )
 
 
 def _convert_session_info(value: str) -> Dict[str, SessionInfo]:
@@ -840,7 +847,7 @@ def load_users(lock: bool = False) -> Users:
             # read special values from own files
             if uid in result:
                 for attr, conv_func in attributes:
-                    val = load_custom_attr(uid, attr, conv_func)
+                    val = load_custom_attr(user_id=uid, key=attr, parser=conv_func)
                     if val is not None:
                         result[uid][attr] = val
 
@@ -870,17 +877,18 @@ def custom_attr_path(userid: UserId, key: str) -> str:
 
 
 def load_custom_attr(
-    userid: UserId,
+    *,
+    user_id: UserId,
     key: str,
-    conv_func: Callable[[str], Any],
+    parser: Callable[[str], Any],
     default: Optional[Any] = None,
     lock: bool = False,
 ) -> Any:
-    path = Path(custom_attr_path(userid, key))
+    path = Path(custom_attr_path(user_id, key))
     result = store.load_text_from_file(path, default=default, lock=lock)  # type: ignore[arg-type]
     if result == default:
         return result
-    return conv_func(result.strip())
+    return parser(result.strip())
 
 
 def save_custom_attr(userid: UserId, key: str, val: Any) -> None:

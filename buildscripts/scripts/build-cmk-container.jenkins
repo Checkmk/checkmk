@@ -75,9 +75,9 @@ timeout(time: 12, unit: 'HOURS') {
                                 ./buildscripts/scripts/build-cmk-container.sh ${BRANCH} ${EDITION} ${CMK_VERS} ${SET_LATEST_TAG} "push"
                             """
                             }
-                            currentBuild.result = 'SUCCESS'
-                            return
                         }
+                        currentBuild.result = 'SUCCESS'
+                        return
                     }
 
                     stage('Prepare package directory') {

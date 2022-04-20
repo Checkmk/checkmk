@@ -47,6 +47,7 @@ import cmk.utils.version as cmk_version
 from cmk.utils import store
 from cmk.utils.iterables import first
 from cmk.utils.memoize import MemoizeCache
+from cmk.utils.object_diff import make_diff_text
 from cmk.utils.redis import get_redis_client, Pipeline
 from cmk.utils.regex import regex, WATO_FOLDER_PATH_NAME_CHARS, WATO_FOLDER_PATH_NAME_REGEX
 from cmk.utils.site import omd_site
@@ -84,10 +85,11 @@ from cmk.gui.type_defs import HTTPVariables, SetOnceDict
 from cmk.gui.utils import urls
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import Choices
-from cmk.gui.watolib.changes import add_change, make_diff_text, ObjectRef, ObjectRefType
+from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.check_mk_automations import delete_hosts
 from cmk.gui.watolib.config_domains import ConfigDomainCore
 from cmk.gui.watolib.host_attributes import collect_attributes, host_attribute_registry
+from cmk.gui.watolib.objref import ObjectRef, ObjectRefType
 from cmk.gui.watolib.search import (
     ABCMatchItemGenerator,
     match_item_generator_registry,

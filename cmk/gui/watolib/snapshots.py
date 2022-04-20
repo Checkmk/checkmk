@@ -26,7 +26,7 @@ from cmk.gui.globals import active_config
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
-from cmk.gui.watolib.changes import log_audit
+from cmk.gui.watolib.audit_log import log_audit
 
 DomainSpec = Dict
 

@@ -434,7 +434,6 @@ def _register_pre_21_plugin_api() -> None:
         "MainModuleTopicUsers",
         "make_action_link",
         "make_confirm_link",
-        "make_diff_text",
         "ManualCheckParameterRulespec",
         "MenuItem",
         "mode_registry",

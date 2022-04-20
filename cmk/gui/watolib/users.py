@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.utils.object_diff import make_diff_text
+
 import cmk.gui.mkeventd
 import cmk.gui.userdb as userdb
 import cmk.gui.watolib.global_settings as global_settings
@@ -32,7 +34,9 @@ from cmk.gui.valuespec import (
     Tuple,
     UserID,
 )
-from cmk.gui.watolib.changes import add_change, log_audit, make_diff_text, ObjectRef, ObjectRefType
+from cmk.gui.watolib.audit_log import log_audit
+from cmk.gui.watolib.changes import add_change
+from cmk.gui.watolib.objref import ObjectRef, ObjectRefType
 from cmk.gui.watolib.user_scripts import (
     declare_notification_plugin_permissions,
     user_script_choices,

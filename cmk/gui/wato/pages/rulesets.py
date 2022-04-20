@@ -19,6 +19,7 @@ from typing import Tuple as _Tuple
 from typing import Type, Union
 
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
+from cmk.utils.object_diff import make_diff_text
 from cmk.utils.regex import escape_regex_chars
 from cmk.utils.tags import GroupedTag
 from cmk.utils.type_defs import (
@@ -63,7 +64,6 @@ from cmk.gui.plugins.wato.utils import (
     LabelCondition,
     make_action_link,
     make_confirm_link,
-    make_diff_text,
     mode_registry,
     redirect,
     search_form,
@@ -91,7 +91,7 @@ from cmk.gui.valuespec import (
     ValueSpec,
     ValueSpecText,
 )
-from cmk.gui.watolib.changes import make_object_audit_log_url
+from cmk.gui.watolib.audit_log_url import make_object_audit_log_url
 from cmk.gui.watolib.check_mk_automations import get_check_information
 from cmk.gui.watolib.host_label_sync import execute_host_label_sync
 from cmk.gui.watolib.hosts_and_folders import Folder

@@ -13,6 +13,7 @@ import cmk.utils.paths
 import cmk.utils.store as store
 from cmk.utils.agent_registration import get_uuid_link_manager, UUIDLinkManager
 from cmk.utils.bi.bi_packs import BIHostRenamer
+from cmk.utils.object_diff import make_diff_text
 from cmk.utils.type_defs import HostName
 
 import cmk.gui.watolib as watolib
@@ -20,7 +21,8 @@ from cmk.gui import userdb
 from cmk.gui.bi import get_cached_bi_packs
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.i18n import _
-from cmk.gui.watolib.changes import add_change, log_audit, make_diff_text
+from cmk.gui.watolib.audit_log import log_audit
+from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.check_mk_automations import rename_hosts
 from cmk.gui.watolib.hosts_and_folders import call_hook_hosts_changed, CREFolder, Folder, Host
 from cmk.gui.watolib.notifications import load_notification_rules, save_notification_rules

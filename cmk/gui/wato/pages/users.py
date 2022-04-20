@@ -59,7 +59,7 @@ from cmk.gui.utils.roles import user_may
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeactionuri, makeuri, makeuri_contextless
 from cmk.gui.valuespec import Alternative, DualListChoice, EmailAddress, FixedValue, UserID
-from cmk.gui.watolib.changes import make_object_audit_log_url
+from cmk.gui.watolib.audit_log_url import make_object_audit_log_url
 from cmk.gui.watolib.global_settings import rulebased_notifications_enabled
 from cmk.gui.watolib.groups import load_contact_group_information
 from cmk.gui.watolib.users import delete_users, edit_users, make_user_object_ref

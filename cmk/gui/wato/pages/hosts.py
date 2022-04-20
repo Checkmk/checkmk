@@ -42,7 +42,7 @@ from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeactionuri
 from cmk.gui.valuespec import FixedValue, Hostname, ListOfStrings
 from cmk.gui.wato.pages.folders import ModeFolder
-from cmk.gui.watolib.changes import make_object_audit_log_url
+from cmk.gui.watolib.audit_log_url import make_object_audit_log_url
 from cmk.gui.watolib.check_mk_automations import update_dns_cache
 from cmk.gui.watolib.hosts_and_folders import CREHost
 

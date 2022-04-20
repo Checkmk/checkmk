@@ -120,6 +120,7 @@ from cmk.gui.watolib.analyze_configuration import (
     ACTest,
     ACTestCategories,
 )
+from cmk.gui.watolib.audit_log import log_audit
 from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
 from cmk.gui.watolib.automations import (
     check_mk_local_automation_serialized,
@@ -130,7 +131,7 @@ from cmk.gui.watolib.automations import (
     MKAutomationException,
     remote_automation_call_came_from_pre21,
 )
-from cmk.gui.watolib.changes import add_change, add_service_change, log_audit, make_diff_text
+from cmk.gui.watolib.changes import add_change, add_service_change
 from cmk.gui.watolib.config_domains import (
     ConfigDomainCACertificates,
     ConfigDomainCore,

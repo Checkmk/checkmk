@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any
+from typing import Any, Optional
 
 from deepdiff import DeepDiff  # type: ignore[import]
 from deepdiff.helper import get_type  # type: ignore[import]
@@ -13,6 +13,7 @@ from cmk.utils.i18n import _
 
 __all__ = [
     "make_object_diff",
+    "make_diff_text",
 ]
 
 
@@ -21,6 +22,12 @@ def make_object_diff(old: Any, new: Any) -> str:
     diff = DeepDiff(old, new, view="tree")
     text = pretty(diff)
     return text or _("Nothing was changed.")
+
+
+def make_diff_text(old_object: Any, new_object: Any) -> Optional[str]:
+    if old_object is not None and new_object is not None:
+        return make_object_diff(old_object, new_object)
+    return None
 
 
 def pretty(diff: DeepDiff) -> str:

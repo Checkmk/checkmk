@@ -40,7 +40,7 @@ from cmk.gui.plugins.watolib.utils import (
 )
 from cmk.gui.site_config import is_wato_slave_site
 from cmk.gui.type_defs import ConfigDomainName
-from cmk.gui.watolib.changes import log_audit
+from cmk.gui.watolib.audit_log import log_audit
 from cmk.gui.watolib.utils import liveproxyd_config_dir, multisite_dir, wato_root_dir
 from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
 

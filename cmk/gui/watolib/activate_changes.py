@@ -84,11 +84,12 @@ from cmk.gui.sites import states as sites_states
 from cmk.gui.type_defs import ConfigDomainName, HTTPVariables
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.ntop import is_ntop_configured
+from cmk.gui.watolib.audit_log import log_audit
 from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
-from cmk.gui.watolib.changes import log_audit, SiteChanges
 from cmk.gui.watolib.config_domains import ConfigDomainOMD
 from cmk.gui.watolib.config_sync import extract_from_buffer, ReplicationPath, SnapshotCreator
 from cmk.gui.watolib.global_settings import save_site_global_settings
+from cmk.gui.watolib.site_changes import SiteChanges
 from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
 
 # TODO: Make private

@@ -14,6 +14,7 @@ from cmk.gui.plugins.openapi.restful_objects.datastructures import denilled
 if typing.TYPE_CHECKING:
     from typing import Tuple
 
+from cmk.utils.object_diff import make_diff_text
 from cmk.utils.type_defs import RuleOptions
 
 from cmk.gui import exceptions, http, watolib
@@ -31,7 +32,7 @@ from cmk.gui.plugins.openapi.restful_objects.type_defs import DomainObject
 from cmk.gui.plugins.openapi.utils import problem
 from cmk.gui.utils import gen_id
 from cmk.gui.utils.escaping import strip_tags
-from cmk.gui.watolib import add_change, make_diff_text
+from cmk.gui.watolib import add_change
 from cmk.gui.watolib.rulesets import RuleConditions
 
 # TODO: move a rule within a ruleset

@@ -42,7 +42,8 @@ from cmk.gui.valuespec import (
     TextInput,
 )
 from cmk.gui.wato.pages.activate_changes import render_object_ref
-from cmk.gui.watolib.changes import AuditLogStore, ObjectRefType
+from cmk.gui.watolib.audit_log import AuditLogStore
+from cmk.gui.watolib.objref import ObjectRefType
 
 
 @mode_registry.register

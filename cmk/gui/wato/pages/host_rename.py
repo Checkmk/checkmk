@@ -47,9 +47,9 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.wato.pages.hosts import ModeEditHost, page_menu_host_entries
-from cmk.gui.watolib.changes import SiteChanges
 from cmk.gui.watolib.host_rename import perform_rename_hosts
 from cmk.gui.watolib.hosts_and_folders import validate_host_uniqueness
+from cmk.gui.watolib.site_changes import SiteChanges
 
 
 @gui_background_job.job_registry.register

@@ -151,7 +151,6 @@ from cmk.gui.watolib import (  # noqa: F401 # pylint: disable=unused-import
     LivestatusViaTCP,
     log_audit,
     make_action_link,
-    make_diff_text,
     multisite_dir,
     register_rule,
     site_neutral_path,

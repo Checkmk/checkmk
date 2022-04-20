@@ -14,6 +14,7 @@ from typing import Any, Callable, cast, Container, Dict, List, Mapping, Optional
 
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 import cmk.utils.store as store
+from cmk.utils.object_diff import make_diff_text
 from cmk.utils.regex import escape_regex_chars
 from cmk.utils.type_defs import (
     HostOrServiceConditionRegex,
@@ -42,7 +43,7 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.utils.html import HTML
 from cmk.gui.valuespec import DropdownChoiceEntries, ValueSpec
-from cmk.gui.watolib.changes import add_change, make_diff_text, ObjectRef, ObjectRefType
+from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.hosts_and_folders import (
     CREFolder,
     CREHost,
@@ -51,6 +52,7 @@ from cmk.gui.watolib.hosts_and_folders import (
     Host,
     may_use_redis,
 )
+from cmk.gui.watolib.objref import ObjectRef, ObjectRefType
 from cmk.gui.watolib.rulespecs import rulespec_group_registry, rulespec_registry
 from cmk.gui.watolib.utils import ALL_HOSTS, ALL_SERVICES, has_agent_bakery, NEGATE, wato_root_dir
 

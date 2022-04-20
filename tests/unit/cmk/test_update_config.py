@@ -29,8 +29,9 @@ from cmk.utils.version import is_raw_edition
 
 import cmk.gui.config
 from cmk.gui.utils.script_helpers import application_and_request_context
-from cmk.gui.watolib.changes import AuditLogStore, ObjectRef, ObjectRefType
+from cmk.gui.watolib.audit_log import AuditLogStore
 from cmk.gui.watolib.hosts_and_folders import Folder
+from cmk.gui.watolib.objref import ObjectRef, ObjectRefType
 from cmk.gui.watolib.password_store import PasswordStore
 from cmk.gui.watolib.rulesets import Rule, Ruleset, RulesetCollection
 

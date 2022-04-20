@@ -103,15 +103,11 @@ from cmk.gui.plugins.watolib.utils import filter_unknown_settings
 from cmk.gui.site_config import has_wato_slave_sites, is_wato_slave_site
 from cmk.gui.userdb import load_users, save_users, Users
 from cmk.gui.utils.script_helpers import gui_context
-from cmk.gui.watolib.changes import (
-    ActivateChangesWriter,
-    add_change,
-    AuditLogStore,
-    ObjectRef,
-    ObjectRefType,
-)
+from cmk.gui.watolib.audit_log import AuditLogStore
+from cmk.gui.watolib.changes import ActivateChangesWriter, add_change
 from cmk.gui.watolib.global_settings import GlobalSettings
 from cmk.gui.watolib.notifications import load_notification_rules, save_notification_rules
+from cmk.gui.watolib.objref import ObjectRef, ObjectRefType
 from cmk.gui.watolib.password_store import PasswordStore
 from cmk.gui.watolib.rulesets import RulesetCollection
 from cmk.gui.watolib.sites import site_globals_editable, SiteManagementFactory

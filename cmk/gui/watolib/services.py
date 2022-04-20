@@ -14,6 +14,7 @@ from hashlib import sha256
 from typing import Any, Iterable, List, NamedTuple, Sequence, Set, Tuple
 
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
+from cmk.utils.object_diff import make_diff_text
 from cmk.utils.type_defs import HostOrServiceConditions, SetAutochecksTable
 
 from cmk.automations.results import CheckPreviewEntry, TryDiscoveryResult
@@ -231,7 +232,7 @@ class Discovery:
             object_ref=self._host.object_ref(),
             site_id=self._host.site_id(),
             need_sync=need_sync,
-            diff_text=watolib.make_diff_text(
+            diff_text=make_diff_text(
                 _make_host_audit_log_object(old_autochecks), _make_host_audit_log_object(checks)
             ),
         )

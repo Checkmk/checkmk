@@ -4,21 +4,21 @@
 
 import {get_url} from "ajax";
 
-var iCurrent = null;
-var oCurrent = null;
+var iCurrent: number | null = null;
+var oCurrent: HTMLAnchorElement | null = null;
 var oldValue = "";
-var g_ajax_obj = null;
+var g_ajax_obj: any = null;
 
 // Register an input field to be a search field and add eventhandlers
 export function register_search_field(field) {
     var oField = document.getElementById(field);
     if (oField) {
         oField.onkeydown = function (e) {
-            if (!e) e = window.event;
+            if (!e) e = window.event as KeyboardEvent;
             return mkSearchKeyDown(e, oField);
         };
         oField.onkeyup = function (e) {
-            if (!e) e = window.event;
+            if (!e) e = window.event as KeyboardEvent;
             return mkSearchKeyUp(e, oField);
         };
         oField.onclick = function () {
@@ -86,7 +86,7 @@ function mkSearchKeyDown(e, oField) {
                 if (oField.value == "")
                     return; /* search field empty, rather not show all services! */
                 // When nothing selected, navigate with the current contents of the field
-                top.frames["main"].location.href =
+                top!.frames["main"].location.href =
                     "search_open.py?q=" + encodeURIComponent(oField.value);
                 mkTermSearch();
                 close_popup();
@@ -127,7 +127,7 @@ function mkSearchKeyDown(e, oField) {
 
 // Navigate to the target of the selected event
 function mkSearchNavigate() {
-    top.frames["main"].location.href = oCurrent.href;
+    top!.frames["main"].location.href = oCurrent?.href;
 }
 
 // Move one step of given size in the result list
@@ -138,20 +138,23 @@ function mkSearchMoveElement(step) {
 
     iCurrent += step;
 
-    var oResults = document.getElementById("mk_search_results");
+    var oResults: HTMLElement | null | HTMLElement[] =
+        document.getElementById("mk_search_results");
+
     if (!oResults) return;
 
     if (iCurrent < 0) iCurrent = oResults.children.length - 1;
 
     if (iCurrent > oResults.children.length - 1) iCurrent = 0;
 
-    oResults = oResults.childNodes;
+    oResults = Array.from(oResults.childNodes) as HTMLElement[];
+
 
     var a = 0;
     for (var i = 0; i < oResults.length; i++) {
         if (oResults[i].tagName == "A") {
+            oCurrent = oResults[i] as HTMLAnchorElement;
             if (a == iCurrent) {
-                oCurrent = oResults[i];
                 oResults[i].setAttribute("class", "active");
             } else {
                 oResults[i].setAttribute("class", "inactive");
@@ -179,7 +182,7 @@ function toggle_popup(oField) {
 export function close_popup() {
     var oContainer = document.getElementById("mk_search_results");
     if (oContainer) {
-        oContainer.parentNode.removeChild(oContainer);
+        oContainer.parentNode?.removeChild(oContainer);
     }
 
     iCurrent = null;

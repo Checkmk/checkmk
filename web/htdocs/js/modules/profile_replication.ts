@@ -52,8 +52,8 @@ export function start(siteid, est, progress_text) {
 }
 
 function set_status(siteid, image, text) {
-    var icon = document.getElementById("site-" + siteid).getElementsByClassName("repl_status")[0];
-    icon.title = text;
+    var icon = document.getElementById("site-" + siteid)!.getElementsByClassName("repl_status")[0];
+    (icon as HTMLElement).title = text;
     icon.className = "icon repl_status " + image;
 }
 

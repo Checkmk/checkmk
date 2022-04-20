@@ -67,14 +67,21 @@ def test_03_python_path(site: Site):
         stdout=subprocess.PIPE,
     )
     sys_path = json.loads(p.stdout.read()) if p.stdout else "<NO STDOUT>"
-    assert sys_path[0] == ""
-    assert site.root + "/local/lib/python3" in sys_path
-    assert site.root + "/lib/python3" in sys_path
-    assert site.root + "/lib/python3.9" in sys_path
 
-    for path in sys_path:
-        if path != "" and not path.startswith(site.root):
-            raise Exception("Found non site path %s in sys.path" % path)
+    assert sys_path[0] == ""
+
+    # ordered_path_elements = [
+    #    # there may be more, but these have to occur in this order:
+    #    site.root + "/local/lib/python3",
+    #    site.root + "/lib/python3/plus",
+    #    site.root + "/lib/python3.9",
+    #    site.root + "/lib/python3",
+    # ]
+    # TODO: restore this when testing against a daily build > 2022-05-10!
+    # assert [s for s in sys_path if s in ordered_path_elements] == ordered_path_elements
+
+    for path in sys_path[1:]:
+        assert path.startswith(site.root), f"Found non site path {path!r} in sys.path"
 
 
 def test_01_pip_exists(site: Site):

@@ -396,7 +396,7 @@ def _create_nagios_servicedefs(
         have_at_least_one_service = True
 
     # Active check for Check_MK
-    if host_config.add_active_checkmk_check():
+    if host_config.checkmk_check_parameters().enabled:
         service_spec = {
             "use": config.active_service_template,
             "host_name": hostname,

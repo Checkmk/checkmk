@@ -170,6 +170,12 @@ CheckContext = Dict[str, Any]
 GetCheckApiContext = Callable[[], Dict[str, Any]]
 GetInventoryApiContext = Callable[[], Dict[str, Any]]
 CheckIncludes = List[str]
+
+
+class CheckmkCheckParameters(NamedTuple):
+    enabled: bool
+
+
 DiscoveryCheckParameters = Dict
 
 
@@ -2965,9 +2971,6 @@ class HostConfig:
             "severity_vanished": 0,
         }
 
-    def add_active_checkmk_check(self) -> bool:
-        return not self.is_ping_host
-
     def add_service_discovery_check(
         self, params: Optional[Dict[str, Any]], service_discovery_name: str
     ) -> bool:
@@ -2984,6 +2987,9 @@ class HostConfig:
             return False
 
         return True
+
+    def checkmk_check_parameters(self) -> CheckmkCheckParameters:
+        return CheckmkCheckParameters(enabled=not self.is_ping_host)
 
     def inventory_parameters(self, ruleset_name: RuleSetName) -> Dict:
         return self._config_cache.host_extra_conf_merged(

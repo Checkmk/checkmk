@@ -6,7 +6,12 @@ import * as utils from "utils";
 import * as ajax from "ajax";
 import * as hover from "hover";
 
-export function show_hover_graphs(event_, site_id, host_name, service_description) {
+export function show_hover_graphs(
+    event_,
+    site_id,
+    host_name,
+    service_description
+) {
     event_ = event_ || window.event;
 
     hover.show(event_, '<div class="message">Loading...</div>');

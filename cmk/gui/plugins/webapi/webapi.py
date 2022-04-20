@@ -1218,13 +1218,15 @@ class APICallOther(APICallCollection):
                 hostname,
                 result.self_total,
             )
-            watolib.add_service_change(host, "refresh-autochecks", message)
+            watolib.add_service_change(
+                "refresh-autochecks", message, host.object_ref(), host.site_id()
+            )
         else:
             message = _("Saved check configuration of host [%s] with %d services") % (
                 hostname,
                 result.self_total,
             )
-            watolib.add_service_change(host, "set-autochecks", message)
+            watolib.add_service_change("set-autochecks", message, host.object_ref(), host.site_id())
 
         msg = _(
             "Service discovery successful. Added %d, removed %d, kept %d, total %d services "

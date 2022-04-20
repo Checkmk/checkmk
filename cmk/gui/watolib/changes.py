@@ -24,7 +24,6 @@ from typing import (
     NamedTuple,
     Optional,
     Type,
-    TYPE_CHECKING,
     TypeVar,
     Union,
 )
@@ -51,9 +50,6 @@ from cmk.gui.utils import escaping
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import DropdownChoice
 from cmk.gui.watolib import search
-
-if TYPE_CHECKING:
-    from cmk.gui.watolib.hosts_and_folders import CREHost
 
 ChangeSpec = Dict[str, Any]
 LogMessage = Union[str, HTML]
@@ -458,17 +454,18 @@ class SiteChanges(ABCAppendStore[ChangeSpec]):
 
 
 def add_service_change(
-    host: "CREHost",
     action_name: str,
     text: str,
+    object_ref: ObjectRef,
+    site_id: SiteId,
     diff_text: Optional[str] = None,
     need_sync: bool = False,
 ) -> None:
     add_change(
         action_name,
         text,
-        object_ref=host.object_ref(),
-        sites=[host.site_id()],
+        object_ref=object_ref,
+        sites=[site_id],
         diff_text=diff_text,
         need_sync=need_sync,
     )

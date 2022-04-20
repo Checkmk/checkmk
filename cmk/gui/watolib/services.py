@@ -226,9 +226,10 @@ class Discovery:
             len(checks),
         )
         watolib.add_service_change(
-            host=self._host,
             action_name="set-autochecks",
             text=message,
+            object_ref=self._host.object_ref(),
+            site_id=self._host.site_id(),
             need_sync=need_sync,
             diff_text=watolib.make_diff_text(
                 _make_host_audit_log_object(old_autochecks), _make_host_audit_log_object(checks)
@@ -513,9 +514,10 @@ def get_check_table(discovery_request: StartDiscoveryRequest) -> DiscoveryResult
     """
     if discovery_request.options.action == DiscoveryAction.TABULA_RASA:
         watolib.add_service_change(
-            discovery_request.host,
             "refresh-autochecks",
             _("Refreshed check configuration of host '%s'") % discovery_request.host.name(),
+            discovery_request.host.object_ref(),
+            discovery_request.host.site_id(),
         )
 
     if site_is_local(discovery_request.host.site_id()):

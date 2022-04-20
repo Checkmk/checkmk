@@ -268,7 +268,6 @@ class BulkDiscoveryBackgroundJob(WatoBackgroundJob):
         self._num_hosts_succeeded += 1
 
         add_service_change(
-            host,
             "bulk-discovery",
             _(
                 "Did service discovery on host %s: %d added, %d removed, %d kept, "
@@ -283,6 +282,8 @@ class BulkDiscoveryBackgroundJob(WatoBackgroundJob):
                 result.self_new_host_labels,
                 result.self_total_host_labels,
             ),
+            host.object_ref(),
+            host.site_id(),
             diff_text=result.diff_text,
         )
 

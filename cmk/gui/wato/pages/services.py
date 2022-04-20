@@ -523,7 +523,12 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             self._host.name(),
             len(discovery_result.host_labels),
         )
-        watolib.add_service_change(self._host, "update-host-labels", message)
+        watolib.add_service_change(
+            "update-host-labels",
+            message,
+            self._host.object_ref(),
+            self._host.site_id(),
+        )
         update_host_labels(
             self._host.site_id(),
             self._host.name(),

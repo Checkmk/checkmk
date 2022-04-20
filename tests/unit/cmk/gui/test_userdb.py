@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import logging
 import os
 import time
 from dataclasses import asdict
@@ -675,7 +676,7 @@ def test_cleanup_user_profiles_keep_recently_updated(user_id: UserId) -> None:
     profile_dir = create_new_profile_dir([Path("bla")])
     now = datetime.now()
     touch_profile_files(profile_dir, now - timedelta(days=10))
-    userdb.UserProfileCleanupBackgroundJob()._do_cleanup(now, timedelta(days=30))
+    userdb.cleanup_abandoned_profiles(logging.getLogger(), now, timedelta(days=30))
     assert profile_dir.exists()
 
 
@@ -683,7 +684,7 @@ def test_cleanup_user_profiles_remove_empty(user_id: UserId) -> None:
     profile_dir = create_new_profile_dir([])
     now = datetime.now()
     touch_profile_files(profile_dir, now - timedelta(days=10))
-    userdb.UserProfileCleanupBackgroundJob()._do_cleanup(now, timedelta(days=30))
+    userdb.cleanup_abandoned_profiles(logging.getLogger(), now, timedelta(days=30))
     assert not profile_dir.exists()
 
 
@@ -691,7 +692,7 @@ def test_cleanup_user_profiles_remove_abandoned(user_id: UserId) -> None:
     profile_dir = create_new_profile_dir([Path("bla")])
     now = datetime.now()
     touch_profile_files(profile_dir, now - timedelta(days=50))
-    userdb.UserProfileCleanupBackgroundJob()._do_cleanup(now, timedelta(days=30))
+    userdb.cleanup_abandoned_profiles(logging.getLogger(), now, timedelta(days=30))
     assert not profile_dir.exists()
 
 
@@ -699,7 +700,7 @@ def test_cleanup_user_profiles_keep_active_profile(user_id: UserId) -> None:
     profile_dir = cmk.utils.paths.profile_dir / user_id
     now = datetime.now()
     touch_profile_files(profile_dir, now - timedelta(days=10))
-    userdb.UserProfileCleanupBackgroundJob()._do_cleanup(now, timedelta(days=30))
+    userdb.cleanup_abandoned_profiles(logging.getLogger(), now, timedelta(days=30))
     assert profile_dir.exists()
 
 
@@ -707,7 +708,7 @@ def test_cleanup_user_profiles_keep_active_profile_old(user_id: UserId) -> None:
     profile_dir = cmk.utils.paths.profile_dir / user_id
     now = datetime.now()
     touch_profile_files(profile_dir, now - timedelta(days=50))
-    userdb.UserProfileCleanupBackgroundJob()._do_cleanup(now, timedelta(days=30))
+    userdb.cleanup_abandoned_profiles(logging.getLogger(), now, timedelta(days=30))
     assert profile_dir.exists()
 
 

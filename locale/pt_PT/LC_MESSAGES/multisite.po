@@ -3741,6 +3741,9 @@ msgstr "Opções adicionais"
 msgid "Additional rules for outliers"
 msgstr "Regras adicionais para os casos anómalos"
 
+msgid "Additional text prefixed to the output"
+msgstr ""
+
 #, fuzzy
 msgid "Additional values per metric"
 msgstr "Regras adicionais para os casos anómalos"
@@ -36420,6 +36423,10 @@ msgstr "Prefixo para o nome da mangueira piggyback"
 
 msgid "Prefix match"
 msgstr "Jogo de prefixos"
+
+#, fuzzy
+msgid "Prefix text"
+msgstr "Prefixo"
 
 msgid "Prepend namespace prefix for hosts"
 msgstr "Prefixo do espaço de nomes para os anfitriões"

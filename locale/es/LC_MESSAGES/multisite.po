@@ -3764,6 +3764,9 @@ msgstr "Opciones adicionales"
 msgid "Additional rules for outliers"
 msgstr "Reglas adicionales para los valores atípicos"
 
+msgid "Additional text prefixed to the output"
+msgstr ""
+
 #, fuzzy
 msgid "Additional values per metric"
 msgstr "Reglas adicionales para los valores atípicos"
@@ -36696,6 +36699,10 @@ msgstr "Prefijo para el nombre de host piggyback"
 
 msgid "Prefix match"
 msgstr "Coincidencia de prefijos"
+
+#, fuzzy
+msgid "Prefix text"
+msgstr "Prefijo"
 
 msgid "Prepend namespace prefix for hosts"
 msgstr "Preagregar el prefijo del espacio de nombres para los hosts"

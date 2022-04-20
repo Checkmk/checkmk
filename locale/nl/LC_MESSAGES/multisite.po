@@ -3745,6 +3745,9 @@ msgstr "Extra opties"
 msgid "Additional rules for outliers"
 msgstr "Aanvullende regels voor uitschieters"
 
+msgid "Additional text prefixed to the output"
+msgstr ""
+
 #, fuzzy
 msgid "Additional values per metric"
 msgstr "Aanvullende regels voor uitschieters"
@@ -36402,6 +36405,10 @@ msgstr "Voorvoegsel voor piggyback hostname"
 
 msgid "Prefix match"
 msgstr "Voorvoegsel match"
+
+#, fuzzy
+msgid "Prefix text"
+msgstr "Voorvoegsel"
 
 msgid "Prepend namespace prefix for hosts"
 msgstr "Prepend namespace prefix voor hosts"

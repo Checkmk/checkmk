@@ -3753,6 +3753,9 @@ msgstr "Zusätzliche Optionen"
 msgid "Additional rules for outliers"
 msgstr "Zusätzliche Regeln für Sonderfälle"
 
+msgid "Additional text prefixed to the output"
+msgstr ""
+
 #, fuzzy
 msgid "Additional values per metric"
 msgstr "Nur Wert der Metrik senden"
@@ -36493,6 +36496,10 @@ msgstr "Präfix für Huckepack-Hostname"
 
 msgid "Prefix match"
 msgstr "Präfixübereinstimmung"
+
+#, fuzzy
+msgid "Prefix text"
+msgstr "Präfix"
 
 msgid "Prepend namespace prefix for hosts"
 msgstr "Namespace-Präfix für Hosts voranstellen"

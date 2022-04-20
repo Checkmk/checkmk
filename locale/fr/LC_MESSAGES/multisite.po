@@ -3785,6 +3785,9 @@ msgstr "Options supplémentaires"
 msgid "Additional rules for outliers"
 msgstr "Règles supplémentaires pour les valeurs aberrantes"
 
+msgid "Additional text prefixed to the output"
+msgstr ""
+
 #, fuzzy
 msgid "Additional values per metric"
 msgstr "Règles supplémentaires pour les valeurs aberrantes"
@@ -36877,6 +36880,10 @@ msgstr "Préfixe pour le nom d'hôte de ferroutage"
 
 msgid "Prefix match"
 msgstr "Correspondance de préfixe"
+
+#, fuzzy
+msgid "Prefix text"
+msgstr "Préfixe"
 
 msgid "Prepend namespace prefix for hosts"
 msgstr "Préfixe d'espace de nom pour les hôtes"

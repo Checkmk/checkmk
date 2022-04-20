@@ -3616,6 +3616,9 @@ msgstr "追加オプション"
 msgid "Additional rules for outliers"
 msgstr "外れ値の追加ルール"
 
+msgid "Additional text prefixed to the output"
+msgstr ""
+
 #, fuzzy
 msgid "Additional values per metric"
 msgstr "外れ値の追加ルール"
@@ -35195,6 +35198,10 @@ msgstr "ピギーバックホスト名のプレフィックス"
 
 msgid "Prefix match"
 msgstr "プレフィックス一致"
+
+#, fuzzy
+msgid "Prefix text"
+msgstr "プレフィックス"
 
 msgid "Prepend namespace prefix for hosts"
 msgstr "ホストの名前スペースプレフィックスを付加する"

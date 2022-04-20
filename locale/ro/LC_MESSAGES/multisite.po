@@ -3568,6 +3568,9 @@ msgstr "Opțiuni adiționale"
 msgid "Additional rules for outliers"
 msgstr "Linii de header adiționale"
 
+msgid "Additional text prefixed to the output"
+msgstr ""
+
 #, fuzzy
 msgid "Additional values per metric"
 msgstr "Linii de header adiționale"
@@ -34935,6 +34938,9 @@ msgid "Prefix for piggyback hostname"
 msgstr ""
 
 msgid "Prefix match"
+msgstr ""
+
+msgid "Prefix text"
 msgstr ""
 
 #, fuzzy

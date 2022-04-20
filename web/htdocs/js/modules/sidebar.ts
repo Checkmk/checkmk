@@ -6,17 +6,17 @@ import * as utils from "utils";
 import * as ajax from "ajax";
 import * as quicksearch from "quicksearch";
 
-var g_content_loc = null;
-var g_scrollbar = null;
+var g_content_loc: null | string = null;
+var g_scrollbar: SimpleBar | null | undefined = null;
 
 export function initialize_sidebar(update_interval, refresh, restart, static_) {
     if (restart) {
-        sidebar_restart_time = Math.floor(Date.parse(new Date()) / 1000);
+        sidebar_restart_time = Math.floor(new Date().getTime() / 1000);
     }
 
     sidebar_update_interval = update_interval;
 
-    register_edge_listeners();
+    register_edge_listeners(null);
 
     refresh_snapins = refresh;
     restart_snapins = restart;
@@ -25,7 +25,7 @@ export function initialize_sidebar(update_interval, refresh, restart, static_) {
     execute_sidebar_scheduler();
 
     g_scrollbar = utils.add_simplebar_scrollbar("side_content");
-    g_scrollbar.getScrollElement().addEventListener(
+    g_scrollbar?.getScrollElement().addEventListener(
         "scroll",
         function () {
             store_scroll_position();
@@ -60,17 +60,13 @@ export function register_edge_listeners(obj) {
     if (!is_content_frame_accessible()) return;
 
     const edge = obj ? obj : parent.frames[0];
-    if (window.addEventListener) edge.addEventListener("mousemove", on_mouse_leave, false);
+    if (window.addEventListener !== null) edge.addEventListener("mousemove", on_mouse_leave, false);
     else edge.onmousemove = on_mouse_leave;
 }
 
-function on_mouse_leave(e) {
+function on_mouse_leave() {
     if (typeof quicksearch.close_popup != "undefined") quicksearch.close_popup();
-    return stop_snapin_dragging(e);
-}
-
-function stop_snapin_dragging(e) {
-    snapinTerminateDrag(e);
+    snapinTerminateDrag();
     return false;
 }
 
@@ -78,7 +74,7 @@ function stop_snapin_dragging(e) {
  * snapin drag/drop code
  *************************************************/
 
-var g_snapin_dragging = false;
+var g_snapin_dragging: false | HTMLElement = false;
 var g_snapin_offset = [0, 0];
 var g_snapin_start_pos = [0, 0];
 var g_snapin_scroll_top = 0;
@@ -102,7 +98,7 @@ export function snapin_start_drag(event) {
         event.clientX - target.parentNode.offsetLeft,
     ];
     g_snapin_start_pos = [event.clientY, event.clientX];
-    g_snapin_scroll_top = document.getElementById("side_content").scrollTop;
+    g_snapin_scroll_top = document.getElementById("side_content")!.scrollTop;
 
     // Disable the default events for all the different browsers
     return utils.prevent_default_events(event);
@@ -119,7 +115,7 @@ function snapinDrag(event) {
     // Drag the snapin
     utils.add_class(g_snapin_dragging, "dragging");
     let newTop = event.clientY - g_snapin_offset[0] - g_snapin_scroll_top;
-    newTop += document.getElementById("side_content").scrollTop;
+    newTop += document.getElementById("side_content")!.scrollTop;
     g_snapin_dragging.style.top = newTop + "px";
     g_snapin_dragging.style.left = event.clientX - g_snapin_offset[1] + "px";
 
@@ -148,7 +144,7 @@ function snapinAddBefore(par, o, add) {
 function removeSnapinDragIndicator() {
     const o = document.getElementById("snapinDragIndicator");
     if (o) {
-        o.parentNode.removeChild(o);
+        o.parentNode?.removeChild(o);
     }
 }
 
@@ -156,6 +152,7 @@ function snapinDrop(event, targetpos) {
     if (g_snapin_dragging === false) return true;
 
     // Reset properties
+    g_snapin_dragging = g_snapin_dragging;
     utils.remove_class(g_snapin_dragging, "dragging");
     g_snapin_dragging.style.top = "";
     g_snapin_dragging.style.left = "";
@@ -167,7 +164,7 @@ function snapinDrop(event, targetpos) {
     }
 
     const par = g_snapin_dragging.parentNode;
-    par.removeChild(g_snapin_dragging);
+    par?.removeChild(g_snapin_dragging);
     snapinAddBefore(par, targetpos, g_snapin_dragging);
 
     // Now send the new information to the backend
@@ -199,7 +196,7 @@ export function snapin_stop_drag(event) {
 }
 
 function getDivChildNodes(node) {
-    const children = [];
+    const children : ChildNode[] = [];
     for (const child of node.childNodes) {
         if (child.tagName === "DIV") {
             children.push(child);
@@ -209,10 +206,12 @@ function getDivChildNodes(node) {
 }
 
 function getSnapinList() {
-    const l = [];
+    const l : ChildNode[] = [];
+    g_snapin_dragging = g_snapin_dragging as HTMLElement;
     for (const child of getDivChildNodes(g_snapin_dragging.parentNode)) {
         // Skip non snapin objects and the currently dragged object
-        if (child.id && child.id.substr(0, 7) == "snapin_" && child.id != g_snapin_dragging.id) {
+        var id = (child as HTMLElement).id;
+        if (id && id.substr(0, 7) == "snapin_" && id != g_snapin_dragging.id) {
             l.push(child);
         }
     }
@@ -220,7 +219,7 @@ function getSnapinList() {
 }
 
 function getSnapinCoords(obj) {
-    const snapinTop = g_snapin_dragging.offsetTop;
+    const snapinTop = (g_snapin_dragging as HTMLElement).offsetTop;
     // + document.getElementById("side_content").scrollTop;
 
     let bottomOffset = obj.offsetTop + obj.clientHeight - snapinTop;
@@ -290,8 +289,8 @@ export function is_content_frame_accessible() {
 
 export function update_content_location() {
     // initialize the original title
-    if (typeof window.parent.orig_title == "undefined") {
-        window.parent.orig_title = window.parent.document.title;
+    if (typeof window.parent["orig_title"] == "undefined") {
+        window.parent["orig_title"] = window.parent.document.title;
     }
 
     const content_frame = parent.frames[0];
@@ -300,9 +299,9 @@ export function update_content_location() {
     // title of the content URL title (window title or tab title)
     let page_title;
     if (content_frame.document.title != "") {
-        page_title = window.parent.orig_title + " - " + content_frame.document.title;
+        page_title = window.parent["orig_title"] + " - " + content_frame.document.title;
     } else {
-        page_title = window.parent.orig_title;
+        page_title = window.parent["orig_title"];
     }
     window.parent.document.title = page_title;
 
@@ -338,7 +337,7 @@ export function scroll_window(speed) {
     const c = document.getElementById("side_content");
 
     if (g_scrolling) {
-        c.scrollTop += speed;
+        c!.scrollTop += speed;
         setTimeout("cmk.sidebar.scroll_window(" + speed + ")", 10);
     }
 }
@@ -372,13 +371,13 @@ function unfold_sidebar() {
 //
 
 // The refresh snapins do reload after a defined amount of time
-var refresh_snapins = [];
+var refresh_snapins : string[][] = [];
 // The restart snapins are notified about the restart of the nagios instance(s)
-var restart_snapins = [];
+var restart_snapins : string[]  = [];
 // Snapins that only have to be reloaded on demand
-var static_snapins = [];
+var static_snapins : string[] = [];
 // Contains a timestamp which holds the time of the last nagios restart handling
-var sidebar_restart_time = null;
+var sidebar_restart_time : number | null= null;
 // Configures the number of seconds to reload all snapins which request it
 var sidebar_update_interval = null;
 
@@ -394,7 +393,7 @@ export function add_snapin(name) {
             const result = data.result;
 
             if (result.refresh) {
-                const entry = [result.name, result.url];
+                const entry : string[] = [result.name, result.url];
                 if (refresh_snapins.indexOf(entry) === -1) {
                     refresh_snapins.push(entry);
                 }
@@ -414,14 +413,14 @@ export function add_snapin(name) {
                 }
             }
 
-            const sidebar_content = g_scrollbar.getContentElement();
+            const sidebar_content = g_scrollbar?.getContentElement();
             if (sidebar_content) {
                 const tmp_container = document.createElement("div");
                 tmp_container.innerHTML = result.content;
 
-                const add_button = sidebar_content.lastChild;
+                const add_button = sidebar_content.lastChild as HTMLElement;
                 while (tmp_container.childNodes.length) {
-                    const tmp = tmp_container.childNodes[0];
+                    const tmp = tmp_container.childNodes[0] as HTMLElement;
                     add_button.insertAdjacentElement("beforebegin", tmp);
 
                     // The object specific JS must be called after the object was inserted.
@@ -434,8 +433,8 @@ export function add_snapin(name) {
             const add_snapin_page = window.frames[0] ? window.frames[0].document : document;
             const preview = add_snapin_page.getElementById("snapin_container_" + name);
             if (preview) {
-                const container = preview.parentElement.parentElement;
-                container.remove();
+                const container = preview.parentElement?.parentElement;
+                container?.remove();
             }
         },
     });
@@ -457,9 +456,9 @@ export function remove_sidebar_snapin(oLink, url) {
 
 // Removes a snapin from the sidebar without reloading anything
 function remove_snapin(id) {
-    const container = document.getElementById(id).parentNode;
-    const myparent = container.parentNode;
-    myparent.removeChild(container);
+    const container = document.getElementById(id)!.parentNode;
+    const myparent = container!.parentNode;
+    myparent!.removeChild(container!);
 
     const name = id.replace("snapin_", "");
 
@@ -480,7 +479,7 @@ function remove_snapin(id) {
 
     // reload main frame if it is currently displaying the "add snapin" page
     if (parent.frames[0]) {
-        const href = encodeURIComponent(parent.frames[0].location);
+        const href = encodeURIComponent(parent.frames[0].location.toString());
         if (href.indexOf("sidebar_add_snapin.py") > -1) parent.frames[0].location.reload();
     }
 }
@@ -535,7 +534,7 @@ function bulk_update_contents(ids, codes) {
             // since sidebar rendering or last update, skip it
             if (codes[i] !== "") {
                 utils.update_contents(ids[i], codes[i]);
-                sidebar_restart_time = Math.floor(Date.parse(new Date()) / 1000);
+                sidebar_restart_time = Math.floor(new Date().getTime()  / 1000);
             }
         } else {
             utils.update_contents(ids[i], codes[i]);
@@ -543,8 +542,8 @@ function bulk_update_contents(ids, codes) {
     }
 }
 
-var g_seconds_to_update = null;
-var g_sidebar_scheduler_timer = null;
+var g_seconds_to_update : null | number = null;
+var g_sidebar_scheduler_timer : null | number = null;
 var g_sidebar_full_reload = false;
 
 export function refresh_single_snapin(name) {
@@ -570,13 +569,13 @@ export function execute_sidebar_scheduler() {
     // Stop reload of the snapins in case the browser window / tab is not visible
     // for the user. Retry after short time.
     if (!utils.is_window_active()) {
-        g_sidebar_scheduler_timer = setTimeout(function () {
+        g_sidebar_scheduler_timer = window.setTimeout(function () {
             execute_sidebar_scheduler();
         }, 250);
         return;
     }
 
-    const to_be_updated = [];
+    const to_be_updated : string[] = [];
 
     let url;
     for (let i = 0; i < refresh_snapins.length; i++) {
@@ -587,7 +586,7 @@ export function execute_sidebar_scheduler() {
             // from this url
             url = refresh_snapins[i][1];
 
-            if (g_seconds_to_update <= 0) {
+            if (g_seconds_to_update && g_seconds_to_update <= 0) {
                 ajax.get_url(url, utils.update_contents, "snapin_" + name);
             }
         } else {
@@ -604,11 +603,11 @@ export function execute_sidebar_scheduler() {
     }
 
     // Are there any snapins to be bulk updated?
-    if (to_be_updated.length > 0 && g_seconds_to_update <= 0) {
+    if (to_be_updated.length > 0 && g_seconds_to_update && g_seconds_to_update <= 0) {
         url = "sidebar_snapin.py?names=" + to_be_updated.join(",");
         if (sidebar_restart_time !== null) url += "&since=" + sidebar_restart_time;
 
-        const ids = [],
+        const ids : string[] = [],
             len = to_be_updated.length;
         for (let i = 0; i < len; i++) {
             ids.push("snapin_" + to_be_updated[i]);
@@ -618,7 +617,7 @@ export function execute_sidebar_scheduler() {
     }
 
     if (g_sidebar_notify_interval !== null) {
-        const timestamp = Date.parse(new Date()) / 1000;
+        const timestamp = new Date().getTime() / 1000;
         if (timestamp % g_sidebar_notify_interval == 0) {
             update_messages();
             if (g_may_ack) {
@@ -634,9 +633,9 @@ export function execute_sidebar_scheduler() {
         update_content_location();
     }
 
-    if (g_seconds_to_update <= 0) g_seconds_to_update = sidebar_update_interval;
+    if (g_seconds_to_update && g_seconds_to_update <= 0) g_seconds_to_update = sidebar_update_interval;
 
-    g_sidebar_scheduler_timer = setTimeout(function () {
+    g_sidebar_scheduler_timer = window.setTimeout(function () {
         execute_sidebar_scheduler();
     }, 1000);
 }
@@ -668,13 +667,13 @@ function getCookie(cookieName) {
 }
 
 export function initialize_scroll_position() {
-    let scrollPos = getCookie("sidebarScrollPos");
-    if (!scrollPos) scrollPos = 0;
-    g_scrollbar.getScrollElement().scrollTop = scrollPos;
+    var scrollPosFromCookie = getCookie("sidebarScrollPos");
+    var scrollPos: number = scrollPosFromCookie ? parseInt(scrollPosFromCookie) : 0;
+    g_scrollbar!.getScrollElement().scrollTop = scrollPos;
 }
 
 function store_scroll_position() {
-    setCookie("sidebarScrollPos", g_scrollbar.getScrollElement().scrollTop, null);
+    setCookie("sidebarScrollPos", g_scrollbar!.getScrollElement().scrollTop, null);
 }
 
 /************************************************
@@ -696,7 +695,7 @@ function highlight_link(link_obj, container_id) {
     if (this_snapin && other_snapin) {
         let links;
         if (this_snapin.getElementsByClassName) links = this_snapin.getElementsByClassName("link");
-        else links = document.getElementsByClassName("link", this_snapin);
+        else links = document.getElementsByClassName("link");
 
         for (let i = 0; i < links.length; i++) {
             links[i].style.fontWeight = "normal";
@@ -735,8 +734,8 @@ export function wato_views_clicked(link_obj) {
 
 /* Foldable Tree in snapin */
 export function wato_tree_click(link_obj, folderpath) {
-    const topic = document.getElementById("topic").value;
-    const target = document.getElementById("target_" + topic).value;
+    const topic = (document.getElementById("topic") as HTMLInputElement).value;
+    const target = (document.getElementById("target_" + topic) as HTMLInputElement).value;
 
     let href;
     if (target.substr(0, 9) == "dashboard") {
@@ -759,7 +758,7 @@ export function wato_tree_topic_changed(topic_field) {
     const select_fields = document.getElementsByTagName("select");
     for (let i = 0; i < select_fields.length; i++) {
         if (select_fields[i].id && select_fields[i].id.substr(0, 7) == "target_") {
-            select_fields[i].selected = "";
+            select_fields[i].selectedIndex = -1;
             if (select_fields[i].id == "target_" + topic) {
                 select_fields[i].style.display = "inline";
             } else {
@@ -769,7 +768,7 @@ export function wato_tree_topic_changed(topic_field) {
     }
 
     // Then send the info to python code via ajax call for persistance
-    call_ajax("ajax_set_foldertree.py", {
+    ajax.call_ajax("ajax_set_foldertree.py", {
         method: "POST",
         post_data: "topic=" + encodeURIComponent(topic) + "&target=",
     });
@@ -780,7 +779,7 @@ export function wato_tree_target_changed(target_field) {
     const target = target_field.value;
 
     // Send the info to python code via ajax call for persistance
-    call_ajax("ajax_set_foldertree.py", {
+    ajax.call_ajax("ajax_set_foldertree.py", {
         method: "POST",
         post_data: "topic=" + encodeURIComponent(topic) + "&target=" + encodeURIComponent(target),
     });
@@ -860,7 +859,7 @@ export function fetch_nagvis_snapin_contents() {
  * Bookmark snapin
  *************************************************/
 
-export function add_bookmark(trans_id = null) {
+export function add_bookmark(trans_id : null | string = null) {
     const url = parent.frames[0].location;
     const title = parent.frames[0].document.title;
     ajax.call_ajax("add_bookmark.py", {
@@ -872,9 +871,9 @@ export function add_bookmark(trans_id = null) {
             "title=" +
             encodeURIComponent(title) +
             "&url=" +
-            encodeURIComponent(url) +
+            encodeURIComponent(url.toString()) +
             "&_transid=" +
-            encodeURIComponent(trans_id),
+            encodeURIComponent(trans_id as string),
     });
 }
 
@@ -884,16 +883,16 @@ export function add_bookmark(trans_id = null) {
 
 export function wiki_search(omd_site) {
     const oInput = document.getElementById("wiki_search_field");
-    top.frames["main"].location.href =
-        "/" + encodeURIComponent(omd_site) + "/wiki/doku.php?do=search&id=" + escape(oInput.value);
-    utils.prevent_default_events();
+    top!.frames["main"].location.href =
+        "/" + encodeURIComponent(omd_site) + "/wiki/doku.php?do=search&id=" + escape((oInput as HTMLInputElement).value);
+    utils.prevent_default_events(event);
 }
 
 /************************************************
  * Wiki search snapin
  *************************************************/
 
-var g_needle_timeout = null;
+var g_needle_timeout : null | number = null;
 
 export function speedometer_show_speed(last_perc, program_start, scheduled_rate) {
     const url =
@@ -919,7 +918,7 @@ export function speedometer_show_speed(last_perc, program_start, scheduled_rate)
 
                 oDiv.title = data.title;
                 oDiv = document.getElementById("speedometerbg");
-                oDiv.title = data.title;
+                oDiv!.title = data.title;
 
                 move_needle(data.last_perc, data.percentage); // 50 * 100ms = 5s = refresh time
             } catch (ie) {
@@ -965,7 +964,7 @@ export function speedometer_show_speed(last_perc, program_start, scheduled_rate)
 }
 
 function show_speed(percentage) {
-    const canvas = document.getElementById("speedometer");
+    const canvas = document.getElementById("speedometer") as HTMLCanvasElement;
     if (!canvas) return;
 
     const context = canvas.getContext("2d");
@@ -1004,7 +1003,7 @@ function move_needle(from_perc, to_perc) {
 
     if (g_needle_timeout != null) clearTimeout(g_needle_timeout);
 
-    g_needle_timeout = setTimeout(
+    g_needle_timeout = window.setTimeout(
         (function (new_perc, to_perc) {
             return function () {
                 move_needle(new_perc, to_perc);
@@ -1060,7 +1059,7 @@ function update_messages() {
 }
 
 export function update_message_trigger(msg_text, msg_count) {
-    let l = document.getElementById("messages_label");
+    let l = document.getElementById("messages_label")!;
     if (msg_count === 0) {
         l.style.display = "none";
         return;
@@ -1069,7 +1068,7 @@ export function update_message_trigger(msg_text, msg_count) {
     l.innerText = msg_count.toString();
     l.style.display = "inline";
 
-    let user_messages = document.getElementById("messages_link_to");
+    let user_messages = document.getElementById("messages_link_to")!;
     let text_content = msg_count + " " + msg_text;
     user_messages.textContent = text_content;
 }
@@ -1098,7 +1097,7 @@ function update_unack_incomp_werks() {
 }
 
 export function update_werks_trigger(werks_count, text, tooltip) {
-    let l = document.getElementById("werks_label");
+    let l = document.getElementById("werks_label")!;
     if (werks_count === 0) {
         l.style.display = "none";
         return;
@@ -1108,20 +1107,21 @@ export function update_werks_trigger(werks_count, text, tooltip) {
     l.style.display = "inline";
 
     let werks_link = document.getElementById("werks_link_to");
-    werks_link.textContent = text;
-    werks_link.setAttribute("title", tooltip.toString());
+    if (werks_link) {
+        werks_link.textContent = text;
+        werks_link.setAttribute("title", tooltip.toString());
+    }
 }
-
 function create_initial_ids(menu, what, start_url) {
     const mega_menu_help_div = document.getElementById(
         "popup_trigger_mega_menu_" + menu
-    ).firstChild;
-    const help_div = mega_menu_help_div.childNodes[2];
+    )!.firstChild;
+    const help_div = mega_menu_help_div!.childNodes[2];
 
     const l = document.createElement("span");
     l.setAttribute("id", what + "_label");
     l.style.display = "none";
-    mega_menu_help_div.insertBefore(l, help_div);
+    mega_menu_help_div?.insertBefore(l, help_div);
 
     // Also update popup content
     const info_line_span = document.getElementById("info_line_" + menu);
@@ -1131,7 +1131,7 @@ function create_initial_ids(menu, what, start_url) {
     a.href = "index.py?start_url=" + start_url;
     a.setAttribute("id", what + "_link_to");
     span.appendChild(a);
-    info_line_span.insertAdjacentElement("beforebegin", span);
+    info_line_span?.insertAdjacentElement("beforebegin", span);
 }
 
 /************************************************

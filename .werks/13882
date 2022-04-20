@@ -1,0 +1,12 @@
+Title: Fix links to parents and childs of hosts
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1650466946
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b6
+
+The links of the painters "Host's parents" and "Host's childs", used e.g. in
+the hostatus view, were broken.

@@ -202,7 +202,7 @@ def _user_exists_according_to_profile(username: UserId) -> bool:
 
 def _login_timed_out(username: UserId, last_activity: int) -> bool:
     idle_timeout = load_custom_attr(
-        user_id=username, key="idle_timeout", parser=_convert_idle_timeout, default=None
+        user_id=username, key="idle_timeout", parser=_convert_idle_timeout
     )
     if idle_timeout is None:
         idle_timeout = active_config.user_idle_timeout

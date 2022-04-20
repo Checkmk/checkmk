@@ -102,6 +102,7 @@ class Label(BaseModel):
 
 
 Labels = Mapping[LabelName, Label]
+Annotations = Mapping[LabelName, LabelValue]
 Timestamp = NewType("Timestamp", float)
 
 # This information is from the one-page API overview v1.22
@@ -123,6 +124,7 @@ class MetaData(BaseModel):
     namespace: Optional[NamespaceName] = None
     creation_timestamp: Optional[CreationTimestamp] = None
     labels: Labels
+    annotations: Annotations
 
 
 class NodeMetaData(MetaData):
@@ -137,6 +139,7 @@ class PodMetaData(MetaData):
 class NamespaceMetaData(BaseModel):
     name: NamespaceName
     labels: Labels
+    annotations: Annotations
     creation_timestamp: CreationTimestamp
 
 

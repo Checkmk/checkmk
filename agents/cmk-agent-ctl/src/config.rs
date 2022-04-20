@@ -351,7 +351,7 @@ impl Registry {
         #[cfg(unix)]
         {
             write_op_result?;
-            fs::set_permissions(&self.path, fs::Permissions::from_mode(0o640))
+            fs::set_permissions(&self.path, fs::Permissions::from_mode(0o600))
         }
     }
 
@@ -524,7 +524,7 @@ mod test_registry {
         #[cfg(unix)]
         assert_eq!(
             fs::metadata(&reg.path).unwrap().permissions().mode(),
-            0o100640 // mode apparently returns the full file mode, not just the permission bits ...
+            0o100600 // mode apparently returns the full file mode, not just the permission bits ...
         );
 
         let new_reg = Registry::from_file(&reg.path).unwrap();

@@ -247,6 +247,9 @@ class ConfigDomainDiskspace(ABCConfigDomain):
     def config_dir(self):
         return ""  # unused, we override load and save below
 
+    def load_full_config(self, site_specific=False, custom_site_path=None):
+        return self.load()
+
     def load(self, site_specific=False, custom_site_path=None):
         cleanup_settings = store.load_mk_file(self.diskspace_config, default={})
         if not cleanup_settings:

@@ -7,7 +7,6 @@
 # pylint: disable=comparison-with-callable,redefined-outer-name
 import json
 
-import pytest
 from pydantic_factories import ModelFactory
 
 from cmk.base.plugins.agent_based import kube_collector_info
@@ -43,36 +42,6 @@ class CollectorDaemonsFactory(ModelFactory):
     # Allows better reasoning about the test cases, where this Model is of no
     # importance. Sadly, this field cannot be set in the build method.
     __allow_none_optionals__ = False
-
-
-class CollectorComponentsMetadataFactory(ModelFactory):
-    __model__ = CollectorComponentsMetadata
-
-
-@pytest.fixture
-def collector_metadata_handling_state() -> CollectorState:
-    return CollectorState.OK
-
-
-@pytest.fixture
-def metadata_collection_log(
-    collector_metadata_handling_state: CollectorState,
-) -> CollectorHandlerLog:
-    return CollectorHandlerLog(
-        status=collector_metadata_handling_state, title="title", detail="detail"
-    )
-
-
-@pytest.fixture
-def collectors_metadata(
-    metadata_collection_log: CollectorHandlerLog,
-    collector_metadata_handling_state: CollectorState,
-) -> CollectorComponentsMetadata:
-    return CollectorComponentsMetadata(
-        processing_log=metadata_collection_log,
-        cluster_collector=ClusterCollectorMetadataFactory.build(),
-        nodes=[NodeMetadataFactory.build()],
-    )
 
 
 def test_parse_collector_metadata():
@@ -178,7 +147,17 @@ def test_parse_collector_daemons():
     )
 
 
-def test_check_all_ok_sections(collectors_metadata):
+def test_check_all_ok_sections():
+    # Arrange
+    collector_metadata = CollectorComponentsMetadata(
+        processing_log=CollectorHandlerLog(
+            status=CollectorState.OK,
+            title="title",
+            detail="detail",
+        ),
+        cluster_collector=ClusterCollectorMetadataFactory.build(),
+        nodes=NodeMetadataFactory.batch(1),
+    )
     collector_processing_logs = CollectorProcessingLogs(
         container=CollectorHandlerLog(status=CollectorState.OK, title="title", detail="OK"),
         machine=CollectorHandlerLog(status=CollectorState.OK, title="title", detail="OK"),
@@ -191,19 +170,32 @@ def test_check_all_ok_sections(collectors_metadata):
         )
     )
 
+    # Act
     check_result = list(
         kube_collector_info.check(
-            collectors_metadata,
+            collector_metadata,
             collector_processing_logs,
             collector_daemons,
         )
     )
+
+    # Assert
     assert len(check_result) == 6
     assert all(isinstance(result, Result) for result in check_result)
     assert all(result.state == State.OK for result in check_result if isinstance(result, Result))
 
 
-def test_check_with_no_collector_components_section(collectors_metadata):
+def test_check_with_no_collector_components_section():
+    # Arrange
+    collector_metadata = CollectorComponentsMetadata(
+        processing_log=CollectorHandlerLog(
+            status=CollectorState.OK,
+            title="title",
+            detail="detail",
+        ),
+        cluster_collector=ClusterCollectorMetadataFactory.build(),
+        nodes=NodeMetadataFactory.batch(1),
+    )
     collector_daemons = CollectorDaemonsFactory.build(
         errors=IdentificationError(
             duplicate_machine_collector=False,
@@ -211,13 +203,17 @@ def test_check_with_no_collector_components_section(collectors_metadata):
             unknown_collector=False,
         )
     )
+
+    # Act
     check_result = list(
         kube_collector_info.check(
-            collectors_metadata,
+            collector_metadata,
             None,
             collector_daemons,
         )
     )
+
+    # Assert
     assert all(isinstance(result, Result) for result in check_result)
     assert isinstance(check_result[0], Result) and check_result[0].summary.startswith(
         "Cluster collector version:"
@@ -225,8 +221,17 @@ def test_check_with_no_collector_components_section(collectors_metadata):
     assert len(check_result) == 4
 
 
-@pytest.mark.parametrize("collector_metadata_handling_state", [CollectorState.ERROR])
-def test_check_with_errored_handled_metadata_section(collectors_metadata):
+def test_check_with_errored_handled_metadata_section():
+    # Arrange
+    collector_metadata = CollectorComponentsMetadata(
+        processing_log=CollectorHandlerLog(
+            status=CollectorState.ERROR,
+            title="title",
+            detail="detail",
+        ),
+        cluster_collector=ClusterCollectorMetadataFactory.build(),
+        nodes=NodeMetadataFactory.batch(1),
+    )
     collector_daemons = CollectorDaemonsFactory.build(
         errors=IdentificationError(
             duplicate_machine_collector=False,
@@ -234,27 +239,36 @@ def test_check_with_errored_handled_metadata_section(collectors_metadata):
             unknown_collector=False,
         ),
     )
+
+    # Act
     check_result = list(
         kube_collector_info.check(
-            collectors_metadata,
+            collector_metadata,
             None,
             collector_daemons,
         )
     )
+
+    # Assert
     assert len(check_result) == 3
     assert isinstance(check_result[0], Result) and check_result[0].state == State.CRIT
 
 
 def test_check_with_errored_handled_component_section():
+    # Arrange
     collector_processing_logs = CollectorProcessingLogs(
         container=CollectorHandlerLog(status=CollectorState.ERROR, title="title", detail="OK"),
         machine=CollectorHandlerLog(status=CollectorState.ERROR, title="title", detail="OK"),
     )
+
+    # Act
     result = list(
         kube_collector_info._component_check(
             "Container Metrics", collector_processing_logs.container
         )
     )
+
+    # Assert
     assert len(result) == 1
     assert result[0].state == State.OK
     assert result[0].summary.startswith("Container Metrics: ")
@@ -262,7 +276,7 @@ def test_check_with_errored_handled_component_section():
 
 def test_check_api_daemonsets_not_found() -> None:
     # Arrange
-    collector_metadata = CollectorComponentsMetadataFactory.build(
+    collector_metadata = CollectorComponentsMetadata(
         processing_log=CollectorHandlerLog(
             status=CollectorState.OK,
             title="title",
@@ -306,7 +320,7 @@ def test_check_api_daemonsets_not_found() -> None:
 
 def test_check_api_daemonsets_multiple_with_same_label() -> None:
     # Arrange
-    collector_metadata = CollectorComponentsMetadataFactory.build(
+    collector_metadata = CollectorComponentsMetadata(
         processing_log=CollectorHandlerLog(
             status=CollectorState.OK,
             title="title",

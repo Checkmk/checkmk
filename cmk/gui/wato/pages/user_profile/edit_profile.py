@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """A user can edit some user profile attributes on this page"""
 
-from typing import Optional
+from typing import Any, Optional
 
 from cmk.gui import forms, userdb
 from cmk.gui.exceptions import FinalizeRequest
@@ -17,11 +17,18 @@ from cmk.gui.plugins.userdb.utils import get_user_attributes_by_topic
 from cmk.gui.type_defs import UserSpec
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.language_cookie import set_language_cookie
+from cmk.gui.valuespec import ValueSpec
 from cmk.gui.wato.pages.users import select_language
 from cmk.gui.watolib.global_settings import rulebased_notifications_enabled
 from cmk.gui.watolib.users import get_vs_flexible_notifications
 
 from .abstract_page import ABCUserProfilePage
+
+
+def _get_input(valuespec: ValueSpec, varprefix: str) -> Any:
+    value = valuespec.from_html_vars(varprefix)
+    valuespec.validate_value(value, varprefix)
+    return value
 
 
 @page_registry.register_page("user_profile")
@@ -54,7 +61,7 @@ class UserProfile(ABCUserProfilePage):
         localize(user.language)
 
         if user.may("general.edit_notifications") and user_spec.get("notifications_enabled"):
-            value = forms.get_input(get_vs_flexible_notifications(), "notification_method")
+            value = _get_input(get_vs_flexible_notifications(), "notification_method")
             user_spec["notification_method"] = value
 
         # Custom attributes

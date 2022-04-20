@@ -5,105 +5,20 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import base64
-from typing import Any, Callable, Dict, List, Optional, Tuple, TYPE_CHECKING, Union
+from typing import Callable, Optional, Tuple, Union
 
 import cmk.gui.utils.escaping as escaping
-from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import html, request, theme, user_errors
+from cmk.gui.globals import html, theme
 from cmk.gui.htmllib.foldable_container import (
     foldable_container_id,
     foldable_container_img_id,
     foldable_container_onclick,
 )
-from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.utils.html import HTML
-from cmk.gui.utils.transaction_manager import transactions
-
-if TYPE_CHECKING:
-    from typing import Sequence
-
-    from cmk.gui.valuespec import Dictionary, Transform, ValueSpec
 
 g_header_open = False
 g_section_open = False
-
-
-def get_input(valuespec: "ValueSpec", varprefix: str) -> Any:
-    value = valuespec.from_html_vars(varprefix)
-    valuespec.validate_value(value, varprefix)
-    return value
-
-
-# Edit a list of several dictionaries. Those can either be dictionary
-# valuespec or just a list of elements. Each entry in dictionaries is
-# a pair of key and either a list of elements or a Dictionary.
-# TODO: As soon as the reports have been migrated to pagetypes.py
-# we can drop edit_dictionaries()? At least the function for editing
-# several dictionaries at once.
-# TODO: Remove all call sites and clean this up! The mechanic of this
-# is very uncommon compared to the other usages of valuespecs.
-def edit_dictionaries(
-    dictionaries: "Sequence[Tuple[str, Union[Transform, Dictionary]]]",
-    value: Dict[str, Any],
-    focus: Optional[str] = None,
-    hover_help: bool = True,
-    validate: Optional[Callable[[Any], None]] = None,
-    title: Optional[str] = None,
-    method: str = "GET",
-    preview: bool = False,
-    varprefix: str = "",
-    formname: str = "form",
-    consume_transid: bool = True,
-):
-
-    if request.get_ascii_input("filled_in") == formname and transactions.transaction_valid():
-        if not preview and consume_transid:
-            transactions.check_transaction()
-
-        messages: List[str] = []
-        new_value: Dict[str, Dict[str, Any]] = {}
-        for keyname, vs_dict in dictionaries:
-            dict_varprefix = varprefix + keyname
-            new_value[keyname] = {}
-            try:
-                edited_value = vs_dict.from_html_vars(dict_varprefix)
-                vs_dict.validate_value(edited_value, dict_varprefix)
-                new_value[keyname].update(edited_value)
-            except MKUserError as e:
-                messages.append("%s: %s" % (vs_dict.title() or _("Properties"), e))
-                user_errors.add(e)
-            except Exception as e:
-                messages.append("%s: %s" % (vs_dict.title() or _("Properties"), e))
-                user_errors.add(MKUserError(None, str(e)))
-
-            if validate and not user_errors:
-                try:
-                    validate(new_value[keyname])
-                except MKUserError as e:
-                    messages.append(str(e))
-                    user_errors.add(e)
-
-        if messages:
-            messages_joined = "".join(["%s<br>\n" % m for m in messages])
-            if not preview:
-                html.show_error(messages_joined)
-            else:
-                raise MKUserError(None, messages_joined)
-        else:
-            return new_value
-
-    html.begin_form(formname, method=method)
-    for keyname, vs_dict in dictionaries:
-        dict_varprefix = varprefix + keyname
-        subvalue = value.get(keyname, {})
-        vs_dict.render_input_as_form(dict_varprefix, subvalue)
-
-    end()
-    # Should be ignored be hidden_fields, but I do not dare to change it there
-    request.del_var("filled_in")
-    html.hidden_fields()
-    html.end_form()
 
 
 # New functions for painting forms

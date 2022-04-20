@@ -20,7 +20,7 @@ start and end with an alphanumeric character.
 
     Examples:
         >>> import re
-        >>> validation_value = re.compile(r'([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9]')
+        >>> validation_value = re.compile(r'(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])?')
         >>> is_value = lambda x: bool(validation_value.fullmatch(x))
         >>> is_value('MyName')
         True
@@ -30,8 +30,8 @@ start and end with an alphanumeric character.
         True
         >>> is_value('a..a') # repeating '.', '_' or '-' characters in the middle is ok
         True
-        >>> is_value('')  # does not start with alphanumeric character
-        False
+        >>> is_value('')  # empty values are allowed
+        True
         >>> is_value('a-')  # does not end with alphanumeric character
         False
         >>> is_value('a&a')  # & not allowed

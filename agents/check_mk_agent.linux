@@ -349,7 +349,7 @@ set_up_disabled_sections() {
 section_checkmk() {
     cat <<HERE
 <<<check_mk>>>
-Version: 2.1.0b7
+Version: 2.1.0b6
 AgentOS: linux
 Hostname: $(uname -n)
 AgentDirectory: ${MK_CONFDIR}

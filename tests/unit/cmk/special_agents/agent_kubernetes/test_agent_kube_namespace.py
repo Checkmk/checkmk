@@ -49,3 +49,30 @@ class TestAPINamespace:
                 name="kubernetes.io/metadata.name", value="checkmk-monitoring"
             )
         }
+        assert metadata.annotations == {}
+
+    def test_parse_metadata_missing_annotations_and_labels(self, core_client, dummy_host):
+        namespace_metadata = {
+            "items": [
+                {
+                    "metadata": {
+                        "name": "checkmk-monitoring",
+                        "uid": "753292ba-5e0e-4267-a0f1-77a3c6b4d55e",
+                        "resourceVersion": "509",
+                        "creationTimestamp": "2022-03-25T13:24:42Z",
+                    },
+                },
+            ],
+        }
+
+        Entry.single_register(
+            Entry.GET,
+            f"{dummy_host}/api/v1/namespaces",
+            body=json.dumps(namespace_metadata),
+            headers={"content-type": "application/json"},
+        )
+        with Mocketizer():
+            namespace = list(core_client.list_namespace().items)[0]
+        metadata = parse_namespace_metadata(namespace.metadata)
+        assert metadata.labels == {}
+        assert metadata.annotations == {}

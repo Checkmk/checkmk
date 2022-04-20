@@ -1276,7 +1276,7 @@ def pod_namespace(pod: api.Pod) -> api.NamespaceName:
 def namespace_name(namespace: api.Namespace) -> api.NamespaceName:
     """The name of the namespace
     Examples:
-        >>> namespace_name(api.Namespace(metadata=api.MetaData(name="foo", creation_timestamp=0.0, labels={})))
+        >>> namespace_name(api.Namespace(metadata=api.MetaData(name="foo", creation_timestamp=0.0, labels={}, annotations={})))
         'foo'
     """
     return namespace.metadata.name

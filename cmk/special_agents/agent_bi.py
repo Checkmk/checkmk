@@ -116,7 +116,7 @@ class AggregationData:
             self._aggregation_targets.setdefault(None, {})[aggr_name] = aggr_data
 
         if "affected_hosts" in self._assignments:
-            for _site, hostname in aggr_data["hosts"]:
+            for hostname in aggr_data["hosts"]:
                 self._aggregation_targets.setdefault(hostname, {})[aggr_name] = aggr_data
 
         for pattern, target_host in self._assignments.get("regex", []):

@@ -1,0 +1,12 @@
+Title: BI datasource program: Fixed aggregation assignment to affected hosts
+Class: fix
+Compatible: compat
+Component: bi
+Date: 1650454733
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p24
+
+The datasource option <tt>Assign to the affected hosts</tt> was broken and has been fixed.

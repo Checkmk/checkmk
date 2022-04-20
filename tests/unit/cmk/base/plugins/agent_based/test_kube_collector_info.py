@@ -50,11 +50,6 @@ class CollectorComponentsMetadataFactory(ModelFactory):
 
 
 @pytest.fixture
-def component_handling_state() -> CollectorState:
-    return CollectorState.OK
-
-
-@pytest.fixture
 def collector_metadata_handling_state() -> CollectorState:
     return CollectorState.OK
 
@@ -65,14 +60,6 @@ def metadata_collection_log(
 ) -> CollectorHandlerLog:
     return CollectorHandlerLog(
         status=collector_metadata_handling_state, title="title", detail="detail"
-    )
-
-
-@pytest.fixture
-def collector_handling_logs(component_handling_state: CollectorState) -> CollectorProcessingLogs:
-    return CollectorProcessingLogs(
-        container=CollectorHandlerLog(status=component_handling_state, title="title", detail="OK"),
-        machine=CollectorHandlerLog(status=component_handling_state, title="title", detail="OK"),
     )
 
 
@@ -191,7 +178,11 @@ def test_parse_collector_daemons():
     )
 
 
-def test_check_all_ok_sections(collectors_metadata, collector_handling_logs):
+def test_check_all_ok_sections(collectors_metadata):
+    collector_processing_logs = CollectorProcessingLogs(
+        container=CollectorHandlerLog(status=CollectorState.OK, title="title", detail="OK"),
+        machine=CollectorHandlerLog(status=CollectorState.OK, title="title", detail="OK"),
+    )
     collector_daemons = CollectorDaemonsFactory.build(
         errors=IdentificationError(
             duplicate_machine_collector=False,
@@ -199,10 +190,11 @@ def test_check_all_ok_sections(collectors_metadata, collector_handling_logs):
             unknown_collector=False,
         )
     )
+
     check_result = list(
         kube_collector_info.check(
             collectors_metadata,
-            collector_handling_logs,
+            collector_processing_logs,
             collector_daemons,
         )
     )
@@ -253,10 +245,15 @@ def test_check_with_errored_handled_metadata_section(collectors_metadata):
     assert isinstance(check_result[0], Result) and check_result[0].state == State.CRIT
 
 
-@pytest.mark.parametrize("component_handling_state", [CollectorState.ERROR])
-def test_check_with_errored_handled_component_section(collector_handling_logs):
+def test_check_with_errored_handled_component_section():
+    collector_processing_logs = CollectorProcessingLogs(
+        container=CollectorHandlerLog(status=CollectorState.ERROR, title="title", detail="OK"),
+        machine=CollectorHandlerLog(status=CollectorState.ERROR, title="title", detail="OK"),
+    )
     result = list(
-        kube_collector_info._component_check("Container Metrics", collector_handling_logs.container)
+        kube_collector_info._component_check(
+            "Container Metrics", collector_processing_logs.container
+        )
     )
     assert len(result) == 1
     assert result[0].state == State.OK

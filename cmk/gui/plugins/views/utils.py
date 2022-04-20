@@ -24,6 +24,7 @@ from typing import (
     Callable,
     cast,
     Dict,
+    Final,
     Hashable,
     List,
     Mapping,
@@ -1737,10 +1738,11 @@ class ViewStore:
         return cls()
 
     def __init__(self) -> None:
-        self.all = self._load_all_views()
-        self.permitted = self._load_permitted_views(self.all)
+        self.all: Final = ViewStore._load_all_views()
+        self.permitted: Final = ViewStore._load_permitted_views(self.all)
 
-    def _load_all_views(self) -> AllViewSpecs:
+    @staticmethod
+    def _load_all_views() -> AllViewSpecs:
         """Loads all view definitions from disk and returns them"""
         # Skip views which do not belong to known datasources
         views = visuals.load(
@@ -1751,7 +1753,8 @@ class ViewStore:
         views = _transform_old_views(views)
         return {viewname: transform_painter_spec(view) for viewname, view in views.items()}
 
-    def _load_permitted_views(self, all_views: AllViewSpecs) -> PermittedViewSpecs:
+    @staticmethod
+    def _load_permitted_views(all_views: AllViewSpecs) -> PermittedViewSpecs:
         """Returns all view defitions that a user is allowed to use"""
         return visuals.available("views", all_views)
 

@@ -9,7 +9,7 @@ import time
 from dataclasses import asdict
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Iterator
+from typing import Iterable, Iterator
 
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
@@ -655,45 +655,60 @@ def test_load_custom_attr_convert(user_id: UserId) -> None:
     )
 
 
+def create_new_profile_dir(paths: Iterable[Path]) -> Path:
+    profile_dir = cmk.utils.paths.profile_dir / "profile"
+    assert not profile_dir.exists()
+    profile_dir.mkdir()
+    for path in paths:
+        (profile_dir / path.with_suffix(".mk")).touch()
+    return profile_dir
+
+
+def touch_profile_files(profile_dir: Path, file_times: datetime) -> None:
+    assert profile_dir.exists()
+    timestamp = file_times.timestamp()
+    for path in profile_dir.glob("*.mk"):
+        os.utime(path, (timestamp, timestamp))
+
+
 def test_cleanup_user_profiles_keep_recently_updated(user_id: UserId) -> None:
-    (profile := cmk.utils.paths.profile_dir.joinpath("profile")).mkdir()
-    (profile / "bla.mk").touch()
-    userdb.UserProfileCleanupBackgroundJob()._do_cleanup(datetime.now(), timedelta(days=30))
-    assert profile.exists()
+    profile_dir = create_new_profile_dir([Path("bla")])
+    now = datetime.now()
+    touch_profile_files(profile_dir, now - timedelta(days=10))
+    userdb.UserProfileCleanupBackgroundJob()._do_cleanup(now, timedelta(days=30))
+    assert profile_dir.exists()
 
 
 def test_cleanup_user_profiles_remove_empty(user_id: UserId) -> None:
-    (profile := cmk.utils.paths.profile_dir.joinpath("profile")).mkdir()
-    userdb.UserProfileCleanupBackgroundJob()._do_cleanup(datetime.now(), timedelta(days=30))
-    assert not profile.exists()
+    profile_dir = create_new_profile_dir([])
+    now = datetime.now()
+    touch_profile_files(profile_dir, now - timedelta(days=10))
+    userdb.UserProfileCleanupBackgroundJob()._do_cleanup(now, timedelta(days=30))
+    assert not profile_dir.exists()
 
 
 def test_cleanup_user_profiles_remove_abandoned(user_id: UserId) -> None:
-    (profile := cmk.utils.paths.profile_dir.joinpath("profile")).mkdir()
-    (bla := profile / "bla.mk").touch()
-    with on_time("2018-04-15 16:50", "CET"):
-        os.utime(bla, (time.time(), time.time()))
-    userdb.UserProfileCleanupBackgroundJob()._do_cleanup(datetime.now(), timedelta(days=30))
-    assert not profile.exists()
+    profile_dir = create_new_profile_dir([Path("bla")])
+    now = datetime.now()
+    touch_profile_files(profile_dir, now - timedelta(days=50))
+    userdb.UserProfileCleanupBackgroundJob()._do_cleanup(now, timedelta(days=30))
+    assert not profile_dir.exists()
 
 
 def test_cleanup_user_profiles_keep_active_profile(user_id: UserId) -> None:
-    assert cmk.utils.paths.profile_dir.joinpath(user_id).exists()
-    userdb.UserProfileCleanupBackgroundJob()._do_cleanup(datetime.now(), timedelta(days=30))
-    assert cmk.utils.paths.profile_dir.joinpath(user_id).exists()
+    profile_dir = cmk.utils.paths.profile_dir / user_id
+    now = datetime.now()
+    touch_profile_files(profile_dir, now - timedelta(days=10))
+    userdb.UserProfileCleanupBackgroundJob()._do_cleanup(now, timedelta(days=30))
+    assert profile_dir.exists()
 
 
 def test_cleanup_user_profiles_keep_active_profile_old(user_id: UserId) -> None:
-    profile_dir = cmk.utils.paths.profile_dir.joinpath(user_id)
-
+    profile_dir = cmk.utils.paths.profile_dir / user_id
+    now = datetime.now()
+    touch_profile_files(profile_dir, now - timedelta(days=50))
+    userdb.UserProfileCleanupBackgroundJob()._do_cleanup(now, timedelta(days=30))
     assert profile_dir.exists()
-
-    with on_time("2018-04-15 16:50", "CET"):
-        for file_path in profile_dir.glob("*.mk"):
-            os.utime(file_path, (time.time(), time.time()))
-
-    userdb.UserProfileCleanupBackgroundJob()._do_cleanup(datetime.now(), timedelta(days=30))
-    assert cmk.utils.paths.profile_dir.joinpath(user_id).exists()
 
 
 def test_load_two_factor_credentials_unset(user_id: UserId) -> None:

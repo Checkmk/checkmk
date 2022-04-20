@@ -23,7 +23,7 @@ class Theme:
         self._default_theme = default_theme
         self._theme = default_theme
 
-    def set(self, theme_id: str) -> None:
+    def set(self, theme_id: Optional[str]) -> None:
         if not theme_id:
             theme_id = self._default_theme
 

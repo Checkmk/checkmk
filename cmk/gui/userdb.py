@@ -28,6 +28,7 @@ from typing import (
     Mapping,
     Optional,
     Tuple,
+    TypeVar,
     Union,
 )
 
@@ -222,7 +223,8 @@ def _reset_failed_logins(username: UserId) -> None:
 
 
 def _load_failed_logins(username: UserId) -> int:
-    return load_custom_attr(user_id=username, key="num_failed_logins", parser=utils.saveint)
+    num = load_custom_attr(user_id=username, key="num_failed_logins", parser=utils.saveint)
+    return 0 if num is None else num
 
 
 def _save_failed_logins(username: UserId, count: int) -> None:
@@ -274,18 +276,10 @@ def set_two_factor_completed() -> None:
 
 
 def load_two_factor_credentials(user_id: UserId, lock: bool = False) -> TwoFactorCredentials:
-    return load_custom_attr(
-        user_id=user_id,
-        key="two_factor_credentials",
-        parser=ast.literal_eval,
-        default=TwoFactorCredentials(
-            {
-                "webauthn_credentials": {},
-                "backup_codes": [],
-            }
-        ),
-        lock=lock,
+    cred = load_custom_attr(
+        user_id=user_id, key="two_factor_credentials", parser=ast.literal_eval, lock=lock
     )
+    return TwoFactorCredentials(webauthn_credentials={}, backup_codes=[]) if cred is None else cred
 
 
 def save_two_factor_credentials(user_id: UserId, credentials: TwoFactorCredentials) -> None:
@@ -876,19 +870,18 @@ def custom_attr_path(userid: UserId, key: str) -> str:
     return cmk.utils.paths.var_dir + "/web/" + userid + "/" + key + ".mk"
 
 
+T = TypeVar("T")
+
+
 def load_custom_attr(
     *,
     user_id: UserId,
     key: str,
-    parser: Callable[[str], Any],
-    default: Optional[Any] = None,
+    parser: Callable[[str], T],
     lock: bool = False,
-) -> Any:
-    path = Path(custom_attr_path(user_id, key))
-    result = store.load_text_from_file(path, default=default, lock=lock)  # type: ignore[arg-type]
-    if result == default:
-        return result
-    return parser(result.strip())
+) -> Optional[T]:
+    result = store.load_text_from_file(Path(custom_attr_path(user_id, key)), lock=lock)
+    return None if result == "" else parser(result.strip())
 
 
 def save_custom_attr(userid: UserId, key: str, val: Any) -> None:

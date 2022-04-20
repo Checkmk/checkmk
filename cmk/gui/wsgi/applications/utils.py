@@ -31,7 +31,7 @@ def ensure_authentication(func: pages.PageHandlerFunc) -> Callable[[], Response]
     # authentication modes the Checkmk GUI supports and initializes the logged
     # in user objects.
     @functools.wraps(func)
-    def _call_auth():
+    def _call_auth() -> Response:
         with login.authenticate(request) as authenticated:
             if not authenticated:
                 return _handle_not_authenticated()

@@ -639,7 +639,7 @@ def test_load_custom_attr_not_existing(user_id: UserId) -> None:
 
 
 def test_load_custom_attr_not_existing_with_default(user_id: UserId) -> None:
-    assert userdb.load_custom_attr(user_id=user_id, key="a", parser=str, default="deflt") == "deflt"
+    assert userdb.load_custom_attr(user_id=user_id, key="a", parser=str) is None
 
 
 def test_load_custom_attr_from_file(user_id: UserId) -> None:

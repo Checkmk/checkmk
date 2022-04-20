@@ -207,12 +207,9 @@ def _login_timed_out(username: UserId, last_activity: int) -> bool:
     )
     if idle_timeout is None:
         idle_timeout = active_config.user_idle_timeout
-
-    if idle_timeout in [None, False]:
+    if idle_timeout is None or idle_timeout is False:
         return False  # no timeout activated at all
-
-    timed_out = (time.time() - last_activity) > idle_timeout
-    return timed_out
+    return time.time() - last_activity > idle_timeout
 
 
 def _reset_failed_logins(username: UserId) -> None:
@@ -1201,11 +1198,8 @@ def contactgroups_of_user(user_id: UserId) -> List[ContactgroupName]:
 
 
 def _convert_idle_timeout(value: str) -> Union[int, bool, None]:
-    if value == "False":
-        return False  # Idle timeout disabled
-
     try:
-        return int(value)
+        return False if value == "False" else int(value)  # disabled or set
     except ValueError:
         return None  # Invalid value -> use global setting
 

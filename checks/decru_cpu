@@ -8,6 +8,7 @@
 def inventory_decru_cpu(info):
     if len(info) == 5:
         return [(None, None)]
+    return []
 
 
 def check_decru_cpu(item, _no_params, info):

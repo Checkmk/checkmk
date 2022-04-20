@@ -24,6 +24,7 @@ def check_akcp_daisy_temp(item, params, info):
         if name == item:
             temp = float(rawtemp) / 10
             return check_temperature(temp, params, "akcp_daisy_temp_%s" % item)
+    return None
 
 
 check_info["akcp_daisy_temp"] = {

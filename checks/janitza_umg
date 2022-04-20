@@ -141,7 +141,7 @@ def inventory_janitza_umg_freq(parsed):
 
 def check_janitza_umg_freq(item, params, parsed):
     if "Frequency" not in parsed:
-        return
+        return None
 
     return check_levels(
         float(parsed["Frequency"]) / 100.0,
@@ -179,6 +179,7 @@ def check_janitza_umg_temp(item, params, parsed):
         return check_temperature(
             float(parsed["Temperature"][idx]) / 10.0, params, "janitza_umg_%s" % item
         )
+    return None
 
 
 check_info["janitza_umg.temp"] = {

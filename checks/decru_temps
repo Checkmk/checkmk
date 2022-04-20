@@ -22,6 +22,7 @@ def check_decru_temps(item, params, info):
         if name == item:
             temp = fahrenheit_to_celsius(int(rawtemp))
             return check_temperature(temp, params, "decru_temps_%s" % item)
+    return None
 
 
 check_info["decru_temps"] = {

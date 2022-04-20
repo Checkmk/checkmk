@@ -36,6 +36,7 @@ def check_ucd_disk(item, params, info):
             return df_check_filesystem_single(
                 item, disk_total_mb, disk_avail_mb, 0, None, None, params
             )
+    return None
 
 
 check_info["ucd_disk"] = {

@@ -8,6 +8,7 @@
 def inventory_viprinet_serial(info):
     if info:
         return [(None, None)]
+    return []
 
 
 def check_viprinet_serial(_no_item, _no_params, info):

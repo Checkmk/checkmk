@@ -43,7 +43,7 @@ def inventory_smart_temp(section):
 def check_smart_temp(item, params, section):
     data = section.get(item)
     if data is None:
-        return
+        return None
 
     if "Temperature_Celsius" in data:
         temperature = data["Temperature_Celsius"]
@@ -52,7 +52,7 @@ def check_smart_temp(item, params, section):
     elif "Temperature" in data:
         temperature = data["Temperature"]
     else:
-        return
+        return None
 
     return check_temperature(temperature, params, "smart_%s" % item)
 

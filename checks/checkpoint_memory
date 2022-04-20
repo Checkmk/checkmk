@@ -26,6 +26,7 @@ factory_settings["checkpoint_memory_default_levels"] = {"levels": ("perc_used", 
 def inventory_checkpoint_memory(info):
     if info and len(info[0]) > 1:
         return [("System", {})]
+    return []
 
 
 def check_checkpoint_memory(item, params, info):

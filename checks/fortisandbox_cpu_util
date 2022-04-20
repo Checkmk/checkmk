@@ -16,7 +16,7 @@ from cmk.base.check_legacy_includes.cpu_util import *  # pylint: disable=wildcar
 
 def check_fortisandbox_cpu_util(_no_item, params, info):
     if not info:
-        return
+        return None
     util = int(info[0][0])
     return check_cpu_util(util, params)
 

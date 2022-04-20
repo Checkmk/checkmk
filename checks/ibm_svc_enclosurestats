@@ -66,7 +66,7 @@ def check_ibm_svc_enclosurestats_temp(item, params, info):
     parsed = parse_ibm_svc_enclosurestats(info)
     data = parsed.get(item)
     if data is None:
-        return
+        return None
     return check_temperature(data["temp_c"], params, "ibm_svc_enclosurestats_%s" % item)
 
 
@@ -100,7 +100,7 @@ def check_ibm_svc_enclosurestats_power(item, _no_params, info):
     parsed = parse_ibm_svc_enclosurestats(info)
     data = parsed.get(item)
     if data is None:
-        return
+        return None
     stat_current = data["power_w"]
     return 0, "%s Watt" % stat_current, [("power", stat_current)]
 

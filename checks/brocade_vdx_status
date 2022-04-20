@@ -29,6 +29,7 @@ def check_brocade_vdx_status(_no_item, _no_params, info):
         return 2, message
     if state == 3:
         return 1, message
+    return None
 
 
 def scan_brocade_vdx_status(oid):

@@ -399,8 +399,12 @@ def _verify_non_deprecated_checkgroups() -> None:
                 "by any check plugin. Maybe this check group has been renamed during an update, "
                 "in this case you will have to migrate your configuration to the new ruleset manually. "
                 "Please check out the release notes of the involved versions. "
-                'You may use the page "Deprecated rules" in the "Rule search" to view your rules'
-                "and move them to the new rulesets." % checkgroup
+                'You may use the page "Deprecated rules" in the "Rule search" to view your rules '
+                "and move them to the new rulesets. "
+                "If this is not the case, the rules could be related to a disabled or removed "
+                "extension package (mkp). You would have to enable/upload the corresponding package "
+                "and remove the related rules before disabling/removing the package again."
+                % checkgroup
             )
 
 

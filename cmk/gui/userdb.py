@@ -49,7 +49,7 @@ from cmk.gui.exceptions import MKAuthException, MKInternalError, MKUserError
 from cmk.gui.globals import active_config, html, request, response
 from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
-from cmk.gui.log import logger
+from cmk.gui.log import logger as gui_logger
 from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.plugins.userdb.htpasswd import Htpasswd
 from cmk.gui.plugins.userdb.ldap_connector import MKLDAPException
@@ -82,7 +82,7 @@ from cmk.gui.valuespec import (
     ValueSpecText,
 )
 
-auth_logger = logger.getChild("auth")
+auth_logger = gui_logger.getChild("auth")
 
 Users = Dict[UserId, UserSpec]  # TODO: Improve this type
 
@@ -1370,7 +1370,7 @@ def execute_userdb_job() -> None:
 
     job = UserSyncBackgroundJob()
     if job.is_active():
-        logger.debug("Another synchronization job is already running: Skipping this sync")
+        gui_logger.debug("Another synchronization job is already running: Skipping this sync")
         return
 
     job.set_function(
@@ -1412,7 +1412,7 @@ def ajax_sync() -> None:
             raise MKUserError(None, _("Another user synchronization is already running: %s") % e)
         response.set_data("OK Started synchronization\n")
     except Exception as e:
-        logger.exception("error synchronizing user DB")
+        gui_logger.exception("error synchronizing user DB")
         if active_config.debug:
             raise
         response.set_data("ERROR %s\n" % e)
@@ -1479,7 +1479,7 @@ class UserSyncBackgroundJob(gui_background_job.GUIBackgroundJob):
                 )
             except Exception as e:
                 job_interface.send_exception(_("[%s] Exception: %s") % (connection_id, e))
-                logger.error(
+                gui_logger.error(
                     "Exception (%s, userdb_job): %s", connection_id, traceback.format_exc()
                 )
 
@@ -1494,13 +1494,13 @@ def execute_user_profile_cleanup_job() -> None:
     Errors are logged to var/log/web.log."""
     job = UserProfileCleanupBackgroundJob()
     if job.is_active():
-        logger.debug("Job is already running: Skipping this time")
+        gui_logger.debug("Job is already running: Skipping this time")
         return
 
     interval = 3600
     with suppress(FileNotFoundError):
         if time.time() - UserProfileCleanupBackgroundJob.last_run_path().stat().st_mtime < interval:
-            logger.debug("Job was already executed within last %d seconds", interval)
+            gui_logger.debug("Job was already executed within last %d seconds", interval)
             return
 
     job.set_function(job.do_execute)

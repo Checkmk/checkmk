@@ -23,6 +23,7 @@ from mock import MagicMock
 from tests.testlib.users import create_and_destroy_user
 
 import cmk.utils.log
+from cmk.utils.plugin_loader import load_plugins_with_exceptions
 from cmk.utils.type_defs import UserId
 
 from cmk.automations.results import DeleteHostsResult
@@ -98,6 +99,16 @@ def load_plugins() -> None:
     main_modules.load_plugins()
     if errors := get_failed_plugins():
         raise Exception(f"The following errors occured during plugin loading: {errors}")
+
+    # our test environment does not deal with namespace packages properly.
+    # Load plus plugins explicitly:
+    try:
+        load_plugins = list(load_plugins_with_exceptions("plus.cmk.gui.plugins"))
+    except ModuleNotFoundError:
+        pass
+    else:
+        for _plugin, exception in load_plugins:
+            raise exception
 
 
 @pytest.fixture(name="patch_json", autouse=True)

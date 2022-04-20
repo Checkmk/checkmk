@@ -230,7 +230,7 @@ def test_openapi_list_rulesets(logged_in_admin_wsgi_app):
 
     base = "/NO_SITE/check_mk/api/1.0"
     resp = wsgi_app.get(
-        base + "/domain-types/ruleset/collections/all?fulltext=aws",
+        base + "/domain-types/ruleset/collections/all?fulltext=cisco_qos",
         headers={"Accept": "application/json", "Content-Type": "application/json"},
     )
-    assert len(resp.json["value"]) == 77
+    assert len(resp.json["value"]) == 2

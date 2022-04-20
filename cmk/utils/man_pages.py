@@ -16,7 +16,7 @@ import subprocess
 import sys
 from io import StringIO
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple
 
 import cmk.utils.debug
 import cmk.utils.paths
@@ -278,32 +278,46 @@ check_mk_agents = {
 _manpage_catalog: Dict[ManPageCatalogPath, List[Dict]] = {}
 
 
+def _get_man_page_dirs() -> Sequence[Path]:
+    # first match wins
+    return [
+        cmk.utils.paths.local_check_manpages_dir,
+        Path(cmk.utils.paths.check_manpages_dir),
+    ]
+
+
 def man_page_exists(name: str) -> bool:
     return man_page_path(name) is not None
 
 
-def man_page_path(name: str) -> Optional[Path]:
-    if name[0] != "." and name[-1] != "~":
-        for basedir in [
-            cmk.utils.paths.local_check_manpages_dir,
-            Path(cmk.utils.paths.check_manpages_dir),
-        ]:
-            # check plugins pre 1.7 could have dots in them. be nice and find those.
-            p = basedir / (name if name.startswith("check-mk") else maincheckify(name))
-            if p.exists():
-                return p
+def _is_valid_basename(name: str) -> bool:
+    return not name.startswith(".") and not name.endswith("~")
+
+
+def man_page_path(name: str, man_page_dirs: Optional[Iterable[Path]] = None) -> Optional[Path]:
+    if not _is_valid_basename(name):
+        return None
+
+    if man_page_dirs is None:
+        man_page_dirs = _get_man_page_dirs()
+
+    for basedir in man_page_dirs:
+        # check plugins pre 1.7 could have dots in them. be nice and find those.
+        p = basedir / (name if name.startswith("check-mk") else maincheckify(name))
+        if p.exists():
+            return p
     return None
 
 
-def all_man_pages() -> Dict[str, str]:
+def all_man_pages(man_page_dirs: Optional[Iterable[Path]] = None) -> Dict[str, str]:
+    if man_page_dirs is None:
+        man_page_dirs = _get_man_page_dirs()
+
     manuals = {}
-    for basedir in [
-        Path(cmk.utils.paths.check_manpages_dir),  #
-        cmk.utils.paths.local_check_manpages_dir,
-    ]:
+    for basedir in man_page_dirs:
         if basedir.exists():
             for file_path in basedir.iterdir():
-                if not file_path.name.startswith(".") and not file_path.name.endswith("~"):
+                if file_path.name not in manuals and _is_valid_basename(file_path.name):
                     manuals[file_path.name] = str(file_path)
     return manuals
 
@@ -528,8 +542,9 @@ def _parse_man_page_header(name, path):
     return parsed
 
 
-def load_man_page(name: str) -> Optional[ManPage]:
-    path = man_page_path(name)
+# TODO: accepting the path here would make things a bit easier.
+def load_man_page(name: str, man_page_dirs: Optional[Iterable[Path]] = None) -> Optional[ManPage]:
+    path = man_page_path(name, man_page_dirs)
     if path is None:
         return None
 

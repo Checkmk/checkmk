@@ -24,6 +24,7 @@ import cmk.utils.paths
 import cmk.utils.redis as redis
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
+from cmk.utils.plugin_loader import load_plugins_with_exceptions
 from cmk.utils.plugin_registry import Registry
 from cmk.utils.site import omd_site
 
@@ -234,6 +235,16 @@ class FixRegister:
             check_api.get_check_api_context,
             inventory_plugins.load_legacy_inventory_plugins,
         )
+
+        # our test environment does not deal with namespace packages properly. load plus plugins:
+        try:
+            load_plugins = list(load_plugins_with_exceptions("plus.cmk.base.plugins.agent_based"))
+        except ModuleNotFoundError:
+            pass
+        else:
+            for _plugin, exception in load_plugins:
+                raise exception
+
         inventory_plugins.load_legacy_inventory_plugins(
             check_api.get_check_api_context,
             register.inventory_plugins_legacy.get_inventory_context,

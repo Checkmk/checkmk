@@ -9,7 +9,7 @@ from typing import Mapping, Optional, Set
 
 import pytest
 
-from tests.testlib.utils import cmk_path
+from tests.testlib.utils import cmk_path, cpe_path
 
 from tests.unit.conftest import FixPluginLegacy, FixRegister
 
@@ -22,13 +22,28 @@ ManPages = Mapping[str, Optional[man_pages.ManPage]]
 
 
 @pytest.fixture(autouse=True)
-def patch_cmk_paths(monkeypatch, tmp_path):
-    monkeypatch.setattr("cmk.utils.paths.local_check_manpages_dir", tmp_path)
+def patch_man_page_dir_paths(monkeypatch, tmp_path):
+    monkeypatch.setattr(
+        man_pages,
+        "_get_man_page_dirs",
+        lambda: [
+            tmp_path,
+            Path(cpe_path(), "checkman"),
+            Path(cmk_path(), "checkman"),
+        ],
+    )
 
 
 @pytest.fixture(scope="module", name="all_pages")
 def get_all_pages() -> ManPages:
-    return {name: man_pages.load_man_page(name) for name in man_pages.all_man_pages()}
+    base_dirs = [
+        Path(cpe_path(), "checkman"),
+        Path(cmk_path(), "checkman"),
+    ]
+    return {
+        name: man_pages.load_man_page(name, base_dirs)
+        for name in man_pages.all_man_pages(base_dirs)
+    }
 
 
 @pytest.fixture(scope="module", name="catalog")

@@ -429,8 +429,9 @@ def _check_auth_cookie_for_web_server_auth(user_id: UserId):
     The authentication is already done on web server level. We accept the provided
     username as authenticated and create our cookie here.
     """
+    now = datetime.now()
     if auth_cookie_name() not in request.cookies:
-        session_id = userdb.on_succeeded_login(user_id)
+        session_id = userdb.on_succeeded_login(user_id, now)
         _create_auth_session(user_id, session_id)
         return
 
@@ -516,7 +517,8 @@ class LoginPage(Page):
                 # from mixed case to lower case.
                 username = result
 
-                session_id = userdb.on_succeeded_login(username)
+                now = datetime.now()
+                session_id = userdb.on_succeeded_login(username, now)
 
                 # The login succeeded! Now:
                 # a) Set the auth cookie

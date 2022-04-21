@@ -105,13 +105,14 @@ def test_load_pre_20_session(user_id: UserId) -> None:
 
 
 def test_on_succeeded_login(user_id: UserId) -> None:
+    now = datetime.now()
     assert active_config.single_user_session is None
 
     # Never logged in before
     assert not userdb._load_session_infos(user_id)
     assert userdb._load_failed_logins(user_id) == 0
 
-    session_id = userdb.on_succeeded_login(user_id)
+    session_id = userdb.on_succeeded_login(user_id, now)
     assert session_id != ""
 
     # Verify the session was initialized
@@ -150,6 +151,7 @@ def test_on_failed_login_no_locking(user_id: UserId) -> None:
 
 @pytest.mark.usefixtures("request_context")
 def test_on_failed_login_count_reset_on_succeeded_login(user_id: UserId) -> None:
+    now = datetime.now()
     assert active_config.lock_on_logon_failures is None
     assert userdb._load_failed_logins(user_id) == 0
     assert userdb.user_locked(user_id) is False
@@ -158,7 +160,7 @@ def test_on_failed_login_count_reset_on_succeeded_login(user_id: UserId) -> None
     assert userdb._load_failed_logins(user_id) == 1
     assert userdb.user_locked(user_id) is False
 
-    userdb.on_succeeded_login(user_id)
+    userdb.on_succeeded_login(user_id, now)
     assert userdb._load_failed_logins(user_id) == 0
     assert userdb.user_locked(user_id) is False
 
@@ -185,7 +187,8 @@ def test_on_failed_login_with_locking(monkeypatch: MonkeyPatch, user_id: UserId)
 
 
 def test_on_logout_no_session(user_id: UserId) -> None:
-    assert userdb.on_succeeded_login(user_id)
+    now = datetime.now()
+    assert userdb.on_succeeded_login(user_id, now)
     assert userdb._load_session_infos(user_id)
 
     userdb.on_logout(user_id, session_id="")
@@ -193,7 +196,8 @@ def test_on_logout_no_session(user_id: UserId) -> None:
 
 
 def test_on_logout_invalidate_session(user_id: UserId) -> None:
-    session_id = userdb.on_succeeded_login(user_id)
+    now = datetime.now()
+    session_id = userdb.on_succeeded_login(user_id, now)
     assert session_id in userdb._load_session_infos(user_id)
 
     userdb.on_logout(user_id, session_id)
@@ -202,7 +206,7 @@ def test_on_logout_invalidate_session(user_id: UserId) -> None:
 
 def test_access_denied_with_invalidated_session(user_id: UserId) -> None:
     now = datetime.now()
-    session_id = userdb.on_succeeded_login(user_id)
+    session_id = userdb.on_succeeded_login(user_id, now)
     assert session_id in userdb._load_session_infos(user_id)
 
     userdb.on_access(user_id, session_id, now)
@@ -273,8 +277,9 @@ def test_on_access_logout_on_idle_timeout(
 
 @pytest.mark.usefixtures("single_user_session_enabled")
 def test_on_succeeded_login_already_existing_session(user_id: UserId, session_valid: str) -> None:
+    now = datetime.now()
     with pytest.raises(MKUserError, match="Another session"):
-        assert userdb.on_succeeded_login(user_id)
+        assert userdb.on_succeeded_login(user_id, now)
 
 
 def test_is_valid_user_session_single_user_session_disabled(user_id: UserId) -> None:

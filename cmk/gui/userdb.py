@@ -395,8 +395,7 @@ class UserSelection(DropdownChoice):
         return str(super().value_to_html(value)).rsplit(" - ", 1)[-1]
 
 
-def on_succeeded_login(username: UserId) -> str:
-    now = datetime.now()
+def on_succeeded_login(username: UserId, now: datetime) -> str:
     _ensure_user_can_init_session(username, now)
     _reset_failed_logins(username)
     return _initialize_session(username, now)

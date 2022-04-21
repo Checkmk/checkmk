@@ -12,10 +12,7 @@ use std::io::{Read, Write};
 
 #[test]
 fn test_pull_inconsistent_cert() -> AnyhowResult<()> {
-    let test_dir = tempfile::Builder::new()
-        .prefix("cmk_agent_ctl_test_pull")
-        .tempdir()
-        .unwrap();
+    let test_dir = common::setup_test_dir("cmk_agent_ctl_test_pull");
     let test_path = test_dir.path();
 
     let controller_uuid = uuid::Uuid::new_v4();
@@ -54,18 +51,13 @@ impl PullFixture {
     fn setup(port: &str, prefix: &str, save_legacy: bool) -> AnyhowResult<PullFixture> {
         // Uncomment for debugging
         // common::init_logging(&test_path.join("log"))?;
-        let test_dir = tempfile::Builder::new().prefix(prefix).tempdir().unwrap();
+        let test_dir = common::setup_test_dir(prefix);
         let test_path = test_dir.path();
         std::env::set_var("DEBUG_HOME_DIR", test_path.to_str().unwrap());
-        std::fs::create_dir(test_path.join("run"))?;
         let test_port = port;
         let test_agent_output = "some test agent output";
         #[cfg(unix)]
-        let agent_socket_address = test_path
-            .join("run/check-mk-agent.socket")
-            .into_os_string()
-            .into_string()
-            .unwrap();
+        let agent_socket_address = common::setup_agent_socket_path(test_path);
         #[cfg(windows)]
         let agent_socket_address = "localhost:7999".to_string();
         let (uuid, pull_config, certs) =
@@ -100,15 +92,16 @@ impl PullFixture {
         Ok(compressed_agent_output)
     }
 
-    fn teardown(&mut self) {
+    fn teardown(self) {
         self.agent_stream_thread.abort();
         self.pull_thread.abort();
+        self.test_dir.close().unwrap();
     }
 }
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_pull_tls_main() -> AnyhowResult<()> {
-    let mut fixture: PullFixture = PullFixture::setup("9999", "test_pull_tls_main", false)?;
+    let fixture: PullFixture = PullFixture::setup("9999", "test_pull_tls_main", false)?;
     // Give it some time to provide the TCP socket
     tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
 
@@ -141,7 +134,7 @@ async fn test_pull_tls_main() -> AnyhowResult<()> {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_pull_tls_check_guards() -> AnyhowResult<()> {
-    let mut fixture: PullFixture = PullFixture::setup("9997", "test_pull_tls_check_guards", false)?;
+    let fixture: PullFixture = PullFixture::setup("9997", "test_pull_tls_check_guards", false)?;
 
     // Give it some time to provide the TCP socket
     tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
@@ -168,7 +161,7 @@ async fn test_pull_tls_check_guards() -> AnyhowResult<()> {
 #[cfg(unix)]
 #[tokio::test(flavor = "multi_thread")]
 async fn test_pull_legacy() -> AnyhowResult<()> {
-    let mut fixture: PullFixture = PullFixture::setup("9998", "test_pull_legacy", true)?;
+    let fixture: PullFixture = PullFixture::setup("9998", "test_pull_legacy", true)?;
     // Give it some time to provide the TCP socket.
     tokio::time::sleep(tokio::time::Duration::from_millis(1500)).await;
 

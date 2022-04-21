@@ -186,10 +186,11 @@ def _check_transport(
         yield Result(state=State.OK, summary="Transport via SSH")
         return
 
-    if not controller_info:
-        return
-
-    if not controller_info.allow_legacy_pull:
+    if (
+        not controller_info
+        or not controller_info.allow_legacy_pull
+        or not controller_info.socket_ready
+    ):
         return
 
     yield Result(

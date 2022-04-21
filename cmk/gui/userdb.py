@@ -229,7 +229,7 @@ def _save_failed_logins(username: UserId, count: int) -> None:
 
 # userdb.need_to_change_pw returns either False or the reason description why the
 # password needs to be changed
-def need_to_change_pw(username: UserId) -> Union[bool, str]:
+def need_to_change_pw(username: UserId, now: datetime) -> Union[bool, str]:
     if not _is_local_user(username):
         return False
 
@@ -244,9 +244,9 @@ def need_to_change_pw(username: UserId) -> Union[bool, str]:
             # the password to have the first access after enabling password aging
             # as starting point for the password period. This bewares all users
             # from needing to set a new password after enabling aging.
-            save_custom_attr(username, "last_pw_change", str(int(time.time())))
+            save_custom_attr(username, "last_pw_change", str(int(now.timestamp())))
             return False
-        if time.time() - last_pw_change > max_pw_age:
+        if now.timestamp() - last_pw_change > max_pw_age:
             return "expired"
     return False
 

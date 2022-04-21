@@ -16,6 +16,7 @@ import os
 import re
 import traceback
 import urllib.parse
+from datetime import datetime
 from typing import Any, Callable, Dict, List, Mapping, Optional, Tuple, Type, TYPE_CHECKING
 
 from apispec.yaml_utils import dict_to_yaml  # type: ignore[import]
@@ -56,9 +57,6 @@ if TYPE_CHECKING:
         WSGIResponse,
     )
 
-if TYPE_CHECKING:
-    from cmk.gui.plugins.openapi.restful_objects import Endpoint
-
 ARGS_KEY = "CHECK_MK_REST_API_ARGS"
 
 logger = logging.getLogger("cmk.gui.wsgi.rest_api")
@@ -69,7 +67,7 @@ EXCEPTION_STATUS: Dict[Type[Exception], int] = {
 }
 
 
-def _verify_user(environ) -> RFC7662:
+def _verify_user(environ: WSGIEnvironment, now: datetime) -> RFC7662:
     verified: List[RFC7662] = []
 
     auth_header = environ.get("HTTP_AUTHORIZATION", "")
@@ -119,7 +117,7 @@ def _verify_user(environ) -> RFC7662:
     if userdb.user_locked(user_id):
         raise MKAuthException(f"{user_id} not authorized.")
 
-    if change_reason := userdb.need_to_change_pw(user_id):
+    if change_reason := userdb.need_to_change_pw(user_id, now):
         raise MKAuthException(f"{user_id} needs to change the password ({change_reason}).")
 
     if userdb.is_two_factor_login_enabled(user_id):
@@ -231,7 +229,7 @@ class Authenticate:
         path_args = environ[ARGS_KEY]
 
         try:
-            rfc7662 = _verify_user(environ)
+            rfc7662 = _verify_user(environ, datetime.now())
         except MKException as exc:
             return problem(
                 status=401,

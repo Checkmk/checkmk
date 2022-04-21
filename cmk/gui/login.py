@@ -245,8 +245,9 @@ def _check_auth_cookie(cookie_name: str) -> Optional[UserId]:
     username, session_id, cookie_hash = user_from_cookie(_fetch_cookie(cookie_name))
     check_parsed_auth_cookie(username, session_id, cookie_hash)
 
+    now = datetime.now()
     try:
-        userdb.on_access(username, session_id, datetime.now())
+        userdb.on_access(username, session_id, now)
     except MKAuthException:
         del_auth_cookie()
         raise
@@ -254,16 +255,16 @@ def _check_auth_cookie(cookie_name: str) -> Optional[UserId]:
     # Once reached this the cookie is a good one. Renew it!
     _renew_cookie(cookie_name, username, session_id)
 
-    _redirect_for_password_change(username)
+    _redirect_for_password_change(username, now)
     _redirect_for_two_factor_authentication(username)
 
     # Return the authenticated username
     return username
 
 
-def _redirect_for_password_change(user_id: UserId) -> None:
+def _redirect_for_password_change(user_id: UserId, now: datetime) -> None:
     if requested_file_name(request) != "user_change_pw":
-        result = userdb.need_to_change_pw(user_id)
+        result = userdb.need_to_change_pw(user_id, now)
         if result:
             raise HTTPRedirect(
                 "user_change_pw.py?_origtarget=%s&reason=%s"
@@ -531,7 +532,7 @@ class LoginPage(Page):
                 # clear situation.
                 # userdb.need_to_change_pw returns either False or the reason description why the
                 # password needs to be changed
-                change_pw_result = userdb.need_to_change_pw(username)
+                change_pw_result = userdb.need_to_change_pw(username, now)
                 if change_pw_result:
                     raise HTTPRedirect(
                         "user_change_pw.py?_origtarget=%s&reason=%s"

@@ -229,7 +229,6 @@ from cmk.gui.watolib.utils import (
     ALL_SERVICES,
     convert_cgroups_from_tuple,
     format_config_value,
-    has_agent_bakery,
     host_attribute_matches,
     liveproxyd_config_dir,
     mk_eval,

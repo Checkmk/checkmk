@@ -12,6 +12,7 @@ import cmk.utils.tags
 
 import cmk.gui.forms as forms
 import cmk.gui.watolib as watolib
+import cmk.gui.watolib.bakery as bakery
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.exceptions import MKAuthException, MKGeneralException, MKUserError
 from cmk.gui.globals import html, request
@@ -492,7 +493,7 @@ def page_menu_host_entries(mode_name: str, host: CREHost) -> Iterator[PageMenuEn
             ),
         )
 
-    if watolib.has_agent_bakery() and user.may("wato.download_agents"):
+    if bakery.has_agent_bakery() and user.may("wato.download_agents"):
         yield PageMenuEntry(
             title=_("Monitoring agent"),
             icon_name="agents",

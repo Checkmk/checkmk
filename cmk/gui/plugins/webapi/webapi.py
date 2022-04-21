@@ -40,10 +40,10 @@ from cmk.gui.plugins.webapi.utils import (
     validate_config_hash,
     validate_host_attributes,
 )
+from cmk.gui.watolib.bakery import try_bake_agents_for_hosts
 from cmk.gui.watolib.check_mk_automations import discovery, try_discovery
 from cmk.gui.watolib.groups import load_contact_group_information
 from cmk.gui.watolib.tags import TagConfigFile
-from cmk.gui.watolib.utils import try_bake_agents_for_hosts
 
 # .
 #   .--Folders-------------------------------------------------------------.

@@ -35,6 +35,7 @@ from cmk.utils.type_defs import (
 # e.g. by trying to move the common code to a common place
 import cmk.base.export  # pylint: disable=cmk-module-layer-violation
 
+import cmk.gui.watolib.bakery as bakery
 from cmk.gui import utils
 from cmk.gui.config import register_post_config_load_hook
 from cmk.gui.exceptions import MKGeneralException
@@ -54,7 +55,7 @@ from cmk.gui.watolib.hosts_and_folders import (
 )
 from cmk.gui.watolib.objref import ObjectRef, ObjectRefType
 from cmk.gui.watolib.rulespecs import rulespec_group_registry, rulespec_registry
-from cmk.gui.watolib.utils import ALL_HOSTS, ALL_SERVICES, has_agent_bakery, NEGATE, wato_root_dir
+from cmk.gui.watolib.utils import ALL_HOSTS, ALL_SERVICES, NEGATE, wato_root_dir
 
 # Make the GUI config module reset the base config to always get the latest state of the config
 register_post_config_load_hook(cmk.base.export.reset_config)
@@ -803,10 +804,7 @@ class Ruleset:
         return self.rulespec.is_optional
 
     def _on_change(self) -> None:
-        if has_agent_bakery():
-            import cmk.gui.cee.agent_bakery as agent_bakery  # pylint: disable=no-name-in-module
-
-            agent_bakery.ruleset_changed(self.name)
+        bakery.ruleset_changed(self.name)
 
     # Returns the outcoming value or None and a list of matching rules. These are pairs
     # of rule_folder and rule_number

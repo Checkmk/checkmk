@@ -13,11 +13,9 @@ from typing import Any, Callable, List, Tuple, TypedDict, Union
 
 import cmk.utils.paths
 import cmk.utils.rulesets.tuple_rulesets
-import cmk.utils.version as cmk_version
-from cmk.utils.type_defs import ContactgroupName, HostName
+from cmk.utils.type_defs import ContactgroupName
 from cmk.utils.version import parse_check_mk_version
 
-from cmk.gui.background_job import BackgroundJobAlreadyRunning
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.globals import active_config
 from cmk.gui.i18n import _
@@ -122,20 +120,6 @@ def mk_eval(s: Union[bytes, str]) -> Any:
         return ast.literal_eval(base64.b64decode(s).decode())
     except Exception:
         raise MKGeneralException(_("Unable to parse provided data: %s") % escape_to_html(repr(s)))
-
-
-def has_agent_bakery() -> bool:
-    return not cmk_version.is_raw_edition()
-
-
-def try_bake_agents_for_hosts(hosts: List[HostName]) -> None:
-    if has_agent_bakery():
-        import cmk.gui.cee.plugins.wato.agent_bakery.misc as agent_bakery  # pylint: disable=import-error,no-name-in-module
-
-        try:
-            agent_bakery.start_bake_agents(host_names=hosts, signing_credentials=None)
-        except BackgroundJobAlreadyRunning:
-            pass
 
 
 def site_neutral_path(path: Union[str, Path]) -> str:

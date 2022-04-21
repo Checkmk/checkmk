@@ -48,6 +48,7 @@ import cmk.utils.version as cmk_version
 from cmk.utils.type_defs import HostName
 
 import cmk.gui.watolib.activate_changes as activate_changes
+import cmk.gui.watolib.bakery as bakery
 from cmk.gui import fields as gui_fields
 from cmk.gui import watolib
 from cmk.gui.exceptions import MKAuthException, MKUserError
@@ -65,7 +66,6 @@ from cmk.gui.plugins.openapi.restful_objects import (
 from cmk.gui.plugins.openapi.restful_objects.parameters import HOST_NAME
 from cmk.gui.plugins.openapi.utils import problem
 from cmk.gui.plugins.webapi.utils import check_hostname
-from cmk.gui.watolib import hosts_and_folders
 from cmk.gui.watolib.host_rename import perform_rename_hosts
 from cmk.gui.watolib.hosts_and_folders import CREFolder
 
@@ -202,7 +202,7 @@ def bulk_create_hosts(params):
         succeeded_hosts.extend(entry[0] for entry in validated_entries)
 
     if params[BAKE_AGENT_PARAM_NAME]:
-        hosts_and_folders.try_bake_agents_for_hosts(succeeded_hosts)
+        bakery.try_bake_agents_for_hosts(succeeded_hosts)
 
     return _bulk_host_action_response(
         failed_hosts, [watolib.Host.load_host(host_name) for host_name in succeeded_hosts]

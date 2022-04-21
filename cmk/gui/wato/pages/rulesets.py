@@ -39,6 +39,7 @@ from cmk.utils.type_defs import (
 import cmk.gui.forms as forms
 import cmk.gui.view_utils
 import cmk.gui.watolib as watolib
+import cmk.gui.watolib.bakery as bakery
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKUserError
 from cmk.gui.globals import active_config, g, html, output_funnel, request
@@ -105,7 +106,7 @@ from cmk.gui.watolib.rulespecs import (
 )
 from cmk.gui.watolib.utils import may_edit_ruleset
 
-if watolib.has_agent_bakery():
+if bakery.has_agent_bakery():
     import cmk.gui.cee.plugins.wato.agent_bakery.misc as agent_bakery  # pylint: disable=import-error,no-name-in-module
 else:
     agent_bakery = None  # type: ignore[assignment]

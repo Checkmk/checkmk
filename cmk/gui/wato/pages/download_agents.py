@@ -15,6 +15,7 @@ import cmk.utils.render
 
 import cmk.gui.forms as forms
 import cmk.gui.watolib as watolib
+import cmk.gui.watolib.bakery as bakery
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.globals import html
 from cmk.gui.i18n import _
@@ -53,7 +54,7 @@ class ABCModeDownloadAgents(WatoMode):
         )
 
     def _page_menu_entries_related(self) -> Iterator[PageMenuEntry]:
-        if watolib.has_agent_bakery():
+        if bakery.has_agent_bakery():
             yield PageMenuEntry(
                 title=_("Windows, Linux, Solaris, AIX"),
                 icon_name="agents",

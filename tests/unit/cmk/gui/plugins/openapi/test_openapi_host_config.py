@@ -16,6 +16,7 @@ from cmk.utils import version
 
 from cmk.automations.results import DeleteHostsResult, RenameHostsResult
 
+import cmk.gui.watolib.bakery as bakery
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.type_defs import CustomAttr
 from cmk.gui.watolib.custom_attributes import save_custom_attrs_to_mk_file
@@ -111,8 +112,9 @@ def test_openapi_cluster_host(base: str, aut_user_auth_wsgi_app: WebTestAppForCM
 
 @pytest.fixture(name="try_bake_agents_for_hosts")
 def fixture_try_bake_agents_for_hosts(mocker: MockerFixture) -> MagicMock:
-    return mocker.patch(
-        "cmk.gui.watolib.hosts_and_folders.try_bake_agents_for_hosts",
+    return mocker.patch.object(
+        bakery,
+        "try_bake_agents_for_hosts",
         side_effect=lambda _hosts: None,
     )
 

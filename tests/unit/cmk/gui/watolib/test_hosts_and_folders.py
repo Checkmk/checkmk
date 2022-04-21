@@ -26,8 +26,8 @@ import cmk.gui.watolib.hosts_and_folders as hosts_and_folders
 from cmk.gui import userdb
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.globals import active_config, g
+from cmk.gui.watolib.bakery import has_agent_bakery
 from cmk.gui.watolib.search import MatchItem
-from cmk.gui.watolib.utils import has_agent_bakery
 
 
 @pytest.fixture(autouse=True)

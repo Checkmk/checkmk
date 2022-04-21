@@ -72,6 +72,7 @@ from cmk.utils.type_defs import ContactgroupName, HostName, TaggroupID, Taggroup
 import cmk.gui.hooks as hooks
 import cmk.gui.userdb as userdb
 import cmk.gui.utils.escaping as escaping
+import cmk.gui.watolib.bakery as bakery
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.exceptions import MKAuthException, MKGeneralException, MKUserError, RequestTimeout
 from cmk.gui.globals import active_config, g, html, request
@@ -103,7 +104,6 @@ from cmk.gui.watolib.utils import (
     host_attribute_matches,
     HostContactGroupSpec,
     rename_host_in_list,
-    try_bake_agents_for_hosts,
     wato_root_dir,
 )
 
@@ -2608,7 +2608,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
 
         # 3. Prepare agents for the new hosts
         if bake_hosts:
-            try_bake_agents_for_hosts([e[0] for e in entries])
+            bakery.try_bake_agents_for_hosts([e[0] for e in entries])
 
         folder_path = self.path()
         Folder.add_hosts_to_lookup_cache([(x[0], folder_path) for x in entries])

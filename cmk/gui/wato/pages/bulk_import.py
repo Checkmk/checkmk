@@ -18,6 +18,7 @@ import cmk.utils.store as store
 
 import cmk.gui.pages
 import cmk.gui.watolib as watolib
+import cmk.gui.watolib.bakery as bakery
 import cmk.gui.weblib as weblib
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.exceptions import MKUserError
@@ -241,7 +242,7 @@ class ModeBulkImport(WatoMode):
                 )
                 num_failed += 1
 
-        watolib.hosts_and_folders.try_bake_agents_for_hosts(imported_hosts)
+        bakery.try_bake_agents_for_hosts(imported_hosts)
 
         self._delete_csv_file()
 

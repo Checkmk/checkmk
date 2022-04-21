@@ -897,6 +897,7 @@ def split_dict(d: Mapping[str, Any], keylist: List[str], positive: bool) -> Dict
 
 
 def save_users(profiles: Users) -> None:
+    now = datetime.now()
     write_contacts_and_users_file(profiles)
 
     # Execute user connector save hooks
@@ -905,7 +906,7 @@ def save_users(profiles: Users) -> None:
     updated_profiles = _add_custom_macro_attributes(profiles)
 
     _save_auth_serials(updated_profiles)
-    _save_user_profiles(updated_profiles)
+    _save_user_profiles(updated_profiles, now)
     _cleanup_old_user_profiles(updated_profiles)
 
     # Release the lock to make other threads access possible again asap
@@ -941,7 +942,7 @@ def _add_custom_macro_attributes(profiles: Users) -> Users:
 
 
 # Write user specific files
-def _save_user_profiles(updated_profiles: Users) -> None:
+def _save_user_profiles(updated_profiles: Users, now: datetime) -> None:
     non_contact_keys = _non_contact_keys()
     multisite_keys = _multisite_keys()
 
@@ -965,7 +966,7 @@ def _save_user_profiles(updated_profiles: Users) -> None:
             user_id, "enforce_pw_change", str(int(bool(user.get("enforce_pw_change"))))
         )
         save_custom_attr(
-            user_id, "last_pw_change", str(user.get("last_pw_change", int(time.time())))
+            user_id, "last_pw_change", str(user.get("last_pw_change", int(now.timestamp())))
         )
 
         if "idle_timeout" in user:

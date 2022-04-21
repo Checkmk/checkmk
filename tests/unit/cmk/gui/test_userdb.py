@@ -225,7 +225,7 @@ def test_on_access_update_valid_session(user_id: UserId, session_valid: str) -> 
     old_session = old_session_infos[session_valid]
 
     userdb.on_access(user_id, session_valid, now)
-    userdb.on_end_of_request(user_id)
+    userdb.on_end_of_request(user_id, now)
 
     new_session_infos = userdb._load_session_infos(user_id)
     new_session = new_session_infos[session_valid]
@@ -242,7 +242,7 @@ def test_on_access_update_idle_session(user_id: UserId, session_timed_out: str) 
     old_session = old_session_infos[session_timed_out]
 
     userdb.on_access(user_id, session_timed_out, now)
-    userdb.on_end_of_request(user_id)
+    userdb.on_end_of_request(user_id, now)
 
     new_session_infos = userdb._load_session_infos(user_id)
     new_session = new_session_infos[session_timed_out]
@@ -437,7 +437,7 @@ def test_refresh_session_success(user_id: UserId, session_valid: str) -> None:
         now = datetime.now()
         userdb._set_session(user_id, session_infos[session_valid])
         userdb._refresh_session(session_infos[session_valid], now)
-        userdb.on_end_of_request(user_id)
+        userdb.on_end_of_request(user_id, now)
 
         new_session_infos = userdb._load_session_infos(user_id)
 
@@ -459,7 +459,7 @@ def test_get_last_activity(with_user: tuple[UserId, str], session_valid: str) ->
     assert userdb.get_last_activity(user) == now.timestamp() - 5
 
     userdb.on_access(user_id, session_valid, now)
-    userdb.on_end_of_request(user_id)
+    userdb.on_end_of_request(user_id, now)
 
     user = _load_users_uncached(lock=False)[user_id]
     assert "session_info" in user

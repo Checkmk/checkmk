@@ -85,7 +85,7 @@ def UserSessionContext(user_id: UserId) -> Iterator[None]:
             yield
         finally:
             transactions.store_new()
-            userdb.on_end_of_request(user_id)
+            userdb.on_end_of_request(user_id, datetime.now())
 
 
 def auth_cookie_name() -> str:

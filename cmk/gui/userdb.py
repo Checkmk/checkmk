@@ -451,8 +451,7 @@ def on_access(username: UserId, session_id: str, now: datetime) -> None:
     _set_session(username, session_info)
 
 
-def on_end_of_request(user_id: UserId) -> None:
-    now = datetime.now()
+def on_end_of_request(user_id: UserId, now: datetime) -> None:
     if not session:
         return  # Nothing to be done in case there is no session
 

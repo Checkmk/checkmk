@@ -89,6 +89,7 @@ class Label(BaseModel):
 
 ContainerName = NewType("ContainerName", str)
 Labels = Mapping[LabelName, Label]
+Annotations = Mapping[LabelName, LabelValue]
 CreationTimestamp = NewType("CreationTimestamp", float)
 HostName = NewType("HostName", str)
 IpAddress = NewType("IpAddress", str)
@@ -160,6 +161,7 @@ def condition_detailed_description(
     return f"{condition_short_description(name, status)} ({reason}: {message})"
 
 
+# TODO: CMK-10380 (the change will incompatible)
 def kube_labels_to_cmk_labels(labels: Labels) -> HostLabelGenerator:
     """Convert Kubernetes Labels to HostLabels.
 
@@ -179,6 +181,33 @@ def kube_labels_to_cmk_labels(labels: Labels) -> HostLabelGenerator:
         if (value := label.value) == "":
             value = LabelValue("true")
         yield HostLabel(f"cmk/kubernetes/label/{label.name}", value)
+
+
+# TODO: CMK-10380 (the change will incompatible)
+def kube_annotations_to_cmk_labels(annotations: Annotations) -> HostLabelGenerator:
+    """Convert Kubernetes Annotations to HostLabels.
+
+    Kubernetes annotations are not valid Checkmk labels, but agent_kube makes
+    sure that annotations only arrive here, if we want to yield it as a
+    HostLabel, e.g. a restricted set of characters.
+
+    Directly yielding `HostLabel(annotation.name, annotation.value)` is
+    problematic. This is because a user can add annotations to their Kubernetes
+    objects, which overwrite existing Checkmk labels. For instance, the
+    annotation `cmk/os_name=` would overwrite the cmk label
+    `cmk/os_name:linux`. To circumvent this problem, we prepend every
+    annotation key with 'cmk/kubernetes/annotation/'.
+
+    >>> annotations = {
+    ... 'k8s.io/app': 'nginx',
+    ... 'infra': 'yes',
+    ... 'empty': '',
+    ... }
+    >>> list(kube_annotations_to_cmk_labels(annotations))
+    [HostLabel('cmk/kubernetes/annotation/k8s.io/app', 'nginx'), HostLabel('cmk/kubernetes/annotation/infra', 'yes'), HostLabel('cmk/kubernetes/annotation/empty', 'true')]
+    """
+    for name, value in annotations.items():
+        yield HostLabel(f"cmk/kubernetes/annotation/{name}", value or "true")
 
 
 class KubernetesError(Exception):
@@ -580,6 +609,7 @@ class DeploymentInfo(BaseModel):
     name: str
     namespace: NamespaceName
     labels: Labels
+    annotations: Annotations
     selector: Selector
     creation_timestamp: CreationTimestamp
     containers: ThinContainers
@@ -592,6 +622,7 @@ class DaemonSetInfo(BaseModel):
     name: str
     namespace: NamespaceName
     labels: Labels
+    annotations: Annotations
     selector: Selector
     creation_timestamp: CreationTimestamp
     containers: ThinContainers
@@ -604,6 +635,7 @@ class StatefulSetInfo(BaseModel):
     name: str
     namespace: NamespaceName
     labels: Labels
+    annotations: Annotations
     selector: Selector
     creation_timestamp: CreationTimestamp
     containers: ThinContainers

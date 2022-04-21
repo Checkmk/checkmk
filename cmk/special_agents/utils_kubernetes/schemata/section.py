@@ -338,6 +338,7 @@ class DeploymentInfo(BaseModel):
     name: str
     namespace: api.NamespaceName
     labels: api.Labels
+    annotations: api.Annotations
     selector: api.Selector
     creation_timestamp: api.CreationTimestamp
     containers: ThinContainers
@@ -350,6 +351,7 @@ class DaemonSetInfo(BaseModel):
     name: str
     namespace: api.NamespaceName
     labels: api.Labels
+    annotations: api.Annotations
     selector: api.Selector
     creation_timestamp: api.CreationTimestamp
     containers: ThinContainers
@@ -362,6 +364,7 @@ class StatefulSetInfo(BaseModel):
     name: str
     namespace: api.NamespaceName
     labels: api.Labels
+    annotations: api.Annotations
     selector: api.Selector
     creation_timestamp: api.CreationTimestamp
     containers: ThinContainers

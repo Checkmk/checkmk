@@ -112,3 +112,17 @@ pub async fn flatten(handle: tokio::task::JoinHandle<AnyhowResult<()>>) -> Anyho
         Err(_) => Err(anyhow!("handling failed")),
     }
 }
+
+pub fn setup_test_dir(prefix: &str) -> tempfile::TempDir {
+    tempfile::Builder::new().prefix(prefix).tempdir().unwrap()
+}
+
+#[cfg(unix)]
+pub fn setup_agent_socket_path(home_dir: &std::path::Path) -> String {
+    std::fs::create_dir(home_dir.join("run")).unwrap();
+    home_dir
+        .join("run/check-mk-agent.socket")
+        .to_str()
+        .unwrap()
+        .to_string()
+}

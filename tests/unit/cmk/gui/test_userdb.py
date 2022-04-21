@@ -343,7 +343,8 @@ def test_ensure_user_can_not_init_with_previous_session(
 
 
 def test_initialize_session_single_user_session(user_id: UserId) -> None:
-    session_id = userdb._initialize_session(user_id)
+    now = datetime.now()
+    session_id = userdb._initialize_session(user_id, now)
     assert session_id != ""
     session_infos = userdb._load_session_infos(user_id)
     assert session_infos[session_id] == userdb.SessionInfo(

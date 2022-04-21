@@ -399,8 +399,7 @@ def on_succeeded_login(username: UserId) -> str:
     now = datetime.now()
     _ensure_user_can_init_session(username, now)
     _reset_failed_logins(username)
-
-    return _initialize_session(username)
+    return _initialize_session(username, now)
 
 
 def on_failed_login(username: UserId) -> None:
@@ -532,10 +531,9 @@ def _ensure_user_can_init_session(username: UserId, now: datetime) -> None:
             raise MKUserError(None, _("Another session is active"))
 
 
-def _initialize_session(username: UserId) -> str:
+def _initialize_session(username: UserId, now: datetime) -> str:
     """Creates a new user login session (if single user session mode is enabled) and
     returns the session_id of the new session."""
-    now = datetime.now()
     session_infos = _cleanup_old_sessions(_load_session_infos(username, lock=True), now)
 
     session_id = _create_session_id()

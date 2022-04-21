@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from datetime import datetime
+
 import pytest
 from werkzeug.test import create_environ
 
@@ -70,8 +72,9 @@ def fixture_pre_20_cookie():
 
 @pytest.fixture(name="session_id")
 def fixture_session_id(with_user):
+    now = datetime.now()
     user_id = with_user[0]
-    return userdb._initialize_session(user_id)
+    return userdb._initialize_session(user_id, now)
 
 
 @pytest.fixture(name="current_cookie")

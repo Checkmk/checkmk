@@ -201,15 +201,14 @@ def _user_exists_according_to_profile(username: UserId) -> bool:
     return base_path.joinpath("transids.mk").exists() or base_path.joinpath("serial.mk").exists()
 
 
-def _login_timed_out(username: UserId, last_activity: int) -> bool:
+def _check_login_timeout(username: UserId, idle_time: float) -> None:
     idle_timeout = load_custom_attr(
         user_id=username, key="idle_timeout", parser=_convert_idle_timeout
     )
     if idle_timeout is None:
         idle_timeout = active_config.user_idle_timeout
-    if idle_timeout is None or idle_timeout is False:
-        return False  # no timeout activated at all
-    return time.time() - last_activity > idle_timeout
+    if idle_timeout is not None and idle_timeout is not False and idle_time > idle_timeout:
+        raise MKAuthException(f"{username} login timed out (Inactivity exceeded {idle_timeout})")
 
 
 def _reset_failed_logins(username: UserId) -> None:
@@ -444,20 +443,13 @@ def on_logout(username: UserId, session_id: str) -> None:
 
 def on_access(username: UserId, session_id: str) -> None:
     session_infos = _load_session_infos(username)
-
     if not _is_valid_user_session(username, session_infos, session_id):
         raise MKAuthException("Invalid user session")
 
     # Check whether or not there is an idle timeout configured, delete cookie and
     # require the user to renew the log when the timeout exceeded.
     session_info = session_infos[session_id]
-    timed_out = _login_timed_out(username, session_info.last_activity)
-    if timed_out:
-        raise MKAuthException(
-            "%s login timed out (Inactivity exceeded %r)"
-            % (username, active_config.user_idle_timeout)
-        )
-
+    _check_login_timeout(username, time.time() - session_info.last_activity)
     _set_session(username, session_info)
 
 

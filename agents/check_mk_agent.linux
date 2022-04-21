@@ -537,11 +537,11 @@ section_systemd() {
     if inpath systemctl; then
         echo '<<<systemd_units>>>'
         echo "[list-unit-files]"
-        systemctl list-unit-files --no-pager | tr -s ' '
+        systemctl list-unit-files --full --no-legend --no-pager --plain | tr -s ' '
         echo "[status]"
         systemctl status --all --type service --no-pager | tr -s ' '
         echo "[all]"
-        systemctl --all --no-pager | sed '/^$/q' | tr -s ' '
+        systemctl --all --full --no-legend --no-pager --plain | sed '/^$/q' | tr -s ' '
     fi
 }
 

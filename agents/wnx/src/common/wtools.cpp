@@ -1403,8 +1403,11 @@ std::wstring WmiStringFromObject(IWbemClassObject *object,
                         ToUtf8(str), value.vt);
             }
             result += str;
-            result += separator;
+        } else {
+            XLOG::t("Missing value for name '{}' error {:#X}",
+                    wtools::ToUtf8(name), hres);
         }
+        result += separator;
     }
     if (result.empty()) {
         XLOG::d("We have empty result for wbm_object, this is unusual");

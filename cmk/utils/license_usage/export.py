@@ -313,7 +313,7 @@ class LicenseUsageExtensions:
         parsed_extensions = {
             ext_key: raw_sample.get(ext_key, raw_sample.get("extensions", {}).get(key, False))
             for key in ["ntop"]
-            for ext_key in ("extension_%s" % key,)
+            for ext_key in (f"extension_{key}",)
         }
         return cls(ntop=parsed_extensions["extension_ntop"])
 

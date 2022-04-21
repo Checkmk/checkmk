@@ -187,7 +187,18 @@ def test_check_tranport_ls_ok(fail_state: State) -> None:
     assert not [
         *_check_transport(
             False,
-            ControllerSection(allow_legacy_pull=False, ip_allowlist=()),
+            ControllerSection(allow_legacy_pull=False, ip_allowlist=(), socket_ready=True),
+            fail_state,
+        )
+    ]
+
+
+@pytest.mark.parametrize("fail_state", list(State))
+def test_check_tranport_no_tls_controller_not_in_use(fail_state: State) -> None:
+    assert not [
+        *_check_transport(
+            False,
+            ControllerSection(allow_legacy_pull=True, ip_allowlist=(), socket_ready=False),
             fail_state,
         )
     ]
@@ -197,7 +208,7 @@ def test_check_tranport_ls_ok(fail_state: State) -> None:
 def test_check_tranport_no_tls(fail_state: State) -> None:
     (result,) = _check_transport(
         False,
-        ControllerSection(allow_legacy_pull=True, ip_allowlist=()),
+        ControllerSection(allow_legacy_pull=True, ip_allowlist=(), socket_ready=True),
         fail_state,
     )
     assert isinstance(result, Result)

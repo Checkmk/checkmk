@@ -24,4 +24,5 @@ class PluginSection(NamedTuple):
 class ControllerSection(NamedTuple):
     # Currently this is all we need. Extend on demand...
     allow_legacy_pull: bool
+    socket_ready: bool
     ip_allowlist: tuple[str, ...]

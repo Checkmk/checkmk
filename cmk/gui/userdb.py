@@ -453,13 +453,14 @@ def on_access(username: UserId, session_id: str, now: datetime) -> None:
 
 
 def on_end_of_request(user_id: UserId) -> None:
+    now = datetime.now()
     if not session:
         return  # Nothing to be done in case there is no session
 
     assert user_id == session.user_id
     session_infos = _load_session_infos(user_id, lock=True)
     if session_infos:
-        _refresh_session(user_id, session.session_info)
+        _refresh_session(session.session_info, now)
         session_infos[session.session_info.session_id] = session.session_info
 
     _save_session_infos(user_id, session_infos)
@@ -583,9 +584,9 @@ def _create_session_id() -> str:
     return utils.gen_id()
 
 
-def _refresh_session(username: UserId, session_info: SessionInfo) -> None:
+def _refresh_session(session_info: SessionInfo, now: datetime) -> None:
     """Updates the current session of the user"""
-    session_info.last_activity = int(time.time())
+    session_info.last_activity = int(now.timestamp())
 
 
 def _invalidate_session(username: UserId, session_id: str) -> None:

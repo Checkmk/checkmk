@@ -434,8 +434,9 @@ def test_refresh_session_success(user_id: UserId, session_valid: str) -> None:
     old_session = userdb.SessionInfo(**asdict(session_infos[session_valid]))
 
     with on_time("2019-09-05 00:00:30", "UTC"):
+        now = datetime.now()
         userdb._set_session(user_id, session_infos[session_valid])
-        userdb._refresh_session(user_id, session_infos[session_valid])
+        userdb._refresh_session(session_infos[session_valid], now)
         userdb.on_end_of_request(user_id)
 
         new_session_infos = userdb._load_session_infos(user_id)

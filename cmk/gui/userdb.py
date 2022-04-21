@@ -441,7 +441,7 @@ def on_logout(username: UserId, session_id: str) -> None:
     _invalidate_session(username, session_id)
 
 
-def on_access(username: UserId, session_id: str) -> None:
+def on_access(username: UserId, session_id: str, now: datetime) -> None:
     session_infos = _load_session_infos(username)
     if not _is_valid_user_session(username, session_infos, session_id):
         raise MKAuthException("Invalid user session")
@@ -449,7 +449,7 @@ def on_access(username: UserId, session_id: str) -> None:
     # Check whether or not there is an idle timeout configured, delete cookie and
     # require the user to renew the log when the timeout exceeded.
     session_info = session_infos[session_id]
-    _check_login_timeout(username, time.time() - session_info.last_activity)
+    _check_login_timeout(username, now.timestamp() - session_info.last_activity)
     _set_session(username, session_info)
 
 

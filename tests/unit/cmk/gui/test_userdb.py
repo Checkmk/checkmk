@@ -201,23 +201,25 @@ def test_on_logout_invalidate_session(user_id: UserId) -> None:
 
 
 def test_access_denied_with_invalidated_session(user_id: UserId) -> None:
+    now = datetime.now()
     session_id = userdb.on_succeeded_login(user_id)
     assert session_id in userdb._load_session_infos(user_id)
 
-    userdb.on_access(user_id, session_id)
+    userdb.on_access(user_id, session_id, now)
 
     userdb.on_logout(user_id, session_id)
     assert not userdb._load_session_infos(user_id)
 
     with pytest.raises(MKAuthException, match="Invalid user session"):
-        userdb.on_access(user_id, session_id)
+        userdb.on_access(user_id, session_id, now)
 
 
 def test_on_access_update_valid_session(user_id: UserId, session_valid: str) -> None:
+    now = datetime.now()
     old_session_infos = userdb._load_session_infos(user_id)
     old_session = old_session_infos[session_valid]
 
-    userdb.on_access(user_id, session_valid)
+    userdb.on_access(user_id, session_valid, now)
     userdb.on_end_of_request(user_id)
 
     new_session_infos = userdb._load_session_infos(user_id)
@@ -230,10 +232,11 @@ def test_on_access_update_valid_session(user_id: UserId, session_valid: str) -> 
 
 
 def test_on_access_update_idle_session(user_id: UserId, session_timed_out: str) -> None:
+    now = datetime.now()
     old_session_infos = userdb._load_session_infos(user_id)
     old_session = old_session_infos[session_timed_out]
 
-    userdb.on_access(user_id, session_timed_out)
+    userdb.on_access(user_id, session_timed_out, now)
     userdb.on_end_of_request(user_id)
 
     new_session_infos = userdb._load_session_infos(user_id)
@@ -247,23 +250,25 @@ def test_on_access_update_idle_session(user_id: UserId, session_timed_out: str) 
 
 @pytest.mark.usefixtures("single_user_session_enabled")
 def test_on_access_update_unknown_session(user_id: UserId, session_valid: str) -> None:
+    now = datetime.now()
     session_info = userdb._load_session_infos(user_id)[session_valid]
     session_info.started_at = 10
 
     with pytest.raises(MKAuthException, match="Invalid user session"):
-        userdb.on_access(user_id, "xyz")
+        userdb.on_access(user_id, "xyz", now)
 
 
 def test_on_access_logout_on_idle_timeout(
     monkeypatch: MonkeyPatch, user_id: UserId, session_timed_out: str
 ) -> None:
+    now = datetime.now()
     monkeypatch.setattr(active_config, "user_idle_timeout", 8)
 
     session_info = userdb._load_session_infos(user_id)[session_timed_out]
     session_info.started_at = int(time.time()) - 10
 
     with pytest.raises(MKAuthException, match="login timed out"):
-        userdb.on_access(user_id, session_timed_out)
+        userdb.on_access(user_id, session_timed_out, now)
 
 
 @pytest.mark.usefixtures("single_user_session_enabled")
@@ -440,11 +445,12 @@ def test_invalidate_session(user_id: UserId, session_valid: str) -> None:
 
 
 def test_get_last_activity(with_user: tuple[UserId, str], session_valid: str) -> None:
+    now = datetime.now()
     user_id = with_user[0]
     user = _load_users_uncached(lock=False)[user_id]
     assert userdb.get_last_activity(user) == time.time() - 5
 
-    userdb.on_access(user_id, session_valid)
+    userdb.on_access(user_id, session_valid, now)
     userdb.on_end_of_request(user_id)
 
     user = _load_users_uncached(lock=False)[user_id]

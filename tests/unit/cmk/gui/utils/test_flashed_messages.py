@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from datetime import datetime
+
 import pytest
 
 from cmk.utils.type_defs import UserId
@@ -30,8 +32,9 @@ def test_flash(user_id):
         assert session.session_info.flashes == ["abc"]
 
     # Now create the second request to get the previously flashed message
+    now = datetime.now()
     with application_and_request_context(), login.UserSessionContext(user_id):
-        on_access(user_id, session_id)
+        on_access(user_id, session_id, now)
         assert session is not None
         assert session.session_info.flashes == ["abc"]
 
@@ -45,7 +48,7 @@ def test_flash(user_id):
     # Now create the third request that should not have access to the flashed messages since the
     # second one consumed them.
     with application_and_request_context(), login.UserSessionContext(user_id):
-        on_access(user_id, session_id)
+        on_access(user_id, session_id, now)
         assert session is not None
         assert session.session_info.flashes == []
         assert get_flashed_messages() == []

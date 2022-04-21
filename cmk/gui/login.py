@@ -9,6 +9,7 @@ import http.client
 import os
 import traceback
 from contextlib import suppress
+from datetime import datetime
 from hashlib import sha256
 from pathlib import Path
 from typing import Iterator, List, Optional, Tuple, Union
@@ -245,7 +246,7 @@ def _check_auth_cookie(cookie_name: str) -> Optional[UserId]:
     check_parsed_auth_cookie(username, session_id, cookie_hash)
 
     try:
-        userdb.on_access(username, session_id)
+        userdb.on_access(username, session_id, datetime.now())
     except MKAuthException:
         del_auth_cookie()
         raise

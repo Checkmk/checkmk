@@ -21,6 +21,7 @@ from cmk.gui.plugins.wato.omd_configuration import (
     ConfigDomainRRDCached,
 )
 from cmk.gui.type_defs import SearchResult
+from cmk.gui.wato.pages.hosts import ModeEditHost
 from cmk.gui.watolib import search
 from cmk.gui.watolib.config_domains import ConfigDomainOMD
 from cmk.gui.watolib.hosts_and_folders import Folder
@@ -192,7 +193,7 @@ def fixture_index_builder(
 
 @pytest.fixture(name="index_searcher")
 def fixture_index_searcher(index_builder: IndexBuilder) -> IndexSearcher:
-    index_searcher = IndexSearcher()
+    index_searcher = IndexSearcher(PermissionsHandler(URLChecker[ModeEditHost](ModeEditHost)))
     index_searcher._redis_client = index_builder._redis_client
     return index_searcher
 
@@ -312,17 +313,21 @@ def fixture_created_host_url(with_admin_login) -> str:
 class TestURLChecker:
     @pytest.mark.usefixtures("request_context")
     def test_is_permitted_false(self) -> None:
-        assert not URLChecker().is_permitted("wato.py?folder=&mode=service_groups")
+        assert not URLChecker[ModeEditHost](ModeEditHost).is_permitted(
+            "wato.py?folder=&mode=service_groups"
+        )
 
     @pytest.mark.usefixtures("with_admin_login")
     def test_is_permitted_true(self) -> None:
-        assert URLChecker().is_permitted("wato.py?folder=&mode=service_groups")
+        assert URLChecker[ModeEditHost](ModeEditHost).is_permitted(
+            "wato.py?folder=&mode=service_groups"
+        )
 
     def test_is_permitted_host_true(
         self,
         created_host_url: str,
     ) -> None:
-        assert URLChecker().is_permitted(created_host_url)
+        assert URLChecker[ModeEditHost](ModeEditHost).is_permitted(created_host_url)
 
     def test_is_permitted_host_false(
         self,
@@ -335,13 +340,13 @@ class TestURLChecker:
             "may",
             lambda pname: False,
         )
-        assert not URLChecker().is_permitted(created_host_url)
+        assert not URLChecker[ModeEditHost](ModeEditHost).is_permitted(created_host_url)
 
 
 class TestPermissionHandler:
     @pytest.mark.usefixtures("with_admin_login")
     def test_may_see_category(self) -> None:
-        permissions_handler = PermissionsHandler()
+        permissions_handler = PermissionsHandler(URLChecker[ModeEditHost](ModeEditHost))
         for category in permissions_handler._category_permissions:
             assert permissions_handler.may_see_category(category)
 
@@ -350,7 +355,7 @@ class TestIndexSearcher:
     @pytest.mark.usefixtures("with_admin_login")
     def test_search_no_index(self) -> None:
         with pytest.raises(IndexNotFoundException):
-            list(IndexSearcher().search("change_dep"))
+            list(IndexSearcher(PermissionsHandler(URLChecker(ModeEditHost))).search("change_dep"))
 
     def test_sort_search_results(self) -> None:
         assert list(
@@ -400,7 +405,7 @@ class TestRealisticSearch:
 
         assert builder.index_is_built(builder._redis_client)
 
-        searcher = IndexSearcher()
+        searcher = IndexSearcher(PermissionsHandler(URLChecker[ModeEditHost](ModeEditHost)))
         searcher._redis_client = builder._redis_client
 
         assert len(list(searcher.search("Host"))) > 4
@@ -435,7 +440,7 @@ class TestRealisticSearch:
             with self._livestatus_mock(mock_livestatus):
                 builder.build_full_index()
 
-        searcher = IndexSearcher()
+        searcher = IndexSearcher(PermissionsHandler(URLChecker[ModeEditHost](ModeEditHost)))
         searcher._redis_client = builder._redis_client
 
         # if the search index did not internally use the super user while building, this item would
@@ -476,6 +481,6 @@ class TestRealisticSearch:
             with self._livestatus_mock(mock_livestatus):
                 builder.build_full_index()
 
-        searcher = IndexSearcher()
+        searcher = IndexSearcher(PermissionsHandler(URLChecker[ModeEditHost](ModeEditHost)))
         searcher._redis_client = builder._redis_client
         assert not list(searcher.search("custom host attributes"))

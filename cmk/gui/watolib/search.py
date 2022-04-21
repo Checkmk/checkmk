@@ -17,11 +17,14 @@ from typing import (
     DefaultDict,
     Dict,
     Final,
+    Generic,
     Iterable,
     List,
     Mapping,
     Optional,
+    Type,
     TYPE_CHECKING,
+    TypeVar,
 )
 
 import redis
@@ -256,11 +259,13 @@ class IndexBuilder:
         return (client or get_redis_client()).exists(cls._KEY_INDEX_BUILT) == 1
 
 
-class URLChecker:
-    def __init__(self) -> None:
-        from cmk.gui.wato.pages.hosts import ModeEditHost
+T = TypeVar("T")
 
-        self._mode_edit_host = ModeEditHost
+
+class URLChecker(Generic[T]):
+    # TODO(ml): This is not a real class.  It does not have a single useful method.
+    def __init__(self, mode: Type[T]) -> None:
+        self._mode_edit_host = mode
 
     @staticmethod
     def _set_query_vars(query_vars: QueryVars) -> None:
@@ -277,17 +282,19 @@ class URLChecker:
 
     def is_permitted(self, url: str) -> bool:
         file_name, query_vars = file_name_and_query_vars_from_url(url)
-        self._set_query_vars(query_vars)
+        URLChecker[T]._set_query_vars(query_vars)
 
         is_host_url = "mode=edit_host" in url
         if is_host_url:
-            self._set_current_folder(query_vars.get("folder", [""])[0])  # "" means root dir
+            URLChecker[T]._set_current_folder(
+                query_vars.get("folder", [""])[0]
+            )  # "" means root dir
 
         try:
             if is_host_url:
                 self._try_host()
             else:
-                self._try_page(file_name)
+                URLChecker[T]._try_page(file_name)
             return True
         except MKAuthException:
             return False
@@ -307,7 +314,7 @@ class URLChecker:
 
 
 class PermissionsHandler:
-    def __init__(self) -> None:
+    def __init__(self, url_checker: URLChecker[T]) -> None:
         self._category_permissions = {
             "global_settings": user.may("wato.global") or user.may("wato.seeall"),
             "folders": user.may("wato.hosts"),
@@ -316,7 +323,7 @@ class PermissionsHandler:
             "event_console_settings": user.may("mkeventd.config") or user.may("wato.seeall"),
             "logfile_pattern_analyzer": user.may("wato.pattern_editor") or user.may("wato.seeall"),
         }
-        self._url_checker = URLChecker()
+        self._url_checker = url_checker
 
     @staticmethod
     def _permissions_rule(url: str) -> bool:
@@ -341,8 +348,7 @@ class PermissionsHandler:
 
 
 class IndexSearcher:
-    def __init__(self) -> None:
-        permissions_handler = PermissionsHandler()
+    def __init__(self, permissions_handler: PermissionsHandler) -> None:
         self._may_see_category = permissions_handler.may_see_category
         self._may_see_item_func = permissions_handler.permissions_for_items()
         self._current_language = get_current_language() or _NAME_DEFAULT_LANGUAGE

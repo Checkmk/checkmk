@@ -49,7 +49,13 @@ from cmk.gui.utils.labels import (
 )
 from cmk.gui.utils.regex import validate_regex
 from cmk.gui.utils.urls import makeuri
-from cmk.gui.watolib.search import IndexNotFoundException, IndexSearcher
+from cmk.gui.wato.pages.hosts import ModeEditHost
+from cmk.gui.watolib.search import (
+    IndexNotFoundException,
+    IndexSearcher,
+    PermissionsHandler,
+    URLChecker,
+)
 
 #   .--Quicksearch---------------------------------------------------------.
 #   |         ___        _      _                            _             |
@@ -1366,7 +1372,9 @@ class MenuSearchResultsRenderer:
                 raise_too_many_rows_error=False
             ).generate_results
         elif search_type == "setup":
-            self._generate_results = IndexSearcher().search
+            self._generate_results = IndexSearcher(
+                PermissionsHandler(URLChecker[ModeEditHost](ModeEditHost))
+            ).search
         else:
             raise NotImplementedError(f"Renderer not implemented for type '{search_type}'")
         self.search_type = search_type

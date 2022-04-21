@@ -25,6 +25,7 @@ from cmk.gui.logged_in import LoggedInNobody
 from cmk.gui.utils.output_funnel import OutputFunnel
 from cmk.gui.utils.theme import Theme
 from cmk.gui.utils.timeout_manager import TimeoutManager
+from cmk.gui.utils.transaction_manager import TransactionManager
 
 
 @lru_cache
@@ -45,12 +46,14 @@ def make_request_context(environ: Optional[Mapping[str, Any]] = None) -> Request
     req = Request(dict(create_environ(), REQUEST_URI="") if environ is None else environ)
     resp = Response(mimetype="text/html")
     funnel = OutputFunnel(resp)
+    nobody = LoggedInNobody()
     return RequestContext(
         req=req,
         resp=resp,
         funnel=funnel,
         config_obj=make_config_object(get_default_config()),
-        user=LoggedInNobody(),
+        user=nobody,
+        transactions=TransactionManager(req, nobody),
         html_obj=html(req, resp, funnel, output_format="html"),
         display_options=DisplayOptions(),
         timeout_manager=TimeoutManager(),

@@ -15,18 +15,22 @@ from cmk.gui.http import Request, Response
 from cmk.gui.logged_in import LoggedInNobody
 from cmk.gui.utils.output_funnel import OutputFunnel
 from cmk.gui.utils.script_helpers import session_wsgi_app
+from cmk.gui.utils.transaction_manager import TransactionManager
 
 
 @pytest.fixture
 def with_request_context():
     environ = create_environ()
+    req = Request(environ)
     resp = Response()
+    nobody = LoggedInNobody()
     with AppContext(session_wsgi_app(debug=False), stack=app_stack()), RequestContext(
-        req=Request(environ),
+        req=req,
         resp=resp,
         funnel=OutputFunnel(resp),
         config_obj=make_config_object(get_default_config()),
-        user=LoggedInNobody(),
+        user=nobody,
+        transactions=TransactionManager(req, nobody),
         display_options=DisplayOptions(),
         stack=request_stack(),
         url_filter=PrependURLFilter(),

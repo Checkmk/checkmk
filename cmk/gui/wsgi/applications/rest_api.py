@@ -42,6 +42,7 @@ from cmk.gui.openapi import add_once, ENDPOINT_REGISTRY, generate_data
 from cmk.gui.permissions import load_dynamic_permissions
 from cmk.gui.plugins.openapi.utils import problem, ProblemException
 from cmk.gui.utils.output_funnel import OutputFunnel
+from cmk.gui.utils.transaction_manager import TransactionManager
 from cmk.gui.wsgi.auth import automation_auth, gui_user_auth, rfc7662_subject, set_user_context
 from cmk.gui.wsgi.middleware import OverrideRequestMethod
 from cmk.gui.wsgi.wrappers import ParameterDict
@@ -469,13 +470,15 @@ class CheckmkRESTAPI:
 
             req = Request(environ)
             resp = Response()
+            nobody = LoggedInNobody()
             with AppContext(self, stack=app_stack()), RequestContext(
                 req=req,
                 resp=resp,
                 funnel=OutputFunnel(resp),
                 config_obj=config.make_config_object(config.get_default_config()),
                 endpoint=endpoint,
-                user=LoggedInNobody(),
+                user=nobody,
+                transactions=TransactionManager(req, nobody),
                 display_options=DisplayOptions(),
                 stack=request_stack(),
                 url_filter=PrependURLFilter(),

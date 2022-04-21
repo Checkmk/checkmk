@@ -1120,6 +1120,7 @@ class APICallBIAggregationState(APICallCollection):
                 "handler": self._get,
                 "optional_keys": ["filter"],
                 "required_permissions": required_permissions,
+                "locking": False,
             },
         }
 

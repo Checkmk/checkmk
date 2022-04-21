@@ -227,28 +227,27 @@ def _save_failed_logins(username: UserId, count: int) -> None:
     save_custom_attr(username, "num_failed_logins", str(count))
 
 
-# userdb.need_to_change_pw returns either False or the reason description why the
+# userdb.need_to_change_pw returns either None or the reason description why the
 # password needs to be changed
-def need_to_change_pw(username: UserId, now: datetime) -> Union[bool, str]:
+def need_to_change_pw(username: UserId, now: datetime) -> Optional[str]:
     if not _is_local_user(username):
-        return False
-
+        return None
     if load_custom_attr(user_id=username, key="enforce_pw_change", parser=utils.saveint) == 1:
         return "enforced"
-
     last_pw_change = load_custom_attr(user_id=username, key="last_pw_change", parser=utils.saveint)
     max_pw_age = active_config.password_policy.get("max_age")
-    if max_pw_age:
-        if not last_pw_change:
-            # The age of the password is unknown. Assume the user has just set
-            # the password to have the first access after enabling password aging
-            # as starting point for the password period. This bewares all users
-            # from needing to set a new password after enabling aging.
-            save_custom_attr(username, "last_pw_change", str(int(now.timestamp())))
-            return False
-        if now.timestamp() - last_pw_change > max_pw_age:
-            return "expired"
-    return False
+    if not max_pw_age:
+        return None
+    if not last_pw_change:
+        # The age of the password is unknown. Assume the user has just set
+        # the password to have the first access after enabling password aging
+        # as starting point for the password period. This bewares all users
+        # from needing to set a new password after enabling aging.
+        save_custom_attr(username, "last_pw_change", str(int(now.timestamp())))
+        return None
+    if now.timestamp() - last_pw_change > max_pw_age:
+        return "expired"
+    return None
 
 
 def is_two_factor_login_enabled(user_id: UserId) -> bool:

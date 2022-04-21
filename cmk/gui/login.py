@@ -265,11 +265,9 @@ def _check_auth_cookie(cookie_name: str) -> Optional[UserId]:
 
 def _redirect_for_password_change(user_id: UserId, now: datetime) -> None:
     if requested_file_name(request) != "user_change_pw":
-        result = userdb.need_to_change_pw(user_id, now)
-        if result:
+        if change_reason := userdb.need_to_change_pw(user_id, now):
             raise HTTPRedirect(
-                "user_change_pw.py?_origtarget=%s&reason=%s"
-                % (urlencode(makeuri(request, [])), result)
+                f"user_change_pw.py?_origtarget={urlencode(makeuri(request, []))}&reason={change_reason}"
             )
 
 
@@ -533,11 +531,9 @@ class LoginPage(Page):
                 # clear situation.
                 # userdb.need_to_change_pw returns either False or the reason description why the
                 # password needs to be changed
-                change_pw_result = userdb.need_to_change_pw(username, now)
-                if change_pw_result:
+                if change_reason := userdb.need_to_change_pw(username, now):
                     raise HTTPRedirect(
-                        "user_change_pw.py?_origtarget=%s&reason=%s"
-                        % (urlencode(origtarget), change_pw_result)
+                        f"user_change_pw.py?_origtarget={urlencode(origtarget)}&reason={change_reason}"
                     )
 
                 if userdb.is_two_factor_login_enabled(username):

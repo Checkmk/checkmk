@@ -135,19 +135,19 @@ def test_on_succeeded_login(user_id: UserId) -> None:
 def test_on_failed_login_no_locking(user_id: UserId) -> None:
     assert active_config.lock_on_logon_failures is None
     assert userdb._load_failed_logins(user_id) == 0
-    assert userdb.user_locked(user_id) is False
+    assert not userdb.user_locked(user_id)
 
     userdb.on_failed_login(user_id)
     assert userdb._load_failed_logins(user_id) == 1
-    assert userdb.user_locked(user_id) is False
+    assert not userdb.user_locked(user_id)
 
     userdb.on_failed_login(user_id)
     assert userdb._load_failed_logins(user_id) == 2
-    assert userdb.user_locked(user_id) is False
+    assert not userdb.user_locked(user_id)
 
     userdb.on_failed_login(user_id)
     assert userdb._load_failed_logins(user_id) == 3
-    assert userdb.user_locked(user_id) is False
+    assert not userdb.user_locked(user_id)
 
 
 @pytest.mark.usefixtures("request_context")
@@ -155,15 +155,15 @@ def test_on_failed_login_count_reset_on_succeeded_login(user_id: UserId) -> None
     now = datetime.now()
     assert active_config.lock_on_logon_failures is None
     assert userdb._load_failed_logins(user_id) == 0
-    assert userdb.user_locked(user_id) is False
+    assert not userdb.user_locked(user_id)
 
     userdb.on_failed_login(user_id)
     assert userdb._load_failed_logins(user_id) == 1
-    assert userdb.user_locked(user_id) is False
+    assert not userdb.user_locked(user_id)
 
     userdb.on_succeeded_login(user_id, now)
     assert userdb._load_failed_logins(user_id) == 0
-    assert userdb.user_locked(user_id) is False
+    assert not userdb.user_locked(user_id)
 
 
 @pytest.mark.usefixtures("request_context")
@@ -172,19 +172,19 @@ def test_on_failed_login_with_locking(monkeypatch: MonkeyPatch, user_id: UserId)
 
     assert active_config.lock_on_logon_failures == 3
     assert userdb._load_failed_logins(user_id) == 0
-    assert userdb.user_locked(user_id) is False
+    assert not userdb.user_locked(user_id)
 
     userdb.on_failed_login(user_id)
     assert userdb._load_failed_logins(user_id) == 1
-    assert userdb.user_locked(user_id) is False
+    assert not userdb.user_locked(user_id)
 
     userdb.on_failed_login(user_id)
     assert userdb._load_failed_logins(user_id) == 2
-    assert userdb.user_locked(user_id) is False
+    assert not userdb.user_locked(user_id)
 
     userdb.on_failed_login(user_id)
     assert userdb._load_failed_logins(user_id) == 3
-    assert userdb.user_locked(user_id) is True
+    assert userdb.user_locked(user_id)
 
 
 def test_on_logout_no_session(user_id: UserId) -> None:
@@ -285,19 +285,15 @@ def test_on_succeeded_login_already_existing_session(user_id: UserId, session_va
 
 def test_is_valid_user_session_single_user_session_disabled(user_id: UserId) -> None:
     assert active_config.single_user_session is None
-    assert (
-        userdb._is_valid_user_session(user_id, userdb._load_session_infos(user_id), "session1")
-        is False
+    assert not userdb._is_valid_user_session(
+        user_id, userdb._load_session_infos(user_id), "session1"
     )
 
 
 @pytest.mark.usefixtures("single_user_session_enabled")
 def test_is_valid_user_session_not_existing(user_id: UserId) -> None:
-    assert (
-        userdb._is_valid_user_session(
-            user_id, userdb._load_session_infos(user_id), "not-existing-session"
-        )
-        is False
+    assert not userdb._is_valid_user_session(
+        user_id, userdb._load_session_infos(user_id), "not-existing-session"
     )
 
 
@@ -305,19 +301,15 @@ def test_is_valid_user_session_not_existing(user_id: UserId) -> None:
 def test_is_valid_user_session_still_valid_when_last_activity_extends_timeout(
     user_id: UserId, session_timed_out: str
 ) -> None:
-    assert (
-        userdb._is_valid_user_session(
-            user_id, userdb._load_session_infos(user_id), session_timed_out
-        )
-        is True
+    assert userdb._is_valid_user_session(
+        user_id, userdb._load_session_infos(user_id), session_timed_out
     )
 
 
 @pytest.mark.usefixtures("single_user_session_enabled")
 def test_is_valid_user_session_valid(user_id: UserId, session_valid: str) -> None:
-    assert (
-        userdb._is_valid_user_session(user_id, userdb._load_session_infos(user_id), session_valid)
-        is True
+    assert userdb._is_valid_user_session(
+        user_id, userdb._load_session_infos(user_id), session_valid
     )
 
 
@@ -543,8 +535,8 @@ def test_check_credentials_local_user(with_user: tuple[UserId, str]) -> None:
 @pytest.mark.usefixtures("request_context")
 def test_check_credentials_local_user_create_htpasswd_user_ad_hoc() -> None:
     user_id = UserId("someuser")
-    assert userdb.user_exists(user_id) is False
-    assert userdb._user_exists_according_to_profile(user_id) is False
+    assert not userdb.user_exists(user_id)
+    assert not userdb._user_exists_according_to_profile(user_id)
     assert user_id not in _load_users_uncached(lock=False)
 
     htpasswd.Htpasswd(Path(cmk.utils.paths.htpasswd_file)).save(
@@ -552,15 +544,15 @@ def test_check_credentials_local_user_create_htpasswd_user_ad_hoc() -> None:
     )
     # Once a user exists in the htpasswd, the GUI treats the user as existing user and will
     # automatically initialize the missing data structures
-    assert userdb.user_exists(user_id) is True
-    assert userdb._user_exists_according_to_profile(user_id) is False
+    assert userdb.user_exists(user_id)
+    assert not userdb._user_exists_according_to_profile(user_id)
     assert str(user_id) in _load_users_uncached(lock=False)
 
     assert userdb.check_credentials(user_id, "cmk") == user_id
 
     # Nothing changes during regular access
-    assert userdb.user_exists(user_id) is True
-    assert userdb._user_exists_according_to_profile(user_id) is False
+    assert userdb.user_exists(user_id)
+    assert not userdb._user_exists_according_to_profile(user_id)
     assert str(user_id) in _load_users_uncached(lock=False)
 
 
@@ -782,9 +774,9 @@ def test_disable_two_factor_authentication(user_id: UserId) -> None:
     )
     userdb.save_two_factor_credentials(user_id, credentials)
 
-    assert userdb.is_two_factor_login_enabled(user_id) is True
+    assert userdb.is_two_factor_login_enabled(user_id)
     userdb.disable_two_factor_authentication(user_id)
-    assert userdb.is_two_factor_login_enabled(user_id) is False
+    assert not userdb.is_two_factor_login_enabled(user_id)
 
 
 def test_make_two_factor_backup_codes(user_id) -> None:
@@ -792,11 +784,11 @@ def test_make_two_factor_backup_codes(user_id) -> None:
     assert len(display_codes) == 10
     assert len(store_codes) == 10
     for index in range(10):
-        assert htpasswd.check_password(display_codes[index], store_codes[index]) is True
+        assert htpasswd.check_password(display_codes[index], store_codes[index])
 
 
 def test_is_two_factor_backup_code_valid_no_codes(user_id) -> None:
-    assert userdb.is_two_factor_backup_code_valid(user_id, "yxz") is False
+    assert not userdb.is_two_factor_backup_code_valid(user_id, "yxz")
 
 
 def test_is_two_factor_backup_code_valid_matches(user_id) -> None:
@@ -806,7 +798,7 @@ def test_is_two_factor_backup_code_valid_matches(user_id) -> None:
     assert len(credentials["backup_codes"]) == 10
     userdb.save_two_factor_credentials(user_id, credentials)
 
-    assert userdb.is_two_factor_backup_code_valid(user_id, display_codes[3]) is True
+    assert userdb.is_two_factor_backup_code_valid(user_id, display_codes[3])
 
     credentials = userdb.load_two_factor_credentials(user_id)
     assert len(credentials["backup_codes"]) == 9

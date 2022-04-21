@@ -355,10 +355,12 @@ def test_initialize_session_single_user_session(user_id: UserId) -> None:
 
 
 def test_cleanup_old_sessions_no_existing(request_context: None) -> None:
-    assert userdb._cleanup_old_sessions({}) == {}
+    now = datetime.now()
+    assert userdb._cleanup_old_sessions({}, now) == {}
 
 
 def test_cleanup_old_sessions_remove_outdated(request_context: None) -> None:
+    now = datetime.now()
     assert list(
         userdb._cleanup_old_sessions(
             {
@@ -374,12 +376,14 @@ def test_cleanup_old_sessions_remove_outdated(request_context: None) -> None:
                     last_activity=int(time.time()) - (86400 * 5),
                     flashes=[],
                 ),
-            }
+            },
+            now,
         ).keys()
     ) == ["keep"]
 
 
 def test_cleanup_old_sessions_too_many(request_context: None) -> None:
+    now = datetime.now()
     sessions = {
         f"keep_{num}": userdb.SessionInfo(
             session_id=f"keep_{num}",
@@ -413,7 +417,7 @@ def test_cleanup_old_sessions_too_many(request_context: None) -> None:
             "keep_19",
             "keep_20",
         ]
-    ) == sorted(userdb._cleanup_old_sessions(sessions).keys())
+    ) == sorted(userdb._cleanup_old_sessions(sessions, now).keys())
 
 
 def test_create_session_id_is_correct_type() -> None:

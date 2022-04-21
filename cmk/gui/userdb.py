@@ -535,14 +535,15 @@ def _ensure_user_can_init_session(username: UserId, now: datetime) -> None:
 def _initialize_session(username: UserId) -> str:
     """Creates a new user login session (if single user session mode is enabled) and
     returns the session_id of the new session."""
-    session_infos = _cleanup_old_sessions(_load_session_infos(username, lock=True))
+    now = datetime.now()
+    session_infos = _cleanup_old_sessions(_load_session_infos(username, lock=True), now)
 
     session_id = _create_session_id()
-    now = int(time.time())
+    now_ts = int(now.timestamp())
     session_info = SessionInfo(
         session_id=session_id,
-        started_at=now,
-        last_activity=now,
+        started_at=now_ts,
+        last_activity=now_ts,
         flashes=[],
     )
 
@@ -560,7 +561,9 @@ def _set_session(user_id: UserId, session_info: SessionInfo) -> None:
     request_local_attr().session = Session(user_id=user_id, session_info=session_info)
 
 
-def _cleanup_old_sessions(session_infos: Dict[str, SessionInfo]) -> Dict[str, SessionInfo]:
+def _cleanup_old_sessions(
+    session_infos: Mapping[str, SessionInfo], now: datetime
+) -> Dict[str, SessionInfo]:
     """Remove invalid / outdated sessions
 
     In single user session mode all sessions are removed. In regular mode, the sessions are limited
@@ -574,7 +577,7 @@ def _cleanup_old_sessions(session_infos: Dict[str, SessionInfo]) -> Dict[str, Se
     return {
         s.session_id: s
         for s in sorted(session_infos.values(), key=lambda s: s.last_activity, reverse=True)[:20]
-        if time.time() - s.last_activity < 86400 * 7
+        if now.timestamp() - s.last_activity < 86400 * 7
     }
 
 

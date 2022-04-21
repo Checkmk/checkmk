@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from datetime import datetime
+
 from cmk.utils.object_diff import make_diff_text
 
 import cmk.gui.mkeventd
@@ -66,7 +68,7 @@ def delete_users(users_to_delete):
                 object_ref=make_user_object_ref(user_id),
             )
         add_change("edit-users", _("Deleted user: %s") % ", ".join(deleted_users))
-        userdb.save_users(all_users)
+        userdb.save_users(all_users, datetime.now())
 
 
 def edit_users(changed_users):
@@ -104,7 +106,7 @@ def edit_users(changed_users):
     if modified_users_info:
         add_change("edit-users", _("Modified users: %s") % ", ".join(modified_users_info))
 
-    userdb.save_users(all_users)
+    userdb.save_users(all_users, datetime.now())
 
 
 def make_user_audit_log_object(attributes):

@@ -558,13 +558,14 @@ def test_check_credentials_local_user_create_htpasswd_user_ad_hoc() -> None:
 
 
 def test_check_credentials_local_user_disallow_locked(with_user: tuple[UserId, str]) -> None:
+    now = datetime.now()
     user_id, password = with_user
     assert userdb.check_credentials(user_id, password) == user_id
 
     users = _load_users_uncached(lock=True)
 
     users[user_id]["locked"] = True
-    userdb.save_users(users)
+    userdb.save_users(users, now)
 
     assert userdb.check_credentials(user_id, password) is False
 
@@ -586,6 +587,7 @@ def make_cme(monkeypatch: MonkeyPatch, user_id: UserId) -> None:
 
 @pytest.fixture()
 def make_cme_global_user(user_id: UserId) -> None:
+    now = datetime.now()
     if not is_managed_repo():
         pytest.skip("not relevant")
 
@@ -594,29 +596,31 @@ def make_cme_global_user(user_id: UserId) -> None:
     users = _load_users_uncached(lock=True)
 
     users[user_id]["customer"] = managed.SCOPE_GLOBAL
-    userdb.save_users(users)
+    userdb.save_users(users, now)
 
 
 @pytest.fixture()
 def make_cme_customer_user(user_id: UserId) -> None:
+    now = datetime.now()
     if not is_managed_repo():
         pytest.skip("not relevant")
 
     users = _load_users_uncached(lock=True)
 
     users[user_id]["customer"] = "test-customer"
-    userdb.save_users(users)
+    userdb.save_users(users, now)
 
 
 @pytest.fixture()
 def make_cme_wrong_customer_user(user_id: UserId) -> None:
+    now = datetime.now()
     if not is_managed_repo():
         pytest.skip("not relevant")
 
     users = _load_users_uncached(lock=True)
 
     users[user_id]["customer"] = "wrong-customer"
-    userdb.save_users(users)
+    userdb.save_users(users, now)
 
 
 @pytest.mark.usefixtures("make_cme", "make_cme_global_user")

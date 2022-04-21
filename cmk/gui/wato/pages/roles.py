@@ -20,6 +20,7 @@ configuration of all roles.
 """
 
 import re
+from datetime import datetime
 from typing import Optional, Type
 
 import cmk.utils.store as store
@@ -96,7 +97,7 @@ class RoleManagement:
                 user["roles"].remove(uid)
                 if new_id:
                     user["roles"].append(new_id)
-        userdb.save_users(users)
+        userdb.save_users(users, datetime.now())
 
 
 @mode_registry.register

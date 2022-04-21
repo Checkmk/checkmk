@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """A user can edit some user profile attributes on this page"""
 
+from datetime import datetime
 from typing import Any, Optional
 
 from cmk.gui import forms, userdb
@@ -80,7 +81,7 @@ class UserProfile(ABCUserProfilePage):
                 # TODO: Dynamically fiddling around with a TypedDict is a bit questionable
                 user_spec[name] = value  # type: ignore[literal-required]
 
-        userdb.save_users(users)
+        userdb.save_users(users, datetime.now())
 
         flash(_("Successfully updated user profile."))
 

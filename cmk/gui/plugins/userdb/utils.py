@@ -6,6 +6,7 @@
 
 import abc
 import os
+from datetime import datetime
 from typing import Any, Callable, Dict, List, Literal, Optional, Tuple, Type, Union
 
 from livestatus import SiteId
@@ -364,7 +365,7 @@ class UserConnector(abc.ABC):
         add_to_changelog: bool,
         only_username: Optional[UserId],
         load_users_func: Callable[[bool], Users],
-        save_users_func: Callable[[Users], None],
+        save_users_func: Callable[[Users, datetime], None],
     ):
         pass
 

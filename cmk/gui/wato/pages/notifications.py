@@ -7,6 +7,7 @@
 
 import abc
 import time
+from datetime import datetime
 from typing import Iterator, List, NamedTuple, Optional, overload
 from typing import Tuple as _Tuple
 from typing import Type, Union
@@ -925,10 +926,11 @@ class ABCUserNotificationsMode(ABCNotificationsMode):
         if not transactions.check_transaction():
             return redirect(self.mode_url(user=self._user_id()))
 
+        now = datetime.now()
         if request.has_var("_delete"):
             nr = request.get_integer_input_mandatory("_delete")
             del self._rules[nr]
-            userdb.save_users(self._users)
+            userdb.save_users(self._users, now)
             self._add_change(
                 "notification-delete-user-rule",
                 _("Deleted notification rule %d of user %s") % (nr, self._user_id()),
@@ -940,7 +942,7 @@ class ABCUserNotificationsMode(ABCNotificationsMode):
             rule = self._rules[from_pos]
             del self._rules[from_pos]  # make to_pos now match!
             self._rules[to_pos:to_pos] = [rule]
-            userdb.save_users(self._users)
+            userdb.save_users(self._users, now)
 
             self._add_change(
                 "notification-move-user-rule",
@@ -1710,7 +1712,7 @@ class ABCEditUserNotificationRuleMode(ABCEditNotificationRuleMode):
         return user_spec.setdefault("notification_rules", [])
 
     def _save_rules(self, rules: List[EventRule]) -> None:
-        userdb.save_users(self._users)
+        userdb.save_users(self._users, datetime.now())
 
     def _rule_from_valuespec(self, rule: EventRule) -> EventRule:
         # Force selection of our user

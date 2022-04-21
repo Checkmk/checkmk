@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
+from datetime import datetime
 
 from cmk.gui import forms, login, userdb
 from cmk.gui.exceptions import MKUserError
@@ -71,7 +72,7 @@ class UserChangePasswordPage(ABCUserProfilePage):
         else:
             user_spec["serial"] += 1
 
-        userdb.save_users(users)
+        userdb.save_users(users, datetime.now())
 
         flash(_("Successfully changed password."))
 

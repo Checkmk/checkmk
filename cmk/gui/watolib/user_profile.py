@@ -6,6 +6,7 @@
 
 import ast
 import time
+from datetime import datetime
 from multiprocessing import TimeoutError as mp_TimeoutError
 from multiprocessing.pool import ThreadPool
 from typing import NamedTuple
@@ -239,5 +240,5 @@ class PushUserProfilesToSite(AutomationCommand):
         users = userdb.load_users(lock=True)
         for user_id, profile in user_profiles.items():
             users[user_id] = profile
-        userdb.save_users(users)
+        userdb.save_users(users, datetime.now())
         return True

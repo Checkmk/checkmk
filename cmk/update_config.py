@@ -22,6 +22,7 @@ import shutil
 import subprocess
 import time
 from contextlib import contextmanager, suppress
+from datetime import datetime
 from pathlib import Path, PureWindowsPath
 from typing import (
     Any,
@@ -1210,7 +1211,7 @@ class UpdateConfig:
             _add_user_scheme_serial(users, user_id)
             _cleanup_ldap_connector(users, user_id, has_deprecated_ldap_connection)
 
-        save_users(users)
+        save_users(users, datetime.now())
 
     def _rewrite_py2_inventory_data(self) -> None:
         done_path = Path(cmk.utils.paths.var_dir, "update_config")

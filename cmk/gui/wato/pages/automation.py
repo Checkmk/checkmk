@@ -8,6 +8,7 @@ automation functions on slaves,"""
 
 import traceback
 from contextlib import nullcontext
+from datetime import datetime
 from typing import Iterable
 
 import cmk.utils.paths
@@ -256,7 +257,7 @@ class ModeAutomation(AjaxPage):
 
         users = userdb.load_users(lock=True)
         users[UserId(user_id)] = watolib.mk_eval(profile)
-        userdb.save_users(users)
+        userdb.save_users(users, datetime.now())
 
         return True
 

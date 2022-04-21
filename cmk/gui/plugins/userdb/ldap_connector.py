@@ -37,6 +37,7 @@ import os
 import shutil
 import sys
 import time
+from datetime import datetime
 from pathlib import Path
 from typing import Callable, Dict, IO, Iterator, List, Literal, Optional, Sequence, Set
 from typing import Tuple as _Tuple
@@ -1205,7 +1206,7 @@ class LDAPUserConnector(UserConnector):
         add_to_changelog: bool,
         only_username: Optional[UserId],
         load_users_func: Callable[[bool], Users],
-        save_users_func: Callable[[Users], None],
+        save_users_func: Callable[[Users, datetime], None],
     ):
         if not self.has_user_base_dn_configured():
             self._logger.info('Not trying sync (no "user base DN" configured)')
@@ -1351,7 +1352,7 @@ class LDAPUserConnector(UserConnector):
         )
 
         if changes or has_changed_passwords:
-            save_users_func(users)
+            save_users_func(users, datetime.now())
         else:
             release_users_lock()
 

@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from datetime import datetime
 from typing import Dict, List, Sequence
 from typing import Tuple as _Tuple
 
@@ -244,7 +245,7 @@ def _rename_host_in_event_rules(oldname, newname):
                 actions += ["notify_flexible"] * channels_changed
 
     if some_user_changed:
-        userdb.save_users(users)
+        userdb.save_users(users, datetime.now())
 
     return actions
 

@@ -135,6 +135,7 @@ def _get_attributes(
 
 
 def create_non_existing_user(connection_id: str, username: UserId) -> None:
+    now = datetime.now()
     # Since user_exists also looks into the htpasswd and treats all users that can be found there as
     # "existing users", we don't care about partially known users here and don't create them ad-hoc.
     # The load_users() method will handle this kind of users (TODO: Consolidate this!).
@@ -145,7 +146,7 @@ def create_non_existing_user(connection_id: str, username: UserId) -> None:
 
     users = load_users(lock=True)
     users[username] = new_user_template(connection_id)
-    save_users(users)
+    save_users(users, now)
 
     # Call the sync function for this new user
     connection = get_connection(connection_id)
@@ -399,13 +400,14 @@ def on_succeeded_login(username: UserId, now: datetime) -> str:
 
 
 def on_failed_login(username: UserId) -> None:
+    now = datetime.now()
     users = load_users(lock=True)
     if user := users.get(username):
         user["num_failed_logins"] = user.get("num_failed_logins", 0) + 1
         if active_config.lock_on_logon_failures:
             if user["num_failed_logins"] >= active_config.lock_on_logon_failures:
                 user["locked"] = True
-        save_users(users)
+        save_users(users, now)
 
     if active_config.log_logon_failures:
         if user:
@@ -894,8 +896,7 @@ def split_dict(d: Mapping[str, Any], keylist: List[str], positive: bool) -> Dict
     return {k: v for k, v in d.items() if (k in keylist) == positive}
 
 
-def save_users(profiles: Users) -> None:
-    now = datetime.now()
+def save_users(profiles: Users, now: datetime) -> None:
     write_contacts_and_users_file(profiles)
 
     # Execute user connector save hooks
@@ -1138,11 +1139,13 @@ def _save_auth_serials(updated_profiles: Users) -> None:
 
 
 def rewrite_users() -> None:
+    now = datetime.now()
     users = load_users(lock=True)
-    save_users(users)
+    save_users(users, now)
 
 
 def create_cmk_automation_user() -> None:
+    now = datetime.now()
     secret = utils.gen_id()
 
     users = load_users(lock=True)
@@ -1160,7 +1163,7 @@ def create_cmk_automation_user() -> None:
         "language": "en",
         "connector": "htpasswd",
     }
-    save_users(users)
+    save_users(users, now)
 
 
 def _save_cached_profile(
@@ -1422,7 +1425,7 @@ class UserSyncBackgroundJob(gui_background_job.GUIBackgroundJob):
         add_to_changelog: bool,
         enforce_sync: bool,
         load_users_func: Callable[[bool], Users],
-        save_users_func: Callable[[Users], None],
+        save_users_func: Callable[[Users, datetime], None],
     ) -> None:
         job_interface.send_progress_update(_("Synchronization started..."))
         if self._execute_sync_action(
@@ -1438,7 +1441,7 @@ class UserSyncBackgroundJob(gui_background_job.GUIBackgroundJob):
         add_to_changelog: bool,
         enforce_sync: bool,
         load_users_func: Callable[[bool], Users],
-        save_users_func: Callable[[Users], None],
+        save_users_func: Callable[[Users, datetime], None],
     ) -> bool:
         for connection_id, connection in active_connections():
             try:

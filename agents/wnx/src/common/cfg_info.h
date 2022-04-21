@@ -63,7 +63,7 @@ constexpr uint32_t kMaxOhmErrorsBeforeRestart = 3;
 constexpr int kDefaultLogLevel = kLogBase;
 
 // Windows Wmi API timeout, decision from LWA
-constexpr int kDefaultWmiTimeout = 3;  // seconds, this is Windows FAIL
+constexpr int kDefaultWmiTimeout = 5;  // seconds, this is Windows FAIL
 
 // data will be send to peer during this interval
 constexpr int kDefaultRealtimeTimeout = 90;  // In seconds.

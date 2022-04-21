@@ -690,7 +690,7 @@ inventory_displayhints.update({
     },
 
     ".software.applications.kube.metadata.": {
-        "title": _l("General"),
+        "title": _l("Metadata"),
         "keyorder": [
             "object",
             "name",

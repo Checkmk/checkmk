@@ -196,12 +196,16 @@ def _check_transport(
         state=fail_state,
         summary="TLS is not activated on monitored host (see details)",
         details=(
-            "The hosts agent supports TLS, but it is not being used. "
+            "The hosts agent supports TLS, but it is not being used.\n"
             "We strongly recommend to enable TLS by registering the host to the site "
-            "(using the `cmk-agent-ctl register` command on the monitored host). "
-            "However you can configure missing TLS to be OK in the setting "
-            '"State in case of available but not enabled TLS" of the ruleset '
-            '"Status of the Checkmk services".'
+            "(using the `cmk-agent-ctl register` command on the monitored host).\n"
+            "NOTE: A registered host will refuse all unencrypted connections. "
+            "If the host is monitored by multiple sites, you must register to all of them. "
+            "This can be problematic if you are monitoring the same host from a site running "
+            "Checkmk version 2.0 or earlier.\n"
+            "If you can not register the host, you can configure missing TLS to be OK in the "
+            'setting "State in case of available but not enabled TLS" of the ruleset '
+            '"Checkmk Agent installation auditing".'
         ),
     )
 

@@ -6,7 +6,6 @@
 
 import logging
 import os
-import time
 from dataclasses import asdict
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -61,15 +60,16 @@ def _load_users_uncached(*, lock: bool) -> userdb.Users:
 
 @pytest.fixture(name="session_timed_out")
 def fixture_session_timed_out(user_id: UserId, fix_time: None) -> str:
+    now = datetime.now()
     session_id = "sess1"
-    now = int(time.time()) - 20
+    timestamp = int(now.timestamp()) - 20
     userdb._save_session_infos(
         user_id,
         {
             session_id: userdb.SessionInfo(
                 session_id,
-                started_at=now,
-                last_activity=now,
+                started_at=timestamp,
+                last_activity=timestamp,
                 flashes=[],
             )
         },
@@ -79,15 +79,16 @@ def fixture_session_timed_out(user_id: UserId, fix_time: None) -> str:
 
 @pytest.fixture(name="session_valid")
 def fixture_session_valid(user_id: UserId, fix_time: None) -> str:
+    now = datetime.now()
     session_id = "sess2"
-    now = int(time.time()) - 5
+    timestamp = int(now.timestamp()) - 5
     userdb._save_session_infos(
         user_id,
         {
             session_id: userdb.SessionInfo(
                 session_id,
-                started_at=now,
-                last_activity=now,
+                started_at=timestamp,
+                last_activity=timestamp,
                 flashes=[],
             )
         },
@@ -120,8 +121,8 @@ def test_on_succeeded_login(user_id: UserId) -> None:
     assert session_infos == {
         session_id: userdb.SessionInfo(
             session_id=session_id,
-            started_at=int(time.time()),
-            last_activity=int(time.time()),
+            started_at=int(now.timestamp()),
+            last_activity=int(now.timestamp()),
             flashes=[],
         )
     }
@@ -231,7 +232,7 @@ def test_on_access_update_valid_session(user_id: UserId, session_valid: str) -> 
 
     assert new_session.session_id == old_session.session_id
     assert new_session.started_at == old_session.started_at
-    assert new_session.last_activity == time.time()
+    assert new_session.last_activity == now.timestamp()
     assert new_session.last_activity > old_session.last_activity
 
 
@@ -248,7 +249,7 @@ def test_on_access_update_idle_session(user_id: UserId, session_timed_out: str) 
 
     assert new_session.session_id == old_session.session_id
     assert new_session.started_at == old_session.started_at
-    assert new_session.last_activity == time.time()
+    assert new_session.last_activity == now.timestamp()
     assert new_session.last_activity > old_session.last_activity
 
 
@@ -269,7 +270,7 @@ def test_on_access_logout_on_idle_timeout(
     monkeypatch.setattr(active_config, "user_idle_timeout", 8)
 
     session_info = userdb._load_session_infos(user_id)[session_timed_out]
-    session_info.started_at = int(time.time()) - 10
+    session_info.started_at = int(now.timestamp()) - 10
 
     with pytest.raises(MKAuthException, match="login timed out"):
         userdb.on_access(user_id, session_timed_out, now)
@@ -354,8 +355,8 @@ def test_initialize_session_single_user_session(user_id: UserId) -> None:
     session_infos = userdb._load_session_infos(user_id)
     assert session_infos[session_id] == userdb.SessionInfo(
         session_id=session_id,
-        started_at=int(time.time()),
-        last_activity=int(time.time()),
+        started_at=int(now.timestamp()),
+        last_activity=int(now.timestamp()),
         flashes=[],
     )
 
@@ -372,14 +373,14 @@ def test_cleanup_old_sessions_remove_outdated(request_context: None) -> None:
             {
                 "outdated": userdb.SessionInfo(
                     session_id="outdated",
-                    started_at=int(time.time()) - (86400 * 10),
-                    last_activity=int(time.time()) - (86400 * 8),
+                    started_at=int(now.timestamp()) - (86400 * 10),
+                    last_activity=int(now.timestamp()) - (86400 * 8),
                     flashes=[],
                 ),
                 "keep": userdb.SessionInfo(
                     session_id="keep",
-                    started_at=int(time.time()) - (86400 * 10),
-                    last_activity=int(time.time()) - (86400 * 5),
+                    started_at=int(now.timestamp()) - (86400 * 10),
+                    last_activity=int(now.timestamp()) - (86400 * 5),
                     flashes=[],
                 ),
             },
@@ -393,8 +394,8 @@ def test_cleanup_old_sessions_too_many(request_context: None) -> None:
     sessions = {
         f"keep_{num}": userdb.SessionInfo(
             session_id=f"keep_{num}",
-            started_at=int(time.time()) - (86400 * 10),
-            last_activity=int(time.time()) - (86400 * 5) + num,
+            started_at=int(now.timestamp()) - (86400 * 10),
+            last_activity=int(now.timestamp()) - (86400 * 5) + num,
             flashes=[],
         )
         for num in range(21)
@@ -462,14 +463,14 @@ def test_get_last_activity(with_user: tuple[UserId, str], session_valid: str) ->
     now = datetime.now()
     user_id = with_user[0]
     user = _load_users_uncached(lock=False)[user_id]
-    assert userdb.get_last_activity(user) == time.time() - 5
+    assert userdb.get_last_activity(user) == now.timestamp() - 5
 
     userdb.on_access(user_id, session_valid, now)
     userdb.on_end_of_request(user_id)
 
     user = _load_users_uncached(lock=False)[user_id]
     assert "session_info" in user
-    assert userdb.get_last_activity(user) == time.time()
+    assert userdb.get_last_activity(user) == now.timestamp()
 
 
 def test_user_attribute_sync_plugins(request_context: None, monkeypatch: MonkeyPatch) -> None:
@@ -696,40 +697,40 @@ def touch_profile_files(profile_dir: Path, file_times: datetime) -> None:
 
 
 def test_cleanup_user_profiles_keep_recently_updated(user_id: UserId) -> None:
-    profile_dir = create_new_profile_dir([Path("bla")])
     now = datetime.now()
+    profile_dir = create_new_profile_dir([Path("bla")])
     touch_profile_files(profile_dir, now - timedelta(days=10))
     userdb.cleanup_abandoned_profiles(logging.getLogger(), now, timedelta(days=30))
     assert profile_dir.exists()
 
 
 def test_cleanup_user_profiles_remove_empty(user_id: UserId) -> None:
-    profile_dir = create_new_profile_dir([])
     now = datetime.now()
+    profile_dir = create_new_profile_dir([])
     touch_profile_files(profile_dir, now - timedelta(days=10))
     userdb.cleanup_abandoned_profiles(logging.getLogger(), now, timedelta(days=30))
     assert not profile_dir.exists()
 
 
 def test_cleanup_user_profiles_remove_abandoned(user_id: UserId) -> None:
-    profile_dir = create_new_profile_dir([Path("bla")])
     now = datetime.now()
+    profile_dir = create_new_profile_dir([Path("bla")])
     touch_profile_files(profile_dir, now - timedelta(days=50))
     userdb.cleanup_abandoned_profiles(logging.getLogger(), now, timedelta(days=30))
     assert not profile_dir.exists()
 
 
 def test_cleanup_user_profiles_keep_active_profile(user_id: UserId) -> None:
-    profile_dir = cmk.utils.paths.profile_dir / user_id
     now = datetime.now()
+    profile_dir = cmk.utils.paths.profile_dir / user_id
     touch_profile_files(profile_dir, now - timedelta(days=10))
     userdb.cleanup_abandoned_profiles(logging.getLogger(), now, timedelta(days=30))
     assert profile_dir.exists()
 
 
 def test_cleanup_user_profiles_keep_active_profile_old(user_id: UserId) -> None:
-    profile_dir = cmk.utils.paths.profile_dir / user_id
     now = datetime.now()
+    profile_dir = cmk.utils.paths.profile_dir / user_id
     touch_profile_files(profile_dir, now - timedelta(days=50))
     userdb.cleanup_abandoned_profiles(logging.getLogger(), now, timedelta(days=30))
     assert profile_dir.exists()

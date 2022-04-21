@@ -212,7 +212,8 @@ def _check_oracle_db_time(item, item_data, now, params):
     for metric, infoname, rate in [("oracle_db_time", "DB Time", db_time_rate),
                                    ("oracle_db_cpu", "DB CPU", cpu_time_rate),
                                    ("oracle_db_wait_time", "DB Non-Idle Wait", wait_time_rate)]:
-        results.append(check_levels(rate, metric, params, unit="1/s", infoname=infoname))
+        metric_params = params.get(metric, (None, None))
+        results.append(check_levels(rate, metric, metric_params, unit="1/s", infoname=infoname))
 
     return results
 
@@ -246,10 +247,12 @@ def _check_oracle_memory_info(data, params, sticky_fields, fields):
         if value is None:
             continue
 
+        metric_params = params.get(ga_field.metric, (None, None))
         state, infotext, perf = check_levels(value,
                                              ga_field.metric,
-                                             params,
+                                             metric_params,
                                              human_readable_func=get_bytes_human_readable)
+
         if ga_field.name in sticky_fields:
             results.append((state, "%s: %s" % (ga_field.name, infotext), perf))
         else:
@@ -308,11 +311,13 @@ def _check_oracle_performance_iostat_file(item, params, data, unit, io_fields):
 
             totals[i] += rate
 
+            metric_params = params.get(metric_name, (None, None))
             state, info, perf = check_levels(rate,
                                              metric_name,
-                                             params,
+                                             metric_params,
                                              infoname=iofile.name + " " + field_name,
                                              unit=unit)
+
             if state > 0:
                 error_results.append((state, info, perf))
             else:
@@ -411,11 +416,13 @@ def check_oracle_performance_waitclasses(item, params, parsed):
             else:
                 total_waited_sum_fg += rate
 
+            metric_params = params.get(metric_name, (None, None))
             state, info, perf = check_levels(rate,
                                              metric_name,
-                                             params,
+                                             metric_params,
                                              infoname="%s %s" % (waitclass.name, infotext_suffix),
                                              unit="1/s")
+
             if state > 0:
                 error_results.append((state, info, perf))
             else:
@@ -426,7 +433,8 @@ def check_oracle_performance_waitclasses(item, params, parsed):
         ("Total waited", total_waited_sum, "oracle_wait_class_total"),
         ("Total waited (FG)", total_waited_sum_fg, "oracle_wait_class_total_fg")
     ]:
-        yield check_levels(total_value, total_metric, params, infoname=infoname, unit="1/s")
+        metric_params = params.get(total_metric, (None, None))
+        yield check_levels(total_value, total_metric, metric_params, infoname=infoname, unit="1/s")
 
     # Output errors
     for result in error_results:

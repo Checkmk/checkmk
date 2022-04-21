@@ -293,6 +293,32 @@ def get_replication_paths() -> List[ReplicationPath]:
     return paths + filtered
 
 
+# If the site is not up-to-date, synchronize it first.
+def sync_changes_before_remote_automation(site_id):
+    manager = ActivateChangesManager()
+    manager.load()
+
+    if not manager.is_sync_needed(site_id):
+        return
+
+    logger.info("Syncing %s", site_id)
+
+    manager.start([site_id], activate_foreign=True, prevent_activate=True)
+
+    # Wait maximum 30 seconds for sync to finish
+    timeout = 30.0
+    while manager.is_running() and timeout > 0.0:
+        time.sleep(0.5)
+        timeout -= 0.5
+
+    state = manager.get_site_state(site_id)
+    if state and state["_state"] != "success":
+        logger.error(
+            _("Remote automation tried to sync pending changes but failed: %s"),
+            state.get("_status_details"),
+        )
+
+
 def _load_site_replication_status(site_id, lock=False):
     return store.load_object_from_file(
         _site_replication_status_path(site_id),

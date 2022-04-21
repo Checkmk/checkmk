@@ -11,10 +11,9 @@ import ast
 import logging
 import re
 import subprocess
-import time
 import uuid
 from pathlib import Path
-from typing import Any, Dict, Iterable, NamedTuple, Optional, Sequence, Tuple, Union
+from typing import Any, Callable, Dict, Iterable, NamedTuple, Optional, Sequence, Tuple, Union
 
 import requests
 import urllib3  # type: ignore[import]
@@ -178,7 +177,7 @@ def check_mk_remote_automation_serialized(
     indata: Any,
     stdin_data: Optional[str] = None,
     timeout: Optional[int] = None,
-    sync: bool = True,
+    sync: Callable[[SiteId], None],
     non_blocking_http: bool = False,
 ) -> SerializedResult:
     site = get_site_config(site_id)
@@ -193,8 +192,7 @@ def check_mk_remote_automation_serialized(
             % site.get("alias", site_id)
         )
 
-    if sync:
-        sync_changes_before_remote_automation(site_id)
+    sync(site_id)
 
     if non_blocking_http:
         # This will start a background job process on the remote site to execute the automation
@@ -217,35 +215,6 @@ def check_mk_remote_automation_serialized(
             ],
         )
     )
-
-
-# If the site is not up-to-date, synchronize it first.
-def sync_changes_before_remote_automation(site_id):
-    # TODO: Cleanup this local import
-    import cmk.gui.watolib.activate_changes  # pylint: disable=redefined-outer-name
-
-    manager = cmk.gui.watolib.activate_changes.ActivateChangesManager()
-    manager.load()
-
-    if not manager.is_sync_needed(site_id):
-        return
-
-    logger.info("Syncing %s", site_id)
-
-    manager.start([site_id], activate_foreign=True, prevent_activate=True)
-
-    # Wait maximum 30 seconds for sync to finish
-    timeout = 30.0
-    while manager.is_running() and timeout > 0.0:
-        time.sleep(0.5)
-        timeout -= 0.5
-
-    state = manager.get_site_state(site_id)
-    if state and state["_state"] != "success":
-        logger.error(
-            _("Remote automation tried to sync pending changes but failed: %s"),
-            state.get("_status_details"),
-        )
 
 
 # This hook is executed when one applies the pending configuration changes

@@ -26,8 +26,9 @@ import cmk.gui.watolib.read_only as read_only
 import cmk.gui.watolib.snapshots
 import cmk.gui.weblib as weblib
 from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import FinalizeRequest, MKUserError
-from cmk.gui.globals import active_config, display_options, html, request
+from cmk.gui.globals import display_options, html, request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import (

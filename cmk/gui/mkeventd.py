@@ -21,8 +21,8 @@ import cmk.utils.version as cmk_version
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
 import cmk.gui.sites as sites
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKGeneralException
-from cmk.gui.globals import active_config
 from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _, _l
 from cmk.gui.permissions import permission_section_registry, PermissionSection

@@ -16,8 +16,9 @@ import cmk.gui.bi as bi
 import cmk.gui.sites as sites
 import cmk.gui.utils as utils
 import cmk.gui.utils.escaping as escaping
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import active_config, html, request
+from cmk.gui.globals import html, request
 from cmk.gui.i18n import _, _l, _u, ungettext
 from cmk.gui.logged_in import user
 from cmk.gui.permissions import (

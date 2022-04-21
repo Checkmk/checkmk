@@ -4,7 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.globals import active_config, display_options, request, response
+from cmk.gui.config import active_config
+from cmk.gui.globals import display_options, request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.plugins.views.icons.utils import Icon, icon_and_action_registry

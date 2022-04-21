@@ -72,8 +72,9 @@ import cmk.gui.site_config as site_config
 import cmk.gui.user_sites as user_sites
 import cmk.gui.utils as utils
 import cmk.gui.utils.escaping as escaping
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKGeneralException, MKUserError
-from cmk.gui.globals import active_config, html, output_funnel, request, theme
+from cmk.gui.globals import html, output_funnel, request, theme
 from cmk.gui.htmllib import HTMLTagAttributes
 from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.http import UploadedFile

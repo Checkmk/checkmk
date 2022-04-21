@@ -15,8 +15,9 @@ import cmk.gui.i18n
 import cmk.gui.pages
 import cmk.gui.sites as sites
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKAuthException
-from cmk.gui.globals import active_config, g, html, request
+from cmk.gui.globals import g, html, request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import mega_menu_registry

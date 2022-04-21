@@ -9,8 +9,8 @@ from cmk.utils.object_diff import make_diff_text
 import cmk.gui.mkeventd
 import cmk.gui.userdb as userdb
 import cmk.gui.watolib.global_settings as global_settings
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import active_config
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.plugins.userdb.utils import add_internal_attributes

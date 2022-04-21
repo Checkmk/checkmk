@@ -9,8 +9,9 @@ import re
 from typing import Any, Dict, List, Optional, Tuple
 
 import cmk.gui.utils as utils
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKGeneralException
-from cmk.gui.globals import active_config, html, theme
+from cmk.gui.globals import html, theme
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.plugins.views.utils import (

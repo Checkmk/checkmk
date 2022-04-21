@@ -26,7 +26,8 @@ import cmk.gui.wato.mkeventdstore
 import cmk.gui.watolib.activate_changes as activate_changes
 import cmk.gui.watolib.config_sync as config_sync
 import cmk.gui.watolib.utils as utils
-from cmk.gui.globals import active_config, request
+from cmk.gui.config import active_config
+from cmk.gui.globals import request
 
 
 @pytest.fixture(name="mocked_responses")

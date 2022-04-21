@@ -63,8 +63,9 @@ import cmk.gui.valuespec as valuespec
 import cmk.gui.view_utils
 import cmk.gui.visuals as visuals
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_topic_breadcrumb
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKGeneralException
-from cmk.gui.globals import active_config, display_options, html, request, response, theme
+from cmk.gui.globals import display_options, html, request, response, theme
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _, _u, ungettext

@@ -23,7 +23,8 @@ from cmk.utils.paths import livestatus_unix_socket
 from cmk.utils.type_defs import UserId
 from cmk.utils.version import is_managed_edition
 
-from cmk.gui.globals import active_config, g, request
+from cmk.gui.config import active_config
+from cmk.gui.globals import g, request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import LoggedInUser

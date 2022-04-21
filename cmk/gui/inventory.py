@@ -38,8 +38,9 @@ from cmk.utils.type_defs import HostName
 import cmk.gui.pages
 import cmk.gui.sites as sites
 import cmk.gui.userdb as userdb
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKAuthException, MKUserError
-from cmk.gui.globals import active_config, html, request, response
+from cmk.gui.globals import html, request, response
 from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user

@@ -42,8 +42,9 @@ from cmk.utils.type_defs import HostName
 import cmk.gui.inventory as inventory
 import cmk.gui.pages
 import cmk.gui.sites as sites
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import active_config, html, output_funnel, request, user_errors
+from cmk.gui.globals import html, output_funnel, request, user_errors
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib import foldable_container, HTML
 from cmk.gui.i18n import _

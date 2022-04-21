@@ -11,7 +11,7 @@ from typing import NamedTuple, Optional, Union
 from cmk.utils.type_defs import UserId
 
 import cmk.gui.watolib.git
-from cmk.gui.globals import active_config
+from cmk.gui.config import active_config
 from cmk.gui.htmllib import HTML
 from cmk.gui.logged_in import user
 from cmk.gui.utils import escaping

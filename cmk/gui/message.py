@@ -19,9 +19,10 @@ import cmk.gui.pages
 import cmk.gui.userdb as userdb
 import cmk.gui.utils as utils
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
+from cmk.gui.config import active_config
 from cmk.gui.default_permissions import PermissionSectionGeneral
 from cmk.gui.exceptions import MKAuthException, MKInternalError, MKUserError
-from cmk.gui.globals import active_config, html
+from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user

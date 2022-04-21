@@ -20,9 +20,9 @@ import cmk.gui.utils as utils
 import cmk.gui.utils.escaping as escaping
 import cmk.gui.watolib
 import cmk.gui.watolib.read_only
-from cmk.gui.config import builtin_role_ids
+from cmk.gui.config import active_config, builtin_role_ids
 from cmk.gui.exceptions import MKAuthException, MKException, MKUserError
-from cmk.gui.globals import active_config, request, response
+from cmk.gui.globals import request, response
 from cmk.gui.i18n import _, _l
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user

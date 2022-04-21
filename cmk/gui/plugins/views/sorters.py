@@ -9,7 +9,7 @@ import time
 from typing import List, Optional, Tuple, TYPE_CHECKING
 
 import cmk.gui.utils as utils
-from cmk.gui.globals import active_config
+from cmk.gui.config import active_config
 from cmk.gui.i18n import _
 from cmk.gui.plugins.views.utils import (
     cmp_custom_variable,

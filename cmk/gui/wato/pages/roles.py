@@ -30,9 +30,9 @@ import cmk.gui.plugins.userdb.utils as userdb_utils
 import cmk.gui.userdb as userdb
 import cmk.gui.watolib as watolib
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.config import builtin_role_ids
+from cmk.gui.config import active_config, builtin_role_ids
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import active_config, html, request
+from cmk.gui.globals import html, request
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
 from cmk.gui.page_menu import (

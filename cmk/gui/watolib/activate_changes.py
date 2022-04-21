@@ -61,8 +61,9 @@ import cmk.gui.watolib.git
 import cmk.gui.watolib.sidebar_reload
 import cmk.gui.watolib.snapshots
 import cmk.gui.watolib.utils
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKAuthException, MKGeneralException, MKUserError, RequestTimeout
-from cmk.gui.globals import active_config, html
+from cmk.gui.globals import html
 from cmk.gui.globals import request as _request
 from cmk.gui.globals import timeout_manager
 from cmk.gui.i18n import _

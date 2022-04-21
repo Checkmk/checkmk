@@ -19,8 +19,9 @@ import cmk.gui.inventory as inventory
 import cmk.gui.site_config as site_config
 import cmk.gui.sites as sites
 import cmk.gui.utils as utils
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import active_config, user_errors
+from cmk.gui.globals import user_errors
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.type_defs import FilterHeader, FilterHTTPVariables, Row, Rows, VisualContext

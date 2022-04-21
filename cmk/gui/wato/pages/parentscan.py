@@ -15,8 +15,9 @@ from cmk.utils.type_defs import HostName
 import cmk.gui.forms as forms
 import cmk.gui.gui_background_job as gui_background_job
 import cmk.gui.watolib as watolib
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import HTTPRedirect, MKUserError
-from cmk.gui.globals import active_config, html, request
+from cmk.gui.globals import html, request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user

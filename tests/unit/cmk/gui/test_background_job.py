@@ -18,7 +18,7 @@ import cmk.utils.paths
 import cmk.utils.version as cmk_version
 
 import cmk.gui.background_job as background_job
-import cmk.gui.globals as gui_globals
+import cmk.gui.config as config
 import cmk.gui.gui_background_job as gui_background_job
 import cmk.gui.log
 
@@ -29,7 +29,7 @@ def debug_logging():
         {"cmk.web": logging.DEBUG, "cmk.web.background-job": cmk.utils.log.VERBOSE}
     )
     yield
-    cmk.gui.log.set_log_levels(gui_globals.active_config.log_levels)
+    cmk.gui.log.set_log_levels(config.active_config.log_levels)
 
 
 def test_registered_background_jobs():

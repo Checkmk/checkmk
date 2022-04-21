@@ -26,8 +26,9 @@ import cmk.gui.utils.escaping as escaping
 import cmk.gui.view_utils
 import cmk.gui.watolib as watolib
 from cmk.gui import sites
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKConfigError
-from cmk.gui.globals import active_config, html, output_funnel, request, theme
+from cmk.gui.globals import html, output_funnel, request, theme
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _, _l

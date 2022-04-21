@@ -26,7 +26,8 @@ from typing import (
 import cmk.gui.utils as utils
 import cmk.gui.utils.escaping as escaping
 import cmk.gui.weblib as weblib
-from cmk.gui.globals import active_config, html, output_funnel, request, response
+from cmk.gui.config import active_config
+from cmk.gui.globals import html, output_funnel, request, response
 from cmk.gui.htmllib import foldable_container, HTML
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user

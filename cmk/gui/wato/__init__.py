@@ -111,6 +111,7 @@ import cmk.gui.wato.permissions
 import cmk.gui.watolib as watolib
 import cmk.gui.watolib.hosts_and_folders
 import cmk.gui.weblib as weblib
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import (
     HTTPRedirect,
     MKAuthException,
@@ -119,7 +120,7 @@ from cmk.gui.exceptions import (
     MKInternalError,
     MKUserError,
 )
-from cmk.gui.globals import active_config, html
+from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _, _l, _u
 from cmk.gui.log import logger

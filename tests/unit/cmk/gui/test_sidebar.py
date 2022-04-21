@@ -9,7 +9,8 @@ from typing import Optional
 import pytest
 
 import cmk.gui.sidebar as sidebar
-from cmk.gui.globals import active_config, html
+from cmk.gui.config import active_config
+from cmk.gui.globals import html
 from cmk.gui.logged_in import user
 from cmk.gui.sidebar import UserSidebarSnapin
 

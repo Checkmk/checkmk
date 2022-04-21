@@ -26,7 +26,7 @@ import cmk.utils.version as cmk_version
 from cmk.utils.rulesets.ruleset_matcher import get_tag_to_group_map, RulesetToDictTransformer
 
 import cmk.gui.watolib as watolib  # pylint: disable=cmk-module-layer-violation
-from cmk.gui.globals import active_config  # pylint: disable=cmk-module-layer-violation
+from cmk.gui.config import active_config  # pylint: disable=cmk-module-layer-violation
 
 if cmk_version.is_managed_edition():
     import cmk.gui.cme.managed as managed  # pylint: disable=cmk-module-layer-violation,no-name-in-module

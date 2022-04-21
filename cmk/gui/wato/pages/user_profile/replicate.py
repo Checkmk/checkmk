@@ -5,8 +5,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.breadcrumb import make_simple_page_breadcrumb
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKAuthException, MKUserError
-from cmk.gui.globals import active_config, html, request
+from cmk.gui.globals import html, request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import mega_menu_registry

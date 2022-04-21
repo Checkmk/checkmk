@@ -17,8 +17,8 @@ from cmk.utils.type_defs import HostName
 
 import cmk.gui.utils.escaping as escaping
 import cmk.gui.watolib as watolib
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import active_config
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.site_config import allsites

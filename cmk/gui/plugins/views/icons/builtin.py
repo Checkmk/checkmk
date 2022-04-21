@@ -46,7 +46,8 @@ import cmk.utils.render
 from cmk.utils.type_defs import TagID
 
 import cmk.gui.bi as bi
-from cmk.gui.globals import active_config, html, request, response
+from cmk.gui.config import active_config
+from cmk.gui.globals import html, request, response
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _

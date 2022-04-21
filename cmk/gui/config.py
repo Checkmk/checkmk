@@ -26,7 +26,6 @@ import cmk.gui.log as log
 import cmk.gui.utils as utils
 from cmk.gui.ctx_stack import request_local_attr
 from cmk.gui.exceptions import MKConfigError
-from cmk.gui.globals import active_config
 from cmk.gui.i18n import _
 
 # Kept for compatibility with pre 1.6 GUI plugins
@@ -81,6 +80,9 @@ class Config(CREConfig, CEEConfig, CMEConfig):
     """
 
     tags: cmk.utils.tags.TagConfig = cmk.utils.tags.TagConfig()
+
+
+active_config: Config = request_local_attr("config")
 
 
 # .

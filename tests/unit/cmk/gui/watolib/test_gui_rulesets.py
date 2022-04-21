@@ -17,8 +17,8 @@ import cmk.gui.utils
 import cmk.gui.wato
 import cmk.gui.watolib.hosts_and_folders as hosts_and_folders
 import cmk.gui.watolib.rulesets as rulesets
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKGeneralException
-from cmk.gui.globals import active_config
 from cmk.gui.plugins.wato.check_parameters.local import _parameter_valuespec_local
 from cmk.gui.plugins.wato.check_parameters.ps import _valuespec_inventory_processes_rules
 

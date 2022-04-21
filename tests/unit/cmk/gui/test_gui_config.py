@@ -20,7 +20,7 @@ import cmk.utils.version as cmk_version
 
 import cmk.gui.config
 import cmk.gui.permissions as permissions
-from cmk.gui.globals import active_config
+from cmk.gui.config import active_config
 from cmk.gui.permissions import (
     load_dynamic_permissions,
     Permission,

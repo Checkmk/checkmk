@@ -16,8 +16,8 @@ import cmk.utils.rulesets.tuple_rulesets
 from cmk.utils.type_defs import ContactgroupName
 from cmk.utils.version import parse_check_mk_version
 
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKGeneralException
-from cmk.gui.globals import active_config
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.sites import SiteStatus

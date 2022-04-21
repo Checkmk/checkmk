@@ -17,8 +17,9 @@ from cmk.utils.prediction import lq_logic
 import cmk.gui.bi as bi
 import cmk.gui.mkeventd as mkeventd
 import cmk.gui.sites as sites
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKMissingDataError, MKUserError
-from cmk.gui.globals import active_config, html, request, user_errors
+from cmk.gui.globals import html, request, user_errors
 from cmk.gui.i18n import _, _l
 from cmk.gui.type_defs import (
     Choices,

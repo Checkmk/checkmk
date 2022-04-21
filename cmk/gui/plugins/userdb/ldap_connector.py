@@ -59,8 +59,8 @@ from cmk.utils.type_defs import UserId
 import cmk.gui.hooks as hooks
 import cmk.gui.log as log
 import cmk.gui.utils.escaping as escaping
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKGeneralException, MKUserError
-from cmk.gui.globals import active_config
 from cmk.gui.i18n import _
 from cmk.gui.plugins.userdb.utils import (
     add_internal_attributes,

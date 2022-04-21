@@ -9,7 +9,7 @@ from typing import List, Tuple
 import cmk.gui.dashboard as dashboard
 import cmk.gui.pagetypes as pagetypes
 import cmk.gui.views as views
-from cmk.gui.globals import active_config
+from cmk.gui.config import active_config
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import mega_menu_registry

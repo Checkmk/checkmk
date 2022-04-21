@@ -7,7 +7,7 @@
 from typing import List
 
 import cmk.gui.dashboard as dashboard
-from cmk.gui.globals import active_config
+from cmk.gui.config import active_config
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.plugins.sidebar.utils import (

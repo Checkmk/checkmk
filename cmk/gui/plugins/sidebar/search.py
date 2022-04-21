@@ -19,8 +19,9 @@ from cmk.utils.exceptions import MKException, MKGeneralException
 
 import cmk.gui.sites as sites
 import cmk.gui.utils
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import HTTPRedirect, MKUserError
-from cmk.gui.globals import active_config, html, output_funnel, request
+from cmk.gui.globals import html, output_funnel, request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user

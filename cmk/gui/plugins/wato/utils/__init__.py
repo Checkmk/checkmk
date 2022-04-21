@@ -31,8 +31,9 @@ import cmk.gui.mkeventd
 import cmk.gui.userdb as userdb
 import cmk.gui.watolib as watolib
 import cmk.gui.weblib as weblib
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKGeneralException, MKUserError
-from cmk.gui.globals import active_config, html, request
+from cmk.gui.globals import html, request
 from cmk.gui.groups import (
     GroupSpecs,
     load_contact_group_information,

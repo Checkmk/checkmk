@@ -15,9 +15,8 @@ import cmk.utils.store as store
 from cmk.utils.site import omd_site
 from cmk.utils.type_defs import UserId
 
-from cmk.gui.config import builtin_role_ids
+from cmk.gui.config import active_config, builtin_role_ids
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import active_config
 from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import LoggedInUser, save_user_file, user

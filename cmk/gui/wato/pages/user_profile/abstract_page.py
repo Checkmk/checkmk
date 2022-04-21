@@ -7,8 +7,9 @@
 import abc
 
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKAuthException, MKUserError
-from cmk.gui.globals import active_config, html, request, user_errors
+from cmk.gui.globals import html, request, user_errors
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import mega_menu_registry

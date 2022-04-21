@@ -14,8 +14,8 @@ from cmk.utils.defines import short_service_state_name
 import cmk.gui.mkeventd as mkeventd
 import cmk.gui.sites as sites
 import cmk.gui.utils.escaping as escaping
-from cmk.gui.config import builtin_role_ids
-from cmk.gui.globals import active_config, html, request
+from cmk.gui.config import active_config, builtin_role_ids
+from cmk.gui.globals import html, request
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _, _l, ungettext
 from cmk.gui.logged_in import user

@@ -15,8 +15,8 @@ import cmk.utils.plugin_registry
 import cmk.utils.regex
 from cmk.utils.type_defs import TagID
 
-from cmk.gui.config import builtin_role_ids, register_post_config_load_hook
-from cmk.gui.globals import active_config, html
+from cmk.gui.config import active_config, builtin_role_ids, register_post_config_load_hook
+from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user

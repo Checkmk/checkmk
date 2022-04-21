@@ -11,7 +11,8 @@ import cmk.gui.site_config as site_config
 import cmk.gui.sites as sites
 import cmk.gui.views as views
 import cmk.gui.watolib as watolib
-from cmk.gui.globals import active_config, html
+from cmk.gui.config import active_config
+from cmk.gui.globals import html
 from cmk.gui.htmllib import foldable_container, HTML
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user

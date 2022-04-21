@@ -11,7 +11,8 @@ import livestatus
 import cmk.gui.notifications as notifications
 import cmk.gui.sites as sites
 import cmk.gui.visuals as visuals
-from cmk.gui.globals import active_config, html, request
+from cmk.gui.config import active_config
+from cmk.gui.globals import html, request
 from cmk.gui.i18n import _, ungettext
 from cmk.gui.logged_in import user
 from cmk.gui.plugins.sidebar.utils import CustomizableSidebarSnapin, link, snapin_registry

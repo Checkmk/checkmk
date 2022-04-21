@@ -20,8 +20,9 @@ import cmk.gui.userdb as userdb
 import cmk.gui.view_utils
 import cmk.gui.watolib as watolib
 from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import active_config, html, request
+from cmk.gui.globals import html, request
 from cmk.gui.htmllib import foldable_container
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user

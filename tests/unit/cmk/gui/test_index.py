@@ -10,8 +10,9 @@ import pytest
 from _pytest.monkeypatch import MonkeyPatch
 
 import cmk.gui.main
+from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import request_local_attr
-from cmk.gui.globals import active_config, html
+from cmk.gui.globals import html
 from cmk.gui.logged_in import user
 
 RequestContextFixture = Iterator[None]

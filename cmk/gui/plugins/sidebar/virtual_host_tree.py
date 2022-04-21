@@ -9,8 +9,9 @@ from typing import Any, ContextManager, Dict, List
 
 import cmk.gui.sites as sites
 import cmk.gui.watolib as watolib
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import active_config, html, request, response
+from cmk.gui.globals import html, request, response
 from cmk.gui.htmllib import foldable_container, HTML
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user

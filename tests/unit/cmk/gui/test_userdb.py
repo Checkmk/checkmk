@@ -24,8 +24,8 @@ import cmk.gui.plugins.userdb.htpasswd as htpasswd
 import cmk.gui.plugins.userdb.ldap_connector as ldap
 import cmk.gui.plugins.userdb.utils as utils
 import cmk.gui.userdb as userdb
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKAuthException, MKUserError
-from cmk.gui.globals import active_config
 from cmk.gui.type_defs import WebAuthnCredential
 from cmk.gui.valuespec import Dictionary
 

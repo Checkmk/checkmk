@@ -28,8 +28,9 @@ from cmk.gui.breadcrumb import (
     make_simple_page_breadcrumb,
     make_topic_breadcrumb,
 )
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKGeneralException
-from cmk.gui.globals import active_config, html, request, theme
+from cmk.gui.globals import html, request, theme
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import mega_menu_registry

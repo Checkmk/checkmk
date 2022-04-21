@@ -10,7 +10,7 @@ import cmk.utils.paths
 from cmk.utils.type_defs import UserId
 
 import cmk.gui.permissions as permissions
-from cmk.gui.globals import active_config
+from cmk.gui.config import active_config
 
 
 def user_may(user_id: Optional[UserId], pname: str) -> bool:

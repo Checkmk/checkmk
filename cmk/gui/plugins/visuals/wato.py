@@ -12,7 +12,8 @@ from cmk.utils.prediction import lq_logic
 import cmk.gui.site_config as site_config
 import cmk.gui.sites as sites
 import cmk.gui.watolib as watolib
-from cmk.gui.globals import active_config, html
+from cmk.gui.config import active_config
+from cmk.gui.globals import html
 from cmk.gui.i18n import _l
 from cmk.gui.plugins.visuals.utils import Filter, filter_registry
 from cmk.gui.type_defs import Choices, FilterHeader, FilterHTTPVariables

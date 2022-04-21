@@ -51,8 +51,9 @@ import cmk.gui.log as log
 import cmk.gui.utils as utils
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbRenderer
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import active_config, theme, user_errors
+from cmk.gui.globals import theme, user_errors
 from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user

@@ -7,7 +7,7 @@
 import cmk.utils.store as store
 from cmk.utils.type_defs import TimeperiodSpec, TimeperiodSpecs
 
-from cmk.gui.globals import active_config
+from cmk.gui.config import active_config
 from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import DropdownChoice

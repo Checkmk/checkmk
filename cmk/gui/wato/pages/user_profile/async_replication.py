@@ -15,8 +15,9 @@ from cmk.utils.type_defs import UserId
 
 import cmk.gui.sites
 from cmk.gui import userdb
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKGeneralException, MKUserError
-from cmk.gui.globals import active_config, html
+from cmk.gui.globals import html
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.pages import AjaxPage, page_registry

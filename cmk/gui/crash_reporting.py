@@ -32,8 +32,9 @@ from cmk.gui.breadcrumb import (
     make_current_page_breadcrumb_item,
     make_topic_breadcrumb,
 )
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import active_config, html, request, response, user_errors
+from cmk.gui.globals import html, request, response, user_errors
 from cmk.gui.htmllib import HTML, HTMLContent
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user

@@ -21,8 +21,9 @@ from cmk.automations.results import result_type_registry, SerializedResult
 import cmk.gui.userdb as userdb
 import cmk.gui.utils
 import cmk.gui.watolib as watolib
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKAuthException, MKGeneralException
-from cmk.gui.globals import active_config, request, response
+from cmk.gui.globals import request, response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import SuperUserContext, user

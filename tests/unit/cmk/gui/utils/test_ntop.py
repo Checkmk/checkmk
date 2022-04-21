@@ -8,7 +8,7 @@ import pytest
 
 import cmk.utils.version as cmk_version
 
-from cmk.gui.globals import active_config
+from cmk.gui.config import active_config
 from cmk.gui.logged_in import user
 from cmk.gui.utils.ntop import (
     get_ntop_misconfiguration_reason,

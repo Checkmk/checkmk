@@ -8,7 +8,8 @@ from typing import Optional, Tuple
 
 import cmk.gui.metrics as metrics
 import cmk.gui.utils.escaping as escaping
-from cmk.gui.globals import active_config, html
+from cmk.gui.config import active_config
+from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
 from cmk.gui.log import logger

@@ -15,8 +15,8 @@ from cmk.utils.type_defs import MetricName
 import cmk.gui.mkeventd as mkeventd
 import cmk.gui.sites as sites
 import cmk.gui.watolib as watolib
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import active_config
 from cmk.gui.i18n import _
 from cmk.gui.pages import AjaxPage, page_registry
 from cmk.gui.plugins.metrics.utils import (

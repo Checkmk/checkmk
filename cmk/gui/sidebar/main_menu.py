@@ -10,8 +10,9 @@ Cares about the main navigation of our GUI. This is a) the small sidebar and b) 
 from typing import List, NamedTuple, Optional, Union
 
 import cmk.gui.message as message
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKAuthException
-from cmk.gui.globals import active_config, html, output_funnel, request, response
+from cmk.gui.globals import html, output_funnel, request, response
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _, ungettext
 from cmk.gui.logged_in import user

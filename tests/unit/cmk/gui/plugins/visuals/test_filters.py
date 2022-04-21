@@ -19,7 +19,8 @@ import cmk.gui.plugins.visuals
 # Triggers plugin loading
 import cmk.gui.views
 import cmk.gui.visuals
-from cmk.gui.globals import active_config, output_funnel
+from cmk.gui.config import active_config
+from cmk.gui.globals import output_funnel
 from cmk.gui.plugins.visuals.wato import FilterWatoFolder
 from cmk.gui.type_defs import VisualContext
 

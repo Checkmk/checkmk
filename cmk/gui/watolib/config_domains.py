@@ -27,9 +27,8 @@ import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 import cmk.gui.gui_background_job as gui_background_job
 import cmk.gui.hooks as hooks
 import cmk.gui.mkeventd as mkeventd
-from cmk.gui.config import get_default_config
+from cmk.gui.config import active_config, get_default_config
 from cmk.gui.exceptions import MKGeneralException, MKUserError
-from cmk.gui.globals import active_config
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.plugins.watolib.utils import (

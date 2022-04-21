@@ -35,8 +35,9 @@ from cmk.automations.results import CheckPreviewEntry
 import cmk.gui.watolib as watolib
 from cmk.gui.background_job import JobStatusStates
 from cmk.gui.breadcrumb import Breadcrumb, make_main_menu_breadcrumb
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKGeneralException, MKUserError
-from cmk.gui.globals import active_config, html, output_funnel, request
+from cmk.gui.globals import html, output_funnel, request
 from cmk.gui.htmllib import foldable_container, HTML
 from cmk.gui.i18n import _, ungettext
 from cmk.gui.logged_in import user

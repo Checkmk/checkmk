@@ -18,8 +18,9 @@ import cmk.gui.view_utils
 import cmk.gui.watolib as watolib
 import cmk.gui.weblib as weblib
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import active_config, html, output_funnel, request
+from cmk.gui.globals import html, output_funnel, request
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user

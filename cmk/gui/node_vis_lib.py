@@ -10,7 +10,7 @@ from typing import Any, Optional
 from cmk.utils import store
 
 from cmk.gui import watolib
-from cmk.gui.globals import active_config
+from cmk.gui.config import active_config
 
 
 class BILayoutManagement:

@@ -14,8 +14,9 @@ import livestatus
 
 import cmk.utils.render
 
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKGeneralException
-from cmk.gui.globals import active_config, html, output_funnel, request, response, theme
+from cmk.gui.globals import html, output_funnel, request, response, theme
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _, _u
 from cmk.gui.log import logger

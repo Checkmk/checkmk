@@ -13,9 +13,8 @@ from tests.testlib.users import create_and_destroy_user
 import cmk.utils.paths
 
 import cmk.gui.permissions as permissions
-from cmk.gui.config import builtin_role_ids
+from cmk.gui.config import active_config, builtin_role_ids
 from cmk.gui.exceptions import MKAuthException
-from cmk.gui.globals import active_config
 from cmk.gui.logged_in import LoggedInNobody, LoggedInSuperUser, LoggedInUser
 from cmk.gui.logged_in import user as global_user
 from cmk.gui.logged_in import UserContext

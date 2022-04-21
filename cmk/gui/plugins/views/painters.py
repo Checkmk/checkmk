@@ -20,7 +20,8 @@ from cmk.utils.type_defs import Timestamp
 import cmk.gui.metrics as metrics
 import cmk.gui.sites as sites
 import cmk.gui.utils.escaping as escaping
-from cmk.gui.globals import active_config, html, output_funnel, request, response
+from cmk.gui.config import active_config
+from cmk.gui.globals import html, output_funnel, request, response
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _

@@ -9,7 +9,7 @@ import pytest
 import cmk.utils.version
 
 import cmk.gui.metrics as metrics
-from cmk.gui.globals import active_config
+from cmk.gui.config import active_config
 from cmk.gui.plugins.metrics import utils
 from cmk.gui.type_defs import Perfdata
 

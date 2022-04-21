@@ -17,8 +17,9 @@ import cmk.utils
 import cmk.utils.render
 
 import cmk.gui.pdf as pdf
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKGeneralException, MKUnauthenticatedException, MKUserError
-from cmk.gui.globals import active_config, request, response
+from cmk.gui.globals import request, response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import SuperUserContext

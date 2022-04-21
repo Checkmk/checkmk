@@ -31,6 +31,7 @@ from .utils_inventory import sort_inventory_result
                 name="oh-lord",
                 namespace="have-mercy",
                 labels={},
+                annotations={},
                 selector=Selector(match_labels={}, match_expressions=[]),
                 creation_timestamp=1600000000.0,
                 containers=ThinContainers(images={"i/name:0.5"}, names=["name"]),

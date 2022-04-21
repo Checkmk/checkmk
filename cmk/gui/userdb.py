@@ -70,7 +70,7 @@ from cmk.gui.plugins.userdb.utils import (
     UserConnector,
 )
 from cmk.gui.site_config import is_wato_slave_site
-from cmk.gui.type_defs import SessionInfo, TwoFactorCredentials, UserSpec
+from cmk.gui.type_defs import SessionInfo, TwoFactorCredentials, Users, UserSpec
 from cmk.gui.utils.roles import roles_of_user
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import (
@@ -85,8 +85,6 @@ from cmk.gui.valuespec import (
 )
 
 auth_logger = gui_logger.getChild("auth")
-
-Users = Dict[UserId, UserSpec]  # TODO: Improve this type
 
 
 def load_plugins() -> None:
@@ -1452,7 +1450,7 @@ class UserSyncBackgroundJob(gui_background_job.GUIBackgroundJob):
                 )
                 connection.do_sync(
                     add_to_changelog=add_to_changelog,
-                    only_username=False,
+                    only_username=None,
                     load_users_func=load_users,
                     save_users_func=save_users,
                 )

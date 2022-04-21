@@ -38,7 +38,7 @@ import shutil
 import sys
 import time
 from pathlib import Path
-from typing import Dict, IO, Iterator, List, Literal, Optional, Sequence, Set
+from typing import Callable, Dict, IO, Iterator, List, Literal, Optional, Sequence, Set
 from typing import Tuple as _Tuple
 from typing import Type, Union
 
@@ -77,6 +77,7 @@ from cmk.gui.plugins.userdb.utils import (
     UserConnector,
 )
 from cmk.gui.site_config import has_wato_slave_sites
+from cmk.gui.type_defs import Users
 from cmk.gui.valuespec import (
     CascadingDropdown,
     CascadingDropdownChoice,
@@ -1198,7 +1199,14 @@ class LDAPUserConnector(UserConnector):
         suffix = self._get_suffix()
         return "%s@%s" % (username, suffix)
 
-    def do_sync(self, add_to_changelog, only_username, load_users_func, save_users_func):
+    def do_sync(
+        self,
+        *,
+        add_to_changelog: bool,
+        only_username: Optional[UserId],
+        load_users_func: Callable[[bool], Users],
+        save_users_func: Callable[[Users], None],
+    ):
         if not self.has_user_base_dn_configured():
             self._logger.info('Not trying sync (no "user base DN" configured)')
             return  # silently skip sync without configuration
@@ -1215,7 +1223,7 @@ class LDAPUserConnector(UserConnector):
 
         ldap_users = self.get_users()
 
-        users = load_users_func(lock=True)
+        users = load_users_func(True)  # too lazy to add a protocol for the "lock" kwarg...
 
         changes = []
 

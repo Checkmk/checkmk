@@ -6,7 +6,7 @@
 
 import abc
 import os
-from typing import Any, Dict, List, Literal, Optional, Tuple, Type, Union
+from typing import Any, Callable, Dict, List, Literal, Optional, Tuple, Type, Union
 
 from livestatus import SiteId
 
@@ -21,7 +21,7 @@ from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import LoggedInUser, save_user_file, user
 from cmk.gui.site_config import get_site_config, is_wato_slave_site, site_is_local
-from cmk.gui.type_defs import UserSpec
+from cmk.gui.type_defs import Users, UserSpec
 from cmk.gui.utils import is_allowed_url
 
 # count this up, if new user attributes are used or old are marked as
@@ -358,7 +358,14 @@ class UserConnector(abc.ABC):
 
     # Optional: Hook function can be registered here to be executed
     # to synchronize all users.
-    def do_sync(self, add_to_changelog, only_username, load_users_func, save_users_func):
+    def do_sync(
+        self,
+        *,
+        add_to_changelog: bool,
+        only_username: Optional[UserId],
+        load_users_func: Callable[[bool], Users],
+        save_users_func: Callable[[Users], None],
+    ):
         pass
 
     # Optional: Tells whether or not the synchronization (using do_sync()

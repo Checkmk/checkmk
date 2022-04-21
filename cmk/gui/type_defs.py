@@ -125,6 +125,8 @@ class UserSpec(TypedDict, total=False):
     user_scheme_serial: int
 
 
+Users = Dict[UserId, UserSpec]  # TODO: Improve this type
+
 # Visual specific
 FilterName = str
 FilterHTTPVariables = Mapping[str, str]

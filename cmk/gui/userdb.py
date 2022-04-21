@@ -879,13 +879,13 @@ def remove_custom_attr(userid: UserId, key: str) -> None:
         pass  # Ignore non existing files
 
 
-def get_online_user_ids() -> List[UserId]:
-    online_threshold = time.time() - active_config.user_online_maxage
-    users = []
-    for user_id, user in load_users(lock=False).items():
-        if get_last_activity(user) >= online_threshold:
-            users.append(user_id)
-    return users
+def get_online_user_ids(now: datetime) -> List[UserId]:
+    online_threshold = now.timestamp() - active_config.user_online_maxage
+    return [
+        user_id
+        for user_id, user in load_users(lock=False).items()
+        if get_last_activity(user) >= online_threshold
+    ]
 
 
 def get_last_activity(user: UserSpec) -> int:

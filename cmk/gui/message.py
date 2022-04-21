@@ -6,6 +6,7 @@
 
 import subprocess
 import time
+from datetime import datetime
 from typing import Any, Dict, List, Tuple
 
 from six import ensure_str
@@ -292,7 +293,7 @@ def _process_message_message(msg):
     if dest_what == "all_users":
         recipients = list(active_config.multisite_users.keys())
     elif dest_what == "online":
-        recipients = userdb.get_online_user_ids()
+        recipients = userdb.get_online_user_ids(datetime.now())
     elif dest_what == "list":
         recipients = msg["dest"][1]
     else:

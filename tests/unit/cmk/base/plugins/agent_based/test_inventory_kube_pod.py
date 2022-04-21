@@ -92,6 +92,7 @@ from cmk.base.plugins.agent_based.utils.kube import (
                 Attributes(
                     path=["software", "applications", "kube", "metadata"],
                     inventory_attributes={
+                        "object": "Pod",
                         "name": "name",
                         "namespace": "default",
                     },

@@ -396,7 +396,8 @@ class UserSelection(DropdownChoice):
 
 
 def on_succeeded_login(username: UserId) -> str:
-    _ensure_user_can_init_session(username)
+    now = datetime.now()
+    _ensure_user_can_init_session(username, now)
     _reset_failed_logins(username)
 
     return _initialize_session(username)
@@ -517,13 +518,13 @@ def _is_valid_user_session(
     return True
 
 
-def _ensure_user_can_init_session(username: UserId) -> None:
+def _ensure_user_can_init_session(username: UserId, now: datetime) -> None:
     """When single user session mode is enabled, check that there is not another active session"""
     session_timeout = active_config.single_user_session
     if session_timeout is None:
         return  # No login session limitation enabled, no validation
     for session_info in _load_session_infos(username).values():
-        idle_time = time.time() - session_info.last_activity
+        idle_time = now.timestamp() - session_info.last_activity
         if idle_time <= session_timeout:
             auth_logger.debug(
                 f"{username} another session is active (inactive for: {idle_time} seconds)"

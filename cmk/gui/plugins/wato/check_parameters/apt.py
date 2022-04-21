@@ -30,6 +30,13 @@ def _parameter_valuespec_apt():
                     default_value=2,
                 ),
             ),
+            (
+                "removals",
+                MonitoringState(
+                    title=_("State when removals are pending"),
+                    default_value=1,
+                ),
+            ),
         ],
     )
 

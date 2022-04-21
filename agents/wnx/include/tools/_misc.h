@@ -348,7 +348,7 @@ inline std::vector<std::string_view> ToView(
 
 /// max_count == 0 means inifinite parsing
 inline std::vector<std::string> SplitString(const std::string &str,
-                                            const std::string &delimiter,
+                                            std::string_view delimiter,
                                             size_t max_count = 0) noexcept {
     // sanity
     if (str.empty()) return {};
@@ -384,7 +384,7 @@ inline std::vector<std::string> SplitString(const std::string &str,
 // ".b", "." => { "b"}
 // max_count == 0 means inifinite parsing
 inline std::vector<std::wstring> SplitString(const std::wstring &str,
-                                             const std::wstring &delimiter,
+                                             std::wstring_view delimiter,
                                              size_t max_count = 0) noexcept {
     // sanity
     if (str.empty()) return {};
@@ -416,7 +416,7 @@ inline std::vector<std::wstring> SplitString(const std::wstring &str,
 // special case when we are parsing to the end
 // indirectly tested in the test-cma_tools
 inline std::vector<std::wstring> SplitStringExact(const std::wstring &str,
-                                                  const std::wstring &delimiter,
+                                                  std::wstring_view delimiter,
                                                   size_t max_count) noexcept {
     // sanity
     if (str.empty()) return {};

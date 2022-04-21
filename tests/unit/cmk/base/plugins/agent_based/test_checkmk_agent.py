@@ -195,26 +195,14 @@ def test_check_tranport_ls_ok(fail_state: State) -> None:
 
 @pytest.mark.parametrize("fail_state", list(State))
 def test_check_tranport_no_tls(fail_state: State) -> None:
-    assert [
-        *_check_transport(
-            False,
-            ControllerSection(allow_legacy_pull=True, ip_allowlist=()),
-            fail_state,
-        )
-    ] == [
-        Result(
-            state=fail_state,
-            summary="TLS is not activated on monitored host (see details)",
-            details=(
-                "The hosts agent supports TLS, but it is not being used. "
-                "We strongly recommend to enable TLS by registering the host to the site"
-                " (using the `cmk-agent-ctl register` command on the monitored host). "
-                "However you can configure missing TLS to be OK in the setting"
-                ' "State in case of available but not enabled TLS" of the ruleset'
-                ' "Status of the Checkmk services".'
-            ),
-        )
-    ]
+    (result,) = _check_transport(
+        False,
+        ControllerSection(allow_legacy_pull=True, ip_allowlist=()),
+        fail_state,
+    )
+    assert isinstance(result, Result)
+    assert result.state == fail_state
+    assert result.summary == "TLS is not activated on monitored host (see details)"
 
 
 @pytest.mark.parametrize("fail_state", list(State))

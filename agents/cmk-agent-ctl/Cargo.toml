@@ -40,6 +40,7 @@ toml = { version = "*" }
 rpassword = { version = "*" }
 async-trait = { version = "*" }
 os_info = { version = "*" }
+faccess = { version = "*" }
 
 [patch.crates-io]
 wepoll-ffi = { path = "./patch/wepoll-ffi-0.1.2" }

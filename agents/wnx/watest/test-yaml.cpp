@@ -693,6 +693,13 @@ TEST(AgentConfig, FactoryConfig) {
         auto rt_port = GetVal(realtime, vars::kRtPort, 111);
         EXPECT_EQ(rt_port, kDefaultRealtimePort);
 
+        EXPECT_EQ(GetVal(groups::kGlobal, vars::kGlobalWmiTimeout, 1),
+                  kDefaultWmiTimeout);
+
+        EXPECT_EQ(GetVal(groups::kGlobal, vars::kCpuLoadMethod,
+                         std::string{values::kCpuLoadPerf}),
+                  values::kCpuLoadWmi);
+
         auto passphrase =
             GetVal(realtime, vars::kGlobalPassword, std::string());
         EXPECT_TRUE(passphrase == "this is my password");

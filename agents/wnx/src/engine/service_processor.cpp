@@ -15,6 +15,7 @@
 #include "agent_controller.h"
 #include "cap.h"
 #include "commander.h"
+#include "common/cma_yml.h"
 #include "common/mailslot_transport.h"
 #include "common/wtools.h"
 #include "common/wtools_service.h"
@@ -393,16 +394,27 @@ bool ServiceProcessor::conditionallyStartOhm() noexcept {
     return true;
 }
 
+namespace {
+bool UsePerfCpuLoad(const YAML::Node &node) {
+    return yml::GetVal(node, std::string{cfg::groups::kGlobal},
+                       std::string{cfg::vars::kCpuLoadMethod}) ==
+           cfg::values::kCpuLoadPerf;
+}
+}  // namespace
+
 // This is relative simple function which kicks to call
 // different providers
 int ServiceProcessor::startProviders(AnswerId answer_id,
                                      const std::string &ip_addr) {
+    bool use_perf_cpuload = UsePerfCpuLoad(cfg::GetLoadedConfig());
     vf_.clear();
     max_wait_time_ = 0;
 
     // call of sensible to CPU-load sections
     auto started_sync =
-        tryToDirectCall(wmi_cpuload_provider_, answer_id, ip_addr);
+        use_perf_cpuload
+            ? false
+            : tryToDirectCall(wmi_cpuload_provider_, answer_id, ip_addr);
 
     // sections to be kicked out
     tryToKick(uptime_provider_, answer_id, ip_addr);
@@ -410,6 +422,10 @@ int ServiceProcessor::startProviders(AnswerId answer_id,
     if (cfg::groups::winperf.enabledInConfig() &&
         cfg::groups::global.allowedSection(cfg::vars::kWinPerfPrefixDefault)) {
         kickWinPerf(answer_id, ip_addr);
+    }
+
+    if (use_perf_cpuload) {
+        tryToKick(perf_cpuload_provider_, answer_id, ip_addr);
     }
 
     tryToKick(df_provider_, answer_id, ip_addr);

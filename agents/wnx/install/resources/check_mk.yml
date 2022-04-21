@@ -109,6 +109,8 @@ global:
     # In seconds 
     wmi_timeout: 5 
 
+    cpuload_method: 'use_wmi' # set use_perf if you have serious problems with the section
+
     # Internal log of agent
     # Write a logfile for tackling down crashes of the agent
     logging:

@@ -500,6 +500,9 @@
     <ClCompile Include="section_header.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="providers\perf_cpuload.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="unpack_packs.cmd">

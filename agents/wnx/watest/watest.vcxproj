@@ -90,6 +90,7 @@
     <EnableMicrosoftCodeAnalysis>false</EnableMicrosoftCodeAnalysis>
     <EnableClangTidyCodeAnalysis>true</EnableClangTidyCodeAnalysis>
     <ClangTidyChecks>-hicpp-signed-bitwise;-google-readability-braces-around-statements,-readability-braces-around-statements,-hicpp-braces-around-statements,-cppcoreguidelines-pro-bounds-array-to-pointer-decay,-hicpp-no-array-decay,-cppcoreguidelines-pro-bounds-pointer-arithmetic</ClangTidyChecks>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>false</LinkIncremental>
@@ -344,6 +345,7 @@
     <ClCompile Include="test-section_df.cpp" />
     <ClCompile Include="test-section_fileinfo.cpp" />
     <ClCompile Include="test-section_logwatchevent.cpp" />
+    <ClCompile Include="test-section_perf_cpuload.cpp" />
     <ClCompile Include="test-section_providers.cpp" />
     <ClCompile Include="test-section_ps.cpp" />
     <ClCompile Include="test-section_wmi.cpp" />

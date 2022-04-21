@@ -37,6 +37,7 @@
 #include "providers/mrpe.h"
 #include "providers/ohm.h"
 #include "providers/p_perf_counters.h"
+#include "providers/perf_cpuload.h"
 #include "providers/plugins.h"
 #include "providers/ps.h"
 #include "providers/services.h"
@@ -379,9 +380,10 @@ private:
                    const std::string &cmdline) {
         const auto &engine = section_provider.getEngine();
 
-        if (!isAllowed(engine)) return false;
+        if (!isAllowed(engine)) {
+            return false;
+        }
 
-        // success story...
         vf_.emplace_back(
             section_provider.kick(std::launch::async, cmdline, stamp, this));
         auto expected_timeout = section_provider.expectedTimeout();
@@ -395,9 +397,10 @@ private:
                          const std::string &cmdline) {
         const auto &engine = section_provider.getEngine();
 
-        if (!isAllowed(engine)) return false;
+        if (!isAllowed(engine)) {
+            return false;
+        }
 
-        // success story...
         section_provider.directCall(cmdline, stamp, getInternalPort());
 
         return true;
@@ -679,6 +682,8 @@ private:
 
     SectionProvider<provider::Wmi> wmi_cpuload_provider_{
         provider::kWmiCpuLoad, cma::provider::wmi::kSepChar};
+
+    SectionProvider<provider::PerfCpuLoad> perf_cpuload_provider_;
 
 #if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
     friend class ServiceProcessorTest;

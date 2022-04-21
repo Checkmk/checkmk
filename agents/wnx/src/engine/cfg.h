@@ -749,6 +749,7 @@ private:
     std::vector<std::string> only_from_;
     std::string password_;
     bool encrypt_;
+    std::string cpuload_method_;
 
     // sections
     std::vector<std::string> enabled_sections_;

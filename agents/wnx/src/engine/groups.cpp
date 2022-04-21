@@ -72,6 +72,8 @@ void Global::loadFromMainConfig() {
 
         wmi_timeout_ = GetVal(groups::kGlobal, vars::kGlobalWmiTimeout,
                               kDefaultWmiTimeout);
+        cpuload_method_ = GetVal(groups::kGlobal, vars::kCpuLoadMethod,
+                                 std::string{defaults::kCpuLoad});
 
         realtime_sections_ = GetInternalArray(realtime, vars::kRtRun);
         auto logging = GetNode(groups::kGlobal, vars::kLogging);

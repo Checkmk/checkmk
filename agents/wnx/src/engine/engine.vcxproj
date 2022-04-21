@@ -548,6 +548,7 @@ cd $(ProjectDir)</Command>
     <ClCompile Include="providers\mrpe.cpp" />
     <ClCompile Include="providers\ohm.cpp" />
     <ClCompile Include="providers\perf_counters_cl.cpp" />
+    <ClCompile Include="providers\perf_cpuload.cpp" />
     <ClCompile Include="providers\plugins.cpp" />
     <ClCompile Include="providers\ps.cpp" />
     <ClCompile Include="providers\p_perf_counters.cpp" />

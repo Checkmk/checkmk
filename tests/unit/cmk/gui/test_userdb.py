@@ -317,17 +317,17 @@ def test_is_valid_user_session_valid(user_id: UserId, session_valid: str) -> Non
 
 def test_ensure_user_can_init_no_single_user_session(user_id: UserId) -> None:
     assert active_config.single_user_session is None
-    assert userdb._ensure_user_can_init_session(user_id) is True
+    userdb._ensure_user_can_init_session(user_id)
 
 
 @pytest.mark.usefixtures("single_user_session_enabled")
 def test_ensure_user_can_init_no_previous_session(user_id: UserId) -> None:
-    assert userdb._ensure_user_can_init_session(user_id) is True
+    userdb._ensure_user_can_init_session(user_id)
 
 
 @pytest.mark.usefixtures("single_user_session_enabled")
 def test_ensure_user_can_init_with_previous_session_timeout(user_id: UserId) -> None:
-    assert userdb._ensure_user_can_init_session(user_id) is True
+    userdb._ensure_user_can_init_session(user_id)
 
 
 @pytest.mark.usefixtures("single_user_session_enabled")
@@ -335,7 +335,7 @@ def test_ensure_user_can_not_init_with_previous_session(
     user_id: UserId, session_valid: str
 ) -> None:
     with pytest.raises(MKUserError, match="Another session"):
-        assert userdb._ensure_user_can_init_session(user_id) is False
+        userdb._ensure_user_can_init_session(user_id)
 
 
 def test_initialize_session_single_user_session(user_id: UserId) -> None:

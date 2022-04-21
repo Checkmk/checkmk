@@ -517,25 +517,18 @@ def _is_valid_user_session(
     return True
 
 
-def _ensure_user_can_init_session(username: UserId) -> bool:
+def _ensure_user_can_init_session(username: UserId) -> None:
     """When single user session mode is enabled, check that there is not another active session"""
-    if active_config.single_user_session is None:
-        return True  # No login session limitation enabled, no validation
-
     session_timeout = active_config.single_user_session
-
+    if session_timeout is None:
+        return  # No login session limitation enabled, no validation
     for session_info in _load_session_infos(username).values():
-        if (time.time() - session_info.last_activity) > session_timeout:
-            continue  # Former active session timed out
-
-        auth_logger.debug(
-            "%s another session is active (inactive for: %d seconds)"
-            % (username, time.time() - session_info.last_activity)
-        )
-
-        raise MKUserError(None, _("Another session is active"))
-
-    return True  # No session active
+        idle_time = time.time() - session_info.last_activity
+        if idle_time <= session_timeout:
+            auth_logger.debug(
+                f"{username} another session is active (inactive for: {idle_time} seconds)"
+            )
+            raise MKUserError(None, _("Another session is active"))
 
 
 def _initialize_session(username: UserId) -> str:

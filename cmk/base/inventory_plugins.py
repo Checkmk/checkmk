@@ -19,7 +19,7 @@ handeled somewhere else entirely.
 """
 import os
 from pathlib import Path
-from typing import Any, Callable, Dict, Sequence, Set
+from typing import Any, Dict, Sequence, Set
 
 import cmk.utils.debug
 import cmk.utils.paths
@@ -40,7 +40,7 @@ from cmk.base.api.agent_based.register.section_plugins_legacy import (
 from cmk.base.api.agent_based.type_defs import SNMPSectionPlugin
 
 InventoryInfo = Dict[str, Any]
-GetInventoryApiContext = Callable[[], Dict[str, Any]]
+GetInventoryApiContext = config.GetInventoryApiContext
 
 # Inventory plugins used to have dependencies to check plugins and the inventory
 # plugins need the check API. This is the easiest solution to get this

@@ -168,6 +168,7 @@ class RRDConfig(TypedDict):
 
 CheckContext = Dict[str, Any]
 GetCheckApiContext = Callable[[], Dict[str, Any]]
+GetInventoryApiContext = Callable[[], Dict[str, Any]]
 CheckIncludes = List[str]
 DiscoveryCheckParameters = Dict
 
@@ -1509,6 +1510,10 @@ def max_cachefile_age(
 
 def load_all_agent_based_plugins(
     get_check_api_context: GetCheckApiContext,
+    legacy_inventory_plugins_loader: Callable[
+        [GetCheckApiContext, GetInventoryApiContext],
+        Sequence[str],
+    ],
 ) -> List[str]:
     """Load all checks and includes"""
     global _all_checks_loaded
@@ -1524,16 +1529,8 @@ def load_all_agent_based_plugins(
     )
 
     errors.extend(load_checks(get_check_api_context, filelist))
-
-    # LEGACY INVENTORY PLUGINS
-    # unfortunately, inventory_plugins will import cmk.base.config,
-    # so we have to use a local import for now.
-    # We could do further refactoring to resolve this, but the time would probably
-    # be spent better migrating the legacy inventory plugins to the new API...
-    import cmk.base.inventory_plugins as inventory_plugins  # pylint: disable=import-outside-toplevel
-
     errors.extend(
-        inventory_plugins.load_legacy_inventory_plugins(
+        legacy_inventory_plugins_loader(
             get_check_api_context,
             agent_based_register.inventory_plugins_legacy.get_inventory_context,
         )

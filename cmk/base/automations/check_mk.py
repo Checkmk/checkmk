@@ -77,6 +77,7 @@ import cmk.base.check_utils
 import cmk.base.config as config
 import cmk.base.core
 import cmk.base.core_config as core_config
+import cmk.base.inventory_plugins as inventory_plugins
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.nagios_utils
 import cmk.base.notify as notify
@@ -273,7 +274,10 @@ class AutomationSetAutochecks(DiscoveryAutomation):
         # service_descriptions of existing services to decided whether or not they are clustered
         # (See autochecks.set_autochecks_of_cluster())
         if host_config.is_cluster:
-            config.load_all_agent_based_plugins(check_api.get_check_api_context)
+            config.load_all_agent_based_plugins(
+                check_api.get_check_api_context,
+                inventory_plugins.load_legacy_inventory_plugins,
+            )
 
         # Fix data from version <2.0
         new_services: List[AutocheckServiceWithNodes] = []
@@ -1074,7 +1078,10 @@ class AutomationGetConfiguration(Automation):
         missing_variables = [v for v in variable_names if not hasattr(config, v)]
 
         if missing_variables:
-            config.load_all_agent_based_plugins(check_api.get_check_api_context)
+            config.load_all_agent_based_plugins(
+                check_api.get_check_api_context,
+                inventory_plugins.load_legacy_inventory_plugins,
+            )
             config.load(with_conf_d=False)
 
         result = {}

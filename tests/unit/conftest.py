@@ -230,7 +230,10 @@ class FixRegister:
         config._initialize_data_structures()
         assert config.check_info == {}
 
-        config.load_all_agent_based_plugins(check_api.get_check_api_context)
+        config.load_all_agent_based_plugins(
+            check_api.get_check_api_context,
+            inventory_plugins.load_legacy_inventory_plugins,
+        )
         inventory_plugins.load_legacy_inventory_plugins(
             check_api.get_check_api_context,
             register.inventory_plugins_legacy.get_inventory_context,

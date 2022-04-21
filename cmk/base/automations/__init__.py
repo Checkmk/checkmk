@@ -18,6 +18,7 @@ from cmk.automations.results import ABCAutomationResult
 
 import cmk.base.check_api as check_api
 import cmk.base.config as config
+import cmk.base.inventory_plugins as inventory_plugins
 import cmk.base.obsolete_output as out
 import cmk.base.profiling as profiling
 
@@ -47,7 +48,10 @@ class Automations:
                 raise MKAutomationError("Automation command '%s' is not implemented." % cmd)
 
             if automation.needs_checks:
-                config.load_all_agent_based_plugins(check_api.get_check_api_context)
+                config.load_all_agent_based_plugins(
+                    check_api.get_check_api_context,
+                    inventory_plugins.load_legacy_inventory_plugins,
+                )
 
             if automation.needs_config:
                 config.load(validate_hosts=False)

@@ -29,11 +29,6 @@ def check_mobileiron_misc(params: Mapping[str, Any], section: Section) -> CheckR
         )
 
     yield Result(
-        state=State.OK if section.uptime else State.UNKNOWN,
-        summary=f"Uptime: {render.timespan(section.uptime) if section.uptime else None}",
-    )
-
-    yield Result(
         state=State.OK,
         summary=f"IP address: {section.ipAddress}",
     )

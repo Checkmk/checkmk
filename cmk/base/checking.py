@@ -941,6 +941,8 @@ def _convert_perf_data(p: Sequence[Union[None, str, float]]) -> str:
 def _convert_perf_value(x: Union[None, str, float]) -> str:
     if isinstance(x, float):
         return ("%.6f" % x).rstrip("0").rstrip(".")
+    if x == 0:
+       x = "0" # prevent 0 integers from being treated as False and set to "" below
     return str(x or "")
 
 

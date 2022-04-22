@@ -129,8 +129,10 @@ set_variable_defaults() {
 
 set_up_path() {
     # Make sure that locally installed binaries are found
-    PATH="${PATH}:/usr/local/bin"
-    [ -d "/var/qmail/bin" ] && PATH="${PATH}:/var/qmail/bin"
+    # Only add binaries if they are not already in the path! If you append to path in a loop the process will
+    # eventually each the 128k size limit for the environment and become a zombie process. See execve manpage.
+    [ "${PATH#*"/usr/local/bin"}" = "${PATH}" ] || PATH="${PATH}:/usr/local/bin"
+    [ -d "/var/qmail/bin" ] && [ "${PATH#*"/var/qmail/bin"}" = "${PATH}" ] || PATH="${PATH}:/var/qmail/bin"
 }
 
 set_up_remote() {

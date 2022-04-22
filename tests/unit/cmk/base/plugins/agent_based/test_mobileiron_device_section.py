@@ -2,7 +2,7 @@ import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
 from cmk.base.plugins.agent_based.mobileiron_compliance import check_mobileiron_compliance
-from cmk.base.plugins.agent_based.utils.mobileiron import parse_mobileiron
+from cmk.base.plugins.agent_based.mobileiron_section import parse_mobileiron
 
 DEVICE_DATA = parse_mobileiron(
     [

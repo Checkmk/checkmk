@@ -2,51 +2,64 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from __future__ import annotations
+from typing import Optional
+
+from cmk.base.plugins.agent_based.utils.df import BlocksSubsection, InodesSubsection
 
 from .agent_based_api.v1 import Attributes, register
 from .agent_based_api.v1.type_defs import InventoryResult
 from .utils.mobileiron import Section
 
 
-def inventory_mobileiron(section: Section) -> InventoryResult:
+def inventory_mobileiron(
+    section_mobileiron_section: Optional[Section],
+    section_df: Optional[tuple[BlocksSubsection, InodesSubsection]],
+) -> InventoryResult:
+
+    if section_mobileiron_section is None:
+        return
 
     yield Attributes(
         path=["hardware", "system"],
         inventory_attributes={
-            "Model Name": section.deviceModel,
-            "Manufacturer": section.manufacturer,
-            "Serial number": section.serialNumber,
+            "model": section_mobileiron_section.deviceModel,
+            "manufacturer": section_mobileiron_section.manufacturer,
+            "serial": section_mobileiron_section.serialNumber,
         },
     )
     yield Attributes(
         path=["networking", "addresses"],
         inventory_attributes={
-            "address": section.ipAddress,
+            "address": section_mobileiron_section.ipAddress,
         },
     )
     yield Attributes(
         path=["software", "os"],
         inventory_attributes={
-            "Type": section.platformType,
+            "type": section_mobileiron_section.platformType,
         },
     )
-    total_capacity = section.totalCapacity * 1024 * 1024 * 1024 if section.totalCapacity else None
-    yield Attributes(
-        path=["hardware", "storage", "disks"],
-        inventory_attributes={"size": total_capacity},
-    )
+
     yield Attributes(
         path=["software", "applications", "mobileiron"],
         inventory_attributes={
-            "Registration state": section.registrationState,
-            "Partition name": section.dmPartitionName,
+            "registration_state": section_mobileiron_section.registrationState,
+            "partition_name": section_mobileiron_section.dmPartitionName,
         },
     )
+
+    if section_df is not None:
+        total_capacity = (
+            total_capacity * 1024 * 1024 if (total_capacity := section_df[0][0].size_mb) else None
+        )
+        yield Attributes(
+            path=["hardware", "storage", "disks"],
+            inventory_attributes={"size": total_capacity},
+        )
 
 
 register.inventory_plugin(
     name="mobileiron_inventory",
-    sections=["mobileiron_section"],
+    sections=["mobileiron_section", "df"],
     inventory_function=inventory_mobileiron,
 )

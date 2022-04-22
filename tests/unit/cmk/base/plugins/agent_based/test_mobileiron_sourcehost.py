@@ -2,7 +2,7 @@ import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
 from cmk.base.plugins.agent_based.mobileiron_sourcehost import check_mobileiron_sourcehost
-from cmk.base.plugins.agent_based.utils.mobileiron import parse_mobileiron_source_host
+from cmk.base.plugins.agent_based.mobileiron_section import parse_mobileiron_source_host
 
 DEVICE_DATA = parse_mobileiron_source_host([['{"queryTime": 12, "total_count": 22}']])
 

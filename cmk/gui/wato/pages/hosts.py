@@ -9,6 +9,7 @@ import abc
 from typing import Iterator, Optional, overload, Type
 
 import cmk.utils.tags
+from cmk.utils.agent_registration import get_uuid_link_manager
 
 import cmk.gui.forms as forms
 import cmk.gui.watolib as watolib
@@ -38,6 +39,7 @@ from cmk.gui.plugins.wato.utils.base_modes import mode_url, redirect, WatoMode
 from cmk.gui.plugins.wato.utils.context_buttons import make_host_status_link
 from cmk.gui.site_config import is_wato_slave_site
 from cmk.gui.type_defs import ActionResult
+from cmk.gui.utils.agent_registration import remove_tls_registration_help
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeactionuri
@@ -372,6 +374,10 @@ class ModeEditHost(ABCHostMode):
             folder.delete_hosts([self._host.name()])
             return redirect(mode_url("folder", folder=folder.path()))
 
+        if request.var("_remove_tls_registration"):
+            get_uuid_link_manager().unlink_sources([self._host.name()])
+            return None
+
         attributes = watolib.collect_attributes(
             "host" if not self._is_cluster() else "cluster", new=False
         )
@@ -535,6 +541,25 @@ def page_menu_host_entries(mode_name: str, host: CREHost) -> Iterator[PageMenuEn
                 title=_("Audit log"),
                 icon_name="auditlog",
                 item=make_simple_link(make_object_audit_log_url(host.object_ref())),
+            )
+
+        if user.may("wato.manage_hosts"):
+            yield PageMenuEntry(
+                title=_("Remove TLS registration"),
+                icon_name="delete",
+                item=make_simple_link(
+                    make_confirm_link(
+                        url=makeactionuri(
+                            request, transactions, [("_remove_tls_registration", "1")]
+                        ),
+                        message=_(
+                            "Do you really want to remove the TLS registration of the host"
+                            " <tt>%s</tt>?"
+                        )
+                        % host.name()
+                        + remove_tls_registration_help(),
+                    )
+                ),
             )
 
 

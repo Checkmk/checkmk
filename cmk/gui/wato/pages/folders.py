@@ -10,6 +10,7 @@ import json
 import operator
 from typing import Dict, Iterator, List, Optional, Tuple, Type
 
+from cmk.utils.agent_registration import get_uuid_link_manager
 from cmk.utils.type_defs import HostName
 
 import cmk.gui.forms as forms
@@ -50,6 +51,7 @@ from cmk.gui.plugins.wato.utils.context_buttons import make_folder_status_link
 from cmk.gui.plugins.wato.utils.main_menu import MainMenu, MenuItem
 from cmk.gui.table import init_rowselect, table_element
 from cmk.gui.type_defs import ActionResult, Choices
+from cmk.gui.utils.agent_registration import remove_tls_registration_help
 from cmk.gui.utils.escaping import escape_to_html_permissive
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.popups import MethodAjax
@@ -278,6 +280,21 @@ class ModeFolder(WatoMode):
                 item=make_simple_link(self._folder.url([("mode", "bulk_rename_host")])),
             )
 
+        if user.may("wato.manage_hosts"):
+            yield PageMenuEntry(
+                title=_("Remove TLS registration"),
+                icon_name="delete",
+                item=make_confirmed_form_submit_link(
+                    form_name="hosts",
+                    button_name="_remove_tls_registration_from_folder",
+                    message=_(
+                        "Do you really want to remove the TLS registration of the hosts in"
+                        " this folder (recursively)?"
+                    )
+                    + remove_tls_registration_help(),
+                ),
+            )
+
         if (
             not self._folder.locked_hosts()
             and user.may("wato.parentscan")
@@ -351,6 +368,20 @@ class ModeFolder(WatoMode):
                     ),
                     is_enabled=is_enabled,
                 )
+
+        if user.may("wato.manage_hosts"):
+            yield PageMenuEntry(
+                title=_("Remove TLS registration"),
+                icon_name="delete",
+                item=make_confirmed_form_submit_link(
+                    form_name="hosts",
+                    button_name="_remove_tls_registration_from_selection",
+                    message=_(
+                        "Do you really want to remove the TLS registration of the selected hosts?"
+                    )
+                    + remove_tls_registration_help(),
+                ),
+            )
 
         if user.may("wato.services"):
             yield PageMenuEntry(
@@ -511,6 +542,10 @@ class ModeFolder(WatoMode):
                 watolib.Folder.current().move_subfolder_to(what_folder, target_folder)
             return redirect(folder_url)
 
+        if request.has_var("_remove_tls_registration_from_folder"):
+            get_uuid_link_manager().unlink_sources(set(self._folder.all_hosts_recursively()))
+            return None
+
         # Operations on HOSTS
 
         # Deletion of single hosts
@@ -577,6 +612,9 @@ class ModeFolder(WatoMode):
                         ]
                     )
                 )
+
+        if request.var("_remove_tls_registration_from_selection"):
+            get_uuid_link_manager().unlink_sources(selected_host_names)
 
         return None
 

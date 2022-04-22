@@ -220,3 +220,25 @@ def test_uuid_link_manager_update_links_no_host_but_ready_or_discoverable(
         assert list(received_outputs_dir.iterdir()) == []
 
     assert not data_source_push_agent_dir.exists()
+
+
+def test_uuid_link_manager_unlink_sources():
+    hostname_1 = "my-hostname-1"
+    raw_uuid_1 = "59e631e9-de89-40d6-9662-ba54569a24fb"
+    hostname_2 = "my-hostname-2"
+    raw_uuid_2 = "db1ea77f-330e-4fb5-b59e-925f55290533"
+
+    uuid_link_manager = UUIDLinkManager(
+        received_outputs_dir=received_outputs_dir,
+        data_source_dir=data_source_push_agent_dir,
+    )
+    uuid_link_manager.create_link(hostname_1, UUID(raw_uuid_1), create_target_dir=False)
+    uuid_link_manager.create_link(hostname_2, UUID(raw_uuid_2), create_target_dir=False)
+
+    uuid_link_manager.unlink_sources([hostname_1])
+
+    sources = list(received_outputs_dir.iterdir())
+    assert len(sources) == 1
+    assert sources[0].name == raw_uuid_2
+
+    assert not data_source_push_agent_dir.exists()

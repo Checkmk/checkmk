@@ -6,6 +6,7 @@
 """Create an initial Checkmk configuration for new sites"""
 
 import os
+from datetime import datetime
 from typing import Any, Dict
 
 from cmk.utils import store
@@ -426,4 +427,4 @@ class ConfigGeneratorAutomationUser(SampleConfigGenerator):
         return 60
 
     def generate(self) -> None:
-        create_cmk_automation_user()
+        create_cmk_automation_user(datetime.now())

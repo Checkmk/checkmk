@@ -1140,10 +1140,8 @@ def rewrite_users(now: datetime) -> None:
     save_users(load_users(lock=True), now)
 
 
-def create_cmk_automation_user() -> None:
-    now = datetime.now()
+def create_cmk_automation_user(now: datetime) -> None:
     secret = utils.gen_id()
-
     users = load_users(lock=True)
     users[UserId("automation")] = {
         "alias": "Check_MK Automation - used for calling web services",

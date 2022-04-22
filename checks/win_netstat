@@ -41,6 +41,7 @@ win_netstat_states = {
     u"ABH\x99REN": "LISTENING",
     "HERGESTELLT": "ESTABLISHED",
     "WARTEND": "TIME_WAIT",
+    "SCHLIESSEN_WARTEN": "CLOSE_WAIT",
     # Add further states in any required language here. Sorry, Windows
     # has no "unset LANG" ;-)
 }

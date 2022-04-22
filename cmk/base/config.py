@@ -2942,7 +2942,7 @@ class HostConfig:
         return self._explicit_attributes_lookup
 
     @property
-    def discovery_check_parameters(self) -> DiscoveryCheckParameters:
+    def discovery_check_parameters(self) -> Optional[DiscoveryCheckParameters]:
         """Compute the parameters for the discovery check for a host
 
         Note:

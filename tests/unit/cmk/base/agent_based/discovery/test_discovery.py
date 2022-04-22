@@ -378,6 +378,7 @@ def test__get_post_discovery_services(
 
 def _get_params(rediscovery: dict[str, Any]) -> config.DiscoveryCheckParameters:
     return config.DiscoveryCheckParameters(
+        commandline_only=False,
         check_interval=60,
         severity_new_services=1,
         severity_vanished_services=0,

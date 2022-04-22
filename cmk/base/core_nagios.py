@@ -576,9 +576,7 @@ def _create_nagios_servicedefs(
     service_discovery_name = config_cache.service_discovery_name()
 
     # Inventory checks - if user has configured them.
-    disco_params = host_config.discovery_check_parameters
-    if host_config.add_service_discovery_check(disco_params, service_discovery_name):
-        assert disco_params is not None  # I'm on it...
+    if not (disco_params := host_config.discovery_check_parameters()).commandline_only:
         service_spec = {
             "use": config.inventory_check_template,
             "host_name": hostname,
@@ -594,8 +592,8 @@ def _create_nagios_servicedefs(
 
         service_spec.update(
             {
-                "check_interval": disco_params.check_interval,
-                "retry_interval": disco_params.check_interval,
+                "check_interval": str(disco_params.check_interval),
+                "retry_interval": str(disco_params.check_interval),
             }
         )
 

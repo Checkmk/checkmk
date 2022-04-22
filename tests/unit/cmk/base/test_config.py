@@ -1031,11 +1031,12 @@ def test_host_config_inventory_parameters(
     [
         (
             "testhost1",
-            None,
+            config.DiscoveryCheckParameters.commandline_only_defaults(),
         ),
         (
             "testhost2",
             config.DiscoveryCheckParameters(
+                commandline_only=False,
                 check_interval=1,
                 severity_new_services=1,
                 severity_vanished_services=0,
@@ -1046,7 +1047,7 @@ def test_host_config_inventory_parameters(
     ],
 )
 def test_host_config_discovery_check_parameters(
-    monkeypatch: MonkeyPatch, hostname_str: str, result: Optional[config.DiscoveryCheckParameters]
+    monkeypatch: MonkeyPatch, hostname_str: str, result: config.DiscoveryCheckParameters
 ) -> None:
     hostname = HostName(hostname_str)
     ts = Scenario()
@@ -1079,12 +1080,7 @@ def test_host_config_discovery_check_parameters(
         ],
     )
     config_cache = ts.apply(monkeypatch)
-    params = config_cache.get_host_config(hostname).discovery_check_parameters
-
-    if result is None:
-        assert params is None or params.check_interval is None
-    else:
-        assert params == result
+    assert config_cache.get_host_config(hostname).discovery_check_parameters() == result
 
 
 @pytest.mark.parametrize(
@@ -2473,13 +2469,13 @@ def _rule_val(check_interval: Optional[int]) -> dict[str, Any]:
 @pytest.mark.parametrize(
     "rule_entries,ignored,ping,result",
     [
-        ([None], False, False, False),
-        ([], False, False, True),
-        ([_rule_val(None)], False, False, False),
-        ([_rule_val(0)], False, False, False),
-        ([_rule_val(3600)], False, False, True),
-        ([_rule_val(3600)], True, False, False),
-        ([_rule_val(3600)], False, True, False),
+        ([None], False, False, True),
+        ([], False, False, False),
+        ([_rule_val(None)], False, False, True),
+        ([_rule_val(0)], False, False, True),
+        ([_rule_val(3600)], False, False, False),
+        ([_rule_val(3600)], True, False, True),
+        ([_rule_val(3600)], False, True, True),
     ],
 )
 def test_host_config_add_discovery_check(
@@ -2514,14 +2510,13 @@ def test_host_config_add_discovery_check(
             for value in rule_entries
         ],
     )
-
     if ignored:
         ts.set_ruleset(
             "ignored_services",
             [
                 {
                     "condition": {
-                        "service_description": [{"$regex": "Check_MK Discovery"}],
+                        "service_description": [{"$regex": "Check_MK inventory"}],
                         "host_name": ["xyz"],
                     },
                     "value": True,
@@ -2533,9 +2528,7 @@ def test_host_config_add_discovery_check(
     monkeypatch.setattr(config, "inventory_check_interval", 42)
 
     host_config = config_cache.get_host_config(xyz_host)
-    params = host_config.discovery_check_parameters
-
-    assert host_config.add_service_discovery_check(params, "Check_MK Discovery") == result
+    assert host_config.discovery_check_parameters().commandline_only == result
 
 
 def test_get_config_file_paths_with_confd(folder_path_test_config: None) -> None:

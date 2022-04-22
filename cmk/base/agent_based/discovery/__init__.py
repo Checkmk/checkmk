@@ -583,10 +583,7 @@ def _execute_check_discovery(
 
     config_cache = config.get_config_cache()
     host_config = config_cache.get_host_config(host_name)
-
-    params = host_config.discovery_check_parameters
-    if params is None:
-        params = config.DiscoveryCheckParameters.default()
+    params = host_config.discovery_check_parameters()
 
     discovery_mode = DiscoveryMode(params.rediscovery.get("mode"))
 
@@ -897,7 +894,7 @@ def _discover_marked_host(
     host_name = host_config.hostname
     console.verbose(f"{tty.bold}{host_name}{tty.normal}:\n")
 
-    if not (params := host_config.discovery_check_parameters):
+    if (params := host_config.discovery_check_parameters()).commandline_only:
         console.verbose("  failed: discovery check disabled\n")
         return False
 

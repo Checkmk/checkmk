@@ -103,9 +103,7 @@ class DiscoveryAutomation(Automation):
         if not config.inventory_check_autotrigger:
             return
 
-        service_discovery_name = config_cache.service_discovery_name()
-        disc_check_params = host_config.discovery_check_parameters
-        if not host_config.add_service_discovery_check(disc_check_params, service_discovery_name):
+        if host_config.discovery_check_parameters().commandline_only:
             return
 
         if host_config.is_cluster:

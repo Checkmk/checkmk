@@ -177,17 +177,23 @@ class CheckmkCheckParameters(NamedTuple):
 
 
 class DiscoveryCheckParameters(NamedTuple):
-    check_interval: Any  # TODO: improve
+    commandline_only: bool
+    check_interval: int
     severity_new_services: int
     severity_vanished_services: int
     severity_new_host_labels: int
     rediscovery: dict[str, Any]  # TODO: improve this
 
     @classmethod
+    def commandline_only_defaults(cls) -> "DiscoveryCheckParameters":
+        return cls.default()._replace(commandline_only=True)
+
+    @classmethod
     def default(cls) -> "DiscoveryCheckParameters":
         """Support legacy single value global configurations. Otherwise return the defaults"""
         return cls(
-            check_interval=inventory_check_interval,
+            commandline_only=inventory_check_interval is None,
+            check_interval=int(inventory_check_interval or 0),
             severity_new_services=int(inventory_check_severity),
             severity_vanished_services=0,
             severity_new_host_labels=1,
@@ -2967,47 +2973,27 @@ class HostConfig:
         self._explicit_attributes_lookup = cache
         return self._explicit_attributes_lookup
 
-    @property
-    def discovery_check_parameters(self) -> Optional[DiscoveryCheckParameters]:
-        """Compute the parameters for the discovery check for a host
+    def discovery_check_parameters(self) -> DiscoveryCheckParameters:
+        """Compute the parameters for the discovery check for a host"""
+        service_discovery_name = self._config_cache.service_discovery_name()
+        if self.is_ping_host or service_ignored(self.hostname, None, service_discovery_name):
+            return DiscoveryCheckParameters.commandline_only_defaults()
 
-        Note:
-        - If a rule is configured to disable the check, this function returns None.
-        - If there is no rule configured, a value is constructed from the legacy global
-          settings and will be returned. In this structure a "check_interval" of None
-          means the check should not be added.
-        """
         entries = self._config_cache.host_extra_conf(self.hostname, periodic_discovery)
         if not entries:
             return DiscoveryCheckParameters.default()
 
-        if (entry := entries[0]) is None:
-            return None
+        if (entry := entries[0]) is None or not (check_interval := entry["check_interval"]):
+            return DiscoveryCheckParameters.commandline_only_defaults()
 
         return DiscoveryCheckParameters(
-            check_interval=entry["check_interval"],
+            commandline_only=False,
+            check_interval=int(check_interval),
             severity_new_services=int(entry["severity_unmonitored"]),
             severity_vanished_services=int(entry["severity_vanished"]),
             severity_new_host_labels=int(entry.get("severity_new_host_label", 1)),
             rediscovery=entry.get("inventory_rediscovery", {}),
         )
-
-    def add_service_discovery_check(
-        self, params: Optional[DiscoveryCheckParameters], service_discovery_name: str
-    ) -> bool:
-        if not params:
-            return False
-
-        if not params.check_interval:
-            return False
-
-        if service_ignored(self.hostname, None, service_discovery_name):
-            return False
-
-        if self.is_ping_host:
-            return False
-
-        return True
 
     def checkmk_check_parameters(self) -> CheckmkCheckParameters:
         return CheckmkCheckParameters(enabled=not self.is_ping_host)

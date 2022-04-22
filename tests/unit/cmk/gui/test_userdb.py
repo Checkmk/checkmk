@@ -9,12 +9,12 @@ import os
 from dataclasses import asdict
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Iterable, Iterator
+from typing import Iterable
 
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
 
-from tests.testlib import is_managed_repo, on_time
+from tests.testlib import is_managed_repo
 
 import cmk.utils.paths
 import cmk.utils.version
@@ -28,12 +28,6 @@ from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.type_defs import SessionId, WebAuthnCredential
 from cmk.gui.valuespec import Dictionary
-
-
-@pytest.fixture(name="fix_time", autouse=True)
-def fixture_time() -> Iterator[None]:
-    with on_time("2019-09-05 00:00:00", "UTC"):
-        yield
 
 
 @pytest.fixture(name="user_id")
@@ -229,7 +223,7 @@ def test_on_access_update_valid_session(user_id: UserId) -> None:
 
     assert new_session.session_id == old_session.session_id
     assert new_session.started_at == old_session.started_at
-    assert new_session.last_activity == now.timestamp()
+    assert new_session.last_activity == int(now.timestamp())
     assert new_session.last_activity > old_session.last_activity
 
 
@@ -247,7 +241,7 @@ def test_on_access_update_idle_session(user_id: UserId) -> None:
 
     assert new_session.session_id == old_session.session_id
     assert new_session.started_at == old_session.started_at
-    assert new_session.last_activity == now.timestamp()
+    assert new_session.last_activity == int(now.timestamp())
     assert new_session.last_activity > old_session.last_activity
 
 
@@ -431,17 +425,16 @@ def test_refresh_session_success(user_id: UserId) -> None:
     assert session_infos
     old_session = userdb.SessionInfo(**asdict(session_infos[session_valid]))
 
-    with on_time("2019-09-05 00:00:30", "UTC"):
-        now = datetime.now()
-        userdb._set_session(user_id, session_infos[session_valid])
-        userdb._refresh_session(session_infos[session_valid], now)
-        userdb.on_end_of_request(user_id, now)
+    now += timedelta(minutes=30)
+    userdb._set_session(user_id, session_infos[session_valid])
+    userdb._refresh_session(session_infos[session_valid], now)
+    userdb.on_end_of_request(user_id, now)
 
-        new_session_infos = userdb._load_session_infos(user_id)
+    new_session_infos = userdb._load_session_infos(user_id)
 
-        new_session = new_session_infos[session_valid]
-        assert old_session.session_id == new_session.session_id
-        assert new_session.last_activity > old_session.last_activity
+    new_session = new_session_infos[session_valid]
+    assert old_session.session_id == new_session.session_id
+    assert new_session.last_activity > old_session.last_activity
 
 
 def test_invalidate_session(user_id: UserId) -> None:
@@ -456,14 +449,14 @@ def test_get_last_activity(with_user: tuple[UserId, str]) -> None:
     user_id = with_user[0]
     session_valid = make_valid_session(user_id, now)
     user = _load_users_uncached(lock=False)[user_id]
-    assert userdb.get_last_activity(user) == now.timestamp() - 5
+    assert userdb.get_last_activity(user) == int(now.timestamp()) - 5
 
     userdb.on_access(user_id, session_valid, now)
     userdb.on_end_of_request(user_id, now)
 
     user = _load_users_uncached(lock=False)[user_id]
     assert "session_info" in user
-    assert userdb.get_last_activity(user) == now.timestamp()
+    assert userdb.get_last_activity(user) == int(now.timestamp())
 
 
 def test_user_attribute_sync_plugins(request_context: None, monkeypatch: MonkeyPatch) -> None:

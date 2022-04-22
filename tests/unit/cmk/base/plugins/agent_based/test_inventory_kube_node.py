@@ -29,6 +29,7 @@ from .utils_inventory import sort_inventory_result
                 name="minikube",
                 creation_timestamp=1640000000.0,
                 labels={},
+                annotations={},
                 addresses=[
                     NodeAddress(type_="Hostname", address="k8-21"),
                     NodeAddress(type_="ExternalIP", address="10.200.3.21"),

@@ -418,6 +418,7 @@ class NodeInfo(BaseModel):
     name: NodeName
     creation_timestamp: CreationTimestamp
     labels: Labels
+    annotations: Annotations
     addresses: NodeAddresses
     cluster: str
 

@@ -285,6 +285,7 @@ class NodeInfo(api.NodeInfo):
     name: api.NodeName
     creation_timestamp: api.CreationTimestamp
     labels: api.Labels
+    annotations: api.Annotations
     addresses: api.NodeAddresses
     cluster: str
 

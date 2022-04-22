@@ -735,6 +735,7 @@ class Node(PodOwner):
     def info(self, cluster_name: str) -> section.NodeInfo:
         return section.NodeInfo(
             labels=self.metadata.labels,
+            annotations=self.metadata.annotations,
             addresses=self.status.addresses,
             name=self.metadata.name,
             creation_timestamp=self.metadata.creation_timestamp,

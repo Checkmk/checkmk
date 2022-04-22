@@ -13,7 +13,11 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     HostLabelGenerator,
     StringTable,
 )
-from cmk.base.plugins.agent_based.utils.kube import kube_labels_to_cmk_labels, NodeInfo
+from cmk.base.plugins.agent_based.utils.kube import (
+    kube_annotations_to_cmk_labels,
+    kube_labels_to_cmk_labels,
+    NodeInfo,
+)
 from cmk.base.plugins.agent_based.utils.kube_info import check_info
 
 
@@ -29,9 +33,11 @@ def parse_kube_node_info(string_table: StringTable):
     ... '"container_runtime_version": "docker://20.10.8",'
     ... '"addresses": [],'
     ... '"cluster": "cluster",'
-    ... '"labels": {}}'
+    ... '"labels": {},'
+    ... '"annotations": {}'
+    ... '}'
     ... ]])
-    NodeInfo(architecture='amd64', kernel_version='5.13.0-27-generic', os_image='Ubuntu 20.04.2 LTS', operating_system='linux', container_runtime_version='docker://20.10.8', name='minikube', creation_timestamp=1640000000.0, labels={}, addresses=[], cluster='cluster')
+    NodeInfo(architecture='amd64', kernel_version='5.13.0-27-generic', os_image='Ubuntu 20.04.2 LTS', operating_system='linux', container_runtime_version='docker://20.10.8', name='minikube', creation_timestamp=1640000000.0, labels={}, annotations={}, addresses=[], cluster='cluster')
     """
     return NodeInfo(**json.loads(string_table[0][0]))
 
@@ -51,6 +57,11 @@ def host_labels(section: NodeInfo) -> HostLabelGenerator:
             host is associated with. Checkmk hosts of the type Pod and Node
             will be assigned this label.
 
+        cmk/kubernetes/annotation/{key}:{value} :
+            These labels are yielded for each Kubernetes annotation, which
+            is permissible. An annotation is permissible if it's value is a
+            valid Kubernetes label value.
+
         cmk/os_family:
             This label is set to the operating system as reported by the agent
             as "AgentOS" (such as "windows" or "linux").
@@ -61,6 +72,7 @@ def host_labels(section: NodeInfo) -> HostLabelGenerator:
     yield HostLabel("cmk/kubernetes/node", section.name)
     yield HostLabel("cmk/os_family", section.operating_system)
     yield from kube_labels_to_cmk_labels(section.labels)
+    yield from kube_annotations_to_cmk_labels(section.annotations)
 
 
 register.agent_section(

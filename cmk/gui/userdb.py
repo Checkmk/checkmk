@@ -398,8 +398,7 @@ def on_succeeded_login(username: UserId, now: datetime) -> str:
     return _initialize_session(username, now)
 
 
-def on_failed_login(username: UserId) -> None:
-    now = datetime.now()
+def on_failed_login(username: UserId, now: datetime) -> None:
     users = load_users(lock=True)
     if user := users.get(username):
         user["num_failed_logins"] = user.get("num_failed_logins", 0) + 1

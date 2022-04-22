@@ -543,7 +543,7 @@ class LoginPage(Page):
 
                 raise HTTPRedirect(origtarget)
 
-            userdb.on_failed_login(username)
+            userdb.on_failed_login(username, now)
             raise MKUserError(None, _("Invalid login"))
         except MKUserError as e:
             user_errors.add(e)

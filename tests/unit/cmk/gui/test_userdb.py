@@ -529,12 +529,14 @@ def test_user_attribute_sync_plugins(request_context: None, monkeypatch: MonkeyP
 
 
 def test_check_credentials_local_user(with_user: tuple[UserId, str]) -> None:
+    now = datetime.now()
     username, password = with_user
-    assert userdb.check_credentials(username, password) == username
+    assert userdb.check_credentials(username, password, now) == username
 
 
 @pytest.mark.usefixtures("request_context")
 def test_check_credentials_local_user_create_htpasswd_user_ad_hoc() -> None:
+    now = datetime.now()
     user_id = UserId("someuser")
     assert not userdb.user_exists(user_id)
     assert not userdb._user_exists_according_to_profile(user_id)
@@ -549,7 +551,7 @@ def test_check_credentials_local_user_create_htpasswd_user_ad_hoc() -> None:
     assert not userdb._user_exists_according_to_profile(user_id)
     assert str(user_id) in _load_users_uncached(lock=False)
 
-    assert userdb.check_credentials(user_id, "cmk") == user_id
+    assert userdb.check_credentials(user_id, "cmk", now) == user_id
 
     # Nothing changes during regular access
     assert userdb.user_exists(user_id)
@@ -560,14 +562,14 @@ def test_check_credentials_local_user_create_htpasswd_user_ad_hoc() -> None:
 def test_check_credentials_local_user_disallow_locked(with_user: tuple[UserId, str]) -> None:
     now = datetime.now()
     user_id, password = with_user
-    assert userdb.check_credentials(user_id, password) == user_id
+    assert userdb.check_credentials(user_id, password, now) == user_id
 
     users = _load_users_uncached(lock=True)
 
     users[user_id]["locked"] = True
     userdb.save_users(users, now)
 
-    assert userdb.check_credentials(user_id, password) is False
+    assert userdb.check_credentials(user_id, password, now) is False
 
 
 # user_id needs to be used here because it executes a reload of the config and the monkeypatch of
@@ -628,8 +630,9 @@ def test_check_credentials_managed_global_user_is_allowed(with_user: tuple[UserI
     if not is_managed_repo():
         pytest.skip("not relevant")
 
+    now = datetime.now()
     user_id, password = with_user
-    assert userdb.check_credentials(user_id, password) == user_id
+    assert userdb.check_credentials(user_id, password, now) == user_id
 
 
 @pytest.mark.usefixtures("make_cme", "make_cme_customer_user")
@@ -637,8 +640,9 @@ def test_check_credentials_managed_customer_user_is_allowed(with_user: tuple[Use
     if not is_managed_repo():
         pytest.skip("not relevant")
 
+    now = datetime.now()
     user_id, password = with_user
-    assert userdb.check_credentials(user_id, password) == user_id
+    assert userdb.check_credentials(user_id, password, now) == user_id
 
 
 @pytest.mark.usefixtures("make_cme", "make_cme_wrong_customer_user")
@@ -648,8 +652,9 @@ def test_check_credentials_managed_wrong_customer_user_is_denied(
     if not is_managed_repo():
         pytest.skip("not relevant")
 
+    now = datetime.now()
     user_id, password = with_user
-    assert userdb.check_credentials(user_id, password) is False
+    assert userdb.check_credentials(user_id, password, now) is False
 
 
 def test_load_custom_attr_not_existing(user_id: UserId) -> None:

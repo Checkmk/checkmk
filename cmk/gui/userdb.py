@@ -134,8 +134,7 @@ def _get_attributes(
     return selector(connection) if connection else []
 
 
-def create_non_existing_user(connection_id: str, username: UserId) -> None:
-    now = datetime.now()
+def create_non_existing_user(connection_id: str, username: UserId, now: datetime) -> None:
     # Since user_exists also looks into the htpasswd and treats all users that can be found there as
     # "existing users", we don't care about partially known users here and don't create them ad-hoc.
     # The load_users() method will handle this kind of users (TODO: Consolidate this!).
@@ -1265,7 +1264,9 @@ register_post_config_load_hook(update_config_based_user_attributes)
 #   +----------------------------------------------------------------------+
 
 
-def check_credentials(username: UserId, password: str) -> Union[UserId, Literal[False]]:
+def check_credentials(
+    username: UserId, password: str, now: datetime
+) -> Union[UserId, Literal[False]]:
     """Verify the credentials given by a user using all auth connections"""
     for connection_id, connection in active_connections():
         # None        -> User unknown, means continue with other connectors
@@ -1294,7 +1295,7 @@ def check_credentials(username: UserId, password: str) -> Union[UserId, Literal[
         # b) LDAP authenticates a user and Checkmk does not have a user entry yet
         #
         # In these situations a user account with the "default profile" should be created
-        create_non_existing_user(connection_id, user_id)
+        create_non_existing_user(connection_id, user_id, now)
 
         if not is_customer_user_allowed_to_login(user_id):
             # A CME not assigned with the current sites customer

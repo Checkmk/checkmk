@@ -6,6 +6,7 @@
 
 import contextlib
 import time
+from datetime import datetime
 from typing import Optional
 
 from cmk.utils.type_defs import UserId
@@ -25,9 +26,9 @@ def automation_auth(user_id: UserId, secret: str) -> Optional[RFC7662]:
     return None
 
 
-def gui_user_auth(user_id: UserId, secret: str) -> Optional[RFC7662]:
+def gui_user_auth(user_id: UserId, secret: str, now: datetime) -> Optional[RFC7662]:
     try:
-        if userdb.check_credentials(user_id, secret):
+        if userdb.check_credentials(user_id, secret, now):
             return rfc7662_subject(user_id, "bearer")
     except MKUserError:
         # This is the case of "Automation user rejected". We don't care about that in the REST API

@@ -82,7 +82,7 @@ def _verify_user(environ: WSGIEnvironment, now: datetime) -> RFC7662:
             else:
                 # GUI user and Automation users are mutually exclusive. Checking only once is less
                 # work for the system.
-                gui_user = gui_user_auth(user_id, secret)
+                gui_user = gui_user_auth(user_id, secret, now)
                 if gui_user:
                     verified.append(gui_user)
         elif auth_type == "Basic":

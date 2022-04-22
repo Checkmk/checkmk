@@ -510,14 +510,14 @@ class LoginPage(Page):
             if "logout.py" in origtarget or "side.py" in origtarget:
                 origtarget = default_origtarget
 
-            result = userdb.check_credentials(username, password)
+            now = datetime.now()
+            result = userdb.check_credentials(username, password, now)
             if result:
                 # use the username provided by the successful login function, this function
                 # might have transformed the username provided by the user. e.g. switched
                 # from mixed case to lower case.
                 username = result
 
-                now = datetime.now()
                 session_id = userdb.on_succeeded_login(username, now)
 
                 # The login succeeded! Now:

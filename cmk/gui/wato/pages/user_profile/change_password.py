@@ -50,7 +50,8 @@ class UserChangePasswordPage(ABCUserProfilePage):
         if cur_password == password:
             raise MKUserError("password", _("The new password must differ from your current one."))
 
-        if userdb.check_credentials(user.id, cur_password) is False:
+        now = datetime.now()
+        if userdb.check_credentials(user.id, cur_password, now) is False:
             raise MKUserError("cur_password", _("Your old password is wrong."))
 
         if password2 and password != password2:
@@ -72,7 +73,7 @@ class UserChangePasswordPage(ABCUserProfilePage):
         else:
             user_spec["serial"] += 1
 
-        userdb.save_users(users, datetime.now())
+        userdb.save_users(users, now)
 
         flash(_("Successfully changed password."))
 

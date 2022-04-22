@@ -26,7 +26,7 @@ import cmk.gui.plugins.userdb.utils as utils
 import cmk.gui.userdb as userdb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKAuthException, MKUserError
-from cmk.gui.type_defs import WebAuthnCredential
+from cmk.gui.type_defs import SessionId, WebAuthnCredential
 from cmk.gui.valuespec import Dictionary
 
 
@@ -58,9 +58,7 @@ def _load_users_uncached(*, lock: bool) -> userdb.Users:
         userdb.load_users.cache_clear()  # type: ignore[attr-defined]
 
 
-@pytest.fixture(name="session_timed_out")
-def fixture_session_timed_out(user_id: UserId, fix_time: None) -> str:
-    now = datetime.now()
+def make_timed_out_session(user_id: UserId, now: datetime) -> SessionId:
     session_id = "sess1"
     timestamp = int(now.timestamp()) - 20
     userdb._save_session_infos(
@@ -77,9 +75,7 @@ def fixture_session_timed_out(user_id: UserId, fix_time: None) -> str:
     return session_id
 
 
-@pytest.fixture(name="session_valid")
-def fixture_session_valid(user_id: UserId, fix_time: None) -> str:
-    now = datetime.now()
+def make_valid_session(user_id: UserId, now: datetime) -> SessionId:
     session_id = "sess2"
     timestamp = int(now.timestamp()) - 5
     userdb._save_session_infos(
@@ -190,8 +186,7 @@ def test_on_failed_login_with_locking(monkeypatch: MonkeyPatch, user_id: UserId)
 
 
 def test_on_logout_no_session(user_id: UserId) -> None:
-    now = datetime.now()
-    assert userdb.on_succeeded_login(user_id, now)
+    assert userdb.on_succeeded_login(user_id, datetime.now())
     assert userdb._load_session_infos(user_id)
 
     userdb.on_logout(user_id, session_id="")
@@ -199,8 +194,7 @@ def test_on_logout_no_session(user_id: UserId) -> None:
 
 
 def test_on_logout_invalidate_session(user_id: UserId) -> None:
-    now = datetime.now()
-    session_id = userdb.on_succeeded_login(user_id, now)
+    session_id = userdb.on_succeeded_login(user_id, datetime.now())
     assert session_id in userdb._load_session_infos(user_id)
 
     userdb.on_logout(user_id, session_id)
@@ -221,8 +215,9 @@ def test_access_denied_with_invalidated_session(user_id: UserId) -> None:
         userdb.on_access(user_id, session_id, now)
 
 
-def test_on_access_update_valid_session(user_id: UserId, session_valid: str) -> None:
+def test_on_access_update_valid_session(user_id: UserId) -> None:
     now = datetime.now()
+    session_valid = make_valid_session(user_id, now)
     old_session_infos = userdb._load_session_infos(user_id)
     old_session = old_session_infos[session_valid]
 
@@ -238,8 +233,9 @@ def test_on_access_update_valid_session(user_id: UserId, session_valid: str) -> 
     assert new_session.last_activity > old_session.last_activity
 
 
-def test_on_access_update_idle_session(user_id: UserId, session_timed_out: str) -> None:
+def test_on_access_update_idle_session(user_id: UserId) -> None:
     now = datetime.now()
+    session_timed_out = make_timed_out_session(user_id, now)
     old_session_infos = userdb._load_session_infos(user_id)
     old_session = old_session_infos[session_timed_out]
 
@@ -256,8 +252,9 @@ def test_on_access_update_idle_session(user_id: UserId, session_timed_out: str) 
 
 
 @pytest.mark.usefixtures("single_user_session_enabled")
-def test_on_access_update_unknown_session(user_id: UserId, session_valid: str) -> None:
+def test_on_access_update_unknown_session(user_id: UserId) -> None:
     now = datetime.now()
+    session_valid = make_valid_session(user_id, now)
     session_info = userdb._load_session_infos(user_id)[session_valid]
     session_info.started_at = 10
 
@@ -265,10 +262,9 @@ def test_on_access_update_unknown_session(user_id: UserId, session_valid: str) -
         userdb.on_access(user_id, "xyz", now)
 
 
-def test_on_access_logout_on_idle_timeout(
-    monkeypatch: MonkeyPatch, user_id: UserId, session_timed_out: str
-) -> None:
+def test_on_access_logout_on_idle_timeout(monkeypatch: MonkeyPatch, user_id: UserId) -> None:
     now = datetime.now()
+    session_timed_out = make_timed_out_session(user_id, now)
     monkeypatch.setattr(active_config, "user_idle_timeout", 8)
 
     session_info = userdb._load_session_infos(user_id)[session_timed_out]
@@ -279,8 +275,9 @@ def test_on_access_logout_on_idle_timeout(
 
 
 @pytest.mark.usefixtures("single_user_session_enabled")
-def test_on_succeeded_login_already_existing_session(user_id: UserId, session_valid: str) -> None:
+def test_on_succeeded_login_already_existing_session(user_id: UserId) -> None:
     now = datetime.now()
+    make_valid_session(user_id, now)
     with pytest.raises(MKUserError, match="Another session"):
         assert userdb.on_succeeded_login(user_id, now)
 
@@ -301,43 +298,41 @@ def test_is_valid_user_session_not_existing(user_id: UserId) -> None:
 
 @pytest.mark.usefixtures("single_user_session_enabled")
 def test_is_valid_user_session_still_valid_when_last_activity_extends_timeout(
-    user_id: UserId, session_timed_out: str
+    user_id: UserId,
 ) -> None:
+    session_timed_out = make_timed_out_session(user_id, datetime.now())
     assert userdb._is_valid_user_session(
         user_id, userdb._load_session_infos(user_id), session_timed_out
     )
 
 
 @pytest.mark.usefixtures("single_user_session_enabled")
-def test_is_valid_user_session_valid(user_id: UserId, session_valid: str) -> None:
+def test_is_valid_user_session_valid(user_id: UserId) -> None:
+    session_valid = make_valid_session(user_id, datetime.now())
     assert userdb._is_valid_user_session(
         user_id, userdb._load_session_infos(user_id), session_valid
     )
 
 
 def test_ensure_user_can_init_no_single_user_session(user_id: UserId) -> None:
-    now = datetime.now()
     assert active_config.single_user_session is None
-    userdb._ensure_user_can_init_session(user_id, now)
+    userdb._ensure_user_can_init_session(user_id, datetime.now())
 
 
 @pytest.mark.usefixtures("single_user_session_enabled")
 def test_ensure_user_can_init_no_previous_session(user_id: UserId) -> None:
-    now = datetime.now()
-    userdb._ensure_user_can_init_session(user_id, now)
+    userdb._ensure_user_can_init_session(user_id, datetime.now())
 
 
 @pytest.mark.usefixtures("single_user_session_enabled")
 def test_ensure_user_can_init_with_previous_session_timeout(user_id: UserId) -> None:
-    now = datetime.now()
-    userdb._ensure_user_can_init_session(user_id, now)
+    userdb._ensure_user_can_init_session(user_id, datetime.now())
 
 
 @pytest.mark.usefixtures("single_user_session_enabled")
-def test_ensure_user_can_not_init_with_previous_session(
-    user_id: UserId, session_valid: str
-) -> None:
+def test_ensure_user_can_not_init_with_previous_session(user_id: UserId) -> None:
     now = datetime.now()
+    make_valid_session(user_id, now)
     with pytest.raises(MKUserError, match="Another session"):
         userdb._ensure_user_can_init_session(user_id, now)
 
@@ -356,8 +351,7 @@ def test_initialize_session_single_user_session(user_id: UserId) -> None:
 
 
 def test_cleanup_old_sessions_no_existing(request_context: None) -> None:
-    now = datetime.now()
-    assert userdb._cleanup_old_sessions({}, now) == {}
+    assert userdb._cleanup_old_sessions({}, datetime.now()) == {}
 
 
 def test_cleanup_old_sessions_remove_outdated(request_context: None) -> None:
@@ -430,7 +424,9 @@ def test_create_session_id_changes() -> None:
     assert userdb._create_session_id() != userdb._create_session_id()
 
 
-def test_refresh_session_success(user_id: UserId, session_valid: str) -> None:
+def test_refresh_session_success(user_id: UserId) -> None:
+    now = datetime.now()
+    session_valid = make_valid_session(user_id, now)
     session_infos = userdb._load_session_infos(user_id)
     assert session_infos
     old_session = userdb.SessionInfo(**asdict(session_infos[session_valid]))
@@ -448,15 +444,17 @@ def test_refresh_session_success(user_id: UserId, session_valid: str) -> None:
         assert new_session.last_activity > old_session.last_activity
 
 
-def test_invalidate_session(user_id: UserId, session_valid: str) -> None:
+def test_invalidate_session(user_id: UserId) -> None:
+    session_valid = make_valid_session(user_id, datetime.now())
     assert session_valid in userdb._load_session_infos(user_id)
     userdb._invalidate_session(user_id, session_valid)
     assert not userdb._load_session_infos(user_id)
 
 
-def test_get_last_activity(with_user: tuple[UserId, str], session_valid: str) -> None:
+def test_get_last_activity(with_user: tuple[UserId, str]) -> None:
     now = datetime.now()
     user_id = with_user[0]
+    session_valid = make_valid_session(user_id, now)
     user = _load_users_uncached(lock=False)[user_id]
     assert userdb.get_last_activity(user) == now.timestamp() - 5
 
@@ -531,14 +529,12 @@ def test_user_attribute_sync_plugins(request_context: None, monkeypatch: MonkeyP
 
 
 def test_check_credentials_local_user(with_user: tuple[UserId, str]) -> None:
-    now = datetime.now()
     username, password = with_user
-    assert userdb.check_credentials(username, password, now) == username
+    assert userdb.check_credentials(username, password, datetime.now()) == username
 
 
 @pytest.mark.usefixtures("request_context")
 def test_check_credentials_local_user_create_htpasswd_user_ad_hoc() -> None:
-    now = datetime.now()
     user_id = UserId("someuser")
     assert not userdb.user_exists(user_id)
     assert not userdb._user_exists_according_to_profile(user_id)
@@ -553,7 +549,7 @@ def test_check_credentials_local_user_create_htpasswd_user_ad_hoc() -> None:
     assert not userdb._user_exists_according_to_profile(user_id)
     assert str(user_id) in _load_users_uncached(lock=False)
 
-    assert userdb.check_credentials(user_id, "cmk", now) == user_id
+    assert userdb.check_credentials(user_id, "cmk", datetime.now()) == user_id
 
     # Nothing changes during regular access
     assert userdb.user_exists(user_id)
@@ -591,7 +587,6 @@ def make_cme(monkeypatch: MonkeyPatch, user_id: UserId) -> None:
 
 @pytest.fixture()
 def make_cme_global_user(user_id: UserId) -> None:
-    now = datetime.now()
     if not is_managed_repo():
         pytest.skip("not relevant")
 
@@ -600,31 +595,29 @@ def make_cme_global_user(user_id: UserId) -> None:
     users = _load_users_uncached(lock=True)
 
     users[user_id]["customer"] = managed.SCOPE_GLOBAL
-    userdb.save_users(users, now)
+    userdb.save_users(users, datetime.now())
 
 
 @pytest.fixture()
 def make_cme_customer_user(user_id: UserId) -> None:
-    now = datetime.now()
     if not is_managed_repo():
         pytest.skip("not relevant")
 
     users = _load_users_uncached(lock=True)
 
     users[user_id]["customer"] = "test-customer"
-    userdb.save_users(users, now)
+    userdb.save_users(users, datetime.now())
 
 
 @pytest.fixture()
 def make_cme_wrong_customer_user(user_id: UserId) -> None:
-    now = datetime.now()
     if not is_managed_repo():
         pytest.skip("not relevant")
 
     users = _load_users_uncached(lock=True)
 
     users[user_id]["customer"] = "wrong-customer"
-    userdb.save_users(users, now)
+    userdb.save_users(users, datetime.now())
 
 
 @pytest.mark.usefixtures("make_cme", "make_cme_global_user")
@@ -632,9 +625,8 @@ def test_check_credentials_managed_global_user_is_allowed(with_user: tuple[UserI
     if not is_managed_repo():
         pytest.skip("not relevant")
 
-    now = datetime.now()
     user_id, password = with_user
-    assert userdb.check_credentials(user_id, password, now) == user_id
+    assert userdb.check_credentials(user_id, password, datetime.now()) == user_id
 
 
 @pytest.mark.usefixtures("make_cme", "make_cme_customer_user")
@@ -642,9 +634,8 @@ def test_check_credentials_managed_customer_user_is_allowed(with_user: tuple[Use
     if not is_managed_repo():
         pytest.skip("not relevant")
 
-    now = datetime.now()
     user_id, password = with_user
-    assert userdb.check_credentials(user_id, password, now) == user_id
+    assert userdb.check_credentials(user_id, password, datetime.now()) == user_id
 
 
 @pytest.mark.usefixtures("make_cme", "make_cme_wrong_customer_user")
@@ -654,9 +645,8 @@ def test_check_credentials_managed_wrong_customer_user_is_denied(
     if not is_managed_repo():
         pytest.skip("not relevant")
 
-    now = datetime.now()
     user_id, password = with_user
-    assert userdb.check_credentials(user_id, password, now) is False
+    assert userdb.check_credentials(user_id, password, datetime.now()) is False
 
 
 def test_load_custom_attr_not_existing(user_id: UserId) -> None:

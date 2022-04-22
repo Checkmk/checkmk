@@ -21,19 +21,22 @@ export function register() {
             return navigator.credentials.create(options);
         })
         .then(function (attestation) {
+            var attestationPkc = attestation as PublicKeyCredential;
+            var attestationPkcResponse =
+                attestationPkc.response as AuthenticatorAttestationResponse;
             return fetch("user_webauthn_register_complete.py", {
                 method: "POST",
                 headers: {"Content-Type": "application/cbor"},
                 body: CBOR.encode({
-                    attestationObject: new Uint8Array(attestation.response.attestationObject),
-                    clientDataJSON: new Uint8Array(attestation.response.clientDataJSON),
+                    attestationObject: new Uint8Array(attestationPkcResponse.attestationObject),
+                    clientDataJSON: new Uint8Array(attestationPkcResponse.clientDataJSON),
                 }),
             });
         })
         .then(function (response) {
             if (response.ok) {
                 show_info("Registration successful");
-                window.location = "user_two_factor_overview.py";
+                window.location.href = "user_two_factor_overview.py";
             } else {
                 response.text().then(function (text) {
                     show_error(
@@ -79,7 +82,7 @@ function show_error(text) {
 }
 
 function show_message(text, cls) {
-    var msg = document.getElementById("webauthn_message");
+    var msg = document.getElementById("webauthn_message")!;
     utils.remove_class(msg, "error");
     utils.remove_class(msg, "success");
     utils.add_class(msg, cls);
@@ -103,14 +106,17 @@ export function login() {
             return navigator.credentials.get(options);
         })
         .then(function (assertion) {
+            var assertionPkc = assertion as PublicKeyCredential;
+            var assertionResponse =
+                assertionPkc.response as AuthenticatorAssertionResponse;
             return fetch("user_webauthn_login_complete.py", {
                 method: "POST",
                 headers: {"Content-Type": "application/cbor"},
                 body: CBOR.encode({
-                    credentialId: new Uint8Array(assertion.rawId),
-                    authenticatorData: new Uint8Array(assertion.response.authenticatorData),
-                    clientDataJSON: new Uint8Array(assertion.response.clientDataJSON),
-                    signature: new Uint8Array(assertion.response.signature),
+                    credentialId: new Uint8Array(assertionPkc.rawId),
+                    authenticatorData: new Uint8Array(assertionResponse.authenticatorData),
+                    clientDataJSON: new Uint8Array(assertionResponse.clientDataJSON),
+                    signature: new Uint8Array(assertionResponse.signature),
                 }),
             });
         })
@@ -122,7 +128,7 @@ export function login() {
             }
         })
         .then(function () {
-            window.location = "index.py";
+            window.location.href = "index.py";
         })
         .catch(function (e) {
             console.log(e);

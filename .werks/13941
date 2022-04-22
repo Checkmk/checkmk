@@ -1,0 +1,14 @@
+Title: Barplot color is now correct for all hosts
+Class: fix
+Compatible: compat
+Component: core
+Date: 1650619400
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b6
+
+Certain hosts hosts and dashlets displayed the bars of their barplots in black instead of a context sensitive color.
+It now displays the correct color.
+
+CMK-10218

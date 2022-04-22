@@ -956,27 +956,29 @@ export function metric_value_component(selection, options) {
         .join("a")
         .classed("single_value", true)
         .attr("xlink:href", d => d.url || null);
+
     let text = link
-        .selectAll("text")
+        .selectAll("foreignObject")
         .data(d => [d])
-        .join("text")
+        .join("foreignObject")
+        .attr("width", "100%")
+        .attr("height", "100%")
+        .selectAll("div")
+        .data(d => [d])
+        .join("xhtml:div")
+        .selectAll("div")
+        .data(d => [d])
+        .join("xhtml:div")
         .text(d => d.value)
-        .attr("x", options.position.x)
-        .attr("y", options.position.y)
-        .attr("text-anchor", "middle")
-        .attr("dominant-baseline", "central")
-        .style("font-weight", "bold")
         .style("font-size", font_size + "px");
 
-    let unit = text
-        .selectAll("tspan")
-        .data(d => [d])
-        .join("tspan")
-        .style("font-size", font_size / 2 + "px")
-        .style("font-weight", "lighter")
-        .text(d => d.unit);
-    if (options.value.unit !== "%") {
-        unit.attr("dx", font_size / 6 + "px").attr("dy", font_size / 8 + "px");
+    if (options.value.unit !== undefined) {
+        let unit = text
+            .selectAll("span")
+            .data(d => [d])
+            .join("span")
+            .style("font-size", font_size / 2 + "px")
+            .text(d => " " + d.unit);
     }
 }
 

@@ -93,7 +93,7 @@ pub struct PullArgs {
     /// None means default behavior
     #[cfg(windows)]
     #[structopt(long, parse(from_str))]
-    pub agent_channel: Option<String>,
+    pub agent_channel: Option<types::AgentChannel>,
 
     #[structopt(flatten)]
     pub logging_opts: LoggingOpts,

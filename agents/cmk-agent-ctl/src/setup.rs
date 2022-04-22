@@ -2,9 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-#[cfg(unix)]
-use super::types;
-use super::{cli, constants};
+use super::{cli, constants, types};
 #[cfg(unix)]
 use anyhow::Context;
 use anyhow::Result as AnyhowResult;
@@ -116,7 +114,7 @@ pub fn max_connections() -> usize {
 }
 
 #[cfg(unix)]
-pub fn agent_socket() -> types::AgentChannel {
+pub fn agent_channel() -> types::AgentChannel {
     match env::var(constants::ENV_HOME_DIR) {
         Err(_) => constants::UNIX_AGENT_SOCKET.into(),
         Ok(home_dir) => {
@@ -143,8 +141,8 @@ fn agent_port() -> String {
 }
 
 #[cfg(windows)]
-pub fn agent_channel() -> String {
-    format!("localhost:{}", agent_port())
+pub fn agent_channel() -> types::AgentChannel {
+    types::AgentChannel::from(format!("localhost:{}", agent_port()).as_str())
 }
 
 #[cfg(unix)]

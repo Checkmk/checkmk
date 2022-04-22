@@ -65,6 +65,7 @@ from cmk.utils.timeout import MKTimeout, Timeout
 from cmk.utils.type_defs import (
     Contact,
     ContactName,
+    EventContext,
     EventRule,
     NotifyAnalysisInfo,
     NotifyBulkParameters,
@@ -82,7 +83,6 @@ import cmk.base.core
 import cmk.base.events as events
 import cmk.base.obsolete_output as out
 import cmk.base.utils
-from cmk.base.events import EventContext
 
 try:
     import cmk.base.cee.keepalive as keepalive

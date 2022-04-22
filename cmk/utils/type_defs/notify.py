@@ -17,6 +17,17 @@ NotifyPluginParamsList = List[str]
 NotifyPluginParamsDict = Dict[str, Any]  # TODO: Improve this
 NotifyPluginParams = Union[NotifyPluginParamsList, NotifyPluginParamsDict]
 NotifyBulkParameters = Dict[str, Any]  # TODO: Improve this
+NotificationType = Literal[
+    "ACKNOWLEDGEMENT",
+    "DOWNTIMECANCELLED",
+    "DOWNTIMEEND",
+    "DOWNTIMESTART",
+    "FLAPPINGDISABLED",
+    "FLAPPINGSTART",
+    "FLAPPINGSTOP",
+    "PROBLEM",
+    "RECOVERY",
+]
 
 
 class EventRule(TypedDict, total=False):
@@ -94,3 +105,111 @@ class Contact(TypedDict, total=False):
     email: str
     name: str
     pager: str
+
+
+class EventContext(TypedDict, total=False):
+    """Used to be Dict[str, Any]"""
+
+    CONTACTNAME: str
+    CONTACTS: str
+    DATE: str
+    EC_COMMENT: str
+    EC_FACILITY: str
+    EC_PRIORITY: str
+    EC_RULE_ID: str
+    HOSTATTEMPT: str
+    HOSTCONTACTGROUPNAMES: str
+    HOSTFORURL: str
+    HOSTGROUPNAMES: str
+    HOSTNAME: str
+    HOSTNOTIFICATIONNUMBER: str
+    HOSTOUTPUT: str
+    HOSTSTATE: Literal["UP", "DOWN", "UNREACHABLE"]
+    HOSTTAGS: str
+    HOSTURL: str
+    HOST_SL: str
+    LASTHOSTSTATE: str
+    LASTHOSTSTATECHANGE: str
+    LASTHOSTSTATECHANGE_REL: str
+    LASTHOSTUP: str
+    LASTHOSTUP_REL: str
+    LASTSERVICEOK: str
+    LASTSERVICEOK_REL: str
+    LASTSERVICESTATE: str
+    LASTSERVICESTATECHANGE: str
+    LASTSERVICESTATECHANGE_REL: str
+    LOGDIR: str
+    LONGDATETIME: str
+    LONGSERVICEOUTPUT: str
+    MICROTIME: str
+    MONITORING_HOST: str
+    NOTIFICATIONCOMMENT: str
+    NOTIFICATIONTYPE: NotificationType
+    OMD_ROOT: str
+    OMD_SITE: str
+    PREVIOUSHOSTHARDSTATE: str
+    PREVIOUSSERVICEHARDSTATE: str
+    SERVICEATTEMPT: str
+    SERVICECHECKCOMMAND: str
+    SERVICECONTACTGROUPNAMES: str
+    SERVICEDESC: str
+    SERVICEFORURL: str
+    SERVICEGROUPNAMES: str
+    SERVICENOTIFICATIONNUMBER: str
+    SERVICEOUTPUT: str
+    SERVICESTATE: str
+    SERVICEURL: str
+    SHORTDATETIME: str
+    SVC_SL: str
+    WHAT: Literal["SERVICE", "HOST"]
+
+    # Dynamically added:
+    # HOSTLABEL_*: str
+    # SERVICELABEL_*: str
+
+    # Dynamically added:
+    # # Add short variants for state names (at most 4 characters)
+    # for key, value in list(raw_context.items()):
+    #     if key.endswith("STATE"):
+    #         raw_context[key[:-5] + "SHORTSTATE"] = value[:4]
+    # We know of:
+    HOSTSHORTSTATE: str
+    LASTHOSTSHORTSTATE: str
+    LASTSERVICESHORTSTATE: str
+    PREVIOUSHOSTHARDSHORTSTATE: str
+    PREVIOUSSERVICEHARDSHORTSTATE: str
+    SERVICESHORTSTATE: str
+
+
+class ECEventContext(EventContext, total=False):
+    """The keys "found" in cmk.ec
+
+    Not sure if subclassing EventContext is the right call...
+    Feel free to merge if you feel like doing it.
+    """
+
+    EC_CONTACT: str
+    EC_CONTACT_GROUPS: str
+    EC_ID: str
+    EC_MATCH_GROUPS: str
+    EC_ORIG_HOST: str
+    EC_OWNER: str
+    EC_PHASE: str
+    EC_PID: str
+    HOSTADDRESS: str
+    HOSTALIAS: str
+    HOSTDOWNTIME: str
+    LASTSERVICESTATEID: str
+    NOTIFICATIONAUTHOR: str
+    NOTIFICATIONAUTHORALIAS: str
+    NOTIFICATIONAUTHORNAME: str
+    SERVICEACKAUTHOR: str
+    SERVICEACKCOMMENT: str
+    SERVICEPERFDATA: str
+    SERVICEPROBLEMID: str
+    SERVICESTATEID: str
+    SERVICE_EC_CONTACT: str
+    SERVICE_SL: str
+
+    # Dynamically added:
+    # HOST_*: str  #  custom_variables

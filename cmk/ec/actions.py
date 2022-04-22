@@ -12,7 +12,7 @@ from typing import Any, cast, Iterable, Optional
 import cmk.utils.debug
 import cmk.utils.defines
 from cmk.utils.log import VERBOSE
-from cmk.utils.type_defs import ContactgroupName
+from cmk.utils.type_defs import ContactgroupName, ECEventContext
 
 from .config import Action, Config, EMailActionConfig, Rule, ScriptActionConfig
 from .core_queries import query_contactgroups_members, query_status_enable_notifications
@@ -20,8 +20,6 @@ from .event import Event
 from .history import History, quote_shell_string
 from .host_config import HostConfig
 from .settings import Settings
-
-NotificationContext = dict[str, str]
 
 # .
 #   .--Actions-------------------------------------------------------------.
@@ -345,6 +343,9 @@ def do_notify(
     context_string = "".join(
         "{}={}\n".format(varname, value.replace("\n", "\\n"))
         for (varname, value) in context.items()
+        if isinstance(
+            value, str
+        )  # context is TypedDict which is dict[str, object], in fact it is dict[str, str]
     )
 
     completed_process = subprocess.run(
@@ -368,7 +369,7 @@ def _create_notification_context(
     username: Optional[str],
     is_cancelling: bool,
     logger: Logger,
-) -> NotificationContext:
+) -> ECEventContext:
     context = _base_notification_context(event, username, is_cancelling)
     _add_infos_from_monitoring_host(host_config, context, event)  # involves Livestatus query
     _add_contacts_from_rule(context, event, logger)
@@ -377,59 +378,59 @@ def _create_notification_context(
 
 def _base_notification_context(
     event: Event, username: Optional[str], is_cancelling: bool
-) -> NotificationContext:
+) -> ECEventContext:
     rule_id = event["rule_id"]
-    return {
-        "WHAT": "SERVICE",
-        "CONTACTNAME": "check-mk-notify",
-        "DATE": str(int(event["last"])),  # -> Event: Time
-        "MICROTIME": str(int(event["last"] * 1000000)),
-        "LASTSERVICESTATE": is_cancelling
+    return ECEventContext(
+        WHAT="SERVICE",
+        CONTACTNAME="check-mk-notify",
+        DATE=str(int(event["last"])),  # -> Event: Time
+        MICROTIME=str(int(event["last"] * 1000000)),
+        LASTSERVICESTATE=is_cancelling
         and "CRITICAL"
         or "OK",  # better assume OK, we have no transition information
-        "LASTSERVICESTATEID": "2" if is_cancelling else "0",  # -> immer OK
-        "LASTSERVICEOK": "0",  # 1.1.1970
-        "LASTSERVICESTATECHANGE": str(int(event["last"])),
-        "LONGSERVICEOUTPUT": "",
-        "NOTIFICATIONAUTHOR": "" if username is None else username,
-        "NOTIFICATIONAUTHORALIAS": "" if username is None else username,
-        "NOTIFICATIONAUTHORNAME": "" if username is None else username,
-        "NOTIFICATIONCOMMENT": "",
-        "NOTIFICATIONTYPE": "RECOVERY" if is_cancelling else "PROBLEM",
-        "SERVICEACKAUTHOR": "",
-        "SERVICEACKCOMMENT": "",
-        "SERVICEATTEMPT": "1",
-        "SERVICECHECKCOMMAND": "ec-internal" if rule_id is None else "ec-rule-" + rule_id,
-        "SERVICEDESC": event["application"] or "Event Console",
-        "SERVICENOTIFICATIONNUMBER": "1",
-        "SERVICEOUTPUT": event["text"],
-        "SERVICEPERFDATA": "",
-        "SERVICEPROBLEMID": "ec-id-" + str(event["id"]),
-        "SERVICESTATE": cmk.utils.defines.service_state_name(event["state"]),
-        "SERVICESTATEID": str(event["state"]),
-        "SERVICE_EC_CONTACT": event.get("owner", ""),
-        "SERVICE_SL": str(event["sl"]),
-        "SVC_SL": str(event["sl"]),
+        LASTSERVICESTATEID="2" if is_cancelling else "0",  # -> immer OK
+        LASTSERVICEOK="0",  # 1.1.1970
+        LASTSERVICESTATECHANGE=str(int(event["last"])),
+        LONGSERVICEOUTPUT="",
+        NOTIFICATIONAUTHOR="" if username is None else username,
+        NOTIFICATIONAUTHORALIAS="" if username is None else username,
+        NOTIFICATIONAUTHORNAME="" if username is None else username,
+        NOTIFICATIONCOMMENT="",
+        NOTIFICATIONTYPE="RECOVERY" if is_cancelling else "PROBLEM",
+        SERVICEACKAUTHOR="",
+        SERVICEACKCOMMENT="",
+        SERVICEATTEMPT="1",
+        SERVICECHECKCOMMAND="ec-internal" if rule_id is None else "ec-rule-" + rule_id,
+        SERVICEDESC=event["application"] or "Event Console",
+        SERVICENOTIFICATIONNUMBER="1",
+        SERVICEOUTPUT=event["text"],
+        SERVICEPERFDATA="",
+        SERVICEPROBLEMID="ec-id-" + str(event["id"]),
+        SERVICESTATE=cmk.utils.defines.service_state_name(event["state"]),
+        SERVICESTATEID=str(event["state"]),
+        SERVICE_EC_CONTACT=event.get("owner", ""),
+        SERVICE_SL=str(event["sl"]),
+        SVC_SL=str(event["sl"]),
         # Some fields only found in EC notifications
-        "EC_ID": str(event["id"]),
-        "EC_RULE_ID": "" if rule_id is None else rule_id,
-        "EC_PRIORITY": str(event["priority"]),
-        "EC_FACILITY": str(event["facility"]),
-        "EC_PHASE": event["phase"],
-        "EC_COMMENT": event.get("comment", ""),
-        "EC_OWNER": event.get("owner", ""),
-        "EC_CONTACT": event.get("contact", ""),
-        "EC_PID": str(event.get("pid", 0)),
-        "EC_MATCH_GROUPS": "\t".join(event["match_groups"]),
-        "EC_CONTACT_GROUPS": " ".join(event.get("contact_groups") or []),
-        "EC_ORIG_HOST": event.get("orig_host", event["host"]),
-    }
+        EC_ID=str(event["id"]),
+        EC_RULE_ID="" if rule_id is None else rule_id,
+        EC_PRIORITY=str(event["priority"]),
+        EC_FACILITY=str(event["facility"]),
+        EC_PHASE=event["phase"],
+        EC_COMMENT=event.get("comment", ""),
+        EC_OWNER=event.get("owner", ""),
+        EC_CONTACT=event.get("contact", ""),
+        EC_PID=str(event.get("pid", 0)),
+        EC_MATCH_GROUPS="\t".join(event["match_groups"]),
+        EC_CONTACT_GROUPS=" ".join(event.get("contact_groups") or []),
+        EC_ORIG_HOST=event.get("orig_host", event["host"]),
+    )
 
 
 # "CONTACTS" is allowed to be missing in the context, cmk --notify will
 # add the fallback contacts then.
 def _add_infos_from_monitoring_host(
-    host_config: HostConfig, context: NotificationContext, event: Event
+    host_config: HostConfig, context: ECEventContext, event: Event
 ) -> None:
     def _add_artificial_context_info() -> None:
         context.update(
@@ -469,12 +470,13 @@ def _add_infos_from_monitoring_host(
 
     # Add custom variables to the notification context
     for key, val in config.custom_variables.items():
-        context["HOST_%s" % key] = val
+        # TypedDict with dynamic keys... The typing we have is worth the supression
+        context["HOST_%s" % key] = val  # type: ignore[literal-required]
 
     context["HOSTDOWNTIME"] = "1" if event["host_in_downtime"] else "0"
 
 
-def _add_contacts_from_rule(context: NotificationContext, event: Event, logger: Logger) -> None:
+def _add_contacts_from_rule(context: ECEventContext, event: Event, logger: Logger) -> None:
     # Add contact information from the rule, but only if the
     # host is unknown or if contact groups in rule have precedence
 
@@ -492,7 +494,7 @@ def _add_contacts_from_rule(context: NotificationContext, event: Event, logger: 
 
 
 def _add_contact_information_to_context(
-    context: NotificationContext, contact_groups: Iterable[ContactgroupName], logger: Logger
+    context: ECEventContext, contact_groups: Iterable[ContactgroupName], logger: Logger
 ) -> None:
     try:
         contact_names = query_contactgroups_members(contact_groups)

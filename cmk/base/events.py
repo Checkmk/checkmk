@@ -13,7 +13,7 @@ import select
 import socket
 import sys
 import time
-from typing import Any, Callable, Iterable, List, Literal, Mapping, Optional, TypedDict, Union
+from typing import Any, Callable, Iterable, List, Mapping, Optional, Union
 from urllib.parse import quote, urlencode
 
 import livestatus
@@ -22,100 +22,12 @@ import cmk.utils.daemon
 import cmk.utils.debug
 from cmk.utils.regex import regex
 from cmk.utils.site import omd_site
-from cmk.utils.type_defs import EventRule, HostName, ServiceName
+from cmk.utils.type_defs import EventContext, EventRule, HostName, ServiceName
 
 import cmk.base.config as config
 import cmk.base.core
 
 ContactList = List  # TODO Improve this
-
-
-class EventContext(TypedDict, total=False):
-    """Used to be Dict[str, Any]"""
-
-    NOTIFICATIONTYPE: Literal[
-        "RECOVERY",
-        "FLAPPINGSTART",
-        "FLAPPINGSTOP",
-        "FLAPPINGDISABLED",
-        "DOWNTIMESTART",
-        "DOWNTIMEEND",
-        "DOWNTIMECANCELLED",
-        "ACKNOWLEDGEMENT",
-    ]
-
-    CONTACTNAME: str
-    CONTACTS: str
-    DATE: str
-    EC_COMMENT: str
-    EC_FACILITY: str
-    EC_PRIORITY: str
-    EC_RULE_ID: str
-    HOSTATTEMPT: str
-    HOSTCONTACTGROUPNAMES: str
-    HOSTFORURL: str
-    HOSTGROUPNAMES: str
-    HOSTNAME: str
-    HOSTNOTIFICATIONNUMBER: str
-    HOSTOUTPUT: str
-    HOSTSTATE: Literal["UP", "DOWN", "UNREACHABLE"]
-    HOSTTAGS: str
-    HOSTURL: str
-    HOST_SL: str
-    LASTHOSTSTATE: str
-    LASTHOSTSTATECHANGE: str
-    LASTHOSTSTATECHANGE_REL: str
-    LASTHOSTUP: str
-    LASTHOSTUP_REL: str
-    LASTSERVICEOK: str
-    LASTSERVICEOK_REL: str
-    LASTSERVICESTATE: str
-    LASTSERVICESTATECHANGE: str
-    LASTSERVICESTATECHANGE_REL: str
-    LONGDATETIME: str
-    LONGSERVICEOUTPUT: str
-    MICROTIME: str
-    MONITORING_HOST: str
-    NOTIFICATIONCOMMENT: str
-    OMD_ROOT: str
-    OMD_SITE: str
-    PREVIOUSHOSTHARDSTATE: str
-    PREVIOUSSERVICEHARDSTATE: str
-    SERVICEATTEMPT: str
-    SERVICECHECKCOMMAND: str
-    SERVICECONTACTGROUPNAMES: str
-    SERVICEDESC: str
-    SERVICEFORURL: str
-    SERVICEGROUPNAMES: str
-    SERVICENOTIFICATIONNUMBER: str
-    SERVICEOUTPUT: str
-    SERVICESTATE: Literal["OK", "WARNING", "CRITICAL", "UNKNOWN"]
-    SERVICEURL: str
-    SHORTDATETIME: str
-    SVC_SL: str
-    WHAT: Literal["SERVICE", "HOST"]
-
-    # Dynamically added:
-    # HOSTLABEL_*: str
-    # SERVICELABEL_*: str
-
-    # Dynamically added:
-    # # Add short variants for state names (at most 4 characters)
-    # for key, value in list(raw_context.items()):
-    #     if key.endswith("STATE"):
-    #         raw_context[key[:-5] + "SHORTSTATE"] = value[:4]
-    # We know of:
-    HOSTSHORTSTATE: str
-    LASTHOSTSHORTSTATE: str
-    LASTSERVICESHORTSTATE: str
-    PREVIOUSHOSTHARDSHORTSTATE: str
-    PREVIOUSSERVICEHARDSHORTSTATE: str
-    SERVICESHORTSTATE: str
-
-    # Todo(Delete them with a Werk)
-    LOGDIR: str
-    MAIL_COMMAND: str
-
 
 # We actually want to use Matcher for all our matchers, but mypy is too dumb to
 # use that for function types, see https://github.com/python/mypy/issues/1641.

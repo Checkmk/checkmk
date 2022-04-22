@@ -1136,10 +1136,8 @@ def _save_auth_serials(updated_profiles: Users) -> None:
     )
 
 
-def rewrite_users() -> None:
-    now = datetime.now()
-    users = load_users(lock=True)
-    save_users(users, now)
+def rewrite_users(now: datetime) -> None:
+    save_users(load_users(lock=True), now)
 
 
 def create_cmk_automation_user() -> None:
@@ -1332,7 +1330,7 @@ def hook_save(users: Users) -> None:
             show_exception(connection_id, _("Error during saving"), e)
 
 
-def general_userdb_job() -> None:
+def general_userdb_job(now: datetime) -> None:
     """This function registers general stuff, which is independet of the single
     connectors to each page load. It is exectued AFTER all other connections jobs."""
 
@@ -1341,7 +1339,7 @@ def general_userdb_job() -> None:
     # Create initial auth.serials file, same issue as auth.php above
     serials_file = "%s/auth.serials" % os.path.dirname(cmk.utils.paths.htpasswd_file)
     if not os.path.exists(serials_file) or os.path.getsize(serials_file) == 0:
-        rewrite_users()
+        rewrite_users(now)
 
 
 def execute_userdb_job() -> None:
@@ -1429,7 +1427,12 @@ class UserSyncBackgroundJob(gui_background_job.GUIBackgroundJob):
     ) -> None:
         job_interface.send_progress_update(_("Synchronization started..."))
         if self._execute_sync_action(
-            job_interface, add_to_changelog, enforce_sync, load_users_func, save_users_func
+            job_interface,
+            add_to_changelog,
+            enforce_sync,
+            load_users_func,
+            save_users_func,
+            datetime.now(),
         ):
             job_interface.send_result_message(_("The user synchronization completed successfully."))
         else:
@@ -1442,6 +1445,7 @@ class UserSyncBackgroundJob(gui_background_job.GUIBackgroundJob):
         enforce_sync: bool,
         load_users_func: Callable[[bool], Users],
         save_users_func: Callable[[Users, datetime], None],
+        now: datetime,
     ) -> bool:
         for connection_id, connection in active_connections():
             try:
@@ -1467,7 +1471,7 @@ class UserSyncBackgroundJob(gui_background_job.GUIBackgroundJob):
                 )
 
         job_interface.send_progress_update(_("Finalizing synchronization"))
-        general_userdb_job()
+        general_userdb_job(now)
         return True
 
 

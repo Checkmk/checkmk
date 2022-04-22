@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import os
 import pprint
+from datetime import datetime
 
 from cmk.utils import store
 
@@ -14,9 +15,9 @@ from cmk.gui.watolib import Folder
 from cmk.gui.watolib.host_attributes import transform_pre_16_host_topics
 
 
-def update_user_custom_attrs():
+def update_user_custom_attrs(now: datetime):
     userdb.update_config_based_user_attributes()
-    userdb.rewrite_users()
+    userdb.rewrite_users(now)
 
 
 def update_host_custom_attrs():

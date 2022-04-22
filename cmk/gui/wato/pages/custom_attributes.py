@@ -7,6 +7,7 @@
 
 import abc
 import re
+from datetime import datetime
 from typing import Any, Dict, Iterable, Optional, Type
 
 import cmk.gui.forms as forms
@@ -295,7 +296,7 @@ class ModeEditCustomUserAttr(ModeEditCustomAttr):
         return _("Make this variable available in notifications")
 
     def _update_config(self):
-        update_user_custom_attrs()
+        update_user_custom_attrs(datetime.now())
 
     def _show_in_table_option(self):
         self._render_table_option(
@@ -513,7 +514,7 @@ class ModeCustomUserAttrs(ModeCustomAttrs):
         return "user"
 
     def _update_config(self):
-        update_user_custom_attrs()
+        update_user_custom_attrs(datetime.now())
 
     def title(self):
         return _("Custom user attributes")

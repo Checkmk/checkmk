@@ -673,7 +673,9 @@ inventory_displayhints.update({
     ".software.applications.kube.pod.qos_class": {"title": _l("QoS class")},
 
 
-    ".software.applications.mobileiron": {"title": _l("Mobileiron")},
+    ".software.applications.mobileiron.": {"title": _l("Mobileiron")},
+    ".software.applications.mobileiron.partition_name": {"title": _l("Partition Name")},
+    ".software.applications.mobileiron.registration_state": {"title": _l("Registration State")},
 
     ".software.applications.citrix.": {"title": _l("Citrix")},
     ".software.applications.citrix.controller.": {"title": _l("Controller")},

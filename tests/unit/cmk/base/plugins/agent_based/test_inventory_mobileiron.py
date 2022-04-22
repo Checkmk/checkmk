@@ -7,7 +7,7 @@ from typing import Iterable, Union
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes, TableRow
 from cmk.base.plugins.agent_based.inventory_mobileiron import inventory_mobileiron
-from cmk.base.plugins.agent_based.utils.mobileiron import parse_mobileiron
+from cmk.base.plugins.agent_based.mobileiron_section import parse_mobileiron, parse_mobileiron_df
 
 from .utils_inventory import sort_inventory_result
 
@@ -21,7 +21,6 @@ DEVICE_DATA = parse_mobileiron(
                     "registrationState": "ACTIVE",
                     "manufacturer": "iasdf",
                     "serialNumber": "asdf",
-                    "totalCapacity": 67.108864,
                     "dmPartitionName": "ASDF_PARTITION",
                     "ipAddress": "10.10.10.10",
                 }
@@ -30,20 +29,24 @@ DEVICE_DATA = parse_mobileiron(
     ]
 )
 
+DEVICE_DATA_DF = parse_mobileiron_df(
+    [[json.dumps({"totalCapacity": 67.108864, "availableCapacity": 34.0})]]
+)
+
 
 EXPECTED: Iterable[Union[Attributes, TableRow]] = [
     Attributes(
         path=["hardware", "system"],
         inventory_attributes={
-            "Model Name": "asdf_model",
-            "Manufacturer": "iasdf",
-            "Serial number": "asdf",
+            "model": "asdf_model",
+            "manufacturer": "iasdf",
+            "serial": "asdf",
         },
     ),
     Attributes(
         path=["software", "os"],
         inventory_attributes={
-            "Type": "ANDROID",
+            "type": "ANDROID",
         },
     ),
     Attributes(
@@ -57,14 +60,14 @@ EXPECTED: Iterable[Union[Attributes, TableRow]] = [
     Attributes(
         path=["software", "applications", "mobileiron"],
         inventory_attributes={
-            "Registration state": "ACTIVE",
-            "Partition name": "ASDF_PARTITION",
+            "registration_state": "ACTIVE",
+            "partition_name": "ASDF_PARTITION",
         },
     ),
 ]
 
 
 def test_inventory_mobileiron() -> None:
-    assert sort_inventory_result(inventory_mobileiron(DEVICE_DATA)) == sort_inventory_result(
-        EXPECTED
-    )
+    assert sort_inventory_result(
+        inventory_mobileiron(DEVICE_DATA, DEVICE_DATA_DF)
+    ) == sort_inventory_result(EXPECTED)

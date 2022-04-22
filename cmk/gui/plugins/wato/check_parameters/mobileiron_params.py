@@ -9,7 +9,7 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-from cmk.gui.valuespec import Dictionary, Float, Integer, Tuple
+from cmk.gui.valuespec import Dictionary, Integer, Tuple
 
 
 def _parameter_valuespec_mobileiron_compliance():
@@ -31,25 +31,6 @@ def _parameter_valuespec_mobileiron_compliance():
     )
 
 
-def _parameter_valuespec_mobileiron_misc():
-    return Dictionary(
-        title=_("Mobileiron miscellaneous parameters"),
-        elements=[
-            (
-                "available_capacity",
-                Tuple(
-                    title=_("Available capacity"),
-                    elements=[
-                        Float(title=_("Warning at"), default_value=70.0),
-                        Float(title=_("Critical at"), default_value=90.0),
-                    ],
-                ),
-            )
-        ],
-        optional_keys=[],
-    )
-
-
 rulespec_registry.register(
     CheckParameterRulespecWithoutItem(
         title=lambda: _("Mobileiron Device"),
@@ -57,15 +38,5 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_mobileiron_compliance,
-    )
-)
-
-rulespec_registry.register(
-    CheckParameterRulespecWithoutItem(
-        title=lambda: _("Mobileiron Device"),
-        check_group_name="mobileiron_misc",
-        group=RulespecGroupCheckParametersApplications,
-        match_type="dict",
-        parameter_valuespec=_parameter_valuespec_mobileiron_misc,
     )
 )

@@ -330,6 +330,8 @@ def test_registered_painters():
         "inv_software_applications_ibm_mq_managers",
         "inv_software_applications_ibm_mq_queues",
         "inv_software_applications_mobileiron",
+        "inv_software_applications_mobileiron_partition_name",
+        "inv_software_applications_mobileiron_registration_state",
         "inv_software_applications_kube",
         "inv_software_applications_kube_metadata",
         "inv_software_applications_kube_metadata_name",

@@ -18,6 +18,8 @@ from urllib.parse import quote, urljoin
 import requests
 import urllib3
 
+from cmk.utils.regex import regex, REGEX_HOST_NAME_CHARS
+
 from cmk.special_agents.utils.agent_common import (
     ConditionalPiggybackSection,
     SectionWriter,
@@ -77,6 +79,14 @@ def _proxy_address(
     return f"{authentication}{address}"
 
 
+def _sanitize_hostname(raw_hostname: str) -> str:
+    """
+    Remove the part with @..., so the "foo@bar" becomes "foo"
+    Then apply the standard hostname allowed characters.
+    """
+    return regex(f"[^{REGEX_HOST_NAME_CHARS}]").sub("_", raw_hostname.partition("@")[0])
+
+
 class MobileironAPI:
     def __init__(
         self,
@@ -115,7 +125,7 @@ class MobileironAPI:
         # TODO chunks of _devices_per_request could contain duplicates
         self._all_devices.update(
             {
-                device_json["entityName"].replace(" ", "_"): device_json
+                _sanitize_hostname(device_json["entityName"]): device_json
                 for device_json in sorted(data_raw, key=lambda d: d["lastRegistrationTime"])
             }
         )
@@ -216,6 +226,10 @@ def agent_mobileiron_main(args: Args) -> None:
     <<<mobileiron_source_host>>>
     {"...": ...}
     <<<<>>>>
+    <<<<entityName>>>>
+    <<<mobileiron_df>>>
+    {"...": ...}
+    <<<<>>>>
     """
 
     LOGGER.info("Fetch general device information...")
@@ -257,6 +271,13 @@ def agent_mobileiron_main(args: Args) -> None:
                 writer.append_json(all_devices[device])
             with ConditionalPiggybackSection(device), SectionWriter("uptime") as writer:
                 writer.append_json(all_devices[device]["uptime"])
+            with ConditionalPiggybackSection(device), SectionWriter("mobileiron_df") as writer:
+                writer.append_json(
+                    {
+                        "totalCapacity": all_devices[device].get("totalCapacity"),
+                        "availableCapacity": all_devices[device].get("availableCapacity"),
+                    }
+                )
 
 
 def main() -> None:

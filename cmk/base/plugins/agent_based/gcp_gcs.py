@@ -57,7 +57,7 @@ register.check_plugin(
     check_ruleset_name="gcp_gcs_requests",
     discovery_function=discover,
     check_function=check_gcp_gcs_requests,
-    check_default_parameters={},
+    check_default_parameters={"requests": None},
 )
 
 

@@ -405,6 +405,24 @@ def test_subscription_details_broken(raw_subscription_details: Mapping[str, Any]
         SubscriptionDetails.parse(raw_subscription_details)
 
 
+def test_subscription_details_empty_source() -> None:
+    assert SubscriptionDetails.parse(
+        {
+            "subscription_start": 1,
+            "subscription_end": 2,
+            "subscription_limit": ("custom", "3"),
+        }
+    ) == SubscriptionDetails(
+        source=SubscriptionDetailsSource.empty,
+        start=1,
+        end=2,
+        limit=SubscriptionDetailsLimit(
+            limit_type=SubscriptionDetailsLimitType.custom,
+            limit_value=3,
+        ),
+    )
+
+
 @pytest.mark.parametrize(
     "raw_subscription_details_source, subscription_details_source",
     [

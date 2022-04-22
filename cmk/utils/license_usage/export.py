@@ -251,11 +251,16 @@ class SubscriptionDetails(NamedTuple):
                 limit=SubscriptionDetailsLimit.parse(details["subscription_limit"]),
             )
 
-        if isinstance(raw_subscription_details, dict) and "source" in raw_subscription_details:
+        if isinstance(raw_subscription_details, dict):
+            if "source" in raw_subscription_details:
+                source = SubscriptionDetailsSource.parse(raw_subscription_details["source"])
+            else:
+                source = SubscriptionDetailsSource.empty
+
             cls._validate_detail_values(raw_subscription_details)
 
             return SubscriptionDetails(
-                source=SubscriptionDetailsSource.parse(raw_subscription_details["source"]),
+                source=source,
                 start=int(raw_subscription_details["subscription_start"]),
                 end=int(raw_subscription_details["subscription_end"]),
                 limit=SubscriptionDetailsLimit.parse(

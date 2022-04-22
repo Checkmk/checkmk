@@ -1,0 +1,12 @@
+Title: win_netstat: Add german translation for CLOSE_WAIT
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1650636964
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+TCP connections with the state SCHLIESSEN_WARTEN weren't
+recognised as CLOSE_WAIT TCP connections.

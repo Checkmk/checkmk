@@ -574,9 +574,6 @@ def test_check_credentials_local_user_disallow_locked(with_user: tuple[UserId, s
 # the config needs to be done after loading the config
 @pytest.fixture()
 def make_cme(monkeypatch: MonkeyPatch, user_id: UserId) -> None:
-    if not is_managed_repo():
-        pytest.skip("not relevant")
-
     monkeypatch.setattr(cmk.utils.version, "omd_version", lambda: "2.0.0i1.cme")
     assert cmk.utils.version.is_managed_edition()
 
@@ -585,68 +582,41 @@ def make_cme(monkeypatch: MonkeyPatch, user_id: UserId) -> None:
     assert active_config.current_customer == "test-customer"  # type: ignore[attr-defined]
 
 
-@pytest.fixture()
-def make_cme_global_user(user_id: UserId) -> None:
-    if not is_managed_repo():
-        pytest.skip("not relevant")
-
+@pytest.mark.skipif(not is_managed_repo(), reason="managed-edition-only test")
+@pytest.mark.usefixtures("make_cme")
+def test_check_credentials_managed_global_user_is_allowed(with_user: tuple[UserId, str]) -> None:
+    user_id, password = with_user
+    now = datetime.now()
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
 
     users = _load_users_uncached(lock=True)
-
     users[user_id]["customer"] = managed.SCOPE_GLOBAL
-    userdb.save_users(users, datetime.now())
+    userdb.save_users(users, now)
+    assert userdb.check_credentials(user_id, password, now) == user_id
 
 
-@pytest.fixture()
-def make_cme_customer_user(user_id: UserId) -> None:
-    if not is_managed_repo():
-        pytest.skip("not relevant")
-
-    users = _load_users_uncached(lock=True)
-
-    users[user_id]["customer"] = "test-customer"
-    userdb.save_users(users, datetime.now())
-
-
-@pytest.fixture()
-def make_cme_wrong_customer_user(user_id: UserId) -> None:
-    if not is_managed_repo():
-        pytest.skip("not relevant")
-
-    users = _load_users_uncached(lock=True)
-
-    users[user_id]["customer"] = "wrong-customer"
-    userdb.save_users(users, datetime.now())
-
-
-@pytest.mark.usefixtures("make_cme", "make_cme_global_user")
-def test_check_credentials_managed_global_user_is_allowed(with_user: tuple[UserId, str]) -> None:
-    if not is_managed_repo():
-        pytest.skip("not relevant")
-
-    user_id, password = with_user
-    assert userdb.check_credentials(user_id, password, datetime.now()) == user_id
-
-
-@pytest.mark.usefixtures("make_cme", "make_cme_customer_user")
+@pytest.mark.skipif(not is_managed_repo(), reason="managed-edition-only test")
+@pytest.mark.usefixtures("make_cme")
 def test_check_credentials_managed_customer_user_is_allowed(with_user: tuple[UserId, str]) -> None:
-    if not is_managed_repo():
-        pytest.skip("not relevant")
-
     user_id, password = with_user
-    assert userdb.check_credentials(user_id, password, datetime.now()) == user_id
+    now = datetime.now()
+    users = _load_users_uncached(lock=True)
+    users[user_id]["customer"] = "test-customer"
+    userdb.save_users(users, now)
+    assert userdb.check_credentials(user_id, password, now) == user_id
 
 
-@pytest.mark.usefixtures("make_cme", "make_cme_wrong_customer_user")
+@pytest.mark.skipif(not is_managed_repo(), reason="managed-edition-only test")
+@pytest.mark.usefixtures("make_cme")
 def test_check_credentials_managed_wrong_customer_user_is_denied(
     with_user: tuple[UserId, str]
 ) -> None:
-    if not is_managed_repo():
-        pytest.skip("not relevant")
-
     user_id, password = with_user
-    assert userdb.check_credentials(user_id, password, datetime.now()) is False
+    now = datetime.now()
+    users = _load_users_uncached(lock=True)
+    users[user_id]["customer"] = "wrong-customer"
+    userdb.save_users(users, now)
+    assert userdb.check_credentials(user_id, password, now) is False
 
 
 def test_load_custom_attr_not_existing(user_id: UserId) -> None:

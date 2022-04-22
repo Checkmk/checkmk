@@ -7,7 +7,7 @@
 import re
 import shutil
 from pathlib import Path
-from typing import Any, Dict, Generator, List, Optional, Tuple, Union
+from typing import Any, Dict, Generator, List, Optional, Sequence, Tuple, Union
 
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
@@ -1031,22 +1031,22 @@ def test_host_config_inventory_parameters(
     [
         (
             "testhost1",
-            {
-                "check_interval": None,
-                "severity_unmonitored": 1,
-                "severity_vanished": 0,
-            },
+            None,
         ),
         (
             "testhost2",
-            {
-                "check_interval": 1,
-            },
+            config.DiscoveryCheckParameters(
+                check_interval=1,
+                severity_new_services=1,
+                severity_vanished_services=0,
+                severity_new_host_labels=1,
+                rediscovery={},
+            ),
         ),
     ],
 )
 def test_host_config_discovery_check_parameters(
-    monkeypatch: MonkeyPatch, hostname_str: str, result: Dict[str, Optional[int]]
+    monkeypatch: MonkeyPatch, hostname_str: str, result: Optional[config.DiscoveryCheckParameters]
 ) -> None:
     hostname = HostName(hostname_str)
     ts = Scenario()
@@ -1057,6 +1057,9 @@ def test_host_config_discovery_check_parameters(
             (
                 {
                     "check_interval": 1,
+                    "severity_unmonitored": 1,
+                    "severity_vanished": 0,
+                    "severity_new_host_label": 1,
                 },
                 [],
                 ["testhost2"],
@@ -1065,6 +1068,9 @@ def test_host_config_discovery_check_parameters(
             (
                 {
                     "check_interval": 2,
+                    "severity_unmonitored": 1,
+                    "severity_vanished": 0,
+                    "severity_new_host_label": 1,
                 },
                 [],
                 ["testhost2"],
@@ -1073,7 +1079,12 @@ def test_host_config_discovery_check_parameters(
         ],
     )
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.get_host_config(hostname).discovery_check_parameters == result
+    params = config_cache.get_host_config(hostname).discovery_check_parameters
+
+    if result is None:
+        assert params is None or params.check_interval is None
+    else:
+        assert params == result
 
 
 @pytest.mark.parametrize(
@@ -2444,19 +2455,30 @@ def test_host_config_service_level(
     assert config_cache.get_host_config(hostname).service_level == result
 
 
+def _rule_val(check_interval: Optional[int]) -> dict[str, Any]:
+    return {
+        "check_interval": check_interval,
+        "severity_unmonitored": 0,
+        "severity_vanished": 0,
+        "severity_new_host_label": 0,
+    }
+
+
 @pytest.mark.parametrize(
-    "params,ignored,ping,result",
+    "rule_entries,ignored,ping,result",
     [
-        (None, False, False, False),
-        ({"check_interval": 0}, False, False, False),
-        ({"check_interval": 3600}, False, False, True),
-        ({"check_interval": 3600}, True, False, False),
-        ({"check_interval": 3600}, False, True, False),
+        ([None], False, False, False),
+        ([], False, False, True),
+        ([_rule_val(None)], False, False, False),
+        ([_rule_val(0)], False, False, False),
+        ([_rule_val(3600)], False, False, True),
+        ([_rule_val(3600)], True, False, False),
+        ([_rule_val(3600)], False, True, False),
     ],
 )
 def test_host_config_add_discovery_check(
     monkeypatch: MonkeyPatch,
-    params: Optional[Dict[str, int]],
+    rule_entries: Sequence[Optional[dict]],
     ignored: bool,
     ping: bool,
     result: bool,
@@ -2474,6 +2496,19 @@ def test_host_config_add_discovery_check(
     ts = Scenario()
     ts.add_host(xyz_host, tags=tags)
 
+    ts.set_ruleset(
+        "periodic_discovery",
+        [
+            {
+                "condition": {
+                    "host_name": ["xyz"],
+                },
+                "value": value,
+            }
+            for value in rule_entries
+        ],
+    )
+
     if ignored:
         ts.set_ruleset(
             "ignored_services",
@@ -2489,7 +2524,11 @@ def test_host_config_add_discovery_check(
         )
     config_cache = ts.apply(monkeypatch)
 
+    monkeypatch.setattr(config, "inventory_check_interval", 42)
+
     host_config = config_cache.get_host_config(xyz_host)
+    params = host_config.discovery_check_parameters
+
     assert host_config.add_service_discovery_check(params, "Check_MK Discovery") == result
 
 

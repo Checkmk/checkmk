@@ -11,7 +11,6 @@ description:
  This check monitors the miscellaneous parameters of each device in mobileiron.
 
  The monitored parameters are:
- - Uptime
  - IP address
  - Available capacity
 

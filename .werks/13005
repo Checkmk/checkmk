@@ -11,4 +11,5 @@ Version: 2.1.0p1
 
 The special agent mobileiron queries the mobileiron REST API.
 
-3 checks were added: Compliance, Versions, Miscellaneous.
+2 checks were added: Compliance, Versions
+3 services added: Inventory, Uptime, df

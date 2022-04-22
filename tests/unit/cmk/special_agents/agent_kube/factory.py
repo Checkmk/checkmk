@@ -67,6 +67,17 @@ def api_to_agent_deployment(api_deployment: api.Deployment) -> agent.Deployment:
     )
 
 
+# Namespace & Resource Quota related Factories
+
+
+class NamespaceMetaDataFactory(ModelFactory):
+    __model__ = api.NamespaceMetaData
+
+
+class APIResourceQuotaFactory(ModelFactory):
+    __model__ = api.ResourceQuota
+
+
 # Performance related Factories
 
 

@@ -7,7 +7,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any, Iterator, List, Mapping, NamedTuple, Optional, Sequence, Tuple
+from typing import Any, Container, Iterator, List, Mapping, NamedTuple, Optional, Sequence, Tuple
 from uuid import UUID
 
 import cmk.utils.paths
@@ -64,6 +64,11 @@ class UUIDLinkManager:
 
         for source in self._received_outputs_dir.iterdir():
             yield UUIDLink(source=source, target=source.readlink())
+
+    def unlink_sources(self, host_names: Container[HostName]) -> None:
+        for link in self:
+            if link.hostname in host_names:
+                link.unlink_source()
 
     def get_uuid(self, host_name: HostName) -> Optional[UUID]:
         for link in self:

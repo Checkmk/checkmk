@@ -1421,8 +1421,8 @@ class UserSyncBackgroundJob(gui_background_job.GUIBackgroundJob):
         job_interface: background_job.BackgroundProcessInterface,
         add_to_changelog: bool,
         enforce_sync: bool,
-        load_users_func: Callable,
-        save_users_func: Callable,
+        load_users_func: Callable[[bool], Users],
+        save_users_func: Callable[[Users], None],
     ) -> None:
         job_interface.send_progress_update(_("Synchronization started..."))
         if self._execute_sync_action(
@@ -1437,8 +1437,8 @@ class UserSyncBackgroundJob(gui_background_job.GUIBackgroundJob):
         job_interface: background_job.BackgroundProcessInterface,
         add_to_changelog: bool,
         enforce_sync: bool,
-        load_users_func: Callable,
-        save_users_func: Callable,
+        load_users_func: Callable[[bool], Users],
+        save_users_func: Callable[[Users], None],
     ) -> bool:
         for connection_id, connection in active_connections():
             try:

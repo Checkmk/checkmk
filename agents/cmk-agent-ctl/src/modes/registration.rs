@@ -376,7 +376,7 @@ mod tests {
     fn registry() -> config::Registry {
         config::Registry::new(
             config::RegisteredConnections::new().unwrap(),
-            std::path::PathBuf::from(&tempfile::NamedTempFile::new().unwrap().into_temp_path()),
+            tempfile::NamedTempFile::new().unwrap(),
         )
         .unwrap()
     }

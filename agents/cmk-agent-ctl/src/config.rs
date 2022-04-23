@@ -302,7 +302,11 @@ pub struct Registry {
 
 impl Registry {
     #[cfg(test)]
-    pub fn new(connections: RegisteredConnections, path: PathBuf) -> AnyhowResult<Registry> {
+    pub fn new<P>(connections: RegisteredConnections, path: P) -> AnyhowResult<Registry>
+    where
+        P: AsRef<Path>,
+    {
+        let path = path.as_ref().to_owned();
         let last_reload = mtime(&path)?;
         Ok(Registry {
             connections,
@@ -506,18 +510,15 @@ mod test_registry {
             root_cert: String::from("root_cert"),
         });
 
-        let path =
-            std::path::PathBuf::from(&tempfile::NamedTempFile::new().unwrap().into_temp_path());
-        let last_reload = mtime(&path).unwrap();
-        Registry {
-            connections: RegisteredConnections {
+        Registry::new(
+            RegisteredConnections {
                 push,
                 pull,
                 pull_imported,
             },
-            path,
-            last_reload,
-        }
+            tempfile::NamedTempFile::new().unwrap(),
+        )
+        .unwrap()
     }
 
     fn connection() -> Connection {
@@ -533,7 +534,6 @@ mod test_registry {
     fn test_io() {
         let reg = registry();
         assert!(!reg.path.exists());
-        assert!(reg.last_reload.is_none());
 
         reg.save().unwrap();
         assert!(reg.path.exists());
@@ -547,6 +547,26 @@ mod test_registry {
         assert_eq!(reg.connections, new_reg.connections);
         assert_eq!(reg.path, new_reg.path);
         assert!(new_reg.last_reload.is_some());
+    }
+
+    #[test]
+    fn test_reload() {
+        let reg = registry();
+        reg.save().unwrap();
+        let mut reg = Registry::from_file(&reg.path).unwrap();
+        assert!(!reg.refresh().unwrap());
+
+        let mtime_before_reload = reg.last_reload.unwrap();
+        // let a mini-bit of time pass st. we actually get a new mtime
+        std::thread::sleep(std::time::Duration::from_millis(10));
+        fs::write(&reg.path, "{}").unwrap();
+        assert!(reg.refresh().unwrap());
+        assert!(!reg
+            .last_reload
+            .unwrap()
+            .duration_since(mtime_before_reload)
+            .unwrap()
+            .is_zero());
     }
 
     #[test]

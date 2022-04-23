@@ -140,13 +140,17 @@ def collect_attributes(
             for tag in tag_group.tags:
                 description.append(f" * {_format(tag.id)}: {tag.title}")
 
+        allowed_ids = [tag.id for tag in tag_group.tags]
+        if tag_group.is_checkbox_tag_group:
+            allowed_ids.insert(0, None)
+
         result.append(
             Attr(
                 name=_ensure(f"tag_{tag_group.id}"),
                 section=tag_group.topic or "No topic",
                 mandatory=False,
                 description="\n\n".join(description),
-                enum=[tag.id for tag in tag_group.tags],
+                enum=allowed_ids,
                 field=None,
             )
         )

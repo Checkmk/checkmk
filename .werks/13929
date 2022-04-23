@@ -1,0 +1,17 @@
+Title: checkbox tag-group handling
+Class: fix
+Compatible: compat
+Component: core
+Date: 1650699464
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b6
+
+In previous versions when a tag-group with only one choice (a checkbox) was
+set to a folder and subsequently removed on a host in that folder, the "show hosts"
+REST API call on that folder crashed with a 500 error (with the error: "tag_xxx can
+not be None").
+
+This werk fixes this behaviour. Apache still needs to be restarted so newly created
+tag-groups come into effect on the REST API.

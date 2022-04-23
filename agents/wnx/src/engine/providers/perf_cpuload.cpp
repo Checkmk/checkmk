@@ -47,7 +47,7 @@ uint64_t ReadSingleCounter(std::wstring_view path) {
 
 namespace cma::provider {
 
-std::unordered_map<std::string, std::string> GetProcessorInfo(
+std::unordered_map<std::string, std::string> GetComputerSystemInfo(
     const std::vector<std::string> &names, std::wstring_view separator) {
     wtools::WmiWrapper wmi;
 
@@ -57,8 +57,9 @@ std::unordered_map<std::string, std::string> GetProcessorInfo(
     }
     wmi.impersonate();
 
-    auto [table, ignored] = wmi.queryTable({}, L"Win32_Processor", separator,
-                                           cfg::groups::global.getWmiTimeout());
+    auto [table, ignored] =
+        wmi.queryTable({}, L"Win32_ComputerSystem", separator,
+                       cfg::groups::global.getWmiTimeout());
     auto rows = tools::SplitString(table, L"\n");
     auto all_names = tools::SplitString(rows[0], separator);
     // case when last value is empty
@@ -67,7 +68,7 @@ std::unordered_map<std::string, std::string> GetProcessorInfo(
     }
     auto all_values = tools::SplitString(rows[1], separator);
     if (all_names.size() != all_values.size()) {
-        XLOG::l("Mismatching of values and names in GetProcessorInfo");
+        XLOG::l("Mismatching of values and names in GetComputerSystemInfo");
         return {};
     }
     std::unordered_map<std::string, std::string> result;
@@ -87,18 +88,18 @@ std::unordered_map<std::string, std::string> GetProcessorInfo(
 }
 
 std::string PerfCpuLoad::makeBody() {
-    static const std::vector<std::string> names{"NumberOfLogicalProcessors",
-                                                "NumberOfProcessors"};
+    static const std::vector<std::string> names{
+        "Name", "NumberOfLogicalProcessors", "NumberOfProcessors"};
     auto sep = wtools::ConvertToUTF16(fmt::format("{}", separator()));
-    auto values = GetProcessorInfo(names, sep);
+    auto values = GetComputerSystemInfo(names, sep);
     auto processor_queue_length = ReadSingleCounter(kProcessorQueueLength);
     auto perf_time = wtools::QueryPerformanceCo();
     auto perf_freq = wtools::QueryPerformanceFreq();
     std::string out{section::MakeSubSectionHeader(kSubSectionSystemPerf)};
     out += fmt::format(
-        "ProcessorQueueLength{0}Timestamp_PerfTime{0}Frequency_PerfTime{0}WMIStatus\n",
+        "Name{0}ProcessorQueueLength{0}Timestamp_PerfTime{0}Frequency_PerfTime{0}WMIStatus\n",
         kSepChar);
-    out += fmt::format("{1}{0}{2}{0}{3}{0}OK\n", separator(),
+    out += fmt::format("{0}{1}{0}{2}{0}{3}{0}OK\n", separator(),
                        processor_queue_length, perf_time, perf_freq);
     out += section::MakeSubSectionHeader(kSubSectionComputerSystem);
     for (const auto &n : names) {

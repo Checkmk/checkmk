@@ -24,12 +24,13 @@ public:
         {1, section::MakeSubSectionHeader(kSubSectionSystemPerf)},
         {2,
          fmt::format(
-             "ProcessorQueueLength{0}Timestamp_PerfTime{0}Frequency_PerfTime{0}WMIStatus\n",
+             "Name{0}ProcessorQueueLength{0}Timestamp_PerfTime{0}Frequency_PerfTime{0}WMIStatus\n",
              PerfCpuLoad::kSepChar)},
         {4, section::MakeSubSectionHeader(kSubSectionComputerSystem)},
-        {5, fmt::format(
-                "NumberOfLogicalProcessors{0}NumberOfProcessors{0}WMIStatus\n",
-                PerfCpuLoad::kSepChar)}
+        {5,
+         fmt::format(
+             "Name{0}NumberOfLogicalProcessors{0}NumberOfProcessors{0}WMIStatus\n",
+             PerfCpuLoad::kSepChar)}
 
     };
 };
@@ -52,24 +53,28 @@ TEST_F(PerfCpuLoadTest, Generation) {
 
     auto perfs =
         tools::SplitString(table[3], fmt::format("{}", PerfCpuLoad::kSepChar));
-    ASSERT_EQ(perfs.size(), 4);
+    ASSERT_EQ(perfs.size(), 5);
 
-    auto queue_length = std::stoull(perfs[0]);
+    EXPECT_TRUE(perfs[0].empty());
+
+    auto queue_length = std::stoull(perfs[1]);
     EXPECT_LT(queue_length, 10000u);
-    auto perf_time = std::stoull(perfs[1]);
+    auto perf_time = std::stoull(perfs[2]);
     EXPECT_TRUE(low <= perf_time && perf_time <= high);
-    EXPECT_GT(std::stoull(perfs[2]), 0u);
-    EXPECT_EQ(perfs[3], "OK");
+    EXPECT_GT(std::stoull(perfs[3]), 0u);
+    EXPECT_EQ(perfs[4], "OK");
 
     auto cpus =
         tools::SplitString(table[6], fmt::format("{}", PerfCpuLoad::kSepChar));
-    ASSERT_EQ(cpus.size(), 3);
-    ASSERT_TRUE(!cpus[0].empty() || !cpus[1].empty())
+    ASSERT_EQ(cpus.size(), 4);
+    ASSERT_FALSE(cpus[1].empty() && cpus[2].empty())
         << "bad line is:" << table[6];
-    auto cpu_count = std::stoull(cpus[0]);
-    EXPECT_TRUE(1 <= cpu_count && cpu_count <= 16);
-    EXPECT_TRUE(cpus[1].empty());
-    EXPECT_EQ(cpus[2], "OK");
+    EXPECT_FALSE(cpus[0].empty());
+    auto cpu_count = std::stoull(cpus[1]);
+    EXPECT_TRUE(1 <= cpu_count && cpu_count <= 16u);
+    auto cpu_count_phys = std::stoull(cpus[2]);
+    EXPECT_GT(cpu_count_phys, 0u);
+    EXPECT_EQ(cpus[3], "OK");
 }
 
 }  // namespace cma::provider

@@ -395,9 +395,10 @@ bool ServiceProcessor::conditionallyStartOhm() noexcept {
 }
 
 namespace {
-bool UsePerfCpuLoad(const YAML::Node &node) {
-    return yml::GetVal(node, std::string{cfg::groups::kGlobal},
-                       std::string{cfg::vars::kCpuLoadMethod}) ==
+bool UsePerfCpuLoad(const YAML::Node &config) {
+    const auto g = yml::GetNode(config, std::string{cfg::groups::kGlobal});
+    return yml::GetVal(g, std::string{cfg::vars::kCpuLoadMethod},
+                       std::string{cfg::defaults::kCpuLoad}) ==
            cfg::values::kCpuLoadPerf;
 }
 }  // namespace

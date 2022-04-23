@@ -169,7 +169,20 @@ impl LegacyPullMarker {
             return Ok(());
         }
 
-        std::fs::remove_file(&self.0)
+        fs::remove_file(&self.0)
+    }
+
+    pub fn create(&self) -> std::io::Result<()> {
+        fs::write(
+            &self.0,
+            "This file has been placed as a marker for cmk-agent-ctl\n\
+            to allow unencrypted legacy agent pull mode.\n\
+            It will be removed automatically on first successful agent registration.\n\
+            You can remove it manually to disallow legacy mode, but note that\n\
+            for regular operation you need to register the agent anyway.\n\
+            \n\
+            To secure the connection run `cmk-agent-ctl register`.\n",
+        )
     }
 }
 
@@ -470,6 +483,39 @@ impl Registry {
         self.connections = RegisteredConnections::load(&self.path)?;
         self.last_reload = mtime(&self.path)?;
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod test_legacy_pull_marker {
+    use super::*;
+
+    fn legacy_pull_marker() -> LegacyPullMarker {
+        LegacyPullMarker::new(tempfile::NamedTempFile::new().unwrap())
+    }
+
+    #[test]
+    fn test_exists() {
+        let lpm = legacy_pull_marker();
+        assert!(!lpm.exists());
+        lpm.create().unwrap();
+        assert!(lpm.exists());
+    }
+
+    #[test]
+    fn test_remove() {
+        let lpm = legacy_pull_marker();
+        assert!(lpm.remove().is_ok());
+        lpm.create().unwrap();
+        assert!(lpm.remove().is_ok());
+        assert!(!lpm.exists());
+    }
+
+    #[test]
+    fn test_create() {
+        let lpm = legacy_pull_marker();
+        lpm.create().unwrap();
+        assert!(lpm.0.is_file());
     }
 }
 

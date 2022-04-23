@@ -103,7 +103,7 @@ mod tests {
                 pull,
                 pull_imported,
             },
-            std::path::PathBuf::from(&tempfile::NamedTempFile::new().unwrap().into_temp_path()),
+            tempfile::NamedTempFile::new().unwrap(),
         )
         .unwrap()
     }

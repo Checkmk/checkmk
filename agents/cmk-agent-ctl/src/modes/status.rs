@@ -851,7 +851,7 @@ mod test_status {
                 pull: std::collections::HashMap::new(),
                 pull_imported: std::collections::HashSet::new(),
             },
-            std::path::PathBuf::from(&tempfile::NamedTempFile::new().unwrap().into_temp_path()),
+            tempfile::NamedTempFile::new().unwrap(),
         )
         .unwrap();
 
@@ -866,9 +866,7 @@ mod test_status {
                         agent_channel: None,
                         allowed_ip: None,
                     },
-                    config::LegacyPullMarker::new(&std::path::PathBuf::from(
-                        &tempfile::NamedTempFile::new().unwrap().into_temp_path()
-                    )),
+                    config::LegacyPullMarker::new(tempfile::NamedTempFile::new().unwrap()),
                     registry.clone()
                 )
                 .unwrap(),

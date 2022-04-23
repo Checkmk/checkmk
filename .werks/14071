@@ -1,0 +1,15 @@
+Title: Agent controller: Add option to (re-)enable legacy pull mode
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1650711314
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0b7
+
+The agent controller (<tt>cmk-agent-ctl</tt>) now offers the option to
+(re-)enable the legacy pull mode (no TLS, simple TCP communication). The
+corresponding flag can be passed as an option to the <tt>delete-all</tt>
+subcommand.

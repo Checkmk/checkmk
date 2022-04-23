@@ -91,6 +91,10 @@ pub fn run_requested_mode(args: cli::Args, paths: setup::PathResolver) -> Anyhow
             status_args.json,
         ),
         cli::Args::Delete(delete_args) => delete(&mut registry, &delete_args.connection),
-        cli::Args::DeleteAll { .. } => delete_all(&mut registry),
+        cli::Args::DeleteAll(delete_all_args) => delete_all(
+            &mut registry,
+            delete_all_args.enable_insecure_connections,
+            &legacy_pull_marker,
+        ),
     }
 }

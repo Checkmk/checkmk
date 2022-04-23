@@ -97,6 +97,18 @@ impl PullFixture {
         self.pull_thread.abort();
         self.test_dir.close().unwrap();
     }
+
+    fn enable_legacy_pull(&self) {
+        common::legacy_pull_marker(self.test_dir.path())
+            .create()
+            .unwrap();
+    }
+
+    fn disable_legacy_pull(&self) {
+        common::legacy_pull_marker(self.test_dir.path())
+            .remove()
+            .unwrap();
+    }
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -176,7 +188,7 @@ async fn test_pull_legacy() -> AnyhowResult<()> {
     // Create allow_legacy_pull file, but still be registered.
     // Connection will timeout after 1 sec, only sending the 16.
     let mut message_buf: Vec<u8> = vec![];
-    std::fs::File::create(fixture.test_dir.path().join("allow_legacy_pull"))?;
+    fixture.enable_legacy_pull();
     let mut tcp_stream = std::net::TcpStream::connect(connect_point.clone())?;
     tcp_stream.read_to_end(&mut message_buf)?;
     assert_eq!(message_buf, b"16");
@@ -191,7 +203,7 @@ async fn test_pull_legacy() -> AnyhowResult<()> {
     // Disallow legacy pull. First successing connection will be dropped, thus the response being empty.
     // The TCP socket will close afterwards, leading to a refused connection on connect().
     let mut message_buf: Vec<u8> = vec![];
-    std::fs::remove_file(fixture.test_dir.path().join("allow_legacy_pull"))?;
+    fixture.disable_legacy_pull();
     let mut tcp_stream = std::net::TcpStream::connect(connect_point.clone())?;
     tcp_stream.read_to_end(&mut message_buf)?;
     assert_eq!(message_buf, b"");

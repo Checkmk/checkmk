@@ -51,6 +51,10 @@ pub fn testing_pull_setup(
     )
 }
 
+pub fn legacy_pull_marker(path: &Path) -> config::LegacyPullMarker {
+    config::LegacyPullMarker::new(&path.join("allow_legacy_pull"))
+}
+
 pub fn testing_pull_config(
     path: &Path,
     port: &str,
@@ -63,7 +67,7 @@ pub fn testing_pull_config(
         max_connections: 3,
         connection_timeout: 1,
         agent_channel,
-        legacy_pull_marker: config::LegacyPullMarker::new(&path.join("allow_legacy_pull")),
+        legacy_pull_marker: legacy_pull_marker(path),
         registry,
     }
 }

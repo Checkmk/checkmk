@@ -2370,6 +2370,10 @@ msgstr "Token di accesso API"
 msgid "API Endpoint from PagerDuty V2"
 msgstr "Endpoint API di PagerDuty V2"
 
+#, fuzzy
+msgid "API Health"
+msgstr "Salute"
+
 msgid "API Key"
 msgstr "Chiave API"
 
@@ -4189,7 +4193,7 @@ msgstr "Stato di distribuzione dell'agente"
 msgid "Agent for %s (%s)"
 msgstr "Agente per %s (%s)"
 
-msgid "Agent internal TCP port used to communicate with controller"
+msgid "Agent internal TCP port used to communicate with the agent controller"
 msgstr ""
 
 #, fuzzy
@@ -4904,8 +4908,9 @@ msgstr ""
 "Aggiungi sempre questi gruppi come <b>contatti</b> a tutti i servizi <b>in "
 "tutte le sottocartelle di questa cartella</b>"
 
-msgid "Always allow to use not encrypted( legacy ) communication as a fallback"
-msgstr ""
+#, fuzzy
+msgid "Always allow to use unencrypted (legacy) communication as fallback"
+msgstr "Crittografare la comunicazione"
 
 msgid "Always assume host to be up"
 msgstr "Presumere sempre che l'host sia attivo"
@@ -7694,11 +7699,43 @@ msgstr "Il carico massimo del rescale della CPU è Non specificato."
 msgid "CPU resources"
 msgstr "Risorse della CPU"
 
+#, fuzzy
+msgid "CPU resources: Cluster"
+msgstr "Risorse della CPU"
+
+#, fuzzy
+msgid "CPU resources: DaemonSet"
+msgstr "Risorse della CPU"
+
+#, fuzzy
+msgid "CPU resources: Deployment"
+msgstr "Risorse di Kubernetes"
+
+#, fuzzy
+msgid "CPU resources: Namespace"
+msgstr "Risorse della CPU"
+
+#, fuzzy
+msgid "CPU resources: StatefulSet"
+msgstr "Risorse della CPU"
+
+#, fuzzy
+msgid "CPU usage"
+msgstr "CPU utilizzata"
+
 msgid "CPU usage critical at"
 msgstr "Utilizzo della CPU critico a"
 
 msgid "CPU usage warning at"
 msgstr "Avviso di utilizzo della CPU a"
+
+#, fuzzy
+msgid "CPU usage: Namespace"
+msgstr "Spazio di archiviazione usato"
+
+#, fuzzy
+msgid "CPU usage: Pods"
+msgstr "CPU utilizzata"
 
 #, fuzzy
 msgid "CPU utilitzation"
@@ -7734,6 +7771,10 @@ msgstr "Utilizzo della CPU di dispositivi con moduli"
 
 msgid "CPU utilization on Linux/UNIX"
 msgstr "Utilizzo della CPU su Linux/UNIX"
+
+#, fuzzy
+msgid "CPU utilization: Cluster"
+msgstr "Utilizzo della CPU dei cluster"
 
 msgid "CR"
 msgstr "CR"
@@ -9670,6 +9711,10 @@ msgstr "IP dei nodi del cluster"
 msgid "Cluster node definition"
 msgstr "Definizione del nodo del cluster"
 
+#, fuzzy
+msgid "Cluster problems"
+msgstr "Ruoli del cluster"
+
 msgid "Cluster roles"
 msgstr "Ruoli del cluster"
 
@@ -10095,6 +10140,10 @@ msgstr "Calcolare l'intervallo in base ai dati visualizzati"
 
 msgid "Computing differences"
 msgstr "Differenze di calcolo"
+
+#, fuzzy
+msgid "Condition"
+msgstr "Condizioni"
 
 msgid "Condition type"
 msgstr "Tipo di condizione"
@@ -12459,6 +12508,14 @@ msgstr ""
 "Stato del demone e conteggio riassuntivo dei contenitori e dei loro stati"
 
 #, fuzzy
+msgid "DaemonSet"
+msgstr "Set di demoni"
+
+#, fuzzy
+msgid "DaemonSet problems"
+msgstr "Set di demoni"
+
+#, fuzzy
 msgid "DaemonSets"
 msgstr "Set di demoni"
 
@@ -13783,6 +13840,10 @@ msgstr "Permettere l'autenticazione con password"
 
 #, fuzzy
 msgid "Deployment"
+msgstr "Distribuzioni"
+
+#, fuzzy
+msgid "Deployment problems"
 msgstr "Distribuzioni"
 
 #, python-format
@@ -19453,6 +19514,10 @@ msgstr "RAM gratuita"
 msgid "Free DHCP leases"
 msgstr "Locazioni DHCP gratuite"
 
+#, fuzzy
+msgid "Free Pods: Cluster"
+msgstr "Ruoli di Kubernetes"
+
 msgid "Free RAM"
 msgstr "RAM gratuita"
 
@@ -23056,12 +23121,11 @@ msgstr ""
 "potete impostare qui la velocità di collegamento."
 
 msgid ""
-"If the flag is set, then the windows agent allows possibility to use not "
-"encrypted communication between the monitoring site and the host. You may "
-"enable this flag for compatibility reasons or if you experience problems "
-"with the controller related to TLS or encryption. But please pay attention, "
-"that this enables an unencrypted communication if your controller connection "
-"isn't properly configured."
+"If the flag is set, then the windows agent may use unencrypted communication "
+"between the monitoring site and the host. Enable this flag for compatibility "
+"reasons or if you experience problems with the controller related to TLS or "
+"encryption. But please pay attention, that this enables unencrypted "
+"communication if your controller connection isn't properly configured."
 msgstr ""
 
 msgid ""
@@ -26275,6 +26339,10 @@ msgid "Kubernetes Cluster"
 msgstr "Ruoli di Kubernetes"
 
 #, fuzzy
+msgid "Kubernetes DaemonSet"
+msgstr "Porta Kubernetes"
+
+#, fuzzy
 msgid "Kubernetes Daemonset"
 msgstr "Porta Kubernetes"
 
@@ -27405,7 +27473,7 @@ msgstr ""
 msgid "Limit length of mail body"
 msgstr "Limitare la lunghezza del corpo della posta"
 
-msgid "Limit local access to the agent data to the agent controller"
+msgid "Limit local agent data access to the agent controller"
 msgstr ""
 
 msgid "Limit login to single session at a time"
@@ -29846,6 +29914,26 @@ msgstr "Richiesta di memoria"
 msgid "Memory resources"
 msgstr "Risorse di memoria"
 
+#, fuzzy
+msgid "Memory resources: Cluster"
+msgstr "Risorse di memoria"
+
+#, fuzzy
+msgid "Memory resources: DaemonSet"
+msgstr "Risorse di memoria"
+
+#, fuzzy
+msgid "Memory resources: Deployment"
+msgstr "Risorse di memoria"
+
+#, fuzzy
+msgid "Memory resources: Namespace"
+msgstr "Risorse di memoria"
+
+#, fuzzy
+msgid "Memory resources: StatefulSet"
+msgstr "Risorse di memoria"
+
 msgid "Memory that cannot be swapped out"
 msgstr "Memoria che non può essere scambiata"
 
@@ -29875,6 +29963,14 @@ msgid "Memory usage of Fortigate devices (fortigate_memory_base)"
 msgstr ""
 "Utilizzo della memoria dei dispositivi Fortigate (fortigate_memory_base)"
 
+#, fuzzy
+msgid "Memory usage: Namespace"
+msgstr "Utilizzo della memoria in percentuale"
+
+#, fuzzy
+msgid "Memory usage: Pods"
+msgstr "Uso della memoria"
+
 msgid "Memory used"
 msgstr "Memoria utilizzata"
 
@@ -29887,6 +29983,10 @@ msgstr "Memoria usata dalle cache"
 
 #, fuzzy
 msgid "Memory utilitzation"
+msgstr "Utilizzo della memoria"
+
+#, fuzzy
+msgid "Memory utilization: Cluster"
 msgstr "Utilizzo della memoria"
 
 msgid "Memory warning at"
@@ -31336,6 +31436,10 @@ msgstr "Spazio dei nomi"
 
 msgid "Namespace prefix for hosts"
 msgstr "Prefisso dello spazio dei nomi per gli host"
+
+#, fuzzy
+msgid "Namespace problems"
+msgstr "Spazio dei nomi"
 
 #, fuzzy
 msgid "Namespaces"
@@ -35030,6 +35134,10 @@ msgstr "Aggiornamenti in sospeso"
 msgid "Pending memory"
 msgstr "Memoria in sospeso"
 
+#, fuzzy
+msgid "Pending pods: Namespace"
+msgstr "Servizi in sospeso"
+
 msgid "Pending tasks"
 msgstr "Compiti in sospeso"
 
@@ -36258,6 +36366,26 @@ msgstr "Richiesta di baccello"
 msgid "Pod resources"
 msgstr "Risorse del baccello"
 
+#, fuzzy
+msgid "Pod resources: Cluster"
+msgstr "Risorse del baccello"
+
+#, fuzzy
+msgid "Pod resources: DaemonSet"
+msgstr "Risorse del baccello"
+
+#, fuzzy
+msgid "Pod resources: Deployment"
+msgstr "Risorse di Kubernetes"
+
+#, fuzzy
+msgid "Pod resources: Namespace"
+msgstr "Risorse del baccello"
+
+#, fuzzy
+msgid "Pod resources: StatefulSet"
+msgstr "Risorse del baccello"
+
 msgid "Pods"
 msgstr "Baccelli"
 
@@ -36607,6 +36735,10 @@ msgstr "Famiglia di indirizzi IP primaria degli host dual-stack"
 msgid "Primary address family"
 msgstr "Indirizzo primario famiglia"
 
+#, fuzzy
+msgid "Primary datasource"
+msgstr "Primario - Superato"
+
 msgid "Primitive sequence errors"
 msgstr "Errori di sequenza primitiva"
 
@@ -36851,7 +36983,7 @@ msgstr "Proprietà per %s"
 msgid "Properties of host"
 msgstr "Proprietà dell'ospite"
 
-msgid "Protect the agent data from an unauthorized access"
+msgid "Protect agent data from unauthorized access"
 msgstr ""
 
 msgid "Protocol"
@@ -39350,6 +39482,10 @@ msgstr "Correre altrove"
 
 msgid "Running nodes by nodes type"
 msgstr "Esecuzione dei nodi per tipo di nodi"
+
+#, fuzzy
+msgid "Running pods"
+msgstr "Correre"
 
 msgid "Running processes"
 msgstr "Processi in corso"
@@ -44249,6 +44385,14 @@ msgid "Stateful sets"
 msgstr "Insiemi statici"
 
 #, fuzzy
+msgid "StatefulSet"
+msgstr "Insiemi statici"
+
+#, fuzzy
+msgid "StatefulSet problems"
+msgstr "Insiemi statici"
+
+#, fuzzy
 msgid "StatefulSets"
 msgstr "Insiemi statici"
 
@@ -46490,16 +46634,15 @@ msgid ""
 "The agent controller provides a safe channel for the communication between "
 "the monitoring site and the agent. It also provides the possibility to push "
 "monitoring data to the site (if applicable in your Checkmk edition). You may "
-"disable the controller if you experience problems with the controller. In "
-"this case the Windows agent will work in legacy pull mode. Please note: In "
-"the legacy pull mode the transported data is not encrypted."
+"disable the agent controller if you experience problems with it. In this "
+"case the Windows agent will work in legacy pull mode. Please note: In the "
+"legacy pull mode the transported data is not encrypted."
 msgstr ""
 
 msgid ""
-"The agent controller uses TCP port 50001 to communicate with Windows agent. "
-"You may change this port in the case if the port 50001 isn't available. For "
-"example, this port may be used by other application or is blocked due to the "
-"security reason by the administrator."
+"The agent controller uses TCP port 50001 to communicate with the agent. You "
+"may change this port if it is used by another application, or blocked, for "
+"security reason, by the administrator."
 msgstr ""
 
 msgid ""
@@ -51052,6 +51195,13 @@ msgid "This is a regular expression for matching the event's comment."
 msgstr "Questa è un'espressione regolare per abbinare il commento dell'evento."
 
 msgid ""
+"This is a security feature, to prevent unauthorized local access to agent "
+"data. You may disable this flag in the case of an emergency. For example, if "
+"theagent can't reliably determine the agent controller as a valid peer which "
+"tries to access the data. "
+msgstr ""
+
+msgid ""
 "This is a special feature for environments where user accounts are located "
 "in one LDAP directory and groups objects having them as members are located "
 "in other directories. You should only enable this feature when you are in "
@@ -51123,13 +51273,6 @@ msgid "This is rule pack can be packaged with the Extension Packages module."
 msgstr ""
 "Questo pacchetto di regole può essere confezionato con il modulo Extension "
 "Packages."
-
-msgid ""
-"This is security feature, which should prevent unauthorized local access to "
-"the monitoring data. You may disable this flag in the case of emergency. For "
-"example, if theagent can't reliably determine the agent controller as a "
-"valid peer which tries to access the data. "
-msgstr ""
 
 msgid ""
 "This is the application name used in the URL. If you enter for example the "
@@ -56937,9 +57080,6 @@ msgstr "Utilizzare un prefisso dello spazio dei nomi"
 
 msgid "Use absolute width:"
 msgstr "Usa la larghezza assoluta:"
-
-msgid "Use agent controller for Windows to provide TLS encrypted communication"
-msgstr ""
 
 msgid "Use alias"
 msgstr "Usa l'alias"
@@ -62877,6 +63017,10 @@ msgstr "ritardato"
 msgid "demand"
 msgstr "domanda"
 
+#, fuzzy
+msgid "detailed config"
+msgstr "Connessioni fallite"
+
 msgid "detections/s"
 msgstr "rilevazioni/s"
 
@@ -64822,11 +64966,6 @@ msgstr "© 2020 tribe29 GmbH. Tutti i diritti riservati."
 #~ msgid "Kubernetes Pod Resources: Clusters, Nodes"
 #~ msgstr "Risorse di Kubernetes"
 
-#, fuzzy
-#~| msgid "Kubernetes resources"
-#~ msgid "Kubernetes Pod Resources: Deployments"
-#~ msgstr "Risorse di Kubernetes"
-
 #~ msgid ""
 #~ "This rule selects the Kubernetes special agent for an existing Checkmk "
 #~ "host. If you want to monitor multiple Kubernetes clusters we strongly "
@@ -65832,9 +65971,6 @@ msgstr "© 2020 tribe29 GmbH. Tutti i diritti riservati."
 
 #~ msgid "CPU total in ms"
 #~ msgstr "Totale CPU in ms"
-
-#~ msgid "CPU used"
-#~ msgstr "CPU utilizzata"
 
 #~ msgid "CPU utilization (%(util_numcpu_as_max:max@count) CPU Threads)"
 #~ msgstr "Utilizzo della CPU (%(util_numcpu_as_max:max@count) CPU Threads)"
@@ -67034,9 +67170,6 @@ msgstr "© 2020 tribe29 GmbH. Tutti i diritti riservati."
 
 #~ msgid "Pending service discovery"
 #~ msgstr "Scoperta del servizio in sospeso"
-
-#~ msgid "Pending services"
-#~ msgstr "Servizi in sospeso"
 
 #~ msgid "Pending vBuckets"
 #~ msgstr "VBucket in sospeso"

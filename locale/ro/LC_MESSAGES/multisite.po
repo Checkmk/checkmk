@@ -2021,6 +2021,9 @@ msgstr "API accesibil"
 msgid "API Endpoint from PagerDuty V2"
 msgstr ""
 
+msgid "API Health"
+msgstr ""
+
 msgid "API Key"
 msgstr ""
 
@@ -3947,7 +3950,7 @@ msgstr ""
 msgid "Agent for %s (%s)"
 msgstr ""
 
-msgid "Agent internal TCP port used to communicate with controller"
+msgid "Agent internal TCP port used to communicate with the agent controller"
 msgstr ""
 
 #, fuzzy
@@ -4643,7 +4646,7 @@ msgstr ""
 "adaugă aceste grupuri ca și <b>contacte</b> la toate elementele în acest "
 "director"
 
-msgid "Always allow to use not encrypted( legacy ) communication as a fallback"
+msgid "Always allow to use unencrypted (legacy) communication as fallback"
 msgstr ""
 
 msgid "Always assume host to be up"
@@ -7202,11 +7205,42 @@ msgstr ""
 msgid "CPU resources"
 msgstr ""
 
+#, fuzzy
+msgid "CPU resources: Cluster"
+msgstr "Cluster nou"
+
+msgid "CPU resources: DaemonSet"
+msgstr ""
+
+#, fuzzy
+msgid "CPU resources: Deployment"
+msgstr "Adresă"
+
+#, fuzzy
+msgid "CPU resources: Namespace"
+msgstr "Adresă"
+
+#, fuzzy
+msgid "CPU resources: StatefulSet"
+msgstr "Adresă"
+
+#, fuzzy
+msgid "CPU usage"
+msgstr "(nefolosit)"
+
 msgid "CPU usage critical at"
 msgstr ""
 
 msgid "CPU usage warning at"
 msgstr ""
+
+#, fuzzy
+msgid "CPU usage: Namespace"
+msgstr "Spațiu liber exact"
+
+#, fuzzy
+msgid "CPU usage: Pods"
+msgstr "(nefolosit)"
 
 #, fuzzy
 msgid "CPU utilitzation"
@@ -7239,6 +7273,10 @@ msgstr ""
 
 msgid "CPU utilization on Linux/UNIX"
 msgstr ""
+
+#, fuzzy
+msgid "CPU utilization: Cluster"
+msgstr "Dezactiveaza Notificarile"
 
 msgid "CR"
 msgstr ""
@@ -9045,6 +9083,10 @@ msgid "Cluster node definition"
 msgstr ""
 
 #, fuzzy
+msgid "Cluster problems"
+msgstr "trei nivele"
+
+#, fuzzy
 msgid "Cluster roles"
 msgstr "trei nivele"
 
@@ -9458,6 +9500,10 @@ msgstr ""
 #, fuzzy
 msgid "Computing differences"
 msgstr "Opțiuni adiționale"
+
+#, fuzzy
+msgid "Condition"
+msgstr "Adaugă Condiție"
 
 #, fuzzy
 msgid "Condition type"
@@ -11858,6 +11904,14 @@ msgid "Daemon state and summarized count of containers and their states"
 msgstr ""
 
 #, fuzzy
+msgid "DaemonSet"
+msgstr "fire"
+
+#, fuzzy
+msgid "DaemonSet problems"
+msgstr "fire"
+
+#, fuzzy
 msgid "DaemonSets"
 msgstr "fire"
 
@@ -13160,6 +13214,10 @@ msgstr "Confirma Parola"
 
 #, fuzzy
 msgid "Deployment"
+msgstr "cu context"
+
+#, fuzzy
+msgid "Deployment problems"
 msgstr "cu context"
 
 #, python-format
@@ -18769,6 +18827,10 @@ msgstr ""
 msgid "Free DHCP leases"
 msgstr ""
 
+#, fuzzy
+msgid "Free Pods: Cluster"
+msgstr "Adresă"
+
 msgid "Free RAM"
 msgstr ""
 
@@ -22003,12 +22065,11 @@ msgid ""
 msgstr ""
 
 msgid ""
-"If the flag is set, then the windows agent allows possibility to use not "
-"encrypted communication between the monitoring site and the host. You may "
-"enable this flag for compatibility reasons or if you experience problems "
-"with the controller related to TLS or encryption. But please pay attention, "
-"that this enables an unencrypted communication if your controller connection "
-"isn't properly configured."
+"If the flag is set, then the windows agent may use unencrypted communication "
+"between the monitoring site and the host. Enable this flag for compatibility "
+"reasons or if you experience problems with the controller related to TLS or "
+"encryption. But please pay attention, that this enables unencrypted "
+"communication if your controller connection isn't properly configured."
 msgstr ""
 
 msgid ""
@@ -24645,6 +24706,10 @@ msgid "Kubernetes Cluster"
 msgstr "Adresă"
 
 #, fuzzy
+msgid "Kubernetes DaemonSet"
+msgstr "Adresă"
+
+#, fuzzy
 msgid "Kubernetes Daemonset"
 msgstr "Adresă"
 
@@ -25846,7 +25911,7 @@ msgstr ""
 msgid "Limit length of mail body"
 msgstr ""
 
-msgid "Limit local access to the agent data to the agent controller"
+msgid "Limit local agent data access to the agent controller"
 msgstr ""
 
 msgid "Limit login to single session at a time"
@@ -28377,6 +28442,26 @@ msgstr "cereri"
 msgid "Memory resources"
 msgstr ""
 
+#, fuzzy
+msgid "Memory resources: Cluster"
+msgstr "cereri"
+
+#, fuzzy
+msgid "Memory resources: DaemonSet"
+msgstr "cereri"
+
+#, fuzzy
+msgid "Memory resources: Deployment"
+msgstr "Adresă"
+
+#, fuzzy
+msgid "Memory resources: Namespace"
+msgstr "% utilizare"
+
+#, fuzzy
+msgid "Memory resources: StatefulSet"
+msgstr "Adresă"
+
 msgid "Memory that cannot be swapped out"
 msgstr ""
 
@@ -28408,6 +28493,14 @@ msgid "Memory usage of Fortigate devices (fortigate_memory_base)"
 msgstr ""
 
 #, fuzzy
+msgid "Memory usage: Namespace"
+msgstr "% utilizare"
+
+#, fuzzy
+msgid "Memory usage: Pods"
+msgstr "% utilizare"
+
+#, fuzzy
 msgid "Memory used"
 msgstr "% utilizare"
 
@@ -28420,6 +28513,10 @@ msgstr ""
 
 #, fuzzy
 msgid "Memory utilitzation"
+msgstr "Dezactiveaza Notificarile"
+
+#, fuzzy
+msgid "Memory utilization: Cluster"
 msgstr "Dezactiveaza Notificarile"
 
 msgid "Memory warning at"
@@ -29921,6 +30018,10 @@ msgstr "spatiu utilizat"
 #, fuzzy
 msgid "Namespace prefix for hosts"
 msgstr "Cautare"
+
+#, fuzzy
+msgid "Namespace problems"
+msgstr "spatiu utilizat"
 
 #, fuzzy
 msgid "Namespaces"
@@ -33586,6 +33687,10 @@ msgstr "cereri"
 msgid "Pending memory"
 msgstr ""
 
+#, fuzzy
+msgid "Pending pods: Namespace"
+msgstr "Afectat de serviciu"
+
 msgid "Pending tasks"
 msgstr ""
 
@@ -34693,6 +34798,26 @@ msgstr "cereri"
 msgid "Pod resources"
 msgstr ""
 
+#, fuzzy
+msgid "Pod resources: Cluster"
+msgstr "Adaugă nume de senzor"
+
+#, fuzzy
+msgid "Pod resources: DaemonSet"
+msgstr "Adresă"
+
+#, fuzzy
+msgid "Pod resources: Deployment"
+msgstr "Adresă"
+
+#, fuzzy
+msgid "Pod resources: Namespace"
+msgstr "Adresă"
+
+#, fuzzy
+msgid "Pod resources: StatefulSet"
+msgstr "Adresă"
+
 msgid "Pods"
 msgstr ""
 
@@ -35044,6 +35169,10 @@ msgstr ""
 msgid "Primary address family"
 msgstr "Adresă"
 
+#, fuzzy
+msgid "Primary datasource"
+msgstr "Tagul Aplicatiei in syslog"
+
 msgid "Primitive sequence errors"
 msgstr ""
 
@@ -35306,7 +35435,7 @@ msgstr ""
 msgid "Properties of host"
 msgstr ""
 
-msgid "Protect the agent data from an unauthorized access"
+msgid "Protect agent data from unauthorized access"
 msgstr ""
 
 msgid "Protocol"
@@ -37831,6 +37960,10 @@ msgstr ", rulează nicăieri"
 
 msgid "Running nodes by nodes type"
 msgstr ""
+
+#, fuzzy
+msgid "Running pods"
+msgstr "sesiuni"
 
 #, fuzzy
 msgid "Running processes"
@@ -42506,6 +42639,14 @@ msgid "Stateful sets"
 msgstr "Adaugă comentarii"
 
 #, fuzzy
+msgid "StatefulSet"
+msgstr "Adaugă comentarii"
+
+#, fuzzy
+msgid "StatefulSet problems"
+msgstr "Adaugă comentarii"
+
+#, fuzzy
 msgid "StatefulSets"
 msgstr "Adaugă comentarii"
 
@@ -44543,16 +44684,15 @@ msgid ""
 "The agent controller provides a safe channel for the communication between "
 "the monitoring site and the agent. It also provides the possibility to push "
 "monitoring data to the site (if applicable in your Checkmk edition). You may "
-"disable the controller if you experience problems with the controller. In "
-"this case the Windows agent will work in legacy pull mode. Please note: In "
-"the legacy pull mode the transported data is not encrypted."
+"disable the agent controller if you experience problems with it. In this "
+"case the Windows agent will work in legacy pull mode. Please note: In the "
+"legacy pull mode the transported data is not encrypted."
 msgstr ""
 
 msgid ""
-"The agent controller uses TCP port 50001 to communicate with Windows agent. "
-"You may change this port in the case if the port 50001 isn't available. For "
-"example, this port may be used by other application or is blocked due to the "
-"security reason by the administrator."
+"The agent controller uses TCP port 50001 to communicate with the agent. You "
+"may change this port if it is used by another application, or blocked, for "
+"security reason, by the administrator."
 msgstr ""
 
 msgid ""
@@ -48037,6 +48177,13 @@ msgid "This is a regular expression for matching the event's comment."
 msgstr ""
 
 msgid ""
+"This is a security feature, to prevent unauthorized local access to agent "
+"data. You may disable this flag in the case of an emergency. For example, if "
+"theagent can't reliably determine the agent controller as a valid peer which "
+"tries to access the data. "
+msgstr ""
+
+msgid ""
 "This is a special feature for environments where user accounts are located "
 "in one LDAP directory and groups objects having them as members are located "
 "in other directories. You should only enable this feature when you are in "
@@ -48081,13 +48228,6 @@ msgid ""
 msgstr ""
 
 msgid "This is rule pack can be packaged with the Extension Packages module."
-msgstr ""
-
-msgid ""
-"This is security feature, which should prevent unauthorized local access to "
-"the monitoring data. You may disable this flag in the case of emergency. For "
-"example, if theagent can't reliably determine the agent controller as a "
-"valid peer which tries to access the data. "
 msgstr ""
 
 msgid ""
@@ -53020,9 +53160,6 @@ msgstr ""
 msgid "Use absolute width:"
 msgstr ""
 
-msgid "Use agent controller for Windows to provide TLS encrypted communication"
-msgstr ""
-
 #, fuzzy
 msgid "Use alias"
 msgstr "foloseste alias"
@@ -57903,6 +58040,10 @@ msgid "demand"
 msgstr ""
 
 #, fuzzy
+msgid "detailed config"
+msgstr "Conexiune Noua"
+
+#, fuzzy
 msgid "detections/s"
 msgstr "Acțiune"
 
@@ -59626,10 +59767,6 @@ msgstr ""
 #~ msgid "IP address of Kubernetes node"
 #~ msgstr "Adresă"
 
-#, fuzzy
-#~ msgid "Kubernetes Pod Resources: Deployments"
-#~ msgstr "Adresă"
-
 #~ msgid "A matrix showing a colored square for each host"
 #~ msgstr "O matrice care arată un pătrat colorat pentru fiecare element"
 
@@ -59970,10 +60107,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "CPU entitlement"
 #~ msgstr "Adaugă element"
-
-#, fuzzy
-#~ msgid "CPU used"
-#~ msgstr "(nefolosit)"
 
 # georgem ##############
 #, fuzzy
@@ -60549,10 +60682,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Pending service discovery"
 #~ msgstr "(fără Nivel de serviciu)"
-
-#, fuzzy
-#~ msgid "Pending services"
-#~ msgstr "Afectat de serviciu"
 
 #, fuzzy
 #~ msgid "Pending vBuckets"

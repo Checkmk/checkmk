@@ -101,6 +101,16 @@ pub struct PushArgs {
     pub logging_opts: LoggingOpts,
 }
 
+#[derive(StructOpt)]
+pub struct DeleteAllArgs {
+    /// Enable insecure connections (no TLS, agent output will be accessible via TCP agent port without encryption)
+    #[structopt(long)]
+    pub enable_insecure_connections: bool,
+
+    #[structopt(flatten)]
+    pub logging_opts: LoggingOpts,
+}
+
 // TODO (sk): Remove port and allowed_ip and instead read from a toml file, as is done under unix
 #[cfg(windows)]
 #[derive(StructOpt)]
@@ -205,6 +215,7 @@ pub enum Args {
     /// (as the 'push' command does) once a minute.
     #[structopt()]
     Daemon(DaemonArgs),
+
     /// Collect monitoring data and write it to standard output
     #[structopt()]
     Dump(SharedArgsOnly),
@@ -223,7 +234,7 @@ pub enum Args {
 
     /// Delete all connections to Checkmk sites
     #[structopt()]
-    DeleteAll(SharedArgsOnly),
+    DeleteAll(DeleteAllArgs),
 
     /// Import a pull connection from file or standard input
     ///

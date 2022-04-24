@@ -11,7 +11,8 @@ import sys
 
 import pytest
 from mock import Mock, patch
-from utils import import_module
+
+import agents.plugins.mk_postgres as mk_postgres
 
 #   .--defines-------------------------------------------------------------.
 #   |                      _       __ _                                    |
@@ -46,18 +47,13 @@ PG_PASSFILE = ["myhost:myport:mydb:myusr:mypw"]
 #   +----------------------------------------------------------------------+
 
 
-@pytest.fixture(scope="module")
-def mk_postgres():
-    return import_module("mk_postgres.py")
-
-
 class TestNotImplementedOS:
     @pytest.fixture(autouse=True)
-    def is_not_implemented_os(self, monkeypatch, mk_postgres):
+    def is_not_implemented_os(self, monkeypatch):
         monkeypatch.setattr(mk_postgres, "IS_WINDOWS", False)
         monkeypatch.setattr(mk_postgres, "IS_LINUX", False)
 
-    def test_not_implemented_os(self, mk_postgres):
+    def test_not_implemented_os(self):
         with pytest.raises(Exception) as e:
             mk_postgres.helper_factory().get_default_path()
         assert "is not yet implemented" in str(e.value)
@@ -68,26 +64,23 @@ class TestNotImplementedOS:
 
 class TestLinux:
     @pytest.fixture(autouse=True)
-    def is_linux(self, monkeypatch, mk_postgres):
+    def is_linux(self, monkeypatch):
         monkeypatch.setattr(mk_postgres, "IS_WINDOWS", False)
         monkeypatch.setattr(mk_postgres, "IS_LINUX", True)
         monkeypatch.setattr(mk_postgres, "open_env_file", lambda *_args: ["export PGPORT=5432"])
 
     def test_get_default_path(
         self,
-        mk_postgres,
     ):
         assert "/etc/check_mk" == mk_postgres.helper_factory().get_default_path()
 
     def test_get_default_postgres_user(
         self,
-        mk_postgres,
     ):
         assert "postgres" == mk_postgres.helper_factory().get_default_postgres_user()
 
     def test_config_without_instance(
         self,
-        mk_postgres,
     ):
         sep = mk_postgres.helper_factory().get_conf_sep()
         dbuser, instances = mk_postgres.parse_postgres_cfg(VALID_CONFIG_WITHOUT_INSTANCE, sep)
@@ -96,7 +89,6 @@ class TestLinux:
 
     def test_config_with_instance(
         self,
-        mk_postgres,
     ):
         config = copy.deepcopy(VALID_CONFIG_WITH_INSTANCES)
         config[-1] = config[-1].format(sep=SEP_LINUX)
@@ -113,7 +105,6 @@ class TestLinux:
     def test_factory_without_instance(
         self,
         mock_Popen,
-        mk_postgres,
     ):
         process_mock = Mock()
         attrs = {
@@ -147,7 +138,6 @@ class TestLinux:
         self,
         mock_Popen,
         monkeypatch,
-        mk_postgres,
     ):
         instance = {
             "pg_database": "mydb",
@@ -182,7 +172,7 @@ class TestLinux:
 
 class TestWindows:
     @pytest.fixture(autouse=True)
-    def is_windows(self, monkeypatch, mk_postgres):
+    def is_windows(self, monkeypatch):
         monkeypatch.setattr(mk_postgres, "IS_WINDOWS", True)
         monkeypatch.setattr(mk_postgres, "IS_LINUX", False)
         monkeypatch.setattr(mk_postgres, "open_env_file", lambda *_args: ["export PGPORT=5432"])
@@ -194,18 +184,17 @@ class TestWindows:
             ),
         )
 
-    def test_get_default_path(self, mk_postgres):
+    def test_get_default_path(self):
         assert (
             "c:\\ProgramData\\checkmk\\agent\\config"
             == mk_postgres.helper_factory().get_default_path()
         )
 
-    def test_get_default_postgres_user(self, mk_postgres):
+    def test_get_default_postgres_user(self):
         assert "postgres" == mk_postgres.helper_factory().get_default_postgres_user()
 
     def test_config_with_instance(
         self,
-        mk_postgres,
     ):
         config = copy.deepcopy(VALID_CONFIG_WITH_INSTANCES)
         config[-1] = config[-1].format(sep=SEP_WINDOWS)
@@ -220,7 +209,7 @@ class TestWindows:
 
     @patch("os.path.isfile", return_value=True)
     @patch("subprocess.Popen")
-    def test_factory_without_instance(self, mock_Popen, mock_isfile, mk_postgres):
+    def test_factory_without_instance(self, mock_Popen, mock_isfile):
         process_mock = Mock()
         attrs = {"communicate.side_effect": [(b"postgres\ndb1", b"ok"), (b"12.1", b"ok")]}
         process_mock.configure_mock(**attrs)
@@ -249,7 +238,6 @@ class TestWindows:
         self,
         mock_Popen,
         mock_isfile,
-        mk_postgres,
     ):
         instance = {
             "pg_database": "mydb",

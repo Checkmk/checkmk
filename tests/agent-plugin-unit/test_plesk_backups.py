@@ -5,12 +5,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest
-from utils import import_module
 
 
 def test_import_module(capfd):
     with pytest.raises(SystemExit) as pytest_wrapped_e:
-        import_module("plesk_backups.py")
+        import agents.plugins.plesk_backups  # pylint: disable=unused-import
     out, _ = capfd.readouterr()
     # PY2 vs PY3: No module named 'MySQLdb' vs No module named MySQLdb
     out = out.replace("'", "")

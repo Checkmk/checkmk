@@ -6,14 +6,10 @@
 
 # pylint: disable=protected-access,redefined-outer-name
 import pytest
-from utils import import_module
+
+import agents.plugins.apache_status as apache_status
 
 RESPONSE = "\n".join(("1st line", "2nd line", "3rd line"))
-
-
-@pytest.fixture(scope="module")
-def apache_status():
-    return import_module("apache_status.py")
 
 
 @pytest.fixture
@@ -36,7 +32,7 @@ def response():
         },
     ],
 )
-def test_http_cfg_versions(apache_status, cfg):
+def test_http_cfg_versions(cfg):
     assert apache_status._unpack(cfg) == (("http", None), "127.0.0.1", None, "", "server-status")
 
 
@@ -53,7 +49,7 @@ def test_http_cfg_versions(apache_status, cfg):
         },
     ],
 )
-def test_https_cfg_versions(apache_status, cfg):
+def test_https_cfg_versions(cfg):
     assert apache_status._unpack(cfg) == (
         ("https", "/path/to/ca.pem"),
         "127.0.0.1",
@@ -71,7 +67,7 @@ def test_https_cfg_versions(apache_status, cfg):
         [("http", "127.0.0.1", None)],
     ],
 )
-def test_agent(apache_status, cfg, response, monkeypatch, capsys):
+def test_agent(cfg, response, monkeypatch, capsys):
     monkeypatch.setattr(apache_status, "get_config", lambda: {"servers": cfg, "ssl_ports": [443]})
     monkeypatch.setattr(apache_status, "get_response_body", lambda *args: response)
     apache_status.main()

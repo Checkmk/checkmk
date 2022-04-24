@@ -8,9 +8,9 @@ import os
 import subprocess
 
 import pytest
-from utils import plugin_path
 
-PLUGIN = os.path.join(plugin_path(), "mk_errpt.aix")
+# this won't work, fix it once test is moved/renewed/enabled
+PLUGIN = os.path.join("agents/plugins/mk_errpt.aix")
 
 ERRPT_OUTPUT = [
     "IDENTIFIER TIMESTAMP  T C RESOURCE_NAME  DESCRIPTION",
@@ -74,6 +74,7 @@ def _format_expected(lines):
 
 
 @pytest.mark.skip("Not a real unit test, we'll have to find a better place")
+# ^--> Indeed. We have shell unit tests these days.
 @pytest.mark.parametrize(
     "state_file_name,errpt_output,last_reported,expectations",
     [

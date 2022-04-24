@@ -162,9 +162,8 @@ $(foreach VERS,$(PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-docker):
 	    -e "PYTEST_ADDOPTS" \
 	    -u $$(id -u):$$(id -g) \
 	    -v "$$TEST_PATH:/tests" \
-	    -v "$(realpath agent-plugin-unit)/utils.py:/tests/utils.py" \
 	    -v "$(realpath agent-plugin-unit)/datasets:/tests/datasets" \
-	    -v "$(realpath ../agents/plugins):/plugins" \
+	    -v "$(realpath ../agents):/agents" \
 	    $$IMAGE_HASH \
 	    python$$PYTHON_VERSION -m pytest --ignore=tests/py2/ "/tests"
 

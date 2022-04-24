@@ -14,7 +14,8 @@ import re
 import sys
 
 import pytest
-from utils import import_module
+
+import agents.plugins.mk_logwatch as mk_logwatch
 
 
 def text_type():
@@ -45,12 +46,7 @@ def ensure_binary(s, encoding='utf-8', errors='strict'):
     raise TypeError("not expecting type '%s'" % type(s))
 
 
-@pytest.fixture(scope="module")
-def mk_logwatch():
-    return import_module("mk_logwatch.py")
-
-
-def test_options_defaults(mk_logwatch):
+def test_options_defaults():
     opt = mk_logwatch.Options()
     for attribute in ('encoding', 'maxfilesize', 'maxlines', 'maxtime', 'maxlinesize', 'regex',
                       'overflow', 'nocontext', 'maxcontextlines', 'maxoutputsize',
@@ -76,7 +72,7 @@ def test_options_defaults(mk_logwatch):
     ("skipconsecutiveduplicated=False", 'skipconsecutiveduplicated', False),
     ("skipconsecutiveduplicated=True", 'skipconsecutiveduplicated', True),
 ])
-def test_options_setter(mk_logwatch, option_string, key, expected_value):
+def test_options_setter( option_string, key, expected_value):
     opt = mk_logwatch.Options()
     opt.set_opt(option_string)
     actual_value = getattr(opt, key)
@@ -88,14 +84,14 @@ def test_options_setter(mk_logwatch, option_string, key, expected_value):
     ("regex=foobar", 'foobar', re.UNICODE),
     ("iregex=foobar", 'foobar', re.IGNORECASE | re.UNICODE),
 ])
-def test_options_setter_regex(mk_logwatch, option_string, expected_pattern, expected_flags):
+def test_options_setter_regex( option_string, expected_pattern, expected_flags):
     opt = mk_logwatch.Options()
     opt.set_opt(option_string)
     assert opt.regex.pattern == expected_pattern
     assert opt.regex.flags == expected_flags
 
 
-def test_get_config_files(mk_logwatch, tmpdir):
+def test_get_config_files( tmpdir):
     fake_config_dir = os.path.join(str(tmpdir), "test")
     os.mkdir(fake_config_dir)
 
@@ -112,7 +108,7 @@ def test_get_config_files(mk_logwatch, tmpdir):
     assert mk_logwatch.get_config_files(str(fake_config_dir)) == expected
 
 
-def test_iter_config_lines(mk_logwatch, tmpdir):
+def test_iter_config_lines( tmpdir):
     """Fakes a logwatch config file and checks if the agent plugin reads it appropriately"""
     # setup
     fake_config_path = os.path.join(str(tmpdir), "test")
@@ -157,7 +153,7 @@ def test_iter_config_lines(mk_logwatch, tmpdir):
         [],
     ),
 ])
-def test_read_config_cluster(mk_logwatch, config_lines, cluster_name, cluster_data, monkeypatch):
+def test_read_config_cluster( config_lines, cluster_name, cluster_data, monkeypatch):
     """checks if the agent plugin parses the configuration appropriately."""
     monkeypatch.setattr(mk_logwatch, 'iter_config_lines', lambda _files, **kw: iter(config_lines))
 
@@ -229,7 +225,7 @@ def test_read_config_cluster(mk_logwatch, config_lines, cluster_name, cluster_da
         [(u'W', u'sshd.*Corrupted MAC on input', [], [])],
     ),
 ])
-def test_read_config_logfiles(mk_logwatch, config_lines, logfiles_files, logfiles_patterns,
+def test_read_config_logfiles(config_lines, logfiles_files, logfiles_patterns,
                               monkeypatch):
     """checks if the agent plugin parses the configuration appropriately."""
     monkeypatch.setattr(mk_logwatch, 'iter_config_lines', lambda _files, **kw: iter(config_lines))
@@ -260,14 +256,14 @@ def test_read_config_logfiles(mk_logwatch, config_lines, logfiles_files, logfile
         ("::ffff:192.168.1.2", False,
          "/path/to/config/logwatch.state.my_cluster"),  # tty doesnt matter
     ])
-def test_get_status_filename(mk_logwatch, env_var, istty, statusfile, monkeypatch, mocker):
+def test_get_status_filename( env_var, istty, statusfile, monkeypatch, mocker):
     """
     May not be executed with pytest option -s set. pytest stdout redirection would colide
     with stdout mock.
     """
     monkeypatch.setenv("REMOTE", env_var)
     monkeypatch.setattr(mk_logwatch, "MK_VARDIR", '/path/to/config')
-    stdout_mock = mocker.patch("mk_logwatch.sys.stdout")
+    stdout_mock = mocker.patch("sys.stdout")
     stdout_mock.isatty.return_value = istty
     fake_config = [
         mk_logwatch.ClusterConfigBlock(
@@ -334,7 +330,7 @@ def test_get_status_filename(mk_logwatch, env_var, istty, statusfile, monkeypatc
         },
     }),
 ])
-def test_state_load(mk_logwatch, tmpdir, state_data, state_dict):
+def test_state_load( tmpdir, state_data, state_dict):
     # setup for reading
     file_path = os.path.join(str(tmpdir), "logwatch.state.testcase")
 
@@ -372,7 +368,7 @@ def test_state_load(mk_logwatch, tmpdir, state_data, state_dict):
         }
     },
 ])
-def test_state_write(mk_logwatch, tmpdir, state_dict):
+def test_state_write( tmpdir, state_dict):
     # setup for writing
     file_path = os.path.join(str(tmpdir), "logwatch.state.testcase")
     state = mk_logwatch.State(file_path)
@@ -409,7 +405,7 @@ STAR_FILES = [
         (b"/symlink_to_dir/yet_another_file.log", u"/symlink_to_dir/yet_another_file.log")
     ]),
 ])
-def test_find_matching_logfiles(mk_logwatch, fake_filesystem, pattern_suffix, file_suffixes):
+def test_find_matching_logfiles( fake_filesystem, pattern_suffix, file_suffixes):
     fake_fs_path_u = ensure_text(fake_filesystem)
     fake_fs_path_b = bytes(fake_filesystem, "utf-8")
     files = mk_logwatch.find_matching_logfiles(fake_fs_path_u + pattern_suffix)
@@ -426,7 +422,7 @@ def test_find_matching_logfiles(mk_logwatch, fake_filesystem, pattern_suffix, fi
         assert actual[1] == expected[1]
 
 
-def test_ip_in_subnetwork(mk_logwatch):
+def test_ip_in_subnetwork():
     assert mk_logwatch.ip_in_subnetwork("192.168.1.1", "192.168.1.0/24") is True
     assert mk_logwatch.ip_in_subnetwork("192.160.1.1", "192.168.1.0/24") is False
     assert mk_logwatch.ip_in_subnetwork("1762:0:0:0:0:B03:1:AF18",
@@ -440,7 +436,7 @@ def test_ip_in_subnetwork(mk_logwatch):
     (b'\xFF\xFE', 'utf_16', 2),
     (b'no encoding in this file!', locale.getpreferredencoding(), 0),
 ])
-def test_log_lines_iter_encoding(mk_logwatch, monkeypatch, buff, encoding, position):
+def test_log_lines_iter_encoding(monkeypatch, buff, encoding, position):
     monkeypatch.setattr(os, 'open', lambda *_args: None)
     monkeypatch.setattr(os, 'close', lambda *_args: None)
     monkeypatch.setattr(os, 'read', lambda *_args: buff)
@@ -450,8 +446,9 @@ def test_log_lines_iter_encoding(mk_logwatch, monkeypatch, buff, encoding, posit
         assert log_iter.get_position() == position
 
 
-def test_log_lines_iter(mk_logwatch):
-    with mk_logwatch.LogLinesIter(mk_logwatch.__file__, None) as log_iter:
+def test_log_lines_iter():
+    txt_file = mk_logwatch.__file__.rstrip('c')
+    with mk_logwatch.LogLinesIter(txt_file, None) as log_iter:
         log_iter.set_position(122)
         assert log_iter.get_position() == 122
 
@@ -466,7 +463,7 @@ def test_log_lines_iter(mk_logwatch):
 
         log_iter.skip_remaining()
         assert log_iter.next_line() is None
-        assert log_iter.get_position() == os.stat(mk_logwatch.__file__).st_size
+        assert log_iter.get_position() == os.stat(txt_file).st_size
 
 
 @pytest.mark.parametrize(
@@ -503,8 +500,8 @@ def test_log_lines_iter(mk_logwatch):
             u"abc3\n",
         ]),
     ])
-def test_non_ascii_line_processing(mk_logwatch, tmpdir, monkeypatch, use_specific_encoding, lines,
-                                   expected_result):
+def test_non_ascii_line_processing(tmpdir, monkeypatch, use_specific_encoding, lines,
+        expected_result):
     # Write test logfile first
     log_path = os.path.join(str(tmpdir), "testlog")
     with open(log_path, "wb") as f:
@@ -593,7 +590,7 @@ class MockStdout(object):  # pylint: disable=useless-object-inheritance
         ),
         ('locked door', [], {}, {}, [u"[[[locked door:cannotopen]]]\n"]),
     ])
-def test_process_logfile(mk_logwatch, monkeypatch, logfile, patterns, opt_raw, state,
+def test_process_logfile(monkeypatch, logfile, patterns, opt_raw, state,
                          expected_output):
 
     section = mk_logwatch.LogfileSection((logfile, logfile))
@@ -614,7 +611,7 @@ def test_process_logfile(mk_logwatch, monkeypatch, logfile, patterns, opt_raw, s
                           (["0", "1", "2", "C 3", "4", "5", "6", "7", "8", "9", "W 10"
                            ], 2, 3, ["1", "2", "C 3", "4", "5", "6", "8", "9", "W 10"]),
                           (["C 0", "1", "2"], 12, 17, ["C 0", "1", "2"])])
-def test_filter_maxcontextlines(mk_logwatch, input_lines, before, after, expected_output):
+def test_filter_maxcontextlines( input_lines, before, after, expected_output):
 
     assert expected_output == list(mk_logwatch._filter_maxcontextlines(input_lines, before, after))
 
@@ -635,7 +632,7 @@ def test_filter_maxcontextlines(mk_logwatch, input_lines, before, after, expecte
                            ((str(i) for i in range(3)),
                            False,
                            ["0", "1", "2"])])
-def test_filter_consecutive_duplicates(mk_logwatch, input_lines, nocontext, expected_output):
+def test_filter_consecutive_duplicates( input_lines, nocontext, expected_output):
     assert expected_output == list(
         mk_logwatch._filter_consecutive_duplicates(input_lines, nocontext)
     )

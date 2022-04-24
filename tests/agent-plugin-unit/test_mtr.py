@@ -5,12 +5,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest
-from utils import import_module
 
-
-@pytest.fixture(name="mtr", scope="module")
-def mtr_fixture():
-    return import_module("mtr.py")
+import agents.plugins.mtr as mtr
 
 
 @pytest.mark.parametrize(
@@ -28,5 +24,5 @@ def mtr_fixture():
         ),
     ],
 )
-def test_host_to_filename(mtr, host, expected_result):
+def test_host_to_filename(host, expected_result):
     assert mtr.host_to_filename(host) == expected_result

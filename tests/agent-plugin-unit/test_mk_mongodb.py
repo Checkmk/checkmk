@@ -10,14 +10,11 @@ import os
 import sys
 
 import pytest
-from utils import import_module
 
-
-@pytest.fixture(scope="module")
-def mk_mongodb():
-    if sys.version_info[0] == 2:
-        return import_module("mk_mongodb_2.py")
-    return import_module("mk_mongodb.py")
+if sys.version_info[0] == 2:
+    import agents.plugins.mk_mongodb_2 as mk_mongodb  # pylint: disable=syntax-error
+else:
+    import agents.plugins.mk_mongodb as mk_mongodb
 
 
 def read_dataset(filename):
@@ -36,10 +33,9 @@ def read_dataset(filename):
         return loads(f.read())
 
 
-def call_mk_mongodb_functions(mk_mongodb, dataset):
+def call_mk_mongodb_functions(dataset):
     """
     calls 4 functions of the mk_mongodb agent.
-    :param mk_mongodb: reference to mk_mongodb agent
     :param dataset: dataset as extended JSON
     :return:
     """
@@ -51,153 +47,141 @@ def call_mk_mongodb_functions(mk_mongodb, dataset):
         mk_mongodb.potentially_piggybacked_sections(None, dataset)
 
 
-def test_arbiter_instance_mongodb_4_0(mk_mongodb):
+def test_arbiter_instance_mongodb_4_0():
     """
     test mongodb cluster output:
     arbiter instance
     arbiter does not have a copy of data set and cannot become a primary,
     but it can vote for the primary.
-    :param mk_mongodb: reference to mk_mongodb agent
     """
     dataset = read_dataset("mongo_output_arbiter-4.0.10.json")
-    call_mk_mongodb_functions(mk_mongodb, dataset)
+    call_mk_mongodb_functions(dataset)
     mk_mongodb.sections_replica(dataset)
 
 
-def test_arbiter_instance_mongodb_3_6(mk_mongodb):
+def test_arbiter_instance_mongodb_3_6():
     """
     test mongodb cluster output:
     arbiter instance
     arbiter does not have a copy of data set and cannot become a primary,
     but it can vote for the primary.
-    :param mk_mongodb: reference to mk_mongodb agent
     """
     dataset = read_dataset("mongo_output_arbiter-3.6.13.json")
-    call_mk_mongodb_functions(mk_mongodb, dataset)
+    call_mk_mongodb_functions(dataset)
     mk_mongodb.sections_replica(dataset)
 
 
-def test_arbiter_instance_mongodb_3_4(mk_mongodb):
+def test_arbiter_instance_mongodb_3_4():
     """
     test mongodb cluster output:
     arbiter instance
     arbiter does not have a copy of data set and cannot become a primary,
     but it can vote for the primary.
-    :param mk_mongodb: reference to mk_mongodb agent
     """
     dataset = read_dataset("mongo_output_arbiter-3.4.21.json")
-    call_mk_mongodb_functions(mk_mongodb, dataset)
+    call_mk_mongodb_functions(dataset)
     mk_mongodb.sections_replica(dataset)
 
 
-def test_config_instance_mongodb_4_0(mk_mongodb):
+def test_config_instance_mongodb_4_0():
     """
     test mongodb cluster output:
     config instance
     config servers store the metadata for a sharded cluster.
-    :param mk_mongodb: reference to mk_mongodb agent
     """
     dataset = read_dataset("mongo_output_config-4.0.10.json")
-    call_mk_mongodb_functions(mk_mongodb, dataset)
+    call_mk_mongodb_functions(dataset)
     mk_mongodb.sections_replica(dataset)
 
 
-def test_config_instance_mongodb_3_6(mk_mongodb):
+def test_config_instance_mongodb_3_6():
     """
     test mongodb cluster output:
     config instance
     config servers store the metadata for a sharded cluster.
-    :param mk_mongodb: reference to mk_mongodb agent
     """
     dataset = read_dataset("mongo_output_config-3.6.13.json")
-    call_mk_mongodb_functions(mk_mongodb, dataset)
+    call_mk_mongodb_functions(dataset)
     mk_mongodb.sections_replica(dataset)
 
 
-def test_config_instance_mongodb_3_4(mk_mongodb):
+def test_config_instance_mongodb_3_4():
     """
     test mongodb cluster output:
     config instance
     config servers store the metadata for a sharded cluster.
-    :param mk_mongodb: reference to mk_mongodb agent
     """
     dataset = read_dataset("mongo_output_config-3.4.21.json")
-    call_mk_mongodb_functions(mk_mongodb, dataset)
+    call_mk_mongodb_functions(dataset)
     mk_mongodb.sections_replica(dataset)
 
 
-def test_shard_instance_mongodb_4_0(mk_mongodb):
+def test_shard_instance_mongodb_4_0():
     """
     test mongodb cluster output:
     shard instance
     shard stores some portion of a sharded cluster’s total data set.
-    :param mk_mongodb: reference to mk_mongodb agent
     """
     dataset = read_dataset("mongo_output_shard-4.0.10.json")
-    call_mk_mongodb_functions(mk_mongodb, dataset)
+    call_mk_mongodb_functions(dataset)
     mk_mongodb.sections_replica(dataset)
 
 
-def test_shard_instance_mongodb_3_6(mk_mongodb):
+def test_shard_instance_mongodb_3_6():
     """
     test mongodb cluster output:
     shard instance
     shard stores some portion of a sharded cluster’s total data set.
-    :param mk_mongodb: reference to mk_mongodb agent
     """
     dataset = read_dataset("mongo_output_shard-3.6.13.json")
-    call_mk_mongodb_functions(mk_mongodb, dataset)
+    call_mk_mongodb_functions(dataset)
     mk_mongodb.sections_replica(dataset)
 
 
-def test_shard_instance_mongodb_3_4(mk_mongodb):
+def test_shard_instance_mongodb_3_4():
     """
     test mongodb cluster output:
     shard instance
     shard stores some portion of a sharded cluster’s total data set.
-    :param mk_mongodb: reference to mk_mongodb agent
     """
     dataset = read_dataset("mongo_output_shard-3.4.21.json")
-    call_mk_mongodb_functions(mk_mongodb, dataset)
+    call_mk_mongodb_functions(dataset)
     mk_mongodb.sections_replica(dataset)
 
 
-def test_router_instance_mongodb_4_0(mk_mongodb):
+def test_router_instance_mongodb_4_0():
     """
     test mongodb cluster output:
     mongos (router)
     mongos is a routing and load balancing process that acts an interface between an application and
     a MongoDB sharded cluster.
-    :param mk_mongodb: reference to mk_mongodb agent
     """
     dataset = read_dataset("mongo_output_router-4.0.10.json")
-    call_mk_mongodb_functions(mk_mongodb, dataset)
+    call_mk_mongodb_functions(dataset)
     mk_mongodb.sections_replica(dataset)
 
 
-def test_router_instance_mongodb_3_6(mk_mongodb):
+def test_router_instance_mongodb_3_6():
     """
     test mongodb cluster output:
     mongos (router)
     mongos is a routing and load balancing process that acts an interface between an application and
     a MongoDB sharded cluster.
-    :param mk_mongodb: reference to mk_mongodb agent
     """
     dataset = read_dataset("mongo_output_router-3.6.13.json")
-    call_mk_mongodb_functions(mk_mongodb, dataset)
+    call_mk_mongodb_functions(dataset)
     mk_mongodb.sections_replica(dataset)
 
 
-def test_router_instance_mongodb_3_4(mk_mongodb):
+def test_router_instance_mongodb_3_4():
     """
     test mongodb cluster output:
     mongos (router)
     mongos is a routing and load balancing process that acts an interface between an application and
     a MongoDB sharded cluster.
-    :param mk_mongodb: reference to mk_mongodb agent
     """
     dataset = read_dataset("mongo_output_router-3.4.21.json")
-    call_mk_mongodb_functions(mk_mongodb, dataset)
+    call_mk_mongodb_functions(dataset)
     mk_mongodb.sections_replica(dataset)
 
 
@@ -265,7 +249,7 @@ def test_router_instance_mongodb_3_4(mk_mongodb):
         ),
     ],
 )
-def test_read_config(config, expected_pymongo_config, mk_mongodb):
+def test_read_config(config, expected_pymongo_config):
     """
     see if the config is corretly transformed to pymongo arguments
     """
@@ -297,9 +281,9 @@ def test_read_config(config, expected_pymongo_config, mk_mongodb):
         ),
     ],
 )
-def test_transform_config(pymongo_version, pymongo_config, mk_mongodb):
+def test_transform_config(pymongo_version, pymongo_config):
     class DummyConfig(mk_mongodb.Config):  # type: ignore[name-defined]
-        def __init__(self):
+        def __init__(self):  # pylint: disable=super-init-not-called
             self.tls_enable = True
             self.tls_verify = None
             self.tls_ca_file = None

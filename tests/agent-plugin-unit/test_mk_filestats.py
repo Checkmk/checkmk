@@ -12,7 +12,8 @@ import os
 import sys
 
 import pytest
-from utils import import_module
+
+import agents.plugins.mk_filestats as mk_filestats
 
 try:
     from collections import OrderedDict
@@ -30,13 +31,8 @@ def configparser_library_name():
     return "configparser"
 
 
-@pytest.fixture(scope="module")
-def mk_filestats():
-    return import_module("mk_filestats.py")
-
-
 @pytest.fixture
-def lazyfile(mk_filestats):
+def lazyfile():
     mylazyfile = mk_filestats.FileStat(__file__)
 
     # Overwrite the path to be reproducable...
@@ -44,7 +40,7 @@ def lazyfile(mk_filestats):
     return mylazyfile
 
 
-def test_lazy_file(mk_filestats):
+def test_lazy_file():
     lfile = mk_filestats.FileStat("/bla/no such file.txt")
     assert lfile.path == "/bla/no such file.txt"
     assert lfile.size is None
@@ -62,7 +58,7 @@ def test_lazy_file(mk_filestats):
 @pytest.mark.parametrize(
     "config", [({}), ({"input_unknown": None}), ({"input_one": None, "input_two": None})]
 )
-def test_get_file_iterator_invalid(mk_filestats, config):
+def test_get_file_iterator_invalid(config):
     with pytest.raises(ValueError):
         mk_filestats.get_file_iterator(config)
 
@@ -74,7 +70,7 @@ def test_get_file_iterator_invalid(mk_filestats, config):
         ({"input_patterns": '"foo bar" gee*'}, ["foo bar", "gee*"]),
     ],
 )
-def test_get_file_iterator_pattern(mk_filestats, config, pat_list):
+def test_get_file_iterator_pattern(config, pat_list):
     iter_obj = mk_filestats.get_file_iterator(config)
     assert isinstance(iter_obj, mk_filestats.PatternIterator)
     assert iter_obj._patterns == [os.path.abspath(p) for p in pat_list]
@@ -90,14 +86,14 @@ def test_get_file_iterator_pattern(mk_filestats, config, pat_list):
         ("==", (2000.0, 1024, "1000"), (False, True, False)),
     ],
 )
-def test_numeric_filter(mk_filestats, operator, values, results):
+def test_numeric_filter(operator, values, results):
     num_filter = mk_filestats.AbstractNumericFilter("%s1024" % operator)
     for value, result in zip(values, results):
         assert result == num_filter._matches_value(value)
 
 
 @pytest.mark.parametrize("invalid_arg", ["<>1024", "<NaN"])
-def test_numeric_filter_raises(mk_filestats, invalid_arg):
+def test_numeric_filter_raises(invalid_arg):
     with pytest.raises(ValueError):
         mk_filestats.AbstractNumericFilter(invalid_arg)
 
@@ -113,7 +109,7 @@ def test_numeric_filter_raises(mk_filestats, invalid_arg):
         ("[^ð]*ð{2}[^ð]*", ("foðbar", "fððbar"), (False, True)),
     ],
 )
-def test_path_filter(mk_filestats, reg_pat, paths, results):
+def test_path_filter(reg_pat, paths, results):
     path_filter = mk_filestats.RegexFilter(reg_pat)
     for path, result in zip(paths, results):
         lazy_file = mk_filestats.FileStat(path)
@@ -127,12 +123,12 @@ def test_path_filter(mk_filestats, reg_pat, paths, results):
         {"filter_size": "!=käse"},
     ],
 )
-def test_get_file_filters_invalid(mk_filestats, config):
+def test_get_file_filters_invalid(config):
     with pytest.raises(ValueError):
         mk_filestats.get_file_filters(config)
 
 
-def test_get_file_filters(mk_filestats):
+def test_get_file_filters():
     config = {"filter_size": ">1", "filter_age": "==0", "filter_regex": "foo"}
     filters = mk_filestats.get_file_filters(config)
     assert len(filters) == 3
@@ -142,13 +138,13 @@ def test_get_file_filters(mk_filestats):
 
 
 @pytest.mark.parametrize("config", [{}, {"output": "/dev/null"}])
-def test_get_ouput_aggregator_invalid(mk_filestats, config):
+def test_get_ouput_aggregator_invalid(config):
     with pytest.raises(ValueError):
         mk_filestats.get_output_aggregator(config)
 
 
 @pytest.mark.parametrize("output_value", ["count_only", "file_stats", "single_file"])
-def test_get_ouput_aggregator(mk_filestats, output_value):
+def test_get_ouput_aggregator(output_value):
     aggr = mk_filestats.get_output_aggregator({"output": output_value})
     assert aggr is getattr(mk_filestats, "output_aggregator_%s" % output_value)
 
@@ -167,7 +163,7 @@ def test_get_ouput_aggregator(mk_filestats, output_value):
         ("%s myService %s", "[[[single_file test_mk_filestats.py myService %s]]]"),
     ],
 )
-def test_output_aggregator_single_file_servicename(mk_filestats, lazyfile, group_name, expected):
+def test_output_aggregator_single_file_servicename(lazyfile, group_name, expected):
 
     actual = mk_filestats.output_aggregator_single_file(group_name, [lazyfile])
     assert expected == list(actual)[0]
@@ -193,7 +189,7 @@ class TestConfigParsing:
         ]
 
     @pytest.fixture
-    def mocked_configparser(self, mk_filestats, config_options):
+    def mocked_configparser(self, config_options):
         parser = MockConfigParser(mk_filestats.DEFAULT_CFG_SECTION, dict_type=OrderedDict)
         for section, option, value in config_options:
             parser.add_section(section)
@@ -202,7 +198,6 @@ class TestConfigParsing:
 
     def test_iter_config_section_dicts(
         self,
-        mk_filestats,
         config_file_name,
         mocked_configparser,
         mocker,
@@ -325,7 +320,6 @@ class MockedFileStatFile:
     ],
 )
 def test_grouping_multiple_groups(
-    mk_filestats,
     section_name,
     files_iter,
     grouping_conditions,

@@ -210,10 +210,12 @@ $(DISTNAME).tar.gz: omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz .
 
 	make -C agents/plugins
 	cd agents ; tar czf ../$(DISTNAME)/agents.tar.gz $(TAROPTS) \
+		--exclude __init__.py \
 		--exclude check_mk_agent.spec \
 		--exclude special/lib \
 		--exclude plugins/Makefile \
 		--exclude plugins/*.checksum \
+		--exclude plugins/__init__.py \
 		cfg_examples \
 		plugins \
 		sap \

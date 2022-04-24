@@ -224,7 +224,7 @@ export function register_delayed_active_check(
     if (g_delayed_active_checks.length == 0) {
         utils
             .content_scrollbar()
-            .getScrollElement()
+            ?.getScrollElement()
             .addEventListener("scroll", trigger_delayed_active_checks);
         utils.add_event_handler("resize", trigger_delayed_active_checks);
     }

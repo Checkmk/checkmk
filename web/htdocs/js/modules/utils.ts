@@ -7,7 +7,7 @@ import SimpleBar from "simplebar";
 import * as ajax from "ajax";
 import * as selection from "selection";
 
-let g_content_scrollbar = null;
+let g_content_scrollbar: SimpleBar | null | undefined = null;
 
 export const browser = {
     agent: navigator.userAgent.toLowerCase(),
@@ -69,7 +69,7 @@ export function execute_javascript_by_object(obj) {
                 eval(aScripts[i].text);
                 current_script = null;
             } catch (e) {
-                alert(aScripts[i].text + "\nError:" + e.message);
+                alert(aScripts[i].text + "\nError:" + (e as any).message);
             }
         }
     }
@@ -130,12 +130,12 @@ export function toggle_class(o, a, b) {
 
 // Adds document/window global event handlers
 // TODO: Move the window fallback to the call sites (when necessary) and nuke this function
-export function add_event_handler(type, func, obj) {
+export function add_event_handler(type, func, obj: any = undefined) {
     obj = typeof obj === "undefined" ? window : obj;
     obj.addEventListener(type, func, false);
 }
 
-export function del_event_handler(type, func, obj) {
+export function del_event_handler(type, func, obj: any = undefined) {
     obj = typeof obj === "undefined" ? window : obj;
 
     if (obj.removeEventListener) {
@@ -195,11 +195,11 @@ export function content_wrapper_size() {
     }
 
     const vert_paddings =
-        parseInt(get_computed_style(container, "padding-top").replace("px", "")) +
-        parseInt(get_computed_style(container, "padding-bottom").replace("px", ""));
+        parseInt(get_computed_style(container, "padding-top")!.replace("px", "")) +
+        parseInt(get_computed_style(container, "padding-bottom")!.replace("px", ""));
     const hor_paddings =
-        parseInt(get_computed_style(container, "padding-right").replace("px", "")) +
-        parseInt(get_computed_style(container, "padding-left").replace("px", ""));
+        parseInt(get_computed_style(container, "padding-right")!.replace("px", "")) +
+        parseInt(get_computed_style(container, "padding-left")!.replace("px", ""));
 
     return {
         height: container.clientHeight - vert_paddings,
@@ -242,11 +242,11 @@ export function update_header_timer() {
 
     var t = new Date();
 
-    var hours = t.getHours();
-    if (hours < 10) hours = "0" + hours;
+    var hours: string = t.getHours().toString();
+    if (parseInt(hours) < 10) hours = "0" + hours;
 
-    var min = t.getMinutes();
-    if (min < 10) min = "0" + min;
+    var min: string = t.getMinutes().toString();
+    if (parseInt(min) < 10) min = "0" + min;
 
     container.innerHTML = hours + ":" + min;
 
@@ -255,9 +255,9 @@ export function update_header_timer() {
 
     var day = ("0" + t.getDate()).slice(-2);
     var month = ("0" + (t.getMonth() + 1)).slice(-2);
-    var year = t.getFullYear();
+    var year = t.getFullYear().toString();
     var date_format = date.getAttribute("format");
-    date.innerHTML = date_format.replace(/yyyy/, year).replace(/mm/, month).replace(/dd/, day);
+    date.innerHTML = date_format!.replace(/yyyy/, year).replace(/mm/, month).replace(/dd/, day);
 }
 
 export function has_row_info() {
@@ -265,7 +265,7 @@ export function has_row_info() {
 }
 
 export function get_row_info() {
-    return document.getElementById("row_info").innerHTML;
+    return document.getElementById("row_info")!.innerHTML;
 }
 
 export function update_row_info(text) {
@@ -276,9 +276,9 @@ export function update_row_info(text) {
 }
 
 // Function gets the value of the given url parameter
-export function get_url_param(name, url) {
+export function get_url_param(name, url: string | undefined = undefined) {
     name = name.replace("[", "\\[").replace("]", "\\]");
-    url = typeof url === "undefined" ? window.location : url;
+    url = typeof url === "undefined" ? window.location.toString() : url;
 
     var regex = new RegExp("[\\?&]" + name + "=([^&#]*)");
     var results = regex.exec(url);
@@ -291,7 +291,11 @@ export function get_url_param(name, url) {
  * - Can add/overwrite parameters
  * - Removes _* parameters
  */
-export function makeuri(addvars, url, filename) {
+export function makeuri(
+    addvars,
+    url: string | undefined = undefined,
+    filename: string | undefined = undefined
+) {
     url = typeof url === "undefined" ? window.location.href : url;
 
     // First cleanup some trailing characters that would confuse the
@@ -310,8 +314,8 @@ export function makeuri(addvars, url, filename) {
         tmp = [];
     }
 
-    var params = [];
-    var pair = null;
+    var params: string[] = [];
+    var pair: string[] | null = null;
 
     // Skip unwanted params
     for (var i = 0; i < tmp.length; i++) {
@@ -332,14 +336,16 @@ export function makeuri(addvars, url, filename) {
 
     // Add new params
     for (var key in addvars) {
-        params.push(encodeURIComponent(key) + "=" + encodeURIComponent(addvars[key]));
+        params.push(
+            encodeURIComponent(key) + "=" + encodeURIComponent(addvars[key])
+        );
     }
 
     return base + "?" + params.join("&");
 }
 
 export function makeuri_contextless(vars, filename) {
-    var params = [];
+    var params: string[] = [];
     // Add new params
     for (var key in vars) {
         params.push(encodeURIComponent(key) + "=" + encodeURIComponent(vars[key]));
@@ -382,11 +388,11 @@ export function time() {
     return new Date().getTime() / 1000;
 }
 
-export function reload_whole_page(url) {
+export function reload_whole_page(url: string | null = null) {
     if (url) {
-        window.top.location = "index.py?start_url=" + encodeURIComponent(url);
+        window.top!.location = "index.py?start_url=" + encodeURIComponent(url);
     } else {
-        window.top.location.reload();
+        window.top!.location.reload();
     }
 }
 
@@ -418,7 +424,7 @@ export function add_height_to_simple_bar_content_of_iframe(target_iframe) {
 //#   '--------------------------------------------------------------------'
 
 // Stores the reload timer object (of views and also dashboards)
-var g_reload_timer = null;
+var g_reload_timer: number | null = null;
 // This stores the refresh time of the page (But never 0)
 var g_reload_interval = 0; // seconds
 // This flag tells the handle_content_reload_error() function to add an
@@ -435,7 +441,10 @@ export function set_reload(secs, url) {
 
 // Issues the timer for the next page reload. If some timer is already
 // running, this timer is terminated and replaced by the new one.
-export function schedule_reload(url, remaining_ms) {
+export function schedule_reload(
+    url: string | undefined = undefined,
+    remaining_ms: number | undefined = undefined
+) {
     if (typeof url === "undefined") url = ""; // reload current page (or just the content)
 
     if (typeof remaining_ms === "undefined") {
@@ -444,7 +453,7 @@ export function schedule_reload(url, remaining_ms) {
         }
 
         // initialize the timer with the configured interval
-        remaining_ms = parseFloat(g_reload_interval) * 1000;
+        remaining_ms = parseFloat(g_reload_interval.toString()) * 1000;
     }
 
     update_page_state_reload_indicator(remaining_ms);
@@ -458,8 +467,8 @@ export function schedule_reload(url, remaining_ms) {
     }
 
     stop_reload_timer();
-    g_reload_timer = setTimeout(function () {
-        schedule_reload(url, remaining_ms - 1000);
+    g_reload_timer = window.setTimeout(function () {
+        schedule_reload(url, remaining_ms! - 1000);
     }, 1000);
 }
 
@@ -468,12 +477,11 @@ function update_page_state_reload_indicator(remaining_ms) {
     if (!icon) return; // Not present, no update needed
     const div = icon.closest(".page_state.reload");
     if (!div) return; // Not a reload page state, no update
-
     let perc = (remaining_ms / (g_reload_interval * 1000)) * 100;
 
     icon.style.clipPath = get_clip_path_polygon(perc);
-    if (div) {
-        div.title = div.title.replace(/\d+/, remaining_ms / 1000);
+    if (div instanceof HTMLElement) {
+        div.title = div.title.replace(/\d+/, (remaining_ms / 1000).toString());
     }
 }
 
@@ -551,7 +559,7 @@ function do_reload(url) {
     // In dem Fall wird die aktuelle URL aus "window.location.href" geholt, für den Refresh
     // modifiziert, der Inhalt neu geholt und in das DIV geschrieben.
     if (!document.getElementById("data_container") || url !== "") {
-        if (url === "") window.location.reload(false);
+        if (url === "") window.location.reload();
         else window.location.href = url;
     } else {
         // Enforce specific display_options to get only the content data.
@@ -595,7 +603,7 @@ function do_reload(url) {
 
 function handle_content_reload(_unused, code) {
     g_reload_error = false;
-    var o = document.getElementById("data_container");
+    var o = document.getElementById("data_container")!;
     o.innerHTML = code;
     execute_javascript_by_object(o);
 
@@ -607,7 +615,7 @@ function handle_content_reload(_unused, code) {
 
 function handle_content_reload_error(_unused, status_code) {
     if (!g_reload_error) {
-        var o = document.getElementById("data_container");
+        var o = document.getElementById("data_container")!;
         o.innerHTML =
             "<div class=error>Update failed (" +
             status_code +
@@ -653,7 +661,7 @@ export function wheel_event_name() {
 }
 
 export function toggle_more(trigger, toggle_id, dom_levels_up) {
-    event.stopPropagation();
+    event!.stopPropagation();
     let container = trigger;
     let state;
     for (var i = 0; i < dom_levels_up; i++) {
@@ -693,13 +701,13 @@ export function add_simplebar_scrollbar_to_object(obj) {
     console.log("Missing object for SimpleBar initiation.");
 }
 
-export function content_scrollbar(scrollable_id) {
+export function content_scrollbar(scrollable_id: string | null = null) {
     if (g_content_scrollbar === null) g_content_scrollbar = add_simplebar_scrollbar(scrollable_id);
     return g_content_scrollbar;
 }
 
 export function set_focus_by_name(form_name, field_name) {
-    set_focus(document.getElementById("form_" + form_name).elements[field_name]);
+    set_focus((document.getElementById("form_" + form_name) as HTMLFormElement).elements[field_name]);
 }
 
 export function set_focus_by_id(dom_id) {
@@ -721,7 +729,7 @@ export function update_pending_changes(changes_info, changes_tooltip) {
     }
 
     // Update container div CSS class and tooltip
-    const page_state_div = document.getElementsByClassName("page_state")[0];
+    const page_state_div = document.getElementsByClassName("page_state")[0] as HTMLElement;
     change_class(page_state_div, "no_changes", "pending_changes");
     page_state_div.title = changes_tooltip;
 
@@ -748,7 +756,7 @@ export function update_pending_changes(changes_info, changes_tooltip) {
     const elem = document.createElement("div");
     elem.setAttribute("class", "icon_container");
     elem.appendChild(img);
-    text_container.parentElement.parentElement.appendChild(elem);
+    text_container?.parentElement?.parentElement?.appendChild(elem);
 }
 
 export function get_computed_style(object, property) {

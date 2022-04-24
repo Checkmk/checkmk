@@ -1,6 +1,5 @@
 @startuml
 skinparam componentStyle uml2
-skinparam linetype ortho
 skinparam monochrome true
 ' Remove shadows
 skinparam shadowing false

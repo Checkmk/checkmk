@@ -406,6 +406,36 @@ def test_mgmt_inherit_protocol(
     assert data[base_variable]["mgmt-host"] == folder_credentials
 
 
+def test_load_hosts_cleanup_pre_210_hostname_attribute() -> None:
+    # Simulate a configuration that has been created with a previous "host diagnostic" in a
+    # previous version. The field "hostname" is added to the attributes dict.
+    folder = hosts_and_folders.Folder.root_folder()
+    folder.create_hosts(
+        [
+            (
+                "test-host",
+                {
+                    "ipaddress": "127.0.0.1",
+                    "hostname": "test-host",
+                },
+                [],
+            )
+        ]
+    )
+
+    hosts_and_folders.Folder.invalidate_caches()
+    folder = hosts_and_folders.Folder.root_folder()
+
+    # Verify that it has been saved with the wrong attribute
+    data = folder._load_hosts_file()
+    assert data is not None
+    assert data["host_attributes"]["test-host"]["hostname"] == "test-host"
+
+    # Now ensure that it is being cleaned up
+    hosts = folder.hosts()
+    assert "hostname" not in hosts["test-host"].attributes()
+
+
 @pytest.fixture(name="make_folder")
 def fixture_make_folder(mocker: MagicMock) -> Callable:
     """

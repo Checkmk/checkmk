@@ -160,6 +160,11 @@ class ModeDiagHost(WatoMode):
             elif "snmp_community" in new:
                 return_message.append(_("SNMP credentials"))
 
+            # The hostname field used by this dialog is not a host_attribute. Remove it here to
+            # prevent data corruption.
+            new = new.copy()
+            del new["hostname"]
+
             self._host.update_attributes(new)
             flash(_("Updated attributes: ") + ", ".join(return_message))
             return redirect(

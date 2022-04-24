@@ -1392,6 +1392,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         attributes = self._add_missing_meta_data(attributes)
         attributes = self._transform_tag_snmp_ds(attributes)
         attributes = self._transform_cgconf_attributes(attributes)
+        attributes = self._cleanup_pre_210_hostname_attribute(attributes)
         return attributes
 
     def _transform_cgconf_attributes(self, attributes):
@@ -1406,6 +1407,23 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
     def _transform_tag_snmp_ds(self, attributes):
         if "tag_snmp" in attributes:
             attributes["tag_snmp_ds"] = attributes.pop("tag_snmp")
+        return attributes
+
+    def _cleanup_pre_210_hostname_attribute(self, attributes):
+        """Cleanup accidentally added hostname host attribute
+
+        The host diagnostic page was adding the field "hostname" to the "attributes"
+        dictionary before 2.0.0p24 and 2.1.0b6 when clicking on "Save and go to host
+        properties".
+
+        Args:
+            attributes: The attributes dictionary
+
+        Returns:
+            The modified 'attributes' dictionary. It actually is modified in-place though.
+
+        """
+        attributes.pop("hostname", None)
         return attributes
 
     def _add_missing_meta_data(self, attributes):

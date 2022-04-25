@@ -49,8 +49,9 @@ import cmk.gui.utils as utils
 from cmk.gui import hooks
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_main_menu_breadcrumb
 from cmk.gui.config import active_config
+from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKGeneralException, MKUserError
-from cmk.gui.globals import g, html, request
+from cmk.gui.globals import html, request
 from cmk.gui.i18n import _, _u
 from cmk.gui.log import logger
 from cmk.gui.logged_in import save_user_file, user

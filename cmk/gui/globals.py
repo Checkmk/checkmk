@@ -7,12 +7,9 @@
 from __future__ import annotations
 
 import logging
-from functools import partial
-from typing import Any, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
-from werkzeug.local import LocalProxy
-
-from cmk.gui.ctx_stack import _lookup_app_object, request_local_attr
+from cmk.gui.ctx_stack import request_local_attr
 
 #####################################################################
 # a namespace for storing data during an application context
@@ -29,11 +26,6 @@ class PrependURLFilter(logging.Filter):
         if record.levelno >= logging.ERROR:
             record.msg = "%s %s" % (request.requested_url, record.msg)
         return True
-
-
-# From app context
-current_app = LocalProxy(partial(_lookup_app_object, "app"))
-g: Any = LocalProxy(partial(_lookup_app_object, "g"))
 
 
 # NOTE: All types FOO below are actually a Union[Foo, LocalProxy], but

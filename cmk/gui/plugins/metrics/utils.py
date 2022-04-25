@@ -45,8 +45,9 @@ from cmk.utils.version import parse_check_mk_version
 
 import cmk.gui.sites as sites
 from cmk.gui.config import active_config
+from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import MKGeneralException, MKUserError
-from cmk.gui.globals import g, html
+from cmk.gui.globals import html
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.plugins.visuals.utils import livestatus_query_bare

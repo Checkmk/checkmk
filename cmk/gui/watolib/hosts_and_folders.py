@@ -75,8 +75,9 @@ import cmk.gui.utils.escaping as escaping
 import cmk.gui.watolib.bakery as bakery
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.config import active_config
+from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import MKAuthException, MKGeneralException, MKUserError, RequestTimeout
-from cmk.gui.globals import g, html, request
+from cmk.gui.globals import html, request
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _

@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from functools import partial
+from typing import Any
 
 from werkzeug.local import LocalProxy, LocalStack
 
@@ -24,6 +25,9 @@ def _lookup_app_object(name):
         raise RuntimeError("Working outside of application context.")
     return getattr(top, name)
 
+
+current_app = LocalProxy(partial(_lookup_app_object, "app"))
+g: Any = LocalProxy(partial(_lookup_app_object, "g"))
 
 _request_ctx_stack = LocalStack()
 

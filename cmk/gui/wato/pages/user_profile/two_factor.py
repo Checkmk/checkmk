@@ -23,8 +23,9 @@ from fido2.webauthn import PublicKeyCredentialRpEntity  # type: ignore[import]
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_simple_page_breadcrumb
 from cmk.gui.crash_handler import handle_exception_as_gui_crash_report
+from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import HTTPRedirect, MKGeneralException, MKUserError
-from cmk.gui.globals import g, html, request, response
+from cmk.gui.globals import html, request, response
 from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.i18n import _
 from cmk.gui.log import logger

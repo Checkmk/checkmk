@@ -14,8 +14,9 @@ from cmk.utils.site import url_prefix
 
 from cmk.gui import login, pages
 from cmk.gui.crash_handler import handle_exception_as_gui_crash_report
+from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKUnauthenticatedException
-from cmk.gui.globals import g, request, response
+from cmk.gui.globals import request, response
 from cmk.gui.http import Response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user

@@ -443,5 +443,5 @@ def test_crashes_if_no_resources(section_kube_performance_memory) -> None:
 
 def test_valuespec_and_check_agree() -> None:
     assert tuple(DEFAULT_PARAMS) == tuple(
-        element[0] for element in _parameter_valuespec_memory()._get_elements()
+        element[0] for element in _parameter_valuespec_memory(valuespec_help="")._get_elements()
     )

@@ -30,6 +30,7 @@ def testconfig(request, make_yaml_config):
         make_yaml_config["global"]["sections"] = Globals.section
     else:
         make_yaml_config["global"]["sections"] = [Globals.section, "systemtime"]
+    make_yaml_config["global"]["cpuload_method"] = "use_wmi"
     return make_yaml_config
 
 

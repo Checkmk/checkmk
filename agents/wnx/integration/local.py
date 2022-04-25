@@ -230,7 +230,7 @@ def actual_output(write_config, wait_agent):
             p.terminate()
 
         # hammer kill of the process, terminate may be too long
-        subprocess.call("taskkill /F /IM check_mk_agent.exe")
+        subprocess.call(f'taskkill /F /FI "pid eq {p.pid}" /FI "IMAGENAME eq check_mk_agent.exe"')
 
         # Possibly wait for async processes to stop.
         wait_agent()

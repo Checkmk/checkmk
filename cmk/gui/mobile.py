@@ -13,8 +13,9 @@ import cmk.gui.view_utils
 import cmk.gui.views as views
 import cmk.gui.visuals as visuals
 from cmk.gui.config import active_config
+from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import display_options, html, request
+from cmk.gui.globals import html, request
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
 from cmk.gui.log import logger

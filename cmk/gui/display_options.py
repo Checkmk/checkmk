@@ -8,6 +8,8 @@ from __future__ import annotations
 
 from typing import Optional, TYPE_CHECKING
 
+from cmk.gui.ctx_stack import request_local_attr
+
 if TYPE_CHECKING:
     import cmk.gui.htmllib as htmllib
     from cmk.gui.http import Request
@@ -115,3 +117,6 @@ class DisplayOptions:
 
     def disabled(self, opt: str) -> bool:
         return opt not in self.options
+
+
+display_options: DisplayOptions = request_local_attr("display_options")

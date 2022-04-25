@@ -12,8 +12,9 @@ import cmk.utils.render as render
 
 import cmk.gui.watolib as watolib
 from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import FinalizeRequest, MKUserError
-from cmk.gui.globals import display_options, html, output_funnel, request, response, user_errors
+from cmk.gui.globals import html, output_funnel, request, response, user_errors
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user

@@ -20,7 +20,6 @@ from cmk.gui.ctx_stack import _lookup_app_object, request_local_attr
 if TYPE_CHECKING:
     # Import cycles
     from cmk.gui import htmllib, http
-    from cmk.gui.display_options import DisplayOptions
     from cmk.gui.plugins.openapi.restful_objects import Endpoint
     from cmk.gui.utils.output_funnel import OutputFunnel
     from cmk.gui.utils.theme import Theme
@@ -57,4 +56,3 @@ user_errors: UserErrors = request_local_attr("user_errors")
 html: htmllib.html = request_local_attr("html")
 timeout_manager: TimeoutManager = request_local_attr("timeout_manager")
 theme: Theme = request_local_attr("theme")
-display_options: DisplayOptions = request_local_attr("display_options")

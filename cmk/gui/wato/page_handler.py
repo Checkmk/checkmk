@@ -13,8 +13,9 @@ import cmk.utils.version as cmk_version
 import cmk.gui.pages
 from cmk.gui.breadcrumb import make_main_menu_breadcrumb
 from cmk.gui.config import active_config
+from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import FinalizeRequest, MKAuthException, MKGeneralException, MKUserError
-from cmk.gui.globals import display_options, html, request, user_errors
+from cmk.gui.globals import html, request, user_errors
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.plugins.wato.utils import mode_registry

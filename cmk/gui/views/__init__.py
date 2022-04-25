@@ -53,8 +53,9 @@ import cmk.gui.weblib as weblib
 from cmk.gui.bi import is_part_of_aggregation
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_topic_breadcrumb
 from cmk.gui.config import active_config, builtin_role_ids, register_post_config_load_hook
+from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import HTTPRedirect, MKGeneralException, MKInternalError, MKUserError
-from cmk.gui.globals import display_options, g, html, output_funnel, request, response, user_errors
+from cmk.gui.globals import g, html, output_funnel, request, response, user_errors
 
 # Needed for legacy (pre 1.6) plugins
 from cmk.gui.htmllib import HTML

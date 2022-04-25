@@ -34,8 +34,8 @@ _PERMISSIONS: List[Tuple[str, Callable[[Path], bool], List[str], List[str]]] = [
     (
         "agents/plugins/*",
         is_executable,
-        ["README", "mk_filestats.pyc", "mk_jolokia.pyc", "mk_docker.pyc", "Makefile"],
-        ["*.checksum"],
+        ["README", "Makefile"],
+        ["*.checksum", "*.pyc"],
     ),
     ("checks/*", is_not_executable, [], []),
     ("checkman/*", is_not_executable, [], []),

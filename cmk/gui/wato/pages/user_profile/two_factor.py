@@ -90,14 +90,15 @@ class UserTwoFactorOverview(ABCUserProfilePage):
             flash(_("Credential has been deleted"))
 
         if request.has_var("_backup_codes"):
-            display_codes, credentials["backup_codes"] = make_two_factor_backup_codes()
+            codes = make_two_factor_backup_codes()
+            credentials["backup_codes"] = [pwhashed for _password, pwhashed in codes]
             save_two_factor_credentials(user.id, credentials)
             flash(
                 _(
                     "The following backup codes have been generated: <ul>%s</ul> These codes are "
                     "displayed only now. Save them securely."
                 )
-                % "".join(f"<li><tt>{c}</tt></li>" for c in display_codes)
+                % "".join(f"<li><tt>{password}</tt></li>" for password, _pwhashed in codes)
             )
 
     def _page_menu(self, breadcrumb) -> PageMenu:

@@ -745,11 +745,10 @@ def test_disable_two_factor_authentication(user_id: UserId) -> None:
 
 
 def test_make_two_factor_backup_codes(user_id: UserId) -> None:
-    display_codes, store_codes = userdb.make_two_factor_backup_codes(rounds=5)
-    assert len(display_codes) == 10
-    assert len(store_codes) == 10
-    for index in range(10):
-        assert htpasswd.check_password(display_codes[index], store_codes[index])
+    codes = userdb.make_two_factor_backup_codes(rounds=5)
+    assert len(codes) == 10
+    for password, pwhashed in codes:
+        assert htpasswd.check_password(password, pwhashed)
 
 
 def test_is_two_factor_backup_code_valid_no_codes(user_id: UserId) -> None:
@@ -757,13 +756,14 @@ def test_is_two_factor_backup_code_valid_no_codes(user_id: UserId) -> None:
 
 
 def test_is_two_factor_backup_code_valid_matches(user_id: UserId) -> None:
-    display_codes, store_codes = userdb.make_two_factor_backup_codes(rounds=5)
+    codes = userdb.make_two_factor_backup_codes(rounds=5)
     credentials = userdb.load_two_factor_credentials(user_id)
-    credentials["backup_codes"] = store_codes
-    assert len(credentials["backup_codes"]) == 10
+    credentials["backup_codes"] = [pwhashed for _password, pwhashed in codes]
     userdb.save_two_factor_credentials(user_id, credentials)
+    assert len(credentials["backup_codes"]) == 10
 
-    assert userdb.is_two_factor_backup_code_valid(user_id, display_codes[3])
+    valid = userdb.is_two_factor_backup_code_valid(user_id, codes[3][0])
+    assert valid
 
     credentials = userdb.load_two_factor_credentials(user_id)
     assert len(credentials["backup_codes"]) == 9

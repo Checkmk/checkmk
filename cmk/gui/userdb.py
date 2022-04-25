@@ -53,7 +53,7 @@ from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
 from cmk.gui.log import logger as gui_logger
 from cmk.gui.logged_in import LoggedInUser
-from cmk.gui.plugins.userdb.htpasswd import Htpasswd
+from cmk.gui.plugins.userdb.htpasswd import check_password, hash_password, Htpasswd
 from cmk.gui.plugins.userdb.ldap_connector import MKLDAPException
 from cmk.gui.plugins.userdb.utils import (
     active_connections,
@@ -279,18 +279,15 @@ def save_two_factor_credentials(user_id: UserId, credentials: TwoFactorCredentia
     save_custom_attr(user_id, "two_factor_credentials", repr(credentials))
 
 
-def make_two_factor_backup_codes(*, rounds: Optional[int] = None) -> Tuple[List[str], List[str]]:
+def make_two_factor_backup_codes(*, rounds: Optional[int] = None) -> list[Tuple[str, str]]:
     """Creates a set of new two factor backup codes
 
     The codes are returned in plain form for displaying and in hashed+salted form for storage
     """
-    display_codes = []
-    store_codes = []
-    for _index in range(10):
-        code = utils.get_random_string(10)
-        display_codes.append(code)
-        store_codes.append(cmk.gui.plugins.userdb.htpasswd.hash_password(code, rounds=rounds))
-    return display_codes, store_codes
+    return [
+        (password, hash_password(password, rounds=rounds))
+        for password in (utils.get_random_string(10) for i in range(10))
+    ]
 
 
 def is_two_factor_backup_code_valid(user_id: UserId, code: str) -> bool:
@@ -298,7 +295,7 @@ def is_two_factor_backup_code_valid(user_id: UserId, code: str) -> bool:
     credentials = load_two_factor_credentials(user_id)
     matched_code = ""
     for stored_code in credentials["backup_codes"]:
-        if cmk.gui.plugins.userdb.htpasswd.check_password(code, stored_code):
+        if check_password(code, stored_code):
             matched_code = stored_code
             break
 
@@ -1147,7 +1144,7 @@ def create_cmk_automation_user(now: datetime) -> None:
         "alias": "Check_MK Automation - used for calling web services",
         "contactgroups": [],
         "automation_secret": secret,
-        "password": cmk.gui.plugins.userdb.htpasswd.hash_password(secret),
+        "password": hash_password(secret),
         "roles": ["admin"],
         "locked": False,
         "serial": 0,

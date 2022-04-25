@@ -23,7 +23,6 @@ A contact group object can have the following relations present in `links`:
 from cmk.utils import version
 
 from cmk.gui import watolib
-from cmk.gui.globals import endpoint
 from cmk.gui.http import Response
 from cmk.gui.logged_in import SuperUserContext
 from cmk.gui.plugins.openapi.endpoints.utils import (
@@ -39,6 +38,7 @@ from cmk.gui.plugins.openapi.endpoints.utils import (
 )
 from cmk.gui.plugins.openapi.restful_objects import (
     constructors,
+    endpoint,
     Endpoint,
     permissions,
     request_schemas,

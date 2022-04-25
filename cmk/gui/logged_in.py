@@ -5,11 +5,24 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Manage the currently logged in user"""
 
+from __future__ import annotations
+
 import contextlib
 import errno
 import os
 import time
-from typing import Any, ContextManager, Dict, Iterator, List, Optional, Set, Tuple, Union
+from typing import (
+    Any,
+    ContextManager,
+    Dict,
+    Iterator,
+    List,
+    Optional,
+    Set,
+    Tuple,
+    TYPE_CHECKING,
+    Union,
+)
 
 from livestatus import SiteConfigurations, SiteId
 
@@ -23,10 +36,16 @@ import cmk.gui.site_config as site_config
 from cmk.gui.config import active_config, builtin_role_ids
 from cmk.gui.ctx_stack import request_local_attr
 from cmk.gui.exceptions import MKAuthException
-from cmk.gui.globals import endpoint, request
+from cmk.gui.globals import request
 from cmk.gui.i18n import _
 from cmk.gui.utils.roles import may_with_roles, roles_of_user
 from cmk.gui.utils.transaction_manager import TransactionManager
+
+if TYPE_CHECKING:
+    # Cyclic import!
+    from cmk.gui.plugins.openapi.restful_objects import Endpoint
+
+endpoint: Endpoint = request_local_attr("endpoint")
 
 
 class LoggedInUser:

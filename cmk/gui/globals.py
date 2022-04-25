@@ -20,7 +20,6 @@ from cmk.gui.ctx_stack import _lookup_app_object, request_local_attr
 if TYPE_CHECKING:
     # Import cycles
     from cmk.gui import htmllib, http
-    from cmk.gui.plugins.openapi.restful_objects import Endpoint
     from cmk.gui.utils.timeout_manager import TimeoutManager
 
 
@@ -46,7 +45,6 @@ g: Any = LocalProxy(partial(_lookup_app_object, "g"))
 # From request context
 request: http.Request = request_local_attr("request")
 response: http.Response = request_local_attr("response")
-endpoint: Endpoint = request_local_attr("endpoint")
 
 html: htmllib.html = request_local_attr("html")
 timeout_manager: TimeoutManager = request_local_attr("timeout_manager")

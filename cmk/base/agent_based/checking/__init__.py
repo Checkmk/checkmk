@@ -51,7 +51,6 @@ import cmk.base.config as config
 import cmk.base.core
 import cmk.base.crash_reporting
 import cmk.base.item_state as item_state
-import cmk.base.license_usage as license_usage
 import cmk.base.plugin_contexts as plugin_contexts
 import cmk.base.utils
 from cmk.base.agent_based.data_provider import make_broker, ParsedSectionsBroker
@@ -173,7 +172,6 @@ def _execute_checkmk_checks(
     host_config = config_cache.get_host_config(hostname)
     exit_spec = host_config.exit_code_spec()
 
-    license_usage.try_history_update()
     services = config.resolve_service_dependencies(
         host_name=hostname,
         services=sorted(

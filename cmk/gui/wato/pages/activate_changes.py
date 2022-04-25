@@ -18,6 +18,7 @@ from six import ensure_str
 from livestatus import SiteId
 
 import cmk.utils.render as render
+from cmk.utils.license_usage import get_license_usage_report_validity, LicenseUsageReportValidity
 
 import cmk.gui.forms as forms
 import cmk.gui.watolib.changes as _changes
@@ -77,6 +78,7 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
         self._value: dict = {}
         super().__init__()
         super().load()
+        self._license_usage_report_validity = get_license_usage_report_validity()
 
     def title(self) -> str:
         return _("Activate pending changes")
@@ -182,7 +184,9 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
         if read_only.is_enabled() and not read_only.may_override():
             return False
 
-        return True
+        return (
+            self._license_usage_report_validity != LicenseUsageReportValidity.older_than_five_days
+        )
 
     def action(self) -> ActionResult:
         if request.var("_action") != "discard":
@@ -195,6 +199,9 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
             return None
 
         if not self.has_changes():
+            return None
+
+        if self._license_usage_report_validity == LicenseUsageReportValidity.older_than_five_days:
             return None
 
         # Now remove all currently pending changes by simply restoring the last automatically
@@ -271,6 +278,8 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
     def page(self) -> None:
         self._activation_msg()
         self._activation_form()
+
+        self._show_license_usage_report_validity()
 
         self._activation_status()
 
@@ -386,6 +395,23 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
                     html.write_text("<i>%s</i>" % _("All sites"))
                 else:
                     html.write_text(", ".join(sorted(change["affected_sites"])))
+
+    def _show_license_usage_report_validity(self) -> None:
+        if self._license_usage_report_validity == LicenseUsageReportValidity.older_than_five_days:
+            html.show_error(
+                _("Cannot activate changes: The license usage history is older than five days.")
+            )
+
+        elif (
+            self._license_usage_report_validity == LicenseUsageReportValidity.older_than_three_days
+        ):
+            html.show_warning(
+                _(
+                    "The license usage history was updated at least three days ago."
+                    "<br>Note: If it cannot be updated within five days activate changes"
+                    " will be blocked."
+                )
+            )
 
     def _activation_status(self):
         with table_element(

@@ -4,17 +4,24 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Mapping
+import time
+from typing import Any, Mapping, Tuple
 
 import pytest
 
+import livestatus
+
+import cmk.utils.license_usage as license_usage
 from cmk.utils.license_usage import (
+    _load_history_dump,
     _serialize_dump,
     LicenseUsageHistory,
     LicenseUsageHistoryDump,
     LicenseUsageHistoryDumpVersion,
+    update_license_usage,
 )
 from cmk.utils.license_usage.export import (
+    LicenseUsageExtensions,
     LicenseUsageSample,
     SubscriptionDetails,
     SubscriptionDetailsError,
@@ -22,6 +29,98 @@ from cmk.utils.license_usage.export import (
     SubscriptionDetailsLimitType,
     SubscriptionDetailsSource,
 )
+
+
+def test_update_license_usage(monkeypatch) -> None:
+    def _mock_livestatus(query: str) -> Tuple[int, int]:
+        if "GET hosts" in query:
+            return 10, 5
+        return 100, 10
+
+    monkeypatch.setattr(
+        license_usage,
+        "_get_stats_from_livestatus",
+        _mock_livestatus,
+    )
+
+    monkeypatch.setattr(
+        license_usage,
+        "_load_extensions",
+        lambda: LicenseUsageExtensions(ntop=False),
+    )
+
+    monkeypatch.setattr(license_usage, "_get_next_run_ts", lambda fp: 0)
+
+    assert update_license_usage() == 0
+    assert len(_load_history_dump().history) == 1
+
+
+def test_update_license_usage_livestatus_socket_error(monkeypatch) -> None:
+    def _mock_livestatus(query: str) -> Tuple[int, int]:
+        raise livestatus.MKLivestatusSocketError()
+
+    monkeypatch.setattr(
+        license_usage,
+        "_get_stats_from_livestatus",
+        _mock_livestatus,
+    )
+
+    monkeypatch.setattr(
+        license_usage,
+        "_load_extensions",
+        lambda: LicenseUsageExtensions(ntop=False),
+    )
+
+    monkeypatch.setattr(license_usage, "_get_next_run_ts", lambda fp: 0)
+
+    assert update_license_usage() == 1
+    assert len(_load_history_dump().history) == 0
+
+
+def test_update_license_usage_livestatus_not_found_error(monkeypatch) -> None:
+    def _mock_livestatus(query: str) -> Tuple[int, int]:
+        raise livestatus.MKLivestatusNotFoundError()
+
+    monkeypatch.setattr(
+        license_usage,
+        "_get_stats_from_livestatus",
+        _mock_livestatus,
+    )
+
+    monkeypatch.setattr(
+        license_usage,
+        "_load_extensions",
+        lambda: LicenseUsageExtensions(ntop=False),
+    )
+
+    monkeypatch.setattr(license_usage, "_get_next_run_ts", lambda fp: 0)
+
+    assert update_license_usage() == 1
+    assert len(_load_history_dump().history) == 0
+
+
+def test_update_license_usage_next_run_ts_not_reached(monkeypatch) -> None:
+    def _mock_livestatus(query: str) -> Tuple[int, int]:
+        if "GET hosts" in query:
+            return 10, 5
+        return 100, 10
+
+    monkeypatch.setattr(
+        license_usage,
+        "_get_stats_from_livestatus",
+        _mock_livestatus,
+    )
+
+    monkeypatch.setattr(
+        license_usage,
+        "_load_extensions",
+        lambda: LicenseUsageExtensions(ntop=False),
+    )
+
+    monkeypatch.setattr(license_usage, "_get_next_run_ts", lambda fp: 2 * time.time())
+
+    assert update_license_usage() == 0
+    assert len(_load_history_dump().history) == 0
 
 
 def test_serialize_history_dump() -> None:

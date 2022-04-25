@@ -26,18 +26,12 @@ import cmk.base.automations
 import cmk.base.automations.check_mk
 import cmk.base.config as config
 import cmk.base.inventory_plugins
-import cmk.base.license_usage as license_usage
 import cmk.base.modes
 import cmk.base.modes.check_mk
 from cmk.base.sources import Source
 from cmk.base.sources.agent import AgentSource
 from cmk.base.sources.snmp import SNMPSource
 from cmk.base.sources.tcp import TCPSource
-
-
-@pytest.fixture(autouse=True)
-def mock_license_usage(monkeypatch):
-    monkeypatch.setattr(license_usage, "try_history_update", lambda: None)
 
 
 @pytest.fixture(name="scenario")

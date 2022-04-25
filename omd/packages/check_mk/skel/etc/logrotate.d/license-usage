@@ -1,0 +1,8 @@
+###ROOT###/var/log/license-usage.log {
+	missingok
+	rotate 7
+	compress
+	delaycompress
+	notifempty
+	create 640 ###SITE### ###SITE###
+}

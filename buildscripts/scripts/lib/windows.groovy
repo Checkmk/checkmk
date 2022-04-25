@@ -26,6 +26,7 @@ def build(Map args) {
                     ARTIFACTS = "check_mk_agent-64.exe,check_mk_agent.exe,check_mk_agent.msi,check_mk.user.yml,check_mk.yml"
                 } else if (args.TARGET == "test_integration") {
                     bat 'cd agents\\wnx && call call_integration_tests.cmd'
+                    ARTIFACTS = "integration_tests_results.zip"
                 } else {
                     throw new Exception(args.TARGET + " is not known!")
                 }

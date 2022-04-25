@@ -130,3 +130,22 @@ def test_chrony_last_sync():
             summary="Time since last sync: 31 minutes 0 seconds (warn/crit at 30 minutes 0 seconds/1 hour 0 minutes)",
         ),
     ]
+
+
+def test_chrony_negative_sync_time():
+    assert list(
+        chrony.check_chrony(
+            {"ntp_levels": (None, 0.12, 0.42), "alert_delay": (1800, 3600)},
+            {
+                "last_sync": -200,
+                "address": "(moo)",
+            },
+            None,
+        )
+    ) == [
+        Result(state=state.OK, notice="NTP servers: (moo)\nReference ID: None"),
+        Result(
+            state=state.OK,
+            summary="Last synchronization appears to be 3 minutes 20 seconds in the future (check your system time)",
+        ),
+    ]

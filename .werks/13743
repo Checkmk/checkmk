@@ -1,0 +1,17 @@
+Title: Crash check chrony: Cannot render negative timespan
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1650874933
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0i1
+
+When the system time is incorrect the time since last synchronization
+can be in the future.
+This caused the chrony check to crash when rendering
+the time since last synchronization.
+
+Now the absolute value is displayed and a note to check the system time is added.

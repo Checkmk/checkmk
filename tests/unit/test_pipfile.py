@@ -7,11 +7,11 @@
 import ast
 import json
 import logging
-import typing as t
 import warnings
 from functools import lru_cache
 from itertools import chain, permutations
 from pathlib import Path
+from typing import Iterable, NewType
 
 import isort
 import pytest
@@ -27,8 +27,8 @@ IGNORED_LIBS |= set(["__future__", "typing_extensions"])  # other builtin stuff
 PACKAGE_REPLACEMENTS = ".-_"
 
 
-PackageName = t.NewType("PackageName", str)  # Name in Pip(file)
-ImportName = t.NewType("ImportName", str)  # Name in Source (import ...)
+PackageName = NewType("PackageName", str)  # Name in Pip(file)
+ImportName = NewType("ImportName", str)  # Name in Source (import ...)
 
 
 @pytest.fixture(name="loaded_pipfile")
@@ -67,7 +67,7 @@ def test_pipfile_syntax(loaded_pipfile) -> None:
     )
 
 
-def iter_sourcefiles(basepath: Path) -> t.Iterable[Path]:
+def iter_sourcefiles(basepath: Path) -> Iterable[Path]:
     """iter over the repo and return all source files
 
     this could have been a easy glob, but we do not care for hidden files here:
@@ -77,23 +77,18 @@ def iter_sourcefiles(basepath: Path) -> t.Iterable[Path]:
             continue
         if sub_path.is_file() and sub_path.name.endswith(".py"):
             yield sub_path
-        if sub_path.is_dir():
+        # Given the fact that the googletest directory contains a hash, it is
+        # easier to filter out here than in prune_build_artifacts later.
+        if sub_path.is_dir() and not sub_path.name.startswith("googletest-"):
             yield from iter_sourcefiles(sub_path)
 
 
-def prune_build_artifacts(basepath: Path, paths: t.Iterable[Path]) -> t.Iterable[Path]:
-    # TODO: Change to p.is_relative_to() with Python 3.9
-    def is_relative_to(p: Path, base_dir: Path) -> bool:
-        try:
-            p.relative_to(base_dir)
-            return True
-        except ValueError:
-            return False
-
-    yield from (p for p in paths if not is_relative_to(p, basepath.joinpath("omd/build")))
+def prune_build_artifacts(basepath: Path, paths: Iterable[Path]) -> Iterable[Path]:
+    omd_build = basepath / "omd" / "build"
+    yield from (p for p in paths if not p.is_relative_to(omd_build))
 
 
-def scan_for_imports(root_node: ast.Module) -> t.Iterable[ImportName]:
+def scan_for_imports(root_node: ast.Module) -> Iterable[ImportName]:
     """walk the tree and yield all imported packages"""
     for node in ast.walk(root_node):
         if isinstance(node, ast.Import):
@@ -123,7 +118,7 @@ def toplevel_importname(name: ImportName) -> ImportName:
         return name
 
 
-def prune_imports(import_set: t.Set[ImportName]) -> t.Set[ImportName]:
+def prune_imports(import_set: set[ImportName]) -> set[ImportName]:
     """throw out all our own libraries and use only top-level names"""
     return {
         top_level_lib
@@ -134,19 +129,17 @@ def prune_imports(import_set: t.Set[ImportName]) -> t.Set[ImportName]:
 
 
 @lru_cache(maxsize=None)
-def get_imported_libs(repopath: Path) -> t.Set[ImportName]:
+def get_imported_libs(repopath: Path) -> set[ImportName]:
     """Scan the repo for import statements, return only non local ones"""
     logger = logging.getLogger()
 
-    imports: t.Set[ImportName] = set()
+    imports: set[ImportName] = set()
     for source_path in prune_build_artifacts(repopath, iter_sourcefiles(repopath)):
-        if source_path.name.startswith("."):
-            continue
-
         # We don't care about warnings from 3rd party packages
         with source_path.open("rb") as source_file, warnings.catch_warnings():
             try:
-                root = ast.parse(source_file.read(), source_path)  # type: ignore
+                # NOTE: This takes quite some time: parse: 5s, scan: 3.3s
+                root = ast.parse(source_file.read(), str(source_path))
                 imports.update(scan_for_imports(root))
             except SyntaxError as e:
                 # We have various py2 scripts which raise SyntaxErrors.
@@ -169,7 +162,7 @@ def packagename_for(path: Path) -> PackageName:
     raise NotImplementedError("No 'Name:' in METADATA file")
 
 
-def importnames_for(packagename: PackageName, path: Path) -> t.List[ImportName]:
+def importnames_for(packagename: PackageName, path: Path) -> list[ImportName]:
     """return a list of importable libs which belong to the package"""
     top_level_txt_path = path.with_name("top_level.txt")
     if not top_level_txt_path.is_file():
@@ -179,7 +172,7 @@ def importnames_for(packagename: PackageName, path: Path) -> t.List[ImportName]:
         return [ImportName(x.strip()) for x in top_level_file.readlines() if x.strip()]
 
 
-def packagenames_to_libnames(repopath: Path) -> t.Dict[PackageName, t.List[ImportName]]:
+def packagenames_to_libnames(repopath: Path) -> dict[PackageName, list[ImportName]]:
     """scan the site-packages folder for package infos"""
     return {
         packagename: importnames_for(packagename, metadata_path)
@@ -189,7 +182,7 @@ def packagenames_to_libnames(repopath: Path) -> t.Dict[PackageName, t.List[Impor
 
 
 @lru_cache(maxsize=None)
-def get_pipfile_libs(repopath: Path) -> t.Dict[PackageName, t.List[ImportName]]:
+def get_pipfile_libs(repopath: Path) -> dict[PackageName, list[ImportName]]:
     """Collect info from Pipfile with additions from site-packages
 
     The dict has as key the Pipfile package name and as value a list with all import names
@@ -198,7 +191,7 @@ def get_pipfile_libs(repopath: Path) -> t.Dict[PackageName, t.List[ImportName]]:
     packagenames may differ from the import names,
     also the site-package folder can be different."""
     site_packages = packagenames_to_libnames(repopath)
-    pipfile_to_libs: t.Dict[PackageName, t.List[ImportName]] = {}
+    pipfile_to_libs: dict[PackageName, list[ImportName]] = {}
 
     parsed_pipfile = Pipfile.load(filename=repopath / "Pipfile")
     for name, details in parsed_pipfile.data["default"].items():
@@ -220,7 +213,7 @@ def get_pipfile_libs(repopath: Path) -> t.Dict[PackageName, t.List[ImportName]]:
     return pipfile_to_libs
 
 
-def get_unused_dependencies() -> t.Iterable[PackageName]:
+def get_unused_dependencies() -> Iterable[PackageName]:
     """Iterate over declared dependencies which are not imported"""
     imported_libs = get_imported_libs(Path(repo_path()))
     pipfile_libs = get_pipfile_libs(Path(repo_path()))
@@ -229,7 +222,7 @@ def get_unused_dependencies() -> t.Iterable[PackageName]:
             yield packagename
 
 
-def get_undeclared_dependencies() -> t.Iterable[ImportName]:
+def get_undeclared_dependencies() -> Iterable[ImportName]:
     """Iterate over imported dependencies which could not be found in the Pipfile"""
     imported_libs = get_imported_libs(Path(repo_path()) / "cmk")
     pipfile_libs = get_pipfile_libs(Path(repo_path()))
@@ -290,18 +283,10 @@ CEE_UNUSED_PACKAGES = [
 ]
 
 
-@pytest.mark.skipif(not is_enterprise_repo(), reason="Test is only for CEE")
-def test_dependencies_are_used_cee() -> None:
-    assert sorted(get_unused_dependencies()) == CEE_UNUSED_PACKAGES
-
-
-@pytest.mark.skipif(is_enterprise_repo(), reason="Test is only for CRE")
-def test_dependencies_are_used_cre() -> None:
-    unused_packages = CEE_UNUSED_PACKAGES + [
-        "PyPDF3",  # is only used in CEE
-        "numpy",  # is only used in CEE
-        "roman",  # is only used in CEE
-    ]
+def test_dependencies_are_used() -> None:
+    unused_packages = CEE_UNUSED_PACKAGES
+    if not is_enterprise_repo():
+        unused_packages += ["PyPDF3", "numpy", "roman"]
     assert sorted(get_unused_dependencies()) == sorted(unused_packages)
 
 

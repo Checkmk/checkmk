@@ -2972,9 +2972,6 @@ class HostConfig:
             "severity_vanished": 0,
         }
 
-    def add_active_checkmk_check(self) -> bool:
-        return not self.is_ping_host
-
     def add_service_discovery_check(
         self, params: Optional[Dict[str, Any]], service_discovery_name: str
     ) -> bool:

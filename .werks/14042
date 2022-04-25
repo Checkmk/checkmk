@@ -1,0 +1,13 @@
+Title: mk_oracle.ps1: $MK_CONFDIR and $MK_TEMPDIR defaults changed
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1650889203
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p24
+
+$MK_CONFDIR and $MK_TEMPDIR now default to paths of the Windows agent
+if they aren't set.

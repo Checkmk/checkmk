@@ -44,9 +44,10 @@ import cmk.gui.pages
 import cmk.gui.sites as sites
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import html, request
+from cmk.gui.globals import html
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib import foldable_container, HTML
+from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.plugins.views.utils import (
     ABCDataSource,

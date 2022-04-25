@@ -15,7 +15,7 @@ import cmk.gui.login as login
 import cmk.gui.userdb as userdb
 from cmk.gui.config import load_config
 from cmk.gui.exceptions import MKAuthException
-from cmk.gui.globals import request
+from cmk.gui.http import request
 from cmk.gui.logged_in import user
 from cmk.gui.userdb import session
 from cmk.gui.utils.script_helpers import application_and_request_context

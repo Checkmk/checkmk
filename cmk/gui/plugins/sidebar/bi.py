@@ -7,9 +7,10 @@
 from typing import Any, Dict, Tuple
 
 import cmk.gui.bi as bi
-from cmk.gui.globals import html, request
+from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
 from cmk.gui.htmllib.foldable_container import foldable_container
+from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.plugins.sidebar.utils import bulletlink, SidebarSnapin, snapin_registry
 from cmk.gui.utils.urls import makeuri_contextless, urlencode

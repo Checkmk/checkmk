@@ -12,7 +12,7 @@ import cmk.utils.version as cmk_version
 from cmk.utils.structured_data import StructuredDataNode
 
 from cmk.gui import sites
-from cmk.gui.globals import request
+from cmk.gui.http import request
 from cmk.gui.plugins.views.utils import painter_registry
 from cmk.gui.type_defs import PainterSpec
 from cmk.gui.utils.html import HTML

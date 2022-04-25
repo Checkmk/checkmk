@@ -8,7 +8,7 @@ import copy
 import time
 
 from cmk.gui.config import active_config
-from cmk.gui.globals import request, response
+from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.plugins.metrics import html_render
 from cmk.gui.plugins.metrics.valuespecs import vs_graph_render_options

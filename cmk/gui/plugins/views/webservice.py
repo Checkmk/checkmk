@@ -9,7 +9,7 @@ import time
 from typing import Dict, List, TYPE_CHECKING, Union
 
 import cmk.gui.utils.escaping as escaping
-from cmk.gui.globals import request, response
+from cmk.gui.http import request, response
 from cmk.gui.plugins.views.utils import (
     ExportCellContent,
     Exporter,

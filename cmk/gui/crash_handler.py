@@ -5,7 +5,8 @@ from cmk.utils.site import omd_site
 
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.globals import html, request, response
+from cmk.gui.globals import html
+from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user

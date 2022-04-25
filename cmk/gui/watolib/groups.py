@@ -17,7 +17,7 @@ import cmk.gui.hooks as hooks
 import cmk.gui.plugins.userdb.utils as userdb_utils
 import cmk.gui.userdb as userdb
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import html, request
+from cmk.gui.globals import html
 from cmk.gui.groups import (
     AllGroupSpecs,
     GroupName,
@@ -27,6 +27,7 @@ from cmk.gui.groups import (
     load_contact_group_information,
     load_group_information,
 )
+from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.plugins.watolib.utils import config_variable_registry, wato_fileheader

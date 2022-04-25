@@ -11,8 +11,8 @@ import cmk.utils.store as store
 
 import cmk.gui.pagetypes as pagetypes
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import request
 from cmk.gui.htmllib.foldable_container import foldable_container
+from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.plugins.sidebar.utils import (

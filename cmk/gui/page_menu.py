@@ -20,7 +20,8 @@ from typing import Dict, Iterator, List, Optional, Tuple, Union
 
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.globals import html, request
+from cmk.gui.globals import html
+from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.type_defs import Icon

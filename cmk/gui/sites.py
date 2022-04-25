@@ -25,7 +25,7 @@ from cmk.utils.version import is_managed_edition
 
 from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import g
-from cmk.gui.globals import request
+from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import LoggedInUser

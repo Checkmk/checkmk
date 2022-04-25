@@ -13,7 +13,8 @@ import cmk.utils.werks
 import cmk.gui.message as message
 import cmk.gui.pages
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
-from cmk.gui.globals import html, request
+from cmk.gui.globals import html
+from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import mega_menu_registry

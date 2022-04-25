@@ -33,7 +33,7 @@ import cmk.gui.watolib as watolib
 import cmk.gui.weblib as weblib
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKGeneralException, MKUserError
-from cmk.gui.globals import html, request
+from cmk.gui.globals import html
 from cmk.gui.groups import (
     GroupSpecs,
     load_contact_group_information,
@@ -42,6 +42,7 @@ from cmk.gui.groups import (
 )
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib import foldable_container, HTML
+from cmk.gui.http import request
 from cmk.gui.i18n import _, _u
 from cmk.gui.logged_in import user
 from cmk.gui.pages import page_registry

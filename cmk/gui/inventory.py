@@ -40,8 +40,9 @@ import cmk.gui.sites as sites
 import cmk.gui.userdb as userdb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKAuthException, MKUserError
-from cmk.gui.globals import html, request, response
+from cmk.gui.globals import html
 from cmk.gui.hooks import request_memoize
+from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.type_defs import Row

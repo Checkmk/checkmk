@@ -28,7 +28,7 @@ import cmk.utils.paths
 import cmk.utils.version as cmk_version
 
 from cmk.gui.exceptions import MKInternalError
-from cmk.gui.globals import response
+from cmk.gui.http import response
 from cmk.gui.i18n import _
 
 RawIconColumn = Tuple[str, Optional[str]]

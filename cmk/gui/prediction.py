@@ -17,7 +17,8 @@ from cmk.utils.type_defs import HostName
 import cmk.gui.pages
 import cmk.gui.sites as sites
 from cmk.gui.exceptions import MKGeneralException
-from cmk.gui.globals import html, request
+from cmk.gui.globals import html
+from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.plugins.views.utils import make_service_breadcrumb
 

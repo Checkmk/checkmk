@@ -9,7 +9,7 @@ import re
 import cmk.gui.pages
 import cmk.gui.utils as utils
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import request, response
+from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 

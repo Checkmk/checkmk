@@ -66,9 +66,10 @@ from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_topic_breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKGeneralException
-from cmk.gui.globals import html, request, response
+from cmk.gui.globals import html
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib import HTML
+from cmk.gui.http import request, response
 from cmk.gui.i18n import _, _u, ungettext
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user

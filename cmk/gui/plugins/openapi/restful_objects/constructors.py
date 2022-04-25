@@ -16,8 +16,7 @@ from werkzeug.datastructures import ETags
 from cmk.utils.site import omd_site
 
 from cmk.gui.config import active_config
-from cmk.gui.globals import request
-from cmk.gui.http import Response
+from cmk.gui.http import request, Response
 from cmk.gui.plugins.openapi.restful_objects.endpoint_registry import ENDPOINT_REGISTRY
 from cmk.gui.plugins.openapi.restful_objects.type_defs import (
     CollectionItem,

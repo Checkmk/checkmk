@@ -19,7 +19,7 @@ from cmk.utils.type_defs import HostAddress, HostName
 
 from cmk.gui import userdb
 from cmk.gui.exceptions import MKGeneralException
-from cmk.gui.globals import request
+from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import UserContext

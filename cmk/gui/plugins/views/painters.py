@@ -21,9 +21,10 @@ import cmk.gui.metrics as metrics
 import cmk.gui.sites as sites
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.config import active_config
-from cmk.gui.globals import html, request, response
+from cmk.gui.globals import html
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib import HTML
+from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.plugins.metrics.utils import render_color_icon, TranslatedMetrics
 from cmk.gui.plugins.views.graphs import cmk_time_graph_params, paint_time_graph_cmk

@@ -28,7 +28,7 @@ from cmk.gui.config import (
     prepare_raw_site_config,
 )
 from cmk.gui.exceptions import MKGeneralException, MKUserError
-from cmk.gui.globals import request
+from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.plugins.watolib.utils import ABCConfigDomain
 from cmk.gui.site_config import has_wato_slave_sites, is_wato_slave_site, site_is_local

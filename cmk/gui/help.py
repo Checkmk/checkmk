@@ -7,7 +7,7 @@
 import json
 
 import cmk.gui.pages
-from cmk.gui.globals import request, response
+from cmk.gui.http import request, response
 from cmk.gui.logged_in import user
 
 

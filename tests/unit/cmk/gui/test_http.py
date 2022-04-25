@@ -15,8 +15,8 @@ from werkzeug.test import create_environ
 import cmk.gui.http as http
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.globals import html
-from cmk.gui.globals import request as global_request
-from cmk.gui.globals import response
+from cmk.gui.http import request as global_request
+from cmk.gui.http import response
 from cmk.gui.utils.script_helpers import application_and_request_context
 
 RequestContextFixture = Iterator[None]

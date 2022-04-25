@@ -6,7 +6,7 @@
 
 from cmk.gui.config import active_config
 from cmk.gui.display_options import display_options
-from cmk.gui.globals import request, response
+from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.plugins.views.icons.utils import Icon, icon_and_action_registry

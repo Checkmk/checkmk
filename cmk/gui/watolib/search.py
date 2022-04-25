@@ -36,8 +36,8 @@ from cmk.utils.redis import get_redis_client
 from cmk.gui.background_job import BackgroundJobAlreadyRunning, BackgroundProcessInterface
 from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import MKAuthException
-from cmk.gui.globals import request
 from cmk.gui.gui_background_job import GUIBackgroundJob, job_registry
+from cmk.gui.http import request
 from cmk.gui.i18n import _, get_current_language, get_languages, localize
 from cmk.gui.logged_in import SuperUserContext, user
 from cmk.gui.pages import get_page_handler

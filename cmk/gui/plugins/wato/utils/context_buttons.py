@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import cmk.gui.watolib as watolib
-from cmk.gui.globals import request
+from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.page_menu import make_simple_link, PageMenuEntry
 from cmk.gui.utils.urls import makeuri_contextless

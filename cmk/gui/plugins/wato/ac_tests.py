@@ -24,7 +24,7 @@ import cmk.gui.userdb as userdb
 import cmk.gui.utils
 import cmk.gui.watolib as watolib
 from cmk.gui.exceptions import MKGeneralException
-from cmk.gui.globals import request
+from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     ac_test_registry,

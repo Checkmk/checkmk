@@ -6,7 +6,7 @@
 
 import logging
 
-from cmk.gui.globals import request
+from cmk.gui.http import request
 
 
 class PrependURLFilter(logging.Filter):

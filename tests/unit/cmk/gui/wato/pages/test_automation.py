@@ -14,7 +14,7 @@ import cmk.utils.version as cmk_version
 from cmk.automations.results import ABCAutomationResult, ResultTypeRegistry
 
 from cmk.gui.exceptions import MKGeneralException
-from cmk.gui.globals import request, response
+from cmk.gui.http import request, response
 from cmk.gui.wato.pages import automation
 from cmk.gui.watolib.utils import mk_repr
 

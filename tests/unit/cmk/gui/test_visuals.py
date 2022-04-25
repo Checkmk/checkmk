@@ -15,7 +15,7 @@ import cmk.gui.plugins.visuals.filters
 import cmk.gui.plugins.visuals.utils as utils
 import cmk.gui.views
 import cmk.gui.visuals as visuals
-from cmk.gui.globals import request
+from cmk.gui.http import request
 
 
 def test_get_filter():

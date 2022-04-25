@@ -28,9 +28,10 @@ import cmk.gui.watolib as watolib
 from cmk.gui import sites
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKConfigError
-from cmk.gui.globals import html, request
+from cmk.gui.globals import html
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib import HTML
+from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
 from cmk.gui.permissions import (

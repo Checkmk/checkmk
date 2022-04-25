@@ -33,8 +33,8 @@ from cmk.gui.exceptions import (
     MKUnauthenticatedException,
     MKUserError,
 )
-from cmk.gui.globals import html, request, response
-from cmk.gui.http import Response
+from cmk.gui.globals import html
+from cmk.gui.http import request, response, Response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import LoggedInNobody

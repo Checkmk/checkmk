@@ -56,10 +56,11 @@ from cmk.gui.config import active_config, builtin_role_ids, register_post_config
 from cmk.gui.ctx_stack import g
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import HTTPRedirect, MKGeneralException, MKInternalError, MKUserError
-from cmk.gui.globals import html, request, response
+from cmk.gui.globals import html
 
 # Needed for legacy (pre 1.6) plugins
 from cmk.gui.htmllib import HTML
+from cmk.gui.http import request, response
 from cmk.gui.i18n import _, _u
 from cmk.gui.inventory import (
     get_short_inventory_filepath,

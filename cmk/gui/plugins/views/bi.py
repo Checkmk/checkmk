@@ -14,8 +14,9 @@ from cmk.utils.defines import short_service_state_name
 
 import cmk.gui.bi as bi
 import cmk.gui.utils.escaping as escaping
-from cmk.gui.globals import html, request
+from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
+from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.plugins.views.utils import (
     ABCDataSource,

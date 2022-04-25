@@ -34,7 +34,7 @@ import cmk.gui.utils.escaping as escaping
 from cmk.gui.background_job import BackgroundProcessInterface
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKGeneralException, MKUserError
-from cmk.gui.globals import request
+from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.site_config import get_site_config

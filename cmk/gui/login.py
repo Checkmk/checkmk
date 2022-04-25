@@ -36,9 +36,9 @@ from cmk.gui.exceptions import (
     MKInternalError,
     MKUserError,
 )
-from cmk.gui.globals import html, request, response
+from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
-from cmk.gui.http import Request
+from cmk.gui.http import request, Request, response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user, UserContext

@@ -5,7 +5,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import cmk.gui.notifications as notifications
-from cmk.gui.globals import html, request
+from cmk.gui.globals import html
+from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.plugins.dashboard.utils import Dashlet, dashlet_registry
 from cmk.gui.utils.urls import makeuri_contextless

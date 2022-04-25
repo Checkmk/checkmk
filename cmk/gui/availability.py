@@ -38,7 +38,7 @@ import cmk.gui.sites as sites
 import cmk.gui.utils as utils
 from cmk.gui.bi import BIManager
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import request
+from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user

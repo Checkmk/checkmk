@@ -22,7 +22,7 @@ import cmk.gui.watolib
 import cmk.gui.watolib.read_only
 from cmk.gui.config import active_config, builtin_role_ids
 from cmk.gui.exceptions import MKAuthException, MKException, MKUserError
-from cmk.gui.globals import request, response
+from cmk.gui.http import request, response
 from cmk.gui.i18n import _, _l
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user

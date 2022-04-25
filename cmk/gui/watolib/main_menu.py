@@ -10,7 +10,7 @@ from typing import Iterable, NamedTuple, Optional, Type, Union
 import cmk.utils.plugin_registry
 
 from cmk.gui.breadcrumb import BreadcrumbItem
-from cmk.gui.globals import request
+from cmk.gui.http import request
 from cmk.gui.logged_in import user
 from cmk.gui.type_defs import Icon
 from cmk.gui.utils.speaklater import LazyString

@@ -10,7 +10,8 @@ from typing import Any, Optional
 
 from cmk.gui import forms, userdb
 from cmk.gui.exceptions import FinalizeRequest
-from cmk.gui.globals import html, request, response
+from cmk.gui.globals import html
+from cmk.gui.http import request, response
 from cmk.gui.i18n import _, _u, localize
 from cmk.gui.logged_in import user
 from cmk.gui.pages import page_registry

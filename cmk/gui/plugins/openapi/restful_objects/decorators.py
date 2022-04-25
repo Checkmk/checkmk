@@ -47,7 +47,7 @@ from cmk.utils import store
 from cmk.gui import fields
 from cmk.gui import http as cmk_http
 from cmk.gui.config import active_config
-from cmk.gui.globals import request
+from cmk.gui.http import request
 from cmk.gui.permissions import permission_registry
 from cmk.gui.plugins.openapi.restful_objects import permissions
 from cmk.gui.plugins.openapi.restful_objects.code_examples import code_samples

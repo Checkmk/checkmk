@@ -24,7 +24,7 @@ import cmk.gui.utils
 import cmk.gui.watolib as watolib
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKAuthException, MKGeneralException
-from cmk.gui.globals import request, response
+from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import SuperUserContext, user

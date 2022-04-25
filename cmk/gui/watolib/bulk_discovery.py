@@ -15,7 +15,7 @@ from cmk.automations.results import DiscoveryResult as AutomationDiscoveryResult
 
 import cmk.gui.gui_background_job as gui_background_job
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import request
+from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import Checkbox, Dictionary, DropdownChoice, Integer, Tuple, ValueSpec
 from cmk.gui.watolib.changes import add_service_change

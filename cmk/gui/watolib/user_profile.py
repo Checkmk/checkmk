@@ -16,7 +16,7 @@ import cmk.gui.sites as sites
 import cmk.gui.userdb as userdb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKGeneralException, RequestTimeout
-from cmk.gui.globals import request
+from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.site_config import get_login_slave_sites, get_site_config, is_wato_slave_site
 from cmk.gui.utils.urls import urlencode_vars

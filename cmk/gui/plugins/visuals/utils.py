@@ -35,7 +35,8 @@ import cmk.utils.plugin_registry
 import cmk.gui.query_filters as query_filters
 import cmk.gui.sites as sites
 from cmk.gui.exceptions import MKGeneralException, MKUserError
-from cmk.gui.globals import html, request
+from cmk.gui.globals import html
+from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.page_menu import PageMenuEntry
 from cmk.gui.site_config import get_site_config

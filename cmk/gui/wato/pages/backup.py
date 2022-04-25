@@ -12,7 +12,7 @@ from cmk.utils.site import omd_site
 
 import cmk.gui.backup as backup
 import cmk.gui.watolib as watolib
-from cmk.gui.globals import request
+from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.pages import AjaxPage, page_registry

@@ -14,7 +14,8 @@ from typing import Type, Union
 import cmk.utils.plugin_registry
 
 from cmk.gui.exceptions import MKGeneralException
-from cmk.gui.globals import html, request
+from cmk.gui.globals import html
+from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.type_defs import HTTPVariables
 from cmk.gui.utils.html import HTML

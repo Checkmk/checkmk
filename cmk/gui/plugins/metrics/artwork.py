@@ -12,7 +12,7 @@ from typing import Callable, Iterable, List, Optional, Tuple, Union
 
 import cmk.utils.render
 
-from cmk.gui.globals import request
+from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.plugins.metrics import rrd_fetch, timeseries

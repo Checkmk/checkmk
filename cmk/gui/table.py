@@ -27,8 +27,9 @@ import cmk.gui.utils as utils
 import cmk.gui.utils.escaping as escaping
 import cmk.gui.weblib as weblib
 from cmk.gui.config import active_config
-from cmk.gui.globals import html, request, response
+from cmk.gui.globals import html
 from cmk.gui.htmllib import foldable_container, HTML
+from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.utils.escaping import escape_to_html_permissive

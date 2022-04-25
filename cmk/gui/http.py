@@ -16,6 +16,7 @@ from six import ensure_str
 from werkzeug.utils import get_content_type
 
 import cmk.gui.utils as utils
+from cmk.gui.ctx_stack import request_local_attr
 from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.i18n import _
 
@@ -431,7 +432,7 @@ class Request(
             python_request = self.var("request", "{}")
             assert python_request is not None
             try:
-                request = ast.literal_eval(python_request)
+                request_ = ast.literal_eval(python_request)
             except (SyntaxError, ValueError) as e:
                 raise MKUserError(
                     "request", _("Failed to parse Python request: '%s': %s") % (python_request, e)
@@ -440,8 +441,8 @@ class Request(
             json_request = self.var("request", "{}")
             assert json_request is not None
             try:
-                request = json.loads(json_request)
-                request["request_format"] = "json"
+                request_ = json.loads(json_request)
+                request_["request_format"] = "json"
             except ValueError as e:  # Python3: json.JSONDecodeError
                 raise MKUserError(
                     "request", _("Failed to parse JSON request: '%s': %s") % (json_request, e)
@@ -449,9 +450,9 @@ class Request(
 
         for key, val in self.itervars():
             if key not in ["request", "output_format"] + exclude_vars:
-                request[key] = val
+                request_[key] = val
 
-        return request
+        return request_
 
 
 class Response(werkzeug.Response):
@@ -465,3 +466,8 @@ class Response(werkzeug.Response):
 
     def set_content_type(self, mime_type: str) -> None:
         self.headers["Content-type"] = get_content_type(mime_type, self.charset)
+
+
+# From request context
+request: Request = request_local_attr("request")
+response: Response = request_local_attr("response")

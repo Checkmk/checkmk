@@ -15,19 +15,10 @@ from cmk.gui.ctx_stack import request_local_attr
 
 if TYPE_CHECKING:
     # Import cycles
-    from cmk.gui import htmllib, http
+    from cmk.gui import htmllib
 
 
 ######################################################################
 # TODO: This should live somewhere else...
-
-# NOTE: All types FOO below are actually a Union[Foo, LocalProxy], but
-# LocalProxy is meant as a transparent proxy, so we leave it out to de-confuse
-# mypy. LocalProxy uses a lot of reflection magic, which can't be understood by
-# tools in general.
-
-# From request context
-request: http.Request = request_local_attr("request")
-response: http.Response = request_local_attr("response")
 
 html: htmllib.html = request_local_attr("html")

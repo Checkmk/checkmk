@@ -2178,8 +2178,17 @@ if ($the_count -gt 0) {
           $inst.name = $inst.name.replace("OracleService", "")
           $inst_name = $inst.name.replace("OracleASMService", "")
           $ORACLE_SID = $inst_name
-          $key = 'HKLM:\SYSTEM\CurrentControlSet\services\OracleService' + $ORACLE_SID
-          $val = (Get-ItemProperty -Path $key).ImagePath
+
+          # in some environments HKLM:\SYSTEM\CurrentControlSet\services\OracleService{ORACLE_SID}
+          # wasn't present, see SUP-10065
+          try {
+              $key = 'HKLM:\SYSTEM\CurrentControlSet\services\OracleService' + $ORACLE_SID
+              $val = (Get-ItemProperty -Path $key).ImagePath
+          }
+          catch {
+              $key = 'HKLM:\SYSTEM\CurrentControlSet\services\OracleASMService' + $ORACLE_SID
+              $val = (Get-ItemProperty -Path $key).ImagePath
+          }
           $ORACLE_HOME = $val.SubString(0, $val.LastIndexOf('\') - 4)
 
           # reset errors found for this instance to zero

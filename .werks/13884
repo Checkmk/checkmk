@@ -1,0 +1,14 @@
+Title: Fix possible exception on download of agent output
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1650878343
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0i1
+
+If you tried to download an agent output via "Download agent output" in the
+service icons of the "Check_MK" service, an exception like "'utf-8' codec can't
+decode byte 0x84 in position 85084: invalid start byte" could occur.

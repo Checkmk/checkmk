@@ -9,9 +9,7 @@ import pytest
 
 from tests.testlib import on_time
 
-from cmk.utils.type_defs import CheckPluginName, SectionName
-
-import cmk.base.item_state
+from cmk.base.plugins.agent_based import network_fs_mounts
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     CheckResult,
@@ -20,44 +18,18 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
 )
 from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_LEVELS
 
-check_name = "nfsmounts"
-
 NOW_SIMULATED = 581792400, "UTC"
 
 
 @pytest.fixture(name="value_store_patch")
 def value_store_fixture(monkeypatch):
     value_store_patched = {
-        "df.%s.delta" % "/ABCshare": [2000000, 30000000],
-        "df.%s.delta" % "/PERFshare": [2000000, 30000000],
-        "df.%s.delta" % "/var/dbaexport": [2000000, 30000000],
+        "%s.delta" % "/ABCshare": [2000000, 30000000],
+        "%s.delta" % "/PERFshare": [2000000, 30000000],
+        "%s.delta" % "/var/dbaexport": [2000000, 30000000],
     }
-    monkeypatch.setattr(cmk.base.item_state, "get_value_store", lambda: value_store_patched)
+    monkeypatch.setattr(network_fs_mounts, "get_value_store", lambda: value_store_patched)
     yield value_store_patched
-
-
-# TODO: drop this after migration
-@pytest.fixture(scope="module", name="plugin")
-def _get_plugin(fix_register):
-    return fix_register.check_plugins[CheckPluginName(check_name)]
-
-
-# TODO: drop this after migration
-@pytest.fixture(scope="module", name="discover_network_fs_mounts")
-def _get_discovery_function(plugin):
-    return lambda s: plugin.discovery_function(section=s)
-
-
-# TODO: drop this after migration
-@pytest.fixture(scope="module", name="check_network_fs_mount")
-def _get_check_function(plugin):
-    return lambda i, p, s: plugin.check_function(item=i, params=p, section=s)
-
-
-# TODO: drop this after migration
-@pytest.fixture(scope="module", name="parse_network_fs_mounts")
-def _get_parse(fix_register):
-    return fix_register.agent_sections[SectionName(check_name)].parse_function
 
 
 class SizeBasic(NamedTuple):
@@ -76,12 +48,12 @@ size1 = SizeWithUsage(
     ["491520", "460182", "460182", "65536"],
     491520 * 65536,
     491520 * 65536 - 460182 * 65536,
-    "6.38% used (1.91 of 30.00 GB), trend: 0.00 B / 24 hours",
+    "6.38% used (1.91 of 30.0 GiB)",
 )
 
 size2 = SizeBasic(
     ["201326592", "170803720", "170803720", "32768"],
-    "15.16% used (931.48 GB of 6.00 TB), trend: 0.00 B / 24 hours",
+    "15.16% used (931 GiB of 6.00 TiB)",
 )
 
 
@@ -124,11 +96,9 @@ size2 = SizeBasic(
 def test_network_fs_mounts_discovery(
     string_table: StringTable,
     discovery_result: DiscoveryResult,
-    parse_network_fs_mounts,
-    discover_network_fs_mounts,
 ):
-    section = parse_network_fs_mounts(string_table)
-    assert list(discover_network_fs_mounts(section)) == discovery_result
+    section = network_fs_mounts.parse_network_fs_mounts(string_table)
+    assert list(network_fs_mounts.discover_network_fs_mounts(section)) == discovery_result
 
 
 @pytest.mark.parametrize(
@@ -140,15 +110,17 @@ def test_network_fs_mounts_discovery(
             "/ABCshare",
             [
                 Result(state=State.OK, summary=size1.text),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: -4.37 GiB"),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: -14.55%"),
                 Metric(
                     "fs_used",
                     2053767168.0,
                     levels=(25769803776.0, 28991029248.0),
                     boundaries=(0.0, 32212254720.0),
                 ),
-                Metric("fs_size", 32212254720.0),
+                Metric("fs_size", 32212254720.0, boundaries=(0.0, None)),
                 Metric("fs_growth", -54252.567354853214),
-                Metric("fs_trend", 0.0, boundaries=(0.0, 15534.459259259258)),
+                Metric("fs_trend", -54252.567354853214, boundaries=(0.0, 15534.459259259258)),
             ],
         ),
         (  # two mountpoints with empty data
@@ -171,15 +143,17 @@ def test_network_fs_mounts_discovery(
             "/var/dbaexport",
             [
                 Result(state=State.OK, summary=size2.text),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: -4.23 GiB"),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: -0.07%"),
                 Metric(
                     "fs_used",
                     1000173469696.0,
                     levels=(5277655813324.8, 5937362789990.4),
                     boundaries=(0.0, 6597069766656.0),
                 ),
-                Metric("fs_size", 6597069766656.0),
+                Metric("fs_size", 6597069766656.0, boundaries=(0.0, None)),
                 Metric("fs_growth", -52531.05513336153),
-                Metric("fs_trend", 0.0, boundaries=(0.0, 3181457.256296296)),
+                Metric("fs_trend", -52531.05513336153, boundaries=(0.0, 3181457.256296296)),
             ],
         ),
         (  # with perfdata
@@ -187,15 +161,17 @@ def test_network_fs_mounts_discovery(
             "/PERFshare",
             [
                 Result(state=State.OK, summary=size1.text),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: -4.37 GiB"),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: -14.55%"),
                 Metric(
                     "fs_used",
                     2053767168.0,
                     levels=(25769803776.0, 28991029248.0),
                     boundaries=(0.0, 32212254720.0),
                 ),
-                Metric("fs_size", 32212254720.0),
+                Metric("fs_size", 32212254720.0, boundaries=(0.0, None)),
                 Metric("fs_growth", -54252.567354853214),
-                Metric("fs_trend", 0.0, boundaries=(0.0, 15534.459259259258)),
+                Metric("fs_trend", -54252.567354853214, boundaries=(0.0, 15534.459259259258)),
             ],
         ),
         (  # state == 'hanging'
@@ -219,15 +195,13 @@ def test_network_fs_mounts_check(
     string_table: StringTable,
     item: str,
     check_result: CheckResult,
-    parse_network_fs_mounts,
-    check_network_fs_mount,
     value_store_patch,
 ):
-    section = parse_network_fs_mounts(string_table)
+    section = network_fs_mounts.parse_network_fs_mounts(string_table)
     with on_time(*NOW_SIMULATED):
         assert (
             list(
-                check_network_fs_mount(
+                network_fs_mounts.check_network_fs_mount(
                     item, {**FILESYSTEM_DEFAULT_LEVELS, **{"has_perfdata": True}}, section
                 )
             )

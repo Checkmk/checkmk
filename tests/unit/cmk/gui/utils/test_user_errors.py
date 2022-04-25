@@ -5,8 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import user_errors
-from cmk.gui.utils.user_errors import UserErrors
+from cmk.gui.utils.user_errors import user_errors, UserErrors
 
 
 def test_user_errors_request_context_integration(request_context) -> None:

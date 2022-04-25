@@ -23,7 +23,6 @@ if TYPE_CHECKING:
     from cmk.gui.plugins.openapi.restful_objects import Endpoint
     from cmk.gui.utils.output_funnel import OutputFunnel
     from cmk.gui.utils.timeout_manager import TimeoutManager
-    from cmk.gui.utils.user_errors import UserErrors
 
 
 ######################################################################
@@ -50,7 +49,6 @@ request: http.Request = request_local_attr("request")
 response: http.Response = request_local_attr("response")
 output_funnel: OutputFunnel = request_local_attr("output_funnel")
 endpoint: Endpoint = request_local_attr("endpoint")
-user_errors: UserErrors = request_local_attr("user_errors")
 
 html: htmllib.html = request_local_attr("html")
 timeout_manager: TimeoutManager = request_local_attr("timeout_manager")

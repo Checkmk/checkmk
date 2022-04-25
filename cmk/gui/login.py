@@ -36,7 +36,7 @@ from cmk.gui.exceptions import (
     MKInternalError,
     MKUserError,
 )
-from cmk.gui.globals import html, request, response, user_errors
+from cmk.gui.globals import html, request, response
 from cmk.gui.htmllib import HTML
 from cmk.gui.http import Request
 from cmk.gui.i18n import _
@@ -51,6 +51,7 @@ from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.theme import theme
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeuri, requested_file_name, urlencode
+from cmk.gui.utils.user_errors import user_errors
 
 auth_logger = logger.getChild("auth")
 

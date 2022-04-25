@@ -36,7 +36,7 @@ import cmk.gui.weblib as weblib
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_main_menu_breadcrumb
 from cmk.gui.default_permissions import PermissionSectionGeneral
 from cmk.gui.exceptions import MKAuthException, MKGeneralException, MKUserError
-from cmk.gui.globals import html, request, user_errors
+from cmk.gui.globals import html, request
 from cmk.gui.i18n import _, _l, _u
 from cmk.gui.logged_in import save_user_file, user
 from cmk.gui.main_menu import mega_menu_registry
@@ -71,6 +71,7 @@ from cmk.gui.utils.urls import (
     makeuri_contextless,
     urlencode,
 )
+from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.valuespec import (
     CascadingDropdown,
     CascadingDropdownChoice,

@@ -28,7 +28,7 @@ import cmk.gui.watolib as watolib
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import FinalizeRequest, MKGeneralException, MKUserError
-from cmk.gui.globals import html, request, user_errors
+from cmk.gui.globals import html, request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
@@ -59,6 +59,7 @@ from cmk.gui.utils.urls import (
     makeactionuri_contextless,
     makeuri_contextless,
 )
+from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.valuespec import (
     Alternative,
     Checkbox,

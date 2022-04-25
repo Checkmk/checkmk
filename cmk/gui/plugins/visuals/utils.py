@@ -35,7 +35,7 @@ import cmk.utils.plugin_registry
 import cmk.gui.query_filters as query_filters
 import cmk.gui.sites as sites
 from cmk.gui.exceptions import MKGeneralException, MKUserError
-from cmk.gui.globals import html, request, user_errors
+from cmk.gui.globals import html, request
 from cmk.gui.i18n import _
 from cmk.gui.page_menu import PageMenuEntry
 from cmk.gui.site_config import get_site_config
@@ -50,6 +50,7 @@ from cmk.gui.type_defs import (
     VisualContext,
 )
 from cmk.gui.utils.speaklater import LazyString
+from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.valuespec import DualListChoice, ValueSpec
 from cmk.gui.view_utils import get_labels
 

@@ -34,7 +34,7 @@ from cmk.gui.breadcrumb import (
 )
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import html, request, response, user_errors
+from cmk.gui.globals import html, request, response
 from cmk.gui.htmllib import HTML, HTMLContent
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -50,6 +50,7 @@ from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.plugins.views.crash_reporting import CrashReportsRowTable
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode, urlencode_vars
+from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.valuespec import Dictionary, EmailAddress, TextInput
 
 

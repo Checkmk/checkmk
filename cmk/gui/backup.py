@@ -33,7 +33,7 @@ import cmk.gui.forms as forms
 import cmk.gui.key_mgmt as key_mgmt
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
 from cmk.gui.exceptions import FinalizeRequest, HTTPRedirect, MKGeneralException, MKUserError
-from cmk.gui.globals import html, request, user_errors
+from cmk.gui.globals import html, request
 from cmk.gui.i18n import _
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.page_menu import (
@@ -54,6 +54,7 @@ from cmk.gui.utils.urls import (
     makeactionuri_contextless,
     makeuri_contextless,
 )
+from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.valuespec import (
     AbsoluteDirname,
     Alternative,

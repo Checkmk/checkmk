@@ -38,7 +38,7 @@ import cmk.gui.sites as sites
 import cmk.gui.utils as utils
 from cmk.gui.bi import BIManager
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import request, user_errors
+from cmk.gui.globals import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
@@ -53,6 +53,7 @@ from cmk.gui.type_defs import (
 )
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode_vars
+from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.valuespec import (
     Age,
     Checkbox,

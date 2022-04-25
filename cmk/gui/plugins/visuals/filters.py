@@ -19,7 +19,7 @@ import cmk.gui.mkeventd as mkeventd
 import cmk.gui.sites as sites
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKMissingDataError, MKUserError
-from cmk.gui.globals import html, request, user_errors
+from cmk.gui.globals import html, request
 from cmk.gui.i18n import _, _l
 from cmk.gui.type_defs import (
     Choices,
@@ -33,6 +33,7 @@ from cmk.gui.type_defs import (
 from cmk.gui.utils.autocompleter_config import AutocompleterConfig, GroupAutocompleterConfig
 from cmk.gui.utils.regex import validate_regex
 from cmk.gui.utils.speaklater import LazyString
+from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.valuespec import DualListChoice, Labels
 
 if cmk_version.is_managed_edition():

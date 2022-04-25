@@ -266,7 +266,7 @@ constexpr std::string_view kControllerOnCrashEmergency{"emergency_mode"};
 }  // namespace values
 
 namespace defaults {
-const std::string_view kCpuLoad{values::kCpuLoadWmi};
+const std::string_view kCpuLoad{values::kCpuLoadPerf};
 constexpr const char *const kStartMode = values::kStartModeAuto;
 constexpr const char *const kErrorMode = values::kErrorModeLog;
 constexpr bool kRestartOnCrash = true;

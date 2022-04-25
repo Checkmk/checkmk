@@ -27,7 +27,10 @@ export function start(siteid, est, progress_text) {
             set_result(
                 handler_data["site_id"],
                 false,
-                "Failed to perform profile replication [" + status_code + "]: " + error_msg
+                "Failed to perform profile replication [" +
+                    status_code +
+                    "]: " +
+                    error_msg
             );
         },
         method: "POST",
@@ -46,13 +49,21 @@ export function start(siteid, est, progress_text) {
 
     profile_replication_progress[siteid] = 20; // 10 of 10 10ths
     setTimeout(
-        "cmk.profile_replication.step('" + siteid + "', " + est + ", '" + progress_text + "');",
+        "cmk.profile_replication.step('" +
+            siteid +
+            "', " +
+            est +
+            ", '" +
+            progress_text +
+            "');",
         est / 20
     );
 }
 
 function set_status(siteid, image, text) {
-    var icon = document.getElementById("site-" + siteid)!.getElementsByClassName("repl_status")[0];
+    var icon = document
+        .getElementById("site-" + siteid)!
+        .getElementsByClassName("repl_status")[0];
     (icon as HTMLElement).title = text;
     icon.className = "icon repl_status " + image;
 }
@@ -68,7 +79,13 @@ export function step(siteid, est, progress_text) {
         else img = "repl_pending";
         set_status(siteid, img, progress_text);
         setTimeout(
-            "cmk.profile_replication.step('" + siteid + "'," + est + ", '" + progress_text + "');",
+            "cmk.profile_replication.step('" +
+                siteid +
+                "'," +
+                est +
+                ", '" +
+                progress_text +
+                "');",
             est / 20
         );
     }

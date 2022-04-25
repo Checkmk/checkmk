@@ -348,7 +348,7 @@ register.check_plugin(
 
 
 def discovery_systemd_units_services_summary(section: Section) -> DiscoveryResult:
-    yield Service()
+    yield Service(item="Summary")
 
 
 def _services_split(
@@ -423,7 +423,7 @@ def _check_non_ok_services(
 
 
 def check_systemd_units_services_summary(
-    params: Mapping[str, Any], section: Section
+    item: str, params: Mapping[str, Any], section: Section
 ) -> CheckResult:
     services = section.values()
     blacklist = params["ignored"]
@@ -454,7 +454,7 @@ register.check_plugin(
     discovery_function=discovery_systemd_units_services_summary,
     check_function=check_systemd_units_services_summary,
     check_ruleset_name="systemd_services_summary",
-    service_name="Systemd Service Services",
+    service_name="Systemd Service %s",
     check_default_parameters={
         "states": {
             "active": 0,

@@ -1,0 +1,12 @@
+Title: Fix deletion and moving of report content
+Class: fix
+Compatible: compat
+Component: reporting
+Date: 1650892374
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.1.0b7
+
+Deletion of report content and moving of report elements was not saved
+correctly to the according user files.

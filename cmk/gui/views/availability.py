@@ -34,7 +34,7 @@ from cmk.gui.availability import (
 )
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import html, output_funnel, request, response
+from cmk.gui.globals import html, request, response
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -50,6 +50,7 @@ from cmk.gui.page_menu import (
 from cmk.gui.plugins.views.utils import display_options, format_plugin_output, view_title
 from cmk.gui.table import Table, table_element
 from cmk.gui.utils.escaping import escape_to_html_permissive
+from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import make_confirm_link, makeactionuri, makeuri, urlencode_vars
 from cmk.gui.utils.user_errors import user_errors

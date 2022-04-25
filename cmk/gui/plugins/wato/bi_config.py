@@ -45,7 +45,7 @@ from cmk.gui.bi import bi_livestatus_query, BIManager, get_cached_bi_packs
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKAuthException, MKGeneralException, MKUserError
-from cmk.gui.globals import html, output_funnel, request
+from cmk.gui.globals import html, request
 from cmk.gui.htmllib import foldable_container, HTML
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
@@ -81,6 +81,7 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.site_config import wato_slave_sites
 from cmk.gui.table import init_rowselect, table_element
 from cmk.gui.type_defs import ActionResult, Choices
+from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import (
     make_confirm_link,

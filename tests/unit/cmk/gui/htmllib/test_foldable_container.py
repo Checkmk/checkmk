@@ -6,13 +6,13 @@
 
 from tests.testlib import compare_html
 
-from cmk.gui.globals import output_funnel
 from cmk.gui.htmllib.foldable_container import (
     foldable_container,
     foldable_container_id,
     foldable_container_img_id,
     foldable_container_onclick,
 )
+from cmk.gui.utils.output_funnel import output_funnel
 
 
 def test_foldable_container(request_context) -> None:

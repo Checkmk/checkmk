@@ -14,7 +14,7 @@ from cmk.utils.defines import short_service_state_name
 
 import cmk.gui.bi as bi
 import cmk.gui.utils.escaping as escaping
-from cmk.gui.globals import html, output_funnel, request
+from cmk.gui.globals import html, request
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
 from cmk.gui.plugins.views.utils import (
@@ -31,6 +31,7 @@ from cmk.gui.plugins.views.utils import (
     RowTable,
 )
 from cmk.gui.type_defs import ColumnName, Rows
+from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.urls import makeuri, urlencode_vars
 from cmk.gui.valuespec import DropdownChoice
 

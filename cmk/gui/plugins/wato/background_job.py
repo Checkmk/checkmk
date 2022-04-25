@@ -10,7 +10,7 @@ from typing import Iterator, Optional, Type
 
 import cmk.gui.gui_background_job as gui_background_job
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.globals import html, output_funnel, request
+from cmk.gui.globals import html, request
 from cmk.gui.gui_background_job import GUIBackgroundStatusSnapshot
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
@@ -32,6 +32,7 @@ from cmk.gui.plugins.wato.utils import (
     WatoMode,
 )
 from cmk.gui.type_defs import ActionResult
+from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.urls import makeuri_contextless
 
 

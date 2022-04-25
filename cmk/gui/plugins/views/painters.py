@@ -21,7 +21,7 @@ import cmk.gui.metrics as metrics
 import cmk.gui.sites as sites
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.config import active_config
-from cmk.gui.globals import html, output_funnel, request, response
+from cmk.gui.globals import html, request, response
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
@@ -58,6 +58,7 @@ from cmk.gui.plugins.views.utils import (
 from cmk.gui.site_config import get_site_config
 from cmk.gui.type_defs import ColumnName, Row, SorterName
 from cmk.gui.utils.mobile import is_mobile
+from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.popups import MethodAjax
 from cmk.gui.utils.urls import makeuri_contextless, urlencode
 from cmk.gui.valuespec import (

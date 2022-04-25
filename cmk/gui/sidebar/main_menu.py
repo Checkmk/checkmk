@@ -12,13 +12,14 @@ from typing import List, NamedTuple, Optional, Union
 import cmk.gui.message as message
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKAuthException
-from cmk.gui.globals import html, output_funnel, request, response
+from cmk.gui.globals import html, request, response
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _, ungettext
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import any_show_more_items, mega_menu_registry
 from cmk.gui.pages import AjaxPage, page_registry, register
 from cmk.gui.type_defs import Icon, MegaMenu, TopicMenuItem, TopicMenuTopic
+from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.popups import MethodInline
 from cmk.gui.werks import may_acknowledge, num_unacknowledged_incompatible_werks
 

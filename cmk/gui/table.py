@@ -27,11 +27,12 @@ import cmk.gui.utils as utils
 import cmk.gui.utils.escaping as escaping
 import cmk.gui.weblib as weblib
 from cmk.gui.config import active_config
-from cmk.gui.globals import html, output_funnel, request, response
+from cmk.gui.globals import html, request, response
 from cmk.gui.htmllib import foldable_container, HTML
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.utils.escaping import escape_to_html_permissive
+from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeactionuri, makeuri, requested_file_name
 

@@ -9,9 +9,10 @@ import traceback
 from tests.testlib import compare_html
 
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import html, output_funnel
+from cmk.gui.globals import html
 from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.utils.html import HTML
+from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.user_errors import user_errors
 
 

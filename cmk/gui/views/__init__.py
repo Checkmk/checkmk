@@ -55,7 +55,7 @@ from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_topic_breadcrumb
 from cmk.gui.config import active_config, builtin_role_ids, register_post_config_load_hook
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import HTTPRedirect, MKGeneralException, MKInternalError, MKUserError
-from cmk.gui.globals import g, html, output_funnel, request, response
+from cmk.gui.globals import g, html, request, response
 
 # Needed for legacy (pre 1.6) plugins
 from cmk.gui.htmllib import HTML
@@ -182,6 +182,7 @@ from cmk.gui.plugins.visuals.utils import (
     VisualInfo,
     VisualType,
 )
+from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.valuespec import (

@@ -21,7 +21,7 @@ import cmk.gui.sites as sites
 import cmk.gui.utils
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import HTTPRedirect, MKUserError
-from cmk.gui.globals import html, output_funnel, request
+from cmk.gui.globals import html, request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
@@ -47,6 +47,7 @@ from cmk.gui.utils.labels import (
     label_help_text,
     Labels,
 )
+from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.regex import validate_regex
 from cmk.gui.utils.urls import makeuri
 from cmk.gui.wato.pages.hosts import ModeEditHost

@@ -279,7 +279,7 @@ def save_two_factor_credentials(user_id: UserId, credentials: TwoFactorCredentia
     save_custom_attr(user_id, "two_factor_credentials", repr(credentials))
 
 
-def make_two_factor_backup_codes() -> Tuple[List[str], List[str]]:
+def make_two_factor_backup_codes(*, rounds: Optional[int] = None) -> Tuple[List[str], List[str]]:
     """Creates a set of new two factor backup codes
 
     The codes are returned in plain form for displaying and in hashed+salted form for storage
@@ -289,7 +289,7 @@ def make_two_factor_backup_codes() -> Tuple[List[str], List[str]]:
     for _index in range(10):
         code = utils.get_random_string(10)
         display_codes.append(code)
-        store_codes.append(cmk.gui.plugins.userdb.htpasswd.hash_password(code))
+        store_codes.append(cmk.gui.plugins.userdb.htpasswd.hash_password(code, rounds=rounds))
     return display_codes, store_codes
 
 

@@ -40,7 +40,7 @@ from urllib.parse import quote_plus
 PY2 = sys.version_info[0] == 2
 
 try:
-    from typing import Any, Callable, Dict, Iterable, Union
+    from typing import Any, Callable, Dict, Iterable, List, Union
 except ImportError:
     pass
 
@@ -83,7 +83,7 @@ def get_database_info(client):
 
 def get_collection_names(database):  # type:(pymongo.database.Database) -> Iterable[str]
     if PYMONGO_VERSION <= (3, 6, 0):
-        collection_names = database.collection_names()
+        collection_names = database.collection_names()  # type: List[str]
     else:
         collection_names = database.list_collection_names()
 
@@ -951,10 +951,12 @@ def main(argv=None):
             message = message.replace(quote_plus(config.password), "****")
         LOGGER.info(message)
 
-    client = pymongo.MongoClient(read_preference=pymongo.ReadPreference.SECONDARY, **pymongo_config)
+    client = pymongo.MongoClient(
+        read_preference=pymongo.ReadPreference.SECONDARY, **pymongo_config
+    )  # type: pymongo.MongoClient
     try:
         # connecting is lazy, it might fail only now
-        server_status = client.admin.command("serverStatus")
+        server_status = client.admin.command("serverStatus")  # type: Dict
     except (pymongo.errors.OperationFailure, pymongo.errors.ConnectionFailure) as e:
         sys.stdout.write("<<<mongodb_instance:sep(9)>>>\n")
         sys.stdout.write("error\tFailed to connect\n")

@@ -29,19 +29,7 @@ import json
 import pprint
 import re
 from pathlib import Path
-from typing import (
-    Any,
-    Callable,
-    cast,
-    Dict,
-    Iterable,
-    List,
-    Optional,
-    Set,
-    Tuple,
-    TYPE_CHECKING,
-    Union,
-)
+from typing import Any, Callable, cast, Dict, Iterable, List, Optional, Set, Tuple, Union
 
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
@@ -54,6 +42,7 @@ from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbRenderer
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.foldable_container import foldable_container
+from cmk.gui.http import Request, Response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import (
@@ -74,6 +63,7 @@ from cmk.gui.type_defs import (
 )
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.mobile import is_mobile
+from cmk.gui.utils.output_funnel import OutputFunnel
 from cmk.gui.utils.popups import PopupMethod
 from cmk.gui.utils.theme import theme
 from cmk.gui.utils.transaction_manager import transactions
@@ -89,10 +79,6 @@ from ._tag_rendering import (
     render_end_tag,
     render_start_tag,
 )
-
-if TYPE_CHECKING:
-    from cmk.gui.http import Request, Response
-    from cmk.gui.utils.output_funnel import OutputFunnel
 
 HTMLMessageInput = Union[HTML, str]
 

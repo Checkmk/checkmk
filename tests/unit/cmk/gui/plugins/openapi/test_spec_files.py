@@ -5,21 +5,24 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import json
 
+import pytest
 import yaml
 from openapi_spec_validator import validate_spec  # type: ignore[import]
 
 
-# TODO(sp): This test takes ages, about 7.2s total! Improve this.
-def test_yaml_file(wsgi_app):  # 0.8s
-    resp = wsgi_app.get("/NO_SITE/check_mk/api/1.0/openapi-swagger-ui.yaml", status=200)  # 3.3s
+# TODO(cr): This test takes ages, about 52s total! Improve this.
+@pytest.mark.slow
+def test_yaml_file(wsgi_app):
+    resp = wsgi_app.get("/NO_SITE/check_mk/api/1.0/openapi-swagger-ui.yaml", status=200)
     assert resp.content_type.startswith("application/x-yaml")
-    data = yaml.safe_load(resp.body)  # 1.9s
-    validate_spec(data)  # 1.2s
+    data = yaml.safe_load(resp.body)
+    validate_spec(data)
 
 
-# TODO(sp): This test takes ages, about 4.1 total! Improve this.
-def test_json_file(wsgi_app):  # 0.8s
-    resp = wsgi_app.get("/NO_SITE/check_mk/api/1.0/openapi-doc.json", status=200)  # 2.1s
+# TODO(cr): This test takes ages, about 50s total! Improve this.
+@pytest.mark.slow
+def test_json_file(wsgi_app):
+    resp = wsgi_app.get("/NO_SITE/check_mk/api/1.0/openapi-doc.json", status=200)
     assert resp.content_type.startswith("application/json")
     data = json.loads(resp.body)
-    validate_spec(data)  # 1.2s
+    validate_spec(data)

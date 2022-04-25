@@ -7,6 +7,17 @@ SCRIPTS := ../scripts
 FIND_PYTHON_FILES := $(SCRIPTS)/find-python-files
 PIPENV := $(SCRIPTS)/run-pipenv
 PYTEST := $(PIPENV) run py.test $(PYTEST_ARGS)
+PYTEST_UNIT_TEST_OPTS = \
+    -T unit \
+    --doctest-modules \
+    ../cmk/base \
+    ../cmk/fields \
+    ../cmk/gui \
+    ../cmk/special_agents \
+    ../cmk/utils \
+    ../agent-receiver \
+    unit
+PYTEST_ADDITIONAL_UNIT_TEST_OPTS = -m "not slow"
 YAPF := $(PIPENV) run yapf
 BLACK  := $(SCRIPTS)/run-black
 THREE_TO_TWO := $(PIPENV) run 3to2
@@ -293,15 +304,8 @@ test-shellcheck:
 
 test-unit: prepare-protobuf-files
 	$(PYTEST) \
-		-T unit \
-		--doctest-modules \
-		../cmk/base \
-		../cmk/fields \
-		../cmk/gui \
-		../cmk/special_agents \
-		../cmk/utils \
-		../agent-receiver \
-		unit
+		$(PYTEST_ADDITIONAL_UNIT_TEST_OPTS) \
+		$(PYTEST_UNIT_TEST_OPTS)
 
 test-unit-docker:
 	../scripts/run-in-docker.sh make --quiet test-unit
@@ -310,16 +314,9 @@ test-unit-resilience: prepare-protobuf-files
 	$(PYTEST) \
 		--count=2 \
 		--random-order-bucket=global \
-		-T unit \
-		--doctest-modules \
-		../cmk/base \
-		../cmk/fields \
-		../cmk/gui \
-		../cmk/special_agents \
-		../cmk/utils \
-		../agent-receiver \
 	        -m "not non_resilient" \
-		unit
+		$(PYTEST_ADDITIONAL_UNIT_TEST_OPTS) \
+		$(PYTEST_UNIT_TEST_OPTS)
 
 test-unit-resilience-docker:
 	../scripts/run-in-docker.sh make test-unit-resilience
@@ -329,19 +326,12 @@ test-agent-plugin-docker:
 
 test-unit-coverage-html: prepare-protobuf-files
 	$(PYTEST) \
-		-T unit \
 		--cov=cmk \
 		--cov-report=html \
 		--cov-config=.coveragerc_unit \
 		--no-cov-on-fail \
-		--doctest-modules \
-		../cmk/base \
-		../cmk/fields \
-		../cmk/gui \
-		../cmk/special_agents \
-		../cmk/utils \
-		../agent-receiver \
-		unit
+		$(PYTEST_ADDITIONAL_UNIT_TEST_OPTS) \
+		$(PYTEST_UNIT_TEST_OPTS)
 
 test-unit-shell:
 	./unit-shell/runner.sh

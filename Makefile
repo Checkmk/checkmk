@@ -52,7 +52,7 @@ WERKS              := $(wildcard .werks/[0-9]*)
 JAVASCRIPT_SOURCES := $(filter-out %_min.js, \
                           $(wildcard \
                               $(foreach edir,. enterprise managed, \
-                                  $(foreach subdir,* */* */*/*,$(edir)/web/htdocs/js/$(subdir).js))))
+                                  $(foreach subdir,* */* */*/*,$(edir)/web/htdocs/js/$(subdir).[jt]s))))
 
 SCSS_SOURCES := $(wildcard \
 					$(foreach edir,. enterprise managed, \

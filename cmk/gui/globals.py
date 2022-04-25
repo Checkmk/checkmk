@@ -6,7 +6,6 @@
 
 from __future__ import annotations
 
-import logging
 from typing import TYPE_CHECKING
 
 from cmk.gui.ctx_stack import request_local_attr
@@ -21,12 +20,6 @@ if TYPE_CHECKING:
 
 ######################################################################
 # TODO: This should live somewhere else...
-class PrependURLFilter(logging.Filter):
-    def filter(self, record):
-        if record.levelno >= logging.ERROR:
-            record.msg = "%s %s" % (request.requested_url, record.msg)
-        return True
-
 
 # NOTE: All types FOO below are actually a Union[Foo, LocalProxy], but
 # LocalProxy is meant as a transparent proxy, so we leave it out to de-confuse

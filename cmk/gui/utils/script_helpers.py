@@ -18,10 +18,10 @@ from cmk.gui.config import get_default_config, load_config, make_config_object
 from cmk.gui.context import AppContext, RequestContext
 from cmk.gui.ctx_stack import app_stack, request_stack
 from cmk.gui.display_options import DisplayOptions
-from cmk.gui.globals import PrependURLFilter
 from cmk.gui.htmllib import html
 from cmk.gui.http import Request, Response
 from cmk.gui.logged_in import LoggedInNobody
+from cmk.gui.utils.logging import PrependURLFilter
 from cmk.gui.utils.output_funnel import OutputFunnel
 from cmk.gui.utils.theme import Theme
 from cmk.gui.utils.timeout_manager import TimeoutManager

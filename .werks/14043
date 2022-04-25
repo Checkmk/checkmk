@@ -1,0 +1,15 @@
+Title: mk_oracle.ps1: Fix crash if registry key isn't present
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1650889904
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p24
+
+In some environments "HKLM:\SYSTEM\CurrentControlSet\services\OracleService{ORACLE_SID}"
+registry key was missing which caused the agent to crash.
+Now, if this key isn't present we use "HKLM:\SYSTEM\CurrentControlSet\services\OracleASMService{ORACLE_SID}"
+registry key instead.

@@ -3,6 +3,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from enum import Enum
 from typing import Any, Final, Mapping, NamedTuple, Optional, Union
 
 from .agent_based_api.v1 import get_value_store, Metric, register, Result, Service, State
@@ -21,16 +22,36 @@ DEFAULT_NETWORK_FS_MOUNT_PARAMETERS: Final = {
 }
 
 
+class NetworkFSState(Enum):
+    PERMISSION_DENIED = "Permission denied"
+    HANGING = "hanging"
+    OK = "ok"
+    UNKNOWN = "unknown"
+
+    @classmethod
+    def _missing_(cls, value):
+        return NetworkFSState.UNKNOWN
+
+
+NetworkFSStateMapping: Mapping[NetworkFSState, State] = {
+    NetworkFSState.PERMISSION_DENIED: State.CRIT,
+    NetworkFSState.HANGING: State.CRIT,
+    NetworkFSState.UNKNOWN: State.CRIT,
+    NetworkFSState.OK: State.OK,
+}
+
+
 class NetworkFSUsage(NamedTuple):
-    total_blocks: str
-    free_blocks_su: str
-    free_blocks: str
-    blocksize: str
+    total_blocks: int
+    free_blocks_su: int
+    free_blocks: int
+    blocksize: int
 
 
 class NetworkFSMount(NamedTuple):
     mountpoint: str
     state: str
+    mount_seems_okay: bool
     usage: Optional[NetworkFSUsage]
 
 
@@ -46,6 +67,7 @@ def parse_network_fs_mounts(string_table: StringTable) -> NetworkFSSection:
                 NetworkFSMount(
                     mountpoint=" ".join(entry[:-2]),
                     state="Permission denied",
+                    mount_seems_okay=False,
                     usage=None,
                 ),
             )
@@ -55,12 +77,15 @@ def parse_network_fs_mounts(string_table: StringTable) -> NetworkFSSection:
             NetworkFSMount(
                 mountpoint=" ".join(entry[:-5]),
                 state=entry[-5],
+                mount_seems_okay=entry[-4:] == ["-", "-", "-", "-"],
                 usage=NetworkFSUsage(
-                    total_blocks=entry[-4],
-                    free_blocks_su=entry[-3],
-                    free_blocks=entry[-2],
-                    blocksize=entry[-1],
-                ),
+                    total_blocks=int(entry[-4]),
+                    free_blocks_su=int(entry[-3]),
+                    free_blocks=int(entry[-2]),
+                    blocksize=int(entry[-1]),
+                )
+                if entry[-4:] != ["-", "-", "-", "-"]
+                else None,
             ),
         )
     return section
@@ -103,23 +128,20 @@ def check_network_fs_mount(
     if not (mount := section.get(item)):
         return
 
-    if mount.state == "Permission denied":
-        yield Result(state=State.CRIT, summary="Permission denied")
-        return
-    if mount.state == "hanging":
-        yield Result(state=State.CRIT, summary="Server not responding")
-        return
-    if mount.state != "ok":
-        yield Result(state=State.CRIT, summary="Unknown state: %s" % mount.state)
+    state = NetworkFSState(mount.state)
+    if state is not NetworkFSState.OK:
+        yield Result(
+            state=NetworkFSStateMapping[state], summary=f"State: {state.value.capitalize()}"
+        )
         return
 
-    if not (usage := mount.usage):
-        return
-    if usage == ("-", "-", "-", "-"):
+    if mount.mount_seems_okay:
         yield Result(state=State.OK, summary="Mount seems OK")
         return
+    if not (usage := mount.usage):
+        return
 
-    size_blocks, _, free_blocks, blocksize = map(int, usage)
+    size_blocks, _, free_blocks, blocksize = usage
 
     if size_blocks <= 0 or free_blocks < 0 or blocksize > 16.0 * MEGA:
         yield Result(state=State.CRIT, summary="Stale fs handle")

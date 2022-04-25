@@ -136,7 +136,7 @@ def test_network_fs_mounts_discovery(
         (  # Mountpoint with spaces and permission denied
             [["/var/dba", "export", "Permission", "denied"], ["/var/dbaexport", "ok", *size2.info]],
             "/var/dba export",
-            [Result(state=State.CRIT, summary="Permission denied")],
+            [Result(state=State.CRIT, summary="State: Permission denied")],
         ),
         (
             [["/var/dba", "export", "Permission", "denied"], ["/var/dbaexport", "ok", *size2.info]],
@@ -177,12 +177,12 @@ def test_network_fs_mounts_discovery(
         (  # state == 'hanging'
             [["/test", "hanging", "hanging", "0", "0", "0", "0"]],
             "/test hanging",
-            [Result(state=State.CRIT, summary="Server not responding")],
+            [Result(state=State.CRIT, summary="State: Hanging")],
         ),
         (  # unknown state
             [["/test", "unknown", "unknown", "1", "1", "1", "1"]],
             "/test unknown",
-            [Result(state=State.CRIT, summary="Unknown state: unknown")],
+            [Result(state=State.CRIT, summary="State: Unknown")],
         ),
         (  # zero block size
             [["/test", "perfdata", "ok", "0", "460182", "460182", "0"]],

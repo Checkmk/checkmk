@@ -25,7 +25,6 @@ from cmk.gui.globals import PrependURLFilter
 from cmk.gui.htmllib import html
 from cmk.gui.logged_in import LoggedInNobody
 from cmk.gui.utils.output_funnel import OutputFunnel
-from cmk.gui.utils.transaction_manager import TransactionManager
 
 
 @contextlib.contextmanager
@@ -37,7 +36,6 @@ def mock_livestatus(
     env = EnvironBuilder().get_environ()
     req = http.Request(env)
     resp = http.Response()
-    nobody = LoggedInNobody()
 
     app_context: ContextManager
     req_context: ContextManager
@@ -58,8 +56,7 @@ def mock_livestatus(
             resp=resp,
             funnel=OutputFunnel(resp),
             config_obj=make_config_object(get_default_config()),
-            user=nobody,
-            transactions=TransactionManager(req, nobody),
+            user=LoggedInNobody(),
             display_options=DisplayOptions(),
             prefix_logs_with_url=False,
             stack=request_stack(),

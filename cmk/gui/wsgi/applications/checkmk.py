@@ -42,7 +42,6 @@ from cmk.gui.utils.json import patch_json
 from cmk.gui.utils.output_funnel import OutputFunnel
 from cmk.gui.utils.theme import Theme
 from cmk.gui.utils.timeout_manager import TimeoutManager
-from cmk.gui.utils.transaction_manager import TransactionManager
 from cmk.gui.utils.urls import requested_file_name
 from cmk.gui.wsgi.applications.utils import (
     ensure_authentication,
@@ -213,14 +212,12 @@ class CheckmkApp:
         theme = Theme()
         config_obj = config_module.make_config_object(config_module.get_default_config())
 
-        nobody = LoggedInNobody()
         with AppContext(self, stack=app_stack()), RequestContext(
             req=req,
             resp=resp,
             funnel=funnel,
             config_obj=config_obj,
-            user=nobody,
-            transactions=TransactionManager(req, nobody),
+            user=LoggedInNobody(),
             html_obj=htmllib.html(req, resp, funnel, output_format),
             timeout_manager=timeout_manager,
             display_options=DisplayOptions(),

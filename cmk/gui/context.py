@@ -113,7 +113,6 @@ class RequestContext:
         funnel: OutputFunnel,
         config_obj: Config,
         user: LoggedInUser,  # pylint: disable=redefined-outer-name
-        transactions: TransactionManager,
         html_obj: Optional[htmllib.html] = None,
         timeout_manager: Optional[TimeoutManager] = None,  # pylint: disable=redefined-outer-name
         theme: Optional[Theme] = None,  # pylint: disable=redefined-outer-name
@@ -140,7 +139,6 @@ class RequestContext:
         self.output_funnel = funnel
         self.config = config_obj
         self._user = user
-        self.transactions = transactions
         self.user_errors = UserErrors()
 
         self._prepend_url_filter = url_filter
@@ -155,6 +153,10 @@ class RequestContext:
     @user.setter
     def user(self, user_obj: LoggedInUser) -> None:
         self._user = user_obj
+
+    @property
+    def transactions(self) -> TransactionManager:
+        return self._user.transactions
 
     def __enter__(self):
         self._stack.push(self)

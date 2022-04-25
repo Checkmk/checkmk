@@ -30,7 +30,7 @@ from cmk.gui.breadcrumb import (
 )
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKGeneralException
-from cmk.gui.globals import html, request, theme
+from cmk.gui.globals import html, request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import mega_menu_registry
@@ -49,6 +49,7 @@ from cmk.gui.plugins.visuals.node_vis import FilterTopologyMaxNodes, FilterTopol
 from cmk.gui.plugins.visuals.utils import Filter, get_livestatus_filter_headers
 from cmk.gui.plugins.wato import bi_valuespecs
 from cmk.gui.type_defs import VisualContext
+from cmk.gui.utils.theme import theme
 from cmk.gui.views import ABCAjaxInitialFilters, View
 
 Mesh = Set[HostName]

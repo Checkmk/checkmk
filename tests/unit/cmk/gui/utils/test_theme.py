@@ -10,8 +10,7 @@ import pytest
 
 import cmk.utils.paths
 
-from cmk.gui.globals import theme
-from cmk.gui.utils.theme import Theme, theme_choices
+from cmk.gui.utils.theme import theme, Theme, theme_choices
 
 
 @pytest.fixture(name="theme_dirs")

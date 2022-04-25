@@ -74,7 +74,7 @@ import cmk.gui.utils as utils
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKGeneralException, MKUserError
-from cmk.gui.globals import html, output_funnel, request, theme
+from cmk.gui.globals import html, output_funnel, request
 from cmk.gui.htmllib import HTMLTagAttributes
 from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.http import UploadedFile
@@ -93,6 +93,7 @@ from cmk.gui.utils.labels import (
 )
 from cmk.gui.utils.popups import MethodAjax, MethodColorpicker
 from cmk.gui.utils.speaklater import LazyString
+from cmk.gui.utils.theme import theme
 from cmk.gui.utils.urls import makeuri, urlencode
 from cmk.gui.view_utils import render_labels
 

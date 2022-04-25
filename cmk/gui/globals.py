@@ -22,7 +22,6 @@ if TYPE_CHECKING:
     from cmk.gui import htmllib, http
     from cmk.gui.plugins.openapi.restful_objects import Endpoint
     from cmk.gui.utils.output_funnel import OutputFunnel
-    from cmk.gui.utils.theme import Theme
     from cmk.gui.utils.timeout_manager import TimeoutManager
     from cmk.gui.utils.user_errors import UserErrors
 
@@ -55,4 +54,3 @@ user_errors: UserErrors = request_local_attr("user_errors")
 
 html: htmllib.html = request_local_attr("html")
 timeout_manager: TimeoutManager = request_local_attr("timeout_manager")
-theme: Theme = request_local_attr("theme")

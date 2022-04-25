@@ -8,7 +8,7 @@ import base64
 from typing import Callable, Optional, Tuple, Union
 
 import cmk.gui.utils.escaping as escaping
-from cmk.gui.globals import html, theme
+from cmk.gui.globals import html
 from cmk.gui.htmllib.foldable_container import (
     foldable_container_id,
     foldable_container_img_id,
@@ -16,6 +16,7 @@ from cmk.gui.htmllib.foldable_container import (
 )
 from cmk.gui.logged_in import user
 from cmk.gui.utils.html import HTML
+from cmk.gui.utils.theme import theme
 
 g_header_open = False
 g_section_open = False

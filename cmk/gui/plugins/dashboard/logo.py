@@ -4,9 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.globals import html, theme
+from cmk.gui.globals import html
 from cmk.gui.i18n import _
 from cmk.gui.plugins.dashboard.utils import Dashlet, dashlet_registry
+from cmk.gui.utils.theme import theme
 
 
 @dashlet_registry.register

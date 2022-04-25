@@ -14,11 +14,12 @@ from livestatus import SiteId
 from cmk.utils.type_defs import Labels, LabelSources, TaggroupID, TaggroupIDToTagID, TagID
 
 import cmk.gui.utils.escaping as escaping
-from cmk.gui.globals import html, request, theme
+from cmk.gui.globals import html, request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.type_defs import HTTPVariables
 from cmk.gui.utils.html import HTML
+from cmk.gui.utils.theme import theme
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
 
 CSSClass = Optional[str]

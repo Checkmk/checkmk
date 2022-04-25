@@ -11,7 +11,7 @@ from typing import Any, Dict, List, Optional, Tuple
 import cmk.gui.utils as utils
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKGeneralException
-from cmk.gui.globals import html, theme
+from cmk.gui.globals import html
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.plugins.views.utils import (
@@ -25,6 +25,7 @@ from cmk.gui.plugins.views.utils import (
     row_id,
 )
 from cmk.gui.table import init_rowselect, table_element
+from cmk.gui.utils.theme import theme
 
 
 def render_checkbox(view, row, num_tds):

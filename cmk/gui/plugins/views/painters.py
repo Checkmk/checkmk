@@ -5373,7 +5373,7 @@ class PainterHostKubernetesCluster(_PainterHostKubernetes):
     _constraints = ["cluster"]
 
     def title(self, cell: Cell) -> str:
-        return _("Kubernetes cluster")
+        return _("Kubernetes Cluster")
 
     def short_title(self, cell: Cell) -> str:
         return _("Cluster")
@@ -5385,7 +5385,7 @@ class PainterHostKubernetesNamespace(_PainterHostKubernetes):
     _constraints = ["namespace", "cluster"]
 
     def title(self, cell: Cell) -> str:
-        return _("Kubernetes namespace")
+        return _("Kubernetes Namespace")
 
     def short_title(self, cell: Cell) -> str:
         return _("Namespace")
@@ -5397,7 +5397,7 @@ class PainterHostKubernetesDeployment(_PainterHostKubernetes):
     _constraints = ["deployment", "namespace", "cluster"]
 
     def title(self, cell: Cell) -> str:
-        return _("Kubernetes deployment")
+        return _("Kubernetes Deployment")
 
     def short_title(self, cell: Cell) -> str:
         return _("Deployment")
@@ -5409,10 +5409,10 @@ class PainterHostKubernetesDaemonset(_PainterHostKubernetes):
     _constraints = ["daemonset", "namespace", "cluster"]
 
     def title(self, cell: Cell) -> str:
-        return _("Kubernetes daemonset")
+        return _("Kubernetes DaemonSet")
 
     def short_title(self, cell: Cell) -> str:
-        return _("Daemonset")
+        return _("DaemonSet")
 
 
 @painter_registry.register
@@ -5421,10 +5421,10 @@ class PainterHostKubernetesStatefulset(_PainterHostKubernetes):
     _constraints = ["statefulset", "namespace", "cluster"]
 
     def title(self, cell: Cell) -> str:
-        return _("Kubernetes statefulset")
+        return _("Kubernetes StatefulSet")
 
     def short_title(self, cell: Cell) -> str:
-        return _("Statefulset")
+        return _("StatefulSet")
 
 
 @painter_registry.register
@@ -5433,7 +5433,7 @@ class PainterHostKubernetesNode(_PainterHostKubernetes):
     _constraints = ["node", "cluster"]
 
     def title(self, cell: Cell) -> str:
-        return _("Kubernetes node")
+        return _("Kubernetes Node")
 
     def short_title(self, cell: Cell) -> str:
         return _("Node")

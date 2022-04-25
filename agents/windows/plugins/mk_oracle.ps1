@@ -122,17 +122,17 @@ Function debug_echo {
 # filename for timestamp
 $MK_CONFDIR = $env:MK_CONFDIR
 
-# Fallback if the (old) agent does not provide the MK_CONFDIR
+# To execute the script standalone in the environment of the installed agent
 if (!$MK_CONFDIR) {
-     $MK_CONFDIR = "c:\Program Files (x86)\check_mk\config"
+     $MK_CONFDIR = "C:\ProgramData\checkmk\agent\config"
 }
 
 # directory for tempfiles
 $MK_TEMPDIR = $env:MK_TEMPDIR
 
-# Fallback if the (old) agent does not provide the MK_TEMPDIR
+# To execute the script standalone in the environment of the installed agent
 if (!$MK_TEMPDIR) {
-     $MK_TEMPDIR = "C:\Program Files (x86)\check_mk\temp"
+     $MK_TEMPDIR = "C:\ProgramData\checkmk\agent\tmp"
 }
 
 

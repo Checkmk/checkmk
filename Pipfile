@@ -81,7 +81,7 @@ cffi = "==1.15.0"  # needed by PyNaCl, cryptography, bcrypt
 PyNaCl = "==1.3.0"  # needed by paramiko
 cryptography = "==3.3.2"  # needed by paramiko
 bcrypt = "==3.1.7"  # needed by paramiko
-paramiko = "==2.6.0"  # direct dependency, used for SFTP transactions in check_sftp
+paramiko = "==2.10.3"
 pyasn1 = "==0.4.8"  # needed by pysnmp
 pyasn1-modules = "==0.2.8"  # needed by kubernetes
 pycryptodomex = "==3.9.3"  # needed by pysnmp
@@ -122,7 +122,7 @@ PyJWT = "==1.7.1"  # needed by jira
 docutils = "==0.17.1"  # needed by boto3 (aws)
 jira = "==2.0.0"  # needed by jira
 adal = "==1.2.0"  # needed by agent_azure
-Pillow = "==8.3.2"  # needed by GUI, Some vulnerabilities
+Pillow = "==9.1.0"
 python-ldap = "==3.3.1"  # needed by GUI (User sync), python-active-directory
 dicttoxml = "==1.7.4"  # needed by GUI (API XML format)
 Cython = "==0.29.19"  # needed by numpy

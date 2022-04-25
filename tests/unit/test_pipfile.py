@@ -88,17 +88,13 @@ def prune_build_artifacts(basepath: Path, paths: Iterable[Path]) -> Iterable[Pat
     yield from (p for p in paths if not p.is_relative_to(omd_build))
 
 
-def scan_for_imports(root_node: ast.Module) -> Iterable[ImportName]:
-    """walk the tree and yield all imported packages"""
-    for node in ast.walk(root_node):
-        if isinstance(node, ast.Import):
-            yield from (ImportName(n.name) for n in node.names)
-        elif isinstance(node, ast.ImportFrom):
-            if node.level != 0:
-                # relative imports
-                continue
-            assert node.module is not None
-            yield ImportName(node.module)
+def imports_for_node(node: ast.AST) -> Iterable[ImportName]:
+    if isinstance(node, ast.Import):
+        return {ImportName(n.name) for n in node.names}
+    if isinstance(node, ast.ImportFrom) and node.level == 0:  # ignore relative imports
+        assert node.module is not None
+        return {ImportName(node.module)}
+    return set()
 
 
 def toplevel_importname(name: ImportName) -> ImportName:
@@ -118,38 +114,43 @@ def toplevel_importname(name: ImportName) -> ImportName:
         return name
 
 
-def prune_imports(import_set: set[ImportName]) -> set[ImportName]:
+def prune_imports(imports: Iterable[ImportName]) -> set[ImportName]:
     """throw out all our own libraries and use only top-level names"""
     return {
         top_level_lib
-        for import_name in import_set
+        for import_name in imports
         for top_level_lib in [toplevel_importname(import_name)]
         if top_level_lib not in IGNORED_LIBS
     }
 
 
 @lru_cache(maxsize=None)
+def imports_for_file(path: Path) -> set[ImportName]:
+    # We don't care about warnings from 3rd party packages
+    with path.open("rb") as source_file, warnings.catch_warnings():
+        try:
+            # NOTE: In summary, this takes quite some time: parse: 5s, scan: 3.3s
+            return {
+                imp
+                for node in ast.walk(ast.parse(source_file.read(), str(path)))
+                for imp in imports_for_node(node)
+            }
+        except SyntaxError as e:
+            # We have various py2 scripts which raise SyntaxErrors.
+            # e.g. agents/pugins/*_2.py also some google test stuff...
+            # If we should check them they would fail the unittests,
+            # providing a whitelist here is not really maintainable
+            logging.getLogger().warning("Failed to read %r: %r", source_file, e)
+            return set()
+
+
 def get_imported_libs(repopath: Path) -> set[ImportName]:
     """Scan the repo for import statements, return only non local ones"""
-    logger = logging.getLogger()
-
-    imports: set[ImportName] = set()
-    for source_path in prune_build_artifacts(repopath, iter_sourcefiles(repopath)):
-        # We don't care about warnings from 3rd party packages
-        with source_path.open("rb") as source_file, warnings.catch_warnings():
-            try:
-                # NOTE: This takes quite some time: parse: 5s, scan: 3.3s
-                root = ast.parse(source_file.read(), str(source_path))
-                imports.update(scan_for_imports(root))
-            except SyntaxError as e:
-                # We have various py2 scripts which raise SyntaxErrors.
-                # e.g. agents/pugins/*_2.py also some google test stuff...
-                # If we should check them they would fail the unittests,
-                # providing a whitelist here is not really maintainable
-                logger.warning("Failed to read %r: %r", source_file, e)
-                continue
-
-    return prune_imports(imports)
+    return prune_imports(
+        imp
+        for path in prune_build_artifacts(repopath, iter_sourcefiles(repopath))
+        for imp in imports_for_file(path)
+    )
 
 
 def packagename_for(path: Path) -> PackageName:

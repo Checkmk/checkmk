@@ -13,8 +13,8 @@ import pytest
 from werkzeug.test import create_environ
 
 from cmk.gui.exceptions import RequestTimeout
-from cmk.gui.globals import request, timeout_manager
-from cmk.gui.utils.timeout_manager import TimeoutManager
+from cmk.gui.globals import request
+from cmk.gui.utils.timeout_manager import timeout_manager, TimeoutManager
 from cmk.gui.wsgi.applications.checkmk import CheckmkApp
 
 if t.TYPE_CHECKING:

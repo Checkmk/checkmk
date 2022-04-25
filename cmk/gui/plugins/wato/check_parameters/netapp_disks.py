@@ -46,7 +46,7 @@ def _parameter_valuespec_netapp_disks():
          Tuple(
              title=_("Failed to spare ratio"),
              help=_("You can set a limit to the failed to spare disk ratio. "
-                    "The ratio is calculated with <i>spare / (failed + spare)</i>."),
+                    "The ratio is calculated with <i>failed / (failed + spare)</i>."),
              elements=[
                  Percentage(title=_("Warning at or above"), default_value=1.0),
                  Percentage(title=_("Critical at or above"), default_value=50.0),
@@ -56,7 +56,7 @@ def _parameter_valuespec_netapp_disks():
          Tuple(
              title=_("Offline to spare ratio"),
              help=_("You can set a limit to the offline to spare disk ratio. "
-                    "The ratio is calculated with <i>spare / (offline + spare)</i>."),
+                    "The ratio is calculated with <i>offline / (offline + spare)</i>."),
              elements=[
                  Percentage(title=_("Warning at or above"), default_value=1.0),
                  Percentage(title=_("Critical at or above"), default_value=50.0),

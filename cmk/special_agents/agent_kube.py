@@ -1160,11 +1160,9 @@ class JsonProtocol(Protocol):
 
 def _write_sections(sections: Mapping[str, Callable[[], Optional[JsonProtocol]]]) -> None:
     for section_name, section_call in sections.items():
-        with SectionWriter(section_name) as writer:
-            section_output = section_call()
-            if not section_output:
-                continue
-            writer.append(section_output.json())
+        if section_output := section_call():
+            with SectionWriter(section_name) as writer:
+                writer.append(section_output.json())
 
 
 def write_cluster_api_sections(cluster_name: str, cluster: Cluster) -> None:

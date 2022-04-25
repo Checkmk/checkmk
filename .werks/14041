@@ -1,0 +1,14 @@
+Title: brocade_fcport: Set "CRC errors rate" display format to two decimals
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1650879821
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1
+
+By default "CRC errors rate" display format was set to one decimal.
+User could enter a percentage with a bigger precision, but it was
+shown incorrectly.
+Now, two decimals are displayed for this parameter.

@@ -158,6 +158,28 @@ def test_create_rule_with_string_value(logged_in_admin_wsgi_app) -> None:
     assert resp.json["extensions"]["value_raw"] == "'d,u,r,f,s'"
 
 
+def test_create_rule_with_bool_value(base: str, logged_in_admin_wsgi_app) -> None:
+    wsgi_app = logged_in_admin_wsgi_app
+    resp = wsgi_app.post(
+        f"{base}/domain-types/rule/collections/all",
+        headers={"Accept": "application/json", "Content-Type": "application/json"},
+        params=json.dumps(
+            {
+                "ruleset": "ignored_services",
+                "folder": "/",
+                "properties": {
+                    "description": "Test",
+                    "disabled": False,
+                },
+                "value_raw": "True",
+                "conditions": {},
+            }
+        ),
+    )
+
+    assert resp.json["extensions"]["value_raw"] == "True"
+
+
 def test_openapi_list_rules(logged_in_admin_wsgi_app, new_rule):
     wsgi_app = logged_in_admin_wsgi_app
     base = "/NO_SITE/check_mk/api/1.0"

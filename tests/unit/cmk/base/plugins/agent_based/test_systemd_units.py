@@ -2166,7 +2166,7 @@ def test_discover_systemd_units_services(section, discovery_params, discovered_s
     [
         (
             SECTION,
-            [Service()],
+            [Service(item="Summary")],
         ),
     ],
 )
@@ -2423,5 +2423,10 @@ def test_check_systemd_units_services(item, params, section, check_results):
 )
 def test_check_systemd_units_services_summary(params, section, check_results):
     assert (
-        list(check_systemd_units_services_summary(params=params, section=section)) == check_results
+        list(
+            check_systemd_units_services_summary(
+                item="nonsense-backward-compatibility", params=params, section=section
+            )
+        )
+        == check_results
     )

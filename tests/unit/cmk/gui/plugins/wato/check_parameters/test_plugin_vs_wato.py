@@ -302,6 +302,11 @@ class ErrorReporter:
         ("check", "mongodb_replica_set", "checkgroup_parameters:mongodb_replica_set"),
         ("check", "mongodb_replica_set_election", "checkgroup_parameters:mongodb_replica_set"),
         ("check", "netapp_fcpio", "checkgroup_parameters:netapp_fcportio"),
+        (
+            "check",
+            "systemd_units_services_summary",
+            "checkgroup_parameters:systemd_services_summary",
+        ),
         ("check", "ucd_mem", "checkgroup_parameters:memory_simple"),
     }
     KNOWN_WATO_MISSING = {

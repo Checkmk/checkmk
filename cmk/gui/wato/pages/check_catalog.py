@@ -21,8 +21,7 @@ from cmk.utils.type_defs import CheckPluginNameStr
 
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import html
-from cmk.gui.htmllib import HTML
+from cmk.gui.htmllib.context import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.page_menu import (
@@ -37,6 +36,7 @@ from cmk.gui.plugins.wato.utils import get_search_expression, mode_registry, sea
 from cmk.gui.plugins.wato.utils.main_menu import MainMenu, MenuItem
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import PermissionName
+from cmk.gui.utils.html import HTML
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
 from cmk.gui.valuespec import ID
 from cmk.gui.watolib.check_mk_automations import get_check_information

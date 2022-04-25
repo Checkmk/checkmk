@@ -18,10 +18,10 @@ from typing import List, Literal, Optional, Tuple
 
 import cmk.gui.metrics as metrics
 from cmk.gui.exceptions import MKGeneralException
-from cmk.gui.globals import html
-from cmk.gui.htmllib import HTML
+from cmk.gui.htmllib.context import html
 from cmk.gui.i18n import _
 from cmk.gui.type_defs import Perfdata, Row
+from cmk.gui.utils.html import HTML
 from cmk.gui.view_utils import get_themed_perfometer_bg_color
 
 PerfometerData = List[Tuple[float, str]]

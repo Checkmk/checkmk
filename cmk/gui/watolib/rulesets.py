@@ -39,7 +39,7 @@ import cmk.gui.watolib.bakery as bakery
 from cmk.gui import utils
 from cmk.gui.config import active_config, register_post_config_load_hook
 from cmk.gui.exceptions import MKGeneralException
-from cmk.gui.globals import html
+from cmk.gui.htmllib.context import html
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.utils.html import HTML

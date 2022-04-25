@@ -17,8 +17,7 @@ import cmk.gui.gui_background_job as gui_background_job
 import cmk.gui.watolib as watolib
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.exceptions import FinalizeRequest, MKAuthException, MKGeneralException, MKUserError
-from cmk.gui.globals import html
-from cmk.gui.htmllib import HTML
+from cmk.gui.htmllib.context import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _, ungettext
 from cmk.gui.logged_in import user
@@ -34,6 +33,7 @@ from cmk.gui.plugins.wato.utils import flash, mode_registry, redirect, WatoMode
 from cmk.gui.plugins.wato.utils.html_elements import wato_html_head
 from cmk.gui.type_defs import ActionResult
 from cmk.gui.utils.confirm_with_preview import confirm_with_preview
+from cmk.gui.utils.html import HTML
 from cmk.gui.utils.urls import makeuri
 from cmk.gui.valuespec import (
     CascadingDropdown,

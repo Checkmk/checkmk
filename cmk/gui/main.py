@@ -10,7 +10,7 @@ import cmk.gui.pages
 import cmk.gui.utils as utils
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import HTTPRedirect
-from cmk.gui.globals import html
+from cmk.gui.htmllib.context import html
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user

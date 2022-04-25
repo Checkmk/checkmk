@@ -8,7 +8,7 @@ from typing import List, Optional, Type
 
 from cmk.utils.password_store import Password
 
-from cmk.gui.globals import html
+from cmk.gui.htmllib.context import html
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.plugins.wato.utils import (

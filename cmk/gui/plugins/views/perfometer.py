@@ -9,8 +9,7 @@ from typing import Optional, Tuple
 import cmk.gui.metrics as metrics
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.config import active_config
-from cmk.gui.globals import html
-from cmk.gui.htmllib import HTML
+from cmk.gui.htmllib.context import html
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.plugins.views.graphs import cmk_graph_url
@@ -27,6 +26,7 @@ from cmk.gui.plugins.views.utils import (
     sorter_registry,
 )
 from cmk.gui.type_defs import Perfdata, PerfometerSpec, TranslatedMetrics
+from cmk.gui.utils.html import HTML
 
 
 class Perfometer:

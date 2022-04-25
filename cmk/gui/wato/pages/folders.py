@@ -21,8 +21,7 @@ import cmk.gui.weblib as weblib
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import html
-from cmk.gui.htmllib import HTML
+from cmk.gui.htmllib.context import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -55,6 +54,7 @@ from cmk.gui.type_defs import ActionResult, Choices
 from cmk.gui.utils.agent_registration import remove_tls_registration_help
 from cmk.gui.utils.escaping import escape_to_html_permissive
 from cmk.gui.utils.flashed_messages import flash
+from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.popups import MethodAjax
 from cmk.gui.utils.transaction_manager import transactions

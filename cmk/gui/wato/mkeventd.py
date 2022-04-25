@@ -56,8 +56,7 @@ import cmk.gui.watolib as watolib
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKGeneralException, MKUserError
-from cmk.gui.globals import html
-from cmk.gui.htmllib import HTML
+from cmk.gui.htmllib.context import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
@@ -112,6 +111,7 @@ from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, Choices
 from cmk.gui.user_sites import get_event_console_site_choices
 from cmk.gui.utils.escaping import escape_to_html
+from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import (
     make_confirm_link,

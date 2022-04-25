@@ -11,7 +11,7 @@ import livestatus
 from livestatus import SiteId
 
 import cmk.gui.sites as sites
-from cmk.gui.globals import html
+from cmk.gui.htmllib.context import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l, ungettext
 from cmk.gui.permissions import Permission, permission_registry

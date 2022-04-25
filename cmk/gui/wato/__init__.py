@@ -120,8 +120,7 @@ from cmk.gui.exceptions import (
     MKInternalError,
     MKUserError,
 )
-from cmk.gui.globals import html
-from cmk.gui.htmllib import HTML
+from cmk.gui.htmllib.context import html
 from cmk.gui.i18n import _, _l, _u
 from cmk.gui.log import logger
 from cmk.gui.pages import Page, page_registry
@@ -129,6 +128,7 @@ from cmk.gui.permissions import Permission, permission_registry
 from cmk.gui.plugins.wato.utils.base_modes import WatoMode
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import PermissionName
+from cmk.gui.utils.html import HTML
 from cmk.gui.wato.pages.activate_changes import (
     ModeActivateChanges,
     ModeAjaxActivationState,

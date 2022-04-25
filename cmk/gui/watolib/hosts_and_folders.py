@@ -77,9 +77,8 @@ from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import MKAuthException, MKGeneralException, MKUserError, RequestTimeout
-from cmk.gui.globals import html
 from cmk.gui.hooks import request_memoize
-from cmk.gui.htmllib import HTML
+from cmk.gui.htmllib.context import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
@@ -87,6 +86,7 @@ from cmk.gui.logged_in import user
 from cmk.gui.site_config import allsites, is_wato_slave_site
 from cmk.gui.type_defs import HTTPVariables, SetOnceDict
 from cmk.gui.utils import urls
+from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import Choices
 from cmk.gui.watolib.changes import add_change

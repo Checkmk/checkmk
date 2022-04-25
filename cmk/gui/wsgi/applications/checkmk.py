@@ -18,7 +18,7 @@ import cmk.utils.profile
 import cmk.utils.store
 
 from cmk.gui import config as config_module
-from cmk.gui import htmllib, http, pages, sites
+from cmk.gui import http, pages, sites
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.config import active_config
 from cmk.gui.context import AppContext, RequestContext
@@ -33,7 +33,8 @@ from cmk.gui.exceptions import (
     MKUnauthenticatedException,
     MKUserError,
 )
-from cmk.gui.globals import html
+from cmk.gui.htmllib.context import html
+from cmk.gui.htmllib.html import HTMLGenerator
 from cmk.gui.http import request, response, Response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
@@ -219,7 +220,7 @@ class CheckmkApp:
             funnel=funnel,
             config_obj=config_obj,
             user=LoggedInNobody(),
-            html_obj=htmllib.html(req, resp, funnel, output_format),
+            html_obj=HTMLGenerator(req, resp, funnel, output_format),
             timeout_manager=timeout_manager,
             display_options=DisplayOptions(),
             theme=theme,

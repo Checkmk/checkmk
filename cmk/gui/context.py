@@ -18,9 +18,10 @@ from cmk.gui.utils.user_errors import UserErrors
 
 if TYPE_CHECKING:
     # Cyclical import
-    from cmk.gui import htmllib, http, userdb
+    from cmk.gui import http, userdb
     from cmk.gui.config import Config
     from cmk.gui.display_options import DisplayOptions
+    from cmk.gui.htmllib.html import HTMLGenerator
     from cmk.gui.i18n import Translation
     from cmk.gui.logged_in import LoggedInUser
     from cmk.gui.plugins.openapi.restful_objects import Endpoint
@@ -113,7 +114,7 @@ class RequestContext:
         funnel: OutputFunnel,
         config_obj: Config,
         user: LoggedInUser,  # pylint: disable=redefined-outer-name
-        html_obj: Optional[htmllib.html] = None,
+        html_obj: Optional[HTMLGenerator] = None,
         timeout_manager: Optional[TimeoutManager] = None,  # pylint: disable=redefined-outer-name
         theme: Optional[Theme] = None,  # pylint: disable=redefined-outer-name
         display_options: Optional[DisplayOptions] = None,  # pylint: disable=redefined-outer-name

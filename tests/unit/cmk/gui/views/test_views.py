@@ -17,7 +17,7 @@ from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 import cmk.gui.plugins.views
 import cmk.gui.views
 from cmk.gui.config import active_config
-from cmk.gui.globals import html
+from cmk.gui.htmllib.context import html
 from cmk.gui.logged_in import user
 from cmk.gui.plugins.views.utils import transform_painter_spec
 from cmk.gui.plugins.visuals.utils import Filter

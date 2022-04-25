@@ -8,7 +8,7 @@ import cmk.utils.render
 from cmk.utils.render import SecondsRenderer
 
 import cmk.gui.utils as utils
-from cmk.gui.globals import html
+from cmk.gui.htmllib.context import html
 from cmk.gui.plugins.views.perfometers.utils import (
     LegacyPerfometerResult,
     Perfdata,

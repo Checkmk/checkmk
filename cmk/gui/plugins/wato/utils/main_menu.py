@@ -7,7 +7,7 @@
 import re
 from typing import List
 
-from cmk.gui.globals import html
+from cmk.gui.htmllib.context import html
 from cmk.gui.i18n import _l
 from cmk.gui.watolib.main_menu import (
     ABCMainModule,

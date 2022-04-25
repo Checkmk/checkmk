@@ -10,15 +10,9 @@ from typing import TYPE_CHECKING
 
 from cmk.gui.ctx_stack import request_local_attr
 
-#####################################################################
-# a namespace for storing data during an application context
-
 if TYPE_CHECKING:
-    # Import cycles
-    from cmk.gui import htmllib
+    # Import cycle
+    from cmk.gui.htmllib.html import HTMLGenerator
 
 
-######################################################################
-# TODO: This should live somewhere else...
-
-html: htmllib.html = request_local_attr("html")
+html: HTMLGenerator = request_local_attr("html")

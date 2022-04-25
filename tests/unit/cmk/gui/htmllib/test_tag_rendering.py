@@ -6,7 +6,7 @@
 
 import pytest
 
-from cmk.gui.htmllib._tag_rendering import (
+from cmk.gui.htmllib.tag_rendering import (
     normalize_css_spec,
     render_element,
     render_end_tag,

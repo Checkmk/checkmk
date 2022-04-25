@@ -8,7 +8,7 @@ import cmk.gui.views as views
 import cmk.gui.visuals as visuals
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import html
+from cmk.gui.htmllib.context import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.plugins.dashboard.utils import dashlet_registry, IFrameDashlet

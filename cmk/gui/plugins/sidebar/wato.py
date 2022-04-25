@@ -12,8 +12,8 @@ import cmk.gui.sites as sites
 import cmk.gui.views as views
 import cmk.gui.watolib as watolib
 from cmk.gui.config import active_config
-from cmk.gui.globals import html
-from cmk.gui.htmllib import foldable_container, HTML
+from cmk.gui.htmllib.context import html
+from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import mega_menu_registry
@@ -27,6 +27,7 @@ from cmk.gui.plugins.sidebar.utils import (
 )
 from cmk.gui.plugins.wato.utils.main_menu import main_module_registry, MainModuleTopic
 from cmk.gui.type_defs import Choices, MegaMenu, TopicMenuItem, TopicMenuTopic, ViewSpec
+from cmk.gui.utils.html import HTML
 from cmk.gui.watolib.search import (
     ABCMatchItemGenerator,
     match_item_generator_registry,

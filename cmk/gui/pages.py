@@ -17,7 +17,7 @@ from cmk.gui.config import active_config
 from cmk.gui.crash_handler import handle_exception_as_gui_crash_report
 from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import MKMissingDataError
-from cmk.gui.globals import html
+from cmk.gui.htmllib.context import html
 from cmk.gui.http import request, response
 from cmk.gui.log import logger
 

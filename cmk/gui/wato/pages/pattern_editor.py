@@ -18,8 +18,8 @@ import cmk.gui.forms as forms
 import cmk.gui.watolib as watolib
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import html
-from cmk.gui.htmllib import foldable_container, HTML
+from cmk.gui.htmllib.context import html
+from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.page_menu import (
@@ -32,6 +32,7 @@ from cmk.gui.page_menu import (
 from cmk.gui.plugins.wato.utils import ConfigHostname, mode_registry, WatoMode
 from cmk.gui.table import table_element
 from cmk.gui.utils.escaping import escape_to_html
+from cmk.gui.utils.html import HTML
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.wato.pages.rulesets import ModeEditRuleset
 from cmk.gui.watolib.search import (

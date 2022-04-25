@@ -13,7 +13,7 @@ from cmk.utils.tags import TagConfig
 from cmk.utils.type_defs import TagConditionNE, TaggroupID, TagID
 
 import cmk.gui.watolib as watolib
-from cmk.gui.htmllib import HTML
+from cmk.gui.utils.html import HTML
 from cmk.gui.wato.pages.rulesets import active_config, RuleConditionRenderer
 
 

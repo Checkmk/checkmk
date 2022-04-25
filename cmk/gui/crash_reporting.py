@@ -34,8 +34,8 @@ from cmk.gui.breadcrumb import (
 )
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import html
-from cmk.gui.htmllib import HTML, HTMLContent
+from cmk.gui.htmllib.context import html
+from cmk.gui.htmllib.tag_rendering import HTMLContent
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -49,6 +49,7 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.plugins.views.crash_reporting import CrashReportsRowTable
+from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode, urlencode_vars
 from cmk.gui.utils.user_errors import user_errors

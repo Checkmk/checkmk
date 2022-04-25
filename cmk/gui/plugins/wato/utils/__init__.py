@@ -33,7 +33,6 @@ import cmk.gui.watolib as watolib
 import cmk.gui.weblib as weblib
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKGeneralException, MKUserError
-from cmk.gui.globals import html
 from cmk.gui.groups import (
     GroupSpecs,
     load_contact_group_information,
@@ -41,7 +40,8 @@ from cmk.gui.groups import (
     load_service_group_information,
 )
 from cmk.gui.hooks import request_memoize
-from cmk.gui.htmllib import foldable_container, HTML
+from cmk.gui.htmllib.context import html
+from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _u
 from cmk.gui.logged_in import user
@@ -93,6 +93,7 @@ from cmk.gui.type_defs import Choices
 from cmk.gui.user_sites import get_activation_site_choices
 from cmk.gui.utils.escaping import escape_to_html
 from cmk.gui.utils.flashed_messages import flash  # noqa: F401 # pylint: disable=unused-import
+from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import make_confirm_link  # noqa: F401 # pylint: disable=unused-import
 from cmk.gui.valuespec import (  # noqa: F401 # pylint: disable=unused-import

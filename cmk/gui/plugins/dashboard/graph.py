@@ -14,7 +14,7 @@ from cmk.utils.type_defs import MetricName
 
 import cmk.gui.sites as sites
 from cmk.gui.exceptions import MKGeneralException, MKMissingDataError, MKUserError
-from cmk.gui.globals import html
+from cmk.gui.htmllib.context import html
 from cmk.gui.i18n import _
 from cmk.gui.metrics import graph_info, metric_info
 from cmk.gui.plugins.dashboard.utils import (

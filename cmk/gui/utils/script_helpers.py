@@ -18,7 +18,7 @@ from cmk.gui.config import get_default_config, load_config, make_config_object
 from cmk.gui.context import AppContext, RequestContext
 from cmk.gui.ctx_stack import app_stack, request_stack
 from cmk.gui.display_options import DisplayOptions
-from cmk.gui.htmllib import html
+from cmk.gui.htmllib.html import HTMLGenerator
 from cmk.gui.http import Request, Response
 from cmk.gui.logged_in import LoggedInNobody
 from cmk.gui.utils.logging import PrependURLFilter
@@ -51,7 +51,7 @@ def make_request_context(environ: Optional[Mapping[str, Any]] = None) -> Request
         funnel=funnel,
         config_obj=make_config_object(get_default_config()),
         user=LoggedInNobody(),
-        html_obj=html(req, resp, funnel, output_format="html"),
+        html_obj=HTMLGenerator(req, resp, funnel, output_format="html"),
         display_options=DisplayOptions(),
         timeout_manager=TimeoutManager(),
         theme=Theme(),

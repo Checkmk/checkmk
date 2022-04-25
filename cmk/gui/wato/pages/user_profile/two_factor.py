@@ -25,7 +25,7 @@ from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_simple_page_brea
 from cmk.gui.crash_handler import handle_exception_as_gui_crash_report
 from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import HTTPRedirect, MKGeneralException, MKUserError
-from cmk.gui.globals import html
+from cmk.gui.htmllib.context import html
 from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _

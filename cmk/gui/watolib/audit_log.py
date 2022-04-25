@@ -12,9 +12,9 @@ from cmk.utils.type_defs import UserId
 
 import cmk.gui.watolib.git
 from cmk.gui.config import active_config
-from cmk.gui.htmllib import HTML
 from cmk.gui.logged_in import user
 from cmk.gui.utils import escaping
+from cmk.gui.utils.html import HTML
 from cmk.gui.watolib.appendstore import ABCAppendStore
 from cmk.gui.watolib.objref import ObjectRef
 from cmk.gui.watolib.paths import wato_var_dir

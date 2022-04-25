@@ -6,7 +6,7 @@
 from dataclasses import dataclass
 from typing import Dict
 
-from cmk.gui.globals import html
+from cmk.gui.htmllib.context import html
 from cmk.gui.i18n import _l
 from cmk.gui.plugins.visuals.utils import Filter, filter_registry
 from cmk.gui.type_defs import FilterHTTPVariables, Row

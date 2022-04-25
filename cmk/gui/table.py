@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from __future__ import annotations
+
 import json
 import re
 from contextlib import contextmanager, nullcontext
@@ -27,18 +29,19 @@ import cmk.gui.utils as utils
 import cmk.gui.utils.escaping as escaping
 import cmk.gui.weblib as weblib
 from cmk.gui.config import active_config
-from cmk.gui.globals import html
-from cmk.gui.htmllib import foldable_container, HTML
+from cmk.gui.htmllib.context import html
+from cmk.gui.htmllib.foldable_container import foldable_container
+from cmk.gui.htmllib.tag_rendering import HTMLContent
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.utils.escaping import escape_to_html_permissive
+from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeactionuri, makeuri, requested_file_name
 
 if TYPE_CHECKING:
-    from cmk.gui.htmllib import HTMLContent
     from cmk.gui.type_defs import CSSSpec
 
 
@@ -85,7 +88,7 @@ class Foldable(Enum):
 @contextmanager
 def table_element(
     table_id: Optional[str] = None,
-    title: Optional["HTMLContent"] = None,
+    title: Optional[HTMLContent] = None,
     searchable: bool = True,
     sortable: bool = True,
     foldable: Foldable = Foldable.NOT_FOLDABLE,
@@ -148,7 +151,7 @@ class Table:
     def __init__(
         self,
         table_id: Optional[str] = None,
-        title: Optional["HTMLContent"] = None,
+        title: Optional[HTMLContent] = None,
         searchable: bool = True,
         sortable: bool = True,
         foldable: Foldable = Foldable.NOT_FOLDABLE,
@@ -219,8 +222,8 @@ class Table:
 
     def cell(
         self,
-        title: "HTMLContent" = "",
-        text: "HTMLContent" = "",
+        title: HTMLContent = "",
+        text: HTMLContent = "",
         css: Optional["CSSSpec"] = None,
         help_txt: Optional[str] = None,
         colspan: Optional[int] = None,
@@ -274,8 +277,8 @@ class Table:
 
     def _add_cell(
         self,
-        title: "HTMLContent" = "",
-        text: "HTMLContent" = "",
+        title: HTMLContent = "",
+        text: HTMLContent = "",
         css: Optional["CSSSpec"] = None,
         help_txt: Optional[str] = None,
         colspan: Optional[int] = None,

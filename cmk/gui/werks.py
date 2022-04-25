@@ -28,8 +28,7 @@ from cmk.gui.breadcrumb import (
     make_simple_page_breadcrumb,
 )
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import html
-from cmk.gui.htmllib import HTML
+from cmk.gui.htmllib.context import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -46,6 +45,7 @@ from cmk.gui.page_menu import (
 from cmk.gui.table import table_element
 from cmk.gui.utils.escaping import escape_to_html, escape_to_html_permissive
 from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
+from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.theme import theme
 from cmk.gui.utils.transaction_manager import transactions

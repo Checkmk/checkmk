@@ -15,8 +15,7 @@ import cmk.gui.mkeventd as mkeventd
 import cmk.gui.sites as sites
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.config import active_config, builtin_role_ids
-from cmk.gui.globals import html
-from cmk.gui.htmllib import HTML
+from cmk.gui.htmllib.context import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l, ungettext
 from cmk.gui.logged_in import user
@@ -42,6 +41,7 @@ from cmk.gui.plugins.views.utils import (
     RowTableLivestatus,
 )
 from cmk.gui.type_defs import HTTPVariables, Row
+from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeactionuri, urlencode_vars
 from cmk.gui.valuespec import MonitoringState

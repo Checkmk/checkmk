@@ -8,11 +8,11 @@ from typing import Dict, Union
 
 import cmk.gui.watolib as watolib
 from cmk.gui.exceptions import MKGeneralException
-from cmk.gui.htmllib import HTML
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.plugins.views.utils import Painter, painter_registry, Sorter, sorter_registry
 from cmk.gui.type_defs import Row
+from cmk.gui.utils.html import HTML
 
 
 @painter_registry.register

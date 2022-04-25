@@ -13,7 +13,7 @@ import cmk.utils.defines as defines
 import cmk.gui.query_filters as query_filters
 import cmk.gui.utils as utils
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import html
+from cmk.gui.htmllib.context import html
 from cmk.gui.i18n import _, _l
 from cmk.gui.plugins.visuals.utils import (
     CheckboxRowFilter,

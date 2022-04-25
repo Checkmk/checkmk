@@ -9,7 +9,7 @@ import subprocess
 
 import cmk.utils.version as cmk_version
 
-from cmk.gui.globals import html  # pylint: disable=cmk-module-layer-violation
+from cmk.gui.htmllib.context import html  # pylint: disable=cmk-module-layer-violation
 
 # Does not detect the module hierarchy correctly. Imports are fine.
 from cmk.gui.i18n import _  # pylint: disable=cmk-module-layer-violation

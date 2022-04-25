@@ -6,7 +6,7 @@
 
 from typing import Iterable, Optional, Tuple
 
-from cmk.gui.globals import html
+from cmk.gui.htmllib.context import html
 from cmk.gui.i18n import _u
 from cmk.gui.utils.escaping import escape_to_html_permissive
 from cmk.gui.utils.html import HTML

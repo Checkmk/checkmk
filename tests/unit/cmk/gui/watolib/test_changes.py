@@ -17,7 +17,7 @@ from livestatus import SiteId
 from cmk.utils.object_diff import make_diff_text
 from cmk.utils.type_defs import UserId
 
-from cmk.gui.htmllib import HTML
+from cmk.gui.utils.html import HTML
 from cmk.gui.watolib.audit_log import AuditLogStore, log_audit
 from cmk.gui.watolib.changes import ActivateChangesWriter, add_change
 from cmk.gui.watolib.objref import ObjectRef, ObjectRefType

@@ -15,8 +15,7 @@ import cmk.gui.userdb as userdb
 import cmk.gui.watolib as watolib
 from cmk.gui import fields as gui_fields
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import html
-from cmk.gui.htmllib import HTML
+from cmk.gui.htmllib.context import html
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.plugins.wato.utils import (
@@ -37,6 +36,7 @@ from cmk.gui.plugins.wato.utils import (
     SNMPCredentials,
 )
 from cmk.gui.site_config import has_wato_slave_sites, is_wato_slave_site
+from cmk.gui.utils.html import HTML
 from cmk.gui.utils.urls import urlencode_vars
 from cmk.gui.valuespec import (
     AbsoluteDate,

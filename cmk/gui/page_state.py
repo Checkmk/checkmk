@@ -12,7 +12,7 @@ top right of the page.
 from dataclasses import dataclass
 from typing import Optional, Union
 
-from cmk.gui.globals import html
+from cmk.gui.htmllib.context import html
 from cmk.gui.type_defs import CSSSpec
 from cmk.gui.utils.html import HTML
 

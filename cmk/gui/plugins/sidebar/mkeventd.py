@@ -9,8 +9,8 @@ from typing import List, Optional, Tuple
 from livestatus import SiteId
 
 import cmk.gui.mkeventd as mkeventd
-from cmk.gui.globals import html
-from cmk.gui.htmllib import HTMLContent
+from cmk.gui.htmllib.context import html
+from cmk.gui.htmllib.tag_rendering import HTMLContent
 from cmk.gui.i18n import _
 from cmk.gui.plugins.sidebar.utils import SidebarSnapin, snapin_registry, snapin_site_choice
 from cmk.gui.type_defs import PermissionName

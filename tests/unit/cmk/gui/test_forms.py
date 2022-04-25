@@ -9,7 +9,7 @@ from typing import List, Tuple
 import pytest  # type: ignore[import]
 
 from cmk.gui.forms import remove_unused_vars
-from cmk.gui.globals import html
+from cmk.gui.htmllib.context import html
 from cmk.gui.wato.pages.rulesets import _is_var_to_delete
 
 

@@ -7,7 +7,7 @@
 import json
 from typing import Any, List, Optional, TypedDict
 
-from cmk.gui.globals import html
+from cmk.gui.htmllib.context import html
 from cmk.gui.i18n import _
 from cmk.gui.pages import AjaxPage, page_registry
 from cmk.gui.plugins.metrics import artwork

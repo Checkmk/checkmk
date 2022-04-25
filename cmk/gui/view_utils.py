@@ -14,7 +14,7 @@ from livestatus import SiteId
 from cmk.utils.type_defs import Labels, LabelSources, TaggroupID, TaggroupIDToTagID, TagID
 
 import cmk.gui.utils.escaping as escaping
-from cmk.gui.globals import html
+from cmk.gui.htmllib.context import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import LoggedInUser

@@ -36,8 +36,7 @@ from cmk.gui.exceptions import (
     MKInternalError,
     MKUserError,
 )
-from cmk.gui.globals import html
-from cmk.gui.htmllib import HTML
+from cmk.gui.htmllib.context import html
 from cmk.gui.http import request, Request, response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
@@ -46,6 +45,7 @@ from cmk.gui.main import get_page_heading
 from cmk.gui.pages import Page, page_registry
 from cmk.gui.type_defs import AuthType
 from cmk.gui.utils.escaping import escape_to_html
+from cmk.gui.utils.html import HTML
 from cmk.gui.utils.language_cookie import del_language_cookie
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.theme import theme

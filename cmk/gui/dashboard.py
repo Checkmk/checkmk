@@ -47,7 +47,7 @@ from cmk.gui.exceptions import (
     MKMissingDataError,
     MKUserError,
 )
-from cmk.gui.globals import html
+from cmk.gui.htmllib.context import html
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger

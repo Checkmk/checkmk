@@ -10,7 +10,7 @@ Cares about rendering the breadcrumb which is shown at the top of all pages
 
 from typing import Iterable, List, MutableSequence, NamedTuple, Optional, Union
 
-from cmk.gui.globals import html
+from cmk.gui.htmllib.context import html
 from cmk.gui.type_defs import MegaMenu
 from cmk.gui.utils.escaping import escape_to_html
 from cmk.gui.utils.speaklater import LazyString

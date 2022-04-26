@@ -17,6 +17,8 @@ def parse_gcp_function(string_table: StringTable) -> gcp.Section:
 
 register.agent_section(name="gcp_service_cloud_functions", parse_function=parse_gcp_function)
 
+service_namer = gcp.service_name_factory("Function")
+
 
 def discover(
     section_gcp_service_cloud_functions: Optional[gcp.Section],
@@ -61,7 +63,7 @@ def check_gcp_function_instances(
 register.check_plugin(
     name="gcp_function_instances",
     sections=["gcp_service_cloud_functions", "gcp_assets"],
-    service_name="GCP Cloud Function instances %s",
+    service_name=service_namer("instances"),
     check_ruleset_name="gcp_function_instances",
     discovery_function=discover,
     check_function=check_gcp_function_instances,
@@ -104,7 +106,7 @@ def check_gcp_function_execution(
 register.check_plugin(
     name="gcp_function_execution",
     sections=["gcp_service_cloud_functions", "gcp_assets"],
-    service_name="GCP Cloud Function execution %s",
+    service_name=service_namer("execution"),
     check_ruleset_name="gcp_function_execution",
     discovery_function=discover,
     check_function=check_gcp_function_execution,
@@ -137,7 +139,7 @@ def check_gcp_function_network(
 register.check_plugin(
     name="gcp_function_network",
     sections=["gcp_service_cloud_functions", "gcp_assets"],
-    service_name="GCP Cloud Function network %s",
+    service_name=service_namer("network"),
     check_ruleset_name="gcp_function_network",
     discovery_function=discover,
     check_function=check_gcp_function_network,

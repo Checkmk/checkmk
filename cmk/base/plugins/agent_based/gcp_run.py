@@ -17,6 +17,8 @@ def parse_gcp_run(string_table: StringTable) -> gcp.Section:
 
 register.agent_section(name="gcp_service_cloud_run", parse_function=parse_gcp_run)
 
+service_namer = gcp.service_name_factory("Cloud Run")
+
 
 def discover(
     section_gcp_service_cloud_run: Optional[gcp.Section],
@@ -62,7 +64,7 @@ def check_gcp_run_network(
 register.check_plugin(
     name="gcp_run_network",
     sections=["gcp_service_cloud_run", "gcp_assets"],
-    service_name="GCP Cloud Run network %s",
+    service_name=service_namer("network"),
     check_ruleset_name="gcp_run_network",
     discovery_function=discover,
     check_function=check_gcp_run_network,
@@ -91,7 +93,7 @@ def check_gcp_run_memory(
 register.check_plugin(
     name="gcp_run_memory",
     sections=["gcp_service_cloud_run", "gcp_assets"],
-    service_name="GCP Cloud Run memory %s",
+    service_name=service_namer("memory"),
     check_ruleset_name="gcp_run_memory",
     discovery_function=discover,
     check_function=check_gcp_run_memory,
@@ -119,7 +121,7 @@ def check_gcp_run_cpu(
 register.check_plugin(
     name="gcp_run_cpu",
     sections=["gcp_service_cloud_run", "gcp_assets"],
-    service_name="GCP Cloud Run cpu %s",
+    service_name=service_namer("cpu"),
     check_ruleset_name="gcp_run_cpu",
     discovery_function=discover,
     check_function=check_gcp_run_cpu,
@@ -162,7 +164,7 @@ def check_gcp_run_requests(
 register.check_plugin(
     name="gcp_run_requests",
     sections=["gcp_service_cloud_run", "gcp_assets"],
-    service_name="GCP Cloud Run requests %s",
+    service_name=service_namer("requests"),
     check_ruleset_name="gcp_run_requests",
     discovery_function=discover,
     check_function=check_gcp_run_requests,

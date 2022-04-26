@@ -15,6 +15,8 @@ def parse(string_table: StringTable) -> gcp.Section:
 
 register.agent_section(name="gcp_service_redis", parse_function=parse)
 
+service_namer = gcp.service_name_factory("Redis")
+
 
 def discover(
     section_gcp_service_redis: Optional[gcp.Section], section_gcp_assets: Optional[gcp.AssetSection]
@@ -61,7 +63,7 @@ def check_cpu_util(
 register.check_plugin(
     name="gcp_redis_cpu",
     sections=["gcp_service_redis", "gcp_assets"],
-    service_name="GCP Redis CPU: %s",
+    service_name=service_namer("CPU"),
     check_ruleset_name="gcp_redis_cpu",
     discovery_function=discover,
     check_function=check_cpu_util,
@@ -98,7 +100,7 @@ def check_memory_util(
 register.check_plugin(
     name="gcp_redis_memory",
     sections=["gcp_service_redis", "gcp_assets"],
-    service_name="GCP Redis Memory: %s",
+    service_name=service_namer("memory"),
     check_ruleset_name="gcp_redis_memory",
     discovery_function=discover,
     check_function=check_memory_util,
@@ -127,7 +129,7 @@ def check_hitratio(
 register.check_plugin(
     name="gcp_redis_hitratio",
     sections=["gcp_service_redis", "gcp_assets"],
-    service_name="GCP Redis Hitratio: %s",
+    service_name=service_namer("hitratio"),
     check_ruleset_name="redis_hitratio",
     discovery_function=discover,
     check_function=check_hitratio,

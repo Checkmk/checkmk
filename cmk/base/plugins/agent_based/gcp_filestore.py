@@ -17,6 +17,8 @@ def parse(string_table: StringTable) -> gcp.Section:
 
 register.agent_section(name="gcp_service_filestore", parse_function=parse)
 
+service_namer = gcp.service_name_factory("Filestore")
+
 
 def discover(
     section_gcp_service_filestore: Optional[gcp.Section],
@@ -65,7 +67,7 @@ def check(
 register.check_plugin(
     name="gcp_filestore_disk",
     sections=["gcp_service_filestore", "gcp_assets"],
-    service_name="GCP Filestore %s",
+    service_name=service_namer("disk"),
     check_ruleset_name="gcp_filestore_disk",
     discovery_function=discover,
     check_function=check,

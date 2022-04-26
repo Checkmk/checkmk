@@ -24,6 +24,8 @@ def parse(string_table: StringTable) -> gcp.Section:
 
 register.agent_section(name="gcp_service_cloud_sql", parse_function=parse)
 
+service_namer = gcp.service_name_factory("Cloud SQL")
+
 
 def discover(
     section_gcp_service_cloud_sql: Optional[gcp.Section],
@@ -90,7 +92,7 @@ def check_gcp_sql_status(
 register.check_plugin(
     name="gcp_sql_status",
     sections=["gcp_service_cloud_sql", "gcp_assets"],
-    service_name="GCP Cloud SQL: %s",
+    service_name=service_namer("status"),
     check_ruleset_name="gcp_sql_status",
     discovery_function=discover,
     check_function=check_gcp_sql_status,
@@ -132,7 +134,7 @@ def check_gcp_sql_memory(
 register.check_plugin(
     name="gcp_sql_memory",
     sections=["gcp_service_cloud_sql", "gcp_assets"],
-    service_name="GCP Cloud SQL memory: %s",
+    service_name=service_namer("memory"),
     check_ruleset_name="gcp_sql_memory",
     discovery_function=discover,
     check_function=check_gcp_sql_memory,
@@ -162,7 +164,7 @@ def check_gcp_sql_cpu(
 register.check_plugin(
     name="gcp_sql_cpu",
     sections=["gcp_service_cloud_sql", "gcp_assets"],
-    service_name="GCP Cloud SQL cpu: %s",
+    service_name=service_namer("CPU"),
     check_ruleset_name="gcp_sql_cpu",
     discovery_function=discover,
     check_function=check_gcp_sql_cpu,
@@ -199,7 +201,7 @@ def check_gcp_sql_network(
 register.check_plugin(
     name="gcp_sql_network",
     sections=["gcp_service_cloud_sql", "gcp_assets"],
-    service_name="GCP Cloud SQL Network: %s",
+    service_name=service_namer("network"),
     check_ruleset_name="gcp_sql_network",
     discovery_function=discover,
     check_function=check_gcp_sql_network,
@@ -238,7 +240,7 @@ def check_gcp_sql_disk(
 register.check_plugin(
     name="gcp_sql_disk",
     sections=["gcp_service_cloud_sql", "gcp_assets"],
-    service_name="GCP Cloud SQL disk: %s",
+    service_name=service_namer("disk"),
     check_ruleset_name="gcp_sql_disk",
     discovery_function=discover,
     check_function=check_gcp_sql_disk,

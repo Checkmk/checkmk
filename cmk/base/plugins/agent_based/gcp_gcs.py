@@ -14,6 +14,8 @@ def parse_gcp_gcs(string_table: StringTable) -> gcp.Section:
     return gcp.parse_gcp(string_table, "bucket_name")
 
 
+service_namer = gcp.service_name_factory("GCS")
+
 register.agent_section(name="gcp_service_gcs", parse_function=parse_gcp_gcs)
 
 
@@ -53,7 +55,7 @@ def check_gcp_gcs_requests(
 register.check_plugin(
     name="gcp_gcs_requests",
     sections=["gcp_service_gcs", "gcp_assets"],
-    service_name="GCP GCS requests %s",
+    service_name=service_namer("requests"),
     check_ruleset_name="gcp_gcs_requests",
     discovery_function=discover,
     check_function=check_gcp_gcs_requests,
@@ -84,7 +86,7 @@ def check_gcp_gcs_network(
 register.check_plugin(
     name="gcp_gcs_network",
     sections=["gcp_service_gcs", "gcp_assets"],
-    service_name="GCP GCS networks %s",
+    service_name=service_namer("networks"),
     check_ruleset_name="gcp_gcs_network",
     discovery_function=discover,
     check_function=check_gcp_gcs_network,
@@ -115,7 +117,7 @@ def check_gcp_gcs_object(
 register.check_plugin(
     name="gcp_gcs_objects",
     sections=["gcp_service_gcs", "gcp_assets"],
-    service_name="GCP GCS objects %s",
+    service_name=service_namer("objects"),
     check_ruleset_name="gcp_gcs_objects",
     discovery_function=discover,
     check_function=check_gcp_gcs_object,

@@ -118,3 +118,10 @@ def generic_check(
                 levels_upper=levels_upper,
                 label=metric_spec.label,
             )
+
+
+def service_name_factory(gcp_service: str) -> Callable[[str], str]:
+    def f(name: str) -> str:
+        return f"{gcp_service} - %s - {name}"
+
+    return f

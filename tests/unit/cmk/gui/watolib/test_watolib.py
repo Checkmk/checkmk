@@ -61,6 +61,7 @@ def test_registered_automation_commands():
         "checkmk-remote-automation-start",
         "checkmk-remote-automation-get-status",
         "discovered-host-label-sync",
+        "remove-tls-registration",
     ]
 
     if not cmk_version.is_raw_edition():

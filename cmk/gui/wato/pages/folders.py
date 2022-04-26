@@ -10,7 +10,6 @@ import json
 import operator
 from typing import Dict, Iterator, List, Optional, Tuple, Type
 
-from cmk.utils.agent_registration import get_uuid_link_manager
 from cmk.utils.type_defs import HostName
 
 import cmk.gui.forms as forms
@@ -61,6 +60,7 @@ from cmk.gui.utils.urls import (
     makeuri_contextless,
 )
 from cmk.gui.valuespec import DropdownChoice, TextInput, ValueSpec, WatoFolderChoices
+from cmk.gui.watolib.agent_registration import remove_tls_registration
 from cmk.gui.watolib.changes import make_object_audit_log_url
 from cmk.gui.watolib.groups import load_contact_group_information
 from cmk.gui.watolib.host_attributes import host_attribute_registry
@@ -286,7 +286,8 @@ class ModeFolder(WatoMode):
                     button_name="_remove_tls_registration_from_folder",
                     message=_(
                         "Do you really want to remove the TLS registration of the hosts in"
-                        " this folder (recursively)?"
+                        " this folder?"
+                        "<br>This does not affect hosts in subfolders."
                     )
                     + remove_tls_registration_help(),
                 ),
@@ -539,8 +540,10 @@ class ModeFolder(WatoMode):
                 watolib.Folder.current().move_subfolder_to(what_folder, target_folder)
             return redirect(folder_url)
 
+        # Operations on current FOLDER
+
         if request.has_var("_remove_tls_registration_from_folder"):
-            get_uuid_link_manager().unlink_sources(set(self._folder.all_hosts_recursively()))
+            remove_tls_registration(self._folder.get_hosts_by_site(list(self._folder.hosts())))
             return None
 
         # Operations on HOSTS
@@ -611,7 +614,7 @@ class ModeFolder(WatoMode):
                 )
 
         if request.var("_remove_tls_registration_from_selection"):
-            get_uuid_link_manager().unlink_sources(selected_host_names)
+            remove_tls_registration(self._folder.get_hosts_by_site(selected_host_names))
 
         return None
 

@@ -2704,17 +2704,22 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         return result
 
     # Group the given host names by their site and delete their files
-    def _delete_host_files(self, host_names):
-        hosts_by_site: Dict[SiteId, List[str]] = {}
-        for host_name in host_names:
-            host = self.hosts()[host_name]
-            hosts_by_site.setdefault(host.site_id(), []).append(host_name)
-
-        for site_id, site_host_names in hosts_by_site.items():
+    def _delete_host_files(self, host_names: Sequence[HostName]) -> None:
+        for site_id, site_host_names in self.get_hosts_by_site(host_names).items():
             delete_hosts(
                 site_id,
                 site_host_names,
             )
+
+    def get_hosts_by_site(
+        self, host_names: Sequence[HostName]
+    ) -> Mapping[SiteId, Sequence[HostName]]:
+        hosts_by_site: Dict[SiteId, List[HostName]] = {}
+        hosts = self.hosts()
+        for host_name in host_names:
+            host = hosts[host_name]
+            hosts_by_site.setdefault(host.site_id(), []).append(host_name)
+        return hosts_by_site
 
     def move_hosts(self, host_names, target_folder):
         # 1. Check preconditions

@@ -9,7 +9,6 @@ import abc
 from typing import Iterator, Optional, overload, Type
 
 import cmk.utils.tags
-from cmk.utils.agent_registration import get_uuid_link_manager
 
 import cmk.gui.forms as forms
 import cmk.gui.watolib as watolib
@@ -42,6 +41,7 @@ from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.urls import makeactionuri
 from cmk.gui.valuespec import FixedValue, Hostname, ListOfStrings
 from cmk.gui.wato.pages.folders import ModeFolder
+from cmk.gui.watolib.agent_registration import remove_tls_registration
 from cmk.gui.watolib.changes import make_object_audit_log_url
 from cmk.gui.watolib.check_mk_automations import update_dns_cache
 from cmk.gui.watolib.hosts_and_folders import CREHost
@@ -372,7 +372,7 @@ class ModeEditHost(ABCHostMode):
             return redirect(mode_url("folder", folder=folder.path()))
 
         if request.var("_remove_tls_registration"):
-            get_uuid_link_manager().unlink_sources([self._host.name()])
+            remove_tls_registration({self._host.site_id(): [self._host.name()]})
             return None
 
         attributes = watolib.collect_attributes(

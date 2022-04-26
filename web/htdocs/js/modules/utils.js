@@ -720,9 +720,11 @@ export function update_pending_changes(changes_info) {
         return;
     }
 
-    const text_container = document.getElementById("pending_changes");
+    const text_container = document.getElementById("changes_info");
     if (text_container) {
-        text_container.innerHTML = changes_info;
+        const changes_number = changes_info.split(" ")[0];
+        const changes_number_span = text_container.getElementsByClassName("changes_number")[0];
+        changes_number_span.innerHTML = changes_number;
     }
 
     const img_container = document.getElementById("page_state_icon");

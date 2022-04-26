@@ -191,25 +191,25 @@ impl ConnectionStatus {
                 ));
             }
             CertParsingResult::Error(..) => {
-                lines.push(mark_problematic("Certificate parsing failed"))
+                lines.push(String::from("Certificate parsing failed (!!)"))
             }
         }
         lines
     }
 
-    fn remote_conn_type_str(
+    fn remote_conn_type_marker(
         local_conn_type: &config::ConnectionType,
         remote_conn_type: &Option<config::ConnectionType>,
     ) -> String {
         match remote_conn_type {
             Some(ct) => {
                 if ct == local_conn_type {
-                    format!("{}", ct)
+                    String::from("")
                 } else {
-                    mark_problematic(&format!("{}", ct))
+                    String::from(" (!!)")
                 }
             }
-            None => mark_problematic("unknown"),
+            None => String::from(" (!!)"),
         }
     }
 
@@ -221,7 +221,7 @@ impl ConnectionStatus {
                 {
                     String::from("operational")
                 } else {
-                    mark_problematic("unknown")
+                    String::from("unknown (!!)")
                 }
             }
         }
@@ -233,8 +233,9 @@ impl ConnectionStatus {
     ) -> Vec<String> {
         vec![
             format!(
-                "Connection type: {}",
-                ConnectionStatus::remote_conn_type_str(
+                "Connection type: {}{}",
+                fmt_option_to_str(&remote_conn_stat.connection_type, "unknown"),
+                ConnectionStatus::remote_conn_type_marker(
                     local_conn_type,
                     &remote_conn_stat.connection_type
                 ),
@@ -245,10 +246,7 @@ impl ConnectionStatus {
             ),
             format!(
                 "Host name: {}",
-                match &remote_conn_stat.host_name {
-                    Some(hn) => hn,
-                    None => "unknown",
-                }
+                fmt_option_to_str(&remote_conn_stat.host_name, "unknown"),
             ),
         ]
     }
@@ -263,7 +261,7 @@ impl ConnectionStatus {
                     )
                 }
                 RemoteConnectionStatusResponse::Error(err) => {
-                    vec![mark_problematic(&format!("Error: {}", err))]
+                    vec![format!("Error: {} (!!)", err)]
                 }
             },
             None => vec![String::from("No remote address (imported connection)")],
@@ -293,7 +291,8 @@ impl std::fmt::Display for ConnectionStatus {
 impl Status {
     fn from(
         registry: &config::Registry,
-        pull_config: &config::PullConfig,
+        ip_allowlist: Vec<String>,
+        allow_legacy_pull: bool,
         agent_rec_api: &impl agent_receiver_api::Status,
     ) -> Status {
         let mut conn_stats = Vec::new();
@@ -320,8 +319,8 @@ impl Status {
 
         Status {
             version: String::from(constants::VERSION),
-            ip_allowlist: pull_config.allowed_ip.to_vec(),
-            allow_legacy_pull: pull_config.allow_legacy_pull(),
+            ip_allowlist,
+            allow_legacy_pull,
             connections: conn_stats,
         }
     }
@@ -369,8 +368,11 @@ impl std::fmt::Display for Status {
     }
 }
 
-fn mark_problematic(to_mark: &str) -> String {
-    format!("{} (!!)", to_mark)
+fn fmt_option_to_str(op: &Option<impl std::fmt::Display>, none_str: &str) -> String {
+    match op {
+        Some(formattable) => format!("{}", formattable),
+        None => String::from(none_str),
+    }
 }
 
 fn _status(
@@ -379,7 +381,13 @@ fn _status(
     json: bool,
     agent_rec_api: &impl agent_receiver_api::Status,
 ) -> AnyhowResult<String> {
-    Status::from(registry, pull_config, agent_rec_api).to_string(json)
+    Status::from(
+        registry,
+        pull_config.allowed_ip.to_vec(),
+        pull_config.allow_legacy_pull(),
+        agent_rec_api,
+    )
+    .to_string(json)
 }
 
 pub fn status(

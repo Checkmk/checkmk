@@ -248,6 +248,7 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
                     "value": {
                         "severity_unmonitored": 1,
                         "severity_vanished": 0,
+                        "severity_new_host_label": 1,
                         "check_interval": 120.0,
                     },
                     "options": {"description": "Perform every two hours a service discovery"},

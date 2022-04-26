@@ -9,6 +9,7 @@ from cmk.gui.plugins.wato.special_agents.common import (
     api_request_authentication,
     api_request_connection_elements,
     RulespecGroupVMCloudContainer,
+    ssl_verification,
 )
 from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
 from cmk.gui.valuespec import (
@@ -90,6 +91,7 @@ def _valuespec_generic_metrics_alertmanager():
                     title=_("Alertmanager connection option"),
                 ),
             ),
+            ssl_verification(),
             api_request_authentication(),
             (
                 "protocol",

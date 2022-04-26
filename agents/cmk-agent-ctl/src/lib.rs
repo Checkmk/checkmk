@@ -13,7 +13,7 @@ mod setup;
 pub mod site_spec;
 mod tls_server;
 pub mod types;
-use anyhow::{anyhow, Context, Result as AnyhowResult};
+use anyhow::{Context, Result as AnyhowResult};
 use config::{JSONLoader, TOMLLoader};
 
 use modes::daemon::daemon;
@@ -28,8 +28,6 @@ use modes::status::status;
 pub use setup::init;
 
 pub fn run_requested_mode(args: cli::Args, paths: setup::PathResolver) -> AnyhowResult<()> {
-    agent_socket_operational(&args)?;
-
     let registration_preset = config::RegistrationPreset::load(&paths.registration_preset_path)?;
     let runtime_config = config::RuntimeConfig::load(&paths.config_path)?;
     let mut registry = config::Registry::from_file(&paths.registry_path)
@@ -85,24 +83,5 @@ pub fn run_requested_mode(args: cli::Args, paths: setup::PathResolver) -> Anyhow
         ),
         cli::Args::Delete(delete_args) => delete(&mut registry, &delete_args.connection),
         cli::Args::DeleteAll { .. } => delete_all(&mut registry),
-    }
-}
-
-// This check is currently only useful on Unix. On Windows, the internal agent address can be passed
-// on the command line, so we cannot easily check this for any mode.
-fn agent_socket_operational(args: &cli::Args) -> AnyhowResult<()> {
-    let agent_channel = setup::agent_channel();
-    match *args {
-        cli::Args::Delete { .. } => Ok(()),
-        cli::Args::DeleteAll { .. } => Ok(()),
-        cli::Args::ProxyRegister { .. } => Ok(()),
-        cli::Args::Status { .. } => Ok(()),
-        _ => match agent_channel.operational() {
-            true => Ok(()),
-            false => Err(anyhow!(format!(
-                "Something seems wrong with the agent socket ({}), aborting",
-                agent_channel
-            ))),
-        },
     }
 }

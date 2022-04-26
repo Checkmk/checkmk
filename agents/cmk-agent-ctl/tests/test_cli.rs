@@ -109,29 +109,3 @@ fn test_fail_become_user() {
             .contains("Failed to run as user 'cmk-agent'."));
     }
 }
-
-#[cfg(unix)]
-#[test]
-fn test_fail_socket_missing() {
-    let mut modes_allowed = std::collections::HashSet::new();
-    modes_allowed.insert("delete");
-    modes_allowed.insert("delete-all");
-    modes_allowed.insert("proxy-register");
-    modes_allowed.insert("status");
-    modes_allowed.insert("help");
-
-    for mode in supported_modes() {
-        if modes_allowed.contains(mode) {
-            continue;
-        }
-        let mut cmd = Command::cargo_bin(BINARY).unwrap();
-        let cmd = cmd.env("DEBUG_HOME_DIR", "whatever").arg(mode);
-        let err = cmd.unwrap_err();
-        let output = err.as_output().unwrap();
-        assert_eq!(output.status.code(), Some(1));
-        assert_eq!(output.stdout, b"");
-        assert!(std::str::from_utf8(&output.stderr)
-            .unwrap()
-            .contains("Something seems wrong with the agent socket"));
-    }
-}

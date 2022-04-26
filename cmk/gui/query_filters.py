@@ -382,8 +382,7 @@ class TimeQuery(NumberRangeQuery):
         super().__init__(ident=ident, column=column)
         self.request_vars.extend([var + "_range" for var in self.request_vars])
 
-    @staticmethod
-    def get_bound(var: str, value: FilterHTTPVariables) -> Optional[int]:
+    def get_bound(self, var: str, value: FilterHTTPVariables) -> Optional[int]:
         rangename = value.get(var + "_range")
         if rangename == "abs":
             try:

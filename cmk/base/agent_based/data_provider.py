@@ -39,7 +39,6 @@ if TYPE_CHECKING:
     from cmk.core_helpers.protocol import FetcherMessage
     from cmk.core_helpers.type_defs import SectionNameCollection
 
-    from cmk.base.config import ConfigCache, HostConfig
     from cmk.base.sources import Source
 
 CacheInfo = Optional[Tuple[int, int]]

@@ -809,7 +809,7 @@ class PerformanceGraphsDiagnosticsElement(ABCDiagnosticsElement):
             ]
         )
 
-        return requests.post(url, verify=False)  # nosec
+        return requests.post(url, verify=str(cmk.utils.paths.trusted_ca_file))
 
     def _get_automation_secret(self) -> str:
         automation_secret_filepath = Path(cmk.utils.paths.var_dir).joinpath(

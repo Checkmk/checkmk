@@ -1149,3 +1149,42 @@ def test_openapi_host_with_inventory_failed(
         headers={"Accept": "application/json"},
     )
     assert resp.json["extensions"]["attributes"]["inventory_failed"] is True
+
+
+def test_openapi_host_with_invalid_labels(
+    base: str, aut_user_auth_wsgi_app: WebTestAppForCMK
+) -> None:
+    json_data = {
+        "folder": "/",
+        "host_name": "example.com",
+        "attributes": {"labels": {"label": ["invalid_label_entry", "another_one"]}},
+    }
+    aut_user_auth_wsgi_app.call_method(
+        "post",
+        f"{base}/domain-types/host_config/collections/all",
+        params=json.dumps(json_data),
+        status=400,
+        content_type="application/json",
+        headers={"Accept": "application/json"},
+    )
+
+
+def test_openapi_host_with_labels(base: str, aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
+    json_data = {
+        "folder": "/",
+        "host_name": "example.com",
+        "attributes": {
+            "labels": {
+                "label": "value",
+            }
+        },
+    }
+    resp = aut_user_auth_wsgi_app.call_method(
+        "post",
+        f"{base}/domain-types/host_config/collections/all",
+        params=json.dumps(json_data),
+        status=200,
+        content_type="application/json",
+        headers={"Accept": "application/json"},
+    )
+    assert resp.json["extensions"]["attributes"]["labels"] == {"label": "value"}

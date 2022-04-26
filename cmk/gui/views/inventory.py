@@ -782,14 +782,14 @@ def _convert_display_hint(hint: InventoryHintSpec) -> InventoryHintSpec:
 
 def _inv_titleinfo(
     invpath: SDRawPath,
-    key: Optional[str] = None,
 ) -> Tuple[Optional[str], str]:
     hint = _get_display_hint(invpath)
     icon = hint.get("icon")
     if "title" in hint:
         title = hint["title"]
         if hasattr(title, "__call__"):
-            title = title(key)
+            parsed_path, _attribute_keys = inventory.parse_tree_path(invpath)
+            title = title(parsed_path[-1] or "")
     else:
         title = (
             invpath.rstrip(".").rstrip(":").split(".")[-1].split(":")[-1].replace("_", " ").title()
@@ -1873,8 +1873,7 @@ class ABCNodeRenderer(abc.ABC):
     def show_node(self, node: StructuredDataNode) -> None:
         invpath = ".%s." % self._get_raw_path(list(node.path))
 
-        edge = node.path[-1] if node.path else ""
-        icon, title = _inv_titleinfo(invpath, key=str(edge))
+        icon, title = _inv_titleinfo(invpath)
 
         # Replace placeholders in title with the real values for this path
         if "%d" in title or "%s" in title:

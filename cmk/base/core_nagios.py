@@ -599,8 +599,8 @@ def _create_nagios_servicedefs(
 
         service_spec.update(
             {
-                "check_interval": disco_params["check_interval"],
-                "retry_interval": disco_params["check_interval"],
+                "check_interval": disco_params.check_interval,
+                "retry_interval": disco_params.check_interval,
             }
         )
 

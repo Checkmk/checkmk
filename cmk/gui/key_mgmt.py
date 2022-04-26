@@ -249,8 +249,7 @@ class PageEditKey:
         keys[new_id] = self._generate_key(value["alias"], value["passphrase"])
         self.save(keys)
 
-    @staticmethod
-    def _generate_key(alias, passphrase):
+    def _generate_key(self, alias, passphrase):
         pkey = crypto.PKey()
         pkey.generate_key(crypto.TYPE_RSA, 2048)
 

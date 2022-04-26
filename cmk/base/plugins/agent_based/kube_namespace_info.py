@@ -13,7 +13,11 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     HostLabelGenerator,
     StringTable,
 )
-from cmk.base.plugins.agent_based.utils.kube import kube_labels_to_cmk_labels, NamespaceInfo
+from cmk.base.plugins.agent_based.utils.kube import (
+    kube_annotations_to_cmk_labels,
+    kube_labels_to_cmk_labels,
+    NamespaceInfo,
+)
 from cmk.base.plugins.agent_based.utils.kube_info import check_info
 
 
@@ -24,9 +28,10 @@ def parse_kube_namespace_info(string_table: StringTable):
     ... '"name": "namespace",'
     ... '"creation_timestamp": "1640000000.0",'
     ... '"cluster": "cluster",'
-    ... '"labels": {}}'
-    ... ]])
-    NamespaceInfo(name='namespace', creation_timestamp=1640000000.0, labels={}, cluster='cluster')
+    ... '"labels": {},'
+    ... '"annotations": {}'
+    ... '}']])
+    NamespaceInfo(name='namespace', creation_timestamp=1640000000.0, labels={}, annotations={}, cluster='cluster')
     """
     return NamespaceInfo(**json.loads(string_table[0][0]))
 
@@ -45,11 +50,17 @@ def host_labels(section: NamespaceInfo) -> HostLabelGenerator:
             This label contains the name of the Kubernetes Namespace this
             checkmk host is associated with.
 
+        cmk/kubernetes/annotation/{key}:{value} :
+            These labels are yielded for each Kubernetes annotation, which
+            is permissible. An annotation is permissible if it's value is a
+            valid Kubernetes label value.
+
     """
     yield HostLabel("cmk/kubernetes/object", "namespace")
     yield HostLabel("cmk/kubernetes/cluster", section.cluster)
     yield HostLabel("cmk/kubernetes/namespace", section.name)
     yield from kube_labels_to_cmk_labels(section.labels)
+    yield from kube_annotations_to_cmk_labels(section.annotations)
 
 
 register.agent_section(

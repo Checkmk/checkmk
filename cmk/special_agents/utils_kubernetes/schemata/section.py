@@ -88,6 +88,7 @@ class NamespaceInfo(BaseModel):
     name: api.NamespaceName
     creation_timestamp: Optional[api.CreationTimestamp]
     labels: api.Labels
+    annotations: api.Annotations
     cluster: str
 
 

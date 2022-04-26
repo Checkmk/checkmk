@@ -277,11 +277,6 @@ import cmk.gui.watolib.network_scan
 import cmk.gui.watolib.read_only
 from cmk.gui.plugins.watolib.utils import configvar_order, register_configvar
 from cmk.gui.watolib import (
-    ACResultCRIT,
-    ACResultOK,
-    ACResultWARN,
-    ACTest,
-    ACTestCategories,
     add_change,
     add_service_change,
     ConfigDomainCore,
@@ -366,13 +361,6 @@ def _register_pre_21_plugin_api() -> None:
         "ABCHostAttributeNagiosText",
         "ABCHostAttributeValueSpec",
         "ABCMainModule",
-        "ac_test_registry",
-        "ACResult",
-        "ACResultCRIT",
-        "ACResultOK",
-        "ACResultWARN",
-        "ACTest",
-        "ACTestCategories",
         "add_change",
         "BinaryHostRulespec",
         "BinaryServiceRulespec",

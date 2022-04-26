@@ -6,7 +6,7 @@
 
 import cmk.utils.version as cmk_version
 
-from cmk.gui.plugins.wato.utils import ac_test_registry
+from cmk.gui.watolib.analyze_configuration import ac_test_registry
 
 
 def test_registered_ac_tests() -> None:

@@ -26,7 +26,15 @@ import cmk.gui.watolib as watolib
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.http import request
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.utils import (
+from cmk.gui.plugins.wato.utils import ConfigDomainOMD, SiteBackupJobs
+from cmk.gui.site_config import (
+    get_site_config,
+    has_wato_slave_sites,
+    is_wato_slave_site,
+    sitenames,
+    wato_slave_sites,
+)
+from cmk.gui.watolib.analyze_configuration import (
     ac_test_registry,
     ACResult,
     ACResultCRIT,
@@ -34,15 +42,6 @@ from cmk.gui.plugins.wato.utils import (
     ACResultWARN,
     ACTest,
     ACTestCategories,
-    ConfigDomainOMD,
-    SiteBackupJobs,
-)
-from cmk.gui.site_config import (
-    get_site_config,
-    has_wato_slave_sites,
-    is_wato_slave_site,
-    sitenames,
-    wato_slave_sites,
 )
 from cmk.gui.watolib.global_settings import rulebased_notifications_enabled
 from cmk.gui.watolib.sites import SiteManagementFactory

@@ -99,16 +99,6 @@ from cmk.gui.valuespec import (
     UserID,
     ValueSpec,
 )
-from cmk.gui.watolib.analyze_configuration import (
-    ac_test_registry,
-    ACResult,
-    ACResultCRIT,
-    ACResultNone,
-    ACResultOK,
-    ACResultWARN,
-    ACTest,
-    ACTestCategories,
-)
 from cmk.gui.watolib.audit_log import log_audit
 from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
 from cmk.gui.watolib.automations import (

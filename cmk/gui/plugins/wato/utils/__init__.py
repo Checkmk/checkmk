@@ -134,13 +134,6 @@ from cmk.gui.valuespec import (  # noqa: F401 # pylint: disable=unused-import
 )
 from cmk.gui.watolib import (  # noqa: F401 # pylint: disable=unused-import
     ABCConfigDomain,
-    ac_test_registry,
-    ACResult,
-    ACResultCRIT,
-    ACResultOK,
-    ACResultWARN,
-    ACTest,
-    ACTestCategories,
     add_change,
     config_domain_registry,
     ConfigDomainCACertificates,

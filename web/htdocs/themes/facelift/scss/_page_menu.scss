@@ -53,18 +53,35 @@ div#top_heading {
       }
     }
 
-    div.text_container span.has_changes {
-      font-size: $font-size-large;
+    &.pending_changes {
+      top: 3px;
+
+      div.text_container span {
+        display: block;
+        text-align: center;
+
+        &.changes_number {
+          font-size: $font-size-page-title;
+          font-weight: $font-weight-bold;
+        }
+      }
+    }
+
+    &.no_changes div.text_container span.changes_str {
+      color: $font-color-dimmed;
+
+      &:hover {
+        color: $font-color;
+      }
     }
 
     div.icon_container {
-      margin-top: -2px; // align icon with text
       margin-left: 8px;
 
       img.icon {
         display: block;
-        width: 2 * $spacing;
-        height: 2 * $spacing;
+        width: 2.8 * $spacing;
+        height: 2.8 * $spacing;
 
         &:hover {
           /* disable hover effect */

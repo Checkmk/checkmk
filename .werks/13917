@@ -1,0 +1,12 @@
+Title: UI: Improve styling of pending changes info
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 2.2.0i1
+Date: 1650964721
+Class: feature
+
+The display of pending changes information in the top right corner is now more noticeable for given
+changes and more decent when there's no pending changes. Font size, weight and color and icon size
+are changed respectively.

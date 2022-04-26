@@ -5,6 +5,7 @@
 """Wrapper for a page, with some often used functionality"""
 
 from abc import ABC, abstractmethod
+from typing import List, Union
 
 from playwright.sync_api import expect, Locator, Page
 from playwright.sync_api._generated import FrameLocator
@@ -39,6 +40,10 @@ class LocatorHelper(ABC):
 
     def get_text(self, text: str) -> Locator:
         return self.locator(f"text={text}")
+
+    def get_element_including_texts(self, element_id: str, texts: List[str]) -> Locator:
+        has_text_str = "".join([f":has-text('{t}')" for t in texts])
+        return self.locator(f"#{element_id}{has_text_str}")
 
     def get_link_from_title(self, title: str) -> Locator:
         return self.locator(f"a[title='{title}']")

@@ -31,7 +31,9 @@ class TestHosts:
         logged_in_page.main_frame.get_input("ipaddress").fill(TestHost.ip)
 
         logged_in_page.main_frame.get_suggestion("Save & go to service configuration").click()
-        logged_in_page.main_frame.get_text("1 pending change").click()
+        logged_in_page.main_frame.get_element_including_texts(
+            element_id="changes_info", texts=["1", "change"]
+        ).click()
 
         logged_in_page.activate_selected()
 
@@ -48,7 +50,9 @@ class TestHosts:
         logged_in_page.main_frame.get_link_from_title("Delete this host").click()
 
         logged_in_page.main_frame.get_text("Yes").click()
-        logged_in_page.main_frame.get_text("1 pending change").click()
+        logged_in_page.main_frame.get_element_including_texts(
+            element_id="changes_info", texts=["1", "change"]
+        ).click()
         logged_in_page.activate_selected()
 
         logged_in_page.expect_activation_state("Success")

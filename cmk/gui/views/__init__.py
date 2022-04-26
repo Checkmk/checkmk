@@ -1224,8 +1224,8 @@ class GUIViewRenderer(ABCViewRenderer):
     def _extend_help_dropdown(self, menu: PageMenu) -> None:
         # TODO
         # menu.add_doc_reference(title=_("Host administration"), doc_ref=DocReference.WATO_HOSTS)
-        # menu.add_youtube_reference(title=_("Episode 3: Monitoring Windows"),
-        #                           youtube_id="iz8S9TGGklQ")
+        # menu.add_youtube_reference(title=_("Episode 4: Monitoring Windows in Checkmk"),
+        #                           youtube_id="Nxiq7Jb9mB4")
         pass
 
 

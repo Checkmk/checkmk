@@ -73,14 +73,18 @@ def test_node_alloctable_pods(
 def test_write_nodes_api_sections_registers_sections_to_be_written(
     node: agent.Node, nodes_api_sections: Sequence[str], write_sections_mock
 ):
-    agent.write_nodes_api_sections("cluster", [node], Mock())
+    agent.write_nodes_api_sections(
+        "cluster", agent.AnnotationNonPatternOption.ignore_all, [node], Mock()
+    )
     assert list(write_sections_mock.call_args[0][0]) == nodes_api_sections
 
 
 def test_write_nodes_api_sections_maps_section_names_to_callables(
     node: agent.Node, nodes_api_sections: Sequence[str], write_sections_mock
 ):
-    agent.write_nodes_api_sections("cluster", [node], Mock())
+    agent.write_nodes_api_sections(
+        "cluster", agent.AnnotationNonPatternOption.ignore_all, [node], Mock()
+    )
     assert all(
         callable(write_sections_mock.call_args[0][0][section_name])
         for section_name in nodes_api_sections
@@ -90,7 +94,12 @@ def test_write_nodes_api_sections_maps_section_names_to_callables(
 def test_write_nodes_api_sections_calls_write_sections_for_each_node(
     new_node: Callable[[], agent.Node], cluster_nodes: int, write_sections_mock
 ):
-    agent.write_nodes_api_sections("cluster", [new_node() for _ in range(cluster_nodes)], Mock())
+    agent.write_nodes_api_sections(
+        "cluster",
+        agent.AnnotationNonPatternOption.ignore_all,
+        [new_node() for _ in range(cluster_nodes)],
+        Mock(),
+    )
     assert write_sections_mock.call_count == cluster_nodes
 
 
@@ -167,7 +176,7 @@ def test_conditions_with_status_conditions_none(node: agent.Node):
 
 
 def test_node_info_section(node: agent.Node):
-    info = node.info("cluster")
+    info = node.info("cluster", agent.AnnotationNonPatternOption.ignore_all)
     assert info.name == node.metadata.name
     assert info.labels == node.metadata.labels
     assert isinstance(info.creation_timestamp, float)

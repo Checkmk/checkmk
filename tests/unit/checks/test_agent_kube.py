@@ -309,6 +309,85 @@ def test_cluster_resource_aggregation():
     ]
 
 
+def test_host_labels_annotation_selection():
+    """Test the import-annotations option"""
+    agent = SpecialAgent("agent_kube")
+
+    # Option not set -> no annotations imported. This special case is covered
+    # by test_parse_arguments. If test_parse_arguments is migrated, this
+    # special case needs to be reconsidered.
+
+    # Explicit no filtering
+    arguments = agent.argument_func(
+        {
+            "cluster-name": "cluster",
+            "token": ("password", "token"),
+            "kubernetes-api-server": {
+                "endpoint": "https://11.211.3.32",
+                "verify-cert": False,
+                "proxy": ("no_proxy", "no_proxy"),
+            },
+            "import-annotations": "include-annotations-as-host-labels",
+            "monitored-objects": ["pods"],
+        },
+        "host",
+        "11.211.3.32",
+    )
+    assert arguments == [
+        "--cluster",
+        "cluster",
+        "--token",
+        "token",
+        "--monitored-objects",
+        "pods",
+        "--cluster-aggregation-exclude-node-roles",
+        "control-plane",
+        "infra",
+        "--include-annotations-as-host-labels",
+        "--api-server-endpoint",
+        "https://11.211.3.32",
+        "--api-server-proxy",
+        "NO_PROXY",
+    ]
+
+    # Explicit filtering
+    arguments = agent.argument_func(
+        {
+            "cluster-name": "cluster",
+            "token": ("password", "token"),
+            "kubernetes-api-server": {
+                "endpoint": "https://11.211.3.32",
+                "verify-cert": False,
+                "proxy": ("no_proxy", "no_proxy"),
+            },
+            "import-annotations": (
+                "include-matching-annotations-as-host-labels",
+                "checkmk-monitoring$",
+            ),
+            "monitored-objects": ["pods"],
+        },
+        "host",
+        "11.211.3.32",
+    )
+    assert arguments == [
+        "--cluster",
+        "cluster",
+        "--token",
+        "token",
+        "--monitored-objects",
+        "pods",
+        "--cluster-aggregation-exclude-node-roles",
+        "control-plane",
+        "infra",
+        "--include-matching-annotations-as-host-labels",
+        "checkmk-monitoring$",
+        "--api-server-endpoint",
+        "https://11.211.3.32",
+        "--api-server-proxy",
+        "NO_PROXY",
+    ]
+
+
 def test_parse_namespace_patterns():
     agent = SpecialAgent("agent_kube")
     arguments = agent.argument_func(

@@ -13,9 +13,9 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     HostLabelGenerator,
 )
 from cmk.base.plugins.agent_based.utils.kube import (
-    Annotations,
     ControlChain,
     CreationTimestamp,
+    FilteredAnnotations,
     kube_annotations_to_cmk_labels,
 )
 
@@ -93,7 +93,7 @@ class Info(Protocol):
     cluster: str
     namespace: str
     name: str
-    annotations: Annotations
+    annotations: FilteredAnnotations
 
 
 def host_labels(
@@ -117,9 +117,9 @@ def host_labels(
                 associated with.
 
             cmk/kubernetes/annotation/{key}:{value} :
-                These labels are yielded for each Kubernetes annotation, which
-                is permissible. An annotation is permissible if it's value is a
-                valid Kubernetes label value.
+                These labels are yielded for each Kubernetes annotation that is
+                a valid Kubernetes label. This can be configured via the rule
+                'Kubernetes'.
 
             cmk/kubernetes/deployment:
                 This label is set to the name of the Deployment.

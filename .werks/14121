@@ -1,0 +1,19 @@
+Title: KUBE: Import annotations as host labels
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1651152296
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0b8
+
+By default, Checkmk does not import Kubernetes annotations. With this werk,
+this bevaviour can be configured via the option <tt>Import annotations as host
+labels<\tt> in the rule <tt>Kubernetes<\tt>. The option allows importing any
+Kubernetes annotation that is a valid Kubernetes label. These imported
+annotations are added as host labels to their respective piggyback host using
+the syntax <tt>cmk/kubernetes/annotation/{key}:{value}<\tt>. You can further
+restrict the imported annotations by specifying a pattern which Checkmk
+searches for in the key of the annotation.

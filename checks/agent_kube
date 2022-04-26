@@ -42,6 +42,13 @@ def agent_kube_arguments(
     else:
         args.extend(["--cluster-aggregation-exclude-node-roles", "control-plane", "infra"])
 
+    if (host_labels_param := params.get("import-annotations")) is not None:
+        if host_labels_param == "include-annotations-as-host-labels":
+            args.append("--include-annotations-as-host-labels")
+        else:
+            args.append("--include-matching-annotations-as-host-labels")
+            args.append(host_labels_param[1])
+
     api_params = params["kubernetes-api-server"]
     args.extend(["--api-server-endpoint", api_params["endpoint"]])
     if api_params.get("verify-cert"):

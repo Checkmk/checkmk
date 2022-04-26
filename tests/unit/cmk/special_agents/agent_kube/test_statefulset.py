@@ -18,7 +18,9 @@ def test_write_statefulsets_api_sections_registers_sections_to_be_written(
     statefulsets_api_sections: Sequence[str],
     write_sections_mock: MagicMock,
 ):
-    agent_kube.write_statefulsets_api_sections("cluster", [statefulset], Mock())
+    agent_kube.write_statefulsets_api_sections(
+        "cluster", agent_kube.AnnotationNonPatternOption.ignore_all, [statefulset], Mock()
+    )
     assert list(write_sections_mock.call_args[0][0]) == statefulsets_api_sections
 
 
@@ -27,7 +29,9 @@ def test_write_statefulsets_api_sections_maps_section_names_to_callables(
     statefulsets_api_sections: Sequence[str],
     write_sections_mock: MagicMock,
 ):
-    agent_kube.write_statefulsets_api_sections("cluster", [statefulset], Mock())
+    agent_kube.write_statefulsets_api_sections(
+        "cluster", agent_kube.AnnotationNonPatternOption.ignore_all, [statefulset], Mock()
+    )
     assert all(
         callable(write_sections_mock.call_args[0][0][section_name])
         for section_name in statefulsets_api_sections
@@ -38,7 +42,10 @@ def test_write_statefulsets_api_sections_calls_write_sections_for_each_statefuls
     new_statefulset: Callable[[], agent_kube.StatefulSet], write_sections_mock: MagicMock
 ):
     agent_kube.write_statefulsets_api_sections(
-        "cluster", [new_statefulset() for _ in range(3)], Mock()
+        "cluster",
+        agent_kube.AnnotationNonPatternOption.ignore_all,
+        [new_statefulset() for _ in range(3)],
+        Mock(),
     )
     assert write_sections_mock.call_count == 3
 

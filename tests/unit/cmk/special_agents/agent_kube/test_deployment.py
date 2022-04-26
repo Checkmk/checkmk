@@ -19,7 +19,7 @@ class DeploymentConditionFactory(ModelFactory):
 
 def test_pod_deployment_controller_name(pod: agent.Pod, deployment: agent.Deployment):
     pod.add_controller(deployment)
-    pod_info = pod.info("cluster")
+    pod_info = pod.info("cluster", agent.AnnotationNonPatternOption.ignore_all)
     assert len(pod_info.controllers) == 1
     assert pod_info.controllers[0].name == deployment.name()
 
@@ -94,5 +94,7 @@ def test_write_deployments_api_sections_registers_sections_to_be_written(
     deployments_api_sections: Sequence[str],
     write_sections_mock: MagicMock,
 ):
-    agent.write_deployments_api_sections("cluster", [deployment], Mock())
+    agent.write_deployments_api_sections(
+        "cluster", agent.AnnotationNonPatternOption.ignore_all, [deployment], Mock()
+    )
     assert list(write_sections_mock.call_args[0][0]) == deployments_api_sections

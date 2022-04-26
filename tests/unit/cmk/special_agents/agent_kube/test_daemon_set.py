@@ -15,14 +15,21 @@ from cmk.special_agents.utils_kubernetes.schemata import section
 def test_write_daemon_sets_api_sections_registers_sections_to_be_written(
     daemon_set, daemon_sets_api_sections, write_sections_mock
 ):
-    agent_kube.write_daemon_sets_api_sections("cluster", [daemon_set], Mock())
+    agent_kube.write_daemon_sets_api_sections(
+        "cluster",
+        agent_kube.AnnotationNonPatternOption.ignore_all,
+        [daemon_set],
+        Mock(),
+    )
     assert list(write_sections_mock.call_args[0][0]) == daemon_sets_api_sections
 
 
 def test_write_daemon_sets_api_sections_maps_section_names_to_callables(
     daemon_set, daemon_sets_api_sections, write_sections_mock
 ):
-    agent_kube.write_daemon_sets_api_sections("cluster", [daemon_set], Mock())
+    agent_kube.write_daemon_sets_api_sections(
+        "cluster", agent_kube.AnnotationNonPatternOption.ignore_all, [daemon_set], Mock()
+    )
     assert all(
         callable(write_sections_mock.call_args[0][0][section_name])
         for section_name in daemon_sets_api_sections
@@ -33,7 +40,10 @@ def test_write_daemon_sets_api_sections_calls_write_sections_for_each_daemon_set
     new_daemon_set, write_sections_mock
 ):
     agent_kube.write_daemon_sets_api_sections(
-        "cluster", [new_daemon_set() for _ in range(3)], Mock()
+        "cluster",
+        agent_kube.AnnotationNonPatternOption.ignore_all,
+        [new_daemon_set() for _ in range(3)],
+        Mock(),
     )
     assert write_sections_mock.call_count == 3
 

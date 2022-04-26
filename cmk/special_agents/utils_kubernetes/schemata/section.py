@@ -27,6 +27,15 @@ PythonCompiler = NewType("PythonCompiler", str)
 Timestamp = NewType("Timestamp", float)
 Version = NewType("Version", str)
 
+FilteredAnnotations = NewType("FilteredAnnotations", api.Annotations)
+""" Annotations filtered with user input.
+
+After receiving the annotations from the Kubernetes API, we cannot process all
+of them as HostLabels. FilteredAnnotations are those annotations, which can be
+processed. This means that the annotations can no longer be arbitrary json
+objects and that options from the `Kubernetes` rule have been taken into account.
+"""
+
 
 class PerformanceMetric(BaseModel):
     value: float
@@ -88,7 +97,7 @@ class NamespaceInfo(BaseModel):
     name: api.NamespaceName
     creation_timestamp: Optional[api.CreationTimestamp]
     labels: api.Labels
-    annotations: api.Annotations
+    annotations: FilteredAnnotations
     cluster: str
 
 
@@ -181,7 +190,7 @@ class PodInfo(BaseModel):
     name: str
     creation_timestamp: Optional[api.CreationTimestamp]
     labels: api.Labels  # used for host labels
-    annotations: api.Annotations  # used for host labels
+    annotations: FilteredAnnotations  # used for host labels
     node: Optional[api.NodeName]  # this is optional, because there may be pods, which are not
     # scheduled on any node (e.g., no node with enough capacity is available).
     host_network: Optional[str]
@@ -286,7 +295,7 @@ class NodeInfo(api.NodeInfo):
     name: api.NodeName
     creation_timestamp: api.CreationTimestamp
     labels: api.Labels
-    annotations: api.Annotations
+    annotations: FilteredAnnotations
     addresses: api.NodeAddresses
     cluster: str
 
@@ -341,7 +350,7 @@ class DeploymentInfo(BaseModel):
     name: str
     namespace: api.NamespaceName
     labels: api.Labels
-    annotations: api.Annotations
+    annotations: FilteredAnnotations
     selector: api.Selector
     creation_timestamp: api.CreationTimestamp
     containers: ThinContainers
@@ -354,7 +363,7 @@ class DaemonSetInfo(BaseModel):
     name: str
     namespace: api.NamespaceName
     labels: api.Labels
-    annotations: api.Annotations
+    annotations: FilteredAnnotations
     selector: api.Selector
     creation_timestamp: api.CreationTimestamp
     containers: ThinContainers
@@ -367,7 +376,7 @@ class StatefulSetInfo(BaseModel):
     name: str
     namespace: api.NamespaceName
     labels: api.Labels
-    annotations: api.Annotations
+    annotations: FilteredAnnotations
     selector: api.Selector
     creation_timestamp: api.CreationTimestamp
     containers: ThinContainers

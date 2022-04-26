@@ -89,7 +89,7 @@ class Label(BaseModel):
 
 ContainerName = NewType("ContainerName", str)
 Labels = Mapping[LabelName, Label]
-Annotations = Mapping[LabelName, LabelValue]
+FilteredAnnotations = Mapping[LabelName, LabelValue]
 CreationTimestamp = NewType("CreationTimestamp", float)
 HostName = NewType("HostName", str)
 IpAddress = NewType("IpAddress", str)
@@ -184,7 +184,7 @@ def kube_labels_to_cmk_labels(labels: Labels) -> HostLabelGenerator:
 
 
 # TODO: CMK-10380 (the change will incompatible)
-def kube_annotations_to_cmk_labels(annotations: Annotations) -> HostLabelGenerator:
+def kube_annotations_to_cmk_labels(annotations: FilteredAnnotations) -> HostLabelGenerator:
     """Convert Kubernetes Annotations to HostLabels.
 
     Kubernetes annotations are not valid Checkmk labels, but agent_kube makes
@@ -418,7 +418,7 @@ class NodeInfo(BaseModel):
     name: NodeName
     creation_timestamp: CreationTimestamp
     labels: Labels
-    annotations: Annotations
+    annotations: FilteredAnnotations
     addresses: NodeAddresses
     cluster: str
 
@@ -450,7 +450,7 @@ class PodInfo(BaseModel):
     name: str
     creation_timestamp: Optional[CreationTimestamp]
     labels: Labels  # used for host labels
-    annotations: Annotations  # used for host labels
+    annotations: FilteredAnnotations  # used for host labels
     node: Optional[NodeName]  # this is optional, because there may be pods, which are not
     # scheduled on any node (e.g., no node with enough capacity is available).
     host_network: Optional[str]
@@ -611,7 +611,7 @@ class DeploymentInfo(BaseModel):
     name: str
     namespace: NamespaceName
     labels: Labels
-    annotations: Annotations
+    annotations: FilteredAnnotations
     selector: Selector
     creation_timestamp: CreationTimestamp
     containers: ThinContainers
@@ -624,7 +624,7 @@ class DaemonSetInfo(BaseModel):
     name: str
     namespace: NamespaceName
     labels: Labels
-    annotations: Annotations
+    annotations: FilteredAnnotations
     selector: Selector
     creation_timestamp: CreationTimestamp
     containers: ThinContainers
@@ -637,7 +637,7 @@ class StatefulSetInfo(BaseModel):
     name: str
     namespace: NamespaceName
     labels: Labels
-    annotations: Annotations
+    annotations: FilteredAnnotations
     selector: Selector
     creation_timestamp: CreationTimestamp
     containers: ThinContainers
@@ -788,7 +788,7 @@ class NamespaceInfo(BaseModel):
     name: NamespaceName
     creation_timestamp: Optional[CreationTimestamp]
     labels: Labels
-    annotations: Annotations
+    annotations: FilteredAnnotations
     cluster: str
 
 

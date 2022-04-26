@@ -64,9 +64,9 @@ def host_labels(section: PodInfo) -> HostLabelGenerator:
             checkmk host is associated with.
 
         cmk/kubernetes/annotation/{key}:{value} :
-            These labels are yielded for each Kubernetes annotation, which
-            is permissible. An annotation is permissible if it's value is a
-            valid Kubernetes label value.
+            These labels are yielded for each Kubernetes annotation that is
+            a valid Kubernetes label. This can be configured via the rule
+            'Kubernetes'.
 
         cmk/kubernetes/node:
             This label contains the name of the Kubernetes Node this checkmk

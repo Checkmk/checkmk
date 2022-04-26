@@ -18,7 +18,7 @@ from cmk.base.plugins.agent_based.utils.kube_info import check_info
 
 
 def parse_kube_namespace_info(string_table: StringTable):
-    """Parses `string_table` into a NodeInfo instance
+    """Parses `string_table` into a NamespaceInfo instance
 
     >>> parse_kube_namespace_info([['{"architecture": "amd64",'
     ... '"name": "namespace",'

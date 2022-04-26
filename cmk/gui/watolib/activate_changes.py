@@ -433,11 +433,11 @@ class ActivateChanges:
         for site_id in activation_sites():
             changes_counter += len(SiteChanges(SiteChanges.make_path(site_id)).read())
             if changes_counter > 10:
-                return _("10+ changes")
+                return _("10+ pending changes")
         if changes_counter == 1:
-            return _("1 change")
+            return _("1 pending change")
         if changes_counter > 1:
-            return _("%d changes") % changes_counter
+            return _("%d pending changes") % changes_counter
         return None
 
     def grouped_changes(self):

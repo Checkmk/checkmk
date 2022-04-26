@@ -367,6 +367,7 @@ class Pod:
             name=self.metadata.name,
             creation_timestamp=self.metadata.creation_timestamp,
             labels=self.metadata.labels,
+            annotations=self.metadata.annotations,
             node=self.node,
             host_network=self.spec.host_network,
             dns_policy=self.spec.dns_policy,

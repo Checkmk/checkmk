@@ -14,6 +14,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     StringTable,
 )
 from cmk.base.plugins.agent_based.utils.kube import (
+    kube_annotations_to_cmk_labels,
     kube_labels_to_cmk_labels,
     KubernetesError,
     PodInfo,
@@ -28,6 +29,7 @@ def parse_kube_pod_info(string_table: StringTable):
     ... '"name": "redis-xyz", '
     ... '"creation_timestamp": 1637069562.0, '
     ... '"labels": {}, '
+    ... '"annotations": {}, '
     ... '"node": "k8-w2", '
     ... '"host_network": null, '
     ... '"dns_policy": "Default", '
@@ -39,7 +41,7 @@ def parse_kube_pod_info(string_table: StringTable):
     ... '"uid": "dd1019ca-c429-46af-b6b7-8aad47b6081a", '
     ... '"controllers": [{"type_": "deployment", "name": "redis-deployment"}]}'
     ... ]])
-    PodInfo(namespace='redis', name='redis-xyz', creation_timestamp=1637069562.0, labels={}, node='k8-w2', host_network=None, dns_policy='Default', host_ip='192.168.49.2', pod_ip='172.17.0.2', qos_class='burstable', restart_policy='Always', uid='dd1019ca-c429-46af-b6b7-8aad47b6081a', controllers=[Controller(type_=<ControllerType.deployment: 'deployment'>, name='redis-deployment')], cluster='cluster')
+    PodInfo(namespace='redis', name='redis-xyz', creation_timestamp=1637069562.0, labels={}, annotations={}, node='k8-w2', host_network=None, dns_policy='Default', host_ip='192.168.49.2', pod_ip='172.17.0.2', qos_class='burstable', restart_policy='Always', uid='dd1019ca-c429-46af-b6b7-8aad47b6081a', controllers=[Controller(type_=<ControllerType.deployment: 'deployment'>, name='redis-deployment')], cluster='cluster')
     """
     return PodInfo(**json.loads(string_table[0][0]))
 
@@ -61,6 +63,11 @@ def host_labels(section: PodInfo) -> HostLabelGenerator:
             This label contains the name of the Kubernetes Namespace this
             checkmk host is associated with.
 
+        cmk/kubernetes/annotation/{key}:{value} :
+            These labels are yielded for each Kubernetes annotation, which
+            is permissible. An annotation is permissible if it's value is a
+            valid Kubernetes label value.
+
         cmk/kubernetes/node:
             This label contains the name of the Kubernetes Node this checkmk
             host is associated with. Checkmk hosts of the type Pod and Node
@@ -79,6 +86,7 @@ def host_labels(section: PodInfo) -> HostLabelGenerator:
         yield HostLabel(f"cmk/kubernetes/{controller.type_.value}", controller.name)
 
     yield from kube_labels_to_cmk_labels(section.labels)
+    yield from kube_annotations_to_cmk_labels(section.annotations)
 
 
 register.agent_section(

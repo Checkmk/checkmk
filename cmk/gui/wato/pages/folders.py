@@ -200,10 +200,11 @@ class ModeFolder(WatoMode):
         )
 
         menu.add_youtube_reference(
-            title=_("Episode 1: Installing Checkmk and monitoring Linux"), youtube_id="g1g2ztXeJbo"
+            title=_("Episode 1: Installing Checkmk and monitoring your first host"),
+            youtube_id="opO-SOgOJ1I",
         )
         menu.add_youtube_reference(
-            title=_("Episode 3: Monitoring Windows"), youtube_id="iz8S9TGGklQ"
+            title=_("Episode 4: Monitoring Windows in Checkmk"), youtube_id="Nxiq7Jb9mB4"
         )
 
     def _search_folder_page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:

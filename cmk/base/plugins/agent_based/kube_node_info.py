@@ -58,9 +58,9 @@ def host_labels(section: NodeInfo) -> HostLabelGenerator:
             will be assigned this label.
 
         cmk/kubernetes/annotation/{key}:{value} :
-            These labels are yielded for each Kubernetes annotation, which
-            is permissible. An annotation is permissible if it's value is a
-            valid Kubernetes label value.
+            These labels are yielded for each Kubernetes annotation that is
+            a valid Kubernetes label. This can be configured via the rule
+            'Kubernetes'.
 
         cmk/os_family:
             This label is set to the operating system as reported by the agent

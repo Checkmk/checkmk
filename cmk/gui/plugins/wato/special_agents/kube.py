@@ -257,8 +257,48 @@ def _valuespec_special_agents_kube():
                     ),
                 ),
             ),
+            (
+                "import-annotations",
+                CascadingDropdown(
+                    title=("Import annotations as host labels"),
+                    choices=[
+                        (
+                            "include-matching-annotations-as-host-labels",
+                            _("Filter valid annotations by key pattern"),
+                            RegExp(
+                                mode=RegExp.infix,
+                                allow_empty=False,
+                                default_value="checkmk-monitoring$",
+                                size=50,
+                            ),
+                        ),
+                        (
+                            "include-annotations-as-host-labels",
+                            _("Import all valid annotations"),
+                            None,
+                        ),
+                    ],
+                    orientation="horizontal",
+                    help=_(
+                        "By default, Checkmk does not imports annotations. If "
+                        "this option is enabled, Checkmk will import any "
+                        "annotation that is a valid Kubernetes label. These "
+                        "imported annotations are added as host labels to their "
+                        "respective piggyback host using the syntax "
+                        "'cmk/kubernetes/annotation/{key}:{value}'. You can "
+                        "further restrict the imported annotations by specifying "
+                        "a pattern which Checkmk searches for in the key of the "
+                        "annotation."
+                    ),
+                ),
+            ),
         ],
-        optional_keys=["namespaces", "cluster-collector", "cluster-resource-aggregation"],
+        optional_keys=[
+            "namespaces",
+            "cluster-collector",
+            "cluster-resource-aggregation",
+            "import-annotations",
+        ],
         default_keys=["cluster-collector"],
         title=_("Kubernetes"),
     )

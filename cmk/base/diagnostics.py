@@ -774,7 +774,7 @@ class PerformanceGraphsDiagnosticsElement(ABCDiagnosticsElement):
             ("name", "host_performance_graphs"),
         ])
 
-        return requests.post(url, verify=False)  # nosec
+        return requests.post(url)
 
     def _get_automation_secret(self) -> str:
         automation_secret_filepath = Path(

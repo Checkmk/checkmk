@@ -48,6 +48,7 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.wato.pages.hosts import ModeEditHost, page_menu_host_entries
+from cmk.gui.watolib.activate_changes import confirm_all_local_changes
 from cmk.gui.watolib.host_rename import perform_rename_hosts
 from cmk.gui.watolib.hosts_and_folders import validate_host_uniqueness
 from cmk.gui.watolib.site_changes import SiteChanges
@@ -383,7 +384,7 @@ def rename_hosts_background_job(renamings, job_interface=None):
     actions, auth_problems = rename_hosts(
         renamings, job_interface=job_interface
     )  # Already activates the changes!
-    watolib.confirm_all_local_changes()  # All activated by the underlying rename automation
+    confirm_all_local_changes()  # All activated by the underlying rename automation
     action_txt = "".join(["<li>%s</li>" % a for a in actions])
     message = _("Renamed %d %s at the following places:<br><ul>%s</ul>") % (
         len(renamings),

@@ -59,7 +59,7 @@ from cmk.gui.watolib.search import build_index_background
 
 
 @mode_registry.register
-class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
+class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
     @classmethod
     def name(cls):
         return "changelog"
@@ -647,7 +647,7 @@ class ModeAjaxStartActivation(AjaxPage):
         if not activate_until:
             raise MKUserError("activate_until", _('Missing parameter "%s".') % "activate_until")
 
-        manager = watolib.ActivateChangesManager()
+        manager = activate_changes.ActivateChangesManager()
         manager.load()
         # ? type of api_request is unclear
         affected_sites_request = ensure_str(  # pylint: disable= six-ensure-str-bin-call
@@ -698,7 +698,7 @@ class ModeAjaxActivationState(AjaxPage):
         if not activation_id:
             raise MKUserError("activation_id", _('Missing parameter "%s".') % "activation_id")
 
-        manager = watolib.ActivateChangesManager()
+        manager = activate_changes.ActivateChangesManager()
         manager.load()
         manager.load_activation(activation_id)
 

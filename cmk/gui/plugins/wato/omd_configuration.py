@@ -19,7 +19,6 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.plugins.wato.utils import (
     ABCConfigDomain,
-    add_replication_paths,
     config_domain_registry,
     config_variable_registry,
     ConfigDomainOMD,
@@ -42,6 +41,7 @@ from cmk.gui.valuespec import (
     Optional,
     Tuple,
 )
+from cmk.gui.watolib.activate_changes import add_replication_paths
 
 # .
 #   .--omd config----------------------------------------------------------.

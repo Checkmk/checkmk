@@ -28,6 +28,7 @@ from cmk.gui.plugins.sidebar.utils import (
 from cmk.gui.plugins.wato.utils.main_menu import main_module_registry, MainModuleTopic
 from cmk.gui.type_defs import Choices, MegaMenu, TopicMenuItem, TopicMenuTopic, ViewSpec
 from cmk.gui.utils.html import HTML
+from cmk.gui.watolib.activate_changes import get_pending_changes_info
 from cmk.gui.watolib.search import (
     ABCMatchItemGenerator,
     match_item_generator_registry,
@@ -59,7 +60,7 @@ def render_wato(mini):
     else:
         show_topic_menu(treename="wato", menu=menu, show_item_icons=True)
 
-    pending_info = watolib.get_pending_changes_info()
+    pending_info = get_pending_changes_info()
     if pending_info:
         footnotelinks([(pending_info, "wato.py?mode=changelog")])
         html.div("", class_="clear")

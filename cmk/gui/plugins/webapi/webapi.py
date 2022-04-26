@@ -43,6 +43,7 @@ from cmk.gui.plugins.webapi.utils import (
     validate_config_hash,
     validate_host_attributes,
 )
+from cmk.gui.watolib.activate_changes import activate_changes_start, activate_changes_wait
 from cmk.gui.watolib.bakery import try_bake_agents_for_hosts
 from cmk.gui.watolib.check_mk_automations import discovery, try_discovery
 from cmk.gui.watolib.tags import TagConfigFile
@@ -1258,9 +1259,9 @@ class APICallOther(APICallCollection):
         else:
             sites = []
 
-        activation_id = watolib.activate_changes_start(
+        activation_id = activate_changes_start(
             sites,
             comment,
             force_foreign_changes=allow_foreign_changes,
         )
-        return watolib.activate_changes_wait(activation_id)
+        return activate_changes_wait(activation_id)

@@ -16,7 +16,6 @@ You can find an introduction to the configuration of Checkmk including activatio
 [Checkmk guide](https://docs.checkmk.com/latest/en/wato.html).
 """
 
-from cmk.gui import watolib
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.http import request, Response
 from cmk.gui.plugins.openapi.endpoints.utils import may_fail
@@ -28,6 +27,7 @@ from cmk.gui.plugins.openapi.restful_objects import (
 )
 from cmk.gui.plugins.openapi.restful_objects.type_defs import LinkType
 from cmk.gui.plugins.openapi.utils import ProblemException
+from cmk.gui.watolib.activate_changes import activate_changes_start, ActivateChangesManager
 
 from cmk import fields
 
@@ -67,7 +67,7 @@ def activate_changes(params):
     body = params["body"]
     sites = body["sites"]
     with may_fail(MKUserError), may_fail(MKAuthException, status=401):
-        activation_id = watolib.activate_changes_start(
+        activation_id = activate_changes_start(
             sites, force_foreign_changes=body["force_foreign_changes"]
         )
 
@@ -128,7 +128,7 @@ def activate_changes_wait_for_completion(params):
     This endpoint will periodically redirect on itself to prevent timeouts.
     """
     activation_id = params["activation_id"]
-    manager = watolib.ActivateChangesManager()
+    manager = ActivateChangesManager()
     manager.load()
     try:
         manager.load_activation(activation_id)
@@ -156,7 +156,7 @@ def activate_changes_wait_for_completion(params):
 def show_activation(params):
     """Show the activation status"""
     activation_id = params["activation_id"]
-    manager = watolib.ActivateChangesManager()
+    manager = ActivateChangesManager()
     manager.load()
     try:
         manager.load_activation(activation_id)
@@ -176,7 +176,7 @@ def show_activation(params):
 )
 def list_activations(params):
     """Show all currently running activations"""
-    manager = watolib.ActivateChangesManager()
+    manager = ActivateChangesManager()
     activations = []
     for activation_id, change in manager.activations():
         activations.append(

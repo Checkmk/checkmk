@@ -11,7 +11,6 @@ from cmk.utils.defines import weekday_ids
 from cmk.utils.livestatus_helpers import tables
 
 from cmk.gui import fields as gui_fields
-from cmk.gui import watolib
 from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.livestatus_utils.commands.acknowledgments import (
     acknowledge_host_problem,
@@ -26,6 +25,7 @@ from cmk.gui.livestatus_utils.commands.downtimes import (
 )
 from cmk.gui.plugins.openapi.utils import param_description
 from cmk.gui.userdb import load_users
+from cmk.gui.watolib.activate_changes import activate_changes_start
 from cmk.gui.watolib.groups import is_alias_used
 from cmk.gui.watolib.tags import load_aux_tags, tag_group_exists
 from cmk.gui.watolib.timeperiods import verify_timeperiod_name_exists
@@ -1986,9 +1986,7 @@ class ActivateChanges(BaseSchema):
         example=["production"],
     )
     force_foreign_changes = fields.Boolean(
-        description=param_description(
-            watolib.activate_changes_start.__doc__, "force_foreign_changes"
-        ),
+        description=param_description(activate_changes_start.__doc__, "force_foreign_changes"),
         required=False,
         load_default=False,
         example=False,

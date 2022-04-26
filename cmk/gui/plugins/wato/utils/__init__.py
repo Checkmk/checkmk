@@ -142,7 +142,6 @@ from cmk.gui.watolib import (  # noqa: F401 # pylint: disable=unused-import
     ACTest,
     ACTestCategories,
     add_change,
-    add_replication_paths,
     config_domain_registry,
     ConfigDomainCACertificates,
     ConfigDomainCore,

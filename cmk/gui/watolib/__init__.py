@@ -99,18 +99,6 @@ from cmk.gui.valuespec import (
     UserID,
     ValueSpec,
 )
-from cmk.gui.watolib.activate_changes import (
-    activate_changes_start,
-    activate_changes_wait,
-    ActivateChanges,
-    ActivateChangesManager,
-    ActivateChangesSite,
-    add_replication_paths,
-    confirm_all_local_changes,
-    get_number_of_pending_changes,
-    get_pending_changes_info,
-    get_replication_paths,
-)
 from cmk.gui.watolib.analyze_configuration import (
     ac_test_registry,
     ACResult,

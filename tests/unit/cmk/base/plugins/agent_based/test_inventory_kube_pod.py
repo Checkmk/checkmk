@@ -32,6 +32,7 @@ from cmk.base.plugins.agent_based.utils.kube import (
                 name="name",
                 creation_timestamp=1600000000.0,
                 labels={},
+                annotations={},
                 node="minikube",
                 host_network=None,
                 dns_policy="ClusterFirst",

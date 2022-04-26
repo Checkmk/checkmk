@@ -450,6 +450,7 @@ class PodInfo(BaseModel):
     name: str
     creation_timestamp: Optional[CreationTimestamp]
     labels: Labels  # used for host labels
+    annotations: Annotations  # used for host labels
     node: Optional[NodeName]  # this is optional, because there may be pods, which are not
     # scheduled on any node (e.g., no node with enough capacity is available).
     host_network: Optional[str]

@@ -65,7 +65,6 @@ struct ConnectionStatus {
 #[derive(serde::Serialize)]
 struct Status {
     version: String,
-    agent_socket_operational: bool,
     ip_allowlist: Vec<String>,
     allow_legacy_pull: bool,
     connections: Vec<ConnectionStatus>,
@@ -321,7 +320,6 @@ impl Status {
 
         Status {
             version: String::from(constants::VERSION),
-            agent_socket_operational: pull_config.agent_channel.operational(),
             ip_allowlist: pull_config.allowed_ip.to_vec(),
             allow_legacy_pull: pull_config.allow_legacy_pull(),
             connections: conn_stats,
@@ -345,12 +343,8 @@ impl std::fmt::Display for Status {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(
             f,
-            "Version: {}\nAgent socket: {}\nIP allowlist: {}{}{}",
+            "Version: {}\nIP allowlist: {}{}{}",
             self.version,
-            match self.agent_socket_operational {
-                true => String::from("operational"),
-                false => mark_problematic("inoperational"),
-            },
             match self.ip_allowlist.is_empty() {
                 true => String::from("any"),
                 false => self.ip_allowlist.join(" "),
@@ -700,7 +694,6 @@ mod test_status {
     fn build_status() -> Status {
         Status {
             version: String::from("1.0.0"),
-            agent_socket_operational: true,
             ip_allowlist: vec![String::from("192.168.1.13"), String::from("[::1]")],
             allow_legacy_pull: false,
             connections: vec![
@@ -755,7 +748,6 @@ mod test_status {
         assert_eq!(
             build_status().to_string(false).unwrap(),
             "Version: 1.0.0\n\
-             Agent socket: operational\n\
              IP allowlist: 192.168.1.13 [::1]\n\n\n\
              Connection: localhost:8000/site\n\
              \tUUID: 50611369-7a42-4c0b-927e-9a14330401fe\n\
@@ -793,7 +785,6 @@ mod test_status {
         assert_eq!(
             Status {
                 version: String::from("2.3r18"),
-                agent_socket_operational: false,
                 ip_allowlist: vec![],
                 allow_legacy_pull: true,
                 connections: vec![],
@@ -801,7 +792,6 @@ mod test_status {
             .to_string(false)
             .unwrap(),
             "Version: 2.3r18\n\
-             Agent socket: inoperational (!!)\n\
              IP allowlist: any\n\
              Legacy mode: enabled\n\
              No connections"
@@ -871,9 +861,7 @@ mod test_status {
                 &MockApi {},
             )
             .unwrap(),
-            format!(
-                "Version: 0.1.0\n\
-             Agent socket: {}\n\
+            "Version: 0.1.0\n\
              IP allowlist: any\n\n\n\
              Connection: server:8000/push-site\n\
              \tUUID: 99f56bbc-5965-4b34-bc70-1959ad1d32d6\n\
@@ -883,13 +871,7 @@ mod test_status {
              \tRemote:\n\
              \t\tConnection type: pull-agent (!!)\n\
              \t\tRegistration state: operational\n\
-             \t\tHost name: host",
-                if cfg!(unix) {
-                    "inoperational (!!)"
-                } else {
-                    "operational"
-                }
-            )
+             \t\tHost name: host"
         );
     }
 }

@@ -3,10 +3,7 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 use anyhow::{Context, Error as AnyhowError, Result as AnyhowResult};
-#[cfg(unix)]
-use faccess::PathExt;
 use serde::Deserialize;
-use std::fmt::Display;
 #[cfg(unix)]
 use std::path::{Path, PathBuf};
 
@@ -51,37 +48,6 @@ impl std::convert::From<&str> for AgentChannel {
 impl std::convert::AsRef<String> for AgentChannel {
     fn as_ref(&self) -> &String {
         &self.0
-    }
-}
-
-impl Display for AgentChannel {
-    #[cfg(unix)]
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        {
-            write!(f, "{}", self.0.to_string_lossy())
-        }
-    }
-
-    #[cfg(windows)]
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        {
-            write!(f, "{}", self.0)
-        }
-    }
-}
-
-impl AgentChannel {
-    #[cfg(unix)]
-    pub fn operational(&self) -> bool {
-        self.0.readable() && self.0.writable()
-    }
-
-    #[cfg(windows)]
-    pub fn operational(&self) -> bool {
-        // Todo (sk): anything to check here? Before we do anything here, we should however switch
-        // to a toml config instead of command line options, st. this check can actually be done
-        // for any mode
-        true
     }
 }
 

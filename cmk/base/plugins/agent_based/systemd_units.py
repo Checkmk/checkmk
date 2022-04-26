@@ -462,7 +462,7 @@ register.check_plugin(
             "failed": 2,
         },
         "states_default": 2,
-        "activating_levels": (30, 60),
+        "activating_levels": None,
         "deactivating_levels": (30, 60),
         "reloading_levels": (30, 60),
         "ignored": [],

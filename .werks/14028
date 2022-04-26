@@ -1,0 +1,17 @@
+Title: Update Systemd time since state changed parsing
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1650956398
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b7
+
+Checkmk now parsed the time a service has been in the activating/deactivating/reloading state from the status output of systemd.
+Correct parsing of the status information will only work after an agent update.
+Previous verions guessed this time based on the past state that was observed.
+
+Default parameters for warning and crit levels have been removed for activating services.
+So a systemd service can be indefinitely in an activating state.

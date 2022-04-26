@@ -62,6 +62,7 @@ import cmk.gui.log as log
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKGeneralException, MKUserError
+from cmk.gui.groups import load_contact_group_information
 from cmk.gui.i18n import _
 from cmk.gui.plugins.userdb.utils import (
     add_internal_attributes,
@@ -2108,9 +2109,6 @@ class LDAPAttributePluginGroupsToContactgroups(LDAPBuiltinAttributePlugin):
         ldap_user: dict,
         user: dict,
     ) -> dict:
-        # Gather all group names to search for in LDAP
-        from cmk.gui.groups import load_contact_group_information
-
         cg_names = load_contact_group_information().keys()
 
         return {

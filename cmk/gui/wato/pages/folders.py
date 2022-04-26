@@ -21,6 +21,7 @@ import cmk.gui.weblib as weblib
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.groups import load_contact_group_information
 from cmk.gui.htmllib.context import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
@@ -67,7 +68,6 @@ from cmk.gui.utils.urls import (
 )
 from cmk.gui.valuespec import DropdownChoice, TextInput, ValueSpec, WatoFolderChoices
 from cmk.gui.watolib.audit_log_url import make_object_audit_log_url
-from cmk.gui.watolib.groups import load_contact_group_information
 from cmk.gui.watolib.host_attributes import host_attribute_registry
 from cmk.gui.watolib.hosts_and_folders import Folder
 

@@ -27,7 +27,11 @@ import cmk.gui.watolib as watolib
 import cmk.gui.watolib.users
 from cmk.gui.config import active_config, prepare_raw_site_config
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.groups import load_host_group_information, load_service_group_information
+from cmk.gui.groups import (
+    load_contact_group_information,
+    load_host_group_information,
+    load_service_group_information,
+)
 from cmk.gui.i18n import _
 from cmk.gui.plugins.userdb.htpasswd import hash_password
 from cmk.gui.plugins.webapi.utils import (
@@ -41,7 +45,6 @@ from cmk.gui.plugins.webapi.utils import (
 )
 from cmk.gui.watolib.bakery import try_bake_agents_for_hosts
 from cmk.gui.watolib.check_mk_automations import discovery, try_discovery
-from cmk.gui.watolib.groups import load_contact_group_information
 from cmk.gui.watolib.tags import TagConfigFile
 
 # .

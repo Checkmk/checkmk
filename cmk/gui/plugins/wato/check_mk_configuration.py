@@ -19,6 +19,7 @@ from cmk.snmplib.type_defs import SNMPBackendEnum  # pylint: disable=cmk-module-
 import cmk.gui.plugins.userdb.utils as userdb_utils
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKConfigError, MKUserError
+from cmk.gui.groups import load_contact_group_information
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -102,7 +103,6 @@ from cmk.gui.valuespec import (
     ValueSpec,
 )
 from cmk.gui.watolib.bulk_discovery import vs_bulk_discovery
-from cmk.gui.watolib.groups import load_contact_group_information
 
 #   .--Global Settings-----------------------------------------------------.
 #   |  ____ _       _           _   ____       _   _   _                   |

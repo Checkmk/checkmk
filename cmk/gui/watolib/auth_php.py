@@ -44,8 +44,8 @@ import cmk.utils.store as store
 import cmk.gui.hooks as hooks
 import cmk.gui.userdb as userdb
 from cmk.gui.config import active_config
+from cmk.gui.groups import load_contact_group_information
 from cmk.gui.utils.roles import get_role_permissions
-from cmk.gui.watolib.groups import load_contact_group_information
 
 
 def _auth_php():

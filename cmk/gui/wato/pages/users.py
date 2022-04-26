@@ -23,6 +23,7 @@ import cmk.gui.watolib as watolib
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.groups import load_contact_group_information
 from cmk.gui.htmllib.context import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _u, get_language_alias, get_languages
@@ -63,7 +64,6 @@ from cmk.gui.utils.urls import makeactionuri, makeuri, makeuri_contextless
 from cmk.gui.valuespec import Alternative, DualListChoice, EmailAddress, FixedValue, UserID
 from cmk.gui.watolib.audit_log_url import make_object_audit_log_url
 from cmk.gui.watolib.global_settings import rulebased_notifications_enabled
-from cmk.gui.watolib.groups import load_contact_group_information
 from cmk.gui.watolib.users import delete_users, edit_users, make_user_object_ref
 
 if cmk_version.is_managed_edition():

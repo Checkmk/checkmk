@@ -9,6 +9,7 @@ from typing import List, Optional, Type
 
 import cmk.gui.userdb as userdb
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.groups import load_contact_group_information
 from cmk.gui.htmllib.context import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
@@ -31,7 +32,6 @@ from cmk.gui.valuespec import (
     ValueSpec,
 )
 from cmk.gui.wato.pages.rulesets import RuleConditions, VSExplicitConditions
-from cmk.gui.watolib.groups import load_contact_group_information
 from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.watolib.predefined_conditions import PredefinedConditionStore
 from cmk.gui.watolib.rulesets import AllRulesets, FolderRulesets, SearchedRulesets

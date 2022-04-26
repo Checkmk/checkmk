@@ -14,7 +14,14 @@ import cmk.gui.userdb as userdb
 import cmk.gui.watolib as watolib
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.groups import load_host_group_information, load_service_group_information
+from cmk.gui.groups import (
+    GroupName,
+    GroupSpec,
+    GroupType,
+    load_contact_group_information,
+    load_host_group_information,
+    load_service_group_information,
+)
 from cmk.gui.htmllib.context import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
@@ -48,7 +55,6 @@ from cmk.gui.valuespec import (
     ListOf,
     ListOfStrings,
 )
-from cmk.gui.watolib.groups import GroupName, GroupSpec, GroupType, load_contact_group_information
 
 
 class ModeGroups(WatoMode, abc.ABC):

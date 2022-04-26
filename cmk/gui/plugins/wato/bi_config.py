@@ -45,6 +45,7 @@ from cmk.gui.bi import bi_livestatus_query, BIManager, get_cached_bi_packs
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKAuthException, MKGeneralException, MKUserError
+from cmk.gui.groups import load_contact_group_information
 from cmk.gui.htmllib.context import html
 from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.http import request
@@ -115,7 +116,6 @@ from cmk.gui.valuespec import (
     ValueSpecText,
     ValueSpecValidateFunc,
 )
-from cmk.gui.watolib.groups import load_contact_group_information
 
 
 @main_module_registry.register

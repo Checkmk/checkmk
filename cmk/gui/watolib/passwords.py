@@ -7,10 +7,10 @@
 from cmk.utils.password_store import Password
 
 import cmk.gui.userdb as userdb
+from cmk.gui.groups import load_contact_group_information
 from cmk.gui.logged_in import user
 from cmk.gui.plugins.wato.utils import ConfigDomainCore
 from cmk.gui.watolib.changes import add_change
-from cmk.gui.watolib.groups import load_contact_group_information
 from cmk.gui.watolib.password_store import PasswordStore
 
 

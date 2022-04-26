@@ -280,7 +280,8 @@ class HTMLGenerator(ABCHTMLGenerator):
         style = "display:%s;" % ("block" if user.show_help else "none")
         return self.render_div(HTML(help_text), class_="help", style=style)
 
-    def resolve_help_text_macros(self, text: str) -> str:
+    @staticmethod
+    def resolve_help_text_macros(text: str) -> str:
         # text = ".*[<page_name>#<anchor_name>|<link_title>].*"
         # e.g. text = "[intro_setup#install|Welcome]" returns
         #      <a href="https://docs.checkmk.com/master/en/intro_setup.html#install">Welcome</a>
@@ -379,7 +380,8 @@ class HTMLGenerator(ABCHTMLGenerator):
                 % active_config.custom_style_sheet
             )
 
-    def _plugin_stylesheets(self) -> Set[str]:
+    @staticmethod
+    def _plugin_stylesheets() -> Set[str]:
         plugin_stylesheets = set([])
         for directory in [
             Path(cmk.utils.paths.web_dir, "htdocs", "css"),
@@ -395,7 +397,8 @@ class HTMLGenerator(ABCHTMLGenerator):
     # a) files which can not be found shal not be loaded
     # b) in OMD environments, add the Checkmk version to the version (prevents update problems)
     # c) load the minified javascript when not in debug mode
-    def javascript_filename_for_browser(self, jsname: str) -> Optional[str]:
+    @staticmethod
+    def javascript_filename_for_browser(jsname: str) -> Optional[str]:
         filename_for_browser = None
         rel_path = "share/check_mk/web/htdocs/js"
         if active_config.debug:
@@ -413,7 +416,8 @@ class HTMLGenerator(ABCHTMLGenerator):
 
         return filename_for_browser
 
-    def _css_filename_for_browser(self, css: str) -> Optional[str]:
+    @staticmethod
+    def _css_filename_for_browser(css: str) -> Optional[str]:
         rel_path = f"share/check_mk/web/htdocs/{css}.css"
         if (cmk.utils.paths.omd_root / rel_path).exists() or (
             cmk.utils.paths.omd_root / "local" / rel_path
@@ -1308,8 +1312,8 @@ class HTMLGenerator(ABCHTMLGenerator):
     def empty_icon(self) -> None:
         self.write_html(self.render_icon("trans"))
 
+    @staticmethod
     def render_icon(
-        self,
         icon: Icon,
         title: Optional[str] = None,
         id_: Optional[str] = None,
@@ -1339,12 +1343,12 @@ class HTMLGenerator(ABCHTMLGenerator):
         )
 
         if isinstance(icon, dict) and icon["emblem"] is not None:
-            return self.render_emblem(icon["emblem"], title, id_, icon_element)
+            return HTMLGenerator.render_emblem(icon["emblem"], title, id_, icon_element)
 
         return icon_element
 
+    @staticmethod
     def render_emblem(
-        self,
         emblem: str,
         title: Optional[str],
         id_: Optional[str],
@@ -1364,13 +1368,13 @@ class HTMLGenerator(ABCHTMLGenerator):
                 src=emblem_path,
             )
 
-        return self.render_span(
-            icon_element + self.render_img(emblem_path, class_="emblem"),
+        return ABCHTMLGenerator.render_span(
+            icon_element + ABCHTMLGenerator.render_img(emblem_path, class_="emblem"),
             class_="emblem",
         )
 
+    @staticmethod
     def render_icon_button(
-        self,
         url: Union[None, str, str],
         title: str,
         icon: Icon,
@@ -1391,8 +1395,8 @@ class HTMLGenerator(ABCHTMLGenerator):
         href = url if not onclick else "javascript:void(0)"
         assert href is not None
 
-        return self.render_a(
-            content=HTML(self.render_icon(icon, cssclass="iconbutton")),
+        return ABCHTMLGenerator.render_a(
+            content=HTML(HTMLGenerator.render_icon(icon, cssclass="iconbutton")),
             href=href,
             title=title,
             id_=id_,
@@ -1473,8 +1477,8 @@ class HTMLGenerator(ABCHTMLGenerator):
             )
         )
 
+    @staticmethod
     def render_popup_trigger(
-        self,
         content: HTML,
         ident: str,
         method: PopupMethod,
@@ -1507,7 +1511,7 @@ class HTMLGenerator(ABCHTMLGenerator):
             onmouseenter = None
             onmouseleave = None
 
-        atag = self.render_a(
+        atag = ABCHTMLGenerator.render_a(
             content,
             class_="popup_trigger",
             href="javascript:void(0);",
@@ -1525,7 +1529,7 @@ class HTMLGenerator(ABCHTMLGenerator):
             classes.append(cssclass)
 
         # TODO: Make method.content return HTML
-        return self.render_div(
+        return ABCHTMLGenerator.render_div(
             atag + HTML(method.content), class_=classes, id_="popup_trigger_%s" % ident, style=style
         )
 
@@ -1551,9 +1555,10 @@ class HTMLGenerator(ABCHTMLGenerator):
 
     # Currently only tested with tables. But with some small changes it may work with other
     # structures too.
-    def render_element_dragger(self, dragging_tag: str, drop_handler: str) -> HTML:
-        return self.render_a(
-            self.render_icon("drag", _("Move this entry")),
+    @staticmethod
+    def render_element_dragger(dragging_tag: str, drop_handler: str) -> HTML:
+        return ABCHTMLGenerator.render_a(
+            HTMLGenerator.render_icon("drag", _("Move this entry")),
             href="javascript:void(0)",
             class_=["element_dragger"],
             onmousedown="cmk.element_dragging.start(event, this, %s, %s"

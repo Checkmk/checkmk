@@ -137,8 +137,9 @@ class ABCHTMLGenerator(abc.ABC):
             attrs["href"] = href
         self.write_html(render_start_tag("a", close_tag=False, **attrs))
 
+    @staticmethod
     def render_a(
-        self, content: HTMLContent, href: Union[None, str, str], **attrs: HTMLTagAttributeValue
+        content: HTMLContent, href: Union[None, str, str], **attrs: HTMLTagAttributeValue
     ) -> HTML:
         if href is not None:
             attrs["href"] = href
@@ -157,7 +158,8 @@ class ABCHTMLGenerator(abc.ABC):
     # Scripting
     #
 
-    def render_javascript(self, code: str) -> HTML:
+    @staticmethod
+    def render_javascript(code: str) -> HTML:
         return HTML('<script type="text/javascript">\n%s\n</script>\n' % code)
 
     def javascript(self, code: str) -> None:
@@ -167,7 +169,8 @@ class ABCHTMLGenerator(abc.ABC):
         """<script type="text/javascript" src="%(name)"/>\n"""
         self.write_html(render_element("script", "", type_="text/javascript", src=src))
 
-    def render_img(self, src: str, **attrs: HTMLTagAttributeValue) -> HTML:
+    @staticmethod
+    def render_img(src: str, **attrs: HTMLTagAttributeValue) -> HTML:
         attrs["src"] = src
         return render_start_tag("img", close_tag=True, **attrs)
 
@@ -185,7 +188,8 @@ class ABCHTMLGenerator(abc.ABC):
     # form elements
     #
 
-    def render_label(self, content: HTMLContent, for_: str, **attrs: HTMLTagAttributeValue) -> HTML:
+    @staticmethod
+    def render_label(content: HTMLContent, for_: str, **attrs: HTMLTagAttributeValue) -> HTML:
         attrs["for"] = for_
         return render_element("label", content, **attrs)
 
@@ -214,19 +218,22 @@ class ABCHTMLGenerator(abc.ABC):
     # structural text elements
     #
 
-    def render_heading(self, content: HTMLContent) -> HTML:
+    @staticmethod
+    def render_heading(content: HTMLContent) -> HTML:
         return render_element("h2", content)
 
     def heading(self, content: HTMLContent) -> None:
         self.write_html(self.render_heading(content))
 
-    def render_br(self) -> HTML:
+    @staticmethod
+    def render_br() -> HTML:
         return HTML("<br />")
 
     def br(self) -> None:
         self.write_html(self.render_br())
 
-    def render_hr(self, **attrs: HTMLTagAttributeValue) -> HTML:
+    @staticmethod
+    def render_hr(**attrs: HTMLTagAttributeValue) -> HTML:
         return render_start_tag("hr", close_tag=True, **attrs)
 
     def hr(self, **attrs: HTMLTagAttributeValue) -> None:
@@ -235,7 +242,8 @@ class ABCHTMLGenerator(abc.ABC):
     def rule(self) -> None:
         self.hr()
 
-    def render_nbsp(self) -> HTML:
+    @staticmethod
+    def render_nbsp() -> HTML:
         return HTML("&nbsp;")
 
     def nbsp(self) -> None:
@@ -332,7 +340,8 @@ class ABCHTMLGenerator(abc.ABC):
     def close_pre(self) -> None:
         self.write_html(render_end_tag("pre"))
 
-    def render_pre(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
+    @staticmethod
+    def render_pre(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
         return render_element("pre", content, **kwargs)
 
     def open_h2(self, **kwargs: HTMLTagAttributeValue) -> None:
@@ -341,7 +350,8 @@ class ABCHTMLGenerator(abc.ABC):
     def close_h2(self) -> None:
         self.write_html(render_end_tag("h2"))
 
-    def render_h2(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
+    @staticmethod
+    def render_h2(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
         return render_element("h2", content, **kwargs)
 
     def open_h3(self, **kwargs: HTMLTagAttributeValue) -> None:
@@ -350,7 +360,8 @@ class ABCHTMLGenerator(abc.ABC):
     def close_h3(self) -> None:
         self.write_html(render_end_tag("h3"))
 
-    def render_h3(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
+    @staticmethod
+    def render_h3(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
         return render_element("h3", content, **kwargs)
 
     def open_h1(self, **kwargs: HTMLTagAttributeValue) -> None:
@@ -359,7 +370,8 @@ class ABCHTMLGenerator(abc.ABC):
     def close_h1(self) -> None:
         self.write_html(render_end_tag("h1"))
 
-    def render_h1(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
+    @staticmethod
+    def render_h1(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
         return render_element("h1", content, **kwargs)
 
     def open_h4(self, **kwargs: HTMLTagAttributeValue) -> None:
@@ -368,7 +380,8 @@ class ABCHTMLGenerator(abc.ABC):
     def close_h4(self) -> None:
         self.write_html(render_end_tag("h4"))
 
-    def render_h4(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
+    @staticmethod
+    def render_h4(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
         return render_element("h4", content, **kwargs)
 
     def open_header(self, **kwargs: HTMLTagAttributeValue) -> None:
@@ -377,7 +390,8 @@ class ABCHTMLGenerator(abc.ABC):
     def close_header(self) -> None:
         self.write_html(render_end_tag("header"))
 
-    def render_header(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
+    @staticmethod
+    def render_header(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
         return render_element("header", content, **kwargs)
 
     def open_tag(self, **kwargs: HTMLTagAttributeValue) -> None:
@@ -386,7 +400,8 @@ class ABCHTMLGenerator(abc.ABC):
     def close_tag(self) -> None:
         self.write_html(render_end_tag("tag"))
 
-    def render_tag(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
+    @staticmethod
+    def render_tag(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
         return render_element("tag", content, **kwargs)
 
     def open_table(self, **kwargs: HTMLTagAttributeValue) -> None:
@@ -395,7 +410,8 @@ class ABCHTMLGenerator(abc.ABC):
     def close_table(self) -> None:
         self.write_html(render_end_tag("table"))
 
-    def render_table(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
+    @staticmethod
+    def render_table(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
         return render_element("table", content, **kwargs)
 
     def open_select(self, **kwargs: HTMLTagAttributeValue) -> None:
@@ -404,7 +420,8 @@ class ABCHTMLGenerator(abc.ABC):
     def close_select(self) -> None:
         self.write_html(render_end_tag("select"))
 
-    def render_select(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
+    @staticmethod
+    def render_select(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
         return render_element("select", content, **kwargs)
 
     def open_row(self, **kwargs: HTMLTagAttributeValue) -> None:
@@ -413,7 +430,8 @@ class ABCHTMLGenerator(abc.ABC):
     def close_row(self) -> None:
         self.write_html(render_end_tag("row"))
 
-    def render_row(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
+    @staticmethod
+    def render_row(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
         return render_element("row", content, **kwargs)
 
     def open_style(self, **kwargs: HTMLTagAttributeValue) -> None:
@@ -422,7 +440,8 @@ class ABCHTMLGenerator(abc.ABC):
     def close_style(self) -> None:
         self.write_html(render_end_tag("style"))
 
-    def render_style(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
+    @staticmethod
+    def render_style(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
         return render_element("style", content, **kwargs)
 
     def open_span(self, **kwargs: HTMLTagAttributeValue) -> None:
@@ -431,7 +450,8 @@ class ABCHTMLGenerator(abc.ABC):
     def close_span(self) -> None:
         self.write_html(render_end_tag("span"))
 
-    def render_span(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
+    @staticmethod
+    def render_span(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
         return render_element("span", content, **kwargs)
 
     def open_sub(self, **kwargs: HTMLTagAttributeValue) -> None:
@@ -440,7 +460,8 @@ class ABCHTMLGenerator(abc.ABC):
     def close_sub(self) -> None:
         self.write_html(render_end_tag("sub"))
 
-    def render_sub(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
+    @staticmethod
+    def render_sub(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
         return render_element("sub", content, **kwargs)
 
     def open_script(self, **kwargs: HTMLTagAttributeValue) -> None:
@@ -449,7 +470,8 @@ class ABCHTMLGenerator(abc.ABC):
     def close_script(self) -> None:
         self.write_html(render_end_tag("script"))
 
-    def render_script(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
+    @staticmethod
+    def render_script(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
         return render_element("script", content, **kwargs)
 
     def open_tt(self, **kwargs: HTMLTagAttributeValue) -> None:
@@ -458,7 +480,8 @@ class ABCHTMLGenerator(abc.ABC):
     def close_tt(self) -> None:
         self.write_html(render_end_tag("tt"))
 
-    def render_tt(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
+    @staticmethod
+    def render_tt(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
         return render_element("tt", content, **kwargs)
 
     def open_tr(self, **kwargs: HTMLTagAttributeValue) -> None:
@@ -467,7 +490,8 @@ class ABCHTMLGenerator(abc.ABC):
     def close_tr(self) -> None:
         self.write_html(render_end_tag("tr"))
 
-    def render_tr(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
+    @staticmethod
+    def render_tr(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
         return render_element("tr", content, **kwargs)
 
     def open_tbody(self, **kwargs: HTMLTagAttributeValue) -> None:
@@ -476,7 +500,8 @@ class ABCHTMLGenerator(abc.ABC):
     def close_tbody(self) -> None:
         self.write_html(render_end_tag("tbody"))
 
-    def render_tbody(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
+    @staticmethod
+    def render_tbody(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
         return render_element("tbody", content, **kwargs)
 
     def open_li(self, **kwargs: HTMLTagAttributeValue) -> None:
@@ -485,7 +510,8 @@ class ABCHTMLGenerator(abc.ABC):
     def close_li(self) -> None:
         self.write_html(render_end_tag("li"))
 
-    def render_li(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
+    @staticmethod
+    def render_li(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
         return render_element("li", content, **kwargs)
 
     def open_html(self, **kwargs: HTMLTagAttributeValue) -> None:
@@ -494,7 +520,8 @@ class ABCHTMLGenerator(abc.ABC):
     def close_html(self) -> None:
         self.write_html(render_end_tag("html"))
 
-    def render_html(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
+    @staticmethod
+    def render_html(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
         return render_element("html", content, **kwargs)
 
     def open_th(self, **kwargs: HTMLTagAttributeValue) -> None:
@@ -503,7 +530,8 @@ class ABCHTMLGenerator(abc.ABC):
     def close_th(self) -> None:
         self.write_html(render_end_tag("th"))
 
-    def render_th(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
+    @staticmethod
+    def render_th(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
         return render_element("th", content, **kwargs)
 
     def open_sup(self, **kwargs: HTMLTagAttributeValue) -> None:
@@ -512,7 +540,8 @@ class ABCHTMLGenerator(abc.ABC):
     def close_sup(self) -> None:
         self.write_html(render_end_tag("sup"))
 
-    def render_sup(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
+    @staticmethod
+    def render_sup(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
         return render_element("sup", content, **kwargs)
 
     def open_input(self, **kwargs: HTMLTagAttributeValue) -> None:
@@ -534,8 +563,9 @@ class ABCHTMLGenerator(abc.ABC):
     def close_td(self) -> None:
         self.write_html(render_end_tag("td"))
 
+    @staticmethod
     def render_td(
-        self, content: HTMLContent, colspan: Optional[int] = None, **kwargs: HTMLTagAttributeValue
+        content: HTMLContent, colspan: Optional[int] = None, **kwargs: HTMLTagAttributeValue
     ) -> HTML:
         return render_element(
             "td", content, colspan=str(colspan) if colspan is not None else None, **kwargs
@@ -547,7 +577,8 @@ class ABCHTMLGenerator(abc.ABC):
     def close_thead(self) -> None:
         self.write_html(render_end_tag("thead"))
 
-    def render_thead(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
+    @staticmethod
+    def render_thead(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
         return render_element("thead", content, **kwargs)
 
     def open_body(self, **kwargs: HTMLTagAttributeValue) -> None:
@@ -556,7 +587,8 @@ class ABCHTMLGenerator(abc.ABC):
     def close_body(self) -> None:
         self.write_html(render_end_tag("body"))
 
-    def render_body(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
+    @staticmethod
+    def render_body(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
         return render_element("body", content, **kwargs)
 
     def open_head(self, **kwargs: HTMLTagAttributeValue) -> None:
@@ -565,7 +597,8 @@ class ABCHTMLGenerator(abc.ABC):
     def close_head(self) -> None:
         self.write_html(render_end_tag("head"))
 
-    def render_head(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
+    @staticmethod
+    def render_head(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
         return render_element("head", content, **kwargs)
 
     def open_fieldset(self, **kwargs: HTMLTagAttributeValue) -> None:
@@ -574,7 +607,8 @@ class ABCHTMLGenerator(abc.ABC):
     def close_fieldset(self) -> None:
         self.write_html(render_end_tag("fieldset"))
 
-    def render_fieldset(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
+    @staticmethod
+    def render_fieldset(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
         return render_element("fieldset", content, **kwargs)
 
     def open_optgroup(self, **kwargs):
@@ -591,7 +625,8 @@ class ABCHTMLGenerator(abc.ABC):
     def close_option(self) -> None:
         self.write_html(render_end_tag("option"))
 
-    def render_option(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
+    @staticmethod
+    def render_option(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
         return render_element("option", content, **kwargs)
 
     def open_form(self, **kwargs: HTMLTagAttributeValue) -> None:
@@ -600,7 +635,8 @@ class ABCHTMLGenerator(abc.ABC):
     def close_form(self) -> None:
         self.write_html(render_end_tag("form"))
 
-    def render_form(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
+    @staticmethod
+    def render_form(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
         return render_element("form", content, **kwargs)
 
     def open_tags(self, **kwargs: HTMLTagAttributeValue) -> None:
@@ -609,7 +645,8 @@ class ABCHTMLGenerator(abc.ABC):
     def close_tags(self) -> None:
         self.write_html(render_end_tag("tags"))
 
-    def render_tags(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
+    @staticmethod
+    def render_tags(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
         return render_element("tags", content, **kwargs)
 
     def open_canvas(self, **kwargs: HTMLTagAttributeValue) -> None:
@@ -618,7 +655,8 @@ class ABCHTMLGenerator(abc.ABC):
     def close_canvas(self) -> None:
         self.write_html(render_end_tag("canvas"))
 
-    def render_canvas(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
+    @staticmethod
+    def render_canvas(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
         return render_element("canvas", content, **kwargs)
 
     def open_nobr(self, **kwargs: HTMLTagAttributeValue) -> None:
@@ -627,7 +665,8 @@ class ABCHTMLGenerator(abc.ABC):
     def close_nobr(self) -> None:
         self.write_html(render_end_tag("nobr"))
 
-    def render_nobr(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
+    @staticmethod
+    def render_nobr(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
         return render_element("nobr", content, **kwargs)
 
     def open_br(self, **kwargs: HTMLTagAttributeValue) -> None:
@@ -642,7 +681,8 @@ class ABCHTMLGenerator(abc.ABC):
     def close_strong(self) -> None:
         self.write_html(render_end_tag("strong"))
 
-    def render_strong(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
+    @staticmethod
+    def render_strong(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
         return render_element("strong", content, **kwargs)
 
     def close_a(self) -> None:
@@ -654,7 +694,8 @@ class ABCHTMLGenerator(abc.ABC):
     def close_b(self) -> None:
         self.write_html(render_end_tag("b"))
 
-    def render_b(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
+    @staticmethod
+    def render_b(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
         return render_element("b", content, **kwargs)
 
     def open_center(self, **kwargs: HTMLTagAttributeValue) -> None:
@@ -663,7 +704,8 @@ class ABCHTMLGenerator(abc.ABC):
     def close_center(self) -> None:
         self.write_html(render_end_tag("center"))
 
-    def render_center(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
+    @staticmethod
+    def render_center(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
         return render_element("center", content, **kwargs)
 
     def open_footer(self, **kwargs: HTMLTagAttributeValue) -> None:
@@ -672,7 +714,8 @@ class ABCHTMLGenerator(abc.ABC):
     def close_footer(self) -> None:
         self.write_html(render_end_tag("footer"))
 
-    def render_footer(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
+    @staticmethod
+    def render_footer(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
         return render_element("footer", content, **kwargs)
 
     def open_i(self, **kwargs: HTMLTagAttributeValue) -> None:
@@ -681,7 +724,8 @@ class ABCHTMLGenerator(abc.ABC):
     def close_i(self) -> None:
         self.write_html(render_end_tag("i"))
 
-    def render_i(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
+    @staticmethod
+    def render_i(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
         return render_element("i", content, **kwargs)
 
     def close_button(self) -> None:
@@ -693,7 +737,8 @@ class ABCHTMLGenerator(abc.ABC):
     def close_title(self) -> None:
         self.write_html(render_end_tag("title"))
 
-    def render_title(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
+    @staticmethod
+    def render_title(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
         return render_element("title", content, **kwargs)
 
     def open_p(self, **kwargs: HTMLTagAttributeValue) -> None:
@@ -702,7 +747,8 @@ class ABCHTMLGenerator(abc.ABC):
     def close_p(self) -> None:
         self.write_html(render_end_tag("p"))
 
-    def render_p(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
+    @staticmethod
+    def render_p(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
         return render_element("p", content, **kwargs)
 
     def open_u(self, **kwargs: HTMLTagAttributeValue) -> None:
@@ -711,7 +757,8 @@ class ABCHTMLGenerator(abc.ABC):
     def close_u(self) -> None:
         self.write_html(render_end_tag("u"))
 
-    def render_u(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
+    @staticmethod
+    def render_u(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
         return render_element("u", content, **kwargs)
 
     def open_iframe(self, **kwargs: HTMLTagAttributeValue) -> None:
@@ -720,7 +767,8 @@ class ABCHTMLGenerator(abc.ABC):
     def close_iframe(self) -> None:
         self.write_html(render_end_tag("iframe"))
 
-    def render_iframe(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
+    @staticmethod
+    def render_iframe(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
         return render_element("iframe", content, **kwargs)
 
     def open_x(self, **kwargs: HTMLTagAttributeValue) -> None:
@@ -729,7 +777,8 @@ class ABCHTMLGenerator(abc.ABC):
     def close_x(self) -> None:
         self.write_html(render_end_tag("x"))
 
-    def render_x(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
+    @staticmethod
+    def render_x(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
         return render_element("x", content, **kwargs)
 
     def open_div(self, **kwargs: HTMLTagAttributeValue) -> None:
@@ -738,7 +787,8 @@ class ABCHTMLGenerator(abc.ABC):
     def close_div(self) -> None:
         self.write_html(render_end_tag("div"))
 
-    def render_div(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
+    @staticmethod
+    def render_div(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
         return render_element("div", content, **kwargs)
 
     def open_ul(self, **kwargs: HTMLTagAttributeValue) -> None:
@@ -747,5 +797,6 @@ class ABCHTMLGenerator(abc.ABC):
     def close_ul(self) -> None:
         self.write_html(render_end_tag("ul"))
 
-    def render_ul(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
+    @staticmethod
+    def render_ul(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
         return render_element("ul", content, **kwargs)

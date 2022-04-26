@@ -22,6 +22,7 @@ from .utils_inventory import sort_inventory_result
             NamespaceInfo(
                 name="Liam",  # first result when googling: 'best names'
                 labels={},
+                annotations={},
                 creation_timestamp=None,
                 cluster="a",
             ),

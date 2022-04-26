@@ -25,6 +25,7 @@ def test_check_kube_namespace_info(time) -> None:
         name="namespace",
         creation_timestamp=1600000000.0,
         labels={},
+        annotations={},
         cluster="cluster",
     )
     check_result = check_kube_namespace_info(info)

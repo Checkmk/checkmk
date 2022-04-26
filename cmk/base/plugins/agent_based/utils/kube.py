@@ -786,6 +786,7 @@ class NamespaceInfo(BaseModel):
     name: NamespaceName
     creation_timestamp: Optional[CreationTimestamp]
     labels: Labels
+    annotations: Annotations
     cluster: str
 
 

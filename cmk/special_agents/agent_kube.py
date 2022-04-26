@@ -1092,6 +1092,7 @@ def namespace_info(namespace: api.Namespace, cluster_name: str):
         name=namespace_name(namespace),
         creation_timestamp=namespace.metadata.creation_timestamp,
         labels=namespace.metadata.labels,
+        annotations=namespace.metadata.annotations,
         cluster=cluster_name,
     )
 

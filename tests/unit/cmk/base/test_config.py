@@ -36,7 +36,7 @@ from cmk.core_helpers.type_defs import Mode
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
-from cmk.base.api.agent_based.type_defs import ParsedSectionName, SNMPSectionPlugin
+from cmk.base.api.agent_based.type_defs import HostLabel, ParsedSectionName, SNMPSectionPlugin
 from cmk.base.autochecks import AutocheckEntry
 from cmk.base.check_utils import ConfiguredService
 
@@ -2776,15 +2776,15 @@ def test__extract_check_plugins(monkeypatch: MonkeyPatch) -> None:
         CheckPluginName("duplicate_plugin"),
         [],
         "Duplicate Plugin",
-        None,  # type: ignore  # irrelevant for test
-        None,  # type: ignore  # irrelevant for test
-        None,  # type: ignore  # irrelevant for test
-        None,  # type: ignore  # irrelevant for test
-        None,  # type: ignore  # irrelevant for test
-        None,  # type: ignore  # irrelevant for test
-        None,  # type: ignore  # irrelevant for test
-        None,  # type: ignore  # irrelevant for test
-        None,  # type: ignore  # irrelevant for test
+        lambda: [],
+        None,
+        None,
+        "merged",
+        lambda: [],
+        None,
+        None,
+        None,
+        None,
     )
 
     monkeypatch.setattr(
@@ -2809,21 +2809,21 @@ def test__extract_check_plugins(monkeypatch: MonkeyPatch) -> None:
 
 
 def test__extract_agent_and_snmp_sections(monkeypatch: MonkeyPatch) -> None:
-    duplicate_plugin = {  # type: ignore
+    duplicate_plugin: dict[str, dict[str, Any]] = {
         "duplicate_plugin": {},
     }
     registered_section = SNMPSectionPlugin(
         SectionName("duplicate_plugin"),
         ParsedSectionName("duplicate_plugin"),
-        None,  # type: ignore  # irrelevant for test
-        None,  # type: ignore  # irrelevant for test
-        None,  # type: ignore  # irrelevant for test
-        None,  # type: ignore  # irrelevant for test
-        None,  # type: ignore  # irrelevant for test
-        None,  # type: ignore  # irrelevant for test
-        None,  # type: ignore  # irrelevant for test
-        None,  # type: ignore  # irrelevant for test
-        None,  # type: ignore  # irrelevant for test
+        lambda x: None,
+        lambda: (HostLabel(x, "bar") for x in ["foo"]),
+        None,
+        None,
+        "merged",
+        [],
+        [],
+        set(),
+        None,
     )
 
     monkeypatch.setattr(

@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # REMOVE THIS:
-# type: ignore
+# type: ignore[import]
 # pylint: disable
 
 from typing import Any, Mapping
@@ -27,7 +27,7 @@ def parse_norris(string_table: StringTable) -> Section:
     ... ])
     Section(...)
     """
-    return section
+    return Section()
 
 
 def host_labels_norris(section: Section) -> HostLabelGenerator:
@@ -39,7 +39,7 @@ register.snmp_section(
     # Don't use this unless you known what you're doing!
     # parsed_section_name="mr_pickle",  # you can' rename norris, norris renames you!
     parse_function=parse_norris,
-    host_label_function=host_label_norris,
+    host_label_function=host_labels_norris,
 )
 
 

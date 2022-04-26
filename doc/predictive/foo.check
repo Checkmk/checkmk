@@ -6,7 +6,7 @@
 
 # Example check. Put this into local/share/check_mk/checks
 # And then remove these two lines:
-# type: ignore
+# type: ignore[name-defined]
 # pylint: disable=undefined-variable,disable=blacklisted-name
 
 

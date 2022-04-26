@@ -15,7 +15,7 @@ from _pytest.monkeypatch import MonkeyPatch
 from tests.testlib.base import Scenario
 
 from cmk.utils.parameters import TimespecificParameters, TimespecificParameterSet
-from cmk.utils.type_defs import CheckPluginName, HostName, LegacyCheckParameters
+from cmk.utils.type_defs import CheckPluginName, HostName, LegacyCheckParameters, RuleSetName
 
 import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base import check_table, config
@@ -430,15 +430,15 @@ def test_check_table__get_static_check_entries(
             CheckPluginName("ps"),
             [],
             "Process item",
-            None,  # type: ignore
-            None,  # type: ignore
-            None,  # type: ignore
-            None,  # type: ignore
-            None,  # type: ignore
+            lambda: [],
+            None,
+            None,
+            "merged",
+            lambda: [],
             {},
-            "ps",  # type: ignore
-            None,  # type: ignore
-            None,  # type: ignore
+            RuleSetName("ps"),
+            None,
+            None,
         ),
     )
 

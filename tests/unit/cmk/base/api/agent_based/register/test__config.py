@@ -17,15 +17,15 @@ def test_get_registered_check_plugins(monkeypatch):
         CheckPluginName("check_unit_test"),
         [],
         "Unit Test",
-        None,  # type: ignore  # irrelevant for test
-        None,  # type: ignore  # irrelevant for test
-        None,  # type: ignore  # irrelevant for test
-        None,  # type: ignore  # irrelevant for test
-        None,  # type: ignore  # irrelevant for test
-        None,  # type: ignore  # irrelevant for test
-        None,  # type: ignore  # irrelevant for test
-        None,  # type: ignore  # irrelevant for test
-        None,  # type: ignore  # irrelevant for test
+        lambda: [],
+        None,
+        None,
+        "merged",
+        lambda: [],
+        None,
+        None,
+        None,
+        None,
     )
 
     monkeypatch.setattr(

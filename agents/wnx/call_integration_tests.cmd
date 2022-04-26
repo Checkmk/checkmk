@@ -4,6 +4,7 @@
 
 set cur_dir=%cd%
 set WNX_TEST_ROOT=%temp%\test_i_%random%
+set WNX_TEST_I_ROOT=%WNX_TEST_ROOT%
 mkdir %WNX_TEST_ROOT%
 ::net stop checkmkservice
 set arte=%cur_dir%\..\..\artefacts

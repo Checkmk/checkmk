@@ -32,7 +32,6 @@ def foldable_container(
     isopen: bool,
     title: HTMLContent,
     indent: Union[str, None, bool] = True,
-    first: bool = False,
     icon: Optional[str] = None,
     fetch_url: Optional[str] = None,
     title_url: Optional[str] = None,

@@ -10,7 +10,8 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-from cmk.gui.valuespec import Dictionary, Integer, ListOf, MonitoringState, RegExp, Tuple
+from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
+from cmk.gui.valuespec import Age, Dictionary, ListOf, MonitoringState, RegExp
 
 
 def _parameter_valuespec_systemd_services():
@@ -71,41 +72,35 @@ def _parameter_valuespec_systemd_services():
             ),
             (
                 "activating_levels",
-                Tuple(
+                SimpleLevels(
+                    Age,
                     title=_("Define a tolerating time period for activating services"),
                     help=_(
-                        "Choose time levels (in seconds) for which a service is allowed to be in an 'activating' state"
+                        "Choose time levels for which a service is allowed to be in an 'activating' state"
                     ),
-                    elements=[
-                        Integer(title=_("Warning at"), unit=_("seconds"), default_value=30),
-                        Integer(title=_("Critical at"), unit=_("seconds"), default_value=60),
-                    ],
+                    default_levels=(30, 60),
                 ),
             ),
             (
                 "deactivating_levels",
-                Tuple(
+                SimpleLevels(
+                    Age,
                     title=_("Define a tolerating time period for deactivating services"),
                     help=_(
                         "Choose time levels (in seconds) for which a service is allowed to be in an 'deactivating' state"
                     ),
-                    elements=[
-                        Integer(title=_("Warning at"), unit=_("seconds"), default_value=30),
-                        Integer(title=_("Critical at"), unit=_("seconds"), default_value=60),
-                    ],
+                    default_value=(30, 60),
                 ),
             ),
             (
                 "reloading_levels",
-                Tuple(
+                SimpleLevels(
+                    Age,
                     title=_("Define a tolerating time period for reloading services"),
                     help=_(
                         "Choose time levels (in seconds) for which a service is allowed to be in a 'reloading' state"
                     ),
-                    elements=[
-                        Integer(title=_("Warning at"), unit=_("seconds"), default_value=30),
-                        Integer(title=_("Critical at"), unit=_("seconds"), default_value=60),
-                    ],
+                    default_value=(30, 60),
                 ),
             ),
         ],

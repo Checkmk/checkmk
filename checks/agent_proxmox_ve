@@ -8,8 +8,6 @@ from typing import Any, Mapping, Optional, Sequence, Tuple, Union
 
 from cmk.utils import password_store
 
-from cmk.utils import password_store
-
 
 def agent_proxmox_ve_arguments(
     params: Mapping[str, Any], hostname: str, ipaddress: Optional[str]

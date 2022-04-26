@@ -5,7 +5,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.61)
-AC_INIT([MK Livestatus], [2.1.0b6], [mk@mathias-kettner.de])
+AC_INIT([MK Livestatus], [2.1.0b7], [mk@mathias-kettner.de])
 AM_INIT_AUTOMAKE([-Wall -Wno-portability foreign subdir-objects])
 AM_EXTRA_RECURSIVE_TARGETS([all-packaging])
 AC_CONFIG_MACRO_DIR([m4])

@@ -11,7 +11,7 @@ Currently we take the guts of the installed mailman binary itself which is not q
 portable of course.
 """
 
-__version__ = "2.1.0b6"
+__version__ = "2.1.0b7"
 
 # This Checkmk-Agent plugin gathers information about mailinglists hosted
 # by the local mailman instance.

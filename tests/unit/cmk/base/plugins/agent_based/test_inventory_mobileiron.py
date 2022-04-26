@@ -5,9 +5,8 @@
 import json
 from typing import Iterable, Union
 
-from cmk.utils.type_defs import InventoryPluginName
-
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes, TableRow
+from cmk.base.plugins.agent_based.inventory_mobileiron import inventory_mobileiron
 from cmk.base.plugins.agent_based.utils.mobileiron import parse_mobileiron
 
 from .utils_inventory import sort_inventory_result
@@ -65,8 +64,7 @@ EXPECTED: Iterable[Union[Attributes, TableRow]] = [
 ]
 
 
-def test_inventory_mobileiron(fix_register) -> None:
-    plugin = fix_register.inventory_plugins[InventoryPluginName("mobileiron_inventory")]
-    assert sort_inventory_result(plugin.inventory_function(DEVICE_DATA)) == sort_inventory_result(
+def test_inventory_mobileiron() -> None:
+    assert sort_inventory_result(inventory_mobileiron(DEVICE_DATA)) == sort_inventory_result(
         EXPECTED
     )

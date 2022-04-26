@@ -578,9 +578,10 @@ def _execute_check_discovery(
 
     params = host_config.discovery_check_parameters
     if params is None:
-        params = config.DiscoveryCheckParameters.default()
+        params = host_config.default_discovery_check_parameters()
+    rediscovery_parameters = params.get("inventory_rediscovery", {})
 
-    discovery_mode = DiscoveryMode(params.rediscovery.get("mode"))
+    discovery_mode = DiscoveryMode(rediscovery_parameters.get("mode"))
 
     # In case of keepalive discovery we always have an ipaddress. When called as non keepalive
     # ipaddress is always None
@@ -613,13 +614,13 @@ def _execute_check_discovery(
         host_name=host_name,
         services_by_transition=services,
         params=params,
-        service_filters=_ServiceFilters.from_settings(params.rediscovery),
+        service_filters=_ServiceFilters.from_settings(rediscovery_parameters),
         discovery_mode=discovery_mode,
     )
 
     host_labels_result, host_labels_need_rediscovery = _check_host_labels(
         host_labels,
-        params.severity_new_host_labels,
+        int(params.get("severity_new_host_label", 1)),
         discovery_mode,
     )
 
@@ -650,19 +651,21 @@ def _check_service_lists(
     subresults = []
     need_rediscovery = False
 
-    for transition, t_services, title, severity, service_filter in [
+    for transition, t_services, title, params_key, default_state, service_filter in [
         (
             "new",
             services_by_transition.get("new", []),
             "unmonitored",
-            params.severity_new_services,
+            "severity_unmonitored",
+            config.inventory_check_severity,
             service_filters.new,
         ),
         (
             "vanished",
             services_by_transition.get("vanished", []),
             "vanished",
-            params.severity_vanished_services,
+            "severity_vanished",
+            0,
             service_filters.vanished,
         ),
     ]:
@@ -695,9 +698,10 @@ def _check_service_lists(
 
         if affected_check_plugin_names:
             info = ", ".join(["%s: %d" % e for e in affected_check_plugin_names.items()])
+            st = params.get(params_key, default_state)
             count = sum(affected_check_plugin_names.values())
             subresults.append(
-                ActiveCheckResult(severity, f"{title.capitalize()} services: {count} ({info})")
+                ActiveCheckResult(st, f"{title.capitalize()} services: {count} ({info})")
             )
 
             if unfiltered and (
@@ -889,12 +893,13 @@ def _discover_marked_host(
     host_name = host_config.hostname
     console.verbose(f"{tty.bold}{host_name}{tty.normal}:\n")
 
-    if not (params := host_config.discovery_check_parameters):
+    if host_config.discovery_check_parameters is None:
         console.verbose("  failed: discovery check disabled\n")
         return False
+    rediscovery_parameters = host_config.discovery_check_parameters.get("inventory_rediscovery", {})
 
     reason = _may_rediscover(
-        rediscovery_parameters=params.rediscovery,
+        rediscovery_parameters=rediscovery_parameters,
         reference_time=reference_time,
         oldest_queued=oldest_queued,
     )
@@ -905,8 +910,8 @@ def _discover_marked_host(
     result = automation_discovery(
         config_cache=config_cache,
         host_config=host_config,
-        mode=DiscoveryMode(params.rediscovery.get("mode")),
-        service_filters=_ServiceFilters.from_settings(params.rediscovery),
+        mode=DiscoveryMode(rediscovery_parameters.get("mode")),
+        service_filters=_ServiceFilters.from_settings(rediscovery_parameters),
         on_error=OnError.IGNORE,
         use_cached_snmp_data=True,
         # autodiscovery is run every 5 minutes (see
@@ -946,7 +951,7 @@ def _discover_marked_host(
 
         # Note: Even if the actual mark-for-discovery flag may have been created by a cluster host,
         #       the activation decision is based on the discovery configuration of the node
-        activation_required = bool(params.rediscovery["activation"])
+        activation_required = bool(rediscovery_parameters["activation"])
 
         # Enforce base code creating a new host config object after this change
         config_cache.invalidate_host_config(host_name)

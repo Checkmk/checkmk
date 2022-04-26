@@ -6,7 +6,7 @@
 
 # pylint: disable=redefined-outer-name
 
-from typing import Any, Dict, List, Mapping, NamedTuple, Optional, Sequence, Set, Tuple
+from typing import Dict, List, Literal, Mapping, NamedTuple, Optional, Sequence, Set, Tuple, Union
 
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
@@ -376,250 +376,240 @@ def test__get_post_discovery_services(
     assert result.self_removed == count_removed
 
 
-def _get_params(rediscovery: dict[str, Any]) -> config.DiscoveryCheckParameters:
-    return config.DiscoveryCheckParameters(
-        check_interval=60,
-        severity_new_services=1,
-        severity_vanished_services=0,
-        severity_new_host_labels=0,
-        rediscovery=rediscovery,
-    )
-
-
 @pytest.mark.parametrize(
     "parameters, result_need_rediscovery",
     [
-        (_get_params({}), False),
+        ({}, False),
         # New services
         # Whitelist
         (
-            _get_params(
-                {
+            {
+                "inventory_rediscovery": {
                     "mode": discovery.DiscoveryMode.NEW,
                     "service_whitelist": ["^Test Description New Item 1"],
-                }
-            ),
+                },
+            },
             True,
         ),
         (
-            _get_params(
-                {
+            {
+                "inventory_rediscovery": {
                     "mode": discovery.DiscoveryMode.REMOVE,
                     "service_whitelist": ["^Test Description New Item 1"],
-                }
-            ),
+                },
+            },
             False,
         ),
         (
-            _get_params(
-                {
+            {
+                "inventory_rediscovery": {
                     "mode": discovery.DiscoveryMode.FIXALL,
                     "service_whitelist": ["^Test Description New Item 1"],
-                }
-            ),
+                },
+            },
             True,
         ),
         (
-            _get_params(
-                {
+            {
+                "inventory_rediscovery": {
                     "mode": discovery.DiscoveryMode.REFRESH,
                     "service_whitelist": ["^Test Description New Item 1"],
-                }
-            ),
+                },
+            },
             True,
         ),
         # Blacklist
         (
-            _get_params(
-                {
+            {
+                "inventory_rediscovery": {
                     "mode": discovery.DiscoveryMode.NEW,
                     "service_blacklist": ["^Test Description New Item 1"],
-                }
-            ),
+                },
+            },
             True,
         ),
         (
-            _get_params(
-                {
+            {
+                "inventory_rediscovery": {
                     "mode": discovery.DiscoveryMode.REMOVE,
                     "service_blacklist": ["^Test Description New Item 1"],
-                }
-            ),
+                },
+            },
             True,
         ),
         (
-            _get_params(
-                {
+            {
+                "inventory_rediscovery": {
                     "mode": discovery.DiscoveryMode.FIXALL,
                     "service_blacklist": ["^Test Description New Item 1"],
-                }
-            ),
+                },
+            },
             True,
         ),
         (
-            _get_params(
-                {
+            {
+                "inventory_rediscovery": {
                     "mode": discovery.DiscoveryMode.REFRESH,
                     "service_blacklist": ["^Test Description New Item 1"],
-                }
-            ),
+                },
+            },
             True,
         ),
         # White-/blacklist
         (
-            _get_params(
-                {
+            {
+                "inventory_rediscovery": {
                     "mode": discovery.DiscoveryMode.NEW,
                     "service_whitelist": ["^Test Description New Item 1"],
                     "service_blacklist": ["^Test Description New Item 2"],
-                }
-            ),
+                },
+            },
             True,
         ),
         (
-            _get_params(
-                {
+            {
+                "inventory_rediscovery": {
                     "mode": discovery.DiscoveryMode.REMOVE,
                     "service_whitelist": ["^Test Description New Item 1"],
                     "service_blacklist": ["^Test Description New Item 2"],
-                }
-            ),
+                },
+            },
             False,
         ),
         (
-            _get_params(
-                {
+            {
+                "inventory_rediscovery": {
                     "mode": discovery.DiscoveryMode.FIXALL,
                     "service_whitelist": ["^Test Description New Item 1"],
                     "service_blacklist": ["^Test Description New Item 2"],
-                }
-            ),
+                },
+            },
             True,
         ),
         (
-            _get_params(
-                {
+            {
+                "inventory_rediscovery": {
                     "mode": discovery.DiscoveryMode.REFRESH,
                     "service_whitelist": ["^Test Description New Item 1"],
                     "service_blacklist": ["^Test Description New Item 2"],
-                }
-            ),
+                },
+            },
             True,
         ),
         # Vanished services
         # Whitelist
         (
-            _get_params(
-                {
+            {
+                "inventory_rediscovery": {
                     "mode": discovery.DiscoveryMode.NEW,
                     "service_whitelist": ["^Test Description Vanished Item 1"],
-                }
-            ),
+                },
+            },
             False,
         ),
         (
-            _get_params(
-                {
+            {
+                "inventory_rediscovery": {
                     "mode": discovery.DiscoveryMode.REMOVE,
                     "service_whitelist": ["^Test Description Vanished Item 1"],
-                }
-            ),
+                },
+            },
             True,
         ),
         (
-            _get_params(
-                {
+            {
+                "inventory_rediscovery": {
                     "mode": discovery.DiscoveryMode.FIXALL,
                     "service_whitelist": ["^Test Description Vanished Item 1"],
-                }
-            ),
+                },
+            },
             True,
         ),
         (
-            _get_params(
-                {
+            {
+                "inventory_rediscovery": {
                     "mode": discovery.DiscoveryMode.REFRESH,
                     "service_whitelist": ["^Test Description Vanished Item 1"],
-                }
-            ),
+                },
+            },
             True,
         ),
         # Blacklist
         (
-            _get_params(
-                {
+            {
+                "inventory_rediscovery": {
                     "mode": discovery.DiscoveryMode.NEW,
                     "service_blacklist": ["^Test Description Vanished Item 1"],
-                }
-            ),
+                },
+            },
             True,
         ),
         (
-            _get_params(
-                {
+            {
+                "inventory_rediscovery": {
                     "mode": discovery.DiscoveryMode.REMOVE,
                     "service_blacklist": ["^Test Description Vanished Item 1"],
-                }
-            ),
+                },
+            },
             True,
         ),
         (
-            _get_params(
-                {
+            {
+                "inventory_rediscovery": {
                     "mode": discovery.DiscoveryMode.FIXALL,
                     "service_blacklist": ["^Test Description Vanished Item 1"],
-                }
-            ),
+                },
+            },
             True,
         ),
         (
-            _get_params(
-                {
+            {
+                "inventory_rediscovery": {
                     "mode": discovery.DiscoveryMode.REFRESH,
                     "service_blacklist": ["^Test Description Vanished Item 1"],
-                }
-            ),
+                },
+            },
             True,
         ),
         # White-/blacklist
         (
-            _get_params(
-                {
+            {
+                "inventory_rediscovery": {
                     "mode": discovery.DiscoveryMode.NEW,
                     "service_whitelist": ["^Test Description Vanished Item 1"],
                     "service_blacklist": ["^Test Description Vanished Item 2"],
-                }
-            ),
+                },
+            },
             False,
         ),
         (
-            _get_params(
-                {
+            {
+                "inventory_rediscovery": {
                     "mode": discovery.DiscoveryMode.REMOVE,
                     "service_whitelist": ["^Test Description Vanished Item 1"],
                     "service_blacklist": ["^Test Description Vanished Item 2"],
-                }
-            ),
+                },
+            },
             True,
         ),
         (
-            _get_params(
-                {
+            {
+                "inventory_rediscovery": {
                     "mode": discovery.DiscoveryMode.FIXALL,
                     "service_whitelist": ["^Test Description Vanished Item 1"],
                     "service_blacklist": ["^Test Description Vanished Item 2"],
-                }
-            ),
+                },
+            },
             True,
         ),
         (
-            _get_params(
-                {
+            {
+                "inventory_rediscovery": {
                     "mode": discovery.DiscoveryMode.REFRESH,
                     "service_whitelist": ["^Test Description Vanished Item 1"],
                     "service_blacklist": ["^Test Description Vanished Item 2"],
-                }
-            ),
+                },
+            },
             True,
         ),
     ],
@@ -627,7 +617,9 @@ def _get_params(rediscovery: dict[str, Any]) -> config.DiscoveryCheckParameters:
 def test__check_service_table(
     monkeypatch: MonkeyPatch,
     grouped_services: discovery.ServicesByTransition,
-    parameters: config.DiscoveryCheckParameters,
+    parameters: Dict[
+        Literal["inventory_rediscovery"], Dict[str, Union[discovery.DiscoveryMode, List[str]]]
+    ],
     result_need_rediscovery: bool,
 ) -> None:
     def _get_service_description(_hostname, _check_plugin_name, item):
@@ -635,7 +627,7 @@ def test__check_service_table(
 
     monkeypatch.setattr(config, "service_description", _get_service_description)
 
-    rediscovery_parameters = parameters.rediscovery.copy()
+    rediscovery_parameters = parameters.get("inventory_rediscovery", {}).copy()
     discovery_mode = rediscovery_parameters.pop("mode", discovery.DiscoveryMode.FALLBACK)
     assert isinstance(discovery_mode, discovery.DiscoveryMode)  # for mypy
     results, need_rediscovery = discovery._check_service_lists(

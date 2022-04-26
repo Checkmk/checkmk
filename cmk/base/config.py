@@ -176,24 +176,7 @@ class CheckmkCheckParameters(NamedTuple):
     enabled: bool
 
 
-class DiscoveryCheckParameters(NamedTuple):
-    check_interval: Any  # TODO: improve
-    severity_new_services: int
-    severity_vanished_services: int
-    severity_new_host_labels: int
-    rediscovery: dict[str, Any]  # TODO: improve this
-
-    @classmethod
-    def default(cls) -> "DiscoveryCheckParameters":
-        """Support legacy single value global configurations. Otherwise return the defaults"""
-        return cls(
-            check_interval=inventory_check_interval,
-            severity_new_services=int(inventory_check_severity),
-            severity_vanished_services=0,
-            severity_new_host_labels=1,
-            # TODO: defaults are currently all over the place :-(
-            rediscovery={},
-        )
+DiscoveryCheckParameters = Dict
 
 
 class SpecialAgentConfiguration(NamedTuple):
@@ -2976,26 +2959,25 @@ class HostConfig:
         """
         entries = self._config_cache.host_extra_conf(self.hostname, periodic_discovery)
         if not entries:
-            return DiscoveryCheckParameters.default()
+            return self.default_discovery_check_parameters()
 
-        if (entry := entries[0]) is None:
-            return None
+        return entries[0]
 
-        return DiscoveryCheckParameters(
-            check_interval=entry["check_interval"],
-            severity_new_services=int(entry["severity_unmonitored"]),
-            severity_vanished_services=int(entry["severity_vanished"]),
-            severity_new_host_labels=int(entry["severity_new_host_label"]),
-            rediscovery=entry.get("inventory_rediscovery", {}),
-        )
+    def default_discovery_check_parameters(self) -> DiscoveryCheckParameters:
+        """Support legacy single value global configurations. Otherwise return the defaults"""
+        return {
+            "check_interval": inventory_check_interval,
+            "severity_unmonitored": inventory_check_severity,
+            "severity_vanished": 0,
+        }
 
     def add_service_discovery_check(
-        self, params: Optional[DiscoveryCheckParameters], service_discovery_name: str
+        self, params: Optional[Dict[str, Any]], service_discovery_name: str
     ) -> bool:
         if not params:
             return False
 
-        if not params.check_interval:
+        if not params["check_interval"]:
             return False
 
         if service_ignored(self.hostname, None, service_discovery_name):

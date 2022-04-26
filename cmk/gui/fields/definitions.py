@@ -18,11 +18,7 @@ from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
 
 import cmk.utils.version as version
 from cmk.utils.exceptions import MKException
-from cmk.utils.livestatus_helpers.expressions import (
-    NothingExpression,
-    QueryExpression,
-    tree_to_expr,
-)
+from cmk.utils.livestatus_helpers.expressions import NothingExpression, QueryExpression
 from cmk.utils.livestatus_helpers.queries import Query
 from cmk.utils.livestatus_helpers.tables import Hostgroups, Hosts, Servicegroups
 from cmk.utils.livestatus_helpers.types import Column, Table
@@ -30,7 +26,13 @@ from cmk.utils.livestatus_helpers.types import Column, Table
 from cmk.gui import sites, watolib
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.fields.base import BaseSchema, MultiNested, ValueTypedDictSchema
-from cmk.gui.fields.utils import attr_openapi_schema, collect_attributes, ObjectContext, ObjectType
+from cmk.gui.fields.utils import (
+    attr_openapi_schema,
+    collect_attributes,
+    ObjectContext,
+    ObjectType,
+    tree_to_expr,
+)
 from cmk.gui.groups import GroupName, GroupType, load_group_information
 from cmk.gui.logged_in import user
 from cmk.gui.site_config import allsites

@@ -1351,8 +1351,7 @@ class PageEditBackupTarget:
                     "remote",
                     CascadingDropdown(
                         title=_("Destination"),
-                        # Like everyone reading this, mypy is totally confused by our ValueSpecs... :-P
-                        choices=ABCBackupTargetType.choices,  # type: ignore[arg-type]
+                        choices=ABCBackupTargetType.choices,
                     ),
                 ),
             ],

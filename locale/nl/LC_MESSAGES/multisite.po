@@ -1358,6 +1358,15 @@ msgstr ""
 "opslaat."
 
 msgid ""
+"<br>This action invalidates the stored connection data and the host "
+"connections will not work any longer. There are only 2 reasons to do this:"
+"<ul><li>You do not trust this host any longer and don't want to receive or "
+"fetch data anymore.</li><li>You want to reset the communication to the "
+"legacy and unencrypted mode (in which case you also need to reset the agent "
+"controller on the monitored host (refer to `cmk-agent-ctl help`).</li></ul>"
+msgstr ""
+
+msgid ""
 "<br>With these intervals specific single values or table columns can be kept "
 "from the previous inventory tree if the current agent output does not "
 "provide any new data for these entries.<br>Only entries corresponding to "
@@ -12490,10 +12499,6 @@ msgstr "Daemon sets"
 msgid "DaemonSets"
 msgstr "Daemon sets"
 
-#, fuzzy
-msgid "Daemonset"
-msgstr "Daemon sets"
-
 msgid "Daily"
 msgstr "Dagelijks"
 
@@ -15429,6 +15434,22 @@ msgstr "Wilt u echt de geselecteerde aggregaten verplaatsen?"
 msgid "Do you really want to move the selected rules?"
 msgstr "Wilt u echt de geselecteerde regels verplaatsen?"
 
+#, fuzzy, python-format
+msgid ""
+"Do you really want to remove the TLS registration of the host <tt>%s</tt>?"
+msgstr "Wilt u echt de host <tt>%s</tt> verwijderen?"
+
+#, fuzzy
+msgid ""
+"Do you really want to remove the TLS registration of the hosts in this "
+"folder (recursively)?"
+msgstr "Wilt u echt de verbinding met de site %s verwijderen?"
+
+#, fuzzy
+msgid ""
+"Do you really want to remove the TLS registration of the selected hosts?"
+msgstr "Wilt u echt de geselecteerde hosts verwijderen?"
+
 #, python-format
 msgid "Do you really want to remove the package <tt>%s</tt> from your system?"
 msgstr "Wilt u echt het pakket <tt>%s</tt> van uw systeem verwijderen?"
@@ -17082,10 +17103,12 @@ msgstr "Ingang"
 msgid "Environment Variables"
 msgstr "Gebruik omgevingsvariabelen van host"
 
-msgid "Episode 1: Installing Checkmk and monitoring Linux"
+#, fuzzy
+msgid "Episode 1: Installing Checkmk and monitoring your first host"
 msgstr "Aflevering 1: Checkmk installeren en Linux monitoren"
 
-msgid "Episode 3: Monitoring Windows"
+#, fuzzy
+msgid "Episode 4: Monitoring Windows in Checkmk"
 msgstr "Aflevering 3: Windows bewaken"
 
 msgid "Equal or more than"
@@ -26294,10 +26317,6 @@ msgid "Kubernetes DaemonSet"
 msgstr "Kubernetes Poort"
 
 #, fuzzy
-msgid "Kubernetes Daemonset"
-msgstr "Kubernetes Poort"
-
-#, fuzzy
 msgid "Kubernetes Deployment"
 msgstr "Voorwaarden toepassen"
 
@@ -26325,20 +26344,12 @@ msgid "Kubernetes Port"
 msgstr "Kubernetes Poort"
 
 #, fuzzy
-msgid "Kubernetes Statefulset"
+msgid "Kubernetes StatefulSet"
 msgstr "Kubernetes Poort"
 
 #, fuzzy
-msgid "Kubernetes cluster"
-msgstr "Kubernetes rollen"
-
-#, fuzzy
-msgid "Kubernetes daemonset"
-msgstr "Kubernetes knooppunten"
-
-#, fuzzy
-msgid "Kubernetes deployment"
-msgstr "Voorwaarden toepassen"
+msgid "Kubernetes Statefulset"
+msgstr "Kubernetes Poort"
 
 #, fuzzy
 msgid "Kubernetes deployment conditions"
@@ -26347,14 +26358,6 @@ msgstr "Voorwaarden toepassen"
 #, fuzzy
 msgid "Kubernetes memory resource utilization"
 msgstr "Kubernetes-bronnen"
-
-#, fuzzy
-msgid "Kubernetes namespace"
-msgstr "Kubernetes knooppunten"
-
-#, fuzzy
-msgid "Kubernetes node"
-msgstr "Kubernetes knooppunten"
 
 #, fuzzy
 msgid "Kubernetes node containers"
@@ -26396,10 +26399,6 @@ msgstr "Kubernetes-bronnen"
 
 msgid "Kubernetes roles"
 msgstr "Kubernetes rollen"
-
-#, fuzzy
-msgid "Kubernetes statefulset"
-msgstr "Kubernetes Poort"
 
 msgid "L2 cache hit ratio"
 msgstr "L2 cache hit ratio"
@@ -38068,6 +38067,10 @@ msgstr "Op afstand: Verzend gebeurtenissen naar syslog host op afstand"
 msgid "Remove"
 msgstr "Verwijder"
 
+#, fuzzy
+msgid "Remove TLS registration"
+msgstr "Agent Versie"
+
 msgid "Remove Windows Firewall configuration if present"
 msgstr "Verwijder Windows Firewall configuratie indien aanwezig"
 
@@ -44278,10 +44281,6 @@ msgstr "Stateful sets"
 
 #, fuzzy
 msgid "StatefulSets"
-msgstr "Stateful sets"
-
-#, fuzzy
-msgid "Statefulset"
 msgstr "Stateful sets"
 
 msgid "Statement"
@@ -61276,17 +61275,19 @@ msgstr ""
 "U kunt de melding sturen naar een lijst van meerdere gebruikers, die u kunt "
 "kiezen uit deze voorgedefinieerde filters."
 
+#, fuzzy
 msgid ""
 "You can set a limit to the failed to spare disk ratio. The ratio is "
-"calculated with <i>spare / (failed + spare)</i>."
+"calculated with <i>failed / (failed + spare)</i>."
 msgstr ""
 "U kunt een limiet instellen voor de verhouding tussen mislukte en "
 "ongebruikte schijven. De verhouding wordt berekend met <i>spare / (failed + "
 "spare)</i>."
 
+#, fuzzy
 msgid ""
 "You can set a limit to the offline to spare disk ratio. The ratio is "
-"calculated with <i>spare / (offline + spare)</i>."
+"calculated with <i>offline / (offline + spare)</i>."
 msgstr ""
 "U kunt een limiet instellen voor de verhouding tussen offline en reserve "
 "schijven. De verhouding wordt berekend met <i>spare / (offline + spare)</i>."
@@ -64462,6 +64463,51 @@ msgstr "z/OS"
 #, fuzzy, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Alle rechten voorbehouden."
+
+#, fuzzy
+#~| msgid "Daemon sets"
+#~ msgid "Daemonset"
+#~ msgstr "Daemon sets"
+
+#, fuzzy
+#~| msgid "Kubernetes Port"
+#~ msgid "Kubernetes Daemonset"
+#~ msgstr "Kubernetes Poort"
+
+#, fuzzy
+#~| msgid "Kubernetes roles"
+#~ msgid "Kubernetes cluster"
+#~ msgstr "Kubernetes rollen"
+
+#, fuzzy
+#~| msgid "Kubernetes nodes"
+#~ msgid "Kubernetes daemonset"
+#~ msgstr "Kubernetes knooppunten"
+
+#, fuzzy
+#~| msgid "Apply conditions"
+#~ msgid "Kubernetes deployment"
+#~ msgstr "Voorwaarden toepassen"
+
+#, fuzzy
+#~| msgid "Kubernetes nodes"
+#~ msgid "Kubernetes namespace"
+#~ msgstr "Kubernetes knooppunten"
+
+#, fuzzy
+#~| msgid "Kubernetes nodes"
+#~ msgid "Kubernetes node"
+#~ msgstr "Kubernetes knooppunten"
+
+#, fuzzy
+#~| msgid "Kubernetes Port"
+#~ msgid "Kubernetes statefulset"
+#~ msgstr "Kubernetes Poort"
+
+#, fuzzy
+#~| msgid "Stateful sets"
+#~ msgid "Statefulset"
+#~ msgstr "Stateful sets"
 
 #~ msgid "Backup conditions"
 #~ msgstr "Back-up voorwaarden"

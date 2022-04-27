@@ -1317,6 +1317,15 @@ msgid ""
 msgstr ""
 
 msgid ""
+"<br>This action invalidates the stored connection data and the host "
+"connections will not work any longer. There are only 2 reasons to do this:"
+"<ul><li>You do not trust this host any longer and don't want to receive or "
+"fetch data anymore.</li><li>You want to reset the communication to the "
+"legacy and unencrypted mode (in which case you also need to reset the agent "
+"controller on the monitored host (refer to `cmk-agent-ctl help`).</li></ul>"
+msgstr ""
+
+msgid ""
 "<br>With these intervals specific single values or table columns can be kept "
 "from the previous inventory tree if the current agent output does not "
 "provide any new data for these entries.<br>Only entries corresponding to "
@@ -11915,10 +11924,6 @@ msgstr "fire"
 msgid "DaemonSets"
 msgstr "fire"
 
-#, fuzzy
-msgid "Daemonset"
-msgstr "fire"
-
 msgid "Daily"
 msgstr ""
 
@@ -14849,6 +14854,21 @@ msgstr "O agregare legată de un singur element"
 msgid "Do you really want to move the selected rules?"
 msgstr "O agregare legată de un singur element"
 
+#, fuzzy, python-format
+msgid ""
+"Do you really want to remove the TLS registration of the host <tt>%s</tt>?"
+msgstr "O agregare legată de un singur element"
+
+msgid ""
+"Do you really want to remove the TLS registration of the hosts in this "
+"folder (recursively)?"
+msgstr ""
+
+#, fuzzy
+msgid ""
+"Do you really want to remove the TLS registration of the selected hosts?"
+msgstr "O agregare legată de un singur element"
+
 #, python-format
 msgid "Do you really want to remove the package <tt>%s</tt> from your system?"
 msgstr ""
@@ -16473,11 +16493,12 @@ msgstr ""
 msgid "Environment Variables"
 msgstr ""
 
-msgid "Episode 1: Installing Checkmk and monitoring Linux"
+msgid "Episode 1: Installing Checkmk and monitoring your first host"
 msgstr ""
 
-msgid "Episode 3: Monitoring Windows"
-msgstr ""
+#, fuzzy
+msgid "Episode 4: Monitoring Windows in Checkmk"
+msgstr " pe siteul de monitorizare: "
 
 msgid "Equal or more than"
 msgstr ""
@@ -24710,10 +24731,6 @@ msgid "Kubernetes DaemonSet"
 msgstr "Adresă"
 
 #, fuzzy
-msgid "Kubernetes Daemonset"
-msgstr "Adresă"
-
-#, fuzzy
 msgid "Kubernetes Deployment"
 msgstr "(fără condiții)"
 
@@ -24741,20 +24758,12 @@ msgid "Kubernetes Port"
 msgstr ""
 
 #, fuzzy
+msgid "Kubernetes StatefulSet"
+msgstr "Adresă"
+
+#, fuzzy
 msgid "Kubernetes Statefulset"
 msgstr "Adresă"
-
-#, fuzzy
-msgid "Kubernetes cluster"
-msgstr "Cluster nou"
-
-#, fuzzy
-msgid "Kubernetes daemonset"
-msgstr "Adresă"
-
-#, fuzzy
-msgid "Kubernetes deployment"
-msgstr "(fără condiții)"
 
 #, fuzzy
 msgid "Kubernetes deployment conditions"
@@ -24763,14 +24772,6 @@ msgstr "(fără condiții)"
 #, fuzzy
 msgid "Kubernetes memory resource utilization"
 msgstr "Dezactiveaza Notificarile"
-
-#, fuzzy
-msgid "Kubernetes namespace"
-msgstr "Adresă"
-
-#, fuzzy
-msgid "Kubernetes node"
-msgstr "Adresă"
 
 #, fuzzy
 msgid "Kubernetes node containers"
@@ -24812,10 +24813,6 @@ msgstr ""
 
 msgid "Kubernetes roles"
 msgstr ""
-
-#, fuzzy
-msgid "Kubernetes statefulset"
-msgstr "Adresă"
 
 msgid "L2 cache hit ratio"
 msgstr ""
@@ -36650,6 +36647,10 @@ msgstr ""
 msgid "Remove"
 msgstr ""
 
+#, fuzzy
+msgid "Remove TLS registration"
+msgstr "Numele Elementului"
+
 msgid "Remove Windows Firewall configuration if present"
 msgstr ""
 
@@ -42648,10 +42649,6 @@ msgstr "Adaugă comentarii"
 
 #, fuzzy
 msgid "StatefulSets"
-msgstr "Adaugă comentarii"
-
-#, fuzzy
-msgid "Statefulset"
 msgstr "Adaugă comentarii"
 
 msgid "Statement"
@@ -56702,12 +56699,12 @@ msgstr ""
 
 msgid ""
 "You can set a limit to the failed to spare disk ratio. The ratio is "
-"calculated with <i>spare / (failed + spare)</i>."
+"calculated with <i>failed / (failed + spare)</i>."
 msgstr ""
 
 msgid ""
 "You can set a limit to the offline to spare disk ratio. The ratio is "
-"calculated with <i>spare / (offline + spare)</i>."
+"calculated with <i>offline / (offline + spare)</i>."
 msgstr ""
 
 msgid "You can set a lower limit to the absolute number of spare disks."
@@ -59678,6 +59675,42 @@ msgstr "z/OS"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr ""
+
+#, fuzzy
+#~ msgid "Daemonset"
+#~ msgstr "fire"
+
+#, fuzzy
+#~ msgid "Kubernetes Daemonset"
+#~ msgstr "Adresă"
+
+#, fuzzy
+#~ msgid "Kubernetes cluster"
+#~ msgstr "Cluster nou"
+
+#, fuzzy
+#~ msgid "Kubernetes daemonset"
+#~ msgstr "Adresă"
+
+#, fuzzy
+#~ msgid "Kubernetes deployment"
+#~ msgstr "(fără condiții)"
+
+#, fuzzy
+#~ msgid "Kubernetes namespace"
+#~ msgstr "Adresă"
+
+#, fuzzy
+#~ msgid "Kubernetes node"
+#~ msgstr "Adresă"
+
+#, fuzzy
+#~ msgid "Kubernetes statefulset"
+#~ msgstr "Adresă"
+
+#, fuzzy
+#~ msgid "Statefulset"
+#~ msgstr "Adaugă comentarii"
 
 #~ msgid "use SSL/HTTPS"
 #~ msgstr "foloseste SSL/HTTPS"

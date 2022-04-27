@@ -1357,6 +1357,15 @@ msgstr ""
 "cifrar<br> en el servidor Checkmk."
 
 msgid ""
+"<br>This action invalidates the stored connection data and the host "
+"connections will not work any longer. There are only 2 reasons to do this:"
+"<ul><li>You do not trust this host any longer and don't want to receive or "
+"fetch data anymore.</li><li>You want to reset the communication to the "
+"legacy and unencrypted mode (in which case you also need to reset the agent "
+"controller on the monitored host (refer to `cmk-agent-ctl help`).</li></ul>"
+msgstr ""
+
+msgid ""
 "<br>With these intervals specific single values or table columns can be kept "
 "from the previous inventory tree if the current agent output does not "
 "provide any new data for these entries.<br>Only entries corresponding to "
@@ -12584,10 +12593,6 @@ msgstr "Conjuntos de demonios"
 msgid "DaemonSets"
 msgstr "Conjuntos de demonios"
 
-#, fuzzy
-msgid "Daemonset"
-msgstr "Conjuntos de demonios"
-
 msgid "Daily"
 msgstr "Diario"
 
@@ -15551,6 +15556,22 @@ msgstr "¿Realmente quiere mover las agregaciones seleccionadas?"
 msgid "Do you really want to move the selected rules?"
 msgstr "¿Realmente quieres mover las reglas seleccionadas?"
 
+#, fuzzy, python-format
+msgid ""
+"Do you really want to remove the TLS registration of the host <tt>%s</tt>?"
+msgstr "¿Realmente quieres borrar el host <tt>%s</tt>?"
+
+#, fuzzy
+msgid ""
+"Do you really want to remove the TLS registration of the hosts in this "
+"folder (recursively)?"
+msgstr "¿Realmente quieres eliminar la conexión con el sitio %s?"
+
+#, fuzzy
+msgid ""
+"Do you really want to remove the TLS registration of the selected hosts?"
+msgstr "¿Realmente desea eliminar los anfitriones seleccionados?"
+
 #, python-format
 msgid "Do you really want to remove the package <tt>%s</tt> from your system?"
 msgstr "¿Realmente quiere eliminar el paquete <tt>%s</tt> de su sistema?"
@@ -17215,10 +17236,12 @@ msgstr "Entrada"
 msgid "Environment Variables"
 msgstr "Utilizar las variables de entorno del host"
 
-msgid "Episode 1: Installing Checkmk and monitoring Linux"
+#, fuzzy
+msgid "Episode 1: Installing Checkmk and monitoring your first host"
 msgstr "Episodio 1: Instalación de Checkmk y monitorización de Linux"
 
-msgid "Episode 3: Monitoring Windows"
+#, fuzzy
+msgid "Episode 4: Monitoring Windows in Checkmk"
 msgstr "Episodio 3: Supervisión de Windows"
 
 msgid "Equal or more than"
@@ -26493,10 +26516,6 @@ msgid "Kubernetes DaemonSet"
 msgstr "Puerto Kubernetes"
 
 #, fuzzy
-msgid "Kubernetes Daemonset"
-msgstr "Puerto Kubernetes"
-
-#, fuzzy
 msgid "Kubernetes Deployment"
 msgstr "Aplicar condiciones"
 
@@ -26524,20 +26543,12 @@ msgid "Kubernetes Port"
 msgstr "Puerto Kubernetes"
 
 #, fuzzy
-msgid "Kubernetes Statefulset"
+msgid "Kubernetes StatefulSet"
 msgstr "Puerto Kubernetes"
 
 #, fuzzy
-msgid "Kubernetes cluster"
-msgstr "Roles de Kubernetes"
-
-#, fuzzy
-msgid "Kubernetes daemonset"
-msgstr "Nodos Kubernetes"
-
-#, fuzzy
-msgid "Kubernetes deployment"
-msgstr "Aplicar condiciones"
+msgid "Kubernetes Statefulset"
+msgstr "Puerto Kubernetes"
 
 #, fuzzy
 msgid "Kubernetes deployment conditions"
@@ -26546,14 +26557,6 @@ msgstr "Aplicar condiciones"
 #, fuzzy
 msgid "Kubernetes memory resource utilization"
 msgstr "Recursos de Kubernetes"
-
-#, fuzzy
-msgid "Kubernetes namespace"
-msgstr "Nodos Kubernetes"
-
-#, fuzzy
-msgid "Kubernetes node"
-msgstr "Nodos Kubernetes"
 
 #, fuzzy
 msgid "Kubernetes node containers"
@@ -26595,10 +26598,6 @@ msgstr "Recursos de Kubernetes"
 
 msgid "Kubernetes roles"
 msgstr "Roles de Kubernetes"
-
-#, fuzzy
-msgid "Kubernetes statefulset"
-msgstr "Puerto Kubernetes"
 
 msgid "L2 cache hit ratio"
 msgstr "Índice de aciertos de la caché L2"
@@ -38374,6 +38373,10 @@ msgstr "Remoto: Envía los eventos al host de syslog remoto"
 msgid "Remove"
 msgstr "Eliminar"
 
+#, fuzzy
+msgid "Remove TLS registration"
+msgstr "Versión para agentes"
+
 msgid "Remove Windows Firewall configuration if present"
 msgstr "Eliminar la configuración del Firewall de Windows si está presente"
 
@@ -44658,10 +44661,6 @@ msgstr "Conjuntos de estados"
 
 #, fuzzy
 msgid "StatefulSets"
-msgstr "Conjuntos de estados"
-
-#, fuzzy
-msgid "Statefulset"
 msgstr "Conjuntos de estados"
 
 msgid "Statement"
@@ -61766,17 +61765,19 @@ msgstr ""
 "Puede enviar la notificación a una lista de múltiples usuarios, que pueden "
 "ser elegidos de entre estos filtros predefinidos."
 
+#, fuzzy
 msgid ""
 "You can set a limit to the failed to spare disk ratio. The ratio is "
-"calculated with <i>spare / (failed + spare)</i>."
+"calculated with <i>failed / (failed + spare)</i>."
 msgstr ""
 "Puede establecer un límite para la proporción de discos fallidos con "
 "respecto a los de repuesto. La proporción se calcula con <i>recambio / "
 "(fallado + repuesto)</i>."
 
+#, fuzzy
 msgid ""
 "You can set a limit to the offline to spare disk ratio. The ratio is "
-"calculated with <i>spare / (offline + spare)</i>."
+"calculated with <i>offline / (offline + spare)</i>."
 msgstr ""
 "Puede establecer un límite a la proporción de discos fuera de línea y de "
 "repuesto. La proporción se calcula con <i>reserva / (sin conexión + "
@@ -64984,6 +64985,51 @@ msgstr "z/OS"
 #, fuzzy, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "2020 tribe29 GmbH. Todos los derechos reservados."
+
+#, fuzzy
+#~| msgid "Daemon sets"
+#~ msgid "Daemonset"
+#~ msgstr "Conjuntos de demonios"
+
+#, fuzzy
+#~| msgid "Kubernetes Port"
+#~ msgid "Kubernetes Daemonset"
+#~ msgstr "Puerto Kubernetes"
+
+#, fuzzy
+#~| msgid "Kubernetes roles"
+#~ msgid "Kubernetes cluster"
+#~ msgstr "Roles de Kubernetes"
+
+#, fuzzy
+#~| msgid "Kubernetes nodes"
+#~ msgid "Kubernetes daemonset"
+#~ msgstr "Nodos Kubernetes"
+
+#, fuzzy
+#~| msgid "Apply conditions"
+#~ msgid "Kubernetes deployment"
+#~ msgstr "Aplicar condiciones"
+
+#, fuzzy
+#~| msgid "Kubernetes nodes"
+#~ msgid "Kubernetes namespace"
+#~ msgstr "Nodos Kubernetes"
+
+#, fuzzy
+#~| msgid "Kubernetes nodes"
+#~ msgid "Kubernetes node"
+#~ msgstr "Nodos Kubernetes"
+
+#, fuzzy
+#~| msgid "Kubernetes Port"
+#~ msgid "Kubernetes statefulset"
+#~ msgstr "Puerto Kubernetes"
+
+#, fuzzy
+#~| msgid "Stateful sets"
+#~ msgid "Statefulset"
+#~ msgstr "Conjuntos de estados"
 
 #~ msgid "Backup conditions"
 #~ msgstr "Condiciones de respaldo"

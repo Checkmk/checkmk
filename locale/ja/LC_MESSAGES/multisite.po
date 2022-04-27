@@ -1314,6 +1314,15 @@ msgstr ""
 "め、暗号化せずに<br>Check_MKサーバーに保存することに注意してください。"
 
 msgid ""
+"<br>This action invalidates the stored connection data and the host "
+"connections will not work any longer. There are only 2 reasons to do this:"
+"<ul><li>You do not trust this host any longer and don't want to receive or "
+"fetch data anymore.</li><li>You want to reset the communication to the "
+"legacy and unencrypted mode (in which case you also need to reset the agent "
+"controller on the monitored host (refer to `cmk-agent-ctl help`).</li></ul>"
+msgstr ""
+
+msgid ""
 "<br>With these intervals specific single values or table columns can be kept "
 "from the previous inventory tree if the current agent output does not "
 "provide any new data for these entries.<br>Only entries corresponding to "
@@ -12061,10 +12070,6 @@ msgstr "デーモンセット"
 msgid "DaemonSets"
 msgstr "デーモンセット"
 
-#, fuzzy
-msgid "Daemonset"
-msgstr "デーモンセット"
-
 msgid "Daily"
 msgstr "毎日"
 
@@ -14930,6 +14935,22 @@ msgstr "選択した集計を本当に移動しますか？"
 msgid "Do you really want to move the selected rules?"
 msgstr "選択したルールを本当に移動しますか?"
 
+#, fuzzy, python-format
+msgid ""
+"Do you really want to remove the TLS registration of the host <tt>%s</tt>?"
+msgstr "本当にホスト <tt>%s</tt>を削除しますか？"
+
+#, fuzzy
+msgid ""
+"Do you really want to remove the TLS registration of the hosts in this "
+"folder (recursively)?"
+msgstr "本当にサイト %s への接続を削除しますか？"
+
+#, fuzzy
+msgid ""
+"Do you really want to remove the TLS registration of the selected hosts?"
+msgstr "選択したホストを本当に削除しますか?"
+
 #, python-format
 msgid "Do you really want to remove the package <tt>%s</tt> from your system?"
 msgstr "本当にシステムからパッケージ<tt>%s</tt>を削除しますか？"
@@ -16554,10 +16575,12 @@ msgstr "エントリ"
 msgid "Environment Variables"
 msgstr "ホストからの環境変数を使用する"
 
-msgid "Episode 1: Installing Checkmk and monitoring Linux"
+#, fuzzy
+msgid "Episode 1: Installing Checkmk and monitoring your first host"
 msgstr "エピソード1: CheckmkのインストールとLinuxの監視"
 
-msgid "Episode 3: Monitoring Windows"
+#, fuzzy
+msgid "Episode 4: Monitoring Windows in Checkmk"
 msgstr "エピソード3: Windowsの監視"
 
 msgid "Equal or more than"
@@ -25324,10 +25347,6 @@ msgid "Kubernetes DaemonSet"
 msgstr "Kubernetesポート"
 
 #, fuzzy
-msgid "Kubernetes Daemonset"
-msgstr "Kubernetesポート"
-
-#, fuzzy
 msgid "Kubernetes Deployment"
 msgstr "条件を適用する"
 
@@ -25355,20 +25374,12 @@ msgid "Kubernetes Port"
 msgstr "Kubernetesポート"
 
 #, fuzzy
-msgid "Kubernetes Statefulset"
+msgid "Kubernetes StatefulSet"
 msgstr "Kubernetesポート"
 
 #, fuzzy
-msgid "Kubernetes cluster"
-msgstr "Kubernetesの役割"
-
-#, fuzzy
-msgid "Kubernetes daemonset"
-msgstr "Kubernetesノード"
-
-#, fuzzy
-msgid "Kubernetes deployment"
-msgstr "条件を適用する"
+msgid "Kubernetes Statefulset"
+msgstr "Kubernetesポート"
 
 #, fuzzy
 msgid "Kubernetes deployment conditions"
@@ -25377,14 +25388,6 @@ msgstr "条件を適用する"
 #, fuzzy
 msgid "Kubernetes memory resource utilization"
 msgstr "Kubernetesリソース"
-
-#, fuzzy
-msgid "Kubernetes namespace"
-msgstr "Kubernetesノード"
-
-#, fuzzy
-msgid "Kubernetes node"
-msgstr "Kubernetesノード"
 
 #, fuzzy
 msgid "Kubernetes node containers"
@@ -25426,10 +25429,6 @@ msgstr "Kubernetesリソース"
 
 msgid "Kubernetes roles"
 msgstr "Kubernetesの役割"
-
-#, fuzzy
-msgid "Kubernetes statefulset"
-msgstr "Kubernetesポート"
 
 msgid "L2 cache hit ratio"
 msgstr "L2キャッシュヒット率"
@@ -36836,6 +36835,10 @@ msgstr "リモート:リモートsyslogホストにイベントを送信しま�
 msgid "Remove"
 msgstr "削除する"
 
+#, fuzzy
+msgid "Remove TLS registration"
+msgstr "エージェントバージョン"
+
 msgid "Remove Windows Firewall configuration if present"
 msgstr "存在する場合は、Windowsファイアウォール構成を削除します"
 
@@ -42827,10 +42830,6 @@ msgstr "ステートフルセット"
 
 #, fuzzy
 msgid "StatefulSets"
-msgstr "ステートフルセット"
-
-#, fuzzy
-msgid "Statefulset"
 msgstr "ステートフルセット"
 
 msgid "Statement"
@@ -58532,16 +58531,18 @@ msgstr ""
 "複数のユーザーのリストに通知を送信できます。リストは、これらの事前定義された"
 "フィルターから選択できます。"
 
+#, fuzzy
 msgid ""
 "You can set a limit to the failed to spare disk ratio. The ratio is "
-"calculated with <i>spare / (failed + spare)</i>."
+"calculated with <i>failed / (failed + spare)</i>."
 msgstr ""
 "スペアディスクの失敗率に制限を設定できます。この比率は、 <i>spare / (failed "
 "+ spare)</i> で計算されます。"
 
+#, fuzzy
 msgid ""
 "You can set a limit to the offline to spare disk ratio. The ratio is "
-"calculated with <i>spare / (offline + spare)</i>."
+"calculated with <i>offline / (offline + spare)</i>."
 msgstr ""
 "オフラインとスペアディスクの比率に制限を設定できます。比率は<i>スペア/(オフラ"
 "イン+スペア)</i>で計算されます。"
@@ -61585,6 +61586,51 @@ msgstr "z/OS"
 #, fuzzy, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. All Rights Reserved."
+
+#, fuzzy
+#~| msgid "Daemon sets"
+#~ msgid "Daemonset"
+#~ msgstr "デーモンセット"
+
+#, fuzzy
+#~| msgid "Kubernetes Port"
+#~ msgid "Kubernetes Daemonset"
+#~ msgstr "Kubernetesポート"
+
+#, fuzzy
+#~| msgid "Kubernetes roles"
+#~ msgid "Kubernetes cluster"
+#~ msgstr "Kubernetesの役割"
+
+#, fuzzy
+#~| msgid "Kubernetes nodes"
+#~ msgid "Kubernetes daemonset"
+#~ msgstr "Kubernetesノード"
+
+#, fuzzy
+#~| msgid "Apply conditions"
+#~ msgid "Kubernetes deployment"
+#~ msgstr "条件を適用する"
+
+#, fuzzy
+#~| msgid "Kubernetes nodes"
+#~ msgid "Kubernetes namespace"
+#~ msgstr "Kubernetesノード"
+
+#, fuzzy
+#~| msgid "Kubernetes nodes"
+#~ msgid "Kubernetes node"
+#~ msgstr "Kubernetesノード"
+
+#, fuzzy
+#~| msgid "Kubernetes Port"
+#~ msgid "Kubernetes statefulset"
+#~ msgstr "Kubernetesポート"
+
+#, fuzzy
+#~| msgid "Stateful sets"
+#~ msgid "Statefulset"
+#~ msgstr "ステートフルセット"
 
 #~ msgid "Backup conditions"
 #~ msgstr "バックアップ条件"

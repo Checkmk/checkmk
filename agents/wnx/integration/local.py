@@ -8,7 +8,7 @@ from __future__ import print_function
 from builtins import zip
 from builtins import range
 from builtins import object
-import configparser
+from pathlib import Path
 import yaml
 from contextlib import contextmanager
 import os
@@ -112,10 +112,19 @@ def make_user_dir(base_dir):
     return u_dir
 
 
-port = 59999
-host = 'localhost'
+def _get_path_from_env(env: str) -> Path:
+    env_value = os.getenv(env)
+    assert env_value is not None
+    return Path(env_value)
 
-src_exec_dir = os.path.abspath(os.path.join(os.getcwd(), '..', '..', '..', 'artefacts'))
+
+port = 59999
+host = "localhost"
+CMA_TEST_DIR_VAR = "CMA_TEST_DIR"
+
+test_dir = _get_path_from_env(CMA_TEST_DIR_VAR)
+
+src_exec_dir = str(test_dir)
 src_agent_exe = get_main_exe_name(src_exec_dir)
 if not os.path.exists(src_agent_exe):
     print('File %s doesnt exist' % src_agent_exe)
@@ -123,12 +132,11 @@ if not os.path.exists(src_agent_exe):
 
 src_main_yaml_config = get_main_yaml_name(src_exec_dir)
 if not os.path.exists(src_main_yaml_config):
-    print('Directory %s doesnt exist' % src_main_yaml_config)
+    print('File %s doesnt exist' % src_main_yaml_config)
     sys.exit(11)
 
 # root dir
-root_dir = os.path.join(src_exec_dir, 'tests')
-create_and_fill_root_dir(root_dir, src_exec_dir)
+root_dir = src_exec_dir
 
 # user dir
 user_dir = make_user_dir(root_dir)

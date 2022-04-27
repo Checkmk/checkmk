@@ -4,7 +4,6 @@
 
 set cur_dir=%cd%
 set WNX_TEST_ROOT=%temp%\test_i_%random%
-set WNX_TEST_I_ROOT=%WNX_TEST_ROOT%
 mkdir %WNX_TEST_ROOT%
 ::net stop checkmkservice
 set arte=%cur_dir%\..\..\artefacts
@@ -15,7 +14,7 @@ set results=integration_tests_results.zip
 mkdir %WNX_TEST_ROOT%\test\root\plugins
 mkdir %WNX_TEST_ROOT%\test\data
 copy %arte%\check_mk_agent.exe  %WNX_TEST_ROOT%\check_mk_agent.exe >nul
-copy %arte%\check_mk.yml %WNX_TEST_ROOT%\test\root\check_mk.yml >nul
+copy %arte%\check_mk.yml %WNX_TEST_ROOT%\check_mk.yml >nul
 powershell Remove-NetFirewallRule -DisplayName "AllowIntegration" 2>nul
 powershell New-NetFirewallRule -DisplayName "AllowIntegration" -Direction Inbound -Program %WNX_TEST_ROOT%\check_mk_agent.exe -RemoteAddress LocalSubnet -Action Allow >nul
 xcopy ..\windows\plugins\*.* %WNX_TEST_ROOT%\test\root\plugins /D /Y> nul
@@ -23,6 +22,7 @@ xcopy ..\windows\plugins\*.* %WNX_TEST_ROOT%\test\root\plugins /D /Y> nul
 cd integration 
 :: tests wait for this env variable
 set WNX_TEST_I_ROOT=%WNX_TEST_ROOT%
+set CMA_TEST_DIR=%WNX_TEST_ROOT%
 py -3 -m pytest %* || set failed=1
 
 call :zip_results

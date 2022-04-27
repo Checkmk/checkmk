@@ -1129,7 +1129,7 @@ def _get_cluster_services(
             parsed_sections_broker=parsed_sections_broker,
             run_plugin_names=EVERYTHING,
             forget_existing=False,
-            keep_vanished=True,
+            keep_vanished=False,
             on_error=on_error,
         )
 

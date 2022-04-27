@@ -8,12 +8,8 @@ from unittest.mock import Mock
 
 import pytest
 
-from tests.unit.cmk.special_agents.agent_kube.conftest import (
-    api_to_agent_node,
-    api_to_agent_pod,
-    APINodeFactory,
-    APIPodFactory,
-)
+from tests.unit.cmk.special_agents.agent_kube.conftest import api_to_agent_node, APINodeFactory
+from tests.unit.cmk.special_agents.agent_kube.factory import api_to_agent_pod, APIPodFactory
 
 from cmk.special_agents import agent_kube as agent
 from cmk.special_agents.utils_kubernetes.schemata import api, section

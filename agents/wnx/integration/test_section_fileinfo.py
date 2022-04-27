@@ -134,4 +134,5 @@ def use_testfiles():
 @pytest.mark.usefixtures('use_testfiles')
 def test_section_fileinfo(request, testconfig, expected_output, actual_output, testfile):
     # request.node.name gives test name
+    pytest.skip('This test is skipped as not stable')
     local_test(expected_output, actual_output, testfile, request.node.name)

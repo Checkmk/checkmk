@@ -6,8 +6,6 @@
 
 from typing import Any, Mapping, Optional, Sequence, Union
 
-from cmk.utils import password_store
-
 
 def _timeouts(timeouts: Mapping[str, int], arg_prefix: str) -> Sequence[str]:
     args = []
@@ -24,7 +22,7 @@ def agent_kube_arguments(
     params: Mapping[str, Any], hostname: str, ipaddress: Optional[str]
 ) -> Sequence[Union[str, tuple[str, str, str]]]:
     args = ["--cluster", params["cluster-name"]]
-    args.extend(["--token", password_store.extract(params["token"])])
+    args.extend(["--token", passwordstore_get_cmdline("%s", params["token"])])
 
     args.append("--monitored-objects")
     args.extend(params["monitored-objects"])

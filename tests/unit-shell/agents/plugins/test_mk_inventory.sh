@@ -50,5 +50,41 @@ test_persist_intertion() {
         "$(_sections | _insert_persist_option "456")"
 }
 
+oneTimeSetUp() {
+    export MK_VARDIR="${SHUNIT_TMPDIR}"
+
+    INVENTORY_CONFIG="$MK_VARDIR/test_mk_inventory.cfg"
+
+    {
+        echo '#!/bin/bash'
+        echo 'export TEST_VARIABLE="Config Called"'
+    } >"$INVENTORY_CONFIG"
+}
+
+test__load_config_cfg_exists() {
+    unset TEST_VARIABLE
+    _load_config "$INVENTORY_CONFIG"
+    assertEquals "${TEST_VARIABLE}" "Config Called"
+    unset TEST_VARIABLE
+    unset INVENTORY_INTERVAL
+}
+
+test__load_config_cfg_does_not_exist_bash() {
+    unset INVENTORY_INTERVAL
+    _load_config "does_not_exist.cfg"
+    assertEquals "${INVENTORY_INTERVAL}" "14400"
+    unset INVENTORY_INTERVAL
+}
+
+test__load_config_cfg_does_not_exist_posix() {
+    unset INVENTORY_INTERVAL
+    INVENTORY_INTERVAL=$(# scope effect of set -o posix
+        set -o posix
+        _load_config "does_not_exist.cfg"
+        echo "$INVENTORY_INTERVAL"
+    )
+    assertEquals "${INVENTORY_INTERVAL}" "14400"
+}
+
 # shellcheck disable=SC1090
 . "$UNIT_SH_SHUNIT2"

@@ -81,7 +81,6 @@ import cmk.gui.wato.permissions
 import cmk.gui.watolib as watolib
 import cmk.gui.watolib.hosts_and_folders
 import cmk.gui.weblib as weblib
-from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKGeneralException as _MKGeneralException
 from cmk.gui.htmllib.context import html
 from cmk.gui.i18n import _

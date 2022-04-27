@@ -70,6 +70,7 @@ import cmk.gui.i18n
 import cmk.gui.mkeventd
 import cmk.gui.plugins.wato.utils
 import cmk.gui.plugins.wato.utils.base_modes
+import cmk.gui.plugins.watolib.utils
 import cmk.gui.sites as sites
 import cmk.gui.userdb as userdb
 import cmk.gui.utils as utils
@@ -80,6 +81,7 @@ import cmk.gui.wato.pages.user_profile
 import cmk.gui.wato.permissions
 import cmk.gui.watolib as watolib
 import cmk.gui.watolib.hosts_and_folders
+import cmk.gui.watolib.utils
 import cmk.gui.weblib as weblib
 from cmk.gui.exceptions import MKGeneralException as _MKGeneralException
 from cmk.gui.htmllib.context import html
@@ -321,16 +323,12 @@ def _register_pre_21_plugin_api() -> None:
         "CheckParameterRulespecWithItem",
         "CheckParameterRulespecWithoutItem",
         "config_domain_registry",
-        "config_variable_group_registry",
-        "config_variable_registry",
         "ConfigDomainCACertificates",
         "ConfigDomainCore",
         "ConfigDomainEventConsole",
         "ConfigDomainGUI",
         "ConfigDomainOMD",
         "ConfigHostname",
-        "ConfigVariable",
-        "ConfigVariableGroup",
         "ContactGroupSelection",
         "DictHostTagCondition",
         "flash",
@@ -381,7 +379,6 @@ def _register_pre_21_plugin_api() -> None:
         "mode_url",
         "monitoring_macro_help",
         "multifolder_host_rule_match_conditions",
-        "multisite_dir",
         "notification_parameter_registry",
         "NotificationParameter",
         "PasswordFromStore",
@@ -390,7 +387,6 @@ def _register_pre_21_plugin_api() -> None:
         "PredictiveLevels",
         "redirect",
         "register_check_parameters",
-        "register_configvar",
         "register_hook",
         "register_modules",
         "register_notification_parameters",
@@ -417,8 +413,6 @@ def _register_pre_21_plugin_api() -> None:
         "RulespecGroupEnforcedServicesStorage",
         "RulespecGroupEnforcedServicesVirtualization",
         "RulespecSubGroup",
-        "sample_config_generator_registry",
-        "SampleConfigGenerator",
         "search_form",
         "ServiceDescriptionTranslation",
         "ServiceGroupSelection",
@@ -426,7 +420,6 @@ def _register_pre_21_plugin_api() -> None:
         "SimpleEditMode",
         "SimpleListMode",
         "SimpleModeType",
-        "site_neutral_path",
         "SiteBackupJobs",
         "SNMPCredentials",
         "sort_sites",
@@ -437,8 +430,23 @@ def _register_pre_21_plugin_api() -> None:
         "UserIconOrAction",
         "valuespec_check_plugin_selection",
         "wato_fileheader",
-        "wato_root_dir",
         "WatoMode",
         "WatoModule",
     ):
         api_module.__dict__[name] = cmk.gui.plugins.wato.utils.__dict__[name]
+    for name in (
+        "config_variable_group_registry",
+        "config_variable_registry",
+        "ConfigVariable",
+        "ConfigVariableGroup",
+        "register_configvar",
+        "sample_config_generator_registry",
+        "SampleConfigGenerator",
+    ):
+        api_module.__dict__[name] = cmk.gui.plugins.watolib.utils.__dict__[name]
+    for name in (
+        "multisite_dir",
+        "site_neutral_path",
+        "wato_root_dir",
+    ):
+        api_module.__dict__[name] = cmk.gui.watolib.utils.__dict__[name]

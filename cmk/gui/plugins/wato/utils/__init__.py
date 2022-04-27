@@ -79,15 +79,6 @@ from cmk.gui.plugins.wato.utils.simple_modes import (  # noqa: F401 # pylint: di
     SimpleListMode,
     SimpleModeType,
 )
-from cmk.gui.plugins.watolib.utils import (  # Required by the pre 2.1 non-official API.
-    config_variable_group_registry,
-    config_variable_registry,
-    ConfigVariable,
-    ConfigVariableGroup,
-    register_configvar,
-    sample_config_generator_registry,
-    SampleConfigGenerator,
-)
 from cmk.gui.site_config import get_site_config, is_wato_slave_site
 from cmk.gui.type_defs import Choices
 from cmk.gui.user_sites import get_activation_site_choices
@@ -220,11 +211,6 @@ from cmk.gui.watolib.timeperiods import (  # noqa: F401 # pylint: disable=unused
     TimeperiodSelection,
 )
 from cmk.gui.watolib.users import notification_script_title
-from cmk.gui.watolib.utils import (  # Required by the pre 2.1 non-official API.
-    multisite_dir,
-    site_neutral_path,
-    wato_root_dir,
-)
 from cmk.gui.watolib.wato_background_job import (  # noqa: F401 # pylint: disable=unused-import
     WatoBackgroundJob,
 )

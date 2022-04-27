@@ -5,8 +5,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import json
 import os
+import typing
 
 import pytest
+import webtest  # type: ignore[import]
 
 from cmk.utils import paths
 from cmk.utils.store import load_mk_file
@@ -14,18 +16,35 @@ from cmk.utils.store import load_mk_file
 
 @pytest.fixture(scope="function", name="new_rule")
 def new_rule_fixture(logged_in_admin_wsgi_app):
-    wsgi_app = logged_in_admin_wsgi_app
-    base = "/NO_SITE/check_mk/api/1.0"
+    return _create_rule(
+        logged_in_admin_wsgi_app,
+        folder="/",
+        comment="They made me do it!",
+        description="This is my title for this very important rule.",
+        documentation_url="http://example.com/",
+    )
 
+
+def _create_rule(
+    wsgi_app,
+    folder,
+    comment="",
+    description="",
+    documentation_url="",
+    disabled=False,
+) -> tuple[webtest.TestResponse, dict[str, typing.Any]]:
+    base = "/NO_SITE/check_mk/api/1.0"
+    properties = {
+        "description": description,
+        "comment": comment,
+        "disabled": disabled,
+    }
+    if documentation_url:
+        properties["documentation_url"] = documentation_url
     values = {
         "ruleset": "inventory_df_rules",
-        "folder": "/",
-        "properties": {
-            "description": "This is my title for this very important rule.",
-            "comment": "They made me do it!",
-            "documentation_url": "http://example.com/",
-            "disabled": False,
-        },
+        "folder": folder,
+        "properties": properties,
         "value_raw": """{
             "ignore_fs_types": ["tmpfs", "nfs", "smbfs", "cifs", "iso9660"],
             "never_ignore_mountpoints": ["~.*/omd/sites/[^/]+/tmp$"],
@@ -51,7 +70,36 @@ def new_rule_fixture(logged_in_admin_wsgi_app):
         headers={"Accept": "application/json", "Content-Type": "application/json"},
         params=json.dumps(values),
     )
-    return values, resp
+    return resp, values
+
+
+@pytest.fixture(scope="function", name="test_folders")
+def site_with_test_folders(wsgi_app, base):
+    test_folder_name_one = "test_folder_1"
+    test_folder_name_two = "test_folder_2"
+
+    _create_folder(wsgi_app, base, test_folder_name_one)
+    _create_folder(wsgi_app, base, test_folder_name_two)
+
+    return test_folder_name_one, test_folder_name_two
+
+
+def _create_folder(wsgi_app, base, folder_name, parent="/"):
+    return wsgi_app.post(
+        base + "/domain-types/folder_config/collections/all",
+        params=json.dumps(
+            {
+                "name": folder_name,
+                "title": folder_name,
+                "parent": parent,
+            }
+        ),
+        headers={
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+        },
+        status=200,
+    )
 
 
 def test_openapi_create_rule_regression(logged_in_admin_wsgi_app):
@@ -102,7 +150,7 @@ def test_openapi_create_rule(logged_in_admin_wsgi_app, new_rule):
     wsgi_app = logged_in_admin_wsgi_app
     base = "/NO_SITE/check_mk/api/1.0"
 
-    values, new_resp = new_rule
+    new_resp, values = new_rule
 
     resp = wsgi_app.get(
         base + f"/objects/ruleset/{values['ruleset']}",
@@ -184,7 +232,7 @@ def test_openapi_list_rules(logged_in_admin_wsgi_app, new_rule):
     wsgi_app = logged_in_admin_wsgi_app
     base = "/NO_SITE/check_mk/api/1.0"
 
-    values, _ = new_rule
+    _, values = new_rule
     rule_set = values["ruleset"]
 
     resp = wsgi_app.get(
@@ -208,7 +256,7 @@ def test_openapi_delete_rule(logged_in_admin_wsgi_app, new_rule):
     wsgi_app = logged_in_admin_wsgi_app
     base = "/NO_SITE/check_mk/api/1.0"
 
-    values, resp = new_rule
+    resp, values = new_rule
 
     _resp = wsgi_app.get(
         base + f"/objects/ruleset/{values['ruleset']}",
@@ -256,3 +304,133 @@ def test_openapi_list_rulesets(logged_in_admin_wsgi_app):
         headers={"Accept": "application/json", "Content-Type": "application/json"},
     )
     assert len(resp.json["value"]) == 2
+
+
+def test_openapi_has_rule(aut_user_auth_wsgi_app, base, new_rule, test_folders):
+    wsgi_app = aut_user_auth_wsgi_app
+    assert _order_of_rules(wsgi_app, base) == ["They made me do it!"]
+
+
+def test_openapi_create_rule_order(aut_user_auth_wsgi_app, base, new_rule, test_folders):
+    wsgi_app = aut_user_auth_wsgi_app
+    folder_name_one, folder_name_two = test_folders
+    rule1, _ = _create_rule(wsgi_app, f"/{folder_name_one}", comment="rule1")
+    rule1_id = rule1.json["id"]
+
+    assert _order_of_rules(wsgi_app, base) == ["rule1", "They made me do it!"]
+
+    rule2, _ = _create_rule(wsgi_app, f"/{folder_name_two}", comment="rule2")
+    rule2_id = rule2.json["id"]
+
+    assert _order_of_rules(wsgi_app, base) == ["rule2", "rule1", "They made me do it!"]
+
+    _ensure_on_folder(wsgi_app, base, rule1_id, f"/{folder_name_one}")
+    _ensure_on_folder(wsgi_app, base, rule2_id, f"/{folder_name_two}")
+
+
+def test_openapi_move_rule_to_top_of_folder(aut_user_auth_wsgi_app, base, new_rule, test_folders):
+    wsgi_app = aut_user_auth_wsgi_app
+    folder_name_one, folder_name_two = test_folders
+    resp, _ = new_rule
+    rule_id = resp.json["id"]
+
+    _rule1, _ = _create_rule(wsgi_app, f"/{folder_name_one}", comment="rule1")
+    _rule2, _ = _create_rule(wsgi_app, f"/{folder_name_two}", comment="rule2")
+
+    _move_to(wsgi_app, base, rule_id, "top_of_folder", folder=f"/{folder_name_one}")
+    _ensure_on_folder(wsgi_app, base, rule_id, f"/{folder_name_one}")
+    assert _order_of_rules(wsgi_app, base) == ["rule2", "They made me do it!", "rule1"]
+
+
+def test_openapi_move_rule_to_bottom_of_folder(
+    aut_user_auth_wsgi_app, base, new_rule, test_folders
+):
+    wsgi_app = aut_user_auth_wsgi_app
+    folder_name_one, folder_name_two = test_folders
+    resp, _ = new_rule
+    rule_id = resp.json["id"]
+
+    _rule1, _ = _create_rule(wsgi_app, f"/{folder_name_one}", comment="rule1")
+    _rule2, _ = _create_rule(wsgi_app, f"/{folder_name_two}", comment="rule2")
+
+    _move_to(wsgi_app, base, rule_id, "bottom_of_folder", folder=f"/{folder_name_two}")
+    _ensure_on_folder(wsgi_app, base, rule_id, f"/{folder_name_two}")
+
+    assert _order_of_rules(wsgi_app, base) == ["rule2", "They made me do it!", "rule1"]
+
+
+def test_openapi_move_rule_after_specific_rule(
+    aut_user_auth_wsgi_app, base, new_rule, test_folders
+):
+    wsgi_app = aut_user_auth_wsgi_app
+    folder_name_one, folder_name_two = test_folders
+    resp, _ = new_rule
+    rule_id = resp.json["id"]
+
+    rule1, _ = _create_rule(wsgi_app, f"/{folder_name_one}", comment="rule1")
+    _rule2, _ = _create_rule(wsgi_app, f"/{folder_name_two}", comment="rule2")
+
+    _move_to(wsgi_app, base, rule_id, "after_specific_rule", dest_rule_id=rule1.json["id"])
+    _ensure_on_folder(wsgi_app, base, rule_id, f"/{folder_name_one}")
+
+    assert _order_of_rules(wsgi_app, base) == ["rule2", "rule1", "They made me do it!"]
+
+
+def test_openapi_move_rule_before_specific_rule(
+    aut_user_auth_wsgi_app, base, new_rule, test_folders
+):
+    wsgi_app = aut_user_auth_wsgi_app
+    folder_name_one, folder_name_two = test_folders
+    resp, _ = new_rule
+    rule_id = resp.json["id"]
+
+    _rule1, _ = _create_rule(wsgi_app, f"/{folder_name_one}", comment="rule1")
+    rule2, _ = _create_rule(wsgi_app, f"/{folder_name_two}", comment="rule2")
+
+    _move_to(wsgi_app, base, rule_id, "before_specific_rule", dest_rule_id=rule2.json["id"])
+    _ensure_on_folder(wsgi_app, base, rule_id, f"/{folder_name_two}")
+
+    assert _order_of_rules(wsgi_app, base) == ["They made me do it!", "rule2", "rule1"]
+
+
+def _ensure_on_folder(wsgi_app, base, _rule_id, folder):
+    rule_resp = wsgi_app.get(
+        base + f"/objects/rule/{_rule_id}",
+        headers={"Accept": "application/json"},
+    )
+    assert rule_resp.json["extensions"]["folder"] == folder
+
+
+def _move_to(wsgi_app, base, _rule_id, position, dest_rule_id=None, folder=None):
+    options = {"position": position}
+    if position in ("top_of_folder", "bottom_of_folder"):
+        options["folder"] = folder
+    elif position in ("before_specific_rule", "after_specific_rule"):
+        options["rule_id"] = dest_rule_id
+
+    _resp = wsgi_app.post(
+        base + f"/objects/rule/{_rule_id}/actions/move/invoke",
+        params=json.dumps(options),
+        headers={
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+        },
+        status=200,
+    )
+
+    if position in ("top_of_folder", "bottom_of_folder"):
+        assert _resp.json["extensions"]["folder"] == folder
+
+    return _resp
+
+
+def _order_of_rules(wsgi_app, base) -> list[str]:
+    _resp = wsgi_app.get(
+        base + "/domain-types/rule/collections/all?ruleset_name=inventory_df_rules",
+        headers={"Accept": "application/json"},
+        status=200,
+    )
+    comments = []
+    for rule in _resp.json["value"]:
+        comments.append(rule["extensions"]["properties"]["comment"])
+    return comments

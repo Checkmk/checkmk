@@ -6,7 +6,7 @@ Date: 1650874933
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0b6
+Version: 2.1.0b7
 
 When the system time is incorrect the time since last synchronization
 can be in the future.

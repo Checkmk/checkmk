@@ -107,7 +107,7 @@ from cmk.gui.plugins.dashboard.utils import (  # noqa: F401 # pylint: disable=un
 from cmk.gui.plugins.metrics.html_render import default_dashlet_graph_render_options
 from cmk.gui.plugins.views.utils import data_source_registry
 from cmk.gui.plugins.visuals.utils import visual_info_registry, visual_type_registry, VisualType
-from cmk.gui.type_defs import InfoName, VisualContext
+from cmk.gui.type_defs import InfoName, SingleInfos, VisualContext
 from cmk.gui.utils.html import HTML, HTMLInput
 from cmk.gui.utils.ntop import is_ntop_configured
 from cmk.gui.utils.output_funnel import output_funnel
@@ -383,7 +383,7 @@ class LegacyDashlet(IFrameDashlet):
         return cls._spec["sort_index"]
 
     @classmethod
-    def single_infos(cls) -> List[str]:
+    def single_infos(cls) -> SingleInfos:
         return cls._spec.get("single_infos", [])
 
     @classmethod
@@ -442,7 +442,7 @@ class LegacyDashlet(IFrameDashlet):
             return cls._spec["add_urlfunc"]()
         return super().add_url()
 
-    def infos(self) -> list[str]:
+    def infos(self) -> SingleInfos:
         return self._spec.get("infos", [])
 
     def default_display_title(self) -> str:
@@ -1959,7 +1959,7 @@ class EditDashletPage(Page):
             self._ident = len(self._dashboard["dashlets"])
 
             single_infos_raw = request.var("single_infos")
-            single_infos: List[InfoName] = []
+            single_infos: SingleInfos = []
             if single_infos_raw:
                 single_infos = single_infos_raw.split(",")
                 for key in single_infos:
@@ -1989,7 +1989,7 @@ class EditDashletPage(Page):
 
         vs_general = dashlet_vs_general_settings(dashlet_type, single_infos)
 
-        def dashlet_info_handler(dashlet_spec: DashletConfig) -> List[str]:
+        def dashlet_info_handler(dashlet_spec: DashletConfig) -> SingleInfos:
             assert isinstance(self._ident, int)
             dashlet_type = dashlet_registry[dashlet_spec["type"]]
             dashlet = dashlet_type(self._board, self._dashboard, self._ident, dashlet_spec)

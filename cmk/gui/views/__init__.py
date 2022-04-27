@@ -224,6 +224,7 @@ from cmk.gui.type_defs import (
     PerfometerSpec,
     Row,
     Rows,
+    SingleInfos,
     TranslatedMetrics,
     ViewName,
     ViewProcessTracking,
@@ -3001,7 +3002,7 @@ def _get_relevant_infos(view: View) -> List[_Tuple[InfoName, bool]]:
 
 
 def collect_context_links(
-    view: View, rows: Rows, mobile: bool, visual_types: List[InfoName]
+    view: View, rows: Rows, mobile: bool, visual_types: SingleInfos
 ) -> Iterator[PageMenuEntry]:
     """Collect all visuals that share a context with visual. For example
     if a visual has a host context, get all relevant visuals."""
@@ -3023,7 +3024,7 @@ def _collect_linked_visuals(
     rows: Rows,
     singlecontext_request_vars: Dict[str, str],
     mobile: bool,
-    visual_types: List[InfoName],
+    visual_types: SingleInfos,
 ) -> Iterator[_Tuple[VisualType, Visual]]:
     for type_name in visual_type_registry.keys():
         if type_name in visual_types:

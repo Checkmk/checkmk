@@ -83,7 +83,7 @@ from cmk.gui.plugins.visuals.utils import (
     visual_info_registry,
     VisualInfo,
 )
-from cmk.gui.type_defs import ColumnName, FilterName, Icon, Row, Rows
+from cmk.gui.type_defs import ColumnName, FilterName, Icon, Row, Rows, SingleInfos
 from cmk.gui.utils.escaping import escape_text
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
@@ -1651,7 +1651,7 @@ class DataSourceInventoryHistory(ABCDataSource):
         return RowTableInventoryHistory()
 
     @property
-    def infos(self) -> list[str]:
+    def infos(self) -> SingleInfos:
         return ["host", "invhist"]
 
     @property

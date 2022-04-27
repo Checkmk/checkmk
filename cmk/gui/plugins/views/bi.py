@@ -30,7 +30,7 @@ from cmk.gui.plugins.views.utils import (
     Row,
     RowTable,
 )
-from cmk.gui.type_defs import ColumnName, Rows
+from cmk.gui.type_defs import ColumnName, Rows, SingleInfos
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.urls import makeuri, urlencode_vars
@@ -63,7 +63,7 @@ class DataSourceBIAggregations(ABCDataSource):
         return RowTableBIAggregations()
 
     @property
-    def infos(self) -> list[str]:
+    def infos(self) -> SingleInfos:
         return ["aggr", "aggr_group"]
 
     @property
@@ -103,7 +103,7 @@ class DataSourceBIHostAggregations(ABCDataSource):
         return RowTableBIHostAggregations()
 
     @property
-    def infos(self) -> list[str]:
+    def infos(self) -> SingleInfos:
         return ["aggr", "host", "aggr_group"]
 
     @property
@@ -138,7 +138,7 @@ class DataSourceBIHostnameAggregations(ABCDataSource):
         return RowTableBIHostnameAggregations()
 
     @property
-    def infos(self) -> list[str]:
+    def infos(self) -> SingleInfos:
         return ["aggr", "host", "aggr_group"]
 
     @property
@@ -172,7 +172,7 @@ class DataSourceBIHostnameByGroupAggregations(ABCDataSource):
         return RowTableBIHostnameByGroupAggregations()
 
     @property
-    def infos(self) -> list[str]:
+    def infos(self) -> SingleInfos:
         return ["aggr", "host", "hostgroup", "aggr_group"]
 
     @property

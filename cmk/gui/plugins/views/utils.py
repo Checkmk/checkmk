@@ -665,7 +665,7 @@ class ABCDataSource(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def infos(self) -> list[str]:
+    def infos(self) -> SingleInfos:
         """Infos that are available with this data sources
 
         A info is used to create groups out of single painters and filters.
@@ -1310,7 +1310,7 @@ def _get_visual_by_link_spec(link_spec: Optional[VisualLinkSpec]) -> Optional[Vi
 def _get_singlecontext_html_vars_from_row(
     visual_name: VisualName,
     row: Row,
-    infos: List[str],
+    infos: SingleInfos,
     single_infos: SingleInfos,
     link_filters: Dict[str, str],
 ) -> Dict[str, str]:
@@ -1688,7 +1688,7 @@ def join_row(row: Row, cell: "Cell") -> Row:
     return row
 
 
-def get_view_infos(view: ViewSpec) -> List[str]:
+def get_view_infos(view: ViewSpec) -> SingleInfos:
     """Return list of available datasources (used to render filters)"""
     ds_name = view.get("datasource", request.var("datasource"))
     return data_source_registry[ds_name]().infos

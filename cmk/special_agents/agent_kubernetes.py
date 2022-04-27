@@ -27,7 +27,19 @@ import sys
 import time
 from collections import defaultdict, OrderedDict
 from collections.abc import MutableSequence
-from typing import Any, Callable, Dict, Generic, Iterator, List, Mapping, Optional, TypeVar, Union
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Generic,
+    Iterator,
+    List,
+    Mapping,
+    Optional,
+    Sequence,
+    TypeVar,
+    Union,
+)
 
 import dateutil.parser
 import urllib3  # type: ignore[import]
@@ -591,6 +603,10 @@ class Pod(Metadata):
         }
 
 
+class Hurz:
+    pass
+
+
 class Endpoint(Metadata):
     # See Also:
     #   https://github.com/kubernetes-client/python/blob/master/kubernetes/docs/V1Endpoints.md
@@ -602,12 +618,9 @@ class Endpoint(Metadata):
             self._parse_subset(subset) for subset in (endpoint.subsets if endpoint.subsets else ())
         ]
 
+    # NOTE: The argument is actually a Subset.
     @staticmethod
-    def _parse_subset(subset):
-        # Silent false positive from pylint.
-        #  - https://github.com/PyCQA/pylint/issues/574
-        #  - https://github.com/PyCQA/pylint/issues/2818
-        # pylint: disable=superfluous-parens
+    def _parse_subset(subset: Any) -> Mapping[str, Sequence[Mapping[str, Any]]]:
         addresses = [
             {
                 "hostname": _.hostname if _.hostname else "",
@@ -632,11 +645,10 @@ class Endpoint(Metadata):
             }
             for _ in (subset.ports if subset.ports else ())
         ]
-        # pylint: enable=superfluous-parens
         return {"addresses": addresses, "not_ready_addresses": not_ready_addresses, "ports": ports}
 
     @property
-    def infos(self) -> dict[str, Any]:
+    def infos(self) -> Mapping[str, Sequence[Mapping[str, Sequence[Mapping[str, Any]]]]]:
         return {"subsets": self._subsets}
 
 
@@ -678,7 +690,7 @@ class Job(Metadata):
             self._succeeded = 0
 
     @property
-    def infos(self) -> dict[str, Any]:
+    def infos(self) -> Mapping[str, dict[str, Any]]:
         return {
             "active": self._active,
             "failed": self._failed,
@@ -948,7 +960,7 @@ class ComponentStatusList(K8sList[ComponentStatus]):  # pylint: disable=too-many
 
 
 class ServiceList(K8sList[Service]):  # pylint: disable=too-many-ancestors
-    def infos(self) -> dict[str, Any]:
+    def infos(self) -> Mapping[str, dict[str, Any]]:
         return {service.name: service.info for service in self}
 
     def selector(self):
@@ -964,7 +976,7 @@ class DeploymentList(K8sList[Deployment]):  # pylint: disable=too-many-ancestors
 
 
 class IngressList(K8sList[Ingress]):  # pylint: disable=too-many-ancestors
-    def infos(self) -> dict[str, Any]:
+    def infos(self) -> Mapping[str, dict[str, Any]]:
         return {ingress.name: ingress.info for ingress in self}
 
 

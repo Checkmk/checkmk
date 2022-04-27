@@ -16,6 +16,7 @@ from typing import (
     Mapping,
     NamedTuple,
     Optional,
+    Sequence,
     Text,
     Tuple,
     TypedDict,
@@ -135,7 +136,7 @@ VisualName = str
 VisualTypeName = str
 VisualContext = Mapping[FilterName, FilterHTTPVariables]
 InfoName = str
-SingleInfos = List[InfoName]
+SingleInfos = Sequence[InfoName]
 
 
 class VisualLinkSpec(NamedTuple):

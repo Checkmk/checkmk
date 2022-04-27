@@ -1569,7 +1569,7 @@ def get_filter(name: str) -> Filter:
 # and the "hosts" info.
 def get_link_filter_names(
     single_infos: SingleInfos,
-    info_keys: List[InfoName],
+    info_keys: SingleInfos,
     link_filters: Dict[FilterName, FilterName],
 ) -> Iterator[Tuple[FilterName, FilterName]]:
     for info_key in single_infos:
@@ -1581,7 +1581,7 @@ def get_link_filter_names(
 
 def filters_of_visual(
     visual: Visual,
-    info_keys: List[InfoName],
+    info_keys: SingleInfos,
     link_filters: Optional[Dict[FilterName, FilterName]] = None,
 ) -> List[Filter]:
     """Collects all filters to be used for the given visual"""
@@ -1655,7 +1655,7 @@ def context_to_uri_vars(context: VisualContext) -> HTTPVariables:
 
 # Vice versa: find all filters that belong to the current URI variables
 # and create a context dictionary from that.
-def get_context_from_uri_vars(only_infos: Optional[List[InfoName]] = None) -> VisualContext:
+def get_context_from_uri_vars(only_infos: Optional[SingleInfos] = None) -> VisualContext:
     context = {}
     for filter_name, filter_object in filter_registry.items():
         if only_infos is not None and filter_object.info not in only_infos:
@@ -1713,9 +1713,7 @@ def get_filter_headers(table, infos, context: VisualContext):
 #   '----------------------------------------------------------------------'
 
 
-def FilterChoices(
-    infos: List[InfoName], title: str, help: str
-):  # pylint: disable=redefined-builtin
+def FilterChoices(infos: SingleInfos, title: str, help: str):  # pylint: disable=redefined-builtin
     """Select names of filters for the given infos"""
 
     def _info_filter_choices(infos):
@@ -1748,7 +1746,7 @@ class VisualFilterList(ListOfMultiple):
         for fname, filter_ in filters_allowed_for_info(info):
             yield fname, VisualFilter(name=fname, title=filter_.title)
 
-    def __init__(self, info_list, **kwargs):
+    def __init__(self, info_list: SingleInfos, **kwargs):
         self._filters = filters_allowed_for_infos(info_list)
 
         kwargs.setdefault("title", _("Filters"))
@@ -1857,7 +1855,7 @@ class VisualFilterListWithAddPopup(VisualFilterList):
         html.javascript("cmk.utils.add_simplebar_scrollbar(%s);" % json.dumps(filter_list_id))
 
 
-def active_context_from_request(infos: List[str], context: VisualContext) -> VisualContext:
+def active_context_from_request(infos: SingleInfos, context: VisualContext) -> VisualContext:
     vs_filterlist = VisualFilterListWithAddPopup(info_list=infos)
     if request.has_var("_active"):
         return vs_filterlist.from_html_vars("")
@@ -1886,7 +1884,7 @@ class PageAjaxVisualFilterListGetChoice(ABCPageListOfMultipleGetChoice):
 
 
 def render_filter_form(
-    info_list: List[InfoName], context: VisualContext, page_name: str, reset_ajax_page: str
+    info_list: SingleInfos, context: VisualContext, page_name: str, reset_ajax_page: str
 ) -> HTML:
     with output_funnel.plugged():
         show_filter_form(info_list, context, page_name, reset_ajax_page)
@@ -1894,7 +1892,7 @@ def render_filter_form(
 
 
 def show_filter_form(
-    info_list: List[InfoName], context: VisualContext, page_name: str, reset_ajax_page: str
+    info_list: SingleInfos, context: VisualContext, page_name: str, reset_ajax_page: str
 ) -> None:
     html.show_user_errors()
     html.begin_form("filter", method="GET", add_transid=False)
@@ -2026,7 +2024,7 @@ def _single_info_selection_back(name_and_restrictions: Tuple[str, Sequence[str]]
     return name_and_restrictions[1]
 
 
-def SingleInfoSelection(info_keys: List[InfoName]) -> Transform:
+def SingleInfoSelection(info_keys: SingleInfos) -> Transform:
     infos = [visual_info_registry[key]() for key in info_keys]
     manual_choices = [
         (i.ident, _("Show information of a single %s") % i.title)
@@ -2086,7 +2084,7 @@ def SingleInfoSelection(info_keys: List[InfoName]) -> Transform:
 # Converts a context from the form { filtername : { ... } } into
 # the for { infoname : { filtername : { } } for editing.
 def pack_context_for_editing(
-    visual: Visual, info_handler: Optional[Callable[[Visual], List[InfoName]]]
+    visual: Visual, info_handler: Optional[Callable[[Visual], SingleInfos]]
 ) -> Dict:
     # We need to pack all variables into dicts with the name of the
     # info. Since we have no mapping from info the the filter variable,
@@ -2139,9 +2137,9 @@ def single_infos_spec(single_infos: SingleInfos) -> Tuple[str, FixedValue]:
         FixedValue(
             value=single_infos,
             title=_("Show information of single"),
-            totext=single_infos
-            and ", ".join(single_infos)
-            or _("Not restricted to showing a specific object."),
+            totext=", ".join(single_infos)
+            if single_infos
+            else _("Not restricted to showing a specific object."),
         ),
     )
 
@@ -2258,7 +2256,7 @@ def get_singlecontext_vars(context: VisualContext, single_infos: SingleInfos) ->
 
 def may_add_site_hint(
     visual_name: str,
-    info_keys: List[InfoName],
+    info_keys: SingleInfos,
     single_info_keys: SingleInfos,
     filter_names: List[FilterName],
 ) -> bool:

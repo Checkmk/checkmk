@@ -178,7 +178,7 @@ class Dashlet(abc.ABC):
         return False
 
     @classmethod
-    def single_infos(cls) -> List[str]:
+    def single_infos(cls) -> SingleInfos:
         """Return a list of the single infos (for the visual context) of this dashlet"""
         return []
 
@@ -277,7 +277,7 @@ class Dashlet(abc.ABC):
         self._dashlet_spec = dashlet
         self._context: Optional[VisualContext] = self._get_context()
 
-    def infos(self) -> list[str]:
+    def infos(self) -> SingleInfos:
         """Return a list of the supported infos (for the visual context) of this dashlet"""
         return []
 
@@ -521,7 +521,7 @@ class VsResultGeneralSettings(TypedDict):
     single_infos: List[str]
 
 
-def dashlet_vs_general_settings(dashlet_type: Type[Dashlet], single_infos: List[str]):
+def dashlet_vs_general_settings(dashlet_type: Type[Dashlet], single_infos: SingleInfos):
     return Dictionary(
         title=_("General Settings"),
         render="form",
@@ -698,11 +698,11 @@ class ABCFigureDashlet(Dashlet, abc.ABC):
         return (56, 40)
 
     @classmethod
-    def infos(cls) -> list[str]:
+    def infos(cls) -> SingleInfos:
         return ["host", "service"]
 
     @classmethod
-    def single_infos(cls):
+    def single_infos(cls) -> SingleInfos:
         return []
 
     @classmethod

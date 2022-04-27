@@ -40,7 +40,7 @@ from cmk.gui.plugins.views.utils import (
     row_id,
     RowTableLivestatus,
 )
-from cmk.gui.type_defs import HTTPVariables, Row
+from cmk.gui.type_defs import HTTPVariables, Row, SingleInfos
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeactionuri, urlencode_vars
@@ -191,7 +191,7 @@ class DataSourceECEvents(ABCDataSource):
         return RowTableEC("eventconsoleevents")
 
     @property
-    def infos(self) -> list[str]:
+    def infos(self) -> SingleInfos:
         return ["event", "host"]
 
     @property
@@ -226,7 +226,7 @@ class DataSourceECEventHistory(ABCDataSource):
         return RowTableEC("eventconsolehistory")
 
     @property
-    def infos(self) -> list[str]:
+    def infos(self) -> SingleInfos:
         return ["history", "event", "host"]
 
     @property

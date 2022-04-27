@@ -30,6 +30,7 @@ from cmk.gui.plugins.views.utils import (
     Sorter,
     sorter_registry,
 )
+from cmk.gui.type_defs import SingleInfos
 from cmk.gui.utils.urls import makeuri_contextless
 
 
@@ -44,7 +45,7 @@ class DataSourceCrashReports(DataSourceLivestatus):
         return _("Crash reports")
 
     @property
-    def infos(self) -> list[str]:
+    def infos(self) -> SingleInfos:
         return ["crash"]
 
     @property

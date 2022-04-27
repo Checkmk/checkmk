@@ -33,7 +33,7 @@ from cmk.gui.plugins.metrics.html_render import (
 )
 from cmk.gui.plugins.metrics.valuespecs import vs_graph_render_options
 from cmk.gui.plugins.visuals.utils import get_only_sites_from_context
-from cmk.gui.type_defs import Choices, GraphIdentifier, VisualContext
+from cmk.gui.type_defs import Choices, GraphIdentifier, SingleInfos, VisualContext
 from cmk.gui.utils.autocompleter_config import ContextAutocompleterConfig
 from cmk.gui.valuespec import (
     Dictionary,
@@ -149,11 +149,11 @@ class GraphDashlet(Dashlet):
         return (60, 21)
 
     @classmethod
-    def infos(cls) -> list[str]:
+    def infos(cls) -> SingleInfos:
         return ["host", "service"]
 
     @classmethod
-    def single_infos(cls):
+    def single_infos(cls) -> SingleInfos:
         return ["host", "service"]
 
     @classmethod

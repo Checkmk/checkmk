@@ -48,6 +48,7 @@ from cmk.gui.type_defs import (
     FilterName,
     Row,
     Rows,
+    SingleInfos,
     VisualContext,
 )
 from cmk.gui.utils.speaklater import LazyString
@@ -735,7 +736,7 @@ def filters_allowed_for_info(info: str) -> Iterator[Tuple[str, Filter]]:
             yield fname, filt
 
 
-def filters_allowed_for_infos(info_list: List[str]) -> Dict[str, Filter]:
+def filters_allowed_for_infos(info_list: SingleInfos) -> Dict[str, Filter]:
     """Same as filters_allowed_for_info() but for multiple infos"""
     return dict(chain.from_iterable(map(filters_allowed_for_info, info_list)))
 

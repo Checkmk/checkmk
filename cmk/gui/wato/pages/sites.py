@@ -46,7 +46,11 @@ from cmk.gui.pages import AjaxPage, page_registry
 from cmk.gui.plugins.wato.utils import mode_registry, sort_sites
 from cmk.gui.plugins.wato.utils.base_modes import mode_url, redirect, WatoMode
 from cmk.gui.plugins.wato.utils.html_elements import wato_html_head
-from cmk.gui.plugins.watolib.utils import config_variable_registry, ConfigVariableGroup
+from cmk.gui.plugins.watolib.utils import (
+    ABCConfigDomain,
+    config_variable_registry,
+    ConfigVariableGroup,
+)
 from cmk.gui.site_config import has_wato_slave_sites, is_wato_slave_site, site_is_local
 from cmk.gui.sites import SiteStatus
 from cmk.gui.table import table_element
@@ -229,7 +233,7 @@ class ModeEditSite(WatoMode):
             "edit-sites",
             msg,
             sites=[self._site_id],
-            domains=watolib.ABCConfigDomain.enabled_domains(),
+            domains=ABCConfigDomain.enabled_domains(),
         )
 
         # In case a site is not being replicated anymore, confirm all changes for this site!
@@ -1277,7 +1281,7 @@ class ModeSiteLivestatusEncryption(WatoMode):
         global_settings = watolib.load_configuration_settings()
         trusted = global_settings.get(
             "trusted_certificate_authorities",
-            watolib.ABCConfigDomain.get_all_default_globals()["trusted_certificate_authorities"],
+            ABCConfigDomain.get_all_default_globals()["trusted_certificate_authorities"],
         )
         trusted_cas = trusted.setdefault("trusted_cas", [])
 

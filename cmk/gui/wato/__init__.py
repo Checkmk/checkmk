@@ -312,7 +312,6 @@ def _register_pre_21_plugin_api() -> None:
     import cmk.gui.plugins.wato as api_module
 
     for name in (
-        "ABCConfigDomain",
         "ABCEventsMode",
         "ABCHostAttributeNagiosText",
         "ABCHostAttributeValueSpec",
@@ -322,7 +321,6 @@ def _register_pre_21_plugin_api() -> None:
         "BinaryServiceRulespec",
         "CheckParameterRulespecWithItem",
         "CheckParameterRulespecWithoutItem",
-        "config_domain_registry",
         "ConfigDomainCACertificates",
         "ConfigDomainCore",
         "ConfigDomainEventConsole",
@@ -429,12 +427,13 @@ def _register_pre_21_plugin_api() -> None:
         "user_script_title",
         "UserIconOrAction",
         "valuespec_check_plugin_selection",
-        "wato_fileheader",
         "WatoMode",
         "WatoModule",
     ):
         api_module.__dict__[name] = cmk.gui.plugins.wato.utils.__dict__[name]
     for name in (
+        "ABCConfigDomain",
+        "config_domain_registry",
         "config_variable_group_registry",
         "config_variable_registry",
         "ConfigVariable",
@@ -442,6 +441,7 @@ def _register_pre_21_plugin_api() -> None:
         "register_configvar",
         "sample_config_generator_registry",
         "SampleConfigGenerator",
+        "wato_fileheader",
     ):
         api_module.__dict__[name] = cmk.gui.plugins.watolib.utils.__dict__[name]
     for name in (

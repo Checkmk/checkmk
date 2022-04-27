@@ -124,9 +124,7 @@ from cmk.gui.valuespec import (  # noqa: F401 # pylint: disable=unused-import
     ValueSpecText,
 )
 from cmk.gui.watolib import (  # noqa: F401 # pylint: disable=unused-import
-    ABCConfigDomain,
     add_change,
-    config_domain_registry,
     ConfigDomainCACertificates,
     ConfigDomainCore,
     ConfigDomainEventConsole,
@@ -140,7 +138,6 @@ from cmk.gui.watolib import (  # noqa: F401 # pylint: disable=unused-import
     register_rule,
     user_script_choices,
     user_script_title,
-    wato_fileheader,
 )
 from cmk.gui.watolib.check_mk_automations import (
     get_check_information as get_check_information_automation,

@@ -35,6 +35,7 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.plugins.wato.utils.base_modes import mode_url, redirect, WatoMode
+from cmk.gui.plugins.watolib.utils import ABCConfigDomain
 from cmk.gui.table import Table, table_element
 from cmk.gui.type_defs import ActionResult
 from cmk.gui.utils import unique_default_name_suggestion
@@ -88,7 +89,7 @@ class SimpleModeType(Generic[_T], abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def affected_config_domains(self) -> List[Type[watolib.ABCConfigDomain]]:
+    def affected_config_domains(self) -> List[Type[ABCConfigDomain]]:
         """List of config domains that are affected by changes to objects of this type"""
         raise NotImplementedError()
 

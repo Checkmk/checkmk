@@ -18,18 +18,18 @@ from cmk.utils.type_defs import ConfigurationWarnings
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.plugins.wato.utils import (
-    ABCConfigDomain,
-    config_domain_registry,
     ConfigDomainOMD,
     ConfigVariableGroupSiteManagement,
     LivestatusViaTCP,
     ReplicationPath,
-    wato_fileheader,
 )
 from cmk.gui.plugins.watolib.utils import (
+    ABCConfigDomain,
+    config_domain_registry,
     config_variable_registry,
     ConfigVariable,
     SerializedSettings,
+    wato_fileheader,
 )
 from cmk.gui.type_defs import ConfigDomainName
 from cmk.gui.valuespec import (

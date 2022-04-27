@@ -274,7 +274,7 @@ class ABCEditGlobalSettingMode(WatoMode):
         )
 
         reset_possible = self._config_variable.allow_reset() and self._is_configured()
-        default_values = watolib.ABCConfigDomain.get_all_default_globals()
+        default_values = ABCConfigDomain.get_all_default_globals()
         defvalue = default_values[self._varname]
         value = self._current_settings.get(
             self._varname, self._global_settings.get(self._varname, defvalue)
@@ -353,7 +353,7 @@ class ABCEditGlobalSettingMode(WatoMode):
         is_configured = self._is_configured()
         is_configured_globally = self._varname in self._global_settings
 
-        default_values = watolib.ABCConfigDomain.get_all_default_globals()
+        default_values = ABCConfigDomain.get_all_default_globals()
 
         defvalue = default_values[self._varname]
         value = self._current_settings.get(

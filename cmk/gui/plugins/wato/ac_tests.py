@@ -27,6 +27,7 @@ from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import ConfigDomainOMD, SiteBackupJobs
+from cmk.gui.plugins.watolib.utils import ABCConfigDomain
 from cmk.gui.site_config import (
     get_site_config,
     has_wato_slave_sites,
@@ -870,7 +871,7 @@ class ACTestCheckMKFetcherUsage(ACTest):
         )
 
         # Only report this as warning in case the user increased the default helper configuration
-        default_values = watolib.ABCConfigDomain.get_all_default_globals()
+        default_values = ABCConfigDomain.get_all_default_globals()
         if (
             self._get_effective_global_setting("cmc_fetcher_helpers")
             > default_values["cmc_fetcher_helpers"]
@@ -944,7 +945,7 @@ class ACTestCheckMKCheckerUsage(ACTest):
         )
 
         # Only report this as warning in case the user increased the default helper configuration
-        default_values = watolib.ABCConfigDomain.get_all_default_globals()
+        default_values = ABCConfigDomain.get_all_default_globals()
         if (
             self._get_effective_global_setting("cmc_checker_helpers")
             > default_values["cmc_checker_helpers"]

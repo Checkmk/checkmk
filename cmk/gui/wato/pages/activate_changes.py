@@ -45,7 +45,7 @@ from cmk.gui.page_menu import (
 from cmk.gui.pages import AjaxPage, page_registry
 from cmk.gui.plugins.wato.utils import mode_registry, sort_sites
 from cmk.gui.plugins.wato.utils.base_modes import WatoMode
-from cmk.gui.plugins.watolib.utils import DomainRequest, DomainRequests
+from cmk.gui.plugins.watolib.utils import ABCConfigDomain, DomainRequest, DomainRequests
 from cmk.gui.table import Foldable, init_rowselect, table_element
 from cmk.gui.type_defs import ActionResult
 from cmk.gui.user_sites import activation_sites
@@ -206,13 +206,13 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
         watolib.add_change(
             "changes-discarded",
             msg,
-            domains=watolib.ABCConfigDomain.enabled_domains(),
+            domains=ABCConfigDomain.enabled_domains(),
             need_restart=True,
         )
 
         self._extract_snapshot(file_to_restore)
         activate_changes.execute_activate_changes(
-            [d.get_domain_request([]) for d in watolib.ABCConfigDomain.enabled_domains()]
+            [d.get_domain_request([]) for d in ABCConfigDomain.enabled_domains()]
         )
 
         for site_id in activation_sites():

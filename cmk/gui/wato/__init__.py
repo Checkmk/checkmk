@@ -91,7 +91,7 @@ from cmk.gui.exceptions import (
     MKUserError,
 )
 from cmk.gui.htmllib.context import html
-from cmk.gui.i18n import _, _l, _u
+from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.pages import Page, page_registry
 from cmk.gui.permissions import Permission, permission_registry

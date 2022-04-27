@@ -33,7 +33,6 @@ import cmk.gui.weblib as weblib
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKAuthException, MKGeneralException, MKUserError, RequestTimeout
 from cmk.gui.htmllib.context import html
-from cmk.gui.i18n import _, _u
 from cmk.gui.log import logger
 from cmk.gui.utils.html import HTML
 

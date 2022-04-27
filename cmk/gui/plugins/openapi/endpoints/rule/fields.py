@@ -55,6 +55,61 @@ RULE_ID = {
 }
 
 
+class MoveToFolder(base.BaseSchema):
+    cast_to_dict = True
+
+    position = fields.String(
+        description="The type of position to move to.", example="top_of_folder"
+    )
+    folder = gui_fields.FolderField(example="/")
+
+
+class MoveToSpecificRule(base.BaseSchema):
+    cast_to_dict = True
+
+    position = fields.String(
+        description="The type of position to move to.", example="after_specific_rule"
+    )
+    rule_id = fields.String(
+        description="The UUID of the rule to move after/before.",
+        example="f8b74720-a454-4242-99c4-62994ef0f2bf",
+    )
+
+
+class MoveRuleTo(marshmallow_oneofschema.OneOfSchema):
+    """
+
+    Examples:
+
+        >>> from cmk.gui.utils.script_helpers import application_and_request_context
+
+        >>> schema = MoveRuleTo()
+        >>> with application_and_request_context():
+        ...     schema.load({"position": "top_of_folder", "folder": "/"})
+        {'position': 'top_of_folder', 'folder': Folder('', 'Main')}
+
+        >>> schema.load({"position": "after_specific_rule",
+        ...              "rule_id": "f8b74720-a454-4242-99c4-62994ef0f2bf"})
+        {'position': 'after_specific_rule', 'rule_id': 'f8b74720-a454-4242-99c4-62994ef0f2bf'}
+
+        >>> schema.load({"position": "foo"})
+        Traceback (most recent call last):
+        ...
+        marshmallow.exceptions.ValidationError: {'position': ['Unsupported value: foo']}
+
+
+    """
+
+    type_field = "position"
+    type_field_remove = False
+    type_schemas = {
+        "top_of_folder": MoveToFolder,
+        "bottom_of_folder": MoveToFolder,
+        "after_specific_rule": MoveToSpecificRule,
+        "before_specific_rule": MoveToSpecificRule,
+    }
+
+
 class LabelConditionSchema(base.BaseSchema):
     """A schema representing a label condition.
 

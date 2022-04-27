@@ -6,16 +6,19 @@
 """Rules"""
 from __future__ import annotations
 
+import contextlib
+import dataclasses
 import typing
 
 from cmk.utils.object_diff import make_diff_text
 from cmk.utils.type_defs import RuleOptions
 
 from cmk.gui import exceptions, http
-from cmk.gui.i18n import _l
+from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
 from cmk.gui.plugins.openapi.endpoints.rule.fields import (
     InputRuleObject,
+    MoveRuleTo,
     RULE_ID,
     RuleCollection,
     RuleObject,
@@ -32,24 +35,122 @@ from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.hosts_and_folders import CREFolder
 from cmk.gui.watolib.rulesets import AllRulesets, FolderRulesets, Rule, RuleConditions, Ruleset
 
-# TODO: move a rule within a ruleset
-
-
-class RuleEntry(typing.NamedTuple):
-    rule: Rule
-    ruleset: Ruleset
-    all_sets: AllRulesets
-    # NOTE: Can't be called "index", because mypy doesn't like that. Duh.
-    index_nr: int
-    folder: CREFolder
-
-
 PERMISSIONS = permissions.AllPerm(
     [
         permissions.Perm("wato.rulesets"),
         permissions.Optional(permissions.Perm("wato.all_folders")),
     ]
 )
+
+
+# NOTE: This is a dataclass and no namedtuple because it needs to be mutable. See `move_rule_to`
+@dataclasses.dataclass
+class RuleEntry:
+    rule: Rule
+    ruleset: Ruleset
+    all_rulesets: AllRulesets
+    # NOTE: Can't be called "index", because mypy doesn't like that. Duh.
+    index_nr: int
+    folder: CREFolder
+
+
+@Endpoint(
+    constructors.object_action_href("rule", "{rule_id}", "move"),
+    "cmk/move",
+    method="post",
+    etag="input",
+    path_params=[RULE_ID],
+    request_schema=MoveRuleTo,
+    response_schema=RuleObject,
+    permissions_required=PERMISSIONS,
+)
+def move_rule_to(param: typing.Mapping[str, typing.Any]) -> http.Response:
+    """Move a rule to a specific location"""
+    user.need_permission("wato.rulesets")
+    rule_id = param["rule_id"]
+
+    body = param["body"]
+    position = body["position"]
+
+    source_entry = _get_rule_by_id(rule_id)
+
+    @contextlib.contextmanager
+    def _log_rule_change(
+        _rule: Rule,
+        _old_folder: CREFolder,
+        _message: str,
+        _dest_folder: typing.Optional[CREFolder] = None,
+    ):
+        yield
+        affected_sites = _old_folder.all_site_ids()
+        if _dest_folder is not None:
+            affected_sites.extend(_dest_folder.all_site_ids())
+        add_change(
+            "edit-rule",
+            _message,
+            sites=list(set(affected_sites)),
+            object_ref=_rule.object_ref(),
+        )
+
+    ruleset = source_entry.ruleset
+    all_rulesets = source_entry.all_rulesets
+    dest_folder: CREFolder
+    if position == "top_of_folder":
+        dest_folder = param["body"]["folder"]
+        with _log_rule_change(
+            source_entry.rule,
+            source_entry.folder,
+            _('Changed properties of rule "%s", moved from folder "%s" to top of folder "%s"')
+            % (source_entry.rule.id, source_entry.folder.title, dest_folder.title),
+            _dest_folder=dest_folder,
+        ):
+            ruleset.move_to_folder(source_entry.rule, dest_folder, index=Ruleset.TOP)
+            source_entry.folder = dest_folder
+            all_rulesets.save()
+    elif position == "bottom_of_folder":
+        dest_folder = param["body"]["folder"]
+        with _log_rule_change(
+            source_entry.rule,
+            source_entry.folder,
+            _('Changed properties of rule "%s", moved from folder "%s" to bottom of folder "%s"')
+            % (source_entry.rule.id, source_entry.folder.title, dest_folder.title),
+            _dest_folder=dest_folder,
+        ):
+            ruleset.move_to_folder(source_entry.rule, dest_folder, index=Ruleset.BOTTOM)
+            source_entry.folder = dest_folder
+            all_rulesets.save()
+    elif position == "before_specific_rule":
+        dest_rule_id = param["body"]["rule_id"]
+        dest_entry = _get_rule_by_id(dest_rule_id, all_rulesets=all_rulesets)
+        with _log_rule_change(
+            source_entry.rule,
+            source_entry.folder,
+            _('Changed properties of rule "%s", moved to before rule "%s" in folder "%s"')
+            % (source_entry.rule.id, dest_entry.rule.id, source_entry.folder.title),
+        ):
+            ruleset.move_to_folder(source_entry.rule, dest_entry.folder, index=dest_entry.index_nr)
+            source_entry.folder = dest_entry.folder
+            source_entry.all_rulesets.save()
+    elif position == "after_specific_rule":
+        dest_rule_id = param["body"]["rule_id"]
+        dest_entry = _get_rule_by_id(dest_rule_id, all_rulesets=all_rulesets)
+        with _log_rule_change(
+            source_entry.rule,
+            source_entry.folder,
+            _('Changed properties of rule "%s", moved to after rule "%s" in folder "%s"')
+            % (source_entry.rule.id, dest_entry.rule.id, source_entry.folder.title),
+        ):
+            ruleset.move_to_folder(source_entry.rule, dest_entry.folder, dest_entry.index_nr + 1)
+            source_entry.folder = dest_entry.folder
+            source_entry.all_rulesets.save()
+    else:
+        return problem(
+            status=400,
+            title="Invalid position",
+            detail=f"Position {position!r} is not a valid position.",
+        )
+
+    return serve_json(_serialize_rule(source_entry))
 
 
 @Endpoint(
@@ -138,12 +239,12 @@ def create_rule(param):
 def list_rules(param):
     """List rules"""
     user.need_permission("wato.rulesets")
-    all_sets = AllRulesets()
-    all_sets.load()
+    all_rulesets = AllRulesets()
+    all_rulesets.load()
     ruleset_name = param["ruleset_name"]
 
     try:
-        ruleset = all_sets.get(ruleset_name.replace("-", ":"))
+        ruleset = all_rulesets.get(ruleset_name.replace("-", ":"))
     except KeyError:
         return problem(
             status=400,
@@ -160,7 +261,7 @@ def list_rules(param):
                     ruleset=rule.ruleset,
                     folder=folder,
                     index_nr=index,
-                    all_sets=all_sets,
+                    all_rulesets=all_rulesets,
                 )
             )
         )
@@ -191,12 +292,12 @@ def show_rule(param):
     return serve_json(_serialize_rule(rule_entry))
 
 
-def _get_rule_by_id(rule_uuid: str, all_sets=None) -> RuleEntry:
-    if all_sets is None:
-        all_sets = AllRulesets()
-        all_sets.load()
+def _get_rule_by_id(rule_uuid: str, all_rulesets=None) -> RuleEntry:
+    if all_rulesets is None:
+        all_rulesets = AllRulesets()
+        all_rulesets.load()
 
-    for ruleset in all_sets.get_rulesets().values():
+    for ruleset in all_rulesets.get_rulesets().values():
         folder: CREFolder
         index: int
         rule: Rule
@@ -207,7 +308,7 @@ def _get_rule_by_id(rule_uuid: str, all_sets=None) -> RuleEntry:
                     rule=rule,
                     folder=folder,
                     ruleset=ruleset,
-                    all_sets=all_sets,
+                    all_rulesets=all_rulesets,
                 )
 
     raise ProblemException(
@@ -238,15 +339,15 @@ def delete_rule(param):
     user.need_permission("wato.rulesets")
     rule_id = param["rule_id"]
     rule: Rule
-    all_sets = AllRulesets()
-    all_sets.load()
+    all_rulesets = AllRulesets()
+    all_rulesets.load()
 
     found = False
-    for ruleset in all_sets.get_rulesets().values():
+    for ruleset in all_rulesets.get_rulesets().values():
         for _folder, _index, rule in ruleset.get_rules():
             if rule.id == rule_id:
                 ruleset.delete_rule(rule)
-                all_sets.save()
+                all_rulesets.save()
                 found = True
     if found:
         return http.Response(status=204)

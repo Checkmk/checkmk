@@ -499,7 +499,7 @@ class Endpoint:
         if self.method in ("get", "delete") and self.request_schema:
             raise ValueError(
                 f"According to the OpenAPI 3 spec, consumers SHALL ignore request bodies on "
-                f"{self.method.upper()!r}. Please use another request method for the endpont: "
+                f"{self.method.upper()!r}. Please use another request method for the endpoint: "
                 f"{self.operation_id} "
                 "See: https://swagger.io/specification/#operation-object"
             )

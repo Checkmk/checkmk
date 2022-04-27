@@ -31,7 +31,7 @@ def new_rule_fixture(logged_in_admin_wsgi_app):
             "never_ignore_mountpoints": ["~.*/omd/sites/[^/]+/tmp$"],
         }""",
         "conditions": {
-            "host_tag": [
+            "host_tags": [
                 {
                     "key": "criticality",
                     "operator": "is",
@@ -43,7 +43,7 @@ def new_rule_fixture(logged_in_admin_wsgi_app):
                     "value": "wan",
                 },
             ],
-            "host_label": [{"key": "os", "operator": "is", "value": "windows"}],
+            "host_labels": [{"key": "os", "operator": "is", "value": "windows"}],
         },
     }
     resp = wsgi_app.post(
@@ -200,8 +200,8 @@ def test_openapi_list_rules(logged_in_admin_wsgi_app, new_rule):
     assert stored["properties"]["disabled"] == values["properties"]["disabled"]
     assert stored["properties"]["comment"] == values["properties"]["comment"]
     # Do the complete round-trip check. Everything stored is also retrieved.
-    assert stored["conditions"]["host_label"] == values["conditions"]["host_label"]
-    assert stored["conditions"]["host_tag"] == values["conditions"]["host_tag"]
+    assert stored["conditions"]["host_labels"] == values["conditions"]["host_labels"]
+    assert stored["conditions"]["host_tags"] == values["conditions"]["host_tags"]
 
 
 def test_openapi_delete_rule(logged_in_admin_wsgi_app, new_rule):

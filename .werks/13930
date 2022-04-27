@@ -1,0 +1,19 @@
+Title: adjust Rule response format in REST API
+Class: fix
+Compatible: compat
+Component: core
+Date: 1651132428
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b9
+
+The response of the Rule object has been changed from singular to plural in some cases.
+
+Concretely, the following fields have been changed:
+
+ * host_tag -> host_tags
+ * host_label -> host_labels
+ * service_label -> service_labels
+
+If you use statically typed language, you may have to recompile your auto generated API client.

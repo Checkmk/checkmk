@@ -33,6 +33,7 @@ from cmk.gui.log import logger
 from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.page_menu import PageMenu, PageMenuDropdown, PageMenuTopic
+from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.theme import theme
 from cmk.gui.utils.urls import makeuri_contextless
@@ -659,42 +660,46 @@ def ajax_snapin():
     response.set_data(json.dumps(snapin_code))
 
 
-@cmk.gui.pages.register("sidebar_fold")
-def ajax_fold():
-    response.set_content_type("application/json")
-    user_config = UserSidebarConfig(user, active_config.sidebar)
-    user_config.folded = request.var("fold") == "yes"
-    user_config.save()
+@cmk.gui.pages.page_registry.register_page("sidebar_fold")
+class AjaxFoldSnapin(cmk.gui.pages.AjaxPage):
+    def page(self):
+        check_csrf_token()
+        response.set_content_type("application/json")
+        user_config = UserSidebarConfig(user, active_config.sidebar)
+        user_config.folded = request.var("fold") == "yes"
+        user_config.save()
 
 
-@cmk.gui.pages.register("sidebar_openclose")
-def ajax_openclose() -> None:
-    response.set_content_type("application/json")
-    if not user.may("general.configure_sidebar"):
+@cmk.gui.pages.page_registry.register_page("sidebar_openclose")
+class AjaxOpenCloseSnapin(cmk.gui.pages.AjaxPage):
+    def page(self):
+        check_csrf_token()
+        response.set_content_type("application/json")
+        if not user.may("general.configure_sidebar"):
+            return None
+
+        snapin_id = request.var("name")
+        if snapin_id is None:
+            return None
+
+        state = request.var("state")
+        if state not in [SnapinVisibility.OPEN.value, SnapinVisibility.CLOSED.value, "off"]:
+            raise MKUserError("state", "Invalid state: %s" % state)
+
+        user_config = UserSidebarConfig(user, active_config.sidebar)
+
+        try:
+            snapin = user_config.get_snapin(snapin_id)
+        except KeyError:
+            return None
+
+        if state == "off":
+            user_config.remove_snapin(snapin)
+        else:
+            snapin.visible = SnapinVisibility(state)
+
+        user_config.save()
         return None
-
-    snapin_id = request.var("name")
-    if snapin_id is None:
-        return None
-
-    state = request.var("state")
-    if state not in [SnapinVisibility.OPEN.value, SnapinVisibility.CLOSED.value, "off"]:
-        raise MKUserError("state", "Invalid state: %s" % state)
-
-    user_config = UserSidebarConfig(user, active_config.sidebar)
-
-    try:
-        snapin = user_config.get_snapin(snapin_id)
-    except KeyError:
-        return None
-
-    if state == "off":
-        user_config.remove_snapin(snapin)
-    else:
-        snapin.visible = SnapinVisibility(state)
-
-    user_config.save()
-    return None
 
 
 @cmk.gui.pages.register("sidebar_move_snapin")
@@ -888,6 +893,7 @@ def _used_snapins() -> List[Any]:
 @cmk.gui.pages.page_registry.register_page("sidebar_ajax_add_snapin")
 class AjaxAddSnapin(cmk.gui.pages.AjaxPage):
     def page(self):
+        check_csrf_token()
         if not user.may("general.configure_sidebar"):
             raise MKGeneralException(_("You are not allowed to change the sidebar."))
 

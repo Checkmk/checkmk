@@ -134,15 +134,20 @@ export function start_test(ident, hostname, transid) {
     utils.add_class(img, "reloading");
 
     log.innerHTML = "...";
-    ajax.get_url(
-        "wato_ajax_diag_host.py?host=" +
-            encodeURIComponent(hostname) +
-            "&_test=" +
-            encodeURIComponent(ident) +
-            vars,
-        handle_host_diag_result,
-        {hostname: hostname, ident: ident}
-    ); // eslint-disable-line indent
+
+    var data =
+        "host=" +
+        encodeURIComponent(hostname) +
+        "&_test=" +
+        encodeURIComponent(ident) +
+        vars;
+
+    ajax.call_ajax("wato_ajax_diag_host.py", {
+        method: "POST",
+        response_handler: handle_host_diag_result,
+        handler_data: {hostname: hostname, ident: ident},
+        post_data: data,
+    });
 }
 
 function handle_host_diag_result(data, response_json) {

@@ -51,6 +51,7 @@ from cmk.gui.plugins.visuals.node_vis import FilterTopologyMaxNodes, FilterTopol
 from cmk.gui.plugins.visuals.utils import Filter, get_livestatus_filter_headers
 from cmk.gui.plugins.wato import bi_valuespecs
 from cmk.gui.type_defs import VisualContext
+from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.theme import theme
 from cmk.gui.views import ABCAjaxInitialFilters, View
 
@@ -462,6 +463,7 @@ class NodeVisualizationBIDataMapper:
 @page_registry.register_page("ajax_save_bi_aggregation_layout")
 class AjaxSaveBIAggregationLayout(AjaxPage):
     def page(self) -> AjaxPageResult:
+        check_csrf_token()
         layout_var = request.get_str_input_mandatory("layout", "{}")
         layout_config = json.loads(layout_var)
         active_config.bi_layouts["aggregations"].update(layout_config)
@@ -472,6 +474,7 @@ class AjaxSaveBIAggregationLayout(AjaxPage):
 @page_registry.register_page("ajax_delete_bi_aggregation_layout")
 class AjaxDeleteBIAggregationLayout(AjaxPage):
     def page(self) -> AjaxPageResult:
+        check_csrf_token()
         for_aggregation = request.var("aggregation_name")
         active_config.bi_layouts["aggregations"].pop(for_aggregation)
         BILayoutManagement.save_layouts()
@@ -489,6 +492,7 @@ class AjaxLoadBIAggregationLayout(AjaxPage):
 @page_registry.register_page("ajax_save_bi_template_layout")
 class AjaxSaveBITemplateLayout(AjaxPage):
     def page(self) -> AjaxPageResult:
+        check_csrf_token()
         layout_var = request.get_str_input_mandatory("layout", "{}")
         layout_config = json.loads(layout_var)
         active_config.bi_layouts["templates"].update(layout_config)
@@ -499,6 +503,7 @@ class AjaxSaveBITemplateLayout(AjaxPage):
 @page_registry.register_page("ajax_delete_bi_template_layout")
 class AjaxDeleteBITemplateLayout(AjaxPage):
     def page(self) -> AjaxPageResult:
+        check_csrf_token()
         layout_id = request.var("layout_id")
         active_config.bi_layouts["templates"].pop(layout_id)
         BILayoutManagement.save_layouts()

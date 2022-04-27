@@ -52,6 +52,7 @@ from cmk.gui.plugins.wato.utils.main_menu import MainMenu, MenuItem
 from cmk.gui.table import init_rowselect, Table, table_element
 from cmk.gui.type_defs import ActionResult, Choices
 from cmk.gui.utils.agent_registration import remove_tls_registration_help
+from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.escaping import escape_to_html_permissive
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.html import HTML
@@ -1406,5 +1407,6 @@ def _convert_title_to_filename(title: str) -> str:
 @page_registry.register_page("ajax_set_foldertree")
 class ModeAjaxSetFoldertree(AjaxPage):
     def page(self):
+        check_csrf_token()
         api_request = self.webapi_request()
         user.save_file("foldertree", (api_request.get("topic"), api_request.get("target")))

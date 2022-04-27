@@ -22,6 +22,7 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.pages import AjaxPage, page_registry
 from cmk.gui.site_config import get_site_config, sitenames
+from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.watolib.activate_changes import ActivateChanges, ACTIVATION_TIME_PROFILE_SYNC
 from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.user_profile import push_user_profiles_to_site_transitional_wrapper
@@ -103,6 +104,7 @@ class ModeAjaxProfileReplication(AjaxPage):
     """AJAX handler for asynchronous replication of user profiles (changed passwords)"""
 
     def page(self):
+        check_csrf_token()
         ajax_request = self.webapi_request()
 
         site_id_val = ajax_request.get("site")

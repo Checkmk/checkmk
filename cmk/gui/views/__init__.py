@@ -181,6 +181,7 @@ from cmk.gui.plugins.visuals.utils import (
     VisualInfo,
     VisualType,
 )
+from cmk.gui.utils.csrf_token import check_csrf_token
 
 # Needed for legacy (pre 1.6) plugins
 from cmk.gui.utils.html import HTML
@@ -3771,6 +3772,8 @@ class PageRescheduleCheck(AjaxPage):
     def _do_reschedule(self, api_request: Dict[str, Any]) -> AjaxPageResult:
         if not user.may("action.reschedule"):
             raise MKGeneralException("You are not allowed to reschedule checks.")
+
+        check_csrf_token()
 
         site = api_request.get("site")
         host = api_request.get("host")

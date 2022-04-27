@@ -244,7 +244,7 @@ def test_ajax_fold(request_context, mocker, origin_state, fold_var, set_state):
     )
     m_save = mocker.patch.object(user, "save_file")
 
-    sidebar.ajax_fold()
+    sidebar.AjaxFoldSnapin().page()
 
     m_config.assert_called_once()
     m_save.assert_called_once_with(
@@ -288,7 +288,7 @@ def test_ajax_openclose_close(request_context, mocker, origin_state, set_state):
     )
     m_save = mocker.patch.object(user, "save_file")
 
-    sidebar.ajax_openclose()
+    sidebar.AjaxOpenCloseSnapin().page()
 
     snapins = [
         UserSidebarSnapin.from_snapin_type_id("views"),

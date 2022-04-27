@@ -17,6 +17,7 @@ from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.pages import AjaxPage, AjaxPageResult, page_registry
 from cmk.gui.plugins.userdb.utils import validate_start_url
 from cmk.gui.type_defs import MegaMenu, TopicMenuItem, TopicMenuTopic
+from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.theme import theme, theme_choices
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.watolib.global_settings import rulebased_notifications_enabled
@@ -141,6 +142,7 @@ class ModeAjaxCycleThemes(AjaxPage):
     """AJAX handler for quick access option 'Interface theme" in user menu"""
 
     def page(self) -> AjaxPageResult:
+        check_csrf_token()
         themes = [theme for theme, _title in theme_choices()]
         current_theme = theme.get()
         try:
@@ -162,6 +164,7 @@ class ModeAjaxCycleSidebarPosition(AjaxPage):
     """AJAX handler for quick access option 'Sidebar position" in user menu"""
 
     def page(self) -> AjaxPageResult:
+        check_csrf_token()
         _set_user_attribute(
             "ui_sidebar_position",
             None if _sidebar_position_id(_get_sidebar_position()) == "left" else "left",
@@ -175,6 +178,7 @@ class ModeAjaxSetStartURL(AjaxPage):
 
     def page(self) -> AjaxPageResult:
         try:
+            check_csrf_token()
             name = request.get_str_input_mandatory("name")
             url = makeuri_contextless(request, [("name", name)], "dashboard.py")
             validate_start_url(url, "")

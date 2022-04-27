@@ -51,7 +51,12 @@ if "%git_hash%" == "" Powershell Write-Host "Git directory is ABSENT. Using PRED
 rem remove quotes from the result
 set git_hash=%git_hash:'=%
 
-set fname=python-%version%.%subversion%_%git_hash%_%BUILD_NUM%.zip
+::set fname=python-%version%.%subversion%_%git_hash%_%BUILD_NUM%.zip
+:: Use build from the cache
+powershell Write-Host "----------------------------------------------------------------" -Foreground cyan
+powershell Write-Host "WE USE CACHED BUILD. THIS IS TEMPORARY SOLUTION TO UNBLOCK BUILD" -Foreground cyan
+powershell Write-Host "----------------------------------------------------------------" -Foreground cyan
+set fname=python-3.8.7_7079b88e8d_12.zip
 powershell Write-Host "Downloading %fname% from cache..." -Foreground cyan
 curl -sSf --user %creds% -o %fname%  %url%/%fname% > nul 2>&1
 IF /I "!ERRORLEVEL!" NEQ "0" (

@@ -1,0 +1,29 @@
+Title: No longer show dashboards specific to one host in a host menu
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1651039838
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+Previously, the host menu would show the following entries:
+
+- Kubernetes Cluster
+
+- Kubernetes Deployment
+
+- Kubernetes StatefulSet
+
+- Kubernetes DaemonSet
+
+- Kubernetes Namespace
+
+- Single Linux host
+
+- Single Windows host
+
+These dashboards are specific to the type of the underlying host. Therefore, the entry would lead
+to a broken dashboard, whenever there was a mismatch between the host expected by the dashboard and
+the host, to which the menu belongs. With this werk, the entries are no longer shown in the menu.

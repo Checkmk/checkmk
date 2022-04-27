@@ -9,7 +9,6 @@ from __future__ import annotations
 import typing
 
 from cmk.gui.globals import user
-from cmk.gui.plugins.openapi.restful_objects.datastructures import denilled
 
 if typing.TYPE_CHECKING:
     from typing import Tuple
@@ -27,14 +26,24 @@ from cmk.gui.plugins.openapi.endpoints.rule.fields import (
 )
 from cmk.gui.plugins.openapi.restful_objects import constructors, Endpoint, permissions
 from cmk.gui.plugins.openapi.restful_objects.constructors import serve_json
+from cmk.gui.plugins.openapi.restful_objects.datastructures import denilled
 from cmk.gui.plugins.openapi.restful_objects.type_defs import DomainObject
-from cmk.gui.plugins.openapi.utils import problem
+from cmk.gui.plugins.openapi.utils import problem, ProblemException
 from cmk.gui.utils import gen_id
 from cmk.gui.utils.escaping import strip_tags
 from cmk.gui.watolib import add_change, make_diff_text
 from cmk.gui.watolib.rulesets import RuleConditions
 
 # TODO: move a rule within a ruleset
+
+
+class RuleEntry(typing.NamedTuple):
+    rule: watolib.Rule
+    ruleset: watolib.Ruleset
+    all_sets: watolib.AllRulesets
+    # NOTE: Can't be called "index", because mypy doesn't like that. Duh.
+    index_nr: int
+    folder: watolib.CREFolder
 
 
 PERMISSIONS = permissions.AllPerm(
@@ -107,7 +116,7 @@ def create_rule(param):
     index = ruleset.append_rule(folder, rule)
     rulesets.save()
     # TODO Duplicated code is in pages/rulesets.py:2670-
-    # TODO Move to watolib
+    # TODO Move to
     add_change(
         "new-rule",
         _l('Created new rule #%d in ruleset "%s" in folder "%s"')
@@ -116,7 +125,8 @@ def create_rule(param):
         diff_text=make_diff_text({}, rule.to_log()),
         object_ref=rule.object_ref(),
     )
-    return serve_json(_serialize_rule(folder, index, rule))
+    rule_entry = _get_rule_by_id(rule.id)
+    return serve_json(_serialize_rule(rule_entry))
 
 
 @Endpoint(
@@ -145,7 +155,17 @@ def list_rules(param):
 
     result = []
     for folder, index, rule in ruleset.get_rules():
-        result.append(_serialize_rule(folder, index, rule))
+        result.append(
+            _serialize_rule(
+                RuleEntry(
+                    rule=rule,
+                    ruleset=rule.ruleset,
+                    folder=folder,
+                    index_nr=index,
+                    all_sets=all_sets,
+                )
+            )
+        )
 
     return serve_json(
         constructors.collection_object(
@@ -168,20 +188,35 @@ def list_rules(param):
 )
 def show_rule(param):
     """Show a rule"""
-    rule: watolib.Rule
     user.need_permission("wato.rulesets")
-    _, folder, index, rule = _get_rule_by_id(param["rule_id"])
-    return serve_json(_serialize_rule(folder, index, rule))
+    rule_entry = _get_rule_by_id(param["rule_id"])
+    return serve_json(_serialize_rule(rule_entry))
 
 
-def _get_rule_by_id(rule_uuid: str) -> Tuple[watolib.Ruleset, watolib.CREFolder, int, watolib.Rule]:
-    all_sets = watolib.AllRulesets()
-    all_sets.load()
+def _get_rule_by_id(rule_uuid: str, all_sets=None) -> RuleEntry:
+    if all_sets is None:
+        all_sets = watolib.AllRulesets()
+        all_sets.load()
+
     for ruleset in all_sets.get_rulesets().values():
+        folder: watolib.CREFolder
+        index: int
+        rule: watolib.Rule
         for folder, index, rule in ruleset.get_rules():
             if rule.id == rule_uuid:
-                return ruleset, folder, index, rule
-    raise KeyError(f"Rule with UUID {rule_uuid} was not found.")
+                return RuleEntry(
+                    index_nr=index,
+                    rule=rule,
+                    folder=folder,
+                    ruleset=ruleset,
+                    all_sets=all_sets,
+                )
+
+    raise ProblemException(
+        status=400,
+        title="Unknown rule.",
+        detail=f"Rule with UUID {rule_uuid} was not found.",
+    )
 
 
 @Endpoint(
@@ -225,11 +260,8 @@ def delete_rule(param):
     )
 
 
-def _serialize_rule(
-    folder: watolib.CREFolder,
-    index: int,
-    rule: watolib.Rule,
-) -> DomainObject:
+def _serialize_rule(rule_entry: RuleEntry) -> DomainObject:
+    rule = rule_entry.rule
     return constructors.domain_object(
         domain_type="rule",
         editable=False,
@@ -237,8 +269,8 @@ def _serialize_rule(
         title=rule.description(),
         extensions={
             "ruleset": rule.ruleset.name,
-            "folder": "/" + folder.path(),
-            "folder_index": index,
+            "folder": "/" + rule_entry.folder.path(),
+            "folder_index": rule_entry.index_nr,
             "properties": rule.rule_options.to_config(),
             "value_raw": rule.value,
             "conditions": denilled(

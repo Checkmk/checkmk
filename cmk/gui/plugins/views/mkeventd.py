@@ -191,7 +191,7 @@ class DataSourceECEvents(ABCDataSource):
         return RowTableEC("eventconsoleevents")
 
     @property
-    def infos(self):
+    def infos(self) -> list[str]:
         return ["event", "host"]
 
     @property
@@ -226,7 +226,7 @@ class DataSourceECEventHistory(ABCDataSource):
         return RowTableEC("eventconsolehistory")
 
     @property
-    def infos(self):
+    def infos(self) -> list[str]:
         return ["history", "event", "host"]
 
     @property

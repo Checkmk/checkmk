@@ -63,7 +63,7 @@ class DataSourceBIAggregations(ABCDataSource):
         return RowTableBIAggregations()
 
     @property
-    def infos(self):
+    def infos(self) -> list[str]:
         return ["aggr", "aggr_group"]
 
     @property
@@ -103,7 +103,7 @@ class DataSourceBIHostAggregations(ABCDataSource):
         return RowTableBIHostAggregations()
 
     @property
-    def infos(self):
+    def infos(self) -> list[str]:
         return ["aggr", "host", "aggr_group"]
 
     @property
@@ -138,7 +138,7 @@ class DataSourceBIHostnameAggregations(ABCDataSource):
         return RowTableBIHostnameAggregations()
 
     @property
-    def infos(self):
+    def infos(self) -> list[str]:
         return ["aggr", "host", "aggr_group"]
 
     @property
@@ -172,7 +172,7 @@ class DataSourceBIHostnameByGroupAggregations(ABCDataSource):
         return RowTableBIHostnameByGroupAggregations()
 
     @property
-    def infos(self):
+    def infos(self) -> list[str]:
         return ["aggr", "host", "hostgroup", "aggr_group"]
 
     @property

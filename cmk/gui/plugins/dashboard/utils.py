@@ -277,7 +277,7 @@ class Dashlet(abc.ABC):
         self._dashlet_spec = dashlet
         self._context: Optional[VisualContext] = self._get_context()
 
-    def infos(self) -> List[str]:
+    def infos(self) -> list[str]:
         """Return a list of the supported infos (for the visual context) of this dashlet"""
         return []
 
@@ -698,7 +698,7 @@ class ABCFigureDashlet(Dashlet, abc.ABC):
         return (56, 40)
 
     @classmethod
-    def infos(cls):
+    def infos(cls) -> list[str]:
         return ["host", "service"]
 
     @classmethod

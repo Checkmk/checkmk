@@ -442,7 +442,7 @@ class LegacyDashlet(IFrameDashlet):
             return cls._spec["add_urlfunc"]()
         return super().add_url()
 
-    def infos(self) -> List[str]:
+    def infos(self) -> list[str]:
         return self._spec.get("infos", [])
 
     def default_display_title(self) -> str:

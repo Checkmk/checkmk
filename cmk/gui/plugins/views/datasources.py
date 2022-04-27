@@ -26,7 +26,7 @@ class DataSourceHosts(DataSourceLivestatus):
         return _("All hosts")
 
     @property
-    def infos(self):
+    def infos(self) -> list[str]:
         return ["host"]
 
     @property
@@ -62,7 +62,7 @@ class DataSourceHostsByGroup(DataSourceLivestatus):
         return _("Hosts grouped by host groups")
 
     @property
-    def infos(self):
+    def infos(self) -> list[str]:
         return ["host", "hostgroup"]
 
     @property
@@ -89,7 +89,7 @@ class DataSourceServices(DataSourceLivestatus):
         return _("All services")
 
     @property
-    def infos(self):
+    def infos(self) -> list[str]:
         return ["service", "host"]
 
     @property
@@ -126,7 +126,7 @@ class DataSourceServicesByGroup(DataSourceLivestatus):
         return _("Services grouped by service groups")
 
     @property
-    def infos(self):
+    def infos(self) -> list[str]:
         return ["service", "host", "servicegroup"]
 
     @property
@@ -149,7 +149,7 @@ class DataSourceServicesByHostGroup(DataSourceLivestatus):
         return _("Services grouped by host groups")
 
     @property
-    def infos(self):
+    def infos(self) -> list[str]:
         return ["service", "host", "hostgroup"]
 
     @property
@@ -172,7 +172,7 @@ class DataSourceHostGroups(DataSourceLivestatus):
         return _("Host groups")
 
     @property
-    def infos(self):
+    def infos(self) -> list[str]:
         return ["hostgroup"]
 
     @property
@@ -201,7 +201,7 @@ class DataSourceMergedHostGroups(DataSourceLivestatus):
         return RowTableLivestatus("hostgroups")
 
     @property
-    def infos(self):
+    def infos(self) -> list[str]:
         return ["hostgroup"]
 
     @property
@@ -228,7 +228,7 @@ class DataSourceServiceGroups(DataSourceLivestatus):
         return _("Service groups")
 
     @property
-    def infos(self):
+    def infos(self) -> list[str]:
         return ["servicegroup"]
 
     @property
@@ -257,7 +257,7 @@ class DataSourceMergedServiceGroups(ABCDataSource):
         return RowTableLivestatus("servicegroups")
 
     @property
-    def infos(self):
+    def infos(self) -> list[str]:
         return ["servicegroup"]
 
     @property
@@ -284,7 +284,7 @@ class DataSourceComments(DataSourceLivestatus):
         return _("Host- and Servicecomments")
 
     @property
-    def infos(self):
+    def infos(self) -> list[str]:
         return ["comment", "host", "service"]
 
     @property
@@ -307,7 +307,7 @@ class DataSourceDowntimes(DataSourceLivestatus):
         return _("Scheduled Downtimes")
 
     @property
-    def infos(self):
+    def infos(self) -> list[str]:
         return ["downtime", "host", "service"]
 
     @property
@@ -329,7 +329,7 @@ class LogDataSource(DataSourceLivestatus):
         return RowTableLivestatus("log")
 
     @property
-    def infos(self):
+    def infos(self) -> list[str]:
         return ["log", "host", "service", "contact", "command"]
 
     @property
@@ -363,7 +363,7 @@ class DataSourceLogHostAndServiceEvents(LogDataSource):
         return _("Host and Service Events")
 
     @property
-    def infos(self):
+    def infos(self) -> list[str]:
         return ["log", "host", "service"]
 
     @property
@@ -382,7 +382,7 @@ class DataSourceLogHostEvents(LogDataSource):
         return _("Host Events")
 
     @property
-    def infos(self):
+    def infos(self) -> list[str]:
         return ["log", "host"]
 
     @property
@@ -401,7 +401,7 @@ class DataSourceLogAlertStatistics(LogDataSource):
         return _("Alert Statistics")
 
     @property
-    def infos(self):
+    def infos(self) -> list[str]:
         return ["log", "host", "service", "contact", "command"]
 
     @property
@@ -442,7 +442,7 @@ class DataSourceServiceDiscovery(ABCDataSource):
         return ServiceDiscoveryRowTable()
 
     @property
-    def infos(self):
+    def infos(self) -> list[str]:
         return ["host", "discovery"]
 
     @property

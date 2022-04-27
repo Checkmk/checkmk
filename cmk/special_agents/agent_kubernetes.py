@@ -326,7 +326,7 @@ class Service(Metadata):
             self._ports = []
 
     @property
-    def info(self):
+    def info(self) -> dict[str, Any]:
         return {
             "type": self._type,
             "cluster_ip": self._cluster_ip,
@@ -454,7 +454,7 @@ class Ingress(Metadata):
         return "/"
 
     @property
-    def info(self):
+    def info(self) -> dict[str, Any]:
         return {
             self.name: {
                 "backends": self._backends,
@@ -580,7 +580,7 @@ class Pod(Metadata):
         return {c.type: c.status for c in self._conditions}
 
     @property
-    def info(self):
+    def info(self) -> dict[str, Any]:
         return {
             "node": self.node,
             "host_network": self.host_network,
@@ -636,7 +636,7 @@ class Endpoint(Metadata):
         return {"addresses": addresses, "not_ready_addresses": not_ready_addresses, "ports": ports}
 
     @property
-    def infos(self):
+    def infos(self) -> dict[str, Any]:
         return {"subsets": self._subsets}
 
 
@@ -678,7 +678,7 @@ class Job(Metadata):
             self._succeeded = 0
 
     @property
-    def infos(self):
+    def infos(self) -> dict[str, Any]:
         return {
             "active": self._active,
             "failed": self._failed,
@@ -748,7 +748,7 @@ class DaemonSet(Metadata):
             self._containers = []
 
     @property
-    def info(self):
+    def info(self) -> dict[str, Any]:
         return {
             "collision_count": self.collision_count,
             "conditions": self.conditions,
@@ -948,7 +948,7 @@ class ComponentStatusList(K8sList[ComponentStatus]):  # pylint: disable=too-many
 
 
 class ServiceList(K8sList[Service]):  # pylint: disable=too-many-ancestors
-    def infos(self):
+    def infos(self) -> dict[str, Any]:
         return {service.name: service.info for service in self}
 
     def selector(self):
@@ -964,12 +964,12 @@ class DeploymentList(K8sList[Deployment]):  # pylint: disable=too-many-ancestors
 
 
 class IngressList(K8sList[Ingress]):  # pylint: disable=too-many-ancestors
-    def infos(self):
+    def infos(self) -> dict[str, Any]:
         return {ingress.name: ingress.info for ingress in self}
 
 
 class DaemonSetList(K8sList[DaemonSet]):  # pylint: disable=too-many-ancestors
-    def info(self):
+    def info(self) -> dict[str, Any]:
         return {daemon_set.name: daemon_set.info for daemon_set in self}
 
     def containers(self):
@@ -1002,7 +1002,7 @@ class PodList(K8sList[Pod]):  # pylint: disable=too-many-ancestors
             }
         }
 
-    def info(self):
+    def info(self) -> dict[str, Any]:
         return {pod.name: pod.info for pod in self}
 
     def resources(self):
@@ -1036,12 +1036,12 @@ class PodList(K8sList[Pod]):  # pylint: disable=too-many-ancestors
 
 
 class EndpointList(K8sList[Endpoint]):  # pylint: disable=too-many-ancestors
-    def info(self):
+    def info(self) -> dict[str, Any]:
         return {endpoint.name: endpoint.infos for endpoint in self}
 
 
 class JobList(K8sList[Job]):  # pylint: disable=too-many-ancestors
-    def info(self):
+    def info(self) -> dict[str, Any]:
         return {job.name: job.infos for job in self}
 
     def pod_infos(self):

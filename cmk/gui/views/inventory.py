@@ -1651,7 +1651,7 @@ class DataSourceInventoryHistory(ABCDataSource):
         return RowTableInventoryHistory()
 
     @property
-    def infos(self) -> List[str]:
+    def infos(self) -> list[str]:
         return ["host", "invhist"]
 
     @property

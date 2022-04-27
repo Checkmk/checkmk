@@ -44,7 +44,7 @@ class DataSourceCrashReports(DataSourceLivestatus):
         return _("Crash reports")
 
     @property
-    def infos(self):
+    def infos(self) -> list[str]:
         return ["crash"]
 
     @property

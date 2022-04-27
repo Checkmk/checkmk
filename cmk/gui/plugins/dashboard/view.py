@@ -129,7 +129,7 @@ class ViewDashlet(ABCViewDashlet):
         self._show_view_as_dashlet(self._dashlet_spec)
         html.javascript('cmk.utils.add_simplebar_scrollbar("dashlet_content_wrapper");')
 
-    def infos(self):
+    def infos(self) -> list[str]:
         # Hack for create mode of dashlet editor. The user first selects a datasource and then the
         # single contexts, the dashlet editor needs to use these information.
         if requested_file_name(request) == "edit_dashlet" and request.has_var("datasource"):
@@ -210,5 +210,5 @@ class LinkedViewDashlet(ABCViewDashlet):
         self._show_view_as_dashlet(self._get_view_spec())
         html.javascript('cmk.utils.add_simplebar_scrollbar("dashlet_content_wrapper");')
 
-    def infos(self):
+    def infos(self) -> list[str]:
         return self._get_infos_from_view_spec(self._get_view_spec())

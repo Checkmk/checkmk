@@ -149,7 +149,7 @@ class GraphDashlet(Dashlet):
         return (60, 21)
 
     @classmethod
-    def infos(cls):
+    def infos(cls) -> list[str]:
         return ["host", "service"]
 
     @classmethod

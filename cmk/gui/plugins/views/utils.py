@@ -665,7 +665,7 @@ class ABCDataSource(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def infos(self) -> List[str]:
+    def infos(self) -> list[str]:
         """Infos that are available with this data sources
 
         A info is used to create groups out of single painters and filters.

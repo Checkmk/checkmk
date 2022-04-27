@@ -8,7 +8,6 @@ from __future__ import annotations
 
 from typing import List
 
-from cmk.gui import watolib
 from cmk.gui.logged_in import user
 from cmk.gui.plugins.openapi.endpoints.ruleset.fields import (
     RULESET_NAME,
@@ -20,6 +19,13 @@ from cmk.gui.plugins.openapi.restful_objects import constructors, Endpoint, perm
 from cmk.gui.plugins.openapi.restful_objects.constructors import serve_json
 from cmk.gui.plugins.openapi.restful_objects.type_defs import DomainObject
 from cmk.gui.utils.escaping import strip_tags
+from cmk.gui.watolib.rulesets import (
+    AllRulesets,
+    FolderRulesets,
+    Ruleset,
+    SearchedRulesets,
+    SingleRulesetRecursively,
+)
 
 PERMISSIONS = permissions.Perm("wato.rulesets")
 
@@ -35,9 +41,7 @@ PERMISSIONS = permissions.Perm("wato.rulesets")
 def list_rulesets(param):
     """Search rule sets"""
     user.need_permission("wato.rulesets")
-    all_sets = (
-        watolib.FolderRulesets(param["folder"]) if param.get("folder") else watolib.AllRulesets()
-    )
+    all_sets = FolderRulesets(param["folder"]) if param.get("folder") else AllRulesets()
     all_sets.load()
 
     def _get_search_options(params):
@@ -48,7 +52,7 @@ def list_rulesets(param):
         return options
 
     if search_options := _get_search_options(param):
-        all_sets = watolib.SearchedRulesets(all_sets, search_options)
+        all_sets = SearchedRulesets(all_sets, search_options)
 
     ruleset_collection: List[DomainObject] = []
     for ruleset in all_sets.get_rulesets().values():
@@ -76,13 +80,13 @@ def show_ruleset(param):
     """Show a ruleset"""
     ruleset_name = param["ruleset_name"]
     user.need_permission("wato.rulesets")
-    collection = watolib.SingleRulesetRecursively(ruleset_name)
+    collection = SingleRulesetRecursively(ruleset_name)
     collection.load()
     ruleset = collection.get(ruleset_name)
     return serve_json(_serialize_ruleset(ruleset))
 
 
-def _serialize_ruleset(ruleset: watolib.Ruleset) -> DomainObject:
+def _serialize_ruleset(ruleset: Ruleset) -> DomainObject:
     members = {}
     if ruleset.num_rules() > 0:
         members["rules"] = constructors.collection_property(

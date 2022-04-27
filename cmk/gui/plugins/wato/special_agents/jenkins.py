@@ -4,16 +4,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-import cmk.gui.watolib as watolib
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.special_agents.common import RulespecGroupDatasourceProgramsApps
 from cmk.gui.plugins.wato.utils import HostRulespec, PasswordFromStore, rulespec_registry
 from cmk.gui.valuespec import Dictionary, DropdownChoice, Integer, ListChoice, TextInput, Transform
+from cmk.gui.watolib.rulespecs import Rulespec
 
 
 def _factory_default_special_agents_jenkins():
     # No default, do not use setting if no rule matches
-    return watolib.Rulespec.FACTORY_DEFAULT_UNUSED
+    return Rulespec.FACTORY_DEFAULT_UNUSED
 
 
 def _transform_jenkins_infos(value):

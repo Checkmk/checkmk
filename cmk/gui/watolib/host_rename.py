@@ -27,6 +27,7 @@ from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.check_mk_automations import rename_hosts
 from cmk.gui.watolib.hosts_and_folders import call_hook_hosts_changed, CREFolder, Folder, Host
 from cmk.gui.watolib.notifications import load_notification_rules, save_notification_rules
+from cmk.gui.watolib.rulesets import FolderRulesets
 from cmk.gui.watolib.utils import rename_host_in_list
 
 try:
@@ -131,7 +132,7 @@ def _rename_host_in_rulesets(folder, oldname, newname):
     changed_rulesets = []
 
     def rename_host_in_folder_rules(folder):
-        rulesets = watolib.FolderRulesets(folder)
+        rulesets = FolderRulesets(folder)
         rulesets.load()
 
         changed_folder_rulesets = []

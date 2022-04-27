@@ -35,6 +35,7 @@ from cmk.gui.utils.escaping import escape_to_html
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.wato.pages.rulesets import ModeEditRuleset
+from cmk.gui.watolib.rulesets import SingleRulesetRecursively
 from cmk.gui.watolib.search import (
     ABCMatchItemGenerator,
     match_item_generator_registry,
@@ -183,7 +184,7 @@ class ModePatternEditor(WatoMode):
     def _show_patterns(self):
         import cmk.gui.logwatch as logwatch
 
-        collection = watolib.SingleRulesetRecursively("logwatch_rules")
+        collection = SingleRulesetRecursively("logwatch_rules")
         collection.load()
         ruleset = collection.get("logwatch_rules")
 

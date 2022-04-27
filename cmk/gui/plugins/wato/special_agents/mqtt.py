@@ -4,11 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-import cmk.gui.watolib as watolib
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.special_agents.common import RulespecGroupDatasourceProgramsApps
 from cmk.gui.plugins.wato.utils import HostRulespec, PasswordFromStore, rulespec_registry
 from cmk.gui.valuespec import Dictionary, DropdownChoice, HostAddress, NetworkPort, TextInput
+from cmk.gui.watolib.rulespecs import Rulespec
 
 
 def _valuespec_special_agents_mqtt() -> Dictionary:
@@ -102,7 +102,7 @@ def _valuespec_special_agents_mqtt() -> Dictionary:
 
 rulespec_registry.register(
     HostRulespec(
-        factory_default=watolib.Rulespec.FACTORY_DEFAULT_UNUSED,
+        factory_default=Rulespec.FACTORY_DEFAULT_UNUSED,
         group=RulespecGroupDatasourceProgramsApps,
         name="special_agents:mqtt",
         valuespec=_valuespec_special_agents_mqtt,

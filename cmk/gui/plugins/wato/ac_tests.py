@@ -22,7 +22,6 @@ import cmk.gui.plugins.userdb.htpasswd
 import cmk.gui.plugins.userdb.ldap_connector as ldap
 import cmk.gui.userdb as userdb
 import cmk.gui.utils
-import cmk.gui.watolib as watolib
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.http import request
 from cmk.gui.i18n import _
@@ -45,6 +44,7 @@ from cmk.gui.watolib.analyze_configuration import (
     ACTestCategories,
 )
 from cmk.gui.watolib.global_settings import rulebased_notifications_enabled
+from cmk.gui.watolib.rulesets import SingleRulesetRecursively
 from cmk.gui.watolib.sites import SiteManagementFactory
 
 # Disable python warnings in background job output or logs like "Unverified
@@ -1130,7 +1130,7 @@ class ACTestESXDatasources(ACTest):
         )
 
     def _get_rules(self):
-        collection = watolib.SingleRulesetRecursively("special_agents:vsphere")
+        collection = SingleRulesetRecursively("special_agents:vsphere")
         collection.load()
 
         ruleset = collection.get("special_agents:vsphere")
@@ -1222,7 +1222,7 @@ class ACTestUnexpectedAllowedIPRanges(ACTest):
             yield ACResultCRIT("Rule in <b>%s</b> has value <b>%s</b>" % (folder_title, rule_state))
 
     def _get_rules(self):
-        collection = watolib.SingleRulesetRecursively("check_mk_exit_status")
+        collection = SingleRulesetRecursively("check_mk_exit_status")
         collection.load()
         ruleset = collection.get("check_mk_exit_status")
         state_map = {0: "OK", 1: "WARN", 2: "CRIT", 3: "UNKNOWN"}

@@ -33,7 +33,7 @@ from cmk.gui.plugins.openapi.utils import problem
 from cmk.gui.utils import gen_id
 from cmk.gui.utils.escaping import strip_tags
 from cmk.gui.watolib import add_change
-from cmk.gui.watolib.rulesets import RuleConditions
+from cmk.gui.watolib.rulesets import AllRulesets, FolderRulesets, Rule, RuleConditions, Ruleset
 
 # TODO: move a rule within a ruleset
 
@@ -65,7 +65,7 @@ def create_rule(param):
 
     folder.need_permission("write")
 
-    rulesets = watolib.FolderRulesets(folder)
+    rulesets = FolderRulesets(folder)
     rulesets.load()
     try:
         ruleset = rulesets.get(ruleset_name)
@@ -90,7 +90,7 @@ def create_rule(param):
             title=title,
         )
 
-    rule = watolib.Rule(
+    rule = Rule(
         gen_id(),
         folder,
         ruleset,
@@ -131,7 +131,7 @@ def create_rule(param):
 def list_rules(param):
     """List rules"""
     user.need_permission("wato.rulesets")
-    all_sets = watolib.AllRulesets()
+    all_sets = AllRulesets()
     all_sets.load()
     ruleset_name = param["ruleset_name"]
 
@@ -169,14 +169,14 @@ def list_rules(param):
 )
 def show_rule(param):
     """Show a rule"""
-    rule: watolib.Rule
+    rule: Rule
     user.need_permission("wato.rulesets")
     _, folder, index, rule = _get_rule_by_id(param["rule_id"])
     return serve_json(_serialize_rule(folder, index, rule))
 
 
-def _get_rule_by_id(rule_uuid: str) -> Tuple[watolib.Ruleset, watolib.CREFolder, int, watolib.Rule]:
-    all_sets = watolib.AllRulesets()
+def _get_rule_by_id(rule_uuid: str) -> Tuple[Ruleset, watolib.CREFolder, int, Rule]:
+    all_sets = AllRulesets()
     all_sets.load()
     for ruleset in all_sets.get_rulesets().values():
         for folder, index, rule in ruleset.get_rules():
@@ -205,8 +205,8 @@ def delete_rule(param):
     """Delete a rule"""
     user.need_permission("wato.rulesets")
     rule_id = param["rule_id"]
-    rule: watolib.Rule
-    all_sets = watolib.AllRulesets()
+    rule: Rule
+    all_sets = AllRulesets()
     all_sets.load()
 
     found = False
@@ -229,7 +229,7 @@ def delete_rule(param):
 def _serialize_rule(
     folder: watolib.CREFolder,
     index: int,
-    rule: watolib.Rule,
+    rule: Rule,
 ) -> DomainObject:
     return constructors.domain_object(
         domain_type="rule",

@@ -10,7 +10,6 @@ import cmk.utils.version as cmk_version
 
 # Triggers plugin loading of plugins.wato which registers all the plugins
 import cmk.gui.wato
-import cmk.gui.watolib as watolib
 import cmk.gui.watolib.rulespecs
 from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.plugins.wato.utils import register_check_parameters, TimeperiodValuespec
@@ -19,10 +18,14 @@ from cmk.gui.watolib.main_menu import main_module_registry
 from cmk.gui.watolib.rulespec_groups import RulespecGroupEnforcedServices
 from cmk.gui.watolib.rulespecs import (
     CheckTypeGroupSelection,
+    get_rulegroup,
     HostRulespec,
     main_module_from_rulespec_group_name,
     ManualCheckParameterRulespec,
     MatchItemGeneratorRules,
+    register_rule,
+    register_rulegroup,
+    Rulespec,
     rulespec_group_registry,
     rulespec_registry,
     RulespecGroup,
@@ -69,9 +72,9 @@ def test_legacy_register_rulegroup(monkeypatch):
     monkeypatch.setattr(
         cmk.gui.watolib.rulespecs, "rulespec_group_registry", RulespecGroupRegistry()
     )
-    watolib.register_rulegroup("abc", "A B C", "abc 123")
+    register_rulegroup("abc", "A B C", "abc 123")
 
-    group = watolib.get_rulegroup("abc")
+    group = get_rulegroup("abc")
     assert isinstance(group, RulespecGroup)
     assert group.name == "abc"
     assert group.title == "A B C"
@@ -83,7 +86,7 @@ def test_legacy_get_not_existing_rulegroup(monkeypatch):
         cmk.gui.watolib.rulespecs, "rulespec_group_registry", RulespecGroupRegistry()
     )
 
-    group = watolib.get_rulegroup("xyz")
+    group = get_rulegroup("xyz")
     assert isinstance(group, cmk.gui.watolib.rulespecs.RulespecGroup)
     assert group.name == "xyz"
     assert group.title == "xyz"
@@ -95,7 +98,7 @@ def test_legacy_get_not_existing_rule_sub_group(monkeypatch):
         cmk.gui.watolib.rulespecs, "rulespec_group_registry", RulespecGroupRegistry()
     )
 
-    group = watolib.get_rulegroup("xyz/Abc, xxx ding./aaa")
+    group = get_rulegroup("xyz/Abc, xxx ding./aaa")
     assert isinstance(group, RulespecSubGroup)
     assert group.name == "xyz/abcxxxdingaaa"
     assert group.title == "Abc, xxx ding./aaa"
@@ -1380,13 +1383,11 @@ def test_rulespec_group_choices(mode, result):
     ],
 )
 def test_rulespec_get_matching_group_names(term, result):
-    assert sorted(watolib.rulespec_group_registry.get_matching_group_names(term)) == sorted(result)
+    assert sorted(rulespec_group_registry.get_matching_group_names(term)) == sorted(result)
 
 
 def test_rulespec_get_main_groups():
-    main_group_names = [
-        g_class().name for g_class in watolib.rulespec_group_registry.get_main_groups()
-    ]
+    main_group_names = [g_class().name for g_class in rulespec_group_registry.get_main_groups()]
     assert sorted(main_group_names) == sorted(
         [
             "activechecks",
@@ -1494,18 +1495,18 @@ def test_rulespec_get_host_groups():
             "agents/windows_modules",
         ]
 
-    group_names = watolib.rulespec_group_registry.get_host_rulespec_group_names(True)
+    group_names = rulespec_group_registry.get_host_rulespec_group_names(True)
     assert sorted(group_names) == sorted(expected_rulespec_host_groups)
 
 
 def test_legacy_register_rule(monkeypatch):
-    group_registry = watolib.RulespecGroupRegistry()
+    group_registry = RulespecGroupRegistry()
     monkeypatch.setattr(cmk.gui.watolib.rulespecs, "rulespec_group_registry", group_registry)
     monkeypatch.setattr(
         cmk.gui.watolib.rulespecs, "rulespec_registry", RulespecRegistry(group_registry)
     )
 
-    watolib.register_rule(
+    register_rule(
         "grouping",
         "dingdong_group",
         Dictionary(
@@ -1515,7 +1516,7 @@ def test_legacy_register_rule(monkeypatch):
         ),
     )
 
-    group = cmk.gui.watolib.rulespecs.get_rulegroup("grouping")
+    group = get_rulegroup("grouping")
     assert group.name == "grouping"
     assert group.title == "grouping"
 
@@ -1541,17 +1542,17 @@ def test_legacy_register_rule(monkeypatch):
     assert spec.item_enum is None
     assert spec.is_optional is False
     assert spec.is_deprecated is False
-    assert spec.factory_default == watolib.Rulespec.NO_FACTORY_DEFAULT
+    assert spec.factory_default == Rulespec.NO_FACTORY_DEFAULT
 
 
 def test_legacy_register_rule_attributes(monkeypatch):
-    group_registry = watolib.RulespecGroupRegistry()
+    group_registry = RulespecGroupRegistry()
     monkeypatch.setattr(cmk.gui.watolib.rulespecs, "rulespec_group_registry", group_registry)
     monkeypatch.setattr(
         cmk.gui.watolib.rulespecs, "rulespec_registry", RulespecRegistry(group_registry)
     )
 
-    watolib.register_rule(
+    register_rule(
         "dingdong_group",
         "rule_name",
         Dictionary(
@@ -1588,7 +1589,7 @@ def test_legacy_register_rule_attributes(monkeypatch):
 
 @pytest.fixture(name="patch_rulespec_registries")
 def fixture_patch_rulespec_registries(monkeypatch):
-    group_registry = watolib.RulespecGroupRegistry()
+    group_registry = RulespecGroupRegistry()
     group_registry.register(RulespecGroupEnforcedServices)
     test_rulespec_registry = RulespecRegistry(group_registry)
     monkeypatch.setattr(cmk.gui.watolib.rulespecs, "rulespec_group_registry", group_registry)
@@ -1609,7 +1610,7 @@ def test_register_check_parameters(patch_rulespec_registries):
     )
 
     # Check either registration as discovery check ruleset
-    group = cmk.gui.watolib.rulespecs.get_rulegroup("checkparams/netblabla")
+    group = get_rulegroup("checkparams/netblabla")
     assert group.name == "checkparams/netblabla"
     assert group.title == "netblabla"
 
@@ -1633,7 +1634,7 @@ def test_register_check_parameters(patch_rulespec_registries):
     assert rulespec.is_optional is False
 
     # and also as static ruleset
-    group = cmk.gui.watolib.rulespecs.get_rulegroup("static/netblabla")
+    group = get_rulegroup("static/netblabla")
     assert group.name == "static/netblabla"
     assert group.title == "netblabla"
 

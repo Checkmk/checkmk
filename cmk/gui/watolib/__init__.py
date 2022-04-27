@@ -119,27 +119,6 @@ from cmk.gui.watolib.hosts_and_folders import (
 # TODO: Cleanup all except declare_host_attribute which is still neded for pre 1.6 plugin
 # compatibility. For the others: Find the call sites and change to full module import
 from cmk.gui.watolib.notifications import save_notification_rules
-from cmk.gui.watolib.rulesets import (
-    AllRulesets,
-    FilteredRulesetCollection,
-    FolderRulesets,
-    Rule,
-    Ruleset,
-    RulesetCollection,
-    SearchedRulesets,
-    SingleRulesetRecursively,
-    StaticChecksRulesets,
-)
-from cmk.gui.watolib.rulespecs import (
-    get_rulegroup,
-    register_rule,
-    register_rulegroup,
-    Rulespec,
-    rulespec_group_registry,
-    RulespecGroup,
-    RulespecGroupRegistry,
-    RulespecSubGroup,
-)
 from cmk.gui.watolib.sample_config import init_wato_datastructures
 from cmk.gui.watolib.sidebar_reload import is_sidebar_reload_needed, need_sidebar_reload
 from cmk.gui.watolib.sites import CEESiteManagement, LivestatusViaTCP, SiteManagementFactory

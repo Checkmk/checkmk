@@ -62,6 +62,7 @@ from cmk.gui.valuespec import (
     ValueSpec,
 )
 from cmk.gui.watolib.notifications import load_notification_rules
+from cmk.gui.watolib.rulesets import AllRulesets
 
 TimeperiodUsage = _Tuple[str, str]
 
@@ -178,7 +179,7 @@ class ModeTimeperiods(WatoMode):
 
     def _find_usages_in_host_and_service_rules(self, tpname: str) -> List[TimeperiodUsage]:
         used_in: List[TimeperiodUsage] = []
-        rulesets = watolib.AllRulesets()
+        rulesets = AllRulesets()
         rulesets.load()
         for varname, ruleset in rulesets.get_rulesets().items():
             if not isinstance(ruleset.valuespec(), watolib.timeperiods.TimeperiodSelection):
@@ -299,7 +300,7 @@ class ModeTimeperiods(WatoMode):
 
     def _find_usages_in_time_specific_parameters(self, tpname: str) -> List[TimeperiodUsage]:
         used_in: List[TimeperiodUsage] = []
-        rulesets = watolib.AllRulesets()
+        rulesets = AllRulesets()
         rulesets.load()
         for ruleset in rulesets.get_rulesets().values():
             vs = ruleset.valuespec()

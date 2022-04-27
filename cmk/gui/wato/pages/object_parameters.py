@@ -28,8 +28,13 @@ from cmk.gui.valuespec import Tuple
 from cmk.gui.wato.pages.hosts import ModeEditHost, page_menu_host_entries
 from cmk.gui.watolib.check_mk_automations import analyse_host, analyse_service
 from cmk.gui.watolib.hosts_and_folders import CREFolder
-from cmk.gui.watolib.rulesets import Rule, Ruleset
-from cmk.gui.watolib.rulespecs import rulespec_group_registry, rulespec_registry
+from cmk.gui.watolib.rulesets import AllRulesets, Rule, Ruleset
+from cmk.gui.watolib.rulespecs import (
+    get_rulegroup,
+    Rulespec,
+    rulespec_group_registry,
+    rulespec_registry,
+)
 from cmk.gui.watolib.utils import mk_repr
 
 
@@ -99,7 +104,7 @@ class ModeObjectParameters(WatoMode):
             yield make_service_status_link(self._host.name(), self._service)
 
     def page(self):
-        all_rulesets = watolib.AllRulesets()
+        all_rulesets = AllRulesets()
         all_rulesets.load()
         for_host: bool = not self._service
 
@@ -121,7 +126,7 @@ class ModeObjectParameters(WatoMode):
                 # Open form for that group here, if we know that we have at least one rule
                 if last_maingroup != maingroup:
                     last_maingroup = maingroup
-                    rulegroup = watolib.get_rulegroup(maingroup)
+                    rulegroup = get_rulegroup(maingroup)
                     forms.header(
                         rulegroup.title,
                         isopen=maingroup == "monconf",
@@ -488,19 +493,19 @@ class ModeObjectParameters(WatoMode):
             # complete outcoming value here.
             if rules and ruleset.match_type() == "dict":
                 if (
-                    rulespec.factory_default is not watolib.Rulespec.NO_FACTORY_DEFAULT
-                    and rulespec.factory_default is not watolib.Rulespec.FACTORY_DEFAULT_UNUSED
+                    rulespec.factory_default is not Rulespec.NO_FACTORY_DEFAULT
+                    and rulespec.factory_default is not Rulespec.FACTORY_DEFAULT_UNUSED
                 ):
                     fd = rulespec.factory_default.copy()
                     fd.update(setting)
                     setting = fd
 
             if valuespec and not rules:  # show the default value
-                if rulespec.factory_default is watolib.Rulespec.FACTORY_DEFAULT_UNUSED:
+                if rulespec.factory_default is Rulespec.FACTORY_DEFAULT_UNUSED:
                     # Some rulesets are ineffective if they are empty
                     html.write_text(_("(unused)"))
 
-                elif rulespec.factory_default is not watolib.Rulespec.NO_FACTORY_DEFAULT:
+                elif rulespec.factory_default is not Rulespec.NO_FACTORY_DEFAULT:
                     # If there is a factory default then show that one
                     setting = rulespec.factory_default
                     html.write_text(valuespec.value_to_html(setting))

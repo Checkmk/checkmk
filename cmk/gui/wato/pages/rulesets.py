@@ -101,8 +101,19 @@ from cmk.gui.watolib.check_mk_automations import get_check_information
 from cmk.gui.watolib.host_label_sync import execute_host_label_sync
 from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.watolib.predefined_conditions import PredefinedConditionStore
-from cmk.gui.watolib.rulesets import Rule, RuleConditions, SearchOptions
+from cmk.gui.watolib.rulesets import (
+    AllRulesets,
+    FolderRulesets,
+    Rule,
+    RuleConditions,
+    Ruleset,
+    SearchedRulesets,
+    SearchOptions,
+    SingleRulesetRecursively,
+    StaticChecksRulesets,
+)
 from cmk.gui.watolib.rulespecs import (
+    get_rulegroup,
     main_module_from_rulespec_group_name,
     Rulespec,
     rulespec_group_registry,
@@ -190,7 +201,7 @@ class ABCRulesetMode(WatoMode):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def _rulesets(self) -> watolib.AllRulesets:
+    def _rulesets(self) -> AllRulesets:
         raise NotImplementedError()
 
     def title(self) -> str:
@@ -205,7 +216,7 @@ class ABCRulesetMode(WatoMode):
 
         # In case the user has filled in the search form, filter the rulesets by the given query
         if self._search_options:
-            rulesets = watolib.SearchedRulesets(rulesets, self._search_options)
+            rulesets = SearchedRulesets(rulesets, self._search_options)
 
         if self._page_type is PageType.RuleSearch and not html.form_submitted():
             return  # Do not show the result list when no query has been made
@@ -213,16 +224,16 @@ class ABCRulesetMode(WatoMode):
         html.open_div(class_="rulesets")
 
         grouped_rulesets = sorted(
-            rulesets.get_grouped(), key=lambda k_v: watolib.get_rulegroup(k_v[0]).title
+            rulesets.get_grouped(), key=lambda k_v: get_rulegroup(k_v[0]).title
         )
 
         show_main_group_title = len(grouped_rulesets) > 1
 
         for main_group_name, sub_groups in grouped_rulesets:
-            main_group_title = watolib.get_rulegroup(main_group_name).title
+            main_group_title = get_rulegroup(main_group_name).title
 
             for group_name, group_rulesets in sub_groups:
-                group_title = watolib.get_rulegroup(group_name).title
+                group_title = get_rulegroup(group_name).title
                 forms.header(
                     title=(
                         f"{main_group_title} > {group_title}"
@@ -301,10 +312,10 @@ class ModeRuleSearch(ABCRulesetMode):
 
         return PageType.RuleSearch
 
-    def _rulesets(self) -> watolib.AllRulesets:
+    def _rulesets(self) -> AllRulesets:
         if self._group_name == "static":
-            return watolib.StaticChecksRulesets()
-        return watolib.AllRulesets()
+            return StaticChecksRulesets()
+        return AllRulesets()
 
     def _set_title_and_help(self) -> None:
         if self._page_type is PageType.DeprecatedRulesets:
@@ -506,16 +517,16 @@ class ModeRulesetGroup(ABCRulesetMode):
     def _get_page_type(self, search_options: Dict[str, str]) -> PageType:
         return PageType.RulesetGroup
 
-    def _rulesets(self) -> watolib.AllRulesets:
+    def _rulesets(self) -> AllRulesets:
         if self._group_name == "static":
-            return watolib.StaticChecksRulesets()
-        return watolib.AllRulesets()
+            return StaticChecksRulesets()
+        return AllRulesets()
 
     def _set_title_and_help(self) -> None:
         if self._group_name == "static":
-            rulegroup = watolib.get_rulegroup("static")
+            rulegroup = get_rulegroup("static")
         else:
-            rulegroup = watolib.get_rulegroup(self._group_name)
+            rulegroup = get_rulegroup(self._group_name)
         self._title, self._help = rulegroup.title, rulegroup.help
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
@@ -774,7 +785,7 @@ class ModeEditRuleset(WatoMode):
             return
 
         rule_folder = watolib.Folder.folder(request.var("rule_folder"))
-        rulesets = watolib.FolderRulesets(rule_folder)
+        rulesets = FolderRulesets(rule_folder)
         rulesets.load()
         ruleset = rulesets.get(self._name)
 
@@ -927,7 +938,7 @@ class ModeEditRuleset(WatoMode):
 
         rule_folder = watolib.Folder.folder(request.var("_folder", request.var("folder")))
         rule_folder.need_permission("write")
-        rulesets = watolib.FolderRulesets(rule_folder)
+        rulesets = FolderRulesets(rule_folder)
         rulesets.load()
         ruleset = rulesets.get(self._name)
 
@@ -956,7 +967,7 @@ class ModeEditRuleset(WatoMode):
             )
             html.div(display_varname, class_="varname")
 
-        rulesets = watolib.SingleRulesetRecursively(self._name)
+        rulesets = SingleRulesetRecursively(self._name)
         rulesets.load()
         ruleset = rulesets.get(self._name)
 
@@ -986,7 +997,7 @@ class ModeEditRuleset(WatoMode):
             html.write_text(_("Unknown match type: %s") % match_type)
         html.close_div()
 
-    def _rule_listing(self, ruleset: watolib.Ruleset) -> None:
+    def _rule_listing(self, ruleset: Ruleset) -> None:
         rules = ruleset.get_rules()
         if not rules:
             html.div(_("There are no rules defined in this set."), class_="info")
@@ -1044,7 +1055,7 @@ class ModeEditRuleset(WatoMode):
             css.append("matches_search")
         return " ".join(css) if css else None
 
-    def _set_focus(self, rule: watolib.Rule) -> None:
+    def _set_focus(self, rule: Rule) -> None:
         if self._just_edited_rule and self._just_edited_rule.id == rule.id:
             html.focus_here()
 
@@ -1575,7 +1586,7 @@ class ABCEditRuleMode(WatoMode):
 
         self._set_folder()
 
-        self._rulesets = watolib.FolderRulesets(self._folder)
+        self._rulesets = FolderRulesets(self._folder)
         self._rulesets.load()
         self._ruleset = self._rulesets.get(self._name)
 
@@ -1595,7 +1606,7 @@ class ABCEditRuleMode(WatoMode):
         else:
             rule_id = request.get_ascii_input_mandatory("rule_id")
 
-            collection = watolib.SingleRulesetRecursively(self._name)
+            collection = SingleRulesetRecursively(self._name)
             collection.load()
             ruleset = collection.get(self._name)
             try:
@@ -1717,7 +1728,7 @@ class ABCEditRuleMode(WatoMode):
             # Set new folder
             self._rule.folder = new_rule_folder
 
-            self._rulesets = watolib.FolderRulesets(new_rule_folder)
+            self._rulesets = FolderRulesets(new_rule_folder)
             self._rulesets.load()
             self._ruleset = self._rulesets.get(self._name)
             self._ruleset.append_rule(new_rule_folder, self._rule)
@@ -1968,7 +1979,7 @@ class ABCEditRuleMode(WatoMode):
         html.close_table()
         html.close_center()
 
-    def _vs_rule_options(self, rule: watolib.Rule, disabling: bool = True) -> Dictionary:
+    def _vs_rule_options(self, rule: Rule, disabling: bool = True) -> Dictionary:
         return Dictionary(
             title=_("Rule Properties"),
             optional_keys=False,
@@ -2670,7 +2681,7 @@ class ModeNewRule(ABCEditRuleMode):
                 if item is not None:
                     service_description_conditions = [{"$regex": "%s$" % escape_regex_chars(item)}]
 
-        self._rule = watolib.Rule.from_ruleset_defaults(self._folder, self._ruleset)
+        self._rule = Rule.from_ruleset_defaults(self._folder, self._ruleset)
         self._rule.update_conditions(
             RuleConditions(
                 host_folder=self._folder.path(),

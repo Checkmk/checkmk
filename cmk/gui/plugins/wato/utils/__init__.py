@@ -30,6 +30,7 @@ import cmk.gui.hooks as hooks
 import cmk.gui.mkeventd
 import cmk.gui.userdb as userdb
 import cmk.gui.watolib as watolib
+import cmk.gui.watolib.rulespecs as _rulespecs
 import cmk.gui.weblib as weblib
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKGeneralException, MKUserError
@@ -131,11 +132,9 @@ from cmk.gui.watolib import (  # noqa: F401 # pylint: disable=unused-import
     ConfigDomainGUI,
     ConfigDomainOMD,
     folder_preserving_link,
-    get_rulegroup,
     LivestatusViaTCP,
     log_audit,
     make_action_link,
-    register_rule,
     user_script_choices,
     user_script_title,
 )
@@ -851,7 +850,7 @@ def register_check_parameters(
     # Added during 1.6 development for easier transition. Convert all legacy subgroup
     # parameters (which are either str/unicode to group classes
     if isinstance(subgroup, str):
-        subgroup = get_rulegroup("checkparams/" + subgroup).__class__
+        subgroup = _rulespecs.get_rulegroup("checkparams/" + subgroup).__class__
 
     # Register rule for discovered checks
     if has_inventory:
@@ -2098,7 +2097,7 @@ class NotificationParameterRegistry(
         # TODO: Cleanup this hack
         valuespec._title = _("Call with the following parameters:")
 
-        register_rule(
+        _rulespecs.register_rule(
             rulespec_group_registry["monconf/notifications"],
             "notification_parameters:" + plugin.ident,
             valuespec,

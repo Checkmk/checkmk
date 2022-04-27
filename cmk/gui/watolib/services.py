@@ -29,7 +29,13 @@ from cmk.gui.site_config import get_site_config, site_is_local
 from cmk.gui.watolib.activate_changes import sync_changes_before_remote_automation
 from cmk.gui.watolib.automations import do_remote_automation
 from cmk.gui.watolib.check_mk_automations import discovery, set_autochecks, try_discovery
-from cmk.gui.watolib.rulesets import RuleConditions, service_description_to_condition
+from cmk.gui.watolib.rulesets import (
+    AllRulesets,
+    Rule,
+    RuleConditions,
+    Ruleset,
+    service_description_to_condition,
+)
 from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
 
 
@@ -260,13 +266,13 @@ class Discovery:
         if not services:
             return
 
-        rulesets = watolib.AllRulesets()
+        rulesets = AllRulesets()
         rulesets.load()
 
         try:
             ruleset = rulesets.get("ignored_services")
         except KeyError:
-            ruleset = watolib.Ruleset(
+            ruleset = Ruleset(
                 "ignored_services", ruleset_matcher.get_tag_to_group_map(active_config.tags)
             )
 
@@ -312,7 +318,7 @@ class Discovery:
         return []
 
     def _update_rule_of_host(
-        self, ruleset: watolib.Ruleset, service_patterns: HostOrServiceConditions, value: Any
+        self, ruleset: Ruleset, service_patterns: HostOrServiceConditions, value: Any
     ) -> List[watolib.CREFolder]:
         folder = self._host.folder()
         rule = self._get_rule_of_host(ruleset, value)
@@ -323,7 +329,7 @@ class Discovery:
                     rule.conditions.service_description.append(service_condition)
 
         elif service_patterns:
-            rule = watolib.Rule.from_ruleset_defaults(folder, ruleset)
+            rule = Rule.from_ruleset_defaults(folder, ruleset)
 
             conditions = RuleConditions(folder.path())
             conditions.host_name = [self._host.name()]

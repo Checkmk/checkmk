@@ -81,6 +81,7 @@ import cmk.gui.wato.pages.user_profile
 import cmk.gui.wato.permissions
 import cmk.gui.watolib as watolib
 import cmk.gui.watolib.hosts_and_folders
+import cmk.gui.watolib.rulespecs
 import cmk.gui.watolib.utils
 import cmk.gui.weblib as weblib
 from cmk.gui.exceptions import MKGeneralException as _MKGeneralException
@@ -244,8 +245,6 @@ from cmk.gui.watolib import (
     LivestatusViaTCP,
     make_action_link,
     NagiosTextAttribute,
-    register_rule,
-    register_rulegroup,
     ValueSpecAttribute,
 )
 
@@ -390,9 +389,6 @@ def _register_pre_21_plugin_api() -> None:
         "register_notification_parameters",
         "ReplicationPath",
         "rule_option_elements",
-        "Rulespec",
-        "rulespec_group_registry",
-        "rulespec_registry",
         "RulespecGroup",
         "RulespecGroupCheckParametersApplications",
         "RulespecGroupCheckParametersDiscovery",
@@ -431,6 +427,12 @@ def _register_pre_21_plugin_api() -> None:
         "WatoModule",
     ):
         api_module.__dict__[name] = cmk.gui.plugins.wato.utils.__dict__[name]
+    for name in (
+        "Rulespec",
+        "rulespec_group_registry",
+        "rulespec_registry",
+    ):
+        api_module.__dict__[name] = cmk.gui.watolib.rulespecs.__dict__[name]
     for name in (
         "ABCConfigDomain",
         "config_domain_registry",

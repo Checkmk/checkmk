@@ -47,6 +47,7 @@ from cmk.gui.watolib.activate_changes import activate_changes_start, activate_ch
 from cmk.gui.watolib.automations import do_site_login
 from cmk.gui.watolib.bakery import try_bake_agents_for_hosts
 from cmk.gui.watolib.check_mk_automations import discovery, try_discovery
+from cmk.gui.watolib.rulesets import AllRulesets, FolderRulesets, Ruleset, SingleRulesetRecursively
 from cmk.gui.watolib.tags import TagConfigFile
 
 # .
@@ -692,7 +693,7 @@ class APICallRules(APICallCollection):
         }
 
     def _get_ruleset_configuration(self, ruleset_name):
-        collection = watolib.SingleRulesetRecursively(ruleset_name)
+        collection = SingleRulesetRecursively(ruleset_name)
         collection.load()
         ruleset = collection.get(ruleset_name)
 
@@ -742,7 +743,7 @@ class APICallRules(APICallCollection):
         tag_to_group_map = ruleset_matcher.get_tag_to_group_map(active_config.tags)
 
         # Verify all rules
-        rule_vs = watolib.Ruleset(ruleset_name, tag_to_group_map).rulespec.valuespec
+        rule_vs = Ruleset(ruleset_name, tag_to_group_map).rulespec.valuespec
 
         for folder_path, rules in new_ruleset.items():
             for rule in rules:
@@ -758,10 +759,10 @@ class APICallRules(APICallCollection):
         for folder_path, rules in new_ruleset.items():
             folder = watolib.Folder.folder(folder_path)
 
-            new_ruleset = watolib.Ruleset(ruleset_name, tag_to_group_map)
+            new_ruleset = Ruleset(ruleset_name, tag_to_group_map)
             new_ruleset.from_config(folder, rules)
 
-            folder_rulesets = watolib.FolderRulesets(folder)
+            folder_rulesets = FolderRulesets(folder)
             folder_rulesets.load()
             # TODO: This add_change() call should be made by the data classes
             watolib.add_change(
@@ -782,10 +783,10 @@ class APICallRules(APICallCollection):
         for folder_path in folders_obsolete_ruleset:
             folder = watolib.Folder.folder(folder_path)
 
-            folder_rulesets = watolib.FolderRulesets(folder)
+            folder_rulesets = FolderRulesets(folder)
             folder_rulesets.load()
 
-            new_ruleset = watolib.Ruleset(ruleset_name, tag_to_group_map)
+            new_ruleset = Ruleset(ruleset_name, tag_to_group_map)
             new_ruleset.from_config(folder, [])
 
             # TODO: This add_change() call should be made by the data classes
@@ -805,7 +806,7 @@ class APICallRules(APICallCollection):
 
     def _get_rulesets_info(self, request):
         rulesets_info = {}
-        all_rulesets = watolib.AllRulesets()
+        all_rulesets = AllRulesets()
         all_rulesets.load()
 
         for varname, ruleset in all_rulesets.get_rulesets().items():
@@ -928,7 +929,7 @@ class APICallHosttags(APICallCollection):
     ) -> Set[Tuple[TagID, Optional[TagID]]]:
         used_tags: Set[Tuple[TagID, Optional[TagID]]] = set()
 
-        all_rulesets = watolib.AllRulesets()
+        all_rulesets = AllRulesets()
         all_rulesets.load()
         for ruleset in all_rulesets.get_rulesets().values():
             for _folder, _rulenr, rule in ruleset.get_rules():

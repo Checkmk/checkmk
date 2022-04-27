@@ -24,6 +24,7 @@ import cmk.gui.watolib as watolib
 from cmk.gui.config import load_config
 from cmk.gui.exceptions import MKAuthException, MKGeneralException
 from cmk.gui.logged_in import user
+from cmk.gui.watolib.rulesets import FolderRulesets
 from cmk.gui.watolib.utils import multisite_dir, wato_root_dir
 
 
@@ -396,7 +397,7 @@ def _change_host_tags_in_rules(operation, mode, folder):
     """
     affected_rulesets = set()
 
-    rulesets = watolib.FolderRulesets(folder)
+    rulesets = FolderRulesets(folder)
     rulesets.load()
 
     for ruleset in rulesets.get_rulesets().values():
@@ -410,7 +411,7 @@ def _change_host_tags_in_rules(operation, mode, folder):
 
 
 def _change_host_tags_in_rule(operation, mode, ruleset, rule):
-    affected_rulesets: Set[watolib.FolderRulesets] = set()
+    affected_rulesets: Set[FolderRulesets] = set()
     if operation.tag_group_id not in rule.conditions.host_tags:
         return affected_rulesets  # The tag group is not used
 

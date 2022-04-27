@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-import cmk.gui.watolib as watolib
 from cmk.gui.i18n import _
 from cmk.gui.mkeventd import service_levels, syslog_facilities, syslog_priorities
 from cmk.gui.plugins.wato.special_agents.common import RulespecGroupDatasourceProgramsApps
@@ -15,6 +14,7 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
 )
 from cmk.gui.valuespec import Age, Dictionary, DropdownChoice, HTTPUrl, ListOfStrings, RegExp
+from cmk.gui.watolib.rulespecs import Rulespec
 
 
 def _valuespec_special_agents_datadog() -> Dictionary:
@@ -219,7 +219,7 @@ def _valuespec_special_agents_datadog() -> Dictionary:
 
 rulespec_registry.register(
     HostRulespec(
-        factory_default=watolib.Rulespec.FACTORY_DEFAULT_UNUSED,
+        factory_default=Rulespec.FACTORY_DEFAULT_UNUSED,
         group=RulespecGroupDatasourceProgramsApps,
         name="special_agents:datadog",
         valuespec=_valuespec_special_agents_datadog,

@@ -41,6 +41,7 @@ from cmk.gui.watolib.search import (
     MatchItem,
     MatchItems,
 )
+from cmk.gui.watolib.utils import mk_repr
 
 
 @mode_registry.register
@@ -297,7 +298,7 @@ class ModePatternEditor(WatoMode):
                         ("mode", "edit_rule"),
                         ("varname", "logwatch_rules"),
                         ("rulenr", rulenr),
-                        ("item", watolib.mk_repr(self._item).decode()),
+                        ("item", mk_repr(self._item).decode()),
                         ("rule_folder", folder.path()),
                         ("rule_id", rule.id),
                     ]

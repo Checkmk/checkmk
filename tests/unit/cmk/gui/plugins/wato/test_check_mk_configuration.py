@@ -7,11 +7,8 @@
 import pytest
 
 from cmk.gui.plugins.wato.check_mk_configuration import _transform_automatic_rediscover_parameters
-from cmk.gui.plugins.wato.utils import (
-    config_variable_registry,
-    ConfigDomainGUI,
-    ConfigVariableGroupUserInterface,
-)
+from cmk.gui.plugins.wato.utils import ConfigDomainGUI, ConfigVariableGroupUserInterface
+from cmk.gui.plugins.watolib.utils import config_variable_registry
 from cmk.gui.utils.theme import theme_choices
 from cmk.gui.valuespec import DropdownChoice
 

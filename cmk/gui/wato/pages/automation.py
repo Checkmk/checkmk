@@ -22,6 +22,7 @@ from cmk.automations.results import result_type_registry, SerializedResult
 import cmk.gui.userdb as userdb
 import cmk.gui.utils
 import cmk.gui.watolib as watolib
+import cmk.gui.watolib.utils as watolib_utils
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKAuthException, MKGeneralException
 from cmk.gui.http import request, response
@@ -210,10 +211,10 @@ class ModeAutomation(AjaxPage):
 
     def _execute_cmk_automation(self):
         cmk_command = request.get_str_input_mandatory("automation")
-        args = watolib.mk_eval(request.get_str_input_mandatory("arguments"))
-        indata = watolib.mk_eval(request.get_str_input_mandatory("indata"))
-        stdin_data = watolib.mk_eval(request.get_str_input_mandatory("stdin_data"))
-        timeout = watolib.mk_eval(request.get_str_input_mandatory("timeout"))
+        args = watolib_utils.mk_eval(request.get_str_input_mandatory("arguments"))
+        indata = watolib_utils.mk_eval(request.get_str_input_mandatory("indata"))
+        stdin_data = watolib_utils.mk_eval(request.get_str_input_mandatory("stdin_data"))
+        timeout = watolib_utils.mk_eval(request.get_str_input_mandatory("timeout"))
         cmdline_cmd, serialized_result = check_mk_local_automation_serialized(
             command=cmk_command,
             args=args,
@@ -232,7 +233,7 @@ class ModeAutomation(AjaxPage):
 
     def _execute_push_profile(self):
         try:
-            response.set_data(str(watolib.mk_repr(self._automation_push_profile())))
+            response.set_data(str(watolib_utils.mk_repr(self._automation_push_profile())))
         except Exception as e:
             logger.exception("error pushing profile")
             if active_config.debug:
@@ -261,7 +262,7 @@ class ModeAutomation(AjaxPage):
             raise MKGeneralException(_("Invalid call: The profile is missing."))
 
         users = userdb.load_users(lock=True)
-        users[UserId(user_id)] = watolib.mk_eval(profile)
+        users[UserId(user_id)] = watolib_utils.mk_eval(profile)
         userdb.save_users(users, datetime.now())
 
         return True

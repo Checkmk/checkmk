@@ -11,6 +11,7 @@ import cmk.utils.version as cmk_version
 import cmk.gui.watolib as watolib
 from cmk.gui.plugins.watolib.utils import (
     ABCConfigDomain,
+    config_domain_registry,
     config_variable_group_registry,
     config_variable_registry,
     configvar_order,
@@ -38,7 +39,7 @@ def test_registered_config_domains():
             "mknotifyd",
         ]
 
-    registered = sorted(watolib.config_domain_registry.keys())
+    registered = sorted(config_domain_registry.keys())
     assert registered == sorted(expected_config_domains)
 
 

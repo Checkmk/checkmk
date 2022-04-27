@@ -12,14 +12,12 @@ import cmk.utils.paths
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
-    config_variable_registry,
     ConfigDomainCore,
     ConfigDomainGUI,
-    ConfigVariable,
     ConfigVariableGroupNotifications,
     notification_parameter_registry,
-    site_neutral_path,
 )
+from cmk.gui.plugins.watolib.utils import config_variable_registry, ConfigVariable
 from cmk.gui.valuespec import (
     Age,
     CascadingDropdown,
@@ -32,6 +30,7 @@ from cmk.gui.valuespec import (
     Transform,
     Tuple,
 )
+from cmk.gui.watolib.utils import site_neutral_path
 
 
 @config_variable_registry.register

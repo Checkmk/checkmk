@@ -25,8 +25,8 @@ import cmk.utils.paths
 import cmk.utils.version as cmk_version
 from cmk.utils.rulesets.ruleset_matcher import get_tag_to_group_map, RulesetToDictTransformer
 
-import cmk.gui.watolib as watolib  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.config import active_config  # pylint: disable=cmk-module-layer-violation
+from cmk.gui.watolib.utils import multisite_dir  # pylint: disable=cmk-module-layer-violation
 
 if cmk_version.is_managed_edition():
     import cmk.gui.cme.managed as managed  # pylint: disable=cmk-module-layer-violation,no-name-in-module
@@ -660,7 +660,7 @@ class BILegacyPacksConverter(BIAggregationPacks):
         self._logger = logger
 
     def convert_config(self):
-        old_bi_config = Path(watolib.multisite_dir(), "bi.mk")
+        old_bi_config = Path(multisite_dir(), "bi.mk")
         if not old_bi_config.exists():
             self._logger.info("Skipping conversion of bi.mk (already done)")
             return

@@ -9,12 +9,12 @@ from typing import Any, Optional
 
 from cmk.utils import store
 
-from cmk.gui import watolib
 from cmk.gui.config import active_config
+from cmk.gui.watolib.utils import multisite_dir
 
 
 class BILayoutManagement:
-    _config_file = Path(watolib.multisite_dir()) / "bi_layouts.mk"
+    _config_file = Path(multisite_dir()) / "bi_layouts.mk"
 
     @classmethod
     def save_layouts(cls) -> None:

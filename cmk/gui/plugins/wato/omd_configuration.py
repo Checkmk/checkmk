@@ -20,15 +20,17 @@ from cmk.gui.log import logger
 from cmk.gui.plugins.wato.utils import (
     ABCConfigDomain,
     config_domain_registry,
-    config_variable_registry,
     ConfigDomainOMD,
-    ConfigVariable,
     ConfigVariableGroupSiteManagement,
     LivestatusViaTCP,
     ReplicationPath,
     wato_fileheader,
 )
-from cmk.gui.plugins.watolib.utils import SerializedSettings
+from cmk.gui.plugins.watolib.utils import (
+    config_variable_registry,
+    ConfigVariable,
+    SerializedSettings,
+)
 from cmk.gui.type_defs import ConfigDomainName
 from cmk.gui.valuespec import (
     Age,

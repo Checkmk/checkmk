@@ -184,16 +184,10 @@ if cmk_version.is_managed_edition():
 else:
     managed = None  # type: ignore[assignment]
 
-wato_root_dir = watolib.wato_root_dir
-multisite_dir = watolib.multisite_dir
-
 # TODO: Kept for old plugin compatibility. Remove this one day
 from cmk.gui.valuespec import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 syslog_facilities = cmk.gui.mkeventd.syslog_facilities
-ALL_HOSTS = watolib.ALL_HOSTS
-ALL_SERVICES = watolib.ALL_SERVICES
-NEGATE = watolib.NEGATE
 from cmk.gui.plugins.wato.utils import (
     get_hostnames_from_checkboxes,
     get_hosts_from_checkboxes,
@@ -237,7 +231,6 @@ subgroup_inventory = RulespecGroupCheckParametersDiscovery().sub_group_name
 # the current plugin API functions working
 import cmk.gui.watolib.network_scan
 import cmk.gui.watolib.read_only
-from cmk.gui.plugins.watolib.utils import configvar_order, register_configvar
 from cmk.gui.watolib import (
     add_change,
     add_service_change,
@@ -251,7 +244,6 @@ from cmk.gui.watolib import (
     NagiosTextAttribute,
     register_rule,
     register_rulegroup,
-    site_neutral_path,
     ValueSpecAttribute,
 )
 

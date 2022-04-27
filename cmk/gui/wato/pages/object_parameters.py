@@ -30,6 +30,7 @@ from cmk.gui.watolib.check_mk_automations import analyse_host, analyse_service
 from cmk.gui.watolib.hosts_and_folders import CREFolder
 from cmk.gui.watolib.rulesets import Rule, Ruleset
 from cmk.gui.watolib.rulespecs import rulespec_group_registry, rulespec_registry
+from cmk.gui.watolib.utils import mk_repr
 
 
 @mode_registry.register
@@ -409,9 +410,9 @@ class ModeObjectParameters(WatoMode):
                     ("host", self._hostname),
                     (
                         "item",
-                        watolib.mk_repr(svc_desc_or_item).decode() if svc_desc_or_item else "",
+                        mk_repr(svc_desc_or_item).decode() if svc_desc_or_item else "",
                     ),
-                    ("service", watolib.mk_repr(svc_desc).decode() if svc_desc else ""),
+                    ("service", mk_repr(svc_desc).decode() if svc_desc else ""),
                 ]
             )
 
@@ -423,8 +424,8 @@ class ModeObjectParameters(WatoMode):
                 ("mode", "edit_ruleset"),
                 ("varname", varname),
                 ("host", self._hostname),
-                ("item", watolib.mk_repr(svc_desc_or_item).decode()),
-                ("service", watolib.mk_repr(svc_desc).decode()),
+                ("item", mk_repr(svc_desc_or_item).decode()),
+                ("service", mk_repr(svc_desc).decode()),
             ]
         )
 

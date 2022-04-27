@@ -158,21 +158,6 @@ from cmk.gui.watolib.users import (
     notification_script_choices,
     verify_password_policy,
 )
-from cmk.gui.watolib.utils import (
-    ALL_HOSTS,
-    ALL_SERVICES,
-    convert_cgroups_from_tuple,
-    format_config_value,
-    host_attribute_matches,
-    liveproxyd_config_dir,
-    mk_eval,
-    mk_repr,
-    multisite_dir,
-    NEGATE,
-    rename_host_in_list,
-    site_neutral_path,
-    wato_root_dir,
-)
 from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
 
 if cmk_version.is_managed_edition():

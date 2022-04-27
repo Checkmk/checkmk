@@ -27,15 +27,11 @@ from cmk.gui.plugins.views.icons.utils import icon_and_action_registry
 from cmk.gui.plugins.wato.utils import (
     BinaryHostRulespec,
     BinaryServiceRulespec,
-    config_variable_group_registry,
-    config_variable_registry,
     ConfigDomainCACertificates,
     ConfigDomainCore,
     ConfigDomainGUI,
     ConfigDomainOMD,
     ConfigHostname,
-    ConfigVariable,
-    ConfigVariableGroup,
     ConfigVariableGroupSiteManagement,
     ConfigVariableGroupUserInterface,
     ConfigVariableGroupWATO,
@@ -63,11 +59,16 @@ from cmk.gui.plugins.wato.utils import (
     ServiceDescriptionTranslation,
     ServiceGroupSelection,
     ServiceRulespec,
-    site_neutral_path,
     SNMPCredentials,
     TimeperiodSelection,
     UserIconOrAction,
     valuespec_check_plugin_selection,
+)
+from cmk.gui.plugins.watolib.utils import (
+    config_variable_group_registry,
+    config_variable_registry,
+    ConfigVariable,
+    ConfigVariableGroup,
 )
 from cmk.gui.utils.theme import theme_choices
 from cmk.gui.utils.urls import makeuri_contextless
@@ -103,6 +104,7 @@ from cmk.gui.valuespec import (
     ValueSpec,
 )
 from cmk.gui.watolib.bulk_discovery import vs_bulk_discovery
+from cmk.gui.watolib.utils import site_neutral_path
 
 #   .--Global Settings-----------------------------------------------------.
 #   |  ____ _       _           _   ____       _   _   _                   |

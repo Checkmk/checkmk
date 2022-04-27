@@ -82,7 +82,7 @@ from cmk.gui.watolib.services import (
     get_check_table,
     StartDiscoveryRequest,
 )
-from cmk.gui.watolib.utils import may_edit_ruleset
+from cmk.gui.watolib.utils import may_edit_ruleset, mk_repr
 
 AjaxDiscoveryRequest = Dict[str, Any]
 
@@ -1232,11 +1232,11 @@ class DiscoveryPageRenderer:
                     ("host", self._host.name()),
                     (
                         "item",
-                        watolib.mk_repr(entry.item).decode(),
+                        mk_repr(entry.item).decode(),
                     ),
                     (
                         "service",
-                        watolib.mk_repr(entry.description).decode(),
+                        mk_repr(entry.description).decode(),
                     ),
                 ]
             )
@@ -1255,7 +1255,7 @@ class DiscoveryPageRenderer:
                     ("host", self._host.name()),
                     (
                         "item",
-                        watolib.mk_repr(descr).decode(),
+                        mk_repr(descr).decode(),
                     ),
                 ]
             ),

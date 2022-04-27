@@ -10,7 +10,6 @@ import time
 import cmk.utils.store as store
 
 import cmk.gui.userdb as userdb
-import cmk.gui.watolib as watolib
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.htmllib.context import html
@@ -28,6 +27,7 @@ from cmk.gui.valuespec import (
     TextAreaUnicode,
     Tuple,
 )
+from cmk.gui.watolib.utils import multisite_dir
 
 
 @mode_registry.register
@@ -63,7 +63,7 @@ class ModeManageReadOnly(WatoMode):
 
     def _save(self):
         store.save_to_mk_file(
-            watolib.multisite_dir() + "read_only.mk",
+            multisite_dir() + "read_only.mk",
             "wato_read_only",
             self._settings,
             pprint_value=active_config.wato_pprint_config,

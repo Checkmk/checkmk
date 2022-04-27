@@ -64,6 +64,7 @@ from cmk.gui.table import Foldable, table_element
 from cmk.gui.type_defs import ActionResult, Choices
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
+from cmk.gui.watolib.utils import multisite_dir
 
 
 class RoleManagement:
@@ -78,9 +79,9 @@ class RoleManagement:
         # functions from the config module
         active_config.roles.update(self._roles)
 
-        store.mkdir(watolib.multisite_dir())
+        store.mkdir(multisite_dir())
         store.save_to_mk_file(
-            watolib.multisite_dir() + "roles.mk",
+            multisite_dir() + "roles.mk",
             "roles",
             self._roles,
             pprint_value=active_config.wato_pprint_config,

@@ -108,7 +108,7 @@ from cmk.gui.watolib.rulespecs import (
     rulespec_group_registry,
     rulespec_registry,
 )
-from cmk.gui.watolib.utils import may_edit_ruleset
+from cmk.gui.watolib.utils import may_edit_ruleset, mk_eval, mk_repr
 
 if bakery.has_agent_bakery():
     import cmk.gui.cee.plugins.wato.agent_bakery.misc as agent_bakery  # pylint: disable=import-error,no-name-in-module
@@ -741,7 +741,7 @@ class ModeEditRuleset(WatoMode):
             self._item = None
             if request.has_var("item"):
                 try:
-                    self._item = watolib.mk_eval(request.get_ascii_input_mandatory("item"))
+                    self._item = mk_eval(request.get_ascii_input_mandatory("item"))
                 except Exception:
                     pass
 
@@ -754,7 +754,7 @@ class ModeEditRuleset(WatoMode):
             self._service = None
             if request.has_var("service"):
                 try:
-                    self._service = watolib.mk_eval(request.get_ascii_input_mandatory("service"))
+                    self._service = mk_eval(request.get_ascii_input_mandatory("service"))
                 except Exception:
                     pass
 
@@ -918,8 +918,8 @@ class ModeEditRuleset(WatoMode):
         back_url = self.mode_url(
             varname=self._name,
             host=self._hostname or "",
-            item=watolib.mk_repr(self._item).decode(),
-            service=watolib.mk_repr(self._service).decode(),
+            item=mk_repr(self._item).decode(),
+            service=mk_repr(self._service).decode(),
         )
 
         if not transactions.check_transaction():
@@ -1072,8 +1072,8 @@ class ModeEditRuleset(WatoMode):
             ("varname", self._name),
             ("rule_id", rule.id),
             ("host", self._hostname),
-            ("item", watolib.mk_repr(self._item).decode()),
-            ("service", watolib.mk_repr(self._service).decode()),
+            ("item", mk_repr(self._item).decode()),
+            ("service", mk_repr(self._service).decode()),
             ("rule_folder", folder.path()),
         ]
 
@@ -1190,9 +1190,9 @@ class ModeEditRuleset(WatoMode):
         if self._hostname:
             vars_.append(("host", self._hostname))
         if self._item:
-            vars_.append(("item", watolib.mk_repr(self._item).decode()))
+            vars_.append(("item", mk_repr(self._item).decode()))
         if self._service:
-            vars_.append(("service", watolib.mk_repr(self._service).decode()))
+            vars_.append(("service", mk_repr(self._service).decode()))
 
         return make_action_link(vars_)
 
@@ -1273,8 +1273,8 @@ class ModeEditRuleset(WatoMode):
 
         if self._hostname:
             html.hidden_field("host", self._hostname)
-            html.hidden_field("item", watolib.mk_repr(self._item).decode())
-            html.hidden_field("service", watolib.mk_repr(self._service).decode())
+            html.hidden_field("item", mk_repr(self._item).decode())
+            html.hidden_field("service", mk_repr(self._service).decode())
 
         html.hidden_field("rule_folder", self._folder.path())
         html.hidden_field("varname", self._name)
@@ -2663,7 +2663,7 @@ class ModeNewRule(ABCEditRuleMode):
 
             if self._rulespec.item_type:
                 item = (
-                    watolib.mk_eval(request.get_str_input_mandatory("item"))
+                    mk_eval(request.get_str_input_mandatory("item"))
                     if request.has_var("item")
                     else None
                 )

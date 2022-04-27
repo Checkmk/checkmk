@@ -24,7 +24,7 @@ import cmk.gui.pages
 import cmk.gui.utils
 import cmk.gui.utils.escaping as escaping
 import cmk.gui.view_utils
-import cmk.gui.watolib as watolib
+import cmk.gui.watolib.utils as watolib_utils
 from cmk.gui import sites
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKConfigError
@@ -969,7 +969,7 @@ class BIManager:
 
     @classmethod
     def bi_configuration_file(cls) -> str:
-        return str(Path(watolib.multisite_dir()) / "bi_config.bi")
+        return str(Path(watolib_utils.multisite_dir()) / "bi_config.bi")
 
 
 @request_memoize()

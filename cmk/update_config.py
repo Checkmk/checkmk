@@ -100,8 +100,7 @@ from cmk.gui.plugins.userdb.utils import (
     USER_SCHEME_SERIAL,
 )
 from cmk.gui.plugins.views.utils import get_all_views
-from cmk.gui.plugins.wato.utils import config_variable_registry
-from cmk.gui.plugins.watolib.utils import filter_unknown_settings
+from cmk.gui.plugins.watolib.utils import config_variable_registry, filter_unknown_settings
 from cmk.gui.site_config import has_wato_slave_sites, is_wato_slave_site
 from cmk.gui.userdb import load_users, save_users, Users
 from cmk.gui.utils.script_helpers import gui_context

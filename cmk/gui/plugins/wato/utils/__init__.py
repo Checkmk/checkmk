@@ -79,7 +79,7 @@ from cmk.gui.plugins.wato.utils.simple_modes import (  # noqa: F401 # pylint: di
     SimpleListMode,
     SimpleModeType,
 )
-from cmk.gui.plugins.watolib.utils import (  # noqa: F401 # pylint: disable=unused-import
+from cmk.gui.plugins.watolib.utils import (  # Required by the pre 2.1 non-official API.
     config_variable_group_registry,
     config_variable_registry,
     ConfigVariable,
@@ -146,13 +146,10 @@ from cmk.gui.watolib import (  # noqa: F401 # pylint: disable=unused-import
     LivestatusViaTCP,
     log_audit,
     make_action_link,
-    multisite_dir,
     register_rule,
-    site_neutral_path,
     user_script_choices,
     user_script_title,
     wato_fileheader,
-    wato_root_dir,
 )
 from cmk.gui.watolib.check_mk_automations import (
     get_check_information as get_check_information_automation,
@@ -223,6 +220,11 @@ from cmk.gui.watolib.timeperiods import (  # noqa: F401 # pylint: disable=unused
     TimeperiodSelection,
 )
 from cmk.gui.watolib.users import notification_script_title
+from cmk.gui.watolib.utils import (  # Required by the pre 2.1 non-official API.
+    multisite_dir,
+    site_neutral_path,
+    wato_root_dir,
+)
 from cmk.gui.watolib.wato_background_job import (  # noqa: F401 # pylint: disable=unused-import
     WatoBackgroundJob,
 )

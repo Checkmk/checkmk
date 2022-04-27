@@ -74,12 +74,8 @@ from cmk.gui.permissions import Permission, permission_registry
 from cmk.gui.plugins.wato.utils import (
     ABCMainModule,
     add_change,
-    config_variable_group_registry,
-    config_variable_registry,
     ConfigDomainEventConsole,
     ConfigDomainGUI,
-    ConfigVariable,
-    ConfigVariableGroup,
     ConfigVariableGroupNotifications,
     ConfigVariableGroupUserInterface,
     ConfigVariableGroupWATO,
@@ -99,12 +95,17 @@ from cmk.gui.plugins.wato.utils import (
     RulespecGroup,
     RulespecGroupHostsMonitoringRulesVarious,
     RulespecGroupMonitoringConfigurationVarious,
-    sample_config_generator_registry,
-    SampleConfigGenerator,
     ServiceRulespec,
-    site_neutral_path,
     SNMPCredentials,
     WatoMode,
+)
+from cmk.gui.plugins.watolib.utils import (
+    config_variable_group_registry,
+    config_variable_registry,
+    ConfigVariable,
+    ConfigVariableGroup,
+    sample_config_generator_registry,
+    SampleConfigGenerator,
 )
 from cmk.gui.site_config import allsites
 from cmk.gui.table import table_element
@@ -157,6 +158,7 @@ from cmk.gui.watolib.search import (
     MatchItem,
     MatchItems,
 )
+from cmk.gui.watolib.utils import site_neutral_path
 
 
 def _compiled_mibs_dir() -> Path:

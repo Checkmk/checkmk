@@ -8,6 +8,9 @@
 SETLOCAL EnableDelayedExpansion
 set error=0
 
+echo SETUP LONG FILENAME SUPPORT:
+powershell Set-ItemProperty -Path "HKLM:\System\CurrentControlSet\Control\FileSystem" -Name "LongPathsEnabled" -Value 1
+
 rem python, version is latest
 set pkg=python3 
 set version=
@@ -60,7 +63,4 @@ exit /b
 :eof
 if %error% == 1 powershell Write-Host "Installation failed" -Foreground Red && exit /b 1
 exit /b 0
-
-
-
 

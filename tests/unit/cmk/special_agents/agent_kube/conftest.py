@@ -396,17 +396,6 @@ def new_pod(
     return _new_pod
 
 
-def api_to_agent_pod(pod: api.Pod) -> agent_kube.Pod:
-    return agent_kube.Pod(
-        uid=pod.uid,
-        metadata=pod.metadata,
-        status=pod.status,
-        spec=pod.spec,
-        containers=pod.containers,
-        init_containers=pod.init_containers,
-    )
-
-
 @pytest.fixture
 def pod(new_pod: Callable[[], agent_kube.Pod]) -> agent_kube.Pod:
     return new_pod()

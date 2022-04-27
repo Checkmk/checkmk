@@ -8,8 +8,11 @@ from typing import Any, Mapping, Optional
 
 from tests.unit.cmk.special_agents.agent_kube.factory import (
     api_to_agent_deployment,
+    api_to_agent_pod,
     APIDeploymentFactory,
+    APIPodFactory,
     MetaDataFactory,
+    PodMetaDataFactory,
 )
 
 from cmk.special_agents.agent_kube import (
@@ -80,15 +83,30 @@ def test_collect_cpu_resources():
 
 
 def test_filter_pods_from_namespaces():
-    pod_one = default_pod(
-        "one",
-        metadata=api.PodMetaData(name="one", namespace=api.NamespaceName("default"), labels={}),
-    )
-    pod_two = default_pod(
-        "two",
-        metadata=api.PodMetaData(name="two", namespace=api.NamespaceName("standard"), labels={}),
-    )
-    assert pods_from_namespaces([pod_one, pod_two], {api.NamespaceName("default")}) == [pod_one]
+    # Arrange
+    pods = [
+        api_to_agent_pod(
+            APIPodFactory.build(
+                metadata=PodMetaDataFactory.build(
+                    name="one", namespace=api.NamespaceName("default")
+                ),
+            )
+        ),
+        api_to_agent_pod(
+            APIPodFactory.build(
+                metadata=PodMetaDataFactory.build(
+                    name="two", namespace=api.NamespaceName("standard")
+                )
+            )
+        ),
+    ]
+
+    # Act
+    filtered_pods = pods_from_namespaces(pods, {api.NamespaceName("default")})
+
+    # Assert
+    assert len(filtered_pods) == 1
+    assert filtered_pods[0].name() == "one"
 
 
 def test_filter_deployments_from_monitored_namespaces():

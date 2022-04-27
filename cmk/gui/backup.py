@@ -1454,8 +1454,9 @@ class ABCBackupTargetType(abc.ABC):
     def __init__(self, params):
         self._params = params
 
+    @classmethod
     @abc.abstractmethod
-    def valuespec(self):
+    def valuespec(cls):
         raise NotImplementedError()
 
     @abc.abstractmethod

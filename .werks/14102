@@ -1,0 +1,12 @@
+Title: Fix possible ValueError on activation of remote sites
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1651049040
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b8
+
+If the password store was used in distributed environments, the error
+"ValueError: MAC check failed" could occur on activation of remote sites.

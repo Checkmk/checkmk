@@ -39,6 +39,7 @@ def _expected_replication_paths():
         ReplicationPath("file", "auth.secret", "etc/auth.secret", []),
         ReplicationPath("file", "password_store.secret", "etc/password_store.secret", []),
         ReplicationPath("file", "auth.serials", "etc/auth.serials", []),
+        ReplicationPath("file", "stored_passwords", "var/check_mk/stored_passwords", []),
         ReplicationPath(
             "dir", "usersettings", "var/check_mk/web", ["report-thumbnails", "session_info.mk"]
         ),

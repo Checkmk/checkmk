@@ -54,6 +54,7 @@ from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeactionuri, makeuri_contextless
 from cmk.gui.valuespec import Checkbox, Dictionary, DictionaryEntry, TextAreaUnicode
 from cmk.gui.watolib import activate_changes
+from cmk.gui.watolib.automations import MKAutomationException
 from cmk.gui.watolib.objref import ObjectRef, ObjectRefType
 from cmk.gui.watolib.search import build_index_background
 
@@ -728,7 +729,7 @@ class AutomationActivateChanges(watolib.AutomationCommand):
                     asdict(DomainRequest(x)) for x in serialized_domain_requests
                 ]
         except SyntaxError:
-            raise watolib.MKAutomationException(
+            raise MKAutomationException(
                 _("Invalid request: %r") % request.get_ascii_input_mandatory("domains")
             )
 

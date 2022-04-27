@@ -27,6 +27,7 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.site_config import get_site_config, site_is_local
 from cmk.gui.watolib.activate_changes import sync_changes_before_remote_automation
+from cmk.gui.watolib.automations import do_remote_automation
 from cmk.gui.watolib.check_mk_automations import discovery, set_autochecks, try_discovery
 from cmk.gui.watolib.rulesets import RuleConditions, service_description_to_condition
 from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
@@ -527,7 +528,7 @@ def get_check_table(discovery_request: StartDiscoveryRequest) -> DiscoveryResult
     sync_changes_before_remote_automation(discovery_request.host.site_id())
 
     return DiscoveryResult.deserialize(
-        watolib.do_remote_automation(
+        do_remote_automation(
             get_site_config(discovery_request.host.site_id()),
             "service-discovery-job",
             [

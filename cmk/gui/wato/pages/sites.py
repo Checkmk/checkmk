@@ -79,7 +79,7 @@ from cmk.gui.watolib.activate_changes import (
     clear_site_replication_status,
     get_trial_expired_message,
 )
-from cmk.gui.watolib.automations import do_site_login
+from cmk.gui.watolib.automations import do_remote_automation, do_site_login, MKAutomationException
 from cmk.gui.watolib.global_settings import load_site_global_settings, save_site_global_settings
 from cmk.gui.watolib.sites import is_livestatus_encrypted, site_globals_editable
 
@@ -677,7 +677,7 @@ class ModeDistributedMonitoring(WatoMode):
                 flash(message)
                 return redirect(mode_url("sites"))
 
-            except watolib.MKAutomationException as e:
+            except MKAutomationException as e:
                 error = _("Cannot connect to remote site: %s") % e
 
             except MKUserError as e:
@@ -1009,7 +1009,7 @@ class ReplicationStatusFetcher:
             result = ReplicationStatus(
                 site_id=site_id,
                 success=True,
-                response=PingResult(**watolib.do_remote_automation(site, "ping", [], timeout=5)),
+                response=PingResult(**do_remote_automation(site, "ping", [], timeout=5)),
             )
             self._logger.debug("[%s] Finished" % site_id)
         except Exception as e:

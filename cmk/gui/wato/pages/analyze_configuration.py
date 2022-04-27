@@ -22,7 +22,6 @@ import cmk.utils.store as store
 
 import cmk.gui.log as log
 import cmk.gui.utils.escaping as escaping
-import cmk.gui.watolib as watolib
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.htmllib.context import html
@@ -53,6 +52,7 @@ from cmk.gui.watolib.analyze_configuration import (
     ACTestCategories,
     AutomationCheckAnalyzeConfig,
 )
+from cmk.gui.watolib.automations import do_remote_automation
 
 
 @ac_test_registry.register
@@ -421,7 +421,7 @@ class ModeAnalyzeConfig(WatoMode):
                 results_data = automation.execute(automation.get_request())
 
             else:
-                results_data = watolib.do_remote_automation(
+                results_data = do_remote_automation(
                     get_site_config(site_id),
                     "check-analyze-config",
                     [],

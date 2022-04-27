@@ -135,7 +135,7 @@ def suppress_remote_automation_calls(mocker: MagicMock) -> Iterator[RemoteAutoma
     This is needed because in order for remote automation calls to work, the site needs to be set up
     properly, which can't be done in an unit-test context."""
     remote_automation = mocker.patch("cmk.gui.watolib.automations.do_remote_automation")
-    mocker.patch("cmk.gui.watolib.do_remote_automation", new=remote_automation)
+    mocker.patch("cmk.gui.watolib.automations.do_remote_automation", new=remote_automation)
     yield RemoteAutomation(
         automation=remote_automation,
         responses=None,

@@ -71,15 +71,6 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.watolib.audit_log import log_audit
 from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
-from cmk.gui.watolib.automations import (
-    check_mk_local_automation_serialized,
-    do_remote_automation,
-    do_site_login,
-    get_url,
-    local_automation_failure,
-    MKAutomationException,
-    remote_automation_call_came_from_pre21,
-)
 from cmk.gui.watolib.changes import add_change, add_service_change
 from cmk.gui.watolib.config_domains import (
     ConfigDomainCACertificates,

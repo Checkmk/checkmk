@@ -29,7 +29,12 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import SuperUserContext, user
 from cmk.gui.pages import AjaxPage, page_registry
-from cmk.gui.watolib.automations import compatible_with_central_site
+from cmk.gui.watolib.automations import (
+    check_mk_local_automation_serialized,
+    compatible_with_central_site,
+    local_automation_failure,
+    remote_automation_call_came_from_pre21,
+)
 
 
 @page_registry.register_page("automation_login")
@@ -192,11 +197,11 @@ class ModeAutomation(AjaxPage):
         try:
             return (
                 repr(result_type_registry[cmk_command].deserialize(serialized_result).to_pre_21())
-                if watolib.remote_automation_call_came_from_pre21()
+                if remote_automation_call_came_from_pre21()
                 else serialized_result
             )
         except SyntaxError as e:
-            raise watolib.local_automation_failure(
+            raise local_automation_failure(
                 command=cmk_command,
                 cmdline=cmdline_cmd,
                 out=serialized_result,
@@ -209,7 +214,7 @@ class ModeAutomation(AjaxPage):
         indata = watolib.mk_eval(request.get_str_input_mandatory("indata"))
         stdin_data = watolib.mk_eval(request.get_str_input_mandatory("stdin_data"))
         timeout = watolib.mk_eval(request.get_str_input_mandatory("timeout"))
-        cmdline_cmd, serialized_result = watolib.check_mk_local_automation_serialized(
+        cmdline_cmd, serialized_result = check_mk_local_automation_serialized(
             command=cmk_command,
             args=args,
             indata=indata,

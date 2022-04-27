@@ -29,6 +29,7 @@ from cmk.gui.utils.escaping import escape_attribute
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
 from cmk.gui.watolib import automation_command_registry, AutomationCommand
+from cmk.gui.watolib.automations import do_remote_automation
 from cmk.gui.watolib.check_mk_automations import get_agent_output
 
 # .
@@ -177,7 +178,7 @@ class PageFetchAgentOutput(AgentOutputPage):
             start_fetch_agent_job(self._request)
             return
 
-        watolib.do_remote_automation(
+        do_remote_automation(
             get_site_config(self._request.host.site_id()),
             "fetch-agent-output-start",
             [
@@ -189,7 +190,7 @@ class PageFetchAgentOutput(AgentOutputPage):
         if site_is_local(self._request.host.site_id()):
             return get_fetch_agent_job_status(self._request)
 
-        return watolib.do_remote_automation(
+        return do_remote_automation(
             get_site_config(self._request.host.site_id()),
             "fetch-agent-output-get-status",
             [
@@ -322,7 +323,7 @@ class PageDownloadAgentOutput(AgentOutputPage):
         if site_is_local(self._request.host.site_id()):
             return get_fetch_agent_output_file(self._request)
 
-        return watolib.do_remote_automation(
+        return do_remote_automation(
             get_site_config(self._request.host.site_id()),
             "fetch-agent-output-get-file",
             [

@@ -56,7 +56,7 @@ class TestModeAutomation:
     @pytest.fixture(name="check_mk_local_automation_serialized")
     def check_mk_local_automation_serialized_fixture(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setattr(
-            automation.watolib,
+            automation,
             "check_mk_local_automation_serialized",
             self._check_mk_local_automation_serialized,
         )

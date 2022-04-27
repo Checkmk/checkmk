@@ -44,6 +44,7 @@ from cmk.gui.plugins.webapi.utils import (
     validate_host_attributes,
 )
 from cmk.gui.watolib.activate_changes import activate_changes_start, activate_changes_wait
+from cmk.gui.watolib.automations import do_site_login
 from cmk.gui.watolib.bakery import try_bake_agents_for_hosts
 from cmk.gui.watolib.check_mk_automations import discovery, try_discovery
 from cmk.gui.watolib.tags import TagConfigFile
@@ -1087,7 +1088,7 @@ class APICallSites(APICallCollection):
         if not site:
             raise MKUserError(None, _("Site id not found: %s") % request["site_id"])
 
-        response = watolib.do_site_login(site, request["username"], request["password"])
+        response = do_site_login(site, request["username"], request["password"])
 
         if isinstance(response, dict):
             if cmk_version.is_managed_edition() and response["edition_short"] != "cme":

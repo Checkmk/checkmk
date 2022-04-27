@@ -11,13 +11,10 @@
 import urllib3  # type: ignore[import]
 
 import cmk.utils
-import cmk.utils.daemon as daemon
 import cmk.utils.defines
 import cmk.utils.paths
 import cmk.utils.plugin_registry
 import cmk.utils.regex
-import cmk.utils.render as render
-import cmk.utils.store as store
 import cmk.utils.tags
 import cmk.utils.version as cmk_version
 

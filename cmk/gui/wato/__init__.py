@@ -60,11 +60,7 @@
 from typing import Any, Dict
 
 import cmk.utils.paths
-import cmk.utils.render as render
-import cmk.utils.store as store
 import cmk.utils.version as cmk_version
-from cmk.utils.defines import short_service_state_name
-from cmk.utils.regex import regex
 
 import cmk.gui.background_job as background_job
 import cmk.gui.backup as backup

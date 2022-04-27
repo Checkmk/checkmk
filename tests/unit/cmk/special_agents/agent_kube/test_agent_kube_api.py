@@ -12,6 +12,7 @@ import pytest
 from pydantic_factories import ModelFactory
 
 from tests.unit.cmk.special_agents.agent_kube.factory import (
+    api_to_agent_pod,
     APIPodFactory,
     pod_phase_generator,
     PodMetaDataFactory,
@@ -270,6 +271,49 @@ def test_collect_workload_resources_from_api_pods(pods_count: int):
     assert cpu_resources == section.Resources(
         request=pods_count * 0.5,
         limit=pods_count * 0.5,
+        count_unspecified_limits=0,
+        count_unspecified_requests=0,
+        count_zeroed_limits=0,
+        count_total=pods_count,
+    )
+
+
+@pytest.mark.parametrize("pods_count", [0, 5])
+def test_collect_workload_resources_from_agent_pods(pods_count: int):
+    requests = ResourcesRequirementsFactory.build(memory=ONE_MiB, cpu=0.5)
+    limits = ResourcesRequirementsFactory.build(memory=2 * ONE_MiB, cpu=1.0)
+    pods = [
+        api_to_agent_pod(
+            APIPodFactory.build(
+                spec=PodSpecFactory.build(
+                    containers=[
+                        ContainerSpecFactory.build(
+                            resources=ContainerResourcesFactory.build(
+                                limits=limits, requests=requests
+                            )
+                        )
+                    ]
+                )
+            )
+        )
+        for _ in range(pods_count)
+    ]
+
+    memory_resources = agent._collect_memory_resources(pods)
+    cpu_resources = agent._collect_cpu_resources(pods)
+
+    assert memory_resources == section.Resources(
+        request=pods_count * ONE_MiB,
+        limit=pods_count * ONE_MiB * 2,
+        count_unspecified_limits=0,
+        count_unspecified_requests=0,
+        count_zeroed_limits=0,
+        count_total=pods_count,
+    )
+
+    assert cpu_resources == section.Resources(
+        request=pods_count * 0.5,
+        limit=pods_count * 1.0,
         count_unspecified_limits=0,
         count_unspecified_requests=0,
         count_zeroed_limits=0,

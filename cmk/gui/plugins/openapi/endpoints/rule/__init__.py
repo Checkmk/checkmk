@@ -102,11 +102,11 @@ def create_rule(param):
         ruleset,
         RuleConditions(
             host_folder=folder.path(),
-            host_tags=body["conditions"].get("host_tag"),
-            host_labels=body["conditions"].get("host_label"),
+            host_tags=body["conditions"].get("host_tags"),
+            host_labels=body["conditions"].get("host_labels"),
             host_name=body["conditions"].get("host_name"),
             service_description=body["conditions"].get("service_description"),
-            service_labels=body["conditions"].get("service_label"),
+            service_labels=body["conditions"].get("service_labels"),
         ),
         RuleOptions.from_config(body["properties"]),
         value,
@@ -274,10 +274,10 @@ def _serialize_rule(rule_entry: RuleEntry) -> DomainObject:
             "conditions": denilled(
                 {
                     "host_name": rule.conditions.host_name,
-                    "host_tag": rule.conditions.host_tags,
-                    "host_label": rule.conditions.host_labels,
+                    "host_tags": rule.conditions.host_tags,
+                    "host_labels": rule.conditions.host_labels,
                     "service_description": rule.conditions.service_description,
-                    "service_label": rule.conditions.service_labels,
+                    "service_labels": rule.conditions.service_labels,
                 }
             ),
         },

@@ -576,7 +576,7 @@ class RuleConditions(base.BaseSchema):
         ),
         example={"match_on": ["host1", "host2"], "operator": "one_of"},
     )
-    host_tag = fields.Nested(
+    host_tags = fields.Nested(
         TagConditionSchema,
         many=True,
         description=(
@@ -585,13 +585,13 @@ class RuleConditions(base.BaseSchema):
         ),
         example=[{"key": "criticality", "operator": "is", "value": "prod"}],
     )
-    host_label = fields.Nested(
+    host_labels = fields.Nested(
         LabelConditionSchema,
         many=True,
         description="Further restrict this rule by applying host label conditions.",
         example=[{"key": "os", "operator": "is", "value": "windows"}],
     )
-    service_label = fields.Nested(
+    service_labels = fields.Nested(
         LabelConditionSchema,
         many=True,
         description=(
@@ -639,19 +639,19 @@ class RuleExtensions(base.BaseSchema):
         ...        'conditions': {
         ...            'service_description': {'match_on': ['foo'],
         ...                                               'operator': 'none_of',},
-        ...            'host_tag': [{'key': 'criticality', 'operator': 'is', 'value': 'prod'}],
+        ...            'host_tags': [{'key': 'criticality', 'operator': 'is', 'value': 'prod'}],
         ...        }
         ...     })
         ...     rv
         {'folder': Folder('', 'Main'), \
 'conditions': {\
-'host_tag': {'criticality': 'prod'},\
+'host_tags': {'criticality': 'prod'},\
  'service_description': {'$nor': [{'$regex': 'foo'}]}\
 }}
 
         >>> ext.dump(rv)
         {'folder': '/', 'conditions': {\
-'host_tag': [{'key': 'criticality', 'operator': 'is', 'value': 'prod'}], \
+'host_tags': [{'key': 'criticality', 'operator': 'is', 'value': 'prod'}], \
 'service_description': {'match_on': ['foo'], 'operator': 'none_of'}}}
 
     """
@@ -724,11 +724,11 @@ class InputRuleObject(base.BaseSchema):
         ...                  'match_on': ['example.com', 'heute'],
         ...                  'operator': 'one_of',
         ...              },
-        ...              'host_label': [
+        ...              'host_labels': [
         ...                   {'key': 'os', 'operator': 'is', 'value': 'windows'},
         ...                   {'key': 'foo', 'operator': 'is_not', 'value': 'bar'},
         ...              ],
-        ...              'host_tag': [
+        ...              'host_tags': [
         ...                  {'key': 'criticality', 'operator': 'is_not', 'value': 'prod'},
         ...                  {'key': 'foo', 'operator': 'is_not', 'value': 'testing'},
         ...              ],
@@ -738,8 +738,8 @@ class InputRuleObject(base.BaseSchema):
         {'ruleset': 'host', 'folder': Folder('', 'Main'), 'properties': {'disabled': False}, \
 'conditions': {\
 'host_name': ['example.com', 'heute'], \
-'host_tag': {'criticality': {'$ne': 'prod'}, 'foo': {'$ne': 'testing'}}, \
-'host_label': {'os': 'windows', 'foo': {'$ne': 'bar'}}}}
+'host_tags': {'criticality': {'$ne': 'prod'}, 'foo': {'$ne': 'testing'}}, \
+'host_labels': {'os': 'windows', 'foo': {'$ne': 'bar'}}}}
 
         >>> rv['folder'].path()
         ''
@@ -748,8 +748,8 @@ class InputRuleObject(base.BaseSchema):
         {'ruleset': 'host', 'folder': '/', 'properties': {'disabled': False}, \
 'conditions': {\
 'host_name': {'match_on': ['example.com', 'heute'], 'operator': 'one_of'}, \
-'host_tag': [{'key': 'criticality', 'operator': 'is_not', 'value': 'prod'}, {'key': 'foo', 'operator': 'is_not', 'value': 'testing'}], \
-'host_label': [{'key': 'os', 'operator': 'is', 'value': 'windows'}, {'key': 'foo', 'operator': 'is_not', 'value': 'bar'}]}}
+'host_tags': [{'key': 'criticality', 'operator': 'is_not', 'value': 'prod'}, {'key': 'foo', 'operator': 'is_not', 'value': 'testing'}], \
+'host_labels': [{'key': 'os', 'operator': 'is', 'value': 'windows'}, {'key': 'foo', 'operator': 'is_not', 'value': 'bar'}]}}
 
     """
 

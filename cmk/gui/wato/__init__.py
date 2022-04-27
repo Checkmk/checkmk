@@ -82,14 +82,7 @@ import cmk.gui.watolib as watolib
 import cmk.gui.watolib.hosts_and_folders
 import cmk.gui.weblib as weblib
 from cmk.gui.config import active_config
-from cmk.gui.exceptions import (
-    HTTPRedirect,
-    MKAuthException,
-    MKException,
-    MKGeneralException,
-    MKInternalError,
-    MKUserError,
-)
+from cmk.gui.exceptions import MKGeneralException as _MKGeneralException
 from cmk.gui.htmllib.context import html
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
@@ -305,7 +298,7 @@ def load_plugins() -> None:
     utils.load_web_plugins("wato", globals())
 
     if modes:
-        raise MKGeneralException(
+        raise _MKGeneralException(
             _("Deprecated WATO modes found: %r. " "They need to be refactored to new API.")
             % list(modes.keys())
         )

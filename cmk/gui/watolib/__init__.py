@@ -31,7 +31,6 @@ import cmk.gui.watolib.git
 import cmk.gui.watolib.timeperiods
 import cmk.gui.weblib as weblib
 from cmk.gui.config import active_config
-from cmk.gui.exceptions import MKAuthException, MKGeneralException, MKUserError, RequestTimeout
 from cmk.gui.htmllib.context import html
 from cmk.gui.log import logger
 from cmk.gui.utils.html import HTML

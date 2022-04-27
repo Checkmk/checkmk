@@ -13,13 +13,12 @@ import shutil
 
 
 class TestPaths(object):
-    drive = os.getcwd()[:2]
+    def __init__(self):
+        self.drive, _ = os.path.splitdrive(user_dir)
 
     def tempdir1(self):
         _, path = os.path.splitdrive(user_dir)
-        return os.path.join(self.drive, path, 'Testdir1')
-        # orginal code, doesn't work on dev machine
-        # return os.path.join(self.drive, user_dir, 'Testdir1')
+        return os.path.join(self.drive, path, "Testdir1")
 
     def tempdir2(self):
         return os.path.join(self.tempdir1(), 'Testdir2')
@@ -134,5 +133,4 @@ def use_testfiles():
 @pytest.mark.usefixtures('use_testfiles')
 def test_section_fileinfo(request, testconfig, expected_output, actual_output, testfile):
     # request.node.name gives test name
-    pytest.skip('This test is skipped as not stable')
     local_test(expected_output, actual_output, testfile, request.node.name)

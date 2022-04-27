@@ -8,6 +8,7 @@
 def inventory_octopus_cpu(info):
     if len(info[0][0]) == 1:
         return [(None, None)]
+    return []
 
 
 def check_octopus_cpu(_no_item, _no_params_info, info):

@@ -20,6 +20,7 @@ factory_settings["mbg_lantime_ng_temp_default_levels"] = {
 def inventory_mbg_lantime_ng_temp(info):
     if info:
         return [("System", {})]
+    return []
 
 
 def check_mbg_lantime_ng_temp(item, params, info):

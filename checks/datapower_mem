@@ -25,6 +25,7 @@ def inventory_datapower_mem(info):
     # TODO: Cleanup empty string and change manpage
     if info:
         return [("", {})]
+    return []
 
 
 def check_datapower_mem(item, params, info):

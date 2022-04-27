@@ -70,6 +70,7 @@ def check_brocade_fan(item, params, info):
     for snmp_item, _name, value in converted:
         if item == snmp_item:
             return check_fan(int(value), params)
+    return None
 
 
 check_info["brocade.fan"] = {
@@ -121,6 +122,7 @@ def check_brocade_temp(item, params, info):
     for snmp_item, _name, value in converted:
         if item == snmp_item:
             return check_temperature(int(value), params, "brocade_temp_%s" % item)
+    return None
 
 
 check_info["brocade.temp"] = {

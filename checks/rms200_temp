@@ -26,6 +26,7 @@ def check_rms200_temp(item, params, info):
             )
             infotext += " (%s)" % line[1]  # Name from SNMP data
             return status, infotext, perfdata
+    return None
 
 
 check_info["rms200_temp"] = {

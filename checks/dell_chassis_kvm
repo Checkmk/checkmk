@@ -8,6 +8,7 @@
 def inventory_dell_chassis_kvm(info):
     if info:
         return [(None, None)]
+    return []
 
 
 def check_dell_chassis_kvm(_no_item, _no_params, info):

@@ -12,6 +12,7 @@ def inventory_apc_inputs(info):
             if line[2] not in ["3", "4"]:
                 inventory.append((line[0], {"state": line[2]}))
         return inventory
+    return []
 
 
 def check_apc_inputs(item, params, info):
@@ -45,6 +46,7 @@ def check_apc_inputs(item, params, info):
                 )
 
             return check_state, ", ".join(messages)
+    return None
 
 
 check_info["apc_inputs"] = {

@@ -8,6 +8,7 @@
 def inventory_ups_modulys_alarms(info):
     if info:
         return [(None, None)]
+    return []
 
 
 def check_ups_modulys_alarms(_no_item, _no_params, info):

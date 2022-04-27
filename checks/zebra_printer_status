@@ -8,6 +8,7 @@
 def inventory_zebra_printer_status(info):
     if info[0][0]:
         return [(None, {})]
+    return []
 
 
 def check_zebra_printer_status(item, params, info):

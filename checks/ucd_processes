@@ -52,6 +52,7 @@ def check_ucd_processes(item, _no_params, info):
                 infotext += " (lower/upper crit at %s/%s)" % (pr_min_str, pr_max_str)
 
             return state, infotext, [("processes", int(pr_count_str))]
+    return None
 
 
 check_info["ucd_processes"] = {

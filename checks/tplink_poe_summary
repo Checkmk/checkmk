@@ -8,6 +8,7 @@
 def inventory_tplink_poe_summary(info):
     if info and info[0][0] != "0":
         return [(None, {})]
+    return []
 
 
 def check_tplink_poe_summary(_no_item, params, info):

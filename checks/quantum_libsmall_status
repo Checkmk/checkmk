@@ -46,6 +46,7 @@ def parse_quantum_libsmall_status(info):
 def inventory_quantum_libsmall_status(parsed):
     if parsed:
         return [(None, None)]
+    return []
 
 
 def check_quantum_libsmall_status(_no_item, _no_params, parsed):

@@ -108,6 +108,10 @@ def _create_test_sync_config(monkeypatch):
     with gui_conf_dir.joinpath("global.mk").open("w", encoding="utf-8") as f:
         f.write("# 123\n")
 
+    stored_passwords_dir = Path(cmk.utils.paths.var_dir)
+    with stored_passwords_dir.joinpath("stored_passwords").open("w", encoding="utf-8") as f:
+        f.write("DUMMY_PWD_ENTRY \n")
+
     if cmk_version.is_managed_edition():
         monkeypatch.setattr(
             active_config,
@@ -257,6 +261,7 @@ def _get_expected_paths(user_id, is_pre_17_site, with_local):
         "var/check_mk/web/%s/last_pw_change.mk" % user_id,
         "var/check_mk/web/%s/num_failed_logins.mk" % user_id,
         "var/check_mk/web/%s/serial.mk" % user_id,
+        "var/check_mk/stored_passwords",
     ]
 
     if with_local:
@@ -329,6 +334,7 @@ def _get_expected_paths(user_id, is_pre_17_site, with_local):
         ]
 
         expected_paths.remove("etc/check_mk/conf.d/wato/hosts.mk")
+        expected_paths.remove("var/check_mk/stored_passwords")
 
     # TODO: The second condition should not be needed. Seems to be a subtle difference between the
     # CME and CRE/CEE snapshot logic
@@ -429,6 +435,7 @@ def test_generate_pre_17_site_snapshot(
         "mkeventd.tar",
         "multisite.tar",
         "sitespecific.tar",
+        "stored_passwords.tar",
         "usersettings.tar",
     ]
 
@@ -473,6 +480,7 @@ def test_generate_pre_17_site_snapshot(
         "htpasswd.tar": ["htpasswd"],
         "liveproxyd.tar": [],
         "sitespecific.tar": ["sitespecific.mk"],
+        "stored_passwords.tar": ["stored_passwords"],
         "auth.secret.tar": [],
         "password_store.secret.tar": [],
         "dcd.tar": [],
@@ -505,6 +513,7 @@ def test_generate_pre_17_site_snapshot(
                     "user_connections.mk",
                     "users.mk",
                 ],
+                "stored_passwords.tar": [],
             }
         )
 

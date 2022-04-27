@@ -231,6 +231,14 @@ def get_replication_paths() -> List[ReplicationPath]:
             ),
             [],
         ),
+        ReplicationPath(
+            "file",
+            "stored_passwords",
+            os.path.relpath(
+                "%s/stored_passwords" % cmk.utils.paths.var_dir, cmk.utils.paths.omd_root
+            ),
+            [],
+        ),
         # Also replicate the user-settings of Multisite? While the replication
         # as such works pretty well, the count of pending changes will not
         # know.

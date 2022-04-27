@@ -13,19 +13,7 @@ import re
 import subprocess
 import uuid
 from pathlib import Path
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Iterable,
-    Literal,
-    NamedTuple,
-    Optional,
-    Sequence,
-    Tuple,
-    TypedDict,
-    Union,
-)
+from typing import Any, Callable, Dict, Iterable, NamedTuple, Optional, Sequence, Tuple, Union
 
 import requests
 import urllib3  # type: ignore[import]
@@ -35,7 +23,7 @@ from livestatus import SiteConfiguration, SiteId
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
 from cmk.utils.log import VERBOSE
-from cmk.utils.type_defs import UserId
+from cmk.utils.type_defs import PhaseOneResult, UserId
 from cmk.utils.version import base_version_parts, is_daily_build_of_master, parse_check_mk_version
 
 from cmk.automations.results import result_type_registry, SerializedResult
@@ -299,57 +287,6 @@ def _do_remote_automation_serialized(
         raise MKAutomationException(_("Empty output from remote site."))
 
     return response
-
-
-class PiggybackHostsConnectorAttributes(TypedDict):
-    hosts: Sequence[str]
-    tmpfs_initialization_time: int
-
-
-class ExecutionStepAttributes(TypedDict):
-    _name: str
-    _title: str
-    _time_initialized: float
-    _time_started: float
-    _time_completed: float
-    _log_entries: Sequence[str]
-    phase: Literal[0, 1, 2]
-    status: Literal[0, 1]
-    message: str
-
-
-class ExecutionStep(TypedDict):
-    class_name: Literal["ExecutionStep"]
-    attributes: ExecutionStepAttributes
-
-
-class ExecutionStatusAttributes(TypedDict):
-    _steps: Sequence[ExecutionStep]
-    _finished: bool
-    _time_initialized: float
-    _time_completed: float
-
-
-class ExecutionStatus(TypedDict):
-    class_name: Literal["ExecutionStatus"]
-    attributes: ExecutionStatusAttributes
-
-
-class ConnectorObject(TypedDict):
-    # Literal["PiggybackHosts"]
-    class_name: str  # TODO: replace str type with Literal
-    # attributes of new connector objects should be listed here
-    attributes: Union[PiggybackHostsConnectorAttributes, dict]
-
-
-class PhaseOneAttributes(TypedDict):
-    connector_object: ConnectorObject
-    status: ExecutionStatus
-
-
-class PhaseOneResult(TypedDict):
-    class_name: Literal["Phase1Result"]
-    attributes: PhaseOneAttributes
 
 
 def execute_phase1_result(site_id: SiteId, connection_id: str) -> PhaseOneResult:

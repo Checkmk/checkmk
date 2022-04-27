@@ -18,6 +18,7 @@ from cmk.special_agents.agent_kube import Pod
 from cmk.special_agents.utils_kubernetes.schemata import api, section
 from cmk.special_agents.utils_kubernetes.transform import (
     convert_to_timestamp,
+    parse_metadata,
     pod_conditions,
     pod_containers,
     pod_spec,
@@ -25,6 +26,51 @@ from cmk.special_agents.utils_kubernetes.transform import (
 
 
 class TestAPIPod:
+    def test_parse_metadata(self, core_client, dummy_host):
+        mocked_pods = {
+            "kind": "PodList",
+            "apiVersion": "v1",
+            "metadata": {"selfLink": "/api/v1/pods", "resourceVersion": "6605101"},
+            "items": [
+                {
+                    "metadata": {
+                        "name": "cluster-collector-595b64557d-x9t5q",
+                        "generateName": "cluster-collector-595b64557d-",
+                        "namespace": "checkmk-monitoring",
+                        "uid": "b1c113f5-ee08-44c2-8438-a83ca240e04a",
+                        "resourceVersion": "221646",
+                        "creationTimestamp": "2022-03-28T09:19:41Z",
+                        "labels": {"app": "cluster-collector"},
+                        "annotations": {"foo": "case"},
+                        "ownerReferences": [
+                            {
+                                "apiVersion": "apps/v1",
+                                "kind": "ReplicaSet",
+                                "name": "cluster-collector-595b64557d",
+                                "uid": "547e9da2-cbfa-4116-9cb6-67487b11a786",
+                                "controller": "true",
+                                "blockOwnerDeletion": "true",
+                            }
+                        ],
+                    },
+                },
+            ],
+        }
+        Entry.single_register(
+            Entry.GET,
+            f"{dummy_host}/api/v1/pods",
+            body=json.dumps(mocked_pods),
+            headers={"content-type": "application/json"},
+        )
+        with Mocketizer():
+            pod = list(core_client.list_pod_for_all_namespaces().items)[0]
+
+        metadata = parse_metadata(pod.metadata, model=api.PodMetaData)
+        assert metadata.name == "cluster-collector-595b64557d-x9t5q"
+        assert metadata.namespace == "checkmk-monitoring"
+        assert isinstance(metadata.creation_timestamp, float)
+        assert metadata.labels == {"app": api.Label(name="app", value="cluster-collector")}
+
     def test_parse_conditions(self, core_client, dummy_host):
         node_with_conditions = {
             "items": [

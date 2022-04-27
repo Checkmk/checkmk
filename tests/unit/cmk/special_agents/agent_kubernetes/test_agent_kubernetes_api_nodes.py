@@ -38,6 +38,7 @@ class TestAPINode:
         metadata = parse_metadata(metadata_obj)
         assert metadata.name == "k8"
         assert metadata.namespace is None
+        assert metadata.labels
 
     def test_parse_metadata_datetime(self):
         now = datetime.datetime(2021, 10, 11, 13, 53, 10, tzinfo=datetime.timezone.utc)

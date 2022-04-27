@@ -49,7 +49,7 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _, _u
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.metrics import translate_perf_data
-from cmk.gui.pages import AjaxPage, page_registry
+from cmk.gui.pages import AjaxPage, AjaxPageResult, page_registry
 from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.plugins.metrics.rrd_fetch import merge_multicol
 from cmk.gui.plugins.metrics.valuespecs import transform_graph_render_options
@@ -654,7 +654,7 @@ dashlet_registry = DashletRegistry()
 
 @page_registry.register_page("ajax_figure_dashlet_data")
 class FigureDashletPage(AjaxPage):
-    def page(self):
+    def page(self) -> AjaxPageResult:
         settings = json.loads(request.get_str_input_mandatory("settings"))
 
         try:
@@ -670,7 +670,11 @@ class FigureDashletPage(AjaxPage):
         properties = dashlet_type.vs_parameters().value_from_json(json.loads(raw_properties))
         context = json.loads(request.get_str_input_mandatory("context", "{}"))
         # Inject the infos because the datagenerator is a separate instance to dashlet
-        settings["infos"] = dashlet_type.infos()
+        # TODO: Can we do better than using fake arguments below? We *really* need an instance,
+        # because in general, infos() is an *instance* method, not a class method.
+        settings["infos"] = dashlet_type(
+            dashboard_name="", dashboard={"context": {}}, dashlet_id=0, dashlet={"context": {}}
+        ).infos()
         response_data = dashlet_type.generate_response_data(properties, context, settings)
         return create_figures_response(response_data)
 
@@ -697,8 +701,7 @@ class ABCFigureDashlet(Dashlet, abc.ABC):
     def initial_size(cls):
         return (56, 40)
 
-    @classmethod
-    def infos(cls) -> SingleInfos:
+    def infos(self) -> SingleInfos:
         return ["host", "service"]
 
     @classmethod

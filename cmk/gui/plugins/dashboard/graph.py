@@ -148,8 +148,7 @@ class GraphDashlet(Dashlet):
     def initial_size(cls):
         return (60, 21)
 
-    @classmethod
-    def infos(cls) -> SingleInfos:
+    def infos(self) -> SingleInfos:
         return ["host", "service"]
 
     @classmethod

@@ -15,7 +15,7 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.plugins.dashboard.utils import ABCFigureDashlet, dashlet_registry
-from cmk.gui.type_defs import HTTPVariables
+from cmk.gui.type_defs import HTTPVariables, SingleInfos
 from cmk.gui.utils.urls import makeuri_contextless
 
 
@@ -458,8 +458,7 @@ class HostStatsDashlet(ABCFigureDashlet):
     def initial_size(cls):
         return (30, 18)
 
-    @classmethod
-    def infos(cls) -> List[str]:
+    def infos(self) -> SingleInfos:
         return ["host"]
 
 
@@ -491,8 +490,7 @@ class ServiceStatsDashlet(ABCFigureDashlet):
     def is_resizable(cls):
         return False
 
-    @classmethod
-    def infos(cls) -> List[str]:
+    def infos(self) -> SingleInfos:
         return ["host"]
 
     @classmethod

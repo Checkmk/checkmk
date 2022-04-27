@@ -449,7 +449,7 @@ TEST(FileInfoTest, Reality) {
         << "unit tests works for windows on c in windows folder";
 
     // invalid entry
-    EXPECT_TRUE(FindFilesByMask(L"c:indows\\notepad.exe").empty());
+    EXPECT_TRUE(details::FindFilesByMask(L"c:indows\\notepad.exe").empty());
     // valid entry
     {
         auto files = details::FindFilesByMask(

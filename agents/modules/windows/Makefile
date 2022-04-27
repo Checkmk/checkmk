@@ -141,9 +141,9 @@ python_344:
 	exec_cmd.bat uninstall_legacy.cmd 3.4 4
 	exec_cmd.bat clean_environment.cmd 3.4 4
 	exec_cmd.bat patch_environment.cmd 3.4 4
-	python_to_cab.cmd $(PYTHON_TMP_DIR) $(PYTHON_MODULE_NAME) to_save
+	python_to_cab.cmd tmp\3.4 python-3.4.zip to_save
 	@if not exist $(ARTEFACTS_DIR) mkdir $(ARTEFACTS_DIR) 2> nul
-	@copy /Y $(PYTHON_MODULE) $(ARTEFACT_MODULE)
+	@copy /Y tmp\3.4\python-3.4.zip $(ARTEFACTS_DIR)\python-3.4.zip
 	@powershell Write-Host -foreground Green "Python 3.4.4 is saved"
 
 integration:

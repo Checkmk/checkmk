@@ -57,33 +57,7 @@
 # for them, we can remove this here and the imports
 # flake8: noqa
 # pylint: disable=unused-import,cmk-module-layer-violation
-
-import abc
-import ast
-import copy
-import csv
-import datetime
-import fcntl
-import glob
-import inspect
-import json
-import math
-import multiprocessing
-import pprint
-import random
-import re
-import shutil
-import socket
-import subprocess
-import sys
-import tarfile
-import time
-import traceback
-from hashlib import sha256
 from typing import Any, Dict
-from typing import Optional as _Optional
-from typing import Tuple as _Tuple
-from typing import Type, Union
 
 import cmk.utils.paths
 import cmk.utils.render as render

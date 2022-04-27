@@ -3,41 +3,11 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""WATO LIBRARY
-
-This component contains classes, functions and globals that are being used by
-WATO. It does not contain any acutal page handlers or WATO modes. Nor complex
-HTML creation. This is all contained in cmk.gui.wato."""
 
 # NOTE: flake8 has no way to ignore just e.g. F401 for the whole file! :-P
 # flake8: noqa
 # pylint: disable=unused-import
 
-import abc
-import ast
-import base64
-import copy
-import glob
-import multiprocessing
-import os
-import pickle
-import pprint
-import pwd
-import re
-import shutil
-import signal
-import socket
-import subprocess
-import sys
-import tarfile
-import threading
-import time
-import traceback
-from hashlib import sha256
-from pathlib import Path
-from typing import List, NamedTuple
-
-import requests
 import urllib3  # type: ignore[import]
 
 import cmk.utils

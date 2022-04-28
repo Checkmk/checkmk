@@ -55,6 +55,7 @@ from cmk.gui.utils.urls import makeactionuri, makeuri_contextless
 from cmk.gui.valuespec import Checkbox, Dictionary, DictionaryEntry, TextAreaUnicode
 from cmk.gui.watolib import activate_changes
 from cmk.gui.watolib.automations import MKAutomationException
+from cmk.gui.watolib.hosts_and_folders import Folder, folder_preserving_link, Host
 from cmk.gui.watolib.objref import ObjectRef, ObjectRefType
 from cmk.gui.watolib.search import build_index_background
 
@@ -126,7 +127,7 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
             yield PageMenuEntry(
                 title=_("Audit log"),
                 icon_name="auditlog",
-                item=make_simple_link(watolib.folder_preserving_link([("mode", "auditlog")])),
+                item=make_simple_link(folder_preserving_link([("mode", "auditlog")])),
             )
 
     def _page_menu_entries_all_sites(self) -> Iterator[PageMenuEntry]:
@@ -423,9 +424,7 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
                 table.cell(_("Actions"), css="buttons")
 
                 if user.may("wato.sites"):
-                    edit_url = watolib.folder_preserving_link(
-                        [("mode", "edit_site"), ("site", site_id)]
-                    )
+                    edit_url = folder_preserving_link([("mode", "edit_site"), ("site", site_id)])
                     html.icon_button(edit_url, _("Edit the properties of this site"), "edit")
 
                 # State
@@ -544,14 +543,14 @@ def _get_object_reference(object_ref: Optional[ObjectRef]) -> Tuple[Optional[str
         return None, None
 
     if object_ref.object_type is ObjectRefType.Host:
-        host = watolib.Host.host(object_ref.ident)
+        host = Host.host(object_ref.ident)
         if host:
             return host.edit_url(), host.name()
         return None, object_ref.ident
 
     if object_ref.object_type is ObjectRefType.Folder:
-        if watolib.Folder.folder_exists(object_ref.ident):
-            folder = watolib.Folder.folder(object_ref.ident)
+        if Folder.folder_exists(object_ref.ident):
+            folder = Folder.folder(object_ref.ident)
             return folder.url(), folder.title()
         return None, object_ref.ident
 

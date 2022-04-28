@@ -10,7 +10,6 @@ import cmk.gui.dashboard as dashboard
 import cmk.gui.site_config as site_config
 import cmk.gui.sites as sites
 import cmk.gui.views as views
-import cmk.gui.watolib as watolib
 from cmk.gui.config import active_config
 from cmk.gui.htmllib.context import html
 from cmk.gui.htmllib.foldable_container import foldable_container
@@ -29,6 +28,7 @@ from cmk.gui.plugins.wato.utils.main_menu import main_module_registry, MainModul
 from cmk.gui.type_defs import Choices, MegaMenu, TopicMenuItem, TopicMenuTopic, ViewSpec
 from cmk.gui.utils.html import HTML
 from cmk.gui.watolib.activate_changes import get_pending_changes_info
+from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.watolib.search import (
     ABCMatchItemGenerator,
     match_item_generator_registry,
@@ -190,7 +190,7 @@ def compute_foldertree():
     sites.live().set_prepend_site(False)
 
     def get_folder(path, num=0):
-        folder = watolib.Folder.folder(path)
+        folder = Folder.folder(path)
         return {
             "title": folder.title() or path.split("/")[-1],
             ".path": path,
@@ -214,7 +214,7 @@ def compute_foldertree():
         for num_parts in range(0, len(path_parts)):
             this_folder_path = "/".join(path_parts[:num_parts])
 
-            if watolib.Folder.folder_exists(this_folder_path):
+            if Folder.folder_exists(this_folder_path):
                 if this_folder_path not in user_folders:
                     user_folders[this_folder_path] = get_folder(this_folder_path, num)
                 else:

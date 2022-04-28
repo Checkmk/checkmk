@@ -38,7 +38,6 @@ from cmk.utils.type_defs import (
 
 import cmk.gui.forms as forms
 import cmk.gui.view_utils
-import cmk.gui.watolib as watolib
 import cmk.gui.watolib.bakery as bakery
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.config import active_config
@@ -65,7 +64,6 @@ from cmk.gui.plugins.wato.utils import (
     flash,
     HostTagCondition,
     LabelCondition,
-    make_action_link,
     make_confirm_link,
     mode_registry,
     redirect,
@@ -99,7 +97,7 @@ from cmk.gui.valuespec import (
 from cmk.gui.watolib.audit_log_url import make_object_audit_log_url
 from cmk.gui.watolib.check_mk_automations import get_check_information
 from cmk.gui.watolib.host_label_sync import execute_host_label_sync
-from cmk.gui.watolib.hosts_and_folders import Folder
+from cmk.gui.watolib.hosts_and_folders import Folder, folder_preserving_link, Host, make_action_link
 from cmk.gui.watolib.predefined_conditions import PredefinedConditionStore
 from cmk.gui.watolib.rulesets import (
     AllRulesets,
@@ -464,7 +462,7 @@ def _page_menu_entries_predefined_searches(group: Optional[str]) -> Iterable[Pag
                 "icon": "rulesets",
                 "emblem": search_emblem,
             },
-            item=make_simple_link(watolib.folder_preserving_link(uri_params)),
+            item=make_simple_link(folder_preserving_link(uri_params)),
         )
 
 
@@ -563,7 +561,7 @@ class ModeRulesetGroup(ABCRulesetMode):
                     title=_("Host properties of: %s") % host_name,
                     icon_name="folder",
                     item=make_simple_link(
-                        watolib.folder_preserving_link([("mode", "edit_host"), ("host", host_name)])
+                        folder_preserving_link([("mode", "edit_host"), ("host", host_name)])
                     ),
                 )
 
@@ -583,7 +581,7 @@ def _page_menu_entry_predefined_conditions() -> PageMenuEntry:
         title=_("Predefined conditions"),
         icon_name="predefined_conditions",
         item=make_simple_link(
-            watolib.folder_preserving_link(
+            folder_preserving_link(
                 [
                     ("mode", "predefined_conditions"),
                 ]
@@ -705,7 +703,7 @@ class ModeEditRuleset(WatoMode):
         self._predefined_conditions = store.filter_usable_entries(store.load_for_reading())
 
     def _from_vars(self) -> None:
-        self._folder = watolib.Folder.current()
+        self._folder = Folder.current()
 
         self._name = request.get_ascii_input_mandatory("varname")
         self._back_mode = request.get_ascii_input_mandatory(
@@ -784,7 +782,7 @@ class ModeEditRuleset(WatoMode):
             self._just_edited_rule = None
             return
 
-        rule_folder = watolib.Folder.folder(request.var("rule_folder"))
+        rule_folder = Folder.folder(request.var("rule_folder"))
         rulesets = FolderRulesets(rule_folder)
         rulesets.load()
         ruleset = rulesets.get(self._name)
@@ -853,9 +851,7 @@ class ModeEditRuleset(WatoMode):
                 title=_("Services"),
                 icon_name="services",
                 item=make_simple_link(
-                    watolib.folder_preserving_link(
-                        [("mode", "inventory"), ("host", self._hostname)]
-                    )
+                    folder_preserving_link([("mode", "inventory"), ("host", self._hostname)])
                 ),
             )
 
@@ -864,7 +860,7 @@ class ModeEditRuleset(WatoMode):
                     title=_("Parameters"),
                     icon_name="rulesets",
                     item=make_simple_link(
-                        watolib.folder_preserving_link(
+                        folder_preserving_link(
                             [
                                 ("mode", "object_parameters"),
                                 ("host", self._hostname),
@@ -882,7 +878,7 @@ class ModeEditRuleset(WatoMode):
                 title=_("Pattern analyzer"),
                 icon_name="logwatch",
                 item=make_simple_link(
-                    watolib.folder_preserving_link(
+                    folder_preserving_link(
                         [
                             ("mode", "pattern_editor"),
                             ("host", self._hostname),
@@ -936,7 +932,7 @@ class ModeEditRuleset(WatoMode):
         if not transactions.check_transaction():
             return redirect(back_url)
 
-        rule_folder = watolib.Folder.folder(request.var("_folder", request.var("folder")))
+        rule_folder = Folder.folder(request.var("_folder", request.var("folder")))
         rule_folder.need_permission("write")
         rulesets = FolderRulesets(rule_folder)
         rulesets.load()
@@ -1089,17 +1085,13 @@ class ModeEditRuleset(WatoMode):
         ]
 
         table.cell(_("Actions"), css="buttons rulebuttons")
-        edit_url = watolib.folder_preserving_link([("mode", "edit_rule"), *folder_preserving_vars])
+        edit_url = folder_preserving_link([("mode", "edit_rule"), *folder_preserving_vars])
         html.icon_button(edit_url, _("Edit this rule"), "edit")
 
-        clone_url = watolib.folder_preserving_link(
-            [("mode", "clone_rule"), *folder_preserving_vars]
-        )
+        clone_url = folder_preserving_link([("mode", "clone_rule"), *folder_preserving_vars])
         html.icon_button(clone_url, _("Create a copy of this rule"), "clone")
 
-        export_url = watolib.folder_preserving_link(
-            [("mode", "export_rule"), *folder_preserving_vars]
-        )
+        export_url = folder_preserving_link([("mode", "export_rule"), *folder_preserving_vars])
         html.icon_button(export_url, _("Export this rule for API"), "export_rule")
 
         html.element_dragger_url("tr", base_url=self._action_url("move_to", folder, rule.id))
@@ -1172,7 +1164,7 @@ class ModeEditRuleset(WatoMode):
         if not remote_sites:
             return
 
-        host = watolib.Host.host(self._hostname)
+        host = Host.host(self._hostname)
         if host is None:
             return
         site_id = host.site_id()
@@ -1270,7 +1262,7 @@ class ModeEditRuleset(WatoMode):
             )
             return
 
-        url = watolib.folder_preserving_link(
+        url = folder_preserving_link(
             [
                 ("mode", "edit_predefined_condition"),
                 ("ident", condition_id),
@@ -1534,7 +1526,7 @@ class ModeRuleSearchForm(WatoMode):
                         elements=[
                             DropdownChoice(
                                 title=_("Selection"),
-                                choices=watolib.Folder.folder_choices,
+                                choices=Folder.folder_choices,
                             ),
                             DropdownChoice(
                                 title=_("Recursion"),
@@ -1602,7 +1594,7 @@ class ABCEditRuleMode(WatoMode):
         """
         rule_folder = request.get_ascii_input("rule_folder")
         if rule_folder:
-            self._folder = watolib.Folder.folder(rule_folder)
+            self._folder = Folder.folder(rule_folder)
         else:
             rule_id = request.get_ascii_input_mandatory("rule_id")
 
@@ -1699,9 +1691,9 @@ class ABCEditRuleMode(WatoMode):
                 var_list.append(("item", request.get_str_input_mandatory("item")))
             if request.has_var("service"):
                 var_list.append(("service", request.get_str_input_mandatory("service")))
-            return watolib.folder_preserving_link(var_list)
+            return folder_preserving_link(var_list)
 
-        return watolib.folder_preserving_link(
+        return folder_preserving_link(
             [("mode", self._back_mode), ("host", request.get_ascii_input_mandatory("host", ""))]
         )
 
@@ -1712,7 +1704,7 @@ class ABCEditRuleMode(WatoMode):
         self._update_rule_from_vars()
 
         # Check permissions on folders
-        new_rule_folder = watolib.Folder.folder(self._get_rule_conditions_from_vars().host_folder)
+        new_rule_folder = Folder.folder(self._get_rule_conditions_from_vars().host_folder)
         if not isinstance(self, ModeNewRule):
             self._folder.need_permission("write")
         new_rule_folder.need_permission("write")
@@ -1895,7 +1887,7 @@ class ABCEditRuleMode(WatoMode):
         )
 
     def _vs_predefined_condition_id(self) -> DropdownChoice:
-        url = watolib.folder_preserving_link([("mode", "predefined_conditions")])
+        url = folder_preserving_link([("mode", "predefined_conditions")])
         return DropdownChoice(
             title=_("Predefined condition"),
             choices=PredefinedConditionStore().choices(),
@@ -2163,7 +2155,7 @@ class VSExplicitConditions(Transform):
         return DropdownChoice(
             title=_("Folder"),
             help=_("The rule is only applied to hosts directly in or below this folder."),
-            choices=watolib.Folder.folder_choices,
+            choices=Folder.folder_choices,
             encode_value=False,
         )
 
@@ -2434,7 +2426,7 @@ class RuleConditionRenderer:
             return
 
         # Other cases should not occur, e.g. list of explicit hosts
-        # plus watolib.ALL_HOSTS.
+        # plus ALL_HOSTS.
         condition_txt = self._render_host_condition_text(conditions.host_name)
         if condition_txt:
             yield condition_txt
@@ -2453,7 +2445,7 @@ class RuleConditionRenderer:
             [x for x in host_name_conditions if isinstance(x, dict) and "$regex" in x]
         )
 
-        folder_lookup_cache = watolib.Folder.get_folder_lookup_cache()
+        folder_lookup_cache = Folder.get_folder_lookup_cache()
         text_list: List[HTML] = []
         if regex_count == len(host_name_conditions) or regex_count == 0:
             # Entries are either complete regex or no regex at all
@@ -2470,10 +2462,7 @@ class RuleConditionRenderer:
                     # Make sure that the host exists and the lookup will not fail
                     # Otherwise the entire config would be read
                     folder_hint = folder_lookup_cache.get(host_spec)
-                    if (
-                        folder_hint is not None
-                        and (host := watolib.Host.host(host_spec)) is not None
-                    ):
+                    if folder_hint is not None and (host := Host.host(host_spec)) is not None:
                         text_list.append(html.render_b(html.render_a(host_spec, host.edit_url())))
                     else:
                         text_list.append(html.render_b(host_spec))
@@ -2493,10 +2482,7 @@ class RuleConditionRenderer:
                     # Make sure that the host exists and the lookup will not fail
                     # Otherwise the entire config would be read
                     folder_hint = folder_lookup_cache.get(host_spec)
-                    if (
-                        folder_hint is not None
-                        and (host := watolib.Host.host(host_spec)) is not None
-                    ):
+                    if folder_hint is not None and (host := Host.host(host_spec)) is not None:
                         text_list.append(
                             escape_to_html(expression + " ")
                             + html.render_b(html.render_a(host_spec, host.edit_url()))
@@ -2642,23 +2628,23 @@ class ModeNewRule(ABCEditRuleMode):
     def _set_folder(self) -> None:
         if request.has_var("_new_dflt_rule"):
             # Start creating a new rule with default selections (root folder)
-            self._folder = watolib.Folder.root_folder()
+            self._folder = Folder.root_folder()
 
         elif request.has_var("_new_rule"):
             # Start creating a new rule in the chosen folder
-            self._folder = watolib.Folder.folder(request.get_ascii_input_mandatory("rule_folder"))
+            self._folder = Folder.folder(request.get_ascii_input_mandatory("rule_folder"))
 
         elif request.has_var("_new_host_rule"):
             # Start creating a new rule for a specific host
-            self._folder = watolib.Folder.current()
+            self._folder = Folder.current()
 
         else:
             # Submitting the create dialog
             try:
-                self._folder = watolib.Folder.folder(self._get_folder_path_from_vars())
+                self._folder = Folder.folder(self._get_folder_path_from_vars())
             except MKUserError:
                 # Folder can not be gathered from form if an error occurs
-                self._folder = watolib.Folder.folder(request.var("rule_folder"))
+                self._folder = Folder.folder(request.var("rule_folder"))
 
     def _get_folder_path_from_vars(self) -> str:
         return self._get_rule_conditions_from_vars().host_folder

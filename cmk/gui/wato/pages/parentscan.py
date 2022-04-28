@@ -27,7 +27,7 @@ from cmk.gui.type_defs import ActionResult
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.watolib.check_mk_automations import scan_parents
-from cmk.gui.watolib.hosts_and_folders import CREFolder
+from cmk.gui.watolib.hosts_and_folders import CREFolder, Folder
 
 
 class ParentScanTask(NamedTuple):
@@ -72,7 +72,7 @@ class ParentScanBackgroundJob(watolib.WatoBackgroundJob):
         )
 
     def _back_url(self):
-        return watolib.Folder.current().url()
+        return Folder.current().url()
 
     def do_execute(self, settings, tasks, job_interface=None):
         self._initialize_statistics()
@@ -174,8 +174,8 @@ class ParentScanBackgroundJob(watolib.WatoBackgroundJob):
         settings: ParentScanSettings,
         gateway: Optional[ParentScanResult],
     ) -> None:
-        watolib.Folder.invalidate_caches()
-        folder = watolib.Folder.folder(task.folder_path)
+        Folder.invalidate_caches()
+        folder = Folder.folder(task.folder_path)
 
         parents = self._configure_gateway(task, settings, gateway, folder)
 
@@ -232,10 +232,10 @@ class ParentScanBackgroundJob(watolib.WatoBackgroundJob):
 
     def _determine_gateway_folder(self, where: str, folder: CREFolder) -> CREFolder:
         if where == "here":  # directly in current folder
-            return watolib.Folder.current_disk_folder()
+            return Folder.current_disk_folder()
 
         if where == "subfolder":
-            current = watolib.Folder.current_disk_folder()
+            current = Folder.current_disk_folder()
 
             # Put new gateways in subfolder "Parents" of current
             # folder. Does this folder already exist?
@@ -352,7 +352,7 @@ class ModeParentScan(WatoMode):
         """all host in this folder, probably recursively"""
         tasks = []
         for host in self._recurse_hosts(
-            watolib.Folder.current(), self._settings.recurse, self._settings.select
+            Folder.current(), self._settings.recurse, self._settings.select
         ):
             tasks.append(ParentScanTask(host.site_id(), host.folder().path(), host.name()))
         return tasks
@@ -521,7 +521,7 @@ class ModeParentScan(WatoMode):
             "where",
             "subfolder",
             self._settings.where == "subfolder",
-            _("in the subfolder <b>%s/Parents</b>") % watolib.Folder.current_disk_folder().title(),
+            _("in the subfolder <b>%s/Parents</b>") % Folder.current_disk_folder().title(),
         )
 
         html.br()
@@ -529,7 +529,7 @@ class ModeParentScan(WatoMode):
             "where",
             "here",
             self._settings.where == "here",
-            _("directly in the folder <b>%s</b>") % watolib.Folder.current_disk_folder().title(),
+            _("directly in the folder <b>%s</b>") % Folder.current_disk_folder().title(),
         )
         html.br()
         html.radiobutton(

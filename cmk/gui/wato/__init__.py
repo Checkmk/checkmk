@@ -242,7 +242,6 @@ from cmk.gui.watolib import (
     ConfigDomainGUI,
     ConfigDomainOMD,
     LivestatusViaTCP,
-    make_action_link,
 )
 
 modes: Dict[Any, Any] = {}
@@ -326,7 +325,6 @@ def _register_pre_21_plugin_api() -> None:
         "ContactGroupSelection",
         "DictHostTagCondition",
         "flash",
-        "folder_preserving_link",
         "FullPathFolderChoice",
         "get_check_information",
         "get_hostnames_from_checkboxes",
@@ -365,7 +363,6 @@ def _register_pre_21_plugin_api() -> None:
         "MainModuleTopicMaintenance",
         "MainModuleTopicServices",
         "MainModuleTopicUsers",
-        "make_action_link",
         "make_confirm_link",
         "ManualCheckParameterRulespec",
         "MenuItem",
@@ -424,6 +421,11 @@ def _register_pre_21_plugin_api() -> None:
         "WatoModule",
     ):
         api_module.__dict__[name] = cmk.gui.plugins.wato.utils.__dict__[name]
+    for name in (
+        "folder_preserving_link",
+        "make_action_link",
+    ):
+        api_module.__dict__[name] = cmk.gui.watolib.hosts_and_folders.__dict__[name]
     for name in (
         "Rulespec",
         "rulespec_group_registry",

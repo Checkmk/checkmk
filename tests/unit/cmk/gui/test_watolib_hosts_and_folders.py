@@ -12,7 +12,7 @@ import pytest
 
 from tests.testlib import on_time
 
-import cmk.gui.watolib as watolib
+from cmk.gui.watolib.hosts_and_folders import Folder
 
 
 @pytest.mark.parametrize(
@@ -30,7 +30,7 @@ import cmk.gui.watolib as watolib
     ],
 )
 def test_next_network_scan_at(allowed, last_end, next_time):
-    folder = watolib.Folder(
+    folder = Folder(
         name="bla",
         title="Bla",
         attributes={
@@ -54,14 +54,14 @@ def test_next_network_scan_at(allowed, last_end, next_time):
 
 
 def test_folder_times(request_context):
-    root = watolib.Folder.root_folder()
+    root = Folder.root_folder()
 
     with freezegun.freeze_time(datetime.datetime(2020, 2, 2, 2, 2, 2)):
         current = time.time()
-        folder = watolib.Folder("test", parent_folder=root)
+        folder = Folder("test", parent_folder=root)
         folder.save()
 
-    folder = watolib.Folder("test", "")
+    folder = Folder("test", "")
     meta_data = folder.attributes()["meta_data"]
     assert int(meta_data["created_at"]) == int(current)
     assert int(meta_data["updated_at"]) == int(current)

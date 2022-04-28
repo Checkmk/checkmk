@@ -52,7 +52,6 @@ from cmk.gui.permissions import (
 )
 from cmk.gui.plugins.wato.utils import (
     get_search_expression,
-    make_action_link,
     make_confirm_link,
     mode_registry,
     mode_url,
@@ -64,6 +63,7 @@ from cmk.gui.table import Foldable, table_element
 from cmk.gui.type_defs import ActionResult, Choices
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
+from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, make_action_link
 from cmk.gui.watolib.utils import multisite_dir
 
 
@@ -129,7 +129,7 @@ class ModeRoles(RoleManagement, WatoMode):
                                     title=_("Permission matrix"),
                                     icon_name="matrix",
                                     item=make_simple_link(
-                                        watolib.folder_preserving_link([("mode", "role_matrix")])
+                                        folder_preserving_link([("mode", "role_matrix")])
                                     ),
                                 ),
                             ],
@@ -211,7 +211,7 @@ class ModeRoles(RoleManagement, WatoMode):
 
                 # Actions
                 table.cell(_("Actions"), css="buttons")
-                edit_url = watolib.folder_preserving_link([("mode", "edit_role"), ("edit", rid)])
+                edit_url = folder_preserving_link([("mode", "edit_role"), ("edit", rid)])
                 clone_url = make_action_link([("mode", "roles"), ("_clone", rid)])
                 delete_url = make_confirm_link(
                     url=make_action_link([("mode", "roles"), ("_delete", rid)]),
@@ -247,9 +247,7 @@ class ModeRoles(RoleManagement, WatoMode):
                         [
                             html.render_a(
                                 user.get("alias", user_id),
-                                watolib.folder_preserving_link(
-                                    [("mode", "edit_user"), ("edit", user_id)]
-                                ),
+                                folder_preserving_link([("mode", "edit_user"), ("edit", user_id)]),
                             )
                             for (user_id, user) in users.items()
                             if rid in user["roles"]

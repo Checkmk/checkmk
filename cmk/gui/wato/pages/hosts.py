@@ -49,7 +49,13 @@ from cmk.gui.watolib.agent_registration import remove_tls_registration
 from cmk.gui.watolib.audit_log_url import make_object_audit_log_url
 from cmk.gui.watolib.check_mk_automations import delete_hosts, update_dns_cache
 from cmk.gui.watolib.host_attributes import collect_attributes
-from cmk.gui.watolib.hosts_and_folders import CREHost
+from cmk.gui.watolib.hosts_and_folders import (
+    CREHost,
+    Folder,
+    folder_preserving_link,
+    Host,
+    validate_all_hosts,
+)
 
 
 class ABCHostMode(WatoMode, abc.ABC):
@@ -58,7 +64,7 @@ class ABCHostMode(WatoMode, abc.ABC):
         return ModeFolder
 
     @abc.abstractmethod
-    def _init_host(self) -> watolib.CREHost:
+    def _init_host(self) -> CREHost:
         ...
 
     def __init__(self):
@@ -87,7 +93,7 @@ class ABCHostMode(WatoMode, abc.ABC):
         )
 
     def _page_menu_save_entries(self) -> Iterator[PageMenuEntry]:
-        if watolib.Folder.current().locked_hosts():
+        if Folder.current().locked_hosts():
             return
 
         yield PageMenuEntry(
@@ -131,8 +137,8 @@ class ABCHostMode(WatoMode, abc.ABC):
 
         # Fake a cluster host in order to get calculated tag groups via effective attributes...
         cluster_computed_datasources = cmk.utils.tags.compute_datasources(
-            watolib.Host(
-                watolib.Folder.current(),
+            Host(
+                Folder.current(),
                 self._host.name(),
                 collect_attributes("cluster", new=False),
                 [],
@@ -143,7 +149,7 @@ class ABCHostMode(WatoMode, abc.ABC):
             if cluster_node == self._host.name():
                 raise MKUserError("nodes_%d" % nr, _("The cluster can not be a node of it's own"))
 
-            if not watolib.Host.host_exists(cluster_node):
+            if not Host.host_exists(cluster_node):
                 raise MKUserError(
                     "nodes_%d" % nr,
                     _(
@@ -154,7 +160,7 @@ class ABCHostMode(WatoMode, abc.ABC):
                 )
 
             node_computed_datasources = cmk.utils.tags.compute_datasources(
-                watolib.Host.load_host(cluster_node).tag_groups()
+                Host.load_host(cluster_node).tag_groups()
             )
 
             if datasource_differences := cluster_computed_datasources.get_differences_to(
@@ -198,7 +204,7 @@ class ABCHostMode(WatoMode, abc.ABC):
         errors = None
         if self._mode == "edit":
             errors = (
-                watolib.validate_all_hosts([self._host.name()]).get(self._host.name(), [])
+                validate_all_hosts([self._host.name()]).get(self._host.name(), [])
                 + self._host.validation_errors()
             )
 
@@ -230,7 +236,7 @@ class ABCHostMode(WatoMode, abc.ABC):
             html.close_div()
 
         lock_message = ""
-        locked_hosts = watolib.Folder.current().locked_hosts()
+        locked_hosts = Folder.current().locked_hosts()
         if locked_hosts:
             if locked_hosts is True:
                 lock_message = _("Host attributes locked (You cannot edit this host)")
@@ -261,7 +267,7 @@ class ABCHostMode(WatoMode, abc.ABC):
             new=self._mode != "edit",
             hosts={self._host.name(): self._host} if self._mode != "new" else {},
             for_what="host" if not self._is_cluster() else "cluster",
-            parent=watolib.Folder.current(),
+            parent=Folder.current(),
             basic_attributes=basic_attributes,
         )
 
@@ -319,9 +325,9 @@ class ModeEditHost(ABCHostMode):
     def _breadcrumb_url(self) -> str:
         return self.mode_url(host=self._host.name())
 
-    def _init_host(self) -> watolib.CREHost:
+    def _init_host(self) -> CREHost:
         hostname = request.get_ascii_input_mandatory("host")
-        folder = watolib.Folder.current()
+        folder = Folder.current()
         if not folder.has_host(hostname):
             raise MKUserError("host", _("You called this page with an invalid host name."))
         host = folder.load_host(hostname)
@@ -354,7 +360,7 @@ class ModeEditHost(ABCHostMode):
         )
 
     def action(self) -> ActionResult:
-        folder = watolib.Folder.current()
+        folder = Folder.current()
         if not transactions.check_transaction():
             return redirect(mode_url("folder", folder=folder.path()))
 
@@ -381,7 +387,7 @@ class ModeEditHost(ABCHostMode):
             return None
 
         attributes = collect_attributes("host" if not self._is_cluster() else "cluster", new=False)
-        host = watolib.Host.host(self._host.name())
+        host = Host.host(self._host.name())
         if host is None:
             flash(f"Host {self._host.name()} could not be found.")
             return None
@@ -434,7 +440,7 @@ def page_menu_host_entries(mode_name: str, host: CREHost) -> Iterator[PageMenuEn
             title=_("Properties"),
             icon_name="edit",
             item=make_simple_link(
-                watolib.folder_preserving_link([("mode", "edit_host"), ("host", host.name())])
+                folder_preserving_link([("mode", "edit_host"), ("host", host.name())])
             ),
         )
 
@@ -443,7 +449,7 @@ def page_menu_host_entries(mode_name: str, host: CREHost) -> Iterator[PageMenuEn
             title=_("Service configuration"),
             icon_name="services",
             item=make_simple_link(
-                watolib.folder_preserving_link([("mode", "inventory"), ("host", host.name())])
+                folder_preserving_link([("mode", "inventory"), ("host", host.name())])
             ),
         )
 
@@ -452,7 +458,7 @@ def page_menu_host_entries(mode_name: str, host: CREHost) -> Iterator[PageMenuEn
             title=_("Connection tests"),
             icon_name="diagnose",
             item=make_simple_link(
-                watolib.folder_preserving_link([("mode", "diag_host"), ("host", host.name())])
+                folder_preserving_link([("mode", "diag_host"), ("host", host.name())])
             ),
         )
 
@@ -461,9 +467,7 @@ def page_menu_host_entries(mode_name: str, host: CREHost) -> Iterator[PageMenuEn
             title=_("Effective parameters"),
             icon_name="rulesets",
             item=make_simple_link(
-                watolib.folder_preserving_link(
-                    [("mode", "object_parameters"), ("host", host.name())]
-                )
+                folder_preserving_link([("mode", "object_parameters"), ("host", host.name())])
             ),
         )
 
@@ -493,7 +497,7 @@ def page_menu_host_entries(mode_name: str, host: CREHost) -> Iterator[PageMenuEn
             title=_("Clustered services"),
             icon_name="rulesets",
             item=make_simple_link(
-                watolib.folder_preserving_link(
+                folder_preserving_link(
                     [("mode", "edit_ruleset"), ("varname", "clustered_services")]
                 )
             ),
@@ -504,7 +508,7 @@ def page_menu_host_entries(mode_name: str, host: CREHost) -> Iterator[PageMenuEn
             title=_("Monitoring agent"),
             icon_name="agents",
             item=make_simple_link(
-                watolib.folder_preserving_link([("mode", "agent_of_host"), ("host", host.name())])
+                folder_preserving_link([("mode", "agent_of_host"), ("host", host.name())])
             ),
         )
 
@@ -514,7 +518,7 @@ def page_menu_host_entries(mode_name: str, host: CREHost) -> Iterator[PageMenuEn
                 title=_("Rename"),
                 icon_name="rename_host",
                 item=make_simple_link(
-                    watolib.folder_preserving_link([("mode", "rename_host"), ("host", host.name())])
+                    folder_preserving_link([("mode", "rename_host"), ("host", host.name())])
                 ),
             )
 
@@ -585,15 +589,15 @@ class CreateHostMode(ABCHostMode):
         else:
             self._mode = "new"
 
-    def _init_host(self) -> watolib.CREHost:
+    def _init_host(self) -> CREHost:
         clonename = request.get_ascii_input("clone")
         if not clonename:
             return self._init_new_host_object()
-        if not watolib.Folder.current().has_host(clonename):
+        if not Folder.current().has_host(clonename):
             raise MKUserError("host", _("You called this page with an invalid host name."))
         if not user.may("wato.clone_hosts"):
             raise MKAuthException(_("Sorry, you are not allowed to clone hosts."))
-        host = watolib.Folder.current().load_host(clonename)
+        host = Folder.current().load_host(clonename)
         self._verify_host_type(host)
         return host
 
@@ -607,14 +611,14 @@ class CreateHostMode(ABCHostMode):
         hostname = request.get_ascii_input_mandatory("host")
         Hostname().validate_value(hostname, "host")
 
-        folder = watolib.Folder.current()
+        folder = Folder.current()
 
         if transactions.check_transaction():
             folder.create_hosts([(hostname, attributes, cluster_nodes)])
 
         self._host = folder.load_host(hostname)
 
-        inventory_url = watolib.folder_preserving_link(
+        inventory_url = folder_preserving_link(
             [
                 ("mode", "inventory"),
                 ("host", self._host.name()),
@@ -671,8 +675,8 @@ class ModeCreateHost(CreateHostMode):
 
     @classmethod
     def _init_new_host_object(cls):
-        return watolib.Host(
-            folder=watolib.Folder.current(),
+        return Host(
+            folder=Folder.current(),
             host_name=request.var("host"),
             attributes={},
             cluster_nodes=None,
@@ -708,8 +712,8 @@ class ModeCreateCluster(CreateHostMode):
 
     @classmethod
     def _init_new_host_object(cls):
-        return watolib.Host(
-            folder=watolib.Folder.current(),
+        return Host(
+            folder=Folder.current(),
             host_name=request.var("host"),
             attributes={},
             cluster_nodes=[],

@@ -9,7 +9,6 @@ import json
 from typing import List, Optional, Type
 
 import cmk.gui.forms as forms
-import cmk.gui.watolib as watolib
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.exceptions import MKAuthException, MKGeneralException, MKUserError
 from cmk.gui.htmllib.context import html
@@ -46,6 +45,7 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.wato.pages.hosts import ModeEditHost, page_menu_host_entries
 from cmk.gui.watolib.check_mk_automations import diag_host
+from cmk.gui.watolib.hosts_and_folders import Folder, folder_preserving_link, Host
 
 
 @mode_registry.register
@@ -76,7 +76,7 @@ class ModeDiagHost(WatoMode):
 
     def _from_vars(self):
         self._hostname = request.get_ascii_input_mandatory("host")
-        self._host = watolib.Folder.current().load_host(self._hostname)
+        self._host = Folder.current().load_host(self._hostname)
         self._host.need_permission("read")
 
         if self._host.is_cluster():
@@ -173,7 +173,7 @@ class ModeDiagHost(WatoMode):
                 mode_url(
                     "edit_host",
                     host=self._hostname,
-                    folder=watolib.Folder.current().path(),
+                    folder=Folder.current().path(),
                 )
             )
         return None
@@ -339,7 +339,7 @@ class ModeDiagHost(WatoMode):
                         maxvalue=65535,
                         default_value=6556,
                         title=_('Checkmk Agent Port (<a href="%s">Rules</a>)')
-                        % watolib.folder_preserving_link(
+                        % folder_preserving_link(
                             [("mode", "edit_ruleset"), ("varname", "agent_ports")]
                         ),
                         help=_(
@@ -357,7 +357,7 @@ class ModeDiagHost(WatoMode):
                         display_format="%.0f",  # show values consistent to
                         size=2,  # SNMP-Timeout
                         title=_('TCP Connection Timeout (<a href="%s">Rules</a>)')
-                        % watolib.folder_preserving_link(
+                        % folder_preserving_link(
                             [("mode", "edit_ruleset"), ("varname", "tcp_connect_timeouts")]
                         ),
                         help=_(
@@ -371,7 +371,7 @@ class ModeDiagHost(WatoMode):
                     "snmp_timeout",
                     Integer(
                         title=_('SNMP-Timeout (<a href="%s">Rules</a>)')
-                        % watolib.folder_preserving_link(
+                        % folder_preserving_link(
                             [("mode", "edit_ruleset"), ("varname", "snmp_timing")]
                         ),
                         help=_(
@@ -388,7 +388,7 @@ class ModeDiagHost(WatoMode):
                     "snmp_retries",
                     Integer(
                         title=_('SNMP-Retries (<a href="%s">Rules</a>)')
-                        % watolib.folder_preserving_link(
+                        % folder_preserving_link(
                             [("mode", "edit_ruleset"), ("varname", "snmp_timing")]
                         ),
                         default_value=5,
@@ -415,7 +415,7 @@ class ModeAjaxDiagHost(AjaxPage):
         if not hostname:
             raise MKGeneralException(_("The hostname is missing."))
 
-        host = watolib.Host.host(hostname)
+        host = Host.host(hostname)
 
         if not host:
             raise MKGeneralException(_("The given host does not exist."))

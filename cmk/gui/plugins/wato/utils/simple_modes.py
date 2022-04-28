@@ -54,6 +54,7 @@ from cmk.gui.valuespec import (
     SetupSiteChoice,
     TextInput,
 )
+from cmk.gui.watolib.hosts_and_folders import make_action_link
 from cmk.gui.watolib.simple_config_file import WatoSimpleConfigFile
 
 _T = TypeVar("_T", bound=Mapping[str, Any])
@@ -294,7 +295,7 @@ class SimpleListMode(_SimpleWatoModeBase[_T]):
         html.icon_button(clone_url, _("Clone this %s") % self._mode_type.name_singular(), "clone")
 
         delete_url = make_confirm_link(
-            url=watolib.make_action_link(
+            url=make_action_link(
                 [
                     ("mode", self._mode_type.list_mode_name()),
                     ("_action", "delete"),

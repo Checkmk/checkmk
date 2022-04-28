@@ -44,7 +44,6 @@ from cmk.gui.plugins.wato.utils import (
     add_change,
     ContactGroupSelection,
     flash,
-    make_action_link,
     make_confirm_link,
     mode_registry,
     notification_parameter_registry,
@@ -85,6 +84,7 @@ from cmk.gui.watolib.check_mk_automations import (
     notification_replay,
 )
 from cmk.gui.watolib.global_settings import rulebased_notifications_enabled
+from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, make_action_link
 from cmk.gui.watolib.notifications import (
     load_notification_rules,
     load_user_notification_rules,
@@ -457,14 +457,14 @@ class ABCNotificationsMode(ABCEventsMode):
                 ("_move", nr),
             ]
         )
-        edit_url = watolib.folder_preserving_link(
+        edit_url = folder_preserving_link(
             [
                 ("mode", mode),
                 ("edit", nr),
                 ("user", userid),
             ]
         )
-        clone_url = watolib.folder_preserving_link(
+        clone_url = folder_preserving_link(
             [
                 ("mode", mode),
                 ("clone", nr),
@@ -518,9 +518,7 @@ class ModeNotifications(ABCNotificationsMode):
                                     title=_("Add rule"),
                                     icon_name="new",
                                     item=make_simple_link(
-                                        watolib.folder_preserving_link(
-                                            [("mode", "notification_rule")]
-                                        )
+                                        folder_preserving_link([("mode", "notification_rule")])
                                     ),
                                     is_shortcut=True,
                                     is_suggested=True,
@@ -1023,7 +1021,7 @@ class ModeUserNotifications(ABCUserNotificationsMode):
                                     title=_("Add rule"),
                                     icon_name="new",
                                     item=make_simple_link(
-                                        watolib.folder_preserving_link(
+                                        folder_preserving_link(
                                             [
                                                 ("mode", "user_notification_rule"),
                                                 ("user", self._user_id()),
@@ -1057,7 +1055,7 @@ class ModeUserNotifications(ABCUserNotificationsMode):
         yield PageMenuEntry(
             title=_("Users"),
             icon_name="users",
-            item=make_simple_link(watolib.folder_preserving_link([("mode", "users")])),
+            item=make_simple_link(folder_preserving_link([("mode", "users")])),
         )
 
 
@@ -1092,9 +1090,7 @@ class ModePersonalUserNotifications(ABCUserNotificationsMode):
                                     title=_("Add rule"),
                                     icon_name="new",
                                     item=make_simple_link(
-                                        watolib.folder_preserving_link(
-                                            [("mode", "notification_rule_p")]
-                                        )
+                                        folder_preserving_link([("mode", "notification_rule_p")])
                                     ),
                                     is_shortcut=True,
                                     is_suggested=True,

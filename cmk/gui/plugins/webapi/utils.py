@@ -16,7 +16,6 @@ import cmk.utils.plugin_registry
 from cmk.utils.type_defs import HostName
 
 import cmk.gui.utils.escaping as escaping
-import cmk.gui.watolib as watolib
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
@@ -29,6 +28,7 @@ from cmk.gui.watolib.host_attributes import (
     host_attribute,
     host_attribute_registry,
 )
+from cmk.gui.watolib.hosts_and_folders import Host
 
 
 class APICallDefinitionDict(TypedDict, total=False):
@@ -74,11 +74,11 @@ def check_hostname(hostname: HostName, should_exist=True) -> None:
     Hostname().validate_value(hostname, "hostname")
 
     if should_exist:
-        host = watolib.Host.host(hostname)
+        host = Host.host(hostname)
         if not host:
             raise MKUserError(None, _("No such host"))
     else:
-        if (host := watolib.Host.host(hostname)) is not None:
+        if (host := Host.host(hostname)) is not None:
             raise MKUserError(
                 None,
                 _("Host %s already exists in the folder %s") % (hostname, host.folder().path()),

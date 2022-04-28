@@ -8,7 +8,6 @@ from contextlib import nullcontext
 from typing import Any, ContextManager, Dict, List
 
 import cmk.gui.sites as sites
-import cmk.gui.watolib as watolib
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.context import html
@@ -20,6 +19,7 @@ from cmk.gui.plugins.sidebar.utils import SidebarSnapin, snapin_registry
 from cmk.gui.plugins.wato.check_mk_configuration import transform_virtual_host_trees
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.urls import makeuri_contextless
+from cmk.gui.watolib.hosts_and_folders import Folder, get_folder_title_path
 
 
 @snapin_registry.register
@@ -327,8 +327,8 @@ function virtual_host_tree_enter(path)
         if wato_folder.startswith("/wato/"):
             folder_path = wato_folder[6:-9]
             folder_path_components = folder_path.split("/")
-            if watolib.Folder.folder_exists(folder_path):
-                folder_titles = watolib.get_folder_title_path(folder_path)[1:]  # omit main folder
+            if Folder.folder_exists(folder_path):
+                folder_titles = get_folder_title_path(folder_path)[1:]  # omit main folder
         else:
             folder_titles = []
 

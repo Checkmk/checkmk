@@ -74,7 +74,6 @@ from cmk.automations.results import ABCAutomationResult
 import cmk.gui.hooks as hooks
 import cmk.gui.userdb as userdb
 import cmk.gui.utils.escaping as escaping
-import cmk.gui.watolib.bakery as bakery
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import g
@@ -2630,6 +2629,9 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
 
         # 3. Prepare agents for the new hosts
         if bake_hosts:
+            # TODO(ml): Import cycle
+            import cmk.gui.watolib.bakery as bakery
+
             bakery.try_bake_agents_for_hosts([e[0] for e in entries])
 
         folder_path = self.path()

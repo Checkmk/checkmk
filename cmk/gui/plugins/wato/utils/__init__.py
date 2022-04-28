@@ -31,6 +31,7 @@ import cmk.gui.mkeventd
 import cmk.gui.userdb as userdb
 import cmk.gui.watolib as watolib
 import cmk.gui.watolib.host_attributes as _host_attributes
+import cmk.gui.watolib.hosts_and_folders as _hosts_and_folders
 import cmk.gui.watolib.rulespecs as _rulespecs
 import cmk.gui.weblib as weblib
 from cmk.gui.config import active_config
@@ -132,10 +133,8 @@ from cmk.gui.watolib import (  # noqa: F401 # pylint: disable=unused-import
     ConfigDomainEventConsole,
     ConfigDomainGUI,
     ConfigDomainOMD,
-    folder_preserving_link,
     LivestatusViaTCP,
     log_audit,
-    make_action_link,
     user_script_choices,
     user_script_title,
 )
@@ -1818,7 +1817,7 @@ def configure_attributes(
 
             if attr.show_inherited_value():
                 if for_what in ["host", "cluster"]:
-                    url = watolib.Folder.current().edit_url()
+                    url = _hosts_and_folders.Folder.current().edit_url()
 
                 container = parent  # container is of type Folder
                 while container:
@@ -2671,12 +2670,12 @@ def get_hostnames_from_checkboxes(
     """Create list of all host names that are select with checkboxes in the current file.
     This is needed for bulk operations."""
     selected = user.get_rowselection(
-        weblib.selection_id(), "wato-folder-/" + watolib.Folder.current().path()
+        weblib.selection_id(), "wato-folder-/" + _hosts_and_folders.Folder.current().path()
     )
     search_text = request.var("search")
 
     selected_host_names: List[str] = []
-    for host_name, host in sorted(watolib.Folder.current().hosts().items()):
+    for host_name, host in sorted(_hosts_and_folders.Folder.current().hosts().items()):
         if (not search_text or _search_text_matches(host, search_text)) and (
             "_c_" + host_name
         ) in selected:
@@ -2686,7 +2685,7 @@ def get_hostnames_from_checkboxes(
 
 
 def _search_text_matches(
-    host: watolib.CREHost,
+    host: _hosts_and_folders.CREHost,
     search_text: str,
 ) -> bool:
 
@@ -2707,20 +2706,20 @@ def _search_text_matches(
 def get_hosts_from_checkboxes(filterfunc=None):
     """Create list of all host objects that are select with checkboxes in the current file.
     This is needed for bulk operations."""
-    folder = watolib.Folder.current()
+    folder = _hosts_and_folders.Folder.current()
     return [folder.host(host_name) for host_name in get_hostnames_from_checkboxes(filterfunc)]
 
 
 class FullPathFolderChoice(DropdownChoice):
     def __init__(self, **kwargs):
-        kwargs["choices"] = watolib.Folder.folder_choices_fulltitle
+        kwargs["choices"] = _hosts_and_folders.Folder.folder_choices_fulltitle
         kwargs.setdefault("title", _("Folder"))
         DropdownChoice.__init__(self, **kwargs)
 
 
 class FolderChoice(DropdownChoice):
     def __init__(self, **kwargs):
-        kwargs["choices"] = watolib.Folder.folder_choices
+        kwargs["choices"] = _hosts_and_folders.Folder.folder_choices
         kwargs.setdefault("title", _("Folder"))
         DropdownChoice.__init__(self, **kwargs)
 

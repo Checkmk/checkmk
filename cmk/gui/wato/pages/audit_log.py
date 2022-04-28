@@ -10,7 +10,6 @@ from typing import Iterator, List
 
 import cmk.utils.render as render
 
-import cmk.gui.watolib as watolib
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import FinalizeRequest, MKUserError
@@ -47,6 +46,7 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.wato.pages.activate_changes import render_object_ref
 from cmk.gui.watolib.audit_log import AuditLogStore
+from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
 from cmk.gui.watolib.objref import ObjectRefType
 
 
@@ -114,7 +114,7 @@ class ModeAuditLog(WatoMode):
             yield PageMenuEntry(
                 title=_("View changes"),
                 icon_name="activate",
-                item=make_simple_link(watolib.folder_preserving_link([("mode", "changelog")])),
+                item=make_simple_link(folder_preserving_link([("mode", "changelog")])),
             )
 
     def _page_menu_entries_actions(self) -> Iterator[PageMenuEntry]:

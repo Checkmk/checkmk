@@ -6,13 +6,13 @@
 
 from typing import Dict, Union
 
-import cmk.gui.watolib as watolib
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.plugins.views.utils import Painter, painter_registry, Sorter, sorter_registry
 from cmk.gui.type_defs import Row
 from cmk.gui.utils.html import HTML
+from cmk.gui.watolib.hosts_and_folders import get_folder_title_path
 
 
 @painter_registry.register
@@ -43,7 +43,7 @@ def get_wato_folder(row: Dict, how: str, with_links: bool = True) -> Union[str, 
         return ""
     wato_path = filename[6:-9]
     try:
-        title_path = watolib.get_folder_title_path(wato_path, with_links)
+        title_path = get_folder_title_path(wato_path, with_links)
     except MKGeneralException:
         # happens when a path can not be resolved using the local WATO.
         # e.g. when having an independent site with different folder

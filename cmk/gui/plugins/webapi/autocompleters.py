@@ -14,7 +14,6 @@ from cmk.utils.type_defs import MetricName
 
 import cmk.gui.mkeventd as mkeventd
 import cmk.gui.sites as sites
-import cmk.gui.watolib as watolib
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
@@ -36,6 +35,7 @@ from cmk.gui.query_filters import sites_options
 from cmk.gui.type_defs import Choices
 from cmk.gui.utils.labels import encode_label_for_livestatus, Label
 from cmk.gui.valuespec import autocompleter_registry
+from cmk.gui.watolib.hosts_and_folders import CREHost, Folder, Host
 
 
 def __live_query_to_choices(
@@ -88,7 +88,7 @@ def monitored_hostname_autocompleter(value: str, params: Dict) -> Choices:
 def config_hostname_autocompleter(value: str, params: Dict) -> Choices:
     """Return the matching list of dropdown choices
     Called by the webservice with the current input field value and the completions_params to get the list of choices"""
-    all_hosts: Dict[str, watolib.CREHost] = watolib.Host.all()
+    all_hosts: Dict[str, CREHost] = Host.all()
     match_pattern = re.compile(value, re.IGNORECASE)
     match_list: Choices = []
     for host_name, host_object in all_hosts.items():
@@ -183,7 +183,7 @@ def monitored_service_description_autocompleter(value: str, params: Dict) -> Cho
 
 @autocompleter_registry.register_expression("wato_folder_choices")
 def wato_folder_choices_autocompleter(value: str, params: Dict) -> Choices:
-    return watolib.Folder.folder_choices_fulltitle()
+    return Folder.folder_choices_fulltitle()
 
 
 @autocompleter_registry.register_expression("kubernetes_labels")

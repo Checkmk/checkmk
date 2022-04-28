@@ -20,10 +20,10 @@ from cmk.utils.i18n import _
 from cmk.utils.tags import BuiltinTagConfig, TagConfig, TagGroup
 from cmk.utils.type_defs import TagConfigSpec
 
-import cmk.gui.watolib as watolib
 from cmk.gui.config import load_config
 from cmk.gui.exceptions import MKAuthException, MKGeneralException
 from cmk.gui.logged_in import user
+from cmk.gui.watolib.hosts_and_folders import CREFolder, CREHost, Folder
 from cmk.gui.watolib.rulesets import FolderRulesets
 from cmk.gui.watolib.utils import multisite_dir, wato_root_dir
 
@@ -157,8 +157,8 @@ def load_aux_tags() -> List[str]:
 
 def _update_tag_dependencies():
     load_config()
-    watolib.Folder.invalidate_caches()
-    watolib.Folder.root_folder().rewrite_hosts_files()
+    Folder.invalidate_caches()
+    Folder.root_folder().rewrite_hosts_files()
 
 
 class RepairError(MKGeneralException):
@@ -190,7 +190,7 @@ def edit_tag_group(ident: str, edited_group: TagGroup, allow_repair=False):
     affected = change_host_tags_in_folders(
         operation,
         TagCleanupMode.CHECK,
-        watolib.Folder.root_folder(),
+        Folder.root_folder(),
     )
     if any(affected):
         if not allow_repair:
@@ -198,7 +198,7 @@ def edit_tag_group(ident: str, edited_group: TagGroup, allow_repair=False):
         _ = change_host_tags_in_folders(
             operation,
             TagCleanupMode("repair"),
-            watolib.Folder.root_folder(),
+            Folder.root_folder(),
         )
     update_tag_config(tag_config)
 
@@ -351,7 +351,7 @@ def _change_host_tags_in_hosts(operation, mode, folder):
 
 
 def _change_host_tags_in_host_or_folder(operation, mode, host_or_folder):
-    affected: List[Union[watolib.CREHost, watolib.CREFolder]] = []
+    affected: List[Union[CREHost, CREFolder]] = []
 
     attrname = "tag_" + operation.tag_group_id
     attributes = host_or_folder.attributes()

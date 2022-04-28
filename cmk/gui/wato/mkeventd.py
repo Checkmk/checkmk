@@ -86,7 +86,6 @@ from cmk.gui.plugins.wato.utils import (
     HostRulespec,
     main_module_registry,
     MainModuleTopicEvents,
-    make_action_link,
     mode_registry,
     mode_url,
     redirect,
@@ -152,6 +151,7 @@ from cmk.gui.wato.pages.global_settings import (
     ABCGlobalSettingsMode,
     MatchItemGeneratorSettings,
 )
+from cmk.gui.watolib.hosts_and_folders import make_action_link
 from cmk.gui.watolib.search import (
     ABCMatchItemGenerator,
     match_item_generator_registry,

@@ -49,6 +49,7 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeactionuri, makeuri_contextless
 from cmk.gui.valuespec import Checkbox, Transform
+from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
 from cmk.gui.watolib.search import (
     ABCMatchItemGenerator,
     match_item_generator_registry,
@@ -178,7 +179,7 @@ class ABCGlobalSettingsMode(WatoMode):
 
                 default_value = self._default_values[varname]
 
-                edit_url = watolib.folder_preserving_link(
+                edit_url = folder_preserving_link(
                     [
                         ("mode", self.edit_mode_name),
                         ("varname", varname),

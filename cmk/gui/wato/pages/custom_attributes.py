@@ -11,7 +11,6 @@ from datetime import datetime
 from typing import Any, Dict, Iterable, Optional, Type
 
 import cmk.gui.forms as forms
-import cmk.gui.watolib as watolib
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.context import html
@@ -45,6 +44,7 @@ from cmk.gui.watolib.custom_attributes import (
     update_user_custom_attrs,
 )
 from cmk.gui.watolib.host_attributes import host_attribute_topic_registry
+from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
 
 
 def custom_attr_types() -> Choices:
@@ -428,7 +428,7 @@ class ModeCustomAttrs(WatoMode, abc.ABC):
                                     title=_("Add attribute"),
                                     icon_name="new",
                                     item=make_simple_link(
-                                        watolib.folder_preserving_link(
+                                        folder_preserving_link(
                                             [("mode", "edit_%s_attr" % self._type)]
                                         )
                                     ),
@@ -484,7 +484,7 @@ class ModeCustomAttrs(WatoMode, abc.ABC):
                 table.row()
 
                 table.cell(_("Actions"), css="buttons")
-                edit_url = watolib.folder_preserving_link(
+                edit_url = folder_preserving_link(
                     [("mode", "edit_%s_attr" % self._type), ("edit", custom_attr["name"])]
                 )
                 delete_url = make_confirm_link(

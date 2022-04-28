@@ -50,7 +50,6 @@ from cmk.utils.type_defs import HostName
 import cmk.gui.watolib.activate_changes as activate_changes
 import cmk.gui.watolib.bakery as bakery
 from cmk.gui import fields as gui_fields
-from cmk.gui import watolib
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.http import Response
@@ -68,7 +67,7 @@ from cmk.gui.plugins.openapi.utils import problem
 from cmk.gui.plugins.webapi.utils import check_hostname
 from cmk.gui.watolib.check_mk_automations import delete_hosts
 from cmk.gui.watolib.host_rename import perform_rename_hosts
-from cmk.gui.watolib.hosts_and_folders import CREFolder
+from cmk.gui.watolib.hosts_and_folders import CREFolder, CREHost, Folder, Host
 
 from cmk import fields
 
@@ -117,7 +116,7 @@ def create_host(params):
         [(host_name, body["attributes"], None)], bake_hosts=params[BAKE_AGENT_PARAM_NAME]
     )
 
-    host = watolib.Host.load_host(host_name)
+    host = Host.load_host(host_name)
     return _serve_host(host, False)
 
 
@@ -144,7 +143,7 @@ def create_cluster_host(params):
         [(host_name, body["attributes"], body["nodes"])], bake_hosts=params[BAKE_AGENT_PARAM_NAME]
     )
 
-    host = watolib.Host.load_host(host_name)
+    host = Host.load_host(host_name)
     return _serve_host(host, effective_attributes=False)
 
 
@@ -206,12 +205,12 @@ def bulk_create_hosts(params):
         bakery.try_bake_agents_for_hosts(succeeded_hosts)
 
     return _bulk_host_action_response(
-        failed_hosts, [watolib.Host.load_host(host_name) for host_name in succeeded_hosts]
+        failed_hosts, [Host.load_host(host_name) for host_name in succeeded_hosts]
     )
 
 
 def _bulk_host_action_response(
-    failed_hosts: Dict[HostName, str], succeeded_hosts: Sequence[watolib.CREHost]
+    failed_hosts: Dict[HostName, str], succeeded_hosts: Sequence[CREHost]
 ) -> Response:
     if failed_hosts:
         return problem(
@@ -237,16 +236,16 @@ def _bulk_host_action_response(
 )
 def list_hosts(param) -> Response:
     """Show all hosts"""
-    root_folder = watolib.Folder.root_folder()
+    root_folder = Folder.root_folder()
     root_folder.need_recursive_permission("read")
     return serve_host_collection(root_folder.all_hosts_recursively().values())
 
 
-def serve_host_collection(hosts: Iterable[watolib.CREHost]) -> Response:
+def serve_host_collection(hosts: Iterable[CREHost]) -> Response:
     return constructors.serve_json(_host_collection(hosts))
 
 
-def _host_collection(hosts: Iterable[watolib.CREHost]) -> dict[str, Any]:
+def _host_collection(hosts: Iterable[CREHost]) -> dict[str, Any]:
     return {
         "id": "host",
         "domainType": "host_config",
@@ -277,7 +276,7 @@ def update_nodes(params):
     host_name = params["host_name"]
     body = params["body"]
     nodes = body["nodes"]
-    host: watolib.CREHost = watolib.Host.load_host(host_name)
+    host: CREHost = Host.load_host(host_name)
     _require_host_etag(host)
     host.edit(host.attributes(), nodes)
 
@@ -309,7 +308,7 @@ def update_host(params):
     update_attributes = body["update_attributes"]
     remove_attributes = body["remove_attributes"]
     check_hostname(host_name, should_exist=True)
-    host: watolib.CREHost = watolib.Host.load_host(host_name)
+    host: CREHost = Host.load_host(host_name)
     _require_host_etag(host)
 
     if new_attributes:
@@ -357,7 +356,7 @@ def bulk_update_hosts(params):
     body = params["body"]
     entries = body["entries"]
 
-    succeeded_hosts: List[watolib.CREHost] = []
+    succeeded_hosts: List[CREHost] = []
     failed_hosts: Dict[HostName, str] = {}
     for update_detail in entries:
         host_name = update_detail["host_name"]
@@ -365,7 +364,7 @@ def bulk_update_hosts(params):
         update_attributes = update_detail["update_attributes"]
         remove_attributes = update_detail["remove_attributes"]
         check_hostname(host_name)
-        host: watolib.CREHost = watolib.Host.load_host(host_name)
+        host: CREHost = Host.load_host(host_name)
         if new_attributes:
             host.edit(new_attributes, None)
 
@@ -420,7 +419,7 @@ def rename_host(params):
             detail="Please activate all pending changes before executing a host rename process",
         )
     host_name = params["host_name"]
-    host: watolib.CREHost = watolib.Host.load_host(host_name)
+    host: CREHost = Host.load_host(host_name)
     new_name = params["body"]["new_name"]
     _, auth_problems = perform_rename_hosts([(host.folder(), host_name, new_name)])
     if auth_problems:
@@ -452,7 +451,7 @@ def move(params):
     """Move a host to another folder"""
     user.need_permission("wato.move_hosts")
     host_name = params["host_name"]
-    host: watolib.CREHost = watolib.Host.load_host(host_name)
+    host: CREHost = Host.load_host(host_name)
     _require_host_etag(host)
     current_folder = host.folder()
     target_folder: CREFolder = params["body"]["target_folder"]
@@ -487,7 +486,7 @@ def delete(params):
     host_name = params["host_name"]
     # Parameters can't be validated through marshmallow yet.
     check_hostname(host_name, should_exist=True)
-    host: watolib.CREHost = watolib.Host.load_host(host_name)
+    host: CREHost = Host.load_host(host_name)
     host.folder().delete_hosts([host.name()], automation=delete_hosts)
     return Response(status=204)
 
@@ -504,7 +503,7 @@ def bulk_delete(params):
     """Bulk delete hosts"""
     body = params["body"]
     for host_name in body["entries"]:
-        host = watolib.Host.load_host(host_name)
+        host = Host.load_host(host_name)
         host.folder().delete_hosts([host.name()], automation=delete_hosts)
     return Response(status=204)
 
@@ -535,7 +534,7 @@ def bulk_delete(params):
 def show_host(params):
     """Show a host"""
     host_name = params["host_name"]
-    host: watolib.CREHost = watolib.Host.load_host(host_name)
+    host: CREHost = Host.load_host(host_name)
     return _serve_host(host, effective_attributes=params["effective_attributes"])
 
 
@@ -548,7 +547,7 @@ def _serve_host(host, effective_attributes=False):
     return response
 
 
-def serialize_host(host: watolib.CREHost, effective_attributes: bool):
+def serialize_host(host: CREHost, effective_attributes: bool):
     extensions = {
         "folder": host.folder().path(),
         "attributes": host.attributes(),

@@ -31,6 +31,7 @@ from cmk.gui.utils.urls import makeuri, makeuri_contextless
 from cmk.gui.watolib import automation_command_registry, AutomationCommand
 from cmk.gui.watolib.automations import do_remote_automation
 from cmk.gui.watolib.check_mk_automations import get_agent_output
+from cmk.gui.watolib.hosts_and_folders import CREHost, Folder, Host
 
 # .
 #   .--Agent-Output--------------------------------------------------------.
@@ -49,14 +50,14 @@ from cmk.gui.watolib.check_mk_automations import get_agent_output
 
 
 class FetchAgentOutputRequest:
-    def __init__(self, host: watolib.CREHost, agent_type: str) -> None:
+    def __init__(self, host: CREHost, agent_type: str) -> None:
         self.host = host
         self.agent_type = agent_type
 
     @classmethod
     def deserialize(cls, serialized: Dict[str, str]) -> "FetchAgentOutputRequest":
         host_name = serialized["host_name"]
-        host = watolib.Host.host(host_name)
+        host = Host.host(host_name)
         if host is None:
             raise MKGeneralException(
                 _(
@@ -98,7 +99,7 @@ class AgentOutputPage(Page, abc.ABC):
 
         self._back_url = request.get_url_input("back_url", deflt="") or None
 
-        host = watolib.Folder.current().host(host_name)
+        host = Folder.current().host(host_name)
         if not host:
             raise MKGeneralException(
                 _("Host is not managed by WATO. " 'Click <a href="%s">here</a> to go back.')

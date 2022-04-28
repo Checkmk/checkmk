@@ -17,7 +17,7 @@ if typing.TYPE_CHECKING:
 from cmk.utils.object_diff import make_diff_text
 from cmk.utils.type_defs import RuleOptions
 
-from cmk.gui import exceptions, http, watolib
+from cmk.gui import exceptions, http
 from cmk.gui.i18n import _l
 from cmk.gui.plugins.openapi.endpoints.rule.fields import (
     InputRuleObject,
@@ -33,6 +33,7 @@ from cmk.gui.plugins.openapi.utils import problem
 from cmk.gui.utils import gen_id
 from cmk.gui.utils.escaping import strip_tags
 from cmk.gui.watolib import add_change
+from cmk.gui.watolib.hosts_and_folders import CREFolder
 from cmk.gui.watolib.rulesets import AllRulesets, FolderRulesets, Rule, RuleConditions, Ruleset
 
 # TODO: move a rule within a ruleset
@@ -59,7 +60,7 @@ def create_rule(param):
     """Create rule"""
     user.need_permission("wato.rulesets")
     body = param["body"]
-    folder: watolib.CREFolder = body["folder"]
+    folder: CREFolder = body["folder"]
     value = body["value_raw"]
     ruleset_name = body["ruleset"]
 
@@ -175,7 +176,7 @@ def show_rule(param):
     return serve_json(_serialize_rule(folder, index, rule))
 
 
-def _get_rule_by_id(rule_uuid: str) -> Tuple[Ruleset, watolib.CREFolder, int, Rule]:
+def _get_rule_by_id(rule_uuid: str) -> Tuple[Ruleset, CREFolder, int, Rule]:
     all_sets = AllRulesets()
     all_sets.load()
     for ruleset in all_sets.get_rulesets().values():
@@ -227,7 +228,7 @@ def delete_rule(param):
 
 
 def _serialize_rule(
-    folder: watolib.CREFolder,
+    folder: CREFolder,
     index: int,
     rule: Rule,
 ) -> DomainObject:

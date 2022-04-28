@@ -15,7 +15,6 @@ from cmk.utils.type_defs import CheckPluginNameStr, HostName, Item, ServiceName
 import cmk.base.export  # pylint: disable=cmk-module-layer-violation
 
 import cmk.gui.forms as forms
-import cmk.gui.watolib as watolib
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.context import html
@@ -35,6 +34,7 @@ from cmk.gui.utils.escaping import escape_to_html
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.wato.pages.rulesets import ModeEditRuleset
+from cmk.gui.watolib.hosts_and_folders import Folder, folder_preserving_link
 from cmk.gui.watolib.rulesets import SingleRulesetRecursively
 from cmk.gui.watolib.search import (
     ABCMatchItemGenerator,
@@ -79,7 +79,7 @@ class ModePatternEditor(WatoMode):
         self._item = request.get_str_input_mandatory("file", "")
         self._match_txt = request.get_str_input_mandatory("match", "")
 
-        self._host = watolib.Folder.current().host(self._hostname)
+        self._host = Folder.current().host(self._hostname)
 
         if self._hostname and not self._host:
             raise MKUserError(None, _("This host does not exist."))
@@ -194,7 +194,7 @@ class ModePatternEditor(WatoMode):
             html.write_text(
                 "There are no logfile patterns defined. You may create "
                 'logfile patterns using the <a href="%s">Rule Editor</a>.'
-                % watolib.folder_preserving_link(
+                % folder_preserving_link(
                     [
                         ("mode", "edit_ruleset"),
                         ("varname", "logwatch_rules"),
@@ -213,7 +213,7 @@ class ModePatternEditor(WatoMode):
 
                 # If hostname (and maybe filename) try match it
                 rule_matches = rule.matches_host_and_item(
-                    watolib.Folder.current(), self._hostname, self._item, service_desc
+                    Folder.current(), self._hostname, self._item, service_desc
                 )
             else:
                 # If no host/file given match all rules
@@ -294,7 +294,7 @@ class ModePatternEditor(WatoMode):
 
                 table.row(fixed=True)
                 table.cell(colspan=5)
-                edit_url = watolib.folder_preserving_link(
+                edit_url = folder_preserving_link(
                     [
                         ("mode", "edit_rule"),
                         ("varname", "logwatch_rules"),

@@ -36,7 +36,6 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.plugins.wato.utils import (
-    make_action_link,
     make_confirm_link,
     mode_registry,
     mode_url,
@@ -61,6 +60,7 @@ from cmk.gui.valuespec import (
     Tuple,
     ValueSpec,
 )
+from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, make_action_link
 from cmk.gui.watolib.notifications import load_notification_rules
 from cmk.gui.watolib.rulesets import AllRulesets
 
@@ -103,9 +103,7 @@ class ModeTimeperiods(WatoMode):
                                     title=_("Add time period"),
                                     icon_name="new",
                                     item=make_simple_link(
-                                        watolib.folder_preserving_link(
-                                            [("mode", "edit_timeperiod")]
-                                        )
+                                        folder_preserving_link([("mode", "edit_timeperiod")])
                                     ),
                                     is_shortcut=True,
                                     is_suggested=True,
@@ -114,7 +112,7 @@ class ModeTimeperiods(WatoMode):
                                     title=_("Import iCalendar"),
                                     icon_name="ical",
                                     item=make_simple_link(
-                                        watolib.folder_preserving_link([("mode", "import_ical")])
+                                        folder_preserving_link([("mode", "import_ical")])
                                     ),
                                     is_shortcut=True,
                                     is_suggested=True,
@@ -190,7 +188,7 @@ class ModeTimeperiods(WatoMode):
                     used_in.append(
                         (
                             "%s: %s" % (_("Ruleset"), ruleset.title()),
-                            watolib.folder_preserving_link(
+                            folder_preserving_link(
                                 [("mode", "edit_ruleset"), ("varname", varname)]
                             ),
                         )
@@ -206,7 +204,7 @@ class ModeTimeperiods(WatoMode):
                 used_in.append(
                     (
                         "%s: %s" % (_("User"), userid),
-                        watolib.folder_preserving_link([("mode", "edit_user"), ("edit", userid)]),
+                        folder_preserving_link([("mode", "edit_user"), ("edit", userid)]),
                     )
                 )
 
@@ -224,9 +222,7 @@ class ModeTimeperiods(WatoMode):
                     (
                         "%s: %s (%s)"
                         % (_("Timeperiod"), timeperiod_spec_alias(tp, tpn), _("excluded")),
-                        watolib.folder_preserving_link(
-                            [("mode", "edit_timeperiod"), ("edit", tpn)]
-                        ),
+                        folder_preserving_link([("mode", "edit_timeperiod"), ("edit", tpn)]),
                     )
                 )
         return used_in
@@ -242,7 +238,7 @@ class ModeTimeperiods(WatoMode):
     ) -> List[TimeperiodUsage]:
         used_in: List[TimeperiodUsage] = []
         if self._used_in_tp_condition(rule, tpname) or self._used_in_bulking(rule, tpname):
-            url = watolib.folder_preserving_link(
+            url = folder_preserving_link(
                 [
                     ("mode", "notification_rule"),
                     ("edit", index),
@@ -273,7 +269,7 @@ class ModeTimeperiods(WatoMode):
             return used_in
         for index, rule in enumerate(alert_handling.load_alert_handler_rules()):
             if rule.get("match_timeperiod") == tpname:
-                url = watolib.folder_preserving_link(
+                url = folder_preserving_link(
                     [
                         ("mode", "alert_handler_rule"),
                         ("edit", index),
@@ -288,7 +284,7 @@ class ModeTimeperiods(WatoMode):
         for rule_pack in rule_packs:
             for rule_index, rule in enumerate(rule_pack["rules"]):
                 if rule.get("match_timeperiod") == tpname:
-                    url = watolib.folder_preserving_link(
+                    url = folder_preserving_link(
                         [
                             ("mode", "mkeventd_edit_rule"),
                             ("edit", rule_index),
@@ -312,7 +308,7 @@ class ModeTimeperiods(WatoMode):
                 for index, (rule_tp_name, _value) in enumerate(rule.value["tp_values"]):
                     if rule_tp_name != tpname:
                         continue
-                    edit_url = watolib.folder_preserving_link(
+                    edit_url = folder_preserving_link(
                         [
                             ("mode", "edit_rule"),
                             ("back_mode", "timeperiods"),
@@ -341,13 +337,13 @@ class ModeTimeperiods(WatoMode):
                 table.cell(_("Alias"), timeperiod_spec_alias(timeperiod))
 
     def _action_buttons(self, name):
-        edit_url = watolib.folder_preserving_link(
+        edit_url = folder_preserving_link(
             [
                 ("mode", "edit_timeperiod"),
                 ("edit", name),
             ]
         )
-        clone_url = watolib.folder_preserving_link(
+        clone_url = folder_preserving_link(
             [
                 ("mode", "edit_timeperiod"),
                 ("clone", name),

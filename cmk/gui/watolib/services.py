@@ -29,6 +29,7 @@ from cmk.gui.site_config import get_site_config, site_is_local
 from cmk.gui.watolib.activate_changes import sync_changes_before_remote_automation
 from cmk.gui.watolib.automations import do_remote_automation
 from cmk.gui.watolib.check_mk_automations import discovery, set_autochecks, try_discovery
+from cmk.gui.watolib.hosts_and_folders import CREFolder, CREHost
 from cmk.gui.watolib.rulesets import (
     AllRulesets,
     Rule,
@@ -138,8 +139,8 @@ class DiscoveryOptions(NamedTuple):
 
 
 class StartDiscoveryRequest(NamedTuple):
-    host: watolib.CREHost
-    folder: watolib.CREFolder
+    host: CREHost
+    folder: CREFolder
     options: DiscoveryOptions
 
 
@@ -319,7 +320,7 @@ class Discovery:
 
     def _update_rule_of_host(
         self, ruleset: Ruleset, service_patterns: HostOrServiceConditions, value: Any
-    ) -> List[watolib.CREFolder]:
+    ) -> List[CREFolder]:
         folder = self._host.folder()
         rule = self._get_rule_of_host(ruleset, value)
 

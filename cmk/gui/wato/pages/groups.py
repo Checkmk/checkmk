@@ -55,6 +55,7 @@ from cmk.gui.valuespec import (
     ListOf,
     ListOfStrings,
 )
+from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
 
 
 class ModeGroups(WatoMode, abc.ABC):
@@ -93,7 +94,7 @@ class ModeGroups(WatoMode, abc.ABC):
                                     title=_("Add group"),
                                     icon_name="new",
                                     item=make_simple_link(
-                                        watolib.folder_preserving_link(
+                                        folder_preserving_link(
                                             [("mode", "edit_%s_group" % self.type_name)]
                                         )
                                     ),
@@ -162,14 +163,14 @@ class ModeGroups(WatoMode, abc.ABC):
 
     def _show_row_cells(self, table: Table, name: GroupName, group: GroupSpec) -> None:
         table.cell(_("Actions"), css="buttons")
-        edit_url = watolib.folder_preserving_link(
+        edit_url = folder_preserving_link(
             [("mode", "edit_%s_group" % self.type_name), ("edit", name)]
         )
         delete_url = make_confirm_link(
             url=makeactionuri(request, transactions, [("_delete", name)]),
             message=_('Do you really want to delete the %s group "%s"?') % (self.type_name, name),
         )
-        clone_url = watolib.folder_preserving_link(
+        clone_url = folder_preserving_link(
             [("mode", "edit_%s_group" % self.type_name), ("clone", name)]
         )
         html.icon_button(edit_url, _("Properties"), "edit")
@@ -315,13 +316,11 @@ class ModeHostgroups(ModeGroups):
         yield PageMenuEntry(
             title=_("Service groups"),
             icon_name="servicegroups",
-            item=make_simple_link(watolib.folder_preserving_link([("mode", "service_groups")])),
+            item=make_simple_link(folder_preserving_link([("mode", "service_groups")])),
         )
 
     def _rules_url(self) -> str:
-        return watolib.folder_preserving_link(
-            [("mode", "edit_ruleset"), ("varname", "host_groups")]
-        )
+        return folder_preserving_link([("mode", "edit_ruleset"), ("varname", "host_groups")])
 
 
 @mode_registry.register
@@ -348,13 +347,11 @@ class ModeServicegroups(ModeGroups):
         yield PageMenuEntry(
             title=_("Host groups"),
             icon_name="hostgroups",
-            item=make_simple_link(watolib.folder_preserving_link([("mode", "host_groups")])),
+            item=make_simple_link(folder_preserving_link([("mode", "host_groups")])),
         )
 
     def _rules_url(self) -> str:
-        return watolib.folder_preserving_link(
-            [("mode", "edit_ruleset"), ("varname", "service_groups")]
-        )
+        return folder_preserving_link([("mode", "edit_ruleset"), ("varname", "service_groups")])
 
 
 @mode_registry.register
@@ -383,11 +380,11 @@ class ModeContactgroups(ModeGroups):
         yield PageMenuEntry(
             title=_("Users"),
             icon_name="users",
-            item=make_simple_link(watolib.folder_preserving_link([("mode", "users")])),
+            item=make_simple_link(folder_preserving_link([("mode", "users")])),
         )
 
     def _rules_url(self) -> str:
-        return watolib.folder_preserving_link(
+        return folder_preserving_link(
             [("mode", "rule_search"), ("filled_in", "search"), ("search", "contactgroups")]
         )
 
@@ -407,9 +404,7 @@ class ModeContactgroups(ModeGroups):
                 [
                     html.render_a(
                         alias,
-                        href=watolib.folder_preserving_link(
-                            [("mode", "edit_user"), ("edit", userid)]
-                        ),
+                        href=folder_preserving_link([("mode", "edit_user"), ("edit", userid)]),
                     )
                     for userid, alias in self._members.get(name, [])
                 ]

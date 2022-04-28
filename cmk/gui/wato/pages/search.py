@@ -8,7 +8,6 @@
 from typing import Optional, Type
 
 import cmk.gui.forms as forms
-import cmk.gui.watolib as watolib
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.htmllib.context import html
 from cmk.gui.http import request
@@ -20,6 +19,7 @@ from cmk.gui.type_defs import ActionResult, HTTPVariables
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import TextInput
 from cmk.gui.wato.pages.folders import ModeFolder
+from cmk.gui.watolib.hosts_and_folders import Folder
 
 
 @mode_registry.register
@@ -38,7 +38,7 @@ class ModeSearch(WatoMode):
 
     def __init__(self):
         super().__init__()
-        self._folder = watolib.Folder.current()
+        self._folder = Folder.current()
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(

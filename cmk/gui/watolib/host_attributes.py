@@ -234,7 +234,7 @@ class ABCHostAttribute(abc.ABC):
         Instead, an exclicit_host_config entry will be generated, e.g.
         explicit_host_config["alias"][hostname] = value
 
-        Used in: cmk.gui.watolib.hosts_and_folders:CREFolder:_save_hosts_file
+        Used in: hosts_and_folders:CREFolder:_save_hosts_file
         """
         return False
 
@@ -601,6 +601,7 @@ def _update_config_based_host_attributes() -> None:
     _declare_host_tag_attributes()
     declare_custom_host_attrs()
 
+    # TODO(ml): Import cycle
     from cmk.gui.watolib.hosts_and_folders import Folder  # pylint: disable=import-outside-toplevel
 
     Folder.invalidate_caches()

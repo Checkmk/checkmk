@@ -38,7 +38,6 @@ from typing import List
 from werkzeug.datastructures import ETags
 
 from cmk.gui import fields as gui_fields
-from cmk.gui import watolib
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import Response
 from cmk.gui.plugins.openapi.endpoints.host_config import serve_host_collection
@@ -51,7 +50,7 @@ from cmk.gui.plugins.openapi.restful_objects import (
     response_schemas,
 )
 from cmk.gui.plugins.openapi.utils import problem, ProblemException
-from cmk.gui.watolib import CREFolder
+from cmk.gui.watolib.hosts_and_folders import CREFolder, Folder
 
 from cmk import fields
 
@@ -121,7 +120,7 @@ def create(params):
 )
 def hosts_of_folder(params):
     """Show all hosts in a folder"""
-    folder: watolib.CREFolder = params["folder"]
+    folder: CREFolder = params["folder"]
     folder.need_permission("read")
     return serve_host_collection(folder.hosts().values())
 
@@ -267,12 +266,12 @@ def delete(params):
 )
 def move(params):
     """Move a folder"""
-    folder: watolib.CREFolder = params["folder"]
+    folder: CREFolder = params["folder"]
     folder_id = folder.id()
 
     constructors.require_etag(etag_of_folder(folder))
 
-    dest_folder: watolib.CREFolder = params["body"]["destination"]
+    dest_folder: CREFolder = params["body"]["destination"]
 
     try:
         folder.parent().move_subfolder_to(folder, dest_folder)
@@ -295,7 +294,7 @@ def move(params):
             "parent": gui_fields.FolderField(
                 description="Show all sub-folders of this folder. The default is the root-folder.",
                 example="/servers",
-                load_default=watolib.Folder.root_folder,  # because we can't load it too early.
+                load_default=Folder.root_folder,  # because we can't load it too early.
             ),
             "recursive": fields.Boolean(
                 description="List the folder (default: root) and all its sub-folders recursively.",

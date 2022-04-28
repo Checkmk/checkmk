@@ -23,7 +23,7 @@ from cmk.utils.livestatus_helpers.queries import Query
 from cmk.utils.livestatus_helpers.tables import Hostgroups, Hosts, Servicegroups
 from cmk.utils.livestatus_helpers.types import Column, Table
 
-from cmk.gui import sites, watolib
+from cmk.gui import sites
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.fields.base import BaseSchema, MultiNested, ValueTypedDictSchema
 from cmk.gui.fields.utils import (
@@ -37,6 +37,7 @@ from cmk.gui.groups import GroupName, GroupType, load_group_information
 from cmk.gui.logged_in import user
 from cmk.gui.site_config import allsites
 from cmk.gui.watolib.host_attributes import host_attribute, HostAttributeTopicCustomAttributes
+from cmk.gui.watolib.hosts_and_folders import CREFolder, Folder, Host
 from cmk.gui.watolib.passwords import contact_group_choices, password_exists
 
 from cmk.fields import base, DateTime
@@ -170,7 +171,7 @@ class FolderField(base.String):
         return folder_id
 
     @classmethod
-    def load_folder(cls, folder_id: str) -> watolib.CREFolder:
+    def load_folder(cls, folder_id: str) -> CREFolder:
         def _ishexdigit(hex_string: str) -> bool:
             try:
                 int(hex_string, 16)
@@ -179,12 +180,12 @@ class FolderField(base.String):
                 return False
 
         if folder_id == "/":
-            folder = watolib.Folder.root_folder()
+            folder = Folder.root_folder()
         elif _ishexdigit(folder_id):
-            folder = watolib.Folder.by_id(folder_id)
+            folder = Folder.by_id(folder_id)
         else:
             folder_id = cls._normalize_folder(folder_id)
-            folder = watolib.Folder.folder(folder_id[1:])
+            folder = Folder.folder(folder_id[1:])
 
         return folder
 
@@ -200,7 +201,7 @@ class FolderField(base.String):
         if isinstance(value, str):
             return value
 
-        if isinstance(value, watolib.CREFolder):
+        if isinstance(value, CREFolder):
             return "/" + value.path()
 
         raise ValueError(f"Unknown type: {value!r}")
@@ -556,14 +557,14 @@ class HostField(base.String):
         # Regex gets checked through the `pattern` of the String instance
 
         if self._should_exist is not None:
-            host = watolib.Host.host(value)
+            host = Host.host(value)
             if self._should_exist and not host:
                 raise self.make_error("should_exist", host_name=value)
 
             if not self._should_exist and host:
                 raise self.make_error("should_not_exist", host_name=value)
 
-        if self._should_be_cluster is not None and (host := watolib.Host.host(value)) is not None:
+        if self._should_be_cluster is not None and (host := Host.host(value)) is not None:
             if self._should_be_cluster and not host.is_cluster():
                 raise self.make_error("should_be_cluster", host_name=value)
 

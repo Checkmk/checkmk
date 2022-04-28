@@ -19,7 +19,6 @@ from typing import Any, Dict
 
 from cmk.utils.tags import BuiltinTagConfig, TagGroup, TaggroupSpec
 
-import cmk.gui.watolib as watolib
 from cmk.gui.http import Response
 from cmk.gui.plugins.openapi.restful_objects import (
     constructors,
@@ -30,6 +29,7 @@ from cmk.gui.plugins.openapi.restful_objects import (
 )
 from cmk.gui.plugins.openapi.utils import problem, ProblemException
 from cmk.gui.watolib.host_attributes import undeclare_host_tag_attribute
+from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.watolib.tags import (
     change_host_tags_in_folders,
     edit_tag_group,
@@ -201,7 +201,7 @@ def delete_host_tag_group(params):
         )
 
     affected = change_host_tags_in_folders(
-        OperationRemoveTagGroup(ident), TagCleanupMode.CHECK, watolib.Folder.root_folder()
+        OperationRemoveTagGroup(ident), TagCleanupMode.CHECK, Folder.root_folder()
     )
     if any(affected):
         if not params["repair"]:
@@ -215,7 +215,7 @@ def delete_host_tag_group(params):
             )
         undeclare_host_tag_attribute(ident)
         _ = change_host_tags_in_folders(
-            OperationRemoveTagGroup(ident), TagCleanupMode("delete"), watolib.Folder.root_folder()
+            OperationRemoveTagGroup(ident), TagCleanupMode("delete"), Folder.root_folder()
         )
 
     tag_config = load_tag_config()

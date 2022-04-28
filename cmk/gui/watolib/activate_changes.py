@@ -90,6 +90,11 @@ from cmk.gui.watolib.automation_commands import automation_command_registry, Aut
 from cmk.gui.watolib.config_domains import ConfigDomainOMD
 from cmk.gui.watolib.config_sync import extract_from_buffer, ReplicationPath, SnapshotCreator
 from cmk.gui.watolib.global_settings import save_site_global_settings
+from cmk.gui.watolib.hosts_and_folders import (
+    collect_all_hosts,
+    folder_preserving_link,
+    validate_all_hosts,
+)
 from cmk.gui.watolib.site_changes import SiteChanges
 from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
 
@@ -671,7 +676,7 @@ class ActivateChangesManager(ActivateChanges):
         return self._activation_id
 
     def _verify_valid_host_config(self):
-        defective_hosts = cmk.gui.watolib.validate_all_hosts([], force_all=True)
+        defective_hosts = validate_all_hosts([], force_all=True)
         if defective_hosts:
             raise MKUserError(
                 None,
@@ -680,9 +685,7 @@ class ActivateChangesManager(ActivateChanges):
                     [
                         '<a href="%s">%s</a>'
                         % (
-                            cmk.gui.watolib.folder_preserving_link(
-                                [("mode", "edit_host"), ("host", hn)]
-                            ),
+                            folder_preserving_link([("mode", "edit_host"), ("host", hn)]),
                             hn,
                         )
                         for hn in defective_hosts
@@ -806,7 +809,7 @@ class ActivateChangesManager(ActivateChanges):
     def _pre_activate_changes(self):
         try:
             if hooks.registered("pre-distribute-changes"):
-                hooks.call("pre-distribute-changes", cmk.gui.watolib.collect_all_hosts())
+                hooks.call("pre-distribute-changes", collect_all_hosts())
         except Exception as e:
             logger.exception("error calling pre-distribute-changes hook")
             if active_config.debug:
@@ -2107,7 +2110,7 @@ def _add_extensions_for_license_usage():
 
 def _update_links_for_agent_receiver() -> None:
     uuid_link_manager = agent_registration.get_uuid_link_manager()
-    uuid_link_manager.update_links(cmk.gui.watolib.collect_all_hosts())
+    uuid_link_manager.update_links(collect_all_hosts())
 
 
 def confirm_all_local_changes() -> None:

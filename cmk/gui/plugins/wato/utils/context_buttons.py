@@ -4,11 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import cmk.gui.watolib as watolib
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.page_menu import make_simple_link, PageMenuEntry
 from cmk.gui.utils.urls import makeuri_contextless
+from cmk.gui.watolib.hosts_and_folders import CREFolder, Folder
 
 
 def make_host_status_link(host_name: str, view_name: str) -> PageMenuEntry:
@@ -20,7 +20,7 @@ def make_host_status_link(host_name: str, view_name: str) -> PageMenuEntry:
                 request,
                 [
                     ("view_name", view_name),
-                    ("filename", watolib.Folder.current().path() + "/hosts.mk"),
+                    ("filename", Folder.current().path() + "/hosts.mk"),
                     ("host", host_name),
                     ("site", ""),
                 ],
@@ -48,7 +48,7 @@ def make_service_status_link(host_name: str, service_name: str) -> PageMenuEntry
     )
 
 
-def make_folder_status_link(folder: watolib.CREFolder, view_name: str) -> PageMenuEntry:
+def make_folder_status_link(folder: CREFolder, view_name: str) -> PageMenuEntry:
     return PageMenuEntry(
         title=_("Status"),
         icon_name="status",

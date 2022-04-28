@@ -12,8 +12,8 @@ from cmk.utils import store
 from cmk.gui import userdb
 from cmk.gui.config import load_config
 from cmk.gui.plugins.watolib.utils import wato_fileheader
-from cmk.gui.watolib import Folder
 from cmk.gui.watolib.host_attributes import transform_pre_16_host_topics
+from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.watolib.utils import multisite_dir
 
 

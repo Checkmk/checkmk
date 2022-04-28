@@ -47,6 +47,7 @@ from cmk.gui.watolib.activate_changes import activate_changes_start, activate_ch
 from cmk.gui.watolib.automations import do_site_login
 from cmk.gui.watolib.bakery import try_bake_agents_for_hosts
 from cmk.gui.watolib.check_mk_automations import delete_hosts, discovery, try_discovery
+from cmk.gui.watolib.hosts_and_folders import check_wato_foldername, CREFolder, Folder, Host
 from cmk.gui.watolib.rulesets import AllRulesets, FolderRulesets, Ruleset, SingleRulesetRecursively
 from cmk.gui.watolib.tags import TagConfigFile
 
@@ -100,10 +101,10 @@ class APICallFolders(APICallCollection):
 
     def _get(self, request):
         folder_path = request["folder"]
-        if not watolib.Folder.folder_exists(folder_path):
+        if not Folder.folder_exists(folder_path):
             raise MKUserError(None, _("Folder %s does not exist") % folder_path)
 
-        folder = watolib.Folder.folder(folder_path)
+        folder = Folder.folder(folder_path)
         if bool(int(request.get("effective_attributes", "0"))):
             attributes = folder.effective_attributes()
         else:
@@ -115,7 +116,7 @@ class APICallFolders(APICallCollection):
 
     def _add(self, request):
         folder_path = request["folder"]
-        watolib.check_wato_foldername(None, os.path.basename(folder_path), just_name=True)
+        check_wato_foldername(None, os.path.basename(folder_path), just_name=True)
 
         folder_attributes = request.get("attributes", {})
         if "alias" in folder_attributes:
@@ -128,18 +129,18 @@ class APICallFolders(APICallCollection):
 
         # Check existance of parent folder, create it when configured
         create_parent_folders = bool(int(request.get("create_parent_folders", "1")))
-        if create_parent_folders or watolib.Folder.folder_exists(os.path.dirname(folder_path)):
-            watolib.Folder.root_folder().create_missing_folders(folder_path)
-            watolib.Folder.folder(folder_path).edit(folder_alias, folder_attributes)
+        if create_parent_folders or Folder.folder_exists(os.path.dirname(folder_path)):
+            Folder.root_folder().create_missing_folders(folder_path)
+            Folder.folder(folder_path).edit(folder_alias, folder_attributes)
         else:
             raise MKUserError(None, _("Unable to create parent folder(s)."))
 
     def _edit(self, request):
         folder_path = request["folder"]
-        if not watolib.Folder.folder_exists(folder_path):
+        if not Folder.folder_exists(folder_path):
             raise MKUserError(None, _("Folder %s does not exist") % folder_path)
 
-        folder = watolib.Folder.folder(folder_path)
+        folder = Folder.folder(folder_path)
         if "configuration_hash" in request:
             validate_config_hash(request["configuration_hash"], folder.attributes())
 
@@ -156,10 +157,10 @@ class APICallFolders(APICallCollection):
 
     def _delete(self, request):
         folder_path = request["folder"]
-        if not watolib.Folder.folder_exists(folder_path):
+        if not Folder.folder_exists(folder_path):
             raise MKUserError(None, _("Folder %s does not exist") % folder_path)
 
-        folder = watolib.Folder.folder(folder_path)
+        folder = Folder.folder(folder_path)
         if "configuration_hash" in request:
             validate_config_hash(request["configuration_hash"], folder.attributes())
 
@@ -172,7 +173,7 @@ class APICallFolders(APICallCollection):
         folders = {}
         effective_attributes = bool(int(request.get("effective_attributes", "0")))
 
-        for folder_path, folder in watolib.Folder.all_folders().items():
+        for folder_path, folder in Folder.all_folders().items():
             if effective_attributes:
                 folders[folder_path] = folder.effective_attributes()
             else:
@@ -260,7 +261,7 @@ class APICallHosts(APICallCollection):
         if folder_path not in ("", "/"):
             folders = folder_path.split("/")
             for foldername in folders:
-                watolib.check_wato_foldername(None, foldername, just_name=True)
+                check_wato_foldername(None, foldername, just_name=True)
         else:
             folder_path = ""
             folders = [""]
@@ -273,15 +274,15 @@ class APICallHosts(APICallCollection):
         validate_host_attributes(attributes, new=True)
 
         # Create folder(s)
-        if not watolib.Folder.folder_exists(folder_path):
+        if not Folder.folder_exists(folder_path):
             if not create_parent_folders:
                 raise MKUserError(None, _("Unable to create parent folder(s)."))
-            watolib.Folder.create_missing_folders(folder_path)
+            Folder.create_missing_folders(folder_path)
 
         # Add host
         if cluster_nodes:
             cluster_nodes = list(map(str, cluster_nodes))
-        watolib.Folder.folder(folder_path).create_hosts(
+        Folder.folder(folder_path).create_hosts(
             [(hostname, attributes, cluster_nodes)], bake_hosts=bake_hosts
         )
 
@@ -317,7 +318,7 @@ class APICallHosts(APICallCollection):
         cluster_nodes = request.get("nodes")
 
         check_hostname(hostname, should_exist=True)
-        host = watolib.Host.load_host(hostname)
+        host = Host.load_host(hostname)
 
         # Deprecated, but still supported
         # Nodes are now specified in an extra key
@@ -349,7 +350,7 @@ class APICallHosts(APICallCollection):
 
         check_hostname(hostname, should_exist=True)
 
-        host = watolib.Host.load_host(hostname)
+        host = Host.load_host(hostname)
         host.need_permission("read")
         if bool(int(request.get("effective_attributes", "0"))):
             attributes = host.effective_attributes()
@@ -365,7 +366,7 @@ class APICallHosts(APICallCollection):
         effective_attributes = bool(int(request.get("effective_attributes", "0")))
 
         response = {}
-        all_hosts = watolib.Folder.root_folder().all_hosts_recursively()
+        all_hosts = Folder.root_folder().all_hosts_recursively()
 
         for hostname, host in all_hosts.items():
             host.need_permission("read")
@@ -387,11 +388,11 @@ class APICallHosts(APICallCollection):
         hostname = request["hostname"]
         check_hostname(hostname, should_exist=True)
 
-        host = watolib.Host.load_host(hostname)
+        host = Host.load_host(hostname)
         host.folder().delete_hosts([host.name()], automation=delete_hosts)
 
     def _delete_hosts(self, request):
-        all_hosts = watolib.Host.all()
+        all_hosts = Host.all()
         delete_hostnames = set(request["hostnames"])
         all_hostnames = set(all_hosts.keys())
 
@@ -399,7 +400,7 @@ class APICallHosts(APICallCollection):
         if unknown_hosts:
             raise MKUserError(None, _("No such host(s): %s") % ", ".join(unknown_hosts))
 
-        grouped_by_folders: Dict[watolib.CREFolder, List[Any]] = {}
+        grouped_by_folders: Dict[CREFolder, List[Any]] = {}
         for hostname in delete_hostnames:
             grouped_by_folders.setdefault(all_hosts[hostname].folder(), []).append(hostname)
 
@@ -735,9 +736,9 @@ class APICallRules(APICallCollection):
 
         for check_folders in [folders_set_ruleset, folders_obsolete_ruleset]:
             for folder_path in check_folders:
-                if not watolib.Folder.folder_exists(folder_path):
+                if not Folder.folder_exists(folder_path):
                     raise MKUserError(None, _("Folder %s does not exist") % folder_path)
-                rule_folder = watolib.Folder.folder(folder_path)
+                rule_folder = Folder.folder(folder_path)
                 rule_folder.need_permission("write")
 
         tag_to_group_map = ruleset_matcher.get_tag_to_group_map(active_config.tags)
@@ -757,7 +758,7 @@ class APICallRules(APICallCollection):
 
         # Add new rulesets
         for folder_path, rules in new_ruleset.items():
-            folder = watolib.Folder.folder(folder_path)
+            folder = Folder.folder(folder_path)
 
             new_ruleset = Ruleset(ruleset_name, tag_to_group_map)
             new_ruleset.from_config(folder, rules)
@@ -781,7 +782,7 @@ class APICallRules(APICallCollection):
 
         # Remove obsolete rulesets
         for folder_path in folders_obsolete_ruleset:
-            folder = watolib.Folder.folder(folder_path)
+            folder = Folder.folder(folder_path)
 
             folder_rulesets = FolderRulesets(folder)
             folder_rulesets.load()
@@ -913,12 +914,12 @@ class APICallHosttags(APICallCollection):
         used_tags = set()
 
         # This requires a lot of computation power..
-        for folder in watolib.Folder.all_folders().values():
+        for folder in Folder.all_folders().values():
             for attr_name, value in folder.attributes().items():
                 if attr_name.startswith("tag_"):
                     used_tags.add((attr_name[4:], value))
 
-        for host in watolib.Host.all().values():
+        for host in Host.all().values():
             for attr_name, value in host.attributes().items():
                 if attr_name.startswith("tag_"):
                     used_tags.add((attr_name[4:], value))
@@ -1173,7 +1174,7 @@ class APICallOther(APICallCollection):
 
         check_hostname(hostname, should_exist=True)
 
-        host = watolib.Host.load_host(hostname)
+        host = Host.load_host(hostname)
 
         host_attributes = host.effective_attributes()
 

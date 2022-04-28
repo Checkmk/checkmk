@@ -17,7 +17,6 @@ from cmk.utils.bi.bi_packs import BIHostRenamer
 from cmk.utils.object_diff import make_diff_text
 from cmk.utils.type_defs import HostName
 
-import cmk.gui.watolib as watolib
 from cmk.gui import userdb
 from cmk.gui.bi import get_cached_bi_packs
 from cmk.gui.exceptions import MKAuthException
@@ -164,7 +163,7 @@ def _rename_host_in_rulesets(folder, oldname, newname):
         for subfolder in folder.subfolders():
             rename_host_in_folder_rules(subfolder)
 
-    rename_host_in_folder_rules(watolib.Folder.root_folder())
+    rename_host_in_folder_rules(Folder.root_folder())
     if changed_rulesets:
         actions = []
         unique = set(changed_rulesets)

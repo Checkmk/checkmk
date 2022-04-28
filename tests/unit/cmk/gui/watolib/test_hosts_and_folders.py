@@ -21,7 +21,6 @@ from mock import MagicMock
 import cmk.utils.paths
 from cmk.utils.type_defs import ContactgroupName, UserId
 
-import cmk.gui.watolib as watolib
 import cmk.gui.watolib.hosts_and_folders as hosts_and_folders
 from cmk.gui import userdb
 from cmk.gui.config import active_config
@@ -163,10 +162,14 @@ def test_write_and_read_host_attributes(
 ) -> None:
     folder_path = str(tmp_path)
     # Used to write the data
-    write_data_folder = watolib.Folder("testfolder", folder_path=folder_path, parent_folder=None)
+    write_data_folder = hosts_and_folders.Folder(
+        "testfolder", folder_path=folder_path, parent_folder=None
+    )
 
     # Used to read the previously written data
-    read_data_folder = watolib.Folder("testfolder", folder_path=folder_path, parent_folder=None)
+    read_data_folder = hosts_and_folders.Folder(
+        "testfolder", folder_path=folder_path, parent_folder=None
+    )
 
     # Write data
     # Note: The create_hosts function modifies the attributes dict, adding a meta_data key inplace
@@ -191,12 +194,12 @@ def in_chdir(directory) -> Iterator[None]:
 
 def test_create_nested_folders(request_context: None) -> None:
     with in_chdir("/"):
-        root = watolib.Folder.root_folder()
+        root = hosts_and_folders.Folder.root_folder()
 
-        folder1 = watolib.Folder("folder1", parent_folder=root)
+        folder1 = hosts_and_folders.Folder("folder1", parent_folder=root)
         folder1.persist_instance()
 
-        folder2 = watolib.Folder("folder2", parent_folder=folder1)
+        folder2 = hosts_and_folders.Folder("folder2", parent_folder=folder1)
         folder2.persist_instance()
 
         shutil.rmtree(os.path.dirname(folder1.wato_info_path()))
@@ -204,18 +207,18 @@ def test_create_nested_folders(request_context: None) -> None:
 
 def test_eq_operation(request_context: None) -> None:
     with in_chdir("/"):
-        root = watolib.Folder.root_folder()
-        folder1 = watolib.Folder("folder1", parent_folder=root)
+        root = hosts_and_folders.Folder.root_folder()
+        folder1 = hosts_and_folders.Folder("folder1", parent_folder=root)
         folder1.persist_instance()
 
-        folder1_new = watolib.Folder("folder1")
+        folder1_new = hosts_and_folders.Folder("folder1")
         folder1_new.load_instance()
 
         assert folder1 == folder1_new
         assert id(folder1) != id(folder1_new)
         assert folder1 in [folder1_new]
 
-        folder2 = watolib.Folder("folder2", parent_folder=folder1)
+        folder2 = hosts_and_folders.Folder("folder2", parent_folder=folder1)
         folder2.persist_instance()
 
         assert folder1 not in [folder2]

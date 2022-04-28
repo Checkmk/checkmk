@@ -85,6 +85,7 @@ from cmk.gui.watolib.activate_changes import (
 )
 from cmk.gui.watolib.automations import do_remote_automation, do_site_login, MKAutomationException
 from cmk.gui.watolib.global_settings import load_site_global_settings, save_site_global_settings
+from cmk.gui.watolib.hosts_and_folders import Folder, folder_preserving_link, make_action_link
 from cmk.gui.watolib.sites import is_livestatus_encrypted, site_globals_editable
 
 
@@ -605,7 +606,7 @@ class ModeDistributedMonitoring(WatoMode):
             raise MKUserError(None, _("You can not delete the connection to the local site."))
 
         # Make sure that site is not being used by hosts and folders
-        if delete_id in watolib.Folder.root_folder().all_site_ids():
+        if delete_id in Folder.root_folder().all_site_ids():
             search_url = makeactionuri_contextless(
                 request,
                 transactions,
@@ -767,10 +768,10 @@ class ModeDistributedMonitoring(WatoMode):
 
     def _show_buttons(self, table, site_id, site):
         table.cell(_("Actions"), css="buttons")
-        edit_url = watolib.folder_preserving_link([("mode", "edit_site"), ("site", site_id)])
+        edit_url = folder_preserving_link([("mode", "edit_site"), ("site", site_id)])
         html.icon_button(edit_url, _("Properties"), "edit")
 
-        clone_url = watolib.folder_preserving_link([("mode", "edit_site"), ("clone", site_id)])
+        clone_url = folder_preserving_link([("mode", "edit_site"), ("clone", site_id)])
         html.icon_button(
             clone_url, _("Clone this connection in order to create a new one"), "clone"
         )
@@ -788,9 +789,7 @@ class ModeDistributedMonitoring(WatoMode):
             html.icon_button(delete_url, _("Delete"), "delete")
 
         if site_globals_editable(site_id, site):
-            globals_url = watolib.folder_preserving_link(
-                [("mode", "edit_site_globals"), ("site", site_id)]
-            )
+            globals_url = folder_preserving_link([("mode", "edit_site_globals"), ("site", site_id)])
 
             has_site_globals = bool(site.get("globals"))
             title = _("Site specific global configuration")
@@ -814,7 +813,7 @@ class ModeDistributedMonitoring(WatoMode):
     def _show_status_connection_status(self, table, site_id, site):
         table.cell("")
 
-        encrypted_url = watolib.folder_preserving_link(
+        encrypted_url = folder_preserving_link(
             [("mode", "site_livestatus_encryption"), ("site", site_id)]
         )
         html.icon_button(encrypted_url, _("Show details about livestatus encryption"), "encrypted")
@@ -849,13 +848,13 @@ class ModeDistributedMonitoring(WatoMode):
         if site["replication"]:
             if site.get("secret"):
                 logout_url = make_confirm_link(
-                    url=watolib.make_action_link([("mode", "sites"), ("_logout", site_id)]),
+                    url=make_action_link([("mode", "sites"), ("_logout", site_id)]),
                     message=_("Do you really want to log out of '%s'?")
                     % html.render_tt(site["alias"]),
                 )
                 html.icon_button(logout_url, _("Logout"), "autherr")
             else:
-                login_url = watolib.make_action_link([("mode", "sites"), ("_login", site_id)])
+                login_url = make_action_link([("mode", "sites"), ("_login", site_id)])
                 html.icon_button(login_url, _("Login"), "authok")
 
         html.open_div(id_="replication_status_%s" % site_id, class_="connection_status")

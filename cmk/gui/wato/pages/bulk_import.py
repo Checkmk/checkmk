@@ -17,7 +17,6 @@ from typing import Any, Dict, List, Optional, Type
 import cmk.utils.store as store
 
 import cmk.gui.pages
-import cmk.gui.watolib as watolib
 import cmk.gui.watolib.bakery as bakery
 import cmk.gui.weblib as weblib
 from cmk.gui.breadcrumb import Breadcrumb
@@ -51,6 +50,7 @@ from cmk.gui.valuespec import (
 from cmk.gui.wato.pages.custom_attributes import ModeCustomHostAttrs
 from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.watolib.host_attributes import host_attribute_registry
+from cmk.gui.watolib.hosts_and_folders import Folder
 
 # Was not able to get determine the type of csv._reader / _csv.reader
 CSVReader = Any
@@ -231,7 +231,7 @@ class ModeBulkImport(WatoMode):
 
             host_name, attributes = self._get_host_info_from_row(row, row_num)
             try:
-                watolib.Folder.current().create_hosts(
+                Folder.current().create_hosts(
                     [(host_name, attributes, None)],
                     bake_hosts=False,
                 )
@@ -256,7 +256,7 @@ class ModeBulkImport(WatoMode):
                 msg += "<li>%s</li>" % fail_msg
             msg += "</ul>"
 
-        folder_path = watolib.Folder.current().path()
+        folder_path = Folder.current().path()
         if num_succeeded > 0 and request.var("do_service_detection") == "1":
             # Create a new selection for performing the bulk discovery
             user.set_rowselection(

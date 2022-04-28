@@ -50,7 +50,7 @@ from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.wato.pages.hosts import ModeEditHost, page_menu_host_entries
 from cmk.gui.watolib.activate_changes import confirm_all_local_changes
 from cmk.gui.watolib.host_rename import perform_rename_hosts
-from cmk.gui.watolib.hosts_and_folders import validate_host_uniqueness
+from cmk.gui.watolib.hosts_and_folders import Folder, Host, validate_host_uniqueness
 from cmk.gui.watolib.site_changes import SiteChanges
 
 
@@ -190,7 +190,7 @@ class ModeBulkRenameHost(WatoMode):
     def _renaming_collision_error(self, renamings):
         name_collisions = set()
         new_names = [new_name for _folder, _old_name, new_name in renamings]
-        all_host_names = watolib.Host.all().keys()
+        all_host_names = Host.all().keys()
         for name in new_names:
             if name in all_host_names:
                 name_collisions.add(name)
@@ -208,7 +208,7 @@ class ModeBulkRenameHost(WatoMode):
             return warning
 
     def _collect_host_renamings(self, renaming_config):
-        return self._recurse_hosts_for_renaming(watolib.Folder.current(), renaming_config)
+        return self._recurse_hosts_for_renaming(Folder.current(), renaming_config)
 
     def _recurse_hosts_for_renaming(self, folder, renaming_config):
         entries = []
@@ -415,13 +415,13 @@ class ModeRenameHost(WatoMode):
     def _from_vars(self):
         host_name = request.get_ascii_input_mandatory("host")
 
-        if not watolib.Folder.current().has_host(host_name):
+        if not Folder.current().has_host(host_name):
             raise MKUserError("host", _("You called this page with an invalid host name."))
 
         if not user.may("wato.rename_hosts"):
             raise MKAuthException(_("You don't have the right to rename hosts"))
 
-        self._host = watolib.Folder.current().load_host(host_name)
+        self._host = Folder.current().load_host(host_name)
         self._host.need_permission("write")
 
     def title(self):
@@ -494,7 +494,7 @@ class ModeRenameHost(WatoMode):
         host_renaming_job = RenameHostBackgroundJob(
             self._host, title=_("Renaming of %s -> %s") % (self._host.name(), newname)
         )
-        renamings = [(watolib.Folder.current(), self._host.name(), newname)]
+        renamings = [(Folder.current(), self._host.name(), newname)]
         host_renaming_job.set_function(rename_hosts_background_job, renamings)
 
         try:
@@ -507,7 +507,7 @@ class ModeRenameHost(WatoMode):
     def _check_new_host_name(self, varname, host_name):
         if not host_name:
             raise MKUserError(varname, _("Please specify a host name."))
-        if watolib.Folder.current().has_host(host_name):
+        if Folder.current().has_host(host_name):
             raise MKUserError(varname, _("A host with this name already exists in this folder."))
         validate_host_uniqueness(varname, host_name)
         Hostname().validate_value(host_name, varname)

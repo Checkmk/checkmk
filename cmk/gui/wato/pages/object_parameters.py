@@ -13,7 +13,6 @@ from typing import Type, Union
 
 import cmk.gui.forms as forms
 import cmk.gui.view_utils
-import cmk.gui.watolib as watolib
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
@@ -27,7 +26,7 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.valuespec import Tuple
 from cmk.gui.wato.pages.hosts import ModeEditHost, page_menu_host_entries
 from cmk.gui.watolib.check_mk_automations import analyse_host, analyse_service
-from cmk.gui.watolib.hosts_and_folders import CREFolder
+from cmk.gui.watolib.hosts_and_folders import CREFolder, CREHost, Folder, folder_preserving_link
 from cmk.gui.watolib.rulesets import AllRulesets, Rule, Ruleset
 from cmk.gui.watolib.rulespecs import (
     get_rulegroup,
@@ -57,10 +56,10 @@ class ModeObjectParameters(WatoMode):
 
     def _from_vars(self):
         self._hostname = request.get_ascii_input_mandatory("host")
-        host = watolib.Folder.current().host(self._hostname)
+        host = Folder.current().host(self._hostname)
         if host is None:
             raise MKUserError("host", _("The given host does not exist."))
-        self._host: watolib.CREHost = host
+        self._host: CREHost = host
         self._host.need_permission("read")
 
         # TODO: Validate?
@@ -222,7 +221,7 @@ class ModeObjectParameters(WatoMode):
                         )
                         return
 
-                    url = watolib.folder_preserving_link(
+                    url = folder_preserving_link(
                         [
                             ("mode", "edit_ruleset"),
                             ("varname", "static_checks:" + checkgroup),
@@ -304,11 +303,11 @@ class ModeObjectParameters(WatoMode):
                 )
             rule_folder, rule_index, rule = origin_rule_result
 
-            url = watolib.folder_preserving_link(
+            url = folder_preserving_link(
                 [("mode", "edit_ruleset"), ("varname", "custom_checks"), ("host", self._hostname)]
             )
             forms.section(html.render_a(_("Command Line"), href=url))
-            url = watolib.folder_preserving_link(
+            url = folder_preserving_link(
                 [
                     ("mode", "edit_rule"),
                     ("varname", "custom_checks"),
@@ -406,7 +405,7 @@ class ModeObjectParameters(WatoMode):
             known_settings = self._PARAMETERS_UNKNOWN
 
         def rule_url(rule: Rule) -> str:
-            return watolib.folder_preserving_link(
+            return folder_preserving_link(
                 [
                     ("mode", "edit_rule"),
                     ("varname", varname),
@@ -424,7 +423,7 @@ class ModeObjectParameters(WatoMode):
         varname = rulespec.name
         valuespec = rulespec.valuespec
 
-        url = watolib.folder_preserving_link(
+        url = folder_preserving_link(
             [
                 ("mode", "edit_ruleset"),
                 ("varname", varname),

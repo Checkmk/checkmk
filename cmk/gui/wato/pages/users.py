@@ -45,7 +45,6 @@ from cmk.gui.plugins.userdb.htpasswd import hash_password
 from cmk.gui.plugins.userdb.utils import get_connection, UserAttribute
 from cmk.gui.plugins.wato.utils import (
     flash,
-    make_action_link,
     make_confirm_link,
     mode_registry,
     mode_url,
@@ -64,6 +63,7 @@ from cmk.gui.utils.urls import makeactionuri, makeuri, makeuri_contextless
 from cmk.gui.valuespec import Alternative, DualListChoice, EmailAddress, FixedValue, UserID
 from cmk.gui.watolib.audit_log_url import make_object_audit_log_url
 from cmk.gui.watolib.global_settings import rulebased_notifications_enabled
+from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, make_action_link
 from cmk.gui.watolib.users import delete_users, edit_users, make_user_object_ref
 
 if cmk_version.is_managed_edition():
@@ -106,7 +106,7 @@ class ModeUsers(WatoMode):
                                     title=_("Add user"),
                                     icon_name="new",
                                     item=make_simple_link(
-                                        watolib.folder_preserving_link([("mode", "edit_user")])
+                                        folder_preserving_link([("mode", "edit_user")])
                                     ),
                                     is_shortcut=True,
                                     is_suggested=True,
@@ -186,13 +186,13 @@ class ModeUsers(WatoMode):
             yield PageMenuEntry(
                 title=_("Custom attributes"),
                 icon_name="custom_attr",
-                item=make_simple_link(watolib.folder_preserving_link([("mode", "user_attrs")])),
+                item=make_simple_link(folder_preserving_link([("mode", "user_attrs")])),
             )
 
         yield PageMenuEntry(
             title=_("LDAP & Active Directory"),
             icon_name="ldap",
-            item=make_simple_link(watolib.folder_preserving_link([("mode", "ldap_config")])),
+            item=make_simple_link(folder_preserving_link([("mode", "ldap_config")])),
         )
 
     def action(self) -> ActionResult:
@@ -353,14 +353,10 @@ class ModeUsers(WatoMode):
                 # Buttons
                 table.cell(_("Actions"), css="buttons")
                 if connection:  # only show edit buttons when the connector is available and enabled
-                    edit_url = watolib.folder_preserving_link(
-                        [("mode", "edit_user"), ("edit", uid)]
-                    )
+                    edit_url = folder_preserving_link([("mode", "edit_user"), ("edit", uid)])
                     html.icon_button(edit_url, _("Properties"), "edit")
 
-                    clone_url = watolib.folder_preserving_link(
-                        [("mode", "edit_user"), ("clone", uid)]
-                    )
+                    clone_url = folder_preserving_link([("mode", "edit_user"), ("clone", uid)])
                     html.icon_button(clone_url, _("Create a copy of this user"), "clone")
 
                 delete_url = make_confirm_link(
@@ -370,7 +366,7 @@ class ModeUsers(WatoMode):
                 html.icon_button(delete_url, _("Delete"), "delete")
 
                 if rulebased_notifications_enabled():
-                    notifications_url = watolib.folder_preserving_link(
+                    notifications_url = folder_preserving_link(
                         [("mode", "user_notifications"), ("user", uid)]
                     )
                     html.icon_button(
@@ -460,7 +456,7 @@ class ModeUsers(WatoMode):
                 if user_spec.get("roles", []):
                     role_links = [
                         (
-                            watolib.folder_preserving_link([("mode", "edit_role"), ("edit", role)]),
+                            folder_preserving_link([("mode", "edit_role"), ("edit", role)]),
                             roles[role].get("alias"),
                         )
                         for role in user_spec["roles"]
@@ -479,9 +475,7 @@ class ModeUsers(WatoMode):
                         contact_groups[c]["alias"] if c in contact_groups else c for c in cgs
                     ]
                     cg_urls = [
-                        watolib.folder_preserving_link(
-                            [("mode", "edit_contact_group"), ("edit", c)]
-                        )
+                        folder_preserving_link([("mode", "edit_contact_group"), ("edit", c)])
                         for c in cgs
                     ]
                     html.write_html(
@@ -515,7 +509,7 @@ class ModeUsers(WatoMode):
                         if tp not in timeperiods:
                             tp_code = escape_to_html(tp + _(" (invalid)"))
                         elif tp not in watolib.timeperiods.builtin_timeperiods():
-                            url = watolib.folder_preserving_link(
+                            url = folder_preserving_link(
                                 [("mode", "edit_timeperiod"), ("edit", tp)]
                             )
                             tp_code = html.render_a(
@@ -651,7 +645,7 @@ class ModeEditUser(WatoMode):
                 title=_("Notification rules"),
                 icon_name="topic_events",
                 item=make_simple_link(
-                    watolib.folder_preserving_link(
+                    folder_preserving_link(
                         [("mode", "user_notifications"), ("user", self._user_id)]
                     )
                 ),
@@ -1074,14 +1068,14 @@ class ModeEditUser(WatoMode):
         for role_id, role in sorted(self._roles.items(), key=lambda x: (x[1]["alias"], x[0])):
             if not self._is_locked("roles"):
                 html.checkbox("role_" + role_id, role_id in self._user.get("roles", []))
-                url = watolib.folder_preserving_link([("mode", "edit_role"), ("edit", role_id)])
+                url = folder_preserving_link([("mode", "edit_role"), ("edit", role_id)])
                 html.a(role["alias"], href=url)
                 html.br()
             else:
                 is_member = role_id in self._user.get("roles", [])
                 if is_member:
                     is_member_of_at_least_one = True
-                    url = watolib.folder_preserving_link([("mode", "edit_role"), ("edit", role_id)])
+                    url = folder_preserving_link([("mode", "edit_role"), ("edit", role_id)])
                     html.a(role["alias"], href=url)
                     html.br()
 
@@ -1093,14 +1087,14 @@ class ModeEditUser(WatoMode):
         # Contact groups
         forms.header(_("Contact Groups"), isopen=False)
         forms.section()
-        groups_page_url = watolib.folder_preserving_link([("mode", "contact_groups")])
-        hosts_assign_url = watolib.folder_preserving_link(
+        groups_page_url = folder_preserving_link([("mode", "contact_groups")])
+        hosts_assign_url = folder_preserving_link(
             [
                 ("mode", "edit_ruleset"),
                 ("varname", "host_contactgroups"),
             ]
         )
-        services_assign_url = watolib.folder_preserving_link(
+        services_assign_url = folder_preserving_link(
             [
                 ("mode", "edit_ruleset"),
                 ("varname", "service_contactgroups"),
@@ -1127,9 +1121,7 @@ class ModeEditUser(WatoMode):
                     html.hidden_field("cg_" + gid, "1" if is_member else "")
 
                 if not self._is_locked("contactgroups") or is_member:
-                    url = watolib.folder_preserving_link(
-                        [("mode", "edit_contact_group"), ("edit", gid)]
-                    )
+                    url = folder_preserving_link([("mode", "edit_contact_group"), ("edit", gid)])
                     html.a(alias, href=url)
                     html.br()
 

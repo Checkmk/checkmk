@@ -25,7 +25,6 @@ from cmk.utils.bi.bi_search import (
 from cmk.utils.defines import short_service_state_name
 
 import cmk.gui.userdb as userdb
-import cmk.gui.watolib as watolib
 from cmk.gui.bi import get_cached_bi_packs
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
@@ -46,6 +45,7 @@ from cmk.gui.valuespec import (
     Transform,
     Tuple,
 )
+from cmk.gui.watolib.hosts_and_folders import Folder
 
 #   .--Generic converter---------------------------------------------------.
 #   |                   ____                      _                        |
@@ -373,7 +373,7 @@ class BIConfigHostSearch(BIHostSearch, ABCBIConfigSearch):
                 DropdownChoice(
                     title=_("Folder"),
                     help=_("The rule is only applied to hosts directly in or below this folder."),
-                    choices=watolib.Folder.folder_choices(),
+                    choices=Folder.folder_choices(),
                     encode_value=False,
                 ),
             ),

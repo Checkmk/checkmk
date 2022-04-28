@@ -30,7 +30,6 @@ from cmk.gui.page_menu import (
 from cmk.gui.plugins.wato.utils import (
     add_change,
     flash,
-    make_action_link,
     make_confirm_link,
     mode_registry,
     mode_url,
@@ -57,7 +56,13 @@ from cmk.gui.valuespec import (
     Tuple,
 )
 from cmk.gui.watolib.host_attributes import host_attribute, undeclare_host_tag_attribute
-from cmk.gui.watolib.hosts_and_folders import CREFolder, CREHost
+from cmk.gui.watolib.hosts_and_folders import (
+    CREFolder,
+    CREHost,
+    Folder,
+    folder_preserving_link,
+    make_action_link,
+)
 from cmk.gui.watolib.rulesets import Ruleset
 from cmk.gui.watolib.tags import (
     ABCOperation,
@@ -80,8 +85,8 @@ class ABCTagMode(WatoMode, abc.ABC):
     def _save_tags_and_update_hosts(self, tag_config):
         self._tag_config_file.save(tag_config)
         load_config()
-        watolib.Folder.invalidate_caches()
-        watolib.Folder.root_folder().rewrite_hosts_files()
+        Folder.invalidate_caches()
+        Folder.root_folder().rewrite_hosts_files()
 
     def _load_effective_config(self):
         self._builtin_config = cmk.utils.tags.BuiltinTagConfig()
@@ -133,7 +138,7 @@ class ModeTags(ABCTagMode):
                                     title=_("Add tag group"),
                                     icon_name="new",
                                     item=make_simple_link(
-                                        watolib.folder_preserving_link([("mode", "edit_tag")])
+                                        folder_preserving_link([("mode", "edit_tag")])
                                     ),
                                     is_shortcut=True,
                                     is_suggested=True,
@@ -142,7 +147,7 @@ class ModeTags(ABCTagMode):
                                     title=_("Add aux tag"),
                                     icon_name={"icon": "tag", "emblem": "add"},
                                     item=make_simple_link(
-                                        watolib.folder_preserving_link([("mode", "edit_auxtag")])
+                                        folder_preserving_link([("mode", "edit_auxtag")])
                                     ),
                                     is_shortcut=True,
                                     is_suggested=True,
@@ -159,7 +164,7 @@ class ModeTags(ABCTagMode):
                                         "emblem": "search",
                                     },
                                     item=make_simple_link(
-                                        watolib.folder_preserving_link([("mode", "tag_usage")])
+                                        folder_preserving_link([("mode", "tag_usage")])
                                     ),
                                 ),
                             ],
@@ -390,7 +395,7 @@ class ModeTags(ABCTagMode):
             html.i("(%s)" % _("builtin"))
             return
 
-        edit_url = watolib.folder_preserving_link([("mode", "edit_tag"), ("edit", tag_group.id)])
+        edit_url = folder_preserving_link([("mode", "edit_tag"), ("edit", tag_group.id)])
         html.icon_button(edit_url, _("Edit this tag group"), "edit")
 
         html.element_dragger_url("tr", base_url=make_action_link([("mode", "tags"), ("_move", nr)]))
@@ -440,7 +445,7 @@ class ModeTags(ABCTagMode):
             html.i("(%s)" % _("builtin"))
             return
 
-        edit_url = watolib.folder_preserving_link([("mode", "edit_auxtag"), ("edit", aux_tag.id)])
+        edit_url = folder_preserving_link([("mode", "edit_auxtag"), ("edit", aux_tag.id)])
         delete_url = make_confirm_link(
             url=make_action_link([("mode", "tags"), ("_del_aux", aux_tag.id)]),
             message=_("Do you really want to delete the auxiliary tag '%s'?") % aux_tag.id,
@@ -559,7 +564,7 @@ class ModeTagUsage(ABCTagMode):
             tag_group.id, remove_tag_ids=[tag.id], replace_tag_ids={}
         )
         affected_folders, affected_hosts, affected_rulesets = change_host_tags_in_folders(
-            operation, TagCleanupMode.CHECK, watolib.Folder.root_folder()
+            operation, TagCleanupMode.CHECK, Folder.root_folder()
         )
 
         table.cell(_("Explicitly set on folders"))
@@ -585,7 +590,7 @@ class ModeTagUsage(ABCTagMode):
             html.i("(%s)" % _("builtin"))
             return
 
-        edit_url = watolib.folder_preserving_link([("mode", "edit_tag"), ("edit", tag_group.id)])
+        edit_url = folder_preserving_link([("mode", "edit_tag"), ("edit", tag_group.id)])
         html.icon_button(edit_url, _("Edit this tag group"), "edit")
 
     def _show_aux_tag_list(self) -> None:
@@ -608,7 +613,7 @@ class ModeTagUsage(ABCTagMode):
             raise Exception("uninitialized tag")
         operation = OperationRemoveAuxTag(aux_tag.id)
         affected_folders, affected_hosts, affected_rulesets = change_host_tags_in_folders(
-            operation, TagCleanupMode.CHECK, watolib.Folder.root_folder()
+            operation, TagCleanupMode.CHECK, Folder.root_folder()
         )
 
         table.cell(_("Explicitly set on folders"))
@@ -628,7 +633,7 @@ class ModeTagUsage(ABCTagMode):
             html.i("(%s)" % _("builtin"))
             return
 
-        edit_url = watolib.folder_preserving_link([("mode", "edit_auxtag"), ("edit", aux_tag.id)])
+        edit_url = folder_preserving_link([("mode", "edit_auxtag"), ("edit", aux_tag.id)])
         html.icon_button(edit_url, _("Edit this auxiliary tag"), "edit")
 
 
@@ -924,7 +929,7 @@ def _rename_tags_after_confirmation(
             undeclare_host_tag_attribute(operation.tag_group_id)
 
         affected_folders, affected_hosts, affected_rulesets = change_host_tags_in_folders(
-            operation, mode, watolib.Folder.root_folder()
+            operation, mode, Folder.root_folder()
         )
 
         return _("Modified folders: %d, modified hosts: %d, modified rulesets: %d") % (
@@ -935,7 +940,7 @@ def _rename_tags_after_confirmation(
 
     message = HTML()
     affected_folders, affected_hosts, affected_rulesets = change_host_tags_in_folders(
-        operation, TagCleanupMode.CHECK, watolib.Folder.root_folder()
+        operation, TagCleanupMode.CHECK, Folder.root_folder()
     )
 
     if affected_folders:
@@ -1039,9 +1044,7 @@ def _show_aux_tag_used_by_tags(tags: Set[cmk.utils.tags.GroupedTag]) -> None:
         if builtin_config.tag_group_exists(tag.group.id):
             html.write_text(_u(tag.choice_title))
         else:
-            edit_url = watolib.folder_preserving_link(
-                [("mode", "edit_tag"), ("edit", tag.group.id)]
-            )
+            edit_url = folder_preserving_link([("mode", "edit_tag"), ("edit", tag.group.id)])
             html.a(_u(tag.choice_title), href=edit_url)
     html.close_li()
     html.close_ul()
@@ -1078,9 +1081,7 @@ def _show_affected_rulesets(affected_rulesets: List[Ruleset]) -> None:
         html.open_li()
         html.a(
             ruleset.title(),
-            href=watolib.folder_preserving_link(
-                [("mode", "edit_ruleset"), ("varname", ruleset.name)]
-            ),
+            href=folder_preserving_link([("mode", "edit_ruleset"), ("varname", ruleset.name)]),
         )
         html.close_li()
     html.close_ul()

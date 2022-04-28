@@ -87,20 +87,6 @@ from cmk.gui.watolib.groups import (
     is_alias_used,
     save_group_information,
 )
-from cmk.gui.watolib.hosts_and_folders import (
-    call_hook_hosts_changed,
-    check_wato_foldername,
-    collect_all_hosts,
-    CREFolder,
-    CREHost,
-    Folder,
-    folder_preserving_link,
-    get_folder_title,
-    get_folder_title_path,
-    Host,
-    make_action_link,
-    validate_all_hosts,
-)
 
 # TODO: Cleanup all except declare_host_attribute which is still neded for pre 1.6 plugin
 # compatibility. For the others: Find the call sites and change to full module import

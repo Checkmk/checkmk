@@ -11,7 +11,6 @@ from hashlib import sha256
 from typing import Optional, Type
 
 import cmk.gui.forms as forms
-import cmk.gui.watolib as watolib
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.htmllib.context import html
 from cmk.gui.http import request
@@ -30,6 +29,7 @@ from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.watolib.host_attributes import collect_attributes, host_attribute_registry
+from cmk.gui.watolib.hosts_and_folders import Folder
 
 
 @mode_registry.register
@@ -63,18 +63,18 @@ class ModeBulkEdit(WatoMode):
         changed_attributes = collect_attributes("bulk", new=False)
         host_names = get_hostnames_from_checkboxes()
         for host_name in host_names:
-            host = watolib.Folder.current().load_host(host_name)
+            host = Folder.current().load_host(host_name)
             host.update_attributes(changed_attributes)
             # call_hook_hosts_changed() is called too often.
             # Either offer API in class Host for bulk change or
             # delay saving until end somehow
 
         flash(_("Edited %d hosts") % len(host_names))
-        return redirect(watolib.Folder.current().url())
+        return redirect(Folder.current().url())
 
     def page(self) -> None:
         host_names = get_hostnames_from_checkboxes()
-        hosts = {host_name: watolib.Folder.current().host(host_name) for host_name in host_names}
+        hosts = {host_name: Folder.current().host(host_name) for host_name in host_names}
         current_host_hash = sha256(repr(hosts).encode()).hexdigest()
 
         # When bulk edit has been made with some hosts, then other hosts have been selected
@@ -109,7 +109,7 @@ class ModeBulkEdit(WatoMode):
         html.begin_form("edit_host", method="POST")
         html.prevent_password_auto_completion()
         html.hidden_field("host_hash", current_host_hash)
-        configure_attributes(False, hosts, "bulk", parent=watolib.Folder.current())
+        configure_attributes(False, hosts, "bulk", parent=Folder.current())
         forms.end()
         html.hidden_fields()
         html.end_form()
@@ -130,7 +130,7 @@ class ModeBulkCleanup(WatoMode):
         return ModeFolder
 
     def _from_vars(self):
-        self._folder = watolib.Folder.current()
+        self._folder = Folder.current()
 
     def title(self):
         return _("Bulk removal of explicit attributes")

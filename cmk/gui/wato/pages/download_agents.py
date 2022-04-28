@@ -14,7 +14,6 @@ import cmk.utils.paths
 import cmk.utils.render
 
 import cmk.gui.forms as forms
-import cmk.gui.watolib as watolib
 import cmk.gui.watolib.bakery as bakery
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.htmllib.context import html
@@ -26,9 +25,10 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
-from cmk.gui.plugins.wato.utils import folder_preserving_link, mode_registry, WatoMode
+from cmk.gui.plugins.wato.utils import mode_registry, WatoMode
 from cmk.gui.type_defs import PermissionName
 from cmk.gui.utils import agent
+from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
 
 
 class ABCModeDownloadAgents(WatoMode):
@@ -58,7 +58,7 @@ class ABCModeDownloadAgents(WatoMode):
             yield PageMenuEntry(
                 title=_("Windows, Linux, Solaris, AIX"),
                 icon_name="agents",
-                item=make_simple_link(watolib.folder_preserving_link([("mode", "agents")])),
+                item=make_simple_link(folder_preserving_link([("mode", "agents")])),
             )
 
         if self.name() != "download_agents_windows":

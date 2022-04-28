@@ -62,6 +62,7 @@ from cmk.gui.valuespec import (
     Tuple,
     ValueSpecText,
 )
+from cmk.gui.watolib.hosts_and_folders import Host
 
 from cmk import fields
 
@@ -472,7 +473,7 @@ def validate_host_parents(host):
                 None, _("You configured the host to be it's own parent, which is not allowed.")
             )
 
-        parent = watolib.Host.host(parent_name)
+        parent = Host.host(parent_name)
         if not parent:
             raise MKUserError(
                 None, _("You defined the non-existing host '%s' as a parent.") % parent_name

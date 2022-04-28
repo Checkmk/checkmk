@@ -44,7 +44,6 @@ from cmk.gui.plugins.userdb.utils import (
 from cmk.gui.plugins.wato.utils import (
     add_change,
     IndividualOrStoredPassword,
-    make_action_link,
     make_confirm_link,
     mode_registry,
     mode_url,
@@ -74,6 +73,7 @@ from cmk.gui.valuespec import (
     Transform,
     Tuple,
 )
+from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, make_action_link
 
 if cmk_version.is_managed_edition():
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
@@ -723,9 +723,7 @@ class ModeLDAPConfig(LDAPMode):
                                     title=_("Add connection"),
                                     icon_name="new",
                                     item=make_simple_link(
-                                        watolib.folder_preserving_link(
-                                            [("mode", "edit_ldap_connection")]
-                                        )
+                                        folder_preserving_link([("mode", "edit_ldap_connection")])
                                     ),
                                     is_shortcut=True,
                                     is_suggested=True,
@@ -798,7 +796,7 @@ class ModeLDAPConfig(LDAPMode):
                 table.row()
 
                 table.cell(_("Actions"), css="buttons")
-                edit_url = watolib.folder_preserving_link(
+                edit_url = folder_preserving_link(
                     [("mode", "edit_ldap_connection"), ("id", connection["id"])]
                 )
                 delete_url = make_confirm_link(
@@ -807,7 +805,7 @@ class ModeLDAPConfig(LDAPMode):
                     % connection["id"],
                 )
                 drag_url = make_action_link([("mode", "ldap_config"), ("_move", index)])
-                clone_url = watolib.folder_preserving_link(
+                clone_url = folder_preserving_link(
                     [("mode", "edit_ldap_connection"), ("clone", connection["id"])]
                 )
 

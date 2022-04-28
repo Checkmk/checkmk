@@ -1,6 +1,6 @@
 import * as d3 from "d3";
 import * as crossfilter from "crossfilter2";
-import * as utils from "utils";
+import * as utils from "../utils";
 
 interface ElementSize {
     width: number | null;
@@ -10,6 +10,7 @@ interface ElementSize {
 // The FigureRegistry holds all figure class templates
 class FigureRegistry {
     private _figures: Record<string, typeof FigureBase>;
+
     constructor() {
         this._figures = {};
     }
@@ -99,15 +100,19 @@ class Scheduler {
         }
     }
 }
+
 interface BodyContent {
     interval: number | Function[];
 }
+
 interface URLBody {
     body: BodyContent;
 }
+
 interface URL {
     url: URLBody;
 }
+
 // Allows scheduling of multiple url calls
 // Registered hooks will be call on receiving data
 export class MultiDataFetcher {
@@ -626,11 +631,13 @@ export class TextFigure extends FigureBase {
         super(div_selector, fixed_size);
         this.margin = {top: 0, right: 0, bottom: 0, left: 0};
     }
+
     initialize(debug) {
         FigureBase.prototype.initialize.call(this, debug);
         this.svg = this._div_selection.append("svg");
         this.plot = this.svg.append("g");
     }
+
     resize() {
         if (this._data.title) {
             this.margin.top = 22; // magic number: title height
@@ -644,6 +651,7 @@ export class TextFigure extends FigureBase {
             "translate(" + this.margin.left + "," + this.margin.top + ")"
         );
     }
+
     update_gui() {
         this.resize();
         this.render();
@@ -685,10 +693,12 @@ export function make_levels(domain, bounds) {
         {from: dmin, to: bounds.warn, style: "metricstate state0"},
     ];
 }
+
 // Base class for dc.js based figures (using crossfilter)
 export class DCFigureBase extends FigureBase {
     _graph_group;
     _dc_chart;
+
     constructor(div_selector, crossfilter, graph_group) {
         super(div_selector);
         this._crossfilter = crossfilter; // Shared dataset
@@ -730,27 +740,25 @@ export class FigureTooltip {
             width: this._tooltip.node().offsetWidth,
             height: this._tooltip.node().offsetHeight,
         };
-        const [x, y] = d3.pointer(event, event.target.closest("svg"));
-        let render_to_the_left =
-            this.figure_size.width! - x < tooltip_size.width + 20;
-        let render_upwards =
-            this.figure_size.height! - y < tooltip_size.height - 16;
 
+        const [x, y] = d3.pointer(event, event.target.closest("svg"));
+
+        const is_at_right_border =
+            event.pageX >= document.body.clientWidth - tooltip_size.width;
+        const is_at_bottom_border =
+            event.pageY >= document.body.clientHeight - tooltip_size.height;
+
+        const left = is_at_right_border
+            ? x - tooltip_size.width + "px"
+            : x + "px";
+        const top = is_at_bottom_border
+            ? y - tooltip_size.height + "px"
+            : y + "px";
         this._tooltip
-            .style("left", () => {
-                return !render_to_the_left ? x + 20 + "px" : "auto";
-            })
-            .style("right", () => {
-                return render_to_the_left
-                    ? this.plot_size.width! - x + 75 + "px"
-                    : "auto";
-            })
-            .style("bottom", () => {
-                return render_upwards ? "6px" : "auto";
-            })
-            .style("top", () => {
-                return !render_upwards ? y - 20 + "px" : "auto";
-            })
+            .style("left", left)
+            .style("right", "auto")
+            .style("bottom", "auto")
+            .style("top", top)
             .style("pointer-events", "none")
             .style("opacity", 1);
     }
@@ -764,10 +772,18 @@ export class FigureTooltip {
     }
 
     activate() {
+        d3.select(this._tooltip.node().closest("div.dashlet")).style(
+            "z-index",
+            "99"
+        );
         this._tooltip.style("display", null);
     }
 
     deactivate() {
+        d3.select(this._tooltip.node().closest("div.dashlet")).style(
+            "z-index",
+            ""
+        );
         this._tooltip.style("display", "none");
     }
 
@@ -877,9 +893,11 @@ export function split_unit(formatted_value) {
 export function getIn(object, ...args) {
     return args.reduce((obj, level) => obj && obj[level], object);
 }
+
 export function get_function(render_string) {
     return new Function(`"use strict"; return ${render_string}`)();
 }
+
 export function plot_render_function(plot) {
     let js_render = getIn(plot, "metric", "unit", "js_render");
     if (js_render) return get_function(js_render);
@@ -887,6 +905,7 @@ export function plot_render_function(plot) {
         "function(v) { return cmk.number_format.fmt_number_with_precision(v, 1000, 2, true); }"
     );
 }
+
 export function svc_status_css(paint, params) {
     let status_cls =
         getIn(params, "paint") === paint ? getIn(params, "css") || "" : "";

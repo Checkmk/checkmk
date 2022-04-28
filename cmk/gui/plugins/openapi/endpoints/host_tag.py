@@ -29,6 +29,7 @@ from cmk.gui.plugins.openapi.restful_objects import (
     response_schemas,
 )
 from cmk.gui.plugins.openapi.utils import problem, ProblemException
+from cmk.gui.watolib.host_attributes import undeclare_host_tag_attribute
 from cmk.gui.watolib.tags import (
     change_host_tags_in_folders,
     edit_tag_group,
@@ -212,7 +213,7 @@ def delete_host_tag_group(params):
                     "authorize Checkmk to update the relevant instances using the repair parameter"
                 ),
             )
-        watolib.host_attributes.undeclare_host_tag_attribute(ident)
+        undeclare_host_tag_attribute(ident)
         _ = change_host_tags_in_folders(
             OperationRemoveTagGroup(ident), TagCleanupMode("delete"), watolib.Folder.root_folder()
         )

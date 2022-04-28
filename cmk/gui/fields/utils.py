@@ -39,12 +39,15 @@ from cmk.utils.tags import BuiltinTagConfig, TagGroup
 
 # There is an implicit dependency introduced by the collect_attributes call which is evaluated
 # at import time. To make it work as expected we need to import
-# TODO: Clean this dependency on the plugins up by moving the plugins to cmk.gui.watolib
 import cmk.gui.plugins.wato.builtin_attributes  # pylint: disable=unused-import
 import cmk.gui.watolib.groups  # pylint: disable=unused-import
-from cmk.gui import site_config, watolib
+from cmk.gui import site_config
 from cmk.gui.fields.base import BaseSchema
 from cmk.gui.utils.escaping import strip_tags
+from cmk.gui.watolib.host_attributes import (
+    get_sorted_host_attribute_topics,
+    get_sorted_host_attributes_by_topic,
+)
 from cmk.gui.watolib.tags import load_tag_config
 
 from cmk import fields
@@ -125,8 +128,8 @@ def collect_attributes(
     #   We want to get all the topics, so we don't miss any attributes. We filter them later.
     #   new=True may also be new=False, it doesn't matter in this context.
     result = []
-    for topic_id, topic_title in watolib.get_sorted_host_attribute_topics("always", new=True):
-        for attr in watolib.get_sorted_host_attributes_by_topic(topic_id):
+    for topic_id, topic_title in get_sorted_host_attribute_topics("always", new=True):
+        for attr in get_sorted_host_attributes_by_topic(topic_id):
             if object_type == "folder" and not attr.show_in_folder():
                 continue
 

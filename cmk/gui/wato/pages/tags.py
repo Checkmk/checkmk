@@ -56,6 +56,7 @@ from cmk.gui.valuespec import (
     Transform,
     Tuple,
 )
+from cmk.gui.watolib.host_attributes import host_attribute, undeclare_host_tag_attribute
 from cmk.gui.watolib.hosts_and_folders import CREFolder, CREHost
 from cmk.gui.watolib.rulesets import Ruleset
 from cmk.gui.watolib.tags import (
@@ -374,7 +375,7 @@ class ModeTags(ABCTagMode):
                 if tag_group.help:
                     html.help(tag_group.help)
                 html.begin_form("tag_%s" % tag_group.id)
-                tag_group_attribute = watolib.host_attribute("tag_%s" % tag_group.id)
+                tag_group_attribute = host_attribute("tag_%s" % tag_group.id)
                 tag_group_attribute.render_input("", tag_group_attribute.default_value())
                 html.end_form()
 
@@ -920,7 +921,7 @@ def _rename_tags_after_confirmation(
 
         # make attribute unknown to system, important for save() operations
         if isinstance(operation, OperationRemoveTagGroup):
-            watolib.host_attributes.undeclare_host_tag_attribute(operation.tag_group_id)
+            undeclare_host_tag_attribute(operation.tag_group_id)
 
         affected_folders, affected_hosts, affected_rulesets = change_host_tags_in_folders(
             operation, mode, watolib.Folder.root_folder()

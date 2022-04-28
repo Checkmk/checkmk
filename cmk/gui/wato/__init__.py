@@ -241,11 +241,8 @@ from cmk.gui.watolib import (
     ConfigDomainEventConsole,
     ConfigDomainGUI,
     ConfigDomainOMD,
-    declare_host_attribute,
     LivestatusViaTCP,
     make_action_link,
-    NagiosTextAttribute,
-    ValueSpecAttribute,
 )
 
 modes: Dict[Any, Any] = {}

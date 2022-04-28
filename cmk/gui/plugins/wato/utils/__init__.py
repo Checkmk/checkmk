@@ -30,6 +30,7 @@ import cmk.gui.hooks as hooks
 import cmk.gui.mkeventd
 import cmk.gui.userdb as userdb
 import cmk.gui.watolib as watolib
+import cmk.gui.watolib.host_attributes as _host_attributes
 import cmk.gui.watolib.rulespecs as _rulespecs
 import cmk.gui.weblib as weblib
 from cmk.gui.config import active_config
@@ -1735,9 +1736,9 @@ def configure_attributes(
 
     show_more_mode = user.show_mode != "default_show_less"
 
-    for topic_id, topic_title in watolib.get_sorted_host_attribute_topics(for_what, new):
+    for topic_id, topic_title in _host_attributes.get_sorted_host_attribute_topics(for_what, new):
         topic_is_volatile = True  # assume topic is sometimes hidden due to dependencies
-        topic_attributes = watolib.get_sorted_host_attributes_by_topic(topic_id)
+        topic_attributes = _host_attributes.get_sorted_host_attributes_by_topic(topic_id)
 
         forms.header(
             topic_title,

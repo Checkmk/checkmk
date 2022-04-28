@@ -7,8 +7,6 @@
 # pylint: disable=redefined-outer-name
 import pytest
 
-# Triggers plugin loading of plugins.wato which registers all the plugins
-import cmk.gui.wato
 import cmk.gui.watolib.host_attributes as attrs
 
 expected_attributes = {
@@ -361,8 +359,8 @@ def test_legacy_register_rulegroup_with_defaults(monkeypatch):
 
     assert "lat" not in attrs.host_attribute_registry
 
-    cmk.gui.wato.declare_host_attribute(
-        cmk.gui.wato.NagiosTextAttribute(
+    attrs.declare_host_attribute(
+        attrs.NagiosTextAttribute(
             "lat",
             "_LAT",
             "Latitude",
@@ -390,8 +388,8 @@ def test_legacy_register_rulegroup_without_defaults(monkeypatch):
 
     assert "lat" not in attrs.host_attribute_registry
 
-    cmk.gui.wato.declare_host_attribute(
-        cmk.gui.wato.NagiosTextAttribute(
+    attrs.declare_host_attribute(
+        attrs.NagiosTextAttribute(
             "lat",
             "_LAT",
             "Latitude",

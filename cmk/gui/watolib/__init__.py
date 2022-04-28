@@ -87,20 +87,6 @@ from cmk.gui.watolib.groups import (
     is_alias_used,
     save_group_information,
 )
-from cmk.gui.watolib.host_attributes import (
-    collect_attributes,
-    declare_host_attribute,
-    EnumAttribute,
-    FixedTextAttribute,
-    get_sorted_host_attribute_topics,
-    get_sorted_host_attributes_by_topic,
-    host_attribute,
-    NagiosTextAttribute,
-    NagiosValueSpecAttribute,
-    TextAttribute,
-    undeclare_host_attribute,
-    ValueSpecAttribute,
-)
 from cmk.gui.watolib.hosts_and_folders import (
     call_hook_hosts_changed,
     check_wato_foldername,

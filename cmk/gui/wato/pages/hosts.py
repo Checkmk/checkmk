@@ -48,6 +48,7 @@ from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.watolib.agent_registration import remove_tls_registration
 from cmk.gui.watolib.audit_log_url import make_object_audit_log_url
 from cmk.gui.watolib.check_mk_automations import update_dns_cache
+from cmk.gui.watolib.host_attributes import collect_attributes
 from cmk.gui.watolib.hosts_and_folders import CREHost
 
 
@@ -133,7 +134,7 @@ class ABCHostMode(WatoMode, abc.ABC):
             watolib.Host(
                 watolib.Folder.current(),
                 self._host.name(),
-                watolib.collect_attributes("cluster", new=False),
+                collect_attributes("cluster", new=False),
                 [],
             ).tag_groups()
         )
@@ -379,9 +380,7 @@ class ModeEditHost(ABCHostMode):
             remove_tls_registration({self._host.site_id(): [self._host.name()]})
             return None
 
-        attributes = watolib.collect_attributes(
-            "host" if not self._is_cluster() else "cluster", new=False
-        )
+        attributes = collect_attributes("host" if not self._is_cluster() else "cluster", new=False)
         host = watolib.Host.host(self._host.name())
         if host is None:
             flash(f"Host {self._host.name()} could not be found.")
@@ -602,7 +601,7 @@ class CreateHostMode(ABCHostMode):
         if not transactions.transaction_valid():
             return redirect(mode_url("folder"))
 
-        attributes = watolib.collect_attributes(self._host_type_name(), new=True)
+        attributes = collect_attributes(self._host_type_name(), new=True)
         cluster_nodes = self._get_cluster_nodes()
 
         hostname = request.get_ascii_input_mandatory("host")

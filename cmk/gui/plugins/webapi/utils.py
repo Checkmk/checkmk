@@ -24,7 +24,11 @@ from cmk.gui.log import logger
 from cmk.gui.site_config import allsites
 from cmk.gui.type_defs import PermissionName
 from cmk.gui.valuespec import Hostname
-from cmk.gui.watolib.host_attributes import ABCHostAttribute, host_attribute_registry
+from cmk.gui.watolib.host_attributes import (
+    ABCHostAttribute,
+    host_attribute,
+    host_attribute_registry,
+)
 
 
 class APICallDefinitionDict(TypedDict, total=False):
@@ -131,7 +135,7 @@ def _validate_general_host_attributes(host_attributes, new):
 
         # For real host attributes validate the values
         try:
-            attr: Optional[ABCHostAttribute] = watolib.host_attribute(name)
+            attr: Optional[ABCHostAttribute] = host_attribute(name)
         except KeyError:
             attr = None
 

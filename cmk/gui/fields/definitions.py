@@ -36,6 +36,7 @@ from cmk.gui.fields.utils import (
 from cmk.gui.groups import GroupName, GroupType, load_group_information
 from cmk.gui.logged_in import user
 from cmk.gui.site_config import allsites
+from cmk.gui.watolib.host_attributes import host_attribute, HostAttributeTopicCustomAttributes
 from cmk.gui.watolib.passwords import contact_group_choices, password_exists
 
 from cmk.fields import base, DateTime
@@ -599,11 +600,11 @@ def host_is_monitored(host_name: str) -> bool:
 def validate_custom_host_attributes(data: dict[str, str]) -> dict[str, str]:
     for name, value in data.items():
         try:
-            attribute = watolib.host_attribute(name)
+            attribute = host_attribute(name)
         except KeyError:
             raise ValidationError(f"No such attribute, {name!r}", field_name=name)
 
-        if attribute.topic() != watolib.host_attributes.HostAttributeTopicCustomAttributes:
+        if attribute.topic() != HostAttributeTopicCustomAttributes:
             raise ValidationError(f"{name} is not a custom host attribute.")
 
         try:

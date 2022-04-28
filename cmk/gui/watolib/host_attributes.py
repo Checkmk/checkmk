@@ -19,7 +19,6 @@ import cmk.utils.plugin_registry
 from cmk.utils.tags import TagGroup
 from cmk.utils.type_defs import HostName, TaggroupIDToTagID, TagID
 
-from cmk.gui import watolib
 from cmk.gui.config import active_config, register_post_config_load_hook
 from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.htmllib.context import html
@@ -1202,7 +1201,7 @@ def _validate_general_host_attributes(host_attributes, new):
 
         # For real host attributes validate the values
         try:
-            attr = watolib.host_attribute(name)
+            attr = host_attribute(name)
         except KeyError:
             attr = None
 

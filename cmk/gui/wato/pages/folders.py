@@ -68,7 +68,7 @@ from cmk.gui.utils.urls import (
 from cmk.gui.valuespec import DropdownChoice, TextInput, ValueSpec, WatoFolderChoices
 from cmk.gui.watolib.agent_registration import remove_tls_registration
 from cmk.gui.watolib.audit_log_url import make_object_audit_log_url
-from cmk.gui.watolib.host_attributes import host_attribute_registry
+from cmk.gui.watolib.host_attributes import collect_attributes, host_attribute_registry
 from cmk.gui.watolib.hosts_and_folders import Folder
 
 
@@ -1243,7 +1243,7 @@ class ABCFolderMode(WatoMode, abc.ABC):
         title = TextInput().from_html_vars("title")
         TextInput(allow_empty=False).validate_value(title, "title")
 
-        attributes = watolib.collect_attributes("folder", new=self._folder.name() is None)
+        attributes = collect_attributes("folder", new=self._folder.name() is None)
         self._save(title, attributes)
 
         return redirect(mode_url("folder", folder=folder.path()))

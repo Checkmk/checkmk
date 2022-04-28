@@ -50,7 +50,7 @@ set fname=python-%version%.%subversion%_%git_hash%_%BUILD_NUM%.cab
 powershell Write-Host "----------------------------------------------"  -Foreground cyan
 powershell Write-Host "REAL BUILD IS DISABLED: THIS IS TEMPORARY     "  -Foreground cyan
 powershell Write-Host "----------------------------------------------"  -Foreground cyan
-set fname=python-3.9.10_dd16e89d8e_16.cab
+if "%version%"=="3.9" set fname=python-3.9.10_dd16e89d8e_16.cab
 set artifact_name=%arti_dir%\python-3.cab
 if "%version%" == "3.4" (
 set artifact_name=%arti_dir%\python-3.4.cab

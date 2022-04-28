@@ -46,7 +46,7 @@ from cmk.gui.plugins.webapi.utils import (
 from cmk.gui.watolib.activate_changes import activate_changes_start, activate_changes_wait
 from cmk.gui.watolib.automations import do_site_login
 from cmk.gui.watolib.bakery import try_bake_agents_for_hosts
-from cmk.gui.watolib.check_mk_automations import discovery, try_discovery
+from cmk.gui.watolib.check_mk_automations import delete_hosts, discovery, try_discovery
 from cmk.gui.watolib.rulesets import AllRulesets, FolderRulesets, Ruleset, SingleRulesetRecursively
 from cmk.gui.watolib.tags import TagConfigFile
 
@@ -388,7 +388,7 @@ class APICallHosts(APICallCollection):
         check_hostname(hostname, should_exist=True)
 
         host = watolib.Host.load_host(hostname)
-        host.folder().delete_hosts([host.name()])
+        host.folder().delete_hosts([host.name()], automation=delete_hosts)
 
     def _delete_hosts(self, request):
         all_hosts = watolib.Host.all()
@@ -404,7 +404,7 @@ class APICallHosts(APICallCollection):
             grouped_by_folders.setdefault(all_hosts[hostname].folder(), []).append(hostname)
 
         for folder, hostnames in grouped_by_folders.items():
-            folder.delete_hosts(hostnames)
+            folder.delete_hosts(hostnames, automation=delete_hosts)
 
 
 # .

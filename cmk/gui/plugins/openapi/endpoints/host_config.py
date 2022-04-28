@@ -66,6 +66,7 @@ from cmk.gui.plugins.openapi.restful_objects import (
 from cmk.gui.plugins.openapi.restful_objects.parameters import HOST_NAME
 from cmk.gui.plugins.openapi.utils import problem
 from cmk.gui.plugins.webapi.utils import check_hostname
+from cmk.gui.watolib.check_mk_automations import delete_hosts
 from cmk.gui.watolib.host_rename import perform_rename_hosts
 from cmk.gui.watolib.hosts_and_folders import CREFolder
 
@@ -487,7 +488,7 @@ def delete(params):
     # Parameters can't be validated through marshmallow yet.
     check_hostname(host_name, should_exist=True)
     host: watolib.CREHost = watolib.Host.load_host(host_name)
-    host.folder().delete_hosts([host.name()])
+    host.folder().delete_hosts([host.name()], automation=delete_hosts)
     return Response(status=204)
 
 
@@ -504,7 +505,7 @@ def bulk_delete(params):
     body = params["body"]
     for host_name in body["entries"]:
         host = watolib.Host.load_host(host_name)
-        host.folder().delete_hosts([host.name()])
+        host.folder().delete_hosts([host.name()], automation=delete_hosts)
     return Response(status=204)
 
 

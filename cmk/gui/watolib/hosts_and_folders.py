@@ -69,6 +69,8 @@ from cmk.utils.store.host_storage import (
 )
 from cmk.utils.type_defs import ContactgroupName, HostName, TaggroupID, TaggroupIDToTagID, TagID
 
+from cmk.automations.results import ABCAutomationResult
+
 import cmk.gui.hooks as hooks
 import cmk.gui.userdb as userdb
 import cmk.gui.utils.escaping as escaping
@@ -90,7 +92,6 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import Choices
 from cmk.gui.watolib.changes import add_change
-from cmk.gui.watolib.check_mk_automations import delete_hosts
 from cmk.gui.watolib.config_domains import ConfigDomainCore
 from cmk.gui.watolib.host_attributes import collect_attributes, host_attribute_registry
 from cmk.gui.watolib.objref import ObjectRef, ObjectRefType
@@ -2656,7 +2657,9 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             domain_settings=ConfigDomainCore.generate_domain_settings([host_name]),
         )
 
-    def delete_hosts(self, host_names):
+    def delete_hosts(
+        self, host_names, *, automation: Callable[[SiteId, Sequence[HostName]], ABCAutomationResult]
+    ):
         # 1. Check preconditions
         user.need_permission("wato.manage_hosts")
         self.need_unlocked_hosts()
@@ -2677,7 +2680,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             )
 
         # 3. Delete host specific files (caches, tempfiles, ...)
-        self._delete_host_files(host_names)
+        self._delete_host_files(host_names, automation=automation)
 
         # 4. Actual modification
         for host_name in host_names:
@@ -2712,9 +2715,14 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         return result
 
     # Group the given host names by their site and delete their files
-    def _delete_host_files(self, host_names: Sequence[HostName]) -> None:
+    def _delete_host_files(
+        self,
+        host_names: Sequence[HostName],
+        *,
+        automation: Callable[[SiteId, Sequence[HostName]], ABCAutomationResult],
+    ) -> None:
         for site_id, site_host_names in self.get_hosts_by_site(host_names).items():
-            delete_hosts(
+            automation(
                 site_id,
                 site_host_names,
             )

@@ -25,6 +25,8 @@ from tests.testlib.users import create_and_destroy_user
 import cmk.utils.log
 from cmk.utils.type_defs import UserId
 
+from cmk.automations.results import DeleteHostsResult
+
 import cmk.gui.config as config_module
 import cmk.gui.login as login
 import cmk.gui.watolib.activate_changes as activate_changes
@@ -322,7 +324,6 @@ def with_groups(request_context, with_admin_login, suppress_remote_automation_ca
 
 @pytest.fixture()
 def with_host(
-    monkeypatch: pytest.MonkeyPatch,
     request_context,
     with_admin_login,
 ):
@@ -331,11 +332,9 @@ def with_host(
         [(hostname, {}, None) for hostname in hostnames]
     )
     yield hostnames
-    monkeypatch.setattr(
-        "cmk.gui.watolib.hosts_and_folders.delete_hosts",
-        lambda *args, **kwargs: None,
+    hosts_and_folders.CREFolder.root_folder().delete_hosts(
+        hostnames, automation=lambda *args, **kwargs: DeleteHostsResult()
     )
-    hosts_and_folders.CREFolder.root_folder().delete_hosts(hostnames)
 
 
 @pytest.fixture(autouse=True)

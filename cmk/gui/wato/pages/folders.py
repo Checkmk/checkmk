@@ -68,6 +68,7 @@ from cmk.gui.utils.urls import (
 from cmk.gui.valuespec import DropdownChoice, TextInput, ValueSpec, WatoFolderChoices
 from cmk.gui.watolib.agent_registration import remove_tls_registration
 from cmk.gui.watolib.audit_log_url import make_object_audit_log_url
+from cmk.gui.watolib.check_mk_automations import delete_hosts
 from cmk.gui.watolib.host_attributes import collect_attributes, host_attribute_registry
 from cmk.gui.watolib.hosts_and_folders import Folder
 
@@ -557,7 +558,7 @@ class ModeFolder(WatoMode):
         # Deletion of single hosts
         delname = request.var("_delete_host")
         if delname and watolib.Folder.current().has_host(delname):
-            watolib.Folder.current().delete_hosts([delname])
+            watolib.Folder.current().delete_hosts([delname], automation=delete_hosts)
             return redirect(folder_url)
 
         # Move single hosts to other folders
@@ -1069,7 +1070,7 @@ class ModeFolder(WatoMode):
                 html.icon_button(delete_url, _("Delete this host"), "delete")
 
     def _delete_hosts(self, host_names) -> ActionResult:
-        self._folder.delete_hosts(host_names)
+        self._folder.delete_hosts(host_names, automation=delete_hosts)
         flash(_("Successfully deleted %d hosts") % len(host_names))
         return redirect(self._folder.url())
 

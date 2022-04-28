@@ -47,7 +47,7 @@ from cmk.gui.valuespec import FixedValue, Hostname, ListOfStrings
 from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.watolib.agent_registration import remove_tls_registration
 from cmk.gui.watolib.audit_log_url import make_object_audit_log_url
-from cmk.gui.watolib.check_mk_automations import update_dns_cache
+from cmk.gui.watolib.check_mk_automations import delete_hosts, update_dns_cache
 from cmk.gui.watolib.host_attributes import collect_attributes
 from cmk.gui.watolib.hosts_and_folders import CREHost
 
@@ -373,7 +373,7 @@ class ModeEditHost(ABCHostMode):
             return None
 
         if request.var("delete"):  # Delete this host
-            folder.delete_hosts([self._host.name()])
+            folder.delete_hosts([self._host.name()], automation=delete_hosts)
             return redirect(mode_url("folder", folder=folder.path()))
 
         if request.var("_remove_tls_registration"):

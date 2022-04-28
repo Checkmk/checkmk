@@ -10,6 +10,8 @@ from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
+from cmk.automations.results import DeleteHostsResult
+
 from cmk.gui.plugins.openapi.restful_objects import constructors
 
 CMK_WAIT_FOR_COMPLETION = "cmk/wait-for-completion"
@@ -93,8 +95,8 @@ def test_openapi_activate_changes(
 
     # We delete the host again
     monkeypatch.setattr(
-        "cmk.gui.watolib.hosts_and_folders.delete_hosts",
-        lambda *args, **kwargs: None,
+        "cmk.gui.plugins.openapi.endpoints.host_config.delete_hosts",
+        lambda *args, **kwargs: DeleteHostsResult(),
     )
     aut_user_auth_wsgi_app.follow_link(
         host_created,

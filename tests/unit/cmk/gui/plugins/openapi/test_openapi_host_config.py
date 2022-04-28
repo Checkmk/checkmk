@@ -449,7 +449,7 @@ def test_openapi_hosts(
     )
 
     monkeypatch.setattr(
-        "cmk.gui.watolib.hosts_and_folders.delete_hosts",
+        "cmk.gui.plugins.openapi.endpoints.host_config.delete_hosts",
         lambda *args, **kwargs: DeleteHostsResult(),
     )
     aut_user_auth_wsgi_app.follow_link(
@@ -546,7 +546,7 @@ def test_openapi_bulk_hosts(
     aut_user_auth_wsgi_app: WebTestAppForCMK,
 ):
     monkeypatch.setattr(
-        "cmk.gui.watolib.hosts_and_folders.delete_hosts",
+        "cmk.gui.plugins.openapi.endpoints.host_config.delete_hosts",
         lambda *args, **kwargs: DeleteHostsResult(),
     )
 

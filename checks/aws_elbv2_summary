@@ -24,6 +24,7 @@ def inventory_aws_elbv2_summary_application(parsed):
     application_lbs, _network_lbs = parsed
     if application_lbs:
         return [(None, {})]
+    return []
 
 
 def check_aws_elbv2_summary_application(item, params, parsed):
@@ -43,6 +44,7 @@ def inventory_aws_elbv2_summary_network(parsed):
     _application_lbs, network_lbs = parsed
     if network_lbs:
         return [(None, {})]
+    return []
 
 
 def check_aws_elbv2_summary_network(item, params, parsed):

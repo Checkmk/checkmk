@@ -6,6 +6,7 @@
 
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables needed for accessing discovery rulesets.
+
 from cmk.base.check_legacy_includes.infoblox import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
@@ -86,6 +87,7 @@ def check_infoblox_temp(item, params, parsed):
             dev_status_name=devstatename,
             dev_unit=devunit,
         )
+    return None
 
 
 check_info["infoblox_temp"] = {

@@ -22,6 +22,7 @@ def inventory_apc_netbotz_other_sensors(info):
     for _sensor_label, _error_state, state_readable in info:
         if state_readable != "":
             return [(None, None)]
+    return []
 
 
 def check_apc_netbotz_other_sensors(_no_item, _no_params, info):

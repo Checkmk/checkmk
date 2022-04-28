@@ -34,6 +34,7 @@ def check_pandacom_fan(item, params, info):
         if fan_nr == item:
             state, state_readable = map_fan_state[fan_state]
             return state, "Operational status: %s" % state_readable
+    return None
 
 
 check_info["pandacom_fan"] = {

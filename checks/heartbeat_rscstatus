@@ -14,7 +14,7 @@ def parse_heartbeat_rscstatus(info):
     try:
         return info[0][0]
     except IndexError:
-        return
+        return None
 
 
 def inventory_heartbeat_rscstatus(heartbeat_rsc_status):

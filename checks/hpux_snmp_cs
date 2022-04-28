@@ -36,6 +36,7 @@
 def inventory_hpux_snmp_cpu(info):
     if len(info) > 0:
         return [(None, None)]
+    return []
 
 
 def check_hpux_snmp_cpu(item, _no_params, info):

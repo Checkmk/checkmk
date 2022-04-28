@@ -25,6 +25,7 @@ def inventory_ups_bat_temp(info):
     # any temperature sensor but report a 0 as upsBatteryTemperature. Skip those lines
     if len(info) > 0 and saveint(info[0][1]) != 0:
         return [(format_item_ups_bat_temp(line[0], True), "ups_bat_temp_default") for line in info]
+    return []
 
 
 def check_ups_bat_temp(item, params, info):
@@ -36,6 +37,7 @@ def check_ups_bat_temp(item, params, info):
             )
             perfdatanew = [perfdata[0] + (80,)]
             return status, infotext, perfdatanew
+    return None
 
 
 check_info["ups_bat_temp"] = {

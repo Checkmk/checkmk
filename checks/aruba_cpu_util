@@ -28,7 +28,7 @@ def parse_aruba_cpu_util(info):
 def check_aruba_cpu_util(item, params, parsed):
     cpu_util = parsed.get(item)
     if cpu_util is None:
-        return
+        return None
     return check_cpu_util(cpu_util, params)
 
 

@@ -95,6 +95,7 @@ icom_ps_volt_default_levels = (13.5, 13.2, 14.1, 14.4)
 def inventory_icom_repeater_ps_volt(parsed):
     if "ps_voltage" in parsed:
         return [(None, "icom_ps_volt_default_levels")]
+    return []
 
 
 def check_icom_repeater_ps_volt(_no_item, params, parsed):
@@ -215,6 +216,7 @@ factory_settings["icom_repeater_temp_default_levels"] = {
 def inventory_icom_repeater_temp(parsed):
     if "temp" in parsed:
         return [("System", {})]
+    return []
 
 
 def check_icom_repeater_temp(_no_item, params, parsed):

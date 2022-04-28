@@ -74,7 +74,7 @@ def check_cisco_stack(item, params, parsed):
 
     data = parsed.get(item)
     if data is None:
-        return
+        return None
 
     switch_state = data["switch_state"]
     switch_role = data["switch_role"]

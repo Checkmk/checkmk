@@ -53,7 +53,7 @@ def inventory_storcli_pdisks(parsed):
 
 def check_storcli_pdisks(item, params, parsed):
     if item not in parsed:
-        return
+        return None
 
     infotext = "Size: %f %s" % parsed[item]["size"]
 

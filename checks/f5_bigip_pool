@@ -69,7 +69,7 @@ def check_f5_bigip_pool(item, params, parsed):
 
     pool_info = parsed.get(item)
     if not pool_info:
-        return
+        return None
 
     pool_act_members = pool_info["act_members"]
     pool_def_members = pool_info["def_members"]

@@ -121,6 +121,7 @@ def inventory_cisco_qos(info):
                     items += [("%s: %s" % (if_name, class_name), {})]
 
         return items
+    return []
 
 
 def check_cisco_qos(item, params, info):

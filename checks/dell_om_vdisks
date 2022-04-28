@@ -47,6 +47,7 @@ def check_dell_om_vdisks(item, params, parsed):
             parsed[item]["State"],
             parsed[item]["Layout"],
         )
+    return None
 
 
 check_info["dell_om_vdisks"] = {

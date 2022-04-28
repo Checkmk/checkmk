@@ -1,18 +1,26 @@
 import * as d3 from "d3";
 import * as crossfilter from "crossfilter2";
-import * as utils from "utils";
+import * as utils from "../utils";
+
+interface ElementSize {
+    width: number | null;
+    height: number | null;
+}
 
 // The FigureRegistry holds all figure class templates
 class FigureRegistry {
+    private _figures: Record<string, typeof FigureBase>;
+
     constructor() {
         this._figures = {};
     }
 
-    register(figure_class) {
-        this._figures[figure_class.ident()] = figure_class;
+    register(figure_class: typeof FigureBase): void {
+        let instance = new figure_class(null, null);
+        this._figures[instance.ident()] = figure_class;
     }
 
-    get_figure(ident) {
+    get_figure(ident: string): typeof FigureBase {
         return this._figures[ident];
     }
 }
@@ -28,6 +36,12 @@ export let figure_registry = new FigureRegistry();
 // - suspend_for (seconds)
 // - update_if_older_than (seconds)
 class Scheduler {
+    _scheduled_function: Function;
+    _update_interval: number;
+    _enabled: boolean;
+    _last_update: number;
+    _suspend_updates_until: number;
+
     constructor(scheduled_function, update_interval) {
         this._scheduled_function = scheduled_function;
         this._update_interval = update_interval;
@@ -54,7 +68,8 @@ class Scheduler {
     }
 
     suspend_for(seconds) {
-        this._suspend_updates_until = Math.floor(new Date().getTime() / 1000) + seconds;
+        this._suspend_updates_until =
+            Math.floor(new Date().getTime() / 1000) + seconds;
     }
 
     update_if_older_than(seconds) {
@@ -86,22 +101,40 @@ class Scheduler {
     }
 }
 
+interface BodyContent {
+    interval: number | Function[];
+}
+
+interface URLBody {
+    body: BodyContent;
+}
+
+interface URL {
+    url: URLBody;
+}
+
 // Allows scheduling of multiple url calls
 // Registered hooks will be call on receiving data
 export class MultiDataFetcher {
+    scheduler: Scheduler;
+    _fetch_operations: URL;
+    _fetch_hooks: URL;
+
     constructor() {
         this.reset();
         this.scheduler = new Scheduler(() => this._schedule_operations(), 1);
+        this._fetch_operations = {} as URL;
+        this._fetch_hooks = {} as URL;
     }
 
     reset() {
         // Urls to call
         // {"url": {"body": {"interval": 10}}
-        this._fetch_operations = {};
+        this._fetch_operations = {} as URL;
 
         // Hooks to call when receiving data
         // {"url": {"body": [funcA, funcB]}}
-        this._fetch_hooks = {};
+        this._fetch_hooks = {} as URL;
     }
 
     subscribe_hook(post_url, post_body, subscriber_func) {
@@ -121,9 +154,11 @@ export class MultiDataFetcher {
     }
 
     add_fetch_operation(post_url, post_body, interval) {
-        if (this._fetch_operations[post_url] == undefined) this._fetch_operations[post_url] = {};
+        if (this._fetch_operations[post_url] == undefined)
+            this._fetch_operations[post_url] = {};
 
-        this._fetch_operations[post_url][post_body] = this._default_operation_options(interval);
+        this._fetch_operations[post_url][post_body] =
+            this._default_operation_options(interval);
     }
 
     _default_operation_options(interval) {
@@ -165,7 +200,9 @@ export class MultiDataFetcher {
             headers: {
                 "Content-type": "application/x-www-form-urlencoded",
             },
-        }).then(response => this._fetch_callback(post_url, post_body, response));
+        }).then(response =>
+            this._fetch_callback(post_url, post_body, response)
+        );
     }
 
     _fetch_callback(post_url, post_body, api_response) {
@@ -196,8 +233,36 @@ export class MultiDataFetcher {
 //  - Automatic update of data via scheduler
 //  - Various hooks for each phase
 //  - Loading icon
+
+interface ELementMargin {
+    top: number;
+    right: number;
+    bottom: number;
+    left: number;
+}
+
 export class FigureBase {
-    static ident() {
+    _div_selector;
+    _div_selection;
+    svg;
+    plot;
+    _fixed_size: ElementSize | null;
+    margin: ELementMargin;
+    _fetch_start: number;
+    _fetch_data_latency: number;
+    _data_pre_processor_hooks;
+    _pre_render_hooks: Function[];
+    _post_render_hooks: Function[];
+    _post_url: string;
+    _post_body: string;
+    _data;
+    // @ts-ignore
+    _crossfilter: crossfilter;
+    scheduler: Scheduler;
+    figure_size;
+    plot_size;
+
+    ident() {
         return "figure_base_class";
     }
 
@@ -213,7 +278,7 @@ export class FigureBase {
         this.margin = {top: 10, right: 10, bottom: 10, left: 10};
 
         this._div_selection
-            .classed(this.constructor.ident(), true)
+            .classed(this.ident(), true)
             .classed("cmk_figure", true)
             .datum(this);
 
@@ -239,10 +304,12 @@ export class FigureBase {
 
         // Current data of this figure
         this._data = {data: [], plot_definitions: []};
-
+        // @ts-ignore
         this._crossfilter = new crossfilter.default();
-
-        this.scheduler = new Scheduler(() => this._fetch_data(), this.get_update_interval());
+        this.scheduler = new Scheduler(
+            () => this._fetch_data(),
+            this.get_update_interval()
+        );
     }
 
     initialize(with_debugging) {
@@ -279,8 +346,10 @@ export class FigureBase {
         }
         this.figure_size = new_size;
         this.plot_size = {
-            width: this.figure_size.width - this.margin.left - this.margin.right,
-            height: this.figure_size.height - this.margin.top - this.margin.bottom,
+            width:
+                this.figure_size.width - this.margin.left - this.margin.right,
+            height:
+                this.figure_size.height - this.margin.top - this.margin.bottom,
         };
     }
 
@@ -375,7 +444,8 @@ export class FigureBase {
         }
         this._clear_error_info();
         this.process_data(api_response.result.figure_response);
-        this._fetch_data_latency = +(new Date() - this._fetch_start) / 1000;
+        this._fetch_data_latency =
+            +(new Date().getDate() - this._fetch_start) / 1000;
     }
 
     process_data(data) {
@@ -469,7 +539,8 @@ export class FigureBase {
         let config = new URLSearchParams(this._post_body);
         let settings = config.get("settings");
         let highlight_container = false;
-        if (settings != undefined) highlight_container = JSON.parse(settings).show_title == true;
+        if (settings != undefined)
+            highlight_container = JSON.parse(settings).show_title == true;
 
         title_component
             .selectAll("rect")
@@ -505,7 +576,9 @@ export class FigureBase {
             "padding-left"
         );
         if (title_padding_left_raw) {
-            title_padding_left = parseInt(title_padding_left_raw.replace("px", ""));
+            title_padding_left = parseInt(
+                title_padding_left_raw.replace("px", "")
+            );
         }
 
         text_element.each((d, idx, nodes) => {
@@ -546,7 +619,8 @@ export class FigureBase {
 
     get_scale_render_function() {
         // Create uniform behaviour with Graph dashlets: Display no unit at y-axis if value is 0
-        const f = render_function => v => Math.abs(v) < 10e-16 ? "0" : render_function(v);
+        const f = render_function => v =>
+            Math.abs(v) < 10e-16 ? "0" : render_function(v);
         if (this._data.plot_definitions.length > 0)
             return f(plot_render_function(this._data.plot_definitions[0]));
         return f(plot_render_function({}));
@@ -558,19 +632,27 @@ export class TextFigure extends FigureBase {
         super(div_selector, fixed_size);
         this.margin = {top: 0, right: 0, bottom: 0, left: 0};
     }
+
     initialize(debug) {
         FigureBase.prototype.initialize.call(this, debug);
         this.svg = this._div_selection.append("svg");
         this.plot = this.svg.append("g");
     }
+
     resize() {
         if (this._data.title) {
             this.margin.top = 22; // magic number: title height
         }
         FigureBase.prototype.resize.call(this);
-        this.svg.attr("width", this.figure_size.width).attr("height", this.figure_size.height);
-        this.plot.attr("transform", "translate(" + this.margin.left + "," + this.margin.top + ")");
+        this.svg
+            .attr("width", this.figure_size.width)
+            .attr("height", this.figure_size.height);
+        this.plot.attr(
+            "transform",
+            "translate(" + this.margin.left + "," + this.margin.top + ")"
+        );
     }
+
     update_gui() {
         this.resize();
         this.render();
@@ -612,8 +694,12 @@ export function make_levels(domain, bounds) {
         {from: dmin, to: bounds.warn, style: "metricstate state0"},
     ];
 }
+
 // Base class for dc.js based figures (using crossfilter)
 export class DCFigureBase extends FigureBase {
+    _graph_group;
+    _dc_chart;
+
     constructor(div_selector, crossfilter, graph_group) {
         super(div_selector);
         this._crossfilter = crossfilter; // Shared dataset
@@ -629,9 +715,16 @@ export class DCFigureBase extends FigureBase {
 // Class which handles the display of a tooltip
 // It generates basic tooltips and handles its correct positioning
 export class FigureTooltip {
+    _tooltip;
+    figure_size: ElementSize;
+    plot_size: ElementSize;
+
     constructor(tooltip_selection) {
         this._tooltip = tooltip_selection;
-        this._tooltip.style("opacity", 0).style("position", "absolute").classed("tooltip", true);
+        this._tooltip
+            .style("opacity", 0)
+            .style("position", "absolute")
+            .classed("tooltip", true);
         this.figure_size = {width: null, height: null};
         this.plot_size = {width: null, height: null};
     }
@@ -648,23 +741,25 @@ export class FigureTooltip {
             width: this._tooltip.node().offsetWidth,
             height: this._tooltip.node().offsetHeight,
         };
-        const [x, y] = d3.pointer(event, event.target.closest("svg"));
-        let render_to_the_left = this.figure_size.width - x < tooltip_size.width + 20;
-        let render_upwards = this.figure_size.height - y < tooltip_size.height - 16;
 
+        const [x, y] = d3.pointer(event, event.target.closest("svg"));
+
+        const is_at_right_border =
+            event.pageX >= document.body.clientWidth - tooltip_size.width;
+        const is_at_bottom_border =
+            event.pageY >= document.body.clientHeight - tooltip_size.height;
+
+        const left = is_at_right_border
+            ? x - tooltip_size.width + "px"
+            : x + "px";
+        const top = is_at_bottom_border
+            ? y - tooltip_size.height + "px"
+            : y + "px";
         this._tooltip
-            .style("left", () => {
-                return !render_to_the_left ? x + 20 + "px" : "auto";
-            })
-            .style("right", () => {
-                return render_to_the_left ? this.plot_size.width - x + 75 + "px" : "auto";
-            })
-            .style("bottom", () => {
-                return render_upwards ? "6px" : "auto";
-            })
-            .style("top", () => {
-                return !render_upwards ? y - 20 + "px" : "auto";
-            })
+            .style("left", left)
+            .style("right", "auto")
+            .style("bottom", "auto")
+            .style("top", top)
             .style("pointer-events", "none")
             .style("opacity", 1);
     }
@@ -678,10 +773,18 @@ export class FigureTooltip {
     }
 
     activate() {
+        d3.select(this._tooltip.node().closest("div.dashlet")).style(
+            "z-index",
+            "99"
+        );
         this._tooltip.style("display", null);
     }
 
     deactivate() {
+        d3.select(this._tooltip.node().closest("div.dashlet")).style(
+            "z-index",
+            ""
+        );
         this._tooltip.style("display", "none");
     }
 
@@ -777,10 +880,12 @@ export function split_unit(formatted_value) {
     if (!formatted_value) return {};
     // Separated by space, most rendered quantities
     let splitted_text = formatted_value.split(" ");
-    if (splitted_text.length == 2) return {value: splitted_text[0], unit: splitted_text[1]};
+    if (splitted_text.length == 2)
+        return {value: splitted_text[0], unit: splitted_text[1]};
 
     // Percentages have no space
-    if (formatted_value.endsWith("%")) return {value: formatted_value.slice(0, -1), unit: "%"};
+    if (formatted_value.endsWith("%"))
+        return {value: formatted_value.slice(0, -1), unit: "%"};
 
     // It's a counter, unitless
     return {value: formatted_value, unit: ""};
@@ -789,9 +894,11 @@ export function split_unit(formatted_value) {
 export function getIn(object, ...args) {
     return args.reduce((obj, level) => obj && obj[level], object);
 }
+
 export function get_function(render_string) {
     return new Function(`"use strict"; return ${render_string}`)();
 }
+
 export function plot_render_function(plot) {
     let js_render = getIn(plot, "metric", "unit", "js_render");
     if (js_render) return get_function(js_render);
@@ -799,9 +906,12 @@ export function plot_render_function(plot) {
         "function(v) { return cmk.number_format.fmt_number_with_precision(v, 1000, 2, true); }"
     );
 }
+
 export function svc_status_css(paint, params) {
-    let status_cls = getIn(params, "paint") === paint ? getIn(params, "css") || "" : "";
-    if (status_cls.endsWith("0") && getIn(params, "status") === "not_ok") return "";
+    let status_cls =
+        getIn(params, "paint") === paint ? getIn(params, "css") || "" : "";
+    if (status_cls.endsWith("0") && getIn(params, "status") === "not_ok")
+        return "";
     return status_cls;
 }
 
@@ -907,7 +1017,10 @@ export function metric_value_component(selection, options) {
  * * font_size
  * * visible
  */
-export function metric_value_component_options_big_centered_text(size, options) {
+export function metric_value_component_options_big_centered_text(
+    size,
+    options
+) {
     if (options == undefined) {
         options = {};
     }

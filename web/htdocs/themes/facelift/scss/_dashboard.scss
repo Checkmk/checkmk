@@ -42,7 +42,6 @@ div.dashlet {
     padding: 0;
     margin: 0;
     overflow: hidden;
-
     /* Dashlets with "background" set to True */
     &.background {
       background-color: $dashlet-inner-bg-color;
@@ -170,6 +169,10 @@ div.dashlet_inner div.stats {
     border-top: 1px solid $dashlet-stats-border-top-color;
     border-bottom: none;
   }
+}
+
+div.site_overview div.dashlet_inner {
+  overflow: visible;
 }
 
 body.main.dashlet {

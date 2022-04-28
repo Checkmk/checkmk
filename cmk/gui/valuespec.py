@@ -4652,8 +4652,7 @@ class TimeHelper:
         elif unit not in {"d", "h"}:
             raise MKGeneralException("invalid time unit %s" % unit)
 
-        return time.mktime(lt.timetuple())
-        # py3 return lt.timestamp()
+        return lt.timestamp()
 
     @staticmethod
     def add(timestamp, count, unit):
@@ -4671,8 +4670,7 @@ class TimeHelper:
         else:
             MKGeneralException("invalid time unit %s" % unit)
 
-        return time.mktime(lt.timetuple())
-        # py3 return lt.timestamp()
+        return lt.timestamp()
 
 
 TimerangeValue = Union[None, int, str, tuple[str, Any]]  # TODO: Be more specific

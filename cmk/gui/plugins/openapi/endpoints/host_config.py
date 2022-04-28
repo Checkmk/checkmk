@@ -377,7 +377,7 @@ def bulk_update_hosts(params):
                 faulty_attributes.append(attribute)
 
         if faulty_attributes:
-            failed_hosts[host_name] = "Failed to remove {', '.join(faulty_attributes)}"
+            failed_hosts[host_name] = f"Failed to remove {', '.join(faulty_attributes)}"
             continue
 
         if remove_attributes:

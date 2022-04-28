@@ -164,6 +164,7 @@ DISCOVERED_PARAMETERS: Final = (
     'Uncorrectable_Error_Cnt',
     'UDMA_CRC_Error_Count',
     'CRC_Error_Count',
+    'Media_and_Data_Integrity_Errors',
     #nvme
     'Critical_Warning',
 )

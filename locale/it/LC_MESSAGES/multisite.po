@@ -9308,17 +9308,18 @@ msgstr ""
 "Scegliere i livelli di tempo (in secondi) per i quali un servizio può essere "
 "in uno stato di \"ricarica"
 
+#, fuzzy
 msgid ""
 "Choose time levels (in seconds) for which a service is allowed to be in an "
-"'activating' state"
+"'deactivating' state"
 msgstr ""
 "Scegliere i livelli di tempo (in secondi) per i quali un servizio può essere "
 "in uno stato di \"attivazione\"."
 
 #, fuzzy
 msgid ""
-"Choose time levels (in seconds) for which a service is allowed to be in an "
-"'deactivating' state"
+"Choose time levels for which a service is allowed to be in an 'activating' "
+"state"
 msgstr ""
 "Scegliere i livelli di tempo (in secondi) per i quali un servizio può essere "
 "in uno stato di \"attivazione\"."
@@ -44353,6 +44354,10 @@ msgstr "Stato quando uno dei flussi è in stato disabilitato"
 
 msgid "State when rebuildung enclosure"
 msgstr "Stato quando si ricostruisce l'involucro"
+
+#, fuzzy
+msgid "State when removals are pending"
+msgstr "Stato quando i normali aggiornamenti sono in attesa"
 
 msgid "State when replication state is active"
 msgstr "Stato quando lo stato di replica è attivo"

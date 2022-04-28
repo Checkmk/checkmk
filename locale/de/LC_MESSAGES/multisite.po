@@ -9293,17 +9293,18 @@ msgstr ""
 "Wählen Sie die Schwellwerte für die Zeit (in Sekunden) die sich ein Dienst "
 "in einem 'reloading' Zustand befinden darf."
 
+#, fuzzy
 msgid ""
 "Choose time levels (in seconds) for which a service is allowed to be in an "
-"'activating' state"
+"'deactivating' state"
 msgstr ""
 "Wählen Sie die Schwellwerte für die Zeit (in Sekunden) die sich ein Dienst "
 "in einem 'activating' Zustand befinden darf."
 
 #, fuzzy
 msgid ""
-"Choose time levels (in seconds) for which a service is allowed to be in an "
-"'deactivating' state"
+"Choose time levels for which a service is allowed to be in an 'activating' "
+"state"
 msgstr ""
 "Wählen Sie die Schwellwerte für die Zeit (in Sekunden) die sich ein Dienst "
 "in einem 'activating' Zustand befinden darf."
@@ -44336,6 +44337,10 @@ msgstr "Zustand, wenn einer der Ströme im Zustand disabled ist"
 
 msgid "State when rebuildung enclosure"
 msgstr "Status beim Wiederaufbau der Enclosure"
+
+#, fuzzy
+msgid "State when removals are pending"
+msgstr "Status, wenn normale Updates ausstehen"
 
 msgid "State when replication state is active"
 msgstr "Zustand, wenn der Replikationsstatus active ist"

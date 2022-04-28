@@ -8940,17 +8940,18 @@ msgstr ""
 "サービスが[リロード]状態になることを許可されるタイムレベル(秒単位)を選択しま"
 "す"
 
+#, fuzzy
 msgid ""
 "Choose time levels (in seconds) for which a service is allowed to be in an "
-"'activating' state"
+"'deactivating' state"
 msgstr ""
 "サービスが'activating'状態になることを許可される時間レベル(秒単位)を選択しま"
 "す"
 
 #, fuzzy
 msgid ""
-"Choose time levels (in seconds) for which a service is allowed to be in an "
-"'deactivating' state"
+"Choose time levels for which a service is allowed to be in an 'activating' "
+"state"
 msgstr ""
 "サービスが'activating'状態になることを許可される時間レベル(秒単位)を選択しま"
 "す"
@@ -42786,6 +42787,10 @@ msgstr "ストリームの1つが無効状態にあるときの状態"
 
 msgid "State when rebuildung enclosure"
 msgstr "エンクロージャーを再構築するときの状態"
+
+#, fuzzy
+msgid "State when removals are pending"
+msgstr "通常の更新が保留中の状態"
 
 msgid "State when replication state is active"
 msgstr ""

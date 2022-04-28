@@ -9286,17 +9286,18 @@ msgstr ""
 "Kies de tijd (in seconden) gedurende welke een dienst in een \"herladen\" "
 "toestand mag zijn"
 
+#, fuzzy
 msgid ""
 "Choose time levels (in seconds) for which a service is allowed to be in an "
-"'activating' state"
+"'deactivating' state"
 msgstr ""
 "Kies de tijd (in seconden) gedurende welke een dienst in een \"activerende\" "
 "toestand mag zijn"
 
 #, fuzzy
 msgid ""
-"Choose time levels (in seconds) for which a service is allowed to be in an "
-"'deactivating' state"
+"Choose time levels for which a service is allowed to be in an 'activating' "
+"state"
 msgstr ""
 "Kies de tijd (in seconden) gedurende welke een dienst in een \"activerende\" "
 "toestand mag zijn"
@@ -44237,6 +44238,10 @@ msgstr "Toestand wanneer een van de stromen in de status uitgeschakeld is"
 
 msgid "State when rebuildung enclosure"
 msgstr "Staat bij heropbouw behuizing"
+
+#, fuzzy
+msgid "State when removals are pending"
+msgstr "Staat wanneer normale updates in afwachting zijn"
 
 msgid "State when replication state is active"
 msgstr "Staat wanneer replicatietoestand actief is"

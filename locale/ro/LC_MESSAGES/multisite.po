@@ -8685,12 +8685,12 @@ msgstr ""
 
 msgid ""
 "Choose time levels (in seconds) for which a service is allowed to be in an "
-"'activating' state"
+"'deactivating' state"
 msgstr ""
 
 msgid ""
-"Choose time levels (in seconds) for which a service is allowed to be in an "
-"'deactivating' state"
+"Choose time levels for which a service is allowed to be in an 'activating' "
+"state"
 msgstr ""
 
 msgid ""
@@ -42603,6 +42603,9 @@ msgid "State when one of the streams is in state disabled"
 msgstr ""
 
 msgid "State when rebuildung enclosure"
+msgstr ""
+
+msgid "State when removals are pending"
 msgstr ""
 
 msgid "State when replication state is active"

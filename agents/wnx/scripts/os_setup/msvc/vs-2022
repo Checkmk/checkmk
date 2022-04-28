@@ -28,8 +28,9 @@
     "Microsoft.VisualStudio.Component.VC.TestAdapterForBoostTest",
     "Microsoft.VisualStudio.Component.VC.TestAdapterForGoogleTest",
     "Microsoft.VisualStudio.Component.VC.ASAN",
-    "Microsoft.VisualStudio.Workload.NativeDesktop",
+    "Microsoft.VisualStudio.Component.Windows11SDK.22000",
     "Microsoft.VisualStudio.Component.VC.CoreBuildTools",
+    "Microsoft.VisualStudio.Workload.NativeDesktop",
     "Microsoft.VisualStudio.Component.VC.14.29.16.11.x86.x64",
     "Microsoft.VisualStudio.Component.VC.14.29.16.11.ATL"
   ]

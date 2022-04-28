@@ -77,8 +77,8 @@ disable=
     # probably want to use "include-naming-hint=yes" in the BASIC section.
     invalid-name,
     #---------------------------------------------------------------------------
-    # isort and pylint disagree about the order when some "normal" code is
-    # interspersed with imports.
+    # We can probably re-enable this if we move __version__ definitions and
+    # conditional imports after the normal imports.
     wrong-import-position,
     #---------------------------------------------------------------------------
     # Enabling this would be nice, but not crucial. At the moment, we have quite

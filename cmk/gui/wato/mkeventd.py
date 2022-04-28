@@ -2256,7 +2256,11 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                         -1: _("(syslog)"),
                         "text_pattern": _("(set by message text)"),
                     }[stateval]
-                    table.cell(_("State"), html.render_span(txt), css="state state%s" % stateval)
+                    table.cell(
+                        _("State"),
+                        html.render_span(txt, class_="state_rounded_tag"),
+                        css="state state%s" % stateval,
+                    )
 
                 # Syslog priority
                 if "match_priority" in rule:

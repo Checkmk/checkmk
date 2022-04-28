@@ -119,7 +119,6 @@ $(() => {
 });
 
 export const cmk_export = {
-    // @ts-ignore
     crossfilter: crossfilter.default,
     d3: d3,
     dc: dc,

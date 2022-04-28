@@ -92,7 +92,7 @@ def fixture_agent_output(mocker: MockerFixture, capsys) -> Section:
     client = agent_gcp.Client({}, "test")
     mocker.patch.object(client, "monitoring", FakeMonitoringClient)
     mocker.patch.object(client, "asset", FakeAssetClient)
-    agent_gcp.run(client, list(agent_gcp.SERVICES.values()))
+    agent_gcp.run(client, list(agent_gcp.SERVICES.values()), serializer=agent_gcp.gcp_serializer)
     captured = capsys.readouterr()
     # strip trailing new lines
     sections = captured.out.rstrip().split("\n")

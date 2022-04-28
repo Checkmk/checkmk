@@ -7,7 +7,7 @@ import json
 import time
 from dataclasses import dataclass, field
 from functools import cache
-from typing import Any, Dict, Iterable, List, Optional, Sequence
+from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence, Union
 
 from google.cloud import asset_v1, monitoring_v3  # type: ignore
 from google.cloud.monitoring_v3 import Aggregation
@@ -19,6 +19,24 @@ Reducer = Aggregation.Reducer
 
 from cmk.special_agents.utils.agent_common import SectionWriter, special_agent_main
 from cmk.special_agents.utils.argument_parsing import Args, create_default_argument_parser
+
+####################
+# Type Definitions #
+####################
+
+
+@dataclass(frozen=True)
+class Asset:
+    asset: asset_v1.Asset
+
+    @staticmethod
+    def serialize(obj: "Asset") -> str:
+        return json.dumps(asset_v1.Asset.to_dict(obj.asset))
+
+    @classmethod
+    def deserialize(cls, data: str) -> "Asset":
+        asset = asset_v1.Asset.from_json(data)
+        return cls(asset=asset)
 
 
 @dataclass(unsafe_hash=True)
@@ -61,6 +79,56 @@ class Result:
         return cls(ts=ts)
 
 
+@dataclass(frozen=True)
+class AssetSection:
+    name: str
+    assets: Iterable[Asset]
+    project: str
+
+
+@dataclass(frozen=True)
+class ResultSection:
+    name: str
+    results: Iterable[Result]
+
+
+Section = Union[AssetSection, ResultSection]
+
+#################
+# Serialization #
+#################
+
+
+def _asset_serializer(section: AssetSection):
+    with SectionWriter("gcp_assets") as w:
+        w.append(json.dumps(dict(project=section.project)))
+        for a in section.assets:
+            if not isinstance(a, Asset):
+                raise RuntimeError
+            w.append(Asset.serialize(a))
+
+
+def _result_serializer(section: ResultSection):
+    with SectionWriter(f"gcp_service_{section.name}") as w:
+        for r in section.results:
+            if not isinstance(r, Result):
+                raise RuntimeError
+            w.append(Result.serialize(r))
+
+
+def gcp_serializer(sections: Iterable[Section]) -> None:
+    for section in sections:
+        if isinstance(section, AssetSection):
+            _asset_serializer(section)
+        else:
+            _result_serializer(section)
+
+
+###########
+# Metrics #
+###########
+
+
 def time_series(client: Client, service: Service) -> Iterable[Result]:
     now = time.time()
     seconds = int(now)
@@ -89,30 +157,14 @@ def time_series(client: Client, service: Service) -> Iterable[Result]:
             yield Result(ts=ts)
 
 
-def run_metrics(client: Client, services: Iterable[Service]) -> None:
+def run_metrics(client: Client, services: Iterable[Service]) -> Iterable[ResultSection]:
     for s in services:
-        with SectionWriter(f"gcp_service_{s.name.lower()}") as w:
-            for result in time_series(client, s):
-                w.append(Result.serialize(result))
+        yield ResultSection(s.name, time_series(client, s))
 
 
 ################################
 # Asset Information collection #
 ################################
-
-
-@dataclass(frozen=True)
-class Asset:
-    asset: asset_v1.Asset
-
-    @staticmethod
-    def serialize(obj: "Asset") -> str:
-        return json.dumps(asset_v1.Asset.to_dict(obj.asset))
-
-    @classmethod
-    def deserialize(cls, data: str) -> "Asset":
-        asset = asset_v1.Asset.from_json(data)
-        return cls(asset=asset)
 
 
 def gather_assets(client: Client) -> Iterable[Asset]:
@@ -124,11 +176,8 @@ def gather_assets(client: Client) -> Iterable[Asset]:
         yield Asset(asset)
 
 
-def run_assets(client: Client) -> None:
-    with SectionWriter("gcp_assets") as w:
-        w.append(json.dumps(dict(project=client.project)))
-        for asset in gather_assets(client):
-            w.append(Asset.serialize(asset))
+def run_assets(client: Client) -> AssetSection:
+    return AssetSection("asset", gather_assets(client), client.project)
 
 
 #################
@@ -136,9 +185,11 @@ def run_assets(client: Client) -> None:
 #################
 
 
-def run(client: Client, services: Sequence[Service]) -> None:
-    run_assets(client)
-    run_metrics(client, services)
+def run(
+    client: Client, services: Sequence[Service], serializer: Callable[[Iterable[Section]], None]
+) -> None:
+    serializer([run_assets(client)])
+    serializer(run_metrics(client, services))
 
 
 #######################################################################
@@ -526,7 +577,7 @@ def parse_arguments(argv: Optional[Sequence[str]]) -> Args:
 def agent_gcp_main(args: Args) -> None:
     client = Client(json.loads(args.credentials), args.project)
     services = [SERVICES[s] for s in args.services]
-    run(client, services)
+    run(client, services, serializer=gcp_serializer)
 
 
 def main() -> None:

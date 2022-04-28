@@ -536,12 +536,13 @@ section_df() {
 section_systemd() {
     if inpath systemctl; then
         echo '<<<systemd_units>>>'
+        # use plain to force ASCII output that is simpler to parse
         echo "[list-unit-files]"
-        systemctl list-unit-files --full --no-legend --no-pager --plain | tr -s ' '
+        systemctl list-unit-files --full --no-legend --no-pager --plain --type service | tr -s ' '
         echo "[status]"
         systemctl status --all --type service --no-pager | tr -s ' '
         echo "[all]"
-        systemctl --all --full --no-legend --no-pager --plain | sed '/^$/q' | tr -s ' '
+        systemctl --all --full --no-legend --no-pager --plain --type service | sed '/^$/q' | tr -s ' '
     fi
 }
 

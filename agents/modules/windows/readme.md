@@ -37,6 +37,14 @@ installation is not possible. The error is "cannot install" or similar
 
 4. You must increase value in file BUILD_NUM to get a rebuild binary
 
+5. You may need to unpack libffi-7.zip into correspoding python source directory.
+
+6. Python 3.8 can't be built with Windows 11 SDK
+Check this path:
+HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Microsoft SDKs\Windows\v10.0
+and set to crrect value 10586
+
+
 ### Changes of the files and names
 
 This procedure may quite annoying, you have to check next points:

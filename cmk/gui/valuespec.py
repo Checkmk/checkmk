@@ -3255,7 +3255,7 @@ class CascadingDropdown(ValueSpec[CascadingDropdownChoiceValue]):
 
     def _fallback_choice(
         self,
-    ) -> Union[CascadingDropdownChoiceIdent, tuple[CascadingDropdownChoiceIdent, ValueSpec]]:
+    ) -> CascadingDropdownChoiceValue:
         choices = self.choices()
         if not choices:
             return None
@@ -4819,7 +4819,7 @@ class Timerange(CascadingDropdown):
 
     def value_to_json(self, value: CascadingDropdownChoiceValue) -> JSONValue:
         if isinstance(value, int):  # Handle default graph_timeranges
-            value = ("age", value)
+            return super().value_to_json(("age", value))
         return super().value_to_json(value)
 
     def value_from_json(self, json_value: JSONValue) -> CascadingDropdownChoiceValue:
@@ -4832,7 +4832,7 @@ class Timerange(CascadingDropdown):
 
     def value_to_json_safe(self, value: CascadingDropdownChoiceValue) -> JSONValue:
         if isinstance(value, int):  # Handle default graph_timeranges
-            value = ("age", value)
+            return super().value_to_json_safe(("age", value))
         return super().value_to_json_safe(value)
 
     @staticmethod

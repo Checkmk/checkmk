@@ -242,7 +242,7 @@ def _valuespec_special_agents_kube():
                                 default_value=["control-plane", "infra"],
                             ),
                         ),
-                        ("cluster-aggregation-include-all-nodes", _("Include all Nodes"), None),
+                        ("cluster-aggregation-include-all-nodes", _("Include all Nodes")),
                     ],
                     orientation="horizontal",
                     help=_(

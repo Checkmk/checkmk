@@ -59,7 +59,7 @@ def _optional(title: str, valuespec: ValueSpec) -> CascadingDropdown:
     return CascadingDropdown(
         title=title,
         choices=[
-            ("no_levels", _("No levels"), None),
+            ("no_levels", _("No levels")),
             ("levels", _("Set levels"), valuespec),
         ],
     )

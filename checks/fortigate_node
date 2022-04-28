@@ -76,6 +76,7 @@ def parse_fortigate_node(info):
 def inventory_fortigate_cluster(parsed):
     if "cluster_info" in parsed:
         return [(None, None)]
+    return []
 
 
 def check_fortigate_cluster(_no_item, _no_params, parsed):
@@ -88,6 +89,7 @@ def check_fortigate_cluster(_no_item, _no_params, parsed):
     if "cluster_info" in parsed:
         system_mode, group_name = parsed["cluster_info"]
         return 0, "System mode: %s, Group: %s" % (map_mode[system_mode], group_name)
+    return None
 
 
 check_info["fortigate_node"] = {
@@ -138,6 +140,7 @@ def inventory_fortigate_node_cpu(parsed):
 def check_fortigate_node_cpu(item, params, parsed):
     if item in parsed["nodes"]:
         return check_cpu_util(parsed["nodes"][item]["cpu"], params)
+    return None
 
 
 check_info["fortigate_node.cpu"] = {
@@ -170,6 +173,7 @@ def check_fortigate_node_ses(item, params, parsed):
         if isinstance(params, dict):
             params = params["levels"]
         return fortigate_sessions(parsed["nodes"][item]["sessions"], params)
+    return None
 
 
 check_info["fortigate_node.sessions"] = {

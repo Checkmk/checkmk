@@ -37,6 +37,7 @@ def check_checkpoint_tunnels(item, params, info):
         if peer == item:
             state = params[tunnel_states[status]]
             return state, tunnel_states[status]
+    return None
 
 
 check_info["checkpoint_tunnels"] = {

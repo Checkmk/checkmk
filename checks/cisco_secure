@@ -47,6 +47,7 @@ def inventory_cisco_secure(parsed):
         # if portsecurity enabled and port up OR currently there is sercurity issue`
         if status == 3 or (is_enabled != "no" and op_state == 1):
             return [(None, None)]
+    return []
 
 
 def check_cisco_secure(_item, _params, parsed):

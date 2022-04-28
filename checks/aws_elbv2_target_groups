@@ -77,6 +77,7 @@ def inventory_aws_application_elb_target_groups(parsed):
     application_target_groups, _network_target_groups = parsed
     if application_target_groups:
         return [(None, {})]
+    return []
 
 
 def check_aws_application_elb_target_groups(item, params, parsed):
@@ -96,6 +97,7 @@ def inventory_aws_network_elb_target_groups(parsed):
     _application_target_groups, network_target_groups = parsed
     if network_target_groups:
         return [(None, {})]
+    return []
 
 
 def check_aws_network_elb_target_groups(item, params, parsed):

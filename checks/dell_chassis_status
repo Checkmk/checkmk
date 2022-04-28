@@ -21,6 +21,7 @@ dell_chassis_status_info = (
 def inventory_dell_chassis_status(info):
     if info:
         return [(None, None)]
+    return []
 
 
 def check_dell_chassis_status(item, _no_params, info):

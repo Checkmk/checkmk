@@ -44,6 +44,7 @@ def check_climaveneta_temp(item, params, info):
         if climaveneta_sensors.get(sensor_id) == item:
             sensor_value = int(sensor_value) / 10.0
             return check_temperature(sensor_value, params, "climaveneta_temp_%s" % item)
+    return None
 
 
 check_info["climaveneta_temp"] = {

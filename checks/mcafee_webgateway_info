@@ -12,6 +12,7 @@ from cmk.base.check_legacy_includes.mcafee_gateway import *  # pylint: disable=w
 def inventory_mcafee_webgateway_info(info):
     if info:
         return [(None, None)]
+    return []
 
 
 def check_mcafee_webgateway_info(_no_item, _no_params, info):

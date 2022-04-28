@@ -25,6 +25,7 @@ def get_k8s_resources_inventory_function(name):
     def inventory_function(parsed):
         if parsed.get("requests", {}).get(name) is not None:
             return [(None, {})]
+        return []
 
     return inventory_function
 

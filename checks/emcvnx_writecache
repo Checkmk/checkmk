@@ -27,6 +27,7 @@ def check_emcvnx_writecache(item, params, info):
         if line[0] == item:
             state, state_readable = map_state.get(line[-1], (3, "unknown"))
             return state, "State: %s" % state_readable
+    return None
 
 
 check_info["emcvnx_writecache"] = {

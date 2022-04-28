@@ -12,6 +12,7 @@ from cmk.base.check_legacy_includes.checkpoint import *  # pylint: disable=wildc
 def inventory_checkpoint_svn_status(info):
     if info:
         return [(None, None)]
+    return []
 
 
 def check_checkpoint_svn_status(item, params, info):
@@ -21,6 +22,7 @@ def check_checkpoint_svn_status(item, params, info):
         if int(code) != 0:
             return 2, description
         return 0, "OK (%s)" % ver
+    return None
 
 
 check_info["checkpoint_svn_status"] = {

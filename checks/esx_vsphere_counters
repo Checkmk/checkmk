@@ -136,6 +136,7 @@ check_info["esx_vsphere_counters"] = {
 def inventory_esx_vsphere_counters_uptime(parsed):
     if "sys.uptime" in parsed:
         return [(None, {})]
+    return []
 
 
 def check_esx_vsphere_counters_uptime(_no_item, params, parsed):
@@ -252,6 +253,7 @@ def inventory_esx_vsphere_counters_swap(parsed):
 
     if any(elem for elem in SWAP.values()):
         return [(None, {})]
+    return []
 
 
 def check_esx_vsphere_counters_swap(item, params, parsed):

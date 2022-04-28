@@ -387,7 +387,7 @@ def check_wagner_titanus_topsense_temp(item, params, info):
     elif item == "Ambient 2":
         temp = float(parsed[2][0][7])
     else:
-        return
+        return None
 
     return check_temperature(temp, params, "wagner_titanus_topsense_%s" % item)
 

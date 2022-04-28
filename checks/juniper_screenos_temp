@@ -24,6 +24,7 @@ def check_juniper_screenos_temp(item, params, info):
             name = name.rsplit(None, 1)[0]
         if name == item:
             return check_temperature(int(temp), params, "juniper_screenos_temp_%s" % item)
+    return None
 
 
 check_info["juniper_screenos_temp"] = {

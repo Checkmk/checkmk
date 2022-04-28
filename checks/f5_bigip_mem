@@ -48,7 +48,7 @@ def discover_f5_bigip_mem(parsed):
 
 def check_f5_bigip_mem(_item, params, parsed):
     if "total" not in parsed:
-        return
+        return None
 
     mem_total, mem_used = parsed["total"]
     return check_memory_element(
@@ -88,7 +88,7 @@ def discover_f5_bigip_mem_tmm(parsed):
 
 def check_f5_bigip_mem_tmm(_item, params, parsed):
     if "TMM" not in parsed:
-        return
+        return None
 
     mem_total, mem_used = parsed["TMM"]
     return check_memory_element(

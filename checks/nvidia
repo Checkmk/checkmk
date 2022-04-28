@@ -36,6 +36,7 @@ def check_nvidia_temp(item, params, info):
             ":"
         ):  # compatibility code for "old discovered" services
             return check_temperature(int(line[1]), params, "nvidia_%s" % item)
+    return None
 
 
 check_info["nvidia.temp"] = {
@@ -61,6 +62,7 @@ def inventory_nvidia_errors(info):
     for line in info:
         if line[0] == "GPUErrors:":
             return [(None, None)]
+    return []
 
 
 def check_nvidia_errors(_no_item, _no_params, info):

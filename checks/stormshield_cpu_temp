@@ -22,6 +22,7 @@ def check_stormshield_cpu_temp(item, params, info):
     for index, temp in info:
         if item == index:
             return check_temperature(int(temp), params, "stormshield_cpu_temp_%s" % index)
+    return None
 
 
 check_info["stormshield_cpu_temp"] = {

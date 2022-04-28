@@ -20,6 +20,7 @@ def check_emc_vplex_cpu(item, params, info):
     for director, util in info:
         if director == item:
             return check_cpu_util(max(100 - int(util), 0), params)
+    return None
 
 
 check_info["emc_vplex_cpu"] = {

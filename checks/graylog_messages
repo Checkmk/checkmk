@@ -16,12 +16,13 @@ def inventory_graylog_messages(parsed):
     events = parsed.get("events")
     if events is not None:
         return [(None, {})]
+    return []
 
 
 def check_graylog_messages(no_item, params, parsed):
     messages = parsed.get("events")
     if messages is None:
-        return
+        return None
 
     return handle_graylog_messages(messages, params)
 

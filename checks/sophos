@@ -140,6 +140,7 @@ def check_sophos(item, _no_params, info):
             extra_info = item_info.get(item_state, "")
             infotext = "Status: %s%s" % (state_readable, extra_info)
             return state, infotext
+    return None
 
 
 check_info["sophos"] = {

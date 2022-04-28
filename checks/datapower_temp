@@ -44,6 +44,7 @@ def check_datapower_temp(item, params, info):
             )
 
             return state, infotext, perfdata
+    return None
 
 
 check_info["datapower_temp"] = {

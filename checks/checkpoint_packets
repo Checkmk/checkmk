@@ -44,6 +44,7 @@ def parse_checkpoint_packets(info):
 def inventory_checkpoint_packets(parsed):
     if parsed:
         return [(None, {})]
+    return []
 
 
 def check_checkpoint_packets(_no_item, params, parsed):

@@ -48,6 +48,7 @@ ddn_s2a_faultsbasic_disks_default_levels = (1, 2)
 def inventory_ddn_s2a_faultsbasic_disks(parsed):
     if "disk_failures_count" in parsed:
         return [(None, "ddn_s2a_faultsbasic_disks_default_levels")]
+    return []
 
 
 def check_ddn_s2a_faultsbasic_disks(_no_item, params, parsed):
@@ -89,6 +90,7 @@ check_info["ddn_s2a_faultsbasic.disks"] = {
 def inventory_ddn_s2a_faultsbasic_temp(parsed):
     if "avr_temp_W_failures_count" in parsed:
         return [(None, None)]
+    return []
 
 
 def check_ddn_s2a_faultsbasic_temp(_no_item, _no_params, parsed):
@@ -135,6 +137,7 @@ check_info["ddn_s2a_faultsbasic.temp"] = {
 def inventory_ddn_s2a_faultsbasic_ps(parsed):
     if "avr_pwr_sup_failures_count" in parsed:
         return [(None, None)]
+    return []
 
 
 def check_ddn_s2a_faultsbasic_ps(_no_item, _no_params, parsed):
@@ -168,6 +171,7 @@ ddn_s2a_faultsbasic_fans_default_levels = (1, 2)
 def inventory_ddn_s2a_faultsbasic_fans(parsed):
     if "avr_fan_ctrl_failures_count" in parsed:
         return [(None, "ddn_s2a_faultsbasic_fans_default_levels")]
+    return []
 
 
 def check_ddn_s2a_faultsbasic_fans(_no_item, params, parsed):
@@ -211,6 +215,7 @@ check_info["ddn_s2a_faultsbasic.fans"] = {
 def inventory_ddn_s2a_faultsbasic_pingfault(parsed):
     if "ping_fault" in parsed:
         return [(None, None)]
+    return []
 
 
 def check_ddn_s2a_faultsbasic_pingfault(_no_item, _no_params, parsed):
@@ -220,6 +225,7 @@ def check_ddn_s2a_faultsbasic_pingfault(_no_item, _no_params, parsed):
         return 1, "Ping Fault: " + parsed["ping_fault_tag"]
     elif parsed["ping_fault"] == "TRUE":
         return 1, "Ping Fault"
+    return None
 
 
 check_info["ddn_s2a_faultsbasic.pingfault"] = {
@@ -242,6 +248,7 @@ check_info["ddn_s2a_faultsbasic.pingfault"] = {
 def inventory_ddn_s2a_faultsbasic_bootstatus(parsed):
     if "system_fully_booted" in parsed:
         return [(None, None)]
+    return []
 
 
 def check_ddn_s2a_faultsbasic_bootstatus(_no_item, _no_params, parsed):
@@ -276,6 +283,7 @@ check_info["ddn_s2a_faultsbasic.bootstatus"] = {
 def inventory_ddn_s2a_faultsbasic_cachecoh(parsed):
     if "hstd1_online_failure" in parsed:
         return [(None, None)]
+    return []
 
 
 def check_ddn_s2a_faultsbasic_cachecoh(_no_item, _no_params, parsed):
@@ -315,6 +323,7 @@ check_info["ddn_s2a_faultsbasic.cachecoh"] = {
 def inventory_ddn_s2a_faultsbasic_dualcomm(parsed):
     if "hstd1_online_failure" in parsed:
         return [(None, None)]
+    return []
 
 
 def check_ddn_s2a_faultsbasic_dualcomm(_no_item, _no_params, parsed):
@@ -326,6 +335,7 @@ def check_ddn_s2a_faultsbasic_dualcomm(_no_item, _no_params, parsed):
         return 0, "Dual comm established"
     elif dual_comm_established == "FALSE":
         return 2, "Dual comm not established"
+    return None
 
 
 check_info["ddn_s2a_faultsbasic.dualcomm"] = {
@@ -348,6 +358,7 @@ check_info["ddn_s2a_faultsbasic.dualcomm"] = {
 def inventory_ddn_s2a_faultsbasic_ethernet(parsed):
     if "hstd1_online_failure" in parsed:
         return [(None, None)]
+    return []
 
 
 def check_ddn_s2a_faultsbasic_ethernet(_no_item, _no_params, parsed):

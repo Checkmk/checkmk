@@ -17,6 +17,7 @@ factory_settings["ups_capacity_default_levels"] = {"battime": (0, 0), "capacity"
 def inventory_ups_socomec_capacity(info):
     if len(info) > 0:
         return [(None, {})]
+    return []
 
 
 def check_ups_socomec_capacity(item, params, info):

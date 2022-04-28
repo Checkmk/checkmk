@@ -18,6 +18,7 @@
 def inventory_esx_vsphere_hostsystem_state(parsed):
     if "runtime.inMaintenanceMode" in parsed:
         return [(None, None)]
+    return []
 
 
 def check_esx_vsphere_hostsystem_state(_no_item, _no_params, parsed):
@@ -64,13 +65,14 @@ def inventory_esx_vsphere_hostsystem_maintenance(parsed):
     if "runtime.inMaintenanceMode" in parsed:
         current_state = str(parsed["runtime.inMaintenanceMode"][0]).lower()
         return [(None, {"target_state": current_state})]
+    return []
 
 
 def check_esx_vsphere_hostsystem_maintenance(_no_item, params, parsed):
     target_state = params["target_state"]
 
     if "runtime.inMaintenanceMode" not in parsed:
-        return
+        return None
 
     current_state = str(parsed["runtime.inMaintenanceMode"][0]).lower()
     state = 0

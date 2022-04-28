@@ -55,6 +55,7 @@ def check_genua_vpn(item, params, info):
             if vpn_state == "2":
                 return 0, "Connected, %s" % infotext
             return 2, "Disconnected, %s" % infotext
+    return None
 
 
 check_info["genua_vpn"] = {

@@ -88,6 +88,7 @@ def inventory_peakflow_tms_updates(parsed):
 def check_peakflow_tms_updates(item, no_params, parsed):
     if item in parsed["update"]:
         return 0, parsed["update"][item]
+    return None
 
 
 check_info["arbor_peakflow_tms.updates"] = {

@@ -52,6 +52,7 @@ def check_datapower_raid_bat(item, _no_params, info):
                 serial,
             )
             return state, infotext
+    return None
 
 
 check_info["datapower_raid_bat"] = {

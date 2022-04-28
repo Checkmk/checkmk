@@ -547,6 +547,7 @@ def check_jolokia_metrics_uptime(item, params, info):
         if "Uptime" in parsed[item]:
             uptime = int(int(parsed[item]["Uptime"]) / 1000)
             return check_uptime_seconds(params, uptime)
+    return None
 
 
 check_info["jolokia_metrics.uptime"] = {

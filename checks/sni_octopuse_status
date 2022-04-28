@@ -13,6 +13,7 @@
 def inventory_octopus_status(info):
     if len(info[0][0]) == 1:
         return [(None, None)]
+    return []
 
 
 def check_octopus_status(_no_item, _no_params_info, info):

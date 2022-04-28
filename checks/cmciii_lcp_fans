@@ -52,6 +52,7 @@ def check_cmciii_lcp_fans(item, params, info):
             perfdata = [("rpm", str(rpm) + unit, str(lowlevel) + ":", 0, 0)]
 
             return (state, info_text, perfdata)
+    return None
 
 
 check_info["cmciii_lcp_fans"] = {

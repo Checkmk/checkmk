@@ -18,6 +18,7 @@ factory_settings["f5_bigip_conns_default_levels"] = {
 def inventory_f5_bigip_conns(info):
     if info:
         return [(None, {})]
+    return []
 
 
 def get_conn_rate_params(params):

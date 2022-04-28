@@ -8,6 +8,7 @@
 def inventory_dell_chassis_io(info):
     if info:
         return [(None, None)]
+    return []
 
 
 def check_dell_chassis_io(_no_item, _no_params, info):

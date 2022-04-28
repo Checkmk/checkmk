@@ -43,12 +43,12 @@ def check_kernel(item, params, parsed):
     timestamp, items = parsed
 
     if timestamp is None:
-        return
+        return None
 
     item_values = items.get(item)
 
     if item_values is None:
-        return
+        return None
 
     if len(item_values) > 1:
         return 3, "item '%s' not unique (found %d times)" % (item, len(item_values))

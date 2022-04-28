@@ -334,6 +334,7 @@ def check_bluenet2_powerrail_temp(item, params, parsed):
             dev_status=state,
             dev_status_name=state_readable,
         )
+    return None
 
 
 check_info["bluenet2_powerrail.temp"] = {

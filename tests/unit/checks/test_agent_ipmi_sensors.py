@@ -4,12 +4,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Any, Mapping, Sequence
+
 import pytest
 
 from tests.testlib import SpecialAgent
 
 pytestmark = pytest.mark.checks
-from typing import Any, Mapping, Sequence
 
 
 @pytest.mark.parametrize(

@@ -140,9 +140,6 @@ disable=
     # one, this might drastically improve the usefulness of our backtraces.
     raise-missing-from,
     #---------------------------------------------------------------------------
-    # Only a handful of findings, this should be fixed.
-    wrong-import-order,
-    #---------------------------------------------------------------------------
     # pylint 2.7.[012] has totally screwed this up... :-/ Takes ages, too.
     duplicate-code,
     R0801,

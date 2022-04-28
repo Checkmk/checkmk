@@ -16,7 +16,7 @@ from tests.testlib.certs import (
     check_cn,
 )
 
-from omdlib.certs import CertificateAuthority
+from omdlib.certs import CertificateAuthority  # pylint: disable=wrong-import-order
 
 from cmk.utils.certs import (
     _rsa_public_key_from_cert_or_csr,

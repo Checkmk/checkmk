@@ -16,7 +16,7 @@ import pytest
 
 import livestatus
 
-from omdlib.certs import CertificateAuthority
+from omdlib.certs import CertificateAuthority  # pylint: disable=wrong-import-order
 
 from cmk.utils.certs import root_cert_path, RootCA
 

@@ -14,10 +14,7 @@ from typing import Optional, Tuple, Union
 
 import snap7  # type: ignore[import]
 from snap7.common import Snap7Exception, Snap7Library  # type: ignore[import]
-
-from cmk.special_agents.utils.agent_common import SectionWriter
-
-from snap7.snap7types import (  # type: ignore[import] # isort: skip # pylint: disable=ungrouped-imports
+from snap7.snap7types import (  # type: ignore[import]
     S7AreaCT,
     S7AreaDB,
     S7AreaMK,
@@ -25,6 +22,8 @@ from snap7.snap7types import (  # type: ignore[import] # isort: skip # pylint: d
     S7AreaPE,
     S7AreaTM,
 )
+
+from cmk.special_agents.utils.agent_common import SectionWriter
 
 # prevent snap7 logger to log errors directly to console
 snap7.common.logger.setLevel(logging.CRITICAL + 10)

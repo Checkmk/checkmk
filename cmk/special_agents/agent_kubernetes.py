@@ -46,15 +46,12 @@ import urllib3  # type: ignore[import]
 
 # We currently have no typeshed for kubernetes
 from kubernetes import client  # type: ignore[import] # pylint: disable=import-error
+from kubernetes.client.rest import ApiException  # type: ignore[import]
 
 import cmk.utils.password_store
 import cmk.utils.profile
 
 from cmk.special_agents.utils.request_helper import get_requests_ca
-
-from kubernetes.client.rest import (  # type: ignore[import] # pylint: disable=import-error,ungrouped-imports # isort: skip
-    ApiException,
-)
 
 
 @contextlib.contextmanager

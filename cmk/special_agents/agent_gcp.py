@@ -36,14 +36,14 @@ class Client:
 
 
 @dataclass(frozen=True)
-class GCPMetric:
+class Metric:
     name: str
     aggregation: Dict[str, Any]
 
 
 @dataclass(frozen=True)
-class GCPService:
-    metrics: List[GCPMetric]
+class Service:
+    metrics: List[Metric]
     name: str
 
 
@@ -61,7 +61,7 @@ class Result:
         return cls(ts=ts)
 
 
-def time_series(client: Client, service: GCPService) -> Iterable[Result]:
+def time_series(client: Client, service: Service) -> Iterable[Result]:
     now = time.time()
     seconds = int(now)
     nanos = int((now - seconds) * 10**9)
@@ -89,7 +89,7 @@ def time_series(client: Client, service: GCPService) -> Iterable[Result]:
             yield Result(ts=ts)
 
 
-def run_metrics(client: Client, services: Iterable[GCPService]) -> None:
+def run_metrics(client: Client, services: Iterable[Service]) -> None:
     for s in services:
         with SectionWriter(f"gcp_service_{s.name.lower()}") as w:
             for result in time_series(client, s):
@@ -136,7 +136,7 @@ def run_assets(client: Client) -> None:
 #################
 
 
-def run(client: Client, services: Sequence[GCPService]) -> None:
+def run(client: Client, services: Sequence[Service]) -> None:
     run_assets(client)
     run_metrics(client, services)
 
@@ -149,10 +149,10 @@ def run(client: Client, services: Sequence[GCPService]) -> None:
 #######################################################################
 
 
-GCS = GCPService(
+GCS = Service(
     name="gcs",
     metrics=[
-        GCPMetric(
+        Metric(
             name="storage.googleapis.com/api/request_count",
             aggregation={
                 "alignment_period": {"seconds": 60},
@@ -161,7 +161,7 @@ GCS = GCPService(
                 "cross_series_reducer": Reducer.REDUCE_SUM,
             },
         ),
-        GCPMetric(
+        Metric(
             name="storage.googleapis.com/network/sent_bytes_count",
             aggregation={
                 "alignment_period": {"seconds": 60},
@@ -170,7 +170,7 @@ GCS = GCPService(
                 "cross_series_reducer": Reducer.REDUCE_SUM,
             },
         ),
-        GCPMetric(
+        Metric(
             name="storage.googleapis.com/network/received_bytes_count",
             aggregation={
                 "alignment_period": {"seconds": 60},
@@ -179,7 +179,7 @@ GCS = GCPService(
                 "cross_series_reducer": Reducer.REDUCE_SUM,
             },
         ),
-        GCPMetric(
+        Metric(
             name="storage.googleapis.com/storage/total_bytes",
             aggregation={
                 "alignment_period": {"seconds": 60},
@@ -188,7 +188,7 @@ GCS = GCPService(
                 "cross_series_reducer": Reducer.REDUCE_SUM,
             },
         ),
-        GCPMetric(
+        Metric(
             name="storage.googleapis.com/storage/object_count",
             aggregation={
                 "alignment_period": {"seconds": 60},
@@ -201,10 +201,10 @@ GCS = GCPService(
 )
 
 
-FUNCTIONS = GCPService(
+FUNCTIONS = Service(
     name="cloud_functions",
     metrics=[
-        GCPMetric(
+        Metric(
             name="cloudfunctions.googleapis.com/function/execution_count",
             aggregation={
                 "alignment_period": {"seconds": 60},
@@ -213,7 +213,7 @@ FUNCTIONS = GCPService(
                 "cross_series_reducer": Reducer.REDUCE_SUM,
             },
         ),
-        GCPMetric(
+        Metric(
             name="cloudfunctions.googleapis.com/function/network_egress",
             aggregation={
                 "alignment_period": {"seconds": 60},
@@ -222,7 +222,7 @@ FUNCTIONS = GCPService(
                 "cross_series_reducer": Reducer.REDUCE_SUM,
             },
         ),
-        GCPMetric(
+        Metric(
             name="cloudfunctions.googleapis.com/function/user_memory_bytes",
             aggregation={
                 "alignment_period": {"seconds": 60},
@@ -231,7 +231,7 @@ FUNCTIONS = GCPService(
                 "cross_series_reducer": Reducer.REDUCE_SUM,
             },
         ),
-        GCPMetric(
+        Metric(
             name="cloudfunctions.googleapis.com/function/instance_count",
             aggregation={
                 "alignment_period": {"seconds": 60},
@@ -240,7 +240,7 @@ FUNCTIONS = GCPService(
                 "cross_series_reducer": Reducer.REDUCE_SUM,
             },
         ),
-        GCPMetric(
+        Metric(
             name="cloudfunctions.googleapis.com/function/execution_times",
             aggregation={
                 "alignment_period": {"seconds": 60},
@@ -249,7 +249,7 @@ FUNCTIONS = GCPService(
                 "cross_series_reducer": Reducer.REDUCE_SUM,
             },
         ),
-        GCPMetric(
+        Metric(
             name="cloudfunctions.googleapis.com/function/active_instances",
             aggregation={
                 "alignment_period": {"seconds": 60},
@@ -262,10 +262,10 @@ FUNCTIONS = GCPService(
 )
 
 
-RUN = GCPService(
+RUN = Service(
     name="cloud_run",
     metrics=[
-        GCPMetric(
+        Metric(
             name="run.googleapis.com/container/memory/utilizations",
             aggregation={
                 "alignment_period": {"seconds": 60},
@@ -274,7 +274,7 @@ RUN = GCPService(
                 "cross_series_reducer": Reducer.REDUCE_MAX,
             },
         ),
-        GCPMetric(
+        Metric(
             name="run.googleapis.com/container/network/received_bytes_count",
             aggregation={
                 "alignment_period": {"seconds": 60},
@@ -283,7 +283,7 @@ RUN = GCPService(
                 "cross_series_reducer": Reducer.REDUCE_SUM,
             },
         ),
-        GCPMetric(
+        Metric(
             name="run.googleapis.com/container/network/sent_bytes_count",
             aggregation={
                 "alignment_period": {"seconds": 60},
@@ -292,7 +292,7 @@ RUN = GCPService(
                 "cross_series_reducer": Reducer.REDUCE_SUM,
             },
         ),
-        GCPMetric(
+        Metric(
             name="run.googleapis.com/request_count",
             # TODO get by different status codes
             aggregation={
@@ -302,7 +302,7 @@ RUN = GCPService(
                 "cross_series_reducer": Reducer.REDUCE_SUM,
             },
         ),
-        GCPMetric(
+        Metric(
             name="run.googleapis.com/container/cpu/allocation_time",
             aggregation={
                 "alignment_period": {"seconds": 60},
@@ -311,7 +311,7 @@ RUN = GCPService(
                 "cross_series_reducer": Reducer.REDUCE_SUM,
             },
         ),
-        GCPMetric(
+        Metric(
             name="run.googleapis.com/container/billable_instance_time",
             aggregation={
                 "alignment_period": {"seconds": 60},
@@ -320,7 +320,7 @@ RUN = GCPService(
                 "cross_series_reducer": Reducer.REDUCE_SUM,
             },
         ),
-        GCPMetric(
+        Metric(
             name="run.googleapis.com/container/instance_count",
             aggregation={
                 "alignment_period": {"seconds": 60},
@@ -329,7 +329,7 @@ RUN = GCPService(
                 "cross_series_reducer": Reducer.REDUCE_SUM,
             },
         ),
-        GCPMetric(
+        Metric(
             name="run.googleapis.com/request_latencies",
             aggregation={
                 "alignment_period": {"seconds": 60},
@@ -341,10 +341,10 @@ RUN = GCPService(
     ],
 )
 
-CLOUDSQL = GCPService(
+CLOUDSQL = Service(
     name="cloud_sql",
     metrics=[
-        GCPMetric(
+        Metric(
             name="cloudsql.googleapis.com/database/up",
             aggregation={
                 "alignment_period": {"seconds": 60},
@@ -353,7 +353,7 @@ CLOUDSQL = GCPService(
                 "cross_series_reducer": Reducer.REDUCE_SUM,
             },
         ),
-        GCPMetric(
+        Metric(
             name="cloudsql.googleapis.com/database/network/received_bytes_count",
             aggregation={
                 "alignment_period": {"seconds": 60},
@@ -362,7 +362,7 @@ CLOUDSQL = GCPService(
                 "cross_series_reducer": Reducer.REDUCE_SUM,
             },
         ),
-        GCPMetric(
+        Metric(
             name="cloudsql.googleapis.com/database/network/sent_bytes_count",
             aggregation={
                 "alignment_period": {"seconds": 60},
@@ -371,7 +371,7 @@ CLOUDSQL = GCPService(
                 "cross_series_reducer": Reducer.REDUCE_SUM,
             },
         ),
-        GCPMetric(
+        Metric(
             name="cloudsql.googleapis.com/database/memory/utilization",
             aggregation={
                 "alignment_period": {"seconds": 60},
@@ -380,7 +380,7 @@ CLOUDSQL = GCPService(
                 "cross_series_reducer": Reducer.REDUCE_SUM,
             },
         ),
-        GCPMetric(
+        Metric(
             name="cloudsql.googleapis.com/database/cpu/utilization",
             aggregation={
                 "alignment_period": {"seconds": 60},
@@ -389,7 +389,7 @@ CLOUDSQL = GCPService(
                 "cross_series_reducer": Reducer.REDUCE_SUM,
             },
         ),
-        GCPMetric(
+        Metric(
             name="cloudsql.googleapis.com/database/state",
             aggregation={
                 "alignment_period": {"seconds": 60},
@@ -398,7 +398,7 @@ CLOUDSQL = GCPService(
                 "cross_series_reducer": Reducer.REDUCE_NONE,
             },
         ),
-        GCPMetric(
+        Metric(
             name="cloudsql.googleapis.com/database/disk/write_ops_count",
             aggregation={
                 "alignment_period": {"seconds": 60},
@@ -407,7 +407,7 @@ CLOUDSQL = GCPService(
                 "cross_series_reducer": Reducer.REDUCE_SUM,
             },
         ),
-        GCPMetric(
+        Metric(
             name="cloudsql.googleapis.com/database/disk/read_ops_count",
             aggregation={
                 "alignment_period": {"seconds": 60},
@@ -416,7 +416,7 @@ CLOUDSQL = GCPService(
                 "cross_series_reducer": Reducer.REDUCE_SUM,
             },
         ),
-        GCPMetric(
+        Metric(
             name="cloudsql.googleapis.com/database/disk/utilization",
             aggregation={
                 "alignment_period": {"seconds": 60},
@@ -428,10 +428,10 @@ CLOUDSQL = GCPService(
     ],
 )
 
-FILESTORE = GCPService(
+FILESTORE = Service(
     name="filestore",
     metrics=[
-        GCPMetric(
+        Metric(
             name="file.googleapis.com/nfs/server/used_bytes_percent",
             aggregation={
                 "alignment_period": {"seconds": 60},
@@ -440,7 +440,7 @@ FILESTORE = GCPService(
                 "cross_series_reducer": Reducer.REDUCE_SUM,
             },
         ),
-        GCPMetric(
+        Metric(
             name="file.googleapis.com/nfs/server/write_ops_count",
             aggregation={
                 "alignment_period": {"seconds": 60},
@@ -449,7 +449,7 @@ FILESTORE = GCPService(
                 "cross_series_reducer": Reducer.REDUCE_SUM,
             },
         ),
-        GCPMetric(
+        Metric(
             name="file.googleapis.com/nfs/server/read_ops_count",
             aggregation={
                 "alignment_period": {"seconds": 60},
@@ -461,10 +461,10 @@ FILESTORE = GCPService(
     ],
 )
 
-REDIS = GCPService(
+REDIS = Service(
     name="redis",
     metrics=[
-        GCPMetric(
+        Metric(
             name="redis.googleapis.com/stats/cpu_utilization",
             aggregation={
                 "alignment_period": {"seconds": 60},
@@ -473,7 +473,7 @@ REDIS = GCPService(
                 "cross_series_reducer": Reducer.REDUCE_SUM,
             },
         ),
-        GCPMetric(
+        Metric(
             name="redis.googleapis.com/stats/memory/usage_ratio",
             aggregation={
                 "alignment_period": {"seconds": 60},
@@ -482,7 +482,7 @@ REDIS = GCPService(
                 "cross_series_reducer": Reducer.REDUCE_SUM,
             },
         ),
-        GCPMetric(
+        Metric(
             name="redis.googleapis.com/stats/memory/system_memory_usage_ratio",
             aggregation={
                 "alignment_period": {"seconds": 60},
@@ -491,7 +491,7 @@ REDIS = GCPService(
                 "cross_series_reducer": Reducer.REDUCE_SUM,
             },
         ),
-        GCPMetric(
+        Metric(
             name="redis.googleapis.com/stats/cache_hit_ratio",
             aggregation={
                 "alignment_period": {"seconds": 60},

@@ -61,16 +61,27 @@ def _make_wato_page_state() -> PageState:
     changes_info = get_pending_changes_info()
     tooltip = get_pending_changes_tooltip()
     changelog_url = "wato.py?mode=changelog"
-    span_id = "pending_changes"
+    span_id = "changes_info"
     if changes_info:
+        changes_number, changes_str = changes_info.split()
         return PageState(
-            text=html.render_span(changes_info, id_=span_id, class_="has_changes"),
+            text=html.render_span(
+                html.render_span(changes_number, class_="changes_number")
+                + html.render_span(changes_str, class_="changes_str"),
+                id_=span_id,
+            ),
             icon_name="pending_changes",
             url=changelog_url,
             tooltip_text=tooltip,
+            css_classes="pending_changes",
         )
     return PageState(
-        text=html.render_span(_("No pending changes"), id_=span_id),
+        text=html.render_span(
+            html.render_span("", class_="changes_number")
+            + html.render_span(_("No pending changes"), class_="changes_str"),
+            id_=span_id,
+        ),
         url=changelog_url,
         tooltip_text=tooltip,
+        css_classes="no_changes",
     )

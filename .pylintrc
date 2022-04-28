@@ -151,9 +151,6 @@ disable=
     # with out cmk.gui.globals.
     assigning-non-slot,
     #---------------------------------------------------------------------------
-    # Lots of findings, but these should *really* be fixed!
-    #consider-using-with,
-    #---------------------------------------------------------------------------
     # Useful, but quite a few findings.
     use-implicit-booleaness-not-comparison,
     #---------------------------------------------------------------------------

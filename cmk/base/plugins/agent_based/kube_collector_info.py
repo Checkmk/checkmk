@@ -204,7 +204,7 @@ def check(
 
 register.check_plugin(
     name="kube_collector_info",
-    service_name="Cluster Collector",
+    service_name="Cluster collector",
     sections=[
         "kube_collector_metadata",
         "kube_collector_processing_logs",

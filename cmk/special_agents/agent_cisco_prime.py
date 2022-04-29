@@ -64,9 +64,15 @@ def write_section_from_get_request(argv: Sequence[str]) -> None:
 
     def fetch_json_data(url: str, args: argparse.Namespace) -> str:
         logging.info("fetch data from url=%r", url)
+
+        if args.basic_auth:
+            username, password = args.basic_auth.split(":")
+            auth = (username, password)
+        else:
+            auth = None
         response = requests.get(
             url=url,
-            auth=tuple(args.basic_auth.split(":")) if args.basic_auth else None,
+            auth=auth,
             timeout=args.timeout,
             verify=not args.no_cert_check,
         )

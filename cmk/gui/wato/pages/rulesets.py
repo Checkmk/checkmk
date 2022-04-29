@@ -39,6 +39,7 @@ from cmk.utils.type_defs import (
 import cmk.gui.forms as forms
 import cmk.gui.view_utils
 import cmk.gui.watolib.bakery as bakery
+import cmk.gui.watolib.changes as _changes
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import g
@@ -58,7 +59,6 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.plugins.wato.utils import (
-    add_change,
     ConfigHostname,
     DictHostTagCondition,
     flash,
@@ -1727,7 +1727,7 @@ class ABCEditRuleMode(WatoMode):
             self._rulesets.save()
 
             affected_sites = list(set(self._folder.all_site_ids() + new_rule_folder.all_site_ids()))
-            add_change(
+            _changes.add_change(
                 "edit-rule",
                 _('Changed properties of rule "%s", moved rule from ' 'folder "%s" to "%s"')
                 % (self._ruleset.title(), self._folder.alias_path(), new_rule_folder.alias_path()),
@@ -2682,7 +2682,7 @@ class ModeNewRule(ABCEditRuleMode):
     def _save_rule(self) -> None:
         index = self._ruleset.append_rule(self._folder, self._rule)
         self._rulesets.save()
-        add_change(
+        _changes.add_change(
             "new-rule",
             _('Created new rule #%d in ruleset "%s" in folder "%s"')
             % (index, self._ruleset.title(), self._folder.alias_path()),

@@ -12,7 +12,7 @@ from typing import List, Optional, Set, Type, Union
 import cmk.utils.tags
 
 import cmk.gui.forms as forms
-import cmk.gui.watolib as watolib
+import cmk.gui.watolib.changes as _changes
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import load_config
 from cmk.gui.exceptions import FinalizeRequest, MKGeneralException, MKUserError
@@ -28,7 +28,6 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.plugins.wato.utils import (
-    add_change,
     flash,
     make_confirm_link,
     mode_registry,
@@ -215,7 +214,7 @@ class ModeTags(ABCTagMode):
             except MKGeneralException as e:
                 raise MKUserError(None, "%s" % e)
             self._save_tags_and_update_hosts(self._tag_config.get_dict_format())
-            add_change("edit-tags", _("Removed tag group %s (%s)") % (message, del_id))
+            _changes.add_change("edit-tags", _("Removed tag group %s (%s)") % (message, del_id))
             if isinstance(message, str):
                 flash(message)
         return redirect(mode_url("tags"))
@@ -274,7 +273,7 @@ class ModeTags(ABCTagMode):
             except MKGeneralException as e:
                 raise MKUserError(None, "%s" % e)
             self._save_tags_and_update_hosts(self._tag_config.get_dict_format())
-            add_change("edit-tags", _("Removed auxiliary tag %s (%s)") % (message, del_id))
+            _changes.add_change("edit-tags", _("Removed auxiliary tag %s (%s)") % (message, del_id))
             if isinstance(message, str):
                 flash(message)
         return redirect(mode_url("tags"))
@@ -293,7 +292,7 @@ class ModeTags(ABCTagMode):
             raise MKUserError(None, "%s" % e)
         self._tag_config_file.save(self._tag_config.get_dict_format())
         self._load_effective_config()
-        watolib.add_change("edit-tags", _("Changed order of tag groups"))
+        _changes.add_change("edit-tags", _("Changed order of tag groups"))
         return None
 
     def page(self):
@@ -782,7 +781,9 @@ class ModeEditTagGroup(ABCEditTagMode):
             except MKGeneralException as e:
                 raise MKUserError(None, "%s" % e)
             self._save_tags_and_update_hosts(changed_hosttags_config.get_dict_format())
-            add_change("edit-hosttags", _("Created new host tag group '%s'") % changed_tag_group.id)
+            _changes.add_change(
+                "edit-hosttags", _("Created new host tag group '%s'") % changed_tag_group.id
+            )
             flash(_("Created new host tag group '%s'") % changed_tag_group.title)
             return redirect(mode_url("tags"))
 
@@ -807,7 +808,9 @@ class ModeEditTagGroup(ABCEditTagMode):
             return FinalizeRequest(code=200)
 
         self._save_tags_and_update_hosts(changed_hosttags_config.get_dict_format())
-        add_change("edit-hosttags", _("Edited host tag group %s (%s)") % (message, self._id))
+        _changes.add_change(
+            "edit-hosttags", _("Edited host tag group %s (%s)") % (message, self._id)
+        )
         if isinstance(message, str):
             flash(message)
 

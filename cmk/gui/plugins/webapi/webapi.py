@@ -24,6 +24,7 @@ from cmk.utils.type_defs import DiscoveryResult, TagConfigSpec, TagID
 import cmk.gui.bi as bi
 import cmk.gui.userdb as userdb
 import cmk.gui.watolib as watolib
+import cmk.gui.watolib.changes as _changes
 import cmk.gui.watolib.groups as groups
 import cmk.gui.watolib.users
 from cmk.gui.config import active_config, prepare_raw_site_config
@@ -767,7 +768,7 @@ class APICallRules(APICallCollection):
             folder_rulesets = FolderRulesets(folder)
             folder_rulesets.load()
             # TODO: This add_change() call should be made by the data classes
-            watolib.add_change(
+            _changes.add_change(
                 "edit-ruleset",
                 _("Set ruleset '%s' for '%s' with %d rules")
                 % (
@@ -792,7 +793,7 @@ class APICallRules(APICallCollection):
             new_ruleset.from_config(folder, [])
 
             # TODO: This add_change() call should be made by the data classes
-            watolib.add_change(
+            _changes.add_change(
                 "edit-ruleset",
                 _("Deleted ruleset '%s' for '%s'")
                 % (
@@ -887,7 +888,7 @@ class APICallHosttags(APICallCollection):
         self._verify_no_used_tags_missing(changed_hosttags_config)
 
         tag_config_file.save(changed_hosttags_config.get_dict_format())
-        watolib.add_change("edit-hosttags", _("Updated host tags through Web-API"))
+        _changes.add_change("edit-hosttags", _("Updated host tags through Web-API"))
 
     def _verify_no_used_tags_missing(self, changed_hosttags_config):
         # Check for conflicts with existing configuration
@@ -1226,7 +1227,7 @@ class APICallOther(APICallCollection):
                 hostname,
                 result.self_total,
             )
-            watolib.add_service_change(
+            _changes.add_service_change(
                 "refresh-autochecks", message, host.object_ref(), host.site_id()
             )
         else:
@@ -1234,7 +1235,9 @@ class APICallOther(APICallCollection):
                 hostname,
                 result.self_total,
             )
-            watolib.add_service_change("set-autochecks", message, host.object_ref(), host.site_id())
+            _changes.add_service_change(
+                "set-autochecks", message, host.object_ref(), host.site_id()
+            )
 
         msg = _(
             "Service discovery successful. Added %d, removed %d, kept %d, total %d services "

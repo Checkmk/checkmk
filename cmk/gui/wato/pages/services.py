@@ -32,7 +32,7 @@ from cmk.utils.site import omd_site
 
 from cmk.automations.results import CheckPreviewEntry
 
-import cmk.gui.watolib as watolib
+import cmk.gui.watolib.changes as _changes
 from cmk.gui.background_job import JobStatusStates
 from cmk.gui.breadcrumb import Breadcrumb, make_main_menu_breadcrumb
 from cmk.gui.config import active_config
@@ -526,7 +526,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             self._host.name(),
             len(discovery_result.host_labels),
         )
-        watolib.add_service_change(
+        _changes.add_service_change(
             "update-host-labels",
             message,
             self._host.object_ref(),

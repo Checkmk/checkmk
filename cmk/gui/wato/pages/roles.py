@@ -29,7 +29,7 @@ import cmk.gui.forms as forms
 import cmk.gui.hooks as hooks
 import cmk.gui.plugins.userdb.utils as userdb_utils
 import cmk.gui.userdb as userdb
-import cmk.gui.watolib as watolib
+import cmk.gui.watolib.changes as _changes
 import cmk.gui.watolib.groups as groups
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config, builtin_role_ids
@@ -167,7 +167,7 @@ class ModeRoles(RoleManagement, WatoMode):
             self._rename_user_role(delid, None)  # Remove from existing users
             del self._roles[delid]
             self._save_roles()
-            watolib.add_change(
+            _changes.add_change(
                 "edit-roles", _("Deleted role '%s'") % delid, sites=get_login_sites()
             )
 
@@ -197,7 +197,7 @@ class ModeRoles(RoleManagement, WatoMode):
 
             self._roles[newid] = new_role
             self._save_roles()
-            watolib.add_change(
+            _changes.add_change(
                 "edit-roles", _("Created new role '%s'") % newid, sites=get_login_sites()
             )
 
@@ -357,7 +357,7 @@ class ModeEditRole(RoleManagement, WatoMode):
             self._rename_user_role(self._role_id, new_id)
 
         self._save_roles()
-        watolib.add_change(
+        _changes.add_change(
             "edit-roles", _("Modified user role '%s'") % new_id, sites=get_login_sites()
         )
         return redirect(mode_url("roles"))

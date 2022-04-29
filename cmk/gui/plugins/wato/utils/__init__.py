@@ -122,7 +122,6 @@ from cmk.gui.valuespec import (
     ValueSpecText,
 )
 from cmk.gui.watolib import (  # noqa: F401 # pylint: disable=unused-import
-    add_change,
     ConfigDomainCACertificates,
     ConfigDomainCore,
     ConfigDomainEventConsole,

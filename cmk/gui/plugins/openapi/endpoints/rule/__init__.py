@@ -32,7 +32,7 @@ from cmk.gui.plugins.openapi.restful_objects.type_defs import DomainObject
 from cmk.gui.plugins.openapi.utils import problem
 from cmk.gui.utils import gen_id
 from cmk.gui.utils.escaping import strip_tags
-from cmk.gui.watolib import add_change
+from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.hosts_and_folders import CREFolder
 from cmk.gui.watolib.rulesets import AllRulesets, FolderRulesets, Rule, RuleConditions, Ruleset
 

@@ -21,6 +21,7 @@ import cmk.utils.render as render
 
 import cmk.gui.forms as forms
 import cmk.gui.watolib as watolib
+import cmk.gui.watolib.changes as _changes
 import cmk.gui.watolib.read_only as read_only
 import cmk.gui.watolib.snapshots as _snapshots
 import cmk.gui.weblib as weblib
@@ -203,7 +204,7 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
         msg = _("Discarded pending changes (Restored %s)") % file_to_restore
 
         # All sites and domains can be affected by a restore: Better restart everything.
-        watolib.add_change(
+        _changes.add_change(
             "changes-discarded",
             msg,
             domains=ABCConfigDomain.enabled_domains(),

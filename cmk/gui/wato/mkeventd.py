@@ -53,6 +53,7 @@ import cmk.gui.forms as forms
 import cmk.gui.hooks as hooks
 import cmk.gui.mkeventd
 import cmk.gui.watolib as watolib
+import cmk.gui.watolib.changes as _changes
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKGeneralException, MKUserError
@@ -73,7 +74,6 @@ from cmk.gui.page_menu import (
 from cmk.gui.permissions import Permission, permission_registry
 from cmk.gui.plugins.wato.utils import (
     ABCMainModule,
-    add_change,
     ConfigDomainEventConsole,
     ConfigDomainGUI,
     ConfigVariableGroupNotifications,
@@ -1385,7 +1385,7 @@ class ABCEventConsoleMode(WatoMode, abc.ABC):
         return True
 
     def _add_change(self, what, message):
-        add_change(
+        _changes.add_change(
             what, message, domains=[ConfigDomainEventConsole], sites=_get_event_console_sync_sites()
         )
 

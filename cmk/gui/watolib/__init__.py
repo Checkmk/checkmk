@@ -35,7 +35,6 @@ from cmk.gui.log import logger
 from cmk.gui.utils.html import HTML
 from cmk.gui.watolib.audit_log import log_audit
 from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
-from cmk.gui.watolib.changes import add_change, add_service_change
 from cmk.gui.watolib.config_domains import (
     ConfigDomainCACertificates,
     ConfigDomainCore,

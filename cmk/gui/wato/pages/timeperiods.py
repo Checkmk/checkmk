@@ -20,6 +20,7 @@ import cmk.gui.plugins.wato.utils
 import cmk.gui.userdb as userdb
 import cmk.gui.wato.mkeventdstore as mkeventdstore
 import cmk.gui.watolib as watolib
+import cmk.gui.watolib.changes as _changes
 import cmk.gui.watolib.groups as groups
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
@@ -151,7 +152,7 @@ class ModeTimeperiods(WatoMode):
 
         del self._timeperiods[delname]
         watolib.timeperiods.save_timeperiods(self._timeperiods)
-        watolib.add_change("edit-timeperiods", _("Deleted timeperiod %s") % delname)
+        _changes.add_change("edit-timeperiods", _("Deleted timeperiod %s") % delname)
         return redirect(mode_url("timeperiods"))
 
     # Check if a timeperiod is currently in use and cannot be deleted
@@ -908,9 +909,9 @@ class ModeEditTimeperiod(WatoMode):
 
         if self._new:
             self._name = vs_spec["name"]
-            watolib.add_change("edit-timeperiods", _("Created new time period %s") % self._name)
+            _changes.add_change("edit-timeperiods", _("Created new time period %s") % self._name)
         else:
-            watolib.add_change("edit-timeperiods", _("Modified time period %s") % self._name)
+            _changes.add_change("edit-timeperiods", _("Modified time period %s") % self._name)
 
         assert self._name is not None
         self._timeperiods[self._name] = self._timeperiod

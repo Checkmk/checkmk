@@ -20,7 +20,7 @@ from cmk.utils.type_defs import HostOrServiceConditions, SetAutochecksTable
 from cmk.automations.results import CheckPreviewEntry, TryDiscoveryResult
 
 import cmk.gui.gui_background_job as gui_background_job
-import cmk.gui.watolib as watolib
+import cmk.gui.watolib.changes as _changes
 from cmk.gui.background_job import BackgroundProcessInterface, JobStatusStates
 from cmk.gui.config import active_config
 from cmk.gui.i18n import _
@@ -234,7 +234,7 @@ class Discovery:
             self._host.name(),
             len(checks),
         )
-        watolib.add_service_change(
+        _changes.add_service_change(
             action_name="set-autochecks",
             text=message,
             object_ref=self._host.object_ref(),
@@ -522,7 +522,7 @@ def get_check_table(discovery_request: StartDiscoveryRequest) -> DiscoveryResult
     _get_check_table()
     """
     if discovery_request.options.action == DiscoveryAction.TABULA_RASA:
-        watolib.add_service_change(
+        _changes.add_service_change(
             "refresh-autochecks",
             _("Refreshed check configuration of host '%s'") % discovery_request.host.name(),
             discovery_request.host.object_ref(),
@@ -642,7 +642,7 @@ class ServiceDiscoveryBackgroundJob(WatoBackgroundJob):
         # count_added, _count_removed, _count_kept, _count_new = counts[api_request.host.name()]
         # message = _("Refreshed check configuration of host '%s' with %d services") % \
         #            (api_request.host.name(), count_added)
-        # watolib.add_service_change(api_request.host, "refresh-autochecks", message)
+        # _changes.add_service_change(api_request.host, "refresh-autochecks", message)
 
     def _get_automation_flags(self, api_request: StartDiscoveryRequest) -> Iterable[str]:
         if api_request.options.action == DiscoveryAction.REFRESH:

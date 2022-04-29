@@ -14,6 +14,7 @@ import cmk.utils.version as cmk_version
 import cmk.gui.forms as forms
 import cmk.gui.utils.escaping as escaping
 import cmk.gui.watolib as watolib
+import cmk.gui.watolib.changes as _changes
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKAuthException, MKGeneralException, MKUserError
@@ -326,7 +327,7 @@ class ABCEditGlobalSettingMode(WatoMode):
             )
 
         self._save()
-        watolib.add_change(
+        _changes.add_change(
             "edit-configvar",
             msg,
             sites=self._affected_sites(),
@@ -513,7 +514,7 @@ class ModeEditGlobals(ABCGlobalSettingsMode):
         )
         watolib.save_global_settings(self._current_settings)
 
-        watolib.add_change(
+        _changes.add_change(
             "edit-configvar",
             msg,
             domains=[config_variable.domain()],

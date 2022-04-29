@@ -40,6 +40,7 @@ import cmk.gui.forms as forms
 import cmk.gui.plugins.wato.bi_valuespecs as bi_valuespecs
 import cmk.gui.sites
 import cmk.gui.watolib as watolib
+import cmk.gui.watolib.changes as _changes
 import cmk.gui.weblib as weblib
 from cmk.gui.bi import bi_livestatus_query, BIManager, get_cached_bi_packs
 from cmk.gui.breadcrumb import Breadcrumb
@@ -68,7 +69,6 @@ from cmk.gui.page_menu import (
 from cmk.gui.permissions import Permission, permission_registry
 from cmk.gui.plugins.wato.utils import (
     ABCMainModule,
-    add_change,
     ContactGroupSelection,
     main_module_registry,
     MainMenu,
@@ -201,7 +201,7 @@ class ABCBIMode(WatoMode):
 
     def _add_change(self, action_name, text):
         site_ids = list(wato_slave_sites().keys()) + [omd_site()]
-        add_change(action_name, text, domains=[watolib.ConfigDomainGUI], sites=site_ids)
+        _changes.add_change(action_name, text, domains=[watolib.ConfigDomainGUI], sites=site_ids)
 
     def url_to_pack(self, addvars, bi_pack):
         return makeuri_contextless(request, addvars + [("pack", bi_pack.id)])

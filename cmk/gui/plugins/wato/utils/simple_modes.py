@@ -19,7 +19,7 @@ from typing import Any, Generic, List, Mapping, Optional, Type, TypeVar, Union
 from livestatus import SiteId
 
 import cmk.gui.forms as forms
-import cmk.gui.watolib as watolib
+import cmk.gui.watolib.changes as _changes
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.context import html
@@ -146,7 +146,7 @@ class _SimpleWatoModeBase(Generic[_T], WatoMode, abc.ABC):
         affected_sites: Optional[List[SiteId]],
     ) -> None:
         """Add a WATO change entry for this object type modifications"""
-        watolib.add_change(
+        _changes.add_change(
             "%s-%s" % (action, self._mode_type.type_name()),
             text,
             domains=self._mode_type.affected_config_domains(),

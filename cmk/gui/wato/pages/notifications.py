@@ -20,6 +20,7 @@ import cmk.gui.permissions as permissions
 import cmk.gui.userdb as userdb
 import cmk.gui.view_utils
 import cmk.gui.watolib as watolib
+import cmk.gui.watolib.changes as _changes
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
@@ -41,7 +42,6 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.plugins.wato.utils import (
     ABCEventsMode,
-    add_change,
     ContactGroupSelection,
     flash,
     make_confirm_link,
@@ -371,7 +371,7 @@ class ABCNotificationsMode(ABCEventsMode):
                     html.i(_("(no conditions)"))
 
     def _add_change(self, log_what, log_text):
-        add_change(log_what, log_text, need_restart=False)
+        _changes.add_change(log_what, log_text, need_restart=False)
 
     def _vs_notification_bulkby(self):
         return ListChoice(

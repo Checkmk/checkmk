@@ -25,6 +25,7 @@ import cmk.gui.forms as forms
 import cmk.gui.log as log
 import cmk.gui.sites
 import cmk.gui.watolib as watolib
+import cmk.gui.watolib.changes as _changes
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import FinalizeRequest, MKGeneralException, MKUserError
@@ -230,7 +231,7 @@ class ModeEditSite(WatoMode):
 
         # Don't know exactly what have been changed, so better issue a change
         # affecting all domains
-        watolib.add_change(
+        _changes.add_change(
             "edit-sites",
             msg,
             sites=[self._site_id],
@@ -243,7 +244,7 @@ class ModeEditSite(WatoMode):
 
         if self._site_id != omd_site():
             # On central site issue a change only affecting the GUI
-            watolib.add_change(
+            _changes.add_change(
                 "edit-sites", msg, sites=[omd_site()], domains=[watolib.ConfigDomainGUI]
             )
 
@@ -638,7 +639,7 @@ class ModeDistributedMonitoring(WatoMode):
         if "secret" in site:
             del site["secret"]
         self._site_mgmt.save_sites(configured_sites)
-        watolib.add_change(
+        _changes.add_change(
             "edit-site",
             _("Logged out of remote site %s") % html.render_tt(site["alias"]),
             domains=[watolib.ConfigDomainGUI],
@@ -1119,7 +1120,7 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
         self._site.setdefault("globals", {})[varname] = self._current_settings[varname]
         self._site_mgmt.save_sites(self._configured_sites, activate=False)
 
-        watolib.add_change(
+        _changes.add_change(
             "edit-configvar",
             msg,
             sites=[self._site_id],
@@ -1294,7 +1295,7 @@ class ModeSiteLivestatusEncryption(WatoMode):
         trusted_cas.append(cert_str)
         global_settings["trusted_certificate_authorities"] = trusted
 
-        watolib.add_change(
+        _changes.add_change(
             "edit-configvar",
             _("Added CA with fingerprint %s to trusted certificate authorities") % digest_sha256,
             domains=[config_variable.domain()],

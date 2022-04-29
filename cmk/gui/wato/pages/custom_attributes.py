@@ -11,6 +11,7 @@ from datetime import datetime
 from typing import Any, Dict, Iterable, Optional, Type
 
 import cmk.gui.forms as forms
+import cmk.gui.watolib.changes as _changes
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.context import html
@@ -26,7 +27,6 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.plugins.wato.utils import (
-    add_change,
     make_confirm_link,
     mode_registry,
     mode_url,
@@ -178,12 +178,12 @@ class ModeEditCustomAttr(WatoMode, abc.ABC):
             }
             self._attrs.append(self._attr)
 
-            add_change(
+            _changes.add_change(
                 "edit-%sattr" % self._type,
                 _("Create new %s attribute %s") % (self._type, self._name),
             )
         else:
-            add_change(
+            _changes.add_change(
                 "edit-%sattr" % self._type, _("Modified %s attribute %s") % (self._type, self._name)
             )
         self._attr.update(
@@ -471,7 +471,7 @@ class ModeCustomAttrs(WatoMode, abc.ABC):
                 self._attrs.pop(index)
         save_custom_attrs_to_mk_file(self._all_attrs)
         self._update_config()
-        add_change("edit-%sattrs" % self._type, _("Deleted attribute %s") % (delname))
+        _changes.add_change("edit-%sattrs" % self._type, _("Deleted attribute %s") % (delname))
         return redirect(self.mode_url())
 
     def page(self):

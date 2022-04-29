@@ -37,19 +37,16 @@ from .detect_specs import PRECONVERTED_DETECT_SPECS
 DetectSpecKey = Tuple[bytes, Tuple, Tuple]
 
 MIGRATED_SCAN_FUNCTIONS: Dict[str, SNMPDetectSpecification] = {
-    # I am not sure why the following suppressions are needed.
-    # 'reveal_type(DETECT)' in checkpoint shows that mypy does know the type in principle
-    # If I add an explicit typehint to 'DETECT' in checkpoint, these suppressions are not needed.
-    "scan_checkpoint": checkpoint.DETECT,  # type: ignore[has-type]
-    "scan_ricoh_printer": printer.DETECT_RICOH,  # type: ignore[has-type]
-    "scan_pulse_secure": pulse_secure.DETECT_PULSE_SECURE,  # type: ignore[has-type]
-    "_is_ucd": ucd_hr_detection.UCD,  # type: ignore[has-type]
-    "is_ucd": ucd_hr_detection.UCD,  # type: ignore[has-type]
-    "is_hr": ucd_hr_detection.HR,  # type: ignore[has-type]
-    "prefer_hr_else_ucd": ucd_hr_detection.PREFER_HR_ELSE_UCD,  # type: ignore[has-type]
-    "is_ucd_mem": ucd_hr_detection.USE_UCD_MEM,  # type: ignore[has-type]
-    "is_hr_mem": ucd_hr_detection.USE_HR_MEM,  # type: ignore[has-type]
-    "_is_ucd_mem": ucd_hr_detection._UCD_MEM,  # type: ignore[has-type]
+    "scan_checkpoint": checkpoint.DETECT,
+    "scan_ricoh_printer": printer.DETECT_RICOH,
+    "scan_pulse_secure": pulse_secure.DETECT_PULSE_SECURE,
+    "_is_ucd": ucd_hr_detection.UCD,
+    "is_ucd": ucd_hr_detection.UCD,
+    "is_hr": ucd_hr_detection.HR,
+    "prefer_hr_else_ucd": ucd_hr_detection.PREFER_HR_ELSE_UCD,
+    "is_ucd_mem": ucd_hr_detection.USE_UCD_MEM,
+    "is_hr_mem": ucd_hr_detection.USE_HR_MEM,
+    "_is_ucd_mem": ucd_hr_detection._UCD_MEM,
 }
 
 
@@ -151,7 +148,7 @@ def _extract_scan_function_ast(tree: ast.AST, scan_function_name: str, plugin_na
 
 
 def _get_expression_from_function(name: str, scan_func_ast: ast.AST) -> ast.AST:
-    body = scan_func_ast.body  # type: ignore
+    body = scan_func_ast.body
     if isinstance(scan_func_ast, ast.Lambda):
         return body
 

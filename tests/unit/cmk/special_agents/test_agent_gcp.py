@@ -84,68 +84,52 @@ class FakeAssetClient:
         yield asset_v1.Asset(name="2")
 
 
-Section = Sequence[str]
+def collector_factory(container: list[agent_gcp.Section]):
+    def f(sections: Iterable[agent_gcp.Section]):
+        container.extend(list(sections))
+
+    return f
 
 
 @pytest.fixture(name="agent_output")
-def fixture_agent_output(mocker: MockerFixture, capsys) -> Section:
+def fixture_agent_output(mocker: MockerFixture) -> Sequence[agent_gcp.Section]:
     client = agent_gcp.Client({}, "test")
     mocker.patch.object(client, "monitoring", FakeMonitoringClient)
     mocker.patch.object(client, "asset", FakeAssetClient)
-    agent_gcp.run(client, list(agent_gcp.SERVICES.values()), serializer=agent_gcp.gcp_serializer)
+    sections: list[agent_gcp.Section] = []
+    collector = collector_factory(sections)
+    agent_gcp.run(client, list(agent_gcp.SERVICES.values()), serializer=collector)
+    return list(sections)
+
+
+def test_output_contains_defined_metric_sections(agent_output: Sequence[agent_gcp.Section]):
+    names = {s.name for s in agent_output}
+    assert names.issuperset({s.name for s in agent_gcp.SERVICES.values()})
+
+
+def test_output_contains_one_asset_section(agent_output: Sequence[agent_gcp.Section]):
+    assert "asset" in {s.name for s in agent_output}
+
+
+def test_metric_serialization(agent_output: Sequence[agent_gcp.Section], capsys):
+    result_section = next(s for s in agent_output if isinstance(s, agent_gcp.ResultSection))
+    agent_gcp.gcp_serializer([result_section])
     captured = capsys.readouterr()
-    # strip trailing new lines
-    sections = captured.out.rstrip().split("\n")
-    return sections
+    lines = captured.out.rstrip().split("\n")
+    assert lines[0] == f"<<<gcp_service_{result_section.name}:sep(0)>>>"
+    for line in lines[1:]:
+        agent_gcp.Result.deserialize(line)
 
 
-def test_output_contains_defined_metric_sections(agent_output: Section):
-    metrics = [l for l in agent_output if l.startswith("<<<gcp_service")]
-    names = {m.removeprefix("<<<gcp_service_").removesuffix(":sep(0)>>>") for m in metrics}
-    assert names == {s.name for s in agent_gcp.SERVICES.values()}
-
-
-def test_output_contains_one_asset_section(agent_output: Section):
-    assets = [l for l in agent_output if l == "<<<gcp_assets:sep(0)>>>"]
-    assert len(assets) == 1
-
-
-@pytest.fixture(name="sections")
-def fixture_section(agent_output: Section) -> Sequence[Section]:
-    sections = []
-    section = [
-        agent_output[0],
-    ]
-    for line in agent_output[1:]:
-        if line.startswith("<<<"):
-            sections.append(section.copy())
-            section = []
-        section.append(line)
-    sections.append(section.copy())
-    return sections
-
-
-def test_sections_contain_json(sections: Sequence[Section]):
-    for section in sections:
-        for line in section[1:]:
-            json.loads(line)
-
-
-def test_metric_deserialization(sections: Sequence[Section]):
-    for section in sections:
-        if not section[0].startswith("<<<gcp_service"):
-            continue
-        for line in section[1:]:
-            agent_gcp.Result.deserialize(line)
-
-
-def test_asset_deserialization(sections: Sequence[Section]):
-    for section in sections:
-        if not section[0].startswith("<<<gcp_assets"):
-            continue
-        assert json.loads(section[1]) == {"project": "test"}
-        for line in section[2:]:
-            agent_gcp.Asset.deserialize(line)
+def test_asset_serialization(agent_output: Sequence[agent_gcp.Section], capsys):
+    asset_section = next(s for s in agent_output if isinstance(s, agent_gcp.AssetSection))
+    agent_gcp.gcp_serializer([asset_section])
+    captured = capsys.readouterr()
+    lines = captured.out.rstrip().split("\n")
+    assert lines[0] == "<<<gcp_assets:sep(0)>>>"
+    assert json.loads(lines[1]) == {"project": "test"}
+    for line in lines[2:]:
+        agent_gcp.Asset.deserialize(line)
 
 
 def test_can_hash_client():

@@ -9,7 +9,7 @@ import tarfile
 import time
 from io import BufferedIOBase
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Union
 
 import pytest
 import responses  # type: ignore[import]
@@ -120,6 +120,22 @@ def _create_test_sync_config(monkeypatch):
                 },
             },
             raising=False,
+        )
+        dummy_password: Dict[str, Dict[str, Union[None, str, List]]] = {
+            "password_1": {
+                "title": "testpwd",
+                "comment": "",
+                "docu_url": "",
+                "password": "",
+                "owned_by": None,
+                "shared_with": [],
+                "customer": "provider",
+            }
+        }
+        monkeypatch.setattr(
+            cmk.gui.watolib.password_store.PasswordStore,
+            "load_for_reading",
+            lambda x: dummy_password,
         )
 
 
@@ -324,6 +340,7 @@ def _get_expected_paths(user_id, is_pre_17_site, with_local):
         expected_paths += [
             "etc/check_mk/conf.d/customer.mk",
             "etc/check_mk/conf.d/wato/groups.mk",
+            "etc/check_mk/conf.d/wato/passwords.mk",
             "etc/check_mk/mkeventd.d/wato/rules.mk",
             "etc/check_mk/multisite.d/customer.mk",
             "etc/check_mk/multisite.d/wato/bi_config.bi",
@@ -333,7 +350,6 @@ def _get_expected_paths(user_id, is_pre_17_site, with_local):
         ]
 
         expected_paths.remove("etc/check_mk/conf.d/wato/hosts.mk")
-        expected_paths.remove("var/check_mk/stored_passwords")
 
     # TODO: The second condition should not be needed. Seems to be a subtle difference between the
     # CME and CRE/CEE snapshot logic
@@ -503,7 +519,7 @@ def test_generate_pre_17_site_snapshot(
                 "gui_logo_facelift.tar": [],
                 # TODO: Shouldn't we clean up these subtle differences?
                 "mkeventd.tar": ["rules.mk"],
-                "check_mk.tar": ["groups.mk", "contacts.mk"],
+                "check_mk.tar": ["groups.mk", "contacts.mk", "passwords.mk"],
                 "multisite.tar": [
                     "bi_config.bi",
                     "customers.mk",
@@ -512,7 +528,6 @@ def test_generate_pre_17_site_snapshot(
                     "user_connections.mk",
                     "users.mk",
                 ],
-                "stored_passwords.tar": [],
             }
         )
 

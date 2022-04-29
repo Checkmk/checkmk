@@ -814,6 +814,9 @@ section_storcli() {
     echo '<<<storcli_virtual_disks>>>'
     _storcli /call/vall show all
 
+    echo '<<<storcli_cache_vault:sep(0)>>>'
+    _storcli /call/cv show all
+
     # exit successfully, because storcli was in the path.
     return 0
 }

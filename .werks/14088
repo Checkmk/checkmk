@@ -1,0 +1,15 @@
+Title: storcli_cache_vault: new plugin
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1652369316
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0b10
+
+This check monitors the status of cache vault units on controllers that are based on LSI Megaraid chipsets, if they support cache vautls.
+The Linux agent will try find any existing controllers - if <tt>storcli</tt> or <tt>storcli64</tt> is in your PATH.
+
+<tt>storcli</tt> can be downloaded <a href="https://docs.broadcom.com/docs/007.2007.0000.0000_Unified_StorCLI.zip">from LSI</a>

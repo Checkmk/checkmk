@@ -7,7 +7,7 @@ import json
 import time
 from dataclasses import dataclass, field
 from functools import cache
-from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence, Union
+from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional, Sequence, Union
 
 from google.cloud import asset_v1, monitoring_v3  # type: ignore
 from google.cloud.monitoring_v3 import Aggregation
@@ -17,7 +17,11 @@ from google.cloud.monitoring_v3.types import TimeSeries
 Aligner = Aggregation.Aligner
 Reducer = Aggregation.Reducer
 
-from cmk.special_agents.utils.agent_common import SectionWriter, special_agent_main
+from cmk.special_agents.utils.agent_common import (
+    ConditionalPiggybackSection,
+    SectionWriter,
+    special_agent_main,
+)
 from cmk.special_agents.utils.argument_parsing import Args, create_default_argument_parser
 
 ####################
@@ -65,6 +69,24 @@ class Service:
     name: str
 
 
+# todo: Do I want to have a class that automatically prepends gcp?
+Labels = Mapping[str, str]
+
+
+class PiggyBackService:
+    def __init__(
+        self,
+        name: str,
+        asset_type: str,
+        labeler: Callable[[Asset], Labels],
+        services: Sequence[Service],
+    ):
+        self.name = name
+        self.asset_type = asset_type
+        self.labeler = labeler
+        self.services = services
+
+
 @dataclass(frozen=True)
 class Result:
     ts: TimeSeries
@@ -82,7 +104,7 @@ class Result:
 @dataclass(frozen=True)
 class AssetSection:
     name: str
-    assets: Iterable[Asset]
+    assets: Sequence[Asset]
     project: str
 
 
@@ -92,7 +114,14 @@ class ResultSection:
     results: Iterable[Result]
 
 
-Section = Union[AssetSection, ResultSection]
+@dataclass(frozen=True)
+class PiggyBackSection:
+    name: str
+    labels: Labels
+    sections: Iterable[ResultSection]
+
+
+Section = Union[AssetSection, ResultSection, PiggyBackSection]
 
 #################
 # Serialization #
@@ -116,12 +145,24 @@ def _result_serializer(section: ResultSection):
             w.append(Result.serialize(r))
 
 
+def _piggyback_serializer(section: PiggyBackSection):
+    with ConditionalPiggybackSection(section.name):
+        with SectionWriter("labels") as w:
+            w.append(json.dumps(section.labels))
+        for s in section.sections:
+            _result_serializer(s)
+
+
 def gcp_serializer(sections: Iterable[Section]) -> None:
     for section in sections:
         if isinstance(section, AssetSection):
             _asset_serializer(section)
-        else:
+        elif isinstance(section, ResultSection):
             _result_serializer(section)
+        elif isinstance(section, PiggyBackSection):
+            _piggyback_serializer(section)
+        else:
+            pass
 
 
 ###########
@@ -129,7 +170,15 @@ def gcp_serializer(sections: Iterable[Section]) -> None:
 ###########
 
 
-def time_series(client: Client, service: Service) -> Iterable[Result]:
+@dataclass(frozen=True)
+class ResourceFilter:
+    label: str
+    value: str
+
+
+def time_series(
+    client: Client, service: Service, filter_by: Optional[ResourceFilter]
+) -> Iterable[Result]:
     now = time.time()
     seconds = int(now)
     nanos = int((now - seconds) * 10**9)
@@ -154,12 +203,19 @@ def time_series(client: Client, service: Service) -> Iterable[Result]:
         except Exception as e:
             raise RuntimeError(metric.name) from e
         for ts in results:
-            yield Result(ts=ts)
+            result = Result(ts=ts)
+            if filter_by is not None:
+                if ts.resource.labels[filter_by.label] == filter_by.value:
+                    yield result
+            else:
+                yield result
 
 
-def run_metrics(client: Client, services: Iterable[Service]) -> Iterable[ResultSection]:
+def run_metrics(
+    client: Client, services: Iterable[Service], filter_by: Optional[ResourceFilter] = None
+) -> Iterable[ResultSection]:
     for s in services:
-        yield ResultSection(s.name, time_series(client, s))
+        yield ResultSection(s.name, time_series(client, s, filter_by))
 
 
 ################################
@@ -167,17 +223,42 @@ def run_metrics(client: Client, services: Iterable[Service]) -> Iterable[ResultS
 ################################
 
 
-def gather_assets(client: Client) -> Iterable[Asset]:
+def gather_assets(client: Client) -> Sequence[Asset]:
     request = asset_v1.ListAssetsRequest(
         parent=f"projects/{client.project}", content_type=asset_v1.ContentType.RESOURCE
     )
     all_assets = client.asset().list_assets(request)
-    for asset in all_assets:
-        yield Asset(asset)
+    return [Asset(a) for a in all_assets]
 
 
 def run_assets(client: Client) -> AssetSection:
     return AssetSection("asset", gather_assets(client), client.project)
+
+
+##############
+# piggy back #
+##############
+
+
+def piggy_back(
+    client: Client, service: PiggyBackService, assets: Sequence[Asset]
+) -> Iterable[PiggyBackSection]:
+    for host in [a for a in assets if a.asset.asset_type == service.asset_type]:
+        name = host.asset.resource.data["id"]
+        filter_by = ResourceFilter(label="id", value=name)
+        sections = run_metrics(client, services=service.services, filter_by=filter_by)
+        yield PiggyBackSection(
+            name=name,
+            labels=service.labeler(host) | {"gcp/project": client.project},
+            sections=sections,
+        )
+
+
+def run_piggy_back(
+    client: Client, services: Sequence[PiggyBackService], assets: Sequence[Asset]
+) -> Iterable[PiggyBackSection]:
+    for s in services:
+        yield from piggy_back(client, s, assets)
 
 
 #################
@@ -186,10 +267,15 @@ def run_assets(client: Client) -> AssetSection:
 
 
 def run(
-    client: Client, services: Sequence[Service], serializer: Callable[[Iterable[Section]], None]
+    client: Client,
+    services: Sequence[Service],
+    piggy_back_services: Sequence[PiggyBackService],
+    serializer: Callable[[Union[Iterable[Section], Iterable[PiggyBackSection]]], None],
 ) -> None:
-    serializer([run_assets(client)])
+    assets = run_assets(client)
+    serializer([assets])
     serializer(run_metrics(client, services))
+    serializer(run_piggy_back(client, piggy_back_services, assets.assets))
 
 
 #######################################################################
@@ -577,7 +663,7 @@ def parse_arguments(argv: Optional[Sequence[str]]) -> Args:
 def agent_gcp_main(args: Args) -> None:
     client = Client(json.loads(args.credentials), args.project)
     services = [SERVICES[s] for s in args.services]
-    run(client, services, serializer=gcp_serializer)
+    run(client, services, [], serializer=gcp_serializer)
 
 
 def main() -> None:

@@ -9,16 +9,17 @@ interface ElementSize {
 
 // The FigureRegistry holds all figure class templates
 class FigureRegistry {
-    _figures;
+    private _figures: Record<string, typeof FigureBase>;
     constructor() {
         this._figures = {};
     }
 
-    register(figure_class) {
-        this._figures[figure_class.ident()] = figure_class;
+    register(figure_class: typeof FigureBase): void {
+        let instance = new figure_class(null, null);
+        this._figures[instance.ident()] = figure_class;
     }
 
-    get_figure(ident) {
+    get_figure(ident: string): typeof FigureBase {
         return this._figures[ident];
     }
 }
@@ -249,12 +250,13 @@ export class FigureBase {
     _post_url: string;
     _post_body: string;
     _data;
+    // @ts-ignore
     _crossfilter: crossfilter;
     scheduler: Scheduler;
     figure_size;
     plot_size;
 
-    static ident() {
+    ident() {
         return "figure_base_class";
     }
 
@@ -270,7 +272,7 @@ export class FigureBase {
         this.margin = {top: 10, right: 10, bottom: 10, left: 10};
 
         this._div_selection
-            .classed(FigureBase.ident(), true)
+            .classed(this.ident(), true)
             .classed("cmk_figure", true)
             .datum(this);
 
@@ -296,9 +298,8 @@ export class FigureBase {
 
         // Current data of this figure
         this._data = {data: [], plot_definitions: []};
-
+        // @ts-ignore
         this._crossfilter = new crossfilter.default();
-
         this.scheduler = new Scheduler(
             () => this._fetch_data(),
             this.get_update_interval()

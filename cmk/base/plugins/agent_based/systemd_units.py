@@ -104,6 +104,12 @@ _SYSTEMD_UNIT_FILE_STATES = [
     "bad",
 ]
 
+# see sources for all possible glyphs to start a service status section
+# https://github.com/systemd/systemd/blob/7d4054464318d15ecd35c93fb477011aec63391e/src/basic/unit-def.c#L307
+# translatons for non utf8 terminals
+# https://github.com/systemd/systemd/blob/7d4054464318d15ecd35c93fb477011aec63391e/src/basic/glyph-util.c#L38
+_STATUS_SYMBOLS = {"●", "○", "↻", "×", "x", "*"}
+
 
 @dataclass(frozen=True)
 class UnitEntry:
@@ -178,7 +184,7 @@ def _parse_all(
 ) -> Optional[Section]:
     parsed: dict[str, UnitEntry] = {}
     for row in source:
-        if row[0] in {"●", "*"}:
+        if row[0] in _STATUS_SYMBOLS:
             row = row[1:]
         if row[0].endswith(".service"):
             name = row[0].replace(".service", "")
@@ -213,11 +219,7 @@ def _parse_status(source: Iterator[Sequence[str]]) -> Mapping[str, UnitStatus]:
     unit_status = {}
     entry: list[Sequence[str]] = []
     for line in source:
-        # see sources for all possible glyphs to start a service status section
-        # https://github.com/systemd/systemd/blob/7d4054464318d15ecd35c93fb477011aec63391e/src/basic/unit-def.c#L307
-        # translatons for non utf8 terminals
-        # https://github.com/systemd/systemd/blob/7d4054464318d15ecd35c93fb477011aec63391e/src/basic/glyph-util.c#L38
-        if line[0] in {"●", "○", "↻", "×", "x", "*"}:
+        if line[0] in _STATUS_SYMBOLS:
             if entry != [] and _is_service_entry(entry):
                 status = UnitStatus.from_entry(entry)
                 unit_status[status.name] = status

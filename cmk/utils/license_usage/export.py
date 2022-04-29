@@ -28,6 +28,8 @@ from typing import (
 
 from dateutil.relativedelta import relativedelta
 
+LicenseUsageHistoryDumpVersion = "1.3"
+
 
 class LicenseUsageReportVersionError(Exception):
     pass

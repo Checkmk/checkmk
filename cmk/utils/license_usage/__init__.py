@@ -16,13 +16,12 @@ from typing import Any, Iterable, Iterator, Mapping, Optional, Sequence
 import cmk.utils.store as store
 from cmk.utils.license_usage.export import (
     LicenseUsageExtensions,
+    LicenseUsageHistoryDumpVersion,
     LicenseUsageHistoryWithSiteHash,
     LicenseUsageSample,
     LicenseUsageSampleWithSiteHash,
 )
 from cmk.utils.paths import license_usage_dir
-
-LicenseUsageHistoryDumpVersion = "1.3"
 
 
 @dataclass

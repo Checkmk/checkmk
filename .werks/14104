@@ -1,0 +1,21 @@
+Title: Fix error on adding views to reports
+Class: fix
+Compatible: incompat
+Component: multisite
+Date: 1651241764
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0i1
+
+If you used report options in the "Add to" menu of views, an error like "Cannot
+load reports from /omd/sites/beta/var/check_mk/web/USER/user_reports.mk:
+invalid syntax (<unknown>, line 1)" occured.
+
+If you still see this error while opening views or reports, you have to edit
+the file /omd/sites/beta/var/check_mk/web/USER/user_reports.mk and change all
+occurrences of entries like {'title': l'MY_TITLE'} to {"title: 'MY_TITLE'}.
+
+Another option is to simply delete the file, but your saved options will be
+lost.

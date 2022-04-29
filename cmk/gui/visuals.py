@@ -306,6 +306,12 @@ def load(
         visual.setdefault("description", "")
         visual.setdefault("hidden", False)
 
+        # Ensure converting _l to str
+        for key, value in visual.items():
+            if not isinstance(value, utils.speaklater.LazyString):
+                continue
+            visual[key] = str(value)
+
         visuals[(UserId(""), name)] = visual
 
     # Add custom "user_*.mk" visuals

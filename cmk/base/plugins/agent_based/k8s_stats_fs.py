@@ -10,7 +10,7 @@ from typing import Any, Mapping, MutableMapping
 from .agent_based_api.v1 import get_value_store, GetRateError, register, Service
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 from .utils.df import df_check_filesystem_single, FILESYSTEM_DEFAULT_LEVELS
-from .utils.k8s import Filesystem, Section, to_filesystem
+from .utils.k8s import Section, to_filesystem
 
 ###########################################################################
 # NOTE: This check (and associated special agent) is deprecated and will be
@@ -62,10 +62,11 @@ def _check__k8s_stats_fs__core(
     Metric('trend', 0.0, boundaries=(0.0, 687.1832682291666))
     """
     now = section["timestamp"]
-    disk: Filesystem = to_filesystem(
+    empty: collections.Counter[str] = collections.Counter()
+    disk = to_filesystem(
         sum(
             (collections.Counter(interface) for interface in section["filesystem"][item]),
-            collections.Counter(),
+            empty,
         )
     )
 

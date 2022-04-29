@@ -474,6 +474,36 @@ def test_all_possible_service_states_in_status_section(icon):
     assert parse(string_table) == section
 
 
+@pytest.mark.parametrize(
+    "icon",
+    ["●", "○", "↻", "×", "x", "*"],
+)
+def test_all_possible_service_states_in_all_section(icon):
+    pre_string_table = [
+        "[list-unit-files]",
+        "[status]",
+        "● sssd.service - System Security Services Daemon",
+        "Loaded: loaded (/lib/systemd/system/sssd.service; enabled; vendor preset: enabled)",
+        " Condition: start condition failed at Tue 2022-04-12 12:53:54 CEST; 3s ago",
+        "[all]",
+        "UNIT LOAD ACTIVE SUB JOB DESCRIPTION",
+        f"{icon} sssd.service loaded active running SSSD NOT FROM SYSTEMD ONLY FOR TEST",
+    ]
+    section = {
+        "sssd": UnitEntry(
+            name="sssd",
+            loaded_status="loaded",
+            active_status="active",
+            current_state="running",
+            description="SSSD NOT FROM SYSTEMD ONLY FOR TEST",
+            enabled_status="unknown",
+            time_since_change=timedelta(seconds=3),
+        ),
+    }
+    string_table = [el.split() for el in pre_string_table]
+    assert parse(string_table) == section
+
+
 SECTION = {
     "virtualbox": UnitEntry(
         name="virtualbox",

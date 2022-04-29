@@ -75,7 +75,9 @@ def cluster_check_postgres_query_duration(
         )
         if d is not None
     ]
-    yield from check_postgres_query_duration(item, {item: sum(data, [])} if data else {})
+    yield from check_postgres_query_duration(
+        item, {item: [x for d in data for x in d]} if data else {}
+    )
 
 
 register.agent_section(

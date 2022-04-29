@@ -2188,17 +2188,15 @@ def test_check_multiple_interfaces_group_multiple_nodes() -> None:
             interfaces.check_multiple_interfaces(
                 "group",
                 params,
-                sum(
-                    (
-                        _create_interfaces(
-                            0,
-                            admin_status=str(idx + 1),
-                            node=node_name,
-                        )
-                        for idx, node_name in enumerate(node_names)
-                    ),
-                    [],
-                ),
+                [
+                    interface
+                    for idx, node_name in enumerate(node_names)
+                    for interface in _create_interfaces(
+                        0,
+                        admin_status=str(idx + 1),
+                        node=node_name,
+                    )
+                ],
                 timestamp=0,
             )
         )
@@ -2206,17 +2204,15 @@ def test_check_multiple_interfaces_group_multiple_nodes() -> None:
         interfaces.check_multiple_interfaces(
             "group",
             params,
-            sum(
-                (
-                    _create_interfaces(
-                        4000000,
-                        admin_status=str(idx + 1),
-                        node=node_name,
-                    )
-                    for idx, node_name in enumerate(node_names)
-                ),
-                [],
-            ),
+            [
+                interface
+                for idx, node_name in enumerate(node_names)
+                for interface in _create_interfaces(
+                    4000000,
+                    admin_status=str(idx + 1),
+                    node=node_name,
+                )
+            ],
             timestamp=5,
         )
     ) == [

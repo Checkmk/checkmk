@@ -216,7 +216,7 @@ def pod_status(pod: client.V1Pod) -> api.PodStatus:
         start_time = None
 
     return api.PodStatus(
-        conditions=pod_conditions(pod.status.conditions),
+        conditions=pod_conditions(pod.status.conditions) if pod.status.conditions else None,
         phase=api.Phase(pod.status.phase.lower()),
         start_time=api.Timestamp(start_time) if start_time else None,
         host_ip=api.IpAddress(pod.status.host_ip) if pod.status.host_ip else None,

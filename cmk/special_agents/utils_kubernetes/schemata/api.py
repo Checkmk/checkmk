@@ -561,7 +561,7 @@ class PodCondition(BaseModel):
 
 
 class PodStatus(BaseModel):
-    conditions: List[PodCondition]
+    conditions: Optional[List[PodCondition]]
     phase: Phase
     start_time: Optional[Timestamp]  # None if pod is faulty
     host_ip: Optional[IpAddress] = None

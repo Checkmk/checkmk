@@ -3348,7 +3348,7 @@ class HostConfig:
 def lookup_mgmt_board_ip_address(host_config: HostConfig) -> Optional[HostAddress]:
     mgmt_address = host_config.management_address
     try:
-        mgmt_ipa: Optional[HostAddress] = HostAddress(ipaddress.ip_address(mgmt_address))
+        mgmt_ipa = None if mgmt_address is None else HostAddress(ipaddress.ip_address(mgmt_address))
     except (ValueError, TypeError):
         mgmt_ipa = None
 

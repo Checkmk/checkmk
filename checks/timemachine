@@ -18,6 +18,7 @@ factory_settings["timemachine_default_levels"] = {"age": (86400, 172800)}  # 1d/
 def inventory_timemachine(info):
     if " ".join(info[0]) != "Unable to locate machine directory for host.":
         return [(None, {})]
+    return []
 
 
 def check_timemachine(item, params, info):

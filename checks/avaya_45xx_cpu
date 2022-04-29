@@ -21,6 +21,7 @@ def check_avaya_45xx_cpu(item, params, info):
     for idx, used_perc in enumerate(info):
         if str(idx) == item:
             return check_cpu_util(int(used_perc[0]), params, now)
+    return None
 
 
 check_info["avaya_45xx_cpu"] = {

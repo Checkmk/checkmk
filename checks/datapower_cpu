@@ -20,6 +20,7 @@ factory_settings["datapower_cpu_default_levels"] = {
 def inventory_datapower_cpu(info):
     if info:
         return [(None, {})]
+    return []
 
 
 def check_datapower_cpu(_no_item, params, info):

@@ -73,6 +73,7 @@ check_info["safenet_ntls.connrate"] = {
 def inventory_safenet_ntls_expiration(parsed):
     if parsed:
         return [(None, None)]
+    return []
 
 
 def check_safenet_ntls_expiration(_no_item, _no_params, parsed):
@@ -99,6 +100,7 @@ check_info["safenet_ntls.expiration"] = {
 def inventory_safenet_ntls_links(parsed):
     if parsed:
         return [(None, None)]
+    return []
 
 
 def check_safenet_ntls_links(_no_item, params, parsed):
@@ -135,6 +137,7 @@ check_info["safenet_ntls.links"] = {
 def inventory_safenet_ntls_clients(parsed):
     if parsed:
         return [(None, None)]
+    return []
 
 
 def check_safenet_ntls_clients(_no_item, params, parsed):
@@ -175,6 +178,7 @@ check_info["safenet_ntls.clients"] = {
 def inventory_safenet_ntls(parsed):
     if parsed:
         return [(None, None)]
+    return []
 
 
 def check_safenet_ntls(_no_item, _no_params, parsed):
@@ -185,6 +189,7 @@ def check_safenet_ntls(_no_item, _no_params, parsed):
         return 2, "Down"
     elif operation_status == "3":
         return 3, "Unknown"
+    return None
 
 
 check_info["safenet_ntls"] = {

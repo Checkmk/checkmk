@@ -14,13 +14,14 @@ hp_procurve_cpu_default_levels = (80.0, 90.0)
 def inventory_hp_procurve_cpu(info):
     if len(info) == 1 and 0 <= int(info[0][0]) <= 100:
         return [(None, "hp_procurve_cpu_default_levels")]
+    return []
 
 
 def check_hp_procurve_cpu(item, params, info):
     try:
         util = int(info[0][0])
     except (IndexError, ValueError):
-        return
+        return None
 
     if 0 <= util <= 100:
         return check_cpu_util(util, params)

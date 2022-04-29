@@ -37,7 +37,7 @@ def check_db2_mem(item, params, info):
                 break
 
     if limit is None or usage is None:
-        return
+        return None
 
     left = limit - usage
     perc_level = (100.0 / limit) * left

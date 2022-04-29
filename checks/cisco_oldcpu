@@ -20,6 +20,7 @@ cisco_oldcpu_default_levels = (80.0, 90.0)
 def inventory_cisco_oldcpu(info):
     if info[0][0]:
         return [(None, "cisco_oldcpu_default_levels")]
+    return []
 
 
 def check_cisco_oldcpu(_no_item, params, info):

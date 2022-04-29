@@ -24,6 +24,7 @@ def inventory_aironet_clients(info):
             ("quality", "aironet_default_quality_levels"),
             ("clients", None),
         ]
+    return []
 
 
 def check_aironet_clients(item, params, info):

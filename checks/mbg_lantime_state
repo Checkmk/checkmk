@@ -14,6 +14,7 @@ factory_settings["mbg_lantime_state_default_levels"] = MBG_LANTIME_STATE_CHECK_D
 def inventory_mbg_lantime_state(info):
     if info:
         return [(None, {})]
+    return []
 
 
 def check_mbg_lantime_state(_no_item, params, info):

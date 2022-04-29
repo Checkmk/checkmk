@@ -38,6 +38,7 @@ def check_checkpoint_temp(item, params, info):
                 dev_status=state,
                 dev_status_name=state_readable,
             )
+    return None
 
 
 check_info["checkpoint_temp"] = {

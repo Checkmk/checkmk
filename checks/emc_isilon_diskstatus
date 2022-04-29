@@ -19,6 +19,7 @@ def check_emc_isilon_diskstatus(item, _no_params, info):
             else:
                 status = 2
             return status, message
+    return None
 
 
 check_info["emc_isilon_diskstatus"] = {

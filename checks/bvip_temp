@@ -26,6 +26,7 @@ def check_bvip_temp(item, params, info):
         if nr == item:
             degree_celsius = float(value) / 10
             return check_temperature(degree_celsius, params, "bvip_temp_%s" % item)
+    return None
 
 
 check_info["bvip_temp"] = {

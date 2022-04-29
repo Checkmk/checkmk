@@ -54,6 +54,7 @@ def check_bintec_sensors_fan(item, params, info):
     for _sensor_id, sensor_descr, _sensor_type, sensor_value, _sensor_unit in info:
         if sensor_descr == item:
             return check_fan(int(sensor_value), params)
+    return None
 
 
 check_info["bintec_sensors.fan"] = {

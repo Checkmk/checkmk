@@ -40,6 +40,7 @@ def check_emc_datadomain_temps(item, params, info):
                 dev_status=int(dev_status),
                 dev_status_name=state_name,
             )
+    return None
 
 
 check_info["emc_datadomain_temps"] = {

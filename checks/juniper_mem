@@ -35,6 +35,7 @@ def check_juniper_mem(item, params, info):
                 infotext += " (warn/crit at %.1f%%/%.1f%%)" % (warn, crit)
 
             return state, infotext, [("mem_used_percent", memory_percent, warn, crit, 0, 100.0)]
+    return None
 
 
 check_info["juniper_mem"] = {

@@ -23,6 +23,7 @@ def parse_ups_cps_inphase(info):
 def inventory_ups_cps_inphase(parsed):
     if parsed:
         return [("1", {})]
+    return []
 
 
 check_info["ups_cps_inphase"] = {

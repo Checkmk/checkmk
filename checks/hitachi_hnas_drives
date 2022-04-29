@@ -12,6 +12,7 @@ from cmk.base.check_legacy_includes.hitachi_hnas import *  # pylint: disable=wil
 def inventory_hitachi_hnas_drives(info):
     if info:
         return [(None, None)]
+    return []
 
 
 def parse_hitachi_hnas_drives(info):

@@ -342,7 +342,7 @@ def inventory_apc_symmetra_temp(parsed):
 def check_apc_symmetra_temp(item, params, parsed):
     reading = parsed.get("temp", {}).get(item)
     if reading is None:
-        return
+        return None
 
     if "levels" not in params:
         params_copy = params.copy()

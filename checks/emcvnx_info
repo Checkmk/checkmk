@@ -108,6 +108,7 @@ def inventory_emcvnx_info(parsed, subcheck):
     output, _errors = parsed
     if output[subcheck]:
         return [(None, None)]
+    return []
 
 
 #   .--Info----------------------------------------------------------------.

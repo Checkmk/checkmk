@@ -12,6 +12,7 @@ def inventory_win_cpuusage(info):
                 return [(None, {})]
         except Exception:
             pass
+    return []
 
 
 def check_win_cpuusage(item, params, info):
@@ -82,7 +83,7 @@ def check_win_diskstat(item, params, info):
             break
 
     if not this_time:
-        return
+        return None
 
     try:
         read_per_sec = get_rate("diskstat.read", this_time, read_bytes_ctr)

@@ -18,6 +18,7 @@ factory_settings["netscaler_dnsrates_default_levels"] = {
 def inventory_netscaler_dnsrates(info):
     if info:
         return [(None, "netscaler_dnsrates_default_levels")]
+    return []
 
 
 def check_netscaler_dnsrates(_no_item, params, info):

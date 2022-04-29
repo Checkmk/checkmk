@@ -30,7 +30,7 @@ def inventory_ups_in_freq(key, freq):
 def check_ups_in_freq(item, params, parsed):
     freq = parsed.get(item)
     if freq is None:
-        return
+        return None
 
     infotext = "%.1f Hz" % freq
     state = 0

@@ -13,6 +13,7 @@ from cmk.base.check_legacy_includes.transforms import *  # pylint: disable=wildc
 def inventory_statgrab_cpu(info):
     if len(info) > 1:
         return [(None, {})]
+    return []
 
 
 def check_statgrab_cpu(_no_item, params, info):

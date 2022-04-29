@@ -21,7 +21,7 @@ def parse_jolokia_jvm_runtime(info):
 def check_jolokia_jvm_runtime_uptime(_item, params, data):
     milli_uptime = data.get("Uptime")
     if milli_uptime is None:
-        return
+        return None
     return check_uptime_seconds(params, milli_uptime / 1000.0)
 
 

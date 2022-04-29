@@ -1254,10 +1254,13 @@ def _compare_dicts(*, old_dict: Dict, new_dict: Dict, keep_identical: bool) -> D
     if keep_identical:
         delta_dict.update(identical)
 
-    return DDeltaResult(
-        counter=Counter(new=len(new), changed=len(changed), removed=len(removed)),
-        delta=delta_dict,
-    )
+    # We have to help mypy a little bit to figure out the Literal.
+    cnt: Mapping[Literal["new", "changed", "removed"], int] = {
+        "new": len(new),
+        "changed": len(changed),
+        "removed": len(removed),
+    }
+    return DDeltaResult(counter=Counter(cnt), delta=delta_dict)
 
 
 class ComparedDictKeys(NamedTuple):

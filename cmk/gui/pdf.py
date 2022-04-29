@@ -979,7 +979,7 @@ class TableRenderer:
                     stats[col][5] = False
 
         # Compute required total width
-        sum_min = sum([s[2] for s in stats])
+        sum_min = sum([s[2] for s in stats if s[2] is not None])
 
         # Now compute the available width, i.e. take the usable page width
         # and substract spacing and padding.

@@ -90,13 +90,12 @@ from cmk.gui.utils.flashed_messages import flash  # noqa: F401 # pylint: disable
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import make_confirm_link  # noqa: F401 # pylint: disable=unused-import
-from cmk.gui.valuespec import (  # noqa: F401 # pylint: disable=unused-import
+from cmk.gui.valuespec import (
     ABCPageListOfMultipleGetChoice,
     AjaxDropdownChoice,
     Alternative,
     CascadingDropdown,
     Dictionary,
-    DocumentationURL,
     DropdownChoice,
     DualListChoice,
     ElementSelection,
@@ -110,19 +109,15 @@ from cmk.gui.valuespec import (  # noqa: F401 # pylint: disable=unused-import
     ListOfMultiple,
     ListOfStrings,
     MonitoredHostname,
-    OptionalDropdownChoice,
     Password,
     Percentage,
     RegExp,
-    rule_option_elements,
-    RuleComment,
     SingleLabel,
     TextInput,
     Transform,
     Tuple,
     Url,
     ValueSpec,
-    ValueSpecDefault,
     ValueSpecHelp,
     ValueSpecText,
 )

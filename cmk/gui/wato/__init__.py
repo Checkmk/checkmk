@@ -74,6 +74,7 @@ import cmk.gui.plugins.watolib.utils
 import cmk.gui.sites as sites
 import cmk.gui.userdb as userdb
 import cmk.gui.utils as utils
+import cmk.gui.valuespec
 import cmk.gui.view_utils
 import cmk.gui.wato.mkeventd
 import cmk.gui.wato.pages.fetch_agent_output
@@ -186,9 +187,6 @@ if cmk_version.is_managed_edition():
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
 else:
     managed = None  # type: ignore[assignment]
-
-# TODO: Kept for old plugin compatibility. Remove this one day
-from cmk.gui.valuespec import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 syslog_facilities = cmk.gui.mkeventd.syslog_facilities
 from cmk.gui.plugins.wato.utils import (
@@ -382,7 +380,6 @@ def _register_pre_21_plugin_api() -> None:
         "register_modules",
         "register_notification_parameters",
         "ReplicationPath",
-        "rule_option_elements",
         "RulespecGroup",
         "RulespecGroupCheckParametersApplications",
         "RulespecGroupCheckParametersDiscovery",
@@ -445,6 +442,8 @@ def _register_pre_21_plugin_api() -> None:
         "wato_fileheader",
     ):
         api_module.__dict__[name] = cmk.gui.plugins.watolib.utils.__dict__[name]
+    for name in ("rule_option_elements",):
+        api_module.__dict__[name] = cmk.gui.valuespec.__dict__[name]
     for name in (
         "multisite_dir",
         "site_neutral_path",

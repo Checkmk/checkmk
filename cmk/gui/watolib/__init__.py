@@ -33,36 +33,6 @@ import cmk.gui.weblib as weblib
 from cmk.gui.htmllib.context import html
 from cmk.gui.log import logger
 from cmk.gui.utils.html import HTML
-
-# TODO: cleanup all call sites to this name
-from cmk.gui.valuespec import (
-    Age,
-    AjaxDropdownChoice,
-    Alternative,
-    CascadingDropdown,
-    Checkbox,
-    Dictionary,
-    DropdownChoice,
-    DualListChoice,
-    EmailAddress,
-    FixedValue,
-    Float,
-    Foldable,
-    HostAddress,
-    Integer,
-    IPNetwork,
-    ListChoice,
-    ListOf,
-    ListOfStrings,
-    MonitoredHostname,
-    RegExp,
-    TextAreaUnicode,
-    TextInput,
-    Transform,
-    Tuple,
-    UserID,
-    ValueSpec,
-)
 from cmk.gui.watolib.audit_log import log_audit
 from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
 from cmk.gui.watolib.changes import add_change, add_service_change

@@ -13,6 +13,7 @@ import time
 import traceback
 import urllib.parse
 from pathlib import Path
+from typing import cast
 
 import requests
 import urllib3  # type: ignore[import]
@@ -191,7 +192,8 @@ if debug:
     sys.stderr.write("URL: %s\n" % url)
 
 try:
-    r = requests.get(url, timeout=timeout, auth=auth, proxies=proxies)
+    # TODO: Figure out if our code is buggy or the typing stub for get() and remove the cast!
+    r = requests.get(url, timeout=timeout, auth=auth, proxies=cast(dict[str, str], proxies))
     r.raise_for_status()
     raw_response = r.text
 except requests.Timeout:

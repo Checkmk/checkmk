@@ -267,8 +267,9 @@ def agent_mobileiron_main(args: Args) -> None:
         else:
             with ConditionalPiggybackSection(device), SectionWriter("mobileiron_section") as writer:
                 writer.append_json(all_devices[device])
-            with ConditionalPiggybackSection(device), SectionWriter("uptime") as writer:
-                writer.append_json(all_devices[device]["uptime"])
+            if uptime := all_devices[device]["uptime"]:
+                with ConditionalPiggybackSection(device), SectionWriter("uptime") as writer:
+                    writer.append_json(uptime)
             with ConditionalPiggybackSection(device), SectionWriter("mobileiron_df") as writer:
                 writer.append_json(
                     {

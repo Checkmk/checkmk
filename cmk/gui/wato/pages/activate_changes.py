@@ -21,9 +21,8 @@ import cmk.utils.render as render
 
 import cmk.gui.forms as forms
 import cmk.gui.watolib as watolib
-import cmk.gui.watolib.changes
 import cmk.gui.watolib.read_only as read_only
-import cmk.gui.watolib.snapshots
+import cmk.gui.watolib.snapshots as _snapshots
 import cmk.gui.weblib as weblib
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
@@ -235,23 +234,19 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
         return FinalizeRequest(code=200)
 
     def _extract_snapshot(self, snapshot_file):
-        self._extract_from_file(
-            cmk.gui.watolib.snapshots.snapshot_dir + snapshot_file, watolib.backup_domains
-        )
+        self._extract_from_file(_snapshots.snapshot_dir + snapshot_file, _snapshots.backup_domains)
 
-    def _extract_from_file(
-        self, filename: str, elements: Dict[str, cmk.gui.watolib.snapshots.DomainSpec]
-    ) -> None:
+    def _extract_from_file(self, filename: str, elements: Dict[str, _snapshots.DomainSpec]) -> None:
         if not isinstance(elements, dict):
             raise NotImplementedError()
 
         with tarfile.open(filename, "r") as opened_file:
-            cmk.gui.watolib.snapshots.extract_snapshot(opened_file, elements)
+            _snapshots.extract_snapshot(opened_file, elements)
 
     # TODO: Remove once new changes mechanism has been implemented
     def _get_last_wato_snapshot_file(self):
         for snapshot_file in self._get_snapshots():
-            status = cmk.gui.watolib.snapshots.get_snapshot_status(snapshot_file)
+            status = _snapshots.get_snapshot_status(snapshot_file)
             if status["type"] == "automatic" and not status["broken"]:
                 return snapshot_file
 
@@ -259,8 +254,8 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
     def _get_snapshots(self):
         snapshots = []
         try:
-            for f in os.listdir(cmk.gui.watolib.snapshots.snapshot_dir):
-                if os.path.isfile(cmk.gui.watolib.snapshots.snapshot_dir + f):
+            for f in os.listdir(_snapshots.snapshot_dir):
+                if os.path.isfile(_snapshots.snapshot_dir + f):
                     snapshots.append(f)
             snapshots.sort(reverse=True)
         except OSError:

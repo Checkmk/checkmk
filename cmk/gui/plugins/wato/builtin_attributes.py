@@ -12,7 +12,6 @@ from cmk.utils.version import Edition, is_plus_edition
 
 import cmk.gui.hooks as hooks
 import cmk.gui.userdb as userdb
-import cmk.gui.watolib as watolib
 from cmk.gui import fields as gui_fields
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.context import html
@@ -63,6 +62,7 @@ from cmk.gui.valuespec import (
     ValueSpecText,
 )
 from cmk.gui.watolib.hosts_and_folders import Host
+from cmk.gui.watolib.tags import TagConfigFile
 
 from cmk import fields
 
@@ -497,7 +497,7 @@ hooks.register_builtin("validate-host", validate_host_parents)
 @hooks.request_memoize()
 def _get_criticality_choices():
     """Returns the current configuration of the tag_group criticality"""
-    tags = cmk.utils.tags.TagConfig.from_config(watolib.TagConfigFile().load_for_reading())
+    tags = cmk.utils.tags.TagConfig.from_config(TagConfigFile().load_for_reading())
     criticality_group = tags.get_tag_group("criticality")
     if not criticality_group:
         return []

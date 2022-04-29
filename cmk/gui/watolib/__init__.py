@@ -49,16 +49,7 @@ from cmk.gui.watolib.global_settings import (
     save_global_settings,
     save_site_global_settings,
 )
-
-# TODO: Cleanup all except declare_host_attribute which is still neded for pre 1.6 plugin
-# compatibility. For the others: Find the call sites and change to full module import
-from cmk.gui.watolib.notifications import save_notification_rules
-from cmk.gui.watolib.sample_config import init_wato_datastructures
-from cmk.gui.watolib.sidebar_reload import is_sidebar_reload_needed, need_sidebar_reload
 from cmk.gui.watolib.sites import CEESiteManagement, LivestatusViaTCP, SiteManagementFactory
-from cmk.gui.watolib.snapshots import backup_domains
-from cmk.gui.watolib.tags import TagConfigFile
-from cmk.gui.watolib.timeperiods import TimeperiodSelection
 from cmk.gui.watolib.user_scripts import (
     load_notification_scripts,
     load_user_scripts,

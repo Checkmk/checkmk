@@ -8,15 +8,9 @@
 # flake8: noqa
 # pylint: disable=unused-import
 
-import urllib3  # type: ignore[import]
+import urllib3 as _urllib3
 
-import cmk.utils
-import cmk.utils.defines
-import cmk.utils.paths
-import cmk.utils.plugin_registry
-import cmk.utils.regex
-import cmk.utils.tags
-import cmk.utils.version as cmk_version
+import cmk.utils.version as _cmk_version
 
 import cmk.gui.background_job as background_job
 import cmk.gui.hooks as hooks
@@ -63,12 +57,12 @@ from cmk.gui.watolib.users import (
 )
 from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
 
-if cmk_version.is_managed_edition():
+if _cmk_version.is_managed_edition():
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
 
 # Disable python warnings in background job output or logs like "Unverified
 # HTTPS request is being made". We warn the user using analyze configuration.
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+_urllib3.disable_warnings(_urllib3.exceptions.InsecureRequestWarning)
 
 
 def load_watolib_plugins():

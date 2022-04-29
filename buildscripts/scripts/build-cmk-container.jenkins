@@ -13,6 +13,7 @@ properties([
     string(name: 'EDITION', defaultValue: 'enterprise', description: 'Edition: raw, free, enterprise or managed' ),
     string(name: 'VERSION', defaultValue: 'daily', description: 'Version: daily builds current git state of the branch. You also can specify a git tag here.' ),
     string(name: 'SET_LATEST_TAG', defaultValue: 'no', description: 'SET_LATEST_TAG: setting yes will push this docker container to the latest tag on docker hub.' ),
+    string(name: 'SET_BRANCH_LATEST_TAG', defaultValue: 'no', description: 'SET_BRANCH_LATEST_TAG: setting yes will push this docker image to the BRANCH-latest tag on docker hub.' ),
     booleanParam(name: 'PUSH_TO_REGISTRY', defaultValue: true, description: 'Set to false if the built docker images should not be pushed to their registries.' ),
     booleanParam(name: 'PUSH_TO_REGISTRY_ONLY', defaultValue: false, description: 'Set to true, if previously built docker images should only be pushed to their registries.' )
   ])
@@ -81,7 +82,7 @@ timeout(time: 12, unit: 'HOURS') {
                                     usernamePassword(credentialsId: CREDENTIALS_ID, passwordVariable: 'DOCKER_PASSPHRASE', usernameVariable: 'DOCKER_USERNAME'),
                                     usernamePassword(credentialsId: 'nexus', passwordVariable: 'NEXUS_PASSWORD', usernameVariable: 'NEXUS_USERNAME')]) {
                                 sh """
-                                ./buildscripts/scripts/build-cmk-container.sh ${BRANCH} ${EDITION} ${CMK_VERS} ${SET_LATEST_TAG} "push"
+                                ./buildscripts/scripts/build-cmk-container.sh ${BRANCH} ${EDITION} ${CMK_VERS} ${SET_LATEST_TAG} ${SET_BRANCH_LATEST_TAG} "push"
                             """
                             }
                         }
@@ -104,7 +105,7 @@ timeout(time: 12, unit: 'HOURS') {
                             usernamePassword(credentialsId: CREDENTIALS_ID, passwordVariable: 'DOCKER_PASSPHRASE', usernameVariable: 'DOCKER_USERNAME'),
                             usernamePassword(credentialsId: 'nexus', passwordVariable: 'NEXUS_PASSWORD', usernameVariable: 'NEXUS_USERNAME')]) {
                             sh """
-                                ./buildscripts/scripts/build-cmk-container.sh ${BRANCH} ${EDITION} ${CMK_VERS} ${SET_LATEST_TAG} "build"
+                                ./buildscripts/scripts/build-cmk-container.sh ${BRANCH} ${EDITION} ${CMK_VERS} ${SET_LATEST_TAG} ${SET_BRANCH_LATEST_TAG} "build"
                             """
                         }
                     }
@@ -137,7 +138,7 @@ timeout(time: 12, unit: 'HOURS') {
                                     usernamePassword(credentialsId: CREDENTIALS_ID, passwordVariable: 'DOCKER_PASSPHRASE', usernameVariable: 'DOCKER_USERNAME'),
                                     usernamePassword(credentialsId: 'nexus', passwordVariable: 'NEXUS_PASSWORD', usernameVariable: 'NEXUS_USERNAME')]) {
                                 sh """
-                                ./buildscripts/scripts/build-cmk-container.sh ${BRANCH} ${EDITION} ${CMK_VERS} ${SET_LATEST_TAG} "push"
+                                ./buildscripts/scripts/build-cmk-container.sh ${BRANCH} ${EDITION} ${CMK_VERS} ${SET_LATEST_TAG} ${SET_BRANCH_LATEST_TAG} "push"
                             """
                             }
 

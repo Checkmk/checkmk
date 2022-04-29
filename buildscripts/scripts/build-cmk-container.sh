@@ -26,12 +26,15 @@ docker_tag() {
     log "Erstelle \"${VERSION}\" tag..."
     docker tag "checkmk/check-mk-${EDITION}:${VERSION}" "$REGISTRY$FOLDER/check-mk-${EDITION}:${VERSION}"
 
-    log "Erstelle \"{$BRANCH}-latest\" tag..."
-    docker tag "checkmk/check-mk-${EDITION}:${VERSION}" "$REGISTRY$FOLDER/check-mk-${EDITION}:${BRANCH}-latest"
+    if [ "$SET_BRANCH_LATEST_TAG" = "yes" ]; then
+        log "Erstelle \"{$BRANCH}-latest\" tag..."
+        docker tag "checkmk/check-mk-${EDITION}:${VERSION}" "$REGISTRY$FOLDER/check-mk-${EDITION}:${BRANCH}-latest"
+    fi
 
-    log "Erstelle \"latest\" tag..."
-    docker tag "checkmk/check-mk-${EDITION}:${VERSION}" "$REGISTRY$FOLDER/check-mk-${EDITION}:latest"
-
+    if [ "$SET_LATEST_TAG" = "yes" ]; then
+        log "Erstelle \"latest\" tag..."
+        docker tag "checkmk/check-mk-${EDITION}:${VERSION}" "$REGISTRY$FOLDER/check-mk-${EDITION}:latest"
+    fi
 }
 
 docker_push() {
@@ -42,7 +45,11 @@ docker_push() {
     log "Lade zu ($REGISTRY) hoch..."
     docker login "${REGISTRY}" -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSPHRASE}"
     DOCKERCLOUD_NAMESPACE=checkmk docker push "$REGISTRY$FOLDER/check-mk-${EDITION}:${VERSION}"
-    DOCKERCLOUD_NAMESPACE=checkmk docker push "$REGISTRY$FOLDER/check-mk-${EDITION}:${BRANCH}-latest"
+
+    if [ "$SET_BRANCH_LATEST_TAG" = "yes" ]; then
+        DOCKERCLOUD_NAMESPACE=checkmk docker push "$REGISTRY$FOLDER/check-mk-${EDITION}:${BRANCH}-latest"
+    fi
+
     if [ "$SET_LATEST_TAG" = "yes" ]; then
         DOCKERCLOUD_NAMESPACE=checkmk docker push "$REGISTRY$FOLDER/check-mk-${EDITION}:latest"
     fi
@@ -77,9 +84,9 @@ push_image() {
 
 }
 
-if [ "$1" = "-h" ] || [ "$1" = "--help" ] || [ "$1" = "" ] || [ "$2" = "" ] || [ "$3" = "" ] || [ "$4" = "" ]; then
-    echo "Aufrufen: bw-docker-bauen [BRANCH] [EDITION] [VERSION] [SET_LATEST_TAG]"
-    echo "          bw-docker-bauen 1.5.0 enterprise 1.5.0p4 no no"
+if [ "$1" = "-h" ] || [ "$1" = "--help" ] || [ "$1" = "" ] || [ "$2" = "" ] || [ "$3" = "" ] || [ "$4" = "" ] || [ "$5" = "" ] || [ "$6" = "" ]; then
+    echo "Aufrufen: bw-docker-bauen [BRANCH] [EDITION] [VERSION] [SET_LATEST_TAG] [SET_BRANCH_LATEST_TAG] [ACTION]"
+    echo "          bw-docker-bauen 1.5.0 enterprise 1.5.0p4 no no push"
     echo
     exit 1
 fi
@@ -88,7 +95,8 @@ BRANCH=$1
 EDITION=$2
 VERSION=$3
 SET_LATEST_TAG=$4
-ACTION=$5
+SET_BRANCH_LATEST_TAG=$5
+ACTION=$6
 
 if [ "$EDITION" = raw ]; then
     SUFFIX=.cre

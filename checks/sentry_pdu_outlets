@@ -69,6 +69,7 @@ def check_sentry_pdu_outlets(item, _no_params, parsed):
         if outlet_state in outlet_states:
             return outlet_states[outlet_state][0], "Status: %s" % outlet_states[outlet_state][1]
         return 3, "Unhandled state: %d" % outlet_state
+    return None
 
 
 check_info["sentry_pdu_outlets"] = {

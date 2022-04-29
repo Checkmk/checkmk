@@ -51,6 +51,7 @@ def check_informix_status(item, params, parsed):
         if port:
             infotext += ", Port: %s" % port.split(" ")[1]
         return state, infotext
+    return None
 
 
 check_info["informix_status"] = {

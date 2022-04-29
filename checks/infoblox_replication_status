@@ -49,6 +49,7 @@ def check_infoblox_replication_status(item, _no_params, info):
                 queue_to_master,
                 time_to_master,
             )
+    return None
 
 
 check_info["infoblox_replication_status"] = {

@@ -276,6 +276,7 @@ def check_cisco_temperature(item, params, parsed):
             dev_status=state,
             dev_status_name=state_readable,
         )
+    return None
 
 
 check_info["cisco_temperature"] = {

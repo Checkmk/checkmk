@@ -20,12 +20,14 @@ from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wild
 def inventory_hp_procurve_temp(info):
     if len(info) == 1:
         return [(info[0][0], {})]
+    return []
 
 
 def check_hp_procurve_temp(item, params, info):
     if len(info) == 1:
         temp, dev_unit = int(info[0][1][:-1]), info[0][1][-1].lower()
         return check_temperature(temp, params, "hp_procurve_temp_%s" % item, dev_unit)
+    return None
 
 
 check_info["hp_procurve_temp"] = {

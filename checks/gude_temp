@@ -29,6 +29,7 @@ def check_gude_temp(item, params, info):
         _oid, index = oid_index.split(".")
         if "Sensor %s" % index == item:
             return check_temperature(float(reading_str) / 10, params, "gude_temp.%s" % item)
+    return None
 
 
 check_info["gude_temp"] = {

@@ -59,6 +59,7 @@ def check_solaris_multipath(item, params, info):
                     infotext += ", %d paths expected to be operational" % expected
 
             return state, infotext
+    return None
 
 
 check_info["solaris_multipath"] = {

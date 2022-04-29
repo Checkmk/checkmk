@@ -24,6 +24,7 @@ def parse_ups_cps_outphase(info):
 def inventory_ups_cps_outphase(parsed):
     if parsed:
         return [("1", {})]
+    return []
 
 
 check_info["ups_cps_outphase"] = {

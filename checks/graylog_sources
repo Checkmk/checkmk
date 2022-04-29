@@ -40,7 +40,7 @@ def parse_graylog_sources(info):
 def check_graylog_sources(item, params, item_data):
     messages = item_data.get("messages")
     if messages is None:
-        return
+        return None
 
     return handle_graylog_messages(messages, params)
 

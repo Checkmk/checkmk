@@ -45,6 +45,7 @@ def parse_aws_costs_and_usage(info):
 def inventory_aws_costs_and_usage_summary(parsed):
     if parsed:
         return [("Summary", {})]
+    return []
 
 
 def check_aws_costs_and_usage_summary(item, params, parsed):

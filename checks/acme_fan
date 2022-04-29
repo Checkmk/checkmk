@@ -31,6 +31,7 @@ def check_acme_fan(item, params, info):
         if item == descr:
             dev_state, dev_state_readable = acme_environment_states[state]
             return dev_state, "Status: %s, Speed: %s%%" % (dev_state_readable, value_str)
+    return None
 
 
 check_info["acme_fan"] = {

@@ -32,6 +32,7 @@ factory_settings["safenet_hsm_events_default_levels"] = {
 def inventory_safenet_hsm_events(parsed):
     if parsed:
         return [(None, {})]
+    return []
 
 
 def check_safenet_hsm_events(_no_item, params, parsed):
@@ -113,6 +114,7 @@ factory_settings["safenet_hsm_default_levels"] = {"error_rate": (0.01, 0.05), "r
 def inventory_safenet_hsm(parsed):
     if parsed:
         return [(None, {})]
+    return []
 
 
 def check_safenet_hsm(_no_item, params, parsed):

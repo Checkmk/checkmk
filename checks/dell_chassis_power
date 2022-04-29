@@ -8,6 +8,7 @@
 def inventory_dell_chassis_power(info):
     if info:
         return [(None, None)]
+    return []
 
 
 def check_dell_chassis_power(item, _no_params, info):

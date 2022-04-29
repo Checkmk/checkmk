@@ -26,7 +26,7 @@ def check_huawei_switch_temp(item, params, item_data):
     try:
         temp = float(item_data.value)
     except TypeError:
-        return
+        return None
     return check_temperature(temp, params, "huawei_switch_temp_%s" % item_data.stack_member)
 
 

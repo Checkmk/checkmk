@@ -16,6 +16,7 @@ def inventory_bvip_poe(info):
         return []
     if info[0][0] != "0":
         return [(None, "bvip_poe_default_levels")]
+    return []
 
 
 def check_bvip_poe(_no_item, params, info):

@@ -24,6 +24,7 @@ def check_apc_humidity(item, params, info):
     for line in info:
         if line[0] == item:
             return check_humidity(saveint(line[1]), params)
+    return None
 
 
 check_info["apc_humidity"] = {

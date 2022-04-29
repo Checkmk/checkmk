@@ -38,6 +38,7 @@ def check_brocade_mlx_temp(item, params, parsed):
         # item discovered in 1.2.6 had the sensor-id stripped and module id replaced
         # so it's impossible to look by that name
         return 3, "check had an incompatible change, please re-discover this host"
+    return None
 
 
 check_info["brocade_mlx_temp"] = {

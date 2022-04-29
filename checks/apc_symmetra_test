@@ -79,6 +79,7 @@ def check_apc_test(item, params, info):
 def inventory_apc_test(info):
     if info:
         return [(None, {})]
+    return []
 
 
 check_info["apc_symmetra_test"] = {

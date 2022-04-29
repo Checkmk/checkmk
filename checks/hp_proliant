@@ -27,7 +27,7 @@ def inventory_proliant_general(info):
 
 def check_proliant_general(_no_item, _no_params, info):
     if not info:
-        return
+        return None
 
     map_states = {
         "1": (3, "unknown"),

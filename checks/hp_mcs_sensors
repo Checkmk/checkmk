@@ -57,6 +57,7 @@ def check_hp_mcs_sensors(item, params, parsed):
     for key, entry in parsed.items():
         if entry["name"] == item:
             return check_temperature(entry["value"], params, "hp_mcs_sensors_%s" % key)
+    return None
 
 
 check_info["hp_mcs_sensors"] = {
@@ -96,6 +97,7 @@ def check_hp_mcs_sensors_fan(item, params, parsed):
     for entry in parsed.values():
         if entry["name"] == item:
             return check_fan(entry["value"], params)
+    return None
 
 
 check_info["hp_mcs_sensors.fan"] = {

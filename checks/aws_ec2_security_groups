@@ -12,6 +12,7 @@ from cmk.base.check_legacy_includes.aws import *  # pylint: disable=wildcard-imp
 def inventory_aws_ec2_security_groups(parsed):
     if parsed:
         return [(None, "%r" % [group["GroupId"] for group in parsed])]
+    return []
 
 
 def check_aws_ec2_security_groups(item, params, parsed):

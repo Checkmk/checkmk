@@ -54,11 +54,13 @@ def check_ddn_s2a_statsdelay(item, params, parsed):
         for interval, value in zip(time_intervals, values):
             if value != 0:
                 return interval
+        return None
 
     def histogram_max(time_intervals, values):
         for interval, value in list(zip(time_intervals, values))[::-1]:
             if value != 0:
                 return interval
+        return None
 
     def histogram_avg(time_intervals, values):
         number_of_values = 0

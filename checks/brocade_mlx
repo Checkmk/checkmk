@@ -139,7 +139,7 @@ def check_brocade_mlx_module_mem(item, params, info):
     parsed = parse_brocade_mlx_module_mem(info)
     data = parsed.get(item)
     if data is None:
-        return
+        return None
 
     state_readable = data["state_readable"]
     if state_readable.lower() != "running":

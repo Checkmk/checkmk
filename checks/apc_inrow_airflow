@@ -13,6 +13,7 @@ apc_inrow_airflow_default_levels = {
 def inventory_apc_inrow_airflow(info):
     if info:
         return [(None, "apc_inrow_airflow_default_levels")]
+    return []
 
 
 def check_apc_inrow_airflow(_no_item, params, info):
@@ -22,7 +23,7 @@ def check_apc_inrow_airflow(_no_item, params, info):
     try:
         flow = float(info[0][0])
     except Exception:
-        return
+        return None
 
     state = 0
     message = ""

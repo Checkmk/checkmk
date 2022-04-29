@@ -113,6 +113,7 @@ def check_cisco_fru_module_status(item, _no_params, parsed):
             extra_info += "[%s] " % parsed[item]["name"]
         state, state_readable = parsed[item]["state"]
         return state, "%sOperational status: %s" % (extra_info, state_readable)
+    return None
 
 
 check_info["cisco_fru_module_status"] = {

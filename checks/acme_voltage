@@ -68,6 +68,7 @@ def check_acme_voltage(item, params, info):
                 params,
                 {descr: {"voltage": (float(value_str) / 1000.0, acme_environment_states[state])}},
             )
+    return None
 
 
 check_info["acme_voltage"] = {

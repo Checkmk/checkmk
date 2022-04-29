@@ -83,6 +83,7 @@ def inventory_lparstat_aix_cpu(parsed):
         return [(None, {})]
     if all(k in parsed.get("cpu", {}) for k in ("user", "sys", "wait", "idle")):
         return [(None, {})]
+    return []
 
 
 def check_lparstat_aix_cpu(_no_item, params, parsed):

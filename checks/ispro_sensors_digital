@@ -41,6 +41,7 @@ def check_ispro_sensors_digital(item, params, info):
                 alarm_state_readable,
                 alarm_device_state_readable,
             )
+    return None
 
 
 check_info["ispro_sensors_digital"] = {

@@ -145,6 +145,7 @@ def check_openhardwaremonitor(sensor_type, item, params, parsed):
             "%.1f%s" % (data.reading, data.unit),
             perfdata,
         )
+    return None
 
 
 def _check_openhardwaremonitor_wmistatus(data):
@@ -197,6 +198,7 @@ def check_openhardwaremonitor_temperature(item, params, parsed):
         data = parsed["Temperature"][item]
         _check_openhardwaremonitor_wmistatus(data)
         return check_temperature(data.reading, params, "openhardwaremonitor_%s" % item)
+    return None
 
 
 check_info["openhardwaremonitor.temperature"] = {
@@ -248,6 +250,7 @@ def check_openhardwaremonitor_fan(item, params, parsed):
         data = parsed["Fan"][item]
         _check_openhardwaremonitor_wmistatus(data)
         return check_fan(data.reading, params)
+    return None
 
 
 check_info["openhardwaremonitor.fan"] = {

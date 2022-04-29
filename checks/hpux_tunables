@@ -63,6 +63,7 @@ def parse_hpux_tunables(info):
 def inventory_hpux_tunables(info, tunable):
     if tunable in parse_hpux_tunables(info):
         return [(None, {})]
+    return []
 
 
 def check_hpux_tunables(info, params, tunable, descr):

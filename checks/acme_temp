@@ -53,6 +53,7 @@ def check_acme_temp(item, params, info):
                 dev_status=dev_state,
                 dev_status_name=dev_state_readable,
             )
+    return None
 
 
 check_info["acme_temp"] = {

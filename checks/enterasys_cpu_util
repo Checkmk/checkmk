@@ -23,6 +23,7 @@ def check_enterasys_cpu_util(item, params, info):
         if item == core[:-2]:
             usage = int(util) / 10.0
             return check_cpu_util(usage, params)
+    return None
 
 
 check_info["enterasys_cpu_util"] = {

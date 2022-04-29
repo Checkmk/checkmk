@@ -131,6 +131,7 @@ def check_apc_netbotz_sensors_temp(item, params, parsed, what):
             data["reading"], params, "apc_netbotz_sensors_%s_%s" % (what, item)
         )
         return state, "[%s] %s" % (data["label"], infotext), perf
+    return None
 
 
 check_info["apc_netbotz_sensors"] = {
@@ -215,6 +216,7 @@ def check_apc_netbotz_sensors_humidity(item, params, parsed):
         data = parsed["humidity"][item]
         state, infotext, perf = check_humidity(data["reading"], params)
         return state, "[%s] %s" % (data["label"], infotext), perf
+    return None
 
 
 check_info["apc_netbotz_sensors.humidity"] = {

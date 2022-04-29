@@ -20,7 +20,7 @@ def inventory_genua_fan(info):
     info = [_f for _f in info if _f]
 
     if not info:
-        return
+        return None
 
     inventory = []
     for fanName, _fanRPM, _fanState in info[0]:

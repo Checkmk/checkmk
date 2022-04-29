@@ -47,6 +47,7 @@ def check_msexch_replhealth(item, _no_params, info):
                     infotxt = val
                     state = 1
                 return state, infotxt
+    return None
 
 
 check_info["msexch_replhealth"] = {

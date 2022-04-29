@@ -26,7 +26,7 @@ def inventory_avaya_88xx_fan(parsed):
 def check_avaya_88xx_fan(item, _no_params, parsed):
     fans = parsed["fanstate"]
     if len(fans) < int(item):
-        return
+        return None
 
     map_fan_state = {
         "1": ("Reported Unknown", 3),
@@ -35,7 +35,7 @@ def check_avaya_88xx_fan(item, _no_params, parsed):
     }
     text, state = map_fan_state.get(fans[int(item)], (None, None))
     if not text:
-        return
+        return None
 
     return state, text
 
@@ -55,7 +55,7 @@ def inventory_avaya_88xx(parsed):
 def check_avaya_88xx(item, params, parsed):
     sensors = parsed["temp"]
     if len(sensors) < int(item):
-        return
+        return None
 
     reading = sensors[int(item)]
     if reading:

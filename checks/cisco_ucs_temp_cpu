@@ -31,6 +31,7 @@ def check_cisco_ucs_temp_cpu(item, params, info):
         if name == item:
             temp = int(value)
             return check_temperature(temp, params, "cisco_temp_%s" % item)
+    return None
 
 
 check_info["cisco_ucs_temp_cpu"] = {

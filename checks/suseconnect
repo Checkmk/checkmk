@@ -129,6 +129,7 @@ def parse_suseconnect(info):
 def inventory_suseconnect(parsed):
     if any("SLES" in identifier for identifier in parsed):
         return [(None, {})]
+    return []
 
 
 def check_suseconnect(_no_item, params, parsed):

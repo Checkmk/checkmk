@@ -22,7 +22,7 @@ def check_huawei_switch_mem(item, params, item_data):
     try:
         mem = float(item_data.value)
     except TypeError:
-        return
+        return None
     return check_levels(
         mem,
         "mem_used_percent",

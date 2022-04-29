@@ -120,6 +120,7 @@ def check_websphere_mq_instance(item, params, parsed):
             mode.lower(),
             qm_name,
         )
+    return None
 
 
 check_info["websphere_mq_instance"] = {

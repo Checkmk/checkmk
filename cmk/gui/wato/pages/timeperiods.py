@@ -20,6 +20,7 @@ import cmk.gui.plugins.wato.utils
 import cmk.gui.userdb as userdb
 import cmk.gui.wato.mkeventdstore as mkeventdstore
 import cmk.gui.watolib as watolib
+import cmk.gui.watolib.groups as groups
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
@@ -781,7 +782,7 @@ class ModeEditTimeperiod(WatoMode):
             )
 
     def _validate_alias(self, name, alias, varprefix):
-        unique, message = watolib.is_alias_used("timeperiods", name, alias)
+        unique, message = groups.is_alias_used("timeperiods", name, alias)
         if not unique:
             assert message is not None
             raise MKUserError(varprefix, message)

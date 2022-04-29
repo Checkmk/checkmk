@@ -79,14 +79,6 @@ from cmk.gui.watolib.global_settings import (
     save_global_settings,
     save_site_global_settings,
 )
-from cmk.gui.watolib.groups import (
-    add_group,
-    delete_group,
-    edit_group,
-    find_usages_of_group,
-    is_alias_used,
-    save_group_information,
-)
 
 # TODO: Cleanup all except declare_host_attribute which is still neded for pre 1.6 plugin
 # compatibility. For the others: Find the call sites and change to full module import

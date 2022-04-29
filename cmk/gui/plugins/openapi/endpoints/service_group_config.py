@@ -21,7 +21,7 @@ A service group object can have the following relations present in `links`:
 
 from cmk.utils import version
 
-from cmk.gui import watolib
+import cmk.gui.watolib.groups as groups
 from cmk.gui.groups import load_service_group_information
 from cmk.gui.http import Response
 from cmk.gui.plugins.openapi.endpoints.utils import (
@@ -43,7 +43,6 @@ from cmk.gui.plugins.openapi.restful_objects import (
     response_schemas,
 )
 from cmk.gui.plugins.openapi.restful_objects.parameters import NAME_FIELD
-from cmk.gui.watolib.groups import add_group, edit_group
 
 PERMISSIONS = permissions.Perm("wato.groups")
 
@@ -64,7 +63,7 @@ def create(params):
     group_details = {"alias": body.get("alias")}
     if version.is_managed_edition():
         group_details = update_customer_info(group_details, body["customer"])
-    add_group(name, "service", group_details)
+    groups.add_group(name, "service", group_details)
     group = fetch_group(name, "service")
     return serve_group(group, serialize_group("service_group_config"))
 
@@ -85,7 +84,7 @@ def bulk_create(params):
 
     service_group_names = []
     for group_name, group_details in service_group_details.items():
-        add_group(group_name, "service", group_details)
+        groups.add_group(group_name, "service", group_details)
         service_group_names.append(group_name)
 
     service_groups = fetch_specific_groups(service_group_names, "service")
@@ -133,7 +132,7 @@ def show_group(params):
 def delete(params):
     """Delete a service group"""
     name = params["name"]
-    watolib.delete_group(name, group_type="service")
+    groups.delete_group(name, group_type="service")
     return Response(status=204)
 
 
@@ -154,7 +153,7 @@ def bulk_delete(params):
             group_name, "service", status=400, message="service group %s was not found" % group_name
         )
     for group_name in entries:
-        watolib.delete_group(group_name, group_type="service")
+        groups.delete_group(group_name, group_type="service")
     return Response(status=204)
 
 
@@ -173,7 +172,7 @@ def update(params):
     name = params["name"]
     group = fetch_group(name, "service")
     constructors.require_etag(constructors.etag_of_dict(group))
-    edit_group(name, "service", updated_group_details(name, "service", params["body"]))
+    groups.edit_group(name, "service", updated_group_details(name, "service", params["body"]))
     group = fetch_group(name, "service")
     return serve_group(group, serialize_group("service_group_config"))
 

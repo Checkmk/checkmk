@@ -20,7 +20,7 @@ A host group object can have the following relations present in `links`:
 """
 from cmk.utils import version
 
-from cmk.gui import watolib
+import cmk.gui.watolib.groups as groups
 from cmk.gui.groups import load_host_group_information
 from cmk.gui.http import Response
 from cmk.gui.plugins.openapi.endpoints.utils import (
@@ -42,7 +42,6 @@ from cmk.gui.plugins.openapi.restful_objects import (
     response_schemas,
 )
 from cmk.gui.plugins.openapi.restful_objects.parameters import NAME_FIELD
-from cmk.gui.watolib.groups import add_group, edit_group
 
 
 @Endpoint(
@@ -61,7 +60,7 @@ def create(params):
     group_details = {"alias": body.get("alias")}
     if version.is_managed_edition():
         group_details = update_customer_info(group_details, body["customer"])
-    add_group(name, "host", group_details)
+    groups.add_group(name, "host", group_details)
     group = fetch_group(name, "host")
     return serve_group(group, serialize_group("host_group_config"))
 
@@ -82,7 +81,7 @@ def bulk_create(params):
 
     host_group_names = []
     for group_name, group_details in host_group_details.items():
-        add_group(group_name, "host", group_details)
+        groups.add_group(group_name, "host", group_details)
         host_group_names.append(group_name)
 
     host_groups = fetch_specific_groups(host_group_names, "host")
@@ -112,7 +111,7 @@ def list_groups(params):
 def delete(params):
     """Delete a host group"""
     name = params["name"]
-    watolib.delete_group(name, "host")
+    groups.delete_group(name, "host")
     return Response(status=204)
 
 
@@ -138,7 +137,7 @@ def bulk_delete(params):
         )
 
     for group_name in entries:
-        watolib.delete_group(group_name, "host")
+        groups.delete_group(group_name, "host")
     return Response(status=204)
 
 
@@ -157,7 +156,7 @@ def update(params):
     name = params["name"]
     group = fetch_group(name, "host")
     constructors.require_etag(constructors.etag_of_dict(group))
-    edit_group(name, "host", updated_group_details(name, "host", params["body"]))
+    groups.edit_group(name, "host", updated_group_details(name, "host", params["body"]))
     group = fetch_group(name, "host")
     return serve_group(group, serialize_group("host_group_config"))
 

@@ -30,6 +30,7 @@ import cmk.gui.hooks as hooks
 import cmk.gui.plugins.userdb.utils as userdb_utils
 import cmk.gui.userdb as userdb
 import cmk.gui.watolib as watolib
+import cmk.gui.watolib.groups as groups
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config, builtin_role_ids
 from cmk.gui.exceptions import MKUserError
@@ -186,7 +187,7 @@ class ModeRoles(RoleManagement, WatoMode):
             new_role.update(cloned_role)
 
             new_alias = new_role["alias"]
-            while not watolib.is_alias_used("roles", newid, new_alias)[0]:
+            while not groups.is_alias_used("roles", newid, new_alias)[0]:
                 new_alias += _(" (copy)")
             new_role["alias"] = new_alias
 
@@ -305,7 +306,7 @@ class ModeEditRole(RoleManagement, WatoMode):
 
         alias = request.get_str_input_mandatory("alias")
 
-        unique, info = watolib.is_alias_used("roles", self._role_id, alias)
+        unique, info = groups.is_alias_used("roles", self._role_id, alias)
         if not unique:
             assert info is not None
             raise MKUserError("alias", info)

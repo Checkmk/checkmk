@@ -30,7 +30,8 @@ from cmk.automations.results import DeleteHostsResult
 import cmk.gui.config as config_module
 import cmk.gui.login as login
 import cmk.gui.watolib.activate_changes as activate_changes
-from cmk.gui import main_modules, watolib
+import cmk.gui.watolib.groups as groups
+from cmk.gui import main_modules
 from cmk.gui.config import active_config
 from cmk.gui.logged_in import SuperUserContext, UserContext
 from cmk.gui.utils import get_failed_plugins
@@ -313,13 +314,13 @@ def logged_in_admin_wsgi_app(wsgi_app, with_admin):
 
 @pytest.fixture()
 def with_groups(request_context, with_admin_login, suppress_remote_automation_calls):
-    watolib.add_group("windows", "host", {"alias": "windows"})
-    watolib.add_group("routers", "service", {"alias": "routers"})
-    watolib.add_group("admins", "contact", {"alias": "admins"})
+    groups.add_group("windows", "host", {"alias": "windows"})
+    groups.add_group("routers", "service", {"alias": "routers"})
+    groups.add_group("admins", "contact", {"alias": "admins"})
     yield
-    watolib.delete_group("windows", "host")
-    watolib.delete_group("routers", "service")
-    watolib.delete_group("admins", "contact")
+    groups.delete_group("windows", "host")
+    groups.delete_group("routers", "service")
+    groups.delete_group("admins", "contact")
 
 
 @pytest.fixture()

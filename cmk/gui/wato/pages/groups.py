@@ -11,7 +11,7 @@ import cmk.utils.paths
 
 import cmk.gui.forms as forms
 import cmk.gui.userdb as userdb
-import cmk.gui.watolib as watolib
+import cmk.gui.watolib.groups as groups
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.groups import (
@@ -138,7 +138,7 @@ class ModeGroups(WatoMode, abc.ABC):
 
         if request.var("_delete"):
             delname = request.get_ascii_input_mandatory("_delete")
-            usages = watolib.find_usages_of_group(delname, self.type_name)
+            usages = groups.find_usages_of_group(delname, self.type_name)
 
             if usages:
                 message = "<b>%s</b><br>%s:<ul>" % (
@@ -150,7 +150,7 @@ class ModeGroups(WatoMode, abc.ABC):
                 message += "</ul>"
                 raise MKUserError(None, message)
 
-            watolib.delete_group(delname, self.type_name)
+            groups.delete_group(delname, self.type_name)
             self._groups = self._load_groups()
 
         return redirect(mode_url("%s_groups" % self.type_name))
@@ -249,10 +249,10 @@ class ABCModeEditGroup(WatoMode, abc.ABC):
 
         if self._new:
             self._name = request.get_ascii_input_mandatory("name").strip()
-            watolib.add_group(self._name, self.type_name, self.group)
+            groups.add_group(self._name, self.type_name, self.group)
         else:
             assert self._name is not None
-            watolib.edit_group(self._name, self.type_name, self.group)
+            groups.edit_group(self._name, self.type_name, self.group)
 
         return redirect(mode_url("%s_groups" % self.type_name))
 

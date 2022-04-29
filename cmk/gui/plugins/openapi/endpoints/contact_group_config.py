@@ -22,7 +22,6 @@ A contact group object can have the following relations present in `links`:
 """
 from cmk.utils import version
 
-from cmk.gui import watolib
 from cmk.gui.http import Response
 from cmk.gui.logged_in import SuperUserContext
 from cmk.gui.plugins.openapi.endpoints.utils import (
@@ -48,6 +47,7 @@ from cmk.gui.plugins.openapi.restful_objects.parameters import NAME_FIELD
 from cmk.gui.watolib.groups import (
     add_group,
     check_modify_group_permissions,
+    delete_group,
     edit_group,
     load_contact_group_information,
 )
@@ -145,7 +145,7 @@ def delete(params):
     check_modify_group_permissions("contact")
     with endpoint.do_not_track_permissions(), SuperUserContext():
         # HACK: We need to supress this, due to lots of irrelevant dashboard permissions
-        watolib.delete_group(name, "contact")
+        delete_group(name, "contact")
     return Response(status=204)
 
 
@@ -172,7 +172,7 @@ def bulk_delete(params):
         for group_name in entries:
             # We need to supress this, because a lot of dashboard permissions are checked for
             # various reasons.
-            watolib.delete_group(group_name, "contact")
+            delete_group(group_name, "contact")
     return Response(status=204)
 
 

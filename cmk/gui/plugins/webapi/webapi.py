@@ -24,6 +24,7 @@ from cmk.utils.type_defs import DiscoveryResult, TagConfigSpec, TagID
 import cmk.gui.bi as bi
 import cmk.gui.userdb as userdb
 import cmk.gui.watolib as watolib
+import cmk.gui.watolib.groups as groups
 import cmk.gui.watolib.users
 from cmk.gui.config import active_config, prepare_raw_site_config
 from cmk.gui.exceptions import MKUserError
@@ -503,11 +504,11 @@ class APICallGroups(APICallCollection):
 
     def _delete_group(self, group_type, request):
         groupname = request.get("groupname")
-        watolib.delete_group(groupname, group_type)
+        groups.delete_group(groupname, group_type)
 
     def _add_group(self, group_type, request):
         self._check_customer(request)
-        watolib.add_group(
+        groups.add_group(
             request.get("groupname"),
             group_type,
             self._get_group_extra_info(group_type, request),
@@ -515,7 +516,7 @@ class APICallGroups(APICallCollection):
 
     def _edit_group(self, group_type, request):
         self._check_customer(request)
-        watolib.edit_group(
+        groups.edit_group(
             request.get("groupname"),
             group_type,
             self._get_group_extra_info(group_type, request),

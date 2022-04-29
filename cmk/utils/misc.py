@@ -15,7 +15,20 @@ import sys
 import time
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterator, List, Optional, Sequence, Set, Tuple, Union
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterator,
+    List,
+    Mapping,
+    MutableMapping,
+    Optional,
+    Sequence,
+    Set,
+    Tuple,
+    Union,
+)
 
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.type_defs import HostAddress
@@ -166,3 +179,9 @@ def normalize_ip_addresses(ip_addresses: Union[str, Sequence[str]]) -> List[Host
         expanded.extend(HostAddress(f"{prefix}{i}{suffix}") for i in curly.split(","))
 
     return expanded
+
+
+def typeshed_issue_7724(x: Optional[Mapping[str, str]]) -> Optional[MutableMapping[str, str]]:
+    """Temporary workaround for https://github.com/python/typeshed/issues/7724
+    TODO: Remove this when the issue a above is fixed!"""
+    return None if x is None else dict(x)

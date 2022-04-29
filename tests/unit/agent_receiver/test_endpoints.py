@@ -21,6 +21,8 @@ from fastapi import HTTPException
 from fastapi.testclient import TestClient
 from pytest_mock import MockerFixture
 
+from cmk.utils.misc import typeshed_issue_7724
+
 
 @pytest.fixture(autouse=True)
 def deactivate_certificate_validation(mocker: MockerFixture) -> None:
@@ -303,7 +305,7 @@ def test_agent_data_no_host(
 ) -> None:
     response = client.post(
         f"/agent_data/{uuid}",
-        headers=agent_data_headers,
+        headers=typeshed_issue_7724(agent_data_headers),
         files={"monitoring_data": ("filename", compressed_agent_data)},
     )
     assert response.status_code == 403
@@ -322,7 +324,7 @@ def test_agent_data_pull_host(
 
     response = client.post(
         f"/agent_data/{uuid}",
-        headers=agent_data_headers,
+        headers=typeshed_issue_7724(agent_data_headers),
         files={
             "monitoring_data": (
                 "filename",
@@ -360,7 +362,7 @@ def test_agent_data_invalid_data(
 ) -> None:
     response = client.post(
         f"/agent_data/{uuid}",
-        headers=agent_data_headers,
+        headers=typeshed_issue_7724(agent_data_headers),
         files={"monitoring_data": ("filename", io.BytesIO(b"certainly invalid"))},
     )
     assert response.status_code == 400
@@ -377,7 +379,7 @@ def test_agent_data_success(
 ) -> None:
     response = client.post(
         f"/agent_data/{uuid}",
-        headers=agent_data_headers,
+        headers=typeshed_issue_7724(agent_data_headers),
         files={"monitoring_data": ("filename", compressed_agent_data)},
     )
 
@@ -399,7 +401,7 @@ def test_agent_data_move_error(
         move_mock.side_effect = FileNotFoundError()
         response = client.post(
             f"/agent_data/{uuid}",
-            headers=agent_data_headers,
+            headers=typeshed_issue_7724(agent_data_headers),
             files={"monitoring_data": ("filename", compressed_agent_data)},
         )
 
@@ -419,7 +421,7 @@ def test_agent_data_move_ready(
 
     client.post(
         f"/agent_data/{uuid}",
-        headers=agent_data_headers,
+        headers=typeshed_issue_7724(agent_data_headers),
         files={"monitoring_data": ("filename", compressed_agent_data)},
     )
 

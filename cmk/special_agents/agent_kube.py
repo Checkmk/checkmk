@@ -54,6 +54,7 @@ import cmk.utils.password_store
 import cmk.utils.paths
 import cmk.utils.profile
 from cmk.utils.http_proxy_config import deserialize_http_proxy_config, HTTPProxyConfig
+from cmk.utils.misc import typeshed_issue_7724
 
 from cmk.special_agents.utils import vcrtrace
 from cmk.special_agents.utils.agent_common import ConditionalPiggybackSection, SectionWriter
@@ -1774,7 +1775,7 @@ def request_cluster_collector(
             headers={"Authorization": f"Bearer {token}"},
             verify=verify,
             timeout=(timeout.connect, timeout.read),
-            proxies=proxy.to_requests_proxies(),
+            proxies=typeshed_issue_7724(proxy.to_requests_proxies()),
         )
         cluster_resp.raise_for_status()
     except requests.HTTPError as e:

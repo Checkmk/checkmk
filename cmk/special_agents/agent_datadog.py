@@ -21,6 +21,7 @@ import requests
 
 from cmk.utils import paths, store
 from cmk.utils.http_proxy_config import deserialize_http_proxy_config
+from cmk.utils.misc import typeshed_issue_7724
 
 from cmk.special_agents.utils.agent_common import SectionWriter, special_agent_main
 from cmk.special_agents.utils.argument_parsing import Args, create_default_argument_parser
@@ -182,7 +183,7 @@ class DatadogAPI:
             f"{self._api_url}/{api_endpoint}",
             headers=self._query_heads,
             params=params,
-            proxies=self._proxy.to_requests_proxies(),
+            proxies=typeshed_issue_7724(self._proxy.to_requests_proxies()),
         ).json()
 
 

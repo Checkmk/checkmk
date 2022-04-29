@@ -142,8 +142,8 @@ class PathPrefixAction(argparse.Action):
 
 
 class TCPTimeout(BaseModel):
-    connect: Optional[int]
-    read: Optional[int]
+    connect: int
+    read: int
 
 
 class PBFormatter(Protocol):

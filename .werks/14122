@@ -1,0 +1,9 @@
+Title: KUBE: add inventory entry object to cluster/Node
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1651232827
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1

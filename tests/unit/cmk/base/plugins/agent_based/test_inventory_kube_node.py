@@ -44,6 +44,7 @@ from .utils_inventory import sort_inventory_result
                 Attributes(
                     path=["software", "applications", "kube", "metadata"],
                     inventory_attributes={
+                        "object": "Node",
                         "name": "minikube",
                     },
                 ),

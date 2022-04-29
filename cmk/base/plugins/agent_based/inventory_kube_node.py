@@ -22,6 +22,7 @@ def inventory_kube_node(
     yield Attributes(
         path=["software", "applications", "kube", "metadata"],
         inventory_attributes={
+            "object": "Node",
             "name": section_kube_node_info.name,
         },
     )

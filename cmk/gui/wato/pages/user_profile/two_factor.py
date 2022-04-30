@@ -350,6 +350,9 @@ class CBORPage(Page, abc.ABC):
         try:
             response.set_content_type("application/cbor")
             response.set_data(cbor.encode(self.page()))
+        except MKGeneralException as e:
+            response.status_code = http_client.BAD_REQUEST
+            response.set_data(str(e))
         except Exception as e:
             response.status_code = http_client.INTERNAL_SERVER_ERROR
             handle_exception_as_gui_crash_report(
@@ -404,15 +407,24 @@ class UserWebAuthnRegisterComplete(CBORPage):
         logger.debug("Client data: %r", client_data)
         logger.debug("Attestation object: %r", att_obj)
 
-        auth_data = make_fido2_server().register_complete(
-            session.session_info.webauthn_action_state, client_data, att_obj
-        )
+        try:
+            auth_data = make_fido2_server().register_complete(
+                session.session_info.webauthn_action_state, client_data, att_obj
+            )
+        except ValueError as e:
+            if "Invalid origin in ClientData" in str(e):
+                raise MKGeneralException(
+                    "The origin %r is not valid. You need to access the UI via HTTPS "
+                    "and you need to use a valid host or domain name. See werk #13325 for "
+                    "further information" % client_data.get("origin")
+                ) from e
+            raise
 
         ident = auth_data.credential_data.credential_id.hex()
         credentials = load_two_factor_credentials(user.id, lock=True)
 
         if ident in credentials["webauthn_credentials"]:
-            raise MKGeneralException(_("Your WebAuthn credetial is already in use"))
+            raise MKGeneralException(_("Your WebAuthn credential is already in use"))
 
         credentials["webauthn_credentials"][ident] = WebAuthnCredential(
             {

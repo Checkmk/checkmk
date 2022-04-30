@@ -329,7 +329,7 @@ class FalsyNodeCustomCondition(FalsyNodeCondition):
 
 
 class NodeConditions(BaseModel):
-    """section: k8s_node_conditions_v1"""
+    """section: kube_node_conditions_v1"""
 
     ready: TruthyNodeCondition
     memorypressure: FalsyNodeCondition
@@ -339,7 +339,7 @@ class NodeConditions(BaseModel):
 
 
 class NodeCustomConditions(BaseModel):
-    """section: k8s_node_custom_conditions_v1"""
+    """section: kube_node_custom_conditions_v1"""
 
     custom_conditions: Sequence[FalsyNodeCustomCondition]
 

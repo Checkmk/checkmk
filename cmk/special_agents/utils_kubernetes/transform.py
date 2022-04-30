@@ -74,18 +74,18 @@ def parse_memory(value: str) -> float:
 
 
 # TODO: change to Timestamp type
-def convert_to_timestamp(k8s_date_time: Union[str, datetime.datetime]) -> float:
-    if isinstance(k8s_date_time, str):
-        date_time = datetime.datetime.strptime(k8s_date_time, "%Y-%m-%dT%H:%M:%SZ").replace(
+def convert_to_timestamp(kube_date_time: Union[str, datetime.datetime]) -> float:
+    if isinstance(kube_date_time, str):
+        date_time = datetime.datetime.strptime(kube_date_time, "%Y-%m-%dT%H:%M:%SZ").replace(
             tzinfo=datetime.timezone.utc
         )
-    elif isinstance(k8s_date_time, datetime.datetime):
-        date_time = k8s_date_time
+    elif isinstance(kube_date_time, datetime.datetime):
+        date_time = kube_date_time
         if date_time.tzinfo is None:
-            raise ValueError(f"Can not convert to timestamp: '{k8s_date_time}' is missing tzinfo")
+            raise ValueError(f"Can not convert to timestamp: '{kube_date_time}' is missing tzinfo")
     else:
         raise TypeError(
-            f"Can not convert to timestamp: '{k8s_date_time}' of type {type(k8s_date_time)}"
+            f"Can not convert to timestamp: '{kube_date_time}' of type {type(kube_date_time)}"
         )
 
     return date_time.timestamp()

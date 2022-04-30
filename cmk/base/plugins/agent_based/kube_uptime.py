@@ -15,7 +15,7 @@ from .utils.kube import StartTime
 from .utils.uptime import Section
 
 
-def parse_k8s_start_time(string_table: StringTable) -> Optional[Section]:
+def parse_kube_start_time(string_table: StringTable) -> Optional[Section]:
     if not string_table:
         return None
     return Section(
@@ -26,5 +26,5 @@ def parse_k8s_start_time(string_table: StringTable) -> Optional[Section]:
 register.agent_section(
     name="kube_start_time_v1",
     parsed_section_name="uptime",
-    parse_function=parse_k8s_start_time,
+    parse_function=parse_kube_start_time,
 )

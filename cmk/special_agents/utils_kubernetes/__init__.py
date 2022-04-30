@@ -28,7 +28,7 @@ The data gathered needs be transported to the checkmk server. The common
 checkmk mechanism to do this is to create a agent section and parse this
 section in the check. We use pydantic for serializing and deserializing this
 data. The schemata used for serializing live mostly in .schemata.section, the
-schemata used for deserializing in cmk.base.plugins.agent_based.utils.k8s
+schemata used for deserializing in cmk.base.plugins.agent_based.utils.kube
 We use a unit test to make sure they stay in sync.
 
 So the layering normally looks like that::

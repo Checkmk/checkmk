@@ -22,31 +22,13 @@
 #     resource_slapmaster (ocf::heartbeat:OpenLDAP):  Started mwp
 # resource_slapslave  (ocf::heartbeat:OpenLDAP):  Started smwp
 
-# Nails down the DC to the node which is the DC during inventory. The check
-# will report CRITICAL when another node becomes the DC during later checks.
-# If set to "False" the check will be passed.
-#
-# Leave this option to be compatible with inventorized pre 1.2.5i6
-heartbeat_crm_naildown = True
-
-# Max age of "last updated"
-#
-# Leave this option to be compatible with inventorized pre 1.2.5i6
-heartbeat_crm_default_max_age = 60
-
-# Naildown the resources to the nodes which care about the resources during
-# the inventory run
-#
-# Leave this option to be compatible with inventorized pre 1.2.5i6
-heartbeat_crm_resources_naildown = True
-
 # Holds a dict of settings which tell the inventory functions whether or not
 # some options like the resources and DC role shal be nailed down to the
 # node which holds these resources during inventory.
 inventory_heartbeat_crm_rules = []
 
 factory_settings["heartbeat_crm_default_levels"] = {
-    "max_age": heartbeat_crm_default_max_age,
+    "max_age": 60,
 }
 
 _FAILED_ACTIONS_KEY = "__failed_actions__"

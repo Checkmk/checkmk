@@ -4,6 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Any, Mapping, NamedTuple
+
+StringTable = list[list[str]]
+
+
 # Example outputs from agent:
 # <<<heartbeat_crm>>>
 # ============
@@ -30,8 +35,6 @@ inventory_heartbeat_crm_rules = []
 factory_settings["heartbeat_crm_default_levels"] = {
     "max_age": 60,
 }
-
-_FAILED_ACTIONS_KEY = "__failed_actions__"
 
 
 def heartbeat_crm_parse_general(info):
@@ -180,12 +183,11 @@ def check_heartbeat_crm(_no_item, params, info):
         else:
             yield 2, "Resources: %d (Expected %d)" % (num_resources, params["num_resources"])
 
-    res = heartbeat_crm_parse_resources(info, show="all")
-    failed_actions = res.get(_FAILED_ACTIONS_KEY, [])
+    if not params.get("show_failed_actions"):
+        return
 
-    if params.get("show_failed_actions"):
-        for action in failed_actions:
-            yield 1, "Failed: %s" % (action,)
+    for action in heartbeat_crm_parse_resources(info).failed_actions:
+        yield 1, f"Failed: {action}"
 
 
 check_info["heartbeat_crm"] = {
@@ -253,7 +255,12 @@ def _join_lines(lines):
     return joined
 
 
-def heartbeat_crm_parse_resources(info, show="resources"):
+class _Resources(NamedTuple):
+    resources: Mapping[str, Any]
+    failed_actions: Any
+
+
+def heartbeat_crm_parse_resources(string_table: StringTable) -> _Resources:
     """
 
     :param info:
@@ -267,12 +274,12 @@ def heartbeat_crm_parse_resources(info, show="resources"):
         A dict of resources and possibly additional information (like error messages).
     """
     block_start = False
-    resources = {}
+    resources: dict[str, Any] = {}
     resource = ""
     list_start = False
     lines = []
     mode = "single"
-    for parts in info:
+    for parts in string_table:
         line = " ".join(parts)
 
         if "failed" in line.lower() and "actions" in line.lower():
@@ -321,10 +328,10 @@ def heartbeat_crm_parse_resources(info, show="resources"):
                 # Single resource
                 resources[parts[0]] = [parts]
 
-    if show == "all":
-        resources[_FAILED_ACTIONS_KEY] = _join_lines(lines)
-
-    return resources
+    return _Resources(
+        resources=resources,
+        failed_actions=_join_lines(lines),
+    )
 
 
 def inventory_heartbeat_crm_resources(info):
@@ -337,7 +344,7 @@ def inventory_heartbeat_crm_resources(info):
     # resource_slapslave  (ocf::heartbeat:OpenLDAP):  Started smwp
     inventory = []
     settings = host_extra_conf_merged(host_name(), inventory_heartbeat_crm_rules)
-    for name, resources in heartbeat_crm_parse_resources(info).items():
+    for name, resources in heartbeat_crm_parse_resources(info).resources.items():
         # In naildown mode only resources which are started somewhere can be
         # inventorized
         if settings.get("naildown_resources", False) and resources[0][2] != "Stopped":
@@ -349,7 +356,7 @@ def inventory_heartbeat_crm_resources(info):
 
 def check_heartbeat_crm_resources(item, target_node, info):
     resources = None
-    for name, this_resources in heartbeat_crm_parse_resources(info).items():
+    for name, this_resources in heartbeat_crm_parse_resources(info).resources.items():
         if name == item:
             resources = this_resources
 

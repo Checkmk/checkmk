@@ -4,7 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Mapping, NamedTuple
+import time
+from typing import Any, Mapping, NamedTuple, Optional
 
 StringTable = list[list[str]]
 
@@ -37,12 +38,19 @@ factory_settings["heartbeat_crm_default_levels"] = {
 }
 
 
-def heartbeat_crm_parse_general(info):
+class _Cluster(NamedTuple):
+    last_updated: Optional[str]
+    dc: Optional[str]
+    num_nodes: Optional[int]
+    num_resources: Optional[int]
+
+
+def heartbeat_crm_parse_general(string_table: StringTable) -> _Cluster:
     last_updated = None
     dc = None
     num_nodes = None
     num_resources = None
-    for raw_line in info:
+    for raw_line in string_table:
         # lines are prefixed with _* in pacemaker versions 2.0.3, e.g.:
         # _* Current DC: ha02 (version 2.0.3-5.el8_2.1-4b1f869f0f)
         line = raw_line[1:] if not raw_line[0].isalnum() else raw_line
@@ -80,7 +88,7 @@ def heartbeat_crm_parse_general(info):
             # pacemaker version = 2.0.3:  3 resource instances configured
             num_resources = int(line[0])
 
-    return last_updated, dc, num_nodes, num_resources
+    return _Cluster(last_updated, dc, num_nodes, num_resources)
 
 
 #   .--CRM-----------------------------------------------------------------.

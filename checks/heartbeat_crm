@@ -5,10 +5,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import Any, Mapping, NamedTuple, Optional
+from typing import Any, Iterator, Mapping, NamedTuple, Optional
 
 StringTable = list[list[str]]
 
+DiscoveryResult = Iterator[tuple[None, Mapping[str, Any]]]
 
 # Example outputs from agent:
 # <<<heartbeat_crm>>>
@@ -43,6 +44,7 @@ class _Cluster(NamedTuple):
     dc: Optional[str]
     num_nodes: Optional[int]
     num_resources: Optional[int]
+    error: Optional[str]
 
 
 class _Resources(NamedTuple):
@@ -50,7 +52,24 @@ class _Resources(NamedTuple):
     failed_actions: Any
 
 
+class Section(NamedTuple):
+    cluster: _Cluster
+    resources: _Resources
+
+
+def _parse_for_error(first_line: str) -> Optional[str]:
+    if (
+        first_line.lower().startswith(("critical", "error:"))
+        or "connection to cluster failed" in first_line.lower()
+    ):
+        return first_line
+    return None
+
+
 def heartbeat_crm_parse_general(string_table: StringTable) -> _Cluster:
+    if (error := _parse_for_error(" ".join(string_table[0]))) is not None:
+        return _Cluster(None, None, None, None, error)
+
     last_updated = None
     dc = None
     num_nodes = None
@@ -93,7 +112,13 @@ def heartbeat_crm_parse_general(string_table: StringTable) -> _Cluster:
             # pacemaker version = 2.0.3:  3 resource instances configured
             num_resources = int(line[0])
 
-    return _Cluster(last_updated, dc, num_nodes, num_resources)
+    return _Cluster(
+        last_updated=last_updated,
+        dc=dc,
+        num_nodes=num_nodes,
+        num_resources=num_resources,
+        error=None,
+    )
 
 
 def heartbeat_crm_parse_resources(string_table: StringTable) -> _Resources:
@@ -170,6 +195,15 @@ def heartbeat_crm_parse_resources(string_table: StringTable) -> _Resources:
     )
 
 
+def parse_heartbeat_crm(string_table: StringTable) -> Optional[Section]:
+    if string_table:
+        return Section(
+            cluster=heartbeat_crm_parse_general(string_table),
+            resources=heartbeat_crm_parse_resources(string_table),
+        )
+    return None
+
+
 #   .--CRM-----------------------------------------------------------------.
 #   |                          ____ ____  __  __                           |
 #   |                         / ___|  _ \|  \/  |                          |
@@ -180,7 +214,7 @@ def heartbeat_crm_parse_resources(string_table: StringTable) -> _Resources:
 #   '----------------------------------------------------------------------'
 
 
-def inventory_heartbeat_crm(info):
+def inventory_heartbeat_crm(section: Section) -> DiscoveryResult:
     # Use these lines to gather the inventory and perform this check:
     # ============
     # Last updated: Thu Jul  1 07:48:19 2010
@@ -193,18 +227,11 @@ def inventory_heartbeat_crm(info):
     # - Check the number of nodes/resources
     # - Check the age of "last updated"
     settings = host_extra_conf_merged(host_name(), inventory_heartbeat_crm_rules)
-    try:
-        _last_updated, dc, num_nodes, num_resources = heartbeat_crm_parse_general(info)
-    except Exception:  # pylint: disable=broad-except
-        # In the case that CRM is not working, add it as a service and show the error later
-        _last_updated, dc, num_nodes, num_resources = 0, 0, 0, 0
-    params = {
-        "num_nodes": num_nodes,
-        "num_resources": num_resources,
+    yield None, {
+        "num_nodes": section.cluster.num_nodes,
+        "num_resources": section.cluster.num_resources,
+        **({"dc": section.cluster.dc} if settings.get("naildown_dc", False) else {}),
     }
-    if settings.get("naildown_dc", False):
-        params["dc"] = dc
-    return [(None, params)]
 
 
 def _transform_heartbeat_crm(params):
@@ -222,19 +249,12 @@ def _transform_heartbeat_crm(params):
     return par_dict
 
 
-def check_heartbeat_crm(_no_item, params, info):
-    if not info:
-        return
+def check_heartbeat_crm(_no_item, params, section: Section):
+    last_updated, dc, num_nodes, num_resources, error = section.cluster
 
-    first_line = " ".join(info[0])
-    if (
-        first_line.lower().startswith(("critical", "error:"))
-        or "connection to cluster failed" in first_line.lower()
-    ):
-        yield 2, first_line
+    if error is not None:
+        yield 2, error
         return
-
-    last_updated, dc, num_nodes, num_resources = heartbeat_crm_parse_general(info)
 
     # Convert old tuple params (pre 1.5.0p14)
     params = _transform_heartbeat_crm(params)
@@ -273,11 +293,12 @@ def check_heartbeat_crm(_no_item, params, info):
     if not params.get("show_failed_actions"):
         return
 
-    for action in heartbeat_crm_parse_resources(info).failed_actions:
+    for action in section.resources.failed_actions:
         yield 1, f"Failed: {action}"
 
 
 check_info["heartbeat_crm"] = {
+    "parse_function": parse_heartbeat_crm,
     "check_function": check_heartbeat_crm,
     "inventory_function": inventory_heartbeat_crm,
     "service_description": "Heartbeat CRM General",
@@ -342,7 +363,7 @@ def _join_lines(lines):
     return joined
 
 
-def inventory_heartbeat_crm_resources(info):
+def inventory_heartbeat_crm_resources(section: Section):
     # Full list of resources:
     # Resource Group: group_slapmaster
     #     resource_virtip1  (ocf::heartbeat:IPaddr):  Started mwp
@@ -350,9 +371,9 @@ def inventory_heartbeat_crm_resources(info):
     #     resource_pingnodes  (ocf::heartbeat:pingd): Started mwp
     #     resource_slapmaster (ocf::heartbeat:OpenLDAP):  Started mwp
     # resource_slapslave  (ocf::heartbeat:OpenLDAP):  Started smwp
-    inventory = []
+    inventory: list[tuple[str, Optional[str]]] = []
     settings = host_extra_conf_merged(host_name(), inventory_heartbeat_crm_rules)
-    for name, resources in heartbeat_crm_parse_resources(info).resources.items():
+    for name, resources in section.resources.resources.items():
         # In naildown mode only resources which are started somewhere can be
         # inventorized
         if settings.get("naildown_resources", False) and resources[0][2] != "Stopped":
@@ -362,9 +383,9 @@ def inventory_heartbeat_crm_resources(info):
     return inventory
 
 
-def check_heartbeat_crm_resources(item, target_node, info):
+def check_heartbeat_crm_resources(item, target_node, section: Section):
     resources = None
-    for name, this_resources in heartbeat_crm_parse_resources(info).resources.items():
+    for name, this_resources in section.resources.resources.items():
         if name == item:
             resources = this_resources
 

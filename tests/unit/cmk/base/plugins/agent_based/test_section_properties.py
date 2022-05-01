@@ -148,7 +148,6 @@ def test_section_parse_function_does_something(fix_register):
         "esx_vsphere_sensors",
         "filehandler",
         "fsc_ipmi_mem_status",
-        "heartbeat_crm",
         "heartbeat_nodes",
         "hivemanager_devices",
         "hpux_fchba",

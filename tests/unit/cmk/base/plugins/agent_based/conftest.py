@@ -6,6 +6,9 @@
 
 import pytest
 
+# This fixture is autoused, because adding it to all existing plugin tests would be too tedious.
+# Please do not extend its scope, but use it explicitly if needed.
+
 
 @pytest.fixture(autouse=True, scope="function")
 def _autouse_initialised_item_state(initialised_item_state):

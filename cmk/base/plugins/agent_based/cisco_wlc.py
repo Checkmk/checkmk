@@ -5,8 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Cisco WLC sections and checks
 
->>> import re
->>> all(re.match(VERSION_CISCO_WLC_PATTERN, v) for v in (
+>>> all(v in _DEVICE_OIDS for v in (
 ...     ".1.3.6.1.4.1.14179.1.1.4.3",
 ...     ".1.3.6.1.4.1.9.1.1069",
 ...     ".1.3.6.1.4.1.9.1.1279",
@@ -25,7 +24,7 @@
 ...     ".1.3.6.1.4.1.9.1.2860",
 ... ))
 True
->>> any(re.match(VERSION_CISCO_WLC_PATTERN, v) for v in (
+>>> any(v in _DEVICE_OIDS for v in (
 ...     ".1.3.6.1.4.1.14179",
 ...     ".1.3.6.1.4.1.9.1.1068",
 ...     ".1 3.6.1.4.1.9.1.1069",
@@ -36,24 +35,26 @@ False
 
 from typing import Any, Dict, List, Mapping, Optional
 
-from .agent_based_api.v1 import matches, register, Result, Service, SNMPTree
+from .agent_based_api.v1 import any_of, equals, register, Result, Service, SNMPTree
 from .agent_based_api.v1 import State as state
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils.cisco_wlc import CISCO_WLC_OIDS
 
 Section = Dict[str, str]
 
-OID_sysObjectID = ".1.3.6.1.2.1.1.2.0"
-VERSION_CISCO_WLC_PATTERN = "|".join(
-    CISCO_WLC_OIDS
-    + [
-        # Not sure if cisco_wlc_clients also supports these oids
-        ".1.3.6.1.4.1.9.1.2171",
-        ".1.3.6.1.4.1.9.1.2391",
-        ".1.3.6.1.4.1.9.1.2530",  # cisco WLC 9800
-        ".1.3.6.1.4.1.9.1.2860",  # cisco WLC C9800
-    ]
-).replace(".", r"\.")
+_OID_sysObjectID = ".1.3.6.1.2.1.1.2.0"
+
+_DEVICE_OIDS = (
+    *CISCO_WLC_OIDS,
+    # Not sure if cisco_wlc_clients also supports these oids
+    ".1.3.6.1.4.1.9.1.2171",
+    ".1.3.6.1.4.1.9.1.2391",
+    ".1.3.6.1.4.1.9.1.2530",  # cisco WLC 9800
+    ".1.3.6.1.4.1.9.1.2860",  # cisco WLC C9800
+)
+
+_DETECT_SPEC = any_of(*(equals(_OID_sysObjectID, device_id) for device_id in _DEVICE_OIDS))
+
 
 map_states = {
     "1": (state.OK, "online"),
@@ -128,7 +129,7 @@ def cluster_check_cisco_wlc(
 
 register.snmp_section(
     name="cisco_wlc",
-    detect=matches(OID_sysObjectID, VERSION_CISCO_WLC_PATTERN),
+    detect=_DETECT_SPEC,
     parse_function=parse_cisco_wlc,
     fetch=[
         SNMPTree(

@@ -996,7 +996,6 @@ def _valuespec_special_agents_kube():
                                 add_label=_("Add new role"),
                                 allow_empty=True,
                                 movable=False,
-                                help=RegExp(mode=RegExp.infix).help(),
                                 default_value=["control-plane", "infra"],
                             ),
                         ),

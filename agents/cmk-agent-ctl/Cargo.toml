@@ -41,6 +41,11 @@ rpassword = { version = "*" }
 async-trait = { version = "*" }
 os_info = { version = "*" }
 faccess = { version = "*" }
+bincode = { version = "*" } # simple binary serialisation
+
+[target.'cfg(windows)'.dependencies]
+mail_slot = { version = "*" }  # windows mailslot api
+
 
 [patch.crates-io]
 wepoll-ffi = { path = "./patch/wepoll-ffi-0.1.2" }

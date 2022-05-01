@@ -22,8 +22,6 @@ pub const REGISTRATION_PRESET_FILE: &str = "registration_preset.json";
 pub const REGISTRY_FILE: &str = "registered_connections.json";
 pub const LEGACY_PULL_FILE: &str = "allow-legacy-pull";
 pub const CONFIG_FILE: &str = "cmk-agent-ctl.toml";
-#[cfg(windows)]
-pub const LOG_FILE: &str = "cmk-agent-ctl.log";
 
 // DIRS
 #[cfg(unix)]

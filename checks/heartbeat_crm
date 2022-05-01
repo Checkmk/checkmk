@@ -234,30 +234,12 @@ def inventory_heartbeat_crm(section: Section) -> DiscoveryResult:
     }
 
 
-def _transform_heartbeat_crm(params):
-    if isinstance(params, dict):
-        _params = params.copy()
-        _params.setdefault("show_failed_actions", False)
-        return _params
-    par_dict = {"max_age": params[0], "show_failed_actions": False}
-    if params[1]:
-        par_dict["dc"] = params[1]
-    if params[2] > -1:
-        par_dict["num_nodes"] = params[2]
-    if params[3] > -1:
-        par_dict["num_resources"] = params[3]
-    return par_dict
-
-
 def check_heartbeat_crm(_no_item, params, section: Section):
     last_updated, dc, num_nodes, num_resources, error = section.cluster
 
     if error is not None:
         yield 2, error
         return
-
-    # Convert old tuple params (pre 1.5.0p14)
-    params = _transform_heartbeat_crm(params)
 
     # Check the freshness of the crm_mon output and terminate with CRITICAL
     # when too old information are found

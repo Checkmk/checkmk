@@ -5,11 +5,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import Any, Iterator, Mapping, NamedTuple, Optional
+from typing import Any, Iterator, Mapping, NamedTuple, Optional, Sequence, Union
 
 StringTable = list[list[str]]
 
-DiscoveryResult = Iterator[tuple[None, Mapping[str, Any]]]
+Service = tuple[Optional[str], Union[dict, str, None]]
+
+DiscoveryResult = Iterator[Service]
+
+CheckResult = Iterator[tuple[int, str]]
+
 
 # Example outputs from agent:
 # <<<heartbeat_crm>>>
@@ -214,27 +219,17 @@ def parse_heartbeat_crm(string_table: StringTable) -> Optional[Section]:
 #   '----------------------------------------------------------------------'
 
 
-def inventory_heartbeat_crm(section: Section) -> DiscoveryResult:
-    # Use these lines to gather the inventory and perform this check:
-    # ============
-    # Last updated: Thu Jul  1 07:48:19 2010
-    # Current DC: mwp (118cc1e7-bbf3-4550-b820-cac372885be1)
-    # 2 Nodes configured.
-    # 2 Resources configured.
-    # ============
-    #
-    # - Naildown the DC or not.
-    # - Check the number of nodes/resources
-    # - Check the age of "last updated"
-    settings = host_extra_conf_merged(host_name(), inventory_heartbeat_crm_rules)
+def discover_heartbeat_crm(section: Section) -> DiscoveryResult:
+    params = host_extra_conf_merged(host_name(), inventory_heartbeat_crm_rules)
     yield None, {
         "num_nodes": section.cluster.num_nodes,
         "num_resources": section.cluster.num_resources,
-        **({"dc": section.cluster.dc} if settings.get("naildown_dc", False) else {}),
+        **({"dc": section.cluster.dc} if params.get("naildown_dc", False) else {}),
     }
 
 
-def check_heartbeat_crm(_no_item, params, section: Section):
+def check_heartbeat_crm(_no_item, params: Mapping[str, Any], section: Section) -> CheckResult:
+
     last_updated, dc, num_nodes, num_resources, error = section.cluster
 
     if error is not None:
@@ -282,7 +277,7 @@ def check_heartbeat_crm(_no_item, params, section: Section):
 check_info["heartbeat_crm"] = {
     "parse_function": parse_heartbeat_crm,
     "check_function": check_heartbeat_crm,
-    "inventory_function": inventory_heartbeat_crm,
+    "inventory_function": discover_heartbeat_crm,
     "service_description": "Heartbeat CRM General",
     "group": "heartbeat_crm",
     "default_levels_variable": "heartbeat_crm_default_levels",
@@ -299,7 +294,7 @@ check_info["heartbeat_crm"] = {
 #   '----------------------------------------------------------------------'
 
 
-def _join_lines(lines):
+def _join_lines(lines: Sequence[str]) -> Sequence[str]:
     """Join lines with the help of some helper characters.
 
     :param lines:
@@ -345,7 +340,7 @@ def _join_lines(lines):
     return joined
 
 
-def inventory_heartbeat_crm_resources(section: Section):
+def inventory_heartbeat_crm_resources(section: Section) -> DiscoveryResult:
     # Full list of resources:
     # Resource Group: group_slapmaster
     #     resource_virtip1  (ocf::heartbeat:IPaddr):  Started mwp
@@ -353,29 +348,26 @@ def inventory_heartbeat_crm_resources(section: Section):
     #     resource_pingnodes  (ocf::heartbeat:pingd): Started mwp
     #     resource_slapmaster (ocf::heartbeat:OpenLDAP):  Started mwp
     # resource_slapslave  (ocf::heartbeat:OpenLDAP):  Started smwp
-    inventory: list[tuple[str, Optional[str]]] = []
     settings = host_extra_conf_merged(host_name(), inventory_heartbeat_crm_rules)
     for name, resources in section.resources.resources.items():
         # In naildown mode only resources which are started somewhere can be
         # inventorized
         if settings.get("naildown_resources", False) and resources[0][2] != "Stopped":
-            inventory.append((name, '"%s"' % resources[0][3]))
+            yield name, '"%s"' % resources[0][3]
         else:
-            inventory.append((name, None))
-    return inventory
+            yield name, None
 
 
-def check_heartbeat_crm_resources(item, target_node, section: Section):
-    resources = None
-    for name, this_resources in section.resources.resources.items():
-        if name == item:
-            resources = this_resources
-
-    if resources is None:
+def check_heartbeat_crm_resources(
+    item: str,
+    target_node: Optional[str],
+    section: Section,
+) -> CheckResult:
+    if (resources := section.resources.resources.get(item)) is None:
         return
 
     if not len(resources):
-        yield 0, "no resources found"
+        yield 0, "No resources found"
 
     for resource in resources:
         yield 0, " ".join([isinstance(p, list) and ", ".join(p) or p for p in resource])

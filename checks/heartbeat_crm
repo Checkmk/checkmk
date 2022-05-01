@@ -45,6 +45,11 @@ class _Cluster(NamedTuple):
     num_resources: Optional[int]
 
 
+class _Resources(NamedTuple):
+    resources: Mapping[str, Any]
+    failed_actions: Any
+
+
 def heartbeat_crm_parse_general(string_table: StringTable) -> _Cluster:
     last_updated = None
     dc = None
@@ -89,6 +94,80 @@ def heartbeat_crm_parse_general(string_table: StringTable) -> _Cluster:
             num_resources = int(line[0])
 
     return _Cluster(last_updated, dc, num_nodes, num_resources)
+
+
+def heartbeat_crm_parse_resources(string_table: StringTable) -> _Resources:
+    """
+
+    :param info:
+        An info list of lists from the check system.
+
+    :param show:
+        Can be either 'all', then it shows some additional information or
+        'resources' then it shows only resources.
+
+    :return:
+        A dict of resources and possibly additional information (like error messages).
+    """
+    block_start = False
+    resources: dict[str, Any] = {}
+    resource = ""
+    list_start = False
+    lines = []
+    mode = "single"
+    for parts in string_table:
+        line = " ".join(parts)
+
+        if "failed" in line.lower() and "actions" in line.lower():
+            block_start = False
+            list_start = True
+        elif not block_start and line == "Full list of resources:":
+            block_start = True
+            list_start = False
+        elif list_start:
+            lines.append(line)
+            mode = "failedaction"
+        elif block_start:
+            if line.startswith("Resource Group:"):
+                # Resource group
+                resources[parts[2]] = []
+                resource = parts[2]
+                mode = "resourcegroup"
+            elif line.startswith("Clone Set:"):
+                # Clone set
+                resources[parts[2]] = []
+                resource = parts[2]
+                mode = "cloneset"
+            elif line.startswith("Master/Slave Set:"):
+                # Master/Slave set
+                resources[parts[2]] = []
+                resource = parts[2]
+                mode = "masterslaveset"
+            elif line[0] == "_":
+                # Cleanup inconsistent agent output in clone set lines
+                if parts[0] != "_":
+                    parts.insert(1, parts[0][1:])
+                    parts[0] = "_"
+
+                # Resource group or set member
+                if mode == "resourcegroup":
+                    resources[resource].append(parts[1:])
+                elif mode == "cloneset":
+                    if parts[1] == "Started:":
+                        resources[resource].append([resource, "Clone", "Started", parts[3:-1]])
+                elif mode == "masterslaveset":
+                    if parts[1] == "Masters:":
+                        resources[resource].append([resource, "Master", "Started", parts[3]])
+                    if parts[1] == "Slaves:":
+                        resources[resource].append([resource, "Slave", "Started", parts[3]])
+            else:
+                # Single resource
+                resources[parts[0]] = [parts]
+
+    return _Resources(
+        resources=resources,
+        failed_actions=_join_lines(lines),
+    )
 
 
 #   .--CRM-----------------------------------------------------------------.
@@ -261,85 +340,6 @@ def _join_lines(lines):
     if line:
         joined.append(line)
     return joined
-
-
-class _Resources(NamedTuple):
-    resources: Mapping[str, Any]
-    failed_actions: Any
-
-
-def heartbeat_crm_parse_resources(string_table: StringTable) -> _Resources:
-    """
-
-    :param info:
-        An info list of lists from the check system.
-
-    :param show:
-        Can be either 'all', then it shows some additional information or
-        'resources' then it shows only resources.
-
-    :return:
-        A dict of resources and possibly additional information (like error messages).
-    """
-    block_start = False
-    resources: dict[str, Any] = {}
-    resource = ""
-    list_start = False
-    lines = []
-    mode = "single"
-    for parts in string_table:
-        line = " ".join(parts)
-
-        if "failed" in line.lower() and "actions" in line.lower():
-            block_start = False
-            list_start = True
-        elif not block_start and line == "Full list of resources:":
-            block_start = True
-            list_start = False
-        elif list_start:
-            lines.append(line)
-            mode = "failedaction"
-        elif block_start:
-            if line.startswith("Resource Group:"):
-                # Resource group
-                resources[parts[2]] = []
-                resource = parts[2]
-                mode = "resourcegroup"
-            elif line.startswith("Clone Set:"):
-                # Clone set
-                resources[parts[2]] = []
-                resource = parts[2]
-                mode = "cloneset"
-            elif line.startswith("Master/Slave Set:"):
-                # Master/Slave set
-                resources[parts[2]] = []
-                resource = parts[2]
-                mode = "masterslaveset"
-            elif line[0] == "_":
-                # Cleanup inconsistent agent output in clone set lines
-                if parts[0] != "_":
-                    parts.insert(1, parts[0][1:])
-                    parts[0] = "_"
-
-                # Resource group or set member
-                if mode == "resourcegroup":
-                    resources[resource].append(parts[1:])
-                elif mode == "cloneset":
-                    if parts[1] == "Started:":
-                        resources[resource].append([resource, "Clone", "Started", parts[3:-1]])
-                elif mode == "masterslaveset":
-                    if parts[1] == "Masters:":
-                        resources[resource].append([resource, "Master", "Started", parts[3]])
-                    if parts[1] == "Slaves:":
-                        resources[resource].append([resource, "Slave", "Started", parts[3]])
-            else:
-                # Single resource
-                resources[parts[0]] = [parts]
-
-    return _Resources(
-        resources=resources,
-        failed_actions=_join_lines(lines),
-    )
 
 
 def inventory_heartbeat_crm_resources(info):

@@ -168,6 +168,16 @@ AnnotationOption = Union[
 ]
 
 
+class MonitoredObject(enum.Enum):
+    deployments = "deployments"
+    daemonsets = "daemonsets"
+    statefulsets = "statefulsets"
+    namespaces = "namespaces"
+    nodes = "nodes"
+    pods = "pods"
+    cronjobs_pods = "cronjobs_pods"
+
+
 def parse_arguments(args: List[str]) -> argparse.Namespace:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--debug", action="store_true", help="Debug mode: raise Python exceptions")
@@ -191,8 +201,16 @@ def parse_arguments(args: List[str]) -> argparse.Namespace:
     p.add_argument("--token", help="Token for that user")
     p.add_argument(
         "--monitored-objects",
+        type=MonitoredObject,
         nargs="+",
-        default=["deployments", "daemonsets", "statefulsets", "namespaces", "nodes", "pods"],
+        default=[
+            MonitoredObject.deployments,
+            MonitoredObject.daemonsets,
+            MonitoredObject.statefulsets,
+            MonitoredObject.pods,
+            MonitoredObject.namespaces,
+            MonitoredObject.nodes,
+        ],
         help="The Kubernetes objects which are supposed to be monitored. Available objects: "
         "deployments, nodes, pods, daemonsets, statefulsets, cronjobs_pods",
     )
@@ -2283,7 +2301,7 @@ def parse_and_group_containers_performance_metrics(
 
 def write_sections_based_on_performance_pods(
     performance_pods: Mapping[PodLookupName, PerformancePod],
-    monitored_objects: Sequence[str],
+    monitored_objects: Sequence[MonitoredObject],
     monitored_pods: Set[PodLookupName],
     cluster: Cluster,
     monitored_namespaces: Set[api.NamespaceName],
@@ -2291,7 +2309,7 @@ def write_sections_based_on_performance_pods(
     piggyback_formatter_node: ObjectSpecificPBFormatter,
 ):
     # Write performance sections
-    if "pods" in monitored_objects:
+    if MonitoredObject.pods in monitored_objects:
         LOGGER.info("Write pod sections based on performance data")
 
         running_pods = pods_from_namespaces(
@@ -2315,7 +2333,7 @@ def write_sections_based_on_performance_pods(
                 ),
             )
 
-    if "nodes" in monitored_objects:
+    if MonitoredObject.nodes in monitored_objects:
         LOGGER.info("Write node sections based on performance data")
         for node in cluster.nodes():
             write_kube_object_performance_section(
@@ -2323,7 +2341,7 @@ def write_sections_based_on_performance_pods(
                 performance_pods,
                 piggyback_name=piggyback_formatter_node(node.name),
             )
-    if "deployments" in monitored_objects:
+    if MonitoredObject.deployments in monitored_objects:
         LOGGER.info("Write deployment sections based on performance data")
         for deployment in kube_objects_from_namespaces(cluster.deployments(), monitored_namespaces):
             write_kube_object_performance_section(
@@ -2334,7 +2352,7 @@ def write_sections_based_on_performance_pods(
                     namespaced_name=deployment.name(prepend_namespace=True),
                 ),
             )
-    if "daemonsets" in monitored_objects:
+    if MonitoredObject.daemonsets in monitored_objects:
         LOGGER.info("Write DaemonSet sections based on performance data")
         for daemonset in kube_objects_from_namespaces(cluster.daemon_sets(), monitored_namespaces):
             write_kube_object_performance_section(
@@ -2344,7 +2362,7 @@ def write_sections_based_on_performance_pods(
                     object_type="daemonset", namespaced_name=daemonset.name(prepend_namespace=True)
                 ),
             )
-    if "statefulsets" in monitored_objects:
+    if MonitoredObject.statefulsets in monitored_objects:
         LOGGER.info("Write StatefulSet sections based on performance data")
         for statefulset in kube_objects_from_namespaces(
             cluster.statefulsets(), monitored_namespaces
@@ -2526,7 +2544,7 @@ def main(args: Optional[List[str]] = None) -> int:
                 piggyback_formatter, "node"
             )
 
-            if "nodes" in arguments.monitored_objects:
+            if MonitoredObject.nodes in arguments.monitored_objects:
                 LOGGER.info("Write nodes sections based on API data")
                 write_nodes_api_sections(
                     arguments.cluster,
@@ -2535,7 +2553,7 @@ def main(args: Optional[List[str]] = None) -> int:
                     piggyback_formatter=piggyback_formatter_node,
                 )
 
-            if "deployments" in arguments.monitored_objects:
+            if MonitoredObject.deployments in arguments.monitored_objects:
                 LOGGER.info("Write deployments sections based on API data")
                 write_deployments_api_sections(
                     arguments.cluster,
@@ -2545,7 +2563,7 @@ def main(args: Optional[List[str]] = None) -> int:
                 )
 
             resource_quotas = api_server.resource_quotas()
-            if "namespaces" in arguments.monitored_objects:
+            if MonitoredObject.namespaces in arguments.monitored_objects:
                 LOGGER.info("Write namespaces sections based on API data")
                 api_namespaces = api_server.namespaces()
                 write_namespaces_api_sections(
@@ -2557,7 +2575,7 @@ def main(args: Optional[List[str]] = None) -> int:
                     piggyback_formatter=functools.partial(piggyback_formatter, "namespace"),
                 )
 
-            if "daemonsets" in arguments.monitored_objects:
+            if MonitoredObject.daemonsets in arguments.monitored_objects:
                 LOGGER.info("Write daemon sets sections based on API data")
                 write_daemon_sets_api_sections(
                     arguments.cluster,
@@ -2566,7 +2584,7 @@ def main(args: Optional[List[str]] = None) -> int:
                     piggyback_formatter=functools.partial(piggyback_formatter, "daemonset"),
                 )
 
-            if "statefulsets" in arguments.monitored_objects:
+            if MonitoredObject.statefulsets in arguments.monitored_objects:
                 LOGGER.info("Write StatefulSets sections based on API data")
                 write_statefulsets_api_sections(
                     arguments.cluster,
@@ -2580,7 +2598,7 @@ def main(args: Optional[List[str]] = None) -> int:
                 for pod in pods_from_namespaces(cluster.pods(), monitored_namespaces)
             }
 
-            if "cronjobs_pods" not in arguments.monitored_objects:
+            if MonitoredObject.cronjobs_pods not in arguments.monitored_objects:
                 # Ignore pods controlled by CronJobs
                 monitored_pods = monitored_pods.difference(
                     {
@@ -2590,7 +2608,7 @@ def main(args: Optional[List[str]] = None) -> int:
                     }
                 )
 
-            if "pods" in arguments.monitored_objects:
+            if MonitoredObject.pods in arguments.monitored_objects:
                 LOGGER.info("Write pods sections based on API data")
                 write_pods_api_sections(
                     arguments.cluster,
@@ -2712,7 +2730,7 @@ def main(args: Optional[List[str]] = None) -> int:
                         piggyback_formatter_node=piggyback_formatter_node,
                     )
 
-                    if "namespaces" in arguments.monitored_objects:
+                    if MonitoredObject.namespaces in arguments.monitored_objects:
                         for api_namespace in api_namespaces:
                             namespace_api_pods = filter_pods_by_phase(
                                 filter_pods_by_namespace(api_pods, namespace_name(api_namespace)),
@@ -2785,7 +2803,7 @@ def main(args: Optional[List[str]] = None) -> int:
                         detail="No machine sections were collected from the cluster collector",
                     )
 
-                if "nodes" in arguments.monitored_objects:
+                if MonitoredObject.nodes in arguments.monitored_objects:
                     try:
                         write_machine_sections(
                             cluster,

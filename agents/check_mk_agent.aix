@@ -232,7 +232,7 @@ read_python_version() {
     return 1
 }
 
-preamble_3() {
+preamble_2() {
     PYTHON3=$(read_python_version python3 3 4 || read_python_version python 3 4)
     PYTHON2=$(read_python_version python2 2 6 || read_python_version python 2 6)
     if [ -f "${MK_CONFDIR}/python_path.cfg" ]; then
@@ -863,7 +863,6 @@ main_setup() {
     unset_locale
     preamble_1
     preamble_2
-    preamble_3
 
     set_up_profiling
 }

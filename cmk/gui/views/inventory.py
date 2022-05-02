@@ -304,26 +304,13 @@ def _inv_filter_info():
 def _cmp_inventory_node(
     a: Dict[str, StructuredDataNode], b: Dict[str, StructuredDataNode], invpath: str
 ) -> int:
-    # TODO merge with _decorate_sort_func
-    # Returns
-    # (1)  1 if val_a > val_b
-    # (2)  0 if val_a == val_b
-    # (3) -1 if val_a < val_b
     val_a = inventory.get_inventory_attribute(a["host_inventory"], invpath)
     val_b = inventory.get_inventory_attribute(b["host_inventory"], invpath)
+    return _decorate_sort_func(_cmp_inv_generic)(val_a, val_b)
 
-    if val_a is None:
-        # as (2) or (3)
-        return 0 if val_b is None else -1
 
-    if val_b is None:
-        # as (2) or (1)
-        return 0 if val_a is None else 1
-
-    if isinstance(val_a, float) and isinstance(val_b, float):
-        return (val_a > val_b) - (val_a < val_b)
-
-    if isinstance(val_a, int) and isinstance(val_b, int):
+def _cmp_inv_generic(val_a: object, val_b: object) -> int:
+    if isinstance(val_a, (float, int)) and isinstance(val_b, (float, int)):
         return (val_a > val_b) - (val_a < val_b)
 
     if isinstance(val_a, str) and isinstance(val_b, str):
@@ -915,10 +902,6 @@ def _declare_invtable_column(
     sub_invpath = invpath + "*." + name
     hint = _convert_display_hint(inventory_displayhints.get(sub_invpath, {}))
 
-    def cmp_func(a, b):
-        return (a > b) - (a < b)
-
-    sortfunc = hint.get("sort", cmp_func)
     if "paint" in hint:
         paint_name = hint["paint"]
         paint_function: PaintFunction = globals()["inv_paint_" + paint_name]
@@ -965,6 +948,8 @@ def _declare_invtable_column(
             "sorter": column,
         },
     )
+
+    sortfunc = hint.get("sort", _cmp_inv_generic)
 
     register_sorter(
         column,

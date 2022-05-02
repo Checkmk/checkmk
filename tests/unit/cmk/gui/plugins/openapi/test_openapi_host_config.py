@@ -1238,3 +1238,49 @@ def test_openapi_host_with_inventory_failed(
         headers={"Accept": "application/json"},
     )
     assert resp.json["extensions"]["attributes"]["inventory_failed"] is True
+
+
+def test_openapi_host_with_invalid_labels(
+    wsgi_app,
+    with_automation_user,
+) -> None:
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(("Bearer", username + " " + secret))
+    base = "/NO_SITE/check_mk/api/1.0"
+    json_data = {
+        "folder": "/",
+        "host_name": "example.com",
+        "attributes": {"labels": {"label": ["invalid_label_entry", "another_one"]}},
+    }
+    wsgi_app.call_method(
+        "post",
+        f"{base}/domain-types/host_config/collections/all",
+        params=json.dumps(json_data),
+        status=400,
+        content_type="application/json",
+        headers={"Accept": "application/json"},
+    )
+
+
+def test_openapi_host_with_labels(wsgi_app, with_automation_user) -> None:
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(("Bearer", username + " " + secret))
+    base = "/NO_SITE/check_mk/api/1.0"
+    json_data = {
+        "folder": "/",
+        "host_name": "example.com",
+        "attributes": {
+            "labels": {
+                "label": "value",
+            }
+        },
+    }
+    resp = wsgi_app.call_method(
+        "post",
+        f"{base}/domain-types/host_config/collections/all",
+        params=json.dumps(json_data),
+        status=200,
+        content_type="application/json",
+        headers={"Accept": "application/json"},
+    )
+    assert resp.json["extensions"]["attributes"]["labels"] == {"label": "value"}

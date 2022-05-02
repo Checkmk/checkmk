@@ -1306,9 +1306,11 @@ class HostAttributeLabels(ABCHostAttributeValueSpec):
     def valuespec(self):
         return Labels(world=Labels.World.CONFIG, label_source=Labels.Source.EXPLICIT)
 
-    def openapi_field(self) -> gui_fields.Field:
+    def openapi_field(self) -> fields.Field:
         return fields.Dict(
             description=self.help(),
+            keys=fields.String(description="The host label key"),
+            values=fields.String(description="The host label value"),
         )
 
     def filter_matches(self, crit, value, hostname):

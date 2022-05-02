@@ -564,16 +564,24 @@ section_nfs_mounts() {
         STAT_VERSION=$(stat --version | head -1 | cut -d" " -f4)
         STAT_BROKE="5.3.0"
 
-        echo '<<<nfsmounts>>>'
-        sed -n '/ nfs4\? /s/[^ ]* \([^ ]*\) .*/\1/p' </proc/mounts |
+        json_templ() {
+            echo '{"mountpoint": "'"${1}"'", "source": "'"${2}"'", "state": "ok", "usage": {"total_blocks": %b, "free_blocks_su": %f, "free_blocks": %a, "blocksize": %s}}'
+        }
+        json_templ_empty() {
+            echo '{"mountpoint": "'"${1}"'", "source": "'"${2}"'", "state": "hanging", "usage": {"total_blocks": 0, "free_blocks_su": 0, "free_blocks": 0, "blocksize": 0}}'
+        }
+
+        echo '<<<nfsmounts_v2:sep(0)>>>'
+
+        sed -n '/ nfs4\? /s/\([^ ]*\) \([^ ]*\) .*/\1 \2/p' </proc/mounts |
             sed 's/\\040/ /g' |
-            while read -r MP; do
+            while read -r MD MP; do
                 if [ "${STAT_VERSION}" != "${STAT_BROKE}" ]; then
-                    waitmax -s 9 5 stat -f -c "${MP} ok %b %f %a %s" "${MP}" ||
-                        echo "${MP} hanging 0 0 0 0"
+                    waitmax -s 9 5 stat -f -c "$(json_templ "${MP}" "${MD}")" "${MP}" ||
+                        json_templ_empty "${MP}" "${MD}"
                 else
-                    waitmax -s 9 5 stat -f -c "${MP} ok %b %f %a %s" "${MP}" &&
-                        printf '\n' || echo "${MP} hanging 0 0 0 0"
+                    (waitmax -s 9 5 stat -f -c "$(json_templ "${MP}" "${MD}")" "${MP}" &&
+                        printf '\n') || json_templ_empty "${MP}" "${MD}"
                 fi
             done
 

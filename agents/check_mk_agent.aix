@@ -358,10 +358,16 @@ section_df() {
 
 section_nfs_mounts() {
     # Check for hanging NFS mounts. This needs a GNU stat installed in the PATH
+    json_templ() {
+        echo '{"mountpoint": "'"${1}"'", "source": "'"${2}"'", "state": "ok", "mount_seems_okay": "true"}'
+    }
+    json_templ_empty() {
+        echo '{"mountpoint": "'"${1}"'", "source": "'"${2}"'", "state": "hanging", "usage": {"total_blocks": 0, "free_blocks_su": 0, "free_blocks": 0, "blocksize": 0}}'
+    }
     if inpath stat; then
-        echo '<<<nfsmounts>>>'
-        mount | grep ' nfs' | while read -r _ _ MP _; do
-            waitmax 5 stat -f -c '"'"${MP}"' ok - - - -"' "${MP}" || echo "${MP} hanging 0 0 0 0"
+        echo '<<<nfsmounts_v2:sep(0)>>>'
+        mount | grep ' nfs' | while read -r HN MD MP _; do
+            waitmax 5 stat -f -c "$(json_templ "${MP}" "'${HN}':'${MD}'")" "${MP}" || json_templ_empty "${MP}" "'${HN}':'${MD}'"
         done
         echo '<<<cifsmounts>>>'
         mount | grep ' cifs' | while read -r _ _ MP _; do

@@ -27,6 +27,7 @@ def value_store_fixture(monkeypatch):
         "%s.delta" % "/ABCshare": [2000000, 30000000],
         "%s.delta" % "/PERFshare": [2000000, 30000000],
         "%s.delta" % "/var/dbaexport": [2000000, 30000000],
+        "%s.delta" % "/mnt/test_client": [2000000, 30000000],
     }
     monkeypatch.setattr(network_fs_mounts, "get_value_store", lambda: value_store_patched)
     yield value_store_patched
@@ -207,3 +208,37 @@ def test_network_fs_mounts_check(
             )
             == check_result
         )
+
+
+@pytest.mark.parametrize(
+    "string_table, item, check_result",
+    [
+        (
+            [
+                [
+                    """
+                    {"mountpoint": "/mnt/test_client", "source": "127.0.0.1:/mnt/test", "state": "ok", "usage": {"total_blocks": 237102, "free_blocks_su": 161350, "free_blocks": 149238, "blocksize": 1048576}}
+                    """
+                ]
+            ],
+            "/mnt/test_client",
+            [
+                Result(state=State.OK, summary="Device: 127.0.0.1:/mnt/test"),
+                Result(state=State.OK, summary="37.06% used (85.8 of 232 GiB)"),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: -1.53 GiB"),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: -0.66%"),
+            ],
+        ),
+    ],
+)
+def test_nfsmount_v2_check(
+    string_table: StringTable,
+    item: str,
+    check_result: CheckResult,
+    value_store_patch,
+):
+    section = network_fs_mounts.parse_nfsmounts_v2(string_table)
+    assert (
+        list(network_fs_mounts.check_network_fs_mount(item, FILESYSTEM_DEFAULT_LEVELS, section))
+        == check_result
+    )

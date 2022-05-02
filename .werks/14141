@@ -1,0 +1,12 @@
+Title: Show source of NFS mounts in service summary
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1651483983
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1
+
+You can now display the source of the mountpoint on AIX and Linux devices by
+updating the respective agent.

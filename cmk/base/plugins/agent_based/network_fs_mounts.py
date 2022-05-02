@@ -3,6 +3,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import json
 from enum import Enum
 from typing import Any, Final, Mapping, NamedTuple, Optional, Union
 
@@ -53,9 +54,34 @@ class NetworkFSMount(NamedTuple):
     state: str
     mount_seems_okay: bool
     usage: Optional[NetworkFSUsage]
+    source: Optional[str]
 
 
 NetworkFSSection = Mapping[str, NetworkFSMount]
+
+
+def parse_nfsmounts_v2(string_table: StringTable) -> NetworkFSSection:
+    section: dict[str, NetworkFSMount] = {}
+    for entry in string_table:
+        data = json.loads(entry[0])
+        section.setdefault(
+            data["mountpoint"],
+            NetworkFSMount(
+                mountpoint=str(data["mountpoint"]),
+                state=str(data["state"]),
+                mount_seems_okay=bool(data.get("mount_seems_okay", False)),
+                usage=NetworkFSUsage(
+                    total_blocks=int(usage["total_blocks"]),
+                    free_blocks_su=int(usage["free_blocks_su"]),
+                    free_blocks=int(usage["free_blocks"]),
+                    blocksize=int(usage["blocksize"]),
+                )
+                if (usage := data["usage"])
+                else None,
+                source=None if (s := data.get("source")) is None else str(s),
+            ),
+        )
+    return section
 
 
 def parse_network_fs_mounts(string_table: StringTable) -> NetworkFSSection:
@@ -69,6 +95,7 @@ def parse_network_fs_mounts(string_table: StringTable) -> NetworkFSSection:
                     state="Permission denied",
                     mount_seems_okay=False,
                     usage=None,
+                    source=None,
                 ),
             )
             continue
@@ -86,6 +113,7 @@ def parse_network_fs_mounts(string_table: StringTable) -> NetworkFSSection:
                 )
                 if entry[-4:] != ["-", "-", "-", "-"]
                 else None,
+                source=None,
             ),
         )
     return section
@@ -127,6 +155,9 @@ def check_network_fs_mount(
 ) -> CheckResult:
     if not (mount := section.get(item)):
         return
+
+    if mount.source:
+        yield Result(state=State.OK, summary=f"Device: {mount.source}")
 
     state = NetworkFSState(mount.state)
     if state is not NetworkFSState.OK:
@@ -188,9 +219,16 @@ def check_network_fs_mount(
     yield from results
 
 
+# this section was replaced by the nfsmounts_v2 section in the agents of Checkmk version 2.2
 register.agent_section(
     name="nfsmounts",
     parse_function=parse_network_fs_mounts,
+)
+
+register.agent_section(
+    name="nfsmounts_v2",
+    parsed_section_name="nfsmounts",
+    parse_function=parse_nfsmounts_v2,
 )
 
 

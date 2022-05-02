@@ -43,6 +43,7 @@ from cmk.gui.plugins.watolib.utils import DomainRequest, DomainRequests
 from cmk.gui.sites import activation_sites
 from cmk.gui.table import Foldable, init_rowselect, table_element
 from cmk.gui.type_defs import ActionResult
+from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.urls import makeactionuri, makeuri_contextless
 from cmk.gui.valuespec import Checkbox, Dictionary, DictionaryEntry, TextAreaUnicode
@@ -632,6 +633,7 @@ def _vs_activation(title: str, has_foreign_changes: bool) -> Optional[Dictionary
 @page_registry.register_page("ajax_start_activation")
 class ModeAjaxStartActivation(AjaxPage):
     def page(self):
+        check_csrf_token()
         user.need_permission("wato.activate")
 
         api_request = self.webapi_request()

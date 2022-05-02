@@ -26,7 +26,6 @@ import json
 # - change naming of escaping.escape_attribute() to html.render()
 #
 # - Unify CSS classes attribute to "class_"
-import os
 import pprint
 import re
 from pathlib import Path
@@ -41,7 +40,7 @@ import cmk.gui.utils as utils
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbRenderer
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import config, theme, transactions, user, user_errors
+from cmk.gui.globals import config, session, theme, transactions, user, user_errors
 from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.i18n import _
 from cmk.gui.page_menu import (
@@ -1077,6 +1076,8 @@ class html(ABCHTMLGenerator):
             if filename_for_browser:
                 self.javascript_file(filename_for_browser)
 
+        self._set_js_csrf_token()
+
         if self.browser_reload != 0.0:
             if self.browser_redirect != "":
                 self.javascript(
@@ -1086,6 +1087,14 @@ class html(ABCHTMLGenerator):
                 self.javascript("cmk.utils.set_reload(%s)" % (self.browser_reload))
 
         self.close_head()
+
+    def _set_js_csrf_token(self) -> None:
+        # session is LocalProxy, only on access it is None, so we cannot test on 'is None'
+        if not hasattr(session, "session_info"):
+            return
+        self.javascript(
+            "var global_csrf_token = %s;" % (json.dumps(session.session_info.csrf_token))
+        )
 
     def _add_custom_style_sheet(self) -> None:
         for css in self._plugin_stylesheets():
@@ -1313,6 +1322,8 @@ class html(ABCHTMLGenerator):
             onsubmit=onsubmit,
             enctype="multipart/form-data" if method.lower() == "post" else None,
         )
+        if hasattr(session, "session_info"):
+            self.hidden_field("csrf_token", session.session_info.csrf_token)
         self.hidden_field("filled_in", name, add_var=True)
         if add_transid:
             self.hidden_field(

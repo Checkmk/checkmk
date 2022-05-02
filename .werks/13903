@@ -1,0 +1,18 @@
+Title: Introduce additional CSRF checks
+Class: security
+Compatible: compat
+Component: wato
+Date: 1652726850
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p2
+
+Previous to this Werk most data changing requests needed a transaction id. This
+mechanism was not used in all methods and in some cases the transaction id
+mechanism was not a good fit. So now a new CSRF token is introduced and checks
+are implemented in various locations.
+
+If you scripted the UI you need to parse the CSRF token from the HTML and send
+it with the Post requests.

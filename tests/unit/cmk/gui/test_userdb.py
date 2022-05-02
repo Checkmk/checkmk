@@ -6,6 +6,7 @@
 
 import os
 import time
+import uuid
 from dataclasses import asdict
 from pathlib import Path
 from typing import Iterator
@@ -38,6 +39,11 @@ def fixture_time() -> Iterator[None]:
 @pytest.fixture(name="user_id")
 def fixture_user_id(with_user: tuple[UserId, str]) -> UserId:
     return with_user[0]
+
+
+@pytest.fixture(name="zero_uuid")
+def zero_uuid_fixture(monkeypatch: MonkeyPatch) -> None:
+    monkeypatch.setattr(uuid, "uuid4", lambda: "00000000-0000-0000-0000-000000000000")
 
 
 # user_id needs to be used here because it executes a reload of the config and the monkeypatch of
@@ -122,7 +128,7 @@ def test_load_pre_20_session(user_id: UserId, session_pre_20: str) -> None:
     assert old_session["sess2"].last_activity == int(time.time()) - 5
 
 
-def test_on_succeeded_login(user_id: UserId) -> None:
+def test_on_succeeded_login(user_id: UserId, zero_uuid: None) -> None:
     assert config.single_user_session is None
 
     # Never logged in before
@@ -140,6 +146,7 @@ def test_on_succeeded_login(user_id: UserId) -> None:
             started_at=int(time.time()),
             last_activity=int(time.time()),
             flashes=[],
+            csrf_token="00000000-0000-0000-0000-000000000000",
         )
     }
 
@@ -348,7 +355,7 @@ def test_ensure_user_can_not_init_with_previous_session(
         assert userdb._ensure_user_can_init_session(user_id) is False
 
 
-def test_initialize_session_single_user_session(user_id: UserId) -> None:
+def test_initialize_session_single_user_session(user_id: UserId, zero_uuid: None) -> None:
     session_id = userdb._initialize_session(user_id)
     assert session_id != ""
     session_infos = userdb._load_session_infos(user_id)
@@ -357,6 +364,7 @@ def test_initialize_session_single_user_session(user_id: UserId) -> None:
         started_at=int(time.time()),
         last_activity=int(time.time()),
         flashes=[],
+        csrf_token="00000000-0000-0000-0000-000000000000",
     )
 
 

@@ -39,6 +39,7 @@ class Page(abc.ABC):
     # in self._ident by PageRegistry.register_page().
     # In practice this is no problem at the moment, because each page is accessible only through a
     # single endpoint.
+
     @classmethod
     def ident(cls) -> str:
         raise NotImplementedError()

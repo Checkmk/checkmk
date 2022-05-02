@@ -31,6 +31,7 @@ from cmk.gui.plugins.wato.utils import (
     WatoMode,
 )
 from cmk.gui.type_defs import ActionResult
+from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.valuespec import (
     Dictionary,
     DropdownChoice,
@@ -399,6 +400,7 @@ class ModeDiagHost(WatoMode):
 @page_registry.register_page("wato_ajax_diag_host")
 class ModeAjaxDiagHost(AjaxPage):
     def page(self):
+        check_csrf_token()
         if not user.may("wato.diag_host"):
             raise MKAuthException(_("You are not permitted to perform this action."))
 

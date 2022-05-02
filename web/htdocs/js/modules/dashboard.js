@@ -23,6 +23,7 @@ export function set_start_url(dashboard_name) {
                 );
             }
         },
+        method: "POST",
     });
 }
 

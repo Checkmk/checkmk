@@ -69,6 +69,7 @@ from cmk.gui.i18n import _
 from cmk.gui.pages import AjaxPage, AjaxPageResult, page_registry
 from cmk.gui.type_defs import ChoiceGroup, ChoiceId, Choices, ChoiceText, GroupedChoices
 from cmk.gui.utils.autocompleter_config import AutocompleterConfig, ContextAutocompleterConfig
+from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.labels import (
     encode_labels_for_http,
@@ -6778,6 +6779,7 @@ class _CAInput(ValueSpec[tuple[str, int, bytes]]):
 @page_registry.register_page("ajax_fetch_ca")
 class AjaxFetchCA(AjaxPage):
     def page(self) -> AjaxPageResult:
+        check_csrf_token()
         user.need_permission("general.server_side_requests")
 
         try:

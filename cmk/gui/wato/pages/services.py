@@ -55,6 +55,7 @@ from cmk.gui.plugins.wato.utils import mode_registry, WatoMode
 from cmk.gui.plugins.wato.utils.context_buttons import make_host_status_link
 from cmk.gui.sites import sitenames
 from cmk.gui.table import Foldable, table_element
+from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.urls import DocReference
 from cmk.gui.view_utils import format_plugin_output, render_labels
 from cmk.gui.wato.pages.hosts import ModeEditHost
@@ -239,6 +240,7 @@ class AutomationServiceDiscoveryJob(AutomationCommand):
 @page_registry.register_page("ajax_service_discovery")
 class ModeAjaxServiceDiscovery(AjaxPage):
     def page(self):
+        check_csrf_token()
         user.need_permission("wato.hosts")
 
         api_request: AjaxDiscoveryRequest = self.webapi_request()
@@ -1454,6 +1456,7 @@ class ModeAjaxExecuteCheck(AjaxPage):
         self._item = request.get_str_input_mandatory("item")
 
     def page(self):
+        check_csrf_token()
         try:
             active_check_result = active_check(
                 self._site,

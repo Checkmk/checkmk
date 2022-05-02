@@ -27,6 +27,7 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.page_menu import PageMenu, PageMenuDropdown, PageMenuTopic
+from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.logged_in import LoggedInUser
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import CascadingDropdown, Dictionary
@@ -648,6 +649,7 @@ def ajax_snapin():
 
 @cmk.gui.pages.register("sidebar_fold")
 def ajax_fold():
+    check_csrf_token()
     response.set_content_type("application/json")
     user_config = UserSidebarConfig(user, config.sidebar)
     user_config.folded = request.var("fold") == "yes"
@@ -656,6 +658,7 @@ def ajax_fold():
 
 @cmk.gui.pages.register("sidebar_openclose")
 def ajax_openclose() -> None:
+    check_csrf_token()
     response.set_content_type("application/json")
     if not user.may("general.configure_sidebar"):
         return None

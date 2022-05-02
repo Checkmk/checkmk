@@ -28,7 +28,7 @@ def patch_json(json_module) -> Iterator[None]:
     # Save unmodified default:
     _default.default = json_module.JSONEncoder().default  # type: ignore[attr-defined]
     # replacement:
-    json_module.JSONEncoder.default = _default  # type: ignore[assignment]
+    json_module.JSONEncoder.default = _default
 
     # And here we go for another dirty JSON hack. We often use he JSON we produce for adding it to HTML
     # tags and the JSON produced by json.dumps() can not directly be added to <script> tags in a save way.

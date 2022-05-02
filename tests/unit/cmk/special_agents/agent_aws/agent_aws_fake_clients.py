@@ -201,7 +201,7 @@ class DictInstanceBuilder(abc.ABC):
     def create_instances(cls, amount) -> Mapping[str, Any]:
         return {
             # static analysis does not recognize that None can not happen because of if clause -> disable warning
-            key.create(idx, amount): value.create(idx, amount)  # type: ignore
+            key.create(idx, amount): value.create(idx, amount)
             for idx in range(amount)
             if (
                 (key := cls(idx, amount)._key()) is not None

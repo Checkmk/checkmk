@@ -33,6 +33,7 @@ import cmk.gui.watolib as watolib
 import cmk.gui.watolib.host_attributes as _host_attributes
 import cmk.gui.watolib.hosts_and_folders as _hosts_and_folders
 import cmk.gui.watolib.rulespecs as _rulespecs
+import cmk.gui.watolib.timeperiods as _timeperiods
 import cmk.gui.weblib as weblib
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKGeneralException, MKUserError
@@ -187,9 +188,6 @@ from cmk.gui.watolib.rulespecs import (  # noqa: F401 # pylint: disable=unused-i
     RulespecSubGroup,
     ServiceRulespec,
     TimeperiodValuespec,
-)
-from cmk.gui.watolib.timeperiods import (  # noqa: F401 # pylint: disable=unused-import
-    TimeperiodSelection,
 )
 from cmk.gui.watolib.users import notification_script_title
 
@@ -1631,7 +1629,7 @@ class ABCEventsMode(WatoMode, abc.ABC):
             ),
             (
                 "match_timeperiod",
-                watolib.timeperiods.TimeperiodSelection(
+                _timeperiods.TimeperiodSelection(
                     title=_("Match only during timeperiod"),
                     help=_(
                         "Match this rule only during times where the selected timeperiod from the monitoring "

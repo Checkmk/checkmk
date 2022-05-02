@@ -56,7 +56,6 @@ from cmk.gui.plugins.wato.utils import (
     ServiceGroupSelection,
     ServiceRulespec,
     SNMPCredentials,
-    TimeperiodSelection,
     UserIconOrAction,
     valuespec_check_plugin_selection,
 )
@@ -106,6 +105,7 @@ from cmk.gui.watolib.config_domains import (
     ConfigDomainGUI,
     ConfigDomainOMD,
 )
+from cmk.gui.watolib.timeperiods import TimeperiodSelection
 from cmk.gui.watolib.utils import site_neutral_path
 
 #   .--Global Settings-----------------------------------------------------.

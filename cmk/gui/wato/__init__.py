@@ -84,6 +84,7 @@ import cmk.gui.watolib as watolib
 import cmk.gui.watolib.changes
 import cmk.gui.watolib.hosts_and_folders
 import cmk.gui.watolib.rulespecs
+import cmk.gui.watolib.timeperiods
 import cmk.gui.watolib.user_scripts
 import cmk.gui.watolib.utils
 import cmk.gui.weblib as weblib
@@ -398,7 +399,6 @@ def _register_pre_21_plugin_api() -> None:
         "SiteBackupJobs",
         "SNMPCredentials",
         "sort_sites",
-        "TimeperiodSelection",
         "transform_simple_to_multi_host_rule_match_conditions",
         "UserIconOrAction",
         "valuespec_check_plugin_selection",
@@ -427,6 +427,8 @@ def _register_pre_21_plugin_api() -> None:
         "rulespec_registry",
     ):
         api_module.__dict__[name] = cmk.gui.watolib.rulespecs.__dict__[name]
+    for name in ("TimeperiodSelection",):
+        api_module.__dict__[name] = cmk.gui.watolib.timeperiods.__dict__[name]
     for name in (
         "user_script_choices",
         "user_script_title",

@@ -23,7 +23,6 @@ import cmk.gui.watolib.automation_commands as _automation_commands
 import cmk.gui.watolib.changes
 import cmk.gui.watolib.config_domains as _config_domains
 import cmk.gui.watolib.git
-import cmk.gui.watolib.timeperiods
 import cmk.gui.weblib
 from cmk.gui.plugins.watolib.utils import config_domain_registry as _config_domain_registry
 from cmk.gui.watolib.sites import CEESiteManagement, LivestatusViaTCP, SiteManagementFactory

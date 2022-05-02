@@ -1743,15 +1743,18 @@ class ABCEditRuleMode(WatoMode):
             validate=self._validate_predefined_condition)
 
     def _validate_predefined_condition(self, value: str, varprefix: str) -> None:
-        if _allow_service_label_conditions(self._rulespec.name):
+        if _allow_label_conditions(self._rulespec.name):
             return
 
         conditions = self._get_predefined_rule_conditions(value)
-        if conditions.service_labels:
+        if (conditions.host_labels and not _allow_host_label_conditions(self._rulespec.name)) or (
+                conditions.service_labels and
+                not _allow_service_label_conditions(self._rulespec.name)):
             raise MKUserError(
                 varprefix,
                 _("This predefined condition can not be used with the "
-                  "current ruleset, because it defines service label conditions."))
+                  "current ruleset, because it defines the same label "
+                  "conditions as set by this rule."))
 
     def _show_explicit_conditions(self):
         vs = self._vs_explicit_conditions(render="form_part")
@@ -2058,6 +2061,11 @@ class VSExplicitConditions(Transform):
                 html.li(condition, class_="condition")
             html.close_ul()
             return html.drain()
+
+
+def _allow_label_conditions(rulespec_name: str) -> bool:
+    return _allow_host_label_conditions(rulespec_name) and _allow_service_label_conditions(
+        rulespec_name)
 
 
 def _allow_host_label_conditions(rulespec_name: str) -> bool:

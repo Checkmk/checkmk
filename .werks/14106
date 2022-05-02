@@ -1,0 +1,13 @@
+Title: Validate if host label rules use predefined conditions with host labels
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1651489003
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p24
+
+Werk 13372 introduced the possibility to use host label conditions in service
+label rulesets but broke the validation, that host label rules can not use
+predefined conditions with host label conditions.

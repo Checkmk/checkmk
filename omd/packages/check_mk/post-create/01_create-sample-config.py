@@ -6,11 +6,12 @@
 """Initialize the Checkmk default configuration in case it is necessary.
 """
 # pylint: disable=cmk-module-layer-violation
-from cmk.gui import watolib
+
 from cmk.gui import main_modules
 from cmk.gui.utils.script_helpers import gui_context
+from cmk.gui.watolib.sample_config import init_wato_datastructures
 
 if __name__ == "__main__":
     main_modules.load_plugins()
     with gui_context():
-        watolib.init_wato_datastructures()
+        init_wato_datastructures()

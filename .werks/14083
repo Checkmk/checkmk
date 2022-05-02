@@ -1,0 +1,13 @@
+Title: Fix linux agent using 100% CPU (again)
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1651475451
+Edition: cre
+Knowledge: doc
+Level: 2
+State: unknown
+Version: 2.1.0b7
+
+Werk <i>#14027: Fix linux agent using 100% CPU</i> actually increased the problem of async agent services using 100% CPU on some systems.
+

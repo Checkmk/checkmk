@@ -183,7 +183,11 @@ def monitored_service_description_autocompleter(value: str, params: Dict) -> Cho
 
 @autocompleter_registry.register_expression("wato_folder_choices")
 def wato_folder_choices_autocompleter(value: str, params: Dict) -> Choices:
-    return Folder.folder_choices_fulltitle()
+    # select2 omits empty strings ("") as option therefore the path of the Main folder is replaced by a placeholder
+    return [
+        (path, name) if path != "" else ("@main", name)
+        for path, name in Folder.folder_choices_fulltitle()
+    ]
 
 
 @autocompleter_registry.register_expression("kubernetes_labels")

@@ -121,6 +121,16 @@ export function call_ajax(url, optional_args) {
             }
         };
     }
+    if (args.method == "POST" && args.post_data == null) {
+        args.post_data = "";
+    }
+    if (
+        typeof args.post_data == "string" &&
+        !args.post_data.includes("&csrf_token=") &&
+        !args.post_data.startsWith("csrf_token=")
+    ) {
+        args.post_data += "&csrf_token=" + encodeURIComponent(global_csrf_token);
+    }
 
     AJAX.send(args.post_data);
     return AJAX;

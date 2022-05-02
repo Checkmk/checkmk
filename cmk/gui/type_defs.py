@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import uuid
 from abc import ABC, abstractmethod
 from dataclasses import asdict, dataclass, field
 from typing import (
@@ -69,6 +70,7 @@ class SessionInfo:
     session_id: SessionId
     started_at: int
     last_activity: int
+    csrf_token: str = field(default_factory=lambda: uuid.uuid4().__str__())
     flashes: List[str] = field(default_factory=list)
     # In case it is enabled: Was it already authenticated?
     two_factor_completed: bool = False

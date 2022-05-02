@@ -1,0 +1,18 @@
+Title: REST-API host_config: addition of validation for host labels
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1650983688
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p26
+
+Host labels take the key:value format where both key and value are of
+the string type. In the previous version, it was possible to specify
+non valid entries such as a list of strings as the REST API did not
+perform validation for the labels. This consequently led to other
+problems as Checkmk attempted to process the label values expecting
+a string. This werk introduces validation for the host labels in
+order to prevent such instances.

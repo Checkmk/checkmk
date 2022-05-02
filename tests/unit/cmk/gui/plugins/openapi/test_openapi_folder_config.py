@@ -500,7 +500,7 @@ def test_openapi_folder_remove_attribute(wsgi_app, with_automation_user):
         'post',
         "/NO_SITE/check_mk/api/1.0/domain-types/folder_config/collections/all",
         params=
-        '{"name": "new_folder", "title": "foo", "parent": "/", "attributes": {"labels": {"a": 2}}}',
+        '{"name": "new_folder", "title": "foo", "parent": "/", "attributes": {"labels": {"a": "2"}}}',
         status=200,
         content_type='application/json',
     )

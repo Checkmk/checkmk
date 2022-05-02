@@ -214,7 +214,7 @@ def unique_default_name_suggestion(template: str, used_names: Iterable[str]) -> 
 def validate_id(
     mode: str,
     existing_entries: Dict[str, Any],
-) -> Callable[[Dict[str, Any], str], None,]:
+) -> Callable[[Dict[str, Any], str], None]:
     """Validate ID of newly created or cloned pagetype or visual"""
     from cmk.gui.i18n import _
 

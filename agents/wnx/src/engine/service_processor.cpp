@@ -779,24 +779,23 @@ bool SystemMailboxCallback(const MailSlot * /*nothing*/, const void *data,
     }
 
     const auto *dt = static_cast<const carrier::CarrierDataHeader *>(data);
-    XLOG::d.i("Received [{}] bytes from '{}'\n", len, dt->providerId());
     switch (dt->type()) {
         case carrier::DataType::kLog:
-            // IMPORTANT ENTRY POINT
             // Receive data for Logging to file
             if (dt->data() != nullptr) {
                 std::string to_log;
                 const auto *data = static_cast<const char *>(dt->data());
                 to_log.assign(data, data + dt->length());
-                XLOG::l(XLOG::kNoPrefix)("{} : {}", dt->providerId(), to_log);
+                XLOG::l(XLOG::kNoPrefix)("[{}]{}", dt->providerId(), to_log);
             } else
-                XLOG::l(XLOG::kNoPrefix)("{} : null", dt->providerId());
+                XLOG::l(XLOG::kNoPrefix)("[{}] null", dt->providerId());
             break;
 
         case carrier::DataType::kSegment:
-            // IMPORTANT ENTRY POINT
             // Receive data for Section
             {
+                XLOG::d.i("Received [{}] bytes from '{}'\n", len,
+                          dt->providerId());
                 std::chrono::nanoseconds duration_since_epoch{dt->answerId()};
                 std::chrono::time_point<std::chrono::steady_clock> tp(
                     duration_since_epoch);

@@ -39,7 +39,6 @@ import cmk.gui.forms as forms
 # TODO: forbidden import, integrate into bi_config... ?
 import cmk.gui.plugins.wato.bi_valuespecs as bi_valuespecs
 import cmk.gui.sites
-import cmk.gui.watolib as watolib
 import cmk.gui.watolib.changes as _changes
 import cmk.gui.weblib as weblib
 from cmk.gui.bi import bi_livestatus_query, BIManager, get_cached_bi_packs
@@ -116,6 +115,7 @@ from cmk.gui.valuespec import (
     ValueSpecText,
     ValueSpecValidateFunc,
 )
+from cmk.gui.watolib.config_domains import ConfigDomainGUI
 
 
 @main_module_registry.register
@@ -201,7 +201,7 @@ class ABCBIMode(WatoMode):
 
     def _add_change(self, action_name, text):
         site_ids = list(wato_slave_sites().keys()) + [omd_site()]
-        _changes.add_change(action_name, text, domains=[watolib.ConfigDomainGUI], sites=site_ids)
+        _changes.add_change(action_name, text, domains=[ConfigDomainGUI], sites=site_ids)
 
     def url_to_pack(self, addvars, bi_pack):
         return makeuri_contextless(request, addvars + [("pack", bi_pack.id)])

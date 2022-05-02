@@ -13,7 +13,6 @@ import cmk.utils.version as cmk_version
 
 import cmk.gui.forms as forms
 import cmk.gui.utils.escaping as escaping
-import cmk.gui.watolib as watolib
 import cmk.gui.watolib.changes as _changes
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
@@ -50,6 +49,7 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeactionuri, makeuri_contextless
 from cmk.gui.valuespec import Checkbox, Transform
+from cmk.gui.watolib.config_domains import ConfigDomainCore
 from cmk.gui.watolib.global_settings import load_configuration_settings, save_global_settings
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
 from cmk.gui.watolib.search import (
@@ -113,10 +113,7 @@ class ABCGlobalSettingsMode(WatoMode):
         if not config_variable.domain().enabled():
             return False
 
-        if (
-            config_variable.domain() == watolib.ConfigDomainCore
-            and varname not in self._default_values
-        ):
+        if config_variable.domain() == ConfigDomainCore and varname not in self._default_values:
             if active_config.debug:
                 raise MKGeneralException(
                     "The configuration variable <tt>%s</tt> is unknown to "

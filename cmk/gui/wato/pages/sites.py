@@ -86,6 +86,7 @@ from cmk.gui.watolib.activate_changes import (
     get_trial_expired_message,
 )
 from cmk.gui.watolib.automations import do_remote_automation, do_site_login, MKAutomationException
+from cmk.gui.watolib.config_domains import ConfigDomainGUI, ConfigDomainLiveproxy
 from cmk.gui.watolib.global_settings import (
     load_configuration_settings,
     load_site_global_settings,
@@ -170,7 +171,7 @@ class ModeEditSite(WatoMode):
                 }
             )
 
-            if watolib.ConfigDomainLiveproxy.enabled():
+            if ConfigDomainLiveproxy.enabled():
                 self._site.update(
                     {
                         "proxy": {},
@@ -250,9 +251,7 @@ class ModeEditSite(WatoMode):
 
         if self._site_id != omd_site():
             # On central site issue a change only affecting the GUI
-            _changes.add_change(
-                "edit-sites", msg, sites=[omd_site()], domains=[watolib.ConfigDomainGUI]
-            )
+            _changes.add_change("edit-sites", msg, sites=[omd_site()], domains=[ConfigDomainGUI])
 
         flash(msg)
         return redirect(mode_url("sites"))
@@ -648,7 +647,7 @@ class ModeDistributedMonitoring(WatoMode):
         _changes.add_change(
             "edit-site",
             _("Logged out of remote site %s") % html.render_tt(site["alias"]),
-            domains=[watolib.ConfigDomainGUI],
+            domains=[ConfigDomainGUI],
             sites=[omd_site()],
         )
         flash(_("Logged out."))

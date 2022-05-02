@@ -15,7 +15,6 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.plugins.wato.utils import (
-    ConfigDomainCore,
     mode_registry,
     SimpleEditMode,
     SimpleListMode,
@@ -32,6 +31,7 @@ from cmk.gui.valuespec import (
     ValueSpec,
 )
 from cmk.gui.wato.pages.rulesets import RuleConditions, VSExplicitConditions
+from cmk.gui.watolib.config_domains import ConfigDomainCore
 from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.watolib.predefined_conditions import PredefinedConditionStore
 from cmk.gui.watolib.rulesets import AllRulesets, FolderRulesets, SearchedRulesets

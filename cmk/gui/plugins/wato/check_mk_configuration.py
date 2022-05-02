@@ -27,10 +27,6 @@ from cmk.gui.plugins.views.icons.utils import icon_and_action_registry
 from cmk.gui.plugins.wato.utils import (
     BinaryHostRulespec,
     BinaryServiceRulespec,
-    ConfigDomainCACertificates,
-    ConfigDomainCore,
-    ConfigDomainGUI,
-    ConfigDomainOMD,
     ConfigHostname,
     ConfigVariableGroupSiteManagement,
     ConfigVariableGroupUserInterface,
@@ -104,6 +100,12 @@ from cmk.gui.valuespec import (
     ValueSpec,
 )
 from cmk.gui.watolib.bulk_discovery import vs_bulk_discovery
+from cmk.gui.watolib.config_domains import (
+    ConfigDomainCACertificates,
+    ConfigDomainCore,
+    ConfigDomainGUI,
+    ConfigDomainOMD,
+)
 from cmk.gui.watolib.utils import site_neutral_path
 
 #   .--Global Settings-----------------------------------------------------.

@@ -121,20 +121,14 @@ from cmk.gui.valuespec import (
     ValueSpecHelp,
     ValueSpecText,
 )
-from cmk.gui.watolib import (  # noqa: F401 # pylint: disable=unused-import
-    ConfigDomainCACertificates,
-    ConfigDomainCore,
-    ConfigDomainEventConsole,
-    ConfigDomainGUI,
-    ConfigDomainOMD,
-    LivestatusViaTCP,
-)
+from cmk.gui.watolib import LivestatusViaTCP  # noqa: F401 # pylint: disable=unused-import
 from cmk.gui.watolib.check_mk_automations import (
     get_check_information as get_check_information_automation,
 )
 from cmk.gui.watolib.check_mk_automations import (
     get_section_information as get_section_information_automation,
 )
+from cmk.gui.watolib.config_domains import ConfigDomainCore as _ConfigDomainCore
 from cmk.gui.watolib.config_sync import (  # noqa: F401 # pylint: disable=unused-import
     ReplicationPath,
 )
@@ -755,7 +749,7 @@ def HTTPProxyReference(allowed_schemes=_allowed_schemes):
     The configured value is is used for preparing requests to work in a proxied environment."""
 
     def _global_proxy_choices():
-        settings = watolib.ConfigDomainCore().load()
+        settings = _ConfigDomainCore().load()
         return [
             (p["ident"], p["title"])
             for p in settings.get("http_proxies", {}).values()

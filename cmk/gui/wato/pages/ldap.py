@@ -11,7 +11,6 @@ from typing import Iterable, List, Optional, Type
 import cmk.utils.version as cmk_version
 
 import cmk.gui.userdb as userdb
-import cmk.gui.watolib as watolib
 import cmk.gui.watolib.changes as _changes
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
@@ -73,6 +72,7 @@ from cmk.gui.valuespec import (
     Transform,
     Tuple,
 )
+from cmk.gui.watolib.config_domains import ConfigDomainGUI
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, make_action_link
 
 if cmk_version.is_managed_edition():
@@ -693,9 +693,7 @@ class LDAPConnectionValuespec(Transform):
 
 class LDAPMode(WatoMode):
     def _add_change(self, action_name, text):
-        _changes.add_change(
-            action_name, text, domains=[watolib.ConfigDomainGUI], sites=get_login_sites()
-        )
+        _changes.add_change(action_name, text, domains=[ConfigDomainGUI], sites=get_login_sites())
 
 
 @mode_registry.register

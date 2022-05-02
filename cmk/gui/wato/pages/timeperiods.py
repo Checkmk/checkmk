@@ -62,6 +62,7 @@ from cmk.gui.valuespec import (
     Tuple,
     ValueSpec,
 )
+from cmk.gui.watolib.config_domains import ConfigDomainOMD
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, make_action_link
 from cmk.gui.watolib.notifications import load_notification_rules
 from cmk.gui.watolib.rulesets import AllRulesets
@@ -851,7 +852,7 @@ class ModeEditTimeperiod(WatoMode):
         if value in ["name", "alias", "timeperiod_name", "register", "use", "exclude"]:
             raise MKUserError(varprefix, _("<tt>%s</tt> is a reserved keyword."))
 
-        cfg = watolib.ConfigDomainOMD().default_globals()
+        cfg = ConfigDomainOMD().default_globals()
         if cfg["site_core"] == "cmc":
             try:
                 time.strptime(value, "%Y-%m-%d")

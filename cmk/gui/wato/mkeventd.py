@@ -75,8 +75,6 @@ from cmk.gui.page_menu import (
 from cmk.gui.permissions import Permission, permission_registry
 from cmk.gui.plugins.wato.utils import (
     ABCMainModule,
-    ConfigDomainEventConsole,
-    ConfigDomainGUI,
     ConfigVariableGroupNotifications,
     ConfigVariableGroupUserInterface,
     ConfigVariableGroupWATO,
@@ -152,6 +150,7 @@ from cmk.gui.wato.pages.global_settings import (
     ABCGlobalSettingsMode,
     MatchItemGeneratorSettings,
 )
+from cmk.gui.watolib.config_domains import ConfigDomainEventConsole, ConfigDomainGUI
 from cmk.gui.watolib.global_settings import load_configuration_settings, save_global_settings
 from cmk.gui.watolib.hosts_and_folders import make_action_link
 from cmk.gui.watolib.search import (

@@ -13,7 +13,6 @@ from cmk.gui.htmllib.context import html
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.plugins.wato.utils import (
-    ConfigDomainCore,
     mode_registry,
     SimpleEditMode,
     SimpleListMode,
@@ -32,6 +31,7 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.valuespec import Password as PasswordValuespec
 from cmk.gui.valuespec import ValueSpec
+from cmk.gui.watolib.config_domains import ConfigDomainCore
 from cmk.gui.watolib.password_store import PasswordStore
 from cmk.gui.watolib.passwords import sorted_contact_group_choices
 

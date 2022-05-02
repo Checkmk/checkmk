@@ -12,8 +12,6 @@ import cmk.utils.paths
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
-    ConfigDomainCore,
-    ConfigDomainGUI,
     ConfigVariableGroupNotifications,
     notification_parameter_registry,
 )
@@ -30,6 +28,7 @@ from cmk.gui.valuespec import (
     Transform,
     Tuple,
 )
+from cmk.gui.watolib.config_domains import ConfigDomainCore, ConfigDomainGUI
 from cmk.gui.watolib.utils import site_neutral_path
 
 

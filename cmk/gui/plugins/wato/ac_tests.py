@@ -25,7 +25,7 @@ import cmk.gui.utils
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.http import request
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.utils import ConfigDomainOMD, SiteBackupJobs
+from cmk.gui.plugins.wato.utils import SiteBackupJobs
 from cmk.gui.plugins.watolib.utils import ABCConfigDomain
 from cmk.gui.site_config import (
     get_site_config,
@@ -43,6 +43,7 @@ from cmk.gui.watolib.analyze_configuration import (
     ACTest,
     ACTestCategories,
 )
+from cmk.gui.watolib.config_domains import ConfigDomainOMD
 from cmk.gui.watolib.global_settings import rulebased_notifications_enabled
 from cmk.gui.watolib.rulesets import SingleRulesetRecursively
 from cmk.gui.watolib.sites import SiteManagementFactory

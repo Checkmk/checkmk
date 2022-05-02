@@ -24,19 +24,13 @@ from cmk.utils.type_defs import ConfigurationWarnings, HostName
 
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
-import cmk.gui.gui_background_job as gui_background_job
 import cmk.gui.hooks as hooks
 import cmk.gui.mkeventd as mkeventd
 from cmk.gui.config import active_config, get_default_config
 from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.plugins.watolib.utils import (
-    ABCConfigDomain,
-    config_domain_registry,
-    DomainRequest,
-    SerializedSettings,
-)
+from cmk.gui.plugins.watolib.utils import ABCConfigDomain, DomainRequest, SerializedSettings
 from cmk.gui.site_config import is_wato_slave_site
 from cmk.gui.type_defs import ConfigDomainName
 from cmk.gui.watolib.audit_log import log_audit
@@ -57,7 +51,6 @@ class ConfigDomainCoreSettings:
         self.validate()
 
 
-@config_domain_registry.register
 class ConfigDomainCore(ABCConfigDomain):
     @classmethod
     def ident(cls) -> ConfigDomainName:
@@ -108,7 +101,6 @@ class ConfigDomainCore(ABCConfigDomain):
         return DomainRequest(cls.ident(), cls.generate_hosts_to_update_settings(hosts_to_update))
 
 
-@config_domain_registry.register
 class ConfigDomainGUI(ABCConfigDomain):
     needs_sync = True
     needs_activation = False
@@ -131,7 +123,6 @@ class ConfigDomainGUI(ABCConfigDomain):
 # to extract SiteManagement() to a separate module (depends on Folder, add_change, ...).
 # As soon as we have untied this we should re-establish a watolib plugin hierarchy and
 # move this to a CEE/CME specific watolib plugin
-@config_domain_registry.register
 class ConfigDomainLiveproxy(ABCConfigDomain):
     needs_sync = False
     needs_activation = False
@@ -207,7 +198,6 @@ class ConfigDomainLiveproxy(ABCConfigDomain):
         }
 
 
-@config_domain_registry.register
 class ConfigDomainEventConsole(ABCConfigDomain):
     needs_sync = True
     needs_activation = True
@@ -236,7 +226,6 @@ class ConfigDomainEventConsole(ABCConfigDomain):
         return ec.default_config()
 
 
-@config_domain_registry.register
 class ConfigDomainCACertificates(ABCConfigDomain):
     needs_sync = True
     needs_activation = True
@@ -367,7 +356,6 @@ class ConfigDomainCACertificates(ABCConfigDomain):
         }
 
 
-@config_domain_registry.register
 class ConfigDomainOMD(ABCConfigDomain):
     needs_sync = True
     needs_activation = True
@@ -571,7 +559,6 @@ class ConfigDomainOMD(ABCConfigDomain):
         return omd_config
 
 
-@gui_background_job.job_registry.register
 class OMDConfigChangeBackgroundJob(WatoBackgroundJob):
     job_prefix = "omd-config-change"
 

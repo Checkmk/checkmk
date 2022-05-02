@@ -229,18 +229,14 @@ subgroup_virt = RulespecGroupCheckParametersVirtualization().sub_group_name
 subgroup_hardware = RulespecGroupCheckParametersHardware().sub_group_name
 subgroup_inventory = RulespecGroupCheckParametersDiscovery().sub_group_name
 
+import cmk.gui.watolib.config_domains
+
 # Make some functions of watolib available to WATO plugins without using the
 # watolib module name. This is mainly done for compatibility reasons to keep
 # the current plugin API functions working
 import cmk.gui.watolib.network_scan
 import cmk.gui.watolib.read_only
-from cmk.gui.watolib import (
-    ConfigDomainCore,
-    ConfigDomainEventConsole,
-    ConfigDomainGUI,
-    ConfigDomainOMD,
-    LivestatusViaTCP,
-)
+from cmk.gui.watolib import LivestatusViaTCP
 
 modes: Dict[Any, Any] = {}
 
@@ -313,11 +309,6 @@ def _register_pre_21_plugin_api() -> None:
         "BinaryServiceRulespec",
         "CheckParameterRulespecWithItem",
         "CheckParameterRulespecWithoutItem",
-        "ConfigDomainCACertificates",
-        "ConfigDomainCore",
-        "ConfigDomainEventConsole",
-        "ConfigDomainGUI",
-        "ConfigDomainOMD",
         "ConfigHostname",
         "ContactGroupSelection",
         "DictHostTagCondition",
@@ -417,6 +408,14 @@ def _register_pre_21_plugin_api() -> None:
         api_module.__dict__[name] = cmk.gui.plugins.wato.utils.__dict__[name]
     for name in ("add_change",):
         api_module.__dict__[name] = cmk.gui.watolib.changes.__dict__[name]
+    for name in (
+        "ConfigDomainCACertificates",
+        "ConfigDomainCore",
+        "ConfigDomainEventConsole",
+        "ConfigDomainGUI",
+        "ConfigDomainOMD",
+    ):
+        api_module.__dict__[name] = cmk.gui.watolib.config_domains.__dict__[name]
     for name in (
         "folder_preserving_link",
         "make_action_link",

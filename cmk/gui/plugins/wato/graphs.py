@@ -6,9 +6,10 @@
 
 from cmk.gui.config import active_config
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.utils import ConfigDomainGUI, ConfigVariableGroupUserInterface
+from cmk.gui.plugins.wato.utils import ConfigVariableGroupUserInterface
 from cmk.gui.plugins.watolib.utils import config_variable_registry, ConfigVariable
 from cmk.gui.valuespec import Age, Dictionary, ListOf, TextInput
+from cmk.gui.watolib.config_domains import ConfigDomainGUI
 
 
 @config_variable_registry.register

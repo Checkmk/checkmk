@@ -8,27 +8,24 @@
 # flake8: noqa
 # pylint: disable=unused-import
 
+from typing import Sequence, Type
+
 import urllib3 as _urllib3
 
 import cmk.utils.version as _cmk_version
 
+import cmk.gui.gui_background_job as _gui_background_job
 import cmk.gui.hooks as hooks
 import cmk.gui.mkeventd as mkeventd
 import cmk.gui.userdb as userdb
 import cmk.gui.watolib.auth_php
 import cmk.gui.watolib.changes
+import cmk.gui.watolib.config_domains as _config_domains
 import cmk.gui.watolib.git
 import cmk.gui.watolib.timeperiods
 import cmk.gui.weblib
+from cmk.gui.plugins.watolib.utils import config_domain_registry as _config_domain_registry
 from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
-from cmk.gui.watolib.config_domains import (
-    ConfigDomainCACertificates,
-    ConfigDomainCore,
-    ConfigDomainEventConsole,
-    ConfigDomainGUI,
-    ConfigDomainLiveproxy,
-    ConfigDomainOMD,
-)
 from cmk.gui.watolib.sites import CEESiteManagement, LivestatusViaTCP, SiteManagementFactory
 
 if _cmk_version.is_managed_edition():
@@ -39,5 +36,27 @@ if _cmk_version.is_managed_edition():
 _urllib3.disable_warnings(_urllib3.exceptions.InsecureRequestWarning)
 
 
+def _register_gui_background_jobs() -> None:
+    cls = _config_domains.OMDConfigChangeBackgroundJob
+    _gui_background_job.job_registry.register(cls)
+
+
+def _register_config_domains() -> None:
+    clss: Sequence[Type[_config_domains.ABCConfigDomain]] = (
+        _config_domains.ConfigDomainCore,
+        _config_domains.ConfigDomainGUI,
+        _config_domains.ConfigDomainLiveproxy,
+        _config_domains.ConfigDomainEventConsole,
+        _config_domains.ConfigDomainCACertificates,
+        _config_domains.ConfigDomainOMD,
+    )
+    for cls in clss:
+        _config_domain_registry.register(cls)
+
+
 def load_watolib_plugins():
     cmk.gui.utils.load_web_plugins("watolib", globals())
+
+
+_register_gui_background_jobs()
+_register_config_domains()

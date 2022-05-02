@@ -22,6 +22,7 @@ def test_registered_ac_tests() -> None:
         "ACTestCheckMKCheckerNumber",
         "ACTestCheckMKCheckerUsage",
         "ACTestConnectivity",
+        "ACTestDeprecatedInventoryPlugins",
         "ACTestESXDatasources",
         "ACTestEscapeHTMLDisabled",
         "ACTestGenericCheckHelperUsage",

@@ -5961,12 +5961,12 @@ class AutoTimestamp(FixedValue[float]):
             raise MKUserError(varprefix, _("Invalid datatype of timestamp: must be int or float."))
 
 
-class Foldable(ValueSpec):
+class Foldable(ValueSpec[T]):
     """Fully transparant VS encapsulating a vs in a foldable container"""
 
     def __init__(  # pylint: disable=redefined-builtin
         self,
-        valuespec: ValueSpec,
+        valuespec: ValueSpec[T],
         title_function: _Optional[Callable[[Any], str]] = None,
         # ValueSpec
         title: _Optional[str] = None,
@@ -5978,7 +5978,7 @@ class Foldable(ValueSpec):
         self._valuespec = valuespec
         self._title_function = title_function
 
-    def render_input(self, varprefix: str, value: Any) -> None:
+    def render_input(self, varprefix: str, value: T) -> None:
         with foldable_container(
             treename="valuespec_foldable",
             id_=varprefix,
@@ -5989,7 +5989,7 @@ class Foldable(ValueSpec):
             html.help(self._valuespec.help())
             self._valuespec.render_input(varprefix, value)
 
-    def _get_title(self, varprefix: str, value: Any) -> str:
+    def _get_title(self, varprefix: str, value: T) -> str:
         if self._title_function:
             title_value = value
             if html.form_submitted():
@@ -6006,34 +6006,34 @@ class Foldable(ValueSpec):
     def set_focus(self, varprefix: str) -> None:
         self._valuespec.set_focus(varprefix)
 
-    def canonical_value(self) -> Any:
+    def canonical_value(self) -> T:
         return self._valuespec.canonical_value()
 
-    def default_value(self) -> Any:
+    def default_value(self) -> T:
         return self._valuespec.default_value()
 
-    def value_to_html(self, value: Any) -> ValueSpecText:
+    def value_to_html(self, value: T) -> ValueSpecText:
         return self._valuespec.value_to_html(value)
 
-    def from_html_vars(self, varprefix: str) -> Any:
+    def from_html_vars(self, varprefix: str) -> T:
         return self._valuespec.from_html_vars(varprefix)
 
-    def value_to_json(self, value: Any) -> JSONValue:
+    def value_to_json(self, value: T) -> JSONValue:
         return self._valuespec.value_to_json(value)
 
-    def value_from_json(self, json_value: JSONValue) -> Any:
+    def value_from_json(self, json_value: JSONValue) -> T:
         return self._valuespec.value_from_json(json_value)
 
-    def value_to_json_safe(self, value: Any) -> JSONValue:
+    def value_to_json_safe(self, value: T) -> JSONValue:
         return self._valuespec.value_to_json_safe(value)
 
     def validate_datatype(self, value: Any, varprefix: str) -> None:
         self._valuespec.validate_datatype(value, varprefix)
 
-    def _validate_value(self, value: Any, varprefix: str) -> None:
+    def _validate_value(self, value: T, varprefix: str) -> None:
         self._valuespec.validate_value(value, varprefix)
 
-    def transform_value(self, value: Any) -> Any:
+    def transform_value(self, value: T) -> T:
         return self._valuespec.transform_value(value)
 
     def has_show_more(self) -> bool:

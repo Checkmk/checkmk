@@ -86,7 +86,12 @@ from cmk.gui.watolib.activate_changes import (
     get_trial_expired_message,
 )
 from cmk.gui.watolib.automations import do_remote_automation, do_site_login, MKAutomationException
-from cmk.gui.watolib.global_settings import load_site_global_settings, save_site_global_settings
+from cmk.gui.watolib.global_settings import (
+    load_configuration_settings,
+    load_site_global_settings,
+    save_global_settings,
+    save_site_global_settings,
+)
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_preserving_link, make_action_link
 from cmk.gui.watolib.sites import is_livestatus_encrypted, site_globals_editable
 
@@ -1071,7 +1076,7 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
             raise MKUserError("site", _("This site does not exist."))
 
         # 2. Values of global settings
-        self._global_settings = watolib.load_configuration_settings()
+        self._global_settings = load_configuration_settings()
 
         # 3. Site specific global settings
 
@@ -1196,7 +1201,7 @@ class ModeEditSiteGlobalSetting(ABCEditGlobalSettingMode):
                 raise MKUserError("site", _("Invalid site"))
 
         self._current_settings = site.setdefault("globals", {})
-        self._global_settings = watolib.load_configuration_settings()
+        self._global_settings = load_configuration_settings()
 
     def title(self):
         return _("Site-specific global configuration for %s") % self._site_id
@@ -1279,7 +1284,7 @@ class ModeSiteLivestatusEncryption(WatoMode):
 
         config_variable = config_variable_registry["trusted_certificate_authorities"]()
 
-        global_settings = watolib.load_configuration_settings()
+        global_settings = load_configuration_settings()
         trusted = global_settings.get(
             "trusted_certificate_authorities",
             ABCConfigDomain.get_all_default_globals()["trusted_certificate_authorities"],
@@ -1302,7 +1307,7 @@ class ModeSiteLivestatusEncryption(WatoMode):
             domains=[config_variable.domain()],
             need_restart=config_variable.need_restart(),
         )
-        watolib.save_global_settings(global_settings)
+        save_global_settings(global_settings)
 
         flash(_("Added CA with fingerprint %s to trusted certificate authorities") % digest_sha256)
         return None

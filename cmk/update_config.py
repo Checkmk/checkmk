@@ -106,7 +106,13 @@ from cmk.gui.userdb import load_users, save_users, Users
 from cmk.gui.utils.script_helpers import gui_context
 from cmk.gui.watolib.audit_log import AuditLogStore
 from cmk.gui.watolib.changes import ActivateChangesWriter, add_change
-from cmk.gui.watolib.global_settings import GlobalSettings
+from cmk.gui.watolib.global_settings import (
+    GlobalSettings,
+    load_configuration_settings,
+    load_site_global_settings,
+    save_global_settings,
+    save_site_global_settings,
+)
 from cmk.gui.watolib.notifications import load_notification_rules, save_notification_rules
 from cmk.gui.watolib.objref import ObjectRef, ObjectRefType
 from cmk.gui.watolib.password_store import PasswordStore
@@ -307,21 +313,19 @@ class UpdateConfig:
     def _update_installation_wide_global_settings(self) -> None:
         """Update the globals.mk of the local site"""
         # Load full config (with undefined settings)
-        global_config = cmk.gui.watolib.global_settings.load_configuration_settings(
-            full_config=True
-        )
+        global_config = load_configuration_settings(full_config=True)
         self._update_global_config(global_config)
-        cmk.gui.watolib.global_settings.save_global_settings(global_config)
+        save_global_settings(global_config)
 
     def _update_site_specific_global_settings(self) -> None:
         """Update the sitespecific.mk of the local site (which is a remote site)"""
         if not is_wato_slave_site():
             return
 
-        global_config = cmk.gui.watolib.global_settings.load_site_global_settings()
+        global_config = load_site_global_settings()
         self._update_global_config(global_config)
 
-        cmk.gui.watolib.global_settings.save_site_global_settings(global_config)
+        save_site_global_settings(global_config)
 
     def _update_remote_site_specific_global_settings(self) -> None:
         """Update the site specific global settings in the central site configuration"""
@@ -1171,9 +1175,7 @@ class UpdateConfig:
         BILegacyPacksConverter(self._logger, BIManager.bi_configuration_file()).convert_config()
 
     def _migrate_dashlets(self) -> None:
-        global_config = cmk.gui.watolib.global_settings.load_configuration_settings(
-            full_config=True
-        )
+        global_config = load_configuration_settings(full_config=True)
         filter_group = global_config.get("topology_default_filter_group", "")
 
         dashboards = visuals.load("dashboards", builtin_dashboards)
@@ -1552,9 +1554,7 @@ class UpdateConfig:
         if not site_ca:
             return
 
-        global_config = cmk.gui.watolib.global_settings.load_configuration_settings(
-            full_config=True
-        )
+        global_config = load_configuration_settings(full_config=True)
         cert_settings = global_config.setdefault(
             "trusted_certificate_authorities", {"use_system_wide_cas": True, "trusted_cas": []}
         )
@@ -1564,7 +1564,7 @@ class UpdateConfig:
             return
 
         cert_settings["trusted_cas"].append(site_ca)
-        cmk.gui.watolib.global_settings.save_global_settings(global_config)
+        save_global_settings(global_config)
 
     def _update_mknotifyd(self) -> None:
         """

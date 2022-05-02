@@ -84,7 +84,10 @@ from cmk.gui.watolib.check_mk_automations import (
     notification_get_bulks,
     notification_replay,
 )
-from cmk.gui.watolib.global_settings import rulebased_notifications_enabled
+from cmk.gui.watolib.global_settings import (
+    load_configuration_settings,
+    rulebased_notifications_enabled,
+)
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, make_action_link
 from cmk.gui.watolib.notifications import (
     load_notification_rules,
@@ -688,7 +691,7 @@ class ModeNotifications(ABCNotificationsMode):
             )
 
     def _fallback_mail_contacts_configured(self):
-        current_settings = watolib.load_configuration_settings()
+        current_settings = load_configuration_settings()
         if current_settings.get("notification_fallback_email"):
             return True
 

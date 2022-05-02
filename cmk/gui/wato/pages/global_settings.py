@@ -50,6 +50,7 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeactionuri, makeuri_contextless
 from cmk.gui.valuespec import Checkbox, Transform
+from cmk.gui.watolib.global_settings import load_configuration_settings, save_global_settings
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
 from cmk.gui.watolib.search import (
     ABCMatchItemGenerator,
@@ -262,7 +263,7 @@ class ABCEditGlobalSettingMode(WatoMode):
         if not self._may_edit_configvar(self._varname):
             raise MKAuthException(_("You are not permitted to edit this global setting."))
 
-        self._current_settings = watolib.load_configuration_settings()
+        self._current_settings = load_configuration_settings()
         self._global_settings = {}
 
     def _may_edit_configvar(self, varname):
@@ -342,7 +343,7 @@ class ABCEditGlobalSettingMode(WatoMode):
         raise NotImplementedError()
 
     def _save(self):
-        watolib.save_global_settings(self._current_settings)
+        save_global_settings(self._current_settings)
 
     @abc.abstractmethod
     def _affected_sites(self):
@@ -422,7 +423,7 @@ class ModeEditGlobals(ABCGlobalSettingsMode):
 
     def __init__(self):
         super().__init__()
-        self._current_settings = watolib.load_configuration_settings()
+        self._current_settings = load_configuration_settings()
 
     def title(self):
         if self._search:
@@ -512,7 +513,7 @@ class ModeEditGlobals(ABCGlobalSettingsMode):
             varname,
             "on" if self._current_settings[varname] else "off",
         )
-        watolib.save_global_settings(self._current_settings)
+        save_global_settings(self._current_settings)
 
         _changes.add_change(
             "edit-configvar",

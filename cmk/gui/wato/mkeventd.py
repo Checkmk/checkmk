@@ -152,6 +152,7 @@ from cmk.gui.wato.pages.global_settings import (
     ABCGlobalSettingsMode,
     MatchItemGeneratorSettings,
 )
+from cmk.gui.watolib.global_settings import load_configuration_settings, save_global_settings
 from cmk.gui.watolib.hosts_and_folders import make_action_link
 from cmk.gui.watolib.search import (
     ABCMatchItemGenerator,
@@ -2765,7 +2766,7 @@ class ModeEventConsoleSettings(ABCEventConsoleMode, ABCGlobalSettingsMode):
         super().__init__()
 
         self._default_values = ConfigDomainEventConsole().default_globals()
-        self._current_settings = watolib.load_configuration_settings()
+        self._current_settings = load_configuration_settings()
 
     @staticmethod
     def _get_groups(show_all: bool) -> Iterable[ConfigVariableGroup]:
@@ -2829,7 +2830,7 @@ class ModeEventConsoleSettings(ABCEventConsoleMode, ABCGlobalSettingsMode):
             self._current_settings[varname] and _("on") or _("off"),
         )
 
-        watolib.save_global_settings(self._current_settings)
+        save_global_settings(self._current_settings)
 
         self._add_change("edit-configvar", msg)
 

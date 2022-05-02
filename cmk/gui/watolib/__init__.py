@@ -36,11 +36,6 @@ from cmk.gui.watolib.config_domains import (
     ConfigDomainLiveproxy,
     ConfigDomainOMD,
 )
-from cmk.gui.watolib.global_settings import (
-    load_configuration_settings,
-    save_global_settings,
-    save_site_global_settings,
-)
 from cmk.gui.watolib.sites import CEESiteManagement, LivestatusViaTCP, SiteManagementFactory
 
 if _cmk_version.is_managed_edition():

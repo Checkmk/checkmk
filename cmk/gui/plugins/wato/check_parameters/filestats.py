@@ -172,7 +172,7 @@ def _parameter_valuespec_filestats():
                             ),
                             RegExp(
                                 title=_("Filename/- expression"),
-                                mode="case_sensitive",
+                                mode="infix",
                                 size=70,
                             ),
                             Dictionary(elements=file_size_age_elements),

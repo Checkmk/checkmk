@@ -860,13 +860,13 @@ def UserID(  # pylint: disable=redefined-builtin
 
 class RegExp(TextInput):
     # TODO: Make this an enum
-    infix = "infix"
-    prefix = "prefix"
-    complete = "complete"
+    infix: Literal["infix"] = "infix"
+    prefix: Literal["prefix"] = "prefix"
+    complete: Literal["complete"] = "complete"
 
     def __init__(  # pylint: disable=redefined-builtin
         self,
-        mode: str,
+        mode: Literal["infix", "prefix", "complete"],
         case_sensitive: bool = True,
         mingroups: int = 0,
         maxgroups: _Optional[int] = None,
@@ -969,7 +969,7 @@ class RegExp(TextInput):
 
         return " ".join("%s" % h for h in help_text)
 
-    def _css_classes(self, case_sensitive, mode):
+    def _css_classes(self, case_sensitive: bool, mode: _Optional[str]):
         classes = ["text", "regexp"]
 
         if case_sensitive is True:

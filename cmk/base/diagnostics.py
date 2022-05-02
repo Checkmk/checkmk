@@ -55,7 +55,7 @@ from cmk.utils.type_defs import HostName
 import cmk.base.section as section
 
 if cmk_version.is_enterprise_edition():
-    # type: ignore[import] # noqa: F401 # pylint: disable=no-name-in-module,import-error
+    # type: ignore[import]  # pylint: disable=no-name-in-module,import-error
     from cmk.base.cee.diagnostics import cmc_specific_attrs
 else:
 

@@ -17,13 +17,13 @@ from cmk.gui.log import logger
 
 # The following imports trigger loading of builtin main modules
 # isort: off
-import cmk.gui.plugins.main_modules  # noqa: F401 # pylint: disable=no-name-in-module,unused-import
+import cmk.gui.plugins.main_modules  # pylint: disable=no-name-in-module,unused-import
 
 if not cmk_version.is_raw_edition():
-    import cmk.gui.cee.plugins.main_modules  # noqa: F401 # pylint: disable=no-name-in-module,unused-import
+    import cmk.gui.cee.plugins.main_modules  # pylint: disable=no-name-in-module,unused-import
 
 if cmk_version.is_managed_edition():
-    import cmk.gui.cme.plugins.main_modules  # noqa: F401 # pylint: disable=no-name-in-module,unused-import
+    import cmk.gui.cme.plugins.main_modules  # pylint: disable=no-name-in-module,unused-import
 
 if cmk_version.is_plus_edition():
     import cmk.gui.cpe.plugins.main_modules  # noqa: F401 # pylint: disable=no-name-in-module,unused-import

@@ -27,7 +27,7 @@ def _is_mobile_client(user_agent: str) -> bool:
     # These regexes are taken from the public domain code of Matt Sullivan
     # http://sullerton.com/2011/03/django-mobile-browser-detection-middleware/
     reg_b = re.compile(
-        r"android.+mobile|avantgo|bada\\/|blackberry|bb10|blazer|compal|elaine|fennec|hiptop|iemobile|ip(hone|od)|iris|kindle|lge |maemo|midp|mmp|opera m(ob|in)i|palm( os)?|phone|p(ixi|re)\\/|plucker|pocket|psp|symbian|treo|up\\.(browser|link)|vodafone|wap|windows (ce|phone)|xda|xiino",  # noqa: E501
+        r"android.+mobile|avantgo|bada\\/|blackberry|bb10|blazer|compal|elaine|fennec|hiptop|iemobile|ip(hone|od)|iris|kindle|lge |maemo|midp|mmp|opera m(ob|in)i|palm( os)?|phone|p(ixi|re)\\/|plucker|pocket|psp|symbian|treo|up\\.(browser|link)|vodafone|wap|windows (ce|phone)|xda|xiino",
         re.I | re.M,
     )
     reg_v = re.compile(

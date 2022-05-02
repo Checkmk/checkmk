@@ -17,7 +17,6 @@ from livestatus import SiteId
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
 
-# It's OK to import centralized config load logic
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
 import cmk.gui.sites as sites

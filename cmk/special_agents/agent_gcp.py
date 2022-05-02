@@ -74,10 +74,29 @@ Labels = Mapping[str, str]
 
 
 class PiggyBackService:
+    """
+    How are piggy back hosts determined?
+
+    asset_label: str,
+    Is used to get the UID for a host from assets that we can look for in the metrics
+
+    metric_label: str,
+    Is used to get the host UID from a metric and filter metrics according to hosts
+
+    name_label: str,
+    Used to determine host name from asset information. Does not need to equal asset_label
+    """
+
     def __init__(
         self,
         name: str,
         asset_type: str,
+        # used to identify marker for host from asset information
+        asset_label: str,
+        # used to identify timeseries for a host
+        metric_label: str,
+        # used to determine host name from asset information. Does not need to equal asset_label
+        name_label: str,
         labeler: Callable[[Asset], Labels],
         services: Sequence[Service],
     ):
@@ -85,6 +104,9 @@ class PiggyBackService:
         self.asset_type = asset_type
         self.labeler = labeler
         self.services = services
+        self.asset_label = asset_label
+        self.metric_label = metric_label
+        self.name_label = name_label
 
 
 @dataclass(frozen=True)
@@ -117,6 +139,7 @@ class ResultSection:
 @dataclass(frozen=True)
 class PiggyBackSection:
     name: str
+    service_name: str
     labels: Labels
     sections: Iterable[ResultSection]
 
@@ -150,7 +173,8 @@ def _piggyback_serializer(section: PiggyBackSection):
         with SectionWriter("labels") as w:
             w.append(json.dumps(section.labels))
         for s in section.sections:
-            _result_serializer(s)
+            new_s = ResultSection(f"{section.service_name}_{s.name}", s.results)
+            _result_serializer(new_s)
 
 
 def gcp_serializer(sections: Iterable[Section]) -> None:
@@ -204,10 +228,10 @@ def time_series(
             raise RuntimeError(metric.name) from e
         for ts in results:
             result = Result(ts=ts)
-            if filter_by is not None:
-                if ts.resource.labels[filter_by.label] == filter_by.value:
-                    yield result
-            else:
+            if filter_by is None:
+                yield result
+                return
+            if ts.resource.labels[filter_by.label] == filter_by.value:
                 yield result
 
 
@@ -244,11 +268,13 @@ def piggy_back(
     client: Client, service: PiggyBackService, assets: Sequence[Asset]
 ) -> Iterable[PiggyBackSection]:
     for host in [a for a in assets if a.asset.asset_type == service.asset_type]:
-        name = host.asset.resource.data["id"]
-        filter_by = ResourceFilter(label="id", value=name)
+        label = host.asset.resource.data[service.asset_label]
+        name = host.asset.resource.data[service.name_label]
+        filter_by = ResourceFilter(label=service.metric_label, value=label)
         sections = run_metrics(client, services=service.services, filter_by=filter_by)
         yield PiggyBackSection(
             name=name,
+            service_name=service.name,
             labels=service.labeler(host) | {"gcp/project": client.project},
             sections=sections,
         )
@@ -640,7 +666,40 @@ REDIS = Service(
     ],
 )
 
+
+def default_labeler(asset: Asset) -> Labels:
+    if "labels" in asset.asset.resource.data:
+        return {f"gcp/labels/{k}": v for k, v in asset.asset.resource.data["labels"].items()}
+    return {}
+
+
+GCE = PiggyBackService(
+    name="gce",
+    asset_type="compute.googleapis.com/Instance",
+    asset_label="id",
+    metric_label="instance_id",
+    name_label="name",
+    labeler=default_labeler,
+    services=[
+        Service(
+            name="uptime_total",
+            metrics=[
+                Metric(
+                    name="compute.googleapis.com/instance/uptime_total",
+                    aggregation={
+                        "alignment_period": {"seconds": 60},
+                        "group_by_fields": ["resource.instance_id"],
+                        "per_series_aligner": Aligner.ALIGN_MAX,
+                        "cross_series_reducer": Reducer.REDUCE_SUM,
+                    },
+                )
+            ],
+        )
+    ],
+)
+
 SERVICES = {s.name: s for s in [GCS, FUNCTIONS, RUN, CLOUDSQL, FILESTORE, REDIS]}
+PIGGY_BACK_SERVICES = {s.name: s for s in [GCE]}
 
 
 def parse_arguments(argv: Optional[Sequence[str]]) -> Args:
@@ -654,7 +713,7 @@ def parse_arguments(argv: Optional[Sequence[str]]) -> Args:
         nargs="+",
         action="extend",
         help=f"implemented services: {','.join(list(SERVICES))}",
-        choices=list(SERVICES),
+        choices=list(SERVICES) + list(PIGGY_BACK_SERVICES),
         required=True,
     )
     return parser.parse_args(argv)
@@ -662,8 +721,9 @@ def parse_arguments(argv: Optional[Sequence[str]]) -> Args:
 
 def agent_gcp_main(args: Args) -> None:
     client = Client(json.loads(args.credentials), args.project)
-    services = [SERVICES[s] for s in args.services]
-    run(client, services, [], serializer=gcp_serializer)
+    services = [SERVICES[s] for s in args.services if s in SERVICES]
+    piggies = [PIGGY_BACK_SERVICES[s] for s in args.services if s in PIGGY_BACK_SERVICES]
+    run(client, services, piggies, serializer=gcp_serializer)
 
 
 def main() -> None:

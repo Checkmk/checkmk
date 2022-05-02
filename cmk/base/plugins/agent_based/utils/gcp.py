@@ -40,6 +40,8 @@ class SectionItem:
 
 Section = Mapping[str, SectionItem]
 
+PiggyBackSection = Sequence[GCPResult]
+
 
 @dataclass(frozen=True)
 class AssetSection:
@@ -59,6 +61,10 @@ def parse_gcp(
         extract(item): SectionItem([r for r in rows if r.ts.resource.labels[label_key] == item])
         for item in items
     }
+
+
+def parse_piggy_back(string_table: StringTable) -> PiggyBackSection:
+    return [GCPResult.deserialize(row[0]) for row in string_table]
 
 
 def parse_assets(string_table: StringTable) -> AssetSection:

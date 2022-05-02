@@ -12,21 +12,14 @@ import urllib3 as _urllib3
 
 import cmk.utils.version as _cmk_version
 
-import cmk.gui.background_job as background_job
 import cmk.gui.hooks as hooks
-import cmk.gui.log as log
 import cmk.gui.mkeventd as mkeventd
-import cmk.gui.sites
 import cmk.gui.userdb as userdb
-import cmk.gui.utils
 import cmk.gui.watolib.auth_php
 import cmk.gui.watolib.changes
 import cmk.gui.watolib.git
 import cmk.gui.watolib.timeperiods
-import cmk.gui.weblib as weblib
-from cmk.gui.htmllib.context import html
-from cmk.gui.log import logger
-from cmk.gui.utils.html import HTML
+import cmk.gui.weblib
 from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
 from cmk.gui.watolib.config_domains import (
     ConfigDomainCACertificates,

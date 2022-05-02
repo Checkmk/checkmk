@@ -53,7 +53,7 @@ fi
 section_misc_sections() {
 
     echo "<<<check_mk>>>"
-    echo "Version: 2.1.0b7"
+    echo "Version: 2.1.0b8"
     echo "AgentOS: netbsd"
     echo "Hostname: $(hostname)"
     echo "AgentDirectory: $MK_CONFDIR"

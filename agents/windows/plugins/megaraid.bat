@@ -1,5 +1,5 @@
 @ECHO off & setlocal EnableDelayedExpansion
-set CMK_VERSION="2.1.0b7"
+set CMK_VERSION="2.1.0b8"
 REM **********************************************************************
 REM * Script: megaraid.bat
 REM * Author: Josef Hack

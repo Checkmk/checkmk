@@ -19,7 +19,7 @@ This plugin it will be called by the agent without any arguments.
 
 from __future__ import with_statement
 
-__version__ = "2.1.0b7"
+__version__ = "2.1.0b8"
 
 # this file has to work with both Python 2 and 3
 # pylint: disable=super-with-arguments

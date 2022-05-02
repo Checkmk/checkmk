@@ -20,6 +20,7 @@ import cmk.gui.permissions as permissions
 import cmk.gui.userdb as userdb
 import cmk.gui.view_utils
 import cmk.gui.watolib as watolib
+import cmk.gui.watolib.audit_log as _audit_log
 import cmk.gui.watolib.changes as _changes
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
@@ -1111,7 +1112,7 @@ class ModePersonalUserNotifications(ABCUserNotificationsMode):
     def _add_change(self, log_what, log_text):
         if has_wato_slave_sites():
             self._start_async_repl = True
-            watolib.log_audit(log_what, log_text)
+            _audit_log.log_audit(log_what, log_text)
         else:
             super()._add_change(log_what, log_text)
 
@@ -1777,7 +1778,7 @@ class ModeEditPersonalNotificationRule(ABCEditUserNotificationRuleMode):
     def _add_change(self, log_what, log_text):
         if has_wato_slave_sites():
             self._start_async_repl = True
-            watolib.log_audit(log_what, log_text)
+            _audit_log.log_audit(log_what, log_text)
         else:
             super()._add_change(log_what, log_text)
 

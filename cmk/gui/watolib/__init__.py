@@ -27,7 +27,6 @@ import cmk.gui.weblib as weblib
 from cmk.gui.htmllib.context import html
 from cmk.gui.log import logger
 from cmk.gui.utils.html import HTML
-from cmk.gui.watolib.audit_log import log_audit
 from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
 from cmk.gui.watolib.config_domains import (
     ConfigDomainCACertificates,

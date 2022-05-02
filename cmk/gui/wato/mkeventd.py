@@ -43,6 +43,7 @@ from cmk.gui.wato.mkeventdstore import (
     load_mkeventd_rules,
     save_mkeventd_rules,
 )
+from cmk.gui.watolib.audit_log import log_audit
 
 if cmk_version.is_managed_edition():
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
@@ -2681,9 +2682,7 @@ class ModeEventConsoleStatus(ABCEventConsoleMode):
         else:
             new_mode = "takeover"
         cmk.gui.mkeventd.execute_command("SWITCHMODE", [new_mode], omd_site())
-        watolib.log_audit(
-            "mkeventd-switchmode", _("Switched replication slave mode to %s") % new_mode
-        )
+        log_audit("mkeventd-switchmode", _("Switched replication slave mode to %s") % new_mode)
         flash(_("Switched to %s mode") % new_mode)
         return None
 

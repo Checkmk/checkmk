@@ -11,13 +11,13 @@ import cmk.utils.paths
 from cmk.utils.site import omd_site
 
 import cmk.gui.backup as backup
-import cmk.gui.watolib as watolib
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.pages import AjaxPage, page_registry
 from cmk.gui.plugins.wato.utils import mode_registry, SiteBackupJobs, WatoMode
 from cmk.gui.valuespec import Checkbox
+from cmk.gui.watolib.audit_log import log_audit
 
 
 class SiteBackupTargets(backup.Targets):
@@ -245,7 +245,7 @@ class ModeBackupUploadKey(SiteBackupKeypairStore, backup.PageBackupUploadKey, Wa
         return ModeBackupKeyManagement
 
     def _upload_key(self, key_file, value):
-        watolib.log_audit("upload-backup-key", _("Uploaded backup key '%s'") % value["alias"])
+        log_audit("upload-backup-key", _("Uploaded backup key '%s'") % value["alias"])
         super()._upload_key(key_file, value)
 
 

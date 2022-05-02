@@ -25,6 +25,7 @@ import cmk.gui.forms as forms
 import cmk.gui.log as log
 import cmk.gui.sites
 import cmk.gui.watolib as watolib
+import cmk.gui.watolib.audit_log as _audit_log
 import cmk.gui.watolib.changes as _changes
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
@@ -679,7 +680,7 @@ class ModeDistributedMonitoring(WatoMode):
                 message = _("Successfully logged into remote site %s.") % html.render_tt(
                     site["alias"]
                 )
-                watolib.log_audit("edit-site", message)
+                _audit_log.log_audit("edit-site", message)
                 flash(message)
                 return redirect(mode_url("sites"))
 

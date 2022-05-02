@@ -128,7 +128,6 @@ from cmk.gui.watolib import (  # noqa: F401 # pylint: disable=unused-import
     ConfigDomainGUI,
     ConfigDomainOMD,
     LivestatusViaTCP,
-    log_audit,
     user_script_choices,
     user_script_title,
 )

@@ -66,9 +66,9 @@ from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import DocReference
 from cmk.gui.view_utils import format_plugin_output, render_labels
 from cmk.gui.wato.pages.hosts import ModeEditHost
-from cmk.gui.watolib import automation_command_registry, AutomationCommand
 from cmk.gui.watolib.activate_changes import get_pending_changes_info, get_pending_changes_tooltip
 from cmk.gui.watolib.audit_log_url import make_object_audit_log_url
+from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
 from cmk.gui.watolib.check_mk_automations import active_check, update_host_labels
 from cmk.gui.watolib.hosts_and_folders import CREHost, Folder, folder_preserving_link, Host
 from cmk.gui.watolib.rulespecs import rulespec_registry

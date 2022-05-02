@@ -19,13 +19,13 @@ import cmk.gui.hooks as hooks
 import cmk.gui.mkeventd as mkeventd
 import cmk.gui.userdb as userdb
 import cmk.gui.watolib.auth_php
+import cmk.gui.watolib.automation_commands as _automation_commands
 import cmk.gui.watolib.changes
 import cmk.gui.watolib.config_domains as _config_domains
 import cmk.gui.watolib.git
 import cmk.gui.watolib.timeperiods
 import cmk.gui.weblib
 from cmk.gui.plugins.watolib.utils import config_domain_registry as _config_domain_registry
-from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
 from cmk.gui.watolib.sites import CEESiteManagement, LivestatusViaTCP, SiteManagementFactory
 
 if _cmk_version.is_managed_edition():
@@ -34,6 +34,12 @@ if _cmk_version.is_managed_edition():
 # Disable python warnings in background job output or logs like "Unverified
 # HTTPS request is being made". We warn the user using analyze configuration.
 _urllib3.disable_warnings(_urllib3.exceptions.InsecureRequestWarning)
+
+
+def _register_automation_commands() -> None:
+    clss = (_automation_commands.AutomationPing,)
+    for cls in clss:
+        _automation_commands.automation_command_registry.register(cls)
 
 
 def _register_gui_background_jobs() -> None:
@@ -58,5 +64,6 @@ def load_watolib_plugins():
     cmk.gui.utils.load_web_plugins("watolib", globals())
 
 
+_register_automation_commands()
 _register_gui_background_jobs()
 _register_config_domains()

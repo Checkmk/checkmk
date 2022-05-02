@@ -20,7 +20,6 @@ from livestatus import SiteId
 import cmk.utils.render as render
 
 import cmk.gui.forms as forms
-import cmk.gui.watolib as watolib
 import cmk.gui.watolib.changes as _changes
 import cmk.gui.watolib.read_only as read_only
 import cmk.gui.watolib.snapshots as _snapshots
@@ -54,6 +53,7 @@ from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeactionuri, makeuri_contextless
 from cmk.gui.valuespec import Checkbox, Dictionary, DictionaryEntry, TextAreaUnicode
 from cmk.gui.watolib import activate_changes
+from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
 from cmk.gui.watolib.automations import MKAutomationException
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_preserving_link, Host
 from cmk.gui.watolib.objref import ObjectRef, ObjectRefType
@@ -706,8 +706,8 @@ class ActivateChangesRequest(NamedTuple):
     domains: DomainRequests
 
 
-@watolib.automation_command_registry.register
-class AutomationActivateChanges(watolib.AutomationCommand):
+@automation_command_registry.register
+class AutomationActivateChanges(AutomationCommand):
     def command_name(self):
         return "activate-changes"
 

@@ -21,7 +21,6 @@ from cmk.automations.results import result_type_registry, SerializedResult
 
 import cmk.gui.userdb as userdb
 import cmk.gui.utils
-import cmk.gui.watolib as watolib
 import cmk.gui.watolib.utils as watolib_utils
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKAuthException, MKGeneralException
@@ -30,6 +29,7 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import SuperUserContext, user
 from cmk.gui.pages import AjaxPage, page_registry
+from cmk.gui.watolib.automation_commands import automation_command_registry
 from cmk.gui.watolib.automations import (
     check_mk_local_automation_serialized,
     compatible_with_central_site,
@@ -183,7 +183,7 @@ class ModeAutomation(AjaxPage):
             self._execute_push_profile()
             return
         try:
-            automation_command = watolib.automation_command_registry[self._command]
+            automation_command = automation_command_registry[self._command]
         except KeyError:
             raise MKGeneralException(_("Invalid automation command: %s.") % self._command)
         self._execute_automation_command(automation_command)

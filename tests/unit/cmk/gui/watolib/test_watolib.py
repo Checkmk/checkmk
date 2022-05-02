@@ -8,7 +8,6 @@ import pytest
 
 import cmk.utils.version as cmk_version
 
-import cmk.gui.watolib as watolib
 from cmk.gui.plugins.watolib.utils import (
     ABCConfigDomain,
     config_domain_registry,
@@ -18,6 +17,7 @@ from cmk.gui.plugins.watolib.utils import (
     ConfigVariableGroup,
 )
 from cmk.gui.valuespec import ValueSpec
+from cmk.gui.watolib.automation_commands import automation_command_registry
 
 
 def test_registered_config_domains():
@@ -72,7 +72,7 @@ def test_registered_automation_commands():
             "update-agent-requests",
         ]
 
-    registered = sorted(watolib.automation_command_registry.keys())
+    registered = sorted(automation_command_registry.keys())
     assert registered == sorted(expected_automation_commands)
 
 

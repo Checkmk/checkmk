@@ -82,10 +82,6 @@ class TagConfigFile:
 
 def load_tag_config() -> TagConfig:
     """Load the tag config object based upon the most recently saved tag config file"""
-    # This sometimes gets called on import-time where we don't have a request-context yet, so we
-    # have to omit on checking the permissions there.
-    if user:
-        user.need_permission("wato.hosttags")  # see cmk.gui.wato.pages.tags
     tag_config = cmk.utils.tags.TagConfig.from_config(TagConfigFile().load_for_modification())
     return tag_config
 

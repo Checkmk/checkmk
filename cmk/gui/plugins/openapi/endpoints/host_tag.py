@@ -20,6 +20,7 @@ from typing import Any, Dict
 from cmk.utils.tags import BuiltinTagConfig, TagGroup, TaggroupSpec
 
 from cmk.gui.http import Response
+from cmk.gui.logged_in import user
 from cmk.gui.plugins.openapi.restful_objects import (
     constructors,
     Endpoint,
@@ -106,6 +107,7 @@ def create_host_tag_group(params):
 def show_host_tag_group(params):
     """Show a host tag group"""
     ident = params["name"]
+    user.need_permission("wato.hosttags")
     tag_group = _retrieve_group(ident=ident)
     return _serve_host_tag_group(tag_group.get_dict_format())
 
@@ -115,7 +117,7 @@ def show_host_tag_group(params):
     ".../collection",
     method="get",
     response_schema=response_schemas.DomainObjectCollection,
-    permissions_required=permissions.Perm("wato.hosttags"),
+    permissions_required=permissions.Optional(permissions.Perm("wato.hosttags")),
 )
 def list_host_tag_groups(params):
     """Show all host tag groups"""
@@ -151,6 +153,7 @@ def list_host_tag_groups(params):
 def update_host_tag_group(params):
     """Update a host tag group"""
     # TODO: ident verification mechanism with ParamDict replacement
+    user.need_permission("wato.hosttags")  # see cmk.gui.wato.pages.tags
     body = params["body"]
     ident = params["name"]
     if is_builtin(ident):

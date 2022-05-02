@@ -608,7 +608,7 @@ class UpdateConfig:
                 rule.to_config(),
             )
             new_rule.id = cmk.gui.watolib.rulesets.utils.gen_id()
-            new_rule.value = {  # type: ignore[assignment]
+            new_rule.value = {
                 "sections_disabled": sorted(str(s) for s in sections_to_disable),
                 "sections_enabled": [],
             }
@@ -1606,7 +1606,7 @@ class UpdateConfig:
             return
 
         # fmt: off
-        from cmk.gui.cee.plugins.wato import influxdb  # type: ignore[import] # isort:skip # pylint: disable=no-name-in-module
+        from cmk.gui.cee.plugins.wato import influxdb  # isort:skip # pylint: disable=no-name-in-module
         # fmt: on
 
         influx_db_connection_config = influxdb.InfluxDBConnectionConfig()

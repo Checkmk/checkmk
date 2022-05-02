@@ -580,7 +580,8 @@ class ModeFolder(WatoMode):
         # Move
         if request.var("_bulk_move"):
             target_folder_path = request.var("_bulk_moveto", request.var("_top_bulk_moveto"))
-            if target_folder_path == "@":
+            target_folder_path = target_folder_path if target_folder_path != "@main" else ""
+            if target_folder_path is None:
                 raise MKUserError("_bulk_moveto", _("Please select the destination folder"))
             target_folder = watolib.Folder.folder(target_folder_path)
             watolib.Folder.current().move_hosts(selected_host_names, target_folder)

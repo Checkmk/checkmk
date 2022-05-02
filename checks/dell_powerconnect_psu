@@ -61,7 +61,7 @@ dell_powerconnect_psu_status2nagios_map = {
 def inventory_dell_powerconnect_psu(info):
     inventory = []
     if not info or not info[0]:
-        return
+        return None
     hw_ident = info[0][0][0]
     for _device_id, name, state, _supply in info[1]:
         # M6220 are blade switches which report valid values only for the "Main"

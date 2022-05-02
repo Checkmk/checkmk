@@ -19,6 +19,7 @@ from cmk.base.check_legacy_includes.hp_proliant import *  # pylint: disable=wild
 def inventory_hp_proliant_power(info):
     if len(info) > 0 and info[0][0] not in ["0", "3"]:
         return [(None, None)]
+    return []
 
 
 def check_hp_proliant_power(_item, params, info):

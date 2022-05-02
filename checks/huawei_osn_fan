@@ -27,6 +27,7 @@ def check_huawei_osn_fan(item, params, info):
         if item == line[0]:
             state, state_readable = translate_speed[line[1]]
             return state, "Speed: %s" % state_readable
+    return None
 
 
 check_info["huawei_osn_fan"] = {

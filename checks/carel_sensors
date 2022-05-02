@@ -72,6 +72,7 @@ def inventory_carel_sensors_temp(parsed):
 def check_carel_sensors_temp(item, params, parsed):
     if item in parsed:
         return check_temperature(parsed[item], params, "carel_sensors_temp_%s" % item)
+    return None
 
 
 check_info["carel_sensors"] = {

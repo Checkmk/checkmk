@@ -42,11 +42,12 @@ def parse_dell_powerconnect_temp(info):
 def inventory_dell_powerconnect_temp(parsed):
     if parsed:
         return [("Ambient", {})]
+    return []
 
 
 def check_dell_powerconnect_temp(_no_item, params, parsed):
     if parsed is None:
-        return
+        return None
 
     temp, dev_state_readable = parsed
     if dev_state_readable == "OK":

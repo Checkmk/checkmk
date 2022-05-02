@@ -27,6 +27,7 @@ def check_gude_humidity(item, params, info):
         _oid, index = oid_index.split(".")
         if "Sensor %s" % index == item:
             return check_humidity(float(reading_str) / 10, params)
+    return None
 
 
 check_info["gude_humidity"] = {

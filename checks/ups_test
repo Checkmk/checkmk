@@ -84,6 +84,7 @@ _SUMMARY_STATE_MAP = {
 def discover_ups_test(info):
     if info[1]:
         return [(None, {})]
+    return None
 
 
 def check_ups_test(_no_item, params, info):

@@ -17,6 +17,7 @@ from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wild
 def inventory_fireeye_temp(info):
     if info:
         return [("system", {})]
+    return []
 
 
 def check_fireeye_temp(item, params, info):

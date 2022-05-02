@@ -71,6 +71,7 @@ check_info["arbor_peakflow_sp.disk_usage"] = {
 def inventory_arbor_peakflow_sp_flows(parsed):
     if "flows" in parsed:
         return [(None, None)]
+    return []
 
 
 def check_arbor_peakflow_sp_flows(no_item, params, parsed):

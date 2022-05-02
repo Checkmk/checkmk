@@ -27,6 +27,7 @@ hp_blade_status2nagios_map = {
 def inventory_hp_blade_general(info):
     if len(info) > 0 and len(info[0]) > 1:
         return [(None, None)]
+    return []
 
 
 def check_hp_blade_general(item, params, info):

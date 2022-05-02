@@ -19,6 +19,7 @@ from cmk.base.check_legacy_includes.blade_scan import *  # pylint: disable=wildc
 def inventory_blade_health(info):
     if len(info) == 1:
         return [(None, None, None)]
+    return []
 
 
 def check_blade_health(_no_item, _no_params, info):

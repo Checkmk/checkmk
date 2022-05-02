@@ -16,6 +16,7 @@ factory_settings["climaveneta_fan_default_levels"] = {
 def inventory_climaveneta_fan(info):
     if len(info[0]) == 2:
         return [("1", {}), ("2", {})]
+    return []
 
 
 def check_climaveneta_fan(item, params, info):

@@ -22,6 +22,7 @@ def check_bvip_fans(item, params, info):
         if nr == item:
             rpm = int(value)
             return check_fan(rpm, params)
+    return None
 
 
 check_info["bvip_fans"] = {

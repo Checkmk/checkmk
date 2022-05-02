@@ -114,7 +114,7 @@ def _get_ibm_svc_enclosure_dflt_header(info):
     try:
         first_line = info[0]
     except IndexError:
-        return
+        return None
 
     if len(first_line) == 9:
         return [
@@ -182,4 +182,4 @@ def _get_ibm_svc_enclosure_dflt_header(info):
             "total_sems",
             "online_sems",
         ]
-    return
+    return None

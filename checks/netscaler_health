@@ -71,6 +71,7 @@ def check_netscaler_health_fan(item, params, info):
     for name, value in info:
         if name[:-5] == item:
             return check_fan(int(value), params)
+    return None
 
 
 check_info["netscaler_health.fan"] = {
@@ -109,6 +110,7 @@ def check_netscaler_health_temp(item, params, info):
         if name[:-11] == item and name.endswith("Temperature"):
             temp = int(value)
             return check_temperature(temp, params, "netscaler_health_%s" % item)
+    return None
 
 
 check_info["netscaler_health.temp"] = {
@@ -155,6 +157,7 @@ def check_netscaler_health_psu(item, _no_params, info):
             name.endswith("Status") or name.endswith("FailureStatus")
         ):
             return psu_status_map[int(state)]
+    return None
 
 
 check_info["netscaler_health.psu"] = {

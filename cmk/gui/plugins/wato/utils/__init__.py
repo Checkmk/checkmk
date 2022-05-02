@@ -128,8 +128,6 @@ from cmk.gui.watolib import (  # noqa: F401 # pylint: disable=unused-import
     ConfigDomainGUI,
     ConfigDomainOMD,
     LivestatusViaTCP,
-    user_script_choices,
-    user_script_title,
 )
 from cmk.gui.watolib.check_mk_automations import (
     get_check_information as get_check_information_automation,
@@ -200,9 +198,6 @@ from cmk.gui.watolib.timeperiods import (  # noqa: F401 # pylint: disable=unused
     TimeperiodSelection,
 )
 from cmk.gui.watolib.users import notification_script_title
-from cmk.gui.watolib.wato_background_job import (  # noqa: F401 # pylint: disable=unused-import
-    WatoBackgroundJob,
-)
 
 
 @permission_section_registry.register

@@ -14,7 +14,6 @@ from cmk.utils.type_defs import HostName
 
 import cmk.gui.forms as forms
 import cmk.gui.gui_background_job as gui_background_job
-import cmk.gui.watolib as watolib
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import HTTPRedirect, MKUserError
 from cmk.gui.htmllib.context import html
@@ -28,6 +27,7 @@ from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.watolib.check_mk_automations import scan_parents
 from cmk.gui.watolib.hosts_and_folders import CREFolder, Folder
+from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
 
 
 class ParentScanTask(NamedTuple):
@@ -56,7 +56,7 @@ class ParentScanSettings(NamedTuple):
 
 # TODO: This job should be executable multiple times at once
 @gui_background_job.job_registry.register
-class ParentScanBackgroundJob(watolib.WatoBackgroundJob):
+class ParentScanBackgroundJob(WatoBackgroundJob):
     job_prefix = "parent_scan"
 
     @classmethod

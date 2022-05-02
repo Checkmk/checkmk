@@ -84,6 +84,7 @@ import cmk.gui.watolib as watolib
 import cmk.gui.watolib.changes
 import cmk.gui.watolib.hosts_and_folders
 import cmk.gui.watolib.rulespecs
+import cmk.gui.watolib.user_scripts
 import cmk.gui.watolib.utils
 import cmk.gui.weblib as weblib
 from cmk.gui.exceptions import MKGeneralException as _MKGeneralException
@@ -408,8 +409,6 @@ def _register_pre_21_plugin_api() -> None:
         "sort_sites",
         "TimeperiodSelection",
         "transform_simple_to_multi_host_rule_match_conditions",
-        "user_script_choices",
-        "user_script_title",
         "UserIconOrAction",
         "valuespec_check_plugin_selection",
         "WatoMode",
@@ -429,6 +428,11 @@ def _register_pre_21_plugin_api() -> None:
         "rulespec_registry",
     ):
         api_module.__dict__[name] = cmk.gui.watolib.rulespecs.__dict__[name]
+    for name in (
+        "user_script_choices",
+        "user_script_title",
+    ):
+        api_module.__dict__[name] = cmk.gui.watolib.user_scripts.__dict__[name]
     for name in (
         "ABCConfigDomain",
         "config_domain_registry",

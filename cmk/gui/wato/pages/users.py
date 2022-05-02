@@ -64,7 +64,14 @@ from cmk.gui.valuespec import Alternative, DualListChoice, EmailAddress, FixedVa
 from cmk.gui.watolib.audit_log_url import make_object_audit_log_url
 from cmk.gui.watolib.global_settings import rulebased_notifications_enabled
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, make_action_link
-from cmk.gui.watolib.users import delete_users, edit_users, make_user_object_ref
+from cmk.gui.watolib.user_scripts import load_notification_scripts
+from cmk.gui.watolib.users import (
+    delete_users,
+    edit_users,
+    get_vs_flexible_notifications,
+    get_vs_user_idle_timeout,
+    make_user_object_ref,
+)
 
 if cmk_version.is_managed_edition():
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
@@ -762,7 +769,7 @@ class ModeEditUser(WatoMode):
         # Email address
         user_attrs["email"] = EmailAddress().from_html_vars("email")
 
-        idle_timeout = watolib.get_vs_user_idle_timeout().from_html_vars("idle_timeout")
+        idle_timeout = get_vs_user_idle_timeout().from_html_vars("idle_timeout")
         user_attrs["idle_timeout"] = idle_timeout
         if idle_timeout is None:
             del user_attrs["idle_timeout"]
@@ -837,7 +844,7 @@ class ModeEditUser(WatoMode):
                 [opt for opt in "wucrfs" if html.get_checkbox("service_" + opt)]
             )
 
-            value = watolib.get_vs_flexible_notifications().from_html_vars("notification_method")
+            value = get_vs_flexible_notifications().from_html_vars("notification_method")
             user_attrs["notification_method"] = value
         else:
             user_attrs["fallback_contact"] = html.get_checkbox("fallback_contact")
@@ -856,7 +863,7 @@ class ModeEditUser(WatoMode):
 
     def page(self) -> None:
         # Let exceptions from loading notification scripts happen now
-        watolib.load_notification_scripts()
+        load_notification_scripts()
 
         html.begin_form("user", method="POST")
         html.prevent_password_auto_completion()
@@ -1057,7 +1064,7 @@ class ModeEditUser(WatoMode):
         forms.section(_("Idle timeout"))
         idle_timeout = self._user.get("idle_timeout")
         if not self._is_locked("idle_timeout"):
-            watolib.get_vs_user_idle_timeout().render_input("idle_timeout", idle_timeout)
+            get_vs_user_idle_timeout().render_input("idle_timeout", idle_timeout)
         else:
             html.write_text(idle_timeout)
             html.hidden_field("idle_timeout", idle_timeout)
@@ -1220,7 +1227,7 @@ class ModeEditUser(WatoMode):
             )
 
             forms.section(_("Notification Method"))
-            watolib.get_vs_flexible_notifications().render_input(
+            get_vs_flexible_notifications().render_input(
                 "notification_method", self._user.get("notification_method")
             )
 

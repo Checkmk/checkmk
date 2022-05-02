@@ -42,19 +42,6 @@ from cmk.gui.watolib.global_settings import (
     save_site_global_settings,
 )
 from cmk.gui.watolib.sites import CEESiteManagement, LivestatusViaTCP, SiteManagementFactory
-from cmk.gui.watolib.user_scripts import (
-    load_notification_scripts,
-    load_user_scripts,
-    user_script_choices,
-    user_script_title,
-)
-from cmk.gui.watolib.users import (
-    get_vs_flexible_notifications,
-    get_vs_user_idle_timeout,
-    notification_script_choices,
-    verify_password_policy,
-)
-from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
 
 if _cmk_version.is_managed_edition():
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module

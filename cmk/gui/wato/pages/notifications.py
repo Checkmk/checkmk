@@ -91,6 +91,8 @@ from cmk.gui.watolib.notifications import (
     load_user_notification_rules,
     save_notification_rules,
 )
+from cmk.gui.watolib.user_scripts import load_notification_scripts
+from cmk.gui.watolib.users import notification_script_choices
 
 
 class ABCNotificationsMode(ABCEventsMode):
@@ -893,7 +895,7 @@ class ModeNotifications(ABCNotificationsMode):
     def _vs_notification_scripts(self):
         return DropdownChoice(
             title=_("Notification Script"),
-            choices=watolib.notification_script_choices,
+            choices=notification_script_choices,
             default_value="mail",
         )
 
@@ -1563,7 +1565,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
 
     def _notification_script_choices_with_parameters(self):
         choices = []
-        for script_name, title in watolib.notification_script_choices():
+        for script_name, title in notification_script_choices():
             if script_name in notification_parameter_registry:
                 vs: Union[Dictionary, ListOfStrings] = notification_parameter_registry[
                     script_name
@@ -1601,7 +1603,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
 
         if "bulk" in rule or "bulk_period" in rule:
             if rule["notify_plugin"][0]:
-                info = watolib.load_notification_scripts()[rule["notify_plugin"][0]]
+                info = load_notification_scripts()[rule["notify_plugin"][0]]
                 if not info["bulk"]:
                     raise MKUserError(
                         varprefix + "_p_notify_plugin",

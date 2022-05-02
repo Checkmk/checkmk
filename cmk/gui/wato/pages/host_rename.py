@@ -14,7 +14,6 @@ from cmk.utils.site import omd_site
 import cmk.gui.background_job as background_job
 import cmk.gui.forms as forms
 import cmk.gui.gui_background_job as gui_background_job
-import cmk.gui.watolib as watolib
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.exceptions import FinalizeRequest, MKAuthException, MKGeneralException, MKUserError
 from cmk.gui.htmllib.context import html
@@ -52,10 +51,11 @@ from cmk.gui.watolib.activate_changes import confirm_all_local_changes
 from cmk.gui.watolib.host_rename import perform_rename_hosts
 from cmk.gui.watolib.hosts_and_folders import Folder, Host, validate_host_uniqueness
 from cmk.gui.watolib.site_changes import SiteChanges
+from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
 
 
 @gui_background_job.job_registry.register
-class RenameHostsBackgroundJob(watolib.WatoBackgroundJob):
+class RenameHostsBackgroundJob(WatoBackgroundJob):
     job_prefix = "rename-hosts"
 
     @classmethod
@@ -63,7 +63,7 @@ class RenameHostsBackgroundJob(watolib.WatoBackgroundJob):
         return _("Host renaming")
 
     def __init__(self, title=None):
-        last_job_status = watolib.WatoBackgroundJob(self.job_prefix).get_status()
+        last_job_status = WatoBackgroundJob(self.job_prefix).get_status()
         super().__init__(
             self.job_prefix,
             title=title or self.gui_title(),

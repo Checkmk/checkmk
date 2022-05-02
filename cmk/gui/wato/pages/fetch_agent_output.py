@@ -15,7 +15,6 @@ from cmk.utils.site import omd_site
 
 import cmk.gui.background_job as background_job
 import cmk.gui.gui_background_job as gui_background_job
-import cmk.gui.watolib as watolib
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.exceptions import HTTPRedirect, MKGeneralException, MKUserError
 from cmk.gui.htmllib.context import html
@@ -32,6 +31,7 @@ from cmk.gui.watolib import automation_command_registry, AutomationCommand
 from cmk.gui.watolib.automations import do_remote_automation
 from cmk.gui.watolib.check_mk_automations import get_agent_output
 from cmk.gui.watolib.hosts_and_folders import CREHost, Folder, Host
+from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
 
 # .
 #   .--Agent-Output--------------------------------------------------------.
@@ -246,7 +246,7 @@ def get_fetch_agent_job_status(api_request: FetchAgentOutputRequest) -> Dict:
 
 
 @gui_background_job.job_registry.register
-class FetchAgentOutputBackgroundJob(watolib.WatoBackgroundJob):
+class FetchAgentOutputBackgroundJob(WatoBackgroundJob):
     """The background job is always executed on the site where the host is located on"""
 
     job_prefix = "agent-output-"

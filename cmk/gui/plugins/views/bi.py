@@ -53,15 +53,15 @@ if TYPE_CHECKING:
 @data_source_registry.register
 class DataSourceBIAggregations(ABCDataSource):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "bi_aggregations"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("BI Aggregations")
 
     @property
-    def table(self):
+    def table(self) -> "RowTable":
         return RowTableBIAggregations()
 
     @property
@@ -69,11 +69,15 @@ class DataSourceBIAggregations(ABCDataSource):
         return ["aggr", "aggr_group"]
 
     @property
-    def keys(self):
+    def unsupported_columns(self) -> List[ColumnName]:
+        return ["site"]
+
+    @property
+    def keys(self) -> List[ColumnName]:
         return []
 
     @property
-    def id_keys(self):
+    def id_keys(self) -> List[ColumnName]:
         return ["aggr_name"]
 
 
@@ -93,15 +97,15 @@ class RowTableBIAggregations(RowTable):
 @data_source_registry.register
 class DataSourceBIHostAggregations(ABCDataSource):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "bi_host_aggregations"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("BI Aggregations affected by one host")
 
     @property
-    def table(self):
+    def table(self) -> "RowTable":
         return RowTableBIHostAggregations()
 
     @property
@@ -109,11 +113,11 @@ class DataSourceBIHostAggregations(ABCDataSource):
         return ["aggr", "host", "aggr_group"]
 
     @property
-    def keys(self):
+    def keys(self) -> List[ColumnName]:
         return []
 
     @property
-    def id_keys(self):
+    def id_keys(self) -> List[ColumnName]:
         return ["aggr_name"]
 
 
@@ -128,15 +132,15 @@ class DataSourceBIHostnameAggregations(ABCDataSource):
     is used to join the host table rather then the affected host"""
 
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "bi_hostname_aggregations"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("BI Hostname Aggregations")
 
     @property
-    def table(self):
+    def table(self) -> "RowTable":
         return RowTableBIHostnameAggregations()
 
     @property
@@ -144,11 +148,11 @@ class DataSourceBIHostnameAggregations(ABCDataSource):
         return ["aggr", "host", "aggr_group"]
 
     @property
-    def keys(self):
+    def keys(self) -> List[ColumnName]:
         return []
 
     @property
-    def id_keys(self):
+    def id_keys(self) -> List[ColumnName]:
         return ["aggr_name"]
 
 
@@ -162,15 +166,15 @@ class DataSourceBIHostnameByGroupAggregations(ABCDataSource):
     """The same but with group information"""
 
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "bi_hostnamebygroup_aggregations"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("BI aggregations for hosts by host groups")
 
     @property
-    def table(self):
+    def table(self) -> "RowTable":
         return RowTableBIHostnameByGroupAggregations()
 
     @property
@@ -178,11 +182,11 @@ class DataSourceBIHostnameByGroupAggregations(ABCDataSource):
         return ["aggr", "host", "hostgroup", "aggr_group"]
 
     @property
-    def keys(self):
+    def keys(self) -> List[ColumnName]:
         return []
 
     @property
-    def id_keys(self):
+    def id_keys(self) -> List[ColumnName]:
         return ["aggr_name"]
 
 

@@ -1,0 +1,12 @@
+Title: Fix KeyError for "Site ID" painter if site is missing
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1651484316
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b9
+
+If the painter "Site ID" is used in views were the site is missing, e.g. "All
+aggregations", the error "KeyError: 'site'" occurred.

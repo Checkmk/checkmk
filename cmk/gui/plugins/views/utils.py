@@ -683,6 +683,11 @@ class ABCDataSource(abc.ABC):
         return []
 
     @property
+    def unsupported_columns(self) -> List[ColumnName]:
+        """These columns are ignored, e.g. 'site' for DataSourceBIAggregations"""
+        return []
+
+    @property
     def add_headers(self) -> str:
         """additional livestatus headers to add to each call"""
         return ""

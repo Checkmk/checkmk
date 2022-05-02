@@ -1875,8 +1875,12 @@ def view_editor_sorter_specs(view: ViewSpec) -> _Tuple[str, Dictionary]:
         view: ViewSpec,
     ) -> Iterator[Union[DropdownChoiceEntry, CascadingDropdownChoice]]:
         ds_name = view["datasource"]
+        datasource: ABCDataSource = data_source_registry[ds_name]()
+        unsupported_columns: List[ColumnName] = datasource.unsupported_columns
 
         for name, p in sorters_of_datasource(ds_name).items():
+            if any(column in p.columns for column in unsupported_columns):
+                continue
             # add all regular sortes. they may provide a third element: this
             # ValueSpec will be displayed after the sorter was choosen in the
             # CascadingDropdown.
@@ -3378,16 +3382,20 @@ def _allowed_for_datasource(
     collection: Union[PainterRegistry, SorterRegistry],
     ds_name: str,
 ) -> Mapping[str, Union[Sorter, Painter]]:
-    datasource = data_source_registry[ds_name]()
-    infos_available = set(datasource.infos)
-    add_columns = datasource.add_columns
+    datasource: ABCDataSource = data_source_registry[ds_name]()
+    infos_available: Set[str] = set(datasource.infos)
+    add_columns: List[ColumnName] = datasource.add_columns
+    unsupported_columns: List[ColumnName] = datasource.unsupported_columns
 
     allowed: Dict[str, Union[Sorter, Painter]] = {}
     for name, plugin_class in collection.items():
         plugin = plugin_class()
+        if any(column in plugin.columns for column in unsupported_columns):
+            continue
         infos_needed = infos_needed_by_plugin(plugin, add_columns)
         if len(infos_needed.difference(infos_available)) == 0:
             allowed[name] = plugin
+
     return allowed
 
 

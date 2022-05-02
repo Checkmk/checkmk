@@ -7,6 +7,7 @@
 import abc
 import multiprocessing
 import subprocess
+from contextlib import suppress
 from pathlib import Path
 from typing import Iterator, Type
 
@@ -15,6 +16,7 @@ import urllib3  # type: ignore[import]
 
 from livestatus import LocalConnection
 
+from cmk.utils.paths import local_inventory_dir
 from cmk.utils.site import omd_site
 from cmk.utils.type_defs import UserId
 
@@ -1184,6 +1186,37 @@ class ACTestRulebasedNotifications(ACTest):
             yield ACResultCRIT("Rulebased notifications are deactivated in the global settings")
         else:
             yield ACResultOK(_("Rulebased notifications are activated"))
+
+
+@ac_test_registry.register
+class ACTestDeprecatedInventoryPlugins(ACTest):
+    def category(self) -> str:
+        return ACTestCategories.deprecations
+
+    def title(self) -> str:
+        return _("Deprecated HW/SW inventory plugins")
+
+    def help(self) -> str:
+        return _(
+            "The old inventory plugin API is deprecated in version 2.1 and will be removed in"
+            " Checkmk version 2.2."
+            " Plugin files in <tt>'%s'</tt> will be ignored in the future."
+            " Please migrate the plugins to the new API."
+        ) % str(local_inventory_dir)
+
+    def is_relevant(self) -> bool:
+        return True
+
+    def execute(self) -> Iterator[ACResult]:
+        with suppress(FileNotFoundError):
+            if plugin_files := list(local_inventory_dir.iterdir()):
+                yield ACResultWARN(
+                    _("%d deprecated HW/SW inventory plugins found: %s")
+                    % (len(plugin_files), ", ".join(f.name for f in plugin_files))
+                )
+                return
+
+        yield ACResultOK(_("No deprecated HW/SW inventory plugins found"))
 
 
 def _site_is_using_livestatus_proxy(site_id):

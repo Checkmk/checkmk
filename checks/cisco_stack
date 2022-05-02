@@ -103,8 +103,10 @@ check_info["cisco_stack"] = {
         ],
     ),
     "snmp_scan_function": lambda oid: (
-        oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.9.1.1208")
-        or oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.9.1.1745")
+        oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.9.1.1208")  # cat29xxStack
+        or oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.9.1.1745")  # cat38xxstack
+        or oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.9.1.2694")  # ciscoCat9200LFixedSwitchStack
+        or oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.9.1.2695")  # ciscoCat9200FixedSwitchStack
     ),
     "group": "cisco_stack",
 }

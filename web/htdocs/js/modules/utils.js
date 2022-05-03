@@ -715,18 +715,27 @@ function set_focus(focus_obj) {
     }
 }
 
-export function update_pending_changes(changes_info) {
+export function update_pending_changes(changes_info, changes_tooltip) {
     if (!changes_info) {
         return;
     }
 
+    // Update container div CSS class and tooltip
+    const page_state_div = document.getElementsByClassName("page_state")[0];
+    change_class(page_state_div, "no_changes", "pending_changes");
+    page_state_div.title = changes_tooltip;
+
+    // Update text (changes number and string)
+    const [changes_number, changes_str] = changes_info.split(" ", 2);
     const text_container = document.getElementById("changes_info");
     if (text_container) {
-        const changes_number = changes_info.split(" ")[0];
         const changes_number_span = text_container.getElementsByClassName("changes_number")[0];
+        const changes_str_span = text_container.getElementsByClassName("changes_str")[0];
         changes_number_span.innerHTML = changes_number;
+        changes_str_span.innerHTML = changes_str;
     }
 
+    // Update changes icon
     const img_container = document.getElementById("page_state_icon");
     if (img_container) {
         return;

@@ -59,7 +59,7 @@ from cmk.gui.utils.urls import DocReference
 from cmk.gui.view_utils import format_plugin_output, render_labels
 from cmk.gui.wato.pages.hosts import ModeEditHost
 from cmk.gui.watolib import automation_command_registry, AutomationCommand
-from cmk.gui.watolib.activate_changes import get_pending_changes_info
+from cmk.gui.watolib.activate_changes import get_pending_changes_info, get_pending_changes_tooltip
 from cmk.gui.watolib.changes import make_object_audit_log_url
 from cmk.gui.watolib.check_mk_automations import active_check, update_host_labels
 from cmk.gui.watolib.rulespecs import rulespec_registry
@@ -313,6 +313,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             "fixall": fix_all_code,
             "page_menu": self._get_page_menu(),
             "pending_changes_info": get_pending_changes_info(),
+            "pending_changes_tooltip": get_pending_changes_tooltip(),
             "discovery_options": self._options._asdict(),
             "discovery_result": discovery_result.serialize(),
         }

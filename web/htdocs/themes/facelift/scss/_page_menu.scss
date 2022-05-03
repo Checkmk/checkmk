@@ -67,11 +67,17 @@ div#top_heading {
       }
     }
 
-    &.no_changes div.text_container span.changes_str {
-      color: $font-color-dimmed;
+    &.no_changes div.text_container {
+      span.changes_number {
+        display: none;
+      }
 
-      &:hover {
-        color: $font-color;
+      span.changes_str {
+        color: $font-color-dimmed;
+
+        &:hover {
+          color: $font-color;
+        }
       }
     }
 

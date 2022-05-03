@@ -144,7 +144,7 @@ def check_diskstat_line(
         else:
             warn, crit = None, None
 
-        per_sec = get_rate(countername, this_time, int(ctr))  # type:ignore
+        per_sec = get_rate(countername, this_time, int(ctr))
         if mode == "sectors":
             # compute IO rate in bytes/sec
             bytes_per_sec = per_sec * 512
@@ -183,8 +183,8 @@ def check_diskstat_line(
 
     # Process IOs when available
     ios_per_sec = None
-    if len(line) >= 6 and line[4] >= 0 and line[5] > 0:  # type:ignore
-        reads, writes = map(int, line[4:6])  # type:ignore
+    if len(line) >= 6 and line[4] >= 0 and line[5] > 0:
+        reads, writes = map(int, line[4:6])
         if "read_ios" in params:
             warn, crit = params["read_ios"]
             if reads >= crit:
@@ -213,8 +213,8 @@ def check_diskstat_line(
             perfdata.append(("ios", ios_per_sec))
 
     # Do Latency computation if this information is available:
-    if len(line) >= 7 and line[6] >= 0:  # type:ignore
-        timems = int(line[6])  # type:ignore
+    if len(line) >= 7 and line[6] >= 0:
+        timems = int(line[6])
         timems_per_sec = get_rate(countername + ".time", this_time, timems)
         if not ios_per_sec:
             latency = 0.0
@@ -246,7 +246,7 @@ def check_diskstat_line(
             else:
                 warn, crit = None, None
 
-            qlx = get_rate(countername, this_time, int(ctr))  # type:ignore
+            qlx = get_rate(countername, this_time, int(ctr))
             ql = qlx / 10000000.0
             infos.append(what.title() + " Queue: %.2f" % ql)
 

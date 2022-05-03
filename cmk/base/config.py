@@ -4169,8 +4169,8 @@ class CEEConfigCache(ConfigCache):
         self, hostname: HostName, description: ServiceName
     ) -> List[RecurringDowntime]:
         return self.service_extra_conf(
-            hostname, description, service_recurring_downtimes
-        )  # pylint: disable=undefined-variable
+            hostname, description, service_recurring_downtimes  # pylint: disable=undefined-variable
+        )
 
     def flap_settings_of_service(
         self, hostname: HostName, description: ServiceName
@@ -4192,8 +4192,8 @@ class CEEConfigCache(ConfigCache):
 
     def state_translation_of_service(self, hostname: HostName, description: ServiceName) -> Dict:
         entries = self.service_extra_conf(
-            hostname, description, service_state_translation
-        )  # pylint: disable=undefined-variable
+            hostname, description, service_state_translation  # pylint: disable=undefined-variable
+        )
 
         spec: Dict = {}
         for entry in entries[::-1]:
@@ -4283,14 +4283,14 @@ class CEEHostConfig(HostConfig):
     @property
     def recurring_downtimes(self) -> List[RecurringDowntime]:
         return self._config_cache.host_extra_conf(
-            self.hostname, host_recurring_downtimes
-        )  # pylint: disable=undefined-variable
+            self.hostname, host_recurring_downtimes  # pylint: disable=undefined-variable
+        )
 
     @property
     def flap_settings(self) -> Tuple[float, float, float]:
         values = self._config_cache.host_extra_conf(
-            self.hostname, cmc_host_flap_settings
-        )  # pylint: disable=undefined-variable
+            self.hostname, cmc_host_flap_settings  # pylint: disable=undefined-variable
+        )
         if not values:
             return cmc_flap_settings  #  pylint: disable=undefined-variable
 
@@ -4308,8 +4308,8 @@ class CEEHostConfig(HostConfig):
     @property
     def state_translation(self) -> Dict:
         entries = self._config_cache.host_extra_conf(
-            self.hostname, host_state_translation
-        )  #  pylint: disable=undefined-variable
+            self.hostname, host_state_translation  #  pylint: disable=undefined-variable
+        )
 
         spec: Dict = {}
         for entry in entries[::-1]:
@@ -4321,8 +4321,8 @@ class CEEHostConfig(HostConfig):
         settings = {"timeout": 2.5}
         settings.update(
             self._config_cache.host_extra_conf_merged(
-                self.hostname, cmc_smartping_settings
-            )  # pylint: disable=undefined-variable
+                self.hostname, cmc_smartping_settings  # pylint: disable=undefined-variable
+            )
         )
         return settings
 

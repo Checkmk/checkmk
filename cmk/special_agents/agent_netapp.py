@@ -87,6 +87,10 @@ except ImportError:
     # 2.0 backwards compatibility
     import xml.etree.ElementTree as ET  # type: ignore[no-redef]
 
+COUNTERS_CLUSTERMODE_MAX_RECORDS = 3000
+QUERY_MAX_RECORDS = 2000
+COUNTERS_CLUSTERMODE_MAX_INSTANCES_PER_REQUEST = 1000
+
 Section = Iterable[str]
 Query = Tuple[str, Any]
 Args = argparse.Namespace
@@ -336,7 +340,15 @@ class NetAppResponse:
 
 
 class NetAppConnection:
-    def __init__(self, hostname: str, user: str, password: str, no_tls: bool) -> None:
+    def __init__(
+        self,
+        hostname: str,
+        user: str,
+        password: str,
+        no_tls: bool,
+        debug: bool = False,
+        dump_xml: bool = False,
+    ) -> None:
         self.url = (
             f"{'http' if no_tls else 'https'}://{hostname}"
             "/servlets/netapp.servlets.admin.XMLrequest_filer"
@@ -352,7 +364,8 @@ class NetAppConnection:
         self.headers = {}
         self.headers["Content-type"] = 'text/xml; charset="UTF-8"'
         self.session = requests.Session()
-        self.debug = False
+        self.debug = debug
+        self.dump_xml = dump_xml
 
     def get_xml_message_from_node(self, node: ET._Element) -> str:
         return ET.tostring(node, encoding="unicode")
@@ -394,7 +407,7 @@ class NetAppConnection:
         root_node.append(node)
 
         request_message = self.get_xml_message_from_node(root_node.get_node())
-        if self.debug:
+        if self.dump_xml:
             print("######## START QUERY ########")
             print(prettify(root_node.get_node()))
 
@@ -412,7 +425,7 @@ class NetAppConnection:
 
         netapp_response = NetAppResponse(response, self.debug)
 
-        if self.debug:
+        if self.dump_xml:
             print("######## GOT RESPONSE #######")
             if netapp_response.results_status() != "passed":
                 print(
@@ -637,10 +650,9 @@ def query(
     what: str,
     return_toplevel_node: bool = False,
 ) -> Optional[NetAppNode]:
-    max_records = "2000"
     if isinstance(what, str):
         if what.endswith("iter"):
-            response = server.get_response((what, [("max-records", max_records)]))
+            response = server.get_response((what, [("max-records", str(QUERY_MAX_RECORDS))]))
         else:
             response = server.get_response((what, []))
     else:
@@ -657,7 +669,7 @@ def query(
             (
                 what,
                 [
-                    ("max-records", max_records),
+                    ("max-records", str(QUERY_MAX_RECORDS)),
                     ("tag", tag_string),
                 ],
             )
@@ -756,71 +768,64 @@ def process_interfaces(
     ports: Optional[NetAppNode],
     if_counters: Optional[NetAppNode],
 ) -> None:
-    if interfaces:
-        print("<<<netapp_api_if:sep(9)>>>")
-        extra_info = {}
-        interface_dict = create_dict(interfaces, custom_key="interface-name", is_counter=False)
-        port_dict = create_dict(ports, custom_key=["node", "port"], is_counter=False)
-        if_counters_dict = create_dict(if_counters, custom_key="instance_name")
+    if not interfaces:
+        return
 
-        # Process counters
-        # NetApp clustermode reports sent_data instead of send_data..
-        for key, values in if_counters_dict.items():
-            for old, new in [
-                ("sent_data", "send_data"),
-                ("sent_packet", "send_packet"),
-                ("sent_errors", "send_errors"),
-            ]:
-                values[new] = values[old]
-                del values[old]
+    # Gather counters-info, which is the same as if_counters but with potentially stripped keys
+    # and re-applying a misspelling ('send' rather than 'sent') in order to keep metric names
+    if_counters_dict = create_dict(if_counters, custom_key="instance_name")
+    extra_info = {
+        if_key.split(":")[-1]: {
+            {
+                "sent_data": "send_data",
+                "sent_packet": "send_packet",
+                "sent_errors": "send_errors",
+            }.get(k, k): v
+            for k, v in values.items()
+        }
+        for if_key, values in if_counters_dict.items()
+    }
 
-        extra_counter_info = {}
-        for key, values in if_counters_dict.items():
-            if ":" in key:
-                _vserver, name = key.split(":", 1)
-            else:
-                name = key
-            extra_counter_info[name] = values
+    # update `extra_info` for every interfaces with associated port-values if available
+    #   I didn't dare to put this here but this mapping seems to be unambigeous
+    #   assert all(i.get("current-node") and i.get("current-port") for i in interface_dict.values())
+    #   assert all(i.get("node") and i.get("port") for i in port_dict.values())
+    #   note: not all ports referenced by interfaces are defined in port_dict:
+    #    print(interface_dict.keys() - extra_port_info.keys())
+    interface_dict = create_dict(interfaces, custom_key="interface-name", is_counter=False)
+    port_dict = create_dict(ports, custom_key=["node", "port"], is_counter=False)
+    for port_values in port_dict.values():
+        for if_key, if_values in interface_dict.items():
+            if (
+                if_values["current-port"] == port_values["port"]
+                and if_values["current-node"] == port_values["node"]
+            ):
+                # This assertion has been true in all tested situations
+                #  assert not (port_values.keys() & extra_info.setdefault(if_key, {}).keys())
+                extra_info.setdefault(if_key, {}).update(port_values)
 
-        # Process ports
-        extra_port_info = {}
-        for the_port, port_values in port_dict.items():
-            port_name = port_values.get("port")
-            port_node = port_values.get("node")
-
-            node, port = the_port.split("|")
-            for if_key, if_values in interface_dict.items():
-                port = if_values.get("current-port")
-                node = if_values.get("current-node")
-                if port_name == port and port_node == node:
-                    extra_port_info[if_key] = port_values
-
-        extra_info = extra_counter_info
-        for key, values in extra_port_info.items():
-            extra_info.setdefault(key, {})
-            extra_info[key].update(values)
-
-        print(
-            format_config(
-                interfaces,
-                "interface",
-                "interface-name",
-                extra_info=extra_info,
-                extra_info_report=[
-                    "recv_data",
-                    "send_data",
-                    "recv_mcasts",
-                    "send_mcasts",
-                    "recv_errors",
-                    "send_errors",
-                    "instance_name",
-                    "link-status",
-                    "operational-speed",
-                    "recv_packet",
-                    "send_packet",
-                ],
-            )
+    print("<<<netapp_api_if:sep(9)>>>")
+    print(
+        format_config(
+            interfaces,
+            "interface",
+            "interface-name",
+            extra_info=extra_info,
+            extra_info_report=[
+                "recv_data",
+                "send_data",
+                "recv_mcasts",
+                "send_mcasts",
+                "recv_errors",
+                "send_errors",
+                "instance_name",
+                "link-status",
+                "operational-speed",
+                "recv_packet",
+                "send_packet",
+            ],
         )
+    )
 
 
 def process_ports(server: NetAppConnection) -> None:
@@ -884,9 +889,9 @@ def process_clustermode(  # pylint: disable=too-many-branches
             for node, entry in cluster_status.items():
                 # Small trick to improve formatting
                 container = NetAppNode("container")
-                container.append(entry.get_node())
+                container.append(entry.get_node())  # type: ignore[attr-defined]
 
-                partner_name = entry.child_get_string("partner-name")
+                partner_name = entry.child_get_string("partner-name")  # type: ignore[attr-defined]
                 if partner_name:
                     ha_partners[node] = partner_name
                 print(format_config(container, "cluster", node.split(".", 1)[1]))
@@ -895,7 +900,7 @@ def process_clustermode(  # pylint: disable=too-many-branches
             current_time = int(time.time())
             print("<<<netapp_api_systemtime:sep(9)>>>")
             for node, entry in cluster_status.items():
-                node_current_time = entry.child_get_string("current-time")
+                node_current_time = entry.child_get_string("current-time")  # type: ignore[attr-defined]
                 print("%s\t%s\t%s" % (node[10:], current_time, node_current_time))
 
     # Disk
@@ -1545,11 +1550,10 @@ def fetch_netapp_mode(server: NetAppConnection) -> str:
 
 
 def query_counters_clustermode(server: NetAppConnection, what: str) -> Optional[NetAppNode]:
-    max_records = "3000"
     response = server.get_response(
         (
             "perf-object-instance-list-info-iter",
-            [("objectname", what), ("max-records", max_records)],
+            [("objectname", what), ("max-records", str(COUNTERS_CLUSTERMODE_MAX_RECORDS))],
         )
     )
 
@@ -1560,7 +1564,11 @@ def query_counters_clustermode(server: NetAppConnection, what: str) -> Optional[
         tag_response = server.get_response(
             (
                 "perf-object-instance-list-info-iter",
-                [("objectname", what), ("max-records", max_records), ("tag", tag_string)],
+                [
+                    ("objectname", what),
+                    ("max-records", str(COUNTERS_CLUSTERMODE_MAX_RECORDS)),
+                    ("tag", tag_string),
+                ],
             )
         )
         if tag_response.results_status() != "passed":
@@ -1597,10 +1605,9 @@ def query_counters_clustermode(server: NetAppConnection, what: str) -> Optional[
     # of counter info in a single call
     responses = []
     while instance_uuids:
-        max_instances_per_request = 1000
         uuids = []
         for idx, uuid in enumerate(instance_uuids):
-            if idx >= max_instances_per_request:
+            if idx >= COUNTERS_CLUSTERMODE_MAX_INSTANCES_PER_REQUEST:
                 break
             uuids.append(("instance-uuid", uuid))
 
@@ -1614,7 +1621,7 @@ def query_counters_clustermode(server: NetAppConnection, what: str) -> Optional[
             return None
 
         responses.append(response)
-        instance_uuids = instance_uuids[max_instances_per_request:]
+        instance_uuids = instance_uuids[COUNTERS_CLUSTERMODE_MAX_INSTANCES_PER_REQUEST:]
 
     initial_results = responses[0].get_results()
     for response in responses[1:]:
@@ -1671,14 +1678,11 @@ def query_counters(
     return query_counters_7mode(server, what)
 
 
-def connect(args: Args) -> NetAppConnection:
+def netapp_session(args: Args) -> NetAppConnection:
     try:
-        server = NetAppConnection(args.host_address, args.user, args.secret, args.no_tls)
-        if args.debug:
-            print("Running in optimized mode")
-            server.debug = True
-
-        return server
+        return NetAppConnection(
+            args.host_address, args.user, args.secret, args.no_tls, args.debug, args.dump_xml
+        )
 
     except Exception:
         if args.debug:
@@ -1695,23 +1699,23 @@ def main() -> int:
     replace_passwords()
     args = parse_arguments(sys.argv[1:])
 
+    session = netapp_session(args)
     try:
-        server = connect(args)
-        netapp_mode = fetch_netapp_mode(server)
-        licenses = fetch_license_information(server)
+        netapp_mode = fetch_netapp_mode(session)
+        licenses = fetch_license_information(session)
 
-        process_mode_specific(netapp_mode, args, server, licenses)
+        process_mode_specific(netapp_mode, args, session, licenses)
 
         return 0
 
     except Exception as exc:
         # Shouldn't happen at all...
-        server.add_error_message("Agent Exception (contact developer): %s" % exc)
+        session.add_error_message("Agent Exception (contact developer): %s" % exc)
         if args.debug:
             raise
         return 1
     finally:
-        output_error_section(server)
+        output_error_section(session)
 
 
 if __name__ == "__main__":

@@ -1213,7 +1213,7 @@ class ModeEditRuleset(WatoMode):
         self._rule_conditions(rule)
 
         # Value
-        table.cell(_("Value"))
+        table.cell(_("Value"), css="value")
         try:
             value_html = self._valuespec.value_to_html(value)
         except Exception as e:
@@ -1231,7 +1231,7 @@ class ModeEditRuleset(WatoMode):
         html.write_text(value_html)
 
         # Comment
-        table.cell(_("Description"))
+        table.cell(_("Description"), css="description")
         if docu_url := rule_options.docu_url:
             html.icon_button(
                 docu_url,

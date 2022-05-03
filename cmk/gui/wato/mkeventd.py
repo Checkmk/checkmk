@@ -2259,7 +2259,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                     }[stateval]
                     table.cell(
                         _("State"),
-                        html.render_span(txt, class_="state_rounded_tag"),
+                        html.render_span(txt, class_="state_rounded_fill"),
                         css="state state%s" % stateval,
                     )
 

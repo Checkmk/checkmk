@@ -543,7 +543,9 @@ span.tagify__tag-text {
 }
 
 .wato table.data.ruleset {
-  td:not(.buttons) {
+  td.condition,
+  td.value,
+  td.description {
     min-width: 30%;
   }
 

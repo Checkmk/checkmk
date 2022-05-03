@@ -317,7 +317,7 @@ def test_inventory_common():
     assert sorted(
         {
             s.item: s
-            for s in ps_utils.discover_ps(  # type: ignore[attr-defined]
+            for s in ps_utils.discover_ps(
                 PS_DISCOVERY_WATO_RULES,  # type: ignore[arg-type]
                 ps_section.parse_ps(info),
                 None,
@@ -326,9 +326,7 @@ def test_inventory_common():
             )
         }.values(),
         key=lambda s: s.item or "",
-    ) == sorted(
-        PS_DISCOVERED_ITEMS, key=lambda s: s.item or ""
-    )  # type: ignore[attr-defined]
+    ) == sorted(PS_DISCOVERED_ITEMS, key=lambda s: s.item or "")
 
 
 CheckResult = tuple
@@ -544,7 +542,7 @@ def test_check_ps_common(inv_item, reference):
             ps_utils.check_ps_common(
                 label="Processes",
                 item=inv_item.item,
-                params=factory_defaults,  # type: ignore[arg-type]
+                params=factory_defaults,
                 process_lines=parsed,
                 cpu_cores=1,
                 total_ram_map={"": 1024**3} if "emacs" in inv_item.item else {},
@@ -662,7 +660,7 @@ def test_check_ps_common_cpu(data):
                 ps_utils.check_ps_common(
                     label="Processes",
                     item=service.item,
-                    params=service.parameters,  # type: ignore[arg-type]
+                    params=service.parameters,
                     process_lines=lines_with_node_name,
                     cpu_cores=cpu_cores,
                     total_ram_map={},
@@ -735,7 +733,7 @@ def test_check_ps_common_count(levels, reference):
         ps_utils.check_ps_common(
             label="Processes",
             item="empty",
-            params=params,  # type: ignore[arg-type]
+            params=params,
             process_lines=lines_with_node_name,
             cpu_cores=1,
             total_ram_map={},
@@ -801,12 +799,8 @@ def test_subset_patterns():
         ),
     ]
 
-    test_discovered = ps_utils.discover_ps(
-        inv_params, section_ps, None, None, None
-    )  # type: ignore[arg-type]
-    assert {s.item: s for s in test_discovered} == {
-        s.item: s for s in discovered
-    }  # type: ignore[attr-defined]
+    test_discovered = ps_utils.discover_ps(inv_params, section_ps, None, None, None)
+    assert {s.item: s for s in test_discovered} == {s.item: s for s in discovered}
 
     for service, count in zip(discovered, [1, 2, 1]):
         assert isinstance(service.item, str)
@@ -814,7 +808,7 @@ def test_subset_patterns():
             ps_utils.check_ps_common(
                 label="Processes",
                 item=service.item,
-                params=service.parameters,  # type: ignore[arg-type]
+                params=service.parameters,
                 process_lines=[(None, psi, cmd_line) for (psi, cmd_line) in section_ps[1]],
                 cpu_cores=1,
                 total_ram_map={},
@@ -852,7 +846,7 @@ def test_cpu_util_single_process_levels(cpu_cores):
                 ps_utils.check_ps_common(
                     label="Processes",
                     item="firefox",
-                    params=params,  # type: ignore[arg-type]
+                    params=params,
                     process_lines=lines_with_node_name,
                     cpu_cores=cpu_cores,
                     total_ram_map={},

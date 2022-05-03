@@ -176,12 +176,12 @@ def fixture_check_plugin(monkeypatch):
         [ParsedSectionName("norris")],
         "Unit Test",
         None,  # type: ignore[arg-type]  # irrelevant for test
+        None,
+        None,
         None,  # type: ignore[arg-type]  # irrelevant for test
         None,  # type: ignore[arg-type]  # irrelevant for test
-        None,  # type: ignore[arg-type]  # irrelevant for test
-        None,  # type: ignore[arg-type]  # irrelevant for test
-        None,  # type: ignore[arg-type]  # irrelevant for test
-        None,  # type: ignore[arg-type]  # irrelevant for test
-        None,  # type: ignore[arg-type]  # irrelevant for test
-        None,  # type: ignore[arg-type]  # irrelevant for test
+        None,
+        None,
+        None,
+        None,
     )

@@ -10,7 +10,7 @@ from typing import Any, Dict
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result
-from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state  # type: ignore[import]
+from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
 from cmk.base.plugins.agent_based.juniper_trpz_aps import (
     check_juniper_trpz_aps,
     cluster_check_juniper_trpz_aps,
@@ -162,7 +162,7 @@ DISCOVERD_ITEMS = {
 @pytest.mark.parametrize("section,parsed_sections", [
     ([[['1', '0']]], (1, 0)),
 ])
-def test_parse_juniper_trpz_aps(section, parsed_sections):  # type: ignore
+def test_parse_juniper_trpz_aps(section, parsed_sections):
     section = parse_juniper_trpz_aps(section)
     assert section == parsed_sections
 
@@ -174,7 +174,7 @@ def test_parse_juniper_trpz_aps(section, parsed_sections):  # type: ignore
         Result(state=state.OK, summary='Online access points: 1, Sessions: 0'),
         ]),
 ])
-def test_check_juniper_trpz_aps(section, expected_results):  # type: ignore
+def test_check_juniper_trpz_aps(section, expected_results):
     results = list(check_juniper_trpz_aps(section))
     for r in results:
         print(r)
@@ -193,7 +193,7 @@ def test_check_juniper_trpz_aps(section, expected_results):  # type: ignore
         Result(state=state.OK, summary='[node2] Online access points: 3, Sessions: 4'),
     ]),
 ])
-def test_cluster_check_juniper_trpz_aps(node_sections, expected_results):  # type: ignore
+def test_cluster_check_juniper_trpz_aps(node_sections, expected_results):
     results = list(cluster_check_juniper_trpz_aps(node_sections))
     for r in results:
         print(r)
@@ -203,7 +203,7 @@ def test_cluster_check_juniper_trpz_aps(node_sections, expected_results):  # typ
 @pytest.mark.parametrize("node_sections,parsed_sections", [
     (NODE_SECTIONS, PARSED_DATA),
 ])
-def test_parse_juniper_trpz_aps_sessions(node_sections, parsed_sections):  # type: ignore
+def test_parse_juniper_trpz_aps_sessions(node_sections, parsed_sections):
     assert {
         node_name: parse_juniper_trpz_aps_sessions(string_list)
         for node_name, string_list in node_sections.items()
@@ -213,10 +213,10 @@ def test_parse_juniper_trpz_aps_sessions(node_sections, parsed_sections):  # typ
 @pytest.mark.parametrize("node_sections,expected_items", [
     (PARSED_DATA, DISCOVERD_ITEMS),
 ])
-def test_discovery_juniper_trpz_aps_sessions(node_sections, expected_items):  # type: ignore
+def test_discovery_juniper_trpz_aps_sessions(node_sections, expected_items):
     services = {
         node_name:
-        [service.item for service in discovery_juniper_trpz_aps_sessions(section)]  # type: ignore
+        [service.item for service in discovery_juniper_trpz_aps_sessions(section)]
         for node_name, section in node_sections.items()
     }
     assert services, expected_items
@@ -242,7 +242,7 @@ def test_discovery_juniper_trpz_aps_sessions(node_sections, expected_items):  # 
         Metric('noise_floor', 0.0),
     ]),
 ])
-def test__check_common_juniper_trpz_aps_sessions_single(node_sections, expected_results):  # type: ignore
+def test__check_common_juniper_trpz_aps_sessions_single(node_sections, expected_results):
     now = 1600000000
     vs: Dict[str, Any] = {}
     for _ in range(2):
@@ -268,7 +268,7 @@ def test__check_common_juniper_trpz_aps_sessions_single(node_sections, expected_
         Metric('noise_floor', 0.0),
     ]),
 ])
-def test__check_common_juniper_trpz_aps_sessions_cluster(node_sections, expected_results):  # type: ignore
+def test__check_common_juniper_trpz_aps_sessions_cluster(node_sections, expected_results):
     now = 1600000000
     vs: Dict[str, Any] = {}
     for _ in range(2):

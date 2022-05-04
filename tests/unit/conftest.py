@@ -210,9 +210,16 @@ def clear_caches_per_function():
 def fixup_ip_lookup(monkeypatch):
     # Fix IP lookup when
     def _getaddrinfo(host, port, family=None, socktype=None, proto=None, flags=None):
+        if host not in ("localhost", "::1", "127.0.0.1"):
+            return None
         if family == socket.AF_INET:
-            # TODO: This is broken. It should return (family, type, proto, canonname, sockaddr)
-            return "0.0.0.0"
+            return [
+                (family, socket.SocketKind.SOCK_STREAM, 6, "", ("127.0.0.1", 0)),
+            ]
+        if family == socket.AF_INET6:
+            return [
+                (family, socket.SocketKind.SOCK_STREAM, 6, "", ("::1", 0)),
+            ]
         raise NotImplementedError()
 
     monkeypatch.setattr(socket, "getaddrinfo", _getaddrinfo)

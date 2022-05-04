@@ -51,7 +51,7 @@ def make_scenario(hostname, tags) -> Scenario:
         ),
     ],
 )
-def test_generates_correct_sections(hostname, tags, fetchers, monkeypatch):
+def test_generates_correct_sections(hostname, tags, fetchers, monkeypatch, fixup_ip_lookup):
     make_scenario(hostname, tags).apply(monkeypatch)
     conf = fetcher_configuration.fetchers(config.HostConfig.make_host_config(hostname))
     assert [FetcherType[f["fetcher_type"]] for f in conf["fetchers"]] == fetchers

@@ -18,6 +18,7 @@ echo --- info ---
 echo USERNAME=%username%
 echo PATH=%path%
 echo ------------
+set RUST_BACKTRACE=1
 
 :: Jenkins calls windows scripts in a quite strange manner, better to check is cargo available
 where cargo > nul

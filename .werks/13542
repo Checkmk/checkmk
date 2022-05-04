@@ -1,0 +1,10 @@
+Title: Fix internal error if HW/SW filter is applied in a host view
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1651655484
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p24
+

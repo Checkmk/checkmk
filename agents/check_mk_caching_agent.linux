@@ -27,7 +27,7 @@
 #   ip address, which is absolutely needed here.                     #
 # ------------------------------------------------------------------ #
 
-export MK_CACHEDIR="/var/cache/check_mk"
+export MK_CACHEDIR=${MK_CACHEDIR:-/var/cache/check_mk}
 
 # Determine the IP address of the remote Nagios server.
 # xinetd sends us the IP address of the remote host via

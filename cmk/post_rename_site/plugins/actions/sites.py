@@ -52,7 +52,7 @@ def update_site_config(old_site_id: SiteId, new_site_id: SiteId) -> None:
         if status_host and status_host[0] == old_site_id:
             logger.debug("Update status host of site %s", this_site_id)
             changed = True
-            site_cfg["status_host"] = (new_site_id, site_cfg["status_host"][1])
+            site_cfg["status_host"] = (new_site_id, status_host[1])
 
     if changed:
         site_mgmt.save_sites(all_sites, activate=True)

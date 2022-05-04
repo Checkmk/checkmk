@@ -7,7 +7,6 @@
 from __future__ import annotations
 
 import os
-from typing import Any, Dict, List
 
 from livestatus import SiteConfiguration, SiteConfigurations, SiteId
 
@@ -17,7 +16,7 @@ from cmk.utils.site import omd_site
 from cmk.gui.config import active_config
 
 
-def sitenames() -> List[SiteId]:
+def sitenames() -> list[SiteId]:
     return list(active_config.sites)
 
 
@@ -54,14 +53,14 @@ def _has_distributed_wato_file() -> bool:
     )
 
 
-def get_login_sites() -> List[SiteId]:
+def get_login_sites() -> list[SiteId]:
     """Returns the WATO slave sites a user may login and the local site"""
     return get_login_slave_sites() + [omd_site()]
 
 
 # TODO: All site listing functions should return the same data structure, e.g. a list of
 #       pairs (site_id, site)
-def get_login_slave_sites() -> List[SiteId]:
+def get_login_slave_sites() -> list[SiteId]:
     """Returns a list of site ids which are WATO slave sites and users can login"""
     login_sites = []
     for site_id, site_spec in wato_slave_sites().items():
@@ -77,28 +76,27 @@ def wato_slave_sites() -> SiteConfigurations:
 
 
 def get_site_config(site_id: SiteId) -> SiteConfiguration:
-    s: SiteConfiguration = SiteConfiguration(dict(active_config.sites.get(site_id, {})))
+    s: SiteConfiguration = active_config.sites.get(site_id, {})
     # Now make sure that all important keys are available.
     # Add missing entries by supplying default values.
     s.setdefault("alias", site_id)
     s.setdefault("socket", ("local", None))
     s.setdefault("url_prefix", "../")  # relative URL from /check_mk/
-    # Astroid 2.x bug prevents us from using NewType https://github.com/PyCQA/pylint/issues/2296
-    s["id"] = site_id  # pylint: disable=unsupported-assignment-operation
-    return SiteConfiguration(s)
+    s["id"] = site_id
+    return s
 
 
 def site_is_local(site_id: SiteId) -> bool:
-    family_spec, address_spec = get_site_config(site_id)["socket"]
-    return _is_local_socket_spec(family_spec, address_spec)
+    socket_info = get_site_config(site_id)["socket"]
+    if isinstance(socket_info, str):
+        # Should be unreachable
+        return False
 
-
-def _is_local_socket_spec(family_spec: str, address_spec: Dict[str, Any]) -> bool:
-    if family_spec == "local":
+    if socket_info[0] == "local":
         return True
 
-    if family_spec == "unix" and address_spec["path"] == cmk.utils.paths.livestatus_unix_socket:
-        return True
+    if socket_info[0] == "unix":
+        return socket_info[1]["path"] == cmk.utils.paths.livestatus_unix_socket
 
     return False
 

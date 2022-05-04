@@ -6,6 +6,8 @@
 
 from typing import Any, Dict, Optional
 
+from livestatus import SiteGlobals
+
 from cmk.gui.plugins.watolib.utils import ABCConfigDomain, config_variable_registry
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
 
@@ -14,7 +16,7 @@ GlobalSettings = Dict[str, Any]
 
 def load_configuration_settings(
     site_specific: bool = False, custom_site_path: Optional[str] = None, full_config: bool = False
-) -> GlobalSettings:
+) -> SiteGlobals:
     settings = {}
     for domain in ABCConfigDomain.enabled_domains():
         if full_config:
@@ -59,11 +61,11 @@ def save_global_settings(vars_, site_specific=False, custom_site_path=None):
             domain().save(domain_config, custom_site_path=custom_site_path)
 
 
-def load_site_global_settings(custom_site_path: Optional[str] = None) -> GlobalSettings:
+def load_site_global_settings(custom_site_path: Optional[str] = None) -> SiteGlobals:
     return load_configuration_settings(site_specific=True, custom_site_path=custom_site_path)
 
 
 def save_site_global_settings(
-    settings: GlobalSettings, custom_site_path: Optional[str] = None
+    settings: SiteGlobals, custom_site_path: Optional[str] = None
 ) -> None:
     save_global_settings(settings, site_specific=True, custom_site_path=custom_site_path)

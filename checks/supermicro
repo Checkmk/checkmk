@@ -52,6 +52,7 @@
 def inventory_supermicro_health(info):
     if info[1]:
         return [(None, None)]
+    return []
 
 
 def check_supermicro_health(_no_item, _no_params, info):
@@ -207,6 +208,7 @@ def check_supermicro_smart(item, _no_params, info):
     for serial, name, status in info[2]:
         if format_item_supermicro_smart(name) == item:
             return int(status), "(S/N %s) %s" % (serial, status_map[status])
+    return None
 
 
 check_info["supermicro.smart"] = {

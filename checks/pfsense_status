@@ -8,6 +8,7 @@
 def inventory_pfsense_status(info):
     if info:
         return [(None, None)]
+    return []
 
 
 def check_pfsense_status(_no_item, params, info):

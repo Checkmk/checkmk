@@ -24,6 +24,7 @@ def check_ibm_tl_changer_devices(item, params, info):
     for name, avail, status in info:
         if item == name.replace("Logical_Library:", "").strip():
             return ibm_tape_library_get_device_state(avail, status)
+    return None
 
 
 check_info["ibm_tl_changer_devices"] = {

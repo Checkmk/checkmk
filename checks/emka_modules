@@ -196,6 +196,7 @@ def check_emka_modules(item, params, parsed):
         attrs = parsed["basic_components"][item]
         state, state_readable = map_activation_states[attrs["activation"]]
         return state, "Activation status: %s, Type: %s" % (state_readable, attrs["type"])
+    return None
 
 
 check_info["emka_modules"] = {
@@ -272,6 +273,7 @@ def check_emka_modules_alarm(item, params, parsed):
     if item in parsed.get("alarm", {}):
         state, state_readable = map_states[parsed["alarm"][item]["value"]]
         return state, "Status: %s" % state_readable
+    return None
 
 
 check_info["emka_modules.alarm"] = {
@@ -309,6 +311,7 @@ def check_emka_modules_handle(item, params, parsed):
     if item in parsed.get("handle", {}):
         state, state_readable = map_states[parsed["handle"][item]["value"]]
         return state, "Status: %s" % state_readable
+    return None
 
 
 check_info["emka_modules.handle"] = {
@@ -338,6 +341,7 @@ def check_emka_modules_sensor_volt(item, params, parsed):
         attrs = parsed["sensor_volt"][item]
         value = attrs["value"] / 1000.0
         return check_elphase(item, params, {item: {"voltage": value}})
+    return None
 
 
 check_info["emka_modules.sensor_volt"] = {
@@ -375,6 +379,7 @@ def check_emka_modules_sensor_temp(item, params, parsed):
             dev_levels=attrs["levels"],
             dev_levels_lower=attrs["levels_lower"],
         )
+    return None
 
 
 check_info["emka_modules.sensor_temp"] = {
@@ -406,6 +411,7 @@ def check_emka_modules_sensor_humid(item, params, parsed):
         attrs = parsed["sensor_humid"][item]
         value = attrs["value"]
         return check_humidity(value, params)
+    return None
 
 
 check_info["emka_modules.sensor_humid"] = {
@@ -442,6 +448,7 @@ def check_emka_modules_relay(item, params, parsed):
     if item in parsed.get("relay", {}):
         state, state_readable = map_states[parsed["relay"][item]["value"]]
         return state, "Status: %s" % state_readable
+    return None
 
 
 check_info["emka_modules.relay"] = {

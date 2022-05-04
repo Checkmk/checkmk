@@ -69,6 +69,7 @@ def check_hp_msa_controller_cpu(item, params, parsed):
         # hp msa 2040 reference guide:
         # cpu-load: percentage of time the CPU is busy, from 0-100
         return check_cpu_util(float(parsed[item]["cpu-load"]), params)
+    return None
 
 
 check_info["hp_msa_controller"] = {

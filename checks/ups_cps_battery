@@ -39,11 +39,13 @@ def parse_ups_cps_battery(info):
 def inventory_ups_cps_battery_temp(parsed):
     if "temperature" in parsed:
         return [("Battery", {})]
+    return []
 
 
 def check_ups_cps_battery_temp(item, params, parsed):
     if "temperature" in parsed:
         return check_temperature(parsed["temperature"], params, "ups_cps_battery_temp")
+    return None
 
 
 check_info["ups_cps_battery.temp"] = {
@@ -71,6 +73,7 @@ factory_settings["ups_cps_battery"] = {
 def inventory_ups_cps_battery(parsed):
     if "capacity" in parsed:
         return [(None, {})]
+    return []
 
 
 def check_ups_cps_battery(item, params, parsed):

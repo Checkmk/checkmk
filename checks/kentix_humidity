@@ -8,6 +8,7 @@
 def inventory_kentix_humidity(info):
     if info:
         return [(None, None)]
+    return []
 
 
 def check_kentix_humidity(_no_item, _no_params, info):

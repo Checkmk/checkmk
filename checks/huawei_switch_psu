@@ -23,7 +23,7 @@ def parse_huawei_switch_psu(info):
 @get_parsed_item_data
 def check_huawei_switch_psu(item, params, item_data):
     if item_data.value is None:
-        return
+        return None
 
     # Only 'enabled' is OK, everything else is considered CRIT
     status = 0 if item_data.value == "3" else 2

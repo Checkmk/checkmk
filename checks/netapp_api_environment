@@ -96,7 +96,7 @@ def check_netapp_api_environment_threshold(item, _no_params, parsed):
 
     sensor_value = maybefloat(parsed.get("threshold-sensor-value"))
     if sensor_value is None:
-        return
+        return None
 
     # NOTE
     # sensor_type may be fru, discrete (see other check), fan, thermal, current or voltage.

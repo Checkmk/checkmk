@@ -75,6 +75,7 @@ def inventory_orion_system_temp(parsed):
 def check_orion_system_temp(item, params, parsed):
     if item in parsed["temperature"]:
         return check_temperature(parsed["temperature"][item], params, "orion_system_temp.%s" % item)
+    return None
 
 
 check_info["orion_system"] = {
@@ -110,6 +111,7 @@ def check_orion_system_charging(item, params, parsed):
     if item in parsed["charging"]:
         state, state_readable = parsed["charging"][item]
         return state, "Status: %s" % state_readable
+    return None
 
 
 check_info["orion_system.charging"] = {

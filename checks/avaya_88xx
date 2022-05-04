@@ -60,6 +60,7 @@ def check_avaya_88xx(item, params, parsed):
     reading = sensors[int(item)]
     if reading:
         return check_temperature(int(reading), params, "avaya_88xx_%s" % item)
+    return None
 
 
 check_info["avaya_88xx"] = {

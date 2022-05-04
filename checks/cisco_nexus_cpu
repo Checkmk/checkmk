@@ -22,6 +22,7 @@ factory_settings["cisco_nexus_cpu_default_levels"] = {
 def inventory_cisco_nexus_cpu(info):
     if info[0][0]:
         return [(None, {})]
+    return []
 
 
 def check_cisco_nexus_cpu(_no_item, params, info):

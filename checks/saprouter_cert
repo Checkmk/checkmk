@@ -63,6 +63,7 @@ def parse_saprouter_cert(info):
 def inventory_saprouter_cert(parsed):
     if parsed:
         return [(None, None)]
+    return []
 
 
 def check_saprouter_cert(_no_item, params, parsed):
@@ -94,6 +95,7 @@ def check_saprouter_cert(_no_item, params, parsed):
 
     elif "failed" in parsed:
         return 3, " - ".join(parsed["failed"])
+    return None
 
 
 check_info["saprouter_cert"] = {

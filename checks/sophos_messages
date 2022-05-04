@@ -35,6 +35,7 @@ def check_sophos_messages(item, params, info):
                 outbound,
             )
             return 0, infotext, [("messages_inbound", inbound), ("messages_outbound", outbound)]
+    return None
 
 
 check_info["sophos_messages"] = {

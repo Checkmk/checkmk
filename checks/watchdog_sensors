@@ -185,7 +185,7 @@ def check_watchdog_sensors_temp(item, params, parsed):
     data = parsed.get("temp", {}).get(item)
 
     if not data:
-        return
+        return None
 
     temperature_str, unit = data
     return check_temperature(

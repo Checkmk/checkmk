@@ -38,6 +38,7 @@ emerson_stat_default = (0, 0)  # warning / critical, unused
 def inventory_emerson_stat(info):
     if info:
         return [(None, "emerson_stat_default")]
+    return []
 
 
 def check_emerson_stat(item, params, info):

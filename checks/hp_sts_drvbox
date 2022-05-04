@@ -61,6 +61,7 @@ def inventory_hp_sts_drvbox(info):
         return [
             (line[0] + "/" + line[1], None) for line in info if line[3] != ""
         ]  # only inventorize rows with "model" set
+    return []
 
 
 def check_hp_sts_drvbox(item, _no_params, info):

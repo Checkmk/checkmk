@@ -27,6 +27,7 @@ def check_acme_agent_sessions(item, _no_params, info):
         if item == hostname:
             dev_state, dev_state_readable = map_states[state]
             return dev_state, "Status: %s" % dev_state_readable
+    return None
 
 
 check_info["acme_agent_sessions"] = {

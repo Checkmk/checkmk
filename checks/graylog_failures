@@ -17,6 +17,7 @@ def inventory_graylog_failures(parsed):
     failure_details = parsed.get("failures")
     if failure_details is not None:
         return [(None, {})]
+    return []
 
 
 def check_graylog_failures(_no_item, params, parsed):

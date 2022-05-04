@@ -96,6 +96,7 @@ def check_raritan_emx_temp(item, params, parsed):
             dev_status=state,
             dev_status_name=state_readable,
         )
+    return None
 
 
 check_info["raritan_emx"] = {
@@ -136,6 +137,7 @@ def check_raritan_emx_fan(item, _no_params, parsed):
         fan_unit = parsed[item]["rack_unit"]
         state, state_readable = parsed[item]["state"]
         return state, "Speed: %d%s, status: %s" % (fan_speed, fan_unit, state_readable)
+    return None
 
 
 check_info["raritan_emx.fan"] = {

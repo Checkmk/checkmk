@@ -43,6 +43,7 @@ def check_cisco_temp_perf(item, _no_params, info):
     for statustext, _temp, _max_temp, _state, oid_end in info:
         if cisco_sensor_item(statustext, oid_end) == item:
             return 3, "This check is obsolete, please re-inventorize this host"
+    return None
 
 
 check_info["cisco_temp_perf"] = {

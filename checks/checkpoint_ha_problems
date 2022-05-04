@@ -20,6 +20,7 @@ def check_checkpoint_ha_problems(item, params, info):
             if dev_status == "OK":
                 return 0, "OK"
             return 2, "%s - %s" % (dev_status, description)
+    return None
 
 
 check_info["checkpoint_ha_problems"] = {

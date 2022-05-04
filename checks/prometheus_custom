@@ -106,6 +106,7 @@ def _metric_levels(
             *datasource_levels.get("upper_levels", missing_levels),
             *datasource_levels.get("lower_levels", missing_levels),
         )
+    return None
 
 
 @get_parsed_item_data

@@ -9,6 +9,7 @@ def inventory_brocade_info(info):
     data = "".join(brocade_info_try_it(info))
     if data != "----":
         return [(None, None)]
+    return []
 
 
 def brocade_info_try_it(info):

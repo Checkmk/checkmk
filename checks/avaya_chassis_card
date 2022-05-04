@@ -23,6 +23,7 @@ def check_avaya_chassis_card(item, _no_params, info):
         if line[0] == item:
             status, name = avaya_chassis_card_operstatus_codes[int(line[1])]
             return status, "Operational status: %s" % name
+    return None
 
 
 check_info["avaya_chassis_card"] = {

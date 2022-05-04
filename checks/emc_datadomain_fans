@@ -30,6 +30,7 @@ def check_emc_datadomain_fans(item, _no_params, info):
             dev_level_str = fan_level.get(dev_level, "Unknown")
             infotext = "%s %s RPM %s" % (dev_descr, dev_state_str, dev_level_str)
             return dev_state_rc, infotext
+    return None
 
 
 check_info["emc_datadomain_fans"] = {

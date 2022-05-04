@@ -47,6 +47,7 @@ def parse_eltek_battery(info):
 def inventory_eltek_battery(parsed):
     if "breaker" in parsed:
         return [(None, None)]
+    return []
 
 
 def check_eltek_battery(_no_item, _no_params, parsed):
@@ -57,6 +58,7 @@ def check_eltek_battery(_no_item, _no_params, parsed):
         }
         state, state_readable = map_status[parsed["breaker"]]
         return state, "Status: %s" % state_readable
+    return None
 
 
 check_info["eltek_battery"] = {
@@ -95,12 +97,14 @@ factory_settings["eltek_battery_temp_default_variables"] = {
 def inventory_eltek_battery_temp(parsed):
     if "temp" in parsed:
         return [("Battery", {})]
+    return []
 
 
 def check_eltek_battery_temp(item, params, parsed):
     # For temp checks we need an item but we have only one
     if "temp" in parsed:
         return check_temperature(parsed["temp"], params, "eltek_battery_temp_Battery")
+    return None
 
 
 check_info["eltek_battery.temp"] = {

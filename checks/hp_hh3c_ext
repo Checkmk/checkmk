@@ -63,7 +63,7 @@ def inventory_hp_hh3c_ext(parsed):
 
 def check_hp_hh3c_ext(item, params, parsed):
     if item not in parsed:
-        return
+        return None
     return check_temperature(parsed[item]["temp"], params, "hp_hh3c_ext.%s" % item)
 
 
@@ -179,7 +179,7 @@ def inventory_hp_hh3c_ext_cpu(parsed):
 
 def check_hp_hh3c_ext_cpu(item, params, parsed):
     if item not in parsed:
-        return
+        return None
     return check_cpu_util(parsed[item]["cpu"], params)
 
 

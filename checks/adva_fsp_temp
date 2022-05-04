@@ -42,6 +42,7 @@ def check_adva_fsp_temp(item, params, info):
             return check_temperature(
                 temp, params, "adva_fsp_temp_%s" % item, dev_levels=(high, high)
             )
+    return None
 
 
 check_info["adva_fsp_temp"] = {

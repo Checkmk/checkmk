@@ -91,6 +91,7 @@ def check_papouch_th2e_sensors_temp(item, params, parsed, what):
             dev_status=state,
             dev_status_name=state_readable,
         )
+    return None
 
 
 check_info["papouch_th2e_sensors"] = {

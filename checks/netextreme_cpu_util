@@ -17,6 +17,7 @@ netextreme_cpu_util_default_levels = (80.0, 90.0)
 def inventory_netextreme_cpu_util(info):
     if info:
         return [(None, "netextreme_cpu_util_default_levels")]
+    return []
 
 
 def check_netextreme_cpu_util(_no_item, params, info):

@@ -32,6 +32,7 @@ def check_netgear_powersupplies(item, params, parsed):
     if item in parsed:
         state, state_readable = map_states[parsed[item]]
         return state, "Status: %s" % state_readable
+    return None
 
 
 check_info["netgear_powersupplies"] = {

@@ -25,6 +25,7 @@ factory_settings["threepar_remotecopy_default_levels"] = {
 def inventory_3par_remotecopy(parsed):
     if parsed.get("mode", 0) > 1:
         return [(None, {})]
+    return []
 
 
 def check_3par_remotecopy(_no_item, params, parsed):

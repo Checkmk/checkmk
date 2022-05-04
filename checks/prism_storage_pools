@@ -48,6 +48,7 @@ def check_prism_storage_pools(item, params, parsed):
                 None,
                 params,
             )
+    return None
 
 
 check_info["prism_storage_pools"] = {

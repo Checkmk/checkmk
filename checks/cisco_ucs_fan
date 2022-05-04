@@ -28,6 +28,7 @@ def check_cisco_ucs_fan(item, _no_params, info):
                 status, (3, "Unknown, status code %s" % status)
             )
             return state, "Status: %s" % (state_readable)
+    return None
 
 
 check_info["cisco_ucs_fan"] = {

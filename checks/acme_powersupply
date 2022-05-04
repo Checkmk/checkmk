@@ -23,6 +23,7 @@ def check_acme_powersupply(item, _no_params, info):
         if item == descr:
             dev_state, dev_state_readable = acme_environment_states[state]
             return dev_state, "Status: %s" % dev_state_readable
+    return None
 
 
 check_info["acme_powersupply"] = {

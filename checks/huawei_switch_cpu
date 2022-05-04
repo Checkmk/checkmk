@@ -26,7 +26,7 @@ def check_huawei_switch_cpu(item, params, item_data):
     try:
         util = float(item_data.value)
     except TypeError:
-        return
+        return None
     return check_cpu_util(util, params, cores=[("core1", util)])
 
 

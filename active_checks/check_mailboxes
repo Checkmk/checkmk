@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# type: ignore[import]
 
 import argparse
 import logging
@@ -85,7 +84,7 @@ def check_mailboxes(args: Args) -> CheckResult:
         mailbox.connect()
 
         logging.info("connected, fetch mailbox folders..")
-        available_mailboxes = mailbox.folders()
+        available_mailboxes = list(mailbox.folders())
 
         logging.debug("Found %d mailbox folders", len(available_mailboxes))
         logging.debug("Mailboxes to check: %r", args.mailbox)

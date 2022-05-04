@@ -38,6 +38,7 @@ def check_ispro_sensors_temp(item, params, info):
                 dev_status=devstatus,
                 dev_status_name=devstatus_name,
             )
+    return None
 
 
 check_info["ispro_sensors_temp"] = {

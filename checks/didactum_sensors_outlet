@@ -17,6 +17,7 @@ def check_didactum_sensors_outlet_relay(item, params, parsed):
     if item in parsed.get("relay", {}):
         data = parsed["relay"][item]
         return data["state"], "Status: %s" % data["state_readable"]
+    return None
 
 
 check_info["didactum_sensors_outlet"] = {

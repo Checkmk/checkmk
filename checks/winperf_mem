@@ -42,6 +42,7 @@
 def inventory_winperf_mem(info):
     if len(info) > 1:
         return [(None, {})]
+    return []
 
 
 def check_winperf_mem(_unused, params, info):

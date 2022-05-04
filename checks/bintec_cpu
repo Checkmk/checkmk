@@ -18,6 +18,7 @@ from cmk.base.check_legacy_includes.cpu_util import *  # pylint: disable=wildcar
 def inventory_bintec_cpu(info):
     if info:
         return [(None, {})]
+    return []
 
 
 def check_bintec_cpu(_no_item, params, info):

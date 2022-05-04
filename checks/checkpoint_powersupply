@@ -23,6 +23,7 @@ def check_checkpoint_powersupply(item, params, info):
             if dev_status != "Up":
                 status = 2
             return status, dev_status
+    return None
 
 
 check_info["checkpoint_powersupply"] = {

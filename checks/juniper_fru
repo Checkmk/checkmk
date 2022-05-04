@@ -110,6 +110,7 @@ def check_juniper_fru(item, _no_params, parsed):
     if item in parsed:
         state, state_readable = _MAP_FRU_STATE[parsed[item]["fru_state"]]
         return state, "Operational status: %s" % state_readable
+    return None
 
 
 check_info["juniper_fru"] = {

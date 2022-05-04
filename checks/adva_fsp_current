@@ -39,6 +39,7 @@ def check_adva_fsp_current(item, _no_params, info):
             elif current >= upper_threshold:
                 return 2, infotext, perfdata
             return 0, infotext, perfdata
+    return None
 
 
 check_info["adva_fsp_current"] = {

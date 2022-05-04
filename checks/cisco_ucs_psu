@@ -30,6 +30,7 @@ def check_cisco_ucs_psu(item, _no_params, info):
                 status, (3, "Unknown, status code %s" % status)
             )
             return state, "Status: %s, Model: %s, SN: %s" % (state_readable, model, serial)
+    return None
 
 
 check_info["cisco_ucs_psu"] = {

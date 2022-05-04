@@ -22,6 +22,7 @@ def inventory_checkpoint_ha_status(info):
     installed, _major, _minor, _started, _state, _block_state, _stat_code, _stat_long = info[0]
     if installed != "0":
         return [(None, None)]
+    return []
 
 
 def check_checkpoint_ha_status(_no_item, _no_params, info):

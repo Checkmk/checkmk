@@ -25,6 +25,7 @@ def check_hp_procurve_cpu(item, params, info):
 
     if 0 <= util <= 100:
         return check_cpu_util(util, params)
+    return None
 
 
 check_info["hp_procurve_cpu"] = {

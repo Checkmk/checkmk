@@ -20,6 +20,7 @@ factory_settings["hr_cpu_default_levels"] = {
 def inventory_hr_cpu(info):
     if len(info) >= 1:
         return [(None, {})]
+    return []
 
 
 def check_hr_cpu(_no_item, params, info):

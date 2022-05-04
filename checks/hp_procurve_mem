@@ -27,11 +27,12 @@ factory_settings["hp_procurve_mem_default_levels"] = {"levels": ("perc_used", (8
 def inventory_hp_procurve_mem(info):
     if len(info) == 1 and int(info[0][0]) >= 0:
         return [("", "hp_procurve_mem_default_levels")]
+    return []
 
 
 def check_hp_procurve_mem(item, params, info):
     if len(info) != 1:
-        return
+        return None
 
     if isinstance(params, tuple):
         params = {"levels": ("perc_used", params)}

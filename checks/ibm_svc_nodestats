@@ -140,7 +140,7 @@ def inventory_ibm_svc_nodestats_diskio(info):
 def check_ibm_svc_nodestats_diskio(item, _no_params, info):
     data = parse_ibm_svc_nodestats(info).get(item)
     if data is None:
-        return
+        return None
 
     read_bytes = data["r_mb"] * 1024 * 1024
     write_bytes = data["w_mb"] * 1024 * 1024
@@ -183,7 +183,7 @@ def inventory_ibm_svc_nodestats_iops(info):
 def check_ibm_svc_nodestats_iops(item, _no_params, info):
     data = parse_ibm_svc_nodestats(info).get(item)
     if data is None:
-        return
+        return None
 
     read_iops = data["r_io"]
     write_iops = data["w_io"]
@@ -221,7 +221,7 @@ def inventory_ibm_svc_nodestats_disk_latency(info):
 def check_ibm_svc_nodestats_disk_latency(item, _no_params, info):
     data = parse_ibm_svc_nodestats(info).get(item)
     if data is None:
-        return
+        return None
 
     read_latency = data["r_ms"]
     write_latency = data["w_ms"]
@@ -262,7 +262,7 @@ def inventory_ibm_svc_nodestats_cpu(info):
 def check_ibm_svc_nodestats_cpu(item, params, info):
     data = parse_ibm_svc_nodestats(info).get(item)
     if data is None:
-        return
+        return None
     return check_cpu_util(data["cpu_pc"], params)
 
 
@@ -296,7 +296,7 @@ def inventory_ibm_svc_nodestats_cache(info):
 def check_ibm_svc_nodestats_cache(item, _no_params, info):
     data = parse_ibm_svc_nodestats(info).get(item)
     if data is None:
-        return
+        return None
 
     write_cache_pc = data["write_cache_pc"]
     total_cache_pc = data["total_cache_pc"]

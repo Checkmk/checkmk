@@ -14,6 +14,7 @@ ups_in_voltage_default_levels = (210, 180)  # warning / critical
 def inventory_socomec_ups_in_voltage(info):
     if len(info) > 0:
         return [(x[0], "ups_in_voltage_default_levels") for x in info if int(x[1]) > 0]
+    return []
 
 
 def check_socomec_ups_in_voltage(item, params, info):

@@ -76,6 +76,7 @@ def inventory_kentix_amp_sensors(parsed, params):
 def check_kentix_amp_sensors_temperature(item, params, parsed):
     if item in parsed:
         return check_temperature(parsed[item]["temp"], params, "kentix_amp_sensors_%s" % item)
+    return None
 
 
 check_info["kentix_amp_sensors"] = {
@@ -103,6 +104,7 @@ check_info["kentix_amp_sensors"] = {
 def check_kentix_amp_sensors_humidity(item, params, parsed):
     if item in parsed:
         return check_humidity(parsed[item]["humidity"], params)
+    return None
 
 
 check_info["kentix_amp_sensors.humidity"] = {
@@ -178,6 +180,7 @@ def check_kentix_amp_sensors_leakage(item, params, parsed):
         if parsed[item]["leakage"] > 0:
             return 2, "Alarm or disconnected"
         return 0, "Connected"
+    return None
 
 
 check_info["kentix_amp_sensors.leakage"] = {

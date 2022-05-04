@@ -19,6 +19,7 @@ def check_stulz_humidity(item, params, info):
     for line in info:
         if line[0] == item:
             return check_humidity(savefloat(line[1]) / 10, params)
+    return None
 
 
 check_info["stulz_humidity"] = {

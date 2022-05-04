@@ -26,6 +26,7 @@ def parse_ibm_mq_plugin(info):
 def inventory_ibm_mq_plugin(parsed):
     if parsed:
         return [(None, {})]
+    return []
 
 
 def check_tool(tool_name, parsed):

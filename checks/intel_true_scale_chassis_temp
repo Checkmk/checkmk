@@ -15,6 +15,7 @@ from cmk.base.check_legacy_includes.intel_true_scale import *  # pylint: disable
 def inventory_intel_true_scale_chassis_temp(info):
     if info and info[0][0] != "6":
         return [(None, None)]
+    return []
 
 
 def check_intel_true_scale_chassis_temp(_no_item, _no_params, info):

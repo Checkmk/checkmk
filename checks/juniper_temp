@@ -35,6 +35,7 @@ def inventory_juniper_temp(parsed):
 def check_juniper_temp(item, params, parsed):
     if item in parsed:
         return check_temperature(parsed[item], params, "juniper_temp_%s" % item)
+    return None
 
 
 check_info["juniper_temp"] = {

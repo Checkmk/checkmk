@@ -33,6 +33,7 @@ def win_cpuinfo_parse_speed(v):  # into Hz (float)
         return float(parts[0]) * 1000.0
     elif parts[1] == "Hz":
         return float(parts[0])
+    return None
 
 
 def win_cpuinfo_parse_voltage(v):

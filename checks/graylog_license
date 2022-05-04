@@ -31,6 +31,7 @@ def inventory_graylog_license(parsed):
     license_state = parsed.get("status")
     if license_state is not None:
         return [(None, {})]
+    return []
 
 
 factory_settings["graylog_license_default_levels"] = {

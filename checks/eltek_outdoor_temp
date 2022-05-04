@@ -72,6 +72,7 @@ def check_eltek_outdoor_temp(item, params, info):
         for temp_id, reading in [("1", float(temp1)), ("2", float(temp2))]:
             if "%s/%s" % (temp_id, index) == item:
                 return check_temperature(reading, params, "eltek_outdoor_temp_%s" % item)
+    return None
 
 
 check_info["eltek_outdoor_temp"] = {

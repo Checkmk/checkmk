@@ -23,15 +23,15 @@ def parse_vmstat_aix(info):
         data = info[0]
         return VMStatAIX(int(data[13]), int(data[14]), int(data[15]), int(data[16]))
     except (IndexError, ValueError):
-        return
+        return None
 
 
 def check_vmstat_aix(item, params, parsed):
     if item != "cpuperc":
-        return
+        return None
 
     if parsed is None:
-        return
+        return None
 
     return (
         0,

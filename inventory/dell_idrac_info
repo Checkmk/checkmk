@@ -25,9 +25,9 @@ def _get_date_format(date):
             return "%m/0%d/%Y"
         elif "/" not in date[:8]:  # In case of Dell devices following the MIB
             return "%Y%m%d"
-        return
+        return None
     except IndexError:
-        return
+        return None
 
 
 def inv_dell_idrac_info(info):

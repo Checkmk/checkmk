@@ -94,6 +94,7 @@ def check_tinkerforge_temperature(item, params, parsed):
     if "temperature" in parsed and item in parsed["temperature"]:
         reading = float(parsed["temperature"][item][0]) / 100.0
         return check_temperature(reading, params, "tinkerforge_%s" % item)
+    return None
 
 
 def check_tinkerforge_ambient(item, params, parsed):
@@ -102,11 +103,13 @@ def check_tinkerforge_ambient(item, params, parsed):
         if not params:
             params = None
         return check_levels(reading, "brightness", params, unit="lx", infoname="Brightness")
+    return None
 
 
 def check_tinkerforge_humidity(item, params, parsed):
     if "humidity" in parsed and item in parsed["humidity"]:
         return check_humidity(float(parsed["humidity"][item][0]) / 10.0, params)
+    return None
 
 
 def check_tinkerforge_motion(item, params, parsed):

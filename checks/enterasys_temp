@@ -14,6 +14,7 @@ factory_settings["enterasys_temp_default_levels"] = {"levels": (30, 35)}
 def inventory_enterasys_temp(info):
     if info and info[0][0] != "0":
         return [("Ambient", {})]
+    return []
 
 
 def check_enterasys_temp(item, params, info):

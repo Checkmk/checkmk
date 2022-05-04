@@ -39,6 +39,7 @@ def check_informix_sessions(item, params, parsed):
         if state:
             infotext += " (warn/crit at %s/%s)" % (warn, crit)
         return state, infotext, [("sessions", sessions)]
+    return None
 
 
 check_info["informix_sessions"] = {

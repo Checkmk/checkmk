@@ -227,15 +227,15 @@ check_info["rabbitmq_nodes.filedesc"] = {
 def check_rabbitmq_nodes_sockets(item, params, parsed):
     socket_data = parsed.get(item, {}).get("sockets")
     if not socket_data:
-        return
+        return None
 
     value = socket_data.get("sockets_used")
     if value is None:
-        return
+        return None
 
     total = socket_data.get("sockets_total")
     if total is None:
-        return
+        return None
 
     return _handle_output(params, value, total, "Sockets used", "sockets")
 
@@ -252,15 +252,15 @@ check_info["rabbitmq_nodes.sockets"] = {
 def check_rabbitmq_nodes_proc(item, params, parsed):
     proc_data = parsed.get(item, {}).get("proc")
     if not proc_data:
-        return
+        return None
 
     used = proc_data.get("proc_used")
     if used is None:
-        return
+        return None
 
     total = proc_data.get("proc_total")
     if total is None:
-        return
+        return None
 
     return _handle_output(params, used, total, "Erlang processes used", "processes")
 

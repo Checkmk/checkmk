@@ -22,10 +22,11 @@ def inventory_genua_pfstate(info):
     info = [_f for _f in info if _f]
 
     if not info or not info[0]:
-        return
+        return []
 
     if len(info[0][0]) == 3:
         return [(None, genua_pfstate_default_levels)]
+    return []
 
 
 def pfstate(st):

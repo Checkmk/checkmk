@@ -12,6 +12,7 @@ from cmk.base.check_legacy_includes.checkpoint import *  # pylint: disable=wildc
 def inventory_checkpoint_firewall(info):
     if info:
         return [(None, None)]
+    return []
 
 
 def check_checkpoint_firewall(item, params, info):
@@ -26,6 +27,7 @@ def check_checkpoint_firewall(item, params, info):
                 filter_date,
             )
         return 2, "not installed, state: %s" % state
+    return None
 
 
 check_info["checkpoint_firewall"] = {

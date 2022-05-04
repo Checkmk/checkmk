@@ -280,8 +280,8 @@ class BIAggregationComputationOptionsSchema(Schema):
 class BIAggregationGroups(ABCWithSchema):
     def __init__(self, group_config: GroupConfigDict):
         super().__init__()
-        self.names: List[str] = group_config["names"]  # type: ignore
-        self.paths: List[List[str]] = group_config["paths"]  # type: ignore
+        self.names: List[str] = group_config["names"]
+        self.paths: List[List[str]] = group_config["paths"]
 
     def count(self) -> int:
         return len(self.names) + len(self.paths)

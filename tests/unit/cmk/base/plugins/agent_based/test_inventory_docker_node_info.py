@@ -42,11 +42,11 @@ from .utils_inventory import sort_inventory_result
                         "swarm_node_id": "Hier koennte ihre Werbung stehen.",
                     },
                     status_attributes={
-                        "num_containers_total": 11,  # type: ignore[dict-item]
-                        "num_containers_running": 11,  # type: ignore[dict-item]
-                        "num_containers_paused": 0,  # type: ignore[dict-item]
-                        "num_containers_stopped": 0,  # type: ignore[dict-item]
-                        "num_images": 22,  # type: ignore[dict-item]
+                        "num_containers_total": 11,
+                        "num_containers_running": 11,
+                        "num_containers_paused": 0,
+                        "num_containers_stopped": 0,
+                        "num_images": 22,
                     },
                 ),
             ],

@@ -336,7 +336,7 @@ class Discovery:
             conditions.host_name = [self._host.name()]
             # mypy is wrong here vor some reason:
             # Invalid index type "str" for "Union[Dict[str, str], str]"; expected type "Union[int, slice]"  [index]
-            conditions.service_description = sorted(service_patterns, key=lambda x: x["$regex"])  # type: ignore[index]
+            conditions.service_description = sorted(service_patterns, key=lambda x: x["$regex"])
             rule.update_conditions(conditions)
 
             rule.value = value

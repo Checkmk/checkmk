@@ -59,7 +59,7 @@ def get_average(_counter, _time, value, _time_span):
 def test_check_diskstat_line(monkeypatch, args, expected_result):
     monkeypatch.setattr(cmk.base.check_legacy_includes.diskstat, "get_rate", get_rate)
     monkeypatch.setattr(cmk.base.check_legacy_includes.diskstat, "get_average", get_average)
-    actual_result = CheckResult(check_diskstat_line(*args))  # type: ignore[name-defined] # pylint: disable=undefined-variable
+    actual_result = CheckResult(check_diskstat_line(*args))
     assertCheckResultsEqual(actual_result, expected_result)
 
 
@@ -88,5 +88,5 @@ def test_check_diskstat_line(monkeypatch, args, expected_result):
 def test_check_diskstat_generic_summary_clutster(monkeypatch, info, expected_result):
     monkeypatch.setattr(cmk.base.check_legacy_includes.diskstat, "get_rate", get_rate)
     monkeypatch.setattr(cmk.base.check_legacy_includes.diskstat, "get_average", get_average)
-    actual_result = CheckResult(check_diskstat_generic("SUMMARY", {}, 0, info))  # type: ignore[name-defined] # pylint: disable=undefined-variable
+    actual_result = CheckResult(check_diskstat_generic("SUMMARY", {}, 0, info))
     assertCheckResultsEqual(actual_result, expected_result)

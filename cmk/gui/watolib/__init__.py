@@ -15,14 +15,11 @@ import urllib3 as _urllib3
 import cmk.utils.version as _cmk_version
 
 import cmk.gui.gui_background_job as _gui_background_job
-import cmk.gui.hooks as hooks
 import cmk.gui.mkeventd as mkeventd
 import cmk.gui.userdb as userdb
 import cmk.gui.watolib.auth_php
 import cmk.gui.watolib.automation_commands as _automation_commands
-import cmk.gui.watolib.changes
 import cmk.gui.watolib.config_domains as _config_domains
-import cmk.gui.watolib.git
 import cmk.gui.weblib
 from cmk.gui.plugins.watolib.utils import config_domain_registry as _config_domain_registry
 from cmk.gui.watolib.sites import CEESiteManagement, LivestatusViaTCP, SiteManagementFactory

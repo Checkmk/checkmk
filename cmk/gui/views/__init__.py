@@ -40,7 +40,6 @@ from cmk.utils.site import omd_site
 from cmk.utils.structured_data import StructuredDataNode
 from cmk.utils.type_defs import HostName, ServiceName
 
-import cmk.gui.forms as forms
 import cmk.gui.i18n
 import cmk.gui.log as log
 import cmk.gui.pages
@@ -48,6 +47,7 @@ import cmk.gui.pagetypes as pagetypes
 import cmk.gui.sites as sites
 import cmk.gui.utils as utils
 import cmk.gui.view_utils
+import cmk.gui.views.datasource_selection as _datasource_selection
 import cmk.gui.visuals as visuals
 import cmk.gui.weblib as weblib
 from cmk.gui.bi import is_part_of_aggregation
@@ -55,7 +55,7 @@ from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_topic_breadcrumb
 from cmk.gui.config import active_config, builtin_role_ids, register_post_config_load_hook
 from cmk.gui.ctx_stack import g
 from cmk.gui.display_options import display_options
-from cmk.gui.exceptions import HTTPRedirect, MKGeneralException, MKInternalError, MKUserError
+from cmk.gui.exceptions import MKGeneralException, MKInternalError, MKUserError
 from cmk.gui.htmllib.context import html
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _, _u
@@ -73,7 +73,6 @@ from cmk.gui.page_menu import (
     make_checkbox_selection_topic,
     make_display_options_dropdown,
     make_external_link,
-    make_simple_form_page_menu,
     make_simple_link,
     PageMenu,
     PageMenuDropdown,
@@ -246,6 +245,9 @@ multisite_commands: List[Dict[str, Any]] = []
 multisite_datasources: Dict[str, Any] = {}
 multisite_painters: Dict[str, Dict[str, Any]] = {}
 multisite_sorters: Dict[str, Any] = {}
+
+
+cmk.gui.pages.register("create_view")(_datasource_selection.page_create_view)
 
 
 @visual_type_registry.register
@@ -1537,71 +1539,6 @@ def page_edit_views():
 #   '----------------------------------------------------------------------'
 
 # First step: Select the data source
-
-
-def DatasourceSelection() -> DropdownChoice:
-    """Create datasource selection valuespec, also for other modules"""
-    return DropdownChoice(
-        title=_("Datasource"),
-        help=_("The datasources define which type of objects should be displayed with this view."),
-        choices=data_source_registry.data_source_choices(),
-        default_value="services",
-    )
-
-
-@cmk.gui.pages.register("create_view")
-def page_create_view():
-    show_create_view_dialog()
-
-
-def show_create_view_dialog(next_url=None):
-    vs_ds = DatasourceSelection()
-
-    ds = "services"  # Default selection
-
-    title = _("Create view")
-    breadcrumb = visuals.visual_page_breadcrumb("views", title, "create")
-    html.header(
-        title,
-        breadcrumb,
-        make_simple_form_page_menu(
-            _("View"),
-            breadcrumb,
-            form_name="create_view",
-            button_name="_save",
-            save_title=_("Continue"),
-        ),
-    )
-
-    if request.var("_save") and transactions.check_transaction():
-        try:
-            ds = vs_ds.from_html_vars("ds")
-            vs_ds.validate_value(ds, "ds")
-
-            if not next_url:
-                next_url = makeuri(
-                    request,
-                    [("datasource", ds)],
-                    filename="create_view_infos.py",
-                )
-            else:
-                next_url = next_url + "&datasource=%s" % ds
-            raise HTTPRedirect(next_url)
-        except MKUserError as e:
-            html.user_error(e)
-
-    html.begin_form("create_view")
-    html.hidden_field("mode", "create")
-
-    forms.header(_("Select Datasource"))
-    forms.section(vs_ds.title())
-    vs_ds.render_input("ds", ds)
-    html.help(vs_ds.help())
-    forms.end()
-
-    html.hidden_fields()
-    html.end_form()
-    html.footer()
 
 
 @cmk.gui.pages.register("create_view_infos")

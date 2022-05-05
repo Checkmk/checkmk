@@ -122,7 +122,8 @@ from cmk.gui.valuespec import (
     ValueSpec,
     ValueSpecValidateFunc,
 )
-from cmk.gui.views import ABCAjaxInitialFilters
+from cmk.gui.views import ABCAjaxInitialFilters, view_choices
+from cmk.gui.views.datasource_selection import show_create_view_dialog
 from cmk.gui.watolib.activate_changes import get_pending_changes_info, get_pending_changes_tooltip
 
 loaded_with_language: Union[None, bool, str] = False
@@ -1802,14 +1803,12 @@ def page_create_view_dashlet() -> None:
     name = request.get_str_input_mandatory("name")
 
     if create:
-        import cmk.gui.views as views  # pylint: disable=import-outside-toplevel
-
         url = makeuri(
             request,
             [("back", makeuri(request, []))],
             filename="create_view_dashlet_infos.py",
         )
-        views.show_create_view_dialog(next_url=url)
+        show_create_view_dialog(next_url=url)
 
     else:
         # Choose an existing view from the list of available views
@@ -1856,11 +1855,9 @@ def page_create_view_dashlet_infos() -> None:
 
 
 def choose_view(name: DashboardName, title: str, create_dashlet_spec_func: Callable) -> None:
-    import cmk.gui.views as views  # pylint: disable=import-outside-toplevel
-
     vs_view = DropdownChoice(
         title=_("View name"),
-        choices=lambda: views.view_choices(allow_empty=False),
+        choices=lambda: view_choices(allow_empty=False),
         sorted=True,
         no_preselect_title="",
     )

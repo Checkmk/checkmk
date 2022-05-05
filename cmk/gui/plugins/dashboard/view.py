@@ -12,7 +12,7 @@ from cmk.gui.htmllib.context import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.plugins.dashboard.utils import dashlet_registry, IFrameDashlet
-from cmk.gui.plugins.views.utils import PainterOptions
+from cmk.gui.plugins.views.utils import data_source_registry, PainterOptions
 from cmk.gui.type_defs import SingleInfos, ViewSpec
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, requested_file_name, urlencode
 from cmk.gui.valuespec import DropdownChoice
@@ -85,7 +85,7 @@ class ABCViewDashlet(IFrameDashlet):
 
     def _get_infos_from_view_spec(self, view_spec: ViewSpec):
         ds_name = view_spec["datasource"]
-        return views.data_source_registry[ds_name]().infos
+        return data_source_registry[ds_name]().infos
 
 
 @dashlet_registry.register
@@ -134,7 +134,7 @@ class ViewDashlet(ABCViewDashlet):
         # single contexts, the dashlet editor needs to use these information.
         if requested_file_name(request) == "edit_dashlet" and request.has_var("datasource"):
             ds_name = request.get_str_input_mandatory("datasource")
-            return list(views.data_source_registry[ds_name]().infos)  # TODO: Hmmm...
+            return list(data_source_registry[ds_name]().infos)  # TODO: Hmmm...
 
         return self._get_infos_from_view_spec(self._dashlet_spec)
 

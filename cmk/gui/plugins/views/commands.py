@@ -1311,7 +1311,7 @@ class CommandScheduleDowntimes(Command):
 
     def _has_recurring_downtimes(self):
         try:
-            # The suppression below is OK, we just want to check if the module is there.
+            # TODO(ml): Import cycle
             import cmk.gui.cee.plugins.wato.cmc  # noqa: F401 # pylint: disable=unused-variable,unused-import,import-outside-toplevel
 
             return True

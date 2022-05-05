@@ -5,7 +5,12 @@
 import * as utils from "utils";
 import * as ajax from "ajax";
 
-var selection_properties = {
+interface Selection_Propoerties {
+    page_id : null | string,
+    selection_id : null | string,
+    selected_rows : string[]
+}
+var selection_properties : Selection_Propoerties = {
     // The unique ID to identify the current page and its selections of a user
     page_id: null,
     selection_id: null,
@@ -37,7 +42,7 @@ export function init_rowselect(properties) {
 }
 
 function table_init_rowselect(oTable) {
-    var childs = get_all_checkboxes(oTable);
+    var childs: null | HTMLInputElement[] = get_all_checkboxes(oTable);
     for (var i = 0; i < childs.length; i++) {
         // Perform initial selections
         if (selection_properties.selected_rows.indexOf(childs[i].name) > -1)
@@ -69,7 +74,7 @@ function table_init_rowselect(oTable) {
 // Container is an DOM element to search below or a list of DOM elements
 // to search below
 function get_all_checkboxes(container) {
-    var checkboxes = [],
+    var checkboxes: HTMLInputElement[] = [],
         childs,
         i;
     if (typeof container === "object" && container.length && !container.tagName) {
@@ -146,7 +151,7 @@ function highlight_row(elem, on) {
     return false;
 }
 
-function find_checkbox(oTd) {
+function find_checkbox(oTd): null | HTMLInputElement {
     // Find the checkbox of this oTdent to gather the number of cells
     // to highlight after the checkbox
     // 1. Go up to the row
@@ -154,7 +159,7 @@ function find_checkbox(oTd) {
     // 3. loop the number of columns to highlight
     var allTds = oTd.parentNode.children;
     var found = false;
-    var checkbox = null;
+    var checkbox: null | HTMLInputElement = null;
     for (var a = allTds.length - 1; a >= 0 && checkbox === null; a--) {
         if (found === false) {
             if (allTds[a] == oTd) {
@@ -168,7 +173,7 @@ function find_checkbox(oTd) {
         var oTds = allTds[a].children;
         for (var x = 0; x < oTds.length; x++) {
             if (oTds[x].tagName === "INPUT" && oTds[x].type == "checkbox") {
-                checkbox = oTds[x];
+                checkbox = oTds[x] as HTMLInputElement;
                 break;
             }
         }
@@ -268,19 +273,19 @@ export function toggle_all_rows(obj, name_select, name_deselect) {
         if (checkboxes[i].classList && checkboxes[i].classList.contains("failed"))
             some_failed = true;
     }
-
+    var span: ChildNode | null = null;
     // Toggle the state
     if (name_select || name_deselect) {
-        var span = document.getElementById("menu_entry_checkbox_selection").childNodes[0].lastChild;
+        var span = document.getElementById("menu_entry_checkbox_selection")!.childNodes[0].lastChild;
     }
     if (all_selected) {
         remove_selected_rows(checkboxes);
-        if (name_select) {
+        if (name_select && span) {
             span.textContent = name_select;
         }
     } else {
         select_all_rows(checkboxes, some_failed && none_selected);
-        if (name_deselect) {
+        if (name_deselect && span) {
             span.textContent = name_deselect;
         }
     }
@@ -325,8 +330,8 @@ export function toggle_group_rows(checkbox) {
     var rows = this_row.parentNode.children;
 
     var in_this_group = false;
-    var group_start = null;
-    var group_end = null;
+    var group_start: number | null = null;
+    var group_end: number | null = null;
     for (var i = 0; i < rows.length; i++) {
         if (rows[i].tagName !== "TR") continue;
 
@@ -350,17 +355,17 @@ export function toggle_group_rows(checkbox) {
     if (group_end === null) group_end = rows.length;
 
     // Found the group start and end row of the checkbox!
-    var group_rows = [];
-    for (var a = group_start; a < group_end; a++) {
+    var group_rows :HTMLTableRowElement[] = [];
+    for (var a = group_start; a < group_end!; a++) {
         if (rows[a].tagName === "TR") {
             group_rows.push(rows[a]);
         }
     }
-    toggle_all_rows(group_rows);
+    toggle_all_rows(group_rows, null, null);
 }
 
 export function update_bulk_moveto(val) {
-    var fields = document.getElementsByClassName("bulk_moveto");
+    var fields = document.getElementsByClassName("bulk_moveto") as HTMLCollectionOf<HTMLSelectElement>;
     for (var i = 0; i < fields.length; i++)
         for (var a = 0; a < fields[i].options.length; a++)
             if (fields[i].options[a].value == val) fields[i].options[a].selected = true;

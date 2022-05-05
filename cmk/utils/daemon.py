@@ -121,7 +121,8 @@ def set_cmdline(cmdline: bytes) -> None:
     argv = ctypes.POINTER(ctypes.c_char_p)()
     argc = ctypes.c_int()
     ctypes.pythonapi.Py_GetArgcArgv(ctypes.byref(argc), ctypes.byref(argv))
-    # mypy: The type is not detected correctly
+    # This is all a bit weird: According to mypy argv[i] is a ctypes.c_char_p, but here we get back
+    # a bytes object. We should probably just use the setproctitle package and nuke our Kung Fu.
     cmdlen = sum([len(argv[i]) for i in range(argc.value)]) + argc.value  # type: ignore[arg-type]
     # TODO: This can probably be simplified...
     _new_cmdline = ctypes.c_char_p(cmdline.ljust(cmdlen, b"\0"))  # noqa: F841

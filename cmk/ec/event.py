@@ -333,7 +333,7 @@ def parse_rfc5424_syslog_info(line: str) -> Event:
             structured_data
         )
         # TODO: Fix the typing chaos below. We really need to parse the attributes.
-        event.update(event_update)  # type: ignore[arg-type,typeddict-item]
+        event.update(event_update)  # type: ignore[typeddict-item]
         # TODO: What about the other non-string attributes of an event?
         if (service_level := event.get("sl")) is not None:
             event["sl"] = int(service_level)

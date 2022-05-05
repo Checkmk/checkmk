@@ -7,7 +7,7 @@
 from __future__ import annotations
 
 import time
-from typing import Any, Callable, Dict, Final, Iterable, Optional, Sequence, Tuple, TypedDict, Union
+from typing import Any, Callable, Final, Iterable, Optional, Sequence, Tuple, TypedDict, Union
 
 import cmk.utils.debug
 from cmk.utils.type_defs import LegacyCheckParameters, TimeperiodName
@@ -130,13 +130,15 @@ def boil_down_parameters(
     (23, 42)
 
     """
-    merged: Dict[str, Any] = {}
+    merged: dict[str, Any] = {}
     for par in parameters:
         if not isinstance(par, dict):
             return par
         merged.update((item for item in par.items() if item[0] not in merged))
 
     try:
+        # TODO: We could get rid of the suppression if we used a "isinstance(default, Mapping)"
+        # guard, but it's a bit unclear how this affects performance.
         return {**default, **merged}  # type: ignore[list-item]
     except TypeError:
         return merged or default

@@ -27,6 +27,7 @@ import cmk.utils.paths
 import cmk.utils.plugin_registry
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
+from cmk.utils.exceptions import MKParseFunctionError
 
 CrashInfo = Dict[str, Any]  # TODO: improve this type
 
@@ -89,7 +90,7 @@ class CrashReportStore:
             sorted(uuid_paths(base_dir), key=lambda p: uuid.UUID(str(p.name)).time, reverse=True),
             self._keep_num_crashes,
             None,
-        ):  # type: Path
+        ):
             # Remove crash report contents
             for f in crash_dir.iterdir():
                 with suppress(OSError):
@@ -213,8 +214,8 @@ def _get_generic_crash_info(type_name: str, details: Dict) -> CrashInfo:
     # to concatenate the traceback of the MKParseFunctionError() and the original
     # exception.
     # Re-raising exceptions will be much easier with Python 3.x.
-    if exc_type and exc_value and exc_type.__name__ == "MKParseFunctionError":
-        tb_list += traceback.extract_tb(exc_value.exc_info()[2])  # type: ignore[attr-defined]
+    if isinstance(exc_value, MKParseFunctionError):
+        tb_list += traceback.extract_tb(exc_value.exc_info()[2])
 
     # Unify different string types from exception messages to a unicode string
     # HACK: copy-n-paste from cmk.utils.exception.MKException.__str__ below.

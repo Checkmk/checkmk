@@ -91,9 +91,9 @@ class History:
 try:
     import datetime
 
-    from pymongo import DESCENDING  # type: ignore[import]
+    from pymongo import DESCENDING
     from pymongo.connection import Connection  # type: ignore[import]
-    from pymongo.errors import OperationFailure  # type: ignore[import]
+    from pymongo.errors import OperationFailure
 except ImportError:
     Connection = None
 

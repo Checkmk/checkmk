@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
+from pathlib import Path
 
 import pytest
 
@@ -20,7 +21,6 @@ from tests.testlib.site import Site
         "check_by_ssh",
         "check_clamd",
         "check_cluster",
-        "check_cpu_peaks",
         "check_dhcp",
         "check_dig",
         "check_disk",
@@ -96,7 +96,7 @@ from tests.testlib.site import Site
         "utils.sh",
     ],
 )
-def test_monitoring_plugins(site: Site, plugin):
-    plugin_path = site.path(os.path.join("lib/nagios/plugins", plugin))
-    assert os.path.exists(plugin_path)
+def test_monitoring_plugins(site: Site, plugin: str):
+    plugin_path = Path(site.root, "lib", "nagios", "plugins", plugin)
+    assert plugin_path.exists()
     assert os.access(plugin_path, os.X_OK)

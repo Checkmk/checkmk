@@ -26,7 +26,6 @@ import cmk.gui.watolib.activate_changes as activate_changes
 import cmk.gui.watolib.config_sync as config_sync
 import cmk.gui.watolib.utils as utils
 from cmk.gui.config import active_config
-from cmk.gui.http import request
 
 
 @pytest.fixture(name="mocked_responses")
@@ -267,34 +266,33 @@ def _get_expected_paths(user_id, is_pre_17_site, with_local):
         ]
 
     # The new sync directories create all needed files on the central site now
-    if not is_pre_17_site:
+    expected_paths += [
+        "etc/check_mk/apache.d",
+        "etc/check_mk/apache.d/wato",
+        "etc/check_mk/apache.d/wato/sitespecific.mk",
+        "etc/check_mk/conf.d/distributed_wato.mk",
+        "etc/check_mk/conf.d/wato/sitespecific.mk",
+        "etc/check_mk/mkeventd.d/wato/sitespecific.mk",
+        "etc/check_mk/multisite.d/wato/ca-certificates_sitespecific.mk",
+        "etc/check_mk/multisite.d/wato/sitespecific.mk",
+        "etc/check_mk/rrdcached.d",
+        "etc/check_mk/rrdcached.d/wato",
+        "etc/check_mk/rrdcached.d/wato/sitespecific.mk",
+        "etc/omd",
+        "etc/omd/sitespecific.mk",
+    ]
+
+    if is_enterprise_repo():
         expected_paths += [
-            "etc/check_mk/apache.d",
-            "etc/check_mk/apache.d/wato",
-            "etc/check_mk/apache.d/wato/sitespecific.mk",
-            "etc/check_mk/conf.d/distributed_wato.mk",
-            "etc/check_mk/conf.d/wato/sitespecific.mk",
-            "etc/check_mk/mkeventd.d/wato/sitespecific.mk",
-            "etc/check_mk/multisite.d/wato/ca-certificates_sitespecific.mk",
-            "etc/check_mk/multisite.d/wato/sitespecific.mk",
-            "etc/check_mk/rrdcached.d",
-            "etc/check_mk/rrdcached.d/wato",
-            "etc/check_mk/rrdcached.d/wato/sitespecific.mk",
-            "etc/omd",
-            "etc/omd/sitespecific.mk",
+            "etc/check_mk/dcd.d/wato/sitespecific.mk",
+            "etc/check_mk/mknotifyd.d/wato/sitespecific.mk",
         ]
 
-        if is_enterprise_repo():
-            expected_paths += [
-                "etc/check_mk/dcd.d/wato/sitespecific.mk",
-                "etc/check_mk/mknotifyd.d/wato/sitespecific.mk",
-            ]
+    if not cmk_version.is_raw_edition():
+        expected_paths += ["etc/check_mk/dcd.d/wato/distributed.mk"]
 
-        if not cmk_version.is_raw_edition():
-            expected_paths += ["etc/check_mk/dcd.d/wato/distributed.mk"]
-
-        if not cmk_version.is_managed_edition():
-            expected_paths += ["etc/omd/site.conf"]
+    if not cmk_version.is_managed_edition():
+        expected_paths += ["etc/omd/site.conf"]
 
     # TODO: The second condition should not be needed. Seems to be a subtle difference between the
     # CME and CRE/CEE snapshot logic
@@ -526,72 +524,6 @@ def test_generate_pre_17_site_snapshot(
         assert sorted(expected_files[subtar.name]) == files, (
             "Subtar %s has wrong files" % subtar.name
         )
-
-
-@pytest.mark.usefixtures("request_context", "fixture_disable_cmk_update_config")
-@pytest.mark.parametrize("remote_site", ["unit_remote_1", "unit_remote_2"])
-def test_apply_pre_17_sync_snapshot(
-    edition: cmk_version.Edition,
-    monkeypatch,
-    tmp_path,
-    with_user_login,
-    remote_site,
-):
-    snapshot_data_collector_class = (
-        "CMESnapshotDataCollector"
-        if edition is cmk_version.Edition.CME
-        else "CRESnapshotDataCollector"
-    )
-
-    is_pre_17_site = True
-    monkeypatch.setattr(cmk_version, "is_raw_edition", lambda: edition is cmk_version.Edition.CRE)
-    monkeypatch.setattr(
-        cmk_version, "is_managed_edition", lambda: edition is cmk_version.Edition.CME
-    )
-    monkeypatch.setattr(utils, "is_pre_17_remote_site", lambda s: is_pre_17_site)
-    monkeypatch.setattr(request, "headers", {"x-checkmk-version": "1.6.0p1"})
-
-    activation_manager = _get_activation_manager(monkeypatch, remote_site)
-    snapshot_settings = _create_sync_snapshot(
-        activation_manager,
-        snapshot_data_collector_class,
-        monkeypatch,
-        tmp_path,
-        is_pre_17_site=is_pre_17_site,
-        remote_site=remote_site,
-        edition=edition,
-    )
-
-    # Change unpack target directory from "unit test site" paths to a test specific path
-    unpack_dir = tmp_path / "snapshot_unpack"
-    if unpack_dir.exists():
-        shutil.rmtree(str(unpack_dir))
-
-    with open(snapshot_settings.snapshot_path, "rb") as f:
-        activate_changes.apply_pre_17_sync_snapshot(
-            remote_site, f.read(), unpack_dir, activate_changes.get_replication_paths()
-        )
-
-    expected_paths = _get_expected_paths(
-        user_id=with_user_login,
-        is_pre_17_site=is_pre_17_site,
-        with_local=active_config.sites[remote_site].get("replicate_mkps", False),
-    )
-
-    if cmk_version.is_managed_edition():
-        expected_paths += [
-            "etc/check_mk/dcd.d",
-            "etc/check_mk/dcd.d/wato",
-            "etc/check_mk/liveproxyd.d",
-            "etc/check_mk/liveproxyd.d/wato",
-            "etc/check_mk/mknotifyd.d",
-            "etc/check_mk/mknotifyd.d/wato",
-            "etc/check_mk/mkeventd.d/mkp",
-            "etc/check_mk/mkeventd.d/mkp/rule_packs",
-        ]
-
-    paths = [str(p.relative_to(unpack_dir)) for p in unpack_dir.glob("**/*")]
-    assert sorted(paths) == sorted(expected_paths)
 
 
 @pytest.mark.parametrize(

@@ -63,7 +63,6 @@ import cmk.gui.watolib.snapshots
 import cmk.gui.watolib.utils
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKAuthException, MKGeneralException, MKUserError, RequestTimeout
-from cmk.gui.htmllib.context import html
 from cmk.gui.http import request as _request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
@@ -84,11 +83,10 @@ from cmk.gui.sites import states as sites_states
 from cmk.gui.type_defs import ConfigDomainName, HTTPVariables
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.ntop import is_ntop_configured
-from cmk.gui.utils.timeout_manager import timeout_manager
 from cmk.gui.watolib.audit_log import log_audit
 from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
 from cmk.gui.watolib.config_domains import ConfigDomainOMD
-from cmk.gui.watolib.config_sync import extract_from_buffer, ReplicationPath, SnapshotCreator
+from cmk.gui.watolib.config_sync import ReplicationPath, SnapshotCreator
 from cmk.gui.watolib.global_settings import save_site_global_settings
 from cmk.gui.watolib.hosts_and_folders import (
     collect_all_hosts,
@@ -2101,26 +2099,6 @@ def get_number_of_pending_changes() -> int:
     return len(changes.grouped_changes())
 
 
-def apply_pre_17_sync_snapshot(
-    site_id: SiteId, tar_content: bytes, base_dir: Path, components: List[ReplicationPath]
-) -> bool:
-    """Apply the snapshot received from a central site to the local site"""
-    try:
-        timeout_manager.disable_timeout()
-        extract_from_buffer(tar_content, base_dir, components)
-
-        _save_pre_17_site_globals_on_slave_site(tar_content)
-
-        # Create rule making this site only monitor our hosts
-        create_distributed_wato_files(cmk.utils.paths.omd_root, site_id, is_remote=True)
-
-        _execute_post_config_sync_actions(site_id)
-    finally:
-        timeout_manager.enable_timeout(html.request.request_timeout)
-
-    return True
-
-
 def _need_to_update_config_after_sync() -> bool:
     if not (central_version := _request.headers.get("x-checkmk-version")):
         raise ValueError("Request header x-checkmk-version is missing")
@@ -2211,26 +2189,6 @@ def verify_remote_site_config(site_id: SiteId) -> None:
         message += ", ".join(change["text"] for _change_id, change in pending[:10])
 
         raise MKGeneralException(message)
-
-
-def _save_pre_17_site_globals_on_slave_site(tarcontent: bytes) -> None:
-    tmp_dir = cmk.utils.paths.tmp_dir + "/sitespecific-%s" % id(object)
-    try:
-        if not os.path.exists(tmp_dir):
-            store.mkdir(tmp_dir)
-
-        extract_from_buffer(
-            tarcontent,
-            Path(tmp_dir),
-            [ReplicationPath("dir", "sitespecific", "site_globals/sitespecific.mk", [])],
-        )
-
-        site_globals = store.load_object_from_file(
-            tmp_dir + "site_globals/sitespecific.mk", default={}
-        )
-        save_site_global_settings(site_globals)
-    finally:
-        shutil.rmtree(tmp_dir)
 
 
 def create_distributed_wato_files(base_dir: Path, site_id: SiteId, is_remote: bool) -> None:

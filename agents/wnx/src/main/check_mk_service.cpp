@@ -402,10 +402,8 @@ void WaitForPostInstall() {
     } while (cma::install::IsPostInstallRequired());
 }
 
-}  // namespace
-
-namespace {
 int ProcessWinperf(const std::vector<std::wstring> &args) {
+    // Two possibilities:
     // @file winperf file:a.txt id:12345 timeout:20 238:processor
     //       winperf file:a.txt id:12345 timeout:20 238:processor
     int offset = 0;
@@ -418,22 +416,21 @@ int ProcessWinperf(const std::vector<std::wstring> &args) {
             XLOG::d.i("winperf started");
             offset++;
         } catch (const std::exception & /*e*/) {
+            // nothing can be done here:
+            // command line is bad, log file probably too
             return 1;
         }
     };
 
-    auto [error_val, name, id_val, timeout_val] =
+    auto parsed =
         exe::cmdline::ParseExeCommandLine({args.begin() + offset, args.end()});
 
-    if (error_val != 0) {
-        XLOG::l("Invalid parameters in command line [{}]", error_val);
+    if (parsed.error_code != 0) {
+        XLOG::l("Invalid parameters in command line [{}]", parsed.error_code);
         return 1;
     }
 
-    std::wstring prefix = name;
-    std::wstring port = args[offset + 1];
-    std::wstring id = id_val;
-    std::wstring timeout = timeout_val;
+    const auto &port = args[offset + 1];
     std::vector<std::wstring_view> counters;
     for (size_t i = 4 + offset; i < args.size(); i++) {
         if (std::wstring(L"#") == args[i]) {
@@ -442,7 +439,8 @@ int ProcessWinperf(const std::vector<std::wstring> &args) {
         counters.emplace_back(args[i]);
     }
 
-    return provider::RunPerf(prefix, port, id, ToInt(timeout, 20), counters);
+    return provider::RunPerf(parsed.name, port, parsed.id_val,
+                             ToInt(parsed.timeout_val, 20), counters);
 }
 }  // namespace
 
@@ -651,7 +649,6 @@ int MainFunction(int argc, wchar_t const *argv[]) {
 }  // namespace cma
 
 #if !defined(CMK_TEST)
-// This is our main: do not add code here
 int wmain(int argc, wchar_t const *argv[]) {
     return cma::MainFunction(argc, argv);
 }

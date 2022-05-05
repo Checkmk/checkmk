@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Any, Callable, Dict, Iterable, NamedTuple, Optional, Sequence, Tuple, Union
 
 import requests
-import urllib3  # type: ignore[import]
+import urllib3
 
 from livestatus import SiteConfiguration, SiteId
 

@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Dict, Set
 
 import requests
-import urllib3  # type: ignore[import]
+import urllib3
 
 import cmk.utils.site
 from cmk.utils.exceptions import MKException

@@ -47,7 +47,7 @@ from typing import (
 from urllib.parse import urlparse
 
 import requests
-import urllib3  # type: ignore[import]
+import urllib3
 from kubernetes import client  # type: ignore[import] # pylint: disable=import-error
 from pydantic import BaseModel
 

@@ -19,7 +19,7 @@ import pytest
 
 # the urllib3 ignore import annotation can be removed when urllib3 v2.0 is released
 #   see https://github.com/urllib3/urllib3/issues/1897
-import urllib3  # type: ignore[import]
+import urllib3
 
 from tests.testlib.compare_html import compare_html
 from tests.testlib.event_console import CMKEventConsole, CMKEventConsoleStatus

@@ -9,7 +9,7 @@ import sys
 import urllib.parse
 
 import requests
-import urllib3  # type: ignore[import]
+import urllib3
 
 import cmk.utils.password_store
 from cmk.utils.exceptions import MKGeneralException

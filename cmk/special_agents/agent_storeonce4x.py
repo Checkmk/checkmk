@@ -15,7 +15,7 @@ import math
 from pathlib import Path
 from typing import Any, Callable, Generator, Optional, Sequence, Tuple
 
-import urllib3  # type: ignore[import]
+import urllib3
 from oauthlib.oauth2 import LegacyApplicationClient  # type: ignore[import]
 from requests_oauthlib import OAuth2Session  # type: ignore[import]
 

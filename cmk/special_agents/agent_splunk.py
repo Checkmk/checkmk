@@ -9,7 +9,7 @@ import sys
 from typing import Any, Callable, NamedTuple
 
 import requests
-import urllib3  # type: ignore[import]
+import urllib3
 
 import cmk.utils.password_store
 

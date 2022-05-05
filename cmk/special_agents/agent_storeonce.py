@@ -10,7 +10,7 @@ import sys
 import xml.etree.ElementTree as ET
 
 import requests
-import urllib3  # type: ignore[import]
+import urllib3
 
 
 def usage():

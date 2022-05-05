@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import cast
 
 import requests
-import urllib3  # type: ignore[import]
+import urllib3
 from requests_kerberos import HTTPKerberosAuth  # type: ignore[import]
 
 import cmk.utils.password_store

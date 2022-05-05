@@ -10,7 +10,7 @@ import logging
 import sys
 from typing import Any, Dict, Union
 
-import urllib3  # type: ignore[import]
+import urllib3
 from jira import JIRA  # type: ignore[import]
 from jira.exceptions import JIRAError  # type: ignore[import]
 from requests.exceptions import ConnectionError as RequestsConnectionError

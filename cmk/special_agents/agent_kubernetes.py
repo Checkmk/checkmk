@@ -42,7 +42,7 @@ from typing import (
 )
 
 import dateutil.parser
-import urllib3  # type: ignore[import]
+import urllib3
 
 # We currently have no typeshed for kubernetes
 from kubernetes import client  # type: ignore[import] # pylint: disable=import-error

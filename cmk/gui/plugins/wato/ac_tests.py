@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Iterator, Type
 
 import requests
-import urllib3  # type: ignore[import]
+import urllib3
 
 from livestatus import LocalConnection
 

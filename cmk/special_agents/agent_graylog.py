@@ -11,7 +11,7 @@ import time
 from typing import NamedTuple
 
 import requests
-import urllib3  # type: ignore[import]
+import urllib3
 
 import cmk.utils.password_store
 

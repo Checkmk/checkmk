@@ -697,8 +697,8 @@ TEST(AgentConfig, FactoryConfig) {
                   kDefaultWmiTimeout);
 
         EXPECT_EQ(GetVal(groups::kGlobal, vars::kCpuLoadMethod,
-                         std::string{values::kCpuLoadPerf}),
-                  values::kCpuLoadWmi);
+                         std::string{values::kCpuLoadWmi}),
+                  values::kCpuLoadPerf);
 
         auto passphrase =
             GetVal(realtime, vars::kGlobalPassword, std::string());

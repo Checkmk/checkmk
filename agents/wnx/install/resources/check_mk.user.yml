@@ -149,7 +149,7 @@ global:
     # In seconds. Windows may be slow during WMI, increase the value when you have problems
     # wmi_timeout: 5
 
-    # cpuload_method: 'use_wmi' # set use_perf if you have serious problems with the section
+    # cpuload_method: 'use_perf' # set use_wmi if you have serious problems with the section
 
 
     # -------------------------------------------------------------- 

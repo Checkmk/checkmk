@@ -27,3 +27,5 @@ tmpfs
 todo
 Vlissides
 rrdcached
+localhost
+Kerberos

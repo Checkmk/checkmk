@@ -25,6 +25,7 @@ Components
 .. toctree::
    :maxdepth: 1
 
+   arch-comp-apache.rst
    arch-comp-checkengine.rst
    arch-comp-core.rst
    arch-comp-liveproxyd.rst
@@ -34,6 +35,7 @@ Components
    arch-comp-rrd-backend.rst
    arch-comp-rrdcached.rst
    arch-comp-nagvis.rst
-   arch-comp-template.rst
 
    arch-comp-agent-linux.rst
+
+   arch-comp-template.rst

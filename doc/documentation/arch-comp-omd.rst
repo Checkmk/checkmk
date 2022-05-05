@@ -36,7 +36,8 @@ OMD hooks into different parts of the Operating system.
 * Each site has it's own operating system user (The *site user*)
 * Each site is located in it's dedicated *site directory*
 * Each site creates a ramdisk for temporary file processing
-* Each site hooks into the system wide apache configuration for HTTP access
+* Each site hooks into the system wide
+  :doc:`Apache configuration <arch-comp-apache>` for HTTP access
 * Each site has a dedicated crontab
 
 The integration with the OS configuration should be as lean as possible so that
@@ -100,11 +101,10 @@ on the configuration.
       component "[[../arch-comp-liveproxyd.html liveproxyd]]" as liveproxyd
       [crontab]
       component "[[../arch-comp-dcd.html dcd]]" as dcd
-      [apache]
+      component "[[../arch-comp-apache.html Apache]]" as apache
       [agent-receiver]
       [redis]
       [stunnel]
-      [systemd]
       [cmc]
    }
    node "Microcore helper processes" as cmc_p {

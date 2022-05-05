@@ -58,8 +58,8 @@ BI_PACK_ID = {
 }
 
 
-def _bailout_with_message(message):
-    raise ProblemException(404, http.client.responses[404], message)
+def _make_error(message):
+    return ProblemException(404, http.client.responses[404], message)
 
 
 #   .--Rules---------------------------------------------------------------.
@@ -127,7 +127,7 @@ def get_bi_rule(params: Mapping[str, Any]) -> Response:
     try:
         bi_rule = bi_packs.get_rule_mandatory(params["rule_id"])
     except MKGeneralException:
-        _bailout_with_message("Unknown bi_rule: %s" % params["rule_id"])
+        raise _make_error("Unknown bi_rule: %s" % params["rule_id"])
 
     data = {"pack_id": bi_rule.pack_id}
     data.update(BIRuleSchema().dump(bi_rule))
@@ -173,14 +173,14 @@ def _update_bi_rule(params, must_exist: bool):
     try:
         target_pack = bi_packs.get_pack_mandatory(rule_config["pack_id"])
     except KeyError:
-        _bailout_with_message("Unknown bi_pack: %s" % rule_config["pack_id"])
+        raise _make_error("Unknown bi_pack: %s" % rule_config["pack_id"])
 
     rule_id = params["rule_id"]
     rule_exists = bool(bi_packs.get_rule(rule_id))
     if rule_exists and not must_exist:
-        _bailout_with_message("This rule_id already exists: %s" % rule_id)
+        raise _make_error("This rule_id already exists: %s" % rule_id)
     if not rule_exists and must_exist:
-        _bailout_with_message("This rule_id does not exist: %s" % rule_id)
+        raise _make_error("This rule_id does not exist: %s" % rule_id)
 
     rule_config["id"] = rule_id
     bi_rule = BIRule(rule_config)
@@ -208,7 +208,7 @@ def delete_bi_rule(params: Mapping[str, Any]) -> Response:
     try:
         bi_rule = bi_packs.get_rule_mandatory(params["rule_id"])
     except KeyError:
-        _bailout_with_message("Unknown bi_rule: %s" % params["rule_id"])
+        raise _make_error("Unknown bi_rule: %s" % params["rule_id"])
 
     bi_packs.delete_rule(bi_rule.id)
     bi_packs.save_config()
@@ -292,7 +292,7 @@ def get_bi_aggregation(params: Mapping[str, Any]) -> Response:
     try:
         bi_aggregation = bi_packs.get_aggregation_mandatory(params["aggregation_id"])
     except MKGeneralException:
-        _bailout_with_message("Unknown bi_aggregation: %s" % params["aggregation_id"])
+        raise _make_error("Unknown bi_aggregation: %s" % params["aggregation_id"])
 
     data = {"pack_id": bi_aggregation.pack_id}
     data.update(BIAggregationSchema().dump(bi_aggregation))
@@ -338,14 +338,14 @@ def _update_bi_aggregation(params, must_exist: bool):
     try:
         target_pack = bi_packs.get_pack_mandatory(aggregation_config["pack_id"])
     except MKGeneralException:
-        _bailout_with_message("Unknown bi_pack: %s" % aggregation_config["pack_id"])
+        raise _make_error("Unknown bi_pack: %s" % aggregation_config["pack_id"])
 
     aggregation_id = params["aggregation_id"]
     aggregation_exists = bool(bi_packs.get_aggregation(aggregation_id))
     if aggregation_exists and not must_exist:
-        _bailout_with_message("This aggregation_id already exists: %s" % aggregation_id)
+        raise _make_error("This aggregation_id already exists: %s" % aggregation_id)
     if not aggregation_exists and must_exist:
-        _bailout_with_message("This aggregation_id does not exist: %s" % aggregation_id)
+        raise _make_error("This aggregation_id does not exist: %s" % aggregation_id)
 
     aggregation_config["id"] = aggregation_id
     bi_aggregation = BIAggregation(aggregation_config)
@@ -373,7 +373,7 @@ def delete_bi_aggregation(params: Mapping[str, Any]) -> Response:
     try:
         bi_aggregation = bi_packs.get_aggregation_mandatory(params["aggregation_id"])
     except KeyError:
-        _bailout_with_message("Unknown bi_aggregation: %s" % params["aggregation_id"])
+        raise _make_error("Unknown bi_aggregation: %s" % params["aggregation_id"])
 
     bi_packs.delete_aggregation(bi_aggregation.id)
     bi_packs.save_config()
@@ -436,7 +436,7 @@ def get_bi_pack(params: Mapping[str, Any]) -> Response:
     bi_packs.load_config()
     bi_pack = bi_packs.get_pack(params["pack_id"])
     if bi_pack is None:
-        _bailout_with_message("This pack_id does not exist: %s" % params["pack_id"])
+        raise _make_error("This pack_id does not exist: %s" % params["pack_id"])
     assert bi_pack is not None
 
     uri = constructors.object_href("bi_pack", bi_pack.id)
@@ -499,11 +499,11 @@ def delete_bi_pack(params: Mapping[str, Any]) -> Response:
     try:
         target_pack = bi_packs.get_pack_mandatory(pack_id)
     except KeyError:
-        _bailout_with_message("Unknown bi_pack: %s" % pack_id)
+        raise _make_error("Unknown bi_pack: %s" % pack_id)
 
     num_rules = target_pack.num_rules()
     if num_rules > 0:
-        _bailout_with_message(
+        raise _make_error(
             "Cannot delete bi_pack %s. It contains %d rules, which might be used in other packs"
             % (pack_id, num_rules)
         )
@@ -571,9 +571,9 @@ def _update_bi_pack(params, must_exist: bool):
     pack_id = params["pack_id"]
     existing_pack = bi_packs.get_pack(pack_id)
     if existing_pack and not must_exist:
-        _bailout_with_message("This pack_id already exists: %s" % pack_id)
+        raise _make_error("This pack_id already exists: %s" % pack_id)
     if not existing_pack and must_exist:
-        _bailout_with_message("This pack_id does not exist: %s" % pack_id)
+        raise _make_error("This pack_id does not exist: %s" % pack_id)
 
     pack_config = {}
     if existing_pack:

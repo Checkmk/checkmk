@@ -122,7 +122,6 @@ from cmk.gui.valuespec import (
     ValueSpecHelp,
     ValueSpecText,
 )
-from cmk.gui.watolib import LivestatusViaTCP  # noqa: F401 # pylint: disable=unused-import
 from cmk.gui.watolib.check_mk_automations import (
     get_check_information as get_check_information_automation,
 )

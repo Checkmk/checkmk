@@ -23,7 +23,6 @@ from cmk.utils.type_defs import DiscoveryResult, TagConfigSpec, TagID
 
 import cmk.gui.bi as bi
 import cmk.gui.userdb as userdb
-import cmk.gui.watolib as watolib
 import cmk.gui.watolib.changes as _changes
 import cmk.gui.watolib.groups as groups
 import cmk.gui.watolib.users
@@ -51,6 +50,7 @@ from cmk.gui.watolib.bakery import try_bake_agents_for_hosts
 from cmk.gui.watolib.check_mk_automations import delete_hosts, discovery, try_discovery
 from cmk.gui.watolib.hosts_and_folders import check_wato_foldername, CREFolder, Folder, Host
 from cmk.gui.watolib.rulesets import AllRulesets, FolderRulesets, Ruleset, SingleRulesetRecursively
+from cmk.gui.watolib.sites import SiteManagementFactory
 from cmk.gui.watolib.tags import TagConfigFile
 
 # .
@@ -1027,7 +1027,7 @@ class APICallSites(APICallCollection):
         }
 
     def _get(self, request: Mapping[str, Any]) -> dict[str, Any]:
-        site_mgmt = watolib.SiteManagementFactory().factory()
+        site_mgmt = SiteManagementFactory().factory()
 
         all_sites = site_mgmt.load_sites()
         existing_site = all_sites.get(request["site_id"])
@@ -1040,14 +1040,14 @@ class APICallSites(APICallCollection):
         return sites_dict
 
     def _get_all(self, request: Mapping[str, Any]) -> dict[str, Any]:
-        site_mgmt = watolib.SiteManagementFactory().factory()
+        site_mgmt = SiteManagementFactory().factory()
         all_sites = site_mgmt.load_sites()
         sites_dict: dict[str, Any] = {"sites": all_sites}
         sites_dict["configuration_hash"] = compute_config_hash(all_sites)
         return sites_dict
 
     def _set(self, request: Mapping[str, Any]) -> None:
-        site_mgmt = watolib.SiteManagementFactory().factory()
+        site_mgmt = SiteManagementFactory().factory()
 
         all_sites = site_mgmt.load_sites()
         existing_site = all_sites.get(request["site_id"])
@@ -1064,7 +1064,7 @@ class APICallSites(APICallCollection):
         site_mgmt.save_sites(all_sites)
 
     def _set_all(self, request: Mapping[str, Any]) -> None:
-        site_mgmt = watolib.SiteManagementFactory().factory()
+        site_mgmt = SiteManagementFactory().factory()
 
         all_sites = site_mgmt.load_sites()
         if "configuration_hash" in request:
@@ -1076,7 +1076,7 @@ class APICallSites(APICallCollection):
         site_mgmt.save_sites(prepare_raw_site_config(request["sites"]))
 
     def _delete(self, request: Mapping[str, Any]) -> None:
-        site_mgmt = watolib.SiteManagementFactory().factory()
+        site_mgmt = SiteManagementFactory().factory()
 
         all_sites = site_mgmt.load_sites()
         existing_site = all_sites.get(request["site_id"])
@@ -1086,7 +1086,7 @@ class APICallSites(APICallCollection):
         site_mgmt.delete_site(request["site_id"])
 
     def _login(self, request: Mapping[str, Any]) -> None:
-        site_mgmt = watolib.SiteManagementFactory().factory()
+        site_mgmt = SiteManagementFactory().factory()
         all_sites = site_mgmt.load_sites()
         site = all_sites.get(request["site_id"])
         if not site:
@@ -1111,7 +1111,7 @@ class APICallSites(APICallCollection):
         site_mgmt.save_sites(all_sites)
 
     def _logout(self, request: Mapping[str, Any]) -> None:
-        site_mgmt = watolib.SiteManagementFactory().factory()
+        site_mgmt = SiteManagementFactory().factory()
         all_sites = site_mgmt.load_sites()
         site = all_sites.get(request["site_id"])
         if not site:

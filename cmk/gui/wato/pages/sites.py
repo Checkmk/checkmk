@@ -24,7 +24,6 @@ from cmk.utils.site import omd_site
 import cmk.gui.forms as forms
 import cmk.gui.log as log
 import cmk.gui.sites
-import cmk.gui.watolib as watolib
 import cmk.gui.watolib.audit_log as _audit_log
 import cmk.gui.watolib.changes as _changes
 from cmk.gui.breadcrumb import Breadcrumb
@@ -94,7 +93,11 @@ from cmk.gui.watolib.global_settings import (
     save_site_global_settings,
 )
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_preserving_link, make_action_link
-from cmk.gui.watolib.sites import is_livestatus_encrypted, site_globals_editable
+from cmk.gui.watolib.sites import (
+    is_livestatus_encrypted,
+    site_globals_editable,
+    SiteManagementFactory,
+)
 
 
 @mode_registry.register
@@ -128,7 +131,7 @@ class ModeEditSite(WatoMode):
 
     def __init__(self):
         super().__init__()
-        self._site_mgmt = watolib.SiteManagementFactory().factory()
+        self._site_mgmt = SiteManagementFactory().factory()
 
         _site_id_return = request.get_ascii_input("site")
         self._site_id = None if _site_id_return is None else SiteId(_site_id_return)
@@ -546,7 +549,7 @@ class ModeDistributedMonitoring(WatoMode):
 
     def __init__(self):
         super().__init__()
-        self._site_mgmt = watolib.SiteManagementFactory().factory()
+        self._site_mgmt = SiteManagementFactory().factory()
 
     def title(self):
         return _("Distributed monitoring")
@@ -883,7 +886,7 @@ class ModeAjaxFetchSiteStatus(AjaxPage):
 
         site_states = {}
 
-        sites = list(watolib.SiteManagementFactory().factory().load_sites().items())
+        sites = list(SiteManagementFactory().factory().load_sites().items())
         replication_sites = [e for e in sites if e[1]["replication"]]
         replication_status = ReplicationStatusFetcher().fetch(replication_sites)
 
@@ -1067,7 +1070,7 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
     def __init__(self):
         super().__init__()
         self._site_id = SiteId(request.get_ascii_input_mandatory("site"))
-        self._site_mgmt = watolib.SiteManagementFactory().factory()
+        self._site_mgmt = SiteManagementFactory().factory()
         self._configured_sites = self._site_mgmt.load_sites()
         try:
             self._site = self._configured_sites[self._site_id]
@@ -1193,7 +1196,7 @@ class ModeEditSiteGlobalSetting(ABCEditGlobalSettingMode):
         super()._from_vars()
         self._site_id = SiteId(request.get_ascii_input_mandatory("site"))
         if self._site_id:
-            self._configured_sites = watolib.SiteManagementFactory().factory().load_sites()
+            self._configured_sites = SiteManagementFactory().factory().load_sites()
             try:
                 site = self._configured_sites[self._site_id]
             except KeyError:
@@ -1209,7 +1212,7 @@ class ModeEditSiteGlobalSetting(ABCEditGlobalSettingMode):
         return [self._site_id]
 
     def _save(self):
-        watolib.SiteManagementFactory().factory().save_sites(self._configured_sites, activate=False)
+        SiteManagementFactory().factory().save_sites(self._configured_sites, activate=False)
         if self._site_id == omd_site():
             save_site_global_settings(self._current_settings)
 
@@ -1238,7 +1241,7 @@ class ModeSiteLivestatusEncryption(WatoMode):
     def __init__(self):
         super().__init__()
         self._site_id = SiteId(request.get_ascii_input_mandatory("site"))
-        self._site_mgmt = watolib.SiteManagementFactory().factory()
+        self._site_mgmt = SiteManagementFactory().factory()
         self._configured_sites = self._site_mgmt.load_sites()
         try:
             self._site = self._configured_sites[self._site_id]

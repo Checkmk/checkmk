@@ -84,6 +84,7 @@ import cmk.gui.watolib as watolib
 import cmk.gui.watolib.changes
 import cmk.gui.watolib.hosts_and_folders
 import cmk.gui.watolib.rulespecs
+import cmk.gui.watolib.sites
 import cmk.gui.watolib.timeperiods
 import cmk.gui.watolib.user_scripts
 import cmk.gui.watolib.utils
@@ -237,7 +238,7 @@ import cmk.gui.watolib.config_domains
 # the current plugin API functions working
 import cmk.gui.watolib.network_scan
 import cmk.gui.watolib.read_only
-from cmk.gui.watolib import LivestatusViaTCP
+from cmk.gui.watolib.sites import LivestatusViaTCP
 
 modes: Dict[Any, Any] = {}
 
@@ -339,7 +340,6 @@ def _register_pre_21_plugin_api() -> None:
         "IPMIParameters",
         "is_wato_slave_site",
         "Levels",
-        "LivestatusViaTCP",
         "main_module_registry",
         "MainMenu",
         "MainModuleTopic",
@@ -427,6 +427,8 @@ def _register_pre_21_plugin_api() -> None:
         "rulespec_registry",
     ):
         api_module.__dict__[name] = cmk.gui.watolib.rulespecs.__dict__[name]
+    for name in ("LivestatusViaTCP",):
+        api_module.__dict__[name] = cmk.gui.watolib.sites.__dict__[name]
     for name in ("TimeperiodSelection",):
         api_module.__dict__[name] = cmk.gui.watolib.timeperiods.__dict__[name]
     for name in (

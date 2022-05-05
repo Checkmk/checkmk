@@ -17,11 +17,7 @@ from cmk.utils.type_defs import ConfigurationWarnings
 
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.plugins.wato.utils import (
-    ConfigVariableGroupSiteManagement,
-    LivestatusViaTCP,
-    ReplicationPath,
-)
+from cmk.gui.plugins.wato.utils import ConfigVariableGroupSiteManagement, ReplicationPath
 from cmk.gui.plugins.watolib.utils import (
     ABCConfigDomain,
     config_domain_registry,
@@ -44,6 +40,7 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.watolib.activate_changes import add_replication_paths
 from cmk.gui.watolib.config_domains import ConfigDomainOMD
+from cmk.gui.watolib.sites import LivestatusViaTCP
 
 # .
 #   .--omd config----------------------------------------------------------.

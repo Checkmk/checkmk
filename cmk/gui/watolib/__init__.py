@@ -20,9 +20,9 @@ import cmk.gui.userdb as userdb
 import cmk.gui.watolib.auth_php
 import cmk.gui.watolib.automation_commands as _automation_commands
 import cmk.gui.watolib.config_domains as _config_domains
+import cmk.gui.watolib.sites
 import cmk.gui.weblib
 from cmk.gui.plugins.watolib.utils import config_domain_registry as _config_domain_registry
-from cmk.gui.watolib.sites import CEESiteManagement, LivestatusViaTCP, SiteManagementFactory
 
 if _cmk_version.is_managed_edition():
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module

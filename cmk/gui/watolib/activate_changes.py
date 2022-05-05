@@ -1709,10 +1709,8 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
         start = time.time()
 
         try:
-            if self._snapshot_settings.create_pre_17_snapshot:
-                self._synchronize_pre_17_site()
-            else:
-                self._synchronize_17_or_newer_site()
+            assert not self._snapshot_settings.create_pre_17_snapshot
+            self._synchronize_17_or_newer_site()
         finally:
             duration = time.time() - start
             self.update_activation_time(self._site_id, ACTIVATION_TIME_SYNC, duration)
@@ -1818,47 +1816,6 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
 
         if response is not True:
             raise MKGeneralException(_("Failed to synchronize with site: %s") % response)
-
-    # TODO: Compatibility for 1.6 -> 1.7 migration. Can be removed with 1.8.
-    def _synchronize_pre_17_site(self) -> None:
-        """This is done on the central site to initiate the sync process"""
-        self._logger.debug("Starting config sync with pre 1.7 site")
-        result = self._push_pre_17_snapshot_to_site()
-        self._logger.debug("Finished config sync")
-
-        # Pre 1.2.7i3 and sites return True on success and a string on error.
-        # 1.2.7i3 and later return a list of warning messages on success.
-        # [] means OK and no warnings. The error handling is unchanged.
-        # Since 1.4.0i3 the old API (True -> success, <unicode>/<str> -> error)
-        if isinstance(result, list):
-            result = True
-
-        if result is not True:
-            raise MKGeneralException(_("Failed to synchronize with site: %s") % result)
-
-    def _push_pre_17_snapshot_to_site(self) -> bool:
-        """Calls a remote automation call push-snapshot which is handled by AutomationPushSnapshot()"""
-        site = get_site_config(self._site_id)
-
-        url = append_query_string(
-            site["multisiteurl"] + "automation.py",
-            [
-                ("command", "push-snapshot"),
-                ("secret", site["secret"]),
-                ("siteid", site["id"]),
-                ("debug", active_config.debug and "1" or ""),
-            ],
-        )
-
-        response_text = self._upload_file(url, site.get("insecure", False))
-
-        try:
-            return ast.literal_eval(response_text)
-        except SyntaxError:
-            raise cmk.gui.watolib.automations.MKAutomationException(
-                _("Garbled automation response: <pre>%s</pre>")
-                % (escaping.escape_attribute(response_text))
-            )
 
     def _upload_file(self, url, insecure):
         with open(self._snapshot_settings.snapshot_path, "rb") as f:

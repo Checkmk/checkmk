@@ -55,7 +55,6 @@ def test_registered_automation_commands():
         "fetch-agent-output-start",
         "network-scan",
         "ping",
-        "push-snapshot",
         "get-config-sync-state",
         "receive-config-sync",
         "service-discovery-job",

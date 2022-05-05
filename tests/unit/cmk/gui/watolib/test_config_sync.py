@@ -7,7 +7,6 @@
 import shutil
 import tarfile
 import time
-from io import BufferedIOBase
 from pathlib import Path
 from typing import Dict, List
 
@@ -736,58 +735,3 @@ def test_synchronize_site(
 
     site_activation._time_started = time.time()
     site_activation._synchronize_site()
-
-
-# This test does not perform the full synchronization. It executes the central site parts and mocks
-# the remote site HTTP calls
-@pytest.mark.usefixtures("request_context")
-def test_synchronize_pre_17_site(monkeypatch, edition: cmk_version.Edition, tmp_path, mocker):
-    snapshot_data_collector_class = (
-        "CMESnapshotDataCollector"
-        if edition is cmk_version.Edition.CME
-        else "CRESnapshotDataCollector"
-    )
-
-    if edition is cmk_version.Edition.CME:
-        pytest.skip("Seems faked site environment is not 100% correct")
-
-    is_pre_17_site = True
-    monkeypatch.setattr(utils, "is_pre_17_remote_site", lambda s: is_pre_17_site)
-
-    activation_manager = _get_activation_manager(monkeypatch)
-    snapshot_settings = _create_sync_snapshot(
-        activation_manager,
-        snapshot_data_collector_class,
-        monkeypatch,
-        tmp_path,
-        is_pre_17_site=is_pre_17_site,
-        remote_site="unit_remote_1",
-        edition=edition,
-    )
-
-    site_activation = activate_changes.ActivateChangesSite(
-        SiteId("unit_remote_1"),
-        snapshot_settings,
-        activation_manager._activation_id,
-        prevent_activate=True,
-    )
-
-    # Could be better to mock requests instead of our own code
-    get_url_mock = mocker.patch("cmk.gui.watolib.automations.get_url", return_value="True")
-
-    site_activation._time_started = time.time()
-    site_activation._synchronize_site()
-
-    get_url_mock.assert_called_once()
-    args, kwargs = get_url_mock.call_args
-
-    assert args == (
-        "http://localhost/unit_remote_1/check_mk/automation.py?command=push-snapshot&debug=&secret=watosecret&siteid=unit_remote_1",
-        False,
-    )
-    assert list(kwargs.keys()) == ["files"]
-    assert list(kwargs["files"].keys()) == ["snapshot"]
-    assert isinstance(kwargs["files"]["snapshot"], BufferedIOBase)
-
-    file_name = kwargs["files"]["snapshot"].name  # type: ignore[attr-defined]
-    assert file_name == snapshot_settings.snapshot_path

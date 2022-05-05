@@ -42,16 +42,22 @@ from cmk.gui.plugins.webapi.utils import (
     check_hostname,
     compute_config_hash,
     validate_config_hash,
-    validate_host_attributes,
 )
 from cmk.gui.watolib.activate_changes import activate_changes_start, activate_changes_wait
 from cmk.gui.watolib.automations import do_site_login
 from cmk.gui.watolib.bakery import try_bake_agents_for_hosts
 from cmk.gui.watolib.check_mk_automations import delete_hosts, discovery, try_discovery
+from cmk.gui.watolib.host_attributes import validate_host_attributes as _validate_host_attributes
 from cmk.gui.watolib.hosts_and_folders import check_wato_foldername, CREFolder, Folder, Host
 from cmk.gui.watolib.rulesets import AllRulesets, FolderRulesets, Ruleset, SingleRulesetRecursively
 from cmk.gui.watolib.sites import SiteManagementFactory
 from cmk.gui.watolib.tags import TagConfigFile
+
+
+def validate_host_attributes(attributes, *, new=False) -> None:
+    # inventory_failed and site are not "real" host_attributes attributes (TODO: Clean this up!)
+    _validate_host_attributes(attributes, extra_attrs=("inventory_failed", "site"), new=new)
+
 
 # .
 #   .--Folders-------------------------------------------------------------.

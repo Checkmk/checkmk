@@ -142,7 +142,6 @@ from cmk.gui.watolib.host_attributes import (  # noqa: F401 # pylint: disable=un
     ABCHostAttributeNagiosText,
     ABCHostAttributeNagiosValueSpec,
     ABCHostAttributeValueSpec,
-    host_attribute_registry,
     host_attribute_topic_registry,
     HostAttributeTopicAddress,
     HostAttributeTopicBasicSettings,

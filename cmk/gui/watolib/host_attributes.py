@@ -1184,25 +1184,29 @@ def _validate_host_tags(host_tags):
             )
 
 
-def validate_host_attributes(attributes, new=False):
+def validate_host_attributes(attributes, extra_attrs: Sequence[str] = (), new=False):
+    # `extra_attrs` is only necessary for the webapi and should be removed later.
     _validate_general_host_attributes(
-        dict((key, value) for key, value in attributes.items() if not key.startswith("tag_")), new
+        dict((key, value) for key, value in attributes.items() if not key.startswith("tag_")),
+        extra_attrs,
+        new,
     )
     _validate_host_tags(
         dict((key[4:], value) for key, value in attributes.items() if key.startswith("tag_"))
     )
 
 
-def _validate_general_host_attributes(host_attributes, new):
+def _validate_general_host_attributes(host_attributes, extra_attrs: Sequence[str], new: bool):
     """Check if the given attribute name exists, no type check"""
     all_host_attribute_names = _retrieve_host_attributes()
+    all_host_attribute_names.extend(extra_attrs)
     for name, value in host_attributes.items():
         if name not in all_host_attribute_names:
             raise MKUserError(None, _("Unknown attribute: %s") % escaping.escape_attribute(name))
 
         # For real host attributes validate the values
         try:
-            attr = host_attribute(name)
+            attr: Optional[ABCHostAttribute] = host_attribute(name)
         except KeyError:
             attr = None
 

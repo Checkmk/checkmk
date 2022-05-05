@@ -22,7 +22,6 @@ from cmk.gui.plugins.wato.utils import (
     ABCHostAttributeNagiosValueSpec,
     ABCHostAttributeValueSpec,
     ConfigHostname,
-    host_attribute_registry,
     HostAttributeTopicAddress,
     HostAttributeTopicBasicSettings,
     HostAttributeTopicCustomAttributes,
@@ -61,6 +60,7 @@ from cmk.gui.valuespec import (
     Tuple,
     ValueSpecText,
 )
+from cmk.gui.watolib.host_attributes import host_attribute_registry
 from cmk.gui.watolib.hosts_and_folders import Host
 from cmk.gui.watolib.tags import TagConfigFile
 

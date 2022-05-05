@@ -82,6 +82,7 @@ import cmk.gui.wato.pages.user_profile
 import cmk.gui.wato.permissions
 import cmk.gui.watolib as watolib
 import cmk.gui.watolib.changes
+import cmk.gui.watolib.host_attributes
 import cmk.gui.watolib.hosts_and_folders
 import cmk.gui.watolib.rulespecs
 import cmk.gui.watolib.sites
@@ -320,16 +321,6 @@ def _register_pre_21_plugin_api() -> None:
         "get_hostnames_from_checkboxes",
         "get_hosts_from_checkboxes",
         "get_search_expression",
-        "host_attribute_registry",
-        "host_attribute_topic_registry",
-        "HostAttributeTopicAddress",
-        "HostAttributeTopicBasicSettings",
-        "HostAttributeTopicCustomAttributes",
-        "HostAttributeTopicDataSources",
-        "HostAttributeTopicHostTags",
-        "HostAttributeTopicManagementBoard",
-        "HostAttributeTopicMetaData",
-        "HostAttributeTopicNetworkScan",
         "HostGroupSelection",
         "HostnameTranslation",
         "HostRulespec",
@@ -416,6 +407,19 @@ def _register_pre_21_plugin_api() -> None:
         "ConfigDomainOMD",
     ):
         api_module.__dict__[name] = cmk.gui.watolib.config_domains.__dict__[name]
+    for name in (
+        "host_attribute_registry",
+        "host_attribute_topic_registry",
+        "HostAttributeTopicAddress",
+        "HostAttributeTopicBasicSettings",
+        "HostAttributeTopicCustomAttributes",
+        "HostAttributeTopicDataSources",
+        "HostAttributeTopicHostTags",
+        "HostAttributeTopicManagementBoard",
+        "HostAttributeTopicMetaData",
+        "HostAttributeTopicNetworkScan",
+    ):
+        api_module.__dict__[name] = cmk.gui.watolib.host_attributes.__dict__[name]
     for name in (
         "folder_preserving_link",
         "make_action_link",

@@ -1,0 +1,13 @@
+Title: Title: Long text in the inventory dashlet will now break into multiple lines
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1651759393
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b8
+
+Instead of rendering the text of the inventory dashlet on one line,
+the text will now break into multiple lines if not enough space is there.

@@ -676,6 +676,23 @@ svg {
     // which is $font-color
     fill: $darkgrey;
   }
+
+  .inventory {
+    foreignObject > div {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+
+      & > div {
+        width: 100%;
+        font-weight: $font-weight-bold;
+        text-align: center;
+        overflow-wrap: break-word;
+      }
+    }
+  }
 }
 
 svg.renderer {

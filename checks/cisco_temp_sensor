@@ -155,6 +155,7 @@ def check_cisco_temp_sensor(item, params, info):
             #
             #            return check_temperature(temp, (warn, crit))
             return 3, "This check is obsolete, please re-inventorize this host"
+    return None
 
 
 check_info["cisco_temp_sensor"] = {

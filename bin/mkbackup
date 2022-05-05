@@ -801,6 +801,7 @@ def do_site_backup(opts, site=None, try_stop=True):
                 )
 
         raise MKGeneralException("Site backup failed: %s" % err)
+    return None
 
 
 def start_site(site: str) -> None:
@@ -1822,6 +1823,7 @@ def enable_drbd_ip_addresses():
     subprocess.call(
         ["ip", "a", "a", "%s/%s" % (address, netmask), "dev", cma_net.get_simple_interface_name()]
     )
+    return None
 
 
 def verify_cma_version_compatible(info):

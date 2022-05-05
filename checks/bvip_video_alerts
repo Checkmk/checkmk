@@ -20,6 +20,7 @@ def check_bvip_video_alerts(item, _no_params, info):
             if alerts != "0":
                 return 2, "Device on Alarm State"
             return 0, "No alarms"
+    return None
 
 
 check_info["bvip_video_alerts"] = {

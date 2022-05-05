@@ -51,6 +51,7 @@ def parse_citrix_state(info):
 def inventory_citrix_state_controller(parsed):
     if "controller" in parsed:
         return [(None, None)]
+    return []
 
 
 def check_citrix_state_controller(_no_item, _no_params, parsed):
@@ -77,6 +78,7 @@ check_info["citrix_state.controller"] = {
 def inventory_citrix_state_hosting_server(parsed):
     if "hosting_server" in parsed:
         return [(None, None)]
+    return []
 
 
 def check_citrix_state_hosting_server(_no_item, _no_params, parsed):
@@ -103,6 +105,7 @@ check_info["citrix_state.hosting_server"] = {
 def inventory_citrix_state(parsed):
     if parsed["instance"]:
         return [(None, {})]
+    return []
 
 
 def check_citrix_state(_no_item, params, parsed):

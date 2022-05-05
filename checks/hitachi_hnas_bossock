@@ -32,6 +32,7 @@ def check_hitachi_hnas_bossock(item, params, info):
             perfdata = [("fibers", fibers, warn, crit)]
 
             return state, infotext, perfdata
+    return None
 
 
 check_info["hitachi_hnas_bossock"] = {

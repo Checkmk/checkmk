@@ -28,6 +28,7 @@ def check_ibm_imm_temp(item, params, info):
                 dev_levels=dev_levels,
                 dev_levels_lower=dev_levels_lower,
             )
+    return None
 
 
 check_info["ibm_imm_temp"] = {

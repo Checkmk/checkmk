@@ -130,7 +130,7 @@ check_info["mysql.sessions"] = {
 @get_parsed_item_data
 def check_mysql_iostat(item, params, data):
     if not ("Innodb_data_read" in data and "Innodb_data_written" in data):
-        return
+        return None
 
     line = [None, None, data["Innodb_data_read"] // 512, data["Innodb_data_written"] // 512]
     return check_diskstat_line(time.time(), "innodb_io" + item, params, line)
@@ -211,6 +211,7 @@ def check_mysql_connections(_no_item, params, data):
         params=None,
         human_readable_func=lambda x: "",
     )
+    return None
 
 
 @discover
@@ -260,7 +261,7 @@ def inventory_mysql_galerasync(parsed):
 def check_mysql_galerasync(item, _no_params, data):
     wsrep_local_state_comment = data.get("wsrep_local_state_comment")
     if wsrep_local_state_comment is None:
-        return
+        return None
 
     if wsrep_local_state_comment == "Synced":
         state = 0
@@ -296,7 +297,7 @@ def inventory_mysql_galeradonor(parsed):
 def check_mysql_galeradonor(item, params, data):
     wsrep_sst_donor = data.get("wsrep_sst_donor")
     if wsrep_sst_donor is None:
-        return
+        return None
 
     state = 0
     infotext = "WSREP SST donor: %s" % wsrep_sst_donor
@@ -337,7 +338,7 @@ def inventory_mysql_galerastartup(parsed):
 def check_mysql_galerastartup(item, _no_params, data):
     wsrep_cluster_address = data.get("wsrep_cluster_address")
     if wsrep_cluster_address is None:
-        return
+        return None
 
     if wsrep_cluster_address == "gcomm://":
         return 2, "WSREP cluster address is empty"
@@ -377,7 +378,7 @@ def inventory_mysql_galerasize(parsed):
 def check_mysql_galerasize(item, params, data):
     wsrep_cluster_size = data.get("wsrep_cluster_size")
     if wsrep_cluster_size is None:
-        return
+        return None
 
     state = 0
     infotext = "WSREP cluster size: %s" % wsrep_cluster_size
@@ -418,7 +419,7 @@ def inventory_mysql_galerastatus(parsed):
 def check_mysql_galerastatus(item, _no_params, data):
     wsrep_cluster_status = data.get("wsrep_cluster_status")
     if wsrep_cluster_status is None:
-        return
+        return None
 
     if wsrep_cluster_status == "Primary":
         state = 0

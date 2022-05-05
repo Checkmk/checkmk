@@ -110,6 +110,7 @@ def check_storeonce_servicesets_capacity(item, params, parsed):
     for values in parsed.values():
         if _get_item(values) == item:
             return check_storeonce_space(item, params, values)
+    return None
 
 
 check_info["storeonce_servicesets.capacity"] = {

@@ -20,6 +20,7 @@ from cmk.base.check_legacy_includes.threepar import *  # pylint: disable=wildcar
 def inventory_3par_system(parsed):
     if "name" in parsed:
         return [(parsed["name"], None)]
+    return []
 
 
 def check_3par_system(item, _no_params, parsed):

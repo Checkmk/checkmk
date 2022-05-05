@@ -25,6 +25,7 @@ def check_mbg_lantime_ng_power(item, _no_params, info):
             power_state, power_state_name = power_states[power_status]
             infotext = "Status: %s" % power_state_name
             return power_state, infotext
+    return None
 
 
 check_info["mbg_lantime_ng_power"] = {

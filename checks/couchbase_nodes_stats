@@ -26,7 +26,7 @@ def check_couchbase_nodes_cpu_util(_item, params, data):
     try:
         return check_cpu_util(float(data["cpu_utilization_rate"]), params)
     except (ValueError, KeyError):
-        pass
+        return None
 
 
 check_info["couchbase_nodes_stats.cpu_util"] = {
@@ -69,6 +69,7 @@ def check_couchbase_nodes_mem(_item, params, data):
         None,
         metric_name="swap_used",
     )
+    return None
 
 
 check_info["couchbase_nodes_stats.mem"] = {

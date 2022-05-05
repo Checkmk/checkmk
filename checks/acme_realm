@@ -33,6 +33,7 @@ def check_acme_realm(item, params, info):
                     ("outbound", int(outbound), None, None, 0, int(total_outbound)),
                 ],
             )
+    return None
 
 
 check_info["acme_realm"] = {

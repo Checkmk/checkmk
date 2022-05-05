@@ -64,6 +64,7 @@ def check_dell_om_sensors(item, params, info):
                 dev_levels=(dev_warn, dev_crit),
                 dev_levels_lower=(dev_warn_lower, dev_crit_lower),
             )
+    return None
 
 
 check_info["dell_om_sensors"] = {

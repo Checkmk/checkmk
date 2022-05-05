@@ -29,6 +29,7 @@ def check_blade_bx_blades(item, _no_params, info):
             else:
                 name_info = "[Serial: %s]" % serial
             return state, "%s Status: %s" % (name_info, state_readable)
+    return None
 
 
 check_info["blade_bx_blades"] = {

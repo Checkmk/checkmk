@@ -53,6 +53,7 @@ def parse_ucs_c_rack_server_topsystem(info):
 def inventory_ucs_c_rack_server_topsystem(parsed):
     if parsed:
         return [(None, None)]
+    return []
 
 
 # @get_parsed_item_data

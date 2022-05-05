@@ -16,6 +16,7 @@ def inventory_bluecat_ha(info):
     # Only add if device is not in standalone mode
     if info[0][0] != "1":
         return [(None, None)]
+    return []
 
 
 def check_bluecat_ha(item, params, info):

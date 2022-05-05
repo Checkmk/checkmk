@@ -36,6 +36,7 @@ def check_ibm_imm_voltage(item, _no_params, info):
                 state = 0
 
             return state, infotext, perfdata
+    return None
 
 
 check_info["ibm_imm_voltage"] = {

@@ -80,6 +80,7 @@ def check_blade_bx_powerfan(item, params, info):
                     infotext += levels_text
 
                 return state, infotext, perfdata
+    return None
 
 
 check_info["blade_bx_powerfan"] = {

@@ -23,6 +23,7 @@ def check_pulse_secure_disk_util(item, params, parsed):
         infoname="Percentage of disk space used",
         human_readable_func=get_percent_human_readable,
     )
+    return None
 
 
 check_info["pulse_secure_disk_util"] = {

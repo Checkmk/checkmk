@@ -19,6 +19,7 @@ netscaler_mem_default_levels = (80.0, 90.0)
 def inventory_netscaler_mem(info):
     if info:
         return [(None, "netscaler_mem_default_levels")]
+    return []
 
 
 def check_netscaler_mem(_no_item, params, info):

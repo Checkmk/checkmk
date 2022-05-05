@@ -145,6 +145,7 @@ def _cluster_check(
     )
 
     yield from summarizer.metrics(clusterization_parameters.get("metrics_node"))
+    return None
 
 
 class NodeResults(NamedTuple):

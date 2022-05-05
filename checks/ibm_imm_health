@@ -8,6 +8,7 @@
 def inventory_ibm_imm_health(info):
     if info:
         return [(None, None)]
+    return []
 
 
 def check_ibm_imm_health(_no_item, _no_params, info):

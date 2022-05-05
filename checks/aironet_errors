@@ -25,6 +25,7 @@ def check_aironet_errors(item, params, info):
                 infotxt,
                 perfdata,
             )
+    return None
 
 
 check_info["aironet_errors"] = {

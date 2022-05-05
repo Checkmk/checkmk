@@ -19,7 +19,7 @@ def inventory_avaya_88xx_cpu(info):
 
 def check_avaya_88xx_cpu(_no_item, params, info):
     if not info:
-        return
+        return None
     return check_cpu_util(int(info[0][0]), params, time.time())
 
 

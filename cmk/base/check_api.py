@@ -658,7 +658,7 @@ def get_parsed_item_data(check_function: Callable) -> Callable:
                 "Wrong usage of decorator function 'get_parsed_item_data': parsed is not a dict",
             )
         if item not in parsed or not parsed[item]:
-            return
+            return None
         return check_function(item, params, parsed[item])
 
     return wrapped_check_function

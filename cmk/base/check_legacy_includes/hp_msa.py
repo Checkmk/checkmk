@@ -68,6 +68,7 @@ def check_hp_msa_health(item, _no_params, parsed):
                 infotexts.append("speed: %s RPM" % (parsed[item]["rpm"]))
 
         return health_state, ", ".join(infotexts)
+    return None
 
 
 def inventory_hp_msa_io(parsed):

@@ -246,6 +246,7 @@ def parse_fsc_sc2_power_consumption(info):
 def inventory_fsc_sc2_info(info):
     if info:
         return [(None, None)]
+    return []
 
 
 def check_fsc_sc2_info(_no_item, _no_params, info):
@@ -256,6 +257,7 @@ def check_fsc_sc2_info(_no_item, _no_params, info):
                 info[0][0], info[0][1], info[0][2]
             ),
         )
+    return None
 
 
 # .
@@ -356,6 +358,7 @@ def check_fsc_sc2_temp(item, params, info):
                 dev_status,
                 dev_status_name,
             )
+    return None
 
 
 # .

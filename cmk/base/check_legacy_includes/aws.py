@@ -32,6 +32,7 @@ def inventory_aws_generic(parsed, required_metrics):
 def inventory_aws_generic_single(parsed, required_metrics, requirement=all):
     if requirement(required_metric in parsed for required_metric in required_metrics):
         return [(None, {})]
+    return []
 
 
 def check_aws_elb_summary_generic(item, params, load_balancers):

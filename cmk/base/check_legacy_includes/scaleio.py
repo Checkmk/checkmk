@@ -32,6 +32,7 @@ def convert_scaleio_space(unit, value):
         return value * 1024
     elif unit == "TB":
         return value * 1024 * 1024
+    return None
 
 
 # Values can be in every unit. We need Bytes for
@@ -47,6 +48,7 @@ def convert_to_bytes(tp, unit):
         return tp * 1024 * 1024 * 1024
     elif unit == "TB":
         return tp * 1024 * 1024 * 1024 * 1024
+    return None
 
 
 def get_disks(item, read_data, write_data):

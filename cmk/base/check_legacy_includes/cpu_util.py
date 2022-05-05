@@ -274,7 +274,7 @@ def check_cpu_util_linux_container(_no_item, params, parsed):
     sys_ticks = parsed.get("system_ticks")
     num_cpus = parsed.get("num_cpus")
     if None in (con_ticks, sys_ticks, num_cpus):
-        return
+        return None
 
     cpu_tick_rate = get_rate("container_ticks", sys_ticks, con_ticks)
 

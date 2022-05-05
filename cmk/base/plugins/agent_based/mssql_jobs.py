@@ -207,6 +207,7 @@ def check_mssql_jobs(
         yield Result(state=State.OK, summary=f"Next run: {job_specs.next_run_datetime}")
 
     yield Result(state=State.OK, notice=f"Outcome message: {job_specs.last_outcome_message}")
+    return None
 
 
 register.agent_section(

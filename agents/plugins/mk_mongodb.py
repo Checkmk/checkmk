@@ -674,7 +674,7 @@ def _get_indexes_information(client, databases):
                 )
             except pymongo.errors.OperationFailure:
                 LOGGER.debug("Could not access $indexStat", exc_info=True)
-                return
+                return None
 
     return indexes_dict
 
@@ -687,6 +687,7 @@ def get_timestamp(text):
             return time.mktime(time.strptime(text, pattern))
         except ValueError:
             pass
+    return None
 
 
 def read_statefile(state_file):

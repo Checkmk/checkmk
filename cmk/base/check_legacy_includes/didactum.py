@@ -93,11 +93,13 @@ def check_didactum_sensors_temp(item, params, parsed):
             dev_status=data["state"],
             dev_status_name=data["state_readable"],
         )
+    return None
 
 
 def check_didactum_sensors_humidity(item, params, parsed):
     if item in parsed["humidity"]:
         return check_humidity(parsed["humidity"][item]["value"], params)
+    return None
 
 
 def check_didactum_sensors_voltage(item, params, parsed):
@@ -108,3 +110,4 @@ def check_didactum_sensors_voltage(item, params, parsed):
             params,
             {item: {"voltage": (data["value"], (data["state"], data["state_readable"]))}},
         )
+    return None

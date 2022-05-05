@@ -220,12 +220,14 @@ def check_raritan_sensors(item, _no_params, parsed):
             )
 
         return state, infotext, [(parsed[item]["sensor_type"], reading, warn, crit)]
+    return None
 
 
 def check_raritan_sensors_binary(item, _no_params, parsed):
     if item in parsed:
         state, state_readable = parsed[item]["state"]
         return state, "Status: %s" % state_readable
+    return None
 
 
 def check_raritan_sensors_temp(item, params, parsed):
@@ -242,3 +244,4 @@ def check_raritan_sensors_temp(item, params, parsed):
             dev_status=state,
             dev_status_name=state_readable,
         )
+    return None

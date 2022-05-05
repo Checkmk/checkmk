@@ -29,7 +29,7 @@ from cmk.base.check_api import MKGeneralException
 # ==================================================================================================
 def oracle_handle_ora_errors(line):
     if len(line) == 1:
-        return
+        return None
 
     legacy_error = oracle_handle_legacy_ora_errors(line)
     if legacy_error:
@@ -46,6 +46,7 @@ def oracle_handle_ora_errors(line):
         return False
     if line[1].startswith("ORA-"):
         return (3, 'Found error in agent output "%s"' % " ".join(line[1:]))
+    return None
 
 
 # ==================================================================================================
@@ -65,6 +66,7 @@ def oracle_handle_legacy_ora_errors(line):
     # Handle error output from 1.6 solaris agent, see SUP-9521
     if line[0] == "Error":
         return (3, 'Found error in agent output "%s"' % " ".join(line[1:]))
+    return None
 
 
 # Fully prevent creation of services when an error is found.

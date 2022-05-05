@@ -459,7 +459,7 @@ def check_temperature_list(sensorlist, params, unique_name):
         return 2
 
     if sensorlist == []:
-        return
+        return None
 
     sensor_count = len(sensorlist)
     tempsum = 0

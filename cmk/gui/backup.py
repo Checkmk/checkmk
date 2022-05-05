@@ -1448,6 +1448,7 @@ class ABCBackupTargetType(abc.ABC):
         for type_class in cls.__subclasses__():
             if type_class.ident == type_ident:
                 return type_class
+        return None
 
     @classmethod
     def title(cls):

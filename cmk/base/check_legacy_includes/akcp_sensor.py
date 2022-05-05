@@ -164,6 +164,7 @@ def check_akcp_sensor_temp(item, params, info):
                 (high_warn, high_crit),
                 (low_warn, low_crit),
             )
+    return None
 
 
 # .
@@ -197,6 +198,7 @@ def check_akcp_sensor_relay(item, _no_params, info):
 
             state, state_name = relay_states[status]
             return state, "State: %s" % state_name
+    return None
 
 
 # .
@@ -241,3 +243,4 @@ def check_akcp_sensor_drycontact(item, _no_params, info):
                 state, infotext = states[status]
 
             return state, infotext
+    return None

@@ -93,6 +93,7 @@ def check_cisco_cpu_multiitem(item: str, params: Params, section: Section) -> Ch
         boundaries=(0, 100),
         label="Utilization in the last 5 minutes",
     )
+    return None
 
 
 register.snmp_section(

@@ -44,6 +44,7 @@ ARBOR_MEMORY_CHECK_DEFAULT_PARAMETERS = {
 def inventory_arbor_memory(parsed):
     if len(parsed) > 0:
         return [(None, {})]
+    return []
 
 
 def check_arbor_memory(no_item, params, parsed):
@@ -86,6 +87,7 @@ def check_arbor_memory(no_item, params, parsed):
 def inventory_arbor_disk_usage(parsed):
     if "disk" in parsed:
         return [("/", {})]
+    return []
 
 
 def check_arbor_disk_usage(no_item, params, parsed):
@@ -108,6 +110,7 @@ def check_arbor_disk_usage(no_item, params, parsed):
 def inventory_arbor_host_fault(parsed):
     if "host_fault" in parsed:
         return [(None, None)]
+    return []
 
 
 def check_arbor_host_fault(no_item, no_params, parsed):
@@ -131,6 +134,7 @@ def check_arbor_host_fault(no_item, no_params, parsed):
 def inventory_arbor_drop_rate(parsed):
     if "drop_rate" in parsed:
         return [("Overrun", {})]
+    return []
 
 
 def check_arbor_drop_rate(no_item, params, parsed):

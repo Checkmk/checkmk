@@ -82,6 +82,7 @@ hp_proliant_da_cntlr_state_map = {
 def inventory_hp_proliant_da_cntlr(info):
     if info:
         return [(line[0], None) for line in info]
+    return []
 
 
 def check_hp_proliant_da_cntlr(item, params, info):
@@ -137,6 +138,7 @@ hp_proliant_cpu_status2nagios_map = {
 def inventory_hp_proliant_cpu(info):
     if len(info) > 0:
         return [(line[0], None) for line in info]
+    return []
 
 
 def check_hp_proliant_cpu(item, params, info):
@@ -191,6 +193,7 @@ def inventory_hp_proliant_fans(info):
                 label = hp_proliant_fans_locale[int(line[1])]
             items.append(("%s (%s)" % (line[0], label), None))
         return items
+    return []
 
 
 def check_hp_proliant_fans(item, params, info):

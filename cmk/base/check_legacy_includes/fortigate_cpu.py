@@ -19,7 +19,7 @@ def check_fortigate_cpu(item, params, info):
         util += int(line[0])
         num_cpus += 1
     if num_cpus == 0:
-        return
+        return None
 
     util = float(util) / num_cpus
 

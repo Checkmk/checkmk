@@ -24,3 +24,4 @@ def check_pandacom_module_temp(item, params, info):
                 "pandacom_%s" % item,
                 dev_levels=(int(warn_str), int(crit_str)),
             )
+    return None

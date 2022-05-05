@@ -36,6 +36,7 @@ def check_fjdarye_item(item, _no_param, info):
     for line in info:
         if line[0] == str(item):  # watch out! older versions discovered `int`s!
             return fjdarye_item_status[line[1]]
+    return None
 
 
 # .
@@ -111,6 +112,7 @@ def check_fjdarye_disks(item, params, parsed):
             check_state = 2
             infotext += " (expected: %s)" % expected_state
         return check_state, infotext
+    return None
 
 
 # .
@@ -143,6 +145,7 @@ def inventory_fjdarye_disks_summary(parsed):
     current_state = fjdarye_disks_summary(parsed)
     if len(current_state) > 0:
         return [(None, current_state)]
+    return []
 
 
 def fjdarye_disks_printstates(states):
@@ -228,6 +231,7 @@ def check_fjdarye_rluns(item, _no_params, info):
             elif rawdata[2] == "\x00":
                 return (0, "RLUN is in normal state")  # assumption
             return (2, "RLUN in unknown state %02x" % ord(rawdata[2]))
+    return None
 
 
 # .

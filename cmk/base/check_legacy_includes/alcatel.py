@@ -70,7 +70,7 @@ def check_alcatel_fans(item, _no_params, info):
         line = info[int(item) - 1]
         fan_state = int(line[0])
     except (ValueError, IndexError):
-        return
+        return None
 
     state = 0 if fan_state == 2 else 2
     return state, "Fan " + fan_states.get(fan_state, "unknown (%s)" % fan_state)

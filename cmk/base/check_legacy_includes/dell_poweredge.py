@@ -49,6 +49,7 @@ def check_dell_poweredge_cpu(item, _no_params, info):
                 infotext += " " + BrandName
 
             return state, infotext
+    return None
 
 
 # .
@@ -209,6 +210,7 @@ def check_dell_poweredge_pci(item, _no_params, info):
 def inventory_dell_poweredge_status(info):
     if info:
         return [(None, None)]
+    return []
 
 
 def check_dell_poweredge_status(item, _no_params, info):

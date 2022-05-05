@@ -437,8 +437,7 @@ class StorageFormat(enum.Enum):
         return cls[value.upper()]
 
     def extension(self) -> str:
-        # This typing error is a false positive.  There are tests to demonstrate that.
-        return {  # type: ignore[return-value]
+        return {
             StorageFormat.STANDARD: ".mk",
             StorageFormat.PICKLE: ".pkl",
             StorageFormat.RAW: ".cfg",

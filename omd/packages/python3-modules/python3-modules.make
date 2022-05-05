@@ -45,7 +45,7 @@ $(PYTHON3_MODULES_BUILD): $(PYTHON_CACHE_PKG_PROCESS) $(OPENSSL_CACHE_PKG_PROCES
 	$(MKDIR) $(BUILD_HELPER_DIR)
 	set -e ; cd $(PYTHON3_MODULES_BUILD_DIR) ; \
 	    PIPENV_PIPFILE="$(REPO_PATH)/Pipfile" \
-            PIPENV_PYPI_MIRROR=$(PIPENV_PYPI_MIRROR)/simple \
+            PIPENV_PYPI_MIRROR=$(PIPENV_PYPI_MIRROR) \
 	    `: rrdtool module is built with rrdtool omd package` \
 	    `: protobuf module is built with protobuf omd package` \
 	    `: fixup git local dependencies` \

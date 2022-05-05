@@ -1,12 +1,12 @@
-EXTERNAL_PYPI_MIRROR := https://pypi.python.org
+EXTERNAL_PYPI_MIRROR := https://pypi.python.org/simple
 
-INTERNAL_PYPI_MIRROR := https://artifacts.lan.tribe29.com/repository/pip-mirror-$(BRANCH_VERSION)
+INTERNAL_PYPI_MIRROR :=  https://$(DEVPI_SERVER):$(DEVPI_PORT)/$(BRANCH_VERSION)/prod/+simple/
 
-#ifeq (true,${USE_EXTERNAL_PIPENV_MIRROR})
+ifeq (true,${USE_EXTERNAL_PIPENV_MIRROR})
 PIPENV_PYPI_MIRROR  := $(EXTERNAL_PYPI_MIRROR)
-#else
-#PIPENV_PYPI_MIRROR  := $(INTERNAL_PYPI_MIRROR)
-#endif
+else
+PIPENV_PYPI_MIRROR  := $(INTERNAL_PYPI_MIRROR)
+endif
 
 REPO_DIR := "$(git rev-parse --show-toplevel)"
 TMP_MIRROR := tmp-mirror-1
@@ -19,7 +19,7 @@ TMP_DIR := tmp_devpi_pkg
 requirements.txt: Pipfile.lock
 	@( \
 	    echo "Creating $@" ; \
-	    $(PIPENV) lock --dev -r > $@; \
+	    USE_EXTERNAL_PIPENV_MIRROR=true $(PIPENV) lock --dev -r > $@; \
             sed -i "1s|-i.*|-i https://pypi.python.org/simple/|" $@ \
 	)
 
@@ -27,16 +27,18 @@ requirements.txt: Pipfile.lock
 runtime-requirements.txt: Pipfile.lock
 	@( \
 	    echo "Creating $@" ; \
-	    $(PIPENV) lock -r > $@; \
+	    USE_EXTERNAL_PIPENV_MIRROR=true $(PIPENV) lock -r > $@; \
             sed -i "/^-i.*\|^-e.*/d" $@ \
 	)
 
-# 1-i Create a temporariy mirror and download source packages
+# 1-i Create a temporariy mirror and download source and wheel packages
 # Makefile internal, as not dockerized
 pip-mirror-dl-pkgs-internal: runtime-requirements.txt
 	set -x; \
-        $(PIPENV) run devpi use https://$(DEVPI_SERVER); \
-        $(PIPENV) run devpi login $(DEVPI_USER) --password $(DEVPI_PWD); \
+	rm -rf .venv ; \
+	make PIPENV_PYPI_MIRROR='https://$(DEVPI_SERVER)/$(BRANCH_VERSION)/$(TMP_MIRROR)/+simple/' .venv ; \
+	$(PIPENV) run devpi use https://$(DEVPI_SERVER); \
+	$(PIPENV) run devpi login $(DEVPI_USER) --password $(DEVPI_PWD); \
 	$(PIPENV) run devpi index -c "$(BRANCH_VERSION)"/${TMP_MIRROR} type=mirror mirror_url=https://pypi.org/simple/ ; \
 	pip3 install \
 	--ignore-installed  \
@@ -77,7 +79,7 @@ pip-mirror-verify-internal: runtime-requirements.txt
 	--no-deps \
 	--compile \
         --progress-bar off \
-	-i https://$(DEVPI_SERVER):$(DEVPI_PORT)/$(BRANCH_VERSION)/prod/+simple/ \
+	-i $(INTERNAL_PYPI_MIRROR) \
 	-r $<
 
 # 4. Dockerize pip-mirror-verify-internal

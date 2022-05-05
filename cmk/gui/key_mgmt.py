@@ -9,7 +9,7 @@ import time
 from pathlib import Path
 from typing import Any, Dict
 
-from OpenSSL import crypto  # type: ignore[import]
+from OpenSSL import crypto
 
 import cmk.utils.render
 import cmk.utils.store as store
@@ -354,7 +354,7 @@ class PageUploadKey:
                 return cert_spec[key][1][2].decode("ascii")
             return cert_spec[key][1]
 
-    def _upload_key(self, key_file, value):
+    def _upload_key(self, key_file, value) -> None:
         keys = self.load()
 
         new_id = 1
@@ -378,9 +378,9 @@ class PageUploadKey:
         def parse_asn1_generalized_time(timestr):
             return time.strptime(timestr, "%Y%m%d%H%M%SZ")
 
-        created = time.mktime(
-            parse_asn1_generalized_time(certificate.get_notBefore().decode("ascii"))
-        )
+        not_before = certificate.get_notBefore()
+        assert not_before is not None  # TODO: Why is this true?
+        created = time.mktime(parse_asn1_generalized_time(not_before.decode("ascii")))
 
         # Check for valid passphrase
         decrypt_private_key(key_file, value["passphrase"])

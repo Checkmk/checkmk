@@ -37,6 +37,7 @@ types-cryptography = "*"  # used for type checking
 types-redis = "*"  # used for type checking
 types-protobuf = "*"  # used for type checking
 types-setuptools = "*"  # used for type checking
+types-pyOpenSSL = "*"  # used for type checking
 playwright = "*"  # used for in-browser testing
 pydantic-factories = "*"  # used for pydantic model testing
 pymongo = "*"  # used by mk_mongodb agent plugin

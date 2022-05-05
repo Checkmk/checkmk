@@ -47,7 +47,7 @@ from typing import (
 from Cryptodome.Cipher import AES, PKCS1_OAEP
 from Cryptodome.Cipher._mode_cbc import CbcMode
 from Cryptodome.PublicKey import RSA
-from OpenSSL import crypto  # type: ignore[import]
+from OpenSSL import crypto
 from semver import VersionInfo  # type: ignore[import]
 from six import ensure_str
 

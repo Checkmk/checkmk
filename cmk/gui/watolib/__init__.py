@@ -8,8 +8,6 @@ from typing import Callable, Sequence, Tuple, Type
 
 import urllib3 as _urllib3
 
-import cmk.utils.version as _cmk_version
-
 import cmk.gui.gui_background_job as _gui_background_job
 import cmk.gui.hooks as _hooks
 import cmk.gui.mkeventd as _mkeventd
@@ -23,10 +21,6 @@ from cmk.gui.config import register_post_config_load_hook as _register_post_conf
 from cmk.gui.permissions import permission_section_registry as _permission_section_registry
 from cmk.gui.plugins.watolib.utils import config_domain_registry as _config_domain_registry
 from cmk.gui.utils import load_web_plugins as _load_web_plugins
-
-if _cmk_version.is_managed_edition():
-    # pylint: disable=unused-import
-    import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
 
 # Disable python warnings in background job output or logs like "Unverified
 # HTTPS request is being made". We warn the user using analyze configuration.

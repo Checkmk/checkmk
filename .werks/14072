@@ -1,0 +1,15 @@
+Title: Filesystem (<tt>df</tt>) check plugins: Handle zero free inodes correctly
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1651831605
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p24
+
+Most filesystem (<tt>df</tt>) check plugins, such as the plugin for Linux systems,
+did not handle the case of exactly zero free inodes correctly. Independently of
+the user configuration, no check result at all for the free inodes was reported
+in this particular case.

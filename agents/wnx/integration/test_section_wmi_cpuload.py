@@ -18,6 +18,17 @@ class Globals(object):
     alone = True
 
 
+SYSTEM_PERF_HEADER = (
+    r"Name,ProcessorQueueLength,Timestamp_PerfTime,Frequency_PerfTime,WMIStatus".replace(",", "\\|")
+)
+SYSTEM_PERF_BODY = r",\d+,\d+,\d+,\b(?:OK|Timeout)\b".replace(",", "\\|")
+
+COMPUTER_SYSTEM_HEADER = r"Name,NumberOfLogicalProcessors,NumberOfProcessors,WMIStatus".replace(
+    ",", "\\|"
+)
+COMPUTER_SYSTEM_BODY = r".*,\d+,\d+,\b(?:OK|Timeout)\b".replace(",", "\\|")
+
+
 @pytest.fixture(name="testfile")
 def testfile_engine():
     return os.path.basename(__file__)
@@ -38,48 +49,11 @@ def expected_output_engine():
     expected = [
         re.escape(r"<<<%s:sep(124)>>>" % Globals.section),
         re.escape(r"[system_perf]"),
-        (
-            r"AlignmentFixupsPersec,Caption,ContextSwitchesPersec,Description,"
-            r"ExceptionDispatchesPersec,FileControlBytesPersec,"
-            r"FileControlOperationsPersec,FileDataOperationsPersec,"
-            r"FileReadBytesPersec,FileReadOperationsPersec,FileWriteBytesPersec,"
-            r"FileWriteOperationsPersec,FloatingEmulationsPersec,Frequency_Object,"
-            r"Frequency_PerfTime,Frequency_Sys100NS,Name,"
-            r"PercentRegistryQuotaInUse,PercentRegistryQuotaInUse_Base,Processes,"
-            r"ProcessorQueueLength,SystemCallsPersec,SystemUpTime,Threads,"
-            r"Timestamp_Object,Timestamp_PerfTime,Timestamp_Sys100NS,WMIStatus"
-        ).replace(",", "\\|"),
-        (
-            r"\d+,,\d+,,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,,\d+,"
-            r"\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\b(?:OK|Timeout)\b"
-        ).replace(",", "\\|"),
+        SYSTEM_PERF_HEADER,
+        SYSTEM_PERF_BODY,
         re.escape(r"[computer_system]"),
-        (
-            r"AdminPasswordStatus,AutomaticManagedPagefile,"
-            r"AutomaticResetBootOption,AutomaticResetCapability,BootOptionOnLimit,"
-            r"BootOptionOnWatchDog,BootROMSupported,BootStatus,BootupState,"
-            r"Caption,ChassisBootupState,ChassisSKUNumber,CreationClassName,"
-            r"CurrentTimeZone,DaylightInEffect,Description,DNSHostName,Domain,"
-            r"DomainRole,EnableDaylightSavingsTime,FrontPanelResetStatus,"
-            r"HypervisorPresent,InfraredSupported,InitialLoadInfo,InstallDate,"
-            r"KeyboardPasswordStatus,LastLoadInfo,Manufacturer,Model,Name,"
-            r"NameFormat,NetworkServerModeEnabled,NumberOfLogicalProcessors,"
-            r"NumberOfProcessors,OEMLogoBitmap,OEMStringArray,PartOfDomain,"
-            r"PauseAfterReset,PCSystemType,PCSystemTypeEx,"
-            r"PowerManagementCapabilities,PowerManagementSupported,"
-            r"PowerOnPasswordStatus,PowerState,PowerSupplyState,"
-            r"PrimaryOwnerContact,PrimaryOwnerName,ResetCapability,ResetCount,"
-            r"ResetLimit,Roles,Status,SupportContactDescription,SystemFamily,"
-            r"SystemSKUNumber,SystemStartupDelay,SystemStartupOptions,"
-            r"SystemStartupSetting,SystemType,ThermalState,TotalPhysicalMemory,"
-            r"UserName,WakeUpType,Workgroup,WMIStatus"
-        ).replace(",", "\\|"),
-        (
-            r"\d+,\d+,\d+,\d+,\d*,\d*,\d+,[^,]*,[^,]+,[\w-]+,\d+,[^,]*,\w+,\d+,\d+,"
-            r"[^,]+,[\w-]+,[^,]+,\d+,\d+,\d+,\d+,\d+,,,\d+,,[^,]+(, [^,]+)?,[^,]+,"
-            r"[\w-]+,,\d+,\d+,\d+,,[^,]*,\d+,\-?\d+,\d+,\d+,,,\d+,\d+,\d+,,[^,]+,"
-            r"\d+,\d+,\d+,[^,]+,\w+,,[^,]*,[^,]*,,,,[^,]+,\d+,\d+,[^,]*,\d+,\w*,\b(?:OK|Timeout)\b"
-        ).replace(",", "\\|"),
+        COMPUTER_SYSTEM_HEADER,
+        COMPUTER_SYSTEM_BODY,
     ]
     if not Globals.alone:
         expected += [re.escape(r"<<<systemtime>>>"), r"\d+"]

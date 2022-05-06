@@ -6,9 +6,9 @@
 // may be some unused functions in the common module
 #![allow(dead_code)]
 mod common;
-
 use anyhow::Result as AnyhowResult;
 use std::io::{Read, Write};
+use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 
 #[test]
 fn test_pull_inconsistent_cert() -> AnyhowResult<()> {
@@ -111,11 +111,8 @@ impl PullFixture {
     }
 }
 
-// TODO(sk): Fix this test
-#[tokio::test(flavor = "multi_thread")]
-#[cfg_attr(target_os = "windows", ignore)]
-async fn test_pull_tls_main() -> AnyhowResult<()> {
-    let fixture: PullFixture = PullFixture::setup(9999, "test_pull_tls_main", false)?;
+async fn _test_pull_tls_main(socket_addr: SocketAddr) -> AnyhowResult<()> {
+    let fixture: PullFixture = PullFixture::setup(socket_addr.port(), "test_pull_tls_main", false)?;
     // Give it some time to provide the TCP socket
     tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
 
@@ -125,7 +122,7 @@ async fn test_pull_tls_main() -> AnyhowResult<()> {
     let mut message_buf: Vec<u8> = vec![];
     let mut client_connection =
         common::testing_tls_client_connection(fixture.certs.clone(), &fixture.uuid);
-    let mut tcp_stream = std::net::TcpStream::connect(format!("127.0.0.1:{}", &fixture.test_port))?;
+    let mut tcp_stream = std::net::TcpStream::connect(socket_addr)?;
     tcp_stream.read_exact(&mut id_buf)?;
     assert_eq!(&id_buf, b"16");
     let mut tls_stream = rustls::Stream::new(&mut client_connection, &mut tcp_stream);
@@ -135,7 +132,7 @@ async fn test_pull_tls_main() -> AnyhowResult<()> {
     // Talk to the pull thread using an unknown uuid
     let mut client_connection =
         common::testing_tls_client_connection(fixture.certs.clone(), "certainly_wrong_uuid");
-    let mut tcp_stream = std::net::TcpStream::connect(format!("127.0.0.1:{}", &fixture.test_port))?;
+    let mut tcp_stream = std::net::TcpStream::connect(socket_addr)?;
     tcp_stream.read_exact(&mut id_buf)?;
     assert_eq!(&id_buf, b"16");
     let mut tls_stream = rustls::Stream::new(&mut client_connection, &mut tcp_stream);
@@ -146,9 +143,16 @@ async fn test_pull_tls_main() -> AnyhowResult<()> {
     Ok(())
 }
 
+// TODO(sk): Fix this test
 #[tokio::test(flavor = "multi_thread")]
-async fn test_pull_tls_check_guards() -> AnyhowResult<()> {
-    let fixture: PullFixture = PullFixture::setup(9997, "test_pull_tls_check_guards", false)?;
+#[cfg_attr(target_os = "windows", ignore)]
+async fn test_pull_tls_main() -> AnyhowResult<()> {
+    _test_pull_tls_main(SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), 9999)).await
+}
+
+async fn _test_pull_tls_check_guards(socket_addr: SocketAddr) -> AnyhowResult<()> {
+    let fixture: PullFixture =
+        PullFixture::setup(socket_addr.port(), "test_pull_tls_check_guards", false)?;
 
     // Give it some time to provide the TCP socket
     tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
@@ -156,11 +160,10 @@ async fn test_pull_tls_check_guards() -> AnyhowResult<()> {
     let mut id_buf: [u8; 2] = [0; 2];
 
     // Talk too much
-    let connect_point = format!("127.0.0.1:{}", fixture.test_port);
-    let mut tcp_stream_1 = std::net::TcpStream::connect(connect_point.clone())?;
-    let mut tcp_stream_2 = std::net::TcpStream::connect(connect_point.clone())?;
-    let mut tcp_stream_3 = std::net::TcpStream::connect(connect_point.clone())?;
-    let mut tcp_stream_4 = std::net::TcpStream::connect(connect_point.clone())?;
+    let mut tcp_stream_1 = std::net::TcpStream::connect(socket_addr)?;
+    let mut tcp_stream_2 = std::net::TcpStream::connect(socket_addr)?;
+    let mut tcp_stream_3 = std::net::TcpStream::connect(socket_addr)?;
+    let mut tcp_stream_4 = std::net::TcpStream::connect(socket_addr)?;
     // NOTE(sk): Give peers some time to perform their operations.
     tokio::time::sleep(tokio::time::Duration::from_millis(200)).await;
     assert!(tcp_stream_1.read_exact(&mut id_buf).is_ok());
@@ -172,18 +175,21 @@ async fn test_pull_tls_check_guards() -> AnyhowResult<()> {
     Ok(())
 }
 
-#[cfg(unix)]
 #[tokio::test(flavor = "multi_thread")]
-async fn test_pull_legacy() -> AnyhowResult<()> {
-    let fixture: PullFixture = PullFixture::setup(9998, "test_pull_legacy", true)?;
+async fn test_pull_tls_check_guards() -> AnyhowResult<()> {
+    _test_pull_tls_check_guards(SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), 9997)).await
+}
+
+#[cfg(unix)]
+async fn _test_pull_legacy(socket_addr: SocketAddr) -> AnyhowResult<()> {
+    let fixture: PullFixture = PullFixture::setup(socket_addr.port(), "test_pull_legacy", true)?;
     // Give it some time to provide the TCP socket.
     tokio::time::sleep(tokio::time::Duration::from_millis(1500)).await;
 
     // Try to read plain data from TLS controller.
     // Connection will timeout after 1 sec, only sending the 16.
     let mut message_buf: Vec<u8> = vec![];
-    let connect_point = format!("127.0.0.1:{}", fixture.test_port);
-    let mut tcp_stream = std::net::TcpStream::connect(connect_point.clone())?;
+    let mut tcp_stream = std::net::TcpStream::connect(socket_addr)?;
     tcp_stream.read_to_end(&mut message_buf)?;
     assert_eq!(message_buf, b"16");
 
@@ -191,14 +197,14 @@ async fn test_pull_legacy() -> AnyhowResult<()> {
     // Connection will timeout after 1 sec, only sending the 16.
     let mut message_buf: Vec<u8> = vec![];
     fixture.enable_legacy_pull();
-    let mut tcp_stream = std::net::TcpStream::connect(connect_point.clone())?;
+    let mut tcp_stream = std::net::TcpStream::connect(socket_addr)?;
     tcp_stream.read_to_end(&mut message_buf)?;
     assert_eq!(message_buf, b"16");
 
     // Delete registry. Now we can finally receive our output in plain text.
     let mut message_buf: Vec<u8> = vec![];
     std::fs::remove_file(fixture.test_dir.path().join("registered_connections.json"))?;
-    let mut tcp_stream = std::net::TcpStream::connect(connect_point.clone())?;
+    let mut tcp_stream = std::net::TcpStream::connect(socket_addr)?;
     tcp_stream.read_to_end(&mut message_buf)?;
     assert_eq!(message_buf, fixture.test_agent_output.as_bytes());
 
@@ -206,11 +212,17 @@ async fn test_pull_legacy() -> AnyhowResult<()> {
     // The TCP socket will close afterwards, leading to a refused connection on connect().
     let mut message_buf: Vec<u8> = vec![];
     fixture.disable_legacy_pull();
-    let mut tcp_stream = std::net::TcpStream::connect(connect_point.clone())?;
+    let mut tcp_stream = std::net::TcpStream::connect(socket_addr)?;
     tcp_stream.read_to_end(&mut message_buf)?;
     assert_eq!(message_buf, b"");
-    assert!(std::net::TcpStream::connect(connect_point).is_err());
+    assert!(std::net::TcpStream::connect(socket_addr).is_err());
 
     fixture.teardown();
     Ok(())
+}
+
+#[cfg(unix)]
+#[tokio::test(flavor = "multi_thread")]
+async fn test_pull_legacy() -> AnyhowResult<()> {
+    _test_pull_legacy(SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), 9998)).await
 }

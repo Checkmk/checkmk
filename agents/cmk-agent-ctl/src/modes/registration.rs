@@ -12,7 +12,7 @@ trait TrustEstablishing {
 struct InteractiveTrust {}
 
 impl InteractiveTrust {
-    fn display_cert(server: &str, port: &types::Port) -> AnyhowResult<()> {
+    fn display_cert(server: &str, port: &u16) -> AnyhowResult<()> {
         let pem_str = certs::fetch_server_cert_pem(server, port)?;
         let pem = certs::parse_pem(&pem_str)?;
         let x509 = pem.parse_x509()?;

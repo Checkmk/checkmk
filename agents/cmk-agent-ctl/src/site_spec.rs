@@ -2,17 +2,24 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use super::types;
 use anyhow::{anyhow, Context, Error as AnyhowError, Result as AnyhowResult};
 use std::fmt::Display;
 use std::str::FromStr;
+
+pub fn parse_port(src: &str) -> AnyhowResult<u16> {
+    u16::from_str(src).context(format!(
+        "Port is not an integer in the range {} - {}",
+        u16::MIN,
+        u16::MAX
+    ))
+}
 
 #[derive(serde::Deserialize, PartialEq, Debug)]
 pub struct ServerSpec {
     pub server: String,
 
     #[serde(default)]
-    pub port: Option<types::Port>,
+    pub port: Option<u16>,
 }
 
 impl FromStr for ServerSpec {
@@ -27,7 +34,7 @@ impl FromStr for ServerSpec {
                 }
                 Ok(Self {
                     server: String::from(components[0]),
-                    port: Some(types::Port::from_str(components[1])?),
+                    port: Some(parse_port(components[1])?),
                 })
             }
             false => Ok(Self {
@@ -57,7 +64,7 @@ pub struct PresetSiteSpec {
 )]
 pub struct Coordinates {
     pub server: String,
-    pub port: types::Port,
+    pub port: u16,
     pub site: String,
 }
 
@@ -77,7 +84,7 @@ impl FromStr for Coordinates {
         }
         Ok(Coordinates {
             server: String::from(server_components[0]),
-            port: server_components[1].parse::<types::Port>()?,
+            port: server_components[1].parse::<u16>()?,
             site: String::from(outer_components[1]),
         })
     }
@@ -90,7 +97,7 @@ impl Display for Coordinates {
 }
 
 impl Coordinates {
-    pub fn new(server: &str, port: Option<types::Port>, site: &str) -> AnyhowResult<Self> {
+    pub fn new(server: &str, port: Option<u16>, site: &str) -> AnyhowResult<Self> {
         Ok(Self {
             server: String::from(server),
             port: match port {
@@ -120,15 +127,28 @@ impl Coordinates {
         ))
     }
 
-    fn port_from_checkmk_rest_api(server: &str, site: &str) -> AnyhowResult<types::Port> {
+    fn port_from_checkmk_rest_api(server: &str, site: &str) -> AnyhowResult<u16> {
         let url = Self::checkmk_rest_api_port_url(server, site)?;
         let error_msg = format!("Failed to discover agent receiver port from {}", &url);
         reqwest::blocking::get(url)
             .context(error_msg.clone())?
             .text()
             .context(error_msg.clone())?
-            .parse::<types::Port>()
+            .parse::<u16>()
             .context(error_msg)
+    }
+}
+
+#[cfg(test)]
+mod test_parse_port {
+    use super::*;
+
+    #[test]
+    fn test() {
+        assert_eq!(parse_port("8999").unwrap(), 8999);
+        assert!(parse_port("kjgsdfljhg").is_err());
+        assert!(parse_port("-10").is_err());
+        assert!(parse_port("99999999999999999999").is_err());
     }
 }
 
@@ -142,7 +162,7 @@ mod test_server_spec {
             ServerSpec::from_str("server:8000").unwrap(),
             ServerSpec {
                 server: String::from("server"),
-                port: Some(types::Port::from_str("8000").unwrap()),
+                port: Some(u16::from_str("8000").unwrap()),
             }
         )
     }
@@ -173,7 +193,7 @@ mod test_coordinates {
         assert_eq!(
             Coordinates {
                 server: String::from("my-server"),
-                port: types::Port::from_str("8002").unwrap(),
+                port: u16::from_str("8002").unwrap(),
                 site: String::from("my-site"),
             }
             .to_string(),
@@ -187,7 +207,7 @@ mod test_coordinates {
             Coordinates::from_str("checkmk.server.com:5678/awesome-site").unwrap(),
             Coordinates {
                 server: String::from("checkmk.server.com"),
-                port: types::Port::from_str("5678").unwrap(),
+                port: u16::from_str("5678").unwrap(),
                 site: String::from("awesome-site"),
             }
         )

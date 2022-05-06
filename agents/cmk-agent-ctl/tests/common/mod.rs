@@ -32,7 +32,7 @@ pub fn testing_registry(
 
 pub fn testing_pull_setup(
     path: &Path,
-    port: &str,
+    port: u16,
     agent_channel: types::AgentChannel,
 ) -> (String, config::PullConfig, certs::X509Certs) {
     let controller_uuid = uuid::Uuid::new_v4();
@@ -57,13 +57,13 @@ pub fn legacy_pull_marker(path: &Path) -> config::LegacyPullMarker {
 
 pub fn testing_pull_config(
     path: &Path,
-    port: &str,
+    port: u16,
     agent_channel: types::AgentChannel,
     registry: config::Registry,
 ) -> config::PullConfig {
     config::PullConfig {
         allowed_ip: vec![],
-        port: types::Port::from_str(port).unwrap(),
+        port,
         max_connections: 3,
         connection_timeout: 1,
         agent_channel,

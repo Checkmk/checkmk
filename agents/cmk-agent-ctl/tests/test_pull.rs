@@ -26,7 +26,7 @@ fn test_pull_inconsistent_cert() -> AnyhowResult<()> {
 
     let error = cmk_agent_ctl::modes::pull::pull(common::testing_pull_config(
         test_path,
-        "1234",
+        1234,
         "dummy".into(),
         registry,
     ))
@@ -38,7 +38,7 @@ fn test_pull_inconsistent_cert() -> AnyhowResult<()> {
 }
 
 struct PullFixture {
-    test_port: String,
+    test_port: u16,
     test_agent_output: String,
     uuid: String,
     certs: common::certs::X509Certs,
@@ -48,7 +48,7 @@ struct PullFixture {
 }
 
 impl PullFixture {
-    fn setup(port: &str, prefix: &str, save_legacy: bool) -> AnyhowResult<PullFixture> {
+    fn setup(port: u16, prefix: &str, save_legacy: bool) -> AnyhowResult<PullFixture> {
         // Uncomment for debugging
         // common::init_logging(&test_path.join("log"))?;
         let test_dir = common::setup_test_dir(prefix);
@@ -73,7 +73,7 @@ impl PullFixture {
         let pull_thread = tokio::task::spawn(cmk_agent_ctl::modes::pull::async_pull(pull_config));
 
         Ok(PullFixture {
-            test_port: String::from(port),
+            test_port: port,
             test_agent_output: test_agent_output.to_string(),
             uuid,
             certs,
@@ -115,7 +115,7 @@ impl PullFixture {
 #[tokio::test(flavor = "multi_thread")]
 #[cfg_attr(target_os = "windows", ignore)]
 async fn test_pull_tls_main() -> AnyhowResult<()> {
-    let fixture: PullFixture = PullFixture::setup("9999", "test_pull_tls_main", false)?;
+    let fixture: PullFixture = PullFixture::setup(9999, "test_pull_tls_main", false)?;
     // Give it some time to provide the TCP socket
     tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
 
@@ -148,7 +148,7 @@ async fn test_pull_tls_main() -> AnyhowResult<()> {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_pull_tls_check_guards() -> AnyhowResult<()> {
-    let fixture: PullFixture = PullFixture::setup("9997", "test_pull_tls_check_guards", false)?;
+    let fixture: PullFixture = PullFixture::setup(9997, "test_pull_tls_check_guards", false)?;
 
     // Give it some time to provide the TCP socket
     tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
@@ -175,7 +175,7 @@ async fn test_pull_tls_check_guards() -> AnyhowResult<()> {
 #[cfg(unix)]
 #[tokio::test(flavor = "multi_thread")]
 async fn test_pull_legacy() -> AnyhowResult<()> {
-    let fixture: PullFixture = PullFixture::setup("9998", "test_pull_legacy", true)?;
+    let fixture: PullFixture = PullFixture::setup(9998, "test_pull_legacy", true)?;
     // Give it some time to provide the TCP socket.
     tokio::time::sleep(tokio::time::Duration::from_millis(1500)).await;
 

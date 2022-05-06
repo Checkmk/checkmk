@@ -23,6 +23,7 @@ import cmk.gui.watolib.config_domains as _config_domains
 import cmk.gui.watolib.sites
 import cmk.gui.weblib
 from cmk.gui.plugins.watolib.utils import config_domain_registry as _config_domain_registry
+from cmk.gui.utils import load_web_plugins as _load_web_plugins
 
 if _cmk_version.is_managed_edition():
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
@@ -57,7 +58,7 @@ def _register_config_domains() -> None:
 
 
 def load_watolib_plugins():
-    cmk.gui.utils.load_web_plugins("watolib", globals())
+    _load_web_plugins("watolib", globals())
 
 
 _register_automation_commands()

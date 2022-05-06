@@ -5,7 +5,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
+import os
 import signal
+from contextlib import redirect_stdout
 from types import FrameType
 from typing import Any, Dict, List, NoReturn, Optional
 
@@ -48,10 +50,11 @@ class Automations:
                 raise MKAutomationError("Automation command '%s' is not implemented." % cmd)
 
             if automation.needs_checks:
-                config.load_all_agent_based_plugins(
-                    check_api.get_check_api_context,
-                    inventory_plugins.load_legacy_inventory_plugins,
-                )
+                with redirect_stdout(open(os.devnull, "w")):
+                    config.load_all_agent_based_plugins(
+                        check_api.get_check_api_context,
+                        inventory_plugins.load_legacy_inventory_plugins,
+                    )
 
             if automation.needs_config:
                 config.load(validate_hosts=False)

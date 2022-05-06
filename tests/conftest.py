@@ -245,7 +245,7 @@ def _get_site_object():
         return os.environ.get("EDITION", testlib.CMKVersion.CEE)
 
     def site_branch():
-        return os.environ.get("BRANCH", testlib.current_branch_name())
+        return os.environ.get("BRANCH") or testlib.current_branch_name()
 
     def reuse_site():
         return os.environ.get("REUSE", "1") == "1"
@@ -262,7 +262,7 @@ def _site_id():
     if site_id is not None:
         return site_id
 
-    branch_name = os.environ.get("BRANCH", testlib.current_branch_name())
+    branch_name = os.environ.get("BRANCH") or testlib.current_branch_name()
     # Split by / and get last element, remove unwanted chars
     branch_part = re.sub("[^a-zA-Z0-9_]", "", branch_name.split("/")[-1])
     site_id = "int_%s" % branch_part

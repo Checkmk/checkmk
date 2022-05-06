@@ -4,30 +4,28 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# NOTE: flake8 has no way to ignore just e.g. F401 for the whole file! :-P
-# flake8: noqa
-# pylint: disable=unused-import
-
-from typing import Sequence, Type
+from typing import Callable, Sequence, Tuple, Type
 
 import urllib3 as _urllib3
 
 import cmk.utils.version as _cmk_version
 
 import cmk.gui.gui_background_job as _gui_background_job
+import cmk.gui.hooks as _hooks
 import cmk.gui.mkeventd as _mkeventd
+import cmk.gui.pages as _pages
 import cmk.gui.userdb as _userdb
-import cmk.gui.watolib.auth_php
+import cmk.gui.watolib.auth_php as _auth_php
 import cmk.gui.watolib.automation_commands as _automation_commands
 import cmk.gui.watolib.config_domains as _config_domains
-import cmk.gui.watolib.sites
-import cmk.gui.weblib
+import cmk.gui.weblib as _webling
 from cmk.gui.config import register_post_config_load_hook as _register_post_config_load_hook
 from cmk.gui.permissions import permission_section_registry as _permission_section_registry
 from cmk.gui.plugins.watolib.utils import config_domain_registry as _config_domain_registry
 from cmk.gui.utils import load_web_plugins as _load_web_plugins
 
 if _cmk_version.is_managed_edition():
+    # pylint: disable=unused-import
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
 
 # Disable python warnings in background job output or logs like "Unverified
@@ -59,6 +57,27 @@ def _register_config_domains() -> None:
         _config_domain_registry.register(cls)
 
 
+def _register_hooks():
+    # TODO: Should we not execute this hook also when folders are modified?
+    args: Sequence[Tuple[str, Callable]] = (
+        ("userdb-job", _auth_php._on_userdb_job),
+        ("users-saved", lambda users: _auth_php._create_auth_file("users-saved", users)),
+        ("roles-saved", lambda x: _auth_php._create_auth_file("roles-saved")),
+        ("contactgroups-saved", lambda x: _auth_php._create_auth_file("contactgroups-saved")),
+        ("activate-changes", lambda x: _auth_php._create_auth_file("activate-changes")),
+    )
+    for name, func in args:
+        _hooks.register_builtin(name, func)
+
+
+def _register_pages():
+    for name, func in (
+        ("tree_openclose", _webling.ajax_tree_openclose),
+        ("ajax_set_rowselection", _webling.ajax_set_rowselection),
+    ):
+        _pages.register(name)(func)
+
+
 def _register_permission_section_registry():
     clss = (_mkeventd.PermissionSectionEventConsole,)
     for cls in clss:
@@ -82,5 +101,7 @@ def load_watolib_plugins():
 
 _register_automation_commands()
 _register_gui_background_jobs()
+_register_hooks()
 _register_config_domains()
+_register_pages()
 _register_permission_section_registry()

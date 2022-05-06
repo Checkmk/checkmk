@@ -6,7 +6,6 @@
 
 import re
 
-import cmk.gui.pages
 import cmk.gui.utils as utils
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request, response
@@ -14,7 +13,6 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 
 
-@cmk.gui.pages.register("tree_openclose")
 def ajax_tree_openclose() -> None:
     tree = request.get_str_input_mandatory("tree")
     name = request.get_str_input_mandatory("name")
@@ -59,7 +57,6 @@ def selection_id() -> str:
     return sel_id
 
 
-@cmk.gui.pages.register("ajax_set_rowselection")
 def ajax_set_rowselection() -> None:
     ident = request.get_str_input_mandatory("id")
     action = request.get_str_input_mandatory("action", "set")

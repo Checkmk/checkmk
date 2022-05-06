@@ -140,6 +140,12 @@ class SiteContext(AbstractSiteContext):
             return None
 
     @property
+    def hook_dir(self) -> Optional[str]:
+        if self.version is None:
+            return None
+        return "/omd/versions/%s/lib/omd/hooks/" % self.version
+
+    @property
     def replacements(self) -> Replacements:
         """Dictionary of key/value for replacing macros in skel files"""
         return {
@@ -158,9 +164,8 @@ class SiteContext(AbstractSiteContext):
         # Get the default values of all config hooks that are not contained
         # in the site configuration. This can happen if there are new hooks
         # after an update or when a site is being created.
-        hook_dir = self.dir + "/lib/omd/hooks"
-        if os.path.exists(hook_dir):
-            for hook_name in sort_hooks(os.listdir(hook_dir)):
+        if self.hook_dir and os.path.exists(self.hook_dir):
+            for hook_name in sort_hooks(os.listdir(self.hook_dir)):
                 if hook_name[0] != "." and hook_name not in self._config:
                     content = call_hook(self, hook_name, ["default"])[1]
                     self._config[hook_name] = content

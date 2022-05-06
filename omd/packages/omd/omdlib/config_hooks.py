@@ -38,6 +38,7 @@ import os
 import re
 import subprocess
 import sys
+from pathlib import Path
 from typing import Dict, Iterable, List, Pattern, Tuple, TYPE_CHECKING, Union
 
 from cmk.utils.exceptions import MKTerminate
@@ -80,8 +81,11 @@ def save_site_conf(site: "SiteContext") -> None:
 def load_config_hooks(site: "SiteContext") -> ConfigHooks:
     config_hooks: ConfigHooks = {}
 
-    hook_dir = site.dir + "/lib/omd/hooks"
-    for hook_name in os.listdir(hook_dir):
+    hook_files = []
+    if site.hook_dir:
+        hook_files = os.listdir(site.hook_dir)
+
+    for hook_name in hook_files:
         try:
             if hook_name[0] != ".":
                 hook = _config_load_hook(site, hook_name)
@@ -102,23 +106,26 @@ def _config_load_hook(site: "SiteContext", hook_name: str) -> ConfigHook:
         "deprecated": False,
     }
 
+    if not site.hook_dir:
+        # IMHO this should be unreachable...
+        raise MKTerminate("Site has no version and therefore no hooks")
+
     description = ""
     description_active = False
-    for line in open(  # pylint:disable=consider-using-with
-        site.dir + "/lib/omd/hooks/" + hook_name
-    ):
-        if line.startswith("# Alias:"):
-            hook["alias"] = line[8:].strip()
-        elif line.startswith("# Menu:"):
-            hook["menu"] = line[7:].strip()
-        elif line.startswith("# Deprecated: yes"):
-            hook["deprecated"] = True
-        elif line.startswith("# Description:"):
-            description_active = True
-        elif line.startswith("#  ") and description_active:
-            description += line[3:].strip() + "\n"
-        else:
-            description_active = False
+    with Path(site.hook_dir, hook_name).open() as hook_file:
+        for line in hook_file:
+            if line.startswith("# Alias:"):
+                hook["alias"] = line[8:].strip()
+            elif line.startswith("# Menu:"):
+                hook["menu"] = line[7:].strip()
+            elif line.startswith("# Deprecated: yes"):
+                hook["deprecated"] = True
+            elif line.startswith("# Description:"):
+                description_active = True
+            elif line.startswith("#  ") and description_active:
+                description += line[3:].strip() + "\n"
+            else:
+                description_active = False
     hook["description"] = description
 
     def get_hook_info(info: str) -> str:
@@ -170,13 +177,19 @@ def sort_hooks(hook_names: List[str]) -> Iterable[str]:
 
 
 def hook_exists(site: "SiteContext", hook_name: str) -> bool:
-    hook_file = site.dir + "/lib/omd/hooks/" + hook_name
+    if not site.hook_dir:
+        return False
+    hook_file = site.hook_dir + hook_name
     return os.path.exists(hook_file)
 
 
 def call_hook(site: "SiteContext", hook_name: str, args: List[str]) -> ConfigHookResult:
 
-    cmd = [site.dir + "/lib/omd/hooks/" + hook_name] + args
+    if not site.hook_dir:
+        # IMHO this should be unreachable...
+        raise MKTerminate("Site has no version and therefore no hooks")
+
+    cmd = [site.hook_dir + hook_name] + args
     hook_env = os.environ.copy()
     hook_env.update(
         {

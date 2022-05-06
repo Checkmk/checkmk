@@ -35,6 +35,18 @@ if TYPE_CHECKING:
     from cmk.gui.type_defs import Row
 
 
+def _prepare_button_url(p: re.Match) -> str:
+    """The regex to find out if a link button should be placed does not deal correctly with escaped trailing quotes
+
+    Because single quotes are valid characters in a URL only remove this is the match was enclosed in single quotes.
+    This can happen with the check_http plugin
+    """
+    m = p.group(1).replace("&quot;", "")
+    if p.start(1) >= 6 and p.string[p.start(1) - 6 : p.start(1)] == "&#x27;":
+        m = m[:-6]
+    return unescape(m)
+
+
 # There is common code with cmk/notification_plugins/utils.py:format_plugin_output(). Please check
 # whether or not that function needs to be changed too
 # TODO(lm): Find a common place to unify this functionality.
@@ -87,8 +99,8 @@ def format_plugin_output(
             "(?:&lt;A HREF=&quot;)?" + http_url + "(?: target=&quot;_blank&quot;&gt;)?",
             lambda p: str(
                 html.render_icon_button(
-                    unescape(p.group(1).replace("&quot;", "")),
-                    unescape(p.group(1).replace("&quot;", "")),
+                    _prepare_button_url(p),
+                    _prepare_button_url(p),
                     "link",
                 )
             ),

@@ -1003,8 +1003,12 @@ class Site(object):
             "REUSE": "1" if self.reuse else "0",
         }
         for varname in [
-                "WORKSPACE", "PYTEST_ADDOPTS", "BANDIT_OUTPUT_ARGS", "SHELLCHECK_OUTPUT_ARGS",
-                "PYLINT_ARGS"
+                "WORKSPACE",
+                "PYTEST_ADDOPTS",
+                "BANDIT_OUTPUT_ARGS",
+                "SHELLCHECK_OUTPUT_ARGS",
+                "PYLINT_ARGS",
+                "BRANCH",
         ]:
             if varname in os.environ:
                 env_vars[varname] = os.environ[varname]

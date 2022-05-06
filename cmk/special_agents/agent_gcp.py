@@ -7,7 +7,7 @@ import json
 import time
 from dataclasses import dataclass, field
 from functools import cache
-from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional, Sequence, Union
+from typing import Any, Callable, Iterable, Mapping, Optional, Sequence, Union
 
 from google.cloud import asset_v1, monitoring_v3  # type: ignore
 from google.cloud.monitoring_v3 import Aggregation
@@ -45,7 +45,7 @@ class Asset:
 
 @dataclass(unsafe_hash=True)
 class Client:
-    account_info: Dict[str, str] = field(compare=False)
+    account_info: dict[str, str] = field(compare=False)
     project: str
 
     @cache
@@ -60,12 +60,12 @@ class Client:
 @dataclass(frozen=True)
 class Metric:
     name: str
-    aggregation: Dict[str, Any]
+    aggregation: Mapping[str, Any]
 
 
 @dataclass(frozen=True)
 class Service:
-    metrics: List[Metric]
+    metrics: list[Metric]
     name: str
 
 

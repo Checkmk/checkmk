@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
@@ -63,7 +62,7 @@ class Base(t.Generic[T], abc.ABC):
     @abc.abstractmethod
     def get_description(self) -> str:
         """
-        return human readable uniqe identifier for this element
+        return human readable unique identifier for this element
         """
 
     def __lt__(self, other: object) -> bool:
@@ -664,7 +663,7 @@ class ErrorReporter:
 
     def raise_last_default_loading_exception(self) -> None:
         if self._last_exception is not None:
-            raise self._last_exception  # pylint: disable-msg=E0702  # https://stackoverflow.com/a/2228811
+            raise self._last_exception
 
 
 ################################################################################

@@ -64,6 +64,7 @@ def render_wato(mini):
     if pending_info:
         footnotelinks([(pending_info, "wato.py?mode=changelog")])
         html.div("", class_="clear")
+    return None
 
 
 def get_wato_menu_items() -> List[TopicMenuTopic]:
@@ -390,3 +391,4 @@ class SidebarSnapinWATOFoldertree(SidebarSnapin):
             render_tree_folder(
                 "wato-hosts", list(user_folders.values())[0], "cmk.sidebar.wato_tree_click"
             )
+        return None

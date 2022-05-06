@@ -148,7 +148,7 @@ class ActivateChangesWriter:
         # change for that site. Otherwise the activation page would show a
         # change but the site would not be selected for activation.
         if site_is_local(site_id) and need_restart is False:
-            return None
+            return
 
         SiteChanges(SiteChanges.make_path(site_id)).append(
             {

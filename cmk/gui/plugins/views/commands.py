@@ -1117,7 +1117,7 @@ class CommandScheduleDowntimes(Command):
 
     def _remove_downtime_details(self, cmdtag, row):
         if not user.may("action.remove_all_downtimes"):
-            return
+            return None
         if request.var("_on_hosts"):
             raise MKUserError(
                 "_on_hosts",
@@ -1362,6 +1362,7 @@ def time_interval_end(
         return time.mktime((new_year, new_month, 1, 0, 0, 0, 0, 0, now.tm_isdst))
     if time_value == "next_year":
         return time.mktime((now.tm_year, 12, 31, 23, 59, 59, 0, 0, now.tm_isdst)) + 1
+    return None
 
 
 def time_interval_to_human_readable(next_time_interval, prefix):

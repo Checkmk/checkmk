@@ -691,6 +691,7 @@ def ajax_openclose() -> None:
         snapin.visible = SnapinVisibility(state)
 
     user_config.save()
+    return None
 
 
 @cmk.gui.pages.register("sidebar_move_snapin")
@@ -720,6 +721,7 @@ def move_snapin() -> None:
 
     user_config.move_snapin_before(snapin, before_snapin)
     user_config.save()
+    return None
 
 
 # .

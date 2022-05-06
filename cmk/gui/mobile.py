@@ -303,6 +303,7 @@ def page_view() -> None:
         html.write_text("ERROR showing view: %s" % e)
 
     mobile_html_foot()
+    return None
 
 
 class MobileViewRenderer(views.ABCViewRenderer):

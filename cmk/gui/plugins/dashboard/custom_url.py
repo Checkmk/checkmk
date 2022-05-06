@@ -60,7 +60,7 @@ class URLDashlet(IFrameDashlet):
 
     def _get_iframe_url(self):
         if not self._dashlet_spec.get("show_in_iframe", True):
-            return
+            return None
 
         # Previous to 1.6 the url was optional and a urlfunc was allowed. The
         # later option has been removed and url is now mandatory. In case you

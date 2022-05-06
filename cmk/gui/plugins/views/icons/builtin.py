@@ -154,7 +154,7 @@ class IconImageIcon(Icon):
     def render(self, what, row, tags, custom_vars):
         img = row[what + "_icon_image"]
         if not img:
-            return
+            return None
 
         if img.endswith(".png"):
             img = img[:-4]
@@ -198,7 +198,7 @@ class RescheduleIcon(Icon):
 
         # Reschedule button
         if row[what + "_check_type"] == 2:
-            return  # shadow hosts/services cannot be rescheduled
+            return None  # shadow hosts/services cannot be rescheduled
 
         if (
             row[what + "_active_checks_enabled"] == 1
@@ -228,6 +228,7 @@ class RescheduleIcon(Icon):
             )
             # _self is needed to prevent wrong linking when views are parts of dashlets
             return icon, txt, (url, "_self")
+        return None
 
 
 # .
@@ -264,7 +265,7 @@ class RuleEditorIcon(Icon):
 
     def render(self, what, row, tags, custom_vars):
         if row[what + "_check_type"] == 2:
-            return  # shadow services have no parameters
+            return None  # shadow services have no parameters
 
         if (
             active_config.wato_enabled
@@ -283,6 +284,7 @@ class RuleEditorIcon(Icon):
                 title = _("Parameters for this host")
 
             return "rulesets", title, makeuri_contextless(request, urlvars, "wato.py")
+        return None
 
 
 # .
@@ -327,15 +329,16 @@ class ManpageIcon(Icon):
                 elif command == "check-mk-inventory":
                     check_type = "check-mk-inventory"
                 else:
-                    return
+                    return None
             else:
-                return
+                return None
             urlvars = [("mode", "check_manpage"), ("check_type", check_type)]
             return (
                 "check_plugins",
                 _("Manual page for this check type"),
                 makeuri_contextless(request, urlvars, "wato.py"),
             )
+        return None
 
 
 # .
@@ -370,6 +373,7 @@ class AcknowledgeIcon(Icon):
     def render(self, what, row, tags, custom_vars):
         if row[what + "_acknowledged"]:
             return "ack", _("This problem has been acknowledged")
+        return None
 
 
 # .
@@ -408,6 +412,7 @@ class PerfgraphIcon(Icon):
         pnpgraph_present = row[what + "_pnpgraph_present"]
         if pnpgraph_present == 1:
             return self._pnp_icon(row, what)
+        return None
 
     def _pnp_icon(self, row, what):
         url = self._graph_icon_link(row, what)
@@ -416,7 +421,7 @@ class PerfgraphIcon(Icon):
         # mobile view for graphs, so the graphs on the bottom of the host/service view are enough
         # for the moment.
         if is_mobile(request, response):
-            return
+            return None
 
         return html.render_a(
             content=html.render_icon("graph", ""),
@@ -486,6 +491,7 @@ class PredictionIcon(Icon):
                         _("Analyse predictive monitoring for this service"),
                         makeuri_contextless(request, urlvars, "prediction_graph.py"),
                     )
+        return None
 
 
 # .
@@ -521,6 +527,7 @@ class CustomActionIcon(Icon):
             pnpgraph_present = row[what + "_pnpgraph_present"]
             if action_url and not ("/pnp4nagios/" in action_url and pnpgraph_present >= 0):
                 return "action", _("Custom Action"), action_url
+        return None
 
 
 # .
@@ -554,7 +561,7 @@ class LogwatchIcon(Icon):
             "check_mk-logwatch",
             "check_mk-logwatch_groups",
         ]:
-            return
+            return None
 
         sitename, hostname, item = row["site"], row["host_name"], row["service_description"][4:]
         url = makeuri_contextless(
@@ -599,6 +606,7 @@ class NotesIcon(Icon):
             notes_url = row[what + "_notes_url_expanded"]
             if notes_url:
                 return "notes", _("Custom Notes"), (notes_url, "_blank")
+        return None
 
 
 # .
@@ -739,6 +747,7 @@ class CommentsIcon(Icon):
                 text,
                 url_to_visual(row, VisualLinkSpec("views", "comments_of_" + what)),
             )
+        return None
 
 
 # .
@@ -780,6 +789,7 @@ class NotificationsIcon(Icon):
             return "notif_man_disabled", _("Notifications are manually disabled for this %s") % what
         if not enabled:
             return "notif_disabled", _("Notifications are disabled for this %s") % what
+        return None
 
 
 # .
@@ -816,6 +826,7 @@ class FlappingIcon(Icon):
             else:
                 title = _("This service is flapping")
             return "flapping", title
+        return None
 
 
 # .
@@ -856,6 +867,7 @@ class StalenessIcon(Icon):
                     % active_config.staleness_threshold
                 )
             return "stale", title
+        return None
 
 
 # .
@@ -896,6 +908,7 @@ class ActiveChecksIcon(Icon):
                     _("Active checks have been manually disabled for this %s!") % what,
                 )
             return "enabled", _("Active checks have been manually enabled for this %s!") % what
+        return None
 
 
 # .
@@ -935,6 +948,7 @@ class PassiveChecksIcon(Icon):
                     "npassive",
                     _("Passive checks have been manually disabled for this %s!") % what,
                 )
+        return None
 
 
 # .
@@ -967,6 +981,7 @@ class NotificationPeriodIcon(Icon):
     def render(self, what, row, tags, custom_vars):
         if not row[what + "_in_notification_period"]:
             return "outofnot", _("Out of notification period")
+        return None
 
 
 # .
@@ -999,6 +1014,7 @@ class ServicePeriodIcon(Icon):
     def render(self, what, row, tags, custom_vars):
         if not row[what + "_in_service_period"]:
             return "outof_serviceperiod", _("Out of service period")
+        return None
 
 
 # .
@@ -1032,7 +1048,7 @@ class AggregationsIcon(Icon):
             view_name = "aggr_%s" % what
 
             if not user.may("view.%s" % view_name):
-                return
+                return None
 
             urivars = [
                 ("view_name", view_name),
@@ -1048,6 +1064,7 @@ class AggregationsIcon(Icon):
                 % (what == "host" and _("Host") or _("Service")),
                 url,
             )
+        return None
 
 
 # .
@@ -1083,6 +1100,7 @@ class StarsIcon(Icon):
 
         if starred:
             return "starred", _("This %s is one of your favorites") % title
+        return None
 
     @request_memoize()
     def _get_stars(self) -> Set[str]:
@@ -1138,6 +1156,7 @@ class AggregationIcon(Icon):
             )
 
             return "aggr", _("Open this Aggregation"), url
+        return None
 
 
 # .
@@ -1207,6 +1226,7 @@ class CrashdumpsIcon(Icon):
                 ),
                 crashurl,
             )
+        return None
 
 
 # .
@@ -1251,6 +1271,7 @@ class CheckPeriodIcon(Icon):
         elif what == "host":
             if row["%s_in_check_period" % what] == 0:
                 return "pause", _("This host is currently not being checked")
+        return None
 
 
 # .

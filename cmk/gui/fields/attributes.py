@@ -597,6 +597,7 @@ class SNMPCommunity(BaseSchema):
                 "type": "v1_v2_community",
                 "community": data,
             }
+        return None
 
 
 class SNMPv3NoAuthNoPrivacy(BaseSchema, CheckmkTuple):

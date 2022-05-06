@@ -32,10 +32,11 @@ class InventoryIcon(Icon):
         ) and inventory.has_inventory(row["host_name"]):
 
             if not user.may("view.inv_host"):
-                return
+                return None
 
             return (
                 "inventory",
                 _("Show Hardware/Software Inventory of this host"),
                 url_to_visual(row, VisualLinkSpec("views", "inv_host")),
             )
+        return None

@@ -353,6 +353,7 @@ class PageUploadKey:
             if cert_spec[key][0] == "upload":
                 return cert_spec[key][1][2].decode("ascii")
             return cert_spec[key][1]
+        return None
 
     def _upload_key(self, key_file, value) -> None:
         keys = self.load()

@@ -721,6 +721,7 @@ class FilterRegistry(cmk.utils.plugin_registry.Registry[Filter]):
             htmlvar: instance.ident for htmlvar in instance.htmlvars
         }
         self.htmlvars_to_filter.update(htmlvars_to_filter)
+        return None
 
     def plugin_name(self, instance):
         return instance.ident

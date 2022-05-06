@@ -980,3 +980,4 @@ def host_service_graph_dashlet_cmk(
         [graph_recipe], graph_data_range, graph_render_options, render_async=False
     )
     html.write_html(html_code)
+    return None

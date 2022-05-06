@@ -371,6 +371,7 @@ def _get_value_at_timestamp(pin_time, rrddata):
     nth_value = (pin_time - start_time) // step
     if 0 <= nth_value < len(rrddata):
         return rrddata[nth_value]
+    return None
 
 
 # .

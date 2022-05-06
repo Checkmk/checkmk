@@ -1066,6 +1066,7 @@ class TimeperiodValuespec(ValueSpec):
                 class_=["toggle_timespecific_parameter"],
             )
             return r
+        return None
 
     def value_to_html(self, value: Any) -> ValueSpecText:
         return self._get_used_valuespec(value).value_to_html(value)

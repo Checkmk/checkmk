@@ -3445,7 +3445,7 @@ class CascadingDropdown(ValueSpec[CascadingDropdownChoiceValue]):
             vs.validate_datatype(value[1], "")
             return [ident, vs.value_to_json(value[1])]
         except Exception:  # TODO: fix exc
-            return
+            return None
 
     def value_from_json(self, json_value: JSONValue) -> CascadingDropdownChoiceValue:
         value_ident = json_value[0] if isinstance(json_value, list) else json_value

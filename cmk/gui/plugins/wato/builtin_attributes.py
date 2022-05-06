@@ -448,6 +448,7 @@ class HostAttributeParents(ABCHostAttributeValueSpec):
     def to_nagios(self, value):
         if value:
             return ",".join(value)
+        return None
 
     def nagios_name(self):
         return "parents"

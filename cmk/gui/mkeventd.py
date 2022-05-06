@@ -400,6 +400,7 @@ def check_timeperiod(tpname):
             return _("The timeperiod %s is not known to the local monitoring core") % tpname
         if int(answer) == 0:
             return _("The timeperiod %s is currently not active") % tpname
+        return None
     except Exception as e:
         if active_config.debug:
             raise

@@ -193,6 +193,7 @@ class HTMLGenerator(ABCHTMLGenerator):
     def reload_whole_page(self, url: Optional[str] = None) -> None:
         if not self.request.has_var("_ajaxid"):
             return self.final_javascript("cmk.utils.reload_whole_page(%s)" % json.dumps(url))
+        return None
 
     #
     # Messages

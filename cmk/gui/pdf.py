@@ -173,6 +173,7 @@ class Document:
             Document.send(pdf_source, sendas)
         else:
             return pdf_source
+        return None
 
     @classmethod
     def send(cls, pdf_source, sendas):
@@ -350,6 +351,7 @@ class Document:
             else:
                 x = self._right - h_offset - el_width
             return x, y
+        return None
 
     def place_hrule(self, position, width=0.05, color=None):
         el_width = self._right - self._left

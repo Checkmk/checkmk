@@ -1965,6 +1965,7 @@ def extract_painter_name(painter_spec: Union[PainterName, PainterSpec]) -> Paint
         return painter_spec[0]
     if isinstance(painter_spec, str):
         return painter_spec
+    return None
 
 
 def painter_exists(painter_spec: PainterSpec) -> bool:
@@ -2231,6 +2232,7 @@ class Cell:
                 for path_in_theme in (str(file_path).replace(t, "facelift") for t in themes):
                     if os.path.exists(path_in_theme):
                         return path_in_theme
+            return None
 
         try:
             row = join_row(row, self)

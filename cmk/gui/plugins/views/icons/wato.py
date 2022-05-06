@@ -123,10 +123,10 @@ def _paint_download_host_info(what, row, tags, host_custom_vars, ty):
         # Render "download agent output" for non agent hosts, because there might
         # be piggyback data available which should be downloadable.
         if ty == "walk" and "snmp" not in tags:
-            return
+            return None
 
         if ty == "agent" and "snmp" in tags and "tcp" not in tags:
-            return
+            return None
 
         params = [
             ("host", row["host_name"]),
@@ -149,8 +149,10 @@ def _paint_download_host_info(what, row, tags, host_custom_vars, ty):
 
         url = makeuri_contextless(request, params, filename="fetch_agent_output.py")
         return "agents", title, url
+    return None
 
 
 def _wato_folder_from_filename(filename):
     if filename.startswith("/wato/") and filename.endswith("hosts.mk"):
         return filename[6:-8].rstrip("/")
+    return None

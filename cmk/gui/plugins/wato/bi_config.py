@@ -796,7 +796,7 @@ class ModeBIRules(ABCBIMode):
 
         selection = self._get_selection("rule")
         if not selection:
-            return None
+            return
 
         for rule_id in selection:
             bi_rule = self.bi_pack.get_rule_mandatory(rule_id)
@@ -1971,7 +1971,7 @@ class BIModeAggregations(ABCBIMode):
 
         selection = list(map(str, self._get_selection("aggregation")))
         if not selection or target_pack is None:
-            return None
+            return
 
         for aggregation_id in selection[::-1]:
             bi_aggregation = self.bi_pack.get_aggregation_mandatory(aggregation_id)

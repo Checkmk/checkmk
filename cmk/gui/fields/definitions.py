@@ -196,6 +196,7 @@ class FolderField(base.String):
         except MKException:
             if value:
                 raise self.make_error("not_found", folder_id=value)
+        return None
 
     def _serialize(self, value, attr, obj, **kwargs) -> typing.Optional[str]:
         if isinstance(value, str):

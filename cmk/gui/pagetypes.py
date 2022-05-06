@@ -934,6 +934,7 @@ class Overridable(Base):
         for page in cls.instances():
             if page.is_mine() and page.name() == name:
                 return page
+        return None
 
     @classmethod
     def find_foreign_page(cls, owner, name):

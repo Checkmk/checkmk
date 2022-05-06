@@ -100,7 +100,7 @@ class AppsAPI:
             _request_timeout=self.timeout
         ).items
 
-    def _query_raw_statefulsets(self) -> Sequence[client.V1DaemonSet]:
+    def _query_raw_statefulsets(self) -> Sequence[client.V1StatefulSet]:
         return self.connection.list_stateful_set_for_all_namespaces(
             _request_timeout=self.timeout
         ).items

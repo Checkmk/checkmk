@@ -757,9 +757,12 @@ class GUIViewRenderer(ABCViewRenderer):
                 weblib.selection_id()
             breadcrumb = self.view.breadcrumb()
             html.top_heading(
+                html,
+                html.request,
                 view_title(view_spec, self.view.context),
                 breadcrumb,
                 page_menu=self._page_menu(rows, show_filters),
+                browser_reload=html.browser_reload,
             )
             html.begin_page_content()
 

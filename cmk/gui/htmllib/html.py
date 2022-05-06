@@ -461,10 +461,13 @@ class HTMLGenerator(ABCHTMLGenerator):
 
                 if self.render_headfoot and show_top_heading:
                     self.top_heading(
+                        self,
+                        self.request,
                         title,
                         breadcrumb=breadcrumb,
                         page_menu=page_menu or PageMenu(breadcrumb=breadcrumb),
                         page_state=page_state,
+                        browser_reload=self.browser_reload,
                     )
             self.begin_page_content()
 
@@ -483,21 +486,25 @@ class HTMLGenerator(ABCHTMLGenerator):
     def html_foot(self) -> None:
         self.close_html()
 
+    @staticmethod
     def top_heading(
-        self,
+        writer: ABCHTMLGenerator,
+        request: Request,
         title: str,
         breadcrumb: Breadcrumb,
         page_menu: Optional[PageMenu] = None,
         page_state: Optional[PageState] = None,
+        *,
+        browser_reload: float,
     ) -> None:
-        self.open_div(id_="top_heading")
-        self.open_div(class_="titlebar")
+        writer.open_div(id_="top_heading")
+        writer.open_div(class_="titlebar")
 
         # HTML() is needed here to prevent a double escape when we do  self._escape_attribute
         # here and self.a() escapes the content (with permissive escaping) again. We don't want
         # to handle "title" permissive.
         html_title = HTML(escaping.escape_attribute(title))
-        self.a(
+        writer.a(
             html_title,
             class_="title",
             href="#",
@@ -509,12 +516,16 @@ class HTMLGenerator(ABCHTMLGenerator):
             BreadcrumbRenderer().show(breadcrumb)
 
         if page_state is None:
-            page_state = self._make_default_page_state()
+            page_state = HTMLGenerator._make_default_page_state(
+                writer,
+                request,
+                browser_reload=browser_reload,
+            )
 
         if page_state:
             PageStateRenderer().show(page_state)
 
-        self.close_div()  # titlebar
+        writer.close_div()  # titlebar
 
         if page_menu:
             PageMenuRenderer().show(
@@ -522,25 +533,31 @@ class HTMLGenerator(ABCHTMLGenerator):
                 hide_suggestions=not user.get_tree_state("suggestions", "all", True),
             )
 
-        self.close_div()  # top_heading
+        writer.close_div()  # top_heading
 
         if page_menu:
             PageMenuPopupsRenderer().show(page_menu)
 
         if active_config.debug:
-            self._dump_get_vars()
+            HTMLGenerator._dump_get_vars(
+                writer,
+                request,
+            )
 
-    def _make_default_page_state(self) -> Optional[PageState]:
+    @staticmethod
+    def _make_default_page_state(
+        writer: ABCHTMLGenerator, request: Request, *, browser_reload: float
+    ) -> Optional[PageState]:
         """Create a general page state for all pages without specific one"""
-        if not self.browser_reload:
+        if not browser_reload:
             return None
 
         return PageState(
-            text=self.render_span("%d" % self.browser_reload),
+            text=writer.render_span("%d" % browser_reload),
             icon_name="trans",
             css_classes=["reload"],
             url="javascript:document.location.reload()",
-            tooltip_text=_("Automatic page reload in %d seconds.") % self.browser_reload
+            tooltip_text=_("Automatic page reload in %d seconds.") % browser_reload
             + "\n"
             + _("Click for instant reload."),
         )
@@ -1569,33 +1586,39 @@ class HTMLGenerator(ABCHTMLGenerator):
     # HTML - All the common and more complex HTML rendering methods
     #
 
-    def _dump_get_vars(self) -> None:
+    @staticmethod
+    def _dump_get_vars(
+        writer: ABCHTMLGenerator,
+        request: Request,
+    ) -> None:
         with foldable_container(
             treename="html",
             id_="debug_vars",
             isopen=True,
             title=_("GET/POST variables of this page"),
         ):
-            self.debug_vars(hide_with_mouse=False)
+            HTMLGenerator.debug_vars(writer, request, hide_with_mouse=False)
 
+    @staticmethod
     def debug_vars(
-        self,
+        writer: ABCHTMLGenerator,
+        request: Request,
         prefix: Optional[str] = None,
         hide_with_mouse: bool = True,
         vars_: Optional[Dict[str, str]] = None,
     ) -> None:
-        it = self.request.itervars() if vars_ is None else vars_.items()
+        it = request.itervars() if vars_ is None else vars_.items()
         hover = "this.style.display='none';"
-        self.open_table(class_=["debug_vars"], onmouseover=hover if hide_with_mouse else None)
+        writer.open_table(class_=["debug_vars"], onmouseover=hover if hide_with_mouse else None)
         oddeven = "even"
-        self.tr(self.render_th(_("POST / GET Variables"), colspan="2"), class_=oddeven)
+        writer.tr(writer.render_th(_("POST / GET Variables"), colspan="2"), class_=oddeven)
         for name, value in sorted(it):
             oddeven = "even" if oddeven == "odd" else "odd"
             if name in ["_password", "password"]:
                 value = "***"
             if not prefix or name.startswith(prefix):
-                self.tr(
-                    self.render_td(name, class_="left") + self.render_td(value, class_="right"),
+                writer.tr(
+                    writer.render_td(name, class_="left") + writer.render_td(value, class_="right"),
                     class_=oddeven,
                 )
-        self.close_table()
+        writer.close_table()

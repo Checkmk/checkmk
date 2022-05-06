@@ -279,6 +279,8 @@ def show_availability_page(view: View, filterheaders: FilterHeader) -> None:
 
     if display_options.enabled(display_options.T):
         html.top_heading(
+            html,
+            html.request,
             title,
             breadcrumb,
             page_menu=_page_menu_availability(
@@ -286,6 +288,7 @@ def show_availability_page(view: View, filterheaders: FilterHeader) -> None:
             )
             if display_options.enabled(display_options.B)
             else None,
+            browser_reload=html.browser_reload,
         )
         html.begin_page_content()
 
@@ -844,7 +847,14 @@ def show_bi_availability(view: "View", aggr_rows: "Rows") -> None:
                 )
             )
 
-        html.top_heading(title, breadcrumb, page_menu)
+        html.top_heading(
+            html,
+            html.request,
+            title,
+            breadcrumb,
+            page_menu,
+            browser_reload=html.browser_reload,
+        )
 
         avoptions = availability.get_availability_options_from_request("bi")
         _save_availability_options_after_update(avoptions)
@@ -1160,7 +1170,14 @@ def edit_annotation(breadcrumb: Breadcrumb) -> bool:
     html.body_start(title)
 
     breadcrumb = _edit_annotation_breadcrumb(breadcrumb, title)
-    html.top_heading(title, breadcrumb, _edit_annotation_page_menu(breadcrumb))
+    html.top_heading(
+        html,
+        html.request,
+        title,
+        breadcrumb,
+        _edit_annotation_page_menu(breadcrumb),
+        browser_reload=html.browser_reload,
+    )
 
     html.begin_form("editanno", method="GET")
     _vs_annotation().render_input_as_form("_editanno", value)

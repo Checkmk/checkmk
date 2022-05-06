@@ -1,0 +1,11 @@
+@startuml
+component "Apache" as site_apache {
+    component "index.wsgi" as index_wsgi
+    component "CheckmkApp" as cmk_gui_app
+    component "CheckmkRESTAPI" as cmk_rest_api_app
+}
+
+index_wsgi -d-> cmk_gui_app
+index_wsgi -d-> cmk_rest_api_app
+
+@enduml

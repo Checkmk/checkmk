@@ -1,0 +1,36 @@
+@startuml
+component "CheckmkApp" as cmk_gui_app
+component "CheckmkRESTAPI" as cmk_rest_api_app
+component openapi
+
+package "GUI Framework" as gui_framework {
+    component htmllib
+    component i18n
+    component utils
+}
+
+package Monitoring {
+    component views
+    component dashboard
+    component availability
+    component bi
+    component inventory
+    component logwatch
+    component metrics
+    component mobile
+    component prediction
+    component robotmk
+    component werks
+}
+package Configuration {
+    component wato
+    component watolib
+}
+
+cmk_gui_app -d--> gui_framework
+cmk_gui_app -d--> Monitoring
+cmk_gui_app -d--> wato
+cmk_rest_api_app -d-> openapi
+openapi -d-> watolib
+wato -> watolib
+@enduml

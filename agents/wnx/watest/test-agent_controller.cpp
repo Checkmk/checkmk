@@ -4,6 +4,8 @@
 #include "pch.h"
 
 #include <filesystem>
+#include <numeric>
+#include <ranges>
 
 #include "agent_controller.h"
 #include "cfg.h"
@@ -11,6 +13,7 @@
 
 using namespace std::chrono_literals;
 namespace fs = std::filesystem;
+namespace rs = std::ranges;
 namespace cma::details {
 extern bool g_is_service;
 }
@@ -37,6 +40,82 @@ TEST(AgentController, BuildCommandLine) {
     EXPECT_EQ(wtools::ToUtf8(ac::BuildCommandLine(fs::path("x"))),
               fmt::format("x daemon -P {} --agent-channel {} -vv", port,
                           cfg::defaults::kControllerAgentChannelDefault));
+}
+
+class AgentControllerCreateToml : public ::testing::Test {
+public:
+    void SetUp() override { temp_fs_ = tst::TempCfgFs::Create(); }
+
+    void TearDown() override { killArtifacts(); }
+
+    std::vector<std::string> loadConfigAndGetResult(const std::string &cfg) {
+        if (!temp_fs_->loadContent(cfg)) {
+            return {};
+        }
+        ac::CreateTomlConfig(tomlFile());
+        return tst::ReadFileAsTable(tomlFile());
+    }
+
+    void killArtifacts() {
+        std::error_code ec;
+        fs::remove(tomlFile(), ec);
+    }
+    fs::path tomlFile() const { return tst::GetTempDir() / "the_file.toml"; }
+
+    // "allowed_ip = [x,b,z]" -> ["x","b","z"]
+    static std::vector<std::string> convertTomlToIps(
+        std::string_view toml_statement) {
+        std::string all{toml_statement};
+        rs::replace_if(
+            all, [](const char c) { return c == '='; }, ':');
+        auto yaml = YAML::Load(all);
+        auto actual_ips = yaml["allowed_ip"];
+        std::vector<std::string> actual;
+        rs::transform(actual_ips, std::back_inserter(actual),
+                      [](const YAML::Node &n) { return n.as<std::string>(); });
+        return actual;
+    }
+
+private:
+    tst::TempCfgFs::ptr temp_fs_;
+};
+
+TEST_F(AgentControllerCreateToml, Port) {
+    auto table =
+        loadConfigAndGetResult(fmt::format("global:\n"
+                                           "  enabled: yes\n"
+                                           "  only_from: \n"
+                                           "  port: {}\n",
+                                           port));
+    for (auto index : {0, 1, 2}) {
+        EXPECT_EQ(table[index][0], '#');
+    }
+    EXPECT_TRUE(table[3].empty());
+    EXPECT_EQ(table[4], fmt::format("pull_port = {}", port));
+}
+
+TEST_F(AgentControllerCreateToml, PortAndAllowed) {
+    auto table =
+        loadConfigAndGetResult(fmt::format("global:\n"
+                                           "  enabled: yes\n"
+                                           "  only_from: {}\n"
+                                           "  port: {}\n",
+                                           allowed, port));
+    for (auto index : {0, 1, 2}) {
+        EXPECT_EQ(table[index][0], '#');
+    }
+    EXPECT_TRUE(table[3].empty());
+    EXPECT_EQ(table[4], fmt::format("pull_port = {}", port));
+
+    auto all = std::accumulate(
+        table.begin() + 5, table.end(), std::string{},
+        [](const std::string &a, const std::string &b) -> std::string {
+            return a + b;
+        });
+    auto actual_ips = convertTomlToIps(all);
+    auto expected_ips = tools::SplitString(std::string{allowed}, " ");
+    EXPECT_TRUE(rs::is_permutation(actual_ips, expected_ips));
+    EXPECT_EQ(actual_ips.size(), expected_ips.size());
 }
 
 TEST(AgentController, BuildCommandLineAgentChannelOk) {
@@ -120,6 +199,7 @@ bool IsLegacyFileExists() {
 void CleanArtifacts() {
     std::error_code ec;
     fs::remove(ac::LegacyPullFile(), ec);
+    fs::remove(ac::ControllerFlagFile(), ec);
     fs::remove(ac::ControllerFlagFile(), ec);
 }
 constexpr auto marker_new =

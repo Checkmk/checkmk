@@ -63,6 +63,7 @@ constexpr std::string_view kUpgradeProtocol = "upgrade.protocol";
 constexpr std::string_view kInstallProtocol = "install.protocol";
 constexpr const wchar_t *kAgentUpdaterPython = L"cmk_update_agent.checkmk.py";
 constexpr const wchar_t *kAgentCtl = L"cmk-agent-ctl.exe";
+constexpr const wchar_t *kAgentToml = L"cmk-agent-ctl.toml";
 
 }  // namespace files
 

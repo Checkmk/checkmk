@@ -123,7 +123,11 @@ from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_LEVELS
                         ("trend", 0.0, None, None, 0, 4277.291666666667),
                     ],
                 ),
-                # Bug, there should be an inode result here
+                (
+                    2,
+                    "Inodes used: 100.00% (warn/crit at 90.00%/95.00%), Inodes available: 0 (0%)",
+                    [("inodes_used", 65486.0, 58937.4, 62211.7, 0.0, 65486.0)],
+                ),
             ],
             id="zero inodes left",
         ),

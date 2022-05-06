@@ -1004,7 +1004,7 @@ class Site(object):
         }
         for varname in [
                 "WORKSPACE", "PYTEST_ADDOPTS", "BANDIT_OUTPUT_ARGS", "SHELLCHECK_OUTPUT_ARGS",
-                "PYLINT_ARGS"
+                "PYLINT_ARGS", "GIT_CEILING_DIRECTORIES",
         ]:
             if varname in os.environ:
                 env_vars[varname] = os.environ[varname]

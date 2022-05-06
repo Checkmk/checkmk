@@ -4,26 +4,25 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from __future__ import print_function
-
 import os
 import platform
 import subprocess
+from typing import Optional, Sequence
 
 import pytest  # type: ignore
 
 
-# we are checking that input is OK(long enough for example)
-def check_actual_input(name, lines, alone, data):
+def check_actual_input(name: str, lines: int, alone: bool, data: Optional[Sequence[str]]) -> bool:
     if data is None:
-        pytest.skip('"%s" Data is absent' % name)
+        pytest.skip(f"Section '{name}': Data is absent")
         return False
 
     if not alone:
         lines += 2
 
     if len(data) < lines:
-        pytest.skip('"%s" Data is TOO short:\n %s' % (name, "\n".join(data)))
+        all_data = "\n".join(data)
+        pytest.skip(f"Section '{name}': Data is TOO short:\n{all_data}\n")
         return False
 
     return True

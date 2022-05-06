@@ -209,6 +209,7 @@ class ModeBulkRenameHost(WatoMode):
                 warning += "<li>%s</li>" % name
             warning += "</ul>"
             return warning
+        return None
 
     def _collect_host_renamings(self, renaming_config):
         return self._recurse_hosts_for_renaming(Folder.current(), renaming_config)
@@ -268,6 +269,7 @@ class ModeBulkRenameHost(WatoMode):
                 new_name = new_name.replace("\\0", hostname)
                 return new_name
             return hostname
+        return None
 
     def page(self):
         html.begin_form("bulk_rename_host", method="POST")

@@ -115,7 +115,7 @@ def _handle_project(jira, args):
     if issues_dict:
         return json.dumps(issues_dict)
 
-    return
+    return None
 
 
 def _handle_custom_query(jira, args):
@@ -199,7 +199,7 @@ def _handle_custom_query(jira, args):
     if result_dict:
         return json.dumps(result_dict)
 
-    return
+    return None
 
 
 def _handle_search_issues(jira, jql, field, max_results, args, project, svc_desc):
@@ -218,6 +218,7 @@ def _handle_search_issues(jira, jql, field, max_results, args, project, svc_desc
         sys.stdout.write("%s\n" % json.dumps(msg_dict))
         if args.debug:
             raise
+        return None
     else:
         return issues
 

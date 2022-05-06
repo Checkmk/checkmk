@@ -106,3 +106,4 @@ def main(sys_argv=None):
     except Exception as e:
         sys.stderr.write("Connection error %s" % e)
         return 1
+    return None

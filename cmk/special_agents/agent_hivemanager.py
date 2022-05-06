@@ -57,3 +57,4 @@ def main(sys_argv=None):
         if line["upTime"] == "":
             line["upTime"] = "down"
         print("|".join(map(str, ["%s::%s" % (x, y) for x, y in line.items() if x in informations])))
+    return None

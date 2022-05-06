@@ -251,6 +251,7 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
             status = _snapshots.get_snapshot_status(snapshot_file)
             if status["type"] == "automatic" and not status["broken"]:
                 return snapshot_file
+        return None
 
     # TODO: Remove once new changes mechanism has been implemented
     def _get_snapshots(self):

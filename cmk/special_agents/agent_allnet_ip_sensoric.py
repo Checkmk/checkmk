@@ -151,3 +151,4 @@ def main(sys_argv=None):
         if opt_debug:
             raise
         sys.stderr.write("Unhandled error: %s" % traceback.format_exc())
+    return None

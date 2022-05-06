@@ -388,6 +388,7 @@ def process_by_result_map(
                 result = get_details_from_json(value, what)
                 if result:
                     return result
+        return None
 
     status_code = response.status_code
     summary = f"{status_code}: {http_responses[status_code]}"

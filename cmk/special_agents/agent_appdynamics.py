@@ -193,3 +193,4 @@ def main(sys_argv=None):  # pylint: disable=too-many-branches
                                     output_items.append("%s:%s" % (name, value))
                             sys.stdout.write("|".join(output_items) + "\n")
     sys.stdout.write("<<<<>>>>\n")
+    return None

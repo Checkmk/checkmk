@@ -562,7 +562,7 @@ class DiscoveryPageRenderer:
 
     def _show_discovered_host_labels(self, discovery_result: DiscoveryResult) -> None:
         if not discovery_result.host_labels:
-            return
+            return None
 
         with table_element(
             table_id="host_labels",

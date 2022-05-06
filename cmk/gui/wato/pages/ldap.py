@@ -877,6 +877,7 @@ class ModeEditLDAPConnection(LDAPMode):
 
         if not self._connection_cfg:
             raise MKUserError(None, _("The requested connection does not exist."))
+        return None
 
     def title(self):
         if self._new:

@@ -1676,7 +1676,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         aliases = self._host_extra_conf(host_name, variables["extra_host_conf"]["alias"])
         if len(aliases) > 0:
             return aliases[0]
-        return
+        return None
 
     # This is a dummy implementation which works without tags
     # and implements only a special case of Checkmk's real logic.
@@ -2972,6 +2972,7 @@ class SearchFolder(WithPermissions, WithAttributes, BaseFolder):
             folder = SearchFolder(base_folder, search_criteria)
             Folder.set_current(folder)
             return folder
+        return None
 
     # .--------------------------------------------------------------------.
     # | CONSTRUCTION                                                       |

@@ -257,3 +257,4 @@ def main(sys_argv=None):
         show_profile.chmod(0o755)
 
         sys.stderr.write("Profile '%s' written. Please run %s.\n" % (g_profile_path, show_profile))
+    return None

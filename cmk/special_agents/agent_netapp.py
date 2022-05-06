@@ -328,6 +328,7 @@ class NetAppConnection:
         response = self.get_response(invoke_list)
         if response:
             return response.get_results()
+        return None
 
     def set_vfiler(self, name):
         self.vfiler = name
@@ -645,7 +646,7 @@ def query_nodes(args, server, nodes, what, node_attribute="node-name"):
             response = server.get_response([what, [[node_attribute, node]]])
 
             if response.results_status() != "passed":
-                return
+                return None
 
             results["%s.%s" % (what, node)] = response.get_results()
 
@@ -664,7 +665,7 @@ def query(args, server, what, return_toplevel_node=False):
 
         if results.results_status() == "failed":
             section_errors.append("In class %s: %s" % (what, results.results_reason()))
-            return
+            return None
     else:
         max_records = "2000"
         if isinstance(what, str):
@@ -676,7 +677,7 @@ def query(args, server, what, return_toplevel_node=False):
             response = server.get_response(what)
 
         if response.results_status() != "passed":
-            return
+            return None
 
         results = response.get_results()
         tag_string = results.child_get_string("next-tag")
@@ -686,7 +687,7 @@ def query(args, server, what, return_toplevel_node=False):
                 [what, [["max-records", max_records], ["tag", tag_string]]]
             )
             if tag_response.results_status() != "passed":
-                return
+                return None
             if tag_response.get_results().child_get_string("num-records") == "0":
                 break
 
@@ -700,6 +701,7 @@ def query(args, server, what, return_toplevel_node=False):
     data = results.children_get()
     if data:
         return data[0]
+    return None
 
 
 def query_counters(args, server, netapp_mode, what):
@@ -723,7 +725,7 @@ def query_counters(args, server, netapp_mode, what):
                     instance_uuids.append(instance_data.child_get_string("uuid"))
                 if not instance_uuids:
                     # Nothing to query..
-                    return
+                    return None
 
                 instances_to_query = NaElement(
                     "instance-uuids"
@@ -732,7 +734,7 @@ def query_counters(args, server, netapp_mode, what):
                     instances_to_query.child_add_string("instance-uuid", uuid)
                 counter_query.child_add(instances_to_query)
             else:
-                return
+                return None
 
         # Query counters
         response = server.invoke_elem(counter_query)
@@ -761,7 +763,7 @@ def query_counters(args, server, netapp_mode, what):
                     ]
                 )
                 if tag_response.results_status() != "passed":
-                    return
+                    return None
                 if tag_response.get_results().child_get_string("num-records") == "0":
                     break
 
@@ -771,17 +773,17 @@ def query_counters(args, server, netapp_mode, what):
                 results.extend_attributes_list(attr_children)
 
             if response.results_status() != "passed":
-                return
+                return None
 
             instance_list = results.child_get("attributes-list")
             if not instance_list:
-                return
+                return None
 
             for instance_data in instance_list.children_get():
                 instance_uuids.append(instance_data.child_get_string("uuid"))
 
             if not instance_uuids:
-                return  # Nothing to query..
+                return None  # Nothing to query..
 
             # I was unable to find an iterator API to query clustermode perfcounters...
             # Maybe the perf-object-get-instances is already able to provide huge amounts
@@ -802,7 +804,7 @@ def query_counters(args, server, netapp_mode, what):
                 response = server.get_response(perfobject_node)
 
                 if response.results_status() != "passed":
-                    return
+                    return None
 
                 responses.append(response)
                 instance_uuids = instance_uuids[max_instances_per_request:]
@@ -820,7 +822,7 @@ def query_counters(args, server, netapp_mode, what):
         tag = results.child_get_string("tag")
 
         if not records or records == "0":
-            return
+            return None
 
         responses = []
         while records != "0":
@@ -843,6 +845,7 @@ def query_counters(args, server, netapp_mode, what):
             if the_instances:
                 initial_results.extend_instances_list(the_instances)
         return initial_results.child_get("instances")
+    return None
 
 
 def fetch_netapp_mode(args, server):

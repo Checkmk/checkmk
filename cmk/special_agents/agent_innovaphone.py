@@ -200,6 +200,7 @@ def main(sys_argv=None):
     )
 
     sys.stdout.writelines(f"{line}\n" for line in licenses_section(connection))
+    return None
 
 
 if __name__ == "__main__":

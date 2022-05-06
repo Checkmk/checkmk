@@ -14,7 +14,6 @@ use std::io;
 #[cfg(unix)]
 use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
-use std::str::FromStr;
 use std::time::SystemTime;
 use string_enum::StringEnum;
 
@@ -142,7 +141,7 @@ pub struct RuntimeConfig {
     allowed_ip: Option<Vec<String>>,
 
     #[serde(default)]
-    pull_port: Option<types::Port>,
+    pull_port: Option<u16>,
 
     #[serde(default)]
     detect_proxy: Option<bool>,
@@ -200,7 +199,7 @@ impl ClientConfig {
 
 pub struct PullConfig {
     pub allowed_ip: Vec<String>,
-    pub port: types::Port,
+    pub port: u16,
     pub max_connections: usize,
     pub connection_timeout: u64,
     pub agent_channel: types::AgentChannel,
@@ -222,7 +221,7 @@ impl PullConfig {
         let port = pull_opts
             .port
             .or(runtime_config.pull_port)
-            .unwrap_or(types::Port::from_str(constants::DEFAULT_PULL_PORT)?);
+            .unwrap_or(constants::DEFAULT_PULL_PORT);
         #[cfg(unix)]
         let agent_channel = setup::agent_channel();
         #[cfg(windows)]

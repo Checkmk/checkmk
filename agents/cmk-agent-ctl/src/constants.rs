@@ -5,7 +5,7 @@
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 // CONFIGURATION
-pub const DEFAULT_PULL_PORT: &str = "6556";
+pub const DEFAULT_PULL_PORT: u16 = 6556;
 pub const MAX_CONNECTIONS: usize = 3;
 pub const CONNECTION_TIMEOUT: u64 = 20;
 #[cfg(unix)]

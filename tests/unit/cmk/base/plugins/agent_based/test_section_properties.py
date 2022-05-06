@@ -221,7 +221,6 @@ def test_section_parse_function_does_something(fix_register):
         "symantec_av_progstate",
         "symantec_av_quarantine",
         "symantec_av_updates",
-        "timemachine",
         "tsm_drives",
         "tsm_paths",
         "tsm_sessions",

@@ -11,51 +11,48 @@
 # Example output from agent on failure:
 # <<<timemachine>>>
 # Unable to locate machine directory for host.
+import datetime
 
 factory_settings["timemachine_default_levels"] = {"age": (86400, 172800)}  # 1d/2d
 
 
-def inventory_timemachine(info):
-    if " ".join(info[0]) != "Unable to locate machine directory for host.":
+def parse_timemachine(info):
+    return " ".join(info[0])
+
+
+def discover_timemachine(section):
+    if section != "Unable to locate machine directory for host.":
         return [(None, {})]
     return []
 
 
-def check_timemachine(item, params, info):
-    line = " ".join(info[0])  # We expect at least one line
-    if not line.startswith("/Volumes/"):
-        return 2, "Backup seems to have failed, message was: " + line
+def check_timemachine(item, params, section):
+    # We expect at least one line
+    if not section.startswith("/Volumes/"):
+        yield 2, f"Backup seems to have failed, message was: {section}"
+        return
 
-    tokens = line.split("/")
-    timestamp = tokens[-1]
-    backup_timeb = time.strptime(timestamp, "%Y-%m-%d-%H%M%S")
-    backup_time = time.mktime(backup_timeb)
-    backup_age = time.time() - backup_time
+    raw_backup_time = section.split("/")[-1]
+    backup_time = datetime.datetime.strptime(raw_backup_time, "%Y-%m-%d-%H%M%S")
+    backup_age = (datetime.datetime.now() - backup_time).total_seconds()
 
     if backup_age < 0:
-        return 3, "Timestamp of last backup is in the future: " + timestamp
+        yield 3, f"Timestamp of last backup is in the future: {datetime.datetime.strftime(backup_time, '%Y-%m-%d %H:%M:%S')}"
+        return
 
-    infotext = "Last backup was at %s (%s ago)" % (
-        time.strftime("%c", backup_timeb),
-        get_age_human_readable(backup_age),
+    yield check_levels(
+        value=backup_age,
+        dsname=None,
+        params=params["age"],
+        infoname=f"Last backup was at {datetime.datetime.strftime(backup_time, '%Y-%m-%d %H:%M:%S')}",
+        human_readable_func=lambda a: f"{get_age_human_readable(a)} ago",
     )
-
-    warn, crit = params["age"]
-    if backup_age >= crit:
-        state = 2
-        infotext += ", more than %s ago" % get_age_human_readable(crit)
-    elif backup_age >= warn:
-        state = 1
-        infotext += ", more than %s ago" % get_age_human_readable(warn)
-    else:
-        state = 0
-
-    return state, infotext
 
 
 check_info["timemachine"] = {
+    "parse_function": parse_timemachine,
     "check_function": check_timemachine,
-    "inventory_function": inventory_timemachine,
+    "inventory_function": discover_timemachine,
     "default_levels_variable": "timemachine_default_levels",
     "service_description": "Backup Timemachine",
     "group": "backup_timemachine",

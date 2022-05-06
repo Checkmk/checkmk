@@ -245,7 +245,7 @@ def _execute_script(
         script_env["CMK_" + key.upper()] = value
 
     # Traps can contain 0-Bytes. We need to remove this from the script
-    # body. Otherwise suprocess.Popen will crash.
+    # body. Otherwise subprocess.Popen will crash.
     completed_process = subprocess.run(
         ["/bin/bash"],
         stdout=subprocess.PIPE,

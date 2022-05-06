@@ -980,7 +980,7 @@ class SnapshotManager:
                 site_snapshot_settings,
                 managed_snapshots.CMESnapshotDataCollector(site_snapshot_settings),
                 reuse_identical_snapshots=False,
-                generate_in_suprocess=True,
+                generate_in_subprocess=True,
             )
 
         return SnapshotManager(
@@ -988,7 +988,7 @@ class SnapshotManager:
             site_snapshot_settings,
             CRESnapshotDataCollector(site_snapshot_settings),
             reuse_identical_snapshots=True,
-            generate_in_suprocess=False,
+            generate_in_subprocess=False,
         )
 
     def __init__(
@@ -997,14 +997,14 @@ class SnapshotManager:
         site_snapshot_settings: Dict[SiteId, SnapshotSettings],
         data_collector: "ABCSnapshotDataCollector",
         reuse_identical_snapshots: bool,
-        generate_in_suprocess: bool,
+        generate_in_subprocess: bool,
     ) -> None:
         super().__init__()
         self._activation_work_dir = activation_work_dir
         self._site_snapshot_settings = site_snapshot_settings
         self._data_collector = data_collector
         self._reuse_identical_snapshots = reuse_identical_snapshots
-        self._generate_in_subproces = generate_in_suprocess
+        self._generate_in_subproces = generate_in_subprocess
 
         # Stores site and folder specific information to speed-up the snapshot generation
         self._logger = logger.getChild(self.__class__.__name__)

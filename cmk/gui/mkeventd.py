@@ -24,7 +24,7 @@ from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _, _l
-from cmk.gui.permissions import permission_section_registry, PermissionSection
+from cmk.gui.permissions import PermissionSection
 from cmk.gui.valuespec import DropdownChoiceEntries
 
 
@@ -115,7 +115,6 @@ action_whats = {
 }
 
 
-@permission_section_registry.register
 class PermissionSectionEventConsole(PermissionSection):
     @property
     def name(self):

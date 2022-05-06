@@ -15,13 +15,15 @@ import urllib3 as _urllib3
 import cmk.utils.version as _cmk_version
 
 import cmk.gui.gui_background_job as _gui_background_job
-import cmk.gui.mkeventd as mkeventd
-import cmk.gui.userdb as userdb
+import cmk.gui.mkeventd as _mkeventd
+import cmk.gui.userdb as _userdb
 import cmk.gui.watolib.auth_php
 import cmk.gui.watolib.automation_commands as _automation_commands
 import cmk.gui.watolib.config_domains as _config_domains
 import cmk.gui.watolib.sites
 import cmk.gui.weblib
+from cmk.gui.config import register_post_config_load_hook as _register_post_config_load_hook
+from cmk.gui.permissions import permission_section_registry as _permission_section_registry
 from cmk.gui.plugins.watolib.utils import config_domain_registry as _config_domain_registry
 from cmk.gui.utils import load_web_plugins as _load_web_plugins
 
@@ -57,10 +59,28 @@ def _register_config_domains() -> None:
         _config_domain_registry.register(cls)
 
 
+def _register_permission_section_registry():
+    clss = (_mkeventd.PermissionSectionEventConsole,)
+    for cls in clss:
+        _permission_section_registry.register(cls)
+
+
+def _register_post_config_load():
+    for cls in (
+        _userdb._fix_user_connections,
+        _userdb.update_config_based_user_attributes,
+    ):
+        _register_post_config_load_hook(cls)
+
+
 def load_watolib_plugins():
     _load_web_plugins("watolib", globals())
 
 
+# TODO(ml):  The code is still poorly organized as we register classes here that are
+# not defined under watolib.
+
 _register_automation_commands()
 _register_gui_background_jobs()
 _register_config_domains()
+_register_permission_section_registry()

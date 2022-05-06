@@ -45,7 +45,7 @@ import cmk.gui.hooks as hooks
 import cmk.gui.i18n
 import cmk.gui.pages
 import cmk.gui.utils as utils
-from cmk.gui.config import active_config, register_post_config_load_hook
+from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import request_local_attr
 from cmk.gui.exceptions import MKAuthException, MKInternalError, MKUserError
 from cmk.gui.hooks import request_memoize
@@ -103,9 +103,6 @@ def _fix_user_connections() -> None:
         # Only migrated configurations have a 'type' entry, all others are
         # implictly LDAP connections.
         cfg.setdefault("type", "ldap")
-
-
-register_post_config_load_hook(_fix_user_connections)
 
 
 # When at least one LDAP connection is defined and active a sync is possible
@@ -1242,9 +1239,6 @@ def _clear_config_based_user_attributes() -> None:
         if attr.from_config():
             user_attribute_registry.unregister(attr.name())
 
-
-# Make the config module initialize the user attributes after loading the config
-register_post_config_load_hook(update_config_based_user_attributes)
 
 # .
 #   .-Hooks----------------------------------------------------------------.

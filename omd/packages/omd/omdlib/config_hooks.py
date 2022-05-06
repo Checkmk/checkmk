@@ -77,8 +77,11 @@ def save_site_conf(site: "SiteContext") -> None:
 def load_config_hooks(site: "SiteContext") -> ConfigHooks:
     config_hooks: ConfigHooks = {}
 
-    hook_dir = site.dir + "/lib/omd/hooks"
-    for hook_name in os.listdir(hook_dir):
+    hook_files = []
+    if site.hook_dir:
+        hook_files = os.listdir(site.hook_dir)
+
+    for hook_name in hook_files:
         try:
             if hook_name[0] != ".":
                 hook = _config_load_hook(site, hook_name)
@@ -99,9 +102,13 @@ def _config_load_hook(site: "SiteContext", hook_name: str) -> ConfigHook:
         "deprecated": False,
     }
 
+    if not site.hook_dir:
+        # IMHO this should be unreachable...
+        raise MKTerminate("Site has no version and therefore no hooks")
+
     description = ""
     description_active = False
-    with Path(site.dir, "lib/omd/hooks", hook_name).open() as hook_file:
+    with Path(site.hook_dir, hook_name).open() as hook_file:
         for line in hook_file:
             if line.startswith("# Alias:"):
                 hook["alias"] = line[8:].strip()
@@ -166,13 +173,19 @@ def sort_hooks(hook_names: List[str]) -> Iterable[str]:
 
 
 def hook_exists(site: "SiteContext", hook_name: str) -> bool:
-    hook_file = site.dir + "/lib/omd/hooks/" + hook_name
+    if not site.hook_dir:
+        return False
+    hook_file = site.hook_dir + hook_name
     return os.path.exists(hook_file)
 
 
 def call_hook(site: "SiteContext", hook_name: str, args: List[str]) -> ConfigHookResult:
 
-    cmd = [site.dir + "/lib/omd/hooks/" + hook_name] + args
+    if not site.hook_dir:
+        # IMHO this should be unreachable...
+        raise MKTerminate("Site has no version and therefore no hooks")
+
+    cmd = [site.hook_dir + hook_name] + args
     hook_env = os.environ.copy()
     hook_env.update(
         {

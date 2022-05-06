@@ -96,7 +96,7 @@ def test_section_detection_uses_sysdescr_or_sysobjid(fix_register):
             assert str(section.name) in known_exceptions.get(
                 first_checked_oid, ()
             ), f"""
-            If you've made it here, you have added a case to the known exeptions above.
+            If you've made it here, you have added a case to the known exceptions above.
             Even worse: You may have added an OID to the list of OIDs that are fetched
             from *all SNMP devices* known to the Checkmk site. Please reconsider!
 

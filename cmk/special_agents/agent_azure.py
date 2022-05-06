@@ -854,7 +854,7 @@ def write_group_info(
 
 
 def write_exception_to_agent_info_section(exception, component):
-    # those exeptions are quite noisy. try to make them more concise:
+    # those exceptions are quite noisy. try to make them more concise:
     msg = str(exception).split("Trace ID", 1)[0]
     msg = msg.split(":", 2)[-1].strip(" ,")
 

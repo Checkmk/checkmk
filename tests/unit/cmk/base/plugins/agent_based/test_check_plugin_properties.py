@@ -53,7 +53,7 @@ def test_check_plugins_do_not_discover_upon_empty_snmp_input(monkeypatch, fix_re
     with a list of known exceptions, to ensure the old behaviour is not changed.
 
     However: There is nothing wrong with not returning None, in principle.
-    If you whish to do that (see one of the listed exeptions for examples),
+    If you whish to do that (see one of the listed exceptions for examples),
     just add an exception below. If maintaining this test becvomes too tedious,
     we can probably just remove it.
     """

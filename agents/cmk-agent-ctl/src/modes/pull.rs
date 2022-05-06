@@ -7,11 +7,12 @@ use std::collections::HashMap;
 use std::error::Error;
 use std::sync::Arc;
 
-use crate::{config, monitoring_data, tls_server, types};
+use crate::{config, constants, monitoring_data, tls_server, types};
 use anyhow::{anyhow, Context, Error as AnyhowError, Result as AnyhowResult};
 use async_trait::async_trait;
 use log::{debug, info, warn};
-use std::net::{IpAddr, SocketAddr};
+use socket2::{Domain, SockAddr, Socket, Type};
+use std::net::{IpAddr, Ipv6Addr, SocketAddr, TcpListener as TcpListenerStd};
 use tokio::io::AsyncWriteExt;
 use tokio::net::{TcpListener, TcpStream};
 use tokio::sync::Semaphore;
@@ -29,7 +30,7 @@ trait PullState {
     fn allow_legacy_pull(&self) -> bool;
     fn is_active(&self) -> bool;
     fn ip_allowlist(&self) -> &[String];
-    fn listening_address(&self) -> String;
+    fn listening_address(&self) -> SocketAddr;
     fn connection_timeout(&self) -> u64;
 }
 struct PullStateImpl {
@@ -77,8 +78,8 @@ impl PullState for PullStateImpl {
         &self.config.allowed_ip
     }
 
-    fn listening_address(&self) -> String {
-        format!("0.0.0.0:{}", &self.config.port)
+    fn listening_address(&self) -> SocketAddr {
+        SocketAddr::new(IpAddr::V6(Ipv6Addr::UNSPECIFIED), self.config.port)
     }
 
     fn connection_timeout(&self) -> u64 {
@@ -203,11 +204,28 @@ async fn _pull(
             continue;
         }
         info!(
-            "Start listening for incoming pull requests on {} .",
+            "Start listening for incoming pull requests on {}.",
             pull_state.listening_address()
         );
         _pull_cycle(&mut pull_state, &mut guard, agent_output_collector.clone()).await?;
     }
+}
+
+fn tcp_listener(listening_address: SocketAddr) -> AnyhowResult<TcpListenerStd> {
+    let socket = Socket::new(Domain::IPV6, Type::STREAM, None)?;
+    socket.set_only_v6(false)?;
+    socket.set_nonblocking(true)?;
+
+    // The socket is apparently not freed fast enough to re-run our tests multiple times. Note that
+    // #[cfg(test)] does not work here because we spawn separate threads which themself don't know
+    // that they are used for testing.
+    if std::env::var(constants::ENV_HOME_DIR).is_ok() {
+        socket.set_reuse_address(true)?;
+    }
+
+    socket.bind(&SockAddr::from(listening_address))?;
+    socket.listen(4096)?;
+    Ok(socket.into())
 }
 
 async fn _pull_cycle(
@@ -215,7 +233,7 @@ async fn _pull_cycle(
     guard: &mut MaxConnectionsGuard,
     agent_output_collector: impl AgentOutputCollector,
 ) -> AnyhowResult<()> {
-    let listener = TcpListener::bind(pull_state.listening_address()).await?;
+    let listener = TcpListener::from_std(tcp_listener(pull_state.listening_address())?)?;
 
     loop {
         let (stream, remote) = match match timeout(
@@ -380,15 +398,29 @@ async fn with_timeout<T, E: 'static + Error + Send + Sync>(
 
 #[cfg(test)]
 mod tests {
-    use crate::types::AgentChannel;
+    use std::str::FromStr;
 
     use super::*;
+    use crate::types::AgentChannel;
+
     #[test]
     fn test_encode_data_for_transport() {
         let mut expected_result = b"\x00\x00\x01".to_vec();
         expected_result.append(&mut monitoring_data::compress(b"abc").unwrap());
         let agout = AgentOutputCollectorImpl::from(AgentChannel::from("dummy"));
         assert_eq!(agout.encode(b"abc").unwrap(), expected_result);
+    }
+
+    #[test]
+    fn test_tcp_listener() {
+        assert_eq!(
+            tcp_listener(SocketAddr::new(IpAddr::from_str("::1").unwrap(), 50147))
+                .unwrap()
+                .local_addr()
+                .unwrap()
+                .to_string(),
+            "[::1]:50147"
+        );
     }
 
     mod allowed_ip {

@@ -8,7 +8,7 @@
 mod common;
 use anyhow::Result as AnyhowResult;
 use std::io::{Read, Write};
-use std::net::{IpAddr, Ipv4Addr, SocketAddr};
+use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
 
 #[test]
 fn test_pull_inconsistent_cert() -> AnyhowResult<()> {
@@ -146,8 +146,15 @@ async fn _test_pull_tls_main(socket_addr: SocketAddr) -> AnyhowResult<()> {
 // TODO(sk): Fix this test
 #[tokio::test(flavor = "multi_thread")]
 #[cfg_attr(target_os = "windows", ignore)]
-async fn test_pull_tls_main() -> AnyhowResult<()> {
-    _test_pull_tls_main(SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), 9999)).await
+async fn test_pull_tls_main_ipv4() -> AnyhowResult<()> {
+    _test_pull_tls_main(SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), 9970)).await
+}
+
+// TODO(sk): Fix this test
+#[tokio::test(flavor = "multi_thread")]
+#[cfg_attr(target_os = "windows", ignore)]
+async fn test_pull_tls_main_ipv6() -> AnyhowResult<()> {
+    _test_pull_tls_main(SocketAddr::new(IpAddr::V6(Ipv6Addr::LOCALHOST), 9971)).await
 }
 
 async fn _test_pull_tls_check_guards(socket_addr: SocketAddr) -> AnyhowResult<()> {
@@ -176,8 +183,13 @@ async fn _test_pull_tls_check_guards(socket_addr: SocketAddr) -> AnyhowResult<()
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn test_pull_tls_check_guards() -> AnyhowResult<()> {
-    _test_pull_tls_check_guards(SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), 9997)).await
+async fn test_pull_tls_check_guards_ipv4() -> AnyhowResult<()> {
+    _test_pull_tls_check_guards(SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), 9980)).await
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_pull_tls_check_guards_ipv6() -> AnyhowResult<()> {
+    _test_pull_tls_check_guards(SocketAddr::new(IpAddr::V6(Ipv6Addr::LOCALHOST), 9981)).await
 }
 
 #[cfg(unix)]
@@ -223,6 +235,12 @@ async fn _test_pull_legacy(socket_addr: SocketAddr) -> AnyhowResult<()> {
 
 #[cfg(unix)]
 #[tokio::test(flavor = "multi_thread")]
-async fn test_pull_legacy() -> AnyhowResult<()> {
-    _test_pull_legacy(SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), 9998)).await
+async fn test_pull_legacy_ipv4() -> AnyhowResult<()> {
+    _test_pull_legacy(SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), 9990)).await
+}
+
+#[cfg(unix)]
+#[tokio::test(flavor = "multi_thread")]
+async fn test_pull_legacy_ipv6() -> AnyhowResult<()> {
+    _test_pull_legacy(SocketAddr::new(IpAddr::V6(Ipv6Addr::LOCALHOST), 9991)).await
 }

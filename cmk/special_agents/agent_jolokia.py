@@ -6,11 +6,18 @@
 """Check_MK Special agent to monitor JMX using Mbeans exposed by jolokia
 """
 import argparse
+import os
 import sys
 from typing import List
 
-import agents.plugins.mk_jolokia as mk_jolokia
+# TODO: is there a better way to do this?
+import cmk.utils.paths
+
 from cmk.special_agents.utils import vcrtrace
+
+sys.path.append(str(cmk.utils.paths.local_agents_dir / "plugins"))
+sys.path.append(os.path.join(cmk.utils.paths.agents_dir, "plugins"))
+import mk_jolokia  # type:ignore  # pylint: disable=import-error,wrong-import-order
 
 
 def parse_arguments(argv):

@@ -20,7 +20,7 @@ from pipfile import Pipfile  # type: ignore[import]
 from tests.testlib import repo_path
 from tests.testlib.utils import is_enterprise_repo
 
-IGNORED_LIBS = set(["cmk", "livestatus", "agents"])  # our stuff
+IGNORED_LIBS = set(["cmk", "livestatus", "mk_jolokia"])  # our stuff
 IGNORED_LIBS |= isort.stdlibs._all.stdlib  # builtin stuff
 IGNORED_LIBS |= set(["__future__", "typing_extensions"])  # other builtin stuff
 

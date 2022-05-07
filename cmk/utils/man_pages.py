@@ -16,7 +16,7 @@ import subprocess
 import sys
 from io import StringIO
 from pathlib import Path
-from typing import Any, Dict, Final, Iterable, Mapping, Optional, Sequence, TextIO
+from typing import Any, Final, Iterable, Mapping, Optional, Sequence, TextIO
 
 import cmk.utils.debug
 import cmk.utils.paths
@@ -29,6 +29,8 @@ ManPage = Mapping[str, Any]
 ManPageCatalogPath = tuple[str, ...]
 
 _ManPageHeader = Mapping[str, Any]  # improve me
+
+ManPageCatalog = Mapping[ManPageCatalogPath, Sequence[_ManPageHeader]]
 
 catalog_titles: Final = {
     "hw": "Appliances, other dedicated Hardware",
@@ -277,7 +279,7 @@ check_mk_agents: Final = {
     "mobileiron": "Mobileiron",
 }
 
-_manpage_catalog: Mapping[ManPageCatalogPath, Sequence[_ManPageHeader]] = {}
+_manpage_catalog: ManPageCatalog = {}
 
 
 def _get_man_page_dirs() -> Sequence[Path]:
@@ -347,7 +349,7 @@ def man_page_catalog_titles() -> Mapping[str, str]:
     return catalog_titles
 
 
-def load_man_page_catalog() -> Mapping[ManPageCatalogPath, Sequence[_ManPageHeader]]:
+def load_man_page_catalog() -> ManPageCatalog:
     catalog: dict[ManPageCatalogPath, list[_ManPageHeader]] = {}
     for name, path in all_man_pages().items():
         try:
@@ -355,7 +357,7 @@ def load_man_page_catalog() -> Mapping[ManPageCatalogPath, Sequence[_ManPageHead
         except Exception as e:
             if cmk.utils.debug.enabled():
                 raise
-            parsed = _create_fallback_man_page(name, Path(path), e)
+            parsed = _create_fallback_man_page(name, Path(path), str(e))
         cat = parsed.get("catalog", ["unsorted"])
         cats = (
             [[cat[0]] + [agent] + cat[1:] for agent in parsed["agents"]]
@@ -367,7 +369,7 @@ def load_man_page_catalog() -> Mapping[ManPageCatalogPath, Sequence[_ManPageHead
     return catalog
 
 
-def print_man_page_browser(cat=()) -> None:
+def print_man_page_browser(cat: ManPageCatalogPath = ()) -> None:
     global _manpage_catalog
     _manpage_catalog = load_man_page_catalog()
 
@@ -386,11 +388,15 @@ def print_man_page_browser(cat=()) -> None:
         _manpage_browser_folder(cat, subtree_names)
 
 
-def _manpage_catalog_entries(catalog, category) -> list[Any]:
+def _manpage_catalog_entries(
+    catalog: ManPageCatalog, category: ManPageCatalogPath
+) -> Sequence[_ManPageHeader]:
     return catalog.get(category, [])
 
 
-def _manpage_catalog_subtree_names(catalog, category) -> list[Any]:
+def _manpage_catalog_subtree_names(
+    catalog: ManPageCatalog, category: ManPageCatalogPath
+) -> list[str]:
     subtrees = set()
     for this_category in catalog.keys():
         if this_category[: len(category)] == category and len(this_category) > len(category):
@@ -399,7 +405,7 @@ def _manpage_catalog_subtree_names(catalog, category) -> list[Any]:
     return list(subtrees)
 
 
-def _manpage_num_entries(cat) -> int:
+def _manpage_num_entries(cat: ManPageCatalogPath) -> int:
     num = 0
     for c, e in _manpage_catalog.items():
         if c[: len(cat)] == cat:
@@ -407,7 +413,7 @@ def _manpage_num_entries(cat) -> int:
     return num
 
 
-def _manpage_browser_folder(cat, subtrees) -> None:
+def _manpage_browser_folder(cat: ManPageCatalogPath, subtrees: Iterable[str]) -> None:
     titles = []
     for e in subtrees:
         title = catalog_titles.get(e, e)
@@ -426,7 +432,7 @@ def _manpage_browser_folder(cat, subtrees) -> None:
             choices,
             "0",
             _("Enter"),
-            cat and _("Back") or _("Quit"),
+            _("Back") if cat else _("Quit"),
         )
         if x[0]:
             index = int(x[1])
@@ -436,8 +442,8 @@ def _manpage_browser_folder(cat, subtrees) -> None:
             break
 
 
-def _manpage_browse_entries(cat, entries) -> None:
-    checks = []
+def _manpage_browse_entries(cat: Iterable[str], entries: Iterable[_ManPageHeader]) -> None:
+    checks: list[tuple[str, str]] = []
     for e in entries:
         checks.append((e["title"], e["name"]))
     checks.sort()
@@ -461,11 +467,18 @@ def _manpage_browse_entries(cat, entries) -> None:
             break
 
 
-def _manpage_display_header(cat) -> str:
+def _manpage_display_header(cat: Iterable[str]) -> str:
     return " -> ".join([catalog_titles.get(e, e) for e in cat])
 
 
-def _dialog_menu(title, text, choices, defvalue, oktext, canceltext) -> tuple[bool, bytes]:
+def _dialog_menu(
+    title: str,
+    text: str,
+    choices: Sequence[tuple[str, str]],
+    defvalue: str,
+    oktext: str,
+    canceltext: str,
+) -> tuple[bool, bytes]:
     args = ["--ok-label", oktext, "--cancel-label", canceltext]
     if defvalue is not None:
         args += ["--default-item", defvalue]
@@ -475,9 +488,9 @@ def _dialog_menu(title, text, choices, defvalue, oktext, canceltext) -> tuple[bo
     return _run_dialog(args)
 
 
-def _run_dialog(args) -> tuple[bool, bytes]:
+def _run_dialog(args: Sequence[str]) -> tuple[bool, bytes]:
     completed_process = subprocess.run(
-        ["dialog", "--shadow"] + args,
+        ["dialog", "--shadow", *args],
         env={"TERM": os.getenv("TERM", "linux"), "LANG": "de_DE.UTF-8"},
         stderr=subprocess.PIPE,
         check=False,
@@ -485,7 +498,7 @@ def _run_dialog(args) -> tuple[bool, bytes]:
     return completed_process.returncode == 0, completed_process.stderr
 
 
-def _create_fallback_man_page(name, path, error_message) -> _ManPageHeader:
+def _create_fallback_man_page(name: str, path: Path, error_message: str) -> _ManPageHeader:
     with path.open(encoding="utf-8") as fp:
         return {
             "name": name,
@@ -499,8 +512,8 @@ def _create_fallback_man_page(name, path, error_message) -> _ManPageHeader:
         }
 
 
-def _parse_man_page_header(name, path) -> _ManPageHeader:
-    parsed = {
+def _parse_man_page_header(name: str, path: Path) -> _ManPageHeader:
+    parsed: dict[str, Any] = {
         "name": name,
         "path": str(path),
     }
@@ -592,7 +605,7 @@ def load_man_page(name: str, man_page_dirs: Optional[Iterable[Path]] = None) -> 
                     "Syntax error in %s line %d (%s).\n" % (path, lineno + 1, e)
                 )
 
-    header: Dict[str, Any] = {}
+    header: dict[str, Any] = {}
     for key, value in man_page["header"]:
         header[key] = value.strip()
     header["agents"] = [a.strip() for a in header["agents"].split(",")]
@@ -605,7 +618,7 @@ def load_man_page(name: str, man_page_dirs: Optional[Iterable[Path]] = None) -> 
 
 
 class ManPageRenderer:
-    def __init__(self, name) -> None:
+    def __init__(self, name: str) -> None:
         self.name = name
         man_page = load_man_page(name)
         if not man_page:
@@ -651,16 +664,16 @@ class ManPageRenderer:
     def _print_header(self) -> None:
         raise NotImplementedError()
 
-    def _print_manpage_title(self, title) -> None:
+    def _print_manpage_title(self, title: str) -> None:
         raise NotImplementedError()
 
-    def _print_info_line(self, left, right) -> None:
+    def _print_info_line(self, left: str, right: str) -> None:
         raise NotImplementedError()
 
-    def _print_subheader(self, line) -> None:
+    def _print_subheader(self, line: str) -> None:
         raise NotImplementedError()
 
-    def _print_line(self, line, attr=None, no_markup=False) -> None:
+    def _print_line(self, line: str, attr: Optional[str] = None, no_markup: bool = False) -> None:
         raise NotImplementedError()
 
     def _print_begin_splitlines(self) -> None:
@@ -672,7 +685,7 @@ class ManPageRenderer:
     def _print_empty_line(self) -> None:
         raise NotImplementedError()
 
-    def _print_textbody(self, text) -> None:
+    def _print_textbody(self, text: str) -> None:
         raise NotImplementedError()
 
 
@@ -685,7 +698,7 @@ def _console_stream() -> TextIO:
 
 
 class ConsoleManPageRenderer(ManPageRenderer):
-    def __init__(self, name) -> None:
+    def __init__(self, name: str) -> None:
         super().__init__(name)
         self.__output = _console_stream()
         # NOTE: We must use instance variables for the TTY stuff because TTY-related
@@ -702,22 +715,22 @@ class ConsoleManPageRenderer(ManPageRenderer):
     def _flush(self) -> None:
         self.__output.flush()
 
-    def _markup(self, line, attr) -> str:
+    def _markup(self, line: str, attr: str) -> str:
         # Replaces braces in the line but preserves the inner braces
         return re.sub("(?<!{){", self._tty_color, re.sub("(?<!})}", tty.normal + attr, line))
 
     def _print_header(self) -> None:
         pass
 
-    def _print_manpage_title(self, title) -> None:
+    def _print_manpage_title(self, title: str) -> None:
         self._print_splitline(
             self._title_color_left, "%-25s" % self.name, self._title_color_right, title
         )
 
-    def _print_info_line(self, left, right) -> None:
+    def _print_info_line(self, left: str, right: str) -> None:
         self._print_splitline(self._header_color_left, left, self._header_color_right, right)
 
-    def _print_subheader(self, line) -> None:
+    def _print_subheader(self, line: str) -> None:
         self._print_empty_line()
         self.__output.write(
             self._subheader_color
@@ -730,7 +743,7 @@ class ConsoleManPageRenderer(ManPageRenderer):
             + "\n"
         )
 
-    def _print_line(self, line, attr=None, no_markup=False) -> None:
+    def _print_line(self, line: str, attr: Optional[str] = None, no_markup: bool = False) -> None:
         if attr is None:
             attr = self._normal_color
 
@@ -746,7 +759,7 @@ class ConsoleManPageRenderer(ManPageRenderer):
         self.__output.write(" " * (self.__width - 2 - l))
         self.__output.write(" " + tty.normal + "\n")
 
-    def _print_splitline(self, attr1, left, attr2, right) -> None:
+    def _print_splitline(self, attr1: str, left: str, attr2: str, right: str) -> None:
         self.__output.write(attr1 + " " + left)
         self.__output.write(attr2)
         self.__output.write(self._markup(right, attr2))
@@ -756,13 +769,13 @@ class ConsoleManPageRenderer(ManPageRenderer):
     def _print_empty_line(self) -> None:
         self._print_line("", tty.colorset(7, 4))
 
-    def _print_len(self, word) -> int:
+    def _print_len(self, word: str) -> int:
         # In case of double braces remove only one brace for counting the length
         netto = word.replace("{{", "x").replace("}}", "x").replace("{", "").replace("}", "")
         netto = re.sub("\033[^m]+m", "", netto)
         return len(netto)
 
-    def _wrap_text(self, text, width, attr=tty.colorset(7, 4)) -> Sequence[str]:
+    def _wrap_text(self, text: str, width: int, attr: str = tty.colorset(7, 4)) -> Sequence[str]:
         wrapped = []
         line = ""
         col = 0
@@ -792,7 +805,7 @@ class ConsoleManPageRenderer(ManPageRenderer):
             wrapped = wrapped[:-1]
         return wrapped
 
-    def _justify(self, line, width) -> str:
+    def _justify(self, line: str, width: int) -> str:
         need_spaces = float(width - self._print_len(line))
         spaces = float(line.count(" "))
         newline = ""
@@ -809,13 +822,13 @@ class ConsoleManPageRenderer(ManPageRenderer):
             newline += word
         return newline
 
-    def _fillup(self, line, width) -> str:
+    def _fillup(self, line: str, width: int) -> str:
         printlen = self._print_len(line)
         if printlen < width:
             line += " " * (width - printlen)
         return line
 
-    def _print_textbody(self, text) -> None:
+    def _print_textbody(self, text: str) -> None:
         wrapped = self._wrap_text(text, self.__width - 2)
         attr = tty.colorset(7, 4)
         for line in wrapped:
@@ -823,7 +836,7 @@ class ConsoleManPageRenderer(ManPageRenderer):
 
 
 class NowikiManPageRenderer(ManPageRenderer):
-    def __init__(self, name) -> None:
+    def __init__(self, name: str) -> None:
         super().__init__(name)
         self.__output = StringIO()
 
@@ -841,7 +854,7 @@ class NowikiManPageRenderer(ManPageRenderer):
         self.paint()
         return self.__output.getvalue()
 
-    def _markup(self, line, ignored=None) -> str:
+    def _markup(self, line: str, ignored: Optional[str] = None) -> str:
         # preserve the inner { and } in double braces and then replace the braces left
         return (
             line.replace("{{", "{&#123;")
@@ -858,16 +871,16 @@ class NowikiManPageRenderer(ManPageRenderer):
         # self.__output.write("DT:%s\n" % (time.strftime("%Y-%m-%d")))
         self.__output.write("SA:check_plugins_catalog,check_plugins_list\n")
 
-    def _print_manpage_title(self, title) -> None:
+    def _print_manpage_title(self, title: str) -> None:
         self.__output.write("<b>%s</b>\n" % title)
 
-    def _print_info_line(self, left, right) -> None:
+    def _print_info_line(self, left: str, right: str) -> None:
         self.__output.write("<tr><td>%s</td><td>%s</td></tr>\n" % (left, right))
 
-    def _print_subheader(self, line) -> None:
+    def _print_subheader(self, line: str) -> None:
         self.__output.write("H2:%s\n" % line)
 
-    def _print_line(self, line, attr=None, no_markup=False) -> None:
+    def _print_line(self, line: str, attr: Optional[str] = None, no_markup: bool = False) -> None:
         if no_markup:
             self.__output.write("%s\n" % line)
         else:
@@ -882,7 +895,7 @@ class NowikiManPageRenderer(ManPageRenderer):
     def _print_empty_line(self) -> None:
         self.__output.write("\n")
 
-    def _print_textbody(self, text) -> None:
+    def _print_textbody(self, text: str) -> None:
         self.__output.write("%s\n" % self._markup(text))
 
 

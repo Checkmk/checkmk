@@ -3,17 +3,19 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""This module handles the manual pages of Check_MK checks. These man
-pages are meant to document the individual checks of Check_MK and are
+"""This module handles the manual pages of Checkmk checks
+
+These man pages are meant to document the individual checks of Checkmk and are
 used as base for the list of supported checks and catalogs of checks.
 
-These man pages are in a Check_MK specific format an not real
-Linux/Unix man pages"""
+These man pages are in a Checkmk specific format an not real Linux/Unix man pages.
+"""
 
 import os
 import re
 import subprocess
 import sys
+from collections import defaultdict
 from io import StringIO
 from pathlib import Path
 from typing import Any, Final, Iterable, Mapping, Optional, Sequence, TextIO
@@ -350,7 +352,7 @@ def man_page_catalog_titles() -> Mapping[str, str]:
 
 
 def load_man_page_catalog() -> ManPageCatalog:
-    catalog: dict[ManPageCatalogPath, list[_ManPageHeader]] = {}
+    catalog: dict[ManPageCatalogPath, list[_ManPageHeader]] = defaultdict(list)
     for name, path in all_man_pages().items():
         try:
             parsed = _parse_man_page_header(name, Path(path))
@@ -359,13 +361,13 @@ def load_man_page_catalog() -> ManPageCatalog:
                 raise
             parsed = _create_fallback_man_page(name, Path(path), str(e))
         cat = parsed.get("catalog", ["unsorted"])
-        cats = (
-            [[cat[0]] + [agent] + cat[1:] for agent in parsed["agents"]]
-            if cat[0] == "os"
-            else [cat]
-        )
-        for c in cats:
-            catalog.setdefault(tuple(c), []).append(parsed)
+
+        if cat[0] == "os":
+            for agent in parsed["agents"]:
+                catalog[("os", agent, *cat[1:])].append(parsed)
+        else:
+            catalog[tuple(cat)].append(parsed)
+
     return catalog
 
 

@@ -29,7 +29,7 @@ fs::path ControllerFlagFile() {
 }
 
 fs::path TomlConfigFile() {
-    return fs::path{cfg::GetUserDir()} / cfg::files::kAgentCtl;
+    return fs::path{cfg::GetUserDir()} / cfg::files::kAgentToml;
 }
 
 namespace {
@@ -163,7 +163,7 @@ fs::path GetController(const fs::path &service) {
 }
 
 fs::path GetWorkController() {
-    return fs::path{cfg::GetUserBinDir()} / cfg::files::kAgentToml;
+    return fs::path{cfg::GetUserBinDir()} / cfg::files::kAgentCtl;
 }
 
 bool CreateTomlConfig(const fs::path &toml_file) {

@@ -145,18 +145,15 @@ def test_load_man_page_catalog():
 
         # TODO: Test for unknown paths?
 
-        for entry in entries:
-            assert isinstance(entry, dict)
-
-            # Test for non fallback man pages
-            assert "Cannot parse man page" not in entry["title"]
+        # Test for non fallback man pages
+        assert not any("Cannot parse man page" in e.title for e in entries)
 
 
 def test_no_unsorted_man_pages():
     catalog = man_pages.load_man_page_catalog()
-    unsorted_page_names = [m["name"] for m in catalog.get(("unsorted",), [])]
+    unsorted_page_names = [m.name for m in catalog.get(("unsorted",), [])]
 
-    assert not unsorted_page_names, "Found unsorted man pages: %s" % ", ".join(unsorted_page_names)
+    assert not unsorted_page_names
 
 
 def test_manpage_files(all_pages: ManPages):
@@ -295,6 +292,4 @@ def test_missing_catalog_entries_of_man_pages(all_pages: ManPages) -> None:
         catalog_entry = str(man_page["header"]["catalog"])  # type: ignore[index,call-overload]
         found_catalog_entries_from_man_pages.update(catalog_entry.split("/"))
     missing_catalog_entries = found_catalog_entries_from_man_pages - catalog_titles
-    assert missing_catalog_entries == set(), "Found missing catalog entries: %s" % ", ".join(
-        sorted(missing_catalog_entries)
-    )
+    assert not missing_catalog_entries

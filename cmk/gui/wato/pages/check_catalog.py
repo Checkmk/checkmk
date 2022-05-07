@@ -474,8 +474,8 @@ class ModeCheckManPage(WatoMode):
                 % self._check_type,
             )
 
-    def title(self):
-        return self._manpage["header"]["title"]  # type: ignore[index,call-overload]
+    def title(self) -> str:
+        return str(self._manpage["header"]["title"])  # type: ignore[index,call-overload]
 
     # TODO
     # We could simply detect on how many hosts and services this plugin

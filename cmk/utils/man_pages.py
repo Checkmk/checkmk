@@ -18,7 +18,7 @@ import sys
 from collections import defaultdict
 from io import StringIO
 from pathlib import Path
-from typing import Any, Final, Iterable, Mapping, Optional, Sequence, TextIO, Union
+from typing import Final, Iterable, Mapping, NamedTuple, Optional, Sequence, TextIO, Union
 
 import cmk.utils.debug
 import cmk.utils.paths
@@ -30,12 +30,25 @@ from cmk.utils.i18n import _
 # Obviously, this type is brilliant and the whole situation must not be improved.
 _ManPageValue = Union[str, Sequence[tuple[str, str]], Mapping[str, Union[str, Sequence[str]]]]
 
+# The destiction between ManPage and Manpage header is not clear to me.
+# I think we should just always parse the whole thing.
 ManPage = Mapping[str, _ManPageValue]
+
+
+class ManPageHeader(NamedTuple):
+    name: str
+    path: str
+    description: str
+    title: str
+    agents: Union[str, Sequence[str]]
+    license: str
+    distribution: str
+    catalog: Sequence[str]
+
+
 ManPageCatalogPath = tuple[str, ...]
 
-_ManPageHeader = Mapping[str, Any]  # improve me
-
-ManPageCatalog = Mapping[ManPageCatalogPath, Sequence[_ManPageHeader]]
+ManPageCatalog = Mapping[ManPageCatalogPath, Sequence[ManPageHeader]]
 
 catalog_titles: Final = {
     "hw": "Appliances, other dedicated Hardware",
@@ -355,7 +368,7 @@ def man_page_catalog_titles() -> Mapping[str, str]:
 
 
 def load_man_page_catalog() -> ManPageCatalog:
-    catalog: dict[ManPageCatalogPath, list[_ManPageHeader]] = defaultdict(list)
+    catalog: dict[ManPageCatalogPath, list[ManPageHeader]] = defaultdict(list)
     for name, path in all_man_pages().items():
         try:
             parsed = _parse_man_page_header(name, Path(path))
@@ -363,13 +376,12 @@ def load_man_page_catalog() -> ManPageCatalog:
             if cmk.utils.debug.enabled():
                 raise
             parsed = _create_fallback_man_page(name, Path(path), str(e))
-        cat = parsed.get("catalog", ["unsorted"])
 
-        if cat[0] == "os":
-            for agent in parsed["agents"]:
-                catalog[("os", agent, *cat[1:])].append(parsed)
+        if parsed.catalog[0] == "os":
+            for agent in parsed.agents:
+                catalog[("os", agent, *parsed.catalog[1:])].append(parsed)
         else:
-            catalog[tuple(cat)].append(parsed)
+            catalog[tuple(parsed.catalog)].append(parsed)
 
     return catalog
 
@@ -395,7 +407,7 @@ def print_man_page_browser(cat: ManPageCatalogPath = ()) -> None:
 
 def _manpage_catalog_entries(
     catalog: ManPageCatalog, category: ManPageCatalogPath
-) -> Sequence[_ManPageHeader]:
+) -> Sequence[ManPageHeader]:
     return catalog.get(category, [])
 
 
@@ -447,10 +459,10 @@ def _manpage_browser_folder(cat: ManPageCatalogPath, subtrees: Iterable[str]) ->
             break
 
 
-def _manpage_browse_entries(cat: Iterable[str], entries: Iterable[_ManPageHeader]) -> None:
+def _manpage_browse_entries(cat: Iterable[str], entries: Iterable[ManPageHeader]) -> None:
     checks: list[tuple[str, str]] = []
     for e in entries:
-        checks.append((e["title"], e["name"]))
+        checks.append((e.title, e.name))
     checks.sort()
 
     choices = [(str(n + 1), c[0]) for n, c in enumerate(checks)]
@@ -503,25 +515,22 @@ def _run_dialog(args: Sequence[str]) -> tuple[bool, bytes]:
     return completed_process.returncode == 0, completed_process.stderr
 
 
-def _create_fallback_man_page(name: str, path: Path, error_message: str) -> _ManPageHeader:
+def _create_fallback_man_page(name: str, path: Path, error_message: str) -> ManPageHeader:
     with path.open(encoding="utf-8") as fp:
-        return {
-            "name": name,
-            "path": str(path),
-            "description": fp.read().strip(),
-            "title": _("%s: Cannot parse man page: %s") % (name, error_message),
-            "agents": "",
-            "license": "unknown",
-            "distribution": "unknown",
-            "catalog": ["generic"],
-        }
+        return ManPageHeader(
+            name=name,
+            path=str(path),
+            description=fp.read().strip(),
+            title=_("%s: Cannot parse man page: %s") % (name, error_message),
+            agents="",
+            license="unknown",
+            distribution="unknown",
+            catalog=["generic"],
+        )
 
 
-def _parse_man_page_header(name: str, path: Path) -> _ManPageHeader:
-    parsed: dict[str, Any] = {
-        "name": name,
-        "path": str(path),
-    }
+def _parse_man_page_header(name: str, path: Path) -> ManPageHeader:
+    parsed: dict[str, str] = {}
     key = ""
     with path.open(encoding="utf-8") as fp:
         for lineno, line in enumerate(fp, start=1):
@@ -542,23 +551,19 @@ def _parse_man_page_header(name: str, path: Path) -> _ManPageHeader:
                 sys.stderr.write("%s\n" % msg)
                 break
 
-    # verify mandatory keys. FIXME: This list may be incomplete
-    for key in [
-        "title",
-        "agents",
-        "license",
-        "distribution",
-        "description",
-    ]:
-        if key not in parsed:
-            raise Exception("Section %s missing in man page of %s" % (key, name))
-
-    parsed["agents"] = parsed["agents"].replace(" ", "").split(",")
-
-    if parsed.get("catalog"):
-        parsed["catalog"] = parsed["catalog"].split("/")
-
-    return parsed
+    try:
+        return ManPageHeader(
+            name=name,
+            path=str(path),
+            title=str(parsed["title"]),
+            agents=parsed["agents"].replace(" ", "").split(","),
+            license=parsed["license"],
+            distribution=parsed["distribution"],
+            description=parsed["description"],
+            catalog=parsed["catalog"].split("/"),
+        )
+    except KeyError as key:
+        raise ValueError(f"Section {key} missing in man page of {name}")
 
 
 # TODO: accepting the path here would make things a bit easier.
@@ -610,7 +615,7 @@ def load_man_page(name: str, man_page_dirs: Optional[Iterable[Path]] = None) -> 
                     "Syntax error in %s line %d (%s).\n" % (path, lineno + 1, e)
                 )
 
-    header: dict[str, Any] = {}
+    header: dict[str, Union[str, Sequence[str]]] = {}
     for key, value in man_page["header"]:  # type: ignore[misc]  # yes, this is the tuple case.
         header[key] = [a.strip() for a in value.split(",")] if key == "agents" else value.strip()
 
@@ -655,6 +660,7 @@ class ManPageRenderer:
         self._print_manpage_title(self._title)
 
         self._print_begin_splitlines()
+
         ags = [check_mk_agents.get(agent, agent.upper()) for agent in self._agents]
         self._print_info_line("Distribution:            ", self._distro)
         self._print_info_line("License:                 ", self._license)

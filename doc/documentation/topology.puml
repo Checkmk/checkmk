@@ -11,6 +11,7 @@ package users {
 }
 
 package "API clients" as api_clients {
+    component "Grafana Connector" as grafana_connector
     component "REST client" as rest_api_client
     component "[[../arch-comp-livestatus-client.html Livestatus client]]" as external_livestatus_client
 }
@@ -91,8 +92,8 @@ interface "SNMP trap" as trap
 interface HTTP as api_hosts_http
 
 users -d- http_gui
-web_api_client -d- http_web_api
 rest_api_client -d- http_rest_api
+grafana_connector -d- http_rest_api
 
 http_gui -d- GUI
 http_gui -d- nagvis

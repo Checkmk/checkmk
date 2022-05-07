@@ -20,10 +20,10 @@ Due to the independent development of check-plugins, it often arises that they
 deliver metrics which represent a common concept, e.g. "RAM used", yet they are
 not equally named across all check-plugins. In order to reunify this
 non-standardized names the metric translations subsystem exists. Its duty relies
-on renaming and rescaling metric names and values from individual check-plugins
+on renaming and re-scaling metric names and values from individual check-plugins
 outputs into their canonical name, and scale. From there on the Metric System
 can use defined metric names & unit for an homogeneous display. This was enough
-for simple display, once checkmk introduced bulk queries and statistical
+for simple display, once Checkmk introduced bulk queries and statistical
 analysis of metrics, metrics names within check-plugin had to be unified and
 thus an extra metric-merge utility enhanced the translation system. It allows to
 rename the old metric-name on the check-plugin yet still allow the GUI to
@@ -41,7 +41,7 @@ Architecture
 
 The metric & graph system although essential is misplaced as a plugin system
 under ``cmk/gui/plugins/metrics/``. Here we define over a dynamically shared
-python dicts (global variables/yet more like a static database) the ``Units`` in
+python dictionaries (global variables/yet more like a static database) the ``Units`` in
 dict ``unit_info``, ``Metrics`` in dict ``metric_info``, check-plugin dependent
 ``metric translation`` in dict ``check_metrics`` and finally the ``graph
 recipes`` in dict ``graph_info``.

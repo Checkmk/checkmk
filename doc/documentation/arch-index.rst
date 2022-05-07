@@ -26,6 +26,7 @@ Components
    :maxdepth: 1
 
    arch-comp-gui.rst
+   arch-comp-gui-metrics.rst
    arch-comp-apache.rst
    arch-comp-checkengine.rst
    arch-comp-core.rst

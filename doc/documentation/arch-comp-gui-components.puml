@@ -16,7 +16,7 @@ package Monitoring {
     component bi
     component inventory
     component logwatch
-    component metrics
+    component "[[../arch-comp-gui-metrics.html metrics]]" as metrics
     component mobile
     component prediction
     component robotmk

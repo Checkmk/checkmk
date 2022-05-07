@@ -530,26 +530,8 @@ def _create_fallback_man_page(name: str, path: Path, error_message: str) -> ManP
 
 
 def _parse_man_page_header(name: str, path: Path) -> ManPageHeader:
-    parsed: dict[str, str] = {}
-    key = ""
     with path.open(encoding="utf-8") as fp:
-        for lineno, line in enumerate(fp, start=1):
-            line = line.rstrip()
-            if not line:
-                parsed[key] += "\n\n"
-            elif line[0] == " ":
-                parsed[key] += "\n" + line.lstrip()
-            elif line[0] == "[":
-                break  # End of header
-            elif ":" in line:
-                key, rest = line.split(":", 1)
-                parsed[key] = rest.lstrip()
-            else:
-                msg = "ERROR: Invalid line %d in man page %s:\n%s" % (lineno, path, line)
-                if cmk.utils.debug.enabled():
-                    raise ValueError(msg)
-                sys.stderr.write("%s\n" % msg)
-                break
+        parsed = _parse_to_raw_header(path, fp)
 
     try:
         return ManPageHeader(
@@ -572,48 +554,8 @@ def load_man_page(name: str, man_page_dirs: Optional[Iterable[Path]] = None) -> 
     if path is None:
         return None
 
-    man_page: dict[str, _ManPageValue] = {}
-    current_section: list[tuple[str, str]] = []
-    current_variable = None
-    man_page["header"] = current_section
-    empty_line_count = 0
-
     with path.open(encoding=str("utf-8")) as fp:
-        for lineno, line in enumerate(fp):
-            try:
-                if line.startswith(" ") and line.strip() != "":  # continuation line
-                    empty_line_count = 0
-                    if current_variable:
-                        name, curval = current_section[-1]
-                        if curval.strip() == "":
-                            current_section[-1] = (name, line.rstrip()[1:])
-                        else:
-                            current_section[-1] = (name, curval + "\n" + line.rstrip()[1:])
-                    else:
-                        raise Exception
-                    continue
-
-                line = line.strip()
-                if line == "":
-                    empty_line_count += 1
-                    if empty_line_count == 1 and current_variable:
-                        name, curval = current_section[-1]
-                        current_section[-1] = (name, curval + "\n<br>\n")
-                    continue
-                empty_line_count = 0
-
-                if line[0] == "[" and line[-1] == "]":
-                    section_header = line[1:-1]
-                    current_section, current_variable = [], None
-                    man_page[section_header] = current_section
-                else:
-                    current_variable, restofline = line.split(":", 1)
-                    current_section.append((current_variable, restofline.lstrip()))
-
-            except Exception as e:
-                raise MKGeneralException(
-                    "Syntax error in %s line %d (%s).\n" % (path, lineno + 1, e)
-                )
+        man_page = _parse_to_raw(path, fp)
 
     header: dict[str, Union[str, Sequence[str]]] = {}
     for key, value in man_page["header"]:  # type: ignore[misc]  # yes, this is the tuple case.
@@ -621,9 +563,77 @@ def load_man_page(name: str, man_page_dirs: Optional[Iterable[Path]] = None) -> 
 
     if "catalog" not in header:
         header["catalog"] = "unsorted"
-    man_page["header"] = header
 
-    return man_page
+    return {**man_page, "header": header}
+
+
+def _parse_to_raw_header(path: Path, lines: Iterable[str]) -> Mapping[str, str]:
+    parsed: dict[str, str] = {}
+    key = ""
+    for lineno, line in enumerate(lines, start=1):
+        line = line.rstrip()
+        if not line:
+            parsed[key] += "\n\n"
+        elif line[0] == " ":
+            parsed[key] += "\n" + line.lstrip()
+        elif line[0] == "[":
+            break  # End of header
+        elif ":" in line:
+            key, rest = line.split(":", 1)
+            parsed[key] = rest.lstrip()
+        else:
+            msg = "ERROR: Invalid line %d in man page %s:\n%s" % (lineno, path, line)
+            if cmk.utils.debug.enabled():
+                raise ValueError(msg)
+            sys.stderr.write("%s\n" % msg)
+            break
+
+    return parsed
+
+
+def _parse_to_raw(path: Path, lines: Iterable[str]) -> Mapping[str, Sequence[tuple[str, str]]]:
+
+    parsed: dict[str, list[tuple[str, str]]] = {}
+    current_section: list[tuple[str, str]] = []
+    current_variable = None
+    parsed["header"] = current_section
+    empty_line_count = 0
+
+    for lineno, line in enumerate(lines):
+        try:
+            if line.startswith(" ") and line.strip() != "":  # continuation line
+                empty_line_count = 0
+                if current_variable:
+                    name, curval = current_section[-1]
+                    if curval.strip() == "":
+                        current_section[-1] = (name, line.rstrip()[1:])
+                    else:
+                        current_section[-1] = (name, curval + "\n" + line.rstrip()[1:])
+                else:
+                    raise Exception
+                continue
+
+            line = line.strip()
+            if line == "":
+                empty_line_count += 1
+                if empty_line_count == 1 and current_variable:
+                    name, curval = current_section[-1]
+                    current_section[-1] = (name, curval + "\n<br>\n")
+                continue
+            empty_line_count = 0
+
+            if line[0] == "[" and line[-1] == "]":
+                section_header = line[1:-1]
+                current_section, current_variable = [], None
+                parsed[section_header] = current_section
+            else:
+                current_variable, restofline = line.split(":", 1)
+                current_section.append((current_variable, restofline.lstrip()))
+
+        except Exception as e:
+            raise MKGeneralException("Syntax error in %s line %d (%s).\n" % (path, lineno + 1, e))
+
+    return parsed
 
 
 class ManPageRenderer:

@@ -16,7 +16,7 @@ import subprocess
 import sys
 from io import StringIO
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple
+from typing import Any, Dict, Final, Iterable, Mapping, Optional, Sequence, TextIO
 
 import cmk.utils.debug
 import cmk.utils.paths
@@ -25,10 +25,12 @@ from cmk.utils.check_utils import maincheckify
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.i18n import _
 
-ManPage = Dict[str, Any]
-ManPageCatalogPath = Tuple[str, ...]
+ManPage = Mapping[str, Any]
+ManPageCatalogPath = tuple[str, ...]
 
-catalog_titles = {
+_ManPageHeader = Mapping[str, Any]  # improve me
+
+catalog_titles: Final = {
     "hw": "Appliances, other dedicated Hardware",
     "environment": "Environmental sensors",
     "acme": "ACME",
@@ -257,10 +259,10 @@ catalog_titles = {
     "smb_share": "SMB Share",
     "gcp": "Google Cloud Platform",
     "mobileiron": "Mobileiron",
-}  # yapf: disable
+}
 
 # TODO: Do we need a more generic place for this?
-check_mk_agents = {
+check_mk_agents: Final = {
     "vms": "VMS",
     "linux": "Linux",
     "aix": "AIX",
@@ -275,7 +277,7 @@ check_mk_agents = {
     "mobileiron": "Mobileiron",
 }
 
-_manpage_catalog: Dict[ManPageCatalogPath, List[Dict]] = {}
+_manpage_catalog: Mapping[ManPageCatalogPath, Sequence[_ManPageHeader]] = {}
 
 
 def _get_man_page_dirs() -> Sequence[Path]:
@@ -309,7 +311,7 @@ def man_page_path(name: str, man_page_dirs: Optional[Iterable[Path]] = None) -> 
     return None
 
 
-def all_man_pages(man_page_dirs: Optional[Iterable[Path]] = None) -> Dict[str, str]:
+def all_man_pages(man_page_dirs: Optional[Iterable[Path]] = None) -> Mapping[str, str]:
     if man_page_dirs is None:
         man_page_dirs = _get_man_page_dirs()
 
@@ -341,12 +343,12 @@ def get_title_from_man_page(path: Path) -> str:
     raise MKGeneralException(_("Invalid man page: Failed to get the title"))
 
 
-def man_page_catalog_titles():
+def man_page_catalog_titles() -> Mapping[str, str]:
     return catalog_titles
 
 
-def load_man_page_catalog() -> Dict[ManPageCatalogPath, List[Dict]]:
-    catalog: Dict[ManPageCatalogPath, List[Dict]] = {}
+def load_man_page_catalog() -> Mapping[ManPageCatalogPath, Sequence[_ManPageHeader]]:
+    catalog: dict[ManPageCatalogPath, list[_ManPageHeader]] = {}
     for name, path in all_man_pages().items():
         try:
             parsed = _parse_man_page_header(name, Path(path))
@@ -365,8 +367,7 @@ def load_man_page_catalog() -> Dict[ManPageCatalogPath, List[Dict]]:
     return catalog
 
 
-def print_man_page_browser(cat=()):
-    # typxe: (ManPageCatalogPath) -> None
+def print_man_page_browser(cat=()) -> None:
     global _manpage_catalog
     _manpage_catalog = load_man_page_catalog()
 
@@ -385,12 +386,12 @@ def print_man_page_browser(cat=()):
         _manpage_browser_folder(cat, subtree_names)
 
 
-def _manpage_catalog_entries(catalog, category):
+def _manpage_catalog_entries(catalog, category) -> list[Any]:
     return catalog.get(category, [])
 
 
-def _manpage_catalog_subtree_names(catalog, category):
-    subtrees = set([])
+def _manpage_catalog_subtree_names(catalog, category) -> list[Any]:
+    subtrees = set()
     for this_category in catalog.keys():
         if this_category[: len(category)] == category and len(this_category) > len(category):
             subtrees.add(this_category[len(category)])
@@ -398,7 +399,7 @@ def _manpage_catalog_subtree_names(catalog, category):
     return list(subtrees)
 
 
-def _manpage_num_entries(cat):
+def _manpage_num_entries(cat) -> int:
     num = 0
     for c, e in _manpage_catalog.items():
         if c[: len(cat)] == cat:
@@ -406,7 +407,7 @@ def _manpage_num_entries(cat):
     return num
 
 
-def _manpage_browser_folder(cat, subtrees):
+def _manpage_browser_folder(cat, subtrees) -> None:
     titles = []
     for e in subtrees:
         title = catalog_titles.get(e, e)
@@ -435,7 +436,7 @@ def _manpage_browser_folder(cat, subtrees):
             break
 
 
-def _manpage_browse_entries(cat, entries):
+def _manpage_browse_entries(cat, entries) -> None:
     checks = []
     for e in entries:
         checks.append((e["title"], e["name"]))
@@ -460,11 +461,11 @@ def _manpage_browse_entries(cat, entries):
             break
 
 
-def _manpage_display_header(cat):
+def _manpage_display_header(cat) -> str:
     return " -> ".join([catalog_titles.get(e, e) for e in cat])
 
 
-def _dialog_menu(title, text, choices, defvalue, oktext, canceltext):
+def _dialog_menu(title, text, choices, defvalue, oktext, canceltext) -> tuple[bool, bytes]:
     args = ["--ok-label", oktext, "--cancel-label", canceltext]
     if defvalue is not None:
         args += ["--default-item", defvalue]
@@ -474,7 +475,7 @@ def _dialog_menu(title, text, choices, defvalue, oktext, canceltext):
     return _run_dialog(args)
 
 
-def _run_dialog(args):
+def _run_dialog(args) -> tuple[bool, bytes]:
     completed_process = subprocess.run(
         ["dialog", "--shadow"] + args,
         env={"TERM": os.getenv("TERM", "linux"), "LANG": "de_DE.UTF-8"},
@@ -484,7 +485,7 @@ def _run_dialog(args):
     return completed_process.returncode == 0, completed_process.stderr
 
 
-def _create_fallback_man_page(name, path, error_message):
+def _create_fallback_man_page(name, path, error_message) -> _ManPageHeader:
     with path.open(encoding="utf-8") as fp:
         return {
             "name": name,
@@ -498,7 +499,7 @@ def _create_fallback_man_page(name, path, error_message):
         }
 
 
-def _parse_man_page_header(name, path):
+def _parse_man_page_header(name, path) -> _ManPageHeader:
     parsed = {
         "name": name,
         "path": str(path),
@@ -548,8 +549,8 @@ def load_man_page(name: str, man_page_dirs: Optional[Iterable[Path]] = None) -> 
     if path is None:
         return None
 
-    man_page: ManPage = {}
-    current_section: List[Tuple[str, str]] = []
+    man_page: dict[str, Any] = {}
+    current_section: list[tuple[str, str]] = []
     current_variable = None
     man_page["header"] = current_section
     empty_line_count = 0
@@ -604,20 +605,20 @@ def load_man_page(name: str, man_page_dirs: Optional[Iterable[Path]] = None) -> 
 
 
 class ManPageRenderer:
-    def __init__(self, name):
+    def __init__(self, name) -> None:
         self.name = name
         man_page = load_man_page(name)
         if not man_page:
             raise MKGeneralException("No manpage for %s. Sorry.\n" % self.name)
         self._header = man_page["header"]
 
-    def paint(self):
+    def paint(self) -> None:
         try:
             self._paint_man_page()
         except Exception as e:
             sys.stdout.write(str("ERROR: Invalid check manpage %s: %s\n") % (self.name, e))
 
-    def _paint_man_page(self):
+    def _paint_man_page(self) -> None:
         self._print_header()
         self._print_manpage_title(self._header["title"])
 
@@ -644,38 +645,38 @@ class ManPageRenderer:
         self._print_empty_line()
         self._flush()
 
-    def _flush(self):
+    def _flush(self) -> None:
         raise NotImplementedError()
 
-    def _print_header(self):
+    def _print_header(self) -> None:
         raise NotImplementedError()
 
-    def _print_manpage_title(self, title):
+    def _print_manpage_title(self, title) -> None:
         raise NotImplementedError()
 
-    def _print_info_line(self, left, right):
+    def _print_info_line(self, left, right) -> None:
         raise NotImplementedError()
 
-    def _print_subheader(self, line):
+    def _print_subheader(self, line) -> None:
         raise NotImplementedError()
 
-    def _print_line(self, line, attr=None, no_markup=False):
+    def _print_line(self, line, attr=None, no_markup=False) -> None:
         raise NotImplementedError()
 
-    def _print_begin_splitlines(self):
+    def _print_begin_splitlines(self) -> None:
         pass
 
-    def _print_end_splitlines(self):
+    def _print_end_splitlines(self) -> None:
         pass
 
-    def _print_empty_line(self):
+    def _print_empty_line(self) -> None:
         raise NotImplementedError()
 
-    def _print_textbody(self, text):
+    def _print_textbody(self, text) -> None:
         raise NotImplementedError()
 
 
-def _console_stream():
+def _console_stream() -> TextIO:
     if os.path.exists("/usr/bin/less") and sys.stdout.isatty():
         # NOTE: We actually want to use subprocess.Popen here, but the tty is in
         # a horrible state after rendering the man page if we do that. Why???
@@ -684,7 +685,7 @@ def _console_stream():
 
 
 class ConsoleManPageRenderer(ManPageRenderer):
-    def __init__(self, name):
+    def __init__(self, name) -> None:
         super().__init__(name)
         self.__output = _console_stream()
         # NOTE: We must use instance variables for the TTY stuff because TTY-related
@@ -698,25 +699,25 @@ class ConsoleManPageRenderer(ManPageRenderer):
         self._header_color_left = tty.colorset(0, 2)
         self._header_color_right = tty.colorset(7, 2, 1)
 
-    def _flush(self):
+    def _flush(self) -> None:
         self.__output.flush()
 
-    def _markup(self, line, attr):
+    def _markup(self, line, attr) -> str:
         # Replaces braces in the line but preserves the inner braces
         return re.sub("(?<!{){", self._tty_color, re.sub("(?<!})}", tty.normal + attr, line))
 
-    def _print_header(self):
+    def _print_header(self) -> None:
         pass
 
-    def _print_manpage_title(self, title):
+    def _print_manpage_title(self, title) -> None:
         self._print_splitline(
             self._title_color_left, "%-25s" % self.name, self._title_color_right, title
         )
 
-    def _print_info_line(self, left, right):
+    def _print_info_line(self, left, right) -> None:
         self._print_splitline(self._header_color_left, left, self._header_color_right, right)
 
-    def _print_subheader(self, line):
+    def _print_subheader(self, line) -> None:
         self._print_empty_line()
         self.__output.write(
             self._subheader_color
@@ -729,7 +730,7 @@ class ConsoleManPageRenderer(ManPageRenderer):
             + "\n"
         )
 
-    def _print_line(self, line, attr=None, no_markup=False):
+    def _print_line(self, line, attr=None, no_markup=False) -> None:
         if attr is None:
             attr = self._normal_color
 
@@ -745,23 +746,23 @@ class ConsoleManPageRenderer(ManPageRenderer):
         self.__output.write(" " * (self.__width - 2 - l))
         self.__output.write(" " + tty.normal + "\n")
 
-    def _print_splitline(self, attr1, left, attr2, right):
+    def _print_splitline(self, attr1, left, attr2, right) -> None:
         self.__output.write(attr1 + " " + left)
         self.__output.write(attr2)
         self.__output.write(self._markup(right, attr2))
         self.__output.write(" " * (self.__width - 1 - len(left) - self._print_len(right)))
         self.__output.write(tty.normal + "\n")
 
-    def _print_empty_line(self):
+    def _print_empty_line(self) -> None:
         self._print_line("", tty.colorset(7, 4))
 
-    def _print_len(self, word):
+    def _print_len(self, word) -> int:
         # In case of double braces remove only one brace for counting the length
         netto = word.replace("{{", "x").replace("}}", "x").replace("{", "").replace("}", "")
         netto = re.sub("\033[^m]+m", "", netto)
         return len(netto)
 
-    def _wrap_text(self, text, width, attr=tty.colorset(7, 4)):
+    def _wrap_text(self, text, width, attr=tty.colorset(7, 4)) -> Sequence[str]:
         wrapped = []
         line = ""
         col = 0
@@ -791,7 +792,7 @@ class ConsoleManPageRenderer(ManPageRenderer):
             wrapped = wrapped[:-1]
         return wrapped
 
-    def _justify(self, line, width):
+    def _justify(self, line, width) -> str:
         need_spaces = float(width - self._print_len(line))
         spaces = float(line.count(" "))
         newline = ""
@@ -808,13 +809,13 @@ class ConsoleManPageRenderer(ManPageRenderer):
             newline += word
         return newline
 
-    def _fillup(self, line, width):
+    def _fillup(self, line, width) -> str:
         printlen = self._print_len(line)
         if printlen < width:
             line += " " * (width - printlen)
         return line
 
-    def _print_textbody(self, text):
+    def _print_textbody(self, text) -> None:
         wrapped = self._wrap_text(text, self.__width - 2)
         attr = tty.colorset(7, 4)
         for line in wrapped:
@@ -822,25 +823,25 @@ class ConsoleManPageRenderer(ManPageRenderer):
 
 
 class NowikiManPageRenderer(ManPageRenderer):
-    def __init__(self, name):
+    def __init__(self, name) -> None:
         super().__init__(name)
         self.__output = StringIO()
 
-    def _flush(self):
+    def _flush(self) -> None:
         pass
 
-    def index_entry(self):
+    def index_entry(self) -> str:
         return '<tr><td class="tt">%s</td><td>[check_%s|%s]</td></tr>\n' % (
             self.name,
             self.name,
             self._header["title"],
         )
 
-    def render(self):
+    def render(self) -> str:
         self.paint()
         return self.__output.getvalue()
 
-    def _markup(self, line, ignored=None):
+    def _markup(self, line, ignored=None) -> str:
         # preserve the inner { and } in double braces and then replace the braces left
         return (
             line.replace("{{", "{&#123;")
@@ -849,7 +850,7 @@ class NowikiManPageRenderer(ManPageRenderer):
             .replace("}", "</tt>")
         )
 
-    def _print_header(self):
+    def _print_header(self) -> None:
         self.__output.write("TI:Check manual page of %s\n" % self.name)
         # It does not make much sense to print the date of the HTML generation
         # of the man page here. More useful would be the Checkmk version where
@@ -857,16 +858,16 @@ class NowikiManPageRenderer(ManPageRenderer):
         # self.__output.write("DT:%s\n" % (time.strftime("%Y-%m-%d")))
         self.__output.write("SA:check_plugins_catalog,check_plugins_list\n")
 
-    def _print_manpage_title(self, title):
+    def _print_manpage_title(self, title) -> None:
         self.__output.write("<b>%s</b>\n" % title)
 
-    def _print_info_line(self, left, right):
+    def _print_info_line(self, left, right) -> None:
         self.__output.write("<tr><td>%s</td><td>%s</td></tr>\n" % (left, right))
 
-    def _print_subheader(self, line):
+    def _print_subheader(self, line) -> None:
         self.__output.write("H2:%s\n" % line)
 
-    def _print_line(self, line, attr=None, no_markup=False):
+    def _print_line(self, line, attr=None, no_markup=False) -> None:
         if no_markup:
             self.__output.write("%s\n" % line)
         else:
@@ -875,13 +876,13 @@ class NowikiManPageRenderer(ManPageRenderer):
     def _print_begin_splitlines(self):
         self.__output.write("<table>\n")
 
-    def _print_end_splitlines(self):
+    def _print_end_splitlines(self) -> None:
         self.__output.write("</table>\n")
 
-    def _print_empty_line(self):
+    def _print_empty_line(self) -> None:
         self.__output.write("\n")
 
-    def _print_textbody(self, text):
+    def _print_textbody(self, text) -> None:
         self.__output.write("%s\n" % self._markup(text))
 
 

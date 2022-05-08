@@ -22,7 +22,7 @@ from typing import (
     Union,
 )
 
-from kubernetes import client  # type: ignore[import] # pylint: disable=import-error
+from kubernetes import client  # type: ignore[import]
 
 from cmk.special_agents.utils_kubernetes.schemata import api
 from cmk.special_agents.utils_kubernetes.transform import (

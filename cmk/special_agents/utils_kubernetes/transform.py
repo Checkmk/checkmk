@@ -15,7 +15,7 @@ import datetime
 import re
 from typing import Any, Dict, List, Literal, Mapping, Optional, Sequence, Type, Union
 
-from kubernetes import client  # type: ignore[import] # pylint: disable=import-error
+from kubernetes import client  # type: ignore[import]
 
 from .schemata import api
 from .schemata.api import Label, LabelName, LabelValue

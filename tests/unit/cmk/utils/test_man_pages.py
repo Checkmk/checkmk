@@ -47,7 +47,7 @@ def get_all_pages() -> ManPages:
 
 
 @pytest.fixture(scope="module", name="catalog")
-def get_catalog():
+def get_catalog() -> man_pages.ManPageCatalog:
     return man_pages.load_man_page_catalog()
 
 
@@ -129,14 +129,11 @@ def test_print_man_page_table(capsys):
 
 
 def man_page_catalog_titles():
-    titles = man_pages.man_page_catalog_titles()
-    assert isinstance(titles, dict)
-    assert "hw" in titles
-    assert "os" in titles
+    assert man_pages.CATALOG_TITLES["hw"]
+    assert man_pages.CATALOG_TITLES["os"]
 
 
-def test_load_man_page_catalog():
-    catalog = man_pages.load_man_page_catalog()
+def test_load_man_page_catalog(catalog):
     assert isinstance(catalog, dict)
 
     for path, entries in catalog.items():
@@ -149,8 +146,7 @@ def test_load_man_page_catalog():
         assert not any("Cannot parse man page" in e.title for e in entries)
 
 
-def test_no_unsorted_man_pages():
-    catalog = man_pages.load_man_page_catalog()
+def test_no_unsorted_man_pages(catalog: man_pages.ManPageCatalog) -> None:
     unsorted_page_names = [m.name for m in catalog.get(("unsorted",), [])]
 
     assert not unsorted_page_names
@@ -284,12 +280,11 @@ def test_print_man_page(capsys):
 
 
 def test_missing_catalog_entries_of_man_pages(all_pages: ManPages) -> None:
-    catalog_titles = set(man_pages.catalog_titles.keys())
     found_catalog_entries_from_man_pages = set()
     for name in man_pages.all_man_pages():
         man_page = all_pages[name]
         assert man_page is not None
         catalog_entry = str(man_page["header"]["catalog"])  # type: ignore[index,call-overload]
         found_catalog_entries_from_man_pages.update(catalog_entry.split("/"))
-    missing_catalog_entries = found_catalog_entries_from_man_pages - catalog_titles
+    missing_catalog_entries = found_catalog_entries_from_man_pages - set(man_pages.CATALOG_TITLES)
     assert not missing_catalog_entries

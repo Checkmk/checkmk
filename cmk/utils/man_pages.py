@@ -50,7 +50,7 @@ ManPageCatalogPath = tuple[str, ...]
 
 ManPageCatalog = Mapping[ManPageCatalogPath, Sequence[ManPageHeader]]
 
-catalog_titles: Final = {
+CATALOG_TITLES: Final = {
     "hw": "Appliances, other dedicated Hardware",
     "environment": "Environmental sensors",
     "acme": "ACME",
@@ -282,7 +282,7 @@ catalog_titles: Final = {
 }
 
 # TODO: Do we need a more generic place for this?
-check_mk_agents: Final = {
+CHECK_MK_AGENTS: Final = {
     "vms": "VMS",
     "linux": "Linux",
     "aix": "AIX",
@@ -296,8 +296,6 @@ check_mk_agents: Final = {
     "vnx_quotas": "VNX Quotas",
     "mobileiron": "Mobileiron",
 }
-
-_manpage_catalog: ManPageCatalog = {}
 
 
 def _get_man_page_dirs() -> Sequence[Path]:
@@ -363,10 +361,6 @@ def get_title_from_man_page(path: Path) -> str:
     raise MKGeneralException(_("Invalid man page: Failed to get the title"))
 
 
-def man_page_catalog_titles() -> Mapping[str, str]:
-    return catalog_titles
-
-
 def load_man_page_catalog() -> ManPageCatalog:
     catalog: dict[ManPageCatalogPath, list[ManPageHeader]] = defaultdict(list)
     for name, path in all_man_pages().items():
@@ -387,11 +381,10 @@ def load_man_page_catalog() -> ManPageCatalog:
 
 
 def print_man_page_browser(cat: ManPageCatalogPath = ()) -> None:
-    global _manpage_catalog
-    _manpage_catalog = load_man_page_catalog()
+    catalog = load_man_page_catalog()
 
-    entries = _manpage_catalog_entries(_manpage_catalog, cat)
-    subtree_names = _manpage_catalog_subtree_names(_manpage_catalog, cat)
+    entries = catalog.get(cat, [])
+    subtree_names = _manpage_catalog_subtree_names(catalog, cat)
 
     if entries and subtree_names:
         sys.stderr.write(
@@ -402,13 +395,7 @@ def print_man_page_browser(cat: ManPageCatalogPath = ()) -> None:
         _manpage_browse_entries(cat, entries)
 
     elif subtree_names:
-        _manpage_browser_folder(cat, subtree_names)
-
-
-def _manpage_catalog_entries(
-    catalog: ManPageCatalog, category: ManPageCatalogPath
-) -> Sequence[ManPageHeader]:
-    return catalog.get(category, [])
+        _manpage_browser_folder(catalog, cat, subtree_names)
 
 
 def _manpage_catalog_subtree_names(
@@ -422,19 +409,21 @@ def _manpage_catalog_subtree_names(
     return list(subtrees)
 
 
-def _manpage_num_entries(cat: ManPageCatalogPath) -> int:
+def _manpage_num_entries(catalog: ManPageCatalog, cat: ManPageCatalogPath) -> int:
     num = 0
-    for c, e in _manpage_catalog.items():
+    for c, e in catalog.items():
         if c[: len(cat)] == cat:
             num += len(e)
     return num
 
 
-def _manpage_browser_folder(cat: ManPageCatalogPath, subtrees: Iterable[str]) -> None:
+def _manpage_browser_folder(
+    catalog: ManPageCatalog, cat: ManPageCatalogPath, subtrees: Iterable[str]
+) -> None:
     titles = []
     for e in subtrees:
-        title = catalog_titles.get(e, e)
-        count = _manpage_num_entries(cat + (e,))
+        title = CATALOG_TITLES.get(e, e)
+        count = _manpage_num_entries(catalog, cat + (e,))
         if count:
             title += " (%d)" % count
         titles.append((title, e))
@@ -485,7 +474,7 @@ def _manpage_browse_entries(cat: Iterable[str], entries: Iterable[ManPageHeader]
 
 
 def _manpage_display_header(cat: Iterable[str]) -> str:
-    return " -> ".join([catalog_titles.get(e, e) for e in cat])
+    return " -> ".join([CATALOG_TITLES.get(e, e) for e in cat])
 
 
 def _dialog_menu(
@@ -671,7 +660,7 @@ class ManPageRenderer:
 
         self._print_begin_splitlines()
 
-        ags = [check_mk_agents.get(agent, agent.upper()) for agent in self._agents]
+        ags = [CHECK_MK_AGENTS.get(agent, agent.upper()) for agent in self._agents]
         self._print_info_line("Distribution:            ", self._distro)
         self._print_info_line("License:                 ", self._license)
         self._print_info_line("Supported Agents:        ", ", ".join(ags))

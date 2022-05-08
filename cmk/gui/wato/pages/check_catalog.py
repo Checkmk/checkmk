@@ -56,7 +56,7 @@ class ModeCheckPlugins(WatoMode):
 
     def _from_vars(self):
         self._manpages = _get_check_catalog(only_path=())
-        self._titles = man_pages.man_page_catalog_titles()
+        self._titles = man_pages.CATALOG_TITLES
 
     def title(self):
         return _("Catalog of check plugins")
@@ -111,7 +111,7 @@ class ModeCheckPluginSearch(WatoMode):
     def _from_vars(self):
         self._search = get_search_expression()
         self._manpages = _get_check_catalog(only_path=())
-        self._titles = man_pages.man_page_catalog_titles()
+        self._titles = man_pages.CATALOG_TITLES
 
     def title(self):
         return "%s: %s" % (_("Check plugins matching"), self._search)
@@ -223,7 +223,7 @@ class ModeCheckPluginTopic(WatoMode):
             ID().validate_value(comp, None)  # Beware against code injection!
 
         self._manpages = _get_check_catalog(self._path)
-        self._titles = man_pages.man_page_catalog_titles()
+        self._titles = man_pages.CATALOG_TITLES
 
         self._has_second_level = None
         for t, has_second_level, title, _helptext in _man_page_catalog_topics():

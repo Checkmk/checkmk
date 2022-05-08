@@ -7,8 +7,8 @@
 import json
 
 import pytest
-from kubernetes import client  # type: ignore[import] # pylint: disable=import-error
-from kubernetes.client import ApiClient  # type: ignore[import] # pylint: disable=import-error
+from kubernetes import client  # type: ignore[import]
+from kubernetes.client import ApiClient  # type: ignore[import]
 from mocket import Mocketizer  # type: ignore[import]
 from mocket.mockhttp import Entry  # type: ignore[import]
 

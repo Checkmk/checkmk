@@ -48,7 +48,7 @@ from urllib.parse import urlparse
 
 import requests
 import urllib3
-from kubernetes import client  # type: ignore[import] # pylint: disable=import-error
+from kubernetes import client  # type: ignore[import]
 from pydantic import BaseModel
 
 import cmk.utils.password_store

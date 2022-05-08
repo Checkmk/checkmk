@@ -222,9 +222,9 @@ def test_load_man_page_not_existing():
     assert man_pages.load_man_page("not_existing") is None
 
 
+# TODO: when the typing is cleaned up, then this can go.
 def _check_man_page_structure(page):
-    for key in ["header"]:
-        assert key in page
+    assert list(page) == ["header"]
 
     for key in ["description", "license", "title", "catalog", "agents", "distribution"]:
         assert key in page["header"]

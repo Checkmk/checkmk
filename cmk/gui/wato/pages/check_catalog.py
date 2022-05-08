@@ -450,7 +450,7 @@ class ModeCheckManPage(WatoMode):
         manpage = man_pages.load_man_page(self._check_type)
         if manpage is None:
             raise MKUserError(None, _("There is no manpage for this check."))
-        self._manpage = manpage
+        self._manpage: Mapping[str, Any] = {"header": manpage["header"]}
 
         checks = get_check_information().plugin_infos
         if self._check_type in checks:

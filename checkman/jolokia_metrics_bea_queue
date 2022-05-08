@@ -23,7 +23,3 @@ discovery:
  One service is created for each application running inside a weblogic
  instance sent by the agent.
 
-
-[paramters]
-warn (int): This many queue entries will trigger a WARNING state
-crit (int): This many queue entries will trigger a CRITICAL state

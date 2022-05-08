@@ -18,7 +18,7 @@ import sys
 from collections import defaultdict
 from io import StringIO
 from pathlib import Path
-from typing import Final, Iterable, Mapping, NamedTuple, Optional, Sequence, TextIO, Union
+from typing import Final, Iterable, Literal, Mapping, NamedTuple, Optional, Sequence, TextIO, Union
 
 import cmk.utils.debug
 import cmk.utils.paths
@@ -32,7 +32,7 @@ _ManPageValue = Union[str, Sequence[tuple[str, str]], Mapping[str, Union[str, Se
 
 # The destiction between ManPage and Manpage header is not clear to me.
 # I think we should just always parse the whole thing.
-ManPage = Mapping[str, _ManPageValue]
+ManPage = Mapping[Literal["header"], _ManPageValue]
 
 
 class ManPageHeader(NamedTuple):
@@ -553,7 +553,7 @@ def load_man_page(name: str, man_page_dirs: Optional[Iterable[Path]] = None) -> 
     if "catalog" not in header:
         header["catalog"] = "unsorted"
 
-    return {**man_page, "header": header}
+    return {"header": header}
 
 
 def _parse_to_raw_header(path: Path, lines: Iterable[str]) -> Mapping[str, str]:
@@ -580,9 +580,15 @@ def _parse_to_raw_header(path: Path, lines: Iterable[str]) -> Mapping[str, str]:
     return parsed
 
 
-def _parse_to_raw(path: Path, lines: Iterable[str]) -> Mapping[str, Sequence[tuple[str, str]]]:
+def _parse_to_raw(
+    path: Path, lines: Iterable[str]
+) -> Mapping[Literal["header"], Sequence[tuple[str, str]]]:
 
-    parsed: dict[str, list[tuple[str, str]]] = {}
+    parsed: dict[Literal["header"], list[tuple[str, str]]] = {}
+
+    # Watch out, the value of "header" is *not* of type ManPageHeader, it may
+    # contain discovery and item!
+
     current_section: list[tuple[str, str]] = []
     current_variable = None
     parsed["header"] = current_section
@@ -611,13 +617,8 @@ def _parse_to_raw(path: Path, lines: Iterable[str]) -> Mapping[str, Sequence[tup
                 continue
             empty_line_count = 0
 
-            if line[0] == "[" and line[-1] == "]":
-                section_header = line[1:-1]
-                current_section, current_variable = [], None
-                parsed[section_header] = current_section
-            else:
-                current_variable, restofline = line.split(":", 1)
-                current_section.append((current_variable, restofline.lstrip()))
+            current_variable, restofline = line.split(":", 1)
+            current_section.append((current_variable, restofline.lstrip()))
 
         except Exception as e:
             raise MKGeneralException("Syntax error in %s line %d (%s).\n" % (path, lineno + 1, e))

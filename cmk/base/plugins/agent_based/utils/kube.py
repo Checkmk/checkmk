@@ -166,10 +166,14 @@ def kube_labels_to_cmk_labels(labels: Labels) -> HostLabelGenerator:
     """Convert Kubernetes Labels to HostLabels.
 
     Key-value pairs of Kubernetes labels are valid checkmk labels (see
-    `LabelName` and `LabelValue`). However, a user can add labels to their
-    Kubernetes objects, which overwrite existing checkmk labels, if we simply
-    add `HostLabel(label.name, label.value)`. To circumvent this problem, we
-    prepend every label name with 'kube/'.
+    `LabelName` and `LabelValue`).
+
+    However, directly yielding `HostLabel(label.name, label.value)` is
+    problematic. This is because a user can add labels to their Kubernetes
+    objects, which overwrite existing Checkmk labels. For instance, the label
+    `cmk/os_name=` would overwrite the cmk label `cmk/os_name:linux`. To
+    circumvent this problem, we prepend every label key with
+    'cmk/kubernetes/label/'.
 
     >>> list(kube_labels_to_cmk_labels({
     ... 'k8s.io/app': Label(name='k8s.io/app', value='nginx'),

@@ -16,7 +16,20 @@ import threading
 import time
 from enum import Enum
 from io import BytesIO
-from typing import Any, AnyStr, Dict, List, NewType, Optional, Pattern, Set, Tuple, Type, Union
+from typing import (
+    Any,
+    AnyStr,
+    Dict,
+    List,
+    NamedTuple,
+    NewType,
+    Optional,
+    Pattern,
+    Set,
+    Tuple,
+    Type,
+    Union,
+)
 
 # TODO: Find a better solution for this issue. Astroid 2.x bug prevents us from using NewType :(
 # (https://github.com/PyCQA/pylint/issues/2296)
@@ -781,6 +794,15 @@ class SingleSiteConnection(Helpers):
 # it possible to connect/disconnect while an object is instantiated.
 
 
+class ConnectedSite(NamedTuple):
+    id: SiteId
+    config: SiteConfiguration
+    connection: SingleSiteConnection
+
+
+ConnectedSites = List[ConnectedSite]
+
+
 class MultiSiteConnection(Helpers):
     def __init__(
         self, sites: SiteConfigurations, disabled_sites: Optional[SiteConfigurations] = None
@@ -789,7 +811,7 @@ class MultiSiteConnection(Helpers):
             disabled_sites = {}
 
         self.sites = sites
-        self.connections: List[Tuple[SiteId, SiteConfiguration, SingleSiteConnection]] = []
+        self.connections: ConnectedSites = []
         self.deadsites: Dict[SiteId, DeadSite] = {}
         self.prepend_site = False
         self.only_sites: OnlySites = None
@@ -845,7 +867,7 @@ class MultiSiteConnection(Helpers):
             else:
                 try:
                     connection = self.connect_to_site(sitename, site)
-                    self.connections.append((sitename, site, connection))
+                    self.connections.append(ConnectedSite(sitename, site, connection))
                 except Exception as e:
                     self.deadsites[sitename] = {
                         "exception": e,
@@ -890,7 +912,7 @@ class MultiSiteConnection(Helpers):
                 if shs == 0 or shs is None:
                     try:
                         connection = self.connect_to_site(sitename, site)
-                        self.connections.append((sitename, site, connection))
+                        self.connections.append(ConnectedSite(sitename, site, connection))
                     except Exception as e:
                         self.deadsites[sitename] = {
                             "exception": e,
@@ -940,22 +962,22 @@ class MultiSiteConnection(Helpers):
         return connection
 
     def disconnect(self) -> None:
-        for _name, _site, connection in self.connections:
-            connection.disconnect()
+        for connected_site in self.connections:
+            connected_site.connection.disconnect()
         self.connections.clear()
 
     # Needed for temporary connection for status_hosts in disabled sites
     def _disconnect_site(self, sitename: SiteId) -> None:
         i = 0
-        for name, _site, _connection in self.connections:
-            if name == sitename:
+        for connected_site in self.connections:
+            if connected_site.id == sitename:
                 del self.connections[i]
                 return
             i += 1
 
     def add_header(self, header: str) -> None:
-        for _sitename, _site, connection in self.connections:
-            connection.add_header(header)
+        for connected_site in self.connections:
+            connected_site.connection.add_header(header)
 
     def set_prepend_site(self, p: bool) -> None:
         self.prepend_site = p
@@ -976,31 +998,31 @@ class MultiSiteConnection(Helpers):
         return self.deadsites
 
     def alive_sites(self) -> List[SiteId]:
-        return [s[0] for s in self.connections]
+        return [s.id for s in self.connections]
 
     def successfully_persisted(self) -> bool:
-        for _sitename, _site, connection in self.connections:
-            if connection.successfully_persisted():
+        for connected_site in self.connections:
+            if connected_site.connection.successfully_persisted():
                 return True
         return False
 
     def set_output_format(self, output_format: LivestatusOutputFormat):
-        for _sitename, _site, connection in self.connections:
-            connection.set_output_format(output_format)
+        for connected_site in self.connections:
+            connected_site.connection.set_output_format(output_format)
 
     def get_output_format(self) -> LivestatusOutputFormat:
         # Since all connections share the same output format, simple return the first connection
         if not self.connections:
             return LivestatusOutputFormat.PYTHON
-        return self.connections[0][2].get_output_format()
+        return self.connections[0].connection.get_output_format()
 
     def set_auth_user(self, domain: str, user: UserId) -> None:
-        for _sitename, _site, connection in self.connections:
-            connection.set_auth_user(domain, user)
+        for connected_site in self.connections:
+            connected_site.connection.set_auth_user(domain, user)
 
     def set_auth_domain(self, domain: str) -> None:
-        for _sitename, _site, connection in self.connections:
-            connection.set_auth_domain(domain)
+        for connected_site in self.connections:
+            connected_site.connection.set_auth_domain(domain)
 
     def query(self, query: "QueryTypes", add_headers: Union[str, bytes] = "") -> LivestatusResponse:
 
@@ -1016,30 +1038,30 @@ class MultiSiteConnection(Helpers):
         result = LivestatusResponse([])
         stillalive = []
         limit = self.limit
-        for sitename, site, connection in self.connections:
-            if self.only_sites is not None and sitename not in self.only_sites:
-                stillalive.append((sitename, site, connection))  # state unknown, assume still alive
+        for connected_site in self.connections:
+            if self.only_sites is not None and connected_site.id not in self.only_sites:
+                stillalive.append(connected_site)  # state unknown, assume still alive
                 continue
             try:
                 if limit is not None:
                     limit_header = "Limit: %d\n" % limit
                 else:
                     limit_header = ""
-                r = connection.query(query, add_headers + limit_header)
+                r = connected_site.connection.query(query, add_headers + limit_header)
                 if self.prepend_site:
                     for row in r:
-                        row.insert(0, sitename)
+                        row.insert(0, connected_site.id)
                 if limit is not None:
                     limit -= len(r)  # Account for portion of limit used by this site
                 result += r
-                stillalive.append((sitename, site, connection))
+                stillalive.append(connected_site)
             except LivestatusTestingError:
                 raise
             except Exception as e:
-                connection.disconnect()
-                self.deadsites[sitename] = {
+                connected_site.connection.disconnect()
+                self.deadsites[connected_site.id] = {
                     "exception": e,
-                    "site": site,
+                    "site": connected_site.config,
                 }
         self.connections = stillalive
         return result
@@ -1063,42 +1085,64 @@ class MultiSiteConnection(Helpers):
             limit_header = ""
 
         # First send all queries
-        for sitename, site, connection in connect_to_sites:
+        for connected_site in connect_to_sites:
             try:
-                str_query = connection.build_query(query, add_headers + limit_header)
-                connection.send_query(str_query)
+                str_query = connected_site.connection.build_query(query, add_headers + limit_header)
+                connected_site.connection.send_query(str_query)
             except LivestatusTestingError:
                 raise
             except Exception as e:
-                self.deadsites[sitename] = {
+                self.deadsites[connected_site.id] = {
                     "exception": e,
-                    "site": site,
+                    "site": connected_site.config,
                 }
 
-        # Then retrieve all answers. We will be as slow as the slowest of all
-        # connections.
-        result = LivestatusResponse([])
-        for sitename, site, connection in connect_to_sites:
+        # Then retrieve all raw responses. We will be as slow as the slowest of all connections.
+        site_responses: List[Tuple[ConnectedSite, bytes]] = []
+        for connected_site in connect_to_sites:
             try:
-                str_query = connection.build_query(query, add_headers + limit_header)
-                r = connection.parse_raw_response(
-                    connection.receive_raw_response(str_query, query.suppress_exceptions)
+                str_query = connected_site.connection.build_query(query, add_headers + limit_header)
+                site_responses.append(
+                    (
+                        connected_site,
+                        connected_site.connection.receive_raw_response(
+                            str_query, query.suppress_exceptions
+                        ),
+                    )
                 )
-                stillalive.append((sitename, site, connection))
-                if self.prepend_site:
-                    for row in r:
-                        row.insert(0, sitename)
-                result += r
             except query.suppress_exceptions:
-                stillalive.append((sitename, site, connection))
+                # Mostly handles exception types MKLivestatusTableNotFoundError
+                stillalive.append(connected_site)
                 continue
             except LivestatusTestingError:
                 raise
             except Exception as e:
-                connection.disconnect()
-                self.deadsites[sitename] = {
+                connected_site.connection.disconnect()
+                self.deadsites[connected_site.id] = {
                     "exception": e,
-                    "site": site,
+                    "site": connected_site.config,
+                }
+
+        # Convert responses to python format
+        result = LivestatusResponse([])
+        for connected_site, raw_response in site_responses:
+            try:
+                rows = connected_site.connection.parse_raw_response(raw_response)
+                stillalive.append(connected_site)
+                if self.prepend_site:
+                    for row in rows:
+                        row.insert(0, connected_site.id)
+                result.extend(rows)
+            except query.suppress_exceptions:
+                stillalive.append(connected_site)
+                continue
+            except LivestatusTestingError:
+                raise
+            except Exception as e:
+                connected_site.connection.disconnect()
+                self.deadsites[connected_site.id] = {
+                    "exception": e,
+                    "site": connected_site.config,
                 }
 
         self.connections = stillalive

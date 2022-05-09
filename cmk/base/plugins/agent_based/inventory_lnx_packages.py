@@ -73,7 +73,7 @@ def parse_lnx_packages(string_table: StringTable) -> Section:
         if len(parts) == 2:
             version, package_version = parts
 
-        if release is not None:
+        if release is not None and release != "-":
             package_version = release
 
         parsed_packages.append(

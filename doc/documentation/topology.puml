@@ -11,7 +11,7 @@ package users {
 }
 
 package "API clients" as api_clients {
-    component "Grafana Connector" as grafana_connector
+    component "[[../arch-comp-grafana-connector.html Grafana Connector]]" as grafana_connector
     component "REST client" as rest_api_client
     component "[[../arch-comp-livestatus-client.html Livestatus client]]" as external_livestatus_client
 }
@@ -19,7 +19,6 @@ package "API clients" as api_clients {
 package "[[../arch-comp-omd.html OMD: Checkmk run-time environment]]" as omd {
     interface HTTP as http_gui
     interface HTTP as http_rest_api
-    interface HTTP as http_web_api
     component "[[../arch-comp-apache.html Apache]]" as apache {
         component "mod_wsgi" as mod_wsgi {
             package "[[../arch-comp-gui.html GUI]]" {

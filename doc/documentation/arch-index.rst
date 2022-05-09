@@ -39,5 +39,6 @@ Components
    arch-comp-nagvis.rst
 
    arch-comp-agent-linux.rst
+   arch-comp-grafana-connector.rst
 
    arch-comp-template.rst

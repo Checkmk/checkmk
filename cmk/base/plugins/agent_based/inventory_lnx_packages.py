@@ -29,7 +29,7 @@
 # cpio-lang|2.9|i586|rpm|Languages for package cpio|
 # zlib|1.2.3|i586|rpm|Data Compression Library|
 
-from typing import Iterable, NamedTuple
+from typing import Iterable, NamedTuple, Optional
 
 from .agent_based_api.v1 import register, TableRow
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
@@ -41,7 +41,7 @@ class Package(NamedTuple):
     arch: str
     package_type: str
     summary: str
-    package_version: str
+    package_version: Optional[str]
 
 
 Section = Iterable[Package]
@@ -64,6 +64,8 @@ def parse_lnx_packages(string_table: StringTable) -> Section:
 
         if arch == "amd64":
             arch = "x86_64"
+
+        package_version = None
 
         # Split version into version of contained software and version of the
         # packages (RPM calls the later "release")
@@ -96,18 +98,20 @@ register.agent_section(
 def inventory_lnx_packages(section: Section) -> InventoryResult:
     path = ["software", "packages"]
     for package in section:
+        inventory_columns = {
+            "version": package.version,
+            "arch": package.arch,
+            "package_type": package.package_type,
+            "summary": package.summary,
+        }
+        if package.package_version:
+            inventory_columns["package_version"] = package.package_version
         yield TableRow(
             path=path,
             key_columns={
                 "name": package.name,
             },
-            inventory_columns={
-                "version": package.version,
-                "arch": package.arch,
-                "package_type": package.package_type,
-                "summary": package.summary,
-                "package_version": package.package_version,
-            },
+            inventory_columns=inventory_columns,
             status_columns={},
         )
 

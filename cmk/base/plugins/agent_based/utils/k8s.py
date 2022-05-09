@@ -7,6 +7,7 @@
 ####################################################################################
 # NOTE: This file is deprecated and all definitions are used by the Kubernetes agent
 # pre 2.1.0. All new definitions should be added to the utils/kube.py file
+# This file will be removed in Checkmk version 2.2.
 ####################################################################################
 
 

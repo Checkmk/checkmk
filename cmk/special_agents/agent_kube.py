@@ -2182,7 +2182,7 @@ def kube_objects_from_namespaces(
     return [kube_obj for kube_obj in kube_objects if kube_obj.namespace in namespaces]
 
 
-def namespaces_from_monitored_namespacenames(
+def namespaces_from_namespacenames(
     api_namespaces: Sequence[api.Namespace], namespace_names: Set[api.NamespaceName]
 ) -> Sequence[api.Namespace]:
     return [
@@ -2533,8 +2533,8 @@ def main(args: Optional[List[str]] = None) -> int:
             LOGGER.info("Write cluster sections based on API data")
             write_cluster_api_sections(arguments.cluster, cluster)
 
-            monitored_namespaces = filter_monitored_namespaces(
-                cluster.namespaces(),
+            monitored_namespace_names = filter_monitored_namespaces(
+                {namespace_name(namespace) for namespace in api_server.namespaces()},
                 arguments.namespace_include_patterns,
                 arguments.namespace_exclude_patterns,
             )
@@ -2557,18 +2557,33 @@ def main(args: Optional[List[str]] = None) -> int:
                 write_deployments_api_sections(
                     arguments.cluster,
                     arguments.annotation_key_pattern,
-                    kube_objects_from_namespaces(cluster.deployments(), monitored_namespaces),
+                    kube_objects_from_namespaces(cluster.deployments(), monitored_namespace_names),
                     piggyback_formatter=functools.partial(piggyback_formatter, "deployment"),
                 )
 
             resource_quotas = api_server.resource_quotas()
             if MonitoredObject.namespaces in arguments.monitored_objects:
                 LOGGER.info("Write namespaces sections based on API data")
-                api_namespaces = api_server.namespaces()
+
+                # Namespaces are handled differently to other objects. Namespace piggyback hosts
+                # should only be created if at least one running or pending pod is found in the
+                # namespace.
+                running_pending_pods = [
+                    pod
+                    for pod in api_pods
+                    if pod.status.phase in [api.Phase.RUNNING, api.Phase.PENDING]
+                ]
+                namespacenames_running_pending_pods = {
+                    pod_namespace(pod) for pod in running_pending_pods
+                }
+                monitored_api_namespaces = namespaces_from_namespacenames(
+                    api_server.namespaces(),
+                    monitored_namespace_names.intersection(namespacenames_running_pending_pods),
+                )
                 write_namespaces_api_sections(
                     arguments.cluster,
                     arguments.annotation_key_pattern,
-                    namespaces_from_monitored_namespacenames(api_namespaces, monitored_namespaces),
+                    monitored_api_namespaces,
                     resource_quotas,
                     api_pods,
                     piggyback_formatter=functools.partial(piggyback_formatter, "namespace"),
@@ -2579,7 +2594,7 @@ def main(args: Optional[List[str]] = None) -> int:
                 write_daemon_sets_api_sections(
                     arguments.cluster,
                     arguments.annotation_key_pattern,
-                    kube_objects_from_namespaces(cluster.daemon_sets(), monitored_namespaces),
+                    kube_objects_from_namespaces(cluster.daemon_sets(), monitored_namespace_names),
                     piggyback_formatter=functools.partial(piggyback_formatter, "daemonset"),
                 )
 
@@ -2588,13 +2603,13 @@ def main(args: Optional[List[str]] = None) -> int:
                 write_statefulsets_api_sections(
                     arguments.cluster,
                     arguments.annotation_key_pattern,
-                    kube_objects_from_namespaces(cluster.statefulsets(), monitored_namespaces),
+                    kube_objects_from_namespaces(cluster.statefulsets(), monitored_namespace_names),
                     piggyback_formatter=functools.partial(piggyback_formatter, "statefulset"),
                 )
 
             monitored_pods: Set[PodLookupName] = {
                 pod_lookup_from_agent_pod(pod)
-                for pod in pods_from_namespaces(cluster.pods(), monitored_namespaces)
+                for pod in pods_from_namespaces(cluster.pods(), monitored_namespace_names)
             }
 
             if MonitoredObject.cronjobs_pods not in arguments.monitored_objects:
@@ -2724,13 +2739,13 @@ def main(args: Optional[List[str]] = None) -> int:
                         cluster=cluster,
                         monitored_pods=monitored_pods,
                         monitored_objects=arguments.monitored_objects,
-                        monitored_namespaces=monitored_namespaces,
+                        monitored_namespaces=monitored_namespace_names,
                         piggyback_formatter=piggyback_formatter,
                         piggyback_formatter_node=piggyback_formatter_node,
                     )
 
                     if MonitoredObject.namespaces in arguments.monitored_objects:
-                        for api_namespace in api_namespaces:
+                        for api_namespace in monitored_api_namespaces:
                             namespace_api_pods = filter_pods_by_phase(
                                 filter_pods_by_namespace(api_pods, namespace_name(api_namespace)),
                                 api.Phase.RUNNING,

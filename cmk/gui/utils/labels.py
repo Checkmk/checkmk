@@ -10,7 +10,7 @@ from typing import Dict, Iterable, List, Mapping, NamedTuple, Set, Tuple, TYPE_C
 
 from redis.client import Pipeline
 
-from livestatus import lqencode, quote_dict, SiteId
+from livestatus import LivestatusResponse, lqencode, quote_dict, SiteId
 
 from cmk.utils.redis import get_redis_client, IntegrityCheckResponse, query_redis
 from cmk.utils.type_defs import Labels as _Labels
@@ -32,6 +32,16 @@ class Label(NamedTuple):
 
 
 Labels = Iterable[Label]
+
+
+class _LivestatusLabelResponse(NamedTuple):
+    host_rows: LivestatusResponse
+    service_rows: LivestatusResponse
+
+
+class _MergedLabels(NamedTuple):
+    hosts: Dict[SiteId, Dict[str, str]]
+    services: Dict[SiteId, Dict[str, str]]
 
 
 def parse_labels_value(value: str) -> Labels:
@@ -161,76 +171,61 @@ class LabelsCache:
 
         return all_labels
 
-    def _livestatus_get_labels(
-        self, only_sites: List[SiteId]
-    ) -> Tuple[Mapping[SiteId, _Labels], Mapping[SiteId, _Labels]]:
+    def _livestatus_get_labels(self, only_sites: List[SiteId]) -> _MergedLabels:
+        # TODO: ueber den user_context müssen wir morgen noch sprechen
         """Get labels for all sites that need an update and the user is authorized for"""
-        return self._collect_labels_from_livestatus_rows(self._query_livestatus(only_sites))
+        return self._collect_labels_from_livestatus_labels(self._query_livestatus(only_sites))
 
     def _query_livestatus(
         self,
         only_sites: List[SiteId],
-    ) -> List[Tuple[SiteId, Dict[str, str], Dict[str, str]]]:
-        query: str = "GET services\n" "Cache: reload\n" "Columns: host_labels labels\n"
+    ) -> _LivestatusLabelResponse:
 
         with sites.prepend_site(), sites.only_sites(only_sites):
-            rows = [(x[0], x[1], x[2]) for x in sites.live(user).query(query)]
-
-        return rows
-
-    def _collect_labels_from_livestatus_rows(
-        self,
-        rows: List[Tuple[SiteId, Dict[str, str], Dict[str, str]]],
-    ) -> Tuple[Mapping[SiteId, _Labels], Mapping[SiteId, _Labels]]:
-        all_host_labels: Dict[SiteId, Dict[str, str]] = {}
-        all_service_labels: Dict[SiteId, Dict[str, str]] = {}
-        site_host_labels: Dict[str, Set[str]] = {}
-        site_service_labels: Dict[str, Set[str]] = {}
-        for site_id, host_labels, service_labels in rows:
-            if site_id not in all_host_labels:
-                site_host_labels = {}
-            all_site_host_labels = self._get_all_labels_from_row(
-                host_labels,
-                site_host_labels,
+            service_rows = sites.live().query(
+                "GET services\n" "Cache: reload\n" "Columns: labels\n"
             )
-            all_host_labels.setdefault(site_id, {}).update(
-                self._serialize_labels(all_site_host_labels)
-            )
+            host_rows = sites.live().query("GET hosts\n" "Cache: reload\n" "Columns: labels\n")
 
-            if site_id not in all_service_labels:
-                site_service_labels = {}
+        return _LivestatusLabelResponse(host_rows, service_rows)
 
-            all_site_service_labels = self._get_all_labels_from_row(
-                service_labels,
-                site_service_labels,
-            )
-            all_service_labels.setdefault(site_id, {}).update(
-                self._serialize_labels(all_site_service_labels)
-            )
+    def _collect_labels_from_livestatus_labels(
+        self, livestatus_labels: _LivestatusLabelResponse
+    ) -> _MergedLabels:
+        all_sites_host_labels: Dict[SiteId, Dict[str, Set]] = {}
+        all_sites_service_labels: Dict[SiteId, Dict[str, Set]] = {}
 
-        return (all_host_labels, all_service_labels)
+        # Collect data from rows
+        for source_rows, target_dict in (
+            (livestatus_labels.host_rows, all_sites_host_labels),
+            (livestatus_labels.service_rows, all_sites_service_labels),
+        ):
+            for (site_id, labels) in source_rows:
+                site_labels = target_dict.setdefault(site_id, {})
+                for key, value in labels.items():
+                    site_labels.setdefault(key, set()).add(value)
 
-    def _get_all_labels_from_row(
-        self,
-        labels: Dict[str, str],
-        site_labels: Dict[str, Set[str]],
-    ) -> Dict[str, Set[str]]:
-        for key, value in labels.items():
-            if key not in site_labels:
-                site_labels[key] = set([value])
-                continue
+        # Convert label_values to a single str
+        merged_host_labels: Dict[SiteId, Dict[str, str]] = {}
+        merged_service_labels: Dict[SiteId, Dict[str, str]] = {}
+        for source_dict, target_merged_labels in (
+            (all_sites_host_labels, merged_host_labels),
+            (all_sites_service_labels, merged_service_labels),
+        ):
+            for site_id, values in source_dict.items():
+                site_dict = target_merged_labels.setdefault(site_id, {})
+                for key, value in values.items():
+                    site_dict[key] = repr(sorted(value))
 
-            site_labels[key].add(value)
-
-        return site_labels
+        return _MergedLabels(merged_host_labels, merged_service_labels)
 
     def _redis_update_labels(self, pipeline: Pipeline) -> None:
         """Set cache for all sites that need an update"""
-        host_labels, service_labels = self._livestatus_get_labels(list(self._sites_to_update))
+        merged_labels = self._livestatus_get_labels(list(self._sites_to_update))
 
         for labels, label_type in [
-            (host_labels, self._hst_label),
-            (service_labels, self._svc_label),
+            (merged_labels.hosts, self._hst_label),
+            (merged_labels.services, self._svc_label),
         ]:
             self._redis_delete_old_and_set_new(labels, label_type, pipeline)
 
@@ -296,9 +291,6 @@ class LabelsCache:
             return IntegrityCheckResponse.UPDATE
 
         return IntegrityCheckResponse.USE
-
-    def _serialize_labels(self, labels: Dict[str, Set[str]]) -> Dict[str, str]:
-        return {k: repr(sorted(v)) for k, v in labels.items()}
 
     def _deserialize_labels(self, labels: _Labels) -> list[tuple[str, str]]:
         all_labels = []

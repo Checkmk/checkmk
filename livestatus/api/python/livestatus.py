@@ -554,7 +554,13 @@ class SingleSiteConnection(Helpers):
     def do_query(self, query_obj: Query, add_headers: str = "") -> LivestatusResponse:
         query = self.build_query(query_obj, add_headers)
         self.send_query(query)
-        return self.recv_response(query, query_obj.suppress_exceptions)
+        try:
+            return self.parse_raw_response(
+                self.receive_raw_response(query, query_obj.suppress_exceptions)
+            )
+        except MKLivestatusQueryError:
+            self.disconnect()
+            raise
 
     def build_query(self, query_obj: Query, add_headers: str) -> str:
         query = str(query_obj)
@@ -598,12 +604,12 @@ class SingleSiteConnection(Helpers):
     # Reads a response from the livestatus socket. If the socket is closed
     # by the livestatus server, we automatically make a reconnect and send
     # the query again (once). This is due to timeouts during keepalive.
-    def recv_response(
+    def receive_raw_response(
         self,
         query: str,
         suppress_exceptions: Tuple[Type[Exception], ...],
         timeout_at: Optional[float] = None,
-    ) -> LivestatusResponse:
+    ) -> bytes:
         try:
             # Headers are always ASCII encoded
             resp = self.receive_data(16)
@@ -621,30 +627,19 @@ class SingleSiteConnection(Helpers):
             # in the socket. The liveproxyd (same system) has the complete data available
             # while the data from a standard connection can still take some time.
             # 30 seconds should be more than enough for the maximum telegram size of 100MB
-            data = self.receive_data(length, 30).decode("utf-8")
+            data = self.receive_data(length, 30)
 
             if code == "200":
-                try:
-                    if self._output_format == LivestatusOutputFormat.PYTHON:
-                        return ast.literal_eval(data)
+                return data
 
-                    if self._output_format == LivestatusOutputFormat.JSON:
-                        return json.loads(data)
+            error_info = data.decode("utf-8")
+            if code == "404":
+                raise MKLivestatusTableNotFoundError("Not Found (%s): %r" % (code, error_info))
 
-                    raise MKLivestatusQueryError("Unknown OutputFormat %r" % self._output_format)
+            if code == "502":
+                raise MKLivestatusBadGatewayError(error_info)
 
-                except (ValueError, SyntaxError):
-                    self.disconnect()
-                    raise MKLivestatusSocketError("Malformed output")
-
-            elif code == "404":
-                raise MKLivestatusTableNotFoundError("Not Found (%s): %s" % (code, data.strip()))
-
-            elif code == "502":
-                raise MKLivestatusBadGatewayError(data.strip())
-
-            else:
-                raise MKLivestatusQueryError("%s: %s" % (code, data.strip()))
+            raise MKLivestatusQueryError("%s: %s" % (code, error_info))
 
         except (MKLivestatusSocketClosed, IOError) as e:
             # In case of an IO error or the other side having
@@ -671,7 +666,7 @@ class SingleSiteConnection(Helpers):
                 self.connect()
                 self.send_query(query)
                 # do not send query again -> danger of infinite loop
-                return self.recv_response(query, suppress_exceptions, timeout_at)
+                return self.receive_raw_response(query, suppress_exceptions, timeout_at)
             raise MKLivestatusSocketError(str(e))
 
         except suppress_exceptions:
@@ -683,6 +678,19 @@ class SingleSiteConnection(Helpers):
             # MKLivestatusSocketError
             # FIXME: ? self.disconnect()
             raise MKLivestatusSocketError("Unhandled exception: %s" % e)
+
+    def parse_raw_response(self, raw_response: bytes) -> LivestatusResponse:
+        data = raw_response.decode("utf-8")
+        try:
+            if self._output_format == LivestatusOutputFormat.PYTHON:
+                return ast.literal_eval(data)
+
+            if self._output_format == LivestatusOutputFormat.JSON:
+                return json.loads(data)
+
+            raise MKLivestatusQueryError("Unknown OutputFormat %r" % self._output_format)
+        except (ValueError, SyntaxError):
+            raise MKLivestatusQueryError("Malformed raw response output")
 
     def set_prepend_site(self, p: bool) -> None:
         self.prepend_site = p
@@ -1073,7 +1081,9 @@ class MultiSiteConnection(Helpers):
         for sitename, site, connection in connect_to_sites:
             try:
                 str_query = connection.build_query(query, add_headers + limit_header)
-                r = connection.recv_response(str_query, query.suppress_exceptions)
+                r = connection.parse_raw_response(
+                    connection.receive_raw_response(str_query, query.suppress_exceptions)
+                )
                 stillalive.append((sitename, site, connection))
                 if self.prepend_site:
                     for row in r:

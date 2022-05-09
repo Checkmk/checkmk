@@ -9,7 +9,7 @@
 
 # Disable unused variable error (needed to keep track of version)
 # shellcheck disable=SC2034
-CMK_VERSION="2.1.0b8"
+CMK_VERSION="2.1.0b9"
 
 INSTANCES=$(ps -ef | grep db2sysc | awk '{print $1}' | sort -u | grep -v root)
 

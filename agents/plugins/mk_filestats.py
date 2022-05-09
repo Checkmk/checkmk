@@ -87,7 +87,7 @@ You should find an example configuration file at
 '../cfg_examples/filestats.cfg' relative to this file.
 """
 
-__version__ = "2.1.0b8"
+__version__ = "2.1.0b9"
 
 # this file has to work with both Python 2 and 3
 # pylint: disable=super-with-arguments

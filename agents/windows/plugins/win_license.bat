@@ -1,5 +1,5 @@
 @echo off
-set CMK_VERSION="2.1.0b8"
+set CMK_VERSION="2.1.0b9"
 REM ***
 REM * plugin to gather and output Windows activation status
 REM ***

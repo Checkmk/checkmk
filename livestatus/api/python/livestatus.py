@@ -20,11 +20,13 @@ from typing import (
     Any,
     AnyStr,
     Dict,
+    Iterator,
     List,
     NamedTuple,
     NewType,
     Optional,
     Pattern,
+    Sequence,
     Set,
     Tuple,
     Type,
@@ -290,6 +292,16 @@ class Helpers:
         return [sum(column) for column in zip(*data)]
 
 
+class QuerySpecification(NamedTuple):
+    table: str
+    columns: Sequence[LivestatusColumn]
+    headers: str
+
+    def __str__(self) -> str:
+        # TODO: later commit
+        pass
+
+
 # TODO: Add more functionality to the Query class:
 # - set_prepend_site
 # - set_only_sites
@@ -307,20 +319,22 @@ class Query:
 
     def __init__(
         self,
-        query: Union[str, bytes],
+        query: Union[str, bytes, QuerySpecification],
         suppress_exceptions: Optional[Tuple[Type[Exception], ...]] = None,
     ) -> None:
-        super().__init__()
-
-        self._query = _ensure_unicode(query)
-
+        self._query = query
         if suppress_exceptions is None:
             self.suppress_exceptions = self.default_suppressed_exceptions
         else:
             self.suppress_exceptions = suppress_exceptions
 
     def __str__(self) -> str:
-        return self._query
+        if isinstance(self._query, QuerySpecification):
+            return str(self._query)
+        return _ensure_unicode(self._query)
+
+    def supports_json_format(self) -> bool:
+        return False
 
 
 QueryTypes = Union[str, bytes, Query]
@@ -565,15 +579,16 @@ class SingleSiteConnection(Helpers):
         return data.getvalue()
 
     def do_query(self, query_obj: Query, add_headers: str = "") -> LivestatusResponse:
-        query = self.build_query(query_obj, add_headers)
-        self.send_query(query)
-        try:
-            return self.parse_raw_response(
-                self.receive_raw_response(query, query_obj.suppress_exceptions)
-            )
-        except MKLivestatusQueryError:
-            self.disconnect()
-            raise
+        with _livestatus_output_format_switcher(query_obj, self):
+            query = self.build_query(query_obj, add_headers)
+            self.send_query(query)
+            try:
+                return self.parse_raw_response(
+                    self.receive_raw_response(query, query_obj.suppress_exceptions)
+                )
+            except MKLivestatusQueryError:
+                self.disconnect()
+                raise
 
     def build_query(self, query_obj: Query, add_headers: str) -> str:
         query = str(query_obj)
@@ -721,7 +736,6 @@ class SingleSiteConnection(Helpers):
         self.limit = limit
 
     def query(self, query: "QueryTypes", add_headers: Union[str, bytes] = "") -> LivestatusResponse:
-
         # Normalize argument types
         normalized_add_headers = _ensure_unicode(add_headers)
         normalized_query = Query(query) if not isinstance(query, Query) else query
@@ -1025,14 +1039,14 @@ class MultiSiteConnection(Helpers):
             connected_site.connection.set_auth_domain(domain)
 
     def query(self, query: "QueryTypes", add_headers: Union[str, bytes] = "") -> LivestatusResponse:
-
         # Normalize argument types
         normalized_add_headers = _ensure_unicode(add_headers)
         normalized_query = Query(query) if not isinstance(query, Query) else query
 
-        if self.parallelize:
-            return self.query_parallel(normalized_query, normalized_add_headers)
-        return self.query_non_parallel(normalized_query, normalized_add_headers)
+        with _livestatus_output_format_switcher(normalized_query, self):
+            if self.parallelize:
+                return self.query_parallel(normalized_query, normalized_add_headers)
+            return self.query_non_parallel(normalized_query, normalized_add_headers)
 
     def query_non_parallel(self, query: Query, add_headers: str = "") -> LivestatusResponse:
         result = LivestatusResponse([])
@@ -1101,7 +1115,6 @@ class MultiSiteConnection(Helpers):
         site_responses: List[Tuple[ConnectedSite, bytes]] = []
         for connected_site in connect_to_sites:
             try:
-                str_query = connected_site.connection.build_query(query, add_headers + limit_header)
                 site_responses.append(
                     (
                         connected_site,
@@ -1175,6 +1188,19 @@ class MultiSiteConnection(Helpers):
             if this_site_id == site_id:
                 return connection
         raise KeyError("Connection does not exist")
+
+
+@contextlib.contextmanager
+def _livestatus_output_format_switcher(
+    query: Query, connection: Union[MultiSiteConnection, SingleSiteConnection]
+) -> Iterator[None]:
+    previous_format = connection.get_output_format()
+    try:
+        if query.supports_json_format():
+            connection.set_output_format(LivestatusOutputFormat.JSON)
+        yield
+    finally:
+        connection.set_output_format(previous_format)
 
 
 # .

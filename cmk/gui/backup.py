@@ -582,17 +582,18 @@ class Jobs(BackupEntityCollection):
 
 
 class PageBackup:
-    def title(self):
+    def title(self) -> str:
         raise NotImplementedError()
 
     def jobs(self):
         raise NotImplementedError()
 
-    def keys(self):
+    def home_button(self) -> None:
         raise NotImplementedError()
 
-    def home_button(self):
-        raise NotImplementedError()
+    def __init__(self, key_store: key_mgmt.KeypairStore) -> None:
+        super().__init__()
+        self.key_store = key_store
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         if not self._may_edit_config():
@@ -702,13 +703,14 @@ class PageBackup:
         flash(_("The backup has been stopped."))
 
     def page(self):
-        show_key_download_warning(self.keys().load())
+        show_key_download_warning(self.key_store.load())
         self.jobs().show_list(editable=self._may_edit_config())
 
 
 class PageEditBackupJob:
-    def __init__(self) -> None:
+    def __init__(self, key_store: key_mgmt.KeypairStore) -> None:
         super().__init__()
+        self.key_store = key_store
         job_ident = request.var("job")
 
         if job_ident is not None:
@@ -734,9 +736,6 @@ class PageEditBackupJob:
         raise NotImplementedError()
 
     def targets(self):
-        raise NotImplementedError()
-
-    def keys(self):
         raise NotImplementedError()
 
     def title(self):
@@ -892,7 +891,7 @@ class PageEditBackupJob:
             raise MKUserError(varprefix, _("This ID is already used by another backup job."))
 
     def backup_key_choices(self):
-        return self.keys().choices()
+        return self.key_store.choices()
 
     def backup_target_choices(self):
         return sorted(self.targets().choices(), key=lambda x_y1: x_y1[1].title())
@@ -1637,7 +1636,7 @@ class PageBackupKeyManagement(key_mgmt.PageKeyManagement):
         return _("Keys for backups")
 
     def page(self) -> None:
-        show_key_download_warning(self.keys)
+        show_key_download_warning(self.key_store.load())
         super().page()
 
     def _key_in_use(self, key_id: int, key: key_mgmt.Key) -> bool:
@@ -1710,7 +1709,7 @@ class PageBackupDownloadKey(key_mgmt.PageDownloadKey):
         super()._send_download(keys, key_id)
         if "not_downloaded" in keys[key_id]:
             del keys[key_id]["not_downloaded"]
-        self.save(keys)
+        self.key_store.save(keys)
 
     def _file_name(self, key_id, key):
         raise NotImplementedError()
@@ -1775,12 +1774,10 @@ class RestoreJob(MKBackupJob):
 
 
 class PageBackupRestore:
-    def __init__(self) -> None:
-        self._load_target()
+    def __init__(self, key_store: key_mgmt.KeypairStore) -> None:
         super().__init__()
-
-    def keys(self):
-        raise NotImplementedError()
+        self.key_store = key_store
+        self._load_target()
 
     def _load_target(self):
         ident = request.var("target")
@@ -1917,7 +1914,7 @@ class PageBackupRestore:
         key_digest = backup_info["config"]["encrypt"]
 
         try:
-            _key_id, key = self.keys().get_key_by_digest(key_digest)
+            _key_id, key = self.key_store.get_key_by_digest(key_digest)
         except KeyError:
             raise MKUserError(
                 None,

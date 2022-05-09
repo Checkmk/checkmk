@@ -5,16 +5,22 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
+from pathlib import Path
+
+import pytest
 
 import cmk.gui.key_mgmt as key_mgmt
 from cmk.gui.logged_in import user
 
 
-def test_key_mgmt_create_key(request_context, monkeypatch):
+@pytest.mark.usefixtures("request_context")
+def test_key_mgmt_create_key(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     monkeypatch.setattr(user, "id", "dingdöng")
     monkeypatch.setattr(time, "time", lambda: 123)
 
-    key_dict = key_mgmt.PageEditKey()._generate_key("älias", "passphra$e")
+    key_dict = key_mgmt.PageEditKey(key_mgmt.KeypairStore(str(tmp_path), "test"))._generate_key(
+        "älias", "passphra$e"
+    )
     assert isinstance(key_dict, dict)
     assert sorted(key_dict.keys()) == ["alias", "certificate", "date", "owner", "private_key"]
     assert isinstance(key_dict["alias"], str)

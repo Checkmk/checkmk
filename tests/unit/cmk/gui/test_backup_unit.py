@@ -51,7 +51,7 @@ def test_backup_key_create_web() -> None:
 
     # Then test key existence
     test_mode = wato.ModeBackupEditKey()
-    keys = test_mode.load()
+    keys = test_mode.key_store.load()
     assert len(keys) == 1
 
     assert store_path.exists()

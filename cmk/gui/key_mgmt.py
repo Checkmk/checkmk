@@ -87,17 +87,11 @@ class PageKeyManagement:
     upload_mode = "upload_key"
     download_mode = "download_key"
 
-    def __init__(self) -> None:
-        self.keys = self.load()
+    def __init__(self, key_store: KeypairStore) -> None:
         super().__init__()
+        self.key_store = key_store
 
     def title(self) -> str:
-        raise NotImplementedError()
-
-    def load(self) -> dict[int, Key]:
-        raise NotImplementedError()
-
-    def save(self, keys: dict[int, Key]) -> None:
         raise NotImplementedError()
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
@@ -148,20 +142,22 @@ class PageKeyManagement:
             if key_id_as_str is None:
                 raise Exception("cannot happen")
             key_id = int(key_id_as_str)
-            if key_id not in self.keys:
+            keys = self.key_store.load()
+            if key_id not in keys:
                 return None
 
-            key = self.keys[key_id]
+            key = keys[key_id]
 
             if self._key_in_use(key_id, key):
                 raise MKUserError("", _("This key is still used."))
 
-            self.delete(key_id)
-            self.save(self.keys)
+            del keys[key_id]
+            self._log_delete_action(key_id, key)
+            self.key_store.save(keys)
         return None
 
-    def delete(self, key_id: int) -> None:
-        del self.keys[key_id]
+    def _log_delete_action(self, key_id: int, key: Key) -> None:
+        pass
 
     def _delete_confirm_msg(self) -> str:
         raise NotImplementedError()
@@ -175,7 +171,7 @@ class PageKeyManagement:
     def page(self) -> None:
         with table_element(title=self._table_title(), searchable=False, sortable=False) as table:
 
-            for key_id, key in sorted(self.keys.items()):
+            for key_id, key in sorted(self.key_store.load().items()):
                 cert = crypto.load_certificate(crypto.FILETYPE_PEM, key["certificate"])
 
                 table.row()
@@ -207,14 +203,9 @@ class PageKeyManagement:
 class PageEditKey:
     back_mode: str
 
-    def __init__(self) -> None:
-        self._minlen: Optional[int] = None
-
-    def load(self) -> dict[int, Key]:
-        raise NotImplementedError()
-
-    def save(self, keys: dict[int, Key]) -> None:
-        raise NotImplementedError()
+    def __init__(self, key_store: KeypairStore, passphrase_min_len: Optional[int] = None) -> None:
+        self._minlen = passphrase_min_len
+        self.key_store = key_store
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(
@@ -242,14 +233,14 @@ class PageEditKey:
         return None
 
     def _create_key(self, alias: str, passphrase: str) -> None:
-        keys = self.load()
+        keys = self.key_store.load()
 
         new_id = 1
         for key_id in keys:
             new_id = max(new_id, key_id + 1)
 
         keys[new_id] = self._generate_key(alias, passphrase)
-        self.save(keys)
+        self.key_store.save(keys)
 
     def _generate_key(self, alias: str, passphrase: str) -> Key:
         pkey = crypto.PKey()
@@ -309,11 +300,9 @@ class PageEditKey:
 class PageUploadKey:
     back_mode: str
 
-    def load(self) -> dict[int, Key]:
-        raise NotImplementedError()
-
-    def save(self, keys: dict[int, Key]) -> None:
-        raise NotImplementedError()
+    def __init__(self, key_store: KeypairStore) -> None:
+        super().__init__()
+        self.key_store = key_store
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(
@@ -361,7 +350,7 @@ class PageUploadKey:
         return cert_spec[1]
 
     def _upload_key(self, key_file: str, alias: str, passphrase: str) -> None:
-        keys = self.load()
+        keys = self.key_store.load()
 
         new_id = 1
         for key_id in keys:
@@ -405,7 +394,7 @@ class PageUploadKey:
         }
 
         keys[new_id] = key
-        self.save(keys)
+        self.key_store.save(keys)
 
     def page(self) -> None:
         html.begin_form("key", method="POST")
@@ -458,11 +447,9 @@ class PageUploadKey:
 class PageDownloadKey:
     back_mode: str
 
-    def load(self) -> dict[int, Key]:
-        raise NotImplementedError()
-
-    def save(self, keys: dict[int, Key]) -> None:
-        raise NotImplementedError()
+    def __init__(self, key_store: KeypairStore) -> None:
+        super().__init__()
+        self.key_store = key_store
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(
@@ -471,7 +458,7 @@ class PageDownloadKey:
 
     def action(self) -> ActionResult:
         if transactions.check_transaction():
-            keys = self.load()
+            keys = self.key_store.load()
 
             try:
                 key_id_str = request.var("key")

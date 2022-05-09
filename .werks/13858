@@ -1,0 +1,23 @@
+Title: Fix crash of windows updates check
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1652098212
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0i1
+
+Previously, the Windows updates check crashed if, for 
+some reason, windows updates service had been disabled. 
+In this special case the windows_updates.vbs plugin 
+sent specially formatted output which the check could 
+not correctly process. 
+
+Since this release, windows updates correctly process 
+any output from windows_updates.vbs plugin and reports 
+the error if it was presented thus eliminating the 
+problem.
+
+CMK-10402

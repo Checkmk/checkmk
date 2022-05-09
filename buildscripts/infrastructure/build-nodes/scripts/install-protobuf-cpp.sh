@@ -15,7 +15,7 @@ DIR_NAME=protobuf-${PROTOBUF_VERSION}
 ARCHIVE_NAME=${PACKAGE_NAME}-${PROTOBUF_VERSION}.tar.gz
 
 # Increase this to enforce a recreation of the build cache
-BUILD_ID=1
+BUILD_ID=2
 
 INSTALL_PREFIX=
 TARGET_DIR=/opt

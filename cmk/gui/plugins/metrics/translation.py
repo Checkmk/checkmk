@@ -466,6 +466,10 @@ check_metrics["check_mk-storeonce4x_cat_stores"] = df_translation
 check_metrics["check_mk-numble_volumes"] = df_translation
 check_metrics["check_mk-zpool"] = df_translation
 check_metrics["check_mk-vnx_quotas"] = df_translation
+###########################################################################
+# NOTE: k8s_stats_fs is deprecated and will be
+#       removed in Checkmk version 2.2.
+###########################################################################
 check_metrics["check_mk-k8s_stats_fs"] = df_translation
 check_metrics["check_mk-sap_hana_diskusage"] = df_translation
 check_metrics["check_mk-fjdarye200_pools"] = df_translation
@@ -545,6 +549,10 @@ check_metrics["check_mk-hitachi_hnas_fc_if"] = if_translation
 check_metrics["check_mk-hpux_if"] = if_translation
 check_metrics["check_mk-huawei_osn_if"] = if_translation
 check_metrics["check_mk-if64"] = if_translation
+###########################################################################
+# NOTE: k8s_stats_network is deprecated and will be
+#       removed in Checkmk version 2.2.
+###########################################################################
 check_metrics["check_mk-k8s_stats_network"] = if_translation
 check_metrics["check_mk-lnx_if"] = if_translation
 check_metrics["check_mk-mcdata_fcport"] = if_translation

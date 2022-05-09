@@ -114,6 +114,10 @@ inventory_displayhints.update({
     ".hardware.system.manufacturer": {"title": _l("Manufacturer")},
 
     # Legacy ones. Kept to not break existing views - DON'T use these values for new plugins
+    ###############################################################################################
+    # NOTE: The path ".software.applications.kubernetes" and all subpaths are deprecated and will be
+    #       removed in Checkmk version 2.2.
+    ###############################################################################################
     ".software.applications.kubernetes.roles:": {
         "title": _l("Roles"),
         "keyorder": ["role", "namespace"],

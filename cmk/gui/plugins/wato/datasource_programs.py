@@ -565,6 +565,10 @@ rulespec_registry.register(
 )
 
 
+###########################################################################
+# NOTE: _transform_kubernetes_connection_params is deprecated and will be
+#       removed in Checkmk version 2.2.
+###########################################################################
 def _transform_kubernetes_connection_params(value):
     """Check_mk version 2.0: rework input of connection paramters to improve intuitive use.
     Note that keys are removed from the parameters dictionary!
@@ -650,6 +654,10 @@ def _filter_kubernetes_namespace_element():
     )
 
 
+###########################################################################
+# NOTE: _valuespec_special_agents_kubernetes is deprecated and will be
+#       removed in Checkmk version 2.2.
+###########################################################################
 def _valuespec_special_agents_kubernetes():
     return Transform(
         Dictionary(
@@ -761,6 +769,10 @@ def _valuespec_special_agents_kubernetes():
     )
 
 
+###########################################################################
+# NOTE: special_agents:kubernetes is deprecated and will be
+#       removed in Checkmk version 2.2.
+###########################################################################
 rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupVMCloudContainer,

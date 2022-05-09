@@ -1,0 +1,16 @@
+Title: KUBE agent_kube: namespace filtering and monitoring
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1652079452
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+The memory and CPU resources checks depend on the section from the Kubernetes API
+and optionally on the section from the cluster collector. For some namespace hosts,
+only the latter was available which led to a crash. This werk fixes this behavior
+and omits the cluster collector section if the API section is not available.
+Furthermore, this werk restricts hosts creation to namespaces that have at least
+one running or pending pod.

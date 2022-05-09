@@ -39,7 +39,6 @@ from .utils_inventory import sort_inventory_result
                         "arch": "x86_64",
                         "package_type": "deb",
                         "summary": "summary",
-                        "package_version": "v5",
                     },
                     status_columns={},
                 ),

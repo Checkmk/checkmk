@@ -38,7 +38,7 @@ TEST(AgentController, BuildCommandLine) {
                                          "  port: {}\n",
                                          port)));
     EXPECT_EQ(wtools::ToUtf8(ac::BuildCommandLine(fs::path("x"))),
-              fmt::format("x daemon -P {} --agent-channel {} -vv", port,
+              fmt::format("x daemon --agent-channel {} -vv",
                           cfg::defaults::kControllerAgentChannelDefault));
 }
 
@@ -136,9 +136,9 @@ TEST(AgentController, BuildCommandLineAgentChannelOk) {
                                              "    run: yes\n"
                                              "    agent_channel: {}\n",
                                              std::get<0>(e))));
-        EXPECT_EQ(wtools::ToUtf8(ac::BuildCommandLine(fs::path("x"))),
-                  fmt::format("x daemon -P {} --agent-channel {} -vv",
-                              cfg::kMainPort, std::get<2>(e)));
+        EXPECT_EQ(
+            wtools::ToUtf8(ac::BuildCommandLine(fs::path("x"))),
+            fmt::format("x daemon --agent-channel {} -vv", std::get<2>(e)));
         EXPECT_EQ(GetConfiguredAgentChannelPort(), std::get<1>(e));
     }
 }
@@ -152,10 +152,9 @@ TEST(AgentController, BuildCommandLineAgentChannelMalformed) {
                                          "  controller:\n"
                                          "    run: yes\n"
                                          "    agent_channel: ll\n")));
-    EXPECT_EQ(
-        wtools::ToUtf8(ac::BuildCommandLine(fs::path("x"))),
-        fmt::format("x daemon -P {} --agent-channel {} -vv", cfg::kMainPort,
-                    cfg::defaults::kControllerAgentChannelDefault));
+    EXPECT_EQ(wtools::ToUtf8(ac::BuildCommandLine(fs::path("x"))),
+              fmt::format("x daemon --agent-channel {} -vv",
+                          cfg::defaults::kControllerAgentChannelDefault));
     EXPECT_EQ(GetConfiguredAgentChannelPort(), kWindowsInternalPort);
 }
 
@@ -167,10 +166,9 @@ TEST(AgentController, BuildCommandLineAllowed) {
                                          "  only_from: {}\n"
                                          "  port: {}\n",
                                          allowed, port)));
-    EXPECT_EQ(
-        wtools::ToUtf8(ac::BuildCommandLine(fs::path("x"))),
-        fmt::format("x daemon -P {} --agent-channel {} -A {} -vv", port,
-                    cfg::defaults::kControllerAgentChannelDefault, allowed));
+    EXPECT_EQ(wtools::ToUtf8(ac::BuildCommandLine(fs::path("x"))),
+              fmt::format("x daemon --agent-channel {} -vv",
+                          cfg::defaults::kControllerAgentChannelDefault));
 }
 
 TEST(AgentController, LegacyMode) {

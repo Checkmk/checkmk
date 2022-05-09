@@ -180,7 +180,7 @@ bool CreateTomlConfig(const fs::path &toml_file) {
     if (!only_from.empty()) {
         allowed_ip = "allowed_ip = ["s;
         for (const auto &a : only_from) {
-            allowed_ip += a + ",\n ";
+            allowed_ip += "\"" + a + "\"" + ",\n ";
         }
         allowed_ip.pop_back();
         allowed_ip.pop_back();
@@ -212,12 +212,11 @@ std::wstring BuildCommandLine(const fs::path &controller) {
     }
 
     return controller.wstring() +
-           wtools::ConvertToUTF16(fmt::format(" {} {} {} {} {}{} -vv",  //
-                                              kCmdLineAsDaemon,    // daemon
-                                              kCmdLinePort, port,  // -P 6556
+           wtools::ConvertToUTF16(fmt::format(" {} {} {} -vv",   //
+                                              kCmdLineAsDaemon,  // daemon
                                               kCmdLineChannel,
-                                              agent_channel,  // --channel 50001
-                                              allowed_ip));   // -A ip ip ip ip
+                                              agent_channel  // --channel 50001
+                                              ));
 }
 
 std::optional<uint32_t> StartAgentController(const fs::path &service) {

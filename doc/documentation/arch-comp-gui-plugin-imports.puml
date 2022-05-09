@@ -1,0 +1,62 @@
+@startuml
+start
+:mod_wsgi imports index.wsgi;
+
+partition "Builtin and local main_modules" {
+    :import cmk.gui.plugins.main_modules;
+    :import cmk.gui.cee.plugins.main_modules;
+    :import cmk.gui.cme.plugins.main_modules;
+
+    while (main_modules to be loaded?)
+        :import cmk.gui.[main_module];
+    endwhile
+}
+
+partition "Local main_modules" {
+    note right
+        Legacy but still needed for user plugins.
+        Can be replacedd one we define the new plugin
+        API. Should happen in 2.2.
+    end note
+    :call modules.load_plugins;
+    :call _import_local_main_modules;
+    :call load_web_plugins("pages");
+    while (legacy main_modules to be loaded?)
+        :execfile loacal/share/check_mk/web/[main_module].py;
+    endwhile
+}
+
+partition "Builtin and local plugins" {
+    :call _import_main_module_plugins;
+    while (Loop all [main_module])
+        :import cmk.gui.plugins.[main_module];
+        :import cmk.gui.cee.plugins.[main_module];
+        :import cmk.gui.cme.plugins.[main_module];
+    endwhile
+}
+
+partition "Call builtin and local 'load_plugins' hooks" {
+    :call _call_load_plugins_hooks;
+    while (Loop all [main_module])
+        :call [main_module].load_plugins;
+
+        partition "Local main_module plugins" {
+            note right
+                Legacy but still needed for user plugins.
+                Can be replacedd one we define the new plugin
+                API. Should happen in 2.2.
+            end note
+
+            if (is local [main_module]?) then (yes)
+                :call load_web_plugins([main_module]);
+                while (iterate all local plugins)
+                    :execfile local/share/check_mk/web/plugins/[main_module]/[plugin].py;
+                endwhile
+            else (no)
+            endif
+        }
+    endwhile    
+}
+
+stop
+@enduml

@@ -336,6 +336,7 @@ def replace_macros(pattern: T, macros: MacroMapping) -> T:
         return replace_macros_in_list(pattern, macros)
     if isinstance(pattern, dict):
         return replace_macros_in_dict(pattern, macros)
+    return None
 
 
 def replace_macros_in_list(elements: List[str], macros: MacroMapping) -> List[str]:

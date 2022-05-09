@@ -57,6 +57,7 @@ class FakeLambdaClient:
             return PaginatorListFunctions()
         if operation_name == "list_provisioned_concurrency_configs":
             return PaginatorProvisionedConcurrencyConfigs()
+        return None
 
     def list_tags(self, Resource: str) -> Mapping[str, Any]:
         tags: Mapping[str, Any] = {}

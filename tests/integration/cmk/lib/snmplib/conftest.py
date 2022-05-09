@@ -214,6 +214,7 @@ def backend_fixture(request, snmp_data_dir):
 
     # Restore global variable.
     cmk.utils.paths.snmpwalks_dir = snmpwalks_dir
+    return None
 
 
 @pytest.fixture(autouse=True)

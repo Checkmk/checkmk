@@ -19,7 +19,7 @@ def check_fortigate_sessions(item, params, info):
     try:
         return fortigate_sessions(int(info[0][0]), params)
     except (IndexError, ValueError):
-        return
+        return None
 
 
 check_info["fortigate_sessions"] = {

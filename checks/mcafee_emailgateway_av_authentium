@@ -12,6 +12,7 @@ from cmk.base.check_legacy_includes.mcafee_gateway import *  # pylint: disable=w
 def inventory_mcafee_emailgateway_av_authentium(info):
     if info[0][0] == "1":
         return [(None, {})]
+    return []
 
 
 def check_mcafee_emailgateway_av_authentium(item, params, info):

@@ -69,6 +69,7 @@ class PathPrefixAction(argparse.Action):
             return ""
         path_prefix = "/" + values.strip("/")
         setattr(namespace, self.dest, path_prefix)
+        return None
 
 
 def parse_arguments(args: List[str]) -> argparse.Namespace:

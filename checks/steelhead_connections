@@ -8,6 +8,7 @@
 def inventory_steelhead_connections(info):
     if len(info) >= 7:
         return [(None, {})]
+    return []
 
 
 def check_steelhead_connections(item, params, info):

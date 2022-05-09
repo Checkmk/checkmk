@@ -233,6 +233,7 @@ class BIRuleSchemaConverter:
                     "action"
                 ],
             }
+        return None
 
 
 class BIAggregationSchemaConverter:
@@ -510,6 +511,7 @@ class BIManagement:
                 spec,
                 service,
             ) + self._convert_node_to_bi(node[1][3])
+        return None
 
     def _convert_aggregation_from_bi(self, aggr, single_host):
         if isinstance(aggr[0], dict):

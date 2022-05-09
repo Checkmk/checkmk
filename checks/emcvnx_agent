@@ -17,6 +17,7 @@ def inventory_emcvnx_agent(parsed):
     output, _errors = parsed
     if output:
         return [(None, None)]
+    return []
 
 
 def check_emcvnx_agent(item, _no_params, parsed):

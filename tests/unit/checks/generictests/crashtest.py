@@ -122,7 +122,7 @@ class CrashDataset(WritableDataset):
         for line in traceback[::-1]:
             if "share/check_mk/checks/" in line[0]:
                 return line[0].split("share/check_mk/checks/")[-1]
-        return
+        return None
 
     def __repr__(self):
         return "CrashDataset(checkname=%r, id=%r)" % (self.checkname, self.crash_id)

@@ -73,6 +73,7 @@ def check_hp_proliant_raid(item, _no_params, parsed):
             infotext += "Rebuild: %s%%" % data["rebuild_perc"]
 
         return state, infotext
+    return None
 
 
 check_info["hp_proliant_raid"] = {

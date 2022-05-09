@@ -20,6 +20,7 @@ def inventory_netapp_api_cluster(info):
     # non_ha is standalone
     if data.get("current-mode", "").lower() != "non_ha" and data.get("partner") is not None:
         return [(data.get("partner"), {"state": data.get("state", "").lower()})]
+    return []
 
 
 # Cluster states according to docu:

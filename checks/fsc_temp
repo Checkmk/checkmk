@@ -36,6 +36,7 @@ def check_fsc_temp(item, params, info):
             return check_temperature(
                 temp, params, "fsc_temp_%s" % item, dev_levels=(int(warn), int(crit))
             )
+    return None
 
 
 check_info["fsc_temp"] = {

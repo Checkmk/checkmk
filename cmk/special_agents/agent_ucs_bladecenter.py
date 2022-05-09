@@ -444,6 +444,7 @@ class Server:
         attribute_data = xml_object.attrib.get(attribute_lower)
         if attribute_data:
             return attribute_data
+        return None
 
     def _get_class_data(self, class_id):
         """

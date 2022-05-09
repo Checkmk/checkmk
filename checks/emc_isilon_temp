@@ -20,6 +20,7 @@ def check_isilon_temp(item, params, info):
     for sensor_name, value in info:
         if item == isilon_temp_item_name(sensor_name):
             return check_temperature(float(value), params, "isilon_%s" % item)
+    return None
 
 
 # Expected sensor names:

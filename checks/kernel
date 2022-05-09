@@ -86,6 +86,7 @@ def inventory_kernel_performance(parsed):
         data = items.get(name)
         if data is not None and len(data) > 0:
             return [(None, {})]
+    return []
 
 
 def check_kernel_performance(_no_item, params, parsed):

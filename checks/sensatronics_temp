@@ -21,6 +21,7 @@ def check_sensatronics_temp(item, params, info):
     for line in info:
         if line[0] == item:
             return check_temperature(float(line[1]), params, "sensatronics_temp_%s" % item)
+    return None
 
 
 check_info["sensatronics_temp"] = {

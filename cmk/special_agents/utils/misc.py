@@ -93,6 +93,7 @@ USAGE: agent_%s --section_url [{section_name},{url}]
                     print(line)
         else:
             return content
+        return None
 
 
 def datetime_serializer(obj):

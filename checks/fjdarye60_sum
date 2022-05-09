@@ -17,6 +17,7 @@ def check_fjdarye60_sum(index, _no_param, info):
             status = int(line[1])
             text = "Status is %s" % fjdarye60_sum_status[status]
             return (0 if status == 3 else 1 if status == 4 else 2, text)
+    return None
 
 
 # 1: fjdaryUnitStatus

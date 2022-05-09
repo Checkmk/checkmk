@@ -11,11 +11,23 @@ from .agent_based_api.v1 import check_levels, register, render, Result, Service,
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 
+# todo(sk): Replace this ugly named tuple with dataclass
 class Section(NamedTuple):
     reboot_required: bool
     important_updates: Sequence[str]
     optional_updates: Sequence[str]
     forced_reboot: Optional[float]
+    failed: Optional[str]
+
+
+def _failed_section(reason: str) -> Section:
+    return Section(
+        reboot_required=False,
+        important_updates=[],
+        optional_updates=[],
+        forced_reboot=None,
+        failed=reason,
+    )
 
 
 def parse_windows_updates(string_table: StringTable) -> Optional[Section]:
@@ -23,7 +35,7 @@ def parse_windows_updates(string_table: StringTable) -> Optional[Section]:
         return None
 
     if string_table[0][0] == "x":
-        raise RuntimeError(" ".join(string_table[1]))
+        return _failed_section(" ".join(string_table[1]))
 
     important_updates_count = int(string_table[0][1])
     optional_updates_count = int(string_table[0][2])
@@ -51,6 +63,7 @@ def parse_windows_updates(string_table: StringTable) -> Optional[Section]:
         important_updates=important,
         optional_updates=optional,
         forced_reboot=forced_reboot,
+        failed=None,
     )
 
 
@@ -59,12 +72,15 @@ register.agent_section(
     parse_function=parse_windows_updates,
 )
 
-
+# NOTE: section can't be renamed to _section due to creative logic
 def discover(section: Section) -> DiscoveryResult:
     yield Service()
 
 
 def check_windows_updates(params: Mapping[str, Any], section: Section) -> CheckResult:
+    if section.failed:
+        yield Result(state=State.CRIT, notice=f"({section.failed})")
+
     yield from check_levels(
         len(section.important_updates),
         metric_name="important",

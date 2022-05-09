@@ -939,7 +939,7 @@ def _convert_perf_data(p: Sequence[Union[None, str, float]]) -> str:
 
 
 def _convert_perf_value(x: Union[None, str, float]) -> str:
-    if isinstance(x, float):
+    if isinstance(x, (int, float)):
         return ("%.6f" % x).rstrip("0").rstrip(".")
     return str(x or "")
 

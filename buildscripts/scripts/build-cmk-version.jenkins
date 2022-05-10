@@ -73,10 +73,7 @@ timeout(time: 12, unit: 'HOURS') {
     node(NODE) {
         SOURCE_DIR = WORKSPACE + "/git"
 
-        stage('Prepare version directory') {
-            sh('rm -rf "${WORKSPACE}/versions/"*')
-            sh('mkdir -p "${WORKSPACE}/versions"')
-        }
+        cleanup_versions(WORKSPACE)
 
         stage('Checkout sources') {
             /// takes place as regular Jenkins user
@@ -209,6 +206,7 @@ timeout(time: 12, unit: 'HOURS') {
                             def DISTRO_DIR = WORKSPACE + "/git"
 
                             docker.image(DISTRO + ':' + DOCKER_TAG).inside(DOCKER_ARGS + " -v ${SOURCE_DIR}:${SOURCE_DIR}:ro --hostname ${DISTRO}") {
+                                cleanup_versions(WORKSPACE)
                                 initialize_workspace(DISTRO, SOURCE_DIR, DISTRO_DIR)
 
                                 withCredentials([usernamePassword(credentialsId: 'nexus', passwordVariable: 'NEXUS_PASSWORD', usernameVariable: 'NEXUS_USERNAME')]) {
@@ -264,6 +262,13 @@ timeout(time: 12, unit: 'HOURS') {
 //
 // FUNCTIONS
 //
+
+def cleanup_versions(WORKSPACE) {
+    stage('Prepare version directory') {
+        sh('rm -rf "' + WORKSPACE + '/versions/"*')
+        sh('mkdir -p "' + WORKSPACE + '/versions"')
+    }
+}
 
 def get_versions_dir(WORKSPACE, CMK_VERS) {
     return WORKSPACE + "/versions/" + CMK_VERS

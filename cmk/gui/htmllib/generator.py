@@ -168,16 +168,6 @@ class HTMLWriter:
     def label(self, content: HTMLContent, for_: str, **attrs: HTMLTagAttributeValue) -> None:
         self.write_html(HTMLWriter.render_label(content, for_, **attrs))
 
-    def render_input(self, name: Optional[str], type_: str, **attrs: HTMLTagAttributeValue) -> HTML:
-        if type_ == "submit":
-            self.form_has_submit_button = True
-        attrs["type_"] = type_
-        attrs["name"] = name
-        return render_start_tag("input", close_tag=True, **attrs)
-
-    def input(self, name: Optional[str], type_: str, **attrs: HTMLTagAttributeValue) -> None:
-        self.write_html(self.render_input(name, type_, **attrs))
-
     def li(self, content: HTMLContent, **attrs: HTMLTagAttributeValue) -> None:
         """Only for text content. You can't put HTML structure here."""
         self.write_html(render_element("li", content, **attrs))

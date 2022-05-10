@@ -1148,6 +1148,16 @@ class HTMLGenerator(HTMLWriter):
         self.close_div()
         self.close_div()
 
+    def render_input(self, name: Optional[str], type_: str, **attrs: HTMLTagAttributeValue) -> HTML:
+        if type_ == "submit":
+            self.form_has_submit_button = True
+        attrs["type_"] = type_
+        attrs["name"] = name
+        return render_start_tag("input", close_tag=True, **attrs)
+
+    def input(self, name: Optional[str], type_: str, **attrs: HTMLTagAttributeValue) -> None:
+        self.write_html(self.render_input(name, type_, **attrs))
+
     def icon(
         self,
         icon: Icon,

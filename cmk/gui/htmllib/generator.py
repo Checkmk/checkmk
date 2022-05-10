@@ -44,24 +44,6 @@ from .tag_rendering import (
     render_start_tag,
 )
 
-# .
-#   .--HTML Generator------------------------------------------------------.
-#   |                      _   _ _____ __  __ _                            |
-#   |                     | | | |_   _|  \/  | |                           |
-#   |                     | |_| | | | | |\/| | |                           |
-#   |                     |  _  | | | | |  | | |___                        |
-#   |                     |_| |_| |_| |_|  |_|_____|                       |
-#   |                                                                      |
-#   |             ____                           _                         |
-#   |            / ___| ___ _ __   ___ _ __ __ _| |_ ___  _ __             |
-#   |           | |  _ / _ \ '_ \ / _ \ '__/ _` | __/ _ \| '__|            |
-#   |           | |_| |  __/ | | |  __/ | | (_| | || (_) | |               |
-#   |            \____|\___|_| |_|\___|_|  \__,_|\__\___/|_|               |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   |  Generator which provides top level HTML writing functionality.      |
-#   '----------------------------------------------------------------------'
-
 
 class HTMLWriter:
     """Usage Notes:
@@ -98,9 +80,6 @@ class HTMLWriter:
       - All attributes will be escaped, i.e. the characters '&', '<', '>', '"' will be replaced by
         non HtML relevant signs '&amp;', '&lt;', '&gt;' and '&quot;'."""
 
-    #
-    # Showing / rendering
-    #
     def __init__(self, output_funnel: OutputFunnel):
         self.output_funnel = output_funnel
 
@@ -124,16 +103,6 @@ class HTMLWriter:
             raise MKGeneralException(_("Type Error: html.write accepts str input objects only!"))
 
         self.output_funnel.write(text.encode("utf-8"))
-
-    #
-    # HTML element methods
-    # If an argument is mandatory, it is used as default and it will overwrite an
-    # implicit argument (e.g. id_ will overwrite attrs["id"]).
-    #
-
-    #
-    # basic elements
-    #
 
     def meta(self, httpequiv: Optional[str] = None, **attrs: HTMLTagAttributeValue) -> None:
         if httpequiv:
@@ -165,10 +134,6 @@ class HTMLWriter:
     def link(self, *, rel: str, href: str, **attrs: HTMLTagAttributeValue) -> None:
         self.write_html(render_start_tag("link", rel=rel, href=href, close_tag=True, **attrs))
 
-    #
-    # Scripting
-    #
-
     @staticmethod
     def render_javascript(code: str) -> HTML:
         return HTML('<script type="text/javascript">\n%s\n</script>\n' % code)
@@ -195,10 +160,6 @@ class HTMLWriter:
     def play_sound(self, url: str) -> None:
         self.write_html(render_start_tag("audio autoplay", src_=url))
 
-    #
-    # form elements
-    #
-
     @staticmethod
     def render_label(content: HTMLContent, for_: str, **attrs: HTMLTagAttributeValue) -> HTML:
         attrs["for"] = for_
@@ -217,17 +178,9 @@ class HTMLWriter:
     def input(self, name: Optional[str], type_: str, **attrs: HTMLTagAttributeValue) -> None:
         self.write_html(self.render_input(name, type_, **attrs))
 
-    #
-    # table and list elements
-    #
-
     def li(self, content: HTMLContent, **attrs: HTMLTagAttributeValue) -> None:
         """Only for text content. You can't put HTML structure here."""
         self.write_html(render_element("li", content, **attrs))
-
-    #
-    # structural text elements
-    #
 
     @staticmethod
     def render_heading(content: HTMLContent) -> HTML:
@@ -259,10 +212,6 @@ class HTMLWriter:
 
     def nbsp(self) -> None:
         self.write_html(self.render_nbsp())
-
-    #
-    # Simple HTML object rendering without specific functionality
-    #
 
     def pre(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> None:
         self.write_html(render_element("pre", content, **kwargs))

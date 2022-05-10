@@ -58,18 +58,6 @@ from .tag_rendering import (
 
 HTMLMessageInput = Union[HTML, str]
 
-# .
-#   .--html----------------------------------------------------------------.
-#   |                        _     _             _                         |
-#   |                       | |__ | |_ _ __ ___ | |                        |
-#   |                       | '_ \| __| '_ ` _ \| |                        |
-#   |                       | | | | |_| | | | | | |                        |
-#   |                       |_| |_|\__|_| |_| |_|_|                        |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   | Caution! The class needs to be derived from Outputfunnel first!      |
-#   '----------------------------------------------------------------------'
-
 
 class HTMLGenerator(HTMLWriter):
     def __init__(
@@ -82,15 +70,9 @@ class HTMLGenerator(HTMLWriter):
         super().__init__(output_funnel)
 
         self._logger = log.logger.getChild("html")
-
-        # rendering state
         self._header_sent = False
-
-        # style options
         self._body_classes = ["main"]
         self._default_javascripts = ["main"]
-
-        # behaviour options
         self.render_headfoot = True
         self.have_help = False
 
@@ -99,8 +81,6 @@ class HTMLGenerator(HTMLWriter):
         self.browser_reload = 0.0
         self.browser_redirect = ""
         self.link_target: Optional[str] = None
-
-        # Browser options
         self.final_javascript_code = ""
 
         # Forms
@@ -108,7 +88,6 @@ class HTMLGenerator(HTMLWriter):
         self.form_vars: List[str] = []
         self.form_has_submit_button: bool = False
 
-        # Register helpers
         self.request = request
 
         self._mobile = is_mobile(request, response)
@@ -118,16 +97,8 @@ class HTMLGenerator(HTMLWriter):
         """Enabling the screenshot mode omits the fancy background and makes it white instead."""
         return bool(self.request.var("screenshotmode", "1" if active_config.screenshotmode else ""))
 
-    #
-    # Content Type
-    #
-
     def is_api_call(self) -> bool:
         return self.output_format != "html"
-
-    #
-    # Other things
-    #
 
     def set_link_target(self, framename: str) -> None:
         self.link_target = framename
@@ -172,10 +143,6 @@ class HTMLGenerator(HTMLWriter):
             return self.final_javascript("cmk.utils.reload_whole_page(%s)" % json.dumps(url))
         return None
 
-    #
-    # Messages
-    #
-
     def show_message(self, msg: HTMLMessageInput) -> None:
         self._write(self._render_message(msg, "message"))
 
@@ -194,7 +161,6 @@ class HTMLGenerator(HTMLWriter):
     def render_warning(self, msg: HTMLMessageInput) -> HTML:
         return self._render_message(msg, "warning")
 
-    # obj might be either a string (str or unicode) or an exception object
     def _render_message(self, msg: HTMLMessageInput, what: str = "message") -> HTML:
         if what == "message":
             cls = "success"
@@ -284,10 +250,6 @@ class HTMLGenerator(HTMLWriter):
     def enable_help_toggle(self) -> None:
         self.have_help = True
 
-    #
-    # Debugging, diagnose and logging
-    #
-
     def debug(self, *x: Any) -> None:
         for element in x:
             try:
@@ -295,10 +257,6 @@ class HTMLGenerator(HTMLWriter):
             except UnicodeDecodeError:
                 formatted = repr(element)
             self._write(self.render_pre(formatted))
-
-    #
-    # HTML heading and footer rendering
-    #
 
     def default_html_headers(self) -> None:
         self.meta(httpequiv="Content-Type", content="text/html; charset=utf-8")
@@ -492,10 +450,6 @@ class HTMLGenerator(HTMLWriter):
         self.close_body()
         self.close_html()
 
-    #
-    # HTML form rendering
-    #
-
     def begin_form(
         self,
         name: str,
@@ -606,10 +560,6 @@ class HTMLGenerator(HTMLWriter):
             autocomplete="off",
         )
 
-    #
-    # Form submission and variable handling
-    #
-
     def do_actions(self) -> bool:
         return self.request.var("_do_actions") not in ["", None, _("No")]
 
@@ -631,10 +581,6 @@ class HTMLGenerator(HTMLWriter):
         if self.form_submitted(self.form_name):
             return False  # Form filled in but variable missing -> Checkbox not checked
         return None
-
-    #
-    # Button elements
-    #
 
     def button(
         self,
@@ -761,10 +707,6 @@ class HTMLGenerator(HTMLWriter):
             value=text,
             title=title,
         )
-
-    #
-    # Other input elements
-    #
 
     def user_error(self, e: MKUserError) -> None:
         """Display the given MKUserError and store message for later use"""
@@ -1111,10 +1053,6 @@ class HTMLGenerator(HTMLWriter):
             self.close_x()
         self.form_vars.append(varname)
 
-    #
-    # Radio groups
-    #
-
     def begin_radio_group(self, horizontal: bool = False) -> None:
         if self._mobile:
             attrs = {"data-type": "horizontal" if horizontal else None, "data-role": "controlgroup"}
@@ -1138,10 +1076,6 @@ class HTMLGenerator(HTMLWriter):
         if label and id_:
             self.label(label, for_=id_)
         self.close_span()
-
-    #
-    # Checkbox groups
-    #
 
     def begin_checkbox_group(self, horizonal: bool = False) -> None:
         self.begin_radio_group(horizonal)
@@ -1194,10 +1128,6 @@ class HTMLGenerator(HTMLWriter):
         self.form_vars.append(varname)
         return code
 
-    #
-    # Floating Options
-    #
-
     def render_floating_option(
         self,
         name: str,
@@ -1211,10 +1141,6 @@ class HTMLGenerator(HTMLWriter):
         renderer()
         self.close_div()
         self.close_div()
-
-    #
-    # HTML icon rendering
-    #
 
     def icon(
         self,

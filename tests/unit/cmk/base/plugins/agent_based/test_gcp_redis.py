@@ -12,13 +12,9 @@ import pytest
 from hypothesis import given
 from hypothesis import strategies as st
 
-from cmk.base.api.agent_based.checking_classes import (
-    CheckFunction,
-    IgnoreResults,
-    Service,
-    ServiceLabel,
-)
+from cmk.base.api.agent_based.checking_classes import CheckFunction, IgnoreResults, ServiceLabel
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import DiscoveryResult, StringTable
 from cmk.base.plugins.agent_based.gcp_redis import (
     check_cpu_util,
     check_hitratio,
@@ -27,6 +23,8 @@ from cmk.base.plugins.agent_based.gcp_redis import (
     parse,
 )
 from cmk.base.plugins.agent_based.utils import gcp
+
+from .gcp_test_util import DiscoverTester, ParsingTester
 
 SECTION_TABLE = [
     [
@@ -57,51 +55,42 @@ ASSET_TABLE = [
 ]
 
 
-def test_parse_gcp():
-    section = parse(SECTION_TABLE)
-    n_rows = sum(len(i.rows) for i in section.values())
-    # first row contains general section information and no metrics
-    assert n_rows == len(SECTION_TABLE)
+class TestDiscover(DiscoverTester):
+    @property
+    def _assets(self) -> StringTable:
+        return ASSET_TABLE
+
+    @property
+    def expected_services(self) -> set[str]:
+        return {
+            "projects/tribe29-check-development/locations/europe-west6/instances/red",
+        }
+
+    @property
+    def expected_labels(self) -> set[ServiceLabel]:
+        return {
+            ServiceLabel("gcp/projectId", "backup-255820"),
+            ServiceLabel("gcp/redis/tier", "BASIC"),
+            ServiceLabel("gcp/redis/host", "10.33.170.67"),
+            ServiceLabel("gcp/redis/version", "REDIS_6_X"),
+            ServiceLabel("gcp/redis/port", "6379"),
+            ServiceLabel("gcp/redis/nr_nodes", "1"),
+            ServiceLabel("gcp/redis/displayname", "red2"),
+            ServiceLabel("gcp/redis/connectMode", "DIRECT_PEERING"),
+            ServiceLabel("gcp/location", "europe-west6-b"),
+        }
+
+    def discover(self, assets: Optional[gcp.AssetSection]) -> DiscoveryResult:
+        yield from discover(section_gcp_service_redis=None, section_gcp_assets=assets)
 
 
-@pytest.fixture(name="asset_section")
-def fixture_asset_section():
-    return gcp.parse_assets(ASSET_TABLE)
+class TestParsing(ParsingTester):
+    def parse(self, string_table):
+        return parse(string_table)
 
-
-@pytest.fixture(name="instances")
-def fixture_instances(asset_section):
-    return list(discover(section_gcp_service_redis=None, section_gcp_assets=asset_section))
-
-
-def test_no_asset_section_yields_no_service():
-    assert len(list(discover(section_gcp_service_redis=None, section_gcp_assets=None))) == 0
-
-
-def test_discover_all_instances(instances: Sequence[Service]):
-    assert {b.item for b in instances} == {
-        "projects/tribe29-check-development/locations/europe-west6/instances/red",
-    }
-
-
-def test_discover_project_labels(instances: Sequence[Service]):
-    for bucket in instances:
-        assert ServiceLabel("gcp/projectId", "backup-255820") in bucket.labels
-
-
-def test_discover_bucket_labels(instances: Sequence[Service]):
-    labels = instances[0].labels
-    assert set(labels) == {
-        ServiceLabel("gcp/projectId", "backup-255820"),
-        ServiceLabel("gcp/redis/tier", "BASIC"),
-        ServiceLabel("gcp/redis/host", "10.33.170.67"),
-        ServiceLabel("gcp/redis/version", "REDIS_6_X"),
-        ServiceLabel("gcp/redis/port", "6379"),
-        ServiceLabel("gcp/redis/nr_nodes", "1"),
-        ServiceLabel("gcp/redis/displayname", "red2"),
-        ServiceLabel("gcp/redis/connectMode", "DIRECT_PEERING"),
-        ServiceLabel("gcp/location", "europe-west6-b"),
-    }
+    @property
+    def section_table(self) -> StringTable:
+        return SECTION_TABLE
 
 
 @pytest.fixture(name="redis_section")

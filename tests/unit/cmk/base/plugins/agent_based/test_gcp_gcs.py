@@ -5,12 +5,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from dataclasses import dataclass
-from typing import Callable, Sequence
+from typing import Callable, Optional, Sequence
 
 import pytest
 
-from cmk.base.api.agent_based.checking_classes import Service, ServiceLabel
+from cmk.base.api.agent_based.checking_classes import ServiceLabel
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import DiscoveryResult, StringTable
 from cmk.base.plugins.agent_based.gcp_gcs import (
     check_gcp_gcs_network,
     check_gcp_gcs_object,
@@ -19,6 +20,8 @@ from cmk.base.plugins.agent_based.gcp_gcs import (
     parse_gcp_gcs,
 )
 from cmk.base.plugins.agent_based.utils import gcp
+
+from .gcp_test_util import DiscoverTester, ParsingTester
 
 SECTION_TABLE = [
     [
@@ -64,50 +67,41 @@ ASSET_TABLE = [
 ]
 
 
-def test_parse_gcp():
-    section = parse_gcp_gcs(SECTION_TABLE)
-    n_rows = sum(len(i.rows) for i in section.values())
-    # first row contains general section information and no metrics
-    assert n_rows == len(SECTION_TABLE)
+class TestGCSParsing(ParsingTester):
+    def parse(self, string_table):
+        return parse_gcp_gcs(string_table)
+
+    @property
+    def section_table(self) -> StringTable:
+        return SECTION_TABLE
 
 
-@pytest.fixture(name="asset_section")
-def fixture_asset_section():
-    return gcp.parse_assets(ASSET_TABLE)
+class TestGCSDiscover(DiscoverTester):
+    @property
+    def _assets(self) -> StringTable:
+        return ASSET_TABLE
 
+    @property
+    def expected_services(self) -> set[str]:
+        return {
+            "backup-home-ml-free",
+            "lakjsdklasjd",
+            "gcf-sources-360989076580-us-central1",
+            "us.artifacts.backup-255820.appspot.com",
+        }
 
-@pytest.fixture(name="buckets")
-def fixture_buckets(asset_section):
-    return list(discover(section_gcp_service_gcs=None, section_gcp_assets=asset_section))
+    @property
+    def expected_labels(self) -> set[ServiceLabel]:
+        return {
+            ServiceLabel("gcp/labels/tag", "freebackup"),
+            ServiceLabel("gcp/location", "US-CENTRAL1"),
+            ServiceLabel("gcp/bucket/storageClass", "STANDARD"),
+            ServiceLabel("gcp/bucket/locationType", "region"),
+            ServiceLabel("gcp/projectId", "backup-255820"),
+        }
 
-
-def test_no_asset_section_yields_no_service():
-    assert len(list(discover(section_gcp_service_gcs=None, section_gcp_assets=None))) == 0
-
-
-def test_discover_all_buckets(buckets: Sequence[Service]):
-    assert {b.item for b in buckets} == {
-        "backup-home-ml-free",
-        "lakjsdklasjd",
-        "gcf-sources-360989076580-us-central1",
-        "us.artifacts.backup-255820.appspot.com",
-    }
-
-
-def test_discover_project_labels(buckets: Sequence[Service]):
-    for bucket in buckets:
-        assert ServiceLabel("gcp/projectId", "backup-255820") in bucket.labels
-
-
-def test_discover_bucket_labels(buckets: Sequence[Service]):
-    labels = buckets[0].labels
-    assert set(labels) == {
-        ServiceLabel("gcp/labels/tag", "freebackup"),
-        ServiceLabel("gcp/location", "US-CENTRAL1"),
-        ServiceLabel("gcp/bucket/storageClass", "STANDARD"),
-        ServiceLabel("gcp/bucket/locationType", "region"),
-        ServiceLabel("gcp/projectId", "backup-255820"),
-    }
+    def discover(self, assets: Optional[gcp.AssetSection]) -> DiscoveryResult:
+        yield from discover(section_gcp_service_gcs=None, section_gcp_assets=assets)
 
 
 def test_discover_bucket_labels_without_user_labels():

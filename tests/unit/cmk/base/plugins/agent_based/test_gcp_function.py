@@ -5,16 +5,17 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from dataclasses import dataclass
-from typing import Callable, Sequence
+from typing import Callable, Optional, Sequence
 
 import pytest
 from pytest_mock import MockerFixture
 
 from cmk.utils.type_defs import CheckPluginName
 
-from cmk.base.api.agent_based.checking_classes import Service, ServiceLabel
+from cmk.base.api.agent_based.checking_classes import ServiceLabel
 from cmk.base.plugin_contexts import current_host, current_service
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import DiscoveryResult, StringTable
 from cmk.base.plugins.agent_based.gcp_function import (
     check_gcp_function_execution,
     check_gcp_function_instances,
@@ -23,6 +24,8 @@ from cmk.base.plugins.agent_based.gcp_function import (
     parse_gcp_function,
 )
 from cmk.base.plugins.agent_based.utils import gcp
+
+from .gcp_test_util import DiscoverTester, ParsingTester
 
 SECTION_TABLE = [
     [
@@ -56,47 +59,34 @@ ASSET_TABLE = [
 ]
 
 
-def test_parse_gcp():
-    section = parse_gcp_function(SECTION_TABLE)
-    n_rows = sum(len(i.rows) for i in section.values())
-    # first row contains general section information and no metrics
-    assert n_rows == len(SECTION_TABLE)
+class TestDiscover(DiscoverTester):
+    @property
+    def _assets(self) -> StringTable:
+        return ASSET_TABLE
+
+    @property
+    def expected_services(self) -> set[str]:
+        return {"function-1", "function-2", "function-3"}
+
+    @property
+    def expected_labels(self) -> set[ServiceLabel]:
+        return {
+            ServiceLabel("gcp/location", "us-central1"),
+            ServiceLabel("gcp/function/name", "function-1"),
+            ServiceLabel("gcp/projectId", "backup-255820"),
+        }
+
+    def discover(self, assets: Optional[gcp.AssetSection]) -> DiscoveryResult:
+        yield from discover(section_gcp_service_cloud_functions=None, section_gcp_assets=assets)
 
 
-@pytest.fixture(name="asset_section")
-def fixture_asset_section():
-    return gcp.parse_assets(ASSET_TABLE)
+class TestParsing(ParsingTester):
+    def parse(self, string_table):
+        return parse_gcp_function(string_table)
 
-
-@pytest.fixture(name="functions")
-def fixture_functions(asset_section):
-    return list(
-        discover(section_gcp_service_cloud_functions=None, section_gcp_assets=asset_section)
-    )
-
-
-def test_no_asset_section_yields_no_service():
-    assert (
-        len(list(discover(section_gcp_service_cloud_functions=None, section_gcp_assets=None))) == 0
-    )
-
-
-def test_discover_all_functions(functions: Sequence[Service]):
-    assert {b.item for b in functions} == {"function-1", "function-2", "function-3"}
-
-
-def test_discover_project_labels(functions: Sequence[Service]):
-    for fun in functions:
-        assert ServiceLabel("gcp/projectId", "backup-255820") in fun.labels
-
-
-def test_discover_function_labels(functions: Sequence[Service]):
-    labels = functions[0].labels
-    assert set(labels) == {
-        ServiceLabel("gcp/location", "us-central1"),
-        ServiceLabel("gcp/function/name", "function-1"),
-        ServiceLabel("gcp/projectId", "backup-255820"),
-    }
+    @property
+    def section_table(self) -> StringTable:
+        return SECTION_TABLE
 
 
 @dataclass(frozen=True)

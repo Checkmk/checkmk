@@ -4,12 +4,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from dataclasses import dataclass
-from typing import Callable, Sequence, Tuple, Union
+from typing import Callable, Optional, Sequence, Tuple, Union
 
 import pytest
 
-from cmk.base.api.agent_based.checking_classes import Service, ServiceLabel
+from cmk.base.api.agent_based.checking_classes import ServiceLabel
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import DiscoveryResult, StringTable
 from cmk.base.plugins.agent_based.gcp_sql import (
     check_gcp_sql_cpu,
     check_gcp_sql_disk,
@@ -20,7 +21,9 @@ from cmk.base.plugins.agent_based.gcp_sql import (
     parse,
 )
 from cmk.base.plugins.agent_based.utils import gcp
-from cmk.base.plugins.agent_based.utils.gcp import AssetSection, Section, SectionItem
+from cmk.base.plugins.agent_based.utils.gcp import Section, SectionItem
+
+from .gcp_test_util import DiscoverTester, ParsingTester
 
 SECTION_TABLE = [
     [
@@ -60,46 +63,40 @@ ASSET_TABLE = [
 ]
 
 
-def test_parse_gcp():
-    section = parse(SECTION_TABLE)
-    n_rows = sum(len(i.rows) for i in section.values())
-    assert n_rows == len(SECTION_TABLE)
+class TestDiscover(DiscoverTester):
+    @property
+    def _assets(self) -> StringTable:
+        return ASSET_TABLE
+
+    @property
+    def expected_services(self) -> set[str]:
+        return {
+            "checktest",
+        }
+
+    @property
+    def expected_labels(self) -> set[ServiceLabel]:
+        return {
+            ServiceLabel("gcp/labels/reason", "check-development"),
+            ServiceLabel("gcp/cloud_sql/name", "checktest"),
+            ServiceLabel("gcp/cloud_sql/databaseVersion", "MYSQL_5_7"),
+            ServiceLabel("gcp/labels/team", "dev"),
+            ServiceLabel("gcp/cloud_sql/availability", "ZONAL"),
+            ServiceLabel("gcp/location", "us-central1"),
+            ServiceLabel("gcp/projectId", "backup-255820"),
+        }
+
+    def discover(self, assets: Optional[gcp.AssetSection]) -> DiscoveryResult:
+        yield from discover(section_gcp_service_cloud_sql=None, section_gcp_assets=assets)
 
 
-@pytest.fixture(name="asset_section")
-def fixture_asset_section() -> AssetSection:
-    return gcp.parse_assets(ASSET_TABLE)
+class TestParsing(ParsingTester):
+    def parse(self, string_table):
+        return parse(string_table)
 
-
-@pytest.fixture(name="sql_services")
-def fixture_sql_services(asset_section: AssetSection) -> Sequence[Service]:
-    return sorted(discover(section_gcp_service_cloud_sql=None, section_gcp_assets=asset_section))
-
-
-def test_no_asset_section_yields_no_service():
-    assert len(list(discover(section_gcp_service_cloud_sql=None, section_gcp_assets=None))) == 0
-
-
-def test_discover_two_sql_services(sql_services: Sequence[Service]):
-    assert {b.item for b in sql_services} == {"checktest"}
-
-
-def test_discover_project_labels(sql_services: Sequence[Service]):
-    for service in sql_services:
-        assert ServiceLabel("gcp/projectId", "backup-255820") in service.labels
-
-
-def test_discover_labels(sql_services: Sequence[Service]):
-    labels = sql_services[0].labels
-    assert set(labels) == {
-        ServiceLabel("gcp/labels/reason", "check-development"),
-        ServiceLabel("gcp/cloud_sql/name", "checktest"),
-        ServiceLabel("gcp/cloud_sql/databaseVersion", "MYSQL_5_7"),
-        ServiceLabel("gcp/labels/team", "dev"),
-        ServiceLabel("gcp/cloud_sql/availability", "ZONAL"),
-        ServiceLabel("gcp/location", "us-central1"),
-        ServiceLabel("gcp/projectId", "backup-255820"),
-    }
+    @property
+    def section_table(self) -> StringTable:
+        return SECTION_TABLE
 
 
 def test_discover_labels_labels_without_user_labels():

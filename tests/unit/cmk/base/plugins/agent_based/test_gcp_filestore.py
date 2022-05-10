@@ -5,18 +5,21 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from dataclasses import dataclass
-from typing import Callable, Sequence
+from typing import Callable, Optional, Sequence
 
 import pytest
 from pytest_mock import MockerFixture
 
 from cmk.utils.type_defs import CheckPluginName
 
-from cmk.base.api.agent_based.checking_classes import Service, ServiceLabel
+from cmk.base.api.agent_based.checking_classes import ServiceLabel
 from cmk.base.plugin_contexts import current_host, current_service
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import DiscoveryResult, StringTable
 from cmk.base.plugins.agent_based.gcp_filestore import check, discover, parse
 from cmk.base.plugins.agent_based.utils import gcp
+
+from .gcp_test_util import DiscoverTester, ParsingTester
 
 SECTION_TABLE = [
     [
@@ -38,46 +41,35 @@ ASSET_TABLE = [
 ]
 
 
-def test_parse_gcp():
-    section = parse(SECTION_TABLE)
-    n_rows = sum(len(i.rows) for i in section.values())
-    # first row contains general section information and no metrics
-    assert n_rows == len(SECTION_TABLE)
+class TestParsing(ParsingTester):
+    def parse(self, string_table):
+        return parse(string_table)
+
+    @property
+    def section_table(self) -> StringTable:
+        return SECTION_TABLE
 
 
-@pytest.fixture(name="asset_section")
-def fixture_asset_section():
-    return gcp.parse_assets(ASSET_TABLE)
+class TestDiscover(DiscoverTester):
+    @property
+    def _assets(self) -> StringTable:
+        return ASSET_TABLE
 
+    @property
+    def expected_services(self) -> set[str]:
+        return {"test"}
 
-@pytest.fixture(name="shares")
-def fixture_shares(asset_section):
-    return list(discover(section_gcp_service_filestore=None, section_gcp_assets=asset_section))
+    @property
+    def expected_labels(self) -> set[ServiceLabel]:
+        return {
+            ServiceLabel("gcp/location", "us-central1-a"),
+            ServiceLabel("gcp/filestore/name", "test"),
+            ServiceLabel("gcp/projectId", "backup-255820"),
+            ServiceLabel("gcp/labels/foo", "bar"),
+        }
 
-
-def test_no_asset_section_yields_no_service():
-    assert len(list(discover(section_gcp_service_filestore=None, section_gcp_assets=None))) == 0
-
-
-def test_discover_all_shares(shares: Sequence[Service]):
-    assert {b.item for b in shares} == {
-        "test",
-    }
-
-
-def test_discover_project_labels(shares: Sequence[Service]):
-    for share in shares:
-        assert ServiceLabel("gcp/projectId", "backup-255820") in share.labels
-
-
-def test_discover_share_labels(shares: Sequence[Service]):
-    labels = shares[0].labels
-    assert set(labels) == {
-        ServiceLabel("gcp/location", "us-central1-a"),
-        ServiceLabel("gcp/filestore/name", "test"),
-        ServiceLabel("gcp/projectId", "backup-255820"),
-        ServiceLabel("gcp/labels/foo", "bar"),
-    }
+    def discover(self, assets: Optional[gcp.AssetSection]) -> DiscoveryResult:
+        yield from discover(section_gcp_service_filestore=None, section_gcp_assets=assets)
 
 
 def test_discover_labels_labels_without_user_labels():

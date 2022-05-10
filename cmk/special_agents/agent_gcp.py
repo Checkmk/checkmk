@@ -10,12 +10,12 @@ from functools import cache
 from typing import Any, Callable, Iterable, Mapping, Optional, Sequence, Union
 
 from google.cloud import asset_v1, monitoring_v3  # type: ignore
-from google.cloud.monitoring_v3 import Aggregation
+from google.cloud.monitoring_v3 import Aggregation as gAggregation
 from google.cloud.monitoring_v3.types import TimeSeries
 
 # Those are enum classes defined in the Aggregation class. Not nice but works
-Aligner = Aggregation.Aligner
-Reducer = Aggregation.Reducer
+Aligner = gAggregation.Aligner
+Reducer = gAggregation.Reducer
 
 from cmk.special_agents.utils.agent_common import (
     ConditionalPiggybackSection,
@@ -58,15 +58,34 @@ class Client:
 
 
 @dataclass(frozen=True)
+class Aggregation:
+    # Those are of from the enum Aligner and Reducer. MyPy cannot handle those imports
+    per_series_aligner: int
+    cross_series_reducer: int = Reducer.REDUCE_SUM
+    alignment_period: int = 60
+
+    def to_dict(self, default_groupby: str) -> Mapping[str, Any]:
+        return {
+            "alignment_period": {"seconds": self.alignment_period},
+            "group_by_fields": [
+                default_groupby,
+            ],
+            "per_series_aligner": self.per_series_aligner,
+            "cross_series_reducer": self.cross_series_reducer,
+        }
+
+
+@dataclass(frozen=True)
 class Metric:
     name: str
-    aggregation: Mapping[str, Any]
+    aggregation: Aggregation
 
 
 @dataclass(frozen=True)
 class Service:
     metrics: list[Metric]
     name: str
+    default_groupby: str
 
 
 # todo: Do I want to have a class that automatically prepends gcp?
@@ -220,7 +239,9 @@ def time_series(
             "filter": filter_rule,
             "interval": interval,
             "view": monitoring_v3.ListTimeSeriesRequest.TimeSeriesView.FULL,
-            "aggregation": monitoring_v3.Aggregation(metric.aggregation),
+            "aggregation": monitoring_v3.Aggregation(
+                metric.aggregation.to_dict(service.default_groupby)
+            ),
         }
         try:
             results = client.monitoring().list_time_series(request=request)
@@ -314,51 +335,37 @@ def run(
 
 GCS = Service(
     name="gcs",
+    default_groupby="resource.bucket_name",
     metrics=[
         Metric(
             name="storage.googleapis.com/api/request_count",
-            aggregation={
-                "alignment_period": {"seconds": 60},
-                "group_by_fields": ["resource.bucket_name"],
-                "per_series_aligner": Aligner.ALIGN_RATE,
-                "cross_series_reducer": Reducer.REDUCE_SUM,
-            },
+            aggregation=Aggregation(
+                per_series_aligner=Aligner.ALIGN_RATE,
+            ),
         ),
         Metric(
             name="storage.googleapis.com/network/sent_bytes_count",
-            aggregation={
-                "alignment_period": {"seconds": 60},
-                "group_by_fields": ["resource.bucket_name"],
-                "per_series_aligner": Aligner.ALIGN_RATE,
-                "cross_series_reducer": Reducer.REDUCE_SUM,
-            },
+            aggregation=Aggregation(
+                per_series_aligner=Aligner.ALIGN_RATE,
+            ),
         ),
         Metric(
             name="storage.googleapis.com/network/received_bytes_count",
-            aggregation={
-                "alignment_period": {"seconds": 60},
-                "group_by_fields": ["resource.bucket_name"],
-                "per_series_aligner": Aligner.ALIGN_RATE,
-                "cross_series_reducer": Reducer.REDUCE_SUM,
-            },
+            aggregation=Aggregation(
+                per_series_aligner=Aligner.ALIGN_RATE,
+            ),
         ),
         Metric(
             name="storage.googleapis.com/storage/total_bytes",
-            aggregation={
-                "alignment_period": {"seconds": 60},
-                "group_by_fields": ["resource.bucket_name"],
-                "per_series_aligner": Aligner.ALIGN_MEAN,
-                "cross_series_reducer": Reducer.REDUCE_SUM,
-            },
+            aggregation=Aggregation(
+                per_series_aligner=Aligner.ALIGN_MEAN,
+            ),
         ),
         Metric(
             name="storage.googleapis.com/storage/object_count",
-            aggregation={
-                "alignment_period": {"seconds": 60},
-                "group_by_fields": ["resource.bucket_name"],
-                "per_series_aligner": Aligner.ALIGN_MEAN,
-                "cross_series_reducer": Reducer.REDUCE_SUM,
-            },
+            aggregation=Aggregation(
+                per_series_aligner=Aligner.ALIGN_MEAN,
+            ),
         ),
     ],
 )
@@ -366,60 +373,43 @@ GCS = Service(
 
 FUNCTIONS = Service(
     name="cloud_functions",
+    default_groupby="resource.function_name",
     metrics=[
         Metric(
             name="cloudfunctions.googleapis.com/function/execution_count",
-            aggregation={
-                "alignment_period": {"seconds": 60},
-                "group_by_fields": ["resource.function_name"],
-                "per_series_aligner": Aligner.ALIGN_RATE,
-                "cross_series_reducer": Reducer.REDUCE_SUM,
-            },
+            aggregation=Aggregation(
+                per_series_aligner=Aligner.ALIGN_RATE,
+            ),
         ),
         Metric(
             name="cloudfunctions.googleapis.com/function/network_egress",
-            aggregation={
-                "alignment_period": {"seconds": 60},
-                "group_by_fields": ["resource.function_name"],
-                "per_series_aligner": Aligner.ALIGN_RATE,
-                "cross_series_reducer": Reducer.REDUCE_SUM,
-            },
+            aggregation=Aggregation(
+                per_series_aligner=Aligner.ALIGN_RATE,
+            ),
         ),
         Metric(
             name="cloudfunctions.googleapis.com/function/user_memory_bytes",
-            aggregation={
-                "alignment_period": {"seconds": 60},
-                "group_by_fields": ["resource.function_name"],
-                "per_series_aligner": Aligner.ALIGN_PERCENTILE_99,
-                "cross_series_reducer": Reducer.REDUCE_SUM,
-            },
+            aggregation=Aggregation(
+                per_series_aligner=Aligner.ALIGN_PERCENTILE_99,
+            ),
         ),
         Metric(
             name="cloudfunctions.googleapis.com/function/instance_count",
-            aggregation={
-                "alignment_period": {"seconds": 60},
-                "group_by_fields": ["resource.function_name"],
-                "per_series_aligner": Aligner.ALIGN_MAX,
-                "cross_series_reducer": Reducer.REDUCE_SUM,
-            },
+            aggregation=Aggregation(
+                per_series_aligner=Aligner.ALIGN_MAX,
+            ),
         ),
         Metric(
             name="cloudfunctions.googleapis.com/function/execution_times",
-            aggregation={
-                "alignment_period": {"seconds": 60},
-                "group_by_fields": ["resource.function_name"],
-                "per_series_aligner": Aligner.ALIGN_PERCENTILE_99,
-                "cross_series_reducer": Reducer.REDUCE_SUM,
-            },
+            aggregation=Aggregation(
+                per_series_aligner=Aligner.ALIGN_PERCENTILE_99,
+            ),
         ),
         Metric(
             name="cloudfunctions.googleapis.com/function/active_instances",
-            aggregation={
-                "alignment_period": {"seconds": 60},
-                "group_by_fields": ["resource.function_name"],
-                "per_series_aligner": Aligner.ALIGN_MAX,
-                "cross_series_reducer": Reducer.REDUCE_SUM,
-            },
+            aggregation=Aggregation(
+                per_series_aligner=Aligner.ALIGN_MAX,
+            ),
         ),
     ],
 )
@@ -427,241 +417,173 @@ FUNCTIONS = Service(
 
 RUN = Service(
     name="cloud_run",
+    default_groupby="resource.service_name",
     metrics=[
         Metric(
             name="run.googleapis.com/container/memory/utilizations",
-            aggregation={
-                "alignment_period": {"seconds": 60},
-                "group_by_fields": ["resource.service_name"],
-                "per_series_aligner": Aligner.ALIGN_PERCENTILE_99,
-                "cross_series_reducer": Reducer.REDUCE_MAX,
-            },
+            aggregation=Aggregation(
+                per_series_aligner=Aligner.ALIGN_PERCENTILE_99,
+            ),
         ),
         Metric(
             name="run.googleapis.com/container/network/received_bytes_count",
-            aggregation={
-                "alignment_period": {"seconds": 60},
-                "group_by_fields": ["resource.service_name"],
-                "per_series_aligner": Aligner.ALIGN_RATE,
-                "cross_series_reducer": Reducer.REDUCE_SUM,
-            },
+            aggregation=Aggregation(
+                per_series_aligner=Aligner.ALIGN_RATE,
+            ),
         ),
         Metric(
             name="run.googleapis.com/container/network/sent_bytes_count",
-            aggregation={
-                "alignment_period": {"seconds": 60},
-                "group_by_fields": ["resource.service_name"],
-                "per_series_aligner": Aligner.ALIGN_RATE,
-                "cross_series_reducer": Reducer.REDUCE_SUM,
-            },
+            aggregation=Aggregation(
+                per_series_aligner=Aligner.ALIGN_RATE,
+            ),
         ),
         Metric(
             name="run.googleapis.com/request_count",
             # TODO get by different status codes
-            aggregation={
-                "alignment_period": {"seconds": 60},
-                "group_by_fields": ["resource.service_name"],
-                "per_series_aligner": Aligner.ALIGN_MAX,
-                "cross_series_reducer": Reducer.REDUCE_SUM,
-            },
+            aggregation=Aggregation(
+                per_series_aligner=Aligner.ALIGN_MAX,
+            ),
         ),
         Metric(
             name="run.googleapis.com/container/cpu/allocation_time",
-            aggregation={
-                "alignment_period": {"seconds": 60},
-                "group_by_fields": ["resource.service_name"],
-                "per_series_aligner": Aligner.ALIGN_MAX,
-                "cross_series_reducer": Reducer.REDUCE_SUM,
-            },
+            aggregation=Aggregation(
+                per_series_aligner=Aligner.ALIGN_MAX,
+            ),
         ),
         Metric(
             name="run.googleapis.com/container/billable_instance_time",
-            aggregation={
-                "alignment_period": {"seconds": 60},
-                "group_by_fields": ["resource.service_name"],
-                "per_series_aligner": Aligner.ALIGN_RATE,
-                "cross_series_reducer": Reducer.REDUCE_SUM,
-            },
+            aggregation=Aggregation(
+                per_series_aligner=Aligner.ALIGN_RATE,
+            ),
         ),
         Metric(
             name="run.googleapis.com/container/instance_count",
-            aggregation={
-                "alignment_period": {"seconds": 60},
-                "group_by_fields": ["resource.service_name"],
-                "per_series_aligner": Aligner.ALIGN_MAX,
-                "cross_series_reducer": Reducer.REDUCE_SUM,
-            },
+            aggregation=Aggregation(
+                per_series_aligner=Aligner.ALIGN_MAX,
+            ),
         ),
         Metric(
             name="run.googleapis.com/request_latencies",
-            aggregation={
-                "alignment_period": {"seconds": 60},
-                "group_by_fields": ["resource.service_name"],
-                "per_series_aligner": Aligner.ALIGN_PERCENTILE_99,
-                "cross_series_reducer": Reducer.REDUCE_SUM,
-            },
+            aggregation=Aggregation(
+                per_series_aligner=Aligner.ALIGN_PERCENTILE_99,
+            ),
         ),
     ],
 )
 
 CLOUDSQL = Service(
     name="cloud_sql",
+    default_groupby="resource.database_id",
     metrics=[
         Metric(
             name="cloudsql.googleapis.com/database/up",
-            aggregation={
-                "alignment_period": {"seconds": 60},
-                "group_by_fields": ["resource.database_id"],
-                "per_series_aligner": Aligner.ALIGN_MAX,
-                "cross_series_reducer": Reducer.REDUCE_SUM,
-            },
+            aggregation=Aggregation(
+                per_series_aligner=Aligner.ALIGN_MAX,
+            ),
         ),
         Metric(
             name="cloudsql.googleapis.com/database/network/received_bytes_count",
-            aggregation={
-                "alignment_period": {"seconds": 60},
-                "group_by_fields": ["resource.database_id"],
-                "per_series_aligner": Aligner.ALIGN_RATE,
-                "cross_series_reducer": Reducer.REDUCE_SUM,
-            },
+            aggregation=Aggregation(
+                per_series_aligner=Aligner.ALIGN_RATE,
+            ),
         ),
         Metric(
             name="cloudsql.googleapis.com/database/network/sent_bytes_count",
-            aggregation={
-                "alignment_period": {"seconds": 60},
-                "group_by_fields": ["resource.database_id"],
-                "per_series_aligner": Aligner.ALIGN_RATE,
-                "cross_series_reducer": Reducer.REDUCE_SUM,
-            },
+            aggregation=Aggregation(
+                per_series_aligner=Aligner.ALIGN_RATE,
+            ),
         ),
         Metric(
             name="cloudsql.googleapis.com/database/memory/utilization",
-            aggregation={
-                "alignment_period": {"seconds": 60},
-                "group_by_fields": ["resource.database_id"],
-                "per_series_aligner": Aligner.ALIGN_MAX,
-                "cross_series_reducer": Reducer.REDUCE_SUM,
-            },
+            aggregation=Aggregation(
+                per_series_aligner=Aligner.ALIGN_MAX,
+            ),
         ),
         Metric(
             name="cloudsql.googleapis.com/database/cpu/utilization",
-            aggregation={
-                "alignment_period": {"seconds": 60},
-                "group_by_fields": ["resource.database_id"],
-                "per_series_aligner": Aligner.ALIGN_MAX,
-                "cross_series_reducer": Reducer.REDUCE_SUM,
-            },
+            aggregation=Aggregation(
+                per_series_aligner=Aligner.ALIGN_MAX,
+            ),
         ),
         Metric(
             name="cloudsql.googleapis.com/database/state",
-            aggregation={
-                "alignment_period": {"seconds": 60},
-                "group_by_fields": ["resource.database_id"],
-                "per_series_aligner": Aligner.ALIGN_NEXT_OLDER,
-                "cross_series_reducer": Reducer.REDUCE_NONE,
-            },
+            aggregation=Aggregation(
+                per_series_aligner=Aligner.ALIGN_NEXT_OLDER,
+            ),
         ),
         Metric(
             name="cloudsql.googleapis.com/database/disk/write_ops_count",
-            aggregation={
-                "alignment_period": {"seconds": 60},
-                "group_by_fields": ["resource.database_id"],
-                "per_series_aligner": Aligner.ALIGN_RATE,
-                "cross_series_reducer": Reducer.REDUCE_SUM,
-            },
+            aggregation=Aggregation(
+                per_series_aligner=Aligner.ALIGN_RATE,
+            ),
         ),
         Metric(
             name="cloudsql.googleapis.com/database/disk/read_ops_count",
-            aggregation={
-                "alignment_period": {"seconds": 60},
-                "group_by_fields": ["resource.database_id"],
-                "per_series_aligner": Aligner.ALIGN_RATE,
-                "cross_series_reducer": Reducer.REDUCE_SUM,
-            },
+            aggregation=Aggregation(
+                per_series_aligner=Aligner.ALIGN_RATE,
+            ),
         ),
         Metric(
             name="cloudsql.googleapis.com/database/disk/utilization",
-            aggregation={
-                "alignment_period": {"seconds": 60},
-                "group_by_fields": ["resource.database_id"],
-                "per_series_aligner": Aligner.ALIGN_MAX,
-                "cross_series_reducer": Reducer.REDUCE_SUM,
-            },
+            aggregation=Aggregation(
+                per_series_aligner=Aligner.ALIGN_MAX,
+            ),
         ),
     ],
 )
 
 FILESTORE = Service(
     name="filestore",
+    default_groupby="resource.instance_name",
     metrics=[
         Metric(
             name="file.googleapis.com/nfs/server/used_bytes_percent",
-            aggregation={
-                "alignment_period": {"seconds": 60},
-                "group_by_fields": ["resource.instance_name"],
-                "per_series_aligner": Aligner.ALIGN_MAX,
-                "cross_series_reducer": Reducer.REDUCE_SUM,
-            },
+            aggregation=Aggregation(
+                per_series_aligner=Aligner.ALIGN_MAX,
+            ),
         ),
         Metric(
             name="file.googleapis.com/nfs/server/write_ops_count",
-            aggregation={
-                "alignment_period": {"seconds": 60},
-                "group_by_fields": ["resource.instance_name"],
-                "per_series_aligner": Aligner.ALIGN_RATE,
-                "cross_series_reducer": Reducer.REDUCE_SUM,
-            },
+            aggregation=Aggregation(
+                per_series_aligner=Aligner.ALIGN_RATE,
+            ),
         ),
         Metric(
             name="file.googleapis.com/nfs/server/read_ops_count",
-            aggregation={
-                "alignment_period": {"seconds": 60},
-                "group_by_fields": ["resource.instance_name"],
-                "per_series_aligner": Aligner.ALIGN_RATE,
-                "cross_series_reducer": Reducer.REDUCE_SUM,
-            },
+            aggregation=Aggregation(
+                per_series_aligner=Aligner.ALIGN_RATE,
+            ),
         ),
     ],
 )
 
 REDIS = Service(
     name="redis",
+    default_groupby="resource.instance_id",
     metrics=[
         Metric(
             name="redis.googleapis.com/stats/cpu_utilization",
-            aggregation={
-                "alignment_period": {"seconds": 60},
-                "group_by_fields": ["resource.instance_id"],
-                "per_series_aligner": Aligner.ALIGN_MAX,
-                "cross_series_reducer": Reducer.REDUCE_SUM,
-            },
+            aggregation=Aggregation(
+                per_series_aligner=Aligner.ALIGN_MAX,
+            ),
         ),
         Metric(
             name="redis.googleapis.com/stats/memory/usage_ratio",
-            aggregation={
-                "alignment_period": {"seconds": 60},
-                "group_by_fields": ["resource.instance_id"],
-                "per_series_aligner": Aligner.ALIGN_MAX,
-                "cross_series_reducer": Reducer.REDUCE_SUM,
-            },
+            aggregation=Aggregation(
+                per_series_aligner=Aligner.ALIGN_MAX,
+            ),
         ),
         Metric(
             name="redis.googleapis.com/stats/memory/system_memory_usage_ratio",
-            aggregation={
-                "alignment_period": {"seconds": 60},
-                "group_by_fields": ["resource.instance_id"],
-                "per_series_aligner": Aligner.ALIGN_MAX,
-                "cross_series_reducer": Reducer.REDUCE_SUM,
-            },
+            aggregation=Aggregation(
+                per_series_aligner=Aligner.ALIGN_MAX,
+            ),
         ),
         Metric(
             name="redis.googleapis.com/stats/cache_hit_ratio",
-            aggregation={
-                "alignment_period": {"seconds": 60},
-                "group_by_fields": ["resource.instance_id"],
-                "per_series_aligner": Aligner.ALIGN_MAX,
-                "cross_series_reducer": Reducer.REDUCE_SUM,
-            },
+            aggregation=Aggregation(
+                per_series_aligner=Aligner.ALIGN_MAX,
+            ),
         ),
     ],
 )
@@ -683,15 +605,13 @@ GCE = PiggyBackService(
     services=[
         Service(
             name="uptime_total",
+            default_groupby="resource.instance_id",
             metrics=[
                 Metric(
                     name="compute.googleapis.com/instance/uptime_total",
-                    aggregation={
-                        "alignment_period": {"seconds": 60},
-                        "group_by_fields": ["resource.instance_id"],
-                        "per_series_aligner": Aligner.ALIGN_MAX,
-                        "cross_series_reducer": Reducer.REDUCE_SUM,
-                    },
+                    aggregation=Aggregation(
+                        per_series_aligner=Aligner.ALIGN_MAX,
+                    ),
                 )
             ],
         )

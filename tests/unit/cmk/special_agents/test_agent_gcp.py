@@ -189,15 +189,13 @@ def piggy_back_sections_fixture(mocker: MockerFixture):
         services=[
             agent_gcp.Service(
                 name="uptime",
+                default_groupby="resource.instance_id",
                 metrics=[
                     agent_gcp.Metric(
                         name="compute.googleapis.com/instance/uptime",
-                        aggregation={
-                            "alignment_period": {"seconds": 60},
-                            "group_by_fields": ["resource.instance_id"],
-                            "per_series_aligner": Aligner.ALIGN_MAX,
-                            "cross_series_reducer": Reducer.REDUCE_SUM,
-                        },
+                        aggregation=agent_gcp.Aggregation(
+                            per_series_aligner=Aligner.ALIGN_MAX,
+                        ),
                     )
                 ],
             )

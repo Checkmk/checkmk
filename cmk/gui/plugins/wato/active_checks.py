@@ -250,6 +250,14 @@ def _valuespec_active_checks_icmp():
                 ),
             ),
             (
+                "multiple_services",
+                Checkbox(
+                    title=_("Multiple services"),
+                    label=_("Create a service for every pinged IP address"),
+                    default_value=False,
+                ),
+            ),
+            (
                 "min_pings",
                 Integer(
                     title=_("Number of positive responses required for OK state"),

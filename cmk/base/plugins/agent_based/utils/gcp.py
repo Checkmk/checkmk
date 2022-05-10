@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import json
 from dataclasses import dataclass
+from enum import IntEnum, unique
 from typing import Any, Callable, Iterator, Mapping, Sequence
 
 from google.cloud.asset_v1 import Asset
@@ -76,12 +77,16 @@ def parse_assets(string_table: StringTable) -> AssetSection:
 
 @dataclass(frozen=True)
 class MetricSpec:
+    @unique
+    class DType(IntEnum):
+        FLOAT = 1
+        INT = 2
+
     metric_type: str
     label: str
     render_func: Callable
     scale: float = 1.0
-    # TODO: use enum
-    dtype: str = "float"
+    dtype: DType = DType.FLOAT
 
 
 def _get_value(results: Sequence[GCPResult], spec: MetricSpec) -> float:
@@ -91,9 +96,9 @@ def _get_value(results: Sequence[GCPResult], spec: MetricSpec) -> float:
     try:
         result = next(r for r in results if r.ts.metric.type == spec.metric_type)
         proto_value = result.ts.points[0].value
-        if spec.dtype == "float":
+        if spec.dtype == MetricSpec.DType.FLOAT:
             value = proto_value.double_value
-        elif spec.dtype == "int":
+        elif spec.dtype == MetricSpec.DType.INT:
             value = proto_value.int64_value
         else:
             raise NotImplementedError("unkown dtype")

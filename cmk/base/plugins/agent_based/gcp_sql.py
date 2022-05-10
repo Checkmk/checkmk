@@ -73,7 +73,10 @@ def check_gcp_sql_status(
         return
     metrics = {
         "up": gcp.MetricSpec(
-            "cloudsql.googleapis.com/database/up", "Up:", lambda x: str(bool(x)), dtype="int"
+            "cloudsql.googleapis.com/database/up",
+            "Up:",
+            lambda x: str(bool(x)),
+            dtype=gcp.MetricSpec.DType.INT,
         ),
     }
     timeseries = section_gcp_service_cloud_sql[item].rows

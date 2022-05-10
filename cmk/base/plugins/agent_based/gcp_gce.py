@@ -15,7 +15,10 @@ def parse_gce_uptime(string_table: StringTable) -> Optional[uptime.Section]:
         return None
     section = gcp.parse_piggy_back(string_table)
     metric = gcp.MetricSpec(
-        "compute.googleapis.com/instance/uptime_total", "uptime", render.timespan, dtype="int"
+        "compute.googleapis.com/instance/uptime_total",
+        "uptime",
+        render.timespan,
+        dtype=gcp.MetricSpec.DType.INT,
     )
     uptime_sec = gcp._get_value(section, metric)
     return uptime.Section(uptime_sec, None)

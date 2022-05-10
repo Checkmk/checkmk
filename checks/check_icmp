@@ -4,8 +4,33 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Any, Iterator, Mapping, NamedTuple, Sequence, Tuple
 
-def check_icmp_arguments(params):
+# we are using Nagios macros to keep compatibility with a former solution
+# in the future, we should use IP addresses in command arguments
+IP_ADDRESS_MACROS: Mapping[str, Sequence[str]] = {
+    "address": ["$HOSTADDRESS$"],
+    "alias": ["$HOSTALIAS$"],
+    "all_ipv4addresses": ["$_HOSTADDRESSES_4$", "$_HOSTADDRESS_4$"],
+    "all_ipv6addresses": ["$_HOSTADDRESSES_6$", "$_HOSTADDRESS_6$"],
+    "additional_ipv4addresses": ["$_HOSTADDRESSES_4$"],
+    "additional_ipv6addresses": ["$_HOSTADDRESSES_6$"],
+    "indexed_ipv4address": ["$_HOSTADDRESSES_4_%s$"],
+    "indexed_ipv6address": ["$_HOSTADDRESSES_6_%s$"],
+}
+
+
+class AddressCmdArgs(NamedTuple):
+    ipv6address: bool
+    address_args: Sequence[str]
+
+    def to_list(self) -> list[str]:
+        if self.ipv6address:
+            return ["-6", *self.address_args]
+        return list(self.address_args)
+
+
+def get_common_arguments(params: Mapping[str, Any]) -> list[str]:
     args = []
 
     min_successful_pings = params.get("min_pings", 0)
@@ -26,48 +51,36 @@ def check_icmp_arguments(params):
     args += ["-w", "%.2f,%d%%" % (rta[0], loss[0])]
     args += ["-c", "%.2f,%d%%" % (rta[1], loss[1])]
 
+    return args
+
+
+def is_ipv6_address(ip_address_type: str) -> bool:
+    return ip_address_type in (
+        "all_ipv6addresses",
+        "additional_ipv6addresses",
+        "indexed_ipv6address",
+    )
+
+
+def get_address_arguments(params: Mapping[str, Any], host_config: Any) -> AddressCmdArgs:
     target = params.get("address", "address")
 
-    # Note: The following macros have to work with both Nagios and the CMC
-    if target == "address":
-        if is_ipv6_primary(host_name()):
-            args.append("-6")
-        args.append("$HOSTADDRESS$")
+    if target in ("address", "alias"):
+        ipv6address = is_ipv6_primary(host_config.hostname)
+        return AddressCmdArgs(ipv6address, list(IP_ADDRESS_MACROS[target]))
 
-    elif target == "alias":
-        if is_ipv6_primary(host_name()):
-            args.append("-6")
-        args.append("$HOSTALIAS$")
+    if target[0] in ("indexed_ipv4address", "indexed_ipv6address"):
+        macro = IP_ADDRESS_MACROS[target[0]][0] % target[1]
+        return AddressCmdArgs(is_ipv6_address(target[0]), [macro])
 
-    elif target == "all_ipv4addresses":
-        args += ["$_HOSTADDRESSES_4$", "$_HOSTADDRESS_4$"]
+    if target in IP_ADDRESS_MACROS:
+        return AddressCmdArgs(is_ipv6_address(target), list(IP_ADDRESS_MACROS[target]))
 
-    elif target == "all_ipv6addresses":
-        args += ["-6", "$_HOSTADDRESSES_6$", "$_HOSTADDRESS_6$"]
-
-    elif target == "additional_ipv4addresses":
-        args.append("$_HOSTADDRESSES_4$")
-
-    elif target == "additional_ipv6addresses":
-        args += ["-6", "$_HOSTADDRESSES_6$"]
-
-    elif target[0] == "indexed_ipv4address":
-        args.append("$_HOSTADDRESS_4_%s$" % target[1])
-
-    elif target[0] == "indexed_ipv6address":
-        args.append("$_HOSTADDRESS_6_%s$" % target[1])
-
-    else:  # custom
-        args.append(str(target[1]))
-
-    # Unfortunately, we must return a single string here.
-    # Otherwise shell quoting will be applied to every element
-    # of the list, which will interfere with macro replacements like
-    # "$_HOSTADDRESSES_4$" -> "1.2.3.4 5.6.7.8"
-    return " ".join(args)
+    # explicit ip address argument
+    return AddressCmdArgs(False, [str(target[1])])
 
 
-def check_icmp_description(params):
+def get_icmp_description_all_ips(params: Mapping[str, Any]) -> str:
     if "description" in params:
         return params["description"]
 
@@ -81,9 +94,75 @@ def check_icmp_description(params):
     return description
 
 
+def generate_single_address_services(
+    address_args: AddressCmdArgs, host_config: Any
+) -> Iterator[Tuple[str, AddressCmdArgs]]:
+    for arg in address_args.address_args:
+        if arg == "$_HOSTADDRESSES_4$":
+            for macro, ip_address in host_config.indexed_ipv4addresses.items():
+                yield ip_address, AddressCmdArgs(address_args.ipv6address, [macro])
+
+        elif arg == "$_HOSTADDRESSES_6$":
+            for macro, ip_address in host_config.indexed_ipv6addresses.items():
+                yield ip_address, AddressCmdArgs(address_args.ipv6address, [macro])
+
+        elif arg == "$HOSTADDRESS$":
+            yield host_config.host_address, AddressCmdArgs(address_args.ipv6address, [arg])
+
+        elif arg == "$HOSTALIAS$":
+            yield host_config.alias, AddressCmdArgs(address_args.ipv6address, [arg])
+
+        elif arg == "$_HOSTADDRESS_4$":
+            yield host_config.ipv4address, AddressCmdArgs(address_args.ipv6address, [arg])
+
+        elif arg == "$_HOSTADDRESS_6$":
+            yield host_config.ipv6address, AddressCmdArgs(address_args.ipv6address, [arg])
+
+        elif "$_HOSTADDRESSES_4_" in arg:
+            yield host_config.indexed_ipv4addresses.get(arg, ""), AddressCmdArgs(
+                address_args.ipv6address, [arg]
+            )
+
+        elif "$_HOSTADDRESSES_6_" in arg:
+            yield host_config.indexed_ipv6addresses.get(arg, ""), AddressCmdArgs(
+                address_args.ipv6address, [arg]
+            )
+
+        else:
+            yield arg, AddressCmdArgs(address_args.ipv6address, [arg])
+
+
+# Unfortunately, we must return a single string here.
+# Otherwise shell quoting will be applied to every element
+# of the list, which will interfere with macro replacements like
+# "$_HOSTADDRESSES_4$" -> "1.2.3.4 5.6.7.8"
+def generate_icmp_services(
+    host_config: Any, params: Mapping[str, Any]
+) -> Iterator[Tuple[str, str]]:
+    multiple_services = params.get("multiple_services", False)
+
+    common_args = get_common_arguments(params)
+    address_args = get_address_arguments(params, host_config)
+
+    if not multiple_services:
+        description = get_icmp_description_all_ips(params)
+        arguments = " ".join(common_args + address_args.to_list())
+        yield description, arguments
+
+    else:
+        desc_template = params.get("description", "PING")
+        for ip_address, single_address_args in generate_single_address_services(
+            address_args, host_config
+        ):
+            arguments = " ".join(common_args + single_address_args.to_list())
+            yield f"{desc_template} {ip_address}", arguments
+
+
+# service_generator is used to create multiple services for the same active
+# check. However, this functionality is NOT part of the official API and can
+# change at any time.
 active_check_info["icmp"] = {
-    "command_line": "check_icmp_wrapper $ARG1$",
-    "argument_function": check_icmp_arguments,
-    "service_description": check_icmp_description,
+    "command_line": "check_icmp $ARG1$",
+    "service_generator": generate_icmp_services,
     "has_perfdata": True,
 }

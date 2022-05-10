@@ -497,6 +497,9 @@ class ActiveCheck(BaseCheck):
     def run_service_description(self, params):
         return self.info["service_description"](params)
 
+    def run_generate_icmp_services(self, host_config, params):
+        yield from self.info["service_generator"](host_config, params)
+
 
 class SpecialAgent:
     def __init__(self, name):

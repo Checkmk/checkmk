@@ -1,0 +1,20 @@
+Title: check_icmp: Option to create one service per IP address
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1652187558
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0b9
+
+Previously, when monitoring multiple IP addresses with an ICMP check,
+results for all addresses would be shown in one service.
+In case of many IP addresses, the user wouldn't have a good overview
+over availability of a particular address.
+
+Enabling option Setup -> Services -> HTTP, TCP, Email, ... ->
+Check hosts with PING (ICMP Echo Request) -> Multiple services ->
+Create a service for every pinged IP address creates one service
+per IP address.

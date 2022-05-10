@@ -85,7 +85,7 @@ make -C "$DOCKER_PATH" "$DOCKER_IMAGE_ARCHIVE"
 log "Verschiebe Image-Tarball..."
 mv -v "$DOCKER_PATH/$DOCKER_IMAGE_ARCHIVE" "$PACKAGE_PATH/${VERSION}/"
 
-if [ $EDITION = raw ]; then
+if [ "$EDITION" = raw ] || [ "$EDITION" = free ]; then
     docker_push "" "checkmk"
 else
     docker_push "registry.checkmk.com" "/${EDITION}"

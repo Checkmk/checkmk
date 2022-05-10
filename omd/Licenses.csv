@@ -262,7 +262,7 @@ yaml-cpp,0.6.3,MIT,https://opensource.org/licenses/MIT,omd/packages/yaml-cpp/yam
 Icons,,,,,,,,
 Classic Icons,,LGPL-2.1,https://opensource.org/licenses/LGPL-2.1,web/htdocs/images/icon_*,,,,
 Facelift Icons,,Icons8,https://icons8.com/download/Icons8_License.pdf,web/htdocs/images/icon_*,,,,
-Kubernetes Logo,,CC-BY-4.0,https://creativecommons.org/licenses/by/4.0/,web/htdocs/themes/facelift/images/kubernetes_logo.svg,,,,
+Kubernetes Logo,,CC-BY-4.0,https://creativecommons.org/licenses/by/4.0/,web/htdocs/themes/facelift/images/icon_kubernetes.svg,,,,
 ,,,,,,,,
 JavaScript and CSS,,,,,,,,
 ColorPicker,,MIT,https://opensource.org/licenses/MIT,"web/htdocs/js/colorpicker.js

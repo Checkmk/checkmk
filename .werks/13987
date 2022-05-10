@@ -1,0 +1,15 @@
+Title: job: replace useless start time metric with job age
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1653299543
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0p1
+
+The check plugin job, which monitors cronjobs running with mk-job, produced
+a useless metric measuring the unix time stamp at which the job had been started.
+This metric has now been replaced with a new metric job age, which measures the
+actual age of the job.

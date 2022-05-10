@@ -414,7 +414,7 @@ class ModeUsers(WatoMode):
                     auth_method = "<i>%s</i>" % _("none")
                 table.cell(_("Authentication"), auth_method)
 
-                table.cell(_("State"))
+                table.cell(_("State"), sortable=False)
                 if user.get("locked", False):
                     html.icon('user_locked', _('The login is currently locked'))
 

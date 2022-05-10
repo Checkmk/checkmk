@@ -44,7 +44,10 @@ def test_check_timemachine_state_ok(fix_register: FixRegister, monkeypatch):
     monkeypatch.setenv("TZ", "Europe/Berlin")
     result = list(check.check_function(params={"age": (86400, 172800)}, section=info))
     assert result == [
-        Result(state=State.OK, summary="Last backup was at 2022-05-05 20:26:10: 18 h ago")
+        Result(
+            state=State.OK,
+            summary="Last backup was at 2022-05-05 20:26:10: 18 hours 33 minutes ago",
+        )
     ]
 
 
@@ -61,7 +64,7 @@ def test_check_timemachine_state_crit(fix_register: FixRegister, monkeypatch):
     assert result == [
         Result(
             state=State.CRIT,
-            summary="Last backup was at 2022-05-01 20:26:10: 4.8 d ago (warn/crit at 24 h ago/2 d ago)",
+            summary="Last backup was at 2022-05-01 20:26:10: 4 days 18 hours ago (warn/crit at 1 day 0 hours ago/2 days 0 hours ago)",
         )
     ]
 
@@ -79,7 +82,7 @@ def test_check_timemachine_state_warn(fix_register: FixRegister, monkeypatch):
     assert result == [
         Result(
             state=State.WARN,
-            summary="Last backup was at 2022-05-04 20:26:10: 42 h ago (warn/crit at 24 h ago/2 d ago)",
+            summary="Last backup was at 2022-05-04 20:26:10: 1 day 18 hours ago (warn/crit at 1 day 0 hours ago/2 days 0 hours ago)",
         )
     ]
 

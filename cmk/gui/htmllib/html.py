@@ -10,7 +10,7 @@ import json
 import pprint
 import re
 from pathlib import Path
-from typing import Any, Callable, cast, Dict, Iterable, List, Optional, Set, Tuple, Union
+from typing import Any, Callable, cast, Dict, Iterable, List, Literal, Optional, Set, Tuple, Union
 
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
@@ -161,21 +161,27 @@ class HTMLGenerator(HTMLWriter):
     def render_warning(self, msg: HTMLMessageInput) -> HTML:
         return self._render_message(msg, "warning")
 
-    def _render_message(self, msg: HTMLMessageInput, what: str = "message") -> HTML:
-        if what == "message":
+    def _render_message(
+        self,
+        msg: HTMLMessageInput,
+        msg_type: Literal["message", "warning", "error"] = "message",
+    ) -> HTML:
+        if msg_type == "message":
             cls = "success"
             prefix = _("MESSAGE")
-        elif what == "warning":
+        elif msg_type == "warning":
             cls = "warning"
             prefix = _("WARNING")
-        else:
+        elif msg_type == "error":
             cls = "error"
             prefix = _("ERROR")
+        else:
+            raise TypeError(msg_type)
 
         if self.output_format == "html":
-            code = self.render_div(msg, class_=cls)
+            code = HTMLWriter.render_div(msg, class_=cls)
             if self._mobile:
-                return self.render_center(code)
+                return HTMLWriter.render_center(code)
             return code
         return escaping.escape_to_html_permissive(
             "%s: %s\n" % (prefix, escaping.strip_tags(msg)), escape_links=False

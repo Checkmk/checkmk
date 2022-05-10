@@ -49,6 +49,7 @@ import cmk.gui.bi as bi
 from cmk.gui.config import active_config
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.context import html
+from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -423,7 +424,7 @@ class PerfgraphIcon(Icon):
         if is_mobile(request, response):
             return None
 
-        return html.render_a(
+        return HTMLWriter.render_a(
             content=html.render_icon("graph", ""),
             href=url,
             onmouseout="cmk.hover.hide()",

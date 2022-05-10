@@ -12,6 +12,7 @@ from livestatus import SiteId
 
 import cmk.gui.sites as sites
 from cmk.gui.htmllib.context import html
+from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l, ungettext
 from cmk.gui.permissions import Permission, permission_registry
@@ -174,7 +175,7 @@ class PainterCrashIdent(Painter):
             ],
             filename="crash.py",
         )
-        return (None, html.render_a(row["crash_id"], href=url))
+        return (None, HTMLWriter.render_a(row["crash_id"], href=url))
 
 
 @painter_registry.register

@@ -10,6 +10,7 @@ from tests.testlib import compare_html
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.context import html
+from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
@@ -135,12 +136,12 @@ def test_HTMLWriter(request_context):
 
         a = "\u2665"
         with output_funnel.plugged():
-            assert html.render_a("test", href="www.test.case")
-            html.render_a("test", href="www.test.case")
-            html.render_a("test", href="www.test.case")
-            html.render_a("test", href="www.test.case")
+            assert HTMLWriter.render_a("test", href="www.test.case")
+            HTMLWriter.render_a("test", href="www.test.case")
+            HTMLWriter.render_a("test", href="www.test.case")
+            HTMLWriter.render_a("test", href="www.test.case")
             try:
-                assert html.render_a(
+                assert HTMLWriter.render_a(
                     "test",
                     href=str("www.test.case"),
                     id_=str("something"),
@@ -162,7 +163,7 @@ def test_exception_handling(request_context):
     try:
         raise Exception("Test")
     except Exception as e:
-        assert compare_html(html.render_div(str(e)), "<div>%s</div>" % e)
+        assert compare_html(HTMLWriter.render_div(str(e)), "<div>%s</div>" % e)
 
 
 def test_text_input(request_context):
@@ -197,10 +198,10 @@ def test_text_input(request_context):
 
 
 def test_render_a(request_context):
-    a = html.render_a("bla", href="blu", class_=["eee"], target="_blank")
+    a = HTMLWriter.render_a("bla", href="blu", class_=["eee"], target="_blank")
     assert compare_html(a, '<a href="blu" target="_blank" class="eee">bla</a>')
 
-    a = html.render_a(
+    a = HTMLWriter.render_a(
         "b<script>alert(1)</script>la",
         href="b<script>alert(1)</script>lu",
         class_=["eee"],

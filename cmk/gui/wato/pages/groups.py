@@ -23,6 +23,7 @@ from cmk.gui.groups import (
     load_service_group_information,
 )
 from cmk.gui.htmllib.context import html
+from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.inventory import vs_element_inventory_visible_raw_path, vs_inventory_path_or_keys_help
@@ -402,7 +403,7 @@ class ModeContactgroups(ModeGroups):
         html.write_html(
             HTML(", ").join(
                 [
-                    html.render_a(
+                    HTMLWriter.render_a(
                         alias,
                         href=folder_preserving_link([("mode", "edit_user"), ("edit", userid)]),
                     )

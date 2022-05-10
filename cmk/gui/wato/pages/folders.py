@@ -21,6 +21,7 @@ from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.groups import load_contact_group_information
 from cmk.gui.htmllib.context import html
+from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -1024,7 +1025,7 @@ class ModeFolder(WatoMode):
     def _limit_labels(self, labels):
         show_all, limit = HTML(""), 3
         if len(labels) > limit and request.var("_show_all") != "1":
-            show_all = HTML(" ") + html.render_a(
+            show_all = HTML(" ") + HTMLWriter.render_a(
                 "... (%s)" % _("show all"), href=makeuri(request, [("_show_all", "1")])
             )
             labels = dict(sorted(labels.items())[:limit])
@@ -1032,7 +1033,7 @@ class ModeFolder(WatoMode):
 
     def _render_contact_group(self, contact_group_names, c):
         display_name = contact_group_names.get(c, {"alias": c})["alias"]
-        return html.render_a(display_name, "wato.py?mode=edit_contact_group&edit=%s" % c)
+        return HTMLWriter.render_a(display_name, "wato.py?mode=edit_contact_group&edit=%s" % c)
 
     def _show_host_actions(self, host):
         html.icon_button(host.edit_url(), _("Edit the properties of this host"), "edit")

@@ -59,6 +59,7 @@ from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.htmllib.context import html
+from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
@@ -211,16 +212,17 @@ def substitute_help():
     # TODO: While loading this module there is no "html" object available for generating the HTML
     # code below. The HTML generating code could be independent of a HTML request.
     _help_rows = [
-        html.render_tr(html.render_td(key) + html.render_td(value)) for key, value in _help_list
+        HTMLWriter.render_tr(HTMLWriter.render_td(key) + HTMLWriter.render_td(value))
+        for key, value in _help_list
     ]
 
     return (
         escape_to_html(
             _("The following macros will be substituted by value from the actual event:")
         )
-        + html.render_br()
-        + html.render_br()
-        + html.render_table(HTML().join(_help_rows), class_="help")
+        + HTMLWriter.render_br()
+        + HTMLWriter.render_br()
+        + HTMLWriter.render_table(HTML().join(_help_rows), class_="help")
     )
 
 
@@ -1380,8 +1382,8 @@ class ABCEventConsoleMode(WatoMode, abc.ABC):
         rfc = cmk.gui.mkeventd.send_event(event)
         flash(
             escape_to_html(_("Test event generated and sent to Event Console."))
-            + html.render_br()
-            + html.render_pre(rfc)
+            + HTMLWriter.render_br()
+            + HTMLWriter.render_pre(rfc)
         )
         return True
 
@@ -1911,7 +1913,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
 
                 table.cell(
                     _("Rules"),
-                    html.render_a("%d" % len(rule_pack["rules"]), href=rules_url),
+                    HTMLWriter.render_a("%d" % len(rule_pack["rules"]), href=rules_url),
                     css="number",
                 )
 
@@ -2226,7 +2228,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                         % (", ".join(rule["contact_groups"]["groups"]) or _("(none)")),
                     )
 
-                table.cell(_("ID"), html.render_a(rule["id"], edit_url))
+                table.cell(_("ID"), HTMLWriter.render_a(rule["id"], edit_url))
 
                 if cmk_version.is_managed_edition():
                     table.cell(_("Customer"))
@@ -2259,7 +2261,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                     }[stateval]
                     table.cell(
                         _("State"),
-                        html.render_span(txt, class_="state_rounded_fill"),
+                        HTMLWriter.render_span(txt, class_="state_rounded_fill"),
                         css="state state%s" % stateval,
                     )
 

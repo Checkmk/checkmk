@@ -22,6 +22,7 @@ from cmk.utils.type_defs import CheckPluginNameStr
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.context import html
+from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.page_menu import (
@@ -323,8 +324,10 @@ def _render_manpage_list(titles, manpage_list, path_comp, heading):
                     ("back", makeuri(request, [])),
                 ],
             )
-            table.cell(_("Type of Check"), html.render_a(entry["title"], href=url), css="title")
-            table.cell(_("Plugin Name"), html.render_tt(entry["name"]), css="name")
+            table.cell(
+                _("Type of Check"), HTMLWriter.render_a(entry["title"], href=url), css="title"
+            )
+            table.cell(_("Plugin Name"), HTMLWriter.render_tt(entry["name"]), css="name")
             table.cell(
                 _("Agents"), ", ".join(map(translate, sorted(entry["agents"]))), css="agents"
             )

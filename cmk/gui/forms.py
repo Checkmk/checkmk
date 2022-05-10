@@ -14,6 +14,7 @@ from cmk.gui.htmllib.foldable_container import (
     foldable_container_img_id,
     foldable_container_onclick,
 )
+from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.logged_in import user
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.theme import theme
@@ -67,7 +68,7 @@ def header(
         )
 
     html.open_tbody(id_=container_id, class_=["open" if isopen else "closed"])
-    html.tr(html.render_td("", colspan=2))
+    html.tr(HTMLWriter.render_td("", colspan=2))
     g_header_open = True
     g_section_open = False
 
@@ -111,7 +112,7 @@ def container() -> None:
 
 
 def space() -> None:
-    html.tr(html.render_td("", colspan=2, style="height:15px;"))
+    html.tr(HTMLWriter.render_td("", colspan=2, style="height:15px;"))
 
 
 def section(
@@ -169,7 +170,7 @@ def end() -> None:
     global g_header_open
     g_header_open = False
     section_close()
-    html.tr(html.render_td("", colspan=2), class_=["bottom"])
+    html.tr(HTMLWriter.render_td("", colspan=2), class_=["bottom"])
     html.close_tbody()
     html.close_table()
 

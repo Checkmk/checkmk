@@ -17,6 +17,7 @@ import cmk.utils.render
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.htmllib.context import html
+from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _, _u
 from cmk.gui.log import logger
@@ -119,8 +120,8 @@ def render_graph_error_html(msg_or_exc, title=None) -> HTML:
     if title is None:
         title = _("Cannot display graph")
 
-    return html.render_div(
-        html.render_div(title, class_="title") + html.render_pre(msg),
+    return HTMLWriter.render_div(
+        HTMLWriter.render_div(title, class_="title") + HTMLWriter.render_pre(msg),
         class_=["graph", "brokengraph"],
     )
 
@@ -134,7 +135,7 @@ def render_graph_html(graph_artwork, graph_data_range, graph_render_options) -> 
         _show_graph_html_content(graph_artwork, graph_data_range, graph_render_options)
         html_code = HTML(output_funnel.drain())
 
-    return html.render_javascript(
+    return HTMLWriter.render_javascript(
         "cmk.graphs.create_graph(%s, %s, %s, %s);"
         % (
             json.dumps(html_code),
@@ -686,14 +687,15 @@ def render_graph_container_html(graph_recipe, graph_data_range, graph_render_opt
     graph_width = size[0] * html_size_per_ex
     graph_height = size[1] * html_size_per_ex
 
-    content = html.render_div("", class_="title") + html.render_div(
+    content = HTMLWriter.render_div("", class_="title") + HTMLWriter.render_div(
         "", class_="content", style="width:%dpx;height:%dpx" % (graph_width, graph_height)
     )
 
-    output = html.render_div(
-        html.render_div(content, class_=["graph", "loading_graph"]), class_="graph_load_container"
+    output = HTMLWriter.render_div(
+        HTMLWriter.render_div(content, class_=["graph", "loading_graph"]),
+        class_="graph_load_container",
     )
-    output += html.render_javascript(
+    output += HTMLWriter.render_javascript(
         "cmk.graphs.load_graph_content(%s, %s, %s)"
         % (
             json.dumps(graph_recipe),
@@ -747,7 +749,7 @@ def render_graph_content_html(graph_recipe, graph_data_range, graph_render_optio
             previews = False
 
         if previews:
-            output += html.render_div(
+            output += HTMLWriter.render_div(
                 main_graph_html + render_time_range_selection(graph_recipe, graph_render_options),
                 class_="graph_with_timeranges",
             )
@@ -796,13 +798,13 @@ def render_time_range_selection(graph_recipe, graph_render_options) -> HTML:
             graph_recipe, graph_data_range, graph_render_options
         )
         rows.append(
-            html.render_td(
+            HTMLWriter.render_td(
                 render_graph_html(graph_artwork, graph_data_range, graph_render_options),
                 title=_("Change graph timerange to: %s") % timerange_attrs["title"],
             )
         )
-    return html.render_table(
-        HTML().join(html.render_tr(content) for content in rows), class_="timeranges"
+    return HTMLWriter.render_table(
+        HTML().join(HTMLWriter.render_tr(content) for content in rows), class_="timeranges"
     )
 
 

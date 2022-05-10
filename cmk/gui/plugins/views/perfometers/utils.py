@@ -18,7 +18,7 @@ from typing import List, Literal, Optional, Tuple
 
 import cmk.gui.metrics as metrics
 from cmk.gui.exceptions import MKGeneralException
-from cmk.gui.htmllib.context import html
+from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.i18n import _
 from cmk.gui.type_defs import Perfdata, Row
 from cmk.gui.utils.html import HTML
@@ -68,14 +68,14 @@ def render_perfometer_td(perc: float, color: str) -> HTML:
     style = ["width: %d%%;" % int(float(perc)), "background-color: %s" % color]
     if opacity is not None:
         style += ["opacity: %s" % opacity]
-    return html.render_td("", class_="inner", style=style)
+    return HTMLWriter.render_td("", class_="inner", style=style)
 
 
 # render the perfometer table
 # data is expected to be a list of tuples [(perc, color), (perc2, color2), ...]
 def render_perfometer(data: PerfometerData) -> HTML:
     tds = HTML().join(render_perfometer_td(percentage, color) for percentage, color in data)
-    return html.render_table(html.render_tr(tds))
+    return HTMLWriter.render_table(HTMLWriter.render_tr(tds))
 
 
 # Paint linear performeter with one value
@@ -175,5 +175,5 @@ def render_metricometer(stack) -> HTML:
         )
     h = HTML().join(map(render_perfometer, stack))
     if len(stack) == 2:
-        h = html.render_div(h, class_="stacked")
+        h = HTMLWriter.render_div(h, class_="stacked")
     return h

@@ -76,6 +76,7 @@ from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.htmllib.context import html
 from cmk.gui.htmllib.foldable_container import foldable_container
+from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.tag_rendering import HTMLTagAttributes
 from cmk.gui.http import request, UploadedFile
 from cmk.gui.i18n import _
@@ -928,8 +929,8 @@ class RegExp(TextInput):
         if default_help_text is not None:
             help_text.append(
                 escaping.escape_to_html_permissive(str(default_help_text), escape_links=False)
-                + html.render_br()
-                + html.render_br()
+                + HTMLWriter.render_br()
+                + HTMLWriter.render_br()
             )
 
         help_text.append(_("The text entered here is handled as a regular expression pattern."))
@@ -1097,7 +1098,7 @@ class EmailAddress(TextInput):
         if not value:
             return super().value_to_html(value)
         if self._make_clickable:
-            return html.render_a(value, href="mailto:%s" % value)
+            return HTMLWriter.render_a(value, href="mailto:%s" % value)
         return value
 
 
@@ -1458,7 +1459,7 @@ class Url(TextInput):
 
         # Remove trailing / if the url does not contain any path component
         if self._show_as_link:
-            return html.render_a(
+            return HTMLWriter.render_a(
                 text, href=value, target=self._link_target if self._link_target else None
             )
 
@@ -1566,7 +1567,7 @@ class TextAreaUnicode(TextInput):
 
     def value_to_html(self, value: str) -> ValueSpecText:
         if self._monospaced:
-            return html.render_pre(HTML(value), class_="ve_textarea")
+            return HTMLWriter.render_pre(HTML(value), class_="ve_textarea")
         return value.replace("\n", "<br>")
 
     def render_input(self, varprefix: str, value: _Optional[str]) -> None:
@@ -1795,8 +1796,11 @@ class ListOfStrings(ValueSpec[Sequence[str]]):
             return self._empty_text
 
         if self._vertical:
-            s = [html.render_tr(html.render_td(self._valuespec.value_to_html(v))) for v in value]
-            return html.render_table(HTML().join(s))
+            s = [
+                HTMLWriter.render_tr(HTMLWriter.render_td(self._valuespec.value_to_html(v)))
+                for v in value
+            ]
+            return HTMLWriter.render_table(HTML().join(s))
         return HTML(", ").join(self._valuespec.value_to_html(v) for v in value)
 
     def from_html_vars(self, varprefix: str) -> Sequence[str]:
@@ -2115,9 +2119,10 @@ class ListOf(ValueSpec[ListOfModel[T]]):
         if not value:
             return self._text_if_empty
 
-        return html.render_table(
+        return HTMLWriter.render_table(
             HTML().join(
-                html.render_tr(html.render_td(self._valuespec.value_to_html(v))) for v in value
+                HTMLWriter.render_tr(HTMLWriter.render_td(self._valuespec.value_to_html(v)))
+                for v in value
             )
         )
 
@@ -2329,10 +2334,10 @@ class ListOfMultiple(ValueSpec[ListOfMultipleModel]):
         table_content = HTML()
         for ident, val in value.items():
             vs = self._choice_dict[ident]
-            table_content += html.render_tr(
-                html.render_td(vs.title()) + html.render_td(vs.value_to_html(val))
+            table_content += HTMLWriter.render_tr(
+                HTMLWriter.render_td(vs.title()) + HTMLWriter.render_td(vs.value_to_html(val))
             )
-        return html.render_table(table_content)
+        return HTMLWriter.render_table(table_content)
 
     def value_to_json(self, value: ListOfMultipleModel) -> JSONValue:
         return {ident: self._choice_dict[ident].value_to_json(val) for ident, val in value.items()}
@@ -3673,7 +3678,9 @@ class ListChoice(ValueSpec[Sequence[ListChoiceChoiceIdent]]):
         if self._render_orientation == "horizontal":
             return ", ".join(texts)
 
-        return html.render_table(html.render_tr(html.render_td(html.render_br().join(texts))))
+        return HTMLWriter.render_table(
+            HTMLWriter.render_tr(HTMLWriter.render_td(HTMLWriter.render_br().join(texts)))
+        )
 
     def from_html_vars(self, varprefix: str) -> list[ListChoiceChoiceIdent]:
         self.load_elements()
@@ -5303,7 +5310,7 @@ class Alternative(ValueSpec):
         if vs:
             output = HTML()
             if self._show_alternative_title and (title := vs.title()):
-                output = escaping.escape_to_html(title) + html.render_br()
+                output = escaping.escape_to_html(title) + HTMLWriter.render_br()
             return output + vs.value_to_html(value)
         return _("invalid:") + " " + str(value)
 
@@ -5765,11 +5772,11 @@ class Dictionary(ValueSpec[dict[str, Any]]):
         s = HTML()
         for param, vs in elem:
             if param in value:
-                s += html.render_tr(
-                    html.render_td("%s:&nbsp;" % vs.title(), class_="title")
-                    + html.render_td(vs.value_to_html(value[param]))
+                s += HTMLWriter.render_tr(
+                    HTMLWriter.render_td("%s:&nbsp;" % vs.title(), class_="title")
+                    + HTMLWriter.render_td(vs.value_to_html(value[param]))
                 )
-        return html.render_table(s)
+        return HTMLWriter.render_table(s)
 
     def value_to_json(self, value: dict[str, Any]) -> JSONValue:
         return {
@@ -6517,7 +6524,9 @@ class ImageUpload(FileUpload):
             html.open_table()
             html.open_tr()
             html.td(_("Current image:"))
-            html.td(html.render_img("data:image/png;base64,%s" % base64.b64encode(value).decode()))
+            html.td(
+                HTMLWriter.render_img("data:image/png;base64,%s" % base64.b64encode(value).decode())
+            )
             html.close_tr()
             html.open_tr()
             html.td(_("Upload new:"))
@@ -6938,7 +6947,7 @@ class IconSelector(ValueSpec):
             icon_tag = html.render_icon(icon, title=title, id_=id_)
 
         if onclick:
-            icon_tag = html.render_a(icon_tag, href="javascript:void(0)", onclick=onclick)
+            icon_tag = HTMLWriter.render_a(icon_tag, href="javascript:void(0)", onclick=onclick)
 
         return icon_tag
 
@@ -7216,7 +7225,7 @@ class Color(ValueSpec):
         # Holds the actual value for form submission
         html.hidden_field(varprefix + "_value", value or "", varprefix + "_value", add_var=True)
 
-        indicator = html.render_div(
+        indicator = HTMLWriter.render_div(
             "",
             id_="%s_preview" % varprefix,
             class_="cp-preview",
@@ -7492,9 +7501,11 @@ class AjaxFetchCA(AjaxPage):
                 raise MKUserError(None, _("Failed to decode certificate data"))
 
             def row(key: str, value: str) -> HTML:
-                return html.render_tr(html.render_td(key) + html.render_td(value), class_="data")
+                return HTMLWriter.render_tr(
+                    HTMLWriter.render_td(key) + HTMLWriter.render_td(value), class_="data"
+                )
 
-            summary = html.render_table(
+            summary = HTMLWriter.render_table(
                 row(_("Issued to"), cert.issued_to)
                 + row(_("Issued by"), cert.issued_by)
                 + row(_("Valid from"), cert.valid_from)
@@ -7581,9 +7592,9 @@ class CAorCAChain(UploadOrPasteTextFile):
             ("subject", _("Subject")),
         ]:
             rows.append(
-                html.render_tr(
-                    html.render_td("%s:" % title)
-                    + html.render_td(
+                HTMLWriter.render_tr(
+                    HTMLWriter.render_td("%s:" % title)
+                    + HTMLWriter.render_td(
                         HTML().join(
                             "%s: %s" % (title1, val)
                             for title1, val in sorted(cert_info[what].items())
@@ -7591,7 +7602,7 @@ class CAorCAChain(UploadOrPasteTextFile):
                     )
                 )
             )
-        return html.render_table(HTML().join(rows))
+        return HTMLWriter.render_table(HTML().join(rows))
 
 
 def ListOfCAs(  # pylint: disable=redefined-builtin

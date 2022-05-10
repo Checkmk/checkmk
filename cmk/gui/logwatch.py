@@ -24,6 +24,7 @@ from cmk.gui.breadcrumb import (
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKAuthException, MKGeneralException, MKUserError
 from cmk.gui.htmllib.context import html
+from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -99,7 +100,7 @@ def show_log_list():
             continue  # Logfile vanished
 
         html.h3(
-            html.render_a(
+            HTMLWriter.render_a(
                 host_name,
                 href=makeuri(
                     request,
@@ -266,7 +267,7 @@ def list_logs(site, host_name, logfile_names):
             table.row()
             file_display = form_file_to_ext(file_name)
             uri = makeuri(request, [("site", site), ("host", host_name), ("file", file_display)])
-            logfile_link = html.render_a(file_display, href=uri)
+            logfile_link = HTMLWriter.render_a(file_display, href=uri)
 
             try:
                 log_chunks = parse_file(site, host_name, file_name)

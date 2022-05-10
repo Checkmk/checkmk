@@ -21,6 +21,7 @@ from typing import Dict, Iterator, List, Optional, Tuple, Union
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.htmllib.context import html
+from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -538,7 +539,7 @@ class PageMenuRenderer:
 
     def _show_dropdown_trigger(self, dropdown: PageMenuDropdown) -> None:
         html.popup_trigger(
-            html.render_h2(dropdown.title),
+            HTMLWriter.render_h2(dropdown.title),
             ident="menu_" + dropdown.name,
             method=MethodInline(self._render_dropdown_area(dropdown)),
             data=dropdown.popup_data,

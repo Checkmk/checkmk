@@ -17,6 +17,7 @@ from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.context import html
+from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.page_menu import PageMenu, PageMenuDropdown, PageMenuEntry, PageMenuTopic
@@ -306,7 +307,7 @@ class ModeObjectParameters(WatoMode):
             url = folder_preserving_link(
                 [("mode", "edit_ruleset"), ("varname", "custom_checks"), ("host", self._hostname)]
             )
-            forms.section(html.render_a(_("Command Line"), href=url))
+            forms.section(HTMLWriter.render_a(_("Command Line"), href=url))
             url = folder_preserving_link(
                 [
                     ("mode", "edit_rule"),
@@ -381,16 +382,16 @@ class ModeObjectParameters(WatoMode):
         self, title, title_url, reason, reason_url, is_default, setting: Union[str, HTML]
     ) -> None:
         if title_url:
-            title = html.render_a(title, href=title_url)
+            title = HTMLWriter.render_a(title, href=title_url)
         forms.section(title)
 
         if reason:
-            reason = html.render_a(reason, href=reason_url)
+            reason = HTMLWriter.render_a(reason, href=reason_url)
 
         html.open_table(class_="setting")
         html.open_tr()
         if is_default:
-            html.td(html.render_i(reason), class_="reason")
+            html.td(HTMLWriter.render_i(reason), class_="reason")
             html.td(setting, class_=["settingvalue", "unused"])
         else:
             html.td(reason, class_="reason")
@@ -433,7 +434,7 @@ class ModeObjectParameters(WatoMode):
             ]
         )
 
-        forms.section(html.render_a(rulespec.title, url))
+        forms.section(HTMLWriter.render_a(rulespec.title, url))
 
         ruleset = all_rulesets.get(varname)
         setting, rules = ruleset.analyse_ruleset(self._hostname, svc_desc_or_item, svc_desc)

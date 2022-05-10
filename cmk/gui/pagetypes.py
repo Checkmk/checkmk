@@ -37,6 +37,7 @@ from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_main_menu_breadc
 from cmk.gui.default_permissions import PermissionSectionGeneral
 from cmk.gui.exceptions import MKAuthException, MKGeneralException, MKUserError
 from cmk.gui.htmllib.context import html
+from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l, _u
 from cmk.gui.logged_in import save_user_file, user
@@ -504,7 +505,7 @@ class PageRenderer(Base):
 
     def render_title(self):
         if self._can_be_linked():
-            return html.render_a(self.title(), href=self.page_url())
+            return HTMLWriter.render_a(self.title(), href=self.page_url())
         return self.title()
 
 
@@ -1209,7 +1210,7 @@ class Overridable(Base):
 
                     # Owner
                     if instance.is_builtin():
-                        ownertxt = html.render_i(_("builtin"))
+                        ownertxt = HTMLWriter.render_i(_("builtin"))
                     else:
                         ownertxt = instance.owner()
                     table.cell(_("Owner"), ownertxt)

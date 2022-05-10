@@ -45,6 +45,7 @@ from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKUserError
 from cmk.gui.htmllib.context import html
+from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -1968,7 +1969,7 @@ class ABCEditRuleMode(WatoMode):
         html.close_tr()
 
         html.open_tr()
-        html.td(html.render_div(content, id_="rule_representation"), class_="log")
+        html.td(HTMLWriter.render_div(content, id_="rule_representation"), class_="log")
         html.close_tr()
 
         html.close_table()
@@ -2409,7 +2410,10 @@ class RuleConditionRenderer:
         )
         yield HTML(
             _("%s matching labels: %s")
-            % (object_title, html.render_i(_("and"), class_="label_operator").join(labels_html))
+            % (
+                object_title,
+                HTMLWriter.render_i(_("and"), class_="label_operator").join(labels_html),
+            )
         )
 
     def _single_label_condition(self, object_type, label_id, label_spec) -> HTML:
@@ -2428,7 +2432,7 @@ class RuleConditionRenderer:
         if not negate:
             return labels_html
 
-        return HTML("%s%s" % (html.render_i(_("not"), class_="label_operator"), labels_html))
+        return HTML("%s%s" % (HTMLWriter.render_i(_("not"), class_="label_operator"), labels_html))
 
     def _host_conditions(self, conditions: RuleConditions) -> Iterable[HTML]:
         if conditions.host_name is None:
@@ -2466,15 +2470,17 @@ class RuleConditionRenderer:
 
             for host_spec in host_name_conditions:
                 if isinstance(host_spec, dict) and "$regex" in host_spec:
-                    text_list.append(html.render_b(host_spec["$regex"]))
+                    text_list.append(HTMLWriter.render_b(host_spec["$regex"]))
                 elif isinstance(host_spec, str):
                     # Make sure that the host exists and the lookup will not fail
                     # Otherwise the entire config would be read
                     folder_hint = folder_lookup_cache.get(host_spec)
                     if folder_hint is not None and (host := Host.host(host_spec)) is not None:
-                        text_list.append(html.render_b(html.render_a(host_spec, host.edit_url())))
+                        text_list.append(
+                            HTMLWriter.render_b(HTMLWriter.render_a(host_spec, host.edit_url()))
+                        )
                     else:
-                        text_list.append(html.render_b(host_spec))
+                        text_list.append(HTMLWriter.render_b(host_spec))
                 else:
                     raise ValueError("Unsupported host spec")
 
@@ -2484,7 +2490,7 @@ class RuleConditionRenderer:
                 if isinstance(host_spec, dict) and "$regex" in host_spec:
                     expression = _("does not match regex") if is_negate else _("matches regex")
                     text_list.append(
-                        escape_to_html(expression + " ") + html.render_b(host_spec["$regex"])
+                        escape_to_html(expression + " ") + HTMLWriter.render_b(host_spec["$regex"])
                     )
                 elif isinstance(host_spec, str):
                     expression = _("is not") if is_negate else _("is")
@@ -2494,11 +2500,12 @@ class RuleConditionRenderer:
                     if folder_hint is not None and (host := Host.host(host_spec)) is not None:
                         text_list.append(
                             escape_to_html(expression + " ")
-                            + html.render_b(html.render_a(host_spec, host.edit_url()))
+                            + HTMLWriter.render_b(HTMLWriter.render_a(host_spec, host.edit_url()))
                         )
                     else:
                         text_list.append(
-                            escape_to_html_permissive(expression + " ") + html.render_b(host_spec)
+                            escape_to_html_permissive(expression + " ")
+                            + HTMLWriter.render_b(host_spec)
                         )
                 else:
                     raise ValueError("Unsupported host spec")
@@ -2549,9 +2556,9 @@ class RuleConditionRenderer:
 
             for item_spec in service_conditions:
                 if isinstance(item_spec, dict) and "$regex" in item_spec:
-                    text_list.append(html.render_b(item_spec["$regex"].rstrip("$")))
+                    text_list.append(HTMLWriter.render_b(item_spec["$regex"].rstrip("$")))
                 elif isinstance(item_spec, str):
-                    text_list.append(html.render_b(item_spec.rstrip("$")))
+                    text_list.append(HTMLWriter.render_b(item_spec.rstrip("$")))
                 else:
                     raise ValueError("Unsupported item spec")
         else:
@@ -2568,7 +2575,7 @@ class RuleConditionRenderer:
                     expression = _("is not ") if is_exact else _("begins not with ")
                 else:
                     expression = _("is ") if is_exact else _("begins with ")
-                text_list.append(escape_to_html(expression) + html.render_b(spec.rstrip("$")))
+                text_list.append(escape_to_html(expression) + HTMLWriter.render_b(spec.rstrip("$")))
 
         if len(text_list) == 1:
             condition += text_list[0]

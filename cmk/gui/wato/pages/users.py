@@ -25,6 +25,7 @@ from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.groups import load_contact_group_information
 from cmk.gui.htmllib.context import html
+from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _u, get_language_alias, get_languages
 from cmk.gui.log import logger
@@ -293,7 +294,7 @@ class ModeUsers(WatoMode):
         self._show_user_list()
 
     def _job_details_link(self):
-        return html.render_a("%s" % self._job.get_title(), href=self._job.detail_url())
+        return HTMLWriter.render_a("%s" % self._job.get_title(), href=self._job.detail_url())
 
     def _job_details_url(self):
         return makeuri_contextless(
@@ -435,7 +436,7 @@ class ModeUsers(WatoMode):
                     if _is_two_factor_enabled(user_spec):
                         auth_method += " (+2FA)"
                 else:
-                    auth_method = html.render_i(_("none"))
+                    auth_method = HTMLWriter.render_i(_("none"))
                 table.cell(_("Authentication"), auth_method)
 
                 table.cell(_("State"), sortable=False)
@@ -470,7 +471,7 @@ class ModeUsers(WatoMode):
                     ]
                     html.write_html(
                         HTML(", ").join(
-                            html.render_a(alias, href=link) for (link, alias) in role_links
+                            HTMLWriter.render_a(alias, href=link) for (link, alias) in role_links
                         )
                     )
 
@@ -487,7 +488,7 @@ class ModeUsers(WatoMode):
                     ]
                     html.write_html(
                         HTML(", ").join(
-                            html.render_a(content, href=url)
+                            HTMLWriter.render_a(content, href=url)
                             for (content, url) in zip(cg_aliases, cg_urls)
                         )
                     )
@@ -519,7 +520,7 @@ class ModeUsers(WatoMode):
                             url = folder_preserving_link(
                                 [("mode", "edit_timeperiod"), ("edit", tp)]
                             )
-                            tp_code = html.render_a(
+                            tp_code = HTMLWriter.render_a(
                                 timeperiod_spec_alias(timeperiods[tp], tp), href=url
                             )
                         else:
@@ -1344,7 +1345,7 @@ def select_language(user_spec: UserSpec) -> None:
             "Configure the language of the user interface. Feel free to contribute to the "
             "translations on %s."
         )
-        % html.render_a(
+        % HTMLWriter.render_a(
             "Weblate",
             "https://translate.checkmk.com",
             target="_blank",

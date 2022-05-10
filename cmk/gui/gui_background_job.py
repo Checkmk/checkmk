@@ -17,6 +17,7 @@ import cmk.gui.log as log
 import cmk.gui.sites as sites
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.htmllib.context import html
+from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
@@ -567,7 +568,8 @@ class JobRenderer:
 
         # State
         html.td(
-            html.render_span(job_status["state"]), css=cls.get_css_for_jobstate(job_status["state"])
+            HTMLWriter.render_span(job_status["state"]),
+            css=cls.get_css_for_jobstate(job_status["state"]),
         )
 
         # Started

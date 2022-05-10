@@ -23,6 +23,7 @@ import cmk.gui.utils.escaping as escaping
 from cmk.gui.config import active_config
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.context import html
+from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.plugins.metrics.utils import render_color_icon, TranslatedMetrics
@@ -344,7 +345,9 @@ class PainterSiteIcon(Painter):
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         if row.get("site") and active_config.use_siteicons:
-            return None, html.render_img("icons/site-%s-24.png" % row["site"], class_="siteicon")
+            return None, HTMLWriter.render_img(
+                "icons/site-%s-24.png" % row["site"], class_="siteicon"
+            )
         return None, ""
 
 
@@ -412,7 +415,9 @@ def _paint_service_state_short(row: Row) -> CellSpec:
     state, name = service_state_short(row)
     if is_stale(row):
         state = state + " stale"
-    return "state svcstate state%s" % state, html.render_span(name, class_=["state_rounded_fill"])
+    return "state svcstate state%s" % state, HTMLWriter.render_span(
+        name, class_=["state_rounded_fill"]
+    )
 
 
 def host_state_short(row: Row) -> Tuple[str, str]:
@@ -435,7 +440,9 @@ def _paint_host_state_short(row: Row, short: bool = False) -> CellSpec:
     if short:
         name = name[0]
 
-    return "state hstate hstate%s" % state, html.render_span(name, class_=["state_rounded_fill"])
+    return "state hstate hstate%s" % state, HTMLWriter.render_span(
+        name, class_=["state_rounded_fill"]
+    )
 
 
 @painter_registry.register
@@ -1386,7 +1393,7 @@ class PainterSvcGroupMemberlist(Painter):
         links = []
         for group in row["service_groups"]:
             link = "view.py?view_name=servicegroup&servicegroup=" + group
-            links.append(html.render_a(group, link))
+            links.append(HTMLWriter.render_a(group, link))
         return "", HTML(", ").join(links)
 
 
@@ -1476,7 +1483,8 @@ def _paint_comments(prefix: str, row: Row) -> CellSpec:
     comments = row[prefix + "comments_with_info"]
     text = HTML(", ").join(
         [
-            html.render_i(a) + escaping.escape_to_html_permissive(": %s" % c, escape_links=False)
+            HTMLWriter.render_i(a)
+            + escaping.escape_to_html_permissive(": %s" % c, escape_links=False)
             for _id, a, c in comments
         ]
     )
@@ -1623,7 +1631,7 @@ class PainterSvcStaleness(Painter):
 
 def _paint_is_stale(row: Row) -> CellSpec:
     if is_stale(row):
-        return "badflag", html.render_span(_("yes"))
+        return "badflag", HTMLWriter.render_span(_("yes"))
     return "goodflag", _("no")
 
 
@@ -1683,8 +1691,10 @@ def _paint_custom_vars(what: str, row: Row, blacklist: Optional[List] = None) ->
     rows = []
     for varname, value in items:
         if varname not in blacklist:
-            rows.append(html.render_tr(html.render_td(varname) + html.render_td(value)))
-    return "", html.render_table(HTML().join(rows))
+            rows.append(
+                HTMLWriter.render_tr(HTMLWriter.render_td(varname) + HTMLWriter.render_td(value))
+            )
+    return "", HTMLWriter.render_table(HTML().join(rows))
 
 
 @painter_registry.register
@@ -2424,7 +2434,7 @@ class PainterHostBlack(Painter):
     def render(self, row: Row, cell: Cell) -> CellSpec:
         state = row["host_state"]
         if state != 0:
-            return "nobr", html.render_div(row["host_name"], class_="hostdown")
+            return "nobr", HTMLWriter.render_div(row["host_name"], class_="hostdown")
         return "nobr", row["host_name"]
 
 
@@ -2454,7 +2464,7 @@ class PainterHostWithState(Painter):
         else:
             state = "p"
         if state != 0:
-            return "state hstate hstate%s" % state, html.render_span(row["host_name"])
+            return "state hstate hstate%s" % state, HTMLWriter.render_span(row["host_name"])
         return "nobr", row["host_name"]
 
 
@@ -2528,7 +2538,7 @@ class PainterHost(Painter):
                 css.append("hstate%s" % option_state)
                 break
 
-        return " ".join(css), html.render_span(
+        return " ".join(css), HTMLWriter.render_span(
             row["host_name"], class_=["state_rounded_fill", "host"]
         )
 
@@ -2937,9 +2947,11 @@ def _paint_service_list(row: Row, columnname: str) -> CellSpec:
         else:
             css = "statep"
 
-        h += html.render_div(html.render_span(html.render_a(text, link)), class_=css)
+        h += HTMLWriter.render_div(
+            HTMLWriter.render_span(HTMLWriter.render_a(text, link)), class_=css
+        )
 
-    return "", html.render_div(h, class_="objectlist")
+    return "", HTMLWriter.render_div(h, class_="objectlist")
 
 
 @painter_registry.register
@@ -3081,7 +3093,7 @@ class PainterHostGroupMemberlist(Painter):
                 link += "&display_options=%s" % escaping.escape_attribute(
                     request.var("display_options")
                 )
-            links.append(html.render_a(group, link))
+            links.append(HTMLWriter.render_a(group, link))
         return "", HTML(", ").join(links)
 
 
@@ -3335,7 +3347,7 @@ def _paint_discovery_output(field: str, row: Row) -> CellSpec:
             urlencode(row["host_name"]),
             urlencode(value),
         )
-        return None, html.render_div(html.render_a(value, link))
+        return None, HTMLWriter.render_div(HTMLWriter.render_a(value, link))
     return None, value
 
 
@@ -3433,8 +3445,8 @@ class PainterHostgroupHosts(Painter):
                 css = "hstate%d" % state
             else:
                 css = "hstatep"
-            h += html.render_div(html.render_a(host, link), class_=css)
-        return "", html.render_div(h, class_="objectlist")
+            h += HTMLWriter.render_div(HTMLWriter.render_a(host, link), class_=css)
+        return "", HTMLWriter.render_div(h, class_="objectlist")
 
 
 @painter_registry.register
@@ -4198,6 +4210,7 @@ class PainterDowntimeRecurring(Painter):
     def render(self, row: Row, cell: Cell) -> CellSpec:
         try:
             from cmk.gui.cee.plugins.wato.cmc import recurring_downtimes_types
+
         except ImportError:
             return "", _("(not supported)")
 
@@ -4540,7 +4553,7 @@ class PainterLogContactName(Painter):
         return (
             "nowrap",
             HTML(", ").join(
-                html.render_a(
+                HTMLWriter.render_a(
                     contact,
                     makeuri_contextless(
                         request,
@@ -4980,7 +4993,7 @@ class ABCPainterTagsWithTitles(Painter, abc.ABC):
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         entries = self._get_entries(row)
-        return "", html.render_br().join(
+        return "", HTMLWriter.render_br().join(
             [
                 escaping.escape_to_html_permissive("%s: %s" % e, escape_links=False)
                 for e in sorted(entries)
@@ -5183,7 +5196,7 @@ class PainterHostDockerNode(Painter):
             ],
             filename="view.py",
         )
-        content: HTML = html.render_a(node, href=url)
+        content: HTML = HTMLWriter.render_a(node, href=url)
         return "", content
 
 
@@ -5362,7 +5375,7 @@ class _PainterHostKubernetes(Painter):
         if (
             object_name := labels.get(f"cmk/kubernetes/{self._kubernetes_object_type}")
         ) is not None:
-            content: HTML = html.render_a(object_name, href=url)
+            content: HTML = HTMLWriter.render_a(object_name, href=url)
             return "", content
         return "", ""
 

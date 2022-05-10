@@ -18,6 +18,7 @@ from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKAuthException, MKGeneralException, MKUserError
 from cmk.gui.htmllib.context import html
+from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
@@ -185,7 +186,7 @@ class ABCGlobalSettingsMode(WatoMode):
                         ("site", request.var("site", "")),
                     ]
                 )
-                title = html.render_a(
+                title = HTMLWriter.render_a(
                     title_text,
                     href=edit_url,
                     class_="modified" if varname in self._current_settings else None,

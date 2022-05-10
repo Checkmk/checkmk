@@ -30,6 +30,7 @@ from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import FinalizeRequest, MKGeneralException, MKUserError
 from cmk.gui.htmllib.context import html
+from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
@@ -649,7 +650,7 @@ class ModeDistributedMonitoring(WatoMode):
         self._site_mgmt.save_sites(configured_sites)
         _changes.add_change(
             "edit-site",
-            _("Logged out of remote site %s") % html.render_tt(site["alias"]),
+            _("Logged out of remote site %s") % HTMLWriter.render_tt(site["alias"]),
             domains=[ConfigDomainGUI],
             sites=[omd_site()],
         )
@@ -684,7 +685,7 @@ class ModeDistributedMonitoring(WatoMode):
 
                 site["secret"] = secret
                 self._site_mgmt.save_sites(configured_sites)
-                message = _("Successfully logged into remote site %s.") % html.render_tt(
+                message = _("Successfully logged into remote site %s.") % HTMLWriter.render_tt(
                     site["alias"]
                 )
                 _audit_log.log_audit("edit-site", message)
@@ -722,7 +723,7 @@ class ModeDistributedMonitoring(WatoMode):
                 "successful then both side will exchange a login secret "
                 "which is used for the further remote calls."
             )
-            % html.render_tt(site["alias"])
+            % HTMLWriter.render_tt(site["alias"])
         )
 
         html.begin_form("login", method="POST")
@@ -793,7 +794,7 @@ class ModeDistributedMonitoring(WatoMode):
             delete_url = make_confirm_link(
                 url=makeactionuri(request, transactions, [("_delete", site_id)]),
                 message=_("Do you really want to delete the connection to the site %s?")
-                % html.render_tt(site_id),
+                % HTMLWriter.render_tt(site_id),
             )
             html.icon_button(delete_url, _("Delete"), "delete")
 
@@ -859,7 +860,7 @@ class ModeDistributedMonitoring(WatoMode):
                 logout_url = make_confirm_link(
                     url=make_action_link([("mode", "sites"), ("_logout", site_id)]),
                     message=_("Do you really want to log out of '%s'?")
-                    % html.render_tt(site["alias"]),
+                    % HTMLWriter.render_tt(site["alias"]),
                 )
                 html.icon_button(logout_url, _("Logout"), "autherr")
             else:
@@ -922,7 +923,7 @@ class ModeAjaxFetchSiteStatus(AjaxPage):
             icon = "failed"
             msg = "%s" % status.response
 
-        return html.render_icon(icon, title=msg) + html.render_span(
+        return html.render_icon(icon, title=msg) + HTMLWriter.render_span(
             msg, style="vertical-align:middle"
         )
 
@@ -939,7 +940,7 @@ class ModeAjaxFetchSiteStatus(AjaxPage):
             message = status_msg.title()
 
         icon = "success" if status == "online" else "failed"
-        return html.render_icon(icon, title=message) + html.render_span(
+        return html.render_icon(icon, title=message) + HTMLWriter.render_span(
             message, style="vertical-align:middle"
         )
 

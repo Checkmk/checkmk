@@ -29,6 +29,7 @@ from cmk.gui.breadcrumb import (
 )
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.context import html
+from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -73,7 +74,9 @@ class ModeAboutCheckmkPage(cmk.gui.pages.Page):
         html.open_div(id_="info_title")
         html.h1(_("Your monitoring machine"))
         html.a(
-            html.render_img(theme.url("images/tribe29.svg")), "https://tribe29.com", target="_blank"
+            HTMLWriter.render_img(theme.url("images/tribe29.svg")),
+            "https://tribe29.com",
+            target="_blank",
         )
         html.close_div()
 
@@ -91,8 +94,8 @@ class ModeAboutCheckmkPage(cmk.gui.pages.Page):
         html.span(
             _("Visit our %s to learn more about Checkmk and about the %s.")
             % (
-                html.render_a(_("website"), "https://checkmk.com", target="_blank"),
-                html.render_a(
+                HTMLWriter.render_a(_("website"), "https://checkmk.com", target="_blank"),
+                HTMLWriter.render_a(
                     _("latest version"),
                     "https://checkmk.com/product/latest-version",
                     target="_blank",
@@ -297,7 +300,7 @@ def page_werk():
 
     translator = cmk.utils.werks.WerkTranslator()
     werk_table_row(_("ID"), render_werk_id(werk, with_link=False))
-    werk_table_row(_("Title"), html.render_b(render_werk_title(werk)))
+    werk_table_row(_("Title"), HTMLWriter.render_b(render_werk_title(werk)))
     werk_table_row(_("Component"), translator.component_of(werk))
     werk_table_row(_("Date"), render_werk_date(werk))
     werk_table_row(_("Checkmk Version"), werk["version"])
@@ -685,7 +688,7 @@ def _werk_table_options_from_request() -> Dict[str, Any]:
 def render_werk_id(werk, with_link) -> Union[HTML, str]:
     if with_link:
         url = makeuri_contextless(request, [("werk", werk["id"])], filename="werk.py")
-        return html.render_a("#%04d" % werk["id"], href=url)
+        return HTMLWriter.render_a("#%04d" % werk["id"], href=url)
     return "#%04d" % werk["id"]
 
 
@@ -767,7 +770,7 @@ def insert_manpage_links(text: str) -> HTML:
                 ],
                 filename="wato.py",
             )
-            new_parts.append(html.render_a(content=part, href=url))
+            new_parts.append(HTMLWriter.render_a(content=part, href=url))
         else:
             new_parts.append(escape_to_html(part))
     return HTML(" ").join(new_parts)

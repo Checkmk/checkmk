@@ -37,6 +37,7 @@ from cmk.gui.exceptions import (
     MKUserError,
 )
 from cmk.gui.htmllib.context import html
+from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.http import request, Request, response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
@@ -615,7 +616,7 @@ class LoginPage(Page):
 
         footer: List[HTML] = []
         for title, url, target in active_config.login_screen.get("footer_links", []):
-            footer.append(html.render_a(title, href=url, target=target))
+            footer.append(HTMLWriter.render_a(title, href=url, target=target))
 
         if "hide_version" not in active_config.login_screen:
             footer.append(escape_to_html("Version: %s" % cmk_version.__version__))
@@ -623,7 +624,7 @@ class LoginPage(Page):
         footer.append(
             HTML(
                 "&copy; %s"
-                % html.render_a("tribe29 GmbH", href="https://tribe29.com", target="_blank")
+                % HTMLWriter.render_a("tribe29 GmbH", href="https://tribe29.com", target="_blank")
             )
         )
 

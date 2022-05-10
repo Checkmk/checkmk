@@ -30,6 +30,7 @@ from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKConfigError
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.context import html
+from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
@@ -669,7 +670,7 @@ class FoldableTreeRendererTree(ABCFoldableTreeRenderer):
             effective_state["output"], shall_escape=active_config.escape_plugin_output
         )
         if output:
-            output = html.render_b(HTML("&diams;"), class_="bullet") + output
+            output = HTMLWriter.render_b(HTML("&diams;"), class_="bullet") + output
         else:
             output = HTML()
 
@@ -763,12 +764,16 @@ class ABCFoldableTreeRendererTable(FoldableTreeRendererTree):
         for code, colspan, parents in leaves:
             html.open_tr()
 
-            leaf_td = html.render_td(code, class_=["leaf", odd], style=td_style, colspan=colspan)
+            leaf_td = HTMLWriter.render_td(
+                code, class_=["leaf", odd], style=td_style, colspan=colspan
+            )
             odd = "even" if odd == "odd" else "odd"
 
             tds = [leaf_td]
             for rowspan, c in parents:
-                tds.append(html.render_td(c, class_=["node"], style=td_style, rowspan=rowspan))
+                tds.append(
+                    HTMLWriter.render_td(c, class_=["node"], style=td_style, rowspan=rowspan)
+                )
 
             if self._mirror:
                 tds.reverse()

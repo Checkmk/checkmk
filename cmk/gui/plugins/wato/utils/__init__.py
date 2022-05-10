@@ -46,6 +46,7 @@ from cmk.gui.groups import (
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.context import html
 from cmk.gui.htmllib.foldable_container import foldable_container
+from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _u
 from cmk.gui.logged_in import user
@@ -1801,7 +1802,7 @@ def configure_attributes(
                 while container:
                     if attrname in container.attributes():
                         url = container.edit_url()
-                        inherited_from = escape_to_html(_("Inherited from ")) + html.render_a(
+                        inherited_from = escape_to_html(_("Inherited from ")) + HTMLWriter.render_a(
                             container.title(), href=url
                         )
 

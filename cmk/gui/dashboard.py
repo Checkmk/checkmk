@@ -48,6 +48,7 @@ from cmk.gui.exceptions import (
     MKUserError,
 )
 from cmk.gui.htmllib.context import html
+from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
@@ -1544,7 +1545,7 @@ def draw_dashlet(dashlet: Dashlet, content: HTMLInput, title: Union[str, HTML]) 
     ):
         title_background = ["highlighted"] if dashlet.show_title() is True else []
         html.div(
-            html.render_span(title),
+            HTMLWriter.render_span(title),
             id_="dashlet_title_%d" % dashlet.dashlet_id,
             class_=["title"] + title_background,
         )

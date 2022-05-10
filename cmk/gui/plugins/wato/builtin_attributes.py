@@ -14,7 +14,7 @@ import cmk.gui.hooks as hooks
 import cmk.gui.userdb as userdb
 from cmk.gui import fields as gui_fields
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.htmllib.context import html
+from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.plugins.wato.utils import (
@@ -458,7 +458,9 @@ class HostAttributeParents(ABCHostAttributeValueSpec):
 
     def paint(self, value, hostname):
         parts = [
-            html.render_a(hn, "wato.py?" + urlencode_vars([("mode", "edit_host"), ("host", hn)]))
+            HTMLWriter.render_a(
+                hn, "wato.py?" + urlencode_vars([("mode", "edit_host"), ("host", hn)])
+            )
             for hn in value
         ]
         return "", HTML(", ").join(parts)

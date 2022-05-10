@@ -13,6 +13,7 @@ import cmk.gui.sites as sites
 import cmk.gui.visuals as visuals
 from cmk.gui.config import active_config
 from cmk.gui.htmllib.context import html
+from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.http import request
 from cmk.gui.i18n import _, ungettext
 from cmk.gui.logged_in import user
@@ -206,8 +207,8 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
             html.th(row.title)
             html.th(_("Problems"), class_="show_more_mode")
             html.th(
-                html.render_span(_("Unhandled"), class_="more")
-                + html.render_span(_("Unhandled p."), class_="less")
+                HTMLWriter.render_span(_("Unhandled"), class_="more")
+                + HTMLWriter.render_span(_("Unhandled p."), class_="less")
             )
             if show_stales and has_stale_objects:
                 html.th(_("Stale"))
@@ -248,7 +249,7 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
                     link(str(stales), url)
                     html.close_td()
                 else:
-                    html.td(html.render_span("0"))
+                    html.td(HTMLWriter.render_span("0"))
 
             html.close_tr()
         html.close_table()

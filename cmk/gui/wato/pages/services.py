@@ -39,6 +39,7 @@ from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.htmllib.context import html
 from cmk.gui.htmllib.foldable_container import foldable_container
+from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.http import request
 from cmk.gui.i18n import _, ungettext
 from cmk.gui.logged_in import user
@@ -650,7 +651,9 @@ class DiscoveryPageRenderer:
             ctype = label["plugin_name"]
 
             manpage_url = folder_preserving_link([("mode", "check_manpage"), ("check_type", ctype)])
-            plugin_names += html.render_a(content=ctype, href=manpage_url) + html.render_br()
+            plugin_names += (
+                HTMLWriter.render_a(content=ctype, href=manpage_url) + HTMLWriter.render_br()
+            )
             labels_html += render_labels(
                 label_data,
                 "host",
@@ -914,7 +917,9 @@ class DiscoveryPageRenderer:
         self._show_actions(table, discovery_result, entry)
 
         table.cell(
-            _("State"), html.render_span(statename, class_=["state_rounded_fill"]), css=stateclass
+            _("State"),
+            HTMLWriter.render_span(statename, class_=["state_rounded_fill"]),
+            css=stateclass,
         )
         table.cell(_("Service"), entry.description, css="service")
         table.cell(_("Status detail"), css="expanding")
@@ -936,7 +941,9 @@ class DiscoveryPageRenderer:
 
         if self._options.show_plugin_names:
             table.cell(
-                _("Check plugin"), html.render_a(content=ctype, href=manpage_url), css="plugins"
+                _("Check plugin"),
+                HTMLWriter.render_a(content=ctype, href=manpage_url),
+                css="plugins",
             )
 
     def _show_status_detail(self, entry: CheckPreviewEntry) -> None:

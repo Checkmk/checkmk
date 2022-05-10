@@ -8,6 +8,7 @@ from typing import Optional
 
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.htmllib.context import html
+from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.i18n import _
 
 # TODO: Change all call sites to directly import from cmk.gui.page_menu
@@ -65,9 +66,9 @@ def _make_wato_page_state() -> PageState:
     if changes_info:
         changes_number, changes_str = changes_info.split()
         return PageState(
-            text=html.render_span(
-                html.render_span(changes_number, class_="changes_number")
-                + html.render_span(changes_str, class_="changes_str"),
+            text=HTMLWriter.render_span(
+                HTMLWriter.render_span(changes_number, class_="changes_number")
+                + HTMLWriter.render_span(changes_str, class_="changes_str"),
                 id_=span_id,
             ),
             icon_name="pending_changes",
@@ -76,9 +77,9 @@ def _make_wato_page_state() -> PageState:
             css_classes="pending_changes",
         )
     return PageState(
-        text=html.render_span(
-            html.render_span("", class_="changes_number")
-            + html.render_span(_("No pending changes"), class_="changes_str"),
+        text=HTMLWriter.render_span(
+            HTMLWriter.render_span("", class_="changes_number")
+            + HTMLWriter.render_span(_("No pending changes"), class_="changes_str"),
             id_=span_id,
         ),
         url=changelog_url,

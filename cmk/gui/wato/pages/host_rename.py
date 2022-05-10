@@ -17,6 +17,7 @@ import cmk.gui.gui_background_job as gui_background_job
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.exceptions import FinalizeRequest, MKAuthException, MKGeneralException, MKUserError
 from cmk.gui.htmllib.context import html
+from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.http import request
 from cmk.gui.i18n import _, ungettext
 from cmk.gui.logged_in import user
@@ -153,7 +154,7 @@ class ModeBulkRenameHost(WatoMode):
             flash(warning)
             return None
 
-        message = html.render_b(
+        message = HTMLWriter.render_b(
             _(
                 "Do you really want to rename to following hosts?"
                 "This involves a restart of the monitoring core!"
@@ -163,9 +164,11 @@ class ModeBulkRenameHost(WatoMode):
         rows = []
         for _folder, host_name, target_name in renamings:
             rows.append(
-                html.render_tr(html.render_td(host_name) + html.render_td(" → %s" % target_name))
+                HTMLWriter.render_tr(
+                    HTMLWriter.render_td(host_name) + HTMLWriter.render_td(" → %s" % target_name)
+                )
             )
-        message += html.render_table(HTML().join(rows))
+        message += HTMLWriter.render_table(HTML().join(rows))
 
         nr_rename = len(renamings)
         c = _confirm(

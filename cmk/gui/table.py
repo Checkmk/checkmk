@@ -31,6 +31,7 @@ import cmk.gui.weblib as weblib
 from cmk.gui.config import active_config
 from cmk.gui.htmllib.context import html
 from cmk.gui.htmllib.foldable_container import foldable_container
+from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.tag_rendering import HTMLContent
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
@@ -341,7 +342,7 @@ class Table:
                     id_=self.id,
                     isopen=self.isopen,
                     indent=False,
-                    title=html.render_h3(self.title, class_=["treeangle", "title"]),
+                    title=HTMLWriter.render_h3(self.title, class_=["treeangle", "title"]),
                     save_state=self.options["foldable"] == Foldable.FOLDABLE_SAVE_STATE,
                 )
             else:
@@ -608,7 +609,7 @@ class Table:
                 continue
 
             if header.help_txt:
-                header_title: HTML = html.render_span(header.title, title=header.help_txt)
+                header_title: HTML = HTMLWriter.render_span(header.title, title=header.help_txt)
             else:
                 header_title = header.title
 

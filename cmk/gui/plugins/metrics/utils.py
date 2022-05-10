@@ -47,7 +47,7 @@ import cmk.gui.sites as sites
 from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import MKGeneralException, MKUserError
-from cmk.gui.htmllib.context import html
+from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.plugins.visuals.utils import livestatus_query_bare
@@ -1256,7 +1256,7 @@ def _mix_colors(a, b):
 
 
 def render_color_icon(color: str) -> HTML:
-    return html.render_div(
+    return HTMLWriter.render_div(
         "",
         class_="color",
         # NOTE: When we drop support for IE11 we can use #%s4c instead of rgba(...)

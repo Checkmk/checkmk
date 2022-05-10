@@ -24,6 +24,7 @@ from cmk.gui.config import active_config
 from cmk.gui.default_permissions import PermissionSectionGeneral
 from cmk.gui.exceptions import MKAuthException, MKInternalError, MKUserError
 from cmk.gui.htmllib.context import html
+from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import mega_menu_registry
@@ -317,12 +318,12 @@ def _process_message_message(msg):
                 errors.setdefault(method, []).append((user_id, e))
 
     message = escape_to_html(_("The message has successfully been sent..."))
-    message += html.render_br()
+    message += HTMLWriter.render_br()
 
     parts = []
     for method in msg["methods"]:
         parts.append(
-            html.render_li(
+            HTMLWriter.render_li(
                 _messaging_methods()[method]["confirmation_title"]
                 + (
                     _(" for all recipients.")
@@ -332,8 +333,8 @@ def _process_message_message(msg):
             )
         )
 
-    message += html.render_ul(HTML().join(parts))
-    message += html.render_p(_("Recipients: %s") % ", ".join(recipients))
+    message += HTMLWriter.render_ul(HTML().join(parts))
+    message += HTMLWriter.render_p(_("Recipients: %s") % ", ".join(recipients))
     html.show_message(message)
 
     if errors:
@@ -342,10 +343,11 @@ def _process_message_message(msg):
             error_message += _("Failed to send %s messages to the following users:") % method
             table_rows = HTML()
             for user_id, exception in method_errors:
-                table_rows += html.render_tr(
-                    html.render_td(html.render_tt(user_id)) + html.render_td(str(exception))
+                table_rows += HTMLWriter.render_tr(
+                    HTMLWriter.render_td(HTMLWriter.render_tt(user_id))
+                    + HTMLWriter.render_td(str(exception))
                 )
-            error_message += html.render_table(table_rows) + html.render_br()
+            error_message += HTMLWriter.render_table(table_rows) + HTMLWriter.render_br()
         html.show_error(error_message)
 
 

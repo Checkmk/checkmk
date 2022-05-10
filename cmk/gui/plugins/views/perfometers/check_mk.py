@@ -8,7 +8,7 @@ import cmk.utils.render
 from cmk.utils.render import SecondsRenderer
 
 import cmk.gui.utils as utils
-from cmk.gui.htmllib.context import html
+from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.plugins.views.perfometers.utils import (
     LegacyPerfometerResult,
     Perfdata,
@@ -777,7 +777,7 @@ def perfometer_fileinfo(
         code.append(perfometer_logarithmic(val, base, scale, color))
         texts.append(verbfunc(val))
     # perfometer_logarithmic(100, 200, 2, "#883875")
-    return (" / ".join(texts), html.render_div(HTML().join(code), class_="stacked"))
+    return (" / ".join(texts), HTMLWriter.render_div(HTML().join(code), class_="stacked"))
 
 
 def perfometer_fileinfo_groups(
@@ -801,7 +801,7 @@ def perfometer_fileinfo_groups(
         code.append(perfometer_logarithmic(value, base, scale, color))
         texts.append(verbfunc(value))
     # perfometer_logarithmic(100, 200, 2, "#883875")
-    return " / ".join(texts), html.render_div(HTML().join(code), class_="stacked")
+    return " / ".join(texts), HTMLWriter.render_div(HTML().join(code), class_="stacked")
 
 
 perfometers["check_mk-fileinfo"] = perfometer_fileinfo
@@ -903,7 +903,7 @@ def perfometer_vms_system_ios(
     # perfometer_logarithmic(100, 200, 2, "#883875")
     return (
         "%.0f / %.0f" % (direct, buffered),
-        html.render_div(
+        HTMLWriter.render_div(
             perfometer_logarithmic(buffered, 10000, 3, "#38b0cf")
             + perfometer_logarithmic(direct, 10000, 3, "#38808f"),
             class_="stacked",

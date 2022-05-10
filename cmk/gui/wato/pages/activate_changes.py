@@ -29,6 +29,7 @@ from cmk.gui.config import active_config
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import FinalizeRequest, MKUserError
 from cmk.gui.htmllib.context import html
+from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -515,7 +516,7 @@ def render_object_ref_as_icon(object_ref: Optional[ObjectRef]) -> Optional[HTML]
         ObjectRefType.Ruleset: "rulesets",
     }
 
-    return html.render_a(
+    return HTMLWriter.render_a(
         content=html.render_icon(
             icons.get(object_ref.object_type, "link"),
             title="%s: %s" % (object_ref.object_type.name, title) if title else None,
@@ -530,7 +531,7 @@ def render_object_ref(object_ref: Optional[ObjectRef]) -> Union[str, HTML, None]
         return title
     if not title:
         return None
-    return html.render_a(title, href=url)
+    return HTMLWriter.render_a(title, href=url)
 
 
 # TODO: Move this to some generic place

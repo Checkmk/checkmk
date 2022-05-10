@@ -34,6 +34,7 @@ import cmk.gui.key_mgmt as key_mgmt
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
 from cmk.gui.exceptions import FinalizeRequest, HTTPRedirect, MKGeneralException, MKUserError
 from cmk.gui.htmllib.context import html
+from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.main_menu import mega_menu_registry
@@ -509,7 +510,7 @@ class Jobs(BackupEntityCollection):
                     css = ""
 
                 table.cell(_("State"), css=css)
-                html.write_html(html.render_span(state_txt))
+                html.write_html(HTMLWriter.render_span(state_txt))
 
                 table.cell(_("Runtime"))
                 if state["started"]:

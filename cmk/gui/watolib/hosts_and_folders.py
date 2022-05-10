@@ -80,6 +80,7 @@ from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import MKAuthException, MKGeneralException, MKUserError, RequestTimeout
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.context import html
+from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
@@ -2029,7 +2030,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         if withlinks:
             # In this case, we return a List[HTML]
             return [
-                html.render_a(
+                HTMLWriter.render_a(
                     folder.title(),
                     href=urls.makeuri_contextless(
                         request,

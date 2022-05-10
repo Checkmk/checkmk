@@ -15,6 +15,7 @@ from cmk.utils.defines import short_service_state_name
 import cmk.gui.bi as bi
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.htmllib.context import html
+from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.plugins.views.utils import (
@@ -39,6 +40,7 @@ from cmk.gui.valuespec import DropdownChoice
 if TYPE_CHECKING:
     from cmk.gui.plugins.visuals.utils import Filter
     from cmk.gui.views import View
+
 
 #     ____        _
 #    |  _ \  __ _| |_ __ _ ___  ___  _   _ _ __ ___ ___  ___
@@ -295,7 +297,7 @@ def _paint_aggr_state_short(state, assumed=False):
     classes = "state svcstate state%s" % state["state"]
     if assumed:
         classes += " assumed"
-    return classes, html.render_span(name, class_=["state_rounded_fill"])
+    return classes, HTMLWriter.render_span(name, class_=["state_rounded_fill"])
 
 
 @painter_registry.register
@@ -444,7 +446,7 @@ def paint_aggr_hosts(row, link_to_view):
     h = []
     for site, host in row["aggr_hosts"]:
         url = makeuri(request, [("view_name", link_to_view), ("site", site), ("host", host)])
-        h.append(html.render_a(host, url))
+        h.append(HTMLWriter.render_a(host, url))
     return "", HTML(" ").join(h)
 
 

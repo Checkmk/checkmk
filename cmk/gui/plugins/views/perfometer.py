@@ -9,7 +9,7 @@ from typing import Optional, Tuple
 import cmk.gui.metrics as metrics
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.config import active_config
-from cmk.gui.htmllib.context import html
+from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.plugins.views.graphs import cmk_graph_url
@@ -248,9 +248,9 @@ class PainterPerfometer(Painter):
 
         assert h is not None
         content = (
-            html.render_div(HTML(h), class_=["content"])
-            + html.render_div(title, class_=["title"])
-            + html.render_div("", class_=["glass"])
+            HTMLWriter.render_div(HTML(h), class_=["content"])
+            + HTMLWriter.render_div(title, class_=["title"])
+            + HTMLWriter.render_div("", class_=["glass"])
         )
 
         # pnpgraph_present: -1 means unknown (path not configured), 0: no, 1: yes
@@ -261,7 +261,7 @@ class PainterPerfometer(Painter):
             url = "javascript:void(0)"
             disabled = True
 
-        return " ".join(classes), html.render_a(
+        return " ".join(classes), HTMLWriter.render_a(
             content=content,
             href=url,
             title=escaping.strip_tags(title),

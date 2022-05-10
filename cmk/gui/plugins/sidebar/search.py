@@ -22,6 +22,7 @@ import cmk.gui.utils
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import HTTPRedirect, MKUserError
 from cmk.gui.htmllib.context import html
+from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
@@ -794,7 +795,8 @@ class QuicksearchResultRenderer:
             for result in sorted(results, key=lambda x: x.title):
                 html.open_a(id_="result_%s" % query, href=result.url, target="main")
                 html.write_text(
-                    result.title + (" %s" % html.render_b(result.context) if result.context else "")
+                    result.title
+                    + (" %s" % HTMLWriter.render_b(result.context) if result.context else "")
                 )
                 html.close_a()
 
@@ -1509,7 +1511,7 @@ class MenuSearchResultsRenderer:
             title=result.title + (" %s" % result.context if result.context else ""),
         )
         html.write_text(
-            result.title + (" %s" % html.render_b(result.context) if result.context else "")
+            result.title + (" %s" % HTMLWriter.render_b(result.context) if result.context else "")
         )
         html.close_a()
         html.close_li()

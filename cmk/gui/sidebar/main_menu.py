@@ -13,6 +13,7 @@ import cmk.gui.message as message
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.htmllib.context import html
+from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _, ungettext
 from cmk.gui.logged_in import user
@@ -72,7 +73,7 @@ class MainMenuRenderer:
         content = html.render_icon(menu_item.icon) + html.render_icon(active_icon, class_="active")
 
         if not user.get_attribute("nav_hide_icons_title"):
-            content += html.render_div(menu_item.title)
+            content += HTMLWriter.render_div(menu_item.title)
 
         return content
 

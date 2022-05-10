@@ -68,6 +68,7 @@ from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.context import html
+from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _, _u, ungettext
 from cmk.gui.log import logger
@@ -106,6 +107,7 @@ from cmk.gui.view_utils import CellContent, CellSpec, CSSClass
 if TYPE_CHECKING:
     from cmk.gui.plugins.visuals.utils import Filter
     from cmk.gui.views import View
+
 
 ExportCellContent = Union[str, Dict[str, Any]]
 PDFCellContent = Union[str, HTML, Tuple[str, str]]
@@ -1259,7 +1261,7 @@ def render_link_to_view(content: CellContent, row: Row, link_spec: VisualLinkSpe
 
     url = url_to_visual(row, link_spec)
     if url:
-        return html.render_a(content, href=url)
+        return HTMLWriter.render_a(content, href=url)
     return content
 
 
@@ -1515,7 +1517,7 @@ def paint_nagiosflag(row: Row, field: ColumnName, bold_if_nonzero: bool) -> Cell
     nonzero = row[field] != 0
     return (
         "badflag" if nonzero == bold_if_nonzero else "goodflag",
-        html.render_span(_("yes") if nonzero else _("no")),
+        HTMLWriter.render_span(_("yes") if nonzero else _("no")),
     )
 
 
@@ -2212,7 +2214,7 @@ class Cell:
             assert not isinstance(tooltip_content, Mapping)
             tooltip_text = escaping.strip_tags(tooltip_content)
             if tooltip_text:
-                content = html.render_span(content, title=tooltip_text)
+                content = HTMLWriter.render_span(content, title=tooltip_text)
 
         return tdclass, content
 

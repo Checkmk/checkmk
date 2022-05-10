@@ -36,6 +36,7 @@ from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.context import html
 from cmk.gui.htmllib.debug_vars import debug_vars
+from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.tag_rendering import HTMLContent
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
@@ -326,7 +327,7 @@ class PageCrash(ABCCrashReportPage):
                         "The following files located in the local hierarchy of your site are involved in this exception:"
                     )
                 )
-                warn_text += html.render_ul(HTML("\n").join(map(html.render_li, files)))
+                warn_text += HTMLWriter.render_ul(HTML("\n").join(map(HTMLWriter.render_li, files)))
                 warn_text += escaping.escape_to_html(
                     _(
                         "Maybe these files are not compatible with your current Checkmk "
@@ -386,7 +387,7 @@ class PageCrash(ABCCrashReportPage):
         _crash_row(_("Core"), info.get("core", ""), True)
         _crash_row(_("Python Version"), info.get("python_version", _("Unknown")), False)
 
-        joined_paths = html.render_br().join(info.get("python_paths", [_("Unknown")]))
+        joined_paths = HTMLWriter.render_br().join(info.get("python_paths", [_("Unknown")]))
         _crash_row(_("Python Module Paths"), joined_paths, odd=False)
 
         html.close_table()
@@ -619,7 +620,7 @@ def _crash_row(
     html.open_tr(class_=trclass)
     html.td(title, class_=tdclass)
     if pre:
-        html.td(html.render_pre(infotext))
+        html.td(HTMLWriter.render_pre(infotext))
     else:
         html.td(infotext)
     html.close_tr()

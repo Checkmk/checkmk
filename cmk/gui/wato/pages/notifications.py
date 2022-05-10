@@ -27,6 +27,7 @@ from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.context import html
 from cmk.gui.htmllib.foldable_container import foldable_container
+from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -806,7 +807,7 @@ class ModeNotifications(ABCNotificationsMode):
                         css = "state hstate hstate%s" % state
                     table.cell(
                         _("State"),
-                        html.render_span(statename, class_=["state_rounded_fill"]),
+                        HTMLWriter.render_span(statename, class_=["state_rounded_fill"]),
                         css=css,
                     )
                 elif nottype.startswith("DOWNTIME"):

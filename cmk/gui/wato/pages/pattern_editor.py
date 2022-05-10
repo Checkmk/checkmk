@@ -19,6 +19,7 @@ from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.context import html
 from cmk.gui.htmllib.foldable_container import foldable_container
+from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.page_menu import (
@@ -250,7 +251,7 @@ class ModePatternEditor(WatoMode):
                             match_end = matched.end()
                             disp_match_txt = (
                                 escape_to_html(self._match_txt[:match_start])
-                                + html.render_span(
+                                + HTMLWriter.render_span(
                                     self._match_txt[match_start:match_end], class_="match"
                                 )
                                 + escape_to_html(self._match_txt[match_end:])
@@ -287,8 +288,10 @@ class ModePatternEditor(WatoMode):
                     cls: List[str] = []
                     if match_class == "match first":
                         cls = ["state%d" % logwatch.level_state(state), "fillbackground"]
-                    table.cell(_("State"), html.render_span(logwatch.level_name(state)), css=cls)
-                    table.cell(_("Pattern"), html.render_tt(pattern))
+                    table.cell(
+                        _("State"), HTMLWriter.render_span(logwatch.level_name(state)), css=cls
+                    )
+                    table.cell(_("Pattern"), HTMLWriter.render_tt(pattern))
                     table.cell(_("Comment"), comment)
                     table.cell(_("Matched line"), disp_match_txt)
 

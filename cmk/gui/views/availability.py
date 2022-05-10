@@ -35,6 +35,7 @@ from cmk.gui.availability import (
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.context import html
+from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.top_heading import top_heading
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
@@ -326,7 +327,7 @@ def show_availability_page(view: View, filterheaders: FilterHeader) -> None:
                 )
                 % avoptions["logrow_limit"]
             )
-            text += html.render_a(
+            text += HTMLWriter.render_a(
                 _("Repeat query without limit."),
                 makeuri(request, [("_unset_logrow_limit", "1"), ("avo_logrow_limit", 0)]),
             )
@@ -531,11 +532,11 @@ def render_availability_tables(availability_tables, what, avoptions):
         html.open_div(class_="avlegend levels")
         html.h3(_("Availability levels"))
 
-        html.div(html.render_span(_("OK")), class_="state state0")
+        html.div(HTMLWriter.render_span(_("OK")), class_="state state0")
         html.div("> %.3f%%" % warn, class_="level")
-        html.div(html.render_span(_("WARN")), class_="state state1")
+        html.div(HTMLWriter.render_span(_("WARN")), class_="state state1")
         html.div("> %.3f%%" % crit, class_="level")
-        html.div(html.render_span(_("CRIT")), class_="state state2")
+        html.div(HTMLWriter.render_span(_("CRIT")), class_="state state2")
         html.div("< %.3f%%" % crit, class_="level")
 
         html.close_div()
@@ -613,7 +614,7 @@ def _render_availability_timeline(
             table.cell(_("Duration"), row["duration_text"], css="narrow number")
             table.cell(
                 _("State"),
-                html.render_span(row["state_name"], class_=["state_rounded_fill"]),
+                HTMLWriter.render_span(row["state_name"], class_=["state_rounded_fill"]),
                 css=row["css"] + " state narrow",
             )
 
@@ -637,24 +638,27 @@ def render_timeline_legend(what: AVObjectType) -> None:
     html.open_div(class_="avlegend timeline")
 
     html.h3(_("Timeline colors"))
-    html.div(html.render_span(_("UP") if what == "host" else _("OK")), class_="state state0")
+    html.div(HTMLWriter.render_span(_("UP") if what == "host" else _("OK")), class_="state state0")
 
     if what != "host":
-        html.div(html.render_span(_("WARN")), class_="state state1")
+        html.div(HTMLWriter.render_span(_("WARN")), class_="state state1")
 
-    html.div(html.render_span(_("DOWN") if what == "host" else _("CRIT")), class_="state state2")
     html.div(
-        html.render_span(_("UNREACH") if what == "host" else _("UNKNOWN")), class_="state state3"
+        HTMLWriter.render_span(_("DOWN") if what == "host" else _("CRIT")), class_="state state2"
     )
-    html.div(html.render_span(_("Flapping")), class_="state flapping")
+    html.div(
+        HTMLWriter.render_span(_("UNREACH") if what == "host" else _("UNKNOWN")),
+        class_="state state3",
+    )
+    html.div(HTMLWriter.render_span(_("Flapping")), class_="state flapping")
 
     if what != "host":
-        html.div(html.render_span(_("H.Down")), class_="state hostdown")
+        html.div(HTMLWriter.render_span(_("H.Down")), class_="state hostdown")
 
-    html.div(html.render_span(_("Downtime")), class_="state downtime")
-    html.div(html.render_span(_("Chaotic")), class_="state chaos")
-    html.div(html.render_span(_("OO/Service")), class_="state ooservice")
-    html.div(html.render_span(_("unmonitored")), class_="state unmonitored")
+    html.div(HTMLWriter.render_span(_("Downtime")), class_="state downtime")
+    html.div(HTMLWriter.render_span(_("Chaotic")), class_="state chaos")
+    html.div(HTMLWriter.render_span(_("OO/Service")), class_="state ooservice")
+    html.div(HTMLWriter.render_span(_("unmonitored")), class_="state unmonitored")
 
     html.close_div()
 
@@ -692,7 +696,7 @@ def render_availability_table(group_title, availability_table, what, avoptions):
 
             # Column with host/service or aggregate name
             for title, (name, url) in zip(av_table["object_titles"], row["object"]):
-                table.cell(title, html.render_a(name, url))
+                table.cell(title, HTMLWriter.render_a(name, url))
 
             if "timeline" in row:
                 show_timeline = True
@@ -703,7 +707,7 @@ def render_availability_table(group_title, availability_table, what, avoptions):
 
             # Columns with the actual availability data
             for (title, help_txt), (text, css) in zip(av_table["cell_titles"], row["cells"]):
-                table.cell(title, html.render_span(text), css=css, help_txt=help_txt)
+                table.cell(title, HTMLWriter.render_span(text), css=css, help_txt=help_txt)
 
         if "summary" in av_table:
             table.row(css="summary", fixed=True)
@@ -716,7 +720,9 @@ def render_availability_table(group_title, availability_table, what, avoptions):
                 table.cell("", "")
 
             for (title, help_txt), (text, css) in zip(av_table["cell_titles"], av_table["summary"]):
-                table.cell(title, html.render_span(text), css="heading " + css, help_txt=help_txt)
+                table.cell(
+                    title, HTMLWriter.render_span(text), css="heading " + css, help_txt=help_txt
+                )
 
 
 def render_timeline_bar(timeline_layout, style, timeline_nr=0):
@@ -995,7 +1001,7 @@ def show_bi_availability(view: "View", aggr_rows: "Rows") -> None:
                 )
                 % avoptions["logrow_limit"]
             )
-            text += html.render_a(
+            text += HTMLWriter.render_a(
                 _("Repeat query without limit."), makeuri(request, [("_unset_logrow_limit", "1")])
             )
             html.show_warning(text)
@@ -1056,7 +1062,7 @@ def show_annotations(annotations, av_rawdata, what, avoptions, omit_service):
                     host_url = "view.py?" + urlencode_vars(
                         [("view_name", "hoststatus"), ("site", site_id), ("host", host)]
                     )
-                    table.cell(_("Host"), html.render_a(host, host_url))
+                    table.cell(_("Host"), HTMLWriter.render_a(host, host_url))
 
                 if what == "service":
                     if service:
@@ -1070,7 +1076,7 @@ def show_annotations(annotations, av_rawdata, what, avoptions, omit_service):
                         )
                         # TODO: honor use_display_name. But we have no display names here...
                         service_name = service
-                        table.cell(_("Service"), html.render_a(service_name, service_url))
+                        table.cell(_("Service"), HTMLWriter.render_a(service_name, service_url))
                     else:
                         table.cell(_("Service"), "")  # Host annotation in service table
 

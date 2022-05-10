@@ -16,6 +16,7 @@ import cmk.gui.sites as sites
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.config import active_config, builtin_role_ids
 from cmk.gui.htmllib.context import html
+from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l, ungettext
 from cmk.gui.logged_in import user
@@ -338,7 +339,7 @@ class PainterEventMatchGroups(Painter):
         if groups:
             code = HTML("")
             for text in groups:
-                code += html.render_span(text)
+                code += HTMLWriter.render_span(text)
             return "matchgroups", code
         return "", HTML("")
 
@@ -644,7 +645,7 @@ class PainterEventRuleId(Painter):
         rule_id = row["event_rule_id"]
         if user.may("mkeventd.edit"):
             urlvars = urlencode_vars([("mode", "mkeventd_edit_rule"), ("rule_id", rule_id)])
-            return "", html.render_a(rule_id, "wato.py?%s" % urlvars)
+            return "", HTMLWriter.render_a(rule_id, "wato.py?%s" % urlvars)
         return "", rule_id
 
 
@@ -667,7 +668,7 @@ class PainterEventState(Painter):
     def render(self, row, cell):
         state = row["event_state"]
         name = short_service_state_name(state, "")
-        return "state svcstate state%s" % state, html.render_span(
+        return "state svcstate state%s" % state, HTMLWriter.render_span(
             name, class_=["state_rounded_fill"]
         )
 
@@ -864,7 +865,7 @@ class PainterEventEffectiveContactGroups(Painter):
             return "", ""
         if cgs:
             return "", ", ".join(sorted(cgs))
-        return "", html.render_i(_("none"))
+        return "", HTMLWriter.render_i(_("none"))
 
 
 # Event History
@@ -932,7 +933,7 @@ class PainterHistoryWhat(Painter):
 
     def render(self, row, cell):
         what = row["history_what"]
-        return "", html.render_span(what, title=str(mkeventd.action_whats[what]))
+        return "", HTMLWriter.render_span(what, title=str(mkeventd.action_whats[what]))
 
 
 @painter_registry.register

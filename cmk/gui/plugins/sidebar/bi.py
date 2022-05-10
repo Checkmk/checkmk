@@ -9,6 +9,7 @@ from typing import Any, Dict, Tuple
 import cmk.gui.bi as bi
 from cmk.gui.htmllib.context import html
 from cmk.gui.htmllib.foldable_container import foldable_container
+from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.plugins.sidebar.utils import bulletlink, SidebarSnapin, snapin_registry
@@ -84,7 +85,7 @@ class SidebarSnapinAggregationGroupTree(SidebarSnapin):
                     id_=aggr_group_tree,
                     isopen=False,
                     title=HTML(
-                        html.render_a(
+                        HTMLWriter.render_a(
                             group,
                             href=fetch_url,
                             target="main",

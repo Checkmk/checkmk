@@ -17,6 +17,7 @@ import cmk.utils.version as cmk_version
 from cmk.utils.site import omd_site
 
 import cmk.gui.utils.escaping as escaping
+from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.pages import AjaxPage, page_registry
 from cmk.gui.utils.urls import DocReference
 
@@ -564,7 +565,7 @@ class ModeBIPacks(ABCBIMode):
 
     def _render_contact_group(self, c):
         display_name = self._contact_group_names.get(c, {"alias": c})["alias"]
-        return html.render_a(display_name, "wato.py?mode=edit_contact_group&edit=%s" % c)
+        return HTMLWriter.render_a(display_name, "wato.py?mode=edit_contact_group&edit=%s" % c)
 
 
 #   .--BIRules-------------------------------------------------------------.
@@ -957,7 +958,7 @@ class ModeBIRules(ABCBIMode):
                         html.empty_icon_button()
 
                     table.cell(_("Level"), level or "", css="number")
-                    table.cell(_("ID"), html.render_a(rule_id, edit_url))
+                    table.cell(_("ID"), HTMLWriter.render_a(rule_id, edit_url))
                     table.cell(_("Parameters"), " ".join(bi_rule.params.arguments))
 
                     if bi_rule.properties.icon:

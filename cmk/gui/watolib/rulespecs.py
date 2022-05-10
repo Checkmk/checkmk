@@ -15,6 +15,7 @@ import cmk.utils.plugin_registry
 
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.htmllib.context import html
+from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.type_defs import HTTPVariables
@@ -1004,7 +1005,7 @@ class CheckTypeGroupSelection(ElementSelection):
         return elements
 
     def value_to_html(self, value: str) -> ValueSpecText:
-        return html.render_tt(value)
+        return HTMLWriter.render_tt(value)
 
 
 class TimeperiodValuespec(ValueSpec):

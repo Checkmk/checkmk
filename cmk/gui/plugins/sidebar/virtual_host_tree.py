@@ -12,6 +12,7 @@ from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.context import html
 from cmk.gui.htmllib.foldable_container import foldable_container
+from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -155,7 +156,7 @@ class VirtualHostTree(SidebarSnapin):
                 if "_num_hosts" in subtree:
                     node_title += " (%d)" % subtree["_num_hosts"]
 
-                node_title = html.render_a(node_title, href=url, target="main")
+                node_title = HTMLWriter.render_a(node_title, href=url, target="main")
 
                 if "_children" not in subtree:
                     if self._is_tag_subdir(path, cwd):
@@ -185,12 +186,12 @@ class VirtualHostTree(SidebarSnapin):
         return self._is_tag_subdir(path[1:], cwd[1:])
 
     def _tag_tree_bullet(self, state, path, leaf) -> HTML:
-        code = html.render_div(
+        code = HTMLWriter.render_div(
             "&nbsp;",
             class_=["tagtree", "leaf" if leaf else None, "statebullet", "state%d" % state],
         )
         if not leaf:
-            code = html.render_a(
+            code = HTMLWriter.render_a(
                 code,
                 href="javascript:virtual_host_tree_enter('%s');" % "|".join(path),
                 title=_("Display the tree only below this node"),

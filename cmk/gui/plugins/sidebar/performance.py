@@ -8,6 +8,7 @@ import cmk.gui.site_config as site_config
 import cmk.gui.sites as sites
 import cmk.gui.user_sites as user_sites
 from cmk.gui.htmllib.context import html
+from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.i18n import _
 from cmk.gui.plugins.sidebar.utils import SidebarSnapin, snapin_registry, snapin_site_choice
 
@@ -40,7 +41,7 @@ class Performance(SidebarSnapin):
         def write_line(left, right, show_more):
             html.open_tr(class_="show_more_mode" if show_more else "basic")
             html.td(left, class_="left")
-            html.td(html.render_strong(right), class_="right")
+            html.td(HTMLWriter.render_strong(right), class_="right")
             html.close_tr()
 
         html.open_table(class_=["performance"])

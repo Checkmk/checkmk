@@ -35,6 +35,7 @@ from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config, builtin_role_ids
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.context import html
+from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.page_menu import (
@@ -235,7 +236,7 @@ class ModeRoles(RoleManagement, WatoMode):
                 # Modifications
                 table.cell(
                     _("Modifications"),
-                    html.render_span(
+                    HTMLWriter.render_span(
                         str(len(role["permissions"])),
                         title=_("That many permissions do not use the factory defaults."),
                     ),
@@ -246,7 +247,7 @@ class ModeRoles(RoleManagement, WatoMode):
                     _("Users"),
                     HTML(", ").join(
                         [
-                            html.render_a(
+                            HTMLWriter.render_a(
                                 user.get("alias", user_id),
                                 folder_preserving_link([("mode", "edit_user"), ("edit", user_id)]),
                             )

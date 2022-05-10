@@ -47,6 +47,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.context import html
 from cmk.gui.htmllib.foldable_container import foldable_container
+from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.plugins.views.utils import (
@@ -96,6 +97,7 @@ from cmk.gui.views.builtin_views import host_view_filters
 if TYPE_CHECKING:
     from cmk.gui.plugins.visuals.utils import Filter
     from cmk.gui.views import View
+
 
 PaintResult = Tuple[str, Union[str, HTML]]
 PaintFunction = Callable[[Any], PaintResult]
@@ -659,7 +661,7 @@ def inv_paint_timestamp_as_age_days(timestamp: int) -> PaintResult:
 
 @decorate_inv_paint()
 def inv_paint_csv_labels(csv_list: str) -> PaintResult:
-    return "labels", html.render_br().join(csv_list.split(","))
+    return "labels", HTMLWriter.render_br().join(csv_list.split(","))
 
 
 @decorate_inv_paint()
@@ -1961,7 +1963,7 @@ class ABCNodeRenderer(abc.ABC):
                 filename="view.py",
             )
             html.div(
-                html.render_a(_("Open this table for filtering / sorting"), href=url),
+                HTMLWriter.render_a(_("Open this table for filtering / sorting"), href=url),
                 class_="invtablelink",
             )
 
@@ -2079,7 +2081,7 @@ class ABCNodeRenderer(abc.ABC):
         header = HTML(title)
         if self._show_internal_tree_paths:
             key_info = "%s*" % key if is_key_column else key
-            header += " " + html.render_span("(%s)" % key_info, style="color: %s" % hex_color)
+            header += " " + HTMLWriter.render_span("(%s)" % key_info, style="color: %s" % hex_color)
         return header
 
     def _show_child_value(
@@ -2120,9 +2122,9 @@ class ABCNodeRenderer(abc.ABC):
 
         if now <= retention_intervals.keep_until:
             _tdclass, value = inv_paint_age(retention_intervals.keep_until - now)
-            return html.render_span(_(" (%s left)") % value, style="color: #DDD")
+            return HTMLWriter.render_span(_(" (%s left)") % value, style="color: #DDD")
 
-        return html.render_span(_(" (outdated)"), style="color: darkred")
+        return HTMLWriter.render_span(_(" (outdated)"), style="color: darkred")
 
 
 class NodeRenderer(ABCNodeRenderer):

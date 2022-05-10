@@ -17,6 +17,7 @@ import cmk.gui.pages
 import cmk.gui.pagetypes as pagetypes
 from cmk.gui.htmllib.context import html
 from cmk.gui.htmllib.foldable_container import foldable_container
+from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.permissions import declare_permission, permission_section_registry, PermissionSection
@@ -257,7 +258,7 @@ def render_link(
     # [3] relative.py
     if not (":" in url[:10]) and not url.startswith("javascript") and url[0] != "/":
         url = url_prefix() + "check_mk/" + url
-    return html.render_a(
+    return HTMLWriter.render_a(
         text,
         href=url,
         class_="link",

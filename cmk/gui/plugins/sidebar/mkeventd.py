@@ -10,6 +10,7 @@ from livestatus import SiteId
 
 import cmk.gui.mkeventd as mkeventd
 from cmk.gui.htmllib.context import html
+from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.tag_rendering import HTMLContent
 from cmk.gui.i18n import _
 from cmk.gui.plugins.sidebar.utils import SidebarSnapin, snapin_registry, snapin_site_choice
@@ -50,7 +51,7 @@ class SidebarSnapinCustomers(SidebarSnapin):
 
         html.open_table(class_=["mkeventd_performance"])
         for _index, left, right in entries:
-            html.tr(html.render_td("%s:" % left) + html.render_td(right))
+            html.tr(HTMLWriter.render_td("%s:" % left) + HTMLWriter.render_td(right))
         html.close_table()
 
     def _mkeventd_performance_entries(

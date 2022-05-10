@@ -15,6 +15,7 @@ from cmk.utils.type_defs import Labels, LabelSources, TaggroupID, TaggroupIDToTa
 
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.htmllib.context import html
+from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import LoggedInUser
@@ -113,7 +114,7 @@ def get_host_list_links(site: SiteId, hosts: List[Union[str]]) -> List[str]:
             args.append(("display_options", request.var("display_options")))
 
         url = makeuri_contextless(request, args, filename="view.py")
-        link = str(html.render_a(host, href=url))
+        link = str(HTMLWriter.render_a(host, href=url))
         entries.append(link)
     return entries
 
@@ -129,7 +130,7 @@ def query_limit_exceeded_warn(limit: Optional[int], user_config: LoggedInUser) -
     if request.get_ascii_input("limit", "soft") == "soft" and user_config.may(
         "general.ignore_soft_limit"
     ):
-        text += html.render_a(
+        text += HTMLWriter.render_a(
             _("Repeat query and allow more results."),
             target="_self",
             href=makeuri(request, [("limit", "hard")]),
@@ -137,7 +138,7 @@ def query_limit_exceeded_warn(limit: Optional[int], user_config: LoggedInUser) -
     elif request.get_ascii_input("limit") == "hard" and user_config.may(
         "general.ignore_hard_limit"
     ):
-        text += html.render_a(
+        text += HTMLWriter.render_a(
             _("Repeat query without limit."),
             target="_self",
             href=makeuri(request, [("limit", "none")]),
@@ -189,7 +190,7 @@ def _render_tag_groups_or_labels(
         )
         for tag_group_id_or_label_key, tag_id_or_label_value in sorted(entries.items())
     ]
-    return html.render_tags(
+    return HTMLWriter.render_tags(
         HTML(" ").join(elements), class_=["tagify", label_type, "display"], readonly="true"
     )
 
@@ -202,9 +203,9 @@ def _render_tag_group(
     label_type: str,
     label_source: str,
 ) -> HTML:
-    span = html.render_tag(
-        html.render_div(
-            html.render_span(
+    span = HTMLWriter.render_tag(
+        HTMLWriter.render_div(
+            HTMLWriter.render_span(
                 "%s:%s"
                 % (
                     tag_group_id_or_label_key,
@@ -244,7 +245,7 @@ def _render_tag_group(
     ]
 
     url = makeuri_contextless(request, url_vars + type_filter_vars, filename="view.py")
-    return html.render_a(span, href=url)
+    return HTMLWriter.render_a(span, href=url)
 
 
 def get_themed_perfometer_bg_color() -> str:

@@ -1,0 +1,11 @@
+Title: Add Kubernetes icon to menu entries
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1652174884
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p1
+
+With this werk, an icon is shown next to the menu item Kubernetes in the Dashboards menu.

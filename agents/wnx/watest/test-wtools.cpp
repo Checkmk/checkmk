@@ -103,7 +103,13 @@ protected:
     void TearDown() override {
         KillTmpProcesses();
         ASSERT_NE(test_dir_.wstring().find(dirToUse()), std::wstring::npos);
-        fs::remove_all(test_dir_);
+        std::error_code ec;
+        fs::remove_all(test_dir_, ec);
+        if (ec) {
+            std::cerr << fmt::format(
+                "Attention: remove_all failed, some of temporary processes are busy. Exception: '{}' [{}]\n",
+                ec.message(), ec.value());
+        }
     }
 
     fs::path test_dir_;

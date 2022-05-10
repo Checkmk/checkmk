@@ -7311,7 +7311,7 @@ def ColorWithThemeAndMetricDefault(
 SSHKeyPairValue = tuple[str, str]
 
 
-class SSHKeyPair(ValueSpec):
+class SSHKeyPair(ValueSpec[_Optional[SSHKeyPairValue]]):
     def render_input(self, varprefix: str, value: _Optional[SSHKeyPairValue]) -> None:
         if value:
             html.write_text(_("Fingerprint: %s") % self.value_to_html(value))
@@ -7322,22 +7322,30 @@ class SSHKeyPair(ValueSpec):
     def canonical_value(self) -> _Optional[SSHKeyPairValue]:
         return None
 
-    def value_to_html(self, value: SSHKeyPairValue) -> ValueSpecText:
+    def value_to_html(self, value: _Optional[SSHKeyPairValue]) -> ValueSpecText:
+        if value is None:
+            return ""
         return self._get_key_fingerprint(value)
 
-    def value_to_json(self, value: SSHKeyPairValue) -> JSONValue:
+    def value_to_json(self, value: _Optional[SSHKeyPairValue]) -> JSONValue:
+        if value is None:
+            return []
         return [value[0], value[1]]
 
-    def value_from_json(self, json_value: JSONValue) -> SSHKeyPairValue:
+    def value_from_json(self, json_value: JSONValue) -> _Optional[SSHKeyPairValue]:
+        if json_value == []:
+            return None
         return (json_value[0], json_value[1])
 
-    def value_to_json_safe(self, value: SSHKeyPairValue) -> JSONValue:
+    def value_to_json_safe(self, value: _Optional[SSHKeyPairValue]) -> JSONValue:
+        if value is None:
+            return ""
         return f"fingerprint:{self._get_key_fingerprint(value)}"
 
     def from_html_vars(self, varprefix: str) -> SSHKeyPairValue:
         if request.has_var(varprefix):
             return self._decode_key_from_url(request.get_ascii_input_mandatory(varprefix))
-        return self._generate_ssh_key(varprefix)
+        return self._generate_ssh_key()
 
     @staticmethod
     def _encode_key_for_url(value: SSHKeyPairValue) -> str:
@@ -7350,8 +7358,8 @@ class SSHKeyPair(ValueSpec):
             raise ValueError("Invalid value: %r" % text)
         return parts[0], parts[1]
 
-    @classmethod
-    def _generate_ssh_key(cls, varprefix: str) -> SSHKeyPairValue:
+    @staticmethod
+    def _generate_ssh_key() -> SSHKeyPairValue:
         key = RSA.generate(4096)
         private_key = key.exportKey("PEM").decode("ascii")
         pubkey = key.publickey()

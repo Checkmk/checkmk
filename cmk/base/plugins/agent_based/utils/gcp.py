@@ -64,7 +64,7 @@ def parse_gcp(
     }
 
 
-def parse_piggy_back(string_table: StringTable) -> PiggyBackSection:
+def parse_piggyback(string_table: StringTable) -> PiggyBackSection:
     return [GCPResult.deserialize(row[0]) for row in string_table]
 
 

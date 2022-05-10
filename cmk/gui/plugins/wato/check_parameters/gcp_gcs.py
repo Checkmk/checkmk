@@ -6,12 +6,13 @@
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
+    CheckParameterRulespecWithoutItem,
     Levels,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
 from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
-from cmk.gui.valuespec import Dictionary, Filesize, MonitoringState, Percentage, ValueSpec
+from cmk.gui.valuespec import Dictionary, Filesize, Integer, MonitoringState, Percentage, ValueSpec
 
 # A notes about the names of the Dictionary elements. They correspond to the names of the metrics in
 # the check plugin. Please do not change them.
@@ -354,5 +355,26 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_vs_redis_memory,
         title=lambda: _("GCP/Memorystore redis memory"),
+    )
+)
+
+
+def _vs_gce_cpu() -> Dictionary:
+    return Dictionary(
+        title=_("Levels CPU"),
+        elements=[
+            ("util", SimpleLevels(Percentage, title=_("CPU utilization"))),
+            ("vcores", SimpleLevels(Integer, title=_("Number of vCPUs reserved for the VM"))),
+        ],
+    )
+
+
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="gcp_gce_cpu",
+        group=RulespecGroupCheckParametersApplications,
+        match_type="dict",
+        parameter_valuespec=_vs_gce_cpu,
+        title=lambda: _("GCP/GCE CPU"),
     )
 )

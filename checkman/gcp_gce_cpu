@@ -1,0 +1,18 @@
+title: GCP GCS: CPU
+agents: gcp
+catalog: cloud/gcp
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the CPU utilization of GCE VMs. The following metrics are provided.
+
+ - total cpu utilization in percent
+ - number of vCores reserved for VM.
+
+ To make this check work you have to configure the related
+ special agent {Google Cloud Platform (GCP)}.
+
+ Upper levels are configurable via the rule "GCP/GCE CPU".
+
+discovery:
+ One service is created.

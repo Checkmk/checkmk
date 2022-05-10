@@ -615,7 +615,25 @@ GCE = PiggyBackService(
                     ),
                 )
             ],
-        )
+        ),
+        Service(
+            name="cpu",
+            default_groupby="resource.instance_id",
+            metrics=[
+                Metric(
+                    name="compute.googleapis.com/instance/cpu/utilization",
+                    aggregation=Aggregation(
+                        per_series_aligner=Aligner.ALIGN_MAX,
+                    ),
+                ),
+                Metric(
+                    name="compute.googleapis.com/instance/cpu/reserved_cores",
+                    aggregation=Aggregation(
+                        per_series_aligner=Aligner.ALIGN_MAX,
+                    ),
+                ),
+            ],
+        ),
     ],
 )
 

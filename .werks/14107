@@ -1,0 +1,13 @@
+Title: Remove sorting option from "State" column on users page
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1652177024
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0i1
+
+The state column had the option of sorting the icon entries, which had no
+effect.

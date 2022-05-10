@@ -125,7 +125,7 @@ register.check_plugin(
     check_ruleset_name="gcp_run_cpu",
     discovery_function=discover,
     check_function=check_gcp_run_cpu,
-    check_default_parameters={"util": None},
+    check_default_parameters={"util": (80.0, 90.0)},
 )
 
 

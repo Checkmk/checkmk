@@ -170,7 +170,10 @@ def _vs_run_memory() -> ValueSpec:
     return Dictionary(
         title=_("Levels memory"),
         elements=[
-            ("memory_util", SimpleLevels(Percentage, title=_("Memory utilitzation"))),
+            (
+                "memory_util",
+                SimpleLevels(Percentage, title=_("Memory utilitzation"), default_value=(80, 90)),
+            ),
         ],
     )
 
@@ -190,7 +193,7 @@ def _vs_run_cpu() -> ValueSpec:
     return Dictionary(
         title=_("Levels CPU"),
         elements=[
-            ("util", SimpleLevels(Percentage, title=_("CPU utilitzation"))),
+            ("util", SimpleLevels(Percentage, title=_("CPU utilitzation"), default_value=(80, 90))),
         ],
     )
 
@@ -288,7 +291,7 @@ def _vs_sql_disk() -> ValueSpec:
     return Dictionary(
         title=_("Levels disk"),
         elements=[
-            ("fs_used_percent", Levels(title=_("Disk usage"), unit="%")),
+            ("fs_used_percent", Levels(title=_("Disk usage"), unit="%", default_value=(80, 90))),
             ("disk_read_ios", Levels(title=_("Number of read IOPS"))),
             ("disk_write_ios", Levels(title=_("Number of write IOPS"))),
         ],
@@ -330,8 +333,16 @@ def _vs_redis_memory() -> ValueSpec:
     return Dictionary(
         title=_("Levels memory"),
         elements=[
-            ("memory_util", SimpleLevels(Percentage, title=_("Memory utilitzation"))),
-            ("system_memory_util", SimpleLevels(Percentage, title=_("System Memory utilitzation"))),
+            (
+                "memory_util",
+                SimpleLevels(Percentage, title=_("Memory utilitzation"), default_value=(80, 90)),
+            ),
+            (
+                "system_memory_util",
+                SimpleLevels(
+                    Percentage, title=_("System Memory utilitzation"), default_value=(80, 90)
+                ),
+            ),
         ],
     )
 

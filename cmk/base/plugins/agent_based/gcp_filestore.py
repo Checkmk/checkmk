@@ -72,7 +72,7 @@ register.check_plugin(
     discovery_function=discover,
     check_function=check,
     check_default_parameters={
-        "fs_used_percent": None,
+        "fs_used_percent": (80.0, 90.0),
         "disk_read_ios": None,
         "disk_write_ios": None,
     },

@@ -138,7 +138,7 @@ register.check_plugin(
     check_ruleset_name="gcp_sql_memory",
     discovery_function=discover,
     check_function=check_gcp_sql_memory,
-    check_default_parameters={"memory_util": None},
+    check_default_parameters={"memory_util": (80.0, 90.0)},
 )
 
 
@@ -168,7 +168,7 @@ register.check_plugin(
     check_ruleset_name="gcp_sql_cpu",
     discovery_function=discover,
     check_function=check_gcp_sql_cpu,
-    check_default_parameters={"util": None},
+    check_default_parameters={"util": (80.0, 90.0)},
 )
 
 
@@ -245,7 +245,7 @@ register.check_plugin(
     discovery_function=discover,
     check_function=check_gcp_sql_disk,
     check_default_parameters={
-        "fs_used_percent": None,
+        "fs_used_percent": (80.0, 90.0),
         "disk_write_ios": None,
         "disk_read_ios": None,
     },

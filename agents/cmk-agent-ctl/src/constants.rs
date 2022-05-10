@@ -12,9 +12,7 @@ pub const CONNECTION_TIMEOUT: u64 = 20;
 pub const CMK_AGENT_USER: &str = "cmk-agent";
 #[cfg(unix)]
 pub const UNIX_AGENT_SOCKET: &str = "/run/check-mk-agent.socket";
-//TODO(sk): Pass internal port via cmdline
 #[cfg(windows)]
-#[allow(dead_code)] // TODO(sk): remove after integration will be confirmed
 pub const WINDOWS_INTERNAL_PORT: &str = "50001";
 
 // FILES

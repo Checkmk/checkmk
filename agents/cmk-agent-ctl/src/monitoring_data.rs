@@ -41,7 +41,6 @@ async fn async_collect_from_ip(
     Ok(data)
 }
 
-// TODO(sk): Deliver the remote ip to Windows agent to satisfy logwatch requirements
 #[cfg(windows)]
 pub async fn async_collect(
     agent_channel: &types::AgentChannel,

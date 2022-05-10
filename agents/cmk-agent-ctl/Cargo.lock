@@ -348,6 +348,7 @@ dependencies = [
  "async-std",
  "async-trait",
  "base64",
+ "faccess",
  "flate2",
  "flexi_logger",
  "http",
@@ -529,6 +530,17 @@ name = "event-listener"
 version = "2.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "77f3309417938f28bf8228fcff79a4a37103981e3e186d2ccd19c74b38f4eb71"
+
+[[package]]
+name = "faccess"
+version = "0.2.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "59ae66425802d6a903e268ae1a08b8c38ba143520f227a205edf4e9c7e3e26d5"
+dependencies = [
+ "bitflags",
+ "libc",
+ "winapi",
+]
 
 [[package]]
 name = "fastrand"

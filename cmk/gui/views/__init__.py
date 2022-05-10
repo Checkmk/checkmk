@@ -57,6 +57,7 @@ from cmk.gui.ctx_stack import g
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKGeneralException, MKInternalError, MKUserError
 from cmk.gui.htmllib.context import html
+from cmk.gui.htmllib.top_heading import top_heading
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _, _u
 from cmk.gui.inventory import (
@@ -756,7 +757,7 @@ class GUIViewRenderer(ABCViewRenderer):
             if self.view.checkboxes_displayed:
                 weblib.selection_id()
             breadcrumb = self.view.breadcrumb()
-            html.top_heading(
+            top_heading(
                 html,
                 html.request,
                 view_title(view_spec, self.view.context),

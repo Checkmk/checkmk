@@ -19,20 +19,15 @@ from cmk.utils.exceptions import MKGeneralException
 import cmk.gui.log as log
 import cmk.gui.utils as utils
 import cmk.gui.utils.escaping as escaping
-from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbRenderer
+from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.htmllib.foldable_container import foldable_container
+from cmk.gui.htmllib.top_heading import top_heading
 from cmk.gui.http import Request, Response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.page_menu import (
-    enable_page_menu_entry,
-    PageMenu,
-    PageMenuPopupsRenderer,
-    PageMenuRenderer,
-)
-from cmk.gui.page_state import PageState, PageStateRenderer
+from cmk.gui.page_menu import enable_page_menu_entry, PageMenu
+from cmk.gui.page_state import PageState
 from cmk.gui.type_defs import (
     Choice,
     ChoiceGroup,
@@ -461,7 +456,7 @@ class HTMLGenerator(ABCHTMLGenerator):
                 breadcrumb = breadcrumb or Breadcrumb()
 
                 if self.render_headfoot and show_top_heading:
-                    self.top_heading(
+                    top_heading(
                         self,
                         self.request,
                         title,
@@ -486,82 +481,6 @@ class HTMLGenerator(ABCHTMLGenerator):
 
     def html_foot(self) -> None:
         self.close_html()
-
-    @staticmethod
-    def top_heading(
-        writer: ABCHTMLGenerator,
-        request: Request,
-        title: str,
-        breadcrumb: Breadcrumb,
-        page_menu: Optional[PageMenu] = None,
-        page_state: Optional[PageState] = None,
-        *,
-        browser_reload: float,
-    ) -> None:
-        writer.open_div(id_="top_heading")
-        writer.open_div(class_="titlebar")
-
-        # HTML() is needed here to prevent a double escape when we do  self._escape_attribute
-        # here and self.a() escapes the content (with permissive escaping) again. We don't want
-        # to handle "title" permissive.
-        html_title = HTML(escaping.escape_attribute(title))
-        writer.a(
-            html_title,
-            class_="title",
-            href="#",
-            onfocus="if (this.blur) this.blur();",
-            onclick="this.innerHTML='%s'; document.location.reload();" % _("Reloading..."),
-        )
-
-        if breadcrumb:
-            BreadcrumbRenderer().show(breadcrumb)
-
-        if page_state is None:
-            page_state = HTMLGenerator._make_default_page_state(
-                writer,
-                request,
-                browser_reload=browser_reload,
-            )
-
-        if page_state:
-            PageStateRenderer().show(page_state)
-
-        writer.close_div()  # titlebar
-
-        if page_menu:
-            PageMenuRenderer().show(
-                page_menu,
-                hide_suggestions=not user.get_tree_state("suggestions", "all", True),
-            )
-
-        writer.close_div()  # top_heading
-
-        if page_menu:
-            PageMenuPopupsRenderer().show(page_menu)
-
-        if active_config.debug:
-            HTMLGenerator._dump_get_vars(
-                writer,
-                request,
-            )
-
-    @staticmethod
-    def _make_default_page_state(
-        writer: ABCHTMLGenerator, request: Request, *, browser_reload: float
-    ) -> Optional[PageState]:
-        """Create a general page state for all pages without specific one"""
-        if not browser_reload:
-            return None
-
-        return PageState(
-            text=writer.render_span("%d" % browser_reload),
-            icon_name="trans",
-            css_classes=["reload"],
-            url="javascript:document.location.reload()",
-            tooltip_text=_("Automatic page reload in %d seconds.") % browser_reload
-            + "\n"
-            + _("Click for instant reload."),
-        )
 
     def begin_page_content(self):
         content_id = "main_page_content"
@@ -1582,44 +1501,3 @@ class HTMLGenerator(ABCHTMLGenerator):
             onmousedown="cmk.element_dragging.start(event, this, %s, %s"
             % (json.dumps(dragging_tag.upper()), drop_handler),
         )
-
-    #
-    # HTML - All the common and more complex HTML rendering methods
-    #
-
-    @staticmethod
-    def _dump_get_vars(
-        writer: ABCHTMLGenerator,
-        request: Request,
-    ) -> None:
-        with foldable_container(
-            treename="html",
-            id_="debug_vars",
-            isopen=True,
-            title=_("GET/POST variables of this page"),
-        ):
-            HTMLGenerator.debug_vars(writer, request, hide_with_mouse=False)
-
-    @staticmethod
-    def debug_vars(
-        writer: ABCHTMLGenerator,
-        request: Request,
-        prefix: Optional[str] = None,
-        hide_with_mouse: bool = True,
-        vars_: Optional[Dict[str, str]] = None,
-    ) -> None:
-        it = request.itervars() if vars_ is None else vars_.items()
-        hover = "this.style.display='none';"
-        writer.open_table(class_=["debug_vars"], onmouseover=hover if hide_with_mouse else None)
-        oddeven = "even"
-        writer.tr(writer.render_th(_("POST / GET Variables"), colspan="2"), class_=oddeven)
-        for name, value in sorted(it):
-            oddeven = "even" if oddeven == "odd" else "odd"
-            if name in ["_password", "password"]:
-                value = "***"
-            if not prefix or name.startswith(prefix):
-                writer.tr(
-                    writer.render_td(name, class_="left") + writer.render_td(value, class_="right"),
-                    class_=oddeven,
-                )
-        writer.close_table()

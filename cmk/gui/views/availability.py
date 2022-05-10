@@ -35,6 +35,7 @@ from cmk.gui.availability import (
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.context import html
+from cmk.gui.htmllib.top_heading import top_heading
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -278,7 +279,7 @@ def show_availability_page(view: View, filterheaders: FilterHeader) -> None:
         html.body_start(title, force=True)
 
     if display_options.enabled(display_options.T):
-        html.top_heading(
+        top_heading(
             html,
             html.request,
             title,
@@ -847,7 +848,7 @@ def show_bi_availability(view: "View", aggr_rows: "Rows") -> None:
                 )
             )
 
-        html.top_heading(
+        top_heading(
             html,
             html.request,
             title,
@@ -1170,7 +1171,7 @@ def edit_annotation(breadcrumb: Breadcrumb) -> bool:
     html.body_start(title)
 
     breadcrumb = _edit_annotation_breadcrumb(breadcrumb, title)
-    html.top_heading(
+    top_heading(
         html,
         html.request,
         title,

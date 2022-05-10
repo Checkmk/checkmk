@@ -35,6 +35,7 @@ from cmk.gui.breadcrumb import (
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.context import html
+from cmk.gui.htmllib.debug_vars import debug_vars
 from cmk.gui.htmllib.tag_rendering import HTMLContent
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
@@ -597,7 +598,7 @@ class ReportRendererGUI(ABCReportRenderer):
         html.open_tr(class_="data even0")
         html.td(_("HTTP Parameters"), class_="left")
         html.open_td()
-        html.debug_vars(html, html.request, vars_=details["vars"], hide_with_mouse=False)
+        debug_vars(html, html.request, vars_=details["vars"], hide_with_mouse=False)
         html.close_td()
         html.close_tr()
         _crash_row(_("Referer"), details.get("referer", _("Unknown")))

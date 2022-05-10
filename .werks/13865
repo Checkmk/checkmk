@@ -4,9 +4,10 @@ Compatible: compat
 Component: checks
 Date: 1650637258
 Edition: cre
-Knowledge: undoc
+Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+State: unknown
+Version: 2.1.0b9
 
 Upon startup, the agent controller (<tt>cmk-agent-ctl</tt>) now checks if the
 agent socket is operational on Unix systems. If not, we refuse the agent

@@ -27,11 +27,14 @@
 
 from __future__ import annotations
 
-import abc
-from typing import Optional, Union
+from typing import final, Optional, Union
+
+from cmk.utils.exceptions import MKGeneralException
 
 import cmk.gui.utils.escaping as escaping
+from cmk.gui.i18n import _
 from cmk.gui.utils.html import HTML
+from cmk.gui.utils.output_funnel import OutputFunnel
 
 from .tag_rendering import (
     HTMLContent,
@@ -60,10 +63,7 @@ from .tag_rendering import (
 #   '----------------------------------------------------------------------'
 
 
-class ABCHTMLGenerator(abc.ABC):
-    # The class should not be abstract.  We should pass it a "writer" object
-    # instead of making the class abstract for this single method.
-    #
+class HTMLWriter:
     """Usage Notes:
 
       - Tags can be opened using the open_[tag]() call where [tag] is one of the possible tag names.
@@ -101,6 +101,8 @@ class ABCHTMLGenerator(abc.ABC):
     #
     # Showing / rendering
     #
+    def __init__(self, output_funnel: OutputFunnel):
+        self.output_funnel = output_funnel
 
     def write_text(self, text: HTMLContent) -> None:
         """Write text. Highlighting tags such as h2|b|tt|i|br|pre|a|sup|p|li|ul|ol are not escaped."""
@@ -110,9 +112,18 @@ class ABCHTMLGenerator(abc.ABC):
         """Write HTML code directly, without escaping."""
         self._write(content)
 
-    @abc.abstractmethod
+    @final
     def _write(self, text: HTMLContent) -> None:
-        raise NotImplementedError()
+        if not text:
+            return
+
+        if isinstance(text, (int, HTML)):
+            text = str(text)
+
+        if not isinstance(text, str):
+            raise MKGeneralException(_("Type Error: html.write accepts str input objects only!"))
+
+        self.output_funnel.write(text.encode("utf-8"))
 
     #
     # HTML element methods

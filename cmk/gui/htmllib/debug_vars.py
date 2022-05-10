@@ -11,11 +11,11 @@ from typing import Dict, Optional
 from cmk.gui.http import Request
 from cmk.gui.i18n import _
 
-from .generator import ABCHTMLGenerator
+from .generator import HTMLWriter
 
 
 def debug_vars(
-    writer: ABCHTMLGenerator,
+    writer: HTMLWriter,
     request: Request,
     prefix: Optional[str] = None,
     hide_with_mouse: bool = True,

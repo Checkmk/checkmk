@@ -14,7 +14,6 @@ from typing import Any, Callable, cast, Dict, Iterable, List, Optional, Set, Tup
 
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
-from cmk.utils.exceptions import MKGeneralException
 
 import cmk.gui.log as log
 import cmk.gui.utils as utils
@@ -46,7 +45,7 @@ from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import doc_reference_url, DocReference, requested_file_name
 from cmk.gui.utils.user_errors import user_errors
 
-from .generator import ABCHTMLGenerator
+from .generator import HTMLWriter
 from .tag_rendering import (
     HTMLContent,
     HTMLTagAttributes,
@@ -72,7 +71,7 @@ HTMLMessageInput = Union[HTML, str]
 #   '----------------------------------------------------------------------'
 
 
-class HTMLGenerator(ABCHTMLGenerator):
+class HTMLGenerator(HTMLWriter):
     def __init__(
         self,
         request: Request,
@@ -80,7 +79,7 @@ class HTMLGenerator(ABCHTMLGenerator):
         output_funnel: OutputFunnel,
         output_format: str,
     ) -> None:
-        super().__init__()
+        super().__init__(output_funnel)
 
         self._logger = log.logger.getChild("html")
 
@@ -110,7 +109,6 @@ class HTMLGenerator(ABCHTMLGenerator):
         self.form_has_submit_button: bool = False
 
         # Register helpers
-        self.output_funnel = output_funnel
         self.request = request
 
         self._mobile = is_mobile(request, response)
@@ -119,22 +117,6 @@ class HTMLGenerator(ABCHTMLGenerator):
     def screenshotmode(self) -> bool:
         """Enabling the screenshot mode omits the fancy background and makes it white instead."""
         return bool(self.request.var("screenshotmode", "1" if active_config.screenshotmode else ""))
-
-    #
-    # output funnel
-    #
-
-    def _write(self, text: HTMLContent) -> None:
-        if not text:
-            return
-
-        if isinstance(text, (int, HTML)):
-            text = str(text)
-
-        if not isinstance(text, str):
-            raise MKGeneralException(_("Type Error: html.write accepts str input objects only!"))
-
-        self.output_funnel.write(text.encode("utf-8"))
 
     #
     # Content Type
@@ -1305,8 +1287,8 @@ class HTMLGenerator(ABCHTMLGenerator):
                 src=emblem_path,
             )
 
-        return ABCHTMLGenerator.render_span(
-            icon_element + ABCHTMLGenerator.render_img(emblem_path, class_="emblem"),
+        return HTMLWriter.render_span(
+            icon_element + HTMLWriter.render_img(emblem_path, class_="emblem"),
             class_="emblem",
         )
 
@@ -1332,7 +1314,7 @@ class HTMLGenerator(ABCHTMLGenerator):
         href = url if not onclick else "javascript:void(0)"
         assert href is not None
 
-        return ABCHTMLGenerator.render_a(
+        return HTMLWriter.render_a(
             content=HTML(HTMLGenerator.render_icon(icon, cssclass="iconbutton")),
             href=href,
             title=title,
@@ -1448,7 +1430,7 @@ class HTMLGenerator(ABCHTMLGenerator):
             onmouseenter = None
             onmouseleave = None
 
-        atag = ABCHTMLGenerator.render_a(
+        atag = HTMLWriter.render_a(
             content,
             class_="popup_trigger",
             href="javascript:void(0);",
@@ -1466,7 +1448,7 @@ class HTMLGenerator(ABCHTMLGenerator):
             classes.append(cssclass)
 
         # TODO: Make method.content return HTML
-        return ABCHTMLGenerator.render_div(
+        return HTMLWriter.render_div(
             atag + HTML(method.content), class_=classes, id_="popup_trigger_%s" % ident, style=style
         )
 
@@ -1494,7 +1476,7 @@ class HTMLGenerator(ABCHTMLGenerator):
     # structures too.
     @staticmethod
     def render_element_dragger(dragging_tag: str, drop_handler: str) -> HTML:
-        return ABCHTMLGenerator.render_a(
+        return HTMLWriter.render_a(
             HTMLGenerator.render_icon("drag", _("Move this entry")),
             href="javascript:void(0)",
             class_=["element_dragger"],

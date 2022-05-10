@@ -99,7 +99,7 @@ def test_show_user_errors(request_context):
     assert c == '<div class="error">asd &lt;script&gt;alert(1)&lt;/script&gt; <br> <b></div>'
 
 
-def test_ABCHTMLGenerator(request_context):
+def test_HTMLWriter(request_context):
     with output_funnel.plugged():
 
         with output_funnel.plugged():

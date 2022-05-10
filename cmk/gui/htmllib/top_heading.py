@@ -20,11 +20,11 @@ from cmk.gui.page_state import PageState, PageStateRenderer
 from cmk.gui.utils.html import HTML
 
 from .debug_vars import debug_vars
-from .generator import ABCHTMLGenerator
+from .generator import HTMLWriter
 
 
 def top_heading(
-    writer: ABCHTMLGenerator,
+    writer: HTMLWriter,
     request: Request,
     title: str,
     breadcrumb: Breadcrumb,
@@ -82,7 +82,7 @@ def top_heading(
 
 
 def _make_default_page_state(
-    writer: ABCHTMLGenerator, request: Request, *, browser_reload: float
+    writer: HTMLWriter, request: Request, *, browser_reload: float
 ) -> Optional[PageState]:
     """Create a general page state for all pages without specific one"""
     if not browser_reload:
@@ -100,7 +100,7 @@ def _make_default_page_state(
 
 
 def _dump_get_vars(
-    writer: ABCHTMLGenerator,
+    writer: HTMLWriter,
     request: Request,
 ) -> None:
     with foldable_container(

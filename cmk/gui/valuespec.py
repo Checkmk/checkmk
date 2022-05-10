@@ -7383,7 +7383,7 @@ def SchedulePeriod(  # pylint: disable=redefined-builtin
     help: _Optional[ValueSpecHelp] = None,
     default_value: ValueSpecDefault[CascadingDropdownChoiceValue] = DEF_VALUE,
     validate: _Optional[ValueSpecValidateFunc[CascadingDropdownChoiceValue]] = None,
-):
+) -> CascadingDropdown:
     if from_end:
         from_end_choice: list[CascadingDropdownChoice] = [
             (
@@ -7621,7 +7621,7 @@ def ListOfCAs(  # pylint: disable=redefined-builtin
     help: _Optional[ValueSpecHelp] = None,
     default_value: ValueSpecDefault[ListOfModel[T]] = DEF_VALUE,
     validate: _Optional[ValueSpecValidateFunc[ListOfModel[T]]] = None,
-):
+) -> ListOf:
     return ListOf(
         valuespec=CAorCAChain(),
         magic=magic,
@@ -7718,7 +7718,7 @@ class SetupSiteChoice(DropdownChoice):
         return self.canonical_value()
 
 
-def MonitoringSiteChoice():
+def MonitoringSiteChoice() -> DropdownChoice:
     """Select a single site that is known as status remote site"""
     return DropdownChoice(
         title=_("Site"),
@@ -7747,7 +7747,7 @@ def LogLevelChoice(  # pylint: disable=redefined-builtin
     default_value: ValueSpecDefault[DropdownChoiceModel] = DEF_VALUE,
     validate: _Optional[ValueSpecValidateFunc[DropdownChoiceModel]] = None,
     deprecated_choices: Sequence[DropdownChoiceModel] = (),
-):
+) -> DropdownChoice:
     return DropdownChoice(
         choices=[
             (logging.CRITICAL, _("Critical")),

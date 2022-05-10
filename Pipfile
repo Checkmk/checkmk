@@ -69,7 +69,6 @@ pipfile = "*" # for generating import names during int tests
 
 [packages]
 setuptools_scm = "==4.1.2"  # needed by various setup.py
-setuptools-git = "==1.2"  # needed by various setup.py
 six = "==1.16.0"  # direct dependency + needed by bcrypt, cryptography, PyNaCl, python-dateutil, vcrpy, python-active-directory
 python-dateutil = "==2.8.2"  # direct dependency
 PyYAML = "==6.0"  # needed by vcrpy

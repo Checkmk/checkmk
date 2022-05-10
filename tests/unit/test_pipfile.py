@@ -271,7 +271,6 @@ CEE_UNUSED_PACKAGES = [
     "rsa",
     "s3transfer",
     "semver",
-    "setuptools-git",
     "setuptools_scm",
     "snmpsim",
     "tenacity",

@@ -3,6 +3,9 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from typing import Sequence
+
+from livestatus import LivestatusColumn, Query, QuerySpecification
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.views.utils import (
@@ -470,13 +473,14 @@ class ServiceDiscoveryRowTable(RowTable):
     # filters to the host livestatus query and apply the others during the discovery
     # service query.
 
-    def prepare_lql(self, columns, headers):
-        query = "GET services\n"
-        query += "Columns: %s\n" % " ".join(columns)
-        query += headers
-        # Hard code the discovery service filter
-        query += "Filter: check_command = check-mk-inventory\n"
-        return query
+    def create_livestatus_query(self, columns: Sequence[LivestatusColumn], headers: str) -> Query:
+        return Query(
+            QuerySpecification(
+                table="services",
+                columns=columns,
+                headers=headers + "Filter: check_command = check-mk-inventory\n",
+            )
+        )
 
     def query(self, view, columns, headers, only_sites, limit, all_active_filters):
 
@@ -484,8 +488,9 @@ class ServiceDiscoveryRowTable(RowTable):
             columns.append("long_plugin_output")
 
         columns = [c for c in columns if c not in view.datasource.add_columns]
-        query = self.prepare_lql(columns, headers)
-        data = query_livestatus(query, only_sites, limit, "read")
+        data = query_livestatus(
+            self.create_livestatus_query(columns, headers), only_sites, limit, "read"
+        )
 
         columns = ["site"] + columns
         service_rows = [dict(zip(columns, row)) for row in data]

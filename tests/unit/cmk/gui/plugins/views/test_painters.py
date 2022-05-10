@@ -27,6 +27,7 @@ def fixture_livestatus_test_config(mock_livestatus):
         "hosts",
         [
             {
+                "host_name": "abc",
                 "name": "abc",
                 "alias": "abc",
                 "address": "server.example.com",
@@ -1674,9 +1675,6 @@ def _set_expected_queries(painter_ident, live):
     if painter_ident == "inv":
         # TODO: Why is it querying twice?
         live.expect_query(
-            "GET hosts\nColumns: host_name\nLocaltime: 1523811000\nOutputFormat: python3\nKeepAlive: on\nResponseHeader: fixed16"
-        )
-        live.expect_query(
-            "GET hosts\nColumns: host_name\nLocaltime: 1523811000\nOutputFormat: python3\nKeepAlive: on\nResponseHeader: fixed16"
+            "GET hosts\nColumns: host_name\nLocaltime: 1523811000\nOutputFormat: json\nKeepAlive: on\nResponseHeader: fixed16"
         )
         return

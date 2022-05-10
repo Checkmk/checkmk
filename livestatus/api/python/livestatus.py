@@ -14,7 +14,9 @@ import socket
 import ssl
 import threading
 import time
+from dataclasses import dataclass, field
 from enum import Enum
+from functools import lru_cache
 from io import BytesIO
 from typing import (
     Any,
@@ -288,14 +290,50 @@ class Helpers:
         return [sum(column) for column in zip(*data)]
 
 
-class QuerySpecification(NamedTuple):
+@lru_cache
+def get_livestatus_blob_columns() -> Set[LivestatusColumn]:
+    # These columns should get queried from the core
+    return {
+        "current_host_mk_inventory",
+        "current_host_mk_inventory_gz",
+        "current_host_structured_status",
+        "current_service_robotmk_last_error_log",
+        "current_service_robotmk_last_error_log_gz",
+        "current_service_robotmk_last_log",
+        "current_service_robotmk_last_log_gz",
+        "host_mk_inventory",
+        "host_mk_inventory_gz",
+        "host_structured_status",
+        "license_usage_history",
+        "mk_inventory",
+        "mk_inventory_gz",
+        "robotmk_last_error_log",
+        "robotmk_last_error_log_gz",
+        "robotmk_last_log",
+        "robotmk_last_log_gz",
+        "service_robotmk_last_error_log",
+        "service_robotmk_last_error_log_gz",
+        "service_robotmk_last_log",
+        "service_robotmk_last_log_gz",
+        "structured_status",
+    }
+
+
+@dataclass
+class QuerySpecification:
     table: str
-    columns: Sequence[LivestatusColumn]
-    headers: str
+    columns: Sequence[LivestatusColumn] = field(default_factory=list)
+    headers: str = ""
 
     def __str__(self) -> str:
-        # TODO: later commit
-        pass
+        query = f"GET {self.table}\n"
+        if self.columns:
+            query += f"Columns: {' '.join(self.columns)}\n"
+        query += self.headers
+        return query
+
+    def supports_json_format(self) -> bool:
+        return not set(self.columns).intersection(get_livestatus_blob_columns())
 
 
 # TODO: Add more functionality to the Query class:
@@ -330,7 +368,9 @@ class Query:
         return _ensure_unicode(self._query)
 
     def supports_json_format(self) -> bool:
-        return False
+        if not isinstance(self._query, QuerySpecification):
+            return False
+        return self._query.supports_json_format()
 
 
 QueryTypes = Union[str, bytes, Query]
@@ -574,13 +614,13 @@ class SingleSiteConnection(Helpers):
 
         return data.getvalue()
 
-    def do_query(self, query_obj: Query, add_headers: str = "") -> LivestatusResponse:
-        with _livestatus_output_format_switcher(query_obj, self):
-            query = self.build_query(query_obj, add_headers)
-            self.send_query(query)
+    def do_query(self, query: Query, add_headers: str = "") -> LivestatusResponse:
+        with _livestatus_output_format_switcher(query, self):
+            str_query = self.build_query(query, add_headers)
+            self.send_query(str_query)
             try:
                 return self.parse_raw_response(
-                    self.receive_raw_response(query, query_obj.suppress_exceptions)
+                    self.receive_raw_response(str_query, query.suppress_exceptions), query
                 )
             except MKLivestatusQueryError:
                 self.disconnect()
@@ -703,16 +743,12 @@ class SingleSiteConnection(Helpers):
             # FIXME: ? self.disconnect()
             raise MKLivestatusSocketError("Unhandled exception: %s" % e)
 
-    def parse_raw_response(self, raw_response: bytes) -> LivestatusResponse:
+    def parse_raw_response(self, raw_response: bytes, query: Query) -> LivestatusResponse:
         data = raw_response.decode("utf-8")
         try:
-            if self._output_format == LivestatusOutputFormat.PYTHON:
-                return ast.literal_eval(data)
-
-            if self._output_format == LivestatusOutputFormat.JSON:
+            if query.supports_json_format():
                 return json.loads(data)
-
-            raise MKLivestatusQueryError("Unknown OutputFormat %r" % self._output_format)
+            return ast.literal_eval(data)
         except (ValueError, SyntaxError):
             raise MKLivestatusQueryError("Malformed raw response output")
 
@@ -1095,10 +1131,12 @@ class MultiSiteConnection(Helpers):
             limit_header = ""
 
         # First send all queries
+        retrieve_responses: List[Tuple[str, ConnectedSite]] = []
         for connected_site in connect_to_sites:
             try:
                 str_query = connected_site.connection.build_query(query, add_headers + limit_header)
                 connected_site.connection.send_query(str_query)
+                retrieve_responses.append((str_query, connected_site))
             except LivestatusTestingError:
                 raise
             except Exception as e:
@@ -1109,7 +1147,7 @@ class MultiSiteConnection(Helpers):
 
         # Then retrieve all raw responses. We will be as slow as the slowest of all connections.
         site_responses: List[Tuple[ConnectedSite, bytes]] = []
-        for connected_site in connect_to_sites:
+        for str_query, connected_site in retrieve_responses:
             try:
                 site_responses.append(
                     (
@@ -1136,7 +1174,7 @@ class MultiSiteConnection(Helpers):
         result = LivestatusResponse([])
         for connected_site, raw_response in site_responses:
             try:
-                rows = connected_site.connection.parse_raw_response(raw_response)
+                rows = connected_site.connection.parse_raw_response(raw_response, query)
                 stillalive.append(connected_site)
                 if self.prepend_site:
                     for row in rows:

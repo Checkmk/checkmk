@@ -77,7 +77,7 @@ pub fn run_requested_mode(args: cli::Args, paths: setup::PathResolver) -> Anyhow
         cli::Args::Dump { .. } => dump(),
         cli::Args::Status(status_args) => status(
             &registry,
-            config::PullConfig::new(
+            &config::PullConfig::new(
                 runtime_config.clone(),
                 // this will vanish once the Windows agent also uses the toml config
                 cli::PullOpts {

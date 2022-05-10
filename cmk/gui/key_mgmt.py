@@ -7,7 +7,7 @@
 import pprint
 import time
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Literal, Optional, Union
 
 from OpenSSL import crypto
 
@@ -42,6 +42,8 @@ from cmk.gui.valuespec import (
     TextInput,
 )
 
+Key = dict[str, Any]
+
 
 class KeypairStore:
     def __init__(self, path: str, attr: str) -> None:
@@ -49,20 +51,20 @@ class KeypairStore:
         self._attr = attr
         super().__init__()
 
-    def load(self):
+    def load(self) -> dict[int, Key]:
         if not self._path.exists():
             return {}
 
-        variables: dict[str, Any] = {self._attr: {}}
+        variables: dict[str, dict[int, Key]] = {self._attr: {}}
         with self._path.open("rb") as f:
             exec(f.read(), variables, variables)
         return variables[self._attr]
 
-    def save(self, keys):
+    def save(self, keys: dict[int, Key]) -> None:
         store.makedirs(self._path.parent)
         store.save_mk_file(self._path, "%s.update(%s)" % (self._attr, pprint.pformat(keys)))
 
-    def choices(self):
+    def choices(self) -> list[tuple[str, str]]:
         choices = []
         for key in self.load().values():
             cert = crypto.load_certificate(crypto.FILETYPE_PEM, key["certificate"])
@@ -71,7 +73,7 @@ class KeypairStore:
 
         return sorted(choices, key=lambda x: x[1])
 
-    def get_key_by_digest(self, digest):
+    def get_key_by_digest(self, digest: str) -> tuple[int, Key]:
         for key_id, key in self.load().items():
             other_cert = crypto.load_certificate(crypto.FILETYPE_PEM, key["certificate"])
             other_digest = other_cert.digest("md5").decode("ascii")
@@ -89,13 +91,13 @@ class PageKeyManagement:
         self.keys = self.load()
         super().__init__()
 
-    def title(self):
+    def title(self) -> str:
         raise NotImplementedError()
 
-    def load(self):
+    def load(self) -> dict[int, Key]:
         raise NotImplementedError()
 
-    def save(self, keys):
+    def save(self, keys: dict[int, Key]) -> None:
         raise NotImplementedError()
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
@@ -137,7 +139,7 @@ class PageKeyManagement:
             breadcrumb=breadcrumb,
         )
 
-    def _may_edit_config(self):
+    def _may_edit_config(self) -> bool:
         return True
 
     def action(self) -> ActionResult:
@@ -158,19 +160,19 @@ class PageKeyManagement:
             self.save(self.keys)
         return None
 
-    def delete(self, key_id):
+    def delete(self, key_id: int) -> None:
         del self.keys[key_id]
 
-    def _delete_confirm_msg(self):
+    def _delete_confirm_msg(self) -> str:
         raise NotImplementedError()
 
-    def _key_in_use(self, key_id, key):
+    def _key_in_use(self, key_id: int, key: Key) -> bool:
         raise NotImplementedError()
 
-    def _table_title(self):
+    def _table_title(self) -> str:
         raise NotImplementedError()
 
-    def page(self):
+    def page(self) -> None:
         with table_element(title=self._table_title(), searchable=False, sortable=False) as table:
 
             for key_id, key in sorted(self.keys.items()):
@@ -208,10 +210,10 @@ class PageEditKey:
     def __init__(self) -> None:
         self._minlen: Optional[int] = None
 
-    def load(self):
+    def load(self) -> dict[int, Key]:
         raise NotImplementedError()
 
-    def save(self, keys):
+    def save(self, keys: dict[int, Key]) -> None:
         raise NotImplementedError()
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
@@ -227,7 +229,7 @@ class PageEditKey:
             # leak the secret information
             request.del_var("key_p_passphrase")
             self._vs_key().validate_value(value, "key")
-            self._create_key(value)
+            self._create_key(value["alias"], value["passphrase"])
             # FIXME: This leads to a circular import otherwise. This module (cmk.gui.key_mgmt) is
             #  clearly outside of either cmk.gui.plugins.wato and cmk.gui.cee.plugins.wato so this
             #  is obviously a very simple module-layer violation. This whole module should either
@@ -239,17 +241,17 @@ class PageEditKey:
             return HTTPRedirect(mode_url(self.back_mode))
         return None
 
-    def _create_key(self, value):
+    def _create_key(self, alias: str, passphrase: str) -> None:
         keys = self.load()
 
         new_id = 1
         for key_id in keys:
             new_id = max(new_id, key_id + 1)
 
-        keys[new_id] = self._generate_key(value["alias"], value["passphrase"])
+        keys[new_id] = self._generate_key(alias, passphrase)
         self.save(keys)
 
-    def _generate_key(self, alias, passphrase):
+    def _generate_key(self, alias: str, passphrase: str) -> Key:
         pkey = crypto.PKey()
         pkey.generate_key(crypto.TYPE_RSA, 2048)
 
@@ -264,7 +266,7 @@ class PageEditKey:
             "date": time.time(),
         }
 
-    def page(self):
+    def page(self) -> None:
         # Currently only "new" is supported
         html.begin_form("key", method="POST")
         html.prevent_password_auto_completion()
@@ -273,7 +275,7 @@ class PageEditKey:
         html.hidden_fields()
         html.end_form()
 
-    def _vs_key(self):
+    def _vs_key(self) -> Dictionary:
         return Dictionary(
             title=_("Properties"),
             elements=[
@@ -307,10 +309,10 @@ class PageEditKey:
 class PageUploadKey:
     back_mode: str
 
-    def load(self):
+    def load(self) -> dict[int, Key]:
         raise NotImplementedError()
 
-    def save(self, keys):
+    def save(self, keys: dict[int, Key]) -> None:
         raise NotImplementedError()
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
@@ -324,7 +326,7 @@ class PageUploadKey:
             request.del_var("key_p_passphrase")
             self._vs_key().validate_value(value, "key")
 
-            key_file = self._get_uploaded(value, "key_file")
+            key_file = self._get_uploaded(value["key_file"])
             if not key_file:
                 raise MKUserError(None, _("You need to provide a key file."))
 
@@ -336,7 +338,7 @@ class PageUploadKey:
             ):
                 raise MKUserError(None, _("The file does not look like a valid key file."))
 
-            self._upload_key(key_file, value)
+            self._upload_key(key_file, value["alias"], value["passphrase"])
             # FIXME: This leads to a circular import otherwise. This module (cmk.gui.key_mgmt) is
             #  clearly outside of either cmk.gui.plugins.wato and cmk.gui.cee.plugins.wato so this
             #  is obviously a very simple module-layer violation. This whole module should either
@@ -348,21 +350,24 @@ class PageUploadKey:
             return HTTPRedirect(mode_url(self.back_mode), code=302)
         return None
 
-    def _get_uploaded(self, cert_spec, key):
-        if key in cert_spec:
-            if cert_spec[key][0] == "upload":
-                return cert_spec[key][1][2].decode("ascii")
-            return cert_spec[key][1]
-        return None
+    def _get_uploaded(
+        self,
+        cert_spec: Union[
+            tuple[Literal["upload"], tuple[str, str, bytes]], tuple[Literal["text"], str]
+        ],
+    ) -> str:
+        if cert_spec[0] == "upload":
+            return cert_spec[1][2].decode("ascii")
+        return cert_spec[1]
 
-    def _upload_key(self, key_file, value) -> None:
+    def _upload_key(self, key_file: str, alias: str, passphrase: str) -> None:
         keys = self.load()
 
         new_id = 1
         for key_id in keys:
             new_id = max(new_id, key_id + 1)
 
-        certificate = crypto.load_certificate(crypto.FILETYPE_PEM, key_file)
+        certificate = crypto.load_certificate(crypto.FILETYPE_PEM, key_file.encode("ascii"))
 
         this_digest = certificate.digest("md5").decode("ascii")
         for key_id, key in keys.items():
@@ -376,7 +381,7 @@ class PageUploadKey:
                 )
 
         # Use time from certificate
-        def parse_asn1_generalized_time(timestr):
+        def parse_asn1_generalized_time(timestr: str) -> time.struct_time:
             return time.strptime(timestr, "%Y%m%d%H%M%SZ")
 
         not_before = certificate.get_notBefore()
@@ -384,7 +389,7 @@ class PageUploadKey:
         created = time.mktime(parse_asn1_generalized_time(not_before.decode("ascii")))
 
         # Check for valid passphrase
-        decrypt_private_key(key_file, value["passphrase"])
+        decrypt_private_key(key_file, passphrase)
 
         # Split PEM for storing separated
         parts = key_file.split("-----END ENCRYPTED PRIVATE KEY-----\n", 1)
@@ -394,7 +399,7 @@ class PageUploadKey:
         key = {
             "certificate": cert_pem,
             "private_key": key_pem,
-            "alias": value["alias"],
+            "alias": alias,
             "owner": user.id,
             "date": created,
         }
@@ -402,7 +407,7 @@ class PageUploadKey:
         keys[new_id] = key
         self.save(keys)
 
-    def page(self):
+    def page(self) -> None:
         html.begin_form("key", method="POST")
         html.prevent_password_auto_completion()
         self._vs_key().render_input("key", {})
@@ -410,7 +415,7 @@ class PageUploadKey:
         html.hidden_fields()
         html.end_form()
 
-    def _vs_key(self):
+    def _vs_key(self) -> Dictionary:
         return Dictionary(
             title=_("Properties"),
             elements=[
@@ -446,17 +451,17 @@ class PageUploadKey:
             render="form",
         )
 
-    def _passphrase_help(self):
+    def _passphrase_help(self) -> str:
         raise NotImplementedError()
 
 
 class PageDownloadKey:
     back_mode: str
 
-    def load(self):
+    def load(self) -> dict[int, Key]:
         raise NotImplementedError()
 
-    def save(self, keys):
+    def save(self, keys: dict[int, Key]) -> None:
         raise NotImplementedError()
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
@@ -489,7 +494,7 @@ class PageDownloadKey:
             return FinalizeRequest(code=200)
         return None
 
-    def _send_download(self, keys, key_id):
+    def _send_download(self, keys: dict[int, Key], key_id: int) -> None:
         key = keys[key_id]
         response.headers["Content-Disposition"] = "Attachment; filename=%s" % self._file_name(
             key_id, key
@@ -497,10 +502,10 @@ class PageDownloadKey:
         response.headers["Content-type"] = "application/x-pem-file"
         response.set_data(key["private_key"] + key["certificate"])
 
-    def _file_name(self, key_id, key):
+    def _file_name(self, key_id: int, key: Key) -> str:
         raise NotImplementedError()
 
-    def page(self):
+    def page(self) -> None:
         html.p(
             _(
                 "To be able to download the key, you need to unlock the key by entering the "
@@ -515,7 +520,7 @@ class PageDownloadKey:
         html.hidden_fields()
         html.end_form()
 
-    def _vs_key(self):
+    def _vs_key(self) -> Dictionary:
         return Dictionary(
             title=_("Properties"),
             elements=[
@@ -533,7 +538,7 @@ class PageDownloadKey:
         )
 
 
-def create_self_signed_cert(pkey):
+def create_self_signed_cert(pkey: crypto.PKey) -> crypto.X509:
     cert = crypto.X509()
     cert.get_subject().O = "Check_MK Site %s" % omd_site()
     cert.get_subject().CN = user.id or "### Check_MK ###"
@@ -547,7 +552,7 @@ def create_self_signed_cert(pkey):
     return cert
 
 
-def decrypt_private_key(encrypted_private_key, passphrase):
+def decrypt_private_key(encrypted_private_key: str, passphrase: str) -> crypto.PKey:
     try:
         return crypto.load_privatekey(
             crypto.FILETYPE_PEM, encrypted_private_key, passphrase.encode("utf-8")

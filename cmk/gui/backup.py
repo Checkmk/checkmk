@@ -1633,24 +1633,24 @@ class PageBackupKeyManagement(key_mgmt.PageKeyManagement):
     def jobs(self):
         raise NotImplementedError()
 
-    def title(self):
+    def title(self) -> str:
         return _("Keys for backups")
 
-    def page(self):
+    def page(self) -> None:
         show_key_download_warning(self.keys)
         super().page()
 
-    def _key_in_use(self, key_id, key):
+    def _key_in_use(self, key_id: int, key: key_mgmt.Key) -> bool:
         for job in self.jobs().objects.values():
             job_key_id = job.key_ident()
             if job_key_id is not None and key_id == job_key_id:
                 return True
         return False
 
-    def _table_title(self):
+    def _table_title(self) -> str:
         return self.title()
 
-    def _delete_confirm_msg(self):
+    def _delete_confirm_msg(self) -> str:
         return _(
             "Are you sure you want to delete this key?<br><br>"
             "<b>Beware:</b> Deleting this key "
@@ -1664,10 +1664,10 @@ class PageBackupKeyManagement(key_mgmt.PageKeyManagement):
 class PageBackupEditKey(key_mgmt.PageEditKey):
     back_mode = "backup_keys"
 
-    def title(self):
+    def title(self) -> str:
         return _("Create backup key")
 
-    def _passphrase_help(self):
+    def _passphrase_help(self) -> str:
         return _(
             "The backup key will be stored encrypted using this passphrase on your "
             "disk. The passphrase will not be stored anywhere. The backup will use "
@@ -1676,7 +1676,7 @@ class PageBackupEditKey(key_mgmt.PageEditKey):
             "passphrase to decrypt the backup."
         )
 
-    def _generate_key(self, alias, passphrase):
+    def _generate_key(self, alias: str, passphrase: str) -> key_mgmt.Key:
         key = super()._generate_key(alias, passphrase)
         # Mark key as not downloaded yet to issue a warning to the user that the key
         # should be backed up. The warning is removed on first download.
@@ -1687,10 +1687,10 @@ class PageBackupEditKey(key_mgmt.PageEditKey):
 class PageBackupUploadKey(key_mgmt.PageUploadKey):
     back_mode = "backup_keys"
 
-    def title(self):
+    def title(self) -> str:
         return _("Upload backup key")
 
-    def _passphrase_help(self):
+    def _passphrase_help(self) -> str:
         return _(
             "The backup key will be stored encrypted using this passphrase on your "
             "disk. The passphrase will not be stored anywhere. The backup will use "
@@ -1703,10 +1703,10 @@ class PageBackupUploadKey(key_mgmt.PageUploadKey):
 class PageBackupDownloadKey(key_mgmt.PageDownloadKey):
     back_mode = "backup_keys"
 
-    def title(self):
+    def title(self) -> str:
         return _("Download backup key")
 
-    def _send_download(self, keys, key_id):
+    def _send_download(self, keys: dict[int, key_mgmt.Key], key_id: int) -> None:
         super()._send_download(keys, key_id)
         if "not_downloaded" in keys[key_id]:
             del keys[key_id]["not_downloaded"]
@@ -1716,7 +1716,7 @@ class PageBackupDownloadKey(key_mgmt.PageDownloadKey):
         raise NotImplementedError()
 
 
-def show_key_download_warning(keys):
+def show_key_download_warning(keys: dict[int, key_mgmt.Key]) -> None:
     to_load = [k["alias"] for k in keys.values() if "not_downloaded" in k]
     if to_load:
         html.show_warning(

@@ -13,9 +13,11 @@ from cmk.utils.site import omd_site
 import cmk.gui.backup as backup
 from cmk.gui.http import request
 from cmk.gui.i18n import _
+from cmk.gui.key_mgmt import Key
 from cmk.gui.logged_in import user
 from cmk.gui.pages import AjaxPage, page_registry
 from cmk.gui.plugins.wato.utils import mode_registry, SiteBackupJobs, WatoMode
+from cmk.gui.type_defs import PermissionName
 from cmk.gui.valuespec import Checkbox
 from cmk.gui.watolib.audit_log import log_audit
 
@@ -28,14 +30,14 @@ class SiteBackupTargets(backup.Targets):
 @mode_registry.register
 class ModeBackup(backup.PageBackup, WatoMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "backup"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> list[PermissionName]:
         return ["backups"]
 
-    def title(self):
+    def title(self) -> str:
         return _("Site backup")
 
     def jobs(self):
@@ -55,7 +57,7 @@ class ModeBackupTargets(backup.PageBackupTargets, WatoMode):
         return "backup_targets"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> list[PermissionName]:
         return ["backups"]
 
     @classmethod
@@ -161,7 +163,7 @@ class ModeEditBackupJob(backup.PageEditBackupJob, WatoMode):
 @mode_registry.register
 class ModeBackupJobState(backup.PageBackupJobState, WatoMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "backup_job_state"
 
     @classmethod
@@ -169,7 +171,7 @@ class ModeBackupJobState(backup.PageBackupJobState, WatoMode):
         return ModeBackup
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> list[PermissionName]:
         return ["backups"]
 
     def jobs(self):
@@ -200,11 +202,11 @@ class SiteBackupKeypairStore(backup.BackupKeypairStore):
 @mode_registry.register
 class ModeBackupKeyManagement(SiteBackupKeypairStore, backup.PageBackupKeyManagement, WatoMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "backup_keys"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> list[PermissionName]:
         return ["backups"]
 
     @classmethod
@@ -218,11 +220,11 @@ class ModeBackupKeyManagement(SiteBackupKeypairStore, backup.PageBackupKeyManage
 @mode_registry.register
 class ModeBackupEditKey(SiteBackupKeypairStore, backup.PageBackupEditKey, WatoMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "backup_edit_key"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> list[PermissionName]:
         return ["backups"]
 
     @classmethod
@@ -233,55 +235,55 @@ class ModeBackupEditKey(SiteBackupKeypairStore, backup.PageBackupEditKey, WatoMo
 @mode_registry.register
 class ModeBackupUploadKey(SiteBackupKeypairStore, backup.PageBackupUploadKey, WatoMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "backup_upload_key"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> list[PermissionName]:
         return ["backups"]
 
     @classmethod
     def parent_mode(cls) -> Optional[Type[WatoMode]]:
         return ModeBackupKeyManagement
 
-    def _upload_key(self, key_file, value):
-        log_audit("upload-backup-key", _("Uploaded backup key '%s'") % value["alias"])
-        super()._upload_key(key_file, value)
+    def _upload_key(self, key_file: str, alias: str, passphrase: str) -> None:
+        log_audit("upload-backup-key", _("Uploaded backup key '%s'") % alias)
+        super()._upload_key(key_file, alias, passphrase)
 
 
 @mode_registry.register
 class ModeBackupDownloadKey(SiteBackupKeypairStore, backup.PageBackupDownloadKey, WatoMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "backup_download_key"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> list[PermissionName]:
         return ["backups"]
 
     @classmethod
     def parent_mode(cls) -> Optional[Type[WatoMode]]:
         return ModeBackupKeyManagement
 
-    def _file_name(self, key_id, key):
+    def _file_name(self, key_id: int, key: Key) -> str:
         return "Check_MK-%s-%s-backup_key-%s.pem" % (backup.hostname(), omd_site(), key_id)
 
 
 @mode_registry.register
 class ModeBackupRestore(backup.PageBackupRestore, WatoMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "backup_restore"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> list[PermissionName]:
         return ["backups"]
 
     @classmethod
     def parent_mode(cls) -> Optional[Type[WatoMode]]:
         return ModeBackup
 
-    def title(self):
+    def title(self) -> str:
         if not self._target:
             return _("Site restore")
         return _("Restore from target: %s") % self._target.title()

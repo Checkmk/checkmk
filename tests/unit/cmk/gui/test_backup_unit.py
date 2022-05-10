@@ -37,19 +37,15 @@ def test_is_canonical(monkeypatch, path, expected):
     assert backup.is_canonical(path) == expected
 
 
-def test_backup_key_create_web(request_context, site, monkeypatch):
+@pytest.mark.usefixtures("request_context")
+def test_backup_key_create_web() -> None:
     store_path = Path(cmk.utils.paths.default_config_dir, "backup_keys.mk")
 
     assert not store_path.exists()
     mode = wato.ModeBackupEditKey()
 
     # First create a backup key
-    mode._create_key(
-        {
-            "alias": "älias",
-            "passphrase": "passphra$e",
-        }
-    )
+    mode._create_key(alias="älias", passphrase="passphra$e")
 
     assert store_path.exists()
 

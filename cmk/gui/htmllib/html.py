@@ -189,16 +189,19 @@ class HTMLGenerator(HTMLWriter):
 
     def show_localization_hint(self) -> None:
         url = "wato.py?mode=edit_configvar&varname=user_localizations"
-        self.show_message(
-            HTMLWriter.render_sup("*")
-            + escaping.escape_to_html_permissive(
-                _(
-                    "These texts may be localized depending on the users' "
-                    "language. You can configure the localizations "
-                    "<a href='%s'>in the global settings</a>."
-                )
-                % url,
-                escape_links=False,
+        self._write(
+            self._render_message(
+                HTMLWriter.render_sup("*")
+                + escaping.escape_to_html_permissive(
+                    _(
+                        "These texts may be localized depending on the users' "
+                        "language. You can configure the localizations "
+                        "<a href='%s'>in the global settings</a>."
+                    )
+                    % url,
+                    escape_links=False,
+                ),
+                "message",
             )
         )
 
@@ -370,12 +373,7 @@ class HTMLGenerator(HTMLWriter):
     def html_head(
         self, title: str, javascripts: Optional[List[str]] = None, force: bool = False
     ) -> None:
-        force_new_document = force  # for backward stability and better readability
-
-        if force_new_document:
-            self._header_sent = False
-
-        if not self._header_sent:
+        if force or not self._header_sent:
             self.write_html(HTML("<!DOCTYPE HTML>\n"))
             self.open_html()
             self._head(title, javascripts)
@@ -392,26 +390,28 @@ class HTMLGenerator(HTMLWriter):
         show_body_start: bool = True,
         show_top_heading: bool = True,
     ) -> None:
-        if self.output_format == "html":
-            if not self._header_sent:
-                if show_body_start:
-                    self.body_start(title, javascripts=javascripts, force=force)
+        if self.output_format != "html":
+            return
 
-                self._header_sent = True
+        if not self._header_sent:
+            if show_body_start:
+                self.body_start(title, javascripts=javascripts, force=force)
 
-                breadcrumb = breadcrumb or Breadcrumb()
+            self._header_sent = True
 
-                if self.render_headfoot and show_top_heading:
-                    top_heading(
-                        self,
-                        self.request,
-                        title,
-                        breadcrumb=breadcrumb,
-                        page_menu=page_menu or PageMenu(breadcrumb=breadcrumb),
-                        page_state=page_state,
-                        browser_reload=self.browser_reload,
-                    )
-            self.begin_page_content()
+            breadcrumb = breadcrumb or Breadcrumb()
+
+            if self.render_headfoot and show_top_heading:
+                top_heading(
+                    self,
+                    self.request,
+                    title,
+                    breadcrumb=breadcrumb,
+                    page_menu=page_menu or PageMenu(breadcrumb=breadcrumb),
+                    page_state=page_state,
+                    browser_reload=self.browser_reload,
+                )
+        self.begin_page_content()
 
     def body_start(
         self, title: str = "", javascripts: Optional[List[str]] = None, force: bool = False
@@ -437,11 +437,13 @@ class HTMLGenerator(HTMLWriter):
         self.close_div()
 
     def footer(self, show_body_end: bool = True) -> None:
-        if self.output_format == "html":
-            self.end_page_content()
+        if self.output_format != "html":
+            return
 
-            if show_body_end:
-                self.body_end()
+        self.end_page_content()
+
+        if show_body_end:
+            self.body_end()
 
     def focus_here(self) -> None:
         self.a("", href="#focus_me", id_="focus_me")

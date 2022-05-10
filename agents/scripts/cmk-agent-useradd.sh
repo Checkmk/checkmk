@@ -14,16 +14,7 @@ HERE
 }
 
 _allow_legacy_pull() {
-    cat >"${HOMEDIR}/allow-legacy-pull" <<HERE
-This file has been placed as a marker for cmk-agent-ctl
-to allow unencrypted legacy agent pull mode.
-It will be removed automatically on first successful agent registration.
-You can remove it manually to disallow legacy mode, but note that
-for regular operation you need to register the agent anyway.
-
-To secure the connection run \`cmk-agent-ctl register\`.
-
-HERE
+    cmk-agent-ctl delete-all --enable-insecure-connections
 }
 
 _issue_legacy_pull_warning() {

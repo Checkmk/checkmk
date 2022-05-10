@@ -190,7 +190,7 @@ class HTMLGenerator(HTMLWriter):
     def show_localization_hint(self) -> None:
         url = "wato.py?mode=edit_configvar&varname=user_localizations"
         self.show_message(
-            self.render_sup("*")
+            HTMLWriter.render_sup("*")
             + escaping.escape_to_html_permissive(
                 _(
                     "These texts may be localized depending on the users' "
@@ -224,11 +224,11 @@ class HTMLGenerator(HTMLWriter):
         if not stripped:
             return HTML("")
 
-        help_text = self.resolve_help_text_macros(stripped)
+        help_text = HTMLGenerator.resolve_help_text_macros(stripped)
 
         self.enable_help_toggle()
         style = "display:%s;" % ("block" if user.show_help else "none")
-        return self.render_div(HTML(help_text), class_="help", style=style)
+        return HTMLWriter.render_div(HTML(help_text), class_="help", style=style)
 
     @staticmethod
     def resolve_help_text_macros(text: str) -> str:
@@ -262,7 +262,7 @@ class HTMLGenerator(HTMLWriter):
                 formatted = pprint.pformat(element)
             except UnicodeDecodeError:
                 formatted = repr(element)
-            self._write(self.render_pre(formatted))
+            self._write(HTMLWriter.render_pre(formatted))
 
     def default_html_headers(self) -> None:
         self.meta(httpequiv="Content-Type", content="text/html; charset=utf-8")
@@ -290,7 +290,7 @@ class HTMLGenerator(HTMLWriter):
         if self.link_target:
             self.base(target=self.link_target)
 
-        fname = self._css_filename_for_browser(theme.url("theme"))
+        fname = HTMLGenerator._css_filename_for_browser(theme.url("theme"))
         if fname is not None:
             self.stylesheet(fname)
 
@@ -298,7 +298,7 @@ class HTMLGenerator(HTMLWriter):
 
         # Load all scripts
         for js in self._default_javascripts + javascripts:
-            filename_for_browser = self.javascript_filename_for_browser(js)
+            filename_for_browser = HTMLGenerator.javascript_filename_for_browser(js)
             if filename_for_browser:
                 self.javascript_file(filename_for_browser)
 
@@ -313,7 +313,7 @@ class HTMLGenerator(HTMLWriter):
         self.close_head()
 
     def _add_custom_style_sheet(self) -> None:
-        for css in self._plugin_stylesheets():
+        for css in HTMLGenerator._plugin_stylesheets():
             self._write('<link rel="stylesheet" type="text/css" href="css/%s">\n' % css)
 
         if active_config.custom_style_sheet:
@@ -671,10 +671,10 @@ class HTMLGenerator(HTMLWriter):
         )
 
     def empty_icon_button(self) -> None:
-        self._write(self.render_icon("trans", cssclass="iconbutton trans"))
+        self._write(HTMLGenerator.render_icon("trans", cssclass="iconbutton trans"))
 
     def disabled_icon_button(self, icon: str) -> None:
-        self._write(self.render_icon(icon, cssclass="iconbutton"))
+        self._write(HTMLGenerator.render_icon(icon, cssclass="iconbutton"))
 
     # TODO: Cleanup to use standard attributes etc.
     def jsbutton(
@@ -723,7 +723,7 @@ class HTMLGenerator(HTMLWriter):
         """Show all previously created user errors"""
         if user_errors:
             self.show_error(
-                self.render_br().join(
+                HTMLWriter.render_br().join(
                     escaping.escape_to_html_permissive(s, escape_links=False)
                     for s in user_errors.values()
                 )
@@ -1126,10 +1126,10 @@ class HTMLGenerator(HTMLWriter):
         code = self.render_input(name=varname, type_="checkbox", **add_attr) + self.render_label(
             label, for_=id_
         )
-        code = self.render_span(code, class_="checkbox")
+        code = HTMLWriter.render_span(code, class_="checkbox")
 
         if error:
-            code = self.render_x(code, class_="inputerror")
+            code = HTMLWriter.render_x(code, class_="inputerror")
 
         self.form_vars.append(varname)
         return code
@@ -1157,11 +1157,13 @@ class HTMLGenerator(HTMLWriter):
         class_: CSSSpec = None,
     ) -> None:
         self.write_html(
-            self.render_icon(icon=icon, title=title, id_=id_, cssclass=cssclass, class_=class_)
+            HTMLGenerator.render_icon(
+                icon=icon, title=title, id_=id_, cssclass=cssclass, class_=class_
+            )
         )
 
     def empty_icon(self) -> None:
-        self.write_html(self.render_icon("trans"))
+        self.write_html(HTMLGenerator.render_icon("trans"))
 
     @staticmethod
     def render_icon(
@@ -1271,7 +1273,9 @@ class HTMLGenerator(HTMLWriter):
         class_: CSSSpec = None,
     ) -> None:
         self.write_html(
-            self.render_icon_button(url, title, icon, id_, onclick, style, target, cssclass, class_)
+            HTMLGenerator.render_icon_button(
+                url, title, icon, id_, onclick, style, target, cssclass, class_
+            )
         )
 
     def more_button(
@@ -1313,7 +1317,7 @@ class HTMLGenerator(HTMLWriter):
         hover_switch_delay: Optional[int] = None,
     ) -> None:
         self.write_html(
-            self.render_popup_trigger(
+            HTMLGenerator.render_popup_trigger(
                 content,
                 ident,
                 method,
@@ -1386,7 +1390,7 @@ class HTMLGenerator(HTMLWriter):
 
     def element_dragger_url(self, dragging_tag: str, base_url: str) -> None:
         self.write_html(
-            self.render_element_dragger(
+            HTMLGenerator.render_element_dragger(
                 dragging_tag,
                 drop_handler="function(index){return cmk.element_dragging.url_drop_handler(%s, index);})"
                 % json.dumps(base_url),
@@ -1397,7 +1401,7 @@ class HTMLGenerator(HTMLWriter):
         self, dragging_tag: str, drop_handler: str, handler_args: Dict[str, Any]
     ) -> None:
         self.write_html(
-            self.render_element_dragger(
+            HTMLGenerator.render_element_dragger(
                 dragging_tag,
                 drop_handler="function(new_index){return %s(%s, new_index);})"
                 % (drop_handler, json.dumps(handler_args)),

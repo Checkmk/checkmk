@@ -126,7 +126,7 @@ class HTMLWriter:
         return render_element("a", content, **attrs)
 
     def a(self, content: HTMLContent, href: str, **attrs: HTMLTagAttributeValue) -> None:
-        self.write_html(self.render_a(content, href, **attrs))
+        self.write_html(HTMLWriter.render_a(content, href, **attrs))
 
     def stylesheet(self, href: str) -> None:
         self.link(rel="stylesheet", href=href, type_="text/css")
@@ -139,7 +139,7 @@ class HTMLWriter:
         return HTML('<script type="text/javascript">\n%s\n</script>\n' % code)
 
     def javascript(self, code: str) -> None:
-        self.write_html(self.render_javascript(code))
+        self.write_html(HTMLWriter.render_javascript(code))
 
     def javascript_file(self, src: str) -> None:
         """<script type="text/javascript" src="%(name)"/>\n"""
@@ -151,7 +151,7 @@ class HTMLWriter:
         return render_start_tag("img", close_tag=True, **attrs)
 
     def img(self, src: str, **attrs: HTMLTagAttributeValue) -> None:
-        self.write_html(self.render_img(src, **attrs))
+        self.write_html(HTMLWriter.render_img(src, **attrs))
 
     def open_button(self, type_: str, **attrs: HTMLTagAttributeValue) -> None:
         attrs["type"] = type_
@@ -166,7 +166,7 @@ class HTMLWriter:
         return render_element("label", content, **attrs)
 
     def label(self, content: HTMLContent, for_: str, **attrs: HTMLTagAttributeValue) -> None:
-        self.write_html(self.render_label(content, for_, **attrs))
+        self.write_html(HTMLWriter.render_label(content, for_, **attrs))
 
     def render_input(self, name: Optional[str], type_: str, **attrs: HTMLTagAttributeValue) -> HTML:
         if type_ == "submit":
@@ -187,21 +187,21 @@ class HTMLWriter:
         return render_element("h2", content)
 
     def heading(self, content: HTMLContent) -> None:
-        self.write_html(self.render_heading(content))
+        self.write_html(HTMLWriter.render_heading(content))
 
     @staticmethod
     def render_br() -> HTML:
         return HTML("<br />")
 
     def br(self) -> None:
-        self.write_html(self.render_br())
+        self.write_html(HTMLWriter.render_br())
 
     @staticmethod
     def render_hr(**attrs: HTMLTagAttributeValue) -> HTML:
         return render_start_tag("hr", close_tag=True, **attrs)
 
     def hr(self, **attrs: HTMLTagAttributeValue) -> None:
-        self.write_html(self.render_hr(**attrs))
+        self.write_html(HTMLWriter.render_hr(**attrs))
 
     def rule(self) -> None:
         self.hr()
@@ -211,7 +211,7 @@ class HTMLWriter:
         return HTML("&nbsp;")
 
     def nbsp(self) -> None:
-        self.write_html(self.render_nbsp())
+        self.write_html(HTMLWriter.render_nbsp())
 
     def pre(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> None:
         self.write_html(render_element("pre", content, **kwargs))

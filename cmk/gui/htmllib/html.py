@@ -81,7 +81,6 @@ class HTMLGenerator(HTMLWriter):
         self.browser_reload = 0.0
         self.browser_redirect = ""
         self.link_target: Optional[str] = None
-        self.final_javascript_code = ""
 
         # Forms
         self.form_name: Optional[str] = None
@@ -134,9 +133,6 @@ class HTMLGenerator(HTMLWriter):
 
     def add_body_css_class(self, cls: str) -> None:
         self._body_classes.append(cls)
-
-    def final_javascript(self, code: str) -> None:
-        self.final_javascript_code += code + "\n"
 
     def reload_whole_page(self, url: Optional[str] = None) -> None:
         if not self.request.has_var("_ajaxid"):
@@ -452,8 +448,7 @@ class HTMLGenerator(HTMLWriter):
     def body_end(self) -> None:
         if self.have_help:
             enable_page_menu_entry("inline_help")
-        if self.final_javascript_code:
-            self.javascript(self.final_javascript_code)
+        self.write_final_javascript()
         self.javascript("cmk.visibility_detection.initialize();")
         self.close_body()
         self.close_html()

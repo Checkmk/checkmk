@@ -27,7 +27,7 @@
 
 from __future__ import annotations
 
-from typing import final, Optional, Union
+from typing import final, List, Optional, Union
 
 from cmk.utils.exceptions import MKGeneralException
 
@@ -82,6 +82,7 @@ class HTMLWriter:
 
     def __init__(self, output_funnel: OutputFunnel):
         self.output_funnel = output_funnel
+        self._final_javascript: List[str] = []
 
     def write_text(self, text: HTMLContent) -> None:
         """Write text. Highlighting tags such as h2|b|tt|i|br|pre|a|sup|p|li|ul|ol are not escaped."""
@@ -137,6 +138,17 @@ class HTMLWriter:
     @staticmethod
     def render_javascript(code: str) -> HTML:
         return HTML('<script type="text/javascript">\n%s\n</script>\n' % code)
+
+    def final_javascript(self, code: str) -> None:
+        self._final_javascript.append(code)
+
+    def final_javascript_code(self) -> str:
+        return "\n".join(self._final_javascript)
+
+    def write_final_javascript(self) -> None:
+        if not self._final_javascript:
+            return
+        self.javascript(self.final_javascript_code())
 
     def javascript(self, code: str) -> None:
         self.write_html(HTMLWriter.render_javascript(code))

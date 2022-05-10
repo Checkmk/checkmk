@@ -109,3 +109,38 @@ fn test_fail_become_user() {
             .contains("Failed to run as user 'cmk-agent'."));
     }
 }
+
+#[cfg(unix)]
+#[test]
+fn test_fail_socket_missing() {
+    let error_message_socket = "Something seems wrong with the agent socket";
+
+    for mode in supported_modes() {
+        let mut cmd = Command::cargo_bin(BINARY).unwrap();
+        let mut cmd = cmd
+            .timeout(std::time::Duration::from_secs(1))
+            .env("DEBUG_HOME_DIR", "whatever")
+            .arg(mode);
+        if mode == "delete" {
+            cmd = cmd.arg("some-connection");
+        };
+
+        let output_res = cmd.ok();
+
+        match mode {
+            // these commands are expected to fail due to missing socket
+            "register" | "import" => {
+                let err = output_res.unwrap_err();
+                let stderr = std::str::from_utf8(&err.as_output().unwrap().stderr).unwrap();
+                assert!(stderr.contains(error_message_socket));
+            }
+            // for other failing commands, we make sure that the failure is *not* due to the socket
+            _ => {
+                if let Err(err) = output_res {
+                    let stderr = std::str::from_utf8(&err.as_output().unwrap().stderr).unwrap();
+                    assert!(!stderr.contains(error_message_socket));
+                }
+            }
+        }
+    }
+}

@@ -1,6 +1,6 @@
 Title: Fix error on adding views to reports
 Class: fix
-Compatible: incompat
+Compatible: incomp
 Component: multisite
 Date: 1651241764
 Edition: cee

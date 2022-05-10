@@ -1840,7 +1840,7 @@ run_purely_synchronous_sections() {
     [ -z "${MK_SKIP_CFGGEN}" ] && _log_section_time section_cfggen
 
     # RAID status of LSI MegaRAID controller via StorCLI or MegaCli. You can download that tool from:
-    # http://www.lsi.com/downloads/Public/MegaRAID%20Common%20Files/8.02.16_MegaCLI.zip
+    # https://docs.broadcom.com/docs/007.2007.0000.0000_Unified_StorCLI.zip
     [ -z "${MK_SKIP_MEGARAID}" ] && _log_section_time section_megaraid
 
     # RAID status of 3WARE disk controller (by Radoslaw Bak)

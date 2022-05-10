@@ -176,35 +176,3 @@ def test_yield_results_as_specified(results):
     assert len(res) == len(checkplugin.metrics)
     for r in res:
         assert r.state == State.OK
-
-
-class TestConfiguredNotificationLevels:
-    # In the example sections we do not have data for all metrics. To be able to test all check plugins
-    # use 0, the default value, to check notification levels.
-    def test_warn_levels(self, checkplugin, section):
-        params = {k: (0, None) for k in checkplugin.metrics}
-        results = list(
-            checkplugin.function(
-                item=ITEM,
-                params=params,
-                section_gcp_service_filestore=section,
-                section_gcp_assets=None,
-            )
-        )
-        results = [r for r in results if isinstance(r, Result)]
-        for r in results:
-            assert r.state == State.WARN
-
-    def test_crit_levels(self, checkplugin, section):
-        params = {k: (None, 0) for k in checkplugin.metrics}
-        results = list(
-            checkplugin.function(
-                item=ITEM,
-                params=params,
-                section_gcp_service_filestore=section,
-                section_gcp_assets=None,
-            )
-        )
-        results = [r for r in results if isinstance(r, Result)]
-        for r in results:
-            assert r.state == State.CRIT

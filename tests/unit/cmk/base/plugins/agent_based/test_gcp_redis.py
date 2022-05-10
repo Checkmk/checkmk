@@ -215,38 +215,6 @@ class TestDefaultMetricValues:
             assert result.value == 0.0
 
 
-class TestConfiguredNotificationLevels:
-    # In the example sections we do not have data for all metrics. To be able to test all check plugins
-    # use 0, the default value, to check notification levels.
-    def test_warn_levels(self, checkplugin, redis_section):
-        params = {k: (0, None) for k in checkplugin.metrics}
-        results = list(
-            checkplugin.function(
-                item=ITEM,
-                params=params,
-                section_gcp_service_redis=redis_section,
-                section_gcp_assets=[],
-            )
-        )
-        results = [r for r in results if isinstance(r, Result)]
-        for r in results:
-            assert r.state == State.WARN
-
-    def test_crit_levels(self, checkplugin, redis_section):
-        params = {k: (None, 0) for k in checkplugin.metrics}
-        results = list(
-            checkplugin.function(
-                item=ITEM,
-                params=params,
-                section_gcp_service_redis=redis_section,
-                section_gcp_assets=[],
-            )
-        )
-        results = [r for r in results if isinstance(r, Result)]
-        for r in results:
-            assert r.state == State.CRIT
-
-
 class ABCTestRedisChecks(abc.ABC):
     ITEM = "redis1"
     METRIC_NAME = "hitratio"

@@ -214,36 +214,3 @@ class TestConfiguredNotificationLevels:
         results = [r for r in results if isinstance(r, Result)]
         for r in results:
             assert r.state == State.CRIT
-
-
-class TestDefaultMetricValues:
-    # requests does not contain example data
-    def test_zero_default_if_metric_does_not_exist(self, section):
-        params = {k: None for k in ["memory_util"]}
-        results = (
-            el
-            for el in check_gcp_run_memory(
-                item=ITEM,
-                params=params,
-                section_gcp_service_cloud_run=section,
-                section_gcp_assets=None,
-            )
-            if isinstance(el, Metric)
-        )
-        for result in results:
-            assert result.value == 0.0
-
-    def test_zero_default_if_item_does_not_exist(self, section, checkplugin: Plugin):
-        params = {k: None for k in checkplugin.metrics}
-        results = (
-            el
-            for el in checkplugin.function(
-                item="no I do not exist",
-                params=params,
-                section_gcp_service_cloud_run=section,
-                section_gcp_assets=None,
-            )
-            if isinstance(el, Metric)
-        )
-        for result in results:
-            assert result.value == 0.0

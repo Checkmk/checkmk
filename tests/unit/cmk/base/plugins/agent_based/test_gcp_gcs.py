@@ -154,6 +154,7 @@ def fixture_checkplugin(request):
 
 @pytest.fixture(name="results")
 def fixture_results(checkplugin, gcs_section):
+    # TODO make library function using inspect?
     params = {k: None for k in checkplugin.metrics}
     results = list(
         checkplugin.function(
@@ -164,6 +165,7 @@ def fixture_results(checkplugin, gcs_section):
 
 
 def test_no_gcs_section_yields_no_metric_data(checkplugin):
+    # TODO make library function using inspect?
     params = {k: None for k in checkplugin.metrics}
     results = list(
         checkplugin.function(
@@ -174,13 +176,14 @@ def test_no_gcs_section_yields_no_metric_data(checkplugin):
 
 
 def test_yield_metrics_as_specified(results):
+    # TODO use common assert from a new test utility
     results, checkplugin = results
     res = {r.name: r for r in results if isinstance(r, Metric)}
-    assert len(res) == len(checkplugin.metrics)
     assert set(res.keys()) == set(checkplugin.metrics)
 
 
 def test_yield_results_as_specified(results):
+    # TODO use common assert from a new test utility
     results, checkplugin = results
     res = [r for r in results if isinstance(r, Result)]
     assert len(res) == len(checkplugin.metrics)
@@ -222,6 +225,7 @@ class TestDefaultMetricValues:
             assert result.value != 0.0
 
     def test_zero_default_if_item_does_not_exist(self, gcs_section, checkplugin: Plugin):
+        # TODO: generalize using inspect
         params = {k: None for k in checkplugin.metrics}
         results = (
             el
@@ -235,29 +239,3 @@ class TestDefaultMetricValues:
         )
         for result in results:
             assert result.value == 0.0
-
-
-class TestConfiguredNotificationLevels:
-    # In the example sections we do not have data for all metrics. To be able to test all check plugins
-    # use 0, the default value, to check notification levels.
-    def test_warn_levels(self, checkplugin, gcs_section):
-        params = {k: (0, None) for k in checkplugin.metrics}
-        results = list(
-            checkplugin.function(
-                item=ITEM, params=params, section_gcp_service_gcs=gcs_section, section_gcp_assets=[]
-            )
-        )
-        results = [r for r in results if isinstance(r, Result)]
-        for r in results:
-            assert r.state == State.WARN
-
-    def test_crit_levels(self, checkplugin, gcs_section):
-        params = {k: (None, 0) for k in checkplugin.metrics}
-        results = list(
-            checkplugin.function(
-                item=ITEM, params=params, section_gcp_service_gcs=gcs_section, section_gcp_assets=[]
-            )
-        )
-        results = [r for r in results if isinstance(r, Result)]
-        for r in results:
-            assert r.state == State.CRIT

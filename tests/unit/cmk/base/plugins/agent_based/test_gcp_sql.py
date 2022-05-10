@@ -285,38 +285,6 @@ def test_yield_results_as_specified(results_and_plugin: Results):
         assert r.state == State.OK
 
 
-class TestConfiguredNotificationLevels:
-    # In the example sections we do not have data for all metrics. To be able to test all check plugins
-    # use 0, the default value, to check notification levels.
-    def test_warn_levels(self, checkplugin: Plugin, section: Section):
-        params = {k: (0, None) for k in checkplugin.metrics}
-        results = list(
-            checkplugin.function(
-                item=ITEM,
-                params=params,
-                section_gcp_service_cloud_sql=section,
-                section_gcp_assets=None,
-            )
-        )
-        results = [r for r in results if isinstance(r, Result)]
-        for r in results:
-            assert r.state == State.WARN
-
-    def test_crit_levels(self, checkplugin: Plugin, section: Section):
-        params = {k: (None, 0) for k in checkplugin.metrics}
-        results = list(
-            checkplugin.function(
-                item=ITEM,
-                params=params,
-                section_gcp_service_cloud_sql=section,
-                section_gcp_assets=None,
-            )
-        )
-        results = [r for r in results if isinstance(r, Result)]
-        for r in results:
-            assert r.state == State.CRIT
-
-
 def test_no_results_if_item_not_found(section: gcp.Section, checkplugin: Plugin):
     params = {k: None for k in ["requests"]}
     results = (

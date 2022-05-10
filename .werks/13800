@@ -1,6 +1,6 @@
 Title: KUBE: update section name kube_collectors_metadata_v1
 Class: fix
-Compatible: incompat
+Compatible: incomp
 Component: checks
 Date: 1649683863
 Edition: cre

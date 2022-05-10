@@ -1,6 +1,6 @@
 Title: Add support to monitor Hopf 8029HEPTA devices
 Class: feature
-Compatible: incompat
+Compatible: incomp
 Component: checks
 Date: 1570629404
 Edition: cre

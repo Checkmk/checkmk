@@ -1,6 +1,6 @@
 Title: KUBE: kube_replicas supports StatefulSet and DaemonSet
 Class: feature
-Compatible: comp
+Compatible: compat
 Component: checks
 Date: 1648648614
 Edition: cre

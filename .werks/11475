@@ -1,6 +1,6 @@
 Title: Fixed site configuration setting "Direct login to Web GUI allowed"
 Class: fix
-Compatible: incompat
+Compatible: incomp
 Component: multisite
 Date: 1600160698
 Edition: cre

@@ -1,7 +1,7 @@
 Title: mem.linux: Optional levels for corrupted memory configurable
 Level: 1
 Component: checks
-Compatible: incompat
+Compatible: incomp
 Edition: cre
 Version: 1.6.0b1
 Date: 1552403287

@@ -1,6 +1,6 @@
 Title: Add builtin host label "cmk/site"
 Class: feature
-Compatible: comp
+Compatible: compat
 Component: core
 Date: 1631785285
 Edition: cre

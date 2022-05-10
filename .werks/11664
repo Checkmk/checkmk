@@ -1,6 +1,6 @@
 Title: Fix AttributeError on update with nagios core
 Class: fix
-Compatible: comp
+Compatible: compat
 Component: core
 Date: 1606934588
 Edition: cre

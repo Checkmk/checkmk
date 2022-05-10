@@ -1,6 +1,6 @@
 Title: Fix wrong allocation of colorant for printer supplies
 Class: fix
-Compatible: imcompat
+Compatible: incomp
 Component: checks
 Date: 1598622178
 Edition: cre

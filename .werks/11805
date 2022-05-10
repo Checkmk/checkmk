@@ -1,6 +1,6 @@
 Title: Monitor WuT Web-IO digital Inputs
 Class: feature
-Compatible: incompat
+Compatible: incomp
 Component: checks
 Date: 1620219182
 Edition: cre

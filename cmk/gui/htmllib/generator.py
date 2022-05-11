@@ -27,6 +27,7 @@
 
 from __future__ import annotations
 
+import json
 from typing import final, Final, List, Literal, Optional, Union
 
 from cmk.utils.exceptions import MKGeneralException
@@ -808,3 +809,11 @@ class HTMLWriter:
     @staticmethod
     def render_ul(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
         return render_element("ul", content, **kwargs)
+
+    def begin_page_content(self):
+        content_id = "main_page_content"
+        self.open_div(id_=content_id)
+        self.final_javascript("cmk.utils.content_scrollbar(%s)" % json.dumps(content_id))
+
+    def end_page_content(self):
+        self.close_div()

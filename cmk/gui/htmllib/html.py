@@ -374,14 +374,6 @@ class HTMLGenerator(HTMLWriter):
     def html_foot(self) -> None:
         self.close_html()
 
-    def begin_page_content(self):
-        content_id = "main_page_content"
-        self.open_div(id_=content_id)
-        self.final_javascript("cmk.utils.content_scrollbar(%s)" % json.dumps(content_id))
-
-    def end_page_content(self):
-        self.close_div()
-
     def footer(self, show_body_end: bool = True) -> None:
         if self.output_format != "html":
             return

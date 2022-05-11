@@ -80,9 +80,10 @@ class HTMLWriter:
       - All attributes will be escaped, i.e. the characters '&', '<', '>', '"' will be replaced by
         non HtML relevant signs '&amp;', '&lt;', '&gt;' and '&quot;'."""
 
-    def __init__(self, output_funnel: OutputFunnel, output_format: str):
+    def __init__(self, output_funnel: OutputFunnel, output_format: str, mobile: bool):
         self.output_funnel: Final = output_funnel
         self.output_format: Final = output_format
+        self.mobile: Final = mobile
         self._final_javascript: List[str] = []
 
     def write_text(self, text: HTMLContent) -> None:

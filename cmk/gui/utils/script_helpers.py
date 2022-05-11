@@ -22,6 +22,7 @@ from cmk.gui.htmllib.html import HTMLGenerator
 from cmk.gui.http import Request, Response
 from cmk.gui.logged_in import LoggedInNobody
 from cmk.gui.utils.logging import PrependURLFilter
+from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.output_funnel import OutputFunnel
 from cmk.gui.utils.theme import Theme
 from cmk.gui.utils.timeout_manager import TimeoutManager
@@ -51,7 +52,7 @@ def make_request_context(environ: Optional[Mapping[str, Any]] = None) -> Request
         funnel=funnel,
         config_obj=make_config_object(get_default_config()),
         user=LoggedInNobody(),
-        html_obj=HTMLGenerator(req, resp, funnel, output_format="html"),
+        html_obj=HTMLGenerator(req, funnel, output_format="html", mobile=is_mobile(req, resp)),
         display_options=DisplayOptions(),
         timeout_manager=TimeoutManager(),
         theme=Theme(),

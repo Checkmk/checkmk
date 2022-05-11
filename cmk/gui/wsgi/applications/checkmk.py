@@ -41,6 +41,7 @@ from cmk.gui.log import logger
 from cmk.gui.logged_in import LoggedInNobody
 from cmk.gui.utils.json import patch_json
 from cmk.gui.utils.logging import PrependURLFilter
+from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.output_funnel import OutputFunnel
 from cmk.gui.utils.theme import Theme
 from cmk.gui.utils.timeout_manager import TimeoutManager
@@ -220,7 +221,7 @@ class CheckmkApp:
             funnel=funnel,
             config_obj=config_obj,
             user=LoggedInNobody(),
-            html_obj=HTMLGenerator(req, resp, funnel, output_format),
+            html_obj=HTMLGenerator(req, funnel, output_format, is_mobile(req, resp)),
             timeout_manager=timeout_manager,
             display_options=DisplayOptions(),
             theme=theme,

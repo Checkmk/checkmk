@@ -22,7 +22,7 @@ from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.top_heading import top_heading
-from cmk.gui.http import Request, Response
+from cmk.gui.http import Request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import enable_page_menu_entry, PageMenu
@@ -37,7 +37,6 @@ from cmk.gui.type_defs import (
     Icon,
 )
 from cmk.gui.utils.html import HTML
-from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.output_funnel import OutputFunnel
 from cmk.gui.utils.popups import PopupMethod
 from cmk.gui.utils.theme import theme
@@ -63,11 +62,11 @@ class HTMLGenerator(HTMLWriter):
     def __init__(
         self,
         request: Request,
-        response: Response,
         output_funnel: OutputFunnel,
         output_format: str,
+        mobile: bool,
     ) -> None:
-        super().__init__(output_funnel, output_format)
+        super().__init__(output_funnel, output_format, mobile)
 
         self._logger = log.logger.getChild("html")
         self._header_sent = False
@@ -87,8 +86,6 @@ class HTMLGenerator(HTMLWriter):
         self.form_has_submit_button: bool = False
 
         self.request = request
-
-        self._mobile = is_mobile(request, response)
 
     @property
     def screenshotmode(self) -> bool:
@@ -175,7 +172,7 @@ class HTMLGenerator(HTMLWriter):
 
         if self.output_format == "html":
             code = HTMLWriter.render_div(msg, class_=cls)
-            if self._mobile:
+            if self.mobile:
                 return HTMLWriter.render_center(code)
             return code
         return escaping.escape_to_html_permissive(
@@ -776,7 +773,7 @@ class HTMLGenerator(HTMLWriter):
                 else:
                     assert isinstance(size, int)
                     field_size = "%d" % (size + 1)
-                    if (style is None or "width:" not in style) and not self._mobile:
+                    if (style is None or "width:" not in style) and not self.mobile:
                         style_size = "width: %d.8ex;" % size
 
         attributes: HTMLTagAttributes = {
@@ -1056,12 +1053,12 @@ class HTMLGenerator(HTMLWriter):
         self.form_vars.append(varname)
 
     def begin_radio_group(self, horizontal: bool = False) -> None:
-        if self._mobile:
+        if self.mobile:
             attrs = {"data-type": "horizontal" if horizontal else None, "data-role": "controlgroup"}
             self.write(render_start_tag("fieldset", close_tag=False, **attrs))
 
     def end_radio_group(self) -> None:
-        if self._mobile:
+        if self.mobile:
             self.write(render_end_tag("fieldset"))
 
     def radiobutton(self, varname: str, value: str, checked: bool, label: Optional[str]) -> None:

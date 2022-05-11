@@ -1,0 +1,20 @@
+Title: Changed internal livestatus serialization format to json
+Class: feature
+Compatible: compat
+Component: multisite
+Date: 1652268427
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1
+
+The GUI now fetches most of the data for the views using the json format instead of python.
+Larger views in particular will benefit from this change, as parsing Python data takes
+10-15 times longer than parsing the same amount of json data.
+A view with 1000 rows roughly fetches 1MB of data.
+<ul>
+<li>Python parsing: 300ms</li>
+<li>Json parsing: 25ms</li>
+</ul>
+
+Note: There are still other livestatus queries that use the old python format, but we will reduce them over time.

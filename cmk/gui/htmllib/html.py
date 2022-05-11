@@ -116,7 +116,7 @@ class HTMLGenerator(HTMLWriter):
 
     def show_localization_hint(self) -> None:
         url = "wato.py?mode=edit_configvar&varname=user_localizations"
-        self.write(
+        self._write(
             self._render_message(
                 HTMLWriter.render_sup("*")
                 + escaping.escape_to_html_permissive(
@@ -192,7 +192,7 @@ class HTMLGenerator(HTMLWriter):
                 formatted = pprint.pformat(element)
             except UnicodeDecodeError:
                 formatted = repr(element)
-            self.write(HTMLWriter.render_pre(formatted))
+            self._write(HTMLWriter.render_pre(formatted))
 
     def default_html_headers(self) -> None:
         self.meta(httpequiv="Content-Type", content="text/html; charset=utf-8")
@@ -239,10 +239,10 @@ class HTMLGenerator(HTMLWriter):
 
     def _add_custom_style_sheet(self) -> None:
         for css in HTMLGenerator._plugin_stylesheets():
-            self.write('<link rel="stylesheet" type="text/css" href="css/%s">\n' % css)
+            self._write('<link rel="stylesheet" type="text/css" href="css/%s">\n' % css)
 
         if active_config.custom_style_sheet:
-            self.write(
+            self._write(
                 '<link rel="stylesheet" type="text/css" href="%s">\n'
                 % active_config.custom_style_sheet
             )
@@ -586,10 +586,10 @@ class HTMLGenerator(HTMLWriter):
         )
 
     def empty_icon_button(self) -> None:
-        self.write(HTMLGenerator.render_icon("trans", cssclass="iconbutton trans"))
+        self._write(HTMLGenerator.render_icon("trans", cssclass="iconbutton trans"))
 
     def disabled_icon_button(self, icon: str) -> None:
-        self.write(HTMLGenerator.render_icon(icon, cssclass="iconbutton"))
+        self._write(HTMLGenerator.render_icon(icon, cssclass="iconbutton"))
 
     # TODO: Cleanup to use standard attributes etc.
     def jsbutton(
@@ -977,11 +977,11 @@ class HTMLGenerator(HTMLWriter):
     def begin_radio_group(self, horizontal: bool = False) -> None:
         if self.mobile:
             attrs = {"data-type": "horizontal" if horizontal else None, "data-role": "controlgroup"}
-            self.write(render_start_tag("fieldset", close_tag=False, **attrs))
+            self._write(render_start_tag("fieldset", close_tag=False, **attrs))
 
     def end_radio_group(self) -> None:
         if self.mobile:
-            self.write(render_end_tag("fieldset"))
+            self._write(render_end_tag("fieldset"))
 
     def radiobutton(self, varname: str, value: str, checked: bool, label: Optional[str]) -> None:
         self.form_vars.append(varname)
@@ -1012,7 +1012,7 @@ class HTMLGenerator(HTMLWriter):
         id_: Optional[str] = None,
         **add_attr: HTMLTagAttributeValue,
     ) -> None:
-        self.write(self.render_checkbox(varname, deflt, label, id_, **add_attr))
+        self._write(self.render_checkbox(varname, deflt, label, id_, **add_attr))
 
     def render_checkbox(
         self,

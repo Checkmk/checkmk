@@ -96,10 +96,10 @@ class HTMLWriter:
 
     def write_html(self, content: HTML) -> None:
         """Write HTML code directly, without escaping."""
-        self.write(content)
+        self._write(content)
 
     @final
-    def write(self, text: HTMLContent) -> None:
+    def _write(self, text: HTMLContent) -> None:
         if not text:
             return
 
@@ -164,13 +164,13 @@ class HTMLWriter:
         self.write_html(render_element("script", "", type_="text/javascript", src=src))
 
     def show_message(self, msg: Union[HTML, str]) -> None:
-        self.write(self._render_message(msg, "message"))
+        self._write(self._render_message(msg, "message"))
 
     def show_error(self, msg: Union[HTML, str]) -> None:
-        self.write(self._render_message(msg, "error"))
+        self._write(self._render_message(msg, "error"))
 
     def show_warning(self, msg: Union[HTML, str]) -> None:
-        self.write(self._render_message(msg, "warning"))
+        self._write(self._render_message(msg, "warning"))
 
     def render_message(self, msg: Union[HTML, str]) -> HTML:
         return self._render_message(msg, "message")

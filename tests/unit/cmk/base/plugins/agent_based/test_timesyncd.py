@@ -17,7 +17,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     StringTable,
 )
 
-DATA1 = [
+STRING_TABLE_STANDARD = [
     ["Server:", "91.189.91.157", "(ntp.ubuntu.com)"],
     ["Poll", "interval:", "32s", "(min:", "32s;", "max", "34min", "8s)"],
     ["Leap:", "normal"],
@@ -33,8 +33,33 @@ DATA1 = [
     ["Frequency:", "-500,000ppm"],
     ["[[[1569922392.37]]]"],
 ]
+STRING_TABLE_LARGE_OFFSET = [
+    ["Server:", "91.189.91.157", "(ntp.ubuntu.com)"],
+    ["Poll", "interval:", "32s", "(min:", "32s;", "max", "34min", "8s)"],
+    ["Leap:", "normal"],
+    ["Version:", "4"],
+    ["Stratum:", "2"],
+    ["Reference:", "C0248F97"],
+    ["Precision:", "1us", "(-24)"],
+    ["Root", "distance:", "87.096ms", "(max:", "5s)"],
+    [
+        "Offset:",
+        "-2y",
+        "5M",
+        "2w",
+        "8d",
+        "9h",
+        "1min",
+        "53.991us",
+    ],
+    ["Delay:", "208.839ms"],
+    ["Jitter:", "0"],
+    ["Packet", "count:", "1"],
+    ["Frequency:", "-500,000ppm"],
+    ["[[[1569922392.37]]]"],
+]
 
-DATA2 = [
+STRING_TABLE_NO_SYNC = [
     ["Server:", "(null)", "(ntp.ubuntu.com)"],
     ["Poll", "interval:", "0", "(min:", "32s;", "max", "34min", "8s)"],
     ["Packet", "count:", "0"],
@@ -45,8 +70,9 @@ DATA2 = [
 @pytest.mark.parametrize(
     "string_table, result",
     [
-        (DATA1, [Service()]),
-        (DATA2, [Service()]),
+        (STRING_TABLE_STANDARD, [Service()]),
+        (STRING_TABLE_LARGE_OFFSET, [Service()]),
+        (STRING_TABLE_NO_SYNC, [Service()]),
         ([], []),
     ],
 )
@@ -62,7 +88,7 @@ def test_discover_timesyncd(
     "string_table, params, result",
     [
         (
-            DATA1,
+            STRING_TABLE_STANDARD,
             timesyncd.default_check_parameters,
             [
                 Result(state=state.OK, summary="Offset: 54 milliseconds"),
@@ -78,7 +104,26 @@ def test_discover_timesyncd(
             ],
         ),
         (
-            DATA2,
+            STRING_TABLE_LARGE_OFFSET,
+            timesyncd.default_check_parameters,
+            [
+                Result(
+                    state=state.CRIT,
+                    summary="Offset: 2 years 175 days (warn/crit at 200 milliseconds/500 milliseconds)",
+                ),
+                Metric("time_offset", 78198540.000053991, levels=(0.2, 0.5)),
+                Result(
+                    state=state.CRIT,
+                    summary="Time since last sync: 22 hours 1 minute (warn/crit at 2 hours 5 minutes/3 hours 0 minutes)",
+                ),
+                Result(state=state.OK, summary="Stratum: 2.00"),
+                Result(state=state.OK, summary="Jitter: Jan 01 1970 00:00:00"),
+                Metric("jitter", 0.0, levels=(0.2, 0.5)),
+                Result(state=state.OK, summary="Synchronized on 91.189.91.157"),
+            ],
+        ),
+        (
+            STRING_TABLE_NO_SYNC,
             timesyncd.default_check_parameters,
             [
                 Result(
@@ -105,7 +150,7 @@ def test_check_timesyncd_freeze(
     "string_table, params, result",
     [
         (
-            DATA2,
+            STRING_TABLE_NO_SYNC,
             timesyncd.default_check_parameters,
             [
                 Result(

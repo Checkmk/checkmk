@@ -552,7 +552,7 @@ class LoginPage(Page):
             user_errors.add(e)
 
     def _show_login_page(self) -> None:
-        html.set_render_headfoot(False)
+        html.render_headfoot = False
         html.add_body_css_class("login")
         html.header(get_page_heading(), Breadcrumb(), javascripts=[])
 

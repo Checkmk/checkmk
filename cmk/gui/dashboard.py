@@ -591,7 +591,7 @@ def draw_dashboard(name: DashboardName) -> None:
 
     if not board.get("show_title"):
         # Remove the whole header line
-        html.set_render_headfoot(False)
+        html.render_headfoot = False
 
     # In case we have a dashboard / dashlet that requires context information that is not available
     # yet, display a message to the user to insert the missing information.

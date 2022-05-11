@@ -445,7 +445,7 @@ class UserLoginTwoFactor(Page):
     def page(self) -> None:
         assert user.id is not None
 
-        html.set_render_headfoot(False)
+        html.render_headfoot = False
         html.add_body_css_class("login")
         html.add_body_css_class("two_factor")
         html.header(_("Two-factor authentication"), Breadcrumb(), javascripts=[])

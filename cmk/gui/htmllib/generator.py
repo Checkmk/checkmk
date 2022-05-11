@@ -85,6 +85,7 @@ class HTMLWriter:
         self.output_funnel: Final = output_funnel
         self.output_format: Final = output_format
         self.mobile: Final = mobile
+        self.render_headfoot = True
         self._final_javascript: List[str] = []
 
     def write_text(self, text: HTMLContent) -> None:

@@ -70,7 +70,6 @@ class HTMLGenerator(HTMLWriter):
         self._header_sent = False
         self._body_classes = ["main"]
         self._default_javascripts = ["main"]
-        self.render_headfoot = True
         self.have_help = False
 
         # browser options
@@ -104,9 +103,6 @@ class HTMLGenerator(HTMLWriter):
 
     def set_focus_by_id(self, dom_id: str) -> None:
         self.final_javascript("cmk.utils.set_focus_by_id(%s)" % (json.dumps(dom_id)))
-
-    def set_render_headfoot(self, render: bool) -> None:
-        self.render_headfoot = render
 
     def set_browser_reload(self, secs: float) -> None:
         self.browser_reload = secs

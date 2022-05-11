@@ -12,16 +12,42 @@ class TestHost:
 
 
 class TestHosts:
-    def test_create_and_delete_a_host(self, logged_in_page: PPage):
+    def test_create_and_delete_a_host(self, logged_in_page: PPage) -> None:
         """Creates a host and deletes it afterwards. Calling order of static methods
         is therefore essential!
         """
 
         self._create_host(logged_in_page)
+
+        logged_in_page.goto_monitoring_all_hosts()
+        logged_in_page.select_host(TestHost.name)
+
+        self._delete_host(logged_in_page)
+
+    def test_reschedule(self, logged_in_page: PPage) -> None:
+        """reschedules a check"""
+
+        self._create_host(logged_in_page)
+
+        logged_in_page.goto_monitoring_all_hosts()
+        logged_in_page.select_host(TestHost.name)
+
+        # Use the Check_MK Service. It is always there and the first.
+        # There are two Services containing "Check_MK", using the first
+        logged_in_page.main_frame.locator(
+            "tr.data:has-text('Check_MK') >> nth=0 >> img[title='Open the action menu']"
+        ).click()
+        logged_in_page.main_frame.locator(
+            "div#popup_menu >> a:has-text('Reschedule check')"
+        ).click()
+        # In case of a success the page is reloaded, therefore the div is hidden,
+        # otherwise the div stays open...
+        logged_in_page.main_frame.locator("div#popup_menu").wait_for(state="hidden")
+
         self._delete_host(logged_in_page)
 
     @staticmethod
-    def _create_host(logged_in_page: PPage):
+    def _create_host(logged_in_page: PPage) -> None:
         """Creates a host by starting from a logged in page."""
         logged_in_page.goto_setup_hosts()
         logged_in_page.main_frame.get_suggestion("Add host").click()
@@ -39,11 +65,8 @@ class TestHosts:
 
         logged_in_page.expect_activation_state("Success")
 
-        logged_in_page.goto_monitoring_all_hosts()
-        logged_in_page.select_host(TestHost.name)
-
     @staticmethod
-    def _delete_host(logged_in_page: PPage):
+    def _delete_host(logged_in_page: PPage) -> None:
         """Deletes the former created host by starting from a logged in page."""
         logged_in_page.goto_setup_hosts()
 

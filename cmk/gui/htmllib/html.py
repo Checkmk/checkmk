@@ -75,7 +75,6 @@ class HTMLGenerator(HTMLWriter):
         # browser options
         self.browser_reload = 0.0
         self.browser_redirect = ""
-        self.link_target: Optional[str] = None
 
         # Forms
         self.form_name: Optional[str] = None
@@ -91,9 +90,6 @@ class HTMLGenerator(HTMLWriter):
 
     def is_api_call(self) -> bool:
         return self.output_format != "html"
-
-    def set_link_target(self, framename: str) -> None:
-        self.link_target = framename
 
     def set_focus(self, varname: str) -> None:
         self.final_javascript(

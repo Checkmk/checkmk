@@ -99,7 +99,7 @@ class DisplayOptions:
         # frame. Also the display options are removed since the view in the main
         # frame should be displayed in standard mode.
         if self.disabled(self.M):
-            html.set_link_target("main")
+            html.link_target = "main"
             request.del_var("display_options")
 
     # If all display_options are upper case assume all not given values default

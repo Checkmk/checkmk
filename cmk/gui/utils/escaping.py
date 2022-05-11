@@ -283,3 +283,16 @@ def strip_tags(ht: EscapableEntity) -> str:
         string = _TAG_RE.sub("", string)
         if string == prev:
             return string
+
+
+def strip_tags_for_tooltip(ht: EscapableEntity) -> str:
+    string = str(ht)
+    # Some painters render table and cell tags that would be stripped away in the next step and
+    # result in the content of tables being joined together to a single word.
+    # We replace the tags here with spaces to prevent that.
+    #
+    # For the moment we keep it simple and only fix the special case we stumbled upon.
+    # In the future it might be better to find a more generic approach
+    # that solves the problem for different tag combinations.
+    string = string.replace("</th><td>", " ")
+    return strip_tags(string)

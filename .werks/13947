@@ -1,0 +1,13 @@
+Title: Add blank seperator to dashboard tooltips
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1652262782
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p1
+
+On some dashboard tooltips there was a space missing between the two words of the tootltip.
+It is now correctly sperated.
+For example, the tooltip will now display "Namespace my-namespace" instead of "Namespacemy-namespace".

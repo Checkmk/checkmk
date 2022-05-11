@@ -16,7 +16,7 @@ ARCHIVE_NAME=${DIR_NAME}.tgz
 TARGET_DIR=/opt
 
 # Increase this to enforce a recreation of the build cache
-BUILD_ID=4
+BUILD_ID=5
 
 build_package() {
     mkdir -p /opt/src

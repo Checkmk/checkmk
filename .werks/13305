@@ -1,0 +1,11 @@
+Title: Fixed exception when using BI acknowledgments/downtimes in GUI
+Class: fix
+Compatible: compat
+Component: bi
+Date: 1652271813
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+The buttons <tt>Acknowledge problems</tt> and <tt>Schedule downtimes</tt> did not work on an aggregation page.

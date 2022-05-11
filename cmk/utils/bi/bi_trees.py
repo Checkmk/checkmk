@@ -540,6 +540,7 @@ class BICompiledAggregation:
                 if node_result_bundle.assumed_result
                 else node_result_bundle.actual_result
             ),
+            "aggr_id": bi_compiled_branch.properties.title,
             "aggr_name": bi_compiled_branch.properties.title,
             "aggr_output": node_result_bundle.actual_result.output,
             "aggr_hosts": bi_compiled_branch.required_hosts,

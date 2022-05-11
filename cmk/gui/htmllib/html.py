@@ -67,7 +67,7 @@ class HTMLGenerator(HTMLWriter):
         output_funnel: OutputFunnel,
         output_format: str,
     ) -> None:
-        super().__init__(output_funnel)
+        super().__init__(output_funnel, output_format)
 
         self._logger = log.logger.getChild("html")
         self._header_sent = False
@@ -77,7 +77,6 @@ class HTMLGenerator(HTMLWriter):
         self.have_help = False
 
         # browser options
-        self.output_format = output_format
         self.browser_reload = 0.0
         self.browser_redirect = ""
         self.link_target: Optional[str] = None

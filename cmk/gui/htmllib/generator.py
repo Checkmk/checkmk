@@ -27,7 +27,7 @@
 
 from __future__ import annotations
 
-from typing import final, List, Optional, Union
+from typing import final, Final, List, Optional, Union
 
 from cmk.utils.exceptions import MKGeneralException
 
@@ -80,8 +80,9 @@ class HTMLWriter:
       - All attributes will be escaped, i.e. the characters '&', '<', '>', '"' will be replaced by
         non HtML relevant signs '&amp;', '&lt;', '&gt;' and '&quot;'."""
 
-    def __init__(self, output_funnel: OutputFunnel):
-        self.output_funnel = output_funnel
+    def __init__(self, output_funnel: OutputFunnel, output_format: str):
+        self.output_funnel: Final = output_funnel
+        self.output_format: Final = output_format
         self._final_javascript: List[str] = []
 
     def write_text(self, text: HTMLContent) -> None:

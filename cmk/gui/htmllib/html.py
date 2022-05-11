@@ -72,9 +72,6 @@ class HTMLGenerator(HTMLWriter):
         self._default_javascripts = ["main"]
         self.have_help = False
 
-        # browser options
-        self.browser_redirect = ""
-
         # Forms
         self.form_name: Optional[str] = None
         self.form_vars: List[str] = []
@@ -236,12 +233,7 @@ class HTMLGenerator(HTMLWriter):
                 self.javascript_file(filename_for_browser)
 
         if self.browser_reload != 0.0:
-            if self.browser_redirect != "":
-                self.javascript(
-                    "cmk.utils.set_reload(%s, '%s')" % (self.browser_reload, self.browser_redirect)
-                )
-            else:
-                self.javascript("cmk.utils.set_reload(%s)" % (self.browser_reload))
+            self.javascript("cmk.utils.set_reload(%s)" % (self.browser_reload))
 
         self.close_head()
 

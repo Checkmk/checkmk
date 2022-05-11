@@ -27,7 +27,7 @@
 
 from __future__ import annotations
 
-from typing import final, Final, List, Optional, Union
+from typing import final, Final, List, Literal, Optional, Union
 
 from cmk.utils.exceptions import MKGeneralException
 
@@ -158,6 +158,50 @@ class HTMLWriter:
     def javascript_file(self, src: str) -> None:
         """<script type="text/javascript" src="%(name)"/>\n"""
         self.write_html(render_element("script", "", type_="text/javascript", src=src))
+
+    def show_message(self, msg: Union[HTML, str]) -> None:
+        self.write(self._render_message(msg, "message"))
+
+    def show_error(self, msg: Union[HTML, str]) -> None:
+        self.write(self._render_message(msg, "error"))
+
+    def show_warning(self, msg: Union[HTML, str]) -> None:
+        self.write(self._render_message(msg, "warning"))
+
+    def render_message(self, msg: Union[HTML, str]) -> HTML:
+        return self._render_message(msg, "message")
+
+    def render_error(self, msg: Union[HTML, str]) -> HTML:
+        return self._render_message(msg, "error")
+
+    def render_warning(self, msg: Union[HTML, str]) -> HTML:
+        return self._render_message(msg, "warning")
+
+    def _render_message(
+        self,
+        msg: Union[HTML, str],
+        msg_type: Literal["message", "warning", "error"] = "message",
+    ) -> HTML:
+        if msg_type == "message":
+            cls = "success"
+            prefix = _("MESSAGE")
+        elif msg_type == "warning":
+            cls = "warning"
+            prefix = _("WARNING")
+        elif msg_type == "error":
+            cls = "error"
+            prefix = _("ERROR")
+        else:
+            raise TypeError(msg_type)
+
+        if self.output_format == "html":
+            code = HTMLWriter.render_div(msg, class_=cls)
+            if self.mobile:
+                return HTMLWriter.render_center(code)
+            return code
+        return escaping.escape_to_html_permissive(
+            "%s: %s\n" % (prefix, escaping.strip_tags(msg)), escape_links=False
+        )
 
     @staticmethod
     def render_img(src: str, **attrs: HTMLTagAttributeValue) -> HTML:

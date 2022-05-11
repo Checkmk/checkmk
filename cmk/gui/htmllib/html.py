@@ -10,7 +10,7 @@ import json
 import pprint
 import re
 from pathlib import Path
-from typing import Any, Callable, cast, Dict, Iterable, List, Literal, Optional, Set, Tuple, Union
+from typing import Any, Callable, cast, Dict, Iterable, List, Optional, Set, Tuple, Union
 
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
@@ -54,8 +54,6 @@ from .tag_rendering import (
     render_end_tag,
     render_start_tag,
 )
-
-HTMLMessageInput = Union[HTML, str]
 
 
 class HTMLGenerator(HTMLWriter):
@@ -134,50 +132,6 @@ class HTMLGenerator(HTMLWriter):
         if not self.request.has_var("_ajaxid"):
             return self.final_javascript("cmk.utils.reload_whole_page(%s)" % json.dumps(url))
         return None
-
-    def show_message(self, msg: HTMLMessageInput) -> None:
-        self.write(self._render_message(msg, "message"))
-
-    def show_error(self, msg: HTMLMessageInput) -> None:
-        self.write(self._render_message(msg, "error"))
-
-    def show_warning(self, msg: HTMLMessageInput) -> None:
-        self.write(self._render_message(msg, "warning"))
-
-    def render_message(self, msg: HTMLMessageInput) -> HTML:
-        return self._render_message(msg, "message")
-
-    def render_error(self, msg: HTMLMessageInput) -> HTML:
-        return self._render_message(msg, "error")
-
-    def render_warning(self, msg: HTMLMessageInput) -> HTML:
-        return self._render_message(msg, "warning")
-
-    def _render_message(
-        self,
-        msg: HTMLMessageInput,
-        msg_type: Literal["message", "warning", "error"] = "message",
-    ) -> HTML:
-        if msg_type == "message":
-            cls = "success"
-            prefix = _("MESSAGE")
-        elif msg_type == "warning":
-            cls = "warning"
-            prefix = _("WARNING")
-        elif msg_type == "error":
-            cls = "error"
-            prefix = _("ERROR")
-        else:
-            raise TypeError(msg_type)
-
-        if self.output_format == "html":
-            code = HTMLWriter.render_div(msg, class_=cls)
-            if self.mobile:
-                return HTMLWriter.render_center(code)
-            return code
-        return escaping.escape_to_html_permissive(
-            "%s: %s\n" % (prefix, escaping.strip_tags(msg)), escape_links=False
-        )
 
     def show_localization_hint(self) -> None:
         url = "wato.py?mode=edit_configvar&varname=user_localizations"

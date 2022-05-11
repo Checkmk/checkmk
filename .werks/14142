@@ -1,0 +1,13 @@
+Title: mk_zypper: Missing data in agent output
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1652272720
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0i1
+
+The mk_zypper agent plugin would not output the necessary data
+needed for the check plugin.

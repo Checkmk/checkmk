@@ -90,10 +90,10 @@ class HTMLWriter:
 
     def write_html(self, content: HTML) -> None:
         """Write HTML code directly, without escaping."""
-        self._write(content)
+        self.write(content)
 
     @final
-    def _write(self, text: HTMLContent) -> None:
+    def write(self, text: HTMLContent) -> None:
         if not text:
             return
 

@@ -36,8 +36,16 @@ pub fn make_csr(cn: &str) -> AnyhowResult<(String, String)> {
     ))
 }
 
-pub fn client(root_cert: Option<&str>, use_proxy: bool) -> AnyhowResult<Client> {
-    let client_builder = ClientBuilder::new();
+pub fn client(
+    root_cert: Option<&str>,
+    identity: Option<reqwest::tls::Identity>,
+    use_proxy: bool,
+) -> AnyhowResult<Client> {
+    let mut client_builder = ClientBuilder::new();
+
+    if let Some(ident) = identity {
+        client_builder = client_builder.identity(ident);
+    }
 
     let mut client_builder = if let Some(cert) = root_cert {
         client_builder.add_root_certificate(Certificate::from_pem(cert.as_bytes())?)

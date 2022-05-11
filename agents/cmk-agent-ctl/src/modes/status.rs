@@ -124,23 +124,16 @@ impl RemoteConnectionStatusResponse {
         agent_rec_api: &impl agent_receiver_api::Status,
     ) -> RemoteConnectionStatusResponse {
         match coordinates.to_url() {
-            Ok(url) => {
-                match agent_rec_api.status(
-                    &url,
-                    &connection.root_cert,
-                    &connection.uuid,
-                    &connection.certificate,
-                ) {
-                    Ok(status_response) => {
-                        RemoteConnectionStatusResponse::Success(RemoteConnectionStatus {
-                            connection_type: status_response.connection_type,
-                            registration_state: status_response.status,
-                            host_name: status_response.hostname,
-                        })
-                    }
-                    Err(err) => RemoteConnectionStatusResponse::Error(RemoteError::from(err)),
+            Ok(url) => match agent_rec_api.status(&url, connection) {
+                Ok(status_response) => {
+                    RemoteConnectionStatusResponse::Success(RemoteConnectionStatus {
+                        connection_type: status_response.connection_type,
+                        registration_state: status_response.status,
+                        host_name: status_response.hostname,
+                    })
                 }
-            }
+                Err(err) => RemoteConnectionStatusResponse::Error(RemoteError::from(err)),
+            },
             _ => RemoteConnectionStatusResponse::Error(RemoteError::InvalidUrl),
         }
     }
@@ -822,9 +815,7 @@ mod test_status {
         fn status(
             &self,
             _base_url: &reqwest::Url,
-            _root_cert: &str,
-            _uuid: &uuid::Uuid,
-            _certificate: &str,
+            _connection: &config::Connection,
         ) -> Result<agent_receiver_api::StatusResponse, agent_receiver_api::StatusError> {
             Ok(agent_receiver_api::StatusResponse {
                 hostname: Some(String::from("host")),

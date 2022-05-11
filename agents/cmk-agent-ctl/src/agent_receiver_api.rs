@@ -120,9 +120,7 @@ pub trait AgentData {
     fn agent_data(
         &self,
         base_url: &reqwest::Url,
-        root_cert: &str,
-        uuid: &uuid::Uuid,
-        certificate: &str,
+        connection: &config::Connection,
         compression_algorithm: &str,
         monitoring_data: &[u8],
     ) -> AnyhowResult<()>;
@@ -132,9 +130,7 @@ pub trait Status {
     fn status(
         &self,
         base_url: &reqwest::Url,
-        root_cert: &str,
-        uuid: &uuid::Uuid,
-        certificate: &str,
+        connection: &config::Connection,
     ) -> Result<StatusResponse, StatusError>;
 }
 
@@ -197,7 +193,7 @@ impl Pairing for Api {
         csr: String,
         credentials: &types::Credentials,
     ) -> AnyhowResult<PairingResponse> {
-        let response = certs::client(root_cert, self.use_proxy)?
+        let response = certs::client(root_cert, None, self.use_proxy)?
             .post(Self::endpoint_url(base_url, &["pairing"])?)
             .basic_auth(&credentials.username, Some(&credentials.password))
             .json(&PairingBody { csr })
@@ -227,7 +223,7 @@ impl Registration for Api {
         host_name: &str,
     ) -> AnyhowResult<()> {
         Api::check_response_204(
-            certs::client(Some(root_cert), self.use_proxy)?
+            certs::client(Some(root_cert), None, self.use_proxy)?
                 .post(Self::endpoint_url(base_url, &["register_with_hostname"])?)
                 .basic_auth(&credentials.username, Some(&credentials.password))
                 .json(&RegistrationWithHNBody {
@@ -247,7 +243,7 @@ impl Registration for Api {
         agent_labels: &types::AgentLabels,
     ) -> AnyhowResult<()> {
         Api::check_response_204(
-            certs::client(Some(root_cert), self.use_proxy)?
+            certs::client(Some(root_cert), None, self.use_proxy)?
                 .post(Self::endpoint_url(base_url, &["register_with_labels"])?)
                 .basic_auth(&credentials.username, Some(&credentials.password))
                 .json(&RegistrationWithALBody {
@@ -263,30 +259,36 @@ impl AgentData for Api {
     fn agent_data(
         &self,
         base_url: &reqwest::Url,
-        root_cert: &str,
-        uuid: &uuid::Uuid,
-        certificate: &str,
+        connection: &config::Connection,
         compression_algorithm: &str,
         monitoring_data: &[u8],
     ) -> AnyhowResult<()> {
         Api::check_response_204(
-            certs::client(Some(root_cert), self.use_proxy)?
-                .post(Self::endpoint_url(
-                    base_url,
-                    &["agent_data", &uuid.to_string()],
-                )?)
-                .header("certificate", encode_pem_cert_base64(certificate)?)
-                .header("compression", compression_algorithm)
-                .multipart(
-                    reqwest::blocking::multipart::Form::new().part(
-                        "monitoring_data",
-                        reqwest::blocking::multipart::Part::bytes(monitoring_data.to_owned())
-                            // Note: We need to set the file name, otherwise the request won't have the
-                            // right format. However, the value itself does not matter.
-                            .file_name("agent_data"),
-                    ),
-                )
-                .send()?,
+            certs::client(
+                Some(&connection.root_cert),
+                Some(connection.identity()?),
+                self.use_proxy,
+            )?
+            .post(Self::endpoint_url(
+                base_url,
+                &["agent_data", &connection.uuid.to_string()],
+            )?)
+            .header(
+                // TODO: Remove this header once the agent receiver doesn't need it any longer
+                "certificate",
+                encode_pem_cert_base64(&connection.certificate)?,
+            )
+            .header("compression", compression_algorithm)
+            .multipart(
+                reqwest::blocking::multipart::Form::new().part(
+                    "monitoring_data",
+                    reqwest::blocking::multipart::Part::bytes(monitoring_data.to_owned())
+                        // Note: We need to set the file name, otherwise the request won't have the
+                        // right format. However, the value itself does not matter.
+                        .file_name("agent_data"),
+                ),
+            )
+            .send()?,
         )
     }
 }
@@ -295,16 +297,26 @@ impl Status for Api {
     fn status(
         &self,
         base_url: &reqwest::Url,
-        root_cert: &str,
-        uuid: &uuid::Uuid,
-        certificate: &str,
+        connection: &config::Connection,
     ) -> Result<StatusResponse, StatusError> {
-        let response = certs::client(Some(root_cert), self.use_proxy)?
+        let identity = match connection.identity() {
+            Ok(ident) => ident,
+            Err(_) => {
+                return Err(StatusError::Other(anyhow!(
+                    "Error loading client certificate"
+                )))
+            }
+        };
+        let response = certs::client(Some(&connection.root_cert), Some(identity), self.use_proxy)?
             .get(Self::endpoint_url(
                 base_url,
-                &["registration_status", &uuid.to_string()],
+                &["registration_status", &connection.uuid.to_string()],
             )?)
-            .header("certificate", encode_pem_cert_base64(certificate)?)
+            .header(
+                // TODO: Remove this header once the agent receiver doesn't need it any longer
+                "certificate",
+                encode_pem_cert_base64(&connection.certificate)?,
+            )
             .send()
             .map_err(StatusError::ConnectionRefused)?;
 

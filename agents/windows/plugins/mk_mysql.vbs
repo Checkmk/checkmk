@@ -6,7 +6,7 @@
 ' is running one or multiple MySQL server instances locally.
 
 Option Explicit
-Const CMK_VERSION = "2.0.0p24"
+Const CMK_VERSION = "2.0.0p25"
 
 Dim SHO, FSO, WMI, PROC
 Dim cfg_dir, cfg_file, service_list, service, instances, instance, cmd

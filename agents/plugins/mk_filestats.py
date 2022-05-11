@@ -82,7 +82,7 @@ You should find an example configuration file at
 '../cfg_examples/filestats.cfg' relative to this file.
 """
 
-__version__ = "2.0.0p24"
+__version__ = "2.0.0p25"
 
 import errno
 import glob

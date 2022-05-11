@@ -544,16 +544,17 @@ def load_man_page(name: str, man_page_dirs: Optional[Iterable[Path]] = None) -> 
         return None
 
     with path.open(encoding=str("utf-8")) as fp:
-        man_page = _parse_to_raw(path, fp)
+        header_raw = _parse_to_raw(path, fp)
 
-    header: dict[str, Union[str, Sequence[str]]] = {}
-    for key, value in man_page["header"]:  # type: ignore[misc]  # yes, this is the tuple case.
-        header[key] = [a.strip() for a in value.split(",")] if key == "agents" else value.strip()
-
-    if "catalog" not in header:
-        header["catalog"] = "unsorted"
-
-    return {"header": header}
+    # Watch out, the value of "header" is *not* of type ManPageHeader, it may
+    # contain discovery and item!
+    return {
+        "header": {
+            "catalog": "unsorted",  # fallback!
+            **header_raw,
+            "agents": [a.strip() for a in header_raw["agents"].split(",")],
+        }
+    }
 
 
 def _parse_to_raw_header(path: Path, lines: Iterable[str]) -> Mapping[str, str]:
@@ -580,18 +581,10 @@ def _parse_to_raw_header(path: Path, lines: Iterable[str]) -> Mapping[str, str]:
     return parsed
 
 
-def _parse_to_raw(
-    path: Path, lines: Iterable[str]
-) -> Mapping[Literal["header"], Sequence[tuple[str, str]]]:
-
-    parsed: dict[Literal["header"], list[tuple[str, str]]] = {}
-
-    # Watch out, the value of "header" is *not* of type ManPageHeader, it may
-    # contain discovery and item!
+def _parse_to_raw(path: Path, lines: Iterable[str]) -> Mapping[str, str]:
 
     current_section: list[tuple[str, str]] = []
     current_variable = None
-    parsed["header"] = current_section
     empty_line_count = 0
 
     for lineno, line in enumerate(lines):
@@ -623,7 +616,7 @@ def _parse_to_raw(
         except Exception as e:
             raise MKGeneralException("Syntax error in %s line %d (%s).\n" % (path, lineno + 1, e))
 
-    return parsed
+    return {k: v.strip() for k, v in current_section}
 
 
 class ManPageRenderer:

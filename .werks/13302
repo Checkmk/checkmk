@@ -1,0 +1,12 @@
+Title: Customize View: Improved performance when rendering painter/sorter/grouper dropdowns
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1652266723
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b9
+
+The GUI had problems displaying certain dropdown elements when there were more than 1000 tag groups.

@@ -3,9 +3,10 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
+import re
 import time
-from typing import Tuple, TypedDict
+from dataclasses import dataclass
+from typing import Any, Iterable, Mapping, Sequence, Tuple, TypedDict
 
 from .agent_based_api.v1 import (
     check_levels,
@@ -36,6 +37,29 @@ default_check_parameters = CheckParams(
 )
 
 
+@dataclass(frozen=True)
+class _TimeUnit:
+    text_representations: Sequence[str]
+    multiple_of_seconds: float
+
+
+_UNITS_TO_SECONDS = {
+    unit: time_unit.multiple_of_seconds
+    for time_unit in [
+        _TimeUnit(["y", "year", "years"], 31557600),
+        _TimeUnit(["M", "month, months"], 2630016),
+        _TimeUnit(["w", "week", "weeks"], 604800),
+        _TimeUnit(["d", "day", "days"], 86400),
+        _TimeUnit(["h", "hour", "hours"], 3600),
+        _TimeUnit(["m", "min", "minute", "minutes"], 60),
+        _TimeUnit(["s", "sec", "second", "seconds"], 1),
+        _TimeUnit(["msec", "ms"], 1e-3),
+        _TimeUnit(["µs", "usec", "us"], 1e-6),
+    ]
+    for unit in time_unit.text_representations
+}
+
+
 class Section(TypedDict, total=False):
     synctime: float
     server: str
@@ -44,14 +68,40 @@ class Section(TypedDict, total=False):
     jitter: float
 
 
-def _get_seconds(time_string: str) -> float:
-    if time_string.endswith("us"):
-        return float(time_string[:-2]) / 1000000
-    if time_string.endswith("ms"):
-        return float(time_string[:-2]) / 1000
-    if time_string.endswith("s"):
-        return float(time_string[:-1])
-    return float(time_string) / 1000000
+def _strip_sign(time_string: str) -> Tuple[str, int]:
+    if time_string[0] == "-":
+        return time_string[1:], -1
+    if time_string[0] == "+":
+        return time_string[1:], 1
+
+    return time_string, 1
+
+
+def _split_into_components(time_string: str) -> Iterable[float]:
+    if time_string[-1].isdigit():  # 3h18 -> 3h18s
+        time_string += "s"
+
+    split_at_numbers = re.split("([0-9]*[.]?[0-9]+)", time_string)[1:]
+    for value_str, unit in zip(split_at_numbers[::2], split_at_numbers[1::2]):
+        yield float(value_str) * _UNITS_TO_SECONDS[unit]
+
+
+def _get_seconds(time_components: Iterable[str]) -> float:
+    """
+    Convert a systemd time span to seconds.
+
+    See systemd.time(7) for a detailed description of the format.
+
+    >>> _get_seconds(["1h30m2s90us"])
+    5402.00009
+    >>> _get_seconds(["-2h15"])
+    -7215.0
+    >>> _get_seconds(["-2y","5M","2w","8d","9h","1min","53.991us"])
+    -78198540.00005399
+    """
+    time_string = "".join(time_components)
+    time_string, sign = _strip_sign(time_string)
+    return sign * sum(_split_into_components(time_string))  # type: ignore
 
 
 def parse_timesyncd(string_table: StringTable) -> Section:
@@ -65,25 +115,22 @@ def parse_timesyncd(string_table: StringTable) -> Section:
             continue
 
         key = line[0].replace(":", "").lower()
-        raw_str = line[1].replace("(", "").replace(")", "")
 
         if key == "server":
-            section["server"] = raw_str
+            section["server"] = line[1].replace("(", "").replace(")", "")
         if key == "stratum":
-            section["stratum"] = int(raw_str)
+            section["stratum"] = int(line[1])
         if key == "offset":
-            section["offset"] = _get_seconds(raw_str)
+            section["offset"] = _get_seconds(line[1:])
         if key == "jitter":
-            section["jitter"] = _get_seconds(raw_str)
+            section["jitter"] = _get_seconds(line[1:])
 
     return section
 
 
-def _get_levels_seconds(params):
-    warn_milli, crit_milli = params.get("quality_levels", (None, None))
-    if warn_milli and crit_milli:
-        return warn_milli / 1000.0, crit_milli / 1000.0
-    return None, None
+def _get_levels_seconds(params: Mapping[str, Any]) -> Tuple[float, float]:
+    warn_milli, crit_milli = params["quality_levels"]
+    return warn_milli / 1000.0, crit_milli / 1000.0
 
 
 def discover_timesyncd(section: Section) -> DiscoveryResult:
@@ -91,7 +138,7 @@ def discover_timesyncd(section: Section) -> DiscoveryResult:
         yield Service()
 
 
-def check_timesyncd(params, section: Section) -> CheckResult:
+def check_timesyncd(params: Mapping[str, Any], section: Section) -> CheckResult:
     levels = _get_levels_seconds(params)
 
     # Offset information
@@ -128,12 +175,10 @@ def check_timesyncd(params, section: Section) -> CheckResult:
         yield Result(state=State.OK, summary="Found no time server")
         return
 
-    stratum_level = params.get("stratum_level") - 1
-    stratum = section.get("stratum")
-    if stratum is not None:
+    if (stratum := section.get("stratum")) is not None:
         yield from check_levels(
             value=stratum,
-            levels_upper=(stratum_level, stratum_level),
+            levels_upper=(stratum_level := params["stratum_level"] - 1, stratum_level),
             label="Stratum",
         )
 

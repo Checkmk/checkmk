@@ -152,10 +152,17 @@ def test_no_plugins_with_trivial_sections(fix_register):
         for s in chain(fix_register.agent_sections.values(), fix_register.snmp_sections.values())
     }
 
-    plugins_with_trivial_sections: Dict[str, Set[str]] = defaultdict(set)
-    for plugin in chain(
-        fix_register.check_plugins.values(), fix_register.inventory_plugins.values()
+    registered_check_and_inventory_plugins = list(
+        chain(fix_register.check_plugins.values(), fix_register.inventory_plugins.values())
+    )
+
+    if unknown_plugins := {str(p) for p in known_exceptions}.difference(
+        {str(p.name) for p in registered_check_and_inventory_plugins}
     ):
+        raise AssertionError(f"Unknown plugins in exception list: {', '.join(unknown_plugins)}")
+
+    plugins_with_trivial_sections: Dict[str, Set[str]] = defaultdict(set)
+    for plugin in registered_check_and_inventory_plugins:
         for section in plugin.sections:
             if section not in registered_sections and section not in known_exceptions:
                 plugins_with_trivial_sections[plugin.name].add(str(section))

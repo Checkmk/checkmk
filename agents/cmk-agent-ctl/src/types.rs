@@ -72,7 +72,9 @@ impl Display for AgentChannel {
 impl AgentChannel {
     #[cfg(unix)]
     pub fn operational(&self) -> bool {
-        self.0.readable() && self.0.writable()
+        // https://man7.org/linux/man-pages/man7/unix.7.html
+        // On Linux, connecting to a stream socket object requires write permission on that socket;
+        self.0.writable()
     }
 
     #[cfg(windows)]

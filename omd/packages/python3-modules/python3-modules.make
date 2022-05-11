@@ -6,7 +6,7 @@ PYTHON3_MODULES_DIR := $(PYTHON3_MODULES)-$(PYTHON3_MODULES_VERS)
 # Note: Because the versions of the individual modules is not reflected in PYTHON3_MODULES_VERS,
 #       like it is done in other OMD packages, we'll have to increase the BUILD_ID on every package
 #       change.
-PYTHON3_MODULES_BUILD_ID := 6
+PYTHON3_MODULES_BUILD_ID := 5
 
 PYTHON3_MODULES_UNPACK:= $(BUILD_HELPER_DIR)/$(PYTHON3_MODULES_DIR)-unpack
 PYTHON3_MODULES_PATCHING := $(BUILD_HELPER_DIR)/$(PYTHON3_MODULES_DIR)-patching

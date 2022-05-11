@@ -202,11 +202,11 @@ class VisualTypeDashboards(VisualType):
             specification = parameters["definition"]["specification"]
             if specification[0] == "template":
                 context = {
-                    "host": specification[1]["host_name"],
+                    "host": {"host": specification[1]["host_name"]},
                     # The service context has to be set, even for host graphs. Otherwise the
                     # pnpgraph dashlet would complain about missing context information when
                     # displaying host graphs.
-                    "service": specification[1]["service_description"],
+                    "service": {"service": specification[1]["service_description"]},
                 }
                 parameters = {"source": specification[1]["graph_id"]}
 
@@ -264,7 +264,7 @@ class VisualTypeDashboards(VisualType):
         elif add_type in ["pnpgraph", "custom_graph"]:
             # The "add to visual" popup does not provide a timerange information,
             # but this is not an optional value. Set it to 25h initially.
-            dashlet_spec.setdefault("timerange", "1")
+            dashlet_spec.setdefault("timerange", "25h")
 
         add_dashlet(dashlet_spec, dashboard)
 

@@ -172,9 +172,12 @@ class LabelsCache:
         return all_labels
 
     def _livestatus_get_labels(self, only_sites: List[SiteId]) -> _MergedLabels:
-        # TODO: ueber den user_context müssen wir morgen noch sprechen
         """Get labels for all sites that need an update and the user is authorized for"""
-        return self._collect_labels_from_livestatus_labels(self._query_livestatus(only_sites))
+        try:
+            sites.live().set_auth_domain("labels")
+            return self._collect_labels_from_livestatus_labels(self._query_livestatus(only_sites))
+        finally:
+            sites.live().set_auth_domain("read")
 
     def _query_livestatus(
         self,

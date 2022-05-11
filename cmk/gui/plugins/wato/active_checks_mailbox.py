@@ -6,7 +6,7 @@
 
 import cmk.gui.mkeventd as mkeventd
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.active_checks import RulespecGroupActiveChecks
+from cmk.gui.plugins.wato.active_checks_module import RulespecGroupActiveChecks
 from cmk.gui.plugins.wato.utils import HostRulespec, IndividualOrStoredPassword, rulespec_registry
 from cmk.gui.valuespec import (
     Age,

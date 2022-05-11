@@ -8,7 +8,7 @@ from typing import Mapping
 
 import pytest
 
-from cmk.gui.plugins.wato import active_checks
+from cmk.gui.plugins.wato import active_checks_module
 
 
 @pytest.mark.parametrize(
@@ -92,4 +92,4 @@ def test_transform_form_submit(
     deprecated_params: tuple[str, Mapping[str, object]],
     transformed_params: tuple[str, Mapping[str, object]],
 ) -> None:
-    assert active_checks._transform_form_submit(deprecated_params) == transformed_params
+    assert active_checks_module._transform_form_submit(deprecated_params) == transformed_params

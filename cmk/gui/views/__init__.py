@@ -1828,9 +1828,9 @@ def view_editor_sorter_specs(view: ViewSpec) -> _Tuple[str, Dictionary]:
             # ValueSpec will be displayed after the sorter was choosen in the
             # CascadingDropdown.
             if isinstance(p, DerivedColumnsSorter) and (parameters := p.get_parameters()):
-                yield name, get_plugin_title_for_choices(p), parameters
+                yield name, get_sorter_plugin_title_for_choices(p), parameters
             else:
-                yield name, get_plugin_title_for_choices(p)
+                yield name, get_sorter_plugin_title_for_choices(p)
 
         painter_spec: PainterSpec
         for painter_spec in view.get("painters", []):
@@ -3352,7 +3352,7 @@ def painter_choices_with_params(painters: Mapping[str, Painter]) -> List[Cascadi
         (
             (
                 name,
-                get_plugin_title_for_choices(painter),
+                get_painter_plugin_title_for_choices(painter),
                 painter.parameters if painter.parameters else None,
             )
             for name, painter in painters.items()
@@ -3361,29 +3361,32 @@ def painter_choices_with_params(painters: Mapping[str, Painter]) -> List[Cascadi
     )
 
 
-def get_plugin_title_for_choices(plugin: Union[Painter, Sorter]) -> str:
-    info_title = "/".join(
+def _get_info_title(plugin: Union[Painter, Sorter]) -> str:
+    # TODO: Cleanup the special case for sites. How? Add an info for it?
+    if plugin.columns == ["site"]:
+        return _("Site")
+
+    return "/".join(
         [
             visual_info_registry[info_name]().title_plural
             for info_name in sorted(infos_needed_by_plugin(plugin))
         ]
     )
 
-    # TODO: Cleanup the special case for sites. How? Add an info for it?
-    if plugin.columns == ["site"]:
-        info_title = _("Site")
 
-    dummy_cell = Cell(View("", {}, {}), PainterSpec(plugin.ident))
+def get_painter_plugin_title_for_choices(plugin: Painter) -> str:
+    dummy_cell = Cell(DummyView(), PainterSpec(plugin.ident))
+    return "%s: %s" % (_get_info_title(plugin), plugin.list_title(dummy_cell))
+
+
+def get_sorter_plugin_title_for_choices(plugin: Sorter) -> str:
+    dummy_cell = Cell(DummyView(), PainterSpec(plugin.ident))
     title: str
-    if isinstance(plugin, Painter):
-        title = plugin.list_title(dummy_cell)
+    if callable(plugin.title):
+        title = plugin.title(dummy_cell)
     else:
-        if callable(plugin.title):
-            title = plugin.title(dummy_cell)
-        else:
-            title = plugin.title
-
-    return "%s: %s" % (info_title, title)
+        title = plugin.title
+    return "%s: %s" % (_get_info_title(plugin), title)
 
 
 # .

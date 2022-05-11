@@ -1,0 +1,10 @@
+Title: Update openssl to 1.1.1o
+Class: security
+Compatible: compat
+Component: core
+Date: 1651838126
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p24

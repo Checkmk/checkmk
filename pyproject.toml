@@ -38,7 +38,9 @@ target-version = ['py39']
 # If you add more modules, add them to mypy-raw.ini as well...
 [[tool.mypy.overrides]]
 module = [
-    "cmk.notification_plugins.*"
+    "cmk.notification_plugins.*",
+    "tests.gui_e2e.*",
+    "tests.testlib.playwright.*"
 ]
 disallow_untyped_calls = true
 disallow_untyped_defs = true

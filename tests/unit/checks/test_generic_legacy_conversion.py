@@ -2508,7 +2508,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy):
         "vnx_version",
         "vutlan_ems_humidity",
         "vutlan_ems_leakage",
-        "vutlan_ems_smoke",
         "vutlan_ems_temp",
         "vxvm_enclosures",
         "vxvm_multipath",

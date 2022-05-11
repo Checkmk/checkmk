@@ -3,8 +3,6 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-import typing
-
 import pytest
 
 from tests.unit.conftest import FixRegister
@@ -12,13 +10,9 @@ from tests.unit.conftest import FixRegister
 from cmk.utils.type_defs import CheckPluginName, SectionName
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
+from cmk.base.plugins.agent_based.vutlan_ems_smoke import SmokeSensor, SmokeSensorSection
 
 pytestmark = pytest.mark.checks
-
-
-class SmokeSensor(typing.NamedTuple):
-    name: str
-    state: int
 
 
 def test_parse_vutlan_ems_smoke(fix_register: FixRegister):
@@ -81,7 +75,9 @@ def test_parse_vutlan_ems_smoke_no_smoke_detector(fix_register: FixRegister):
     ]
     result = check.parse_function(string_table)
 
-    assert result is None
+    expected_parse_result: SmokeSensorSection = {}
+
+    assert result == expected_parse_result
 
 
 def test_section_vutlan_ems_smoke(fix_register: FixRegister):
@@ -109,7 +105,7 @@ def test_check_vutlan_ems_smoke_state_crit(fix_register: FixRegister):
         "Banana": SmokeSensor(name="Banana", state=2),
     }
 
-    result = check.check_function(item="Banana", params={}, section=section)
+    result = check.check_function(item="Banana", section=section)
 
     expected_check_result_state_crit = [Result(state=State.CRIT, summary="Smoke detected")]
 
@@ -120,7 +116,7 @@ def test_check_vutlan_ems_smoke_state_crit(fix_register: FixRegister):
         "Banana": SmokeSensor(name="Banana", state=1),
     }
 
-    result = check.check_function(item="Banana", params={}, section=section)
+    result = check.check_function(item="Banana", section=section)
 
     expected_check_result_state_crit = [Result(state=State.CRIT, summary="Smoke detected")]
 
@@ -134,7 +130,7 @@ def test_check_vutlan_ems_smoke_state_ok(fix_register: FixRegister):
         "Banana": SmokeSensor(name="Banana", state=2),
     }
 
-    result = check.check_function(item="Analog-5", params={}, section=section)
+    result = check.check_function(item="Analog-5", section=section)
 
     expected_check_result_state_ok = [Result(state=State.OK, summary="No smoke detected")]
 
@@ -147,6 +143,6 @@ def test_check_vutlan_ems_smoke_item_not_found(fix_register: FixRegister):
         "Analog-5": SmokeSensor(name="Analog-5", state=0),
     }
 
-    result = check.check_function(item="Banana", params={}, section=section)
+    result = check.check_function(item="Banana", section=section)
 
     assert list(result) == []

@@ -346,6 +346,7 @@ class NetAppNode:
             return self.node.tag.split("}")[-1]
         if what == "content":
             return self.node.text or ""
+        return None
 
     def __getattr__(self, what):
         return object.__getattribute__(self, what)

@@ -20,7 +20,7 @@ METRICS_INFO_NAMES_PULSE_SECURE_MEM = (
 def check_pulse_secure_mem(item, params, parsed):
 
     if not parsed:
-        return None
+        return
 
     for metric, info_name in zip(*METRICS_INFO_NAMES_PULSE_SECURE_MEM):
         if metric in parsed:

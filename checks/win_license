@@ -41,6 +41,7 @@ def parse_win_license(info):
 def inventory_win_license(parsed):
     if "License" in parsed:
         return [(None, {})]
+    return []
 
 
 def check_win_license(_item, params, parsed):

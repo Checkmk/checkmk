@@ -85,6 +85,7 @@ def inventory_graylog_cluster_stats_elastic(parsed):
     elastic_data = parsed.get("elasticsearch")
     if elastic_data is not None:
         return [(None, {})]
+    return []
 
 
 factory_settings["graylog_cluster_stats_elastic_defaultlevels"] = {
@@ -194,6 +195,7 @@ def inventory_graylog_cluster_stats_mongodb(parsed):
     mongo_data = parsed.get("mongo")
     if mongo_data is not None:
         return [(None, {})]
+    return []
 
 
 def check_graylog_cluster_stats_mongodb(no_item, params, parsed):

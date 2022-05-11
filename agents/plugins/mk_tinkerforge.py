@@ -377,6 +377,7 @@ def main():
                 display_on_segment(conn, settings, "")
     finally:
         conn.disconnect()
+    return None
 
 
 if __name__ == "__main__":

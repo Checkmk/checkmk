@@ -73,7 +73,7 @@ def check_ceph_status(_no_item, params, parsed):
 
     overall_status = parsed.get("health", {}).get("status")
     if not overall_status:
-        return None
+        return
 
     state, state_readable = map_health_states.get(
         overall_status,
@@ -117,6 +117,7 @@ factory_settings["ceph_osds_default_levels"] = {
 def inventory_ceph_status_osds(parsed):
     if "osdmap" in parsed:
         return [(None, {})]
+    return []
 
 
 def check_ceph_status_osds(_no_item, params, parsed):
@@ -180,6 +181,7 @@ check_info["ceph_status.osds"] = {
 def inventory_ceph_status_pgs(parsed):
     if "pgmap" in parsed:
         return [(None, {})]
+    return []
 
 
 def check_ceph_status_pgs(_no_item, params, parsed):
@@ -254,12 +256,13 @@ factory_settings["ceph_mgrs_default_levels"] = {
 def inventory_ceph_status_mgrs(parsed):
     if "mgrmap" in parsed:
         return [(None, {})]
+    return []
 
 
 def check_ceph_status_mgrs(_no_item, params, parsed):
     epoch = parsed.get("mgrmap", {}).get("epoch")
     if epoch is None:
-        return None
+        return
     yield ceph_check_epoch("ceph_mgrs", epoch, params)
 
 

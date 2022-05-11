@@ -14,7 +14,7 @@ factory_settings["poseidon_temp_default_levels"] = {}
 def parse_poseidon_temp(info):
     parsed = {}
     if not info:
-        return
+        return None
     for name, state, value_string in info:
         try:
             temp = float(value_string.replace("C", ""))

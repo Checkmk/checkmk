@@ -64,6 +64,7 @@ from cmk.base.check_legacy_includes.uptime import *  # pylint: disable=wildcard-
 def inventory_storeonce_clusterinfo(parsed):
     if "Product Class" in parsed:
         return [(parsed["Product Class"], None)]
+    return []
 
 
 def check_storeonce_clusterinfo(item, _no_params, parsed):
@@ -97,6 +98,7 @@ check_info["storeonce_clusterinfo"] = {
 def inventory_storeonce_clusterinfo_cluster(parsed):
     if "Cluster Health" in parsed:
         return [(None, {})]
+    return []
 
 
 def check_storeonce_clusterinfo_cluster(item, params, parsed):

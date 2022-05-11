@@ -26,6 +26,7 @@ def check_netapp_api_info(item, _no_params, info):
     for line in info:
         if line[0] == "version":
             return 0, "Version: %s" % line[1]
+    return None
 
 
 check_info["netapp_api_info"] = {

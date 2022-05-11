@@ -270,6 +270,7 @@ def parse_command_line(argv):
                 sys.argv[0], ex
             )
         )
+    return None
 
 
 def msi_update_core(msi_file_name, src_dir, revision_text, version, package_code_base=None):

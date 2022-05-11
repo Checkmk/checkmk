@@ -17,6 +17,7 @@
 def inventory_vms_system(info):
     if len(info) > 0:
         return [(None, None)]
+    return []
 
 
 def check_vms_system_ios(_no_item, _no_params, info):

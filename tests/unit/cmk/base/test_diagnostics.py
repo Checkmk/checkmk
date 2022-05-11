@@ -18,6 +18,7 @@ import livestatus
 import cmk.utils.packaging as packaging
 import cmk.utils.paths
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
+import cmk.utils.version as cmk_version
 
 import cmk.base.diagnostics as diagnostics
 
@@ -412,7 +413,48 @@ def test_diagnostics_element_environment_content(monkeypatch, tmp_path, _collect
         for key in environment_vars:
             assert content[key] == environment_vars[key]
 
-        assert content["OMD_SITE"] == cmk.gui.config.omd_site()
+        assert content["OMD_SITE"] == cmk_version.omd_site()
+
+
+def test_diagnostics_element_filesize():
+    diagnostics_element = diagnostics.FilesSizeCSVDiagnosticsElement()
+    assert diagnostics_element.ident == "file_size"
+    assert diagnostics_element.title == "File Size"
+    assert diagnostics_element.description == ("List of all files in the site including their size")
+
+
+def test_diagnostics_element_filesize_content(monkeypatch, tmp_path, _collectors):
+
+    diagnostics_element = diagnostics.FilesSizeCSVDiagnosticsElement()
+
+    test_dir = cmk.utils.paths.local_checks_dir
+    test_dir.mkdir(parents=True, exist_ok=True)
+    test_file = test_dir.joinpath("testfile")
+    test_content = "test\n"
+    with test_file.open("w", encoding="utf-8") as f:
+        f.write(test_content)
+
+    tmppath = Path(tmp_path).joinpath("tmp")
+    filepath = next(diagnostics_element.add_or_get_files(tmppath, _collectors))
+
+    assert isinstance(filepath, Path)
+    assert filepath == tmppath.joinpath("file_size.csv")
+
+    column_headers = [
+        "path",
+        "size",
+    ]
+
+    csvdata = {}
+    with open(filepath, newline="") as csvfile:
+        csvreader = csv.DictReader(csvfile, delimiter=";", quotechar="'")
+        for row in csvreader:
+            csvdata[row["path"]] = row["size"]
+            last_row = row
+
+    assert sorted(last_row.keys()) == sorted(column_headers)
+    assert str(test_file) in csvdata
+    assert csvdata[str(test_file)] == str(len(test_content))
 
 
 def test_diagnostics_element_omd_config():

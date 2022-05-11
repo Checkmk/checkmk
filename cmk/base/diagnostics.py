@@ -132,6 +132,7 @@ class DiagnosticsDump:
             PerfDataDiagnosticsElement(),
             HWDiagnosticsElement(),
             EnvironmentDiagnosticsElement(),
+            FilesSizeCSVDiagnosticsElement(),
         ]
 
     def _get_optional_elements(
@@ -377,6 +378,30 @@ class LocalFilesCSVDiagnosticsElement(ABCDiagnosticsElementCSVDump):
     def _collect_infos(self, collectors: Collectors) -> DiagnosticsElementCSVResult:
         package_infos = packaging.get_all_package_infos()
         return get_local_files_csv(package_infos)
+
+
+class FilesSizeCSVDiagnosticsElement(ABCDiagnosticsElementCSVDump):
+    @property
+    def ident(self) -> str:
+        return "file_size"
+
+    @property
+    def title(self) -> str:
+        return _("File Size")
+
+    @property
+    def description(self) -> str:
+        return _("List of all files in the site including their size")
+
+    def _collect_infos(self, collectors: Collectors) -> DiagnosticsElementCSVResult:
+        csv_data = []
+        csv_data.append("size;path")
+        for path, _dirs, files in os.walk(cmk.utils.paths.omd_root):
+            for f in files:
+                fp = os.path.join(path, f)
+                if not os.path.islink(fp):
+                    csv_data.append("%d;%s" % (os.path.getsize(fp), str(fp)))
+        return "\n".join(csv_data)
 
 
 #   ---json dumps-----------------------------------------------------------

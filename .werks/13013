@@ -1,0 +1,11 @@
+Title: Add support for Ubuntu 22.04
+Class: feature
+Compatible: compat
+Component: setup
+Date: 1652283682
+Edition: cee
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b9
+
+

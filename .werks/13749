@@ -1,0 +1,13 @@
+Title: Support Diagnostics: Add file size information
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1652255128
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0p1
+
+The Support Diagnostics dumps now contain a csv file that lists the file sizes for all files in the site.
+That is relevant for support cases related to performance issues.

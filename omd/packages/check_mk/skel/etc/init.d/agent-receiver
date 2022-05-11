@@ -3,9 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-PIDFILE=$OMD_ROOT/tmp/run/agent-receiver.pid
+PIDFILE="${OMD_ROOT}/tmp/run/agent-receiver.pid"
+SOCKET="${OMD_ROOT}/tmp/run/agent-receiver.sock"
+
 PID=$(cat $PIDFILE 2>/dev/null)
-KEY_AND_CERT_FILE=$OMD_ROOT/etc/ssl/agent_receiver_cert.pem
 
 . $OMD_ROOT/etc/omd/site.conf
 if [ "$CONFIG_AGENT_RECEIVER" != on ] ; then
@@ -24,9 +25,7 @@ case "$1" in
         gunicorn -D -p $PIDFILE  \
                 --error-logfile $OMD_ROOT/var/log/agent-receiver/error.log \
                 --access-logfile $OMD_ROOT/var/log/agent-receiver/access.log \
-                --keyfile "$KEY_AND_CERT_FILE" \
-                --certfile "$KEY_AND_CERT_FILE" \
-                -b 0.0.0.0:$CONFIG_AGENT_RECEIVER_PORT \
+                -b "unix:${SOCKET}" \
                 -k uvicorn.workers.UvicornWorker 'agent_receiver.apps:main_app()'
         if [ $? -eq 0 ]; then
             echo "OK"

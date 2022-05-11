@@ -72,9 +72,7 @@ pub fn handle_push_cycle(
                 })
                 .agent_data(
                     &url,
-                    &connection.root_cert,
-                    &connection.uuid,
-                    &connection.certificate,
+                    connection,
                     &monitoring_data::compression_header_info().push,
                     &compressed_mon_data,
                 ) {

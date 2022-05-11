@@ -284,6 +284,22 @@ impl std::borrow::Borrow<uuid::Uuid> for Connection {
     }
 }
 
+impl Connection {
+    pub fn identity(&self) -> AnyhowResult<reqwest::tls::Identity> {
+        let private_key = openssl::pkey::PKey::private_key_from_pem(self.private_key.as_bytes())?;
+        let client_certificate = openssl::x509::X509::from_pem(self.certificate.as_bytes())?;
+
+        let pkcs12_archive = openssl::pkcs12::Pkcs12::builder()
+            .build("password", "identity", &private_key, &client_certificate)?
+            .to_der()?;
+
+        Ok(reqwest::tls::Identity::from_pkcs12_der(
+            &pkcs12_archive,
+            "password",
+        )?)
+    }
+}
+
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 pub struct RegisteredConnections {
     #[serde(default)]

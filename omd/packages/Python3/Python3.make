@@ -3,7 +3,7 @@ PYTHON3 := Python3
 PYTHON3_VERS := 3.8.7
 PYTHON3_DIR := Python-$(PYTHON3_VERS)
 # Increase this to enforce a recreation of the build cache
-PYTHON3_BUILD_ID := 4
+PYTHON3_BUILD_ID := 5
 
 PYTHON3_UNPACK := $(BUILD_HELPER_DIR)/$(PYTHON3_DIR)-unpack
 PYTHON3_BUILD := $(BUILD_HELPER_DIR)/$(PYTHON3_DIR)-build

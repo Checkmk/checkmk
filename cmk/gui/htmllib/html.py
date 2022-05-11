@@ -73,7 +73,6 @@ class HTMLGenerator(HTMLWriter):
         self.have_help = False
 
         # browser options
-        self.browser_reload = 0.0
         self.browser_redirect = ""
 
         # Forms
@@ -99,13 +98,6 @@ class HTMLGenerator(HTMLWriter):
 
     def set_focus_by_id(self, dom_id: str) -> None:
         self.final_javascript("cmk.utils.set_focus_by_id(%s)" % (json.dumps(dom_id)))
-
-    def set_browser_reload(self, secs: float) -> None:
-        self.browser_reload = secs
-
-    def set_browser_redirect(self, secs: float, url: str) -> None:
-        self.browser_reload = secs
-        self.browser_redirect = url
 
     def clear_default_javascript(self) -> None:
         del self._default_javascripts[:]

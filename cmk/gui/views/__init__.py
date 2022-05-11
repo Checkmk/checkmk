@@ -747,7 +747,7 @@ class GUIViewRenderer(ABCViewRenderer):
         view_spec = self.view.spec
 
         if transactions.transaction_valid() and html.do_actions():
-            html.set_browser_reload(0)
+            html.browser_reload = 0.0
 
         # Show/Hide the header with page title, MK logo, etc.
         if display_options.enabled(display_options.H):
@@ -2371,7 +2371,7 @@ def _show_view(view_renderer: ABCViewRenderer, unfiltered_amount_of_rows: int, r
 
     # Set browser reload
     if browser_reload and display_options.enabled(display_options.R):
-        html.set_browser_reload(browser_reload)
+        html.browser_reload = browser_reload
 
     if active_config.enable_sounds and active_config.sounds:
         for row in rows:

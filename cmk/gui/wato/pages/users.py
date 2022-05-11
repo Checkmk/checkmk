@@ -310,7 +310,7 @@ class ModeUsers(WatoMode):
     def _show_job_info(self):
         if self._job_snapshot.is_active():
             html.h3(_("Current status of synchronization process"))
-            html.set_browser_reload(0.8)
+            html.browser_reload = 0.8
         else:
             html.h3(_("Result of last synchronization process"))
 

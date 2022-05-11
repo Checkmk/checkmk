@@ -75,7 +75,7 @@ class SnapinDashlet(IFrameDashlet):
             raise MKUserError(None, _("The configured element does not exist."))
         snapin_instance = snapin()
 
-        html.set_browser_reload(self.refresh_interval())
+        html.browser_reload = self.refresh_interval()
         html.html_head(_("Sidebar element"))
         html.open_body(class_="side", data_theme=theme.get())
         html.open_div(id_="check_mk_sidebar")

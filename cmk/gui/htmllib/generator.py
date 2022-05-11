@@ -87,6 +87,7 @@ class HTMLWriter:
         self.mobile: Final = mobile
         self.render_headfoot = True
         self.link_target: Optional[str] = None
+        self.browser_reload = 0.0
         self._final_javascript: List[str] = []
 
     def write_text(self, text: HTMLContent) -> None:

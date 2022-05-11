@@ -29,12 +29,14 @@ from six import ensure_str
 
 import cmk.utils.paths
 import cmk.utils.regex
+from cmk.gui.hooks import request_memoize
 
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.exceptions import MKUserError
 
 
+@request_memoize(maxsize=100000)
 def num_split(s: str) -> Tuple[Union[int, str], ...]:
     """Splits a word into sequences of numbers and non-numbers.
 
@@ -51,6 +53,7 @@ def num_split(s: str) -> Tuple[Union[int, str], ...]:
     return tuple(parts)
 
 
+@request_memoize(maxsize=100000)
 def cmp_num_split(a: str, b: str) -> int:
     """Compare two strings, separate numbers and non-numbers from before."""
     return (num_split(a) > num_split(b)) - (num_split(a) < num_split(b))

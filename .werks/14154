@@ -1,0 +1,16 @@
+Title: Improved unresponsive views when lots of data got queried
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1652272974
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p25
+
+In configurations with more than 10 remote sites, each with at least 1000 services,
+there were problems in displaying the data in a timely manner. Sometimes views took more than 30 seconds to open.
+This werk optimises a socket timeout to improve overall performance. 
+The sorting algorithm for some tables has also been improved, halving the sorting time.
+
+This is just a preliminary fix. A complete revision of the mechanics for retrieving data will be available in version 2.1.

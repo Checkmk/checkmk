@@ -25,6 +25,7 @@ information about VMs and nodes:
 import logging
 import re
 from datetime import datetime, timedelta
+from json import JSONDecodeError
 from pathlib import Path
 from typing import Any, Dict, Iterable, Mapping, MutableMapping, Optional, Sequence, Tuple, Union
 
@@ -722,7 +723,10 @@ class ProxmoxVeSession:
 
     def get_api_element(self, path: str) -> Any:
         """do an API GET request"""
-        response_json = self.get_raw("api2/json/" + path).json()
+        try:
+            response_json = self.get_raw("api2/json/" + path).json()
+        except JSONDecodeError as e:
+            raise RuntimeError("Couldn't parse API element %r" % path) from e
         if "errors" in response_json:
             raise RuntimeError("Could not fetch %r (%r)" % (path, response_json["errors"]))
         return response_json.get("data")

@@ -36,6 +36,37 @@ default_check_parameters = CheckParams(
 )
 
 
+def _mult(multiplier: int):
+    return float(multiplier).__mul__
+
+
+def _div(divisor: int):
+    return float(divisor).__rtruediv__
+
+
+# according to systemd.time(7)
+suffix_modifiers = {
+    "h": _mult(3600),
+    "hr": _mult(3600),
+    "hour": _mult(3600),
+    "hours": _mult(3600),
+    "m": _mult(60),
+    "min": _mult(60),
+    "minute": _mult(60),
+    "minutes": _mult(60),
+    "s": _mult(1),
+    "sec": _mult(1),
+    "second": _mult(1),
+    "seconds": _mult(1),
+    "ms": _div(1000),
+    "msec": _div(1000),
+    "µs": _div(1000000),
+    "us": _div(1000000),
+    "usec": _div(1000000),
+    "": _div(1000000),
+}
+
+
 class Section(TypedDict, total=False):
     synctime: float
     server: str
@@ -45,13 +76,42 @@ class Section(TypedDict, total=False):
 
 
 def _get_seconds(time_string: str) -> float:
-    if time_string.endswith("us"):
-        return float(time_string[:-2]) / 1000000
-    if time_string.endswith("ms"):
-        return float(time_string[:-2]) / 1000
-    if time_string.endswith("s"):
-        return float(time_string[:-1])
-    return float(time_string) / 1000000
+    """
+    Convert a systemd time span to seconds.
+
+    See systemd.time(7) for a detailed description of the format.
+
+    >>> _get_seconds("1h30m2s90us")
+    5402.00009
+    """
+    sign = 1
+    total = 0
+    value = None
+    unit = None
+    last_change = None
+    last_char_was_digit = True
+
+    if time_string[0] == "-":
+        sign = -1
+        time_string = time_string[1:]
+    elif time_string[0] == "+":
+        time_string = time_string[1:]
+
+    # The additional 0 causes the loop to process the last value-unit-pair and
+    # is ignored completely
+    for i, c in enumerate(time_string + "0"):
+        is_digit = c.isdigit() or c == "."
+        if is_digit != last_char_was_digit or i > len(time_string):
+            if last_char_was_digit:
+                value = float(time_string[last_change:i])
+            else:
+                unit = time_string[last_change:i].strip()
+                total += suffix_modifiers[unit](value)
+
+            last_change = i
+            last_char_was_digit = is_digit
+
+    return sign * total
 
 
 def parse_timesyncd(string_table: StringTable) -> Section:
@@ -65,10 +125,10 @@ def parse_timesyncd(string_table: StringTable) -> Section:
             continue
 
         key = line[0].replace(":", "").lower()
-        raw_str = line[1].replace("(", "").replace(")", "")
+        raw_str = " ".join(line[1:]).replace("(", "").replace(")", "")
 
         if key == "server":
-            section["server"] = raw_str
+            section["server"] = raw_str.split()[0]
         if key == "stratum":
             section["stratum"] = int(raw_str)
         if key == "offset":

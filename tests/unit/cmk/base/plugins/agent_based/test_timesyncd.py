@@ -26,7 +26,7 @@ DATA1 = [
     ["Reference:", "C0248F97"],
     ["Precision:", "1us", "(-24)"],
     ["Root", "distance:", "87.096ms", "(max:", "5s)"],
-    ["Offset:", "-53.991ms"],
+    ["Offset:", "-1min 53.991ms"],
     ["Delay:", "208.839ms"],
     ["Jitter:", "0"],
     ["Packet", "count:", "1"],
@@ -65,11 +65,14 @@ def test_discover_timesyncd(
             DATA1,
             timesyncd.default_check_parameters,
             [
-                Result(state=state.OK, summary="Offset: 54 milliseconds"),
-                Metric("time_offset", 0.053991, levels=(0.2, 0.5)),
                 Result(
                     state=state.CRIT,
-                    summary="Time since last sync: 22 hours 1 minute (warn/crit at 2 hours 5 minutes/3 hours 0 minutes)",
+                    summary="Offset: 1 minute 0 seconds (warn/crit at 200 milliseconds/500 milliseconds)",
+                ),
+                Metric("time_offset", 60.053991, levels=(0.2, 0.5)),
+                Result(
+                    state=state.CRIT,
+                    summary="Time since last sync: 22 hours 0 minutes (warn/crit at 2 hours 5 minutes/3 hours 0 minutes)",
                 ),
                 Result(state=state.OK, summary="Stratum: 2.00"),
                 Result(state=state.OK, summary="Jitter: Jan 01 1970 00:00:00"),
@@ -83,7 +86,7 @@ def test_discover_timesyncd(
             [
                 Result(
                     state=state.CRIT,
-                    summary="Time since last sync: 22 hours 1 minute (warn/crit at 2 hours 5 minutes/3 hours 0 minutes)",
+                    summary="Time since last sync: 22 hours 0 minutes (warn/crit at 2 hours 5 minutes/3 hours 0 minutes)",
                 ),
                 Result(state=state.OK, summary="Found no time server"),
             ],
@@ -95,7 +98,7 @@ def test_check_timesyncd_freeze(
     params: timesyncd.CheckParams,
     result: CheckResult,
 ):
-    server_time = 1569922392.37 + 60 * 60 * 22 + 60, "UTC"
+    server_time = 1569922332.37 + 60 * 60 * 22 + 60, "UTC"
     section = timesyncd.parse_timesyncd(string_table)
     with on_time(*server_time):
         assert list(timesyncd.check_timesyncd(params, section)) == result

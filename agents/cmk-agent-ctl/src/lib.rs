@@ -7,6 +7,8 @@ pub mod certs;
 mod cli;
 pub mod config;
 mod constants;
+#[cfg(windows)]
+mod log_ext;
 pub mod modes;
 mod monitoring_data;
 mod setup;
@@ -15,7 +17,6 @@ mod tls_server;
 pub mod types;
 use anyhow::{anyhow, Context, Result as AnyhowResult};
 use config::{JSONLoader, TOMLLoader};
-
 use modes::daemon::daemon;
 use modes::delete_connection::{delete, delete_all};
 use modes::dump::dump;

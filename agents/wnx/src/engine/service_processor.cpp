@@ -786,7 +786,7 @@ bool SystemMailboxCallback(const MailSlot * /*nothing*/, const void *data,
                 std::string to_log;
                 const auto *data = static_cast<const char *>(dt->data());
                 to_log.assign(data, data + dt->length());
-                XLOG::l(XLOG::kNoPrefix)("[{}]{}", dt->providerId(), to_log);
+                XLOG::l(XLOG::kNoPrefix)("[{}] {}", dt->providerId(), to_log);
             } else
                 XLOG::l(XLOG::kNoPrefix)("[{}] null", dt->providerId());
             break;

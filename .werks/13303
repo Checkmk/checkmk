@@ -1,0 +1,13 @@
+Title: Label autocompletion: improved fetched and processing speed
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1652267671
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p25
+
+In larger configurations, the automatic completion of labels can take more than a minute or even fail completely.
+This werk changes the amount of data retrieved and the post-processing mechanism.
+Autocompletion should now complete in less than 2 seconds.

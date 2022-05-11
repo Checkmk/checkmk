@@ -6,104 +6,125 @@
 
 import pytest
 
-from cmk.utils.type_defs import Dict, List, Mapping, Tuple
+from livestatus import LivestatusResponse, LivestatusRow, SiteId
 
-from cmk.gui.utils.labels import LabelsCache
+from cmk.utils.type_defs import Dict, List, Tuple
 
-DISTRIBUTED_ROWS: List[Tuple[str, Dict[str, str], Dict[str, str]]] = [
-    (
-        "heute",
-        {
-            "cmk/os_family": "linux",
-            "cmk/docker_object": "node",
-            "hstlabel": "hstvalue1",
-            "cmk/check_mk_server": "yes",
-            "cmk/site": "heute",
-        },
-        {
-            "svclabel": "svcvalue1"
-        },
-    ),
-    (
-        "heute",
-        {
-            "cmk/os_family": "linux",
-            "cmk/docker_object": "node",
-            "hstlabel": "hstvalue2",
-            "cmk/check_mk_server": "yes",
-            "cmk/site": "heute",
-        },
-        {
-            "svclabel": "svcvalue2"
-        },
-    ),
-    (
-        "heute_remote_1",
-        {
-            "cmk/os_family": "linux",
-            "cmk/docker_object": "node",
-            "hstlabel": "hstvalue3",
-            "cmk/check_mk_server": "yes",
-            "cmk/site": "heute_remote_1",
-        },
-        {
-            "svclabel": "svcvalue3"
-        },
-    ),
-    (
-        "heute_remote_2",
-        {
-            "cmk/os_family": "linux",
-            "cmk/docker_object": "node",
-            "hstlabel": "hstvalue4",
-            "cmk/check_mk_server": "yes",
-            "cmk/site": "heute_remote_2",
-        },
-        {},
-    ),
-]
+from cmk.gui.utils.labels import _LivestatusLabelResponse, _MergedLabels, LabelsCache
 
-SINGLE_SETUP_ROWS: List[Tuple[str, Dict[str, str], Dict[str, str]]] = [
-    (
-        "heute",
-        {
-            "cmk/os_family": "linux",
-            "cmk/docker_object": "node",
-            "label1": "value1",
-            "cmk/check_mk_server": "yes",
+DISTRIBUTED_ROWS = _LivestatusLabelResponse(
+    LivestatusResponse([
+        LivestatusRow([
+            "heute",
+            {
+                "cmk/os_family": "linux",
+                "cmk/docker_object": "node",
+                "hstlabel": "hstvalue1",
+                "cmk/check_mk_server": "yes",
+                "cmk/site": "heute",
+            },
+        ]),
+        LivestatusRow([
+            "heute",
+            {
+                "cmk/os_family": "linux",
+                "cmk/docker_object": "node",
+                "hstlabel": "hstvalue2",
+                "cmk/check_mk_server": "yes",
+                "cmk/site": "heute",
+            },
+        ]),
+        LivestatusRow([
+            "heute_remote_1",
+            {
+                "cmk/os_family": "linux",
+                "cmk/docker_object": "node",
+                "hstlabel": "hstvalue3",
+                "cmk/check_mk_server": "yes",
+                "cmk/site": "heute_remote_1",
+            },
+        ]),
+        LivestatusRow([
+            "heute_remote_2",
+            {
+                "cmk/os_family": "linux",
+                "cmk/docker_object": "node",
+                "hstlabel": "hstvalue4",
+                "cmk/check_mk_server": "yes",
+                "cmk/site": "heute_remote_2",
+            },
+        ]),
+    ]),
+    LivestatusResponse([
+        LivestatusRow([
+            "heute",
+            {
+                "svclabel": "svcvalue1"
+            },
+        ]),
+        LivestatusRow([
+            "heute",
+            {
+                "svclabel": "svcvalue2"
+            },
+        ]),
+        LivestatusRow([
+            "heute_remote_1",
+            {
+                "svclabel": "svcvalue3"
+            },
+        ]),
+        LivestatusRow([
+            "heute_remote_2",
+            {},
+        ]),
+    ]),
+)
+
+SINGLE_SETUP_ROWS = _LivestatusLabelResponse(
+    LivestatusResponse([
+        LivestatusRow([
+            "heute",
+            {
+                "cmk/os_family": "linux",
+                "cmk/docker_object": "node",
+                "label1": "value1",
+                "cmk/check_mk_server": "yes",
+                "cmk/site": "heute",
+            },
+        ]),
+    ]),
+    LivestatusResponse([
+        LivestatusRow(["heute", {
             "cmk/site": "heute",
-        },
-        {},
-    ),
-    ("heute", {
-        "cmk/site": "heute",
-        "label1": "value2"
-    }, {}),
-]
+            "label1": "value2"
+        }]),
+    ]),
+)
 
 
 @pytest.mark.parametrize(
-    "rows, expected",
+    "livestatus_label_response, expected",
     [
         [
             DISTRIBUTED_ROWS,
-            (
+            _MergedLabels(
                 {
-                    "heute": {
+                    SiteId("heute"): {
                         "cmk/os_family": "['linux']",
                         "cmk/docker_object": "['node']",
                         "hstlabel": "['hstvalue1', 'hstvalue2']",
                         "cmk/check_mk_server": "['yes']",
                         "cmk/site": "['heute']",
                     },
-                    "heute_remote_1": {
+                    SiteId("heute_remote_1"): {
                         "cmk/os_family": "['linux']",
                         "cmk/docker_object": "['node']",
                         "hstlabel": "['hstvalue3']",
                         "cmk/check_mk_server": "['yes']",
                         "cmk/site": "['heute_remote_1']",
                     },
-                    "heute_remote_2": {
+                    SiteId("heute_remote_2"): {
                         "cmk/os_family": "['linux']",
                         "cmk/docker_object": "['node']",
                         "hstlabel": "['hstvalue4']",
@@ -112,40 +133,40 @@ SINGLE_SETUP_ROWS: List[Tuple[str, Dict[str, str], Dict[str, str]]] = [
                     },
                 },
                 {
-                    "heute": {
+                    SiteId("heute"): {
                         "svclabel": "['svcvalue1', 'svcvalue2']"
                     },
-                    "heute_remote_1": {
+                    SiteId("heute_remote_1"): {
                         "svclabel": "['svcvalue3']"
                     },
-                    "heute_remote_2": {},
+                    SiteId("heute_remote_2"): {},
                 },
             ),
         ],
         [
             SINGLE_SETUP_ROWS,
-            (
+            _MergedLabels(
                 {
-                    "heute": {
+                    SiteId("heute"): {
                         "cmk/os_family": "['linux']",
                         "cmk/docker_object": "['node']",
-                        "label1": "['value1', 'value2']",
+                        "label1": "['value1']",
                         "cmk/check_mk_server": "['yes']",
                         "cmk/site": "['heute']",
                     },
                 },
-                {
-                    "heute": {}
-                },
+                {SiteId("heute"): {
+                     "cmk/site": "['heute']",
+                     "label1": "['value2']"
+                 }},
             ),
         ],
     ],
 )
-def test_collect_labels_from_livestatus_rows(
-    rows: List[Tuple[str, Dict[str, str], Dict[str, str]]],
-    expected: Tuple[Mapping[str, Mapping[str, str]], Mapping[str, Mapping[str, str]]],
-):
-    assert LabelsCache()._collect_labels_from_livestatus_rows(rows) == expected
+def test_collect_labels_from_livestatus_rows(livestatus_label_response: _LivestatusLabelResponse,
+                                             expected: _MergedLabels):
+    assert (
+        LabelsCache()._collect_labels_from_livestatus_labels(livestatus_label_response) == expected)
 
 
 DISTRIBUTED_RESULT: List[Dict[str, str]] = [

@@ -3,6 +3,8 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import typing
+
 import pytest
 
 from tests.unit.conftest import FixRegister
@@ -12,6 +14,11 @@ from cmk.utils.type_defs import CheckPluginName, SectionName
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
 
 pytestmark = pytest.mark.checks
+
+
+class SmokeSensor(typing.NamedTuple):
+    name: str
+    state: int
 
 
 def test_parse_vutlan_ems_smoke(fix_register: FixRegister):
@@ -41,8 +48,8 @@ def test_parse_vutlan_ems_smoke(fix_register: FixRegister):
     result = check.parse_function(string_table)
 
     expected_parse_result = {
-        "Analog-5": False,
-        "Banana": True,
+        "Analog-5": SmokeSensor(name="Analog-5", state=0),
+        "Banana": SmokeSensor(name="Banana", state=2),
     }
 
     assert result == expected_parse_result
@@ -64,7 +71,7 @@ def test_parse_vutlan_ems_smoke_no_smoke_detector(fix_register: FixRegister):
             ["201003", "Analog-2", "22.10"],
             ["202001", "Analog-3", "46.20"],
             ["202002", "Analog-4", "42.10"],
-            ["202001", "Onboard Voltage DC", "12.06"],
+            ["203001", "Onboard Voltage DC", "12.06"],
             ["301001", "Analog Power", "on"],
             ["304001", "Power-1", "off"],
             ["304002", "Power-2", "off"],
@@ -81,8 +88,8 @@ def test_section_vutlan_ems_smoke(fix_register: FixRegister):
     check = fix_register.check_plugins[CheckPluginName("vutlan_ems_smoke")]
 
     section = {
-        "Analog-5": False,
-        "Banana": True,
+        "Analog-5": SmokeSensor(name="Analog-5", state=0),
+        "Banana": SmokeSensor(name="Banana", state=2),
     }
     result = check.discovery_function(section=section)
 
@@ -98,8 +105,19 @@ def test_check_vutlan_ems_smoke_state_crit(fix_register: FixRegister):
     check = fix_register.check_plugins[CheckPluginName("vutlan_ems_smoke")]
 
     section = {
-        "Analog-5": False,
-        "Banana": True,
+        "Analog-5": SmokeSensor(name="Analog-5", state=0),
+        "Banana": SmokeSensor(name="Banana", state=2),
+    }
+
+    result = check.check_function(item="Banana", params={}, section=section)
+
+    expected_check_result_state_crit = [Result(state=State.CRIT, summary="Smoke detected")]
+
+    assert list(result) == expected_check_result_state_crit
+
+    section = {
+        "Analog-5": SmokeSensor(name="Analog-5", state=0),
+        "Banana": SmokeSensor(name="Banana", state=1),
     }
 
     result = check.check_function(item="Banana", params={}, section=section)
@@ -112,8 +130,8 @@ def test_check_vutlan_ems_smoke_state_crit(fix_register: FixRegister):
 def test_check_vutlan_ems_smoke_state_ok(fix_register: FixRegister):
     check = fix_register.check_plugins[CheckPluginName("vutlan_ems_smoke")]
     section = {
-        "Analog-5": False,
-        "Banana": True,
+        "Analog-5": SmokeSensor(name="Analog-5", state=0),
+        "Banana": SmokeSensor(name="Banana", state=2),
     }
 
     result = check.check_function(item="Analog-5", params={}, section=section)
@@ -126,7 +144,7 @@ def test_check_vutlan_ems_smoke_state_ok(fix_register: FixRegister):
 def test_check_vutlan_ems_smoke_item_not_found(fix_register: FixRegister):
     check = fix_register.check_plugins[CheckPluginName("vutlan_ems_smoke")]
     section = {
-        "Analog-5": False,
+        "Analog-5": SmokeSensor(name="Analog-5", state=0),
     }
 
     result = check.check_function(item="Banana", params={}, section=section)

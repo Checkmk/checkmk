@@ -10,28 +10,27 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-structopt = { version = "0.3", features = [ "paw" ] }
-reqwest = { version = "0.11.4", features = ["blocking", "json", "multipart", "native-tls", "__rustls"] }
-serde = { version = "1.0", features = ["derive"] }
-serde_json = { version = "1.0.68" }
+structopt = { version = "*", features = [ "paw" ] }
+reqwest = { version = "*", features = ["blocking", "json", "multipart", "native-tls", "__rustls"] }
+serde = { version = "*", features = ["derive"] }
+serde_json = { version = "*" }
 serde_with = { version = "*" }
-uuid = { version = "0.8.2", features = ["v4"] }
+uuid = { version = "*", features = ["v4"] }
 openssl = { version = "*", features = ["vendored"] }
-rustls = { version = "0.20.0" }
+rustls = { version = "*" }
 rustls-pemfile = { version = "*" }
 log = { version = "*" }
 flexi_logger = { version = "*" }
 http = { version = "*" }
-anyhow = { version = "1.0", features = ["backtrace"]}
+anyhow = { version = "*", features = ["backtrace"]}
 nix = { version = "*" }
 string_enum = { version = "*" }
 x509-parser = { version = "*" }
 thiserror = { version = "*" }
 tempfile = { version = "*" }
 flate2 = { version = "*" }
-regex = { version = "*" }
 rand = { version = "*" }
-tokio = { version = "1", features = ["full"] }
+tokio = { version = "*", features = ["full"] }
 tokio-rustls = { version = "*" }
 async-std = { version = "*" }
 ipnet = { version = "*" }

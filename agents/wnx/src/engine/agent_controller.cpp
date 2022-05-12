@@ -163,7 +163,38 @@ fs::path GetController(const fs::path &service) {
 }
 
 fs::path GetWorkController() {
-    return fs::path{cfg::GetUserBinDir()} / cfg::files::kAgentCtl;
+    return fs::path{cfg::GetUserBinDir()} / cfg::files::kAgentToml;
+}
+
+bool CreateTomlConfig(const fs::path &toml_file) {
+    constexpr std::string_view text{
+        "# Controlled by Check_MK Agent Bakery.\n"
+        "# This file is managed via WATO, do not edit manually or you\n"
+        "# lose your changes next time when you update the agent.\n\n"};
+    auto port =
+        cfg::GetVal(cfg::groups::kGlobal, cfg::vars::kPort, cfg::kMainPort);
+    auto pull_port = fmt::format("pull_port = {}\n", port);
+    auto only_from =
+        cfg::GetInternalArray(cfg::groups::kGlobal, cfg::vars::kOnlyFrom);
+    std::string allowed_ip;
+    if (!only_from.empty()) {
+        allowed_ip = "allowed_ip = ["s;
+        for (const auto &a : only_from) {
+            allowed_ip += a + ",\n ";
+        }
+        allowed_ip.pop_back();
+        allowed_ip.pop_back();
+        allowed_ip.pop_back();
+        allowed_ip += "]\n";
+    }
+    try {
+        std::ofstream ofs(toml_file);
+        ofs << text << pull_port << allowed_ip;
+    } catch (const std::exception &e) {
+        XLOG::l("Failed to create TOML config with exception {}", e.what());
+        return false;
+    }
+    return true;
 }
 
 bool CreateTomlConfig(const fs::path &toml_file) {

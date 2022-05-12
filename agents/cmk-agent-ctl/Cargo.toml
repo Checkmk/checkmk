@@ -24,7 +24,6 @@ flexi_logger = { version = "*" }
 http = { version = "*" }
 anyhow = { version = "1.0", features = ["backtrace"]}
 nix = { version = "*" }
-base64 = { version = "*" }
 string_enum = { version = "*" }
 x509-parser = { version = "*" }
 thiserror = { version = "*" }

@@ -79,13 +79,6 @@ struct ErrorResponse {
     pub detail: String,
 }
 
-fn encode_pem_cert_base64(cert: &str) -> AnyhowResult<String> {
-    Ok(base64::encode_config(
-        certs::parse_pem(cert)?.contents,
-        base64::URL_SAFE,
-    ))
-}
-
 pub trait Pairing {
     fn pair(
         &self,
@@ -273,11 +266,6 @@ impl AgentData for Api {
                 base_url,
                 &["agent_data", &connection.uuid.to_string()],
             )?)
-            .header(
-                // TODO: Remove this header once the agent receiver doesn't need it any longer
-                "certificate",
-                encode_pem_cert_base64(&connection.certificate)?,
-            )
             .header("compression", compression_algorithm)
             .multipart(
                 reqwest::blocking::multipart::Form::new().part(
@@ -312,11 +300,6 @@ impl Status for Api {
                 base_url,
                 &["registration_status", &connection.uuid.to_string()],
             )?)
-            .header(
-                // TODO: Remove this header once the agent receiver doesn't need it any longer
-                "certificate",
-                encode_pem_cert_base64(&connection.certificate)?,
-            )
             .send()
             .map_err(StatusError::ConnectionRefused)?;
 

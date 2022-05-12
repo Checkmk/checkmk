@@ -99,6 +99,7 @@ class QueryCallback(Protocol):
         query: str,
         only_sites: Optional[List[SiteId]] = None,
         output_format: LivestatusOutputFormat = LivestatusOutputFormat.PYTHON,
+        fetch_full_data: bool = False,
     ) -> LivestatusResponse:
         ...
 

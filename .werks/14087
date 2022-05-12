@@ -1,0 +1,23 @@
+Title: Fix privilege escalation vulnerability
+Class: security
+Compatible: compat
+Component: checks
+Date: 1652351997
+Edition: cre
+Knowledge: doc
+Level: 2
+State: unknown
+Version: 2.1.0b9
+
+Previously to this Werk an attacker who could become a site user could replace the sites <tt>bin/unixcat</tt> by a custom executable.
+The Checkmk agent would then run it as root.
+
+With this Werk the agent now always calls one of the shipped <tt>unixcat</tt>s below <tt>/omd/versions/</tt>.
+
+All maintained versions (>=1.6) are subject to this vulnerability. It is likely that also previous versions were vulnerable.
+
+To check against possible exploitation make sure that the sites directory <tt>~MySite/bin</tt> points to <tt>/omd/versions/MySitesVersion/bin<tt>.
+
+CVSS:3.1/AV:L/AC:L/PR:L/UI:R/S:C/C:H/I:H/A:H 8.2
+
+CVE will be added here later

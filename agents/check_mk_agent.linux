@@ -1092,13 +1092,21 @@ section_veritas_cluster() {
 }
 
 section_omd_core() {
-    if cd /omd/sites; then
+    (
+        cd /omd/sites || return
+
+        _sites_cmd() {
+            # DO NOT ACCESS /omd/sites/${site}/bin/cmd directly.
+            # bin might point anywhere -> priv escalation.
+            printf "/omd/versions/%s/bin/%s" "$(realpath "${1}/version" | sed 's|.*/||')" "${2}"
+        }
+
         echo '<<<livestatus_status:sep(59)>>>'
         for site in *; do
             if [ -S "/omd/sites/${site}/tmp/run/live" ]; then
                 echo "[${site}]"
                 echo "GET status" |
-                    waitmax 3 "/omd/sites/${site}/bin/unixcat" "/omd/sites/${site}/tmp/run/live"
+                    waitmax 3 "$(_sites_cmd "${site}" unixcat)" "/omd/sites/${site}/tmp/run/live"
             fi
         done
 
@@ -1118,7 +1126,7 @@ section_omd_core() {
             if [ -S "/omd/sites/${site}/tmp/run/mkeventd/status" ]; then
                 echo "[\"${site}\"]"
                 (echo "GET status" && echo "OutputFormat: json") |
-                    waitmax 3 "/omd/sites/${site}/bin/unixcat" "/omd/sites/${site}/tmp/run/mkeventd/status"
+                    waitmax 3 "$(_sites_cmd "${site}" unixcat)" "/omd/sites/${site}/tmp/run/mkeventd/status"
             fi
         done
 
@@ -1126,7 +1134,7 @@ section_omd_core() {
         for site in *; do
             if [ -S "/omd/sites/${site}/tmp/run/live" ]; then
                 echo "[${site}]"
-                waitmax 5 "/omd/sites/${site}/bin/unixcat" "/omd/sites/${site}/tmp/run/live" <<LimitString
+                waitmax 5 "$(_sites_cmd "${site}" unixcat)" "/omd/sites/${site}/tmp/run/live" <<LimitString
 GET hosts
 Stats: state = 0
 Stats: scheduled_downtime_depth = 0
@@ -1140,7 +1148,7 @@ StatsAnd: 2
 Stats: scheduled_downtime_depth > 0
 Filter: custom_variable_names < _REALNAME
 LimitString
-                waitmax 5 "/omd/sites/${site}/bin/unixcat" "/omd/sites/${site}/tmp/run/live" <<LimitString
+                waitmax 5 "$(_sites_cmd "${site}" unixcat)" "/omd/sites/${site}/tmp/run/live" <<LimitString
 GET services
 Stats: state = 0
 Stats: scheduled_downtime_depth = 0
@@ -1177,7 +1185,7 @@ Filter: host_custom_variable_names < _REALNAME
 LimitString
             fi
         done
-    fi
+    )
 }
 
 section_mkbackup() {

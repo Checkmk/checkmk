@@ -91,8 +91,45 @@ def get_instance_name(host, port_nr, conf):
     return ""
 
 
+def parse_address_and_port(address_and_port, ssl_ports):
+    """
+    parse address:port section from netstat or ss
+    return scheme (http|https), address, port
+    """
+    server_address, _server_port = address_and_port.rsplit(":", 1)
+    server_port = int(_server_port)
+
+    # Use localhost when listening globally
+    if server_address == "0.0.0.0":  # nosec - B104
+        server_address = "127.0.0.1"
+    elif server_address == "::":
+        server_address = "[::1]"
+    elif ":" in server_address:
+        server_address = "[%s]" % server_address
+
+    # Switch protocol if port is SSL port. In case you use SSL on another
+    # port you would have to change/extend the ssl_port list
+    if server_port in ssl_ports:
+        scheme = "https"
+    else:
+        scheme = "http"
+
+    return scheme, server_address, server_port
+
+
 def try_detect_servers(ssl_ports):
     results = []
+
+    procs = [
+        "apache2",
+        "httpd",
+        "httpd-prefork",
+        "httpd2-prefork",
+        "httpd2-worker",
+        "httpd.worker",
+        "httpd-event",
+        "fcgi-pm",
+    ]
 
     for netstat_line in os.popen("netstat -tlnp 2>/dev/null").readlines():
         parts = netstat_line.split()
@@ -104,16 +141,6 @@ def try_detect_servers(ssl_ports):
         to_replace = re.compile("^.*/")
         proc = to_replace.sub("", proc)
 
-        procs = [
-            "apache2",
-            "httpd",
-            "httpd-prefork",
-            "httpd2-prefork",
-            "httpd2-worker",
-            "httpd.worker",
-            "httpd-event",
-            "fcgi-pm",
-        ]
         # the pid/proc field length is limited to 19 chars. Thus in case of
         # long PIDs, the process names are stripped of by that length.
         # Workaround this problem here
@@ -123,25 +150,42 @@ def try_detect_servers(ssl_ports):
         if proc not in procs:
             continue
 
-        server_address, _server_port = parts[3].rsplit(":", 1)
-        server_port = int(_server_port)
-
-        # Use localhost when listening globally
-        if server_address == "0.0.0.0":  # nosec - B104
-            server_address = "127.0.0.1"
-        elif server_address == "::":
-            server_address = "[::1]"
-        elif ":" in server_address:
-            server_address = "[%s]" % server_address
-
-        # Switch protocol if port is SSL port. In case you use SSL on another
-        # port you would have to change/extend the ssl_port list
-        if server_port in ssl_ports:
-            scheme = "https"
-        else:
-            scheme = "http"
+        scheme, server_address, server_port = parse_address_and_port(parts[3], ssl_ports)
 
         results.append((scheme, server_address, server_port))
+
+    if not results:
+        # if netstat output was empty (maybe not installed), try ss instead
+        # (plugin silently fails without any section output,
+        #  if neither netstat nor ss are installed.)
+
+        #  ss lists parent and first level child processes
+        #  last process in line is the parent:
+        #    users:(("apache2",pid=123456,fd=3),...,("apache2",pid=123,fd=3))
+        #  capture content of last brackets (...))
+        pattern = re.compile(r"users:.*\(([^\(\)]*?)\)\)$")
+
+        for ss_line in os.popen("ss -tlnp 2>/dev/null").readlines():
+            parts = ss_line.split()
+            # Skip lines with wrong format
+            if len(parts) < 6 or "users:" not in parts[5]:
+                continue
+
+            match = re.match(pattern, parts[5])
+            if match is None:
+                continue
+            proc_info = match.group(1)
+            proc, pid, _fd = proc_info.split(",")
+            proc = proc.replace('"', "")
+            pid = pid.replace("pid=", "")
+
+            # Skip unwanted processes
+            if proc not in procs:
+                continue
+
+            scheme, server_address, server_port = parse_address_and_port(parts[3], ssl_ports)
+
+            results.append((scheme, server_address, server_port))
 
     return results
 

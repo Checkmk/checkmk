@@ -331,6 +331,10 @@ msgid "%d actions"
 msgstr "%d actions"
 
 #, python-format
+msgid "%d changes"
+msgstr "%d changements"
+
+#, python-format
 msgid "%d chaotic state changes from %s until %s (%s)"
 msgstr "%d changements d'état chaotique de %s à %s (%s)"
 
@@ -367,6 +371,10 @@ msgid "%d icons customized"
 msgstr "%d icônes personnalisées"
 
 #, python-format
+msgid "%d ignored HW/SW inventory plugins found: %s"
+msgstr ""
+
+#, python-format
 msgid "%d incompatible Werks have been acknowledged."
 msgstr "%d de Werks incompatibles ayant été acquittés."
 
@@ -397,10 +405,6 @@ msgstr ""
 #, python-format
 msgid "%d open incompatible werks"
 msgstr "%d open werks incompatible"
-
-#, fuzzy, python-format
-msgid "%d pending changes"
-msgstr "Aucun changement en cours"
 
 #, python-format
 msgid "%d rows"
@@ -914,9 +918,8 @@ msgstr "0,5 - 1,0 ms"
 msgid "1 Host"
 msgstr "1 hôte"
 
-#, fuzzy
-msgid "1 pending change"
-msgstr "Aucun changement en cours"
+msgid "1 change"
+msgstr "1 changement"
 
 msgid "1 row"
 msgstr "1 rang"
@@ -936,9 +939,8 @@ msgstr "1/s"
 msgid "10 seconds"
 msgstr "10 secondes"
 
-#, fuzzy
-msgid "10+ pending changes"
-msgstr "Aucun changement en cours"
+msgid "10+ changes"
+msgstr "10+ changements"
 
 msgid "10.0 - 20.0 ms"
 msgstr "10,0 - 20,0 ms"
@@ -2414,10 +2416,6 @@ msgstr "Token d'accès à l'API"
 msgid "API Endpoint from PagerDuty V2"
 msgstr "Point de terminaison API de PagerDuty V2"
 
-#, fuzzy
-msgid "API Health"
-msgstr "Santé"
-
 msgid "API Key"
 msgstr "Clé API"
 
@@ -2427,6 +2425,10 @@ msgid ""
 msgstr ""
 "Clé API à utiliser. En fonction de votre abonnement à opsgenie, vous pouvez "
 "utiliser des clés API d'intégration globale ou d'équipe."
+
+#, fuzzy
+msgid "API health"
+msgstr "Santé"
 
 #, fuzzy
 msgid "API host"
@@ -2561,18 +2563,6 @@ msgstr "Objets de chambre forte AWS/Glacier"
 msgid "AWS/Glacier Vaults"
 msgstr "Chambres fortes AWS/Glacier"
 
-#, fuzzy
-msgid "AWS/Lambda Concurrency"
-msgstr "Performance"
-
-#, fuzzy
-msgid "AWS/Lambda Memory"
-msgstr "Performance"
-
-#, fuzzy
-msgid "AWS/Lambda Performance"
-msgstr "Performance"
-
 msgid "AWS/RDS CPU Credits"
 msgstr "Crédits CPU AWS/RDS"
 
@@ -2587,9 +2577,6 @@ msgstr "Limites AWS/RDS"
 
 msgid "AWS/RDS Replica lag"
 msgstr "décalage des répliques AWS/RDS"
-
-msgid "AWS/Route53"
-msgstr ""
 
 msgid "AWS/S3 Bucket Objects"
 msgstr "Objets Bucket AWS/S3"
@@ -5858,6 +5845,10 @@ msgstr "Protocole d'authentification"
 msgid "Authentication to web service failed.<br>Message:<br>%s"
 msgstr "L'authentification au service web a échoué.<br>Message:<br>%s"
 
+#, fuzzy
+msgid "Authentication with TLS"
+msgstr "Méthode d'authentification"
+
 msgid "Authmethod"
 msgstr "Authmethod"
 
@@ -7435,6 +7426,16 @@ msgstr ""
 "connexions configurées. Mais vous pouvez configurer chaque site pour "
 "synchroniser les utilisateurs avec toutes les connexions configurées ou une "
 "liste spécifique de connexions."
+
+#, python-brace-format
+msgid ""
+"By default, Checkmk does not imports annotations. If this option is enabled, "
+"Checkmk will import any annotation that is a valid Kubernetes label. These "
+"imported annotations are added as host labels to their respective piggyback "
+"host using the syntax 'cmk/kubernetes/annotation/{key}:{value}'. You can "
+"further restrict the imported annotations by specifying a pattern which "
+"Checkmk searches for in the key of the annotation."
+msgstr ""
 
 msgid ""
 "By default, all mailboxes are checked with these parameters. If you specify "
@@ -9875,10 +9876,6 @@ msgstr "Cnt."
 
 msgid "Codec that should be used to decode the matching files"
 msgstr "Codec qui doit être utilisé pour décoder les fichiers correspondants"
-
-#, fuzzy
-msgid "Cold starts in percent"
-msgstr "CPU en pourcentage"
 
 msgid "Collect diagnostic dump"
 msgstr "Collecte des données de diagnostic"
@@ -14013,6 +14010,10 @@ msgstr "Déploiements"
 msgid "Deprecated"
 msgstr "Déprécié"
 
+#, fuzzy
+msgid "Deprecated HW/SW inventory plugins"
+msgstr "Chemins d'inventaire HW/SW autorisés"
+
 #, python-format
 msgid "Deprecated WATO modes found: %r. They need to be refactored to new API."
 msgstr ""
@@ -15645,7 +15646,7 @@ msgstr "Voulez-vous vraiment supprimer l'hôte <tt>%s</tt> ?"
 #, fuzzy
 msgid ""
 "Do you really want to remove the TLS registration of the hosts in this "
-"folder (recursively)?"
+"folder?<br>This does not affect hosts in subfolders."
 msgstr "Voulez-vous vraiment supprimer la connexion au site %s ?"
 
 #, fuzzy
@@ -18944,6 +18945,9 @@ msgstr ""
 msgid "Filter pattern (RegExp)"
 msgstr "Modèle de filtre (RegExp)"
 
+msgid "Filter valid annotations by key pattern"
+msgstr ""
+
 msgid "Filter view"
 msgstr "Vue du filtre"
 
@@ -19977,10 +19981,6 @@ msgstr "Extensions de l'interface graphique"
 msgid "Gamelan"
 msgstr "Gamelan"
 
-#, python-format
-msgid "Garbled automation response: <pre>%s</pre>"
-msgstr "Réponse d'automatisation tronquée : <pre>%s</pre>"
-
 msgid "Gateway route"
 msgstr "Route de la passerelle"
 
@@ -20185,6 +20185,10 @@ msgstr ""
 
 #, fuzzy
 msgid "Google Cloud Storage (GCS)"
+msgstr "Elastic Block Storage (EBS)"
+
+#, fuzzy
+msgid "Google Compute Engine (GCE)"
 msgstr "Elastic Block Storage (EBS)"
 
 msgid "Got invalid data"
@@ -24600,6 +24604,9 @@ msgstr "Importation"
 msgid "Import Hosts"
 msgstr "Hôtes d'importation"
 
+msgid "Import all valid annotations"
+msgstr ""
+
 msgid "Import hosts via CSV file"
 msgstr "Importation d'hôtes via un fichier CSV"
 
@@ -25366,9 +25373,6 @@ msgstr "Hériter de la plage horaire du rapport (Reporting uniquement)"
 msgid "Inherited from "
 msgstr "Hérité de "
 
-msgid "Init duration with absolute limits"
-msgstr ""
-
 msgid "Initial Scheduling"
 msgstr "Programmation initiale"
 
@@ -25806,9 +25810,6 @@ msgstr "Appel non valide : Aucun profil défini."
 
 msgid "Invalid call: The profile is missing."
 msgstr "Appel non valide : Le profil est manquant."
-
-msgid "Invalid call: The snapshot is missing."
-msgstr "Appel invalide : L'instantané est manquant."
 
 #, python-format
 msgid "Invalid certificate file: %s"
@@ -26735,6 +26736,10 @@ msgstr "Port Kubernetes"
 msgid "Kubernetes replicas"
 msgstr "Nœuds Kubernetes"
 
+#, fuzzy
+msgid "Kubernetes resource quota memory utilization"
+msgstr "Ressources Kubernetes"
+
 msgid "Kubernetes resources"
 msgstr "Ressources Kubernetes"
 
@@ -26831,10 +26836,23 @@ msgstr "Objets déplacés LRU"
 msgid "LRU nuked objects"
 msgstr "Objets \"nuked\" LRU"
 
-msgid "LSI RAID VDrives (StorCLI)"
-msgstr "Lecteurs LSI RAID VDrives (StorCLI)"
+msgid "LSI MegaRAID: Battery Backup Unit"
+msgstr ""
 
-msgid "LSI RAID physical disks (StorCLI)"
+#, fuzzy
+msgid "LSI MegaRAID: Logical Disks"
+msgstr "Disques physiques LSI RAID (StorCLI)"
+
+#, fuzzy
+msgid "LSI MegaRAID: Physical Disks"
+msgstr "Disques physiques LSI RAID (StorCLI)"
+
+#, fuzzy
+msgid "LSI RAID logical disks"
+msgstr "Disques physiques LSI RAID (StorCLI)"
+
+#, fuzzy
+msgid "LSI RAID physical disks"
 msgstr "Disques physiques LSI RAID (StorCLI)"
 
 msgid "LSI Raid Controller Status (via StorCLI)"
@@ -28756,10 +28774,6 @@ msgstr "Niveaux inférieurs pour l'âge du certificat"
 
 msgid "Lower levels for first output item"
 msgstr "Niveaux inférieurs pour le premier élément de sortie"
-
-#, fuzzy
-msgid "Lower levels for health check percentage healty"
-msgstr "Niveaux inférieurs pour la santé à vie"
 
 msgid "Lower levels for health lifetime"
 msgstr "Niveaux inférieurs pour la santé à vie"
@@ -32128,6 +32142,10 @@ msgstr "Non (Erreur : %s, Code : %d, Profondeur : %d)"
 msgid "No API integrations, no Checkmk agent"
 msgstr "Pas d'intégrations API, pas d'agent Checkmk"
 
+#, fuzzy
+msgid "No Authentication"
+msgstr "Authentification"
+
 msgid "No Conditions"
 msgstr "Pas de conditions"
 
@@ -32325,6 +32343,10 @@ msgstr "Ne pas convertir le cas"
 
 msgid "No hosts/services found."
 msgstr "Aucun hôte/service trouvé."
+
+#, fuzzy
+msgid "No ignored HW/SW inventory plugins found"
+msgstr "Chemins d'inventaire HW/SW autorisés"
 
 msgid "No influence on element display"
 msgstr "Aucune influence sur l'affichage des éléments"
@@ -43910,68 +43932,6 @@ msgstr ""
 msgid "Specify the token to be used to connect to InfluxDB."
 msgstr "Spécifiez le jeton à utiliser pour se connecter à InfluxDB."
 
-#, fuzzy
-msgid ""
-"Specify the upper levels for the cold starts in percent of total invocations."
-msgstr ""
-"Niveaux supérieurs pour le nombre de connexions actives à la base de données"
-
-msgid ""
-"Specify the upper levels for the elapsed time of a function’s execution "
-"(duration) in percent of the AWS Lambda configuration value \"Timeout\"."
-msgstr ""
-
-msgid ""
-"Specify the upper levels for the elapsed time of a function’s execution "
-"(duration)."
-msgstr ""
-
-msgid ""
-"Specify the upper levels for the number of discarded events per second that "
-"could not be processed. This metric is only reported for asynchronous "
-"invocations. Default is CRIT for more than one error per hour (ca. 1.0/3600)."
-msgstr ""
-
-#, fuzzy
-msgid ""
-"Specify the upper levels for the number of failed invocations per second due "
-"to function errors. Default is CRIT for more than one error per hour (ca. "
-"1.0/3600)."
-msgstr ""
-"Niveaux supérieurs pour le nombre de connexions actives à la base de données"
-
-#, fuzzy
-msgid ""
-"Specify the upper levels for the number of invocations per second that are "
-"run on non-provisioned concurrency (spillover invocations) when all "
-"provisioned concurrency is in use. Default is CRIT for more than one "
-"spillover invocation per hour (ca. 1.0/3600)."
-msgstr ""
-"Vous pouvez spécifier ici des niveaux supérieurs pour le nombre d'infections "
-"détectées par le moteur antimalware de McAfee Gateway."
-
-#, fuzzy
-msgid ""
-"Specify the upper levels for the number of invocations per second that "
-"exceeded the concurrent limits (throttles). Default is CRIT for more than "
-"one error per hour (ca. 1.0/3600)."
-msgstr ""
-"Vous pouvez spécifier ici des niveaux supérieurs pour le nombre d'infections "
-"détectées par le moteur antimalware de McAfee Gateway."
-
-#, fuzzy
-msgid "Specify the upper levels for the number of invocations per second."
-msgstr ""
-"Niveaux supérieurs pour le nombre de connexions actives à la base de données"
-
-msgid ""
-"Specify the upper levels in seconds for the age of the last record for each "
-"batch of records processed (iterator age). A high iterator age could result "
-"from the following scenarios: a high execution duration for a function, not "
-"enough shards in a stream, invocation errors, insufficient batch size. This "
-"metric is only reported for stream-based invocations."
-msgstr ""
-
 msgid "Specify time since last successful backup"
 msgstr "Indiquez le temps écoulé depuis la dernière sauvegarde réussie"
 
@@ -45794,6 +45754,9 @@ msgstr "TIME_WAIT"
 #, fuzzy
 msgid "TLS"
 msgstr "SSL/TLS"
+
+msgid "TLS Authentication without TLS is not possible"
+msgstr ""
 
 #, fuzzy
 msgid "TLS without certificate validation"
@@ -49235,6 +49198,13 @@ msgid ""
 "The offset of the information relative to counter base. You can get a "
 "detailed list of available counters in a windows shell with the command "
 "'lodctr /s:counters.txt'."
+msgstr ""
+
+#, python-format
+msgid ""
+"The old inventory plugin API has been removed in Checkmk version 2.2. Plugin "
+"files in <tt>'%s'</tt> are ignored. Please migrate the plugins to the new "
+"API."
 msgstr ""
 
 msgid "The operational transmit power"
@@ -52736,7 +52706,7 @@ msgstr ""
 #, fuzzy
 msgid ""
 "This predefined condition can not be used with the current ruleset, because "
-"it defines service label conditions."
+"it defines the same label conditions as set by this rule."
 msgstr ""
 "Chaque condition prédéfinie est la propriété d'un groupe d'utilisateurs qui "
 "peuvent modifier, supprimer et utiliser les conditions prédéfinies "
@@ -57124,10 +57094,6 @@ msgstr "Niveaux supérieurs d'utilisation des swaps IVE"
 msgid "Upper levels for Load Balancers"
 msgstr "Niveaux supérieurs pour les équilibreurs de charge"
 
-#, fuzzy
-msgid "Upper levels for SSL handshake time"
-msgstr "Niveaux supérieurs pour le temps CPU"
-
 msgid "Upper levels for Soap Service Errors"
 msgstr "Niveaux supérieurs pour les erreurs de service du savon"
 
@@ -57153,26 +57119,6 @@ msgstr "Niveaux supérieurs pour les clients"
 msgid "Upper levels for cluster utilization"
 msgstr "Niveaux supérieurs d'utilisation des disques"
 
-#, fuzzy
-msgid "Upper levels for code size"
-msgstr "Niveaux supérieurs pour la taille"
-
-#, fuzzy
-msgid "Upper levels for code size in percent of the region limit"
-msgstr "Niveaux supérieurs en pourcentage de la limite"
-
-#, fuzzy
-msgid "Upper levels for concurrent executions"
-msgstr "Niveaux supérieurs pour les exceptions rencontrées"
-
-#, fuzzy
-msgid "Upper levels for concurrent executions in percent of the region limit"
-msgstr "Niveaux supérieurs en pourcentage de la limite"
-
-#, fuzzy
-msgid "Upper levels for connection_time"
-msgstr "Niveaux supérieurs pour les connexions en cours d'utilisation"
-
 msgid "Upper levels for connections in use"
 msgstr "Niveaux supérieurs pour les connexions en cours d'utilisation"
 
@@ -57181,10 +57127,6 @@ msgstr "Niveaux supérieurs pour les données"
 
 msgid "Upper levels for data file size"
 msgstr "Niveaux supérieurs pour la taille des fichiers de données"
-
-#, fuzzy
-msgid "Upper levels for dead letter errors"
-msgstr "Niveaux supérieurs pour le taux d'erreurs de serveur"
 
 msgid "Upper levels for disk usage"
 msgstr "Niveaux supérieurs d'utilisation du disque"
@@ -57196,23 +57138,11 @@ msgstr "Niveaux supérieurs d'utilisation des disques"
 msgid "Upper levels for drifted access points"
 msgstr "Niveaux supérieurs pour les infections"
 
-#, fuzzy
-msgid "Upper levels for duration in percent of the timeout"
-msgstr "Niveaux supérieurs en pourcentage de la limite"
-
-#, fuzzy
-msgid "Upper levels for duration in seconds"
-msgstr "Niveaux supérieurs pour les infections"
-
 msgid "Upper levels for encountered exceptions"
 msgstr "Niveaux supérieurs pour les exceptions rencontrées"
 
 msgid "Upper levels for encountered warnings"
 msgstr "Niveaux supérieurs pour les avertissements rencontrés"
-
-#, fuzzy
-msgid "Upper levels for errors"
-msgstr "Niveaux supérieurs pour les erreurs HTTP"
 
 msgid "Upper levels for estimated time to complete"
 msgstr "Niveaux supérieurs pour l'estimation du temps de réalisation"
@@ -57230,14 +57160,6 @@ msgstr "Niveaux supérieurs pour les indices"
 msgid "Upper levels for infections"
 msgstr "Niveaux supérieurs pour les infections"
 
-#, fuzzy
-msgid "Upper levels for invocations"
-msgstr "Niveaux supérieurs pour les infections"
-
-#, fuzzy
-msgid "Upper levels for iterator age"
-msgstr "Niveaux supérieurs pour l'âge"
-
 msgid "Upper levels for latency"
 msgstr "Niveaux supérieurs de latence"
 
@@ -57254,14 +57176,6 @@ msgstr ""
 
 msgid "Upper levels for mail latency"
 msgstr "Niveaux supérieurs pour la latence du courrier"
-
-#, fuzzy
-msgid "Upper levels for memory used"
-msgstr "Niveaux supérieurs pour les erreurs HTTP"
-
-#, fuzzy
-msgid "Upper levels for memory used in percent of the Lambda function limit"
-msgstr "Niveaux supérieurs en pourcentage de la limite"
 
 #, fuzzy
 msgid "Upper levels for node utilization"
@@ -57284,19 +57198,6 @@ msgstr "Niveaux supérieurs pour les activations en attente"
 
 msgid "Upper levels for physical capacity in percent"
 msgstr "Niveaux supérieurs de capacité physique en pourcentage"
-
-#, fuzzy
-msgid ""
-"Upper levels for provisioned concurrency spillover invocations per second"
-msgstr "Niveaux supérieurs d'erreurs de connexion au backend par seconde"
-
-#, fuzzy
-msgid "Upper levels for provisioned concurrent executions per second"
-msgstr "Niveaux supérieurs d'erreurs de connexion au backend par seconde"
-
-#, fuzzy
-msgid "Upper levels for provisioned concurrent invocations per second"
-msgstr "Niveaux supérieurs d'erreurs de connexion au backend par seconde"
 
 #, fuzzy
 msgid "Upper levels for queue lengths"
@@ -57379,14 +57280,6 @@ msgstr "Niveaux pour le nombre d'extents de table"
 msgid "Upper levels for the vault size"
 msgstr "Niveaux supérieurs pour la taille de la chambre forte"
 
-#, fuzzy
-msgid "Upper levels for throttles"
-msgstr "Niveaux supérieurs pour l'âge"
-
-#, fuzzy
-msgid "Upper levels for time to first byte"
-msgstr "Niveaux supérieurs pour l'âge"
-
 msgid "Upper levels for total index size"
 msgstr "Niveaux supérieurs pour la taille totale de l'index"
 
@@ -57398,16 +57291,6 @@ msgstr "Niveaux supérieurs pour la taille totale des données non comprimées"
 
 msgid "Upper levels for unblended costs"
 msgstr "Niveaux supérieurs pour les coûts non mélangés"
-
-#, fuzzy
-msgid "Upper levels for unreserved concurrent executions"
-msgstr "Niveaux supérieurs pour les connexions bloquées"
-
-#, fuzzy
-msgid ""
-"Upper levels for unreserved concurrent executions in percent of the region "
-"limit"
-msgstr "Niveaux supérieurs en pourcentage de la limite"
 
 #, fuzzy
 msgid "Upper levels for unresponsive access points"
@@ -57454,10 +57337,6 @@ msgstr "Niveaux supérieurs sur le décalage de la réplique"
 
 msgid "Upper levels on total request latency"
 msgstr "Niveaux supérieurs de latence totale des demandes"
-
-#, fuzzy
-msgid "Upper levels provisioned concurrency utilization"
-msgstr "Niveaux supérieurs d'utilisation des disques"
 
 msgid "Upper limits in percent"
 msgstr "Limites supérieures en pourcentage"
@@ -61195,6 +61074,12 @@ msgstr ""
 "devrait être configurée que dans les premières étapes."
 
 msgid ""
+"Without authentication everybody can send notifications to the spooler.  If "
+"you choose <tt>Authentication with TLS</tt> this site must trust the SiteCA "
+"of the senders!"
+msgstr ""
+
+msgid ""
 "Without this option the access is limited to querying the current and "
 "historic event status."
 msgstr ""
@@ -63126,8 +63011,9 @@ msgstr "Votre %s a été supprimé."
 msgid "Your %s has been saved."
 msgstr "Votre %s a été sauvegardé."
 
-msgid "Your WebAuthn credetial is already in use"
-msgstr ""
+#, fuzzy
+msgid "Your WebAuthn credential is already in use"
+msgstr "Informations d'identification par défaut"
 
 #, fuzzy, python-format
 msgid ""
@@ -65322,6 +65208,221 @@ msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Tous droits réservés."
 
 #, fuzzy
+#~| msgid "Performance"
+#~ msgid "AWS/Lambda Concurrency"
+#~ msgstr "Performance"
+
+#, fuzzy
+#~| msgid "Performance"
+#~ msgid "AWS/Lambda Memory"
+#~ msgstr "Performance"
+
+#, fuzzy
+#~| msgid "Performance"
+#~ msgid "AWS/Lambda Performance"
+#~ msgstr "Performance"
+
+#, fuzzy
+#~| msgid "CPU in percent"
+#~ msgid "Cold starts in percent"
+#~ msgstr "CPU en pourcentage"
+
+#~ msgid "LSI RAID VDrives (StorCLI)"
+#~ msgstr "Lecteurs LSI RAID VDrives (StorCLI)"
+
+#, fuzzy
+#~| msgid "Lower levels for health lifetime"
+#~ msgid "Lower levels for health check percentage healty"
+#~ msgstr "Niveaux inférieurs pour la santé à vie"
+
+#, fuzzy
+#~| msgid "Upper levels for the number of active database connections"
+#~ msgid ""
+#~ "Specify the upper levels for the cold starts in percent of total "
+#~ "invocations."
+#~ msgstr ""
+#~ "Niveaux supérieurs pour le nombre de connexions actives à la base de "
+#~ "données"
+
+#, fuzzy
+#~| msgid "Upper levels for the number of active database connections"
+#~ msgid ""
+#~ "Specify the upper levels for the number of failed invocations per second "
+#~ "due to function errors. Default is CRIT for more than one error per hour "
+#~ "(ca. 1.0/3600)."
+#~ msgstr ""
+#~ "Niveaux supérieurs pour le nombre de connexions actives à la base de "
+#~ "données"
+
+#, fuzzy
+#~| msgid ""
+#~| "Here you can specify upper levels for the number of infections detected "
+#~| "by the McAfee Gateway Antimalware Engine."
+#~ msgid ""
+#~ "Specify the upper levels for the number of invocations per second that "
+#~ "are run on non-provisioned concurrency (spillover invocations) when all "
+#~ "provisioned concurrency is in use. Default is CRIT for more than one "
+#~ "spillover invocation per hour (ca. 1.0/3600)."
+#~ msgstr ""
+#~ "Vous pouvez spécifier ici des niveaux supérieurs pour le nombre "
+#~ "d'infections détectées par le moteur antimalware de McAfee Gateway."
+
+#, fuzzy
+#~| msgid ""
+#~| "Here you can specify upper levels for the number of infections detected "
+#~| "by the McAfee Gateway Antimalware Engine."
+#~ msgid ""
+#~ "Specify the upper levels for the number of invocations per second that "
+#~ "exceeded the concurrent limits (throttles). Default is CRIT for more than "
+#~ "one error per hour (ca. 1.0/3600)."
+#~ msgstr ""
+#~ "Vous pouvez spécifier ici des niveaux supérieurs pour le nombre "
+#~ "d'infections détectées par le moteur antimalware de McAfee Gateway."
+
+#, fuzzy
+#~| msgid "Upper levels for the number of active database connections"
+#~ msgid "Specify the upper levels for the number of invocations per second."
+#~ msgstr ""
+#~ "Niveaux supérieurs pour le nombre de connexions actives à la base de "
+#~ "données"
+
+#, fuzzy
+#~| msgid "Upper levels for CPU time"
+#~ msgid "Upper levels for SSL handshake time"
+#~ msgstr "Niveaux supérieurs pour le temps CPU"
+
+#, fuzzy
+#~| msgid "Upper levels for size"
+#~ msgid "Upper levels for code size"
+#~ msgstr "Niveaux supérieurs pour la taille"
+
+#, fuzzy
+#~| msgid "Upper levels in percentage of limit"
+#~ msgid "Upper levels for code size in percent of the region limit"
+#~ msgstr "Niveaux supérieurs en pourcentage de la limite"
+
+#, fuzzy
+#~| msgid "Upper levels for encountered exceptions"
+#~ msgid "Upper levels for concurrent executions"
+#~ msgstr "Niveaux supérieurs pour les exceptions rencontrées"
+
+#, fuzzy
+#~| msgid "Upper levels in percentage of limit"
+#~ msgid ""
+#~ "Upper levels for concurrent executions in percent of the region limit"
+#~ msgstr "Niveaux supérieurs en pourcentage de la limite"
+
+#, fuzzy
+#~| msgid "Upper levels for connections in use"
+#~ msgid "Upper levels for connection_time"
+#~ msgstr "Niveaux supérieurs pour les connexions en cours d'utilisation"
+
+#, fuzzy
+#~| msgid "Upper levels for rate of server errors"
+#~ msgid "Upper levels for dead letter errors"
+#~ msgstr "Niveaux supérieurs pour le taux d'erreurs de serveur"
+
+#, fuzzy
+#~| msgid "Upper levels in percentage of limit"
+#~ msgid "Upper levels for duration in percent of the timeout"
+#~ msgstr "Niveaux supérieurs en pourcentage de la limite"
+
+#, fuzzy
+#~| msgid "Upper levels for infections"
+#~ msgid "Upper levels for duration in seconds"
+#~ msgstr "Niveaux supérieurs pour les infections"
+
+#, fuzzy
+#~| msgid "Upper levels for HTTP errors"
+#~ msgid "Upper levels for errors"
+#~ msgstr "Niveaux supérieurs pour les erreurs HTTP"
+
+#, fuzzy
+#~| msgid "Upper levels for infections"
+#~ msgid "Upper levels for invocations"
+#~ msgstr "Niveaux supérieurs pour les infections"
+
+#, fuzzy
+#~| msgid "Upper levels for the age"
+#~ msgid "Upper levels for iterator age"
+#~ msgstr "Niveaux supérieurs pour l'âge"
+
+#, fuzzy
+#~| msgid "Upper levels for HTTP errors"
+#~ msgid "Upper levels for memory used"
+#~ msgstr "Niveaux supérieurs pour les erreurs HTTP"
+
+#, fuzzy
+#~| msgid "Upper levels in percentage of limit"
+#~ msgid "Upper levels for memory used in percent of the Lambda function limit"
+#~ msgstr "Niveaux supérieurs en pourcentage de la limite"
+
+#, fuzzy
+#~| msgid "Upper levels for backend connection errors per second"
+#~ msgid ""
+#~ "Upper levels for provisioned concurrency spillover invocations per second"
+#~ msgstr "Niveaux supérieurs d'erreurs de connexion au backend par seconde"
+
+#, fuzzy
+#~| msgid "Upper levels for backend connection errors per second"
+#~ msgid "Upper levels for provisioned concurrent executions per second"
+#~ msgstr "Niveaux supérieurs d'erreurs de connexion au backend par seconde"
+
+#, fuzzy
+#~| msgid "Upper levels for backend connection errors per second"
+#~ msgid "Upper levels for provisioned concurrent invocations per second"
+#~ msgstr "Niveaux supérieurs d'erreurs de connexion au backend par seconde"
+
+#, fuzzy
+#~| msgid "Upper levels for the age"
+#~ msgid "Upper levels for throttles"
+#~ msgstr "Niveaux supérieurs pour l'âge"
+
+#, fuzzy
+#~| msgid "Upper levels for the age"
+#~ msgid "Upper levels for time to first byte"
+#~ msgstr "Niveaux supérieurs pour l'âge"
+
+#, fuzzy
+#~| msgid "Upper levels for blocked connections"
+#~ msgid "Upper levels for unreserved concurrent executions"
+#~ msgstr "Niveaux supérieurs pour les connexions bloquées"
+
+#, fuzzy
+#~| msgid "Upper levels in percentage of limit"
+#~ msgid ""
+#~ "Upper levels for unreserved concurrent executions in percent of the "
+#~ "region limit"
+#~ msgstr "Niveaux supérieurs en pourcentage de la limite"
+
+#, fuzzy
+#~| msgid "Upper levels for disk utilization"
+#~ msgid "Upper levels provisioned concurrency utilization"
+#~ msgstr "Niveaux supérieurs d'utilisation des disques"
+
+#, python-format
+#~ msgid "Garbled automation response: <pre>%s</pre>"
+#~ msgstr "Réponse d'automatisation tronquée : <pre>%s</pre>"
+
+#~ msgid "Invalid call: The snapshot is missing."
+#~ msgstr "Appel invalide : L'instantané est manquant."
+
+#, fuzzy, python-format
+#~| msgid "No pending changes"
+#~ msgid "%d pending changes"
+#~ msgstr "Aucun changement en cours"
+
+#, fuzzy
+#~| msgid "No pending changes"
+#~ msgid "1 pending change"
+#~ msgstr "Aucun changement en cours"
+
+#, fuzzy
+#~| msgid "No pending changes"
+#~ msgid "10+ pending changes"
+#~ msgstr "Aucun changement en cours"
+
+#, fuzzy
 #~| msgid "Daemon sets"
 #~ msgid "Daemonset"
 #~ msgstr "Jeux de démons"
@@ -65851,16 +65952,6 @@ msgstr "© 2020 tribe29 GmbH. Tous droits réservés."
 
 #~ msgid "Move to folder:"
 #~ msgstr "Déplacer vers le dossier :"
-
-#, python-format
-#~ msgid "%d changes"
-#~ msgstr "%d changements"
-
-#~ msgid "1 change"
-#~ msgstr "1 changement"
-
-#~ msgid "10+ changes"
-#~ msgstr "10+ changements"
 
 #~ msgid "Click here to go to pending changes."
 #~ msgstr "Cliquez ici pour accéder aux modifications en cours."

@@ -326,6 +326,10 @@ msgid "%d actions"
 msgstr "%d アクション"
 
 #, python-format
+msgid "%d changes"
+msgstr "%d の変更"
+
+#, python-format
 msgid "%d chaotic state changes from %s until %s (%s)"
 msgstr "%dカオス状態は%sから%s(%s)まで変化します"
 
@@ -362,6 +366,10 @@ msgid "%d icons customized"
 msgstr "カスタマイズされた %d アイコン"
 
 #, python-format
+msgid "%d ignored HW/SW inventory plugins found: %s"
+msgstr ""
+
+#, python-format
 msgid "%d incompatible Werks have been acknowledged."
 msgstr "%d 互換性のないWerksが確認されました。"
 
@@ -391,10 +399,6 @@ msgstr ""
 #, python-format
 msgid "%d open incompatible werks"
 msgstr "%d互換性のないwerksを開く"
-
-#, python-format
-msgid "%d pending changes"
-msgstr "%d 個の変更"
 
 #, python-format
 msgid "%d rows"
@@ -900,9 +904,8 @@ msgstr "0.5 - 1.0ミリ秒"
 msgid "1 Host"
 msgstr "1ホスト"
 
-#, fuzzy
-msgid "1 pending change"
-msgstr "保留中の変更はありません"
+msgid "1 change"
+msgstr "1つの変更"
 
 msgid "1 row"
 msgstr "1行"
@@ -922,9 +925,8 @@ msgstr "1/s"
 msgid "10 seconds"
 msgstr "10秒"
 
-#, fuzzy
-msgid "10+ pending changes"
-msgstr "保留中の変更はありません"
+msgid "10+ changes"
+msgstr "10+ 変更"
 
 msgid "10.0 - 20.0 ms"
 msgstr "10.0 - 20.0 ミリ秒"
@@ -2265,10 +2267,6 @@ msgstr "APIアクセストークン"
 msgid "API Endpoint from PagerDuty V2"
 msgstr "PagerDuty V2のAPIエンドポイント"
 
-#, fuzzy
-msgid "API Health"
-msgstr "健康"
-
 msgid "API Key"
 msgstr "APIキー"
 
@@ -2278,6 +2276,10 @@ msgid ""
 msgstr ""
 "使用するAPIキー。opsgenieサブスクリプションに応じて、グローバルまたはチーム統"
 "合APIキーを使用できます。"
+
+#, fuzzy
+msgid "API health"
+msgstr "健康"
 
 #, fuzzy
 msgid "API host"
@@ -2411,18 +2413,6 @@ msgstr "AWS/Glacier Vaultオブジェクト"
 msgid "AWS/Glacier Vaults"
 msgstr "AWS/Glacier Vaults"
 
-#, fuzzy
-msgid "AWS/Lambda Concurrency"
-msgstr "パフォーマンス"
-
-#, fuzzy
-msgid "AWS/Lambda Memory"
-msgstr "パフォーマンス"
-
-#, fuzzy
-msgid "AWS/Lambda Performance"
-msgstr "パフォーマンス"
-
 msgid "AWS/RDS CPU Credits"
 msgstr "AWS/RDS CPUクレジット"
 
@@ -2437,9 +2427,6 @@ msgstr "AWS/RDSの制限"
 
 msgid "AWS/RDS Replica lag"
 msgstr "AWS/RDSレプリカラグ"
-
-msgid "AWS/Route53"
-msgstr ""
 
 msgid "AWS/S3 Bucket Objects"
 msgstr "AWS/S3バケットオブジェクト"
@@ -5592,6 +5579,10 @@ msgstr "認証プロトコル"
 msgid "Authentication to web service failed.<br>Message:<br>%s"
 msgstr ""
 
+#, fuzzy
+msgid "Authentication with TLS"
+msgstr "認証方法"
+
 msgid "Authmethod"
 msgstr "認証方法"
 
@@ -7096,6 +7087,16 @@ msgstr ""
 "とに注意してください。<br>リモートサイトは、構成された接続との自動ユーザー同"
 "期を実行しません。ただし、構成済みのすべての接続または特定の接続リストとユー"
 "ザーを同期するように各サイトを構成できます。"
+
+#, python-brace-format
+msgid ""
+"By default, Checkmk does not imports annotations. If this option is enabled, "
+"Checkmk will import any annotation that is a valid Kubernetes label. These "
+"imported annotations are added as host labels to their respective piggyback "
+"host using the syntax 'cmk/kubernetes/annotation/{key}:{value}'. You can "
+"further restrict the imported annotations by specifying a pattern which "
+"Checkmk searches for in the key of the annotation."
+msgstr ""
 
 msgid ""
 "By default, all mailboxes are checked with these parameters. If you specify "
@@ -9395,10 +9396,6 @@ msgstr "Cnt"
 
 msgid "Codec that should be used to decode the matching files"
 msgstr "一致するファイルをデコードするために使用する必要があるコーデック"
-
-#, fuzzy
-msgid "Cold starts in percent"
-msgstr "CPU(パーセント)"
 
 msgid "Collect diagnostic dump"
 msgstr "診断ダンプを収集する"
@@ -13376,6 +13373,10 @@ msgstr "展開"
 msgid "Deprecated"
 msgstr "非推奨"
 
+#, fuzzy
+msgid "Deprecated HW/SW inventory plugins"
+msgstr "許可されたHW/SWインベントリパス"
+
 #, python-format
 msgid "Deprecated WATO modes found: %r. They need to be refactored to new API."
 msgstr ""
@@ -14944,7 +14945,7 @@ msgstr "本当にホスト <tt>%s</tt>を削除しますか？"
 #, fuzzy
 msgid ""
 "Do you really want to remove the TLS registration of the hosts in this "
-"folder (recursively)?"
+"folder?<br>This does not affect hosts in subfolders."
 msgstr "本当にサイト %s への接続を削除しますか？"
 
 #, fuzzy
@@ -18166,6 +18167,9 @@ msgstr ""
 msgid "Filter pattern (RegExp)"
 msgstr "フィルタパターン(RegExp)"
 
+msgid "Filter valid annotations by key pattern"
+msgstr ""
+
 msgid "Filter view"
 msgstr "フィルタビュー"
 
@@ -19145,10 +19149,6 @@ msgstr "GUI拡張機能"
 msgid "Gamelan"
 msgstr "ガムラン"
 
-#, python-format
-msgid "Garbled automation response: <pre>%s</pre>"
-msgstr "文字化けした自動化応答: <pre>%s</pre>"
-
 msgid "Gateway route"
 msgstr "ゲートウェイルート"
 
@@ -19345,6 +19345,10 @@ msgstr ""
 
 #, fuzzy
 msgid "Google Cloud Storage (GCS)"
+msgstr "Elastic Block Storage(EBS)"
+
+#, fuzzy
+msgid "Google Compute Engine (GCE)"
 msgstr "Elastic Block Storage(EBS)"
 
 msgid "Got invalid data"
@@ -23408,6 +23412,9 @@ msgstr "インポート"
 msgid "Import Hosts"
 msgstr "ホストのインポート"
 
+msgid "Import all valid annotations"
+msgstr ""
+
 msgid "Import hosts via CSV file"
 msgstr "CSVファイルを介してホストをインポートする"
 
@@ -24111,9 +24118,6 @@ msgstr "レポートの時間範囲から継承(レポートのみ)"
 msgid "Inherited from "
 msgstr "から継承 "
 
-msgid "Init duration with absolute limits"
-msgstr ""
-
 msgid "Initial Scheduling"
 msgstr "初期スケジューリング"
 
@@ -24530,9 +24534,6 @@ msgstr "無効な呼び出し:プロファイルが設定されていません�
 
 msgid "Invalid call: The profile is missing."
 msgstr "無効な呼び出し: プロファイルがありません"
-
-msgid "Invalid call: The snapshot is missing."
-msgstr "無効なコール:スナップショットがありません。"
 
 #, python-format
 msgid "Invalid certificate file: %s"
@@ -25425,6 +25426,10 @@ msgstr "Kubernetesポート"
 msgid "Kubernetes replicas"
 msgstr "Kubernetesノード"
 
+#, fuzzy
+msgid "Kubernetes resource quota memory utilization"
+msgstr "Kubernetesリソース"
+
 msgid "Kubernetes resources"
 msgstr "Kubernetesリソース"
 
@@ -25516,10 +25521,23 @@ msgstr "LRUはオブジェクトを移動しました"
 msgid "LRU nuked objects"
 msgstr "LRUオブジェクト nuked"
 
-msgid "LSI RAID VDrives (StorCLI)"
-msgstr "LSI RAID VDrives (StorCLI)"
+msgid "LSI MegaRAID: Battery Backup Unit"
+msgstr ""
 
-msgid "LSI RAID physical disks (StorCLI)"
+#, fuzzy
+msgid "LSI MegaRAID: Logical Disks"
+msgstr "LSI RAID物理ディスク (StorCLI)"
+
+#, fuzzy
+msgid "LSI MegaRAID: Physical Disks"
+msgstr "LSI RAID物理ディスク (StorCLI)"
+
+#, fuzzy
+msgid "LSI RAID logical disks"
+msgstr "LSI RAID物理ディスク (StorCLI)"
+
+#, fuzzy
+msgid "LSI RAID physical disks"
 msgstr "LSI RAID物理ディスク (StorCLI)"
 
 msgid "LSI Raid Controller Status (via StorCLI)"
@@ -27394,10 +27412,6 @@ msgstr "証明書の期間の下位レベル"
 
 msgid "Lower levels for first output item"
 msgstr "最初の出力項目の下位レベル"
-
-#, fuzzy
-msgid "Lower levels for health check percentage healty"
-msgstr "ヘルスライフタイムの低レベル"
 
 msgid "Lower levels for health lifetime"
 msgstr "ヘルスライフタイムの低レベル"
@@ -30690,6 +30704,10 @@ msgstr "いいえ(エラー: %s、コード: %d、深さ: %d)"
 msgid "No API integrations, no Checkmk agent"
 msgstr ""
 
+#, fuzzy
+msgid "No Authentication"
+msgstr "認証"
+
 msgid "No Conditions"
 msgstr "条件なし"
 
@@ -30880,6 +30898,10 @@ msgstr "ケースを変換しないでください"
 
 msgid "No hosts/services found."
 msgstr "ホスト/サービスが見つかりません。"
+
+#, fuzzy
+msgid "No ignored HW/SW inventory plugins found"
+msgstr "許可されたHW/SWインベントリパス"
 
 msgid "No influence on element display"
 msgstr "エレメントの表示に影響を与えません"
@@ -41927,65 +41949,6 @@ msgstr ""
 msgid "Specify the token to be used to connect to InfluxDB."
 msgstr ""
 
-#, fuzzy
-msgid ""
-"Specify the upper levels for the cold starts in percent of total invocations."
-msgstr "アクティブなデータベース接続数の上位レベル"
-
-msgid ""
-"Specify the upper levels for the elapsed time of a function’s execution "
-"(duration) in percent of the AWS Lambda configuration value \"Timeout\"."
-msgstr ""
-
-msgid ""
-"Specify the upper levels for the elapsed time of a function’s execution "
-"(duration)."
-msgstr ""
-
-msgid ""
-"Specify the upper levels for the number of discarded events per second that "
-"could not be processed. This metric is only reported for asynchronous "
-"invocations. Default is CRIT for more than one error per hour (ca. 1.0/3600)."
-msgstr ""
-
-#, fuzzy
-msgid ""
-"Specify the upper levels for the number of failed invocations per second due "
-"to function errors. Default is CRIT for more than one error per hour (ca. "
-"1.0/3600)."
-msgstr "アクティブなデータベース接続数の上位レベル"
-
-#, fuzzy
-msgid ""
-"Specify the upper levels for the number of invocations per second that are "
-"run on non-provisioned concurrency (spillover invocations) when all "
-"provisioned concurrency is in use. Default is CRIT for more than one "
-"spillover invocation per hour (ca. 1.0/3600)."
-msgstr ""
-"ここでは、McAfee Gateway Antimalware Engineによって検出された感染数の上位レベ"
-"ルを指定できます。"
-
-#, fuzzy
-msgid ""
-"Specify the upper levels for the number of invocations per second that "
-"exceeded the concurrent limits (throttles). Default is CRIT for more than "
-"one error per hour (ca. 1.0/3600)."
-msgstr ""
-"ここでは、McAfee Gateway Antimalware Engineによって検出された感染数の上位レベ"
-"ルを指定できます。"
-
-#, fuzzy
-msgid "Specify the upper levels for the number of invocations per second."
-msgstr "アクティブなデータベース接続数の上位レベル"
-
-msgid ""
-"Specify the upper levels in seconds for the age of the last record for each "
-"batch of records processed (iterator age). A high iterator age could result "
-"from the following scenarios: a high execution duration for a function, not "
-"enough shards in a stream, invocation errors, insufficient batch size. This "
-"metric is only reported for stream-based invocations."
-msgstr ""
-
 msgid "Specify time since last successful backup"
 msgstr "最後にバックアップが成功してからの時間を指定します"
 
@@ -43758,6 +43721,9 @@ msgstr "TIME_WAIT"
 #, fuzzy
 msgid "TLS"
 msgstr "SSL/TLS"
+
+msgid "TLS Authentication without TLS is not possible"
+msgstr ""
 
 #, fuzzy
 msgid "TLS without certificate validation"
@@ -46839,6 +46805,13 @@ msgid ""
 "The offset of the information relative to counter base. You can get a "
 "detailed list of available counters in a windows shell with the command "
 "'lodctr /s:counters.txt'."
+msgstr ""
+
+#, python-format
+msgid ""
+"The old inventory plugin API has been removed in Checkmk version 2.2. Plugin "
+"files in <tt>'%s'</tt> are ignored. Please migrate the plugins to the new "
+"API."
 msgstr ""
 
 msgid "The operational transmit power"
@@ -49944,7 +49917,7 @@ msgstr ""
 #, fuzzy
 msgid ""
 "This predefined condition can not be used with the current ruleset, because "
-"it defines service label conditions."
+"it defines the same label conditions as set by this rule."
 msgstr ""
 "事前定義された各条件は、既存の事前定義された条件を編集、削除、および使用でき"
 "るユーザーのグループによって所有されます。"
@@ -54002,10 +53975,6 @@ msgstr "IVEスワップ使用率の上位レベル"
 msgid "Upper levels for Load Balancers"
 msgstr "ロードバランサーの上位レベル"
 
-#, fuzzy
-msgid "Upper levels for SSL handshake time"
-msgstr "CPU時間の上位レベル"
-
 msgid "Upper levels for Soap Service Errors"
 msgstr "SOAPサービスエラーの上位レベル"
 
@@ -54031,26 +54000,6 @@ msgstr "クライアントの上位レベル"
 msgid "Upper levels for cluster utilization"
 msgstr "ディスク使用率の上位レベル"
 
-#, fuzzy
-msgid "Upper levels for code size"
-msgstr "サイズの上位レベル"
-
-#, fuzzy
-msgid "Upper levels for code size in percent of the region limit"
-msgstr "更新期間の上位レベル"
-
-#, fuzzy
-msgid "Upper levels for concurrent executions"
-msgstr "発生した例外の上位レベル"
-
-#, fuzzy
-msgid "Upper levels for concurrent executions in percent of the region limit"
-msgstr "更新期間の上位レベル"
-
-#, fuzzy
-msgid "Upper levels for connection_time"
-msgstr "感染の上位レベル"
-
 msgid "Upper levels for connections in use"
 msgstr ""
 
@@ -54059,10 +54008,6 @@ msgstr "データの上位レベル"
 
 msgid "Upper levels for data file size"
 msgstr "データファイルサイズの上位レベル"
-
-#, fuzzy
-msgid "Upper levels for dead letter errors"
-msgstr "サーバーエラー率の上位レベル"
 
 msgid "Upper levels for disk usage"
 msgstr "ディスク使用量の上位レベル"
@@ -54074,23 +54019,11 @@ msgstr "ディスク使用率の上位レベル"
 msgid "Upper levels for drifted access points"
 msgstr "感染の上位レベル"
 
-#, fuzzy
-msgid "Upper levels for duration in percent of the timeout"
-msgstr "更新期間の上位レベル"
-
-#, fuzzy
-msgid "Upper levels for duration in seconds"
-msgstr "感染の上位レベル"
-
 msgid "Upper levels for encountered exceptions"
 msgstr "発生した例外の上位レベル"
 
 msgid "Upper levels for encountered warnings"
 msgstr "発生した警告の上位レベル"
-
-#, fuzzy
-msgid "Upper levels for errors"
-msgstr "HTTPエラーの上位レベル"
 
 msgid "Upper levels for estimated time to complete"
 msgstr "完了するまでの推定時間の上位レベル"
@@ -54108,14 +54041,6 @@ msgstr "インデックスの上位レベル"
 msgid "Upper levels for infections"
 msgstr "感染の上位レベル"
 
-#, fuzzy
-msgid "Upper levels for invocations"
-msgstr "感染の上位レベル"
-
-#, fuzzy
-msgid "Upper levels for iterator age"
-msgstr "バックアップ経過日数の上位レベル"
-
 msgid "Upper levels for latency"
 msgstr "レイテンシの上位レベル"
 
@@ -54131,14 +54056,6 @@ msgstr "ロードバランサー容量ユニットの上位レベル"
 
 msgid "Upper levels for mail latency"
 msgstr "メール遅延の上位レベル"
-
-#, fuzzy
-msgid "Upper levels for memory used"
-msgstr "HTTPエラーの上位レベル"
-
-#, fuzzy
-msgid "Upper levels for memory used in percent of the Lambda function limit"
-msgstr "更新期間の上位レベル"
 
 #, fuzzy
 msgid "Upper levels for node utilization"
@@ -54161,19 +54078,6 @@ msgstr "保留中のアクティベーションの上位レベル"
 
 msgid "Upper levels for physical capacity in percent"
 msgstr "物理容量の上位レベル パーセント"
-
-#, fuzzy
-msgid ""
-"Upper levels for provisioned concurrency spillover invocations per second"
-msgstr "1秒あたりのバックエンド接続エラーの上位レベル"
-
-#, fuzzy
-msgid "Upper levels for provisioned concurrent executions per second"
-msgstr "1秒あたりのバックエンド接続エラーの上位レベル"
-
-#, fuzzy
-msgid "Upper levels for provisioned concurrent invocations per second"
-msgstr "1秒あたりのバックエンド接続エラーの上位レベル"
 
 #, fuzzy
 msgid "Upper levels for queue lengths"
@@ -54252,14 +54156,6 @@ msgstr "テーブルエクステントの数のレベル"
 msgid "Upper levels for the vault size"
 msgstr "ボールトサイズの上位レベル"
 
-#, fuzzy
-msgid "Upper levels for throttles"
-msgstr "%s の上位レベル"
-
-#, fuzzy
-msgid "Upper levels for time to first byte"
-msgstr "バックアップ経過日数の上位レベル"
-
 msgid "Upper levels for total index size"
 msgstr "合計インデックスサイズの上位レベル"
 
@@ -54271,16 +54167,6 @@ msgstr "圧縮されていないデータの合計サイズの上位レベル"
 
 msgid "Upper levels for unblended costs"
 msgstr "混合されていないコストの上位レベル"
-
-#, fuzzy
-msgid "Upper levels for unreserved concurrent executions"
-msgstr "ブロックされた接続の上位レベル"
-
-#, fuzzy
-msgid ""
-"Upper levels for unreserved concurrent executions in percent of the region "
-"limit"
-msgstr "更新期間の上位レベル"
 
 #, fuzzy
 msgid "Upper levels for unresponsive access points"
@@ -54324,10 +54210,6 @@ msgstr "レプリカラグの上位レベル"
 
 msgid "Upper levels on total request latency"
 msgstr "リクエストの合計レイテンシの上位レベル"
-
-#, fuzzy
-msgid "Upper levels provisioned concurrency utilization"
-msgstr "ディスク使用率の上位レベル"
 
 msgid "Upper limits in percent"
 msgstr "パーセントでの上限"
@@ -57729,6 +57611,12 @@ msgstr ""
 "初期段階でのみ構成する必要があります。"
 
 msgid ""
+"Without authentication everybody can send notifications to the spooler.  If "
+"you choose <tt>Authentication with TLS</tt> this site must trust the SiteCA "
+"of the senders!"
+msgstr ""
+
+msgid ""
 "Without this option the access is limited to querying the current and "
 "historic event status."
 msgstr ""
@@ -59433,8 +59321,9 @@ msgstr "%s が削除されました。"
 msgid "Your %s has been saved."
 msgstr "%s が保存されました。"
 
-msgid "Your WebAuthn credetial is already in use"
-msgstr ""
+#, fuzzy
+msgid "Your WebAuthn credential is already in use"
+msgstr "デフォルトの資格情報"
 
 #, fuzzy, python-format
 msgid ""
@@ -61593,6 +61482,214 @@ msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. All Rights Reserved."
 
 #, fuzzy
+#~| msgid "Performance"
+#~ msgid "AWS/Lambda Concurrency"
+#~ msgstr "パフォーマンス"
+
+#, fuzzy
+#~| msgid "Performance"
+#~ msgid "AWS/Lambda Memory"
+#~ msgstr "パフォーマンス"
+
+#, fuzzy
+#~| msgid "Performance"
+#~ msgid "AWS/Lambda Performance"
+#~ msgstr "パフォーマンス"
+
+#, fuzzy
+#~| msgid "CPU in percent"
+#~ msgid "Cold starts in percent"
+#~ msgstr "CPU(パーセント)"
+
+#~ msgid "LSI RAID VDrives (StorCLI)"
+#~ msgstr "LSI RAID VDrives (StorCLI)"
+
+#, fuzzy
+#~| msgid "Lower levels for health lifetime"
+#~ msgid "Lower levels for health check percentage healty"
+#~ msgstr "ヘルスライフタイムの低レベル"
+
+#, fuzzy
+#~| msgid "Upper levels for the number of active database connections"
+#~ msgid ""
+#~ "Specify the upper levels for the cold starts in percent of total "
+#~ "invocations."
+#~ msgstr "アクティブなデータベース接続数の上位レベル"
+
+#, fuzzy
+#~| msgid "Upper levels for the number of active database connections"
+#~ msgid ""
+#~ "Specify the upper levels for the number of failed invocations per second "
+#~ "due to function errors. Default is CRIT for more than one error per hour "
+#~ "(ca. 1.0/3600)."
+#~ msgstr "アクティブなデータベース接続数の上位レベル"
+
+#, fuzzy
+#~| msgid ""
+#~| "Here you can specify upper levels for the number of infections detected "
+#~| "by the McAfee Gateway Antimalware Engine."
+#~ msgid ""
+#~ "Specify the upper levels for the number of invocations per second that "
+#~ "are run on non-provisioned concurrency (spillover invocations) when all "
+#~ "provisioned concurrency is in use. Default is CRIT for more than one "
+#~ "spillover invocation per hour (ca. 1.0/3600)."
+#~ msgstr ""
+#~ "ここでは、McAfee Gateway Antimalware Engineによって検出された感染数の上位"
+#~ "レベルを指定できます。"
+
+#, fuzzy
+#~| msgid ""
+#~| "Here you can specify upper levels for the number of infections detected "
+#~| "by the McAfee Gateway Antimalware Engine."
+#~ msgid ""
+#~ "Specify the upper levels for the number of invocations per second that "
+#~ "exceeded the concurrent limits (throttles). Default is CRIT for more than "
+#~ "one error per hour (ca. 1.0/3600)."
+#~ msgstr ""
+#~ "ここでは、McAfee Gateway Antimalware Engineによって検出された感染数の上位"
+#~ "レベルを指定できます。"
+
+#, fuzzy
+#~| msgid "Upper levels for the number of active database connections"
+#~ msgid "Specify the upper levels for the number of invocations per second."
+#~ msgstr "アクティブなデータベース接続数の上位レベル"
+
+#, fuzzy
+#~| msgid "Upper levels for CPU time"
+#~ msgid "Upper levels for SSL handshake time"
+#~ msgstr "CPU時間の上位レベル"
+
+#, fuzzy
+#~| msgid "Upper levels for size"
+#~ msgid "Upper levels for code size"
+#~ msgstr "サイズの上位レベル"
+
+#, fuzzy
+#~| msgid "Upper levels for the age of the update"
+#~ msgid "Upper levels for code size in percent of the region limit"
+#~ msgstr "更新期間の上位レベル"
+
+#, fuzzy
+#~| msgid "Upper levels for encountered exceptions"
+#~ msgid "Upper levels for concurrent executions"
+#~ msgstr "発生した例外の上位レベル"
+
+#, fuzzy
+#~| msgid "Upper levels for the age of the update"
+#~ msgid ""
+#~ "Upper levels for concurrent executions in percent of the region limit"
+#~ msgstr "更新期間の上位レベル"
+
+#, fuzzy
+#~| msgid "Upper levels for infections"
+#~ msgid "Upper levels for connection_time"
+#~ msgstr "感染の上位レベル"
+
+#, fuzzy
+#~| msgid "Upper levels for rate of server errors"
+#~ msgid "Upper levels for dead letter errors"
+#~ msgstr "サーバーエラー率の上位レベル"
+
+#, fuzzy
+#~| msgid "Upper levels for the age of the update"
+#~ msgid "Upper levels for duration in percent of the timeout"
+#~ msgstr "更新期間の上位レベル"
+
+#, fuzzy
+#~| msgid "Upper levels for infections"
+#~ msgid "Upper levels for duration in seconds"
+#~ msgstr "感染の上位レベル"
+
+#, fuzzy
+#~| msgid "Upper levels for HTTP errors"
+#~ msgid "Upper levels for errors"
+#~ msgstr "HTTPエラーの上位レベル"
+
+#, fuzzy
+#~| msgid "Upper levels for infections"
+#~ msgid "Upper levels for invocations"
+#~ msgstr "感染の上位レベル"
+
+#, fuzzy
+#~| msgid "Upper levels for the backup age"
+#~ msgid "Upper levels for iterator age"
+#~ msgstr "バックアップ経過日数の上位レベル"
+
+#, fuzzy
+#~| msgid "Upper levels for HTTP errors"
+#~ msgid "Upper levels for memory used"
+#~ msgstr "HTTPエラーの上位レベル"
+
+#, fuzzy
+#~| msgid "Upper levels for the age of the update"
+#~ msgid "Upper levels for memory used in percent of the Lambda function limit"
+#~ msgstr "更新期間の上位レベル"
+
+#, fuzzy
+#~| msgid "Upper levels for backend connection errors per second"
+#~ msgid ""
+#~ "Upper levels for provisioned concurrency spillover invocations per second"
+#~ msgstr "1秒あたりのバックエンド接続エラーの上位レベル"
+
+#, fuzzy
+#~| msgid "Upper levels for backend connection errors per second"
+#~ msgid "Upper levels for provisioned concurrent executions per second"
+#~ msgstr "1秒あたりのバックエンド接続エラーの上位レベル"
+
+#, fuzzy
+#~| msgid "Upper levels for backend connection errors per second"
+#~ msgid "Upper levels for provisioned concurrent invocations per second"
+#~ msgstr "1秒あたりのバックエンド接続エラーの上位レベル"
+
+#, fuzzy
+#~| msgid "Upper levels for %s"
+#~ msgid "Upper levels for throttles"
+#~ msgstr "%s の上位レベル"
+
+#, fuzzy
+#~| msgid "Upper levels for the backup age"
+#~ msgid "Upper levels for time to first byte"
+#~ msgstr "バックアップ経過日数の上位レベル"
+
+#, fuzzy
+#~| msgid "Upper levels for blocked connections"
+#~ msgid "Upper levels for unreserved concurrent executions"
+#~ msgstr "ブロックされた接続の上位レベル"
+
+#, fuzzy
+#~| msgid "Upper levels for the age of the update"
+#~ msgid ""
+#~ "Upper levels for unreserved concurrent executions in percent of the "
+#~ "region limit"
+#~ msgstr "更新期間の上位レベル"
+
+#, fuzzy
+#~| msgid "Upper levels for disk utilization"
+#~ msgid "Upper levels provisioned concurrency utilization"
+#~ msgstr "ディスク使用率の上位レベル"
+
+#, python-format
+#~ msgid "Garbled automation response: <pre>%s</pre>"
+#~ msgstr "文字化けした自動化応答: <pre>%s</pre>"
+
+#~ msgid "Invalid call: The snapshot is missing."
+#~ msgstr "無効なコール:スナップショットがありません。"
+
+#, python-format
+#~ msgid "%d pending changes"
+#~ msgstr "%d 個の変更"
+
+#, fuzzy
+#~| msgid "No pending changes"
+#~ msgid "1 pending change"
+#~ msgstr "保留中の変更はありません"
+
+#, fuzzy
+#~| msgid "No pending changes"
+#~ msgid "10+ pending changes"
+#~ msgstr "保留中の変更はありません"
+
+#, fuzzy
 #~| msgid "Daemon sets"
 #~ msgid "Daemonset"
 #~ msgstr "デーモンセット"
@@ -62040,16 +62137,6 @@ msgstr "© 2020 tribe29 GmbH. All Rights Reserved."
 
 #~ msgid "Move to folder:"
 #~ msgstr "フォルダへ移動:"
-
-#, python-format
-#~ msgid "%d changes"
-#~ msgstr "%d の変更"
-
-#~ msgid "1 change"
-#~ msgstr "1つの変更"
-
-#~ msgid "10+ changes"
-#~ msgstr "10+ 変更"
 
 #~ msgid "Click here to go to pending changes."
 #~ msgstr "保留中の変更に移動するには、ここをクリックしてください。"

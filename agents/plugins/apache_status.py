@@ -73,8 +73,45 @@ def get_instance_name(host, port_nr, conf):
     return ""
 
 
+def parse_address_and_port(address_and_port, ssl_ports):
+    """
+    parse address:port section from netstat or ss
+    return scheme (http|https), address, port
+    """
+    server_address, _server_port = address_and_port.rsplit(":", 1)
+    server_port = int(_server_port)
+
+    # Use localhost when listening globally
+    if server_address == "0.0.0.0":
+        server_address = "127.0.0.1"
+    elif server_address == "::":
+        server_address = "[::1]"
+    elif ":" in server_address:
+        server_address = "[%s]" % server_address
+
+    # Switch protocol if port is SSL port. In case you use SSL on another
+    # port you would have to change/extend the ssl_port list
+    if server_port in ssl_ports:
+        scheme = "https"
+    else:
+        scheme = "http"
+
+    return scheme, server_address, server_port
+
+
 def try_detect_servers(ssl_ports):
     results = []
+
+    procs = [
+        "apache2",
+        "httpd",
+        "httpd-prefork",
+        "httpd2-prefork",
+        "httpd2-worker",
+        "httpd.worker",
+        "httpd-event",
+        "fcgi-pm",
+    ]
 
     for netstat_line in os.popen("netstat -tlnp 2>/dev/null").readlines():
         parts = netstat_line.split()
@@ -86,16 +123,6 @@ def try_detect_servers(ssl_ports):
         to_replace = re.compile("^.*/")
         proc = to_replace.sub("", proc)
 
-        procs = [
-            "apache2",
-            "httpd",
-            "httpd-prefork",
-            "httpd2-prefork",
-            "httpd2-worker",
-            "httpd.worker",
-            "httpd-event",
-            "fcgi-pm",
-        ]
         # the pid/proc field length is limited to 19 chars. Thus in case of
         # long PIDs, the process names are stripped of by that length.
         # Workaround this problem here
@@ -105,23 +132,7 @@ def try_detect_servers(ssl_ports):
         if proc not in procs:
             continue
 
-        server_address, _server_port = parts[3].rsplit(":", 1)
-        server_port = int(_server_port)
-
-        # Use localhost when listening globally
-        if server_address == "0.0.0.0":
-            server_address = "127.0.0.1"
-        elif server_address == "::":
-            server_address = "[::1]"
-        elif ":" in server_address:
-            server_address = "[%s]" % server_address
-
-        # Switch protocol if port is SSL port. In case you use SSL on another
-        # port you would have to change/extend the ssl_port list
-        if server_port in ssl_ports:
-            scheme = "https"
-        else:
-            scheme = "http"
+        scheme, server_address, server_port = parse_address_and_port(parts[3], ssl_ports)
 
         results.append((scheme, server_address, server_port))
 
@@ -147,39 +158,11 @@ def try_detect_servers(ssl_ports):
             proc = proc.replace('"', '')
             pid = pid.replace('pid=', '')
 
-            # Note: code-redundancy will be re-factored in a second commit
-            procs = [
-                "apache2",
-                "httpd",
-                "httpd-prefork",
-                "httpd2-prefork",
-                "httpd2-worker",
-                "httpd.worker",
-                "httpd-event",
-                "fcgi-pm",
-            ]
-
             # Skip unwanted processes
             if proc not in procs:
                 continue
 
-            server_address, _server_port = parts[3].rsplit(":", 1)
-            server_port = int(_server_port)
-
-            # Use localhost when listening globally
-            if server_address == "0.0.0.0":
-                server_address = "127.0.0.1"
-            elif server_address == "::":
-                server_address = "[::1]"
-            elif ":" in server_address:
-                server_address = "[%s]" % server_address
-
-            # Switch protocol if port is SSL port. In case you use SSL on another
-            # port you would have to change/extend the ssl_port list
-            if server_port in ssl_ports:
-                scheme = "https"
-            else:
-                scheme = "http"
+            scheme, server_address, server_port = parse_address_and_port(parts[3], ssl_ports)
 
             results.append((scheme, server_address, server_port))
 

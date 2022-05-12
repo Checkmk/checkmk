@@ -30,6 +30,7 @@ from cmk.gui.breadcrumb import (
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.context import html
 from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.htmllib.header import make_header
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -66,7 +67,8 @@ class ModeAboutCheckmkPage(cmk.gui.pages.Page):
 
     def page(self) -> cmk.gui.pages.PageResult:
         breadcrumb = make_simple_page_breadcrumb(mega_menu_registry["help_links"], _("Info"))
-        html.header(
+        make_header(
+            html,
             self._title(),
             breadcrumb=breadcrumb,
         )
@@ -135,7 +137,8 @@ class ModeChangeLogPage(cmk.gui.pages.Page):
         load_werks()
         werk_table_options = _werk_table_options_from_request()
 
-        html.header(
+        make_header(
+            html,
             self._title(),
             breadcrumb,
             self._page_menu(breadcrumb, werk_table_options),
@@ -288,7 +291,7 @@ def page_werk():
         )
     )
     breadcrumb.append(make_current_page_breadcrumb_item(title))
-    html.header(title, breadcrumb, _page_menu_werk(breadcrumb, werk))
+    make_header(html, title, breadcrumb, _page_menu_werk(breadcrumb, werk))
 
     html.open_table(class_=["data", "headerleft", "werks"])
 

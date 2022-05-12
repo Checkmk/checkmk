@@ -18,15 +18,12 @@ import cmk.utils.version as cmk_version
 import cmk.gui.log as log
 import cmk.gui.utils as utils
 import cmk.gui.utils.escaping as escaping
-from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.htmllib.top_heading import top_heading
 from cmk.gui.http import Request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.page_menu import enable_page_menu_entry, PageMenu
-from cmk.gui.page_state import PageState
+from cmk.gui.page_menu import enable_page_menu_entry
 from cmk.gui.type_defs import (
     Choice,
     ChoiceGroup,
@@ -300,40 +297,6 @@ class HTMLGenerator(HTMLWriter):
             self.open_html()
             self._head(title, javascripts)
             self._header_sent = True
-
-    def header(
-        self,
-        title: str,
-        breadcrumb: Breadcrumb,
-        page_menu: Optional[PageMenu] = None,
-        page_state: Optional[PageState] = None,
-        javascripts: Optional[List[str]] = None,
-        force: bool = False,
-        show_body_start: bool = True,
-        show_top_heading: bool = True,
-    ) -> None:
-        if self.output_format != "html":
-            return
-
-        if not self._header_sent:
-            if show_body_start:
-                self.body_start(title, javascripts=javascripts, force=force)
-
-            self._header_sent = True
-
-            breadcrumb = breadcrumb or Breadcrumb()
-
-            if self.render_headfoot and show_top_heading:
-                top_heading(
-                    self,
-                    self.request,
-                    title,
-                    breadcrumb=breadcrumb,
-                    page_menu=page_menu or PageMenu(breadcrumb=breadcrumb),
-                    page_state=page_state,
-                    browser_reload=self.browser_reload,
-                )
-        self.begin_page_content()
 
     def body_start(
         self, title: str = "", javascripts: Optional[List[str]] = None, force: bool = False

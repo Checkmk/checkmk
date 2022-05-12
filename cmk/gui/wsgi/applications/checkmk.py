@@ -34,6 +34,7 @@ from cmk.gui.exceptions import (
     MKUserError,
 )
 from cmk.gui.htmllib.context import html
+from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import HTMLGenerator
 from cmk.gui.http import request, response, Response
 from cmk.gui.i18n import _
@@ -114,7 +115,8 @@ def _page_not_found() -> Response:
         html.write_text(_("Page not found"))
     else:
         title = _("Page not found")
-        html.header(
+        make_header(
+            html,
             title,
             Breadcrumb(
                 [
@@ -145,7 +147,7 @@ def _render_exception(e: Exception, title: str) -> Response:
         )
 
     if not fail_silently():
-        html.header(title, Breadcrumb())
+        make_header(html, title, Breadcrumb())
         html.show_error(str(e))
         html.footer()
 

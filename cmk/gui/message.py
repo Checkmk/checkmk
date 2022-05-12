@@ -25,6 +25,7 @@ from cmk.gui.default_permissions import PermissionSectionGeneral
 from cmk.gui.exceptions import MKAuthException, MKInternalError, MKUserError
 from cmk.gui.htmllib.context import html
 from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.htmllib.header import make_header
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import mega_menu_registry
@@ -136,7 +137,7 @@ def page_message():
     title = _("Send user message")
     breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_setup(), title)
     menu = _page_menu(breadcrumb)
-    html.header(title, breadcrumb, menu)
+    make_header(html, title, breadcrumb, menu)
 
     vs_message = _vs_message()
 

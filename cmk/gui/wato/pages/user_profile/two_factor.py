@@ -27,6 +27,7 @@ from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import HTTPRedirect, MKGeneralException, MKUserError
 from cmk.gui.htmllib.context import html
 from cmk.gui.htmllib.foldable_container import foldable_container
+from cmk.gui.htmllib.header import make_header
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
@@ -448,7 +449,7 @@ class UserLoginTwoFactor(Page):
         html.render_headfoot = False
         html.add_body_css_class("login")
         html.add_body_css_class("two_factor")
-        html.header(_("Two-factor authentication"), Breadcrumb(), javascripts=[])
+        make_header(html, _("Two-factor authentication"), Breadcrumb(), javascripts=[])
 
         html.open_div(id_="login")
 

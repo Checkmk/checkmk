@@ -25,6 +25,7 @@ from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKAuthException, MKGeneralException, MKUserError
 from cmk.gui.htmllib.context import html
 from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.htmllib.header import make_header
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -84,7 +85,7 @@ def page_show():
 def show_log_list():
     title = _("All problematic logfiles")
     breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_monitoring(), title)
-    html.header(title, breadcrumb, _log_list_page_menu(breadcrumb))
+    make_header(html, title, breadcrumb, _log_list_page_menu(breadcrumb))
 
     if request.has_var("_ack") and not request.var("_do_actions") == _("No"):
         do_log_ack(site=None, host_name=None, file_name=None)
@@ -179,7 +180,7 @@ def analyse_url(site, host_name, file_name="", match=""):
 def show_host_log_list(site, host_name):
     title = _("Logfiles of host %s") % host_name
     breadcrumb = _host_log_list_breadcrumb(host_name, title)
-    html.header(title, breadcrumb, _host_log_list_page_menu(breadcrumb, site, host_name))
+    make_header(html, title, breadcrumb, _host_log_list_page_menu(breadcrumb, site, host_name))
 
     if request.has_var("_ack") and not request.var("_do_actions") == _("No"):
         do_log_ack(site, host_name, file_name=None)
@@ -298,7 +299,9 @@ def show_file(site, host_name, file_name):
 
     title = _("Logfiles of Host %s: %s") % (host_name, int_filename)
     breadcrumb = _show_file_breadcrumb(host_name, title)
-    html.header(title, breadcrumb, _show_file_page_menu(breadcrumb, site, host_name, int_filename))
+    make_header(
+        html, title, breadcrumb, _show_file_page_menu(breadcrumb, site, host_name, int_filename)
+    )
 
     if request.has_var("_ack") and not request.var("_do_actions") == _("No"):
         do_log_ack(site, host_name, file_name)

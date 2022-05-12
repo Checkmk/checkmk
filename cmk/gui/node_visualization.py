@@ -31,6 +31,7 @@ from cmk.gui.breadcrumb import (
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.htmllib.context import html
+from cmk.gui.htmllib.header import make_header
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -196,7 +197,7 @@ class ParentChildTopologyPage(Page):
         breadcrumb.append(make_current_page_breadcrumb_item(visual_spec["title"]))
         page_menu = PageMenu(breadcrumb=breadcrumb)
         self._extend_display_dropdown(page_menu, visual_spec["name"])
-        html.header(visual_spec["title"], breadcrumb, page_menu)
+        make_header(html, visual_spec["title"], breadcrumb, page_menu)
         self.show_topology_content(topology_settings=topology_settings)
 
     def show_topology_content(self, topology_settings: TopologySettings) -> None:
@@ -267,7 +268,7 @@ def _bi_map() -> None:
     layout_id = request.var("layout_id")
     title = _("BI visualization")
     breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_monitoring(), title)
-    html.header(title, breadcrumb)
+    make_header(html, title, breadcrumb)
     div_id = "node_visualization"
     html.div("", id=div_id)
     html.javascript(

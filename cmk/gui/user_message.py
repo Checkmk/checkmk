@@ -14,6 +14,7 @@ import cmk.gui.message as message
 import cmk.gui.pages
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
 from cmk.gui.htmllib.context import html
+from cmk.gui.htmllib.header import make_header
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -53,7 +54,7 @@ class ModeUserMessagePage(cmk.gui.pages.Page):
 
     def page(self) -> None:
         breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_user(), _("Messages"))
-        html.header(self.title(), breadcrumb, self.page_menu(breadcrumb))
+        make_header(html, self.title(), breadcrumb, self.page_menu(breadcrumb))
         render_user_message_table("gui_hint")
 
 

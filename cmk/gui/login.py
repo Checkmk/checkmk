@@ -38,6 +38,7 @@ from cmk.gui.exceptions import (
 )
 from cmk.gui.htmllib.context import html
 from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.htmllib.header import make_header
 from cmk.gui.http import request, Request, response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
@@ -554,7 +555,7 @@ class LoginPage(Page):
     def _show_login_page(self) -> None:
         html.render_headfoot = False
         html.add_body_css_class("login")
-        html.header(get_page_heading(), Breadcrumb(), javascripts=[])
+        make_header(html, get_page_heading(), Breadcrumb(), javascripts=[])
 
         default_origtarget = (
             "index.py"

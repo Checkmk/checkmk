@@ -30,6 +30,7 @@ from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import FinalizeRequest, MKUserError
 from cmk.gui.htmllib.context import html
 from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.htmllib.header import make_header
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -222,7 +223,8 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
 
         build_index_background()
 
-        html.header(
+        make_header(
+            html,
             self.title(),
             breadcrumb=self.breadcrumb(),
             show_body_start=display_options.enabled(display_options.H),

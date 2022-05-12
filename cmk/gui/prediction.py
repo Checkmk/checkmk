@@ -18,6 +18,7 @@ import cmk.gui.pages
 import cmk.gui.sites as sites
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.htmllib.context import html
+from cmk.gui.htmllib.header import make_header
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.plugins.views.utils import make_service_breadcrumb
@@ -59,7 +60,11 @@ def page_graph():
     dsname = request.get_str_input_mandatory("dsname")
 
     breadcrumb = make_service_breadcrumb(host_name, service)
-    html.header(_("Prediction for %s - %s - %s") % (host_name, service, dsname), breadcrumb)
+    make_header(
+        html,
+        _("Prediction for %s - %s - %s") % (host_name, service, dsname),
+        breadcrumb,
+    )
 
     # Get current value from perf_data via Livestatus
     current_value = get_current_perfdata(host_name, service, dsname)

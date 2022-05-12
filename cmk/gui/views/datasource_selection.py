@@ -8,6 +8,7 @@ import cmk.gui.forms as forms
 import cmk.gui.visuals as visuals
 from cmk.gui.exceptions import HTTPRedirect, MKUserError
 from cmk.gui.htmllib.context import html
+from cmk.gui.htmllib.header import make_header
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.page_menu import make_simple_form_page_menu
@@ -38,7 +39,8 @@ def show_create_view_dialog(next_url=None):
 
     title = _("Create view")
     breadcrumb = visuals.visual_page_breadcrumb("views", title, "create")
-    html.header(
+    make_header(
+        html,
         title,
         breadcrumb,
         make_simple_form_page_menu(

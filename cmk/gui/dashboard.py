@@ -49,6 +49,7 @@ from cmk.gui.exceptions import (
 )
 from cmk.gui.htmllib.context import html
 from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.htmllib.header import make_header
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
@@ -609,7 +610,8 @@ def draw_dashboard(name: DashboardName) -> None:
 
     html.add_body_css_class("dashboard")
     breadcrumb = dashboard_breadcrumb(name, board, title)
-    html.header(
+    make_header(
+        html,
         title,
         breadcrumb=breadcrumb,
         page_menu=_page_menu(
@@ -1869,7 +1871,12 @@ def choose_view(name: DashboardName, title: str, create_dashlet_spec_func: Calla
         raise MKUserError("name", _("The requested dashboard does not exist."))
 
     breadcrumb = _dashlet_editor_breadcrumb(name, dashboard, title)
-    html.header(title, breadcrumb=breadcrumb, page_menu=_choose_view_page_menu(breadcrumb))
+    make_header(
+        html,
+        title,
+        breadcrumb=breadcrumb,
+        page_menu=_choose_view_page_menu(breadcrumb),
+    )
 
     if request.var("_save") and transactions.check_transaction():
         try:
@@ -1983,7 +1990,12 @@ class EditDashletPage(Page):
             title = _("Edit element: %s") % dashlet_type.title()
 
         breadcrumb = _dashlet_editor_breadcrumb(self._board, self._dashboard, title)
-        html.header(title, breadcrumb=breadcrumb, page_menu=_dashlet_editor_page_menu(breadcrumb))
+        make_header(
+            html,
+            title,
+            breadcrumb=breadcrumb,
+            page_menu=_dashlet_editor_page_menu(breadcrumb),
+        )
 
         vs_general = dashlet_vs_general_settings(dashlet_type, single_infos)
 

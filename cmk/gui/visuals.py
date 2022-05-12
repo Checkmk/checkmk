@@ -52,6 +52,7 @@ from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKGeneralException, MKUserError
 from cmk.gui.htmllib.context import html
+from cmk.gui.htmllib.header import make_header
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _u
 from cmk.gui.log import logger
@@ -736,7 +737,7 @@ def page_list(
         current_type_dropdown,
         what,
     )
-    html.header(title, breadcrumb, page_menu)
+    make_header(html, title, breadcrumb, page_menu)
 
     for message in get_flashed_messages():
         html.show_message(message)
@@ -916,7 +917,8 @@ def page_create_visual(what, info_keys, next_url=None):
     vs_infos = SingleInfoSelection(info_keys)
 
     breadcrumb = visual_page_breadcrumb(what, title, "create")
-    html.header(
+    make_header(
+        html,
         title,
         breadcrumb,
         make_simple_form_page_menu(
@@ -1325,7 +1327,7 @@ def page_edit_visual(
         form_name="visual",
         visualname=visualname,
     )
-    html.header(title, breadcrumb, page_menu)
+    make_header(html, title, breadcrumb, page_menu)
 
     # A few checkboxes concerning the visibility of the visual. These will
     # appear as boolean-keys directly in the visual dict, but encapsulated

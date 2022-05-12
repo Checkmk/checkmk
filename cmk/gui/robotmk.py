@@ -19,6 +19,7 @@ import cmk.gui.pages
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.context import html
+from cmk.gui.htmllib.header import make_header
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -60,7 +61,8 @@ class ModeRobotmkPage(cmk.gui.pages.Page):
                 self._report_type(), site_id, host_name, service_description
             )
         except MKLivestatusNotFoundError:
-            html.header(
+            make_header(
+                html,
                 title=title,
                 breadcrumb=breadcrumb,
             )
@@ -68,7 +70,8 @@ class ModeRobotmkPage(cmk.gui.pages.Page):
             return
 
         if not content[0]:
-            html.header(
+            make_header(
+                html,
                 title=title,
                 breadcrumb=breadcrumb,
             )
@@ -77,7 +80,8 @@ class ModeRobotmkPage(cmk.gui.pages.Page):
 
         # Only render page menu with download option if content is not empty
         # and user is permitted
-        html.header(
+        make_header(
+            html,
             title=title,
             breadcrumb=breadcrumb,
             page_menu=self._page_menu(breadcrumb, site_id, host_name, service_description),

@@ -37,6 +37,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.context import html
 from cmk.gui.htmllib.debug_vars import debug_vars
 from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.tag_rendering import HTMLContent
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
@@ -111,7 +112,7 @@ class PageCrash(ABCCrashReportPage):
 
         title = _("Crash report: %s") % self._crash_id
         breadcrumb = self._breadcrumb(title)
-        html.header(title, breadcrumb, self._page_menu(breadcrumb, crash_info))
+        make_header(html, title, breadcrumb, self._page_menu(breadcrumb, crash_info))
 
         # Do not reveal crash context information to unauthenticated users or not permitted
         # users to prevent disclosure of internal information

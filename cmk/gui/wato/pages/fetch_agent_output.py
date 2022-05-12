@@ -18,6 +18,7 @@ import cmk.gui.gui_background_job as gui_background_job
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.exceptions import HTTPRedirect, MKGeneralException, MKUserError
 from cmk.gui.htmllib.context import html
+from cmk.gui.htmllib.header import make_header
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -122,7 +123,7 @@ class AgentOutputPage(Page, abc.ABC):
 class PageFetchAgentOutput(AgentOutputPage):
     def page(self) -> None:
         title = self._title()
-        html.header(title, self._breadcrumb(title))
+        make_header(html, title, self._breadcrumb(title))
 
         self._action()
 

@@ -30,11 +30,6 @@ def r4r_dir() -> Path:
 
 
 @functools.lru_cache
-def root_cert_path() -> Path:
-    return _omd_root() / "etc/ssl/ca.pem"
-
-
-@functools.lru_cache
 def site_config_path() -> Path:
     return _omd_root() / "etc" / "omd" / "site.conf"
 

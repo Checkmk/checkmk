@@ -25,6 +25,7 @@ from cmk.special_agents.utils_kubernetes.transform import (
     resource_quota_from_client,
     statefulset_from_client,
 )
+from cmk.special_agents.utils_kubernetes.transform_json import JSONStatefulSetList
 
 LOGGER = logging.getLogger()
 VERSION_MATCH_RE = re.compile(r"\s*v?([0-9]+(?:\.[0-9]+)*).*")
@@ -165,7 +166,7 @@ class RawAPI:
     def query_kubelet_health(self, node_name) -> api.HealthZ:
         return self._get_healthz(f"/api/v1/nodes/{node_name}/proxy/healthz")
 
-    def query_raw_statefulsets(self) -> Mapping:
+    def query_raw_statefulsets(self) -> JSONStatefulSetList:
         return json.loads(self._request("GET", "/apis/apps/v1/statefulsets").response)
 
 

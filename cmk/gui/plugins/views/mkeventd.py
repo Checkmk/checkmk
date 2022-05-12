@@ -21,6 +21,7 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _, _l, ungettext
 from cmk.gui.logged_in import user
 from cmk.gui.permissions import Permission, permission_registry
+from cmk.gui.plugins.dashboard.utils import DashletConfig
 from cmk.gui.plugins.views.utils import (
     ABCDataSource,
     cmp_num_split,
@@ -41,7 +42,7 @@ from cmk.gui.plugins.views.utils import (
     row_id,
     RowTableLivestatus,
 )
-from cmk.gui.type_defs import HTTPVariables, Row, SingleInfos
+from cmk.gui.type_defs import HTTPVariables, Row, SingleInfos, ViewSpec
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeactionuri, urlencode_vars
@@ -729,24 +730,30 @@ def render_delete_event_icons(row):
 
     # Found no cleaner way to get the view. Sorry.
     # TODO: This needs to be cleaned up with the new view implementation.
-    if request.has_var("name") and request.has_var("id"):
+    filename: Optional[str] = None
+    if _is_rendered_from_view_dashlet():
         ident = request.get_integer_input_mandatory("id")
 
         import cmk.gui.dashboard as dashboard
 
-        view = dashboard.get_dashlet(request.get_str_input_mandatory("name"), ident)
+        dashlet_config: DashletConfig = dashboard.get_dashlet(
+            request.get_str_input_mandatory("name"), ident
+        )
+        if dashlet_config.get("type") == "linked_view":
+            view: Union[DashletConfig, ViewSpec] = get_permitted_views()[dashlet_config["name"]]
+        else:
+            view = dashlet_config
 
         # These actions are not performed within the dashlet. Assume the title url still
         # links to the source view where the action can be performed.
-        title_url = view.get("title_url")
+        title_url = dashlet_config.get("title_url")
         if title_url:
             parsed_url = urllib.parse.urlparse(title_url)
-            filename: Optional[str] = parsed_url.path
+            filename = parsed_url.path
             urlvars += urllib.parse.parse_qsl(parsed_url.query)
     else:
         # Regular view
-        view = get_permitted_views()[(request.get_str_input_mandatory("view_name"))]
-        filename = None
+        view = get_permitted_views()[request.get_str_input_mandatory("view_name")]
 
     urlvars += [
         ("filled_in", "actions"),
@@ -760,6 +767,10 @@ def render_delete_event_icons(row):
         request, transactions, urlvars, filename=filename, delvars=["selection", "show_checkboxes"]
     )
     return html.render_icon_button(url, _("Archive this event"), "archive_event")
+
+
+def _is_rendered_from_view_dashlet() -> bool:
+    return html.request.has_var("name") and html.request.has_var("id")
 
 
 @painter_registry.register

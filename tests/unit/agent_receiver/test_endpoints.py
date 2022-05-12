@@ -275,15 +275,33 @@ def test_register_with_labels_folder_exists(
 
 
 @pytest.fixture(name="agent_data_headers")
-def fixture_agent_data_headers() -> Mapping[str, str]:
+def fixture_agent_data_headers(uuid: UUID) -> Mapping[str, str]:
     return {
         "compression": "zlib",
+        "verified-uuid": str(uuid),
     }
 
 
 @pytest.fixture(name="compressed_agent_data")
 def fixture_compressed_agent_data() -> io.BytesIO:
     return io.BytesIO(compress(b"mock file"))
+
+
+def test_agent_data_uuid_mismatch(
+    client: TestClient,
+    uuid: UUID,
+    agent_data_headers: Mapping[str, str],
+    compressed_agent_data: io.BytesIO,
+) -> None:
+    response = client.post(
+        "/agent_data/123",
+        headers=agent_data_headers,
+        files={"monitoring_data": ("filename", compressed_agent_data)},
+    )
+    assert response.status_code == 400
+    assert response.json() == {
+        "detail": f"Verified client UUID ({uuid}) does not match UUID in URL (123)"
+    }
 
 
 def test_agent_data_no_host(
@@ -417,9 +435,33 @@ def test_agent_data_move_ready(
     assert (site_context.r4r_dir() / "DISCOVERABLE" / f"{uuid}.json").exists()
 
 
+@pytest.fixture(name="registration_status_headers")
+def fixture_registration_status_headers(uuid: UUID) -> Mapping[str, str]:
+    return {
+        "verified-uuid": str(uuid),
+    }
+
+
+def test_registration_status_uuid_mismtach(
+    client: TestClient,
+    uuid: UUID,
+    registration_status_headers: Mapping[str, str],
+) -> None:
+    response = client.get(
+        "/registration_status/123",
+        headers=registration_status_headers,
+    )
+
+    assert response.status_code == 400
+    assert response.json() == {
+        "detail": f"Verified client UUID ({uuid}) does not match UUID in URL (123)"
+    }
+
+
 def test_registration_status_declined(
     client: TestClient,
     uuid: UUID,
+    registration_status_headers: Mapping[str, str],
 ) -> None:
     (path_declined := site_context.r4r_dir() / "DECLINED").mkdir()
     (path_declined / f"{uuid}.json").write_text(
@@ -428,7 +470,7 @@ def test_registration_status_declined(
 
     response = client.get(
         f"/registration_status/{uuid}",
-        headers={"authentication": "auth"},
+        headers=registration_status_headers,
     )
 
     assert response.status_code == 200
@@ -443,10 +485,11 @@ def test_registration_status_declined(
 def test_registration_status_host_not_registered(
     client: TestClient,
     uuid: UUID,
+    registration_status_headers: Mapping[str, str],
 ) -> None:
     response = client.get(
         f"/registration_status/{uuid}",
-        headers={"authentication": "auth"},
+        headers=registration_status_headers,
     )
 
     assert response.status_code == 404
@@ -457,13 +500,14 @@ def test_registration_status_host_not_registered(
 def test_registration_status_push_host(
     client: TestClient,
     uuid: UUID,
+    registration_status_headers: Mapping[str, str],
 ) -> None:
     (path_discoverable := site_context.r4r_dir() / "DISCOVERABLE").mkdir()
     (path_discoverable / f"{uuid}.json").touch()
 
     response = client.get(
         f"/registration_status/{uuid}",
-        headers={"authentication": "auth"},
+        headers=registration_status_headers,
     )
 
     assert response.status_code == 200
@@ -479,6 +523,7 @@ def test_registration_status_pull_host(
     tmp_path: Path,
     client: TestClient,
     uuid: UUID,
+    registration_status_headers: Mapping[str, str],
 ) -> None:
     source = site_context.agent_output_dir() / str(uuid)
     target_dir = tmp_path / "hostname"
@@ -486,7 +531,7 @@ def test_registration_status_pull_host(
 
     response = client.get(
         f"/registration_status/{uuid}",
-        headers={"authentication": "auth"},
+        headers=registration_status_headers,
     )
 
     assert response.status_code == 200

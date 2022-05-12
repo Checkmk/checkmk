@@ -4,19 +4,37 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Callable, Coroutine
+from typing import Any, Callable, Coroutine, Optional
 
 from agent_receiver.log import configure_logger
 from agent_receiver.site_context import log_path, site_name
 from fastapi import APIRouter, FastAPI, Request, Response
+from fastapi.responses import JSONResponse
 from fastapi.routing import APIRoute
+from starlette.status import HTTP_400_BAD_REQUEST
 
 
-class _CertValidationRoute(APIRoute):
+class _UUIDValidationRoute(APIRoute):
+    @staticmethod
+    def _mismatch_header_vs_url_uuid_response(request: Request) -> Optional[JSONResponse]:
+        return (
+            None
+            if (header_uuid := request.headers["verified-uuid"])
+            == (url_uuid := request.url.path.split("/")[-1])
+            else JSONResponse(
+                status_code=HTTP_400_BAD_REQUEST,
+                content={
+                    "detail": f"Verified client UUID ({header_uuid}) does not match UUID in URL ({url_uuid})"
+                },
+            )
+        )
+
     def get_route_handler(self) -> Callable[[Request], Coroutine[Any, Any, Response]]:
         original_route_handler = super().get_route_handler()
 
         async def custom_route_handler(request: Request) -> Response:
+            if mismatch_response := self._mismatch_header_vs_url_uuid_response(request):
+                return mismatch_response
             response: Response = await original_route_handler(request)
             return response
 
@@ -24,7 +42,7 @@ class _CertValidationRoute(APIRoute):
 
 
 agent_receiver_app = FastAPI(title="Checkmk Agent Receiver")
-cert_validation_router = APIRouter(route_class=_CertValidationRoute)
+uuid_validation_router = APIRouter(route_class=_UUIDValidationRoute)
 
 
 def main_app() -> FastAPI:
@@ -34,7 +52,7 @@ def main_app() -> FastAPI:
     from agent_receiver import endpoints  # pylint: disable=unused-import
 
     # this must happen *after* registering the endpoints
-    agent_receiver_app.include_router(cert_validation_router)
+    agent_receiver_app.include_router(uuid_validation_router)
 
     main_app_ = FastAPI(
         openapi_url=None,

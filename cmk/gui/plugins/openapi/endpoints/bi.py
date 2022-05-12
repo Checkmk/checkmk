@@ -24,7 +24,7 @@ from cmk.utils.bi.bi_rule import BIRule, BIRuleSchema
 from cmk.utils.bi.bi_schema import Schema
 from cmk.utils.exceptions import MKGeneralException
 
-from cmk.gui.bi import get_cached_bi_packs
+from cmk.gui.bi import api_get_aggregation_state, get_cached_bi_packs
 from cmk.gui.http import Response
 from cmk.gui.plugins.openapi.restful_objects import constructors, Endpoint, response_schemas
 from cmk.gui.plugins.openapi.utils import ProblemException
@@ -186,6 +186,46 @@ class BIAggregationEndpointSchema(BIAggregationSchema):
         dump_default="",
         example="pack1",
         description="TODO: Hier muß Andreas noch etwas reinschreiben!",
+    )
+
+
+class BIAggregationStateRequestSchema(Schema):
+    filter_names = fields.List(fields.String(), description="Filter by names", example=["Host foo"])
+    filter_groups = fields.List(
+        fields.String(), description="Filter by group", example=["My Group"]
+    )
+
+
+class BIAggregationStateResponseSchema(Schema):
+    aggregations = fields.Dict(
+        description="The Aggregation state",
+        example={},
+    )
+    missing_sites = fields.List(
+        fields.String(),
+        description="The missing sites",
+        example=["beta", "heute"],
+    )
+    missing_aggr = fields.List(
+        fields.String(), description="the missing aggregations", example=["Host heute"]
+    )
+
+
+@Endpoint(
+    constructors.domain_type_action_href("bi_aggregation", "aggregation_state"),
+    "cmk/get_bi_aggregation_state",
+    method="post",
+    convert_response=False,
+    request_schema=BIAggregationStateRequestSchema,
+    response_schema=BIAggregationStateResponseSchema,
+)
+def get_bi_aggregation_state(params):
+    """Get the state of BI aggregations"""
+    filter_names = params.get("filter_names")
+    filter_groups = params.get("filter_groups")
+
+    return constructors.serve_json(
+        api_get_aggregation_state(filter_names=filter_names, filter_groups=filter_groups)
     )
 
 

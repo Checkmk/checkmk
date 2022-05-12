@@ -1,6 +1,6 @@
 import logging
 import time
-from typing import Any, List, NamedTuple, NewType, Optional
+from typing import Any, List, NamedTuple, Optional
 
 import requests
 

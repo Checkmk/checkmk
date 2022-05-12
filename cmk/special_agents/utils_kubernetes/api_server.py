@@ -4,8 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import ast
 import itertools
+import json
 from dataclasses import dataclass
 from typing import Dict, Iterable, List, Literal, Mapping, Optional, Sequence, Tuple, Union
 
@@ -125,12 +125,14 @@ class RawAPI:
         response, status_code, headers = self._api_client.call_api(
             resource_path,
             method,
-            response_type=str,
             query_params=query_params,
             auth_settings=["BearerToken"],
             _request_timeout=self.timeout,
+            _preload_content=False,
         )
-        return RawAPIResponse(response=response, status_code=status_code, headers=headers)
+        return RawAPIResponse(
+            response=response.data.decode("utf-8"), status_code=status_code, headers=headers
+        )
 
     def _get_healthz(self, url) -> api.HealthZ:
         def get_health(query_params=None) -> Tuple[int, str]:
@@ -155,10 +157,7 @@ class RawAPI:
         )
 
     def query_version(self) -> api.GitVersion:
-        # We cannot use json instead of ast here, because the Kubernetes client converts the JSON
-        # to a string by replacing " by ' (hence it no longer is JSON). It may be possible to fix
-        # this by looking into the parameters for client.APIClient.call_api.
-        return ast.literal_eval(self._request("GET", "/version").response)["gitVersion"]
+        return json.loads(self._request("GET", "/version").response)["gitVersion"]
 
     def query_api_health(self) -> api.APIHealth:
         return api.APIHealth(ready=self._get_healthz("/readyz"), live=self._get_healthz("/livez"))

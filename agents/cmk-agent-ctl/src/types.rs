@@ -114,7 +114,7 @@ impl std::convert::TryFrom<OptPwdCredentials> for Credentials {
 impl Credentials {
     fn prompt_password(user: &str) -> AnyhowResult<String> {
         eprintln!();
-        rpassword::prompt_password_stderr(&format!("Please enter password for '{}'\n> ", user))
-            .context("Failed to obtain API password")
+        eprint!("Please enter password for '{}'\n> ", user);
+        rpassword::read_password().context("Failed to obtain API password")
     }
 }

@@ -8,6 +8,10 @@ import sys
 import traceback
 from typing import Any, Callable, Dict, List, Literal, NamedTuple, Optional, Union
 
+from cmk.gui.config import active_config
+from cmk.gui.htmllib.context import html
+from cmk.gui.i18n import _
+
 
 class Hook(NamedTuple):
     handler: Callable
@@ -63,12 +67,7 @@ def call(name: str, *args: Any) -> None:
         try:
             hook.handler(*args)
         except Exception as e:
-            from cmk.gui.config import active_config
-
             if active_config.debug:
-                from cmk.gui.htmllib.context import html
-                from cmk.gui.i18n import _
-
                 t, v, tb = sys.exc_info()
                 msg = "".join(traceback.format_exception(t, v, tb, None))
                 html.show_error(

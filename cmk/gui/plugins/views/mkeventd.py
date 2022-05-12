@@ -12,7 +12,7 @@ from cmk.utils.defines import short_service_state_name
 import cmk.gui.escaping as escaping
 import cmk.gui.config as config
 import cmk.gui.sites as sites
-from cmk.gui.type_defs import HTTPVariables
+from cmk.gui.type_defs import HTTPVariables, ViewSpec
 
 import cmk.gui.mkeventd as mkeventd
 from cmk.gui.valuespec import MonitoringState
@@ -21,6 +21,7 @@ from cmk.gui.i18n import _, _l, ungettext
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
 
+from cmk.gui.plugins.dashboard.utils import DashletConfig
 from cmk.gui.plugins.views import (
     get_permitted_views,
     command_registry,
@@ -716,23 +717,28 @@ def render_delete_event_icons(row):
 
     # Found no cleaner way to get the view. Sorry.
     # TODO: This needs to be cleaned up with the new view implementation.
-    if html.request.has_var("name") and html.request.has_var("id"):
+    filename: Optional[str] = None
+    if _is_rendered_from_view_dashlet():
         ident = html.request.get_integer_input_mandatory("id")
 
         import cmk.gui.dashboard as dashboard
-        view = dashboard.get_dashlet(html.request.get_str_input_mandatory("name"), ident)
+        dashlet_config: DashletConfig = dashboard.get_dashlet(
+            html.request.get_str_input_mandatory("name"), ident)
+        if dashlet_config.get("type") == "linked_view":
+            view: Union[DashletConfig, ViewSpec] = get_permitted_views()[dashlet_config["name"]]
+        else:
+            view = dashlet_config
 
         # These actions are not performed within the dashlet. Assume the title url still
         # links to the source view where the action can be performed.
-        title_url = view.get("title_url")
+        title_url = dashlet_config.get("title_url")
         if title_url:
             parsed_url = urllib.parse.urlparse(title_url)
-            filename: Optional[str] = parsed_url.path
+            filename = parsed_url.path
             urlvars += urllib.parse.parse_qsl(parsed_url.query)
     else:
         # Regular view
-        view = get_permitted_views()[(html.request.get_str_input_mandatory("view_name"))]
-        filename = None
+        view = get_permitted_views()[html.request.get_str_input_mandatory("view_name")]
 
     urlvars += [
         ("filled_in", "actions"),
@@ -744,6 +750,10 @@ def render_delete_event_icons(row):
     ]
     url = html.makeactionuri(urlvars, filename=filename, delvars=["selection", "show_checkboxes"])
     return html.render_icon_button(url, _("Archive this event"), "archive_event")
+
+
+def _is_rendered_from_view_dashlet() -> bool:
+    return html.request.has_var("name") and html.request.has_var("id")
 
 
 @painter_registry.register

@@ -100,62 +100,6 @@ def check_icmp_params():
     ]
 
 
-def _valuespec_active_checks_ssh():
-    return Dictionary(
-        title=_("Check SSH service"),
-        help=_("This rulset allow you to configure a SSH check for a host"),
-        elements=[
-            (
-                "description",
-                TextInput(
-                    title=_("Service Description"),
-                ),
-            ),
-            (
-                "port",
-                Integer(
-                    title=_("TCP port number"),
-                    default_value=22,
-                ),
-            ),
-            (
-                "timeout",
-                Integer(
-                    title=_("Connect Timeout"),
-                    help=_("Seconds before connection times out"),
-                    default_value=10,
-                ),
-            ),
-            (
-                "remote_version",
-                TextInput(
-                    title=_("Version of Server"),
-                    help=_(
-                        "Warn if string doesn't match expected server version (ex: OpenSSH_3.9p1)"
-                    ),
-                ),
-            ),
-            (
-                "remote_protocol",
-                TextInput(
-                    title=_("Protocol of Server"),
-                    help=_("Warn if protocol doesn't match expected protocol version (ex: 2.0)"),
-                ),
-            ),
-        ],
-    )
-
-
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupIntegrateOtherServices,
-        match_type="all",
-        name="active_checks:ssh",
-        valuespec=_valuespec_active_checks_ssh,
-    )
-)
-
-
 def _valuespec_active_checks_icmp():
     return Dictionary(
         title=_("Check hosts with PING (ICMP Echo Request)"),

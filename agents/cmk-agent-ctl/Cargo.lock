@@ -356,7 +356,6 @@ dependencies = [
  "assert_cmd",
  "async-std",
  "async-trait",
- "base64",
  "bincode",
  "faccess",
  "flate2",

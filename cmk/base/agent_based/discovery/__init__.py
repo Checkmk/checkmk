@@ -1240,9 +1240,9 @@ def get_check_preview(
     all services if possible"""
     config_cache = config.get_config_cache()
     host_config = config_cache.get_host_config(host_name)
-    host_attrs = get_host_attributes(host_name, config_cache)
 
     ip_address = None if host_config.is_cluster else config.lookup_ip_address(host_config)
+    host_attrs = get_host_attributes(host_name, config_cache)
 
     cmk.core_helpers.cache.FileCacheFactory.use_outdated = True
     cmk.core_helpers.cache.FileCacheFactory.maybe = use_cached_snmp_data

@@ -1522,7 +1522,8 @@ class AutomationActiveCheck(Automation):
 
         config_cache = config.get_config_cache()
         host_config = config_cache.get_host_config(hostname)
-        host_attrs = core_config.get_host_attributes(hostname, config_cache)
+        with redirect_stdout(open(os.devnull, "w")):
+            host_attrs = core_config.get_host_attributes(hostname, config_cache)
 
         if plugin == "custom":
             for entry in host_config.custom_checks:

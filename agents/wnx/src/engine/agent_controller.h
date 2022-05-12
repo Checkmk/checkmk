@@ -33,6 +33,7 @@ constexpr uint16_t kWindowsInternalPort{50001};
 
 std::filesystem::path GetController(const std::filesystem::path &service);
 std::filesystem::path GetWorkController();
+bool CreateTomlConfig(const std::filesystem::path &service);
 std::wstring BuildCommandLine(const std::filesystem::path &controller);
 std::optional<uint32_t> StartAgentController(
     const std::filesystem::path &service);
@@ -47,11 +48,13 @@ bool IsControllerFlagFileExists();
 
 std::filesystem::path LegacyPullFile();
 std::filesystem::path ControllerFlagFile();
+std::filesystem::path TomlConfigFile();
 
 // config
 uint16_t GetConfiguredAgentChannelPort();
 bool GetConfiguredLocalOnly();
 bool GetConfiguredCheck();
+bool IsConfiguredEmergencyOnCrash();
 
 /// To be called once when cap is installed
 ///

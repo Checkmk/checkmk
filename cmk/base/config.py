@@ -1083,6 +1083,9 @@ _old_service_descriptions: Mapping[
     "liebert_bat_temp": lambda item: (False, "Battery Temp"),
     "logwatch": "LOG %s",
     "logwatch_groups": "LOG %s",
+    "megaraid_bbu": "RAID Adapter/BBU %s",
+    "megaraid_pdisks": "RAID PDisk Adapt/Enc/Sl %s",
+    "megaraid_ldisks": "RAID Adapter/LDisk %s",
     "mem_used": "Memory used",
     "mem_win": "Memory and pagefile",
     "mknotifyd": "Notification Spooler %s",
@@ -2971,6 +2974,9 @@ class HostConfig:
             "severity_unmonitored": inventory_check_severity,
             "severity_vanished": 0,
         }
+
+    def add_active_checkmk_check(self) -> bool:
+        return not self.is_ping_host
 
     def add_service_discovery_check(
         self, params: Optional[Dict[str, Any]], service_discovery_name: str

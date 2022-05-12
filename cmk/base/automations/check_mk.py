@@ -877,12 +877,13 @@ class ABCDeleteHosts:
                     raise
 
     def _delete_if_exists(self, path: str) -> None:
-        """Delete the given file in case it exists"""
+        """Delete the given file or folder in case it exists"""
         try:
             os.unlink(path)
-        except OSError as e:
-            if e.errno != errno.ENOENT:
-                raise
+        except IsADirectoryError:
+            shutil.rmtree(path)
+        except FileNotFoundError:
+            pass
 
 
 class AutomationDeleteHosts(ABCDeleteHosts, Automation):

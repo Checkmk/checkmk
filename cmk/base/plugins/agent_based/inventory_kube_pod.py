@@ -48,12 +48,18 @@ def inventory_kube_pod(
         or section_kube_pod_init_container_specs is None
     ):
         return
+    yield Attributes(
+        path=["software", "applications", "kube", "metadata"],
+        inventory_attributes={
+            "object": "Pod",
+            "name": section_kube_pod_info.name,
+            "namespace": section_kube_pod_info.namespace,
+        },
+    )
 
     yield Attributes(
         path=["software", "applications", "kube", "pod"],
         inventory_attributes={
-            "name": section_kube_pod_info.name,
-            "namespace": section_kube_pod_info.namespace,
             "dns_policy": section_kube_pod_info.dns_policy,
             "host_ip": section_kube_pod_info.host_ip,
             "host_network": section_kube_pod_info.host_network,

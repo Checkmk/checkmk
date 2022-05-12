@@ -7,12 +7,14 @@
 import json
 
 import pytest
+from mock import call, MagicMock
+from pytest_mock import MockerFixture
 
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
-from cmk.automations.results import CheckPreviewEntry, SetAutochecksResult, TryDiscoveryResult
+from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
-from cmk.gui.watolib.services import Discovery
+from cmk.automations.results import CheckPreviewEntry, SetAutochecksResult, TryDiscoveryResult
 
 mock_discovery_result = TryDiscoveryResult(
     check_table=[
@@ -783,85 +785,311 @@ mock_discovery_result = TryDiscoveryResult(
 )
 
 
-@pytest.mark.usefixtures("with_host")
-@pytest.mark.usefixtures("inline_background_jobs")
-def test_openapi_discovery(
-    monkeypatch: pytest.MonkeyPatch,
+@pytest.fixture(name="mock_try_discovery")
+def fixture_mock_try_discovery(mocker: MockerFixture) -> MagicMock:
+    return mocker.patch(
+        "cmk.gui.watolib.services.try_discovery", return_value=mock_discovery_result
+    )
+
+
+@pytest.fixture(name="mock_set_autochecks")
+def fixture_mock_set_autochecks(mocker: MockerFixture) -> MagicMock:
+    return mocker.patch(
+        "cmk.gui.watolib.services.set_autochecks", return_value=SetAutochecksResult()
+    )
+
+
+@pytest.mark.usefixtures("with_host", "inline_background_jobs")
+def test_openapi_discovery_fails_on_invalid_content_type(
+    base: str,
     aut_user_auth_wsgi_app: WebTestAppForCMK,
-    mock_livestatus,
+    mock_try_discovery: MagicMock,
+    mock_set_autochecks: MagicMock,
 ) -> None:
-    monkeypatch.setattr(
-        "cmk.gui.watolib.services.try_discovery",
-        lambda *args, **kwargs: mock_discovery_result,
-    )
-    monkeypatch.setattr(
-        "cmk.gui.watolib.services.set_autochecks",
-        lambda *args, **kwargs: SetAutochecksResult(),
-    )
-
-    base = "/NO_SITE/check_mk/api/1.0"
-
-    _resp = aut_user_auth_wsgi_app.call_method(
+    resp = aut_user_auth_wsgi_app.call_method(
         "post",
-        base + "/objects/host/example.com/actions/discover_services/invoke",
+        f"{base}/objects/host/example.com/actions/discover_services/invoke",
         params='{"mode": "foo"}',
         headers={"Accept": "application/json"},
         status=415,
     )
+    assert "Content type not valid" in resp.json["title"]
+    mock_try_discovery.assert_not_called()
+    mock_set_autochecks.assert_not_called()
 
-    _resp = aut_user_auth_wsgi_app.call_method(
+
+@pytest.mark.usefixtures("with_host", "inline_background_jobs")
+def test_openapi_discovery_on_invalid_mode(
+    base: str,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    mock_try_discovery: MagicMock,
+    mock_set_autochecks: MagicMock,
+) -> None:
+    resp = aut_user_auth_wsgi_app.call_method(
         "post",
-        base + "/objects/host/example.com/actions/discover_services/invoke",
+        f"{base}/objects/host/example.com/actions/discover_services/invoke",
         params='{"mode": "foo"}',
         content_type="application/json",
         headers={"Accept": "application/json"},
         status=400,
     )
+    assert resp.json["detail"] == "These fields have problems: mode"
+    mock_try_discovery.assert_not_called()
+    mock_set_autochecks.assert_not_called()
 
-    _resp = aut_user_auth_wsgi_app.call_method(
+
+@pytest.mark.usefixtures("with_host", "inline_background_jobs")
+def test_openapi_discovery_refresh_services(
+    base: str,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    mock_try_discovery: MagicMock,
+    mock_set_autochecks: MagicMock,
+) -> None:
+    resp = aut_user_auth_wsgi_app.call_method(
         "post",
-        base + "/objects/host/example.com/actions/discover_services/invoke",
+        f"{base}/objects/host/example.com/actions/discover_services/invoke",
         params='{"mode": "refresh"}',
         content_type="application/json",
         headers={"Accept": "application/json"},
         status=200,
     )
-
-    with mock_livestatus(expect_status_query=True):
-        aut_user_auth_wsgi_app.follow_link(
-            _resp,
-            "cmk/service.move-ignored",
-            json_data=_resp.json["members"]["df-/boot"],
-            headers={"Accept": "application/json"},
-            status=204,
-        )
-
-    with mock_livestatus(expect_status_query=True):
-        aut_user_auth_wsgi_app.follow_link(
-            _resp,
-            "cmk/service.move-monitored",
-            json_data=_resp.json["members"]["df-/boot"],
-            headers={"Accept": "application/json"},
-            status=204,
-        )
+    assert len(resp.json["members"]) == len(mock_discovery_result.check_table)
+    assert mock_try_discovery.mock_calls == [
+        call("NO_SITE", ["@noscan"], "example.com"),
+        call("NO_SITE", ["@scan"], "example.com"),
+        call("NO_SITE", ["@noscan"], "example.com"),
+    ]
+    # TODO: This is a bug
+    mock_set_autochecks.assert_not_called()
 
 
-@pytest.mark.usefixtures("inline_background_jobs")
-def test_openapi_discover_single_service(
+@pytest.mark.usefixtures("with_host", "inline_background_jobs")
+def test_openapi_discovery_disable_and_re_enable_one_service(
+    base: str,
     aut_user_auth_wsgi_app: WebTestAppForCMK,
-    mocker,
+    mock_livestatus: MockLiveStatusConnection,
+    mock_try_discovery: MagicMock,
+    mock_set_autochecks: MagicMock,
 ) -> None:
-    base = "/NO_SITE/check_mk/api/1.0"
+    resp = aut_user_auth_wsgi_app.call_method(
+        "post",
+        f"{base}/objects/host/example.com/actions/discover_services/invoke",
+        params='{"mode": "refresh"}',
+        content_type="application/json",
+        headers={"Accept": "application/json"},
+        status=200,
+    )
+    assert len(resp.json["members"]) == len(mock_discovery_result.check_table)
+    mock_try_discovery.reset_mock()
 
-    # create a host
+    with mock_livestatus(expect_status_query=True):
+        df_boot_ignore = aut_user_auth_wsgi_app.follow_link(
+            resp,
+            "cmk/service.move-ignored",
+            json_data=resp.json["members"]["df-/boot"],
+            headers={"Accept": "application/json"},
+            status=204,
+        )
+        assert df_boot_ignore.text == ""
+        mock_try_discovery.assert_called_once()
+        mock_try_discovery.reset_mock()
+        mock_set_autochecks.assert_called_once_with(
+            "NO_SITE",
+            "example.com",
+            {
+                ("cpu.loads", None): ("CPU load", "cpuload_default_levels", {}, ["heute"]),
+                ("cpu.threads", None): ("Number of threads", "{}", {}, ["heute"]),
+                ("df", "/boot/efi"): (
+                    "Filesystem /boot/efi",
+                    "{'include_volume_name': False}",
+                    {},
+                    ["heute"],
+                ),
+                ("kernel.performance", None): ("Kernel Performance", "{}", {}, ["heute"]),
+                ("kernel.util", None): ("CPU utilization", "{}", {}, ["heute"]),
+                ("lnx_thermal", "Zone 0"): ("Temperature Zone 0", "{}", {}, ["heute"]),
+                ("lnx_thermal", "Zone 1"): ("Temperature Zone 1", "{}", {}, ["heute"]),
+                ("lnx_thermal", "Zone 2"): ("Temperature Zone 2", "{}", {}, ["heute"]),
+                ("lnx_thermal", "Zone 3"): ("Temperature Zone 3", "{}", {}, ["heute"]),
+                ("lnx_thermal", "Zone 4"): ("Temperature Zone 4", "{}", {}, ["heute"]),
+                ("lnx_thermal", "Zone 5"): ("Temperature Zone 5", "{}", {}, ["heute"]),
+                ("lnx_thermal", "Zone 6"): ("Temperature Zone 6", "{}", {}, ["heute"]),
+                ("lnx_thermal", "Zone 7"): ("Temperature Zone 7", "{}", {}, ["heute"]),
+                ("lnx_thermal", "Zone 8"): ("Temperature Zone 8", "{}", {}, ["heute"]),
+                ("mkeventd_status", "heute"): ("OMD heute Event Console", "{}", {}, ["heute"]),
+                ("mkeventd_status", "stable"): ("OMD stable Event Console", "{}", {}, ["heute"]),
+                ("mknotifyd", "heute"): ("OMD heute Notification Spooler", "{}", {}, ["heute"]),
+                ("mknotifyd", "stable"): ("OMD stable Notification Spooler", "{}", {}, ["heute"]),
+                ("mounts", "/"): (
+                    "Mount options of /",
+                    "['errors=remount-ro', 'relatime', 'rw']",
+                    {},
+                    ["heute"],
+                ),
+                ("mounts", "/boot"): (
+                    "Mount options of /boot",
+                    "['relatime', 'rw']",
+                    {},
+                    ["heute"],
+                ),
+                ("mounts", "/boot/efi"): (
+                    "Mount options of /boot/efi",
+                    "['codepage=437', 'dmask=0077', 'errors=remount-ro', 'fmask=0077', 'iocharset=iso8859-1', 'relatime', 'rw', 'shortname=mixed']",
+                    {},
+                    ["heute"],
+                ),
+                ("omd_apache", "heute"): ("OMD heute apache", "None", {}, ["heute"]),
+                ("omd_apache", "stable"): ("OMD stable apache", "None", {}, ["heute"]),
+                ("systemd_units.services_summary", "Summary"): (
+                    "Systemd Service Summary",
+                    "{}",
+                    {},
+                    ["heute"],
+                ),
+                ("tcp_conn_stats", None): (
+                    "TCP Connections",
+                    "tcp_conn_stats_default_levels",
+                    {},
+                    ["heute"],
+                ),
+                ("uptime", None): ("Uptime", "{}", {}, ["heute"]),
+            },
+        )
+        mock_set_autochecks.reset_mock()
+
+    with mock_livestatus(expect_status_query=True):
+        df_boot_monitor = aut_user_auth_wsgi_app.follow_link(
+            resp,
+            "cmk/service.move-monitored",
+            json_data=resp.json["members"]["df-/boot"],
+            headers={"Accept": "application/json"},
+            status=204,
+        )
+        assert df_boot_monitor.text == ""
+        mock_try_discovery.assert_called_once()
+        mock_set_autochecks.assert_called_once_with(
+            "NO_SITE",
+            "example.com",
+            {
+                ("cpu.loads", None): ("CPU load", "cpuload_default_levels", {}, ["heute"]),
+                ("cpu.threads", None): ("Number of threads", "{}", {}, ["heute"]),
+                ("df", "/boot/efi"): (
+                    "Filesystem /boot/efi",
+                    "{'include_volume_name': False}",
+                    {},
+                    ["heute"],
+                ),
+                ("df", "/boot"): (
+                    "Filesystem /boot",
+                    {"include_volume_name": False},
+                    {},
+                    ["heute"],
+                ),
+                ("kernel.performance", None): ("Kernel Performance", "{}", {}, ["heute"]),
+                ("kernel.util", None): ("CPU utilization", "{}", {}, ["heute"]),
+                ("lnx_thermal", "Zone 0"): ("Temperature Zone 0", "{}", {}, ["heute"]),
+                ("lnx_thermal", "Zone 1"): ("Temperature Zone 1", "{}", {}, ["heute"]),
+                ("lnx_thermal", "Zone 2"): ("Temperature Zone 2", "{}", {}, ["heute"]),
+                ("lnx_thermal", "Zone 3"): ("Temperature Zone 3", "{}", {}, ["heute"]),
+                ("lnx_thermal", "Zone 4"): ("Temperature Zone 4", "{}", {}, ["heute"]),
+                ("lnx_thermal", "Zone 5"): ("Temperature Zone 5", "{}", {}, ["heute"]),
+                ("lnx_thermal", "Zone 6"): ("Temperature Zone 6", "{}", {}, ["heute"]),
+                ("lnx_thermal", "Zone 7"): ("Temperature Zone 7", "{}", {}, ["heute"]),
+                ("lnx_thermal", "Zone 8"): ("Temperature Zone 8", "{}", {}, ["heute"]),
+                ("mkeventd_status", "heute"): ("OMD heute Event Console", "{}", {}, ["heute"]),
+                ("mkeventd_status", "stable"): (
+                    "OMD stable Event Console",
+                    "{}",
+                    {},
+                    ["heute"],
+                ),
+                ("mknotifyd", "heute"): ("OMD heute Notification Spooler", "{}", {}, ["heute"]),
+                ("mknotifyd", "stable"): (
+                    "OMD stable Notification Spooler",
+                    "{}",
+                    {},
+                    ["heute"],
+                ),
+                ("mounts", "/"): (
+                    "Mount options of /",
+                    "['errors=remount-ro', 'relatime', 'rw']",
+                    {},
+                    ["heute"],
+                ),
+                ("mounts", "/boot"): (
+                    "Mount options of /boot",
+                    "['relatime', 'rw']",
+                    {},
+                    ["heute"],
+                ),
+                ("mounts", "/boot/efi"): (
+                    "Mount options of /boot/efi",
+                    "['codepage=437', 'dmask=0077', 'errors=remount-ro', 'fmask=0077', 'iocharset=iso8859-1', 'relatime', 'rw', 'shortname=mixed']",
+                    {},
+                    ["heute"],
+                ),
+                ("omd_apache", "heute"): ("OMD heute apache", "None", {}, ["heute"]),
+                ("omd_apache", "stable"): ("OMD stable apache", "None", {}, ["heute"]),
+                ("systemd_units.services_summary", "Summary"): (
+                    "Systemd Service Summary",
+                    "{}",
+                    {},
+                    ["heute"],
+                ),
+                ("tcp_conn_stats", None): (
+                    "TCP Connections",
+                    "tcp_conn_stats_default_levels",
+                    {},
+                    ["heute"],
+                ),
+                ("uptime", None): ("Uptime", "{}", {}, ["heute"]),
+            },
+        )
+
+
+@pytest.mark.usefixtures("with_host", "inline_background_jobs")
+def test_openapi_discover_single_service(
+    base: str,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    mock_try_discovery: MagicMock,
+    mock_set_autochecks: MagicMock,
+) -> None:
+    resp = aut_user_auth_wsgi_app.call_method(
+        "put",
+        f"{base}/objects/host/example.com/actions/update_discovery_phase/invoke",
+        params='{"check_type": "systemd_units_services_summary", "service_item": "Summary", "target_phase": "monitored"}',
+        headers={"Accept": "application/json"},
+        content_type="application/json",
+        status=204,
+    )
+    assert resp.text == ""
+    mock_try_discovery.assert_called_once()
+    # TODO: This seems to be a bug. Might be caused by the fact that the service is currently not
+    # known to the host. I have not verified this. But in case something like this happens, the
+    # endpoint should fail with some error instead instead of continuing silently.
+    mock_set_autochecks.assert_not_called()
+
+
+def test_openapi_bulk_discovery_with_default_options(
+    base: str,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+) -> None:
+    # create some sample hosts
     aut_user_auth_wsgi_app.call_method(
         "post",
-        base + "/domain-types/host_config/collections/all",
+        f"{base}/domain-types/host_config/actions/bulk-create/invoke",
         params=json.dumps(
             {
-                "folder": "/",
-                "host_name": "example.com",
-                "attributes": {},
+                "entries": [
+                    {
+                        "host_name": "foobar",
+                        "folder": "/",
+                    },
+                    {
+                        "host_name": "sample",
+                        "folder": "/",
+                    },
+                ]
             }
         ),
         status=200,
@@ -869,18 +1097,46 @@ def test_openapi_discover_single_service(
         content_type="application/json",
     )
 
-    discovery_spy = mocker.spy(Discovery, "__init__")
-    mocker.patch("cmk.gui.watolib.services.execute_discovery_job")
-
-    # we want to test this call:
-    aut_user_auth_wsgi_app.call_method(
-        "put",
-        base + "/objects/host/example.com/actions/update_discovery_phase/invoke",
-        params='{"check_type": "systemd_units_services_summary", "service_item": "Summary", "target_phase": "monitored"}',
+    resp = aut_user_auth_wsgi_app.call_method(
+        "post",
+        f"{base}/domain-types/discovery_run/actions/bulk-discovery-start/invoke",
+        status=200,
+        params=json.dumps(
+            {
+                "hostnames": ["foobar", "sample"],
+            }
+        ),
         headers={"Accept": "application/json"},
         content_type="application/json",
-        status=204,
     )
+    assert resp.json["id"] == "bulk_discovery"
+    assert resp.json["title"].endswith("is active")
+    assert "active" in resp.json["extensions"]
+    assert "state" in resp.json["extensions"]
+    assert "result" in resp.json["extensions"]["logs"]
+    assert "progress" in resp.json["extensions"]["logs"]
 
-    # 'monitored' is the external name for the target_phase, internally 'old' is used.
-    assert discovery_spy.call_args.kwargs["api_request"]["update_target"] == "old"
+    status_resp = aut_user_auth_wsgi_app.call_method(
+        "get",
+        base + f"/objects/discovery_run/{resp.json['id']}",
+        status=200,
+        headers={"Accept": "application/json"},
+    )
+    assert status_resp.json["id"] == resp.json["id"]
+    assert "active" in status_resp.json["extensions"]
+
+    # TODO: additional tests for bulk discovery modes (CMK-10160)
+
+
+def test_openapi_bulk_discovery_with_invalid_hostname(
+    base: str,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+) -> None:
+    aut_user_auth_wsgi_app.call_method(
+        "post",
+        f"{base}/domain-types/discovery_run/actions/bulk-discovery-start/invoke",
+        status=400,
+        params=json.dumps({"hostnames": ["wrong_hostname"]}),
+        headers={"Accept": "application/json"},
+        content_type="application/json",
+    )

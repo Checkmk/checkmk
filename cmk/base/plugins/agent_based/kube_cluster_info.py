@@ -25,9 +25,9 @@ from cmk.base.plugins.agent_based.utils.kube import ClusterInfo
 def parse_kube_cluster_info(string_table: StringTable) -> ClusterInfo:
     """
     >>> parse_kube_cluster_info([[
-    ... '{"name": "cluster"}'
+    ... '{"name": "cluster", "version": "v1.22.2"}'
     ... ]])
-    ClusterInfo(name='cluster')
+    ClusterInfo(name='cluster', version='v1.22.2')
     """
     return ClusterInfo(**json.loads(string_table[0][0]))
 
@@ -36,12 +36,16 @@ def host_labels(section: ClusterInfo) -> HostLabelGenerator:
     """Host label function
 
     Labels:
+        cmk/kubernetes:
+            This label is set to "yes" for all Kubernetes objects.
+
         cmk/kubernetes/object:
             This label is set to the Kubernetes object type.
 
         cmk/kubernetes/cluster:
             This label is set to the given Kubernetes cluster name.
     """
+    yield HostLabel("cmk/kubernetes", "yes")
     yield HostLabel("cmk/kubernetes/object", "cluster")
     yield HostLabel("cmk/kubernetes/cluster", section.name)
 

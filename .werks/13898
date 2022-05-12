@@ -1,0 +1,12 @@
+Title: Update stunnel to 5.63
+Class: security
+Compatible: compat
+Component: core
+Date: 1649076882
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b5
+
+Update to the latest stunnel version 5.63

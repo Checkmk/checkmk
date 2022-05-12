@@ -1,0 +1,21 @@
+Title: Add InfluxDB exporter
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1650970100
+Edition: cee
+Knowledge: undoc
+Level: 2
+Version: 2.1.0b1
+
+With Checkmk 2.1 we introduce the new option to configure InfluxDB connections.
+With this option you are able to send metrics directly from Checkmk to the
+REST-API of InfluxDB.
+
+More information on how to configure the connection can be found here:
+https://docs.checkmk.com/master/en/metrics_exporter.html
+
+Please note:
+The integration is only compatible with InfluxDB 2.0 or later.
+If you're using InfluxDB <= 1.8 you need to use the option "Send metrics to
+Graphite" as described in the Checkmk docs.

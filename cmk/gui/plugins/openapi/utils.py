@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import json
-from typing import Any, cast, Dict, Literal, Optional
+from typing import Any, cast, Literal, Optional
 from urllib.parse import quote_plus
 
 import docstring_parser  # type: ignore[import]
@@ -19,11 +19,12 @@ from cmk.gui.http import Response
 
 def problem(
     status: int = 400,
-    title: str = "A problem occured.",
+    title: str = "A problem occurred.",
     detail: Optional[str] = None,
     type_: Optional[str] = None,
-    ext: Optional[Dict[str, Any]] = None,
-):
+    fields: Optional[dict[str, Any]] = None,
+    ext: Optional[dict[str, Any]] = None,
+) -> Response:
     problem_dict = {
         "title": title,
         "status": status,
@@ -33,11 +34,11 @@ def problem(
     if type_ is not None:
         problem_dict["type"] = type_
 
-    if isinstance(ext, dict):
-        problem_dict.update(ext)
-    else:
-        if ext:
-            problem_dict["ext"] = ext
+    if fields is not None:
+        problem_dict["fields"] = fields
+
+    if ext is not None:
+        problem_dict["ext"] = ext
 
     response = Response()
     response.status_code = status
@@ -53,7 +54,8 @@ class ProblemException(HTTPException):
         title: str = "A problem occured.",
         detail: Optional[str] = None,
         type_: Optional[str] = None,
-        ext: Optional[Dict[str, Any]] = None,
+        fields: Optional[dict[str, list[Any]]] = None,
+        ext: Optional[dict[str, Any]] = None,
     ):
         """
         This exception is holds arguments that are going to be passed to the
@@ -67,6 +69,7 @@ class ProblemException(HTTPException):
         self.detail = detail
         self.type = type_
         self.ext = ext
+        self.fields = fields
 
     def __call__(self, environ, start_response):
         return self.to_problem()(environ, start_response)
@@ -77,6 +80,7 @@ class ProblemException(HTTPException):
             title=self.description,  # same as title
             detail=self.detail,
             type_=self.type,
+            fields=self.fields,
             ext=self.ext,
         )
 

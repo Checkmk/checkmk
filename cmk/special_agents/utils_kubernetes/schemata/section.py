@@ -27,6 +27,15 @@ PythonCompiler = NewType("PythonCompiler", str)
 Timestamp = NewType("Timestamp", float)
 Version = NewType("Version", str)
 
+FilteredAnnotations = NewType("FilteredAnnotations", api.Annotations)
+""" Annotations filtered with user input.
+
+After receiving the annotations from the Kubernetes API, we cannot process all
+of them as HostLabels. FilteredAnnotations are those annotations, which can be
+processed. This means that the annotations can no longer be arbitrary json
+objects and that options from the `Kubernetes` rule have been taken into account.
+"""
+
 
 class PerformanceMetric(BaseModel):
     value: float
@@ -80,6 +89,16 @@ class CollectorType(enum.Enum):
 class Components(BaseModel):
     cadvisor_version: Optional[Version]
     checkmk_agent_version: Optional[Version]
+
+
+class NamespaceInfo(BaseModel):
+    """section: kube_namespace_info_v1"""
+
+    name: api.NamespaceName
+    creation_timestamp: Optional[api.CreationTimestamp]
+    labels: api.Labels
+    annotations: FilteredAnnotations
+    cluster: str
 
 
 class NodeCollectorMetadata(CollectorMetadata):
@@ -139,15 +158,15 @@ class AllocatableResource(BaseModel):
 
 class ControllerType(enum.Enum):
     deployment = "deployment"
-    daemon_set = "daemon_set"
+    daemonset = "daemonset"
     statefulset = "statefulset"
 
     @staticmethod
     def from_str(label):
         if label == "deployment":
             return ControllerType.deployment
-        if label == "daemon_set":
-            return ControllerType.daemon_set
+        if label == "daemonset":
+            return ControllerType.daemonset
         if label == "statefulset":
             return ControllerType.statefulset
         raise ValueError(f"Unknown controller type {label} specified")
@@ -167,10 +186,11 @@ ControlChain = Sequence[Controller]
 class PodInfo(BaseModel):
     """section: kube_pod_info_v1"""
 
-    namespace: Optional[api.Namespace]
+    namespace: Optional[api.NamespaceName]
     name: str
     creation_timestamp: Optional[api.CreationTimestamp]
     labels: api.Labels  # used for host labels
+    annotations: FilteredAnnotations  # used for host labels
     node: Optional[api.NodeName]  # this is optional, because there may be pods, which are not
     # scheduled on any node (e.g., no node with enough capacity is available).
     host_network: Optional[str]
@@ -275,6 +295,7 @@ class NodeInfo(api.NodeInfo):
     name: api.NodeName
     creation_timestamp: api.CreationTimestamp
     labels: api.Labels
+    annotations: FilteredAnnotations
     addresses: api.NodeAddresses
     cluster: str
 
@@ -308,7 +329,7 @@ class FalsyNodeCustomCondition(FalsyNodeCondition):
 
 
 class NodeConditions(BaseModel):
-    """section: k8s_node_conditions_v1"""
+    """section: kube_node_conditions_v1"""
 
     ready: TruthyNodeCondition
     memorypressure: FalsyNodeCondition
@@ -318,7 +339,7 @@ class NodeConditions(BaseModel):
 
 
 class NodeCustomConditions(BaseModel):
-    """section: k8s_node_custom_conditions_v1"""
+    """section: kube_node_custom_conditions_v1"""
 
     custom_conditions: Sequence[FalsyNodeCustomCondition]
 
@@ -327,8 +348,9 @@ class DeploymentInfo(BaseModel):
     """section: kube_deployment_info_v1"""
 
     name: str
-    namespace: api.Namespace
+    namespace: api.NamespaceName
     labels: api.Labels
+    annotations: FilteredAnnotations
     selector: api.Selector
     creation_timestamp: api.CreationTimestamp
     containers: ThinContainers
@@ -339,8 +361,9 @@ class DaemonSetInfo(BaseModel):
     """section: kube_daemonset_info_v1"""
 
     name: str
-    namespace: api.Namespace
+    namespace: api.NamespaceName
     labels: api.Labels
+    annotations: FilteredAnnotations
     selector: api.Selector
     creation_timestamp: api.CreationTimestamp
     containers: ThinContainers
@@ -351,8 +374,9 @@ class StatefulSetInfo(BaseModel):
     """section: kube_statefulset_info_v1"""
 
     name: str
-    namespace: api.Namespace
+    namespace: api.NamespaceName
     labels: api.Labels
+    annotations: FilteredAnnotations
     selector: api.Selector
     creation_timestamp: api.CreationTimestamp
     containers: ThinContainers
@@ -375,22 +399,15 @@ class ContainerCount(BaseModel):
     terminated: int = 0
 
 
-class DeploymentStrategy(BaseModel):
-    """section: kube_deployment_strategy_v1"""
-
-    strategy: Union[api.Recreate, api.RollingUpdate] = Field(discriminator="type_")
-
-
-class DaemonSetStrategy(BaseModel):
-    """section: kube_daemonset_strategy_v1"""
-
-    strategy: Union[api.OnDelete, api.RollingUpdate] = Field(discriminator="type_")
+DisplayableStrategy = Union[
+    api.OnDelete, api.Recreate, api.RollingUpdate, api.StatefulSetRollingUpdate
+]
 
 
-class StatefulSetStrategy(BaseModel):
-    """section: kube_statefulset_strategy_v1"""
+class UpdateStrategy(BaseModel):
+    """section: kube_update_strategy_v1"""
 
-    strategy: Union[api.OnDelete, api.StatefulSetRollingUpdate] = Field(discriminator="type_")
+    strategy: DisplayableStrategy = Field(discriminator="type_")
 
 
 class Memory(BaseModel):
@@ -413,3 +430,128 @@ class ClusterInfo(BaseModel):
     """section: kube_cluster_info_v1"""
 
     name: str
+    version: api.GitVersion
+
+
+class ClusterDetails(BaseModel):
+    """section: kube_cluster_details_v1"""
+
+    api_health: api.APIHealth
+
+
+class CommonReplicas(BaseModel):
+    """Model shared among controllers.
+
+    Note: All controllers are relatively similiar in how they claim a Pod. A Pod will be claimed
+    if the following criterions match:
+    * the Selector matches
+    * the Pods controller field is empty or equal to that of the claiming Controller
+    * the Pod is not Succeeded or Failed
+    * neither the Pod nor the Controller have been deleted (DeletionTimestamp is null)
+    Note, that this list is somewhat heuristic and reality is a bit more complicated. For instance,
+    a Pod can sometimes still be claimed, if the DaemonSet has been deleted.
+    """
+
+    desired: int
+    ready: int
+    updated: int
+
+
+class DaemonSetReplicas(CommonReplicas):
+    """section: kube_daemonset_replicas_v1
+
+    Model for a given DaemonSet supplied to the kube_replicas check.
+
+    The key distinction to Deployments and StatefulSets is the fact, that this section counts Nodes
+    rather than Pods. On each Node only the oldest Pod is considered, that has been claimed by the
+    DaemonSet.
+    """
+
+    # desired (status.desiredNumberScheduled): the number of Nodes, which match the NodeAffinity
+    # specified by the DaemonSet.
+    # ready (status.numberReady): the number of Nodes, where the oldest claimed Pod is ready.
+    # updated (status.updatedNumberScheduled): the number of Nodes, where the oldest claimed Pod is
+    # updated. A Pod is updated, if the hash of the Pod template matches the template of the
+    # DaemonSet.
+    # misscheduled (status.numberMisscheduled): the number of Nodes, on which there is a Pod claimed
+    # by the DaemonSet (not necessarily running or ready), but which is not supposed to run a
+    # daemon Pod (since the NodeSelector or NodeAffinity term does not match the Node). In
+    # particular, there is no overlap between Nodes counted by desired and Nodes counted by
+    # misscheduled.
+    misscheduled: int
+
+
+class StatefulSetReplicas(CommonReplicas):
+    """section: kube_statefulset_replicas_v1
+
+    Model for a given StatefulSet supplied to the kube_replicas check.
+
+    The key distinction to DaemonSets and Deployments is the concept of ordinals. Ordinals give Pods
+    a unique identity, which is persistent across being rescheduled on a different Node. The ordinal
+    affects the order of creation and updates (see below).
+    """
+
+    # desired (spec.replicas): the number of Pods, which should be claimed, available and up-to-date
+    # ready (status.readyReplicas): the number of claimed Pods, which are ready. StatefulSets can
+    # achieve readiness in different fashions depending on the value of spec.podManagementPolicy.
+    # By default, a new Pod is only created after all the Pods with lower ordinals (the ordinal is
+    # appended to the name of the Pod) are available. As of Kubernetes v1.7 Pods can be configured
+    # to be created in parallel.
+    # updated (status.updatedReplicas): the number of claimed Pods, which match updateRevision of
+    # the StatefulSet. The StatefulSet only allows updating in order of the ordinals. Unlike the Pod
+    # creation, this behaviour can't be configured as of v1.23.
+
+
+class DeploymentReplicas(CommonReplicas):
+    """section: kube_deployment_replicas_v1
+
+    Model for a given Deployment supplied to the kube_replicas check.
+
+    The key distinction to DaemonSets and StatefulSets is that Deployments manage their Pods via
+    ReplicaSets. A Deployment controls either one or two ReplicaSets. The second ReplicaSet is
+    created whenever a Deployment needs to update its Pods. The quantities in status of Deployment
+    are often sums over the status of the two ReplicaSets.
+
+    Example: The number of unavailableReplicas may be twice the number of desired replicas, because
+    it corresponds to the number of Pods not available for both ReplicaSets. Whereas for other
+    controllers unavailableReplicas (StatefulSet) or numberUnavailable (DaemonSet) is equal to
+    desired - availableReplicas or desired - numberAvailable.
+    """
+
+    # desired (spec.replicas): the number of Pods, which should be claimed, available and
+    # up-to-date.
+    # ready (status.readyReplicas): the number of claimed Pods, which are ready. This is calculated
+    # across both ReplicaSets (if present).
+    # updated (status.updatedReplicas): the number of claimed Pods, belonging the ReplicaSet with
+    # the up-to-date Pod template.
+
+
+class IdentificationError(BaseModel):
+    """Errors due to incorrect labels set by the user."""
+
+    duplicate_machine_collector: bool
+    duplicate_container_collector: bool
+    unknown_collector: bool
+
+
+class NodeCollectorReplica(BaseModel):
+    # This model reports api data of a node collector DaemonSet.
+    # We identify this DaemonSet via certain labels and provide the counts to the
+    # Cluster object via the CollectorDaemons section. The data is also available in
+    # a more generic way as part of the Replicas service on a DaemonSet, but we want
+    # to show this information on the cluster object.
+    available: int
+    desired: int
+
+
+class CollectorDaemons(BaseModel):
+    """section: kube_collector_daemons_v1
+
+    Model containing information about the DaemonSets of the node-collectors.
+    The section is intended for the cluster host. `None` indicates, that the
+    corresponding DaemonSet is not among the API data.
+    """
+
+    machine: Optional[NodeCollectorReplica]
+    container: Optional[NodeCollectorReplica]
+    errors: IdentificationError

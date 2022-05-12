@@ -12,12 +12,13 @@ import pytest
 from tests.testlib.site import Site
 
 import cmk.utils.msi_engine as msi_engine
+import cmk.utils.obfuscate as obfuscate
 
 MSI_LOCATION = "share/check_mk/agents/windows"
 
 EXPECTED_EXECUTABLES = ["msiinfo", "msibuild", "lcab"]
 
-EXPECTED_TEST_FILES = ["check_mk_agent.msi", "check_mk.user.yml"]
+EXPECTED_TEST_FILES = ["check_mk_agent.msi", msi_engine.AGENT_MSI_FILE, "check_mk.user.yml"]
 
 # check base files are presented
 # binaries and test files
@@ -35,21 +36,23 @@ def test_files(site: Site, test_file):
     assert Path(msi_path / test_file).exists(), "path: '{}' file: '{}'".format(msi_path, test_file)
 
 
-def _get_msi_file_path(site: Site):
+def _get_msi_file_path_not_signed(site: Site):
     msi_path = Path(site.path(MSI_LOCATION))
-    return msi_path / "check_mk_agent.msi"
+    return msi_path / msi_engine.AGENT_MSI_FILE
 
 
 # check the export with site/bin tools
 def test_export_msi_file(site: Site, tmp_path):
-    msi_file = _get_msi_file_path(site=site)
+    msi_file = _get_msi_file_path_not_signed(site=site)
 
     out_dir = tmp_path / "idts"
     bin_path = site.path("bin/")
     try:
         out_dir.mkdir()
+        deobfuscated_file = out_dir / "deobfuscated.msi"
+        obfuscate.deobfuscate_file(msi_file, file_out=deobfuscated_file)
         for entry in ["File", "Property", "Component"]:
-            msi_engine.export_msi_file(bin_path, entry, str(msi_file), str(out_dir))
+            msi_engine.export_msi_file(bin_path, entry, str(deobfuscated_file), str(out_dir))
             f = out_dir / (entry + ".idt")
             assert f.exists(), "Ups for [{}] {}".format(entry, f)
     finally:

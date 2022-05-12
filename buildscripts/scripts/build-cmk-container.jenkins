@@ -12,7 +12,9 @@ properties([
   parameters([
     string(name: 'EDITION', defaultValue: 'enterprise', description: 'Edition: raw, free, enterprise or managed' ),
     string(name: 'VERSION', defaultValue: 'daily', description: 'Version: daily builds current git state of the branch. You also can specify a git tag here.' ),
-    string(name: 'SET_LATEST_TAG', defaultValue: 'no', description: 'SET_LATEST_TAG: setting yes will push this docker container to the latest tag on docker hub.' )
+    string(name: 'SET_LATEST_TAG', defaultValue: 'no', description: 'SET_LATEST_TAG: setting yes will push this docker container to the latest tag on docker hub.' ),
+    booleanParam(name: 'PUSH_TO_REGISTRY', defaultValue: true, description: 'Set to false if the built docker images should not be pushed to their registries.' ),
+    booleanParam(name: 'PUSH_TO_REGISTRY_ONLY', defaultValue: false, description: 'Set to true, if previously built docker images should only be pushed to their registries.' )
   ])
 ])
 
@@ -37,11 +39,15 @@ def get_cmk_version(BRANCH, VERSION){
     }
 }
 
+def registry_credentials_id() {
+    return (EDITION == "raw") ? '11fb3d5f-e44e-4f33-a651-274227cc48ab' : "registry.checkmk.com"
+}
+
 timeout(time: 12, unit: 'HOURS') {
     node (NODE) {
         def PACKAGE_DIR = WORKSPACE + '/download'
         def DOCKER_GROUP_ID = ''
-    
+
         stage('checkout sources') {
             checkout(scm)
         }
@@ -58,27 +64,38 @@ timeout(time: 12, unit: 'HOURS') {
             docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
                 def BUILD_IMAGE = docker.build("build-image:${env.BUILD_ID}", "--pull buildscripts/docker_image_aliases/IMAGE_TESTING")
                 BUILD_IMAGE.inside("--ulimit nofile=1024:1024 --group-add=${DOCKER_GROUP_ID} -v /var/run/docker.sock:/var/run/docker.sock") {
+
+                    if (params.PUSH_TO_REGISTRY_ONLY) {
+                        stage('Push previously built image') {
+                            def CREDENTIALS_ID = registry_credentials_id()
+                            withCredentials([
+                                    usernamePassword(credentialsId: CREDENTIALS_ID, passwordVariable: 'DOCKER_PASSPHRASE', usernameVariable: 'DOCKER_USERNAME'),
+                                    usernamePassword(credentialsId: 'nexus', passwordVariable: 'NEXUS_PASSWORD', usernameVariable: 'NEXUS_USERNAME')]) {
+                                sh """
+                                ./buildscripts/scripts/build-cmk-container.sh ${BRANCH} ${EDITION} ${CMK_VERS} ${SET_LATEST_TAG} "push"
+                            """
+                            }
+                        }
+                        currentBuild.result = 'SUCCESS'
+                        return
+                    }
+
                     stage('Prepare package directory') {
                         sh("rm -rf \"${PACKAGE_DIR}\"")
                         sh("mkdir -p \"${PACKAGE_DIR}\"")
                     }
 
                     stage('Build Container') {
-                        def CREDENTIALS_ID
-                        if (EDITION == "raw") {
-                            CREDENTIALS_ID = '11fb3d5f-e44e-4f33-a651-274227cc48ab'
-                        } else {
-                            CREDENTIALS_ID = "registry.checkmk.com"
-                        }
+                        def CREDENTIALS_ID = registry_credentials_id()
 
                         upload.download_deb(INTERNAL_DEPLOY_DEST, INTERNAL_DEPLOY_PORT, CMK_VERS, PACKAGE_DIR + "/" + CMK_VERS, EDITION, "buster")
                         upload.download_source_tar(INTERNAL_DEPLOY_DEST, INTERNAL_DEPLOY_PORT, CMK_VERS, PACKAGE_DIR + "/" + CMK_VERS, EDITION)
-    
+
                         withCredentials([
                             usernamePassword(credentialsId: CREDENTIALS_ID, passwordVariable: 'DOCKER_PASSPHRASE', usernameVariable: 'DOCKER_USERNAME'),
                             usernamePassword(credentialsId: 'nexus', passwordVariable: 'NEXUS_PASSWORD', usernameVariable: 'NEXUS_USERNAME')]) {
                             sh """
-                                ./buildscripts/scripts/build-cmk-container.sh ${BRANCH} ${EDITION} ${CMK_VERS} ${SET_LATEST_TAG}
+                                ./buildscripts/scripts/build-cmk-container.sh ${BRANCH} ${EDITION} ${CMK_VERS} ${SET_LATEST_TAG} "build"
                             """
                         }
                         withCredentials([file(credentialsId: 'Release_Key', variable: 'RELEASE_KEY')]) {
@@ -90,6 +107,20 @@ timeout(time: 12, unit: 'HOURS') {
                                     ${PACKAGE_DIR}/./${CMK_VERS}/check-mk-*-docker-*.tar.gz \
                                     ${WEB_DEPLOY_DEST}
                             """
+                        }
+                    }
+
+                    if (params.PUSH_TO_REGISTRY) {
+                        stage("Push images") {
+                            def CREDENTIALS_ID = registry_credentials_id()
+                            withCredentials([
+                                    usernamePassword(credentialsId: CREDENTIALS_ID, passwordVariable: 'DOCKER_PASSPHRASE', usernameVariable: 'DOCKER_USERNAME'),
+                                    usernamePassword(credentialsId: 'nexus', passwordVariable: 'NEXUS_PASSWORD', usernameVariable: 'NEXUS_USERNAME')]) {
+                                sh """
+                                ./buildscripts/scripts/build-cmk-container.sh ${BRANCH} ${EDITION} ${CMK_VERS} ${SET_LATEST_TAG} "push"
+                            """
+                            }
+
                         }
                     }
                 }

@@ -9,10 +9,11 @@ use serde::Deserialize;
 use serde::Serialize;
 use serde_with::DisplayFromStr;
 use std::collections::HashMap;
-use std::fs::{metadata, read_to_string, write};
+use std::fs;
 use std::io;
+#[cfg(unix)]
+use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
-use std::str::FromStr;
 use std::time::SystemTime;
 use string_enum::StringEnum;
 
@@ -33,7 +34,7 @@ pub trait JSONLoader: DeserializeOwned {
         if !path.exists() {
             return Self::new();
         }
-        Ok(serde_json::from_str(&read_to_string(path)?)?)
+        Ok(serde_json::from_str(&fs::read_to_string(path)?)?)
     }
 }
 
@@ -46,7 +47,7 @@ pub trait TOMLLoader: DeserializeOwned {
         if !path.exists() {
             return Self::new();
         }
-        Ok(toml::from_str(&read_to_string(path)?)?)
+        Ok(toml::from_str(&fs::read_to_string(path)?)?)
     }
 }
 
@@ -81,10 +82,12 @@ pub struct RegistrationConfig {
     pub root_certificate: Option<String>,
     pub host_reg_data: HostRegistrationData,
     pub trust_server_cert: bool,
+    pub client_config: ClientConfig,
 }
 
 impl RegistrationConfig {
     pub fn new(
+        runtime_config: RuntimeConfig,
         preset: RegistrationPreset,
         reg_args: cli::RegistrationArgs,
     ) -> AnyhowResult<RegistrationConfig> {
@@ -124,20 +127,27 @@ impl RegistrationConfig {
             root_certificate,
             host_reg_data,
             trust_server_cert: reg_args.trust_server_cert,
+            client_config: ClientConfig {
+                use_proxy: reg_args.client_opts.detect_proxy
+                    || runtime_config.detect_proxy.unwrap_or(false),
+            },
         })
     }
 }
 
-#[derive(Deserialize)]
-pub struct ConfigFromDisk {
+#[derive(Deserialize, Clone)]
+pub struct RuntimeConfig {
     #[serde(default)]
     allowed_ip: Option<Vec<String>>,
 
     #[serde(default)]
-    pull_port: Option<types::Port>,
+    pull_port: Option<u16>,
+
+    #[serde(default)]
+    detect_proxy: Option<bool>,
 }
 
-impl TOMLLoader for ConfigFromDisk {}
+impl TOMLLoader for RuntimeConfig {}
 
 pub struct LegacyPullMarker(std::path::PathBuf);
 
@@ -158,13 +168,38 @@ impl LegacyPullMarker {
             return Ok(());
         }
 
-        std::fs::remove_file(&self.0)
+        fs::remove_file(&self.0)
+    }
+
+    pub fn create(&self) -> std::io::Result<()> {
+        fs::write(
+            &self.0,
+            "This file has been placed as a marker for cmk-agent-ctl\n\
+            to allow unencrypted legacy agent pull mode.\n\
+            It will be removed automatically on first successful agent registration.\n\
+            You can remove it manually to disallow legacy mode, but note that\n\
+            for regular operation you need to register the agent anyway.\n\
+            \n\
+            To secure the connection run `cmk-agent-ctl register`.\n",
+        )
+    }
+}
+
+pub struct ClientConfig {
+    pub use_proxy: bool,
+}
+
+impl ClientConfig {
+    pub fn new(runtime_config: RuntimeConfig, client_opts: cli::ClientOpts) -> ClientConfig {
+        ClientConfig {
+            use_proxy: client_opts.detect_proxy || runtime_config.detect_proxy.unwrap_or(false),
+        }
     }
 }
 
 pub struct PullConfig {
     pub allowed_ip: Vec<String>,
-    pub port: types::Port,
+    pub port: u16,
     pub max_connections: usize,
     pub connection_timeout: u64,
     pub agent_channel: types::AgentChannel,
@@ -174,28 +209,23 @@ pub struct PullConfig {
 
 impl PullConfig {
     pub fn new(
-        config_from_disk: ConfigFromDisk,
-        pull_args: cli::PullArgs,
+        runtime_config: RuntimeConfig,
+        pull_opts: cli::PullOpts,
         legacy_pull_marker: LegacyPullMarker,
         registry: Registry,
     ) -> AnyhowResult<PullConfig> {
-        let allowed_ip = pull_args
+        let allowed_ip = pull_opts
             .allowed_ip
-            .or(config_from_disk.allowed_ip)
+            .or(runtime_config.allowed_ip)
             .unwrap_or_default();
-        let port = pull_args
+        let port = pull_opts
             .port
-            .or(config_from_disk.pull_port)
-            .unwrap_or(types::Port::from_str(constants::DEFAULT_PULL_PORT)?);
+            .or(runtime_config.pull_port)
+            .unwrap_or(constants::DEFAULT_PULL_PORT);
         #[cfg(unix)]
-        let agent_channel = setup::agent_socket();
+        let agent_channel = setup::agent_channel();
         #[cfg(windows)]
-        let agent_channel = types::AgentChannel::from(
-            pull_args
-                .agent_channel
-                .unwrap_or_else(setup::agent_channel)
-                .as_str(),
-        );
+        let agent_channel = pull_opts.agent_channel.unwrap_or_else(setup::agent_channel);
         Ok(PullConfig {
             allowed_ip,
             port,
@@ -254,6 +284,22 @@ impl std::borrow::Borrow<uuid::Uuid> for Connection {
     }
 }
 
+impl Connection {
+    pub fn identity(&self) -> AnyhowResult<reqwest::tls::Identity> {
+        let private_key = openssl::pkey::PKey::private_key_from_pem(self.private_key.as_bytes())?;
+        let client_certificate = openssl::x509::X509::from_pem(self.certificate.as_bytes())?;
+
+        let pkcs12_archive = openssl::pkcs12::Pkcs12::builder()
+            .build("password", "identity", &private_key, &client_certificate)?
+            .to_der()?;
+
+        Ok(reqwest::tls::Identity::from_pkcs12_der(
+            &pkcs12_archive,
+            "password",
+        )?)
+    }
+}
+
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 pub struct RegisteredConnections {
     #[serde(default)]
@@ -270,7 +316,7 @@ impl JSONLoader for RegisteredConnections {}
 
 fn mtime(path: &Path) -> AnyhowResult<Option<SystemTime>> {
     Ok(if path.exists() {
-        Some(metadata(&path)?.modified()?)
+        Some(fs::metadata(&path)?.modified()?)
     } else {
         None
     })
@@ -284,7 +330,11 @@ pub struct Registry {
 
 impl Registry {
     #[cfg(test)]
-    pub fn new(connections: RegisteredConnections, path: PathBuf) -> AnyhowResult<Registry> {
+    pub fn new<P>(connections: RegisteredConnections, path: P) -> AnyhowResult<Registry>
+    where
+        P: AsRef<Path>,
+    {
+        let path = path.as_ref().to_owned();
         let last_reload = mtime(&path)?;
         Ok(Registry {
             connections,
@@ -340,10 +390,17 @@ impl Registry {
     }
 
     pub fn save(&self) -> io::Result<()> {
-        write(
+        let write_op_result = fs::write(
             &self.path,
             &serde_json::to_string_pretty(&self.connections)?,
-        )
+        );
+        #[cfg(windows)]
+        return write_op_result;
+        #[cfg(unix)]
+        {
+            write_op_result?;
+            fs::set_permissions(&self.path, fs::Permissions::from_mode(0o600))
+        }
     }
 
     pub fn pull_standard_is_empty(&self) -> bool {
@@ -445,6 +502,39 @@ impl Registry {
 }
 
 #[cfg(test)]
+mod test_legacy_pull_marker {
+    use super::*;
+
+    fn legacy_pull_marker() -> LegacyPullMarker {
+        LegacyPullMarker::new(tempfile::NamedTempFile::new().unwrap())
+    }
+
+    #[test]
+    fn test_exists() {
+        let lpm = legacy_pull_marker();
+        assert!(!lpm.exists());
+        lpm.create().unwrap();
+        assert!(lpm.exists());
+    }
+
+    #[test]
+    fn test_remove() {
+        let lpm = legacy_pull_marker();
+        assert!(lpm.remove().is_ok());
+        lpm.create().unwrap();
+        assert!(lpm.remove().is_ok());
+        assert!(!lpm.exists());
+    }
+
+    #[test]
+    fn test_create() {
+        let lpm = legacy_pull_marker();
+        lpm.create().unwrap();
+        assert!(lpm.0.is_file());
+    }
+}
+
+#[cfg(test)]
 mod test_registry {
     use super::*;
     use std::str::FromStr;
@@ -481,18 +571,15 @@ mod test_registry {
             root_cert: String::from("root_cert"),
         });
 
-        let path =
-            std::path::PathBuf::from(&tempfile::NamedTempFile::new().unwrap().into_temp_path());
-        let last_reload = mtime(&path).unwrap();
-        Registry {
-            connections: RegisteredConnections {
+        Registry::new(
+            RegisteredConnections {
                 push,
                 pull,
                 pull_imported,
             },
-            path,
-            last_reload,
-        }
+            tempfile::NamedTempFile::new().unwrap(),
+        )
+        .unwrap()
     }
 
     fn connection() -> Connection {
@@ -508,14 +595,39 @@ mod test_registry {
     fn test_io() {
         let reg = registry();
         assert!(!reg.path.exists());
-        assert!(reg.last_reload.is_none());
 
         reg.save().unwrap();
         assert!(reg.path.exists());
+        #[cfg(unix)]
+        assert_eq!(
+            fs::metadata(&reg.path).unwrap().permissions().mode(),
+            0o100600 // mode apparently returns the full file mode, not just the permission bits ...
+        );
+
         let new_reg = Registry::from_file(&reg.path).unwrap();
         assert_eq!(reg.connections, new_reg.connections);
         assert_eq!(reg.path, new_reg.path);
         assert!(new_reg.last_reload.is_some());
+    }
+
+    #[test]
+    fn test_reload() {
+        let reg = registry();
+        reg.save().unwrap();
+        let mut reg = Registry::from_file(&reg.path).unwrap();
+        assert!(!reg.refresh().unwrap());
+
+        let mtime_before_reload = reg.last_reload.unwrap();
+        // let a mini-bit of time pass st. we actually get a new mtime
+        std::thread::sleep(std::time::Duration::from_millis(10));
+        fs::write(&reg.path, "{}").unwrap();
+        assert!(reg.refresh().unwrap());
+        assert!(!reg
+            .last_reload
+            .unwrap()
+            .duration_since(mtime_before_reload)
+            .unwrap()
+            .is_zero());
     }
 
     #[test]

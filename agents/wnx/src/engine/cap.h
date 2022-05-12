@@ -75,16 +75,16 @@ bool Process(const std::string &cap_name, ProcMode mode,
 bool ExtractAll(const std::string &cap_name, const std::filesystem::path &to);
 
 // converts name in cap to name in actual environment
-std::wstring ProcessPluginPath(const std::string &File);
+std::wstring ProcessPluginPath(const std::string &name);
 
 // Low Level API
 // Returns -1 is a bad value, not nice
 // #TODO think over API
-uint32_t ReadFileNameLength(std::ifstream &CapFile);
-std::string ReadFileName(std::ifstream &CapFile, uint32_t Length);
-std::optional<std::vector<char>> ReadFileData(std::ifstream &CapFile);
+uint32_t ReadFileNameLength(std::ifstream &cap_file);
+std::string ReadFileName(std::ifstream &cap_file, uint32_t length);
+std::optional<std::vector<char>> ReadFileData(std::ifstream &cap_file);
 FileInfo ExtractFile(std::ifstream &cap_file);
-bool StoreFile(const std::wstring &Name, const std::vector<char> &Data);
+bool StoreFile(const std::wstring &name, const std::vector<char> &data);
 
 [[nodiscard]] std::wstring GetProcessToKill(std::wstring_view name);
 // we will try to kill the process with name of the executable if
@@ -97,7 +97,7 @@ bool StoreFile(const std::wstring &Name, const std::vector<char> &Data);
 [[nodiscard]] bool IsAllowedToKill(std::wstring_view proc_name);
 
 // idiotic API form thje past. Do not for what hell, but let it stay
-bool CheckAllFilesWritable(const std::string &Directory);
+bool CheckAllFilesWritable(const std::string &directory);
 
 // tgt,src
 using PairOfPath = std::pair<std::filesystem::path, std::filesystem::path>;

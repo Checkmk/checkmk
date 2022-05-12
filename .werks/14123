@@ -1,0 +1,13 @@
+Title: KUBE: Change Service name 'Cluster Collector'
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1651233458
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b8
+
+The new service name is 'Cluster collector'. Users have to rediscover the service and to reconfigure
+rules, which have options matching the service name.

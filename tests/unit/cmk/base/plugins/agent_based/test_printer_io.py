@@ -28,7 +28,6 @@ from cmk.base.plugins.agent_based.printer_io import (
                 Result(state=State.OK, summary="MP TRAY"),
                 Result(state=State.OK, summary="Status: Available and idle"),
                 Result(state=State.OK, summary="Alerts: None"),
-                Result(state=State.OK, summary="Capacity: 0 unknown"),
             ],
         ),
         (
@@ -55,7 +54,6 @@ from cmk.base.plugins.agent_based.printer_io import (
                 Result(state=State.OK, summary="Transitioning"),
                 Result(state=State.OK, summary="Status: Available and idle"),
                 Result(state=State.OK, summary="Alerts: None"),
-                Result(state=State.OK, summary="Capacity: 0 unknown"),
             ],
         ),
         (
@@ -68,7 +66,6 @@ from cmk.base.plugins.agent_based.printer_io import (
                 Result(state=State.OK, summary="MP TRAY"),
                 Result(state=State.OK, summary="Status: Available and standby"),
                 Result(state=State.WARN, summary="Alerts: Non-Critical"),
-                Result(state=State.OK, summary="Capacity: 0 unknown"),
             ],
         ),
         (
@@ -81,7 +78,6 @@ from cmk.base.plugins.agent_based.printer_io import (
                 Result(state=State.OK, summary="MP TRAY"),
                 Result(state=State.OK, summary="Status: Available and standby"),
                 Result(state=State.CRIT, summary="Alerts: Critical"),
-                Result(state=State.OK, summary="Capacity: 0 unknown"),
             ],
         ),
         (
@@ -166,6 +162,47 @@ from cmk.base.plugins.agent_based.printer_io import (
 def test_check_printer_input(item, params, info, expected_result):
     data = parse_printer_io(info)
     result = check_printer_input(item, params, data)
+    assert list(result) == expected_result
+
+
+@pytest.mark.parametrize("capacity_unit", ["-1", "0", "1", "2"])
+@pytest.mark.parametrize(
+    "capacity_max ",
+    [
+        "-2",
+        "-1",
+        "0",
+    ],
+)
+def test_check_printer_input_capacity_not_reported_if_unit_is_unkown_if_capacity_max_unkown(
+    capacity_unit, capacity_max
+):
+    string_table = [[["1.42", "", "", "0", capacity_unit, capacity_max, "11"]]]
+    params = {"capacity_levels": (80, 20)}
+    item = "42"
+    data = parse_printer_io(string_table)
+    result = check_printer_input(item, params, data)
+    expected_result = [
+        Result(state=State.OK, summary="Status: Available and idle"),
+        Result(state=State.OK, summary="Alerts: None"),
+    ]
+    assert list(result) == expected_result
+
+
+@pytest.mark.parametrize("capacity_unit", ["-1", "0", "1", "2"])
+def test_check_printer_input_capacity_not_reported_if_unit_is_unkown(
+    capacity_unit,
+):
+    string_table = [[["1.42", "", "", "0", capacity_unit, "42", "11"]]]
+    params = {"capacity_levels": (80, 20)}
+    item = "42"
+    data = parse_printer_io(string_table)
+    result = check_printer_input(item, params, data)
+    expected_result = [
+        Result(state=State.OK, summary="Status: Available and idle"),
+        Result(state=State.OK, summary="Alerts: None"),
+        Result(state=State.WARN, summary="Remaining: 26.19% (warn/crit below 80.00%/20.00%)"),
+    ]
     assert list(result) == expected_result
 
 

@@ -1088,6 +1088,7 @@ class GUIViewRenderer(ABCViewRenderer):
                     delvars=["show_checkboxes", "selection"],
                 )
             ),
+            css_classes=["context_pdf_export"],
         )
 
         # Link related reports
@@ -1223,8 +1224,8 @@ class GUIViewRenderer(ABCViewRenderer):
     def _extend_help_dropdown(self, menu: PageMenu) -> None:
         # TODO
         # menu.add_doc_reference(title=_("Host administration"), doc_ref=DocReference.WATO_HOSTS)
-        # menu.add_youtube_reference(title=_("Episode 3: Monitoring Windows"),
-        #                           youtube_id="iz8S9TGGklQ")
+        # menu.add_youtube_reference(title=_("Episode 4: Monitoring Windows in Checkmk"),
+        #                           youtube_id="Nxiq7Jb9mB4")
         pass
 
 
@@ -1880,9 +1881,9 @@ def view_editor_sorter_specs(view: ViewSpec) -> _Tuple[str, Dictionary]:
             # ValueSpec will be displayed after the sorter was choosen in the
             # CascadingDropdown.
             if isinstance(p, DerivedColumnsSorter) and (parameters := p.get_parameters()):
-                yield name, get_plugin_title_for_choices(p), parameters
+                yield name, get_sorter_plugin_title_for_choices(p), parameters
             else:
-                yield name, get_plugin_title_for_choices(p)
+                yield name, get_sorter_plugin_title_for_choices(p)
 
         painter_spec: PainterSpec
         for painter_spec in view.get("painters", []):
@@ -3408,7 +3409,7 @@ def painter_choices_with_params(painters: Mapping[str, Painter]) -> List[Cascadi
         (
             (
                 name,
-                get_plugin_title_for_choices(painter),
+                get_painter_plugin_title_for_choices(painter),
                 painter.parameters if painter.parameters else None,
             )
             for name, painter in painters.items()
@@ -3417,29 +3418,32 @@ def painter_choices_with_params(painters: Mapping[str, Painter]) -> List[Cascadi
     )
 
 
-def get_plugin_title_for_choices(plugin: Union[Painter, Sorter]) -> str:
-    info_title = "/".join(
+def _get_info_title(plugin: Union[Painter, Sorter]) -> str:
+    # TODO: Cleanup the special case for sites. How? Add an info for it?
+    if plugin.columns == ["site"]:
+        return _("Site")
+
+    return "/".join(
         [
             visual_info_registry[info_name]().title_plural
             for info_name in sorted(infos_needed_by_plugin(plugin))
         ]
     )
 
-    # TODO: Cleanup the special case for sites. How? Add an info for it?
-    if plugin.columns == ["site"]:
-        info_title = _("Site")
 
-    dummy_cell = Cell(View("", {}, {}), PainterSpec(plugin.ident))
+def get_painter_plugin_title_for_choices(plugin: Painter) -> str:
+    dummy_cell = Cell(DummyView(), PainterSpec(plugin.ident))
+    return "%s: %s" % (_get_info_title(plugin), plugin.list_title(dummy_cell))
+
+
+def get_sorter_plugin_title_for_choices(plugin: Sorter) -> str:
+    dummy_cell = Cell(DummyView(), PainterSpec(plugin.ident))
     title: str
-    if isinstance(plugin, Painter):
-        title = plugin.list_title(dummy_cell)
+    if callable(plugin.title):
+        title = plugin.title(dummy_cell)
     else:
-        if callable(plugin.title):
-            title = plugin.title(dummy_cell)
-        else:
-            title = plugin.title
-
-    return "%s: %s" % (info_title, title)
+        title = plugin.title
+    return "%s: %s" % (_get_info_title(plugin), title)
 
 
 # .
@@ -3774,6 +3778,37 @@ class PageRescheduleCheck(AjaxPage):
         api_request = request.get_request()
         return self._do_reschedule(api_request)
 
+    @staticmethod
+    def _force_check(now: int, cmd: str, spec: str, site: SiteId) -> None:
+        sites.live().command(
+            "[%d] SCHEDULE_FORCED_%s_CHECK;%s;%d" % (now, cmd, livestatus.lqencode(spec), now), site
+        )
+
+    @staticmethod
+    def _wait_for(
+        site: SiteId, host: str, what: str, wait_spec: str, now: int, add_filter: str
+    ) -> livestatus.LivestatusRow:
+        with sites.only_sites(site):
+            return sites.live().query_row(
+                (
+                    "GET %ss\n"
+                    "WaitObject: %s\n"
+                    "WaitCondition: last_check >= %d\n"
+                    "WaitTimeout: %d\n"
+                    "WaitTrigger: check\n"
+                    "Columns: last_check state plugin_output\n"
+                    "Filter: host_name = %s\n%s"
+                )
+                % (
+                    what,
+                    livestatus.lqencode(wait_spec),
+                    now,
+                    config.reschedule_timeout * 1000,
+                    livestatus.lqencode(host),
+                    add_filter,
+                )
+            )
+
     def _do_reschedule(self, api_request: Dict[str, Any]) -> AjaxPageResult:
         if not user.may("action.reschedule"):
             raise MKGeneralException("You are not allowed to reschedule checks.")
@@ -3805,29 +3840,25 @@ class PageRescheduleCheck(AjaxPage):
             add_filter = ""
 
         now = int(time.time())
-        sites.live().command(
-            "[%d] SCHEDULE_FORCED_%s_CHECK;%s;%d" % (now, cmd, livestatus.lqencode(spec), now), site
-        )
 
-        query = (
-            "GET %ss\n"
-            "WaitObject: %s\n"
-            "WaitCondition: last_check >= %d\n"
-            "WaitTimeout: %d\n"
-            "WaitTrigger: check\n"
-            "Columns: last_check state plugin_output\n"
-            "Filter: host_name = %s\n%s"
-            % (
-                what,
-                livestatus.lqencode(wait_spec),
+        if service in ("Check_MK Discovery", "Check_MK Inventory"):
+            # During discovery, the allowed cache age is (by default) 120 seconds, such that the
+            # discovery service won't steal data in the TCP case.
+            # But we do want to see new services, so for SNMP we set the cache age to zero.
+            # For TCP, we ensure updated caches by triggering the "Check_MK" service whenever the
+            # user manually triggers "Check_MK Discovery".
+            self._force_check(now, "SVC", f"{host};Check_MK", site)
+            _row = self._wait_for(
+                site,
+                host,
+                "service",
+                f"{host};Check_MK",
                 now,
-                config.reschedule_timeout * 1000,
-                livestatus.lqencode(host),
-                add_filter,
+                "Filter: service_description = Check_MK\n",
             )
-        )
-        with sites.only_sites(site):
-            row = sites.live().query_row(query)
+
+        self._force_check(now, cmd, spec, site)
+        row = self._wait_for(site, host, what, wait_spec, now, add_filter)
 
         last_check = row[0]
         if last_check < now:

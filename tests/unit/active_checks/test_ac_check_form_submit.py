@@ -4,17 +4,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access,redefined-outer-name
 import os
+from types import ModuleType
+from typing import Mapping, Optional, Sequence
 
 import pytest
 import vcr  # type: ignore[import]
 
-from tests.testlib import import_module  # pylint: disable=import-error
+from tests.testlib import import_module
 
 
-@pytest.fixture(scope="module")
-def check_form_submit():
+@pytest.fixture(name="check_form_submit", scope="module")
+def fixture_check_form_submit() -> ModuleType:
     return import_module("active_checks/check_form_submit")
 
 
@@ -23,9 +24,8 @@ def check_form_submit():
     [
         (
             [
-                "-I",
                 "localhost",
-                "-u",
+                "--uri",
                 "/heute",
             ],
             0,
@@ -33,33 +33,38 @@ def check_form_submit():
         ),
         (
             [
-                "-I",
                 "localhost",
-                "-u",
+                "--uri",
                 "/heute",
-                "-q",
+                "--query",
                 '"_origtarget=wato.py&_username=cmkadmin&_password=cmk"',
-                "-e" + "wato",
+                "--expected_regex",
+                "wato",
             ],
             0,
             'Found expected regex "wato" in form response',
         ),
         (
             [
-                "-I",
                 "localhost",
-                "-u",
+                "--uri",
                 "/heute",
-                "-q",
+                "--query",
                 '"_origtarget=wato.py&_username=cmkadmin&_password=cmk"',
-                "-e" + "lala",
+                "--expected_regex",
+                "lala",
             ],
             2,
             'Expected regex "lala" could not be found in form response',
         ),
     ],
 )
-def test_check_form_submit_main(check_form_submit, args, expected_exitcode, expected_info):
+def test_check_form_submit_main(
+    check_form_submit: ModuleType,
+    args: Sequence[str],
+    expected_exitcode: int,
+    expected_info: str,
+) -> None:
     filepath = "%s/_check_form_submit_response" % os.path.dirname(os.path.abspath(__file__))
     with vcr.use_cassette(filepath, record_mode="none"):
         exitcode, info = check_form_submit.main(args)
@@ -108,34 +113,36 @@ def test_check_form_submit_main(check_form_submit, args, expected_exitcode, expe
     ],
 )
 def test_ac_check_form_submit_host_states_no_levels(
-    check_form_submit, states, expected_status, expected_info
-):
-    status, info = check_form_submit.check_host_states(states, None, None)
+    check_form_submit: ModuleType,
+    states: Mapping[str, tuple[int, str]],
+    expected_status: int,
+    expected_info: str,
+) -> None:
+    status, info = check_form_submit.check_host_states(states, None)
     assert status == expected_status
     assert info == expected_info
 
 
 @pytest.mark.parametrize(
-    "states, warn, crit, expected_status, expected_info",
+    "states, levels, expected_status, expected_info",
     [
-        ({}, None, None, 0, "0 succeeded, 0 failed"),
-        ({}, 0, None, 1, "0 succeeded, 0 failed"),
-        ({}, 0, 0, 2, "0 succeeded, 0 failed"),
-        ({"foo": (0, "SOME_TEXT_1")}, None, None, 0, "1 succeeded, 0 failed"),
-        ({"foo": (0, "SOME_TEXT_1")}, 0, None, 0, "1 succeeded, 0 failed"),
-        ({"foo": (0, "SOME_TEXT_1")}, 0, 0, 0, "1 succeeded, 0 failed"),
-        ({"foo": (0, "SOME_TEXT_1")}, 1, None, 1, "1 succeeded, 0 failed"),
-        ({"foo": (0, "SOME_TEXT_1")}, 1, 1, 2, "1 succeeded, 0 failed"),
-        ({"foo": (3, "SOME_TEXT_1")}, None, None, 3, "0 succeeded, 1 failed (foo: SOME_TEXT_1)"),
-        ({"foo": (3, "SOME_TEXT_1")}, 0, None, 1, "0 succeeded, 1 failed (foo: SOME_TEXT_1)"),
-        ({"foo": (3, "SOME_TEXT_1")}, 0, 0, 2, "0 succeeded, 1 failed (foo: SOME_TEXT_1)"),
-        ({"foo": (3, "SOME_TEXT_1")}, 1, None, 1, "0 succeeded, 1 failed (foo: SOME_TEXT_1)"),
-        ({"foo": (3, "SOME_TEXT_1")}, 1, 1, 2, "0 succeeded, 1 failed (foo: SOME_TEXT_1)"),
+        ({}, None, 0, "0 succeeded, 0 failed"),
+        ({}, (0, 0), 2, "0 succeeded, 0 failed"),
+        ({"foo": (0, "SOME_TEXT_1")}, None, 0, "1 succeeded, 0 failed"),
+        ({"foo": (0, "SOME_TEXT_1")}, (0, 0), 0, "1 succeeded, 0 failed"),
+        ({"foo": (0, "SOME_TEXT_1")}, (1, 1), 2, "1 succeeded, 0 failed"),
+        ({"foo": (3, "SOME_TEXT_1")}, None, 3, "0 succeeded, 1 failed (foo: SOME_TEXT_1)"),
+        ({"foo": (3, "SOME_TEXT_1")}, (0, 0), 2, "0 succeeded, 1 failed (foo: SOME_TEXT_1)"),
+        ({"foo": (3, "SOME_TEXT_1")}, (1, 1), 2, "0 succeeded, 1 failed (foo: SOME_TEXT_1)"),
     ],
 )
 def test_ac_check_form_submit_host_states_levels(
-    check_form_submit, states, warn, crit, expected_status, expected_info
-):
-    status, info = check_form_submit.check_host_states(states, warn, crit)
+    check_form_submit: ModuleType,
+    states: Mapping[str, tuple[int, str]],
+    levels: Optional[tuple[int, int]],
+    expected_status: int,
+    expected_info: str,
+) -> None:
+    status, info = check_form_submit.check_host_states(states, levels)
     assert status == expected_status
     assert info == expected_info

@@ -288,7 +288,7 @@ def df_check_filesystem_single_coroutine(
         if trend_state or trend_text or trend_perf:
             yield trend_state, trend_text.strip(" ,"), trend_perf or []
 
-    if not inodes_total or not inodes_avail:
+    if not inodes_total or inodes_avail is None:
         return
 
     metric, result = _check_inodes(levels, inodes_total, inodes_avail)

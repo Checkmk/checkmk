@@ -1,0 +1,18 @@
+Title: Check HTML Form Submit: Add option to use TLS without server certificate validation
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1649694423
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0b6
+
+The activate check "Check HTML Form Submit" can now be configured to use TLS
+without validating the server certificate. Previously, TLS could only be switched
+on or off and the server certificate was always validated if TLS was activated.
+
+Furthermore, if no port is configured, the active check now defaults to port 80
+if TLS is deactivated and to port 443 if TLS activated. Previously, the default
+was always port 80, regardless of the TLS configuration.

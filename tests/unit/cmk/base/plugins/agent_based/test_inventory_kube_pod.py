@@ -32,6 +32,7 @@ from cmk.base.plugins.agent_based.utils.kube import (
                 name="name",
                 creation_timestamp=1600000000.0,
                 labels={},
+                annotations={},
                 node="minikube",
                 host_network=None,
                 dns_policy="ClusterFirst",
@@ -90,10 +91,16 @@ from cmk.base.plugins.agent_based.utils.kube import (
             ),
             [
                 Attributes(
-                    path=["software", "applications", "kube", "pod"],
+                    path=["software", "applications", "kube", "metadata"],
                     inventory_attributes={
+                        "object": "Pod",
                         "name": "name",
                         "namespace": "default",
+                    },
+                ),
+                Attributes(
+                    path=["software", "applications", "kube", "pod"],
+                    inventory_attributes={
                         "dns_policy": "ClusterFirst",
                         "host_ip": "192.168.49.2",
                         "host_network": None,

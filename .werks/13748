@@ -1,0 +1,17 @@
+Title: Support Diagnostics: Missing performance report
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1649929068
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b8
+
+In an environment with multiple sites on one server or with multiple CMK servers added as hosts, the
+performance report was sometimes missing in the Support Diagnostics dump.
+The reason was: When creating a Support Diagnostics dump, the hostname of the Checkmk server is determined using a Livestatus query.
+The query previously used, returned multiple servers in some cases, and the first one listed was used.
+
+This fix uses a new query that is more reliable.

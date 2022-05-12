@@ -254,7 +254,6 @@ CEE_UNUSED_PACKAGES = [
     "click",
     "defusedxml",
     "docutils",
-    "exchangelib",  # TODO: Clean this up once the call sites have been added
     "gunicorn",
     "idna",
     "importlib_metadata",

@@ -46,6 +46,9 @@ pytestmark = pytest.mark.checks
                 "cluster",
                 "--monitored-objects",
                 "pods",
+                "--cluster-aggregation-exclude-node-roles",
+                "control-plane",
+                "infra",
                 "--api-server-endpoint",
                 "https://11.211.3.32",
                 "--api-server-proxy",
@@ -86,6 +89,9 @@ pytestmark = pytest.mark.checks
                 "cluster",
                 "--monitored-objects",
                 "pods",
+                "--cluster-aggregation-exclude-node-roles",
+                "control-plane",
+                "infra",
                 "--api-server-endpoint",
                 "http://11.211.3.32:8080",
                 "--api-server-proxy",
@@ -110,7 +116,7 @@ pytestmark = pytest.mark.checks
                     "endpoint": "https://11.211.3.32:20026",
                     "verify-cert": False,
                 },
-                "monitored-objects": ["pods"],
+                "monitored-objects": ["pods", "namespaces"],
             },
             [
                 "--cluster",
@@ -119,6 +125,10 @@ pytestmark = pytest.mark.checks
                 "randomtoken",
                 "--monitored-objects",
                 "pods",
+                "namespaces",
+                "--cluster-aggregation-exclude-node-roles",
+                "control-plane",
+                "infra",
                 "--api-server-endpoint",
                 "http://localhost:8080",
                 "--api-server-proxy",
@@ -159,6 +169,9 @@ def test_parse_arguments_with_no_cluster_endpoint():
         "token",
         "--monitored-objects",
         "pods",
+        "--cluster-aggregation-exclude-node-roles",
+        "control-plane",
+        "infra",
         "--api-server-endpoint",
         "https://127.0.0.1",
         "--api-server-proxy",
@@ -191,6 +204,183 @@ def test_cronjob_piggyback_option():
         "--monitored-objects",
         "pods",
         "cronjobs_pods",
+        "--cluster-aggregation-exclude-node-roles",
+        "control-plane",
+        "infra",
+        "--api-server-endpoint",
+        "https://11.211.3.32",
+        "--api-server-proxy",
+        "NO_PROXY",
+    ]
+
+
+def test_cluster_resource_aggregation():
+    """Test the cluster-resource-aggregation option"""
+    agent = SpecialAgent("agent_kube")
+    arguments = agent.argument_func(
+        {
+            "cluster-name": "cluster",
+            "token": ("password", "token"),
+            "kubernetes-api-server": {
+                "endpoint": "https://11.211.3.32",
+                "verify-cert": False,
+                "proxy": ("no_proxy", "no_proxy"),
+            },
+            "monitored-objects": ["pods"],
+            "cluster-resource-aggregation": (
+                "cluster-aggregation-exclude-node-roles",
+                ["control*", "worker"],
+            ),
+        },
+        "host",
+        "11.211.3.32",
+    )
+    assert arguments == [
+        "--cluster",
+        "cluster",
+        "--token",
+        "token",
+        "--monitored-objects",
+        "pods",
+        "--cluster-aggregation-exclude-node-roles",
+        "control*",
+        "worker",
+        "--api-server-endpoint",
+        "https://11.211.3.32",
+        "--api-server-proxy",
+        "NO_PROXY",
+    ]
+    arguments = agent.argument_func(
+        {
+            "cluster-name": "cluster",
+            "token": ("password", "token"),
+            "kubernetes-api-server": {
+                "endpoint": "https://11.211.3.32",
+                "verify-cert": False,
+                "proxy": ("no_proxy", "no_proxy"),
+            },
+            "monitored-objects": ["pods"],
+            "cluster-resource-aggregation": "cluster-aggregation-include-all-nodes",
+        },
+        "host",
+        "11.211.3.32",
+    )
+    assert arguments == [
+        "--cluster",
+        "cluster",
+        "--token",
+        "token",
+        "--monitored-objects",
+        "pods",
+        "--cluster-aggregation-include-all-nodes",
+        "--api-server-endpoint",
+        "https://11.211.3.32",
+        "--api-server-proxy",
+        "NO_PROXY",
+    ]
+    arguments = agent.argument_func(
+        {
+            "cluster-name": "cluster",
+            "token": ("password", "token"),
+            "kubernetes-api-server": {
+                "endpoint": "https://11.211.3.32",
+                "verify-cert": False,
+                "proxy": ("no_proxy", "no_proxy"),
+            },
+            "monitored-objects": ["pods"],
+        },
+        "host",
+        "11.211.3.32",
+    )
+    assert arguments == [
+        "--cluster",
+        "cluster",
+        "--token",
+        "token",
+        "--monitored-objects",
+        "pods",
+        "--cluster-aggregation-exclude-node-roles",
+        "control-plane",
+        "infra",
+        "--api-server-endpoint",
+        "https://11.211.3.32",
+        "--api-server-proxy",
+        "NO_PROXY",
+    ]
+
+
+def test_host_labels_annotation_selection():
+    """Test the import-annotations option"""
+    agent = SpecialAgent("agent_kube")
+
+    # Option not set -> no annotations imported. This special case is covered
+    # by test_parse_arguments. If test_parse_arguments is migrated, this
+    # special case needs to be reconsidered.
+
+    # Explicit no filtering
+    arguments = agent.argument_func(
+        {
+            "cluster-name": "cluster",
+            "token": ("password", "token"),
+            "kubernetes-api-server": {
+                "endpoint": "https://11.211.3.32",
+                "verify-cert": False,
+                "proxy": ("no_proxy", "no_proxy"),
+            },
+            "import-annotations": "include-annotations-as-host-labels",
+            "monitored-objects": ["pods"],
+        },
+        "host",
+        "11.211.3.32",
+    )
+    assert arguments == [
+        "--cluster",
+        "cluster",
+        "--token",
+        "token",
+        "--monitored-objects",
+        "pods",
+        "--cluster-aggregation-exclude-node-roles",
+        "control-plane",
+        "infra",
+        "--include-annotations-as-host-labels",
+        "--api-server-endpoint",
+        "https://11.211.3.32",
+        "--api-server-proxy",
+        "NO_PROXY",
+    ]
+
+    # Explicit filtering
+    arguments = agent.argument_func(
+        {
+            "cluster-name": "cluster",
+            "token": ("password", "token"),
+            "kubernetes-api-server": {
+                "endpoint": "https://11.211.3.32",
+                "verify-cert": False,
+                "proxy": ("no_proxy", "no_proxy"),
+            },
+            "import-annotations": (
+                "include-matching-annotations-as-host-labels",
+                "checkmk-monitoring$",
+            ),
+            "monitored-objects": ["pods"],
+        },
+        "host",
+        "11.211.3.32",
+    )
+    assert arguments == [
+        "--cluster",
+        "cluster",
+        "--token",
+        "token",
+        "--monitored-objects",
+        "pods",
+        "--cluster-aggregation-exclude-node-roles",
+        "control-plane",
+        "infra",
+        "--include-matching-annotations-as-host-labels",
+        "checkmk-monitoring$",
         "--api-server-endpoint",
         "https://11.211.3.32",
         "--api-server-proxy",
@@ -226,6 +416,9 @@ def test_parse_namespace_patterns():
         "default",
         "--namespace-include-patterns",
         "kube-system",
+        "--cluster-aggregation-exclude-node-roles",
+        "control-plane",
+        "infra",
         "--api-server-endpoint",
         "https://11.211.3.32",
         "--api-server-proxy",

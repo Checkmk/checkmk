@@ -1,0 +1,14 @@
+Title: Bulk host create/update calls now report succeeded and failed hosts
+Class: feature
+Compatible: compat
+Component: rest-api
+Date: 1648713023
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b5
+
+The REST API calls cmk/bulk_create/invoke and bulk-update/invoke may perform
+only parts of the requested actions in some cases. The endpoints now report
+additional structured information regarding the failed hosts and the cause of
+the issue and the collection of succeeded hosts.

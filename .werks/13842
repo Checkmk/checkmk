@@ -1,0 +1,16 @@
+Title: ups_test: Display result of last test
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1649191577
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b5
+
+The check ups_test now displays the result of the last test.
+The result of the last test has already been considered in
+the computation of the service state, and not displaying it
+lead to inexplicable non-OK services.
+

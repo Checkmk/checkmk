@@ -12,7 +12,12 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     CheckResult,
     HostLabelGenerator,
 )
-from cmk.base.plugins.agent_based.utils.kube import ControlChain, CreationTimestamp
+from cmk.base.plugins.agent_based.utils.kube import (
+    ControlChain,
+    CreationTimestamp,
+    FilteredAnnotations,
+    kube_annotations_to_cmk_labels,
+)
 
 
 def result_simple(display_name: str, notice_only=False):
@@ -36,8 +41,8 @@ def result_from_control_chain(control_chain: ControlChain) -> Result:
     >>> from cmk.base.plugins.agent_based.utils.kube import ControllerType, Controller
     >>> result_from_control_chain([])
     Result(state=<State.OK: 0>, summary='Controlled by: None')
-    >>> result_from_control_chain([Controller(type_=ControllerType.daemon_set, name="kube-proxy")])
-    Result(state=<State.OK: 0>, summary='Controlled by: daemon_set/kube-proxy')
+    >>> result_from_control_chain([Controller(type_=ControllerType.daemonset, name="kube-proxy")])
+    Result(state=<State.OK: 0>, summary='Controlled by: daemonset/kube-proxy')
     """
     chain_display = " <- ".join(f"{c.type_.value}/{c.name}" for c in control_chain)
     return Result(
@@ -88,6 +93,7 @@ class Info(Protocol):
     cluster: str
     namespace: str
     name: str
+    annotations: FilteredAnnotations
 
 
 def host_labels(
@@ -97,6 +103,9 @@ def host_labels(
         """Host label function.
 
         Labels:
+            cmk/kubernetes:
+                This label is set to "yes" for all Kubernetes objects.
+
             cmk/kubernetes/object:
                 This label is set to the Kubernetes object type.
 
@@ -106,6 +115,11 @@ def host_labels(
             cmk/kubernetes/namespace:
                 This label contains the name of the Kubernetes Namespace this checkmk host is
                 associated with.
+
+            cmk/kubernetes/annotation/{key}:{value} :
+                These labels are yielded for each Kubernetes annotation that is
+                a valid Kubernetes label. This can be configured via the rule
+                'Kubernetes'.
 
             cmk/kubernetes/deployment:
                 This label is set to the name of the Deployment.
@@ -118,9 +132,11 @@ def host_labels(
 
         """
 
+        yield HostLabel("cmk/kubernetes", "yes")
         yield HostLabel("cmk/kubernetes/object", object_type)
         yield HostLabel("cmk/kubernetes/cluster", section.cluster)
         yield HostLabel("cmk/kubernetes/namespace", section.namespace)
         yield HostLabel(f"cmk/kubernetes/{object_type}", section.name)
+        yield from kube_annotations_to_cmk_labels(section.annotations)
 
     return _host_labels

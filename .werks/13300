@@ -1,0 +1,16 @@
+Title: BI special agent: no longer hangs during agent baking
+Class: fix
+Compatible: compat
+Component: bi
+Date: 1650530885
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b6
+
+In the previous version the BI special agent required the configuration lock to compute the aggregation status.
+Long running processes, like the agent baking or host renaming, could hold the configuration lock for a considerable
+amount of time, hereby cauing the BI special agent to run into a timeout.
+
+With this change, the agent no longer needs a locked configuration to compute its data.

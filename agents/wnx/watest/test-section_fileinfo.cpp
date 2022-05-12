@@ -401,7 +401,7 @@ TEST(FileInfoTest, FindFileByMask) {
         << "unit tests works for windows on c in windows folder";
 
     // invalid entry
-    EXPECT_TRUE(FindFilesByMask(L"c:windows\\notepad.exe").empty());
+    EXPECT_TRUE(FindFilesByMask(L"c:indows\\notepad.exe").empty());
     // valid entry
     EXPECT_EQ(FindFilesByMask(L"c:\\windows\\notepad.exe").size(), 1U);
     // invalid relative entry

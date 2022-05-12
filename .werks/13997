@@ -1,0 +1,13 @@
+Title: Rule merging for fileinfo_group
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1649763488
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b6
+
+Pre 2.1.0, the check fileinfo_groups was able to receive all matching rules for a host
+and then discover the file groups accordingly.
+This was broken since 2.1.0b1.

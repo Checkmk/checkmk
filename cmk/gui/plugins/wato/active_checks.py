@@ -7,7 +7,6 @@
 import copy
 from typing import Any, Mapping, Union
 
-import cmk.gui.mkeventd as mkeventd
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
@@ -26,14 +25,12 @@ from cmk.gui.valuespec import (
     Checkbox,
     Dictionary,
     DropdownChoice,
-    EmailAddress,
     FixedValue,
     Float,
     Hostname,
     Integer,
     ListOf,
     ListOfStrings,
-    Optional,
     Password,
     Percentage,
     RegExp,
@@ -133,142 +130,6 @@ def check_icmp_params():
                     "of how many packets have been received yet."
                 ),
                 minvalue=1,
-            ),
-        ),
-    ]
-
-
-def _imap_parameters():
-    return Dictionary(
-        title="IMAP",
-        optional_keys=[],
-        elements=[
-            (
-                "server",
-                TextInput(
-                    title=_("IMAP Server"),
-                    allow_empty=False,
-                    help=_(
-                        "You can specify a hostname or IP address different from the IP address "
-                        "of the host this check will be assigned to."
-                    ),
-                ),
-            ),
-            (
-                "ssl",
-                CascadingDropdown(
-                    title=_("SSL Encryption"),
-                    default_value=(False, 143),
-                    choices=[
-                        (
-                            False,
-                            _("Use no encryption"),
-                            Optional(
-                                Integer(
-                                    default_value=143,
-                                ),
-                                title=_("TCP Port"),
-                                help=_("By default the standard IMAP Port 143 is used."),
-                            ),
-                        ),
-                        (
-                            True,
-                            _("Encrypt IMAP communication using SSL"),
-                            Optional(
-                                Integer(
-                                    default_value=993,
-                                ),
-                                title=_("TCP Port"),
-                                help=_("By default the standard IMAP/SSL Port 993 is used."),
-                            ),
-                        ),
-                    ],
-                ),
-            ),
-            (
-                "auth",
-                Tuple(
-                    title=_("Authentication"),
-                    elements=[
-                        TextInput(title=_("Username"), allow_empty=False, size=24),
-                        IndividualOrStoredPassword(title=_("Password"), allow_empty=False, size=12),
-                    ],
-                ),
-            ),
-        ],
-    )
-
-
-def _pop3_parameters():
-    return Dictionary(
-        optional_keys=["server"],
-        elements=[
-            (
-                "server",
-                TextInput(
-                    title=_("POP3 Server"),
-                    allow_empty=False,
-                    help=_(
-                        "You can specify a hostname or IP address different from the IP address "
-                        "of the host this check will be assigned to."
-                    ),
-                ),
-            ),
-            (
-                "ssl",
-                CascadingDropdown(
-                    title=_("SSL Encryption"),
-                    default_value=(False, 110),
-                    choices=[
-                        (
-                            False,
-                            _("Use no encryption"),
-                            Optional(
-                                Integer(
-                                    default_value=110,
-                                ),
-                                title=_("TCP Port"),
-                                help=_("By default the standard POP3 Port 110 is used."),
-                            ),
-                        ),
-                        (
-                            True,
-                            _("Encrypt POP3 communication using SSL"),
-                            Optional(
-                                Integer(
-                                    default_value=995,
-                                ),
-                                title=_("TCP Port"),
-                                help=_("By default the standard POP3/SSL Port 995 is used."),
-                            ),
-                        ),
-                    ],
-                ),
-            ),
-            (
-                "auth",
-                Tuple(
-                    title=_("Authentication"),
-                    elements=[
-                        TextInput(title=_("Username"), allow_empty=False, size=24),
-                        IndividualOrStoredPassword(title=_("Password"), allow_empty=False, size=12),
-                    ],
-                ),
-            ),
-        ],
-    )
-
-
-def _mail_receiving_params():
-    return [
-        (
-            "fetch",
-            CascadingDropdown(
-                title=_("Mail Receiving"),
-                choices=[
-                    ("IMAP", _("IMAP"), _imap_parameters()),
-                    ("POP3", _("POP3"), _pop3_parameters()),
-                ],
             ),
         ),
     ]
@@ -1220,7 +1081,7 @@ def _active_checks_http_proxyspec():
     return Dictionary(
         title=_("Use proxy"),
         elements=[
-            ("address", TextInput(title=_("Proxy server address"))),
+            ("address", TextInput(title=_("Proxy server address"), size=45)),
             ("port", _active_checks_http_portspec(80)),
             (
                 "auth",
@@ -1253,7 +1114,7 @@ def _active_checks_http_hostspec():
             "HTTP/1.1 is used."
         ),
         elements=[
-            ("address", TextInput(title=_("Hosts name / IP address"), allow_empty=False)),
+            ("address", TextInput(title=_("Hostname / IP address"), allow_empty=False, size=45)),
             ("port", _active_checks_http_portspec(443)),
             _ip_address_family_element(),
             (
@@ -1265,6 +1126,7 @@ def _active_checks_http_hostspec():
                         " virtual host for the query."
                     ),
                     allow_empty=False,
+                    size=45,
                 ),
             ),
         ],
@@ -1356,6 +1218,7 @@ def _valuespec_active_checks_http():
                         ),
                         allow_empty=False,
                         validate=_validate_active_check_http_name,
+                        size=45,
                     ),
                 ),
                 ("host", _active_checks_http_hostspec()),
@@ -1383,6 +1246,7 @@ def _valuespec_active_checks_http():
                                                 ),
                                                 allow_empty=False,
                                                 default_value="/",
+                                                size=45,
                                             ),
                                         ),
                                         (
@@ -2423,129 +2287,147 @@ rulespec_registry.register(
 
 
 def _valuespec_active_checks_form_submit():
-    return Tuple(
-        title=_("Check HTML Form Submit"),
-        help=_(
-            "Check submission of HTML forms via HTTP/HTTPS using the plugin <tt>check_form_submit</tt> "
-            "provided with Check_MK. This plugin provides more functionality than <tt>check_http</tt>, "
-            "as it automatically follows HTTP redirect, accepts and uses cookies, parses forms "
-            "from the requested pages, changes vars and submits them to check the response "
-            "afterwards."
+    return Transform(
+        Tuple(
+            title=_("Check HTML Form Submit"),
+            help=_(
+                "Check submission of HTML forms via HTTP/HTTPS using the plugin <tt>check_form_submit</tt> "
+                "provided with Check_MK. This plugin provides more functionality than <tt>check_http</tt>, "
+                "as it automatically follows HTTP redirect, accepts and uses cookies, parses forms "
+                "from the requested pages, changes vars and submits them to check the response "
+                "afterwards."
+            ),
+            elements=[
+                TextInput(
+                    title=_("Name"),
+                    help=_("The name will be used in the service description"),
+                    allow_empty=False,
+                ),
+                Dictionary(
+                    title=_("Check the URL"),
+                    elements=[
+                        (
+                            "hosts",
+                            ListOfStrings(
+                                title=_("Check specific host(s)"),
+                                help=_(
+                                    "By default, if you do not specify any host addresses here, "
+                                    "the host address of the host this service is assigned to will "
+                                    "be used. But by specifying one or several host addresses here, "
+                                    "it is possible to let the check monitor one or multiple hosts."
+                                ),
+                            ),
+                        ),
+                        (
+                            "uri",
+                            TextInput(
+                                title=_("URI to fetch (default is <tt>/</tt>)"),
+                                allow_empty=False,
+                                default_value="/",
+                                regex="^/.*",
+                            ),
+                        ),
+                        (
+                            "port",
+                            Integer(
+                                title=_("TCP Port"),
+                                minvalue=1,
+                                maxvalue=65535,
+                                default_value=80,
+                            ),
+                        ),
+                        (
+                            "tls_configuration",
+                            DropdownChoice(
+                                title=_("TLS/HTTPS configuration"),
+                                help=_(
+                                    "Activate or deactivate TLS for the connection. No certificate validation means that "
+                                    "the server certificate will not be validated by the locally available certificate authorities."
+                                ),
+                                choices=[
+                                    (
+                                        "no_tls",
+                                        _("No TLS"),
+                                    ),
+                                    (
+                                        "tls_standard",
+                                        _("TLS"),
+                                    ),
+                                    (
+                                        "tls_no_cert_valid",
+                                        _("TLS without certificate validation"),
+                                    ),
+                                ],
+                            ),
+                        ),
+                        (
+                            "timeout",
+                            Integer(
+                                title=_("Seconds before connection times out"),
+                                unit=_("sec"),
+                                default_value=10,
+                            ),
+                        ),
+                        (
+                            "expect_regex",
+                            RegExp(
+                                title=_("Regular expression to expect in content"),
+                                mode=RegExp.infix,
+                            ),
+                        ),
+                        (
+                            "form_name",
+                            TextInput(
+                                title=_("Name of the form to populate and submit"),
+                                help=_(
+                                    "If there is only one form element on the requested page, you "
+                                    "do not need to provide the name of that form here. But if you "
+                                    "have several forms on that page, you need to provide the name "
+                                    "of the form here, to enable the check to identify the correct "
+                                    "form element."
+                                ),
+                                allow_empty=True,
+                            ),
+                        ),
+                        (
+                            "query",
+                            TextInput(
+                                title=_("Send HTTP POST data"),
+                                help=_(
+                                    "Data to send via HTTP POST method. Please make sure, that the data "
+                                    'is URL-encoded (for example "key1=val1&key2=val2").'
+                                ),
+                                size=40,
+                            ),
+                        ),
+                        (
+                            "num_succeeded",
+                            Tuple(
+                                title=_("Multiple Hosts: Number of successful results"),
+                                elements=[
+                                    Integer(title=_("Warning if equal or below")),
+                                    Integer(title=_("Critical if equal or below")),
+                                ],
+                            ),
+                        ),
+                    ],
+                ),
+            ],
         ),
-        elements=[
-            TextInput(
-                title=_("Name"),
-                help=_("The name will be used in the service description"),
-                allow_empty=False,
-            ),
-            Dictionary(
-                title=_("Check the URL"),
-                elements=[
-                    (
-                        "hosts",
-                        ListOfStrings(
-                            title=_("Check specific host(s)"),
-                            help=_(
-                                "By default, if you do not specify any host addresses here, "
-                                "the host address of the host this service is assigned to will "
-                                "be used. But by specifying one or several host addresses here, "
-                                "it is possible to let the check monitor one or multiple hosts."
-                            ),
-                        ),
-                    ),
-                    (
-                        "virthost",
-                        TextInput(
-                            title=_("Virtual host"),
-                            help=_(
-                                "Set this in order to specify the name of the "
-                                "virtual host for the query (using HTTP/1.1). When you "
-                                "leave this empty, then the IP address of the host "
-                                "will be used instead."
-                            ),
-                            allow_empty=False,
-                        ),
-                    ),
-                    (
-                        "uri",
-                        TextInput(
-                            title=_("URI to fetch (default is <tt>/</tt>)"),
-                            allow_empty=False,
-                            default_value="/",
-                            regex="^/.*",
-                        ),
-                    ),
-                    (
-                        "port",
-                        Integer(
-                            title=_("TCP Port"),
-                            minvalue=1,
-                            maxvalue=65535,
-                            default_value=80,
-                        ),
-                    ),
-                    (
-                        "ssl",
-                        FixedValue(
-                            value=True,
-                            totext=_("use SSL/HTTPS"),
-                            title=_("Use SSL/HTTPS for the connection."),
-                        ),
-                    ),
-                    (
-                        "timeout",
-                        Integer(
-                            title=_("Seconds before connection times out"),
-                            unit=_("sec"),
-                            default_value=10,
-                        ),
-                    ),
-                    (
-                        "expect_regex",
-                        RegExp(
-                            title=_("Regular expression to expect in content"),
-                            mode=RegExp.infix,
-                        ),
-                    ),
-                    (
-                        "form_name",
-                        TextInput(
-                            title=_("Name of the form to populate and submit"),
-                            help=_(
-                                "If there is only one form element on the requested page, you "
-                                "do not need to provide the name of that form here. But if you "
-                                "have several forms on that page, you need to provide the name "
-                                "of the form here, to enable the check to identify the correct "
-                                "form element."
-                            ),
-                            allow_empty=True,
-                        ),
-                    ),
-                    (
-                        "query",
-                        TextInput(
-                            title=_("Send HTTP POST data"),
-                            help=_(
-                                "Data to send via HTTP POST method. Please make sure, that the data "
-                                'is URL-encoded (for example "key1=val1&key2=val2").'
-                            ),
-                            size=40,
-                        ),
-                    ),
-                    (
-                        "num_succeeded",
-                        Tuple(
-                            title=_("Multiple Hosts: Number of successful results"),
-                            elements=[
-                                Integer(title=_("Warning if equal or below")),
-                                Integer(title=_("Critical if equal or below")),
-                            ],
-                        ),
-                    ),
-                ],
-            ),
-        ],
+        forth=_transform_form_submit,
     )
+
+
+def _transform_form_submit(p: tuple[str, Mapping[str, object]]) -> tuple[str, Mapping[str, object]]:
+    service_name, params = p
+    if "tls_configuration" in params:
+        return p
+    if "ssl" not in params:
+        return p
+    return service_name, {
+        **{k: v for k, v in params.items() if k != "ssl"},
+        "tls_configuration": "tls_standard",
+    }
 
 
 rulespec_registry.register(
@@ -2684,452 +2566,6 @@ rulespec_registry.register(
         match_type="all",
         name="active_checks:traceroute",
         valuespec=_valuespec_active_checks_traceroute,
-    )
-)
-
-
-def _valuespec_active_checks_mail_loop():
-    return Dictionary(
-        title=_("Check Email Delivery"),
-        help=_(
-            "This active check sends out special E-Mails to a defined mail address using "
-            "the SMTP protocol and then tries to receive these mails back by querying the "
-            "inbox of a IMAP or POP3 mailbox. With this check you can verify that your whole "
-            "mail delivery progress is working."
-        ),
-        optional_keys=[
-            "subject",
-            "smtp_server",
-            "smtp_tls",
-            "smtp_port",
-            "smtp_auth",
-            "imap_tls",
-            "connect_timeout",
-            "delete_messages",
-            "duration",
-        ],
-        elements=[
-            (
-                "item",
-                TextInput(
-                    title=_("Name"),
-                    help=_("The service description will be <b>Mail Loop</b> plus this name"),
-                    allow_empty=False,
-                ),
-            ),
-            (
-                "subject",
-                TextInput(
-                    title=_("Subject"),
-                    allow_empty=False,
-                    help=_(
-                        "Here you can specify the subject text "
-                        "instead of default text 'Check_MK-Mail-Loop'."
-                    ),
-                ),
-            ),
-            (
-                "smtp_server",
-                TextInput(
-                    title=_("SMTP Server"),
-                    allow_empty=False,
-                    help=_(
-                        "You can specify a hostname or IP address different from the IP address "
-                        "of the host this check will be assigned to."
-                    ),
-                ),
-            ),
-            (
-                "smtp_tls",
-                FixedValue(
-                    True,
-                    title=_("Use TLS over SMTP"),
-                    totext=_("Encrypt SMTP communication using TLS"),
-                ),
-            ),
-            (
-                "imap_tls",
-                FixedValue(
-                    True,
-                    title=_("Use TLS for IMAP authentification"),
-                    totext=_("IMAP authentification uses TLS"),
-                ),
-            ),
-            (
-                "smtp_port",
-                Integer(
-                    title=_("SMTP TCP Port to connect to"),
-                    help=_(
-                        "The TCP Port the SMTP server is listening on. Defaulting to <tt>25</tt>."
-                    ),
-                    default_value=25,
-                ),
-            ),
-            (
-                "smtp_auth",
-                Tuple(
-                    title=_("SMTP Authentication"),
-                    elements=[
-                        TextInput(title=_("Username"), allow_empty=False, size=24),
-                        IndividualOrStoredPassword(title=_("Password"), allow_empty=False, size=12),
-                    ],
-                ),
-            ),
-        ]
-        + _mail_receiving_params()
-        + [
-            (
-                "mail_from",
-                EmailAddress(
-                    title=_("From: email address"),
-                ),
-            ),
-            (
-                "mail_to",
-                EmailAddress(
-                    title=_("Destination email address"),
-                ),
-            ),
-            (
-                "connect_timeout",
-                Integer(
-                    title=_("Connect Timeout"),
-                    minvalue=1,
-                    default_value=10,
-                    unit=_("sec"),
-                ),
-            ),
-            (
-                "duration",
-                Tuple(
-                    title=_("Loop duration"),
-                    elements=[
-                        Age(title=_("Warning at")),
-                        Age(title=_("Critical at")),
-                    ],
-                ),
-            ),
-            (
-                "delete_messages",
-                FixedValue(
-                    True,
-                    title=_("Delete processed messages"),
-                    totext=_("Delete all processed message belonging to this check"),
-                    help=_(
-                        "Delete all messages identified as being related to this "
-                        "check. This is disabled by default, which will make "
-                        "your mailbox grow when you not clean it up on your own."
-                    ),
-                ),
-            ),
-        ],
-    )
-
-
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupActiveChecks,
-        match_type="all",
-        name="active_checks:mail_loop",
-        valuespec=_valuespec_active_checks_mail_loop,
-    )
-)
-
-
-def _valuespec_active_checks_mail():
-    return Dictionary(
-        title=_("Check Email"),
-        help=_(
-            "The basic function of this check is to log in into an IMAP or POP3 mailbox to "
-            "monitor whether or not the login is possible. A extended feature is, that the "
-            "check can fetch all (or just some) from the mailbox and forward them as events "
-            "to the Event Console."
-        ),
-        required_keys=["service_description", "fetch"],
-        elements=[
-            (
-                "service_description",
-                TextInput(
-                    title=_("Service description"),
-                    help=_(
-                        "Please make sure that this is unique per host "
-                        "and does not collide with other services."
-                    ),
-                    allow_empty=False,
-                    default_value="Email",
-                ),
-            )
-        ]
-        + _mail_receiving_params()
-        + [
-            (
-                "connect_timeout",
-                Integer(
-                    title=_("Connect Timeout"),
-                    minvalue=1,
-                    default_value=10,
-                    unit=_("sec"),
-                ),
-            ),
-            (
-                "forward",
-                Dictionary(
-                    title=_("Forward mails as events to Event Console"),
-                    elements=[
-                        (
-                            "method",
-                            Alternative(
-                                title=_("Forwarding Method"),
-                                elements=[
-                                    Alternative(
-                                        title=_("Send events to local event console"),
-                                        elements=[
-                                            FixedValue(
-                                                "",
-                                                totext=_("Directly forward to event console"),
-                                                title=_(
-                                                    "Send events to local event console in same OMD site"
-                                                ),
-                                            ),
-                                            TextInput(
-                                                title=_(
-                                                    "Send events to local event console into unix socket"
-                                                ),
-                                                allow_empty=False,
-                                            ),
-                                            FixedValue(
-                                                "spool:",
-                                                totext=_("Spool to event console"),
-                                                title=_(
-                                                    "Spooling: Send events to local event console in same OMD site"
-                                                ),
-                                            ),
-                                            Transform(
-                                                TextInput(
-                                                    allow_empty=False,
-                                                ),
-                                                title=_(
-                                                    "Spooling: Send events to local event console into given spool directory"
-                                                ),
-                                                # remove prefix
-                                                forth=lambda x: x[6:],
-                                                back=lambda x: "spool:" + x,  # add prefix
-                                            ),
-                                        ],
-                                        match=lambda x: x
-                                        and (
-                                            x == "spool:" and 2 or x.startswith("spool:") and 3 or 1
-                                        )
-                                        or 0,
-                                    ),
-                                    Tuple(
-                                        title=_("Send events to remote syslog host"),
-                                        elements=[
-                                            DropdownChoice(
-                                                choices=[
-                                                    ("udp", _("UDP")),
-                                                    ("tcp", _("TCP")),
-                                                ],
-                                                title=_("Protocol"),
-                                            ),
-                                            TextInput(
-                                                title=_("Address"),
-                                                allow_empty=False,
-                                            ),
-                                            Integer(
-                                                title=_("Port"),
-                                                default_value=514,
-                                                minvalue=1,
-                                                maxvalue=65535,
-                                                size=6,
-                                            ),
-                                        ],
-                                    ),
-                                ],
-                            ),
-                        ),
-                        (
-                            "match_subject",
-                            RegExp(
-                                title=_("Only process mails with matching subject"),
-                                help=_(
-                                    "Use this option to not process all messages found in the inbox, "
-                                    "but only the those whose subject matches the given regular expression."
-                                ),
-                                mode=RegExp.prefix,
-                            ),
-                        ),
-                        (
-                            "facility",
-                            DropdownChoice(
-                                title=_("Events: Syslog facility"),
-                                help=_("Use this syslog facility for all created events"),
-                                choices=mkeventd.syslog_facilities,
-                                default_value=2,  # mail
-                            ),
-                        ),
-                        (
-                            "application",
-                            Alternative(
-                                title=_("Events: Syslog application"),
-                                help=_("Use this syslog application for all created events"),
-                                elements=[
-                                    FixedValue(
-                                        None,
-                                        title=_("Use the mail subject"),
-                                        totext=_("The mail subject is used as syslog appliaction"),
-                                    ),
-                                    TextInput(
-                                        title=_("Specify the application"),
-                                        help=_(
-                                            "Use this text as application. You can use macros like <tt>\\1</tt>, <tt>\\2</tt>, ... "
-                                            "here when you configured <i>subject matching</i> in this rule with a regular expression "
-                                            "that declares match groups (using braces)."
-                                        ),
-                                        allow_empty=False,
-                                    ),
-                                ],
-                            ),
-                        ),
-                        (
-                            "host",
-                            TextInput(
-                                title=_("Events: Hostname"),
-                                help=_(
-                                    "Use this hostname for all created events instead of the name of the mailserver"
-                                ),
-                            ),
-                        ),
-                        (
-                            "body_limit",
-                            Integer(
-                                title=_("Limit length of mail body"),
-                                help=_(
-                                    "When forwarding mails from the mailbox to the event console, the "
-                                    "body of the mail is limited to the given number of characters."
-                                ),
-                                default_value=1000,
-                            ),
-                        ),
-                        (
-                            "cleanup",
-                            Alternative(
-                                title=_("Cleanup messages"),
-                                help=_(
-                                    "The handled messages (see <i>subject matching</i>) can be cleaned up by either "
-                                    "deleting them or moving them to a subfolder. By default nothing is cleaned up."
-                                ),
-                                elements=[
-                                    FixedValue(
-                                        True,
-                                        title=_("Delete messages"),
-                                        totext=_(
-                                            "Delete all processed message belonging to this check"
-                                        ),
-                                    ),
-                                    TextInput(
-                                        title=_("Move to subfolder"),
-                                        help=_(
-                                            "Specify the destination path in the format <tt>Path/To/Folder</tt>, for example"
-                                            "<tt>INBOX/Processed_Mails</tt>."
-                                        ),
-                                        allow_empty=False,
-                                    ),
-                                ],
-                            ),
-                        ),
-                    ],
-                ),
-            ),
-        ],
-    )
-
-
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupActiveChecks,
-        match_type="all",
-        name="active_checks:mail",
-        valuespec=_valuespec_active_checks_mail,
-    )
-)
-
-
-def _valuespec_active_checks_mailboxes():
-    return Dictionary(
-        title=_("Check IMAP Mailboxes"),
-        help=_("This check monitors count and age of mails in mailboxes."),
-        elements=[
-            (
-                "service_description",
-                TextInput(
-                    title=_("Service description"),
-                    help=_(
-                        "Please make sure that this is unique per host "
-                        "and does not collide with other services."
-                    ),
-                    allow_empty=False,
-                    default_value="Mailboxes",
-                ),
-            ),
-            ("imap_parameters", _imap_parameters()),
-            (
-                "connect_timeout",
-                Integer(
-                    title=_("Connect Timeout"),
-                    minvalue=1,
-                    default_value=10,
-                    unit=_("sec"),
-                ),
-            ),
-            (
-                "age",
-                Tuple(
-                    title=_("Message Age of oldest messages"),
-                    elements=[
-                        Age(title=_("Warning if older than")),
-                        Age(title=_("Critical if older than")),
-                    ],
-                ),
-            ),
-            (
-                "age_newest",
-                Tuple(
-                    title=_("Message Age of newest messages"),
-                    elements=[
-                        Age(title=_("Warning if older than")),
-                        Age(title=_("Critical if older than")),
-                    ],
-                ),
-            ),
-            (
-                "count",
-                Tuple(
-                    title=_("Message Count"),
-                    elements=[Integer(title=_("Warning at")), Integer(title=_("Critical at"))],
-                ),
-            ),
-            (
-                "mailboxes",
-                ListOfStrings(
-                    title=_("Check only the listed mailboxes"),
-                    help=_(
-                        "By default, all mailboxes are checked with these parameters. "
-                        "If you specify mailboxes here, only those are monitored."
-                    ),
-                ),
-            ),
-        ],
-        required_keys=["service_description", "imap_parameters"],
-    )
-
-
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupActiveChecks,
-        match_type="all",
-        name="active_checks:mailboxes",
-        valuespec=_valuespec_active_checks_mailboxes,
     )
 )
 

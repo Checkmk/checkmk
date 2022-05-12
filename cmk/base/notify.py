@@ -51,6 +51,7 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import console
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.notify import (
+    ensure_utf8,
     find_wato_folder,
     notification_message,
     notification_result_message,
@@ -134,7 +135,6 @@ notification_log_template = (
     "$SERVICEDESC$ $SERVICESTATE$ "
 )
 
-notification_mail_command = "mail -s '$SUBJECT$' '$CONTACTEMAIL$'"
 notification_host_subject = "Check_MK: $HOSTNAME$ - $NOTIFICATIONTYPE$"
 notification_service_subject = "Check_MK: $HOSTNAME$/$SERVICEDESC$ $NOTIFICATIONTYPE$"
 
@@ -331,7 +331,7 @@ def notify_notify(raw_context: EventContext, analyse: bool = False) -> Optional[
 
     logger.debug(events.render_context_dump(raw_context))
 
-    _complete_raw_context_with_notification_vars(raw_context)
+    raw_context["LOGDIR"] = notification_logdir
     events.complete_raw_context(raw_context, with_dump=config.notification_logging <= 10)
 
     # Spool notification to remote host, if this is enabled
@@ -341,13 +341,6 @@ def notify_notify(raw_context: EventContext, analyse: bool = False) -> Optional[
     if config.notification_spooling != "remote":
         return locally_deliver_raw_context(raw_context, analyse=analyse)
     return None
-
-
-# Add some notification specific variables to the context. These are currently
-# not added to alert handler scripts
-def _complete_raw_context_with_notification_vars(raw_context: EventContext) -> None:
-    raw_context["LOGDIR"] = notification_logdir
-    raw_context["MAIL_COMMAND"] = notification_mail_command
 
 
 # Here we decide which notification implementation we are using.
@@ -1511,20 +1504,17 @@ def notify_via_email(plugin_context: PluginContext) -> int:
     subject = substitute_context(subject_t, plugin_context)
     plugin_context["SUBJECT"] = subject
     body = substitute_context(notification_common_body + body_t, plugin_context)
-    command = substitute_context(notification_mail_command, plugin_context)
-    command_utf8 = command.encode("utf-8")
+    command = [cmk.utils.paths.bin_dir + "/mail", "-s", subject, plugin_context["CONTACTEMAIL"]]
 
     old_lang = os.getenv("LANG", "")
-    _ensure_utf8()
+    ensure_utf8(logger)
     # Important: we must not output anything on stdout or stderr. Data of stdout
     # goes back into the socket to the CMC in keepalive mode and garbles the
     # handshake signal.
-    logger.debug("Executing command: %s", command)
+    logger.debug("Executing command: %s", " ".join(command))
 
-    # TODO: Cleanup this shell=True call!
-    completed_process = subprocess.run(  # nosec
-        command_utf8,
-        shell=True,
+    completed_process = subprocess.run(
+        command,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         close_fds=True,
@@ -1545,47 +1535,6 @@ def notify_via_email(plugin_context: PluginContext) -> int:
     return 0
 
 
-def _ensure_utf8() -> None:
-    # Make sure that mail(x) is using UTF-8. Otherwise we cannot send notifications
-    # with non-ASCII characters. Unfortunately we do not know whether C.UTF-8 is
-    # available. If e.g. mail detects a non-Ascii character in the mail body and
-    # the specified encoding is not available, it will silently not send the mail!
-    # Our resultion in future: use /usr/sbin/sendmail directly.
-    # Our resultion in the present: look with locale -a for an existing UTF encoding
-    # and use that.
-    completed_process = subprocess.run(
-        ["locale", "-a"],
-        close_fds=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.DEVNULL,
-        check=False,
-    )
-
-    not_found_msg = "No UTF-8 encoding found in your locale -a! Please install appropriate locales."
-
-    if completed_process.returncode:
-        logger.info(
-            "Command 'locale -a' could not be executed. Exit code of command was: %r",
-            completed_process.returncode,
-        )
-        logger.info(not_found_msg)
-        return
-
-    locales_list = completed_process.stdout.decode("utf-8", "ignore").split("\n")
-    for encoding in locales_list:
-        el = encoding.lower()
-        if "utf8" in el or "utf-8" in el or "utf.8" in el:
-            encoding = encoding.strip()
-            os.putenv("LANG", encoding)
-            logger.debug("Setting locale for mail to %s.", encoding)
-            break
-    else:
-        logger.info(not_found_msg)
-
-    return
-
-
-# .
 #   .--Plugins-------------------------------------------------------------.
 #   |                   ____  _             _                              |
 #   |                  |  _ \| |_   _  __ _(_)_ __  ___                    |
@@ -1625,6 +1574,10 @@ def create_bulk_parameter_context(params: NotifyPluginParams) -> List[str]:
 
 
 def path_to_notification_script(plugin_name: NotificationPluginNameStr) -> Optional[str]:
+    if "/" in plugin_name:
+        logger.error("Pluginname %r with slash. Raising exception...")
+        raise MKGeneralException("Slashes in plugin_name are forbidden!")
+
     # Call actual script without any arguments
     local_path = cmk.utils.paths.local_notifications_dir / plugin_name
     if local_path.exists():
@@ -1844,6 +1797,9 @@ def do_bulk_notify(
 
     what = plugin_context["WHAT"]
     contact = plugin_context["CONTACTNAME"]
+    if "/" in contact or "/" in plugin_name:
+        logger.error("Tried to construct bulk dir with unsanitized attributes")
+        raise MKGeneralException("Slashes in CONTACTNAME or plugin_name are forbidden!")
     if bulk.get("timeperiod"):
         bulk_path: List[str] = [
             contact,
@@ -1937,8 +1893,8 @@ def do_bulk_notify(
         )
 
     logger.info("    --> storing for bulk notification %s", "|".join(bulk_path))
-    bulk_dir = create_bulk_dir(bulk_path)
-    notify_uuid = fresh_uuid()
+    bulk_dir = _create_bulk_dir(bulk_path)
+    notify_uuid = str(uuid.uuid4())
     filename_new = bulk_dir / f"{notify_uuid}.new"
     filename_final = bulk_dir / notify_uuid
     filename_new.write_text("%r\n" % ((params, plugin_context),))
@@ -1946,7 +1902,7 @@ def do_bulk_notify(
     logger.info("        - stored in %s", filename_final)
 
 
-def create_bulk_dir(bulk_path: Sequence[str]) -> Path:
+def _create_bulk_dir(bulk_path: Sequence[str]) -> Path:
     bulk_dir = Path(
         notification_bulkdir,
         bulk_path[0],

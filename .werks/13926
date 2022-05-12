@@ -1,0 +1,27 @@
+Title: validation of error responses of the REST API
+Class: fix
+Compatible: incomp
+Component: core
+Date: 1649174159
+Edition: cre
+Knowledge: doc
+Level: 2
+State: unknown
+Version: 2.1.0b6
+
+This werk changes the default error schema to be in line with
+the until now returned responses.
+
+The schema and responses did not fit and it was not found because
+the responses were not checked automatically. This is now the case.
+
+To ensure that dynamic scripts will not break only the schema has
+been changed. Users of dynamic languages (Python, Bash, etc.) will not
+have to change anything.
+
+If you use a statically generated API client, you may need to re-compile
+the client after this werk.
+
+The changed fields in the schema (not the response) are:
+ - code -> status
+ - message -> detail

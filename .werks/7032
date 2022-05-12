@@ -1,7 +1,7 @@
 Title: logwatch: Optional shared log pointer for several ip addresses
 Level: 1
 Component: checks
-Compatible: comp
+Compatible: compat
 Edition: cre
 Version: 1.6.0b1
 Date: 1547735561

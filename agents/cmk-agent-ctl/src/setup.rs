@@ -2,9 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-#[cfg(unix)]
-use super::types;
-use super::{cli, constants};
+use super::{cli, constants, types};
 #[cfg(unix)]
 use anyhow::Context;
 use anyhow::Result as AnyhowResult;
@@ -48,8 +46,6 @@ pub struct PathResolver {
     pub registration_preset_path: PathBuf,
     pub registry_path: PathBuf,
     pub legacy_pull_path: PathBuf,
-    #[cfg(windows)]
-    pub log_path: PathBuf,
 }
 
 #[cfg(unix)]
@@ -62,8 +58,8 @@ impl PathResolver {
                 .join(constants::CONFIG_FILE)
                 .exists_or(etc_dir.join(constants::CONFIG_FILE)),
             registration_preset_path: home_dir
-                .join(constants::PAIRING_PRESET_FILE)
-                .exists_or(etc_dir.join(constants::PAIRING_PRESET_FILE)),
+                .join(constants::REGISTRATION_PRESET_FILE)
+                .exists_or(etc_dir.join(constants::REGISTRATION_PRESET_FILE)),
             registry_path: home_dir.join(Path::new(constants::REGISTRY_FILE)),
             legacy_pull_path: home_dir.join(Path::new(constants::LEGACY_PULL_FILE)),
         }
@@ -76,10 +72,9 @@ impl PathResolver {
         PathResolver {
             home_dir: PathBuf::from(home_dir),
             config_path: home_dir.join(Path::new(constants::CONFIG_FILE)),
-            registration_preset_path: home_dir.join(Path::new(constants::PAIRING_PRESET_FILE)),
+            registration_preset_path: home_dir.join(Path::new(constants::REGISTRATION_PRESET_FILE)),
             registry_path: home_dir.join(Path::new(constants::REGISTRY_FILE)),
             legacy_pull_path: home_dir.join(Path::new(constants::LEGACY_PULL_FILE)),
-            log_path: home_dir.join("log").join(Path::new(constants::LOG_FILE)),
         }
     }
 }
@@ -116,7 +111,7 @@ pub fn max_connections() -> usize {
 }
 
 #[cfg(unix)]
-pub fn agent_socket() -> types::AgentChannel {
+pub fn agent_channel() -> types::AgentChannel {
     match env::var(constants::ENV_HOME_DIR) {
         Err(_) => constants::UNIX_AGENT_SOCKET.into(),
         Ok(home_dir) => {
@@ -143,8 +138,8 @@ fn agent_port() -> String {
 }
 
 #[cfg(windows)]
-pub fn agent_channel() -> String {
-    format!("localhost:{}", agent_port())
+pub fn agent_channel() -> types::AgentChannel {
+    types::AgentChannel::from(format!("localhost:{}", agent_port()).as_str())
 }
 
 #[cfg(unix)]
@@ -158,14 +153,19 @@ fn init_logging(level: &str) -> Result<flexi_logger::LoggerHandle, flexi_logger:
 #[cfg(windows)]
 fn init_logging(
     level: &str,
-    path: &std::path::Path,
     duplicate_level: flexi_logger::Duplicate,
 ) -> Result<flexi_logger::LoggerHandle, flexi_logger::FlexiLoggerError> {
-    flexi_logger::Logger::try_with_env_or_str(level)?
-        .log_to_file(flexi_logger::FileSpec::try_from(path)?) // critically important for daemon mode
+    let mut logger = flexi_logger::Logger::try_with_env_or_str(level)?;
+
+    logger = match duplicate_level {
+        flexi_logger::Duplicate::None => {
+            logger.log_to_writer(crate::log_ext::make_mailslot_logger(level))
+        }
+        _ => logger.log_to_stderr(),
+    };
+    logger
         .append()
         .format(flexi_logger::detailed_format)
-        .duplicate_to_stderr(duplicate_level)
         .rotate(
             constants::log::FILE_MAX_SIZE,
             constants::log::FILE_NAMING,
@@ -242,7 +242,7 @@ fn setup(args: &cli::Args) -> AnyhowResult<PathResolver> {
     } else {
         flexi_logger::Duplicate::All
     };
-    if let Err(err) = init_logging(&args.logging_level(), &paths.log_path, duplicate_level) {
+    if let Err(err) = init_logging(&args.logging_level(), duplicate_level) {
         io::stderr()
             .write_all(format!("Failed to initialize logging: {:?}", err).as_bytes())
             .unwrap_or(());
@@ -279,17 +279,11 @@ mod tests {
         assert_eq!(p.home_dir, std::path::PathBuf::from(&home));
         assert_eq!(
             p.registration_preset_path,
-            std::path::PathBuf::from(&home).join("cmk-agent-ctl-config.json")
+            std::path::PathBuf::from(&home).join("registration_preset.json")
         );
         assert_eq!(
             p.registry_path,
             std::path::PathBuf::from(&home).join("registered_connections.json")
-        );
-        assert_eq!(
-            p.log_path,
-            std::path::PathBuf::from(&home)
-                .join("log")
-                .join("cmk-agent-ctl.log")
         );
         assert_eq!(
             p.legacy_pull_path,

@@ -6,10 +6,10 @@
 
 from freezegun import freeze_time
 
-from cmk.base.plugins.agent_based.kube_uptime import parse_k8s_start_time
+from cmk.base.plugins.agent_based.kube_uptime import parse_kube_start_time
 from cmk.base.plugins.agent_based.utils.uptime import Section
 
 
 @freeze_time("1970-01-01 00:00:01")
-def test_parse_k8s_start_time() -> None:
-    assert parse_k8s_start_time([['{"start_time": 0}']]) == Section(uptime_sec=1.0, message=None)
+def test_parse_kube_start_time() -> None:
+    assert parse_kube_start_time([['{"start_time": 0}']]) == Section(uptime_sec=1.0, message=None)

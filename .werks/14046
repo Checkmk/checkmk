@@ -1,0 +1,13 @@
+Title: inventory_lnx_packages: Fix crash when there is no package version
+Class: fix
+Compatible: compat
+Component: inv
+Date: 1652080826
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b9
+
+Discovery would crash if there was no package version. It would
+result with packages not being shown in the Inventory tree.

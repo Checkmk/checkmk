@@ -64,6 +64,7 @@ custom_checks = [
 
     # Cleanup
     site.delete_file("etc/check_mk/conf.d/linux_test_host_%s_cpu_load.mk" % hostname)
+    site.activate_changes_and_wait_for_core_reload()
     site.delete_dir("var/check_mk/rrd")
 
 

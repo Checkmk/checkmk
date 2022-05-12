@@ -1,0 +1,13 @@
+Title: The printer input check correctly handles capacity unit other
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1649253341
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b6
+
+The print input check stops crashing if capacity unit is set to "other".
+Capacity is no longer reported if the unit is unkown or other.

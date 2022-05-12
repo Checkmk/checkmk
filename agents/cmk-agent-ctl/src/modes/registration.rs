@@ -12,7 +12,7 @@ trait TrustEstablishing {
 struct InteractiveTrust {}
 
 impl InteractiveTrust {
-    fn display_cert(server: &str, port: &types::Port) -> AnyhowResult<()> {
+    fn display_cert(server: &str, port: &u16) -> AnyhowResult<()> {
         let pem_str = certs::fetch_server_cert_pem(server, port)?;
         let pem = certs::parse_pem(&pem_str)?;
         let x509 = pem.parse_x509()?;
@@ -115,14 +115,11 @@ struct PairingResult {
 
 fn post_registration_conn_type(
     coordinates: &site_spec::Coordinates,
-    root_cert: &str,
-    uuid: &uuid::Uuid,
-    client_cert: &str,
+    connection: &config::Connection,
     agent_rec_api: &impl agent_receiver_api::Status,
 ) -> AnyhowResult<config::ConnectionType> {
     loop {
-        let status_resp =
-            agent_rec_api.status(&coordinates.to_url()?, root_cert, uuid, client_cert)?;
+        let status_resp = agent_rec_api.status(&coordinates.to_url()?, connection)?;
         if let Some(agent_receiver_api::HostStatus::Declined) = status_resp.status {
             return Err(anyhow!(
                 "Registration declined by Checkmk instance, please check credentials"
@@ -178,21 +175,16 @@ fn _register(
         }
     }
 
+    let connection = config::Connection {
+        uuid: pairing_result.uuid,
+        private_key: pairing_result.private_key,
+        certificate: pairing_result.pairing_response.client_cert,
+        root_cert: pairing_result.pairing_response.root_cert,
+    };
     registry.register_connection(
-        post_registration_conn_type(
-            &config.coordinates,
-            &pairing_result.pairing_response.root_cert,
-            &pairing_result.uuid,
-            &pairing_result.pairing_response.client_cert,
-            agent_rec_api,
-        )?,
+        post_registration_conn_type(&config.coordinates, &connection, agent_rec_api)?,
         &config.coordinates,
-        config::Connection {
-            uuid: pairing_result.uuid,
-            private_key: pairing_result.private_key,
-            certificate: pairing_result.pairing_response.client_cert,
-            root_cert: pairing_result.pairing_response.root_cert,
-        },
+        connection,
     );
 
     registry.save()?;
@@ -204,10 +196,11 @@ pub fn register(
     config: config::RegistrationConfig,
     registry: &mut config::Registry,
 ) -> AnyhowResult<()> {
+    let use_proxy = config.client_config.use_proxy;
     _register(
         config,
         registry,
-        &agent_receiver_api::Api {},
+        &agent_receiver_api::Api { use_proxy },
         &InteractiveTrust {},
     )
 }
@@ -263,7 +256,12 @@ fn _proxy_register(
 }
 
 pub fn proxy_register(config: config::RegistrationConfig) -> AnyhowResult<()> {
-    _proxy_register(config, &agent_receiver_api::Api {}, &InteractiveTrust {})
+    let use_proxy = config.client_config.use_proxy;
+    _proxy_register(
+        config,
+        &agent_receiver_api::Api { use_proxy },
+        &InteractiveTrust {},
+    )
 }
 
 #[cfg(test)]
@@ -344,9 +342,7 @@ mod tests {
         fn status(
             &self,
             base_url: &reqwest::Url,
-            _root_cert: &str,
-            _uuid: &uuid::Uuid,
-            _certificate: &str,
+            _connection: &config::Connection,
         ) -> Result<agent_receiver_api::StatusResponse, agent_receiver_api::StatusError> {
             assert!(base_url.to_string() == SITE_URL);
             Ok(agent_receiver_api::StatusResponse {
@@ -370,7 +366,7 @@ mod tests {
     fn registry() -> config::Registry {
         config::Registry::new(
             config::RegisteredConnections::new().unwrap(),
-            std::path::PathBuf::from(&tempfile::NamedTempFile::new().unwrap().into_temp_path()),
+            tempfile::NamedTempFile::new().unwrap(),
         )
         .unwrap()
     }
@@ -395,6 +391,7 @@ mod tests {
             root_certificate,
             host_reg_data,
             trust_server_cert,
+            client_config: config::ClientConfig { use_proxy: false },
         }
     }
 
@@ -544,7 +541,7 @@ mod tests {
                 None,
                 config::HostRegistrationData::Labels(agent_labels()),
                 true,
-            ))
+            ),)
             .is_err());
         }
     }

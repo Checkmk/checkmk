@@ -10,7 +10,7 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-from cmk.gui.valuespec import Age, Alternative, Dictionary, FixedValue, Tuple
+from cmk.gui.valuespec import Age, Alternative, Dictionary, FixedValue, Float, Tuple
 
 
 def _parameter_valuespec_proxmox_ve_vm_backup_requirements():
@@ -20,7 +20,7 @@ def _parameter_valuespec_proxmox_ve_vm_backup_requirements():
             (
                 "age_levels_upper",
                 Alternative(
-                    title=_("Backup conditions"),
+                    title=_("Age levels"),
                     elements=[
                         Tuple(
                             title=_("Set conditions"),
@@ -42,7 +42,47 @@ def _parameter_valuespec_proxmox_ve_vm_backup_requirements():
                         FixedValue(None, title=_("No Conditions"), totext=""),
                     ],
                 ),
-            )
+            ),
+            (
+                "duration_levels_upper",
+                Alternative(
+                    title=_("Duration levels"),
+                    elements=[
+                        Tuple(
+                            title=_("Set conditions"),
+                            elements=[
+                                Age(
+                                    title=_("Warning at"),
+                                    display=["hours", "minutes"],
+                                    default_value=int(60),
+                                ),
+                                Age(
+                                    title=_("Critical at"),
+                                    display=["hours", "minutes"],
+                                    default_value=int(60 * 3),
+                                ),
+                            ],
+                        ),
+                        FixedValue(value=None, title=_("No Conditions"), totext=""),
+                    ],
+                ),
+            ),
+            (
+                "bandwidth_levels_lower",
+                Alternative(
+                    title=_("Bandwidth levels"),
+                    elements=[
+                        Tuple(
+                            title=_("Set conditions"),
+                            elements=[
+                                Float(title=_("Warning below"), size=15, unit="MB/s"),
+                                Float(title=_("Critical below"), size=15, unit="MB/s"),
+                            ],
+                        ),
+                        FixedValue(value=None, title=_("No Conditions"), totext=""),
+                    ],
+                ),
+            ),
         ]
     )
 

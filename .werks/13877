@@ -1,0 +1,13 @@
+Title: Fix possible UnicodeDecodeError on notify of users via mail
+Class: fix
+Compatible: compat
+Component: notifications
+Date: 1649410750
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b6
+
+Notifying users with the option "Send an E-Mail" via "Notify users" could lead
+to an UnicodeDecodeError.

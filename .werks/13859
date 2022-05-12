@@ -1,0 +1,11 @@
+Title: Windows agent controller uses windows agent log
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1652254950
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b9
+
+This is done to make logging more consistent

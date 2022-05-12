@@ -48,6 +48,7 @@ from cmk.gui.plugins.wato.utils.context_buttons import make_folder_status_link
 from cmk.gui.plugins.wato.utils.main_menu import MainMenu, MenuItem
 from cmk.gui.table import init_rowselect, table_element
 from cmk.gui.type_defs import ActionResult, Choices
+from cmk.gui.utils.agent_registration import remove_tls_registration_help
 from cmk.gui.utils.escaping import escape_to_html_permissive
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.popups import MethodAjax
@@ -59,6 +60,7 @@ from cmk.gui.utils.urls import (
     makeuri_contextless,
 )
 from cmk.gui.valuespec import DropdownChoice, TextInput, ValueSpec, WatoFolderChoices
+from cmk.gui.watolib.agent_registration import remove_tls_registration
 from cmk.gui.watolib.changes import make_object_audit_log_url
 from cmk.gui.watolib.groups import load_contact_group_information
 from cmk.gui.watolib.host_attributes import host_attribute_registry
@@ -193,10 +195,11 @@ class ModeFolder(WatoMode):
         )
 
         menu.add_youtube_reference(
-            title=_("Episode 1: Installing Checkmk and monitoring Linux"), youtube_id="g1g2ztXeJbo"
+            title=_("Episode 1: Installing Checkmk and monitoring your first host"),
+            youtube_id="opO-SOgOJ1I",
         )
         menu.add_youtube_reference(
-            title=_("Episode 3: Monitoring Windows"), youtube_id="iz8S9TGGklQ"
+            title=_("Episode 4: Monitoring Windows in Checkmk"), youtube_id="Nxiq7Jb9mB4"
         )
 
     def _search_folder_page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
@@ -275,6 +278,22 @@ class ModeFolder(WatoMode):
                 item=make_simple_link(self._folder.url([("mode", "bulk_rename_host")])),
             )
 
+        if user.may("wato.manage_hosts"):
+            yield PageMenuEntry(
+                title=_("Remove TLS registration"),
+                icon_name="delete",
+                item=make_confirmed_form_submit_link(
+                    form_name="hosts",
+                    button_name="_remove_tls_registration_from_folder",
+                    message=_(
+                        "Do you really want to remove the TLS registration of the hosts in"
+                        " this folder?"
+                        "<br>This does not affect hosts in subfolders."
+                    )
+                    + remove_tls_registration_help(),
+                ),
+            )
+
         if (
             not self._folder.locked_hosts()
             and user.may("wato.parentscan")
@@ -348,6 +367,20 @@ class ModeFolder(WatoMode):
                     ),
                     is_enabled=is_enabled,
                 )
+
+        if user.may("wato.manage_hosts"):
+            yield PageMenuEntry(
+                title=_("Remove TLS registration"),
+                icon_name="delete",
+                item=make_confirmed_form_submit_link(
+                    form_name="hosts",
+                    button_name="_remove_tls_registration_from_selection",
+                    message=_(
+                        "Do you really want to remove the TLS registration of the selected hosts?"
+                    )
+                    + remove_tls_registration_help(),
+                ),
+            )
 
         if user.may("wato.services"):
             yield PageMenuEntry(
@@ -508,6 +541,12 @@ class ModeFolder(WatoMode):
                 watolib.Folder.current().move_subfolder_to(what_folder, target_folder)
             return redirect(folder_url)
 
+        # Operations on current FOLDER
+
+        if request.has_var("_remove_tls_registration_from_folder"):
+            remove_tls_registration(self._folder.get_hosts_by_site(list(self._folder.hosts())))
+            return None
+
         # Operations on HOSTS
 
         # Deletion of single hosts
@@ -574,6 +613,9 @@ class ModeFolder(WatoMode):
                         ]
                     )
                 )
+
+        if request.var("_remove_tls_registration_from_selection"):
+            remove_tls_registration(self._folder.get_hosts_by_site(selected_host_names))
 
         return None
 

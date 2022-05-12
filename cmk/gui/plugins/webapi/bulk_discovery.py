@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import copy
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Tuple
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.globals import config
@@ -13,12 +13,17 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.plugins.webapi.utils import api_call_collection_registry, APICallCollection
 from cmk.gui.watolib.bulk_discovery import (
+    bulk_discovery_job_status,
     BulkDiscoveryBackgroundJob,
+    BulkSize,
     DiscoveryHost,
-    get_tasks,
+    DiscoveryMode,
+    DoFullScan,
+    IgnoreErrors,
+    prepare_hosts_for_discovery,
+    start_bulk_discovery,
     vs_bulk_discovery,
 )
-from cmk.gui.watolib.hosts_and_folders import Host
 
 
 @api_call_collection_registry.register
@@ -54,20 +59,29 @@ class APICallBulkDiscovery(APICallCollection):
                 ),
             )
 
-        mode, do_scan, bulk_size, error_handling = self._get_parameters_from_request(request)
-        tasks = get_tasks(self._get_hosts_from_request(request), bulk_size)
-
+        discovery_mode, do_full_scan, bulk_size, ignore_errors = self._get_parameters_from_request(
+            request
+        )
         try:
-            job.set_function(job.do_execute, mode, do_scan, error_handling, tasks)
-            job.start()
-            return {
-                "started": True,
-            }
+            start_bulk_discovery(
+                job,
+                self._get_hosts_from_request(request),
+                discovery_mode,
+                do_full_scan,
+                ignore_errors,
+                bulk_size,
+            )
         except Exception as e:
             logger.exception("Failed to start bulk discovery")
             raise MKUserError(None, _("Failed to start discovery: %s") % e)
 
-    def _get_parameters_from_request(self, request):
+        return {
+            "started": True,
+        }
+
+    def _get_parameters_from_request(
+        self, request
+    ) -> Tuple[DiscoveryMode, DoFullScan, BulkSize, IgnoreErrors]:
         """Get and verify discovery parameters from the request
 
         The API call only makes a part of all bulk discovery parameters configurable
@@ -89,33 +103,26 @@ class APICallBulkDiscovery(APICallCollection):
 
         vs_bulk_discovery().validate_value(params, "")
         return (
-            params["mode"],
-            params["performance"][0],
-            params["performance"][1],
-            params["error_handling"],
+            DiscoveryMode(params["mode"]),
+            DoFullScan(params["performance"][0]),
+            BulkSize(params["performance"][1]),
+            IgnoreErrors(params["error_handling"]),
         )
 
     def _get_hosts_from_request(self, request: Dict) -> List[DiscoveryHost]:
-        if not request["hostnames"]:
+        if not (hostnames := request["hostnames"]):
             raise MKUserError(None, _("You have to specify some hosts"))
 
-        hosts_to_discover = []
-        for host_name in request["hostnames"]:
-            host = Host.host(host_name)
-            if host is None:
-                raise MKUserError(None, _("The host '%s' does not exist") % host_name)
-            host.need_permission("write")
-            hosts_to_discover.append(DiscoveryHost(host.site_id(), host.folder().path(), host_name))
-        return hosts_to_discover
+        return prepare_hosts_for_discovery(hostnames)
 
     def _bulk_discovery_status(self, request):
         job = BulkDiscoveryBackgroundJob()
-        status = job.get_status()
+        status_details = bulk_discovery_job_status(job)
         return {
-            "is_active": job.is_active(),
+            "is_active": status_details["is_active"],
             "job": {
-                "state": status["state"],
-                "result_msg": "\n".join(status["loginfo"]["JobResult"]),
-                "output": "\n".join(status["loginfo"]["JobProgressUpdate"]),
+                "state": status_details["job_state"],
+                "result_msg": "\n".join(status_details["logs"]["result"]),
+                "output": "\n".join(status_details["logs"]["progress"]),
             },
         }

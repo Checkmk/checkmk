@@ -51,16 +51,15 @@ pub async fn async_collect(
 }
 
 #[cfg(windows)]
-fn collect_from_ip(agent_ip: &str) -> IoResult<Vec<u8>> {
+fn collect_from_ip(agent_channel: &types::AgentChannel) -> IoResult<Vec<u8>> {
     let mut data: Vec<u8> = vec![];
-    StdTcpStream::connect(agent_ip)?.read_to_end(&mut data)?;
+    StdTcpStream::connect(agent_channel.as_ref())?.read_to_end(&mut data)?;
     Ok(data)
 }
 
 #[cfg(windows)]
 pub fn collect() -> IoResult<Vec<u8>> {
-    let agent_channel = setup::agent_channel();
-    collect_from_ip(&agent_channel)
+    collect_from_ip(&setup::agent_channel())
 }
 
 #[cfg(unix)]
@@ -80,7 +79,7 @@ pub async fn async_collect(
 #[cfg(unix)]
 pub fn collect() -> IoResult<Vec<u8>> {
     let mut mondata: Vec<u8> = vec![];
-    let mut agent_stream = UnixStream::connect(setup::agent_socket())?;
+    let mut agent_stream = UnixStream::connect(setup::agent_channel())?;
     agent_stream.write_all("\n".as_bytes())?; // No remote IP, signalize agent to continue and collect
     agent_stream.read_to_end(&mut mondata)?;
     Ok(mondata)

@@ -1,0 +1,14 @@
+Title: apt check - add the option to change the monitoring state for removals
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1650968811
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b7
+
+Add the possibility to specify the monitoring state when the apt check
+finds some packages that need to be removed.
+Before the change, removals were always reported as warnings.

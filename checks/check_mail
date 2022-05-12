@@ -1,25 +1,25 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+from cmk.base.check_api import passwordstore_get_cmdline
 
 
 def check_mail_arguments(params):
     """
     >>> for a in check_mail_arguments({
     ...     'service_description': 'Email',
-    ...     'fetch': (
-    ...       'IMAP', {
-    ...         'server': 'imap.gmx.com',
-    ...         'ssl': (True, None),
-    ...         'auth': ('me@gmx.de', ('password', 'p4ssw0rd'))}),
+    ...     'fetch': ('IMAP', {
+    ...       'server': 'imap.gmx.de',
+    ...       'auth': ('me@gmx.de', ('password', 'p4ssw0rd')),
+    ...       'connection': {'disable_tls': True, 'tcp_port': 123}}),
     ...     'forward': {'facility': 2, 'application': None, 'host': 'me.too@tribe29.com',
     ...     'cleanup': True}}):
     ...   print(a)
     --fetch-protocol=IMAP
-    --fetch-server=imap.gmx.com
-    --fetch-tls
+    --fetch-server=imap.gmx.de
+    --fetch-port=123
     --fetch-username=me@gmx.de
     --fetch-password=p4ssw0rd
     --forward-ec
@@ -27,21 +27,31 @@ def check_mail_arguments(params):
     --forward-host=me.too@tribe29.com
     --cleanup=delete
     """
+    try:
+        fetch_protocol, fetch_params = params["fetch"]
+        connection_params = fetch_params["connection"]
+        username, password = fetch_params["auth"]
+    except KeyError as exc:
+        raise ValueError(
+            f"Params for check_mailboxes are faulty (missing {exc}), did you update the config?"
+        )
 
-    fetch_proto, fetch_params = params["fetch"]
+    args = [
+        f"--fetch-protocol={fetch_protocol}",
+        f"--fetch-server={fetch_params.get('server', '$HOSTADDRESS$')}",
+    ]
 
-    args = []
-    args.append(f"--fetch-protocol={fetch_proto}")
-    args.append(f"--fetch-server={fetch_params.get('server', '$HOSTADDRESS$')}")
-
-    fetch_use_ssl, fetch_port = fetch_params["ssl"]
-    if fetch_use_ssl:
+    # NOTE: this argument will be turned into `--fetch-disable-tls` when
+    # refactoring all mailbox based active checks
+    if not connection_params.get("disable_tls"):
         args.append("--fetch-tls")
 
-    if fetch_port is not None:
+    if connection_params.get("disable_cert_validation"):
+        args.append("--fetch-disable-cert-validation")
+
+    if (fetch_port := connection_params.get("tcp_port")) is not None:
         args.append(f"--fetch-port={fetch_port}")
 
-    username, password = fetch_params["auth"]
     args.append(f"--fetch-username={username}")
     args.append(passwordstore_get_cmdline("--fetch-password=%s", password))
 
@@ -51,6 +61,7 @@ def check_mail_arguments(params):
     if "forward" in params:
         forward = params["forward"]
         args.append("--forward-ec")
+
         if forward.get("method"):
             args.append(f"--forward-method={forward['method']}")
 
@@ -73,6 +84,7 @@ def check_mail_arguments(params):
 
         if isinstance(forward.get("cleanup"), bool):  # can never be False
             args.append("--cleanup=delete")
+
         elif isinstance(forward.get("cleanup"), str):
             move_to_subfolder = forward["cleanup"]
             args.append(f"--cleanup={move_to_subfolder}")
@@ -80,9 +92,16 @@ def check_mail_arguments(params):
     return args
 
 
-active_check_info["mail"] = {
-    "command_line": "check_mail $ARG1$",
-    "argument_function": check_mail_arguments,
-    "service_description": lambda params: params["service_description"],
-    "has_perfdata": True,
-}
+if __name__ == "__main__":
+    # Please keep these lines - they make TDD easy and have no effect on normal test runs.
+    # Just run this file from your IDE and dive into the code.
+    import doctest
+
+    assert not doctest.testmod().failed
+else:
+    active_check_info["mail"] = {
+        "command_line": "check_mail $ARG1$",
+        "argument_function": check_mail_arguments,
+        "service_description": lambda params: params["service_description"],
+        "has_perfdata": True,
+    }

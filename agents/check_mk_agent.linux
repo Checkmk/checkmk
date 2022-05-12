@@ -128,9 +128,14 @@ set_variable_defaults() {
 }
 
 set_up_path() {
+    _PATH="${1}"
     # Make sure that locally installed binaries are found
-    PATH="${PATH}:/usr/local/bin"
-    [ -d "/var/qmail/bin" ] && PATH="${PATH}:/var/qmail/bin"
+    # Only add binaries if they are not already in the path! If you append to path in a loop the process will
+    # eventually each the 128k size limit for the environment and become a zombie process. See execve manpage.
+    [ "${_PATH#*"/usr/local/bin"}" != "${_PATH}" ] || _PATH="${_PATH}:/usr/local/bin"
+    [ -d "/var/qmail/bin" ] && { [ "${_PATH#*"/var/qmail/bin"}" != "${_PATH}" ] || _PATH="${_PATH}:/var/qmail/bin"; }
+    echo "${_PATH}"
+    unset _PATH
 }
 
 set_up_remote() {
@@ -349,7 +354,7 @@ set_up_disabled_sections() {
 section_checkmk() {
     cat <<HERE
 <<<check_mk>>>
-Version: 2.1.0b5
+Version: 2.1.0b9
 AgentOS: linux
 Hostname: $(uname -n)
 AgentDirectory: ${MK_CONFDIR}
@@ -536,6 +541,8 @@ section_systemd() {
         echo '<<<systemd_units>>>'
         echo "[list-unit-files]"
         systemctl list-unit-files --no-pager | tr -s ' '
+        echo "[status]"
+        systemctl status --all --type service --no-pager | tr -s ' '
         echo "[all]"
         systemctl --all --no-pager | sed '/^$/q' | tr -s ' '
     fi
@@ -784,17 +791,34 @@ section_cfggen() {
     fi
 }
 
+section_storcli() {
+    if inpath storcli; then
+        _storcli() { storcli "$@"; }
+    elif inpath storcli64; then
+        _storcli() { storcli64 "$@"; }
+    else
+        return 1
+    fi
+
+    echo '<<<storcli_physical_disks>>>'
+    _storcli /call/eall/sall show all
+
+    echo '<<<storcli_virtual_disks>>>'
+    _storcli /call/vall show all
+
+    # exit successfully, because storcli was in the path.
+    return 0
+}
+
 section_megaraid() {
+    section_storcli && return
+
     if inpath MegaCli; then
         MegaCli_bin="MegaCli"
     elif inpath MegaCli64; then
         MegaCli_bin="MegaCli64"
     elif inpath megacli; then
         MegaCli_bin="megacli"
-    elif inpath storcli; then
-        MegaCli_bin="storcli"
-    elif inpath storcli64; then
-        MegaCli_bin="storcli64"
     else
         MegaCli_bin="unknown"
     fi
@@ -1818,8 +1842,8 @@ run_purely_synchronous_sections() {
     # RAID status of LSI controllers via cfggen
     [ -z "${MK_SKIP_CFGGEN}" ] && _log_section_time section_cfggen
 
-    # RAID status of LSI MegaRAID controller via MegaCli. You can download that tool from:
-    # http://www.lsi.com/downloads/Public/MegaRAID%20Common%20Files/8.02.16_MegaCLI.zip
+    # RAID status of LSI MegaRAID controller via StorCLI or MegaCli. You can download that tool from:
+    # https://docs.broadcom.com/docs/007.2007.0000.0000_Unified_StorCLI.zip
     [ -z "${MK_SKIP_MEGARAID}" ] && _log_section_time section_megaraid
 
     # RAID status of 3WARE disk controller (by Radoslaw Bak)
@@ -1927,7 +1951,7 @@ main_setup() {
 
     announce_remote # needs MK_VARDIR!
 
-    set_up_path
+    PATH="$(set_up_path "${PATH}")"
 
     set_up_profiling
     unset_locale

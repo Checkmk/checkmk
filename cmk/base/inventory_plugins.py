@@ -18,6 +18,7 @@ all that this file deals with are inventory export hooks, which should be
 handeled somewhere else entirely.
 """
 import os
+from contextlib import suppress
 from pathlib import Path
 from typing import Any, Callable, Dict, Sequence, Set
 
@@ -73,6 +74,13 @@ def load_legacy_inventory_plugins(
     file_list = config.get_plugin_paths(
         str(cmk.utils.paths.local_inventory_dir), cmk.utils.paths.inventory_dir
     )
+
+    with suppress(FileNotFoundError):
+        if local_plugins := list(cmk.utils.paths.local_inventory_dir.iterdir()):
+            errors.append(
+                f"WARNING: {len(local_plugins)} deprecated plugins will be ignored in Checkmk "
+                f"version 2.2 (see werk #14084): {', '.join(f.name for f in local_plugins)}\n"
+            )
 
     for f in file_list:
         if f[0] == "." or f[-1] == "~":

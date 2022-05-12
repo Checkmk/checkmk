@@ -1,0 +1,16 @@
+Title: Fix reset of automatic disk space cleanup settings on update
+Class: fix
+Compatible: incomp
+Component: wato
+Date: 1650453326
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b6
+
+Since version 2.0.0 the options of the global setting "Automatic disk space
+cleanup" were resetted to default on updating Checkmk.
+
+If you modified the options in the past, please have a look if the current
+options fit your needs and adjust them, if necessary.

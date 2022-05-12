@@ -1,0 +1,13 @@
+Title: KUBE: addition of Namespace inventory
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1651234649
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0b7
+
+The piggyback host of a Namespace object now features the 'Metadata' path, which is already
+available on other piggyback hosts.

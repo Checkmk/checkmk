@@ -24,6 +24,7 @@ import cmk.utils.paths
 import cmk.utils.redis as redis
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
+from cmk.utils.plugin_loader import load_plugins_with_exceptions
 from cmk.utils.site import omd_site
 
 import cmk.gui.dashboard
@@ -37,7 +38,7 @@ import cmk.gui.views
 from cmk.gui.livestatus_utils.testing import mock_livestatus
 
 if is_enterprise_repo():
-    import cmk.cee.dcd.plugins.connectors.connectors_api.v1
+    import cmk.cee.dcd.plugins.connectors.connectors_api.v1  # pylint: disable=import-error,no-name-in-module
 
 logger = logging.getLogger(__name__)
 
@@ -75,6 +76,7 @@ def fixture_edition(monkeypatch, request) -> Iterable[cmk_version.Edition]:
 @pytest.fixture(autouse=True)
 def patch_omd_site(monkeypatch):
     monkeypatch.setenv("OMD_SITE", "NO_SITE")
+    monkeypatch.setenv("OMD_ROOT", str(cmk.utils.paths.omd_root))
     omd_site.cache_clear()
 
     _touch(cmk.utils.paths.htpasswd_file)
@@ -229,6 +231,16 @@ class FixRegister:
         assert config.check_info == {}
 
         config.load_all_agent_based_plugins(check_api.get_check_api_context)
+
+        # our test environment does not deal with namespace packages properly. load plus plugins:
+        try:
+            load_plugins = list(load_plugins_with_exceptions("plus.cmk.base.plugins.agent_based"))
+        except ModuleNotFoundError:
+            pass
+        else:
+            for _plugin, exception in load_plugins:
+                raise exception
+
         inventory_plugins.load_legacy_inventory_plugins(
             check_api.get_check_api_context,
             register.inventory_plugins_legacy.get_inventory_context,

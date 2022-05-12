@@ -1202,7 +1202,7 @@ class ModeEditRuleset(WatoMode):
         self._rule_conditions(rule)
 
         # Value
-        table.cell(_("Value"))
+        table.cell(_("Value"), css="value")
         try:
             value_html = self._valuespec.value_to_html(value)
         except Exception as e:
@@ -1220,7 +1220,7 @@ class ModeEditRuleset(WatoMode):
         html.write_text(value_html)
 
         # Comment
-        table.cell(_("Description"))
+        table.cell(_("Description"), css="description")
         if docu_url := rule_options.docu_url:
             html.icon_button(
                 docu_url,
@@ -1899,16 +1899,19 @@ class ABCEditRuleMode(WatoMode):
 
     # TODO: refine type
     def _validate_predefined_condition(self, value: str, varprefix: str) -> None:
-        if _allow_service_label_conditions(self._rulespec.name):
+        if _allow_label_conditions(self._rulespec.name):
             return
 
         conditions = self._get_predefined_rule_conditions(value)
-        if conditions.service_labels:
+        if (conditions.host_labels and not _allow_host_label_conditions(self._rulespec.name)) or (
+            conditions.service_labels and not _allow_service_label_conditions(self._rulespec.name)
+        ):
             raise MKUserError(
                 varprefix,
                 _(
                     "This predefined condition can not be used with the "
-                    "current ruleset, because it defines service label conditions."
+                    "current ruleset, because it defines the same label "
+                    "conditions as set by this rule."
                 ),
             )
 
@@ -2267,6 +2270,12 @@ class VSExplicitConditions(Transform):
                 html.li(_("No conditions"), class_="no_conditions")
             html.close_ul()
             return HTML(output_funnel.drain())
+
+
+def _allow_label_conditions(rulespec_name: str) -> bool:
+    return _allow_host_label_conditions(rulespec_name) and _allow_service_label_conditions(
+        rulespec_name
+    )
 
 
 def _allow_host_label_conditions(rulespec_name: str) -> bool:

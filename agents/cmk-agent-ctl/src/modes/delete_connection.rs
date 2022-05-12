@@ -47,9 +47,17 @@ pub fn delete(registry: &mut config::Registry, connection_id: &str) -> AnyhowRes
     Ok(())
 }
 
-pub fn delete_all(registry: &mut config::Registry) -> AnyhowResult<()> {
+pub fn delete_all(
+    registry: &mut config::Registry,
+    enable_legacy_mode: bool,
+    legacy_pull_marker: &config::LegacyPullMarker,
+) -> AnyhowResult<()> {
     registry.clear();
-    Ok(registry.save()?)
+    registry.save()?;
+    if enable_legacy_mode {
+        legacy_pull_marker.create()?;
+    }
+    Ok(())
 }
 
 #[cfg(test)]
@@ -103,7 +111,7 @@ mod tests {
                 pull,
                 pull_imported,
             },
-            std::path::PathBuf::from(&tempfile::NamedTempFile::new().unwrap().into_temp_path()),
+            tempfile::NamedTempFile::new().unwrap(),
         )
         .unwrap()
     }
@@ -166,10 +174,24 @@ mod tests {
     }
 
     #[test]
-    fn test_delete_all() {
+    fn test_delete_all_no_legacy_pull() {
         let mut reg = registry();
+        let lpm = config::LegacyPullMarker::new(tempfile::NamedTempFile::new().unwrap());
         assert!(!reg.path().exists());
-        assert!(delete_all(&mut reg).is_ok());
+        assert!(!lpm.exists());
+        assert!(delete_all(&mut reg, false, &lpm).is_ok());
         assert!(reg.path().exists());
+        assert!(!lpm.exists());
+    }
+
+    #[test]
+    fn test_delete_all_with_legacy_pull() {
+        let mut reg = registry();
+        let lpm = config::LegacyPullMarker::new(tempfile::NamedTempFile::new().unwrap());
+        assert!(!reg.path().exists());
+        assert!(!lpm.exists());
+        assert!(delete_all(&mut reg, true, &lpm).is_ok());
+        assert!(reg.path().exists());
+        assert!(lpm.exists());
     }
 }

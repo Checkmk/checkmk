@@ -1,0 +1,13 @@
+Title: KUBE: Parse Objects without labels
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1650303873
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b6
+
+Checkmk would previously fail to parse Kubernetes objects, if they had no labels. Affected
+Objects were StatefulSets, DaemonSets and Namespaces. This werk fixes the crash.

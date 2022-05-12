@@ -191,6 +191,7 @@ def _process_job_stats(
     job: Job,
     age_levels: Optional[Tuple[int, int]],
     exit_code_to_state_map: Dict[int, State],
+    now: float,
 ) -> type_defs.CheckResult:
 
     yield Result(
@@ -226,19 +227,28 @@ def _process_job_stats(
         yield Metric("start_time", job["start_time"])
 
     used_start_time = max(job["running_start_time"]) if currently_running else job["start_time"]
-    yield from check_levels(
-        time.time() - used_start_time,
-        label=f"Job age{currently_running}",
-        # In pre-2.0 versions of this check plugin, we had
-        # check_default_parameters={"age": (0, 0)}
-        # However, these levels were only applied if they were not zero. We still need to keep this
-        # check because many old autocheck files still have
-        # 'parameters': {'age': (0, 0)}
-        # which must not result in actually applying these levels.
-        levels_upper=age_levels if age_levels != (0, 0) else None,
-        render_func=render.timespan,
-        boundaries=(0, None),
-    )
+    if (age := now - used_start_time) >= 0:
+        yield from check_levels(
+            age,
+            label=f"Job age{currently_running}",
+            # In pre-2.0 versions of this check plugin, we had
+            # check_default_parameters={"age": (0, 0)}
+            # However, these levels were only applied if they were not zero. We still need to keep this
+            # check because many old autocheck files still have
+            # 'parameters': {'age': (0, 0)}
+            # which must not result in actually applying these levels.
+            levels_upper=age_levels if age_levels != (0, 0) else None,
+            render_func=render.timespan,
+            boundaries=(0, None),
+        )
+    else:
+        yield Result(
+            state=State.OK,
+            summary=(
+                f"Job age appears to be {render.timespan(-age)}"
+                " in the future (check your system time)"
+            ),
+        )
 
     for metric in sorted(metrics_to_output):
         yield from _check_job_levels(job, metric)
@@ -265,6 +275,7 @@ def check_job(
         job,
         params.get("age"),
         {0: State.OK, **{k: State(v) for k, v in params.get("exit_code_to_state_map", [])}},
+        time.time(),
     )
 
 

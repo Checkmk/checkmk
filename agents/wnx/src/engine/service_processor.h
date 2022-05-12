@@ -28,6 +28,7 @@
 #include "external_port.h"
 #include "logger.h"
 #include "modules.h"
+#include "providers/agent_plugins.h"
 #include "providers/check_mk.h"
 #include "providers/df.h"
 #include "providers/fileinfo.h"
@@ -36,6 +37,7 @@
 #include "providers/mrpe.h"
 #include "providers/ohm.h"
 #include "providers/p_perf_counters.h"
+#include "providers/perf_cpuload.h"
 #include "providers/plugins.h"
 #include "providers/ps.h"
 #include "providers/services.h"
@@ -97,7 +99,7 @@ public:
     SectionProvider() { provider_uniq_name_ = engine_.getUniqName(); }
 
     // with engine init
-    SectionProvider(const std::string &uniq_name,  // id for the provider
+    SectionProvider(std::string_view uniq_name,  // id for the provider
                     char separator)
         : engine_(uniq_name, separator) {
         provider_uniq_name_ = engine_.getUniqName();
@@ -188,6 +190,11 @@ protected:
 // Thread Safe
 class ServiceProcessor : public wtools::BaseServiceProcessor {
 public:
+    struct ControllerParam {
+        uint16_t port;
+        uint32_t pid;
+    };
+
     using thread_callback = std::function<bool(const void *)>;
     using AnswerDataBlock = cma::srv::AsyncAnswer::DataBlock;
     ServiceProcessor(std::chrono::milliseconds delay, thread_callback callback)
@@ -314,7 +321,7 @@ private:
     enum class Signal { restart, quit };
 
     // returns break type(what todo)
-    Signal mainWaitLoop();
+    Signal mainWaitLoop(std::optional<ControllerParam> &controller_param);
 
     AsyncAnswer answer_;  // queue in the future, now only one answer for all
 
@@ -373,9 +380,10 @@ private:
                    const std::string &cmdline) {
         const auto &engine = section_provider.getEngine();
 
-        if (!isAllowed(engine)) return false;
+        if (!isAllowed(engine)) {
+            return false;
+        }
 
-        // success story...
         vf_.emplace_back(
             section_provider.kick(std::launch::async, cmdline, stamp, this));
         auto expected_timeout = section_provider.expectedTimeout();
@@ -389,9 +397,10 @@ private:
                          const std::string &cmdline) {
         const auto &engine = section_provider.getEngine();
 
-        if (!isAllowed(engine)) return false;
+        if (!isAllowed(engine)) {
+            return false;
+        }
 
-        // success story...
         section_provider.directCall(cmdline, stamp, getInternalPort());
 
         return true;
@@ -659,6 +668,8 @@ private:
     SectionProvider<provider::OhmProvider> ohm_provider_{
         provider::kOhm, provider::ohm::kSepChar};
     SectionProvider<provider::SpoolProvider> spool_provider_;
+    SectionProvider<provider::AgentPlugins> agent_plugins_{
+        provider::kAgentPlugins, provider::AgentPlugins::kSepChar};
 
     SectionProvider<provider::Wmi> dotnet_clrmemory_provider_{
         provider::kDotNetClrMemory, cma::provider::wmi::kSepChar};
@@ -671,6 +682,8 @@ private:
 
     SectionProvider<provider::Wmi> wmi_cpuload_provider_{
         provider::kWmiCpuLoad, cma::provider::wmi::kSepChar};
+
+    SectionProvider<provider::PerfCpuLoad> perf_cpuload_provider_;
 
 #if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
     friend class ServiceProcessorTest;

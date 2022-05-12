@@ -6,7 +6,7 @@
 
 import json
 import time
-from typing import Any, Mapping, MutableMapping, Optional, Tuple
+from typing import Any, Literal, Mapping, MutableMapping, Optional, Tuple, Union
 
 from .agent_based_api.v1 import (
     check_levels,
@@ -19,51 +19,91 @@ from .agent_based_api.v1 import (
     State,
 )
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.kube import DeploymentStrategy, Replicas, VSResultAge
+from .utils.kube import (
+    DaemonSetReplicas,
+    DeploymentReplicas,
+    StatefulSetReplicas,
+    UpdateStrategy,
+    VSResultAge,
+)
 from .utils.kube_strategy import strategy_text
 
 
-def parse_kube_replicas(string_table: StringTable) -> Replicas:
-    return Replicas(**json.loads(string_table[0][0]))
+def parse_kube_deployment_replicas(string_table: StringTable) -> DeploymentReplicas:
+    return DeploymentReplicas(**json.loads(string_table[0][0]))
+
+
+def parse_kube_statefulset_replicas(string_table: StringTable) -> StatefulSetReplicas:
+    return StatefulSetReplicas(**json.loads(string_table[0][0]))
+
+
+def parse_kube_daemonset_replicas(string_table: StringTable) -> DaemonSetReplicas:
+    return DaemonSetReplicas(**json.loads(string_table[0][0]))
 
 
 register.agent_section(
-    name="kube_replicas_v1",
+    name="kube_deployment_replicas_v1",
     parsed_section_name="kube_replicas",
-    parse_function=parse_kube_replicas,
+    parse_function=parse_kube_deployment_replicas,
+)
+
+register.agent_section(
+    name="kube_statefulset_replicas_v1",
+    parsed_section_name="kube_replicas",
+    parse_function=parse_kube_statefulset_replicas,
+)
+
+register.agent_section(
+    name="kube_daemonset_replicas_v1",
+    parsed_section_name="kube_replicas",
+    parse_function=parse_kube_daemonset_replicas,
 )
 
 
-def parse_kube_deployment_strategy(string_table: StringTable) -> DeploymentStrategy:
-    return DeploymentStrategy(**json.loads(string_table[0][0]))
+def parse_kube_strategy(string_table: StringTable) -> UpdateStrategy:
+    return UpdateStrategy(**json.loads(string_table[0][0]))
 
 
 register.agent_section(
-    name="kube_deployment_strategy_v1",
-    parsed_section_name="kube_deployment_strategy",
-    parse_function=parse_kube_deployment_strategy,
+    name="kube_update_strategy_v1",
+    parsed_section_name="kube_update_strategy",
+    parse_function=parse_kube_strategy,
 )
+
+Replicas = Union[DeploymentReplicas, StatefulSetReplicas, DaemonSetReplicas]
 
 
 def discover_kube_replicas(
     section_kube_replicas: Optional[Replicas],
-    section_kube_deployment_strategy: Optional[DeploymentStrategy],
+    section_kube_update_strategy: Optional[UpdateStrategy],
 ) -> DiscoveryResult:
     if section_kube_replicas is not None:
         yield Service()
 
 
 def _check_duration(
-    reference_ts: Optional[float],
+    transition_complete: bool,
+    value_store_key: Literal[
+        "not_ready_started_timestamp", "update_started_timestamp", "misscheduled_timestamp"
+    ],
     now: float,
+    value_store: MutableMapping[str, Any],
     levels_upper: Optional[Tuple[int, int]],
     label: str,
 ) -> CheckResult:
-    if reference_ts is None:
+    """Update/read value_store and check the duration of undesired replica states.
+
+    This function has side effects: It mutates the value_store.
+    """
+
+    if transition_complete:
+        value_store[value_store_key] = None
         return
+    ts = value_store.get(value_store_key) or now
+    value_store[value_store_key] = ts
 
     yield from check_levels(
-        now - reference_ts,
+        now - ts,
         levels_upper=levels_upper,
         render_func=render.timespan,
         label=label,
@@ -82,12 +122,12 @@ def _levels(
 def check_kube_replicas(
     params: Mapping[str, VSResultAge],
     section_kube_replicas: Optional[Replicas],
-    section_kube_deployment_strategy: Optional[DeploymentStrategy],
+    section_kube_update_strategy: Optional[UpdateStrategy],
 ) -> CheckResult:
     yield from _check_kube_replicas(
         params,
         section_kube_replicas,
-        section_kube_deployment_strategy,
+        section_kube_update_strategy,
         now=time.time(),
         value_store=get_value_store(),
     )
@@ -96,7 +136,7 @@ def check_kube_replicas(
 def _check_kube_replicas(
     params: Mapping[str, VSResultAge],
     section_kube_replicas: Optional[Replicas],
-    section_kube_deployment_strategy: Optional[DeploymentStrategy],
+    section_kube_update_strategy: Optional[UpdateStrategy],
     *,
     now: float,
     value_store: MutableMapping[str, Any],
@@ -107,60 +147,67 @@ def _check_kube_replicas(
 
     yield Result(
         state=State.OK,
-        summary=f"Ready: {section_kube_replicas.ready}/{section_kube_replicas.replicas}",
+        summary=f"Ready: {section_kube_replicas.ready}/{section_kube_replicas.desired}",
     )
 
     yield Result(
         state=State.OK,
-        summary=f"Up-to-date: {section_kube_replicas.updated}/{section_kube_replicas.replicas}",
+        summary=f"Up-to-date: {section_kube_replicas.updated}/{section_kube_replicas.desired}",
     )
 
-    metric_boundary = (0, section_kube_replicas.replicas)
-    yield Metric(
-        "kube_desired_replicas", section_kube_replicas.replicas, boundaries=metric_boundary
-    )
+    metric_boundary = (0, section_kube_replicas.desired)
+    yield Metric("kube_desired_replicas", section_kube_replicas.desired, boundaries=metric_boundary)
     yield Metric("kube_ready_replicas", section_kube_replicas.ready, boundaries=metric_boundary)
     yield Metric("kube_updated_replicas", section_kube_replicas.updated, boundaries=metric_boundary)
 
-    all_ready = section_kube_replicas.ready == section_kube_replicas.replicas
-    not_ready_started_ts = (
-        None if all_ready else value_store.get("not_ready_started_timestamp") or now
-    )
-    value_store["not_ready_started_timestamp"] = not_ready_started_ts
-
-    all_updated = section_kube_replicas.updated == section_kube_replicas.replicas
-    update_started_ts = None if all_updated else value_store.get("update_started_timestamp") or now
-    value_store["update_started_timestamp"] = update_started_ts
-
-    if all_ready and all_updated:
-        return
+    if isinstance(section_kube_replicas, DaemonSetReplicas):
+        yield Result(
+            state=State.OK,
+            summary=f"Misscheduled: {section_kube_replicas.misscheduled}",
+        )
+        yield Metric("kube_misscheduled_replicas", section_kube_replicas.misscheduled)
 
     yield from _check_duration(
-        not_ready_started_ts,
+        section_kube_replicas.ready == section_kube_replicas.desired,
+        "not_ready_started_timestamp",
         now,
+        value_store,
         _levels(params, "not_ready_duration"),
         "Not ready for",
     )
 
+    all_updated = section_kube_replicas.updated == section_kube_replicas.desired
     yield from _check_duration(
-        update_started_ts,
+        all_updated,
+        "update_started_timestamp",
         now,
+        value_store,
         _levels(params, "update_duration"),
         "Not updated for",
     )
 
-    if section_kube_deployment_strategy is None or all_updated:
+    if isinstance(section_kube_replicas, DaemonSetReplicas):
+        yield from _check_duration(
+            section_kube_replicas.misscheduled == 0,
+            "misscheduled_timestamp",
+            now,
+            value_store,
+            _levels(params, "misscheduled_duration"),
+            "Misscheduled for",
+        )
+
+    if section_kube_update_strategy is None or all_updated:
         return
 
     yield Result(
         state=State.OK,
-        summary=f"Strategy: {strategy_text(section_kube_deployment_strategy.strategy)}",
+        summary=f"Strategy: {strategy_text(section_kube_update_strategy.strategy)}",
     )
 
 
 register.check_plugin(
     name="kube_replicas",
-    sections=["kube_replicas", "kube_deployment_strategy"],
+    sections=["kube_replicas", "kube_update_strategy"],
     service_name="Replicas",
     discovery_function=discover_kube_replicas,
     check_function=check_kube_replicas,
@@ -168,5 +215,6 @@ register.check_plugin(
     check_default_parameters={
         "update_duration": ("levels", (300, 600)),
         "not_ready_duration": ("levels", (300, 600)),
+        "misscheduled_duration": ("levels", (300, 600)),
     },
 )

@@ -223,6 +223,14 @@ def get_replication_paths() -> List[ReplicationPath]:
             ),
             [],
         ),
+        ReplicationPath(
+            "file",
+            "stored_passwords",
+            os.path.relpath(
+                "%s/stored_passwords" % cmk.utils.paths.var_dir, cmk.utils.paths.omd_root
+            ),
+            [],
+        ),
         # Also replicate the user-settings of Multisite? While the replication
         # as such works pretty well, the count of pending changes will not
         # know.
@@ -395,11 +403,11 @@ class ActivateChanges:
         for site_id in activation_sites():
             changes_counter += len(SiteChanges(SiteChanges.make_path(site_id)).read())
             if changes_counter > 10:
-                return _("10+ pending changes")
+                return _("10+ changes")
         if changes_counter == 1:
-            return _("1 pending change")
+            return _("1 change")
         if changes_counter > 1:
-            return _("%d pending changes") % changes_counter
+            return _("%d changes") % changes_counter
         return None
 
     def grouped_changes(self):

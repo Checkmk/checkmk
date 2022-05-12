@@ -396,6 +396,15 @@ export function delete_user_message(msg_id, btn) {
     row.parentNode.removeChild(row);
 }
 
+export function add_height_to_simple_bar_content_of_iframe(target_iframe) {
+    var iframe = document.getElementById(target_iframe);
+    if (!iframe) return;
+
+    var simple_bar_content = iframe.parentElement;
+    if (!simple_bar_content) return;
+    simple_bar_content.style.height = "100%";
+}
+
 //#.
 //#   .-Page Reload--------------------------------------------------------.
 //#   |        ____                    ____      _                 _       |
@@ -706,16 +715,27 @@ function set_focus(focus_obj) {
     }
 }
 
-export function update_pending_changes(changes_info) {
+export function update_pending_changes(changes_info, changes_tooltip) {
     if (!changes_info) {
         return;
     }
 
-    const text_container = document.getElementById("pending_changes");
+    // Update container div CSS class and tooltip
+    const page_state_div = document.getElementsByClassName("page_state")[0];
+    change_class(page_state_div, "no_changes", "pending_changes");
+    page_state_div.title = changes_tooltip;
+
+    // Update text (changes number and string)
+    const [changes_number, changes_str] = changes_info.split(" ", 2);
+    const text_container = document.getElementById("changes_info");
     if (text_container) {
-        text_container.innerHTML = changes_info;
+        const changes_number_span = text_container.getElementsByClassName("changes_number")[0];
+        const changes_str_span = text_container.getElementsByClassName("changes_str")[0];
+        changes_number_span.innerHTML = changes_number;
+        changes_str_span.innerHTML = changes_str;
     }
 
+    // Update changes icon
     const img_container = document.getElementById("page_state_icon");
     if (img_container) {
         return;

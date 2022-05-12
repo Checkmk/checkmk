@@ -16,44 +16,89 @@ from cmk.base.plugins.agent_based.kube_replicas import (
     _check_kube_replicas,
     check_kube_replicas,
     discover_kube_replicas,
-    parse_kube_deployment_strategy,
-    parse_kube_replicas,
+    parse_kube_daemonset_replicas,
+    parse_kube_deployment_replicas,
+    parse_kube_statefulset_replicas,
+    parse_kube_strategy,
+    Replicas,
 )
 from cmk.base.plugins.agent_based.utils.kube import (
-    DeploymentStrategy,
+    DaemonSetReplicas,
+    DeploymentReplicas,
+    OnDelete,
     Recreate,
-    Replicas,
     RollingUpdate,
+    StatefulSetReplicas,
+    StatefulSetRollingUpdate,
+    UpdateStrategy,
     VSResultAge,
 )
 
 
-def test_parse_kube_replicas() -> None:
-    assert parse_kube_replicas(
+def test_parse_kube_deployment_replicas() -> None:
+    assert parse_kube_deployment_replicas(
         [
             [
                 json.dumps(
                     {
-                        "replicas": 3,
+                        "desired": 3,
                         "updated": 0,
-                        "available": 0,
                         "ready": 3,
-                        "unavailable": 0,
                     }
                 )
             ]
         ]
-    ) == Replicas(
-        replicas=3,
+    ) == DeploymentReplicas(
+        desired=3,
         updated=0,
-        available=0,
         ready=3,
-        unavailable=0,
     )
 
 
-def test_parse_kube_deployment_strategy() -> None:
-    assert parse_kube_deployment_strategy(
+def test_parse_kube_statefulset_replicas() -> None:
+    assert parse_kube_statefulset_replicas(
+        [
+            [
+                json.dumps(
+                    {
+                        "desired": 3,
+                        "updated": 0,
+                        "ready": 3,
+                    }
+                )
+            ]
+        ]
+    ) == StatefulSetReplicas(
+        desired=3,
+        updated=0,
+        ready=3,
+    )
+
+
+def test_parse_kube_daemonset_replicas() -> None:
+    assert parse_kube_daemonset_replicas(
+        [
+            [
+                json.dumps(
+                    {
+                        "desired": 3,
+                        "updated": 0,
+                        "ready": 3,
+                        "misscheduled": 2,
+                    }
+                )
+            ]
+        ]
+    ) == DaemonSetReplicas(
+        desired=3,
+        updated=0,
+        ready=3,
+        misscheduled=2,
+    )
+
+
+def test_parse_kube_strategy() -> None:
+    assert parse_kube_strategy(
         [
             [
                 json.dumps(
@@ -67,9 +112,9 @@ def test_parse_kube_deployment_strategy() -> None:
                 )
             ]
         ]
-    ) == DeploymentStrategy(strategy=RollingUpdate(max_surge="25%", max_unavailable="25%"))
+    ) == UpdateStrategy(strategy=RollingUpdate(max_surge="25%", max_unavailable="25%"))
 
-    assert parse_kube_deployment_strategy(
+    assert parse_kube_strategy(
         [
             [
                 json.dumps(
@@ -81,18 +126,45 @@ def test_parse_kube_deployment_strategy() -> None:
                 )
             ]
         ]
-    ) == DeploymentStrategy(strategy=Recreate())
+    ) == UpdateStrategy(strategy=Recreate())
+
+    assert parse_kube_strategy(
+        [
+            [
+                json.dumps(
+                    {
+                        "strategy": {
+                            "type_": "OnDelete",
+                        },
+                    }
+                )
+            ]
+        ]
+    ) == UpdateStrategy(strategy=OnDelete())
+
+    assert parse_kube_strategy(
+        [
+            [
+                json.dumps(
+                    {
+                        "strategy": {
+                            "type_": "StatefulSetRollingUpdate",
+                            "partition": 0,
+                        },
+                    }
+                )
+            ]
+        ]
+    ) == UpdateStrategy(strategy=StatefulSetRollingUpdate(partition=0))
 
 
 def test_discover_kube_replicas() -> None:
-    replicas = Replicas(
-        replicas=3,
+    replicas = DeploymentReplicas(
+        desired=3,
         updated=0,
-        available=0,
         ready=3,
-        unavailable=3,
     )
-    strategy = DeploymentStrategy(
+    strategy = UpdateStrategy(
         strategy=RollingUpdate(
             max_surge="25%",
             max_unavailable="25%",
@@ -108,12 +180,10 @@ def test_check_kube_replicas() -> None:
     assert list(
         check_kube_replicas(
             {},
-            Replicas(
-                replicas=3,
+            DeploymentReplicas(
+                desired=3,
                 updated=3,
-                available=3,
                 ready=3,
-                unavailable=0,
             ),
             None,
         )
@@ -131,14 +201,12 @@ def test_check_kube_replicas() -> None:
     [
         pytest.param(
             {"update_duration": "no_levels"},
-            Replicas(
-                replicas=3,
+            DeploymentReplicas(
+                desired=3,
                 updated=0,
-                available=3,
                 ready=3,
-                unavailable=0,
             ),
-            DeploymentStrategy(
+            UpdateStrategy(
                 strategy=RollingUpdate(
                     max_surge="25%",
                     max_unavailable="25%",
@@ -161,14 +229,12 @@ def test_check_kube_replicas() -> None:
         ),
         pytest.param(
             {"update_duration": ("levels", (900, 1000))},
-            Replicas(
-                replicas=3,
+            DeploymentReplicas(
+                desired=3,
                 updated=0,
-                available=3,
                 ready=3,
-                unavailable=0,
             ),
-            DeploymentStrategy(
+            UpdateStrategy(
                 strategy=RollingUpdate(
                     max_surge="25%",
                     max_unavailable="25%",
@@ -191,14 +257,12 @@ def test_check_kube_replicas() -> None:
         ),
         pytest.param(
             {"update_duration": ("levels", (300, 500))},
-            Replicas(
-                replicas=3,
+            DeploymentReplicas(
+                desired=3,
                 updated=0,
-                available=3,
                 ready=3,
-                unavailable=0,
             ),
-            DeploymentStrategy(
+            UpdateStrategy(
                 strategy=RollingUpdate(
                     max_surge="25%",
                     max_unavailable="25%",
@@ -227,7 +291,7 @@ def test_check_kube_replicas() -> None:
 def test_check_kube_replicas_outdated_replicas(
     params: Mapping[str, VSResultAge],
     replicas: Replicas,
-    strategy: DeploymentStrategy,
+    strategy: UpdateStrategy,
     value_store: MutableMapping[str, Any],
     expected_check_result: Sequence[Union[Result, Metric]],
 ) -> None:
@@ -241,13 +305,94 @@ def test_check_kube_replicas_outdated_replicas(
     "params,replicas,value_store,expected_check_result",
     [
         pytest.param(
-            {"not_ready_duration": "no_levels"},
-            Replicas(
-                replicas=3,
+            {"misscheduled_duration": "no_levels"},
+            DaemonSetReplicas(
+                desired=3,
                 updated=3,
-                available=3,
+                ready=3,
+                misscheduled=1,
+            ),
+            {"misscheduled_timestamp": 100.0},
+            [
+                Result(state=State.OK, summary="Ready: 3/3"),
+                Result(state=State.OK, summary="Up-to-date: 3/3"),
+                Metric("kube_desired_replicas", 3.0, boundaries=(0.0, 3.0)),
+                Metric("kube_ready_replicas", 3.0, boundaries=(0.0, 3.0)),
+                Metric("kube_updated_replicas", 3.0, boundaries=(0.0, 3.0)),
+                Result(state=State.OK, summary="Misscheduled: 1"),
+                Metric("kube_misscheduled_replicas", 1.0),
+                Result(state=State.OK, summary="Misscheduled for: 11 minutes 40 seconds"),
+            ],
+            id="Misscheduled is OK when no parameters are specified",
+        ),
+        pytest.param(
+            {"misscheduled_duration": ("levels", (900, 1000))},
+            DaemonSetReplicas(
+                desired=3,
+                updated=3,
+                ready=3,
+                misscheduled=1,
+            ),
+            {"misscheduled_timestamp": 100.0},
+            [
+                Result(state=State.OK, summary="Ready: 3/3"),
+                Result(state=State.OK, summary="Up-to-date: 3/3"),
+                Metric("kube_desired_replicas", 3.0, boundaries=(0.0, 3.0)),
+                Metric("kube_ready_replicas", 3.0, boundaries=(0.0, 3.0)),
+                Metric("kube_updated_replicas", 3.0, boundaries=(0.0, 3.0)),
+                Result(state=State.OK, summary="Misscheduled: 1"),
+                Metric("kube_misscheduled_replicas", 1.0),
+                Result(state=State.OK, summary="Misscheduled for: 11 minutes 40 seconds"),
+            ],
+            id="Misscheduled is OK when thresholds are not reached",
+        ),
+        pytest.param(
+            {"misscheduled_duration": ("levels", (300, 500))},
+            DaemonSetReplicas(
+                desired=3,
+                updated=3,
+                ready=3,
+                misscheduled=1,
+            ),
+            {"misscheduled_timestamp": 100.0},
+            [
+                Result(state=State.OK, summary="Ready: 3/3"),
+                Result(state=State.OK, summary="Up-to-date: 3/3"),
+                Metric("kube_desired_replicas", 3.0, boundaries=(0.0, 3.0)),
+                Metric("kube_ready_replicas", 3.0, boundaries=(0.0, 3.0)),
+                Metric("kube_updated_replicas", 3.0, boundaries=(0.0, 3.0)),
+                Result(state=State.OK, summary="Misscheduled: 1"),
+                Metric("kube_misscheduled_replicas", 1.0),
+                Result(
+                    state=State.CRIT,
+                    summary="Misscheduled for: 11 minutes 40 seconds (warn/crit at 5 minutes 0 seconds/8 minutes 20 seconds)",
+                ),
+            ],
+            id="Misscheduled thresholds are applied",
+        ),
+    ],
+)
+def test_check_kube_replicas_misscheduled_pods(
+    params: Mapping[str, VSResultAge],
+    replicas: DaemonSetReplicas,
+    value_store: MutableMapping[str, Any],
+    expected_check_result: Sequence[Union[Result, Metric]],
+) -> None:
+    assert (
+        list(_check_kube_replicas(params, replicas, None, now=800.0, value_store=value_store))
+        == expected_check_result
+    )
+
+
+@pytest.mark.parametrize(
+    "params,replicas,value_store,expected_check_result",
+    [
+        pytest.param(
+            {"not_ready_duration": "no_levels"},
+            DeploymentReplicas(
+                desired=3,
+                updated=3,
                 ready=0,
-                unavailable=0,
             ),
             {"not_ready_started_timestamp": 100.0},
             [
@@ -262,12 +407,10 @@ def test_check_kube_replicas_outdated_replicas(
         ),
         pytest.param(
             {"not_ready_duration": ("levels", (900, 1000))},
-            Replicas(
-                replicas=3,
+            DeploymentReplicas(
+                desired=3,
                 updated=3,
-                available=3,
                 ready=0,
-                unavailable=0,
             ),
             {"not_ready_started_timestamp": 100.0},
             [
@@ -282,12 +425,10 @@ def test_check_kube_replicas_outdated_replicas(
         ),
         pytest.param(
             {"not_ready_duration": ("levels", (300, 500))},
-            Replicas(
-                replicas=3,
+            DeploymentReplicas(
+                desired=3,
                 updated=3,
-                available=3,
                 ready=0,
-                unavailable=0,
             ),
             {"not_ready_started_timestamp": 100.0},
             [
@@ -325,14 +466,12 @@ def test_check_kube_replicas_not_ready_replicas(
                 "not_ready_duration": ("levels", (300, 500)),
                 "update_duration": ("levels", (300, 500)),
             },
-            Replicas(
-                replicas=3,
+            DeploymentReplicas(
+                desired=3,
                 updated=0,
-                available=3,
                 ready=0,
-                unavailable=0,
             ),
-            DeploymentStrategy(
+            UpdateStrategy(
                 strategy=RollingUpdate(
                     max_surge="25%",
                     max_unavailable="25%",
@@ -365,14 +504,12 @@ def test_check_kube_replicas_not_ready_replicas(
                 "not_ready_duration": ("levels", (300, 500)),
                 "update_duration": ("levels", (300, 500)),
             },
-            Replicas(
-                replicas=3,
+            DeploymentReplicas(
+                desired=3,
                 updated=0,
-                available=3,
                 ready=0,
-                unavailable=0,
             ),
-            DeploymentStrategy(strategy=Recreate()),
+            UpdateStrategy(strategy=Recreate()),
             {"not_ready_started_timestamp": 100.0, "update_started_timestamp": 100.0},
             [
                 Result(state=State.OK, summary="Ready: 0/3"),
@@ -400,7 +537,7 @@ def test_check_kube_replicas_not_ready_replicas(
 def test_check_kube_replicas_not_ready_and_outdated(
     params: Mapping[str, VSResultAge],
     replicas: Replicas,
-    strategy: DeploymentStrategy,
+    strategy: UpdateStrategy,
     value_store: MutableMapping[str, Any],
     expected_check_result: Sequence[Union[Result, Metric]],
     monkeypatch: pytest.MonkeyPatch,
@@ -425,12 +562,10 @@ def test_check_kube_replicas_not_ready_and_outdated(
                 "not_ready_duration": ("levels", (300, 500)),
                 "update_duration": ("levels", (300, 500)),
             },
-            Replicas(
-                replicas=3,
+            DeploymentReplicas(
+                desired=3,
                 updated=0,
-                available=3,
                 ready=3,
-                unavailable=0,
             ),
             {"not_ready_started_timestamp": 100.0, "update_started_timestamp": 100.0},
             [
@@ -451,12 +586,10 @@ def test_check_kube_replicas_not_ready_and_outdated(
                 "not_ready_duration": ("levels", (300, 500)),
                 "update_duration": ("levels", (300, 500)),
             },
-            Replicas(
-                replicas=3,
+            DeploymentReplicas(
+                desired=3,
                 updated=3,
-                available=3,
                 ready=0,
-                unavailable=0,
             ),
             {"not_ready_started_timestamp": 100.0, "update_started_timestamp": 100.0},
             [
@@ -474,12 +607,10 @@ def test_check_kube_replicas_not_ready_and_outdated(
         ),
         pytest.param(
             {},
-            Replicas(
-                replicas=3,
+            DeploymentReplicas(
+                desired=3,
                 updated=3,
-                available=3,
                 ready=0,
-                unavailable=0,
             ),
             {"not_ready_started_timestamp": None, "update_started_timestamp": None},
             [
@@ -496,12 +627,10 @@ def test_check_kube_replicas_not_ready_and_outdated(
         ),
         pytest.param(
             {},
-            Replicas(
-                replicas=3,
+            DeploymentReplicas(
+                desired=3,
                 updated=0,
-                available=3,
                 ready=3,
-                unavailable=0,
             ),
             {"not_ready_started_timestamp": None, "update_started_timestamp": None},
             [

@@ -1,7 +1,7 @@
 Title: Obtain "V$SYSTEM_PARAMETER" from Oracle DB
 Class: feature
 Compatible: compat
-Component: HW/SW Inventory
+Component: inv
 Date: 1586436197
 Edition: cre
 Knowledge: undoc

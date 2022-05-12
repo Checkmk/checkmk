@@ -7,13 +7,14 @@
 import ast
 import json
 import typing
+import warnings
 from datetime import datetime
 from typing import Any, Optional
 
 import pytz
 from cryptography.x509 import load_pem_x509_csr
 from marshmallow import fields as _fields
-from marshmallow import post_load, utils, ValidationError
+from marshmallow import post_load, pre_dump, utils, ValidationError
 from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
 
 import cmk.utils.version as version
@@ -59,6 +60,12 @@ class PythonString(base.String):
             >>> expr.deserialize("...")  # doctest: +ELLIPSIS
             Ellipsis
 
+            >>> expr.deserialize("''")
+            ''
+
+            >>> expr.serialize("foo", {"foo": ""})
+            "''"
+
         Borked syntax leads to an ValidationError
 
             >>> expr.deserialize("{'a': (5.5,")  # doctest: +ELLIPSIS
@@ -77,6 +84,9 @@ class PythonString(base.String):
             marshmallow.exceptions.ValidationError: ...
 
     """
+
+    def _serialize(self, value, attr, obj, **kwargs) -> typing.Optional[str]:
+        return repr(value)
 
     def _deserialize(self, value, attr, data, **kwargs):
         if not isinstance(value, str):
@@ -590,10 +600,10 @@ def validate_custom_host_attributes(data: dict[str, str]) -> dict[str, str]:
         try:
             attribute = watolib.host_attribute(name)
         except KeyError:
-            raise ValidationError(f"No such attribute, {name!r}", field_name=name)
+            raise ValidationError({name: f"No such attribute, {name!r}"}, field_name=name)
 
         if attribute.topic() != watolib.host_attributes.HostAttributeTopicCustomAttributes:
-            raise ValidationError(f"{name} is not a custom host attribute.")
+            raise ValidationError({name: f"{name} is not a custom host attribute."})
 
         try:
             attribute.validate_input(value, "")
@@ -621,6 +631,101 @@ class CustomFolderAttributes(ValueTypedDictSchema):
     @post_load
     def _valid(self, data, **kwargs):
         return validate_custom_host_attributes(data)
+
+
+class TagGroupAttributes(ValueTypedDictSchema):
+    """Schema to validate tag groups
+
+    Examples:
+
+        >>> schema = TagGroupAttributes()
+        >>> schema.load({"foo": "bar"})
+        Traceback (most recent call last):
+        ...
+        marshmallow.exceptions.ValidationError: {'foo': "Tag group name must start with 'tag_'"}
+
+        >>> schema.load({"tag_foo": "bar"})
+        Traceback (most recent call last):
+        ...
+        marshmallow.exceptions.ValidationError: {'tag_foo': 'No such tag-group.'}
+
+        >>> schema.load({"tag_agent": "flint"})
+        Traceback (most recent call last):
+        ...
+        marshmallow.exceptions.ValidationError: {'tag_agent': "Invalid value for tag-group: 'flint'"}
+
+        >>> schema.load({"tag_agent": "cmk-agent"})
+        {'tag_agent': 'cmk-agent'}
+
+        >>> schema.dump({"tag_agent": "cmk-agent"})
+        {'tag_agent': 'cmk-agent'}
+
+        >>> schema.load({"tag_agent": None})
+        Traceback (most recent call last):
+        ...
+        marshmallow.exceptions.ValidationError: {'tag_agent': 'Invalid value for tag-group: None'}
+
+        >>> schema.dump({"tag_agent": None})
+        {'tag_agent': None}
+
+    """
+
+    value_type = ValueTypedDictSchema.field(
+        base.String(
+            description=(
+                "The value of the tag-group attribute. Each tag is a mapping of string to string, "
+                "where the tag name must start with `tag_`."
+            ),
+            allow_none=True,
+        )
+    )
+
+    def _validate_tag_group(self, name: str) -> set[typing.Optional[str]]:
+        if not name.startswith("tag_"):
+            raise ValidationError({name: "Tag group name must start with 'tag_'"})
+
+        try:
+            tag_group = watolib.tags.load_tag_group(name[4:])
+        except MKUserError as exc:
+            raise ValidationError({name: str(exc)}) from exc
+
+        if tag_group is None:
+            raise ValidationError({name: "No such tag-group."})
+
+        # FIXME: This should eventually be moved into TagGroup
+
+        # Checkbox tags are allowed to have no value at all. This means they are deactivated.
+        allowed_ids = tag_group.get_tag_ids()
+        if tag_group.is_checkbox_tag_group:
+            allowed_ids.add(None)
+
+        return allowed_ids
+
+    @pre_dump
+    def _pre_dump(self, data: dict[str, str], **kwargs) -> dict[str, str]:
+        rv: dict[str, str] = {}
+        for key, value in data.items():
+            allowed_ids = self._validate_tag_group(key)
+
+            if value not in allowed_ids:
+                warnings.warn(f"Invalid value for tag-group {key}: {value!r}")
+
+            rv[key] = value
+
+        return rv
+
+    @post_load
+    def _post_load(self, data: dict[str, str], **kwargs) -> dict[str, str]:
+        rv: dict[str, str] = {}
+        for key, value in data.items():
+            allowed_ids = self._validate_tag_group(key)
+
+            if value not in allowed_ids:
+                raise ValidationError({key: f"Invalid value for tag-group: {value!r}"})
+
+            rv[key] = value
+
+        return rv
 
 
 def attributes_field(
@@ -675,6 +780,7 @@ def attributes_field(
             [
                 attr_openapi_schema(object_type, object_context),
                 custom_schema[object_type],
+                TagGroupAttributes,
             ],
             metadata={"context": {"object_context": object_context}},
             merged=True,  # to unify both models

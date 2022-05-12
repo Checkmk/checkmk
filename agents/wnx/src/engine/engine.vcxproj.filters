@@ -246,6 +246,9 @@
     <ClInclude Include="agent_controller.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="providers\agent_plugins.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -489,6 +492,15 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="agent_controller.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="providers\agent_plugins.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="section_header.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="providers\perf_cpuload.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -4,16 +4,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import os
+import json
 from enum import Enum
 from http import HTTPStatus
-from pathlib import Path
 from typing import Any
 from uuid import UUID
 
 import requests
+from agent_receiver.site_context import site_config_path, site_name
 from fastapi import HTTPException
 from fastapi.security import HTTPBasicCredentials
+from pydantic import BaseModel
 
 
 class CMKEdition(Enum):
@@ -21,22 +22,20 @@ class CMKEdition(Enum):
     cfe = "Free"
     cee = "Enterprise"
     cme = "Managed Services"
+    cpe = "Plus"
 
     def supports_registration_with_labels(self) -> bool:
         """
         >>> CMKEdition["cre"].supports_registration_with_labels()
         False
-        >>> CMKEdition["cee"].supports_registration_with_labels()
+        >>> CMKEdition["cpe"].supports_registration_with_labels()
         True
         """
-        # TODO CMK-9171
-        return self is CMKEdition.cee
+        return self is CMKEdition.cpe
 
 
 def _local_apache_port() -> int:
-    for site_config_line in (
-        Path(os.environ["OMD_ROOT"], "etc", "omd", "site.conf").read_text().splitlines()
-    ):
+    for site_config_line in site_config_path().read_text().splitlines():
         key, value = site_config_line.split("=")
         if key == "CONFIG_APACHE_TCP_PORT":
             return int(value.strip("'"))
@@ -44,7 +43,7 @@ def _local_apache_port() -> int:
 
 
 def _local_rest_api_url() -> str:
-    return f"http://localhost:{_local_apache_port()}/{os.environ['OMD_SITE']}/check_mk/api/1.0"
+    return f"http://localhost:{_local_apache_port()}/{site_name()}/check_mk/api/1.0"
 
 
 def _credentials_to_rest_api_auth(credentials: HTTPBasicCredentials) -> str:
@@ -115,16 +114,31 @@ def post_csr(
     )
 
 
-def host_exists(
+class HostConfiguration(BaseModel):
+    site: str
+    is_cluster: bool
+
+
+def host_configuration(
     credentials: HTTPBasicCredentials,
     host_name: str,
-) -> bool:
-    return (
-        _forward_get(
-            f"objects/host_config/{host_name}",
+) -> HostConfiguration:
+    if (
+        response := _forward_get(
+            f"objects/host_config_internal/{host_name}",
             credentials,
-        ).status_code
-        == HTTPStatus.OK
+        )
+    ).status_code == HTTPStatus.OK:
+        return HostConfiguration(**response.json())
+    if response.status_code == HTTPStatus.NOT_FOUND:
+        # The REST API only says 'Not Found' in the response title here
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND,
+            detail=f"Host {host_name} does not exist.",
+        )
+    raise HTTPException(
+        status_code=response.status_code,
+        detail=parse_error_response_body(response.text),
     )
 
 
@@ -135,14 +149,14 @@ def link_host_with_uuid(
 ) -> None:
     if (
         response := _forward_put(
-            f"objects/host_config/{host_name}/actions/link_uuid/invoke",
+            f"objects/host_config_internal/{host_name}/actions/link_uuid/invoke",
             credentials,
             {"uuid": str(uuid)},
         )
     ).status_code != HTTPStatus.NO_CONTENT:
         raise HTTPException(
             status_code=response.status_code,
-            detail=response.text,
+            detail=parse_error_response_body(response.text),
         )
 
 
@@ -158,3 +172,28 @@ def cmk_edition(credentials: HTTPBasicCredentials) -> CMKEdition:
         status_code=response.status_code,
         detail="User authentication failed",
     )
+
+
+def parse_error_response_body(body: str) -> str:
+    """
+    The REST API often returns JSON error bodies such as
+    {"title": "You do not have the permission for agent pairing.", "status": 403}
+    from which we want to extract the title field.
+
+    >>> parse_error_response_body("123")
+    '123'
+    >>> parse_error_response_body('["x", "y"]')
+    '["x", "y"]'
+    >>> parse_error_response_body('{"message": "Hands off this component!", "status": 403}')
+    '{"message": "Hands off this component!", "status": 403}'
+    >>> parse_error_response_body('{"title": "You do not have the permission for agent pairing.", "status": 403}')
+    'You do not have the permission for agent pairing.'
+    """
+    try:
+        deserialized_body = json.loads(body)
+    except json.JSONDecodeError:
+        return body
+    try:
+        return deserialized_body["title"]
+    except (TypeError, KeyError):
+        return body

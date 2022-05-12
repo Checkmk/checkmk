@@ -62,12 +62,17 @@ div.cmk_tab {
   }
 }
 
-.bar_chart {
+/* TODO: Check whether the bar_chart dashlet is still in use at all or if these styles can be set
+ *       solely for the barplot dashlet. Both should be the same, this seems to be a name confusion.
+ */
+.bar_chart,
+.barplot {
   a {
     outline: none;
   }
 
-  rect.bar.bar_chart {
+  rect.bar.bar_chart,
+  rect.bar {
     fill: $bar-fill-color;
     stroke: rgba($black, 0.2);
 

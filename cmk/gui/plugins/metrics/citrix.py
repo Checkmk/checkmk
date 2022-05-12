@@ -40,18 +40,6 @@ metric_info["citrix_load"] = {
 #   |  Definitions of time series graphs                                   |
 #   '----------------------------------------------------------------------'
 
-graph_info["citrix_licenses"] = {
-    "title": _l("Citrix licenses"),
-    "metrics": [
-        ("licenses", "area"),
-    ],
-    "scalars": [
-        "licenses:warn",
-        "licenses:crit",
-        ("licenses:max#000000", "Installed licenses"),
-    ],
-    "range": (0, "licenses:max"),
-}
 
 graph_info["citrix_serverload"] = {
     "title": _l("Citrix Serverload"),

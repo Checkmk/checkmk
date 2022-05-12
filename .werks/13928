@@ -1,0 +1,20 @@
+Title: validation of custom tag-groups through the REST API
+Class: fix
+Compatible: compat
+Component: core
+Date: 1650635481
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b6
+
+To create and edit custom tag groups via the REST API, one
+had to restart Apache after a new tag was created and before
+it could be used.
+
+This werk fixes this behaviour. A restart is no longer necessary
+for the tag-groups to be editable right after creation.
+
+Note: The documentation of the custom created tags in the ReDoc component
+are still only updated after an Apache restart. This does not affect the
+editability of the tags though.

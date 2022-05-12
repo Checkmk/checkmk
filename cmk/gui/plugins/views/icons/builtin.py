@@ -39,14 +39,16 @@
 
 import json
 import re
-from typing import Set
+from typing import Dict, List, Set, Tuple, Union
 
 import cmk.utils
 import cmk.utils.render
+from cmk.utils.type_defs import TagID
 
 import cmk.gui.bi as bi
 from cmk.gui.globals import config, html, request, response, user
 from cmk.gui.hooks import request_memoize
+from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
 from cmk.gui.plugins.views.graphs import cmk_graph_url
 from cmk.gui.plugins.views.icons.utils import Icon, icon_and_action_registry
@@ -57,7 +59,7 @@ from cmk.gui.plugins.views.utils import (
     render_cache_info,
     url_to_visual,
 )
-from cmk.gui.type_defs import VisualLinkSpec
+from cmk.gui.type_defs import Row, VisualLinkSpec
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.popups import MethodAjax
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode
@@ -1242,3 +1244,95 @@ class CheckPeriodIcon(Icon):
         elif what == "host":
             if row["%s_in_check_period" % what] == 0:
                 return "pause", _("This host is currently not being checked")
+
+
+# .
+#   .--robotmk-------------------------------------------------------------.
+#   |                        _           _             _                   |
+#   |              _ __ ___ | |__   ___ | |_ _ __ ___ | | __               |
+#   |             | '__/ _ \| '_ \ / _ \| __| '_ ` _ \| |/ /               |
+#   |             | | | (_) | |_) | (_) | |_| | | | | |   <                |
+#   |             |_|  \___/|_.__/ \___/ \__|_| |_| |_|_|\_\               |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+@icon_and_action_registry.register
+class RobotmkIcon(Icon):
+    @classmethod
+    def ident(cls) -> str:
+        return "robotmk"
+
+    @classmethod
+    def title(cls) -> str:
+        return _("Robot Framework: Last log")
+
+    def service_columns(self) -> List[str]:
+        return ["labels"]
+
+    def render(
+        self,
+        what: str,
+        row: Row,
+        tags: List[TagID],
+        custom_vars: Dict[str, str],
+    ) -> Union[None, str, HTML, Tuple[str, str], Tuple[str, str, str]]:
+        if not row.get("service_labels", {}).get("robotmk/html_last_log"):
+            return None
+
+        return (
+            "robotmk",
+            self.title(),
+            makeuri_contextless(
+                request,
+                [
+                    ("report_type", self.ident()),
+                    ("site", row["site"]),
+                    ("host", row["host_name"]),
+                    ("service", row["service_description"]),
+                ],
+                filename="robotmk.py",
+            ),
+        )
+
+
+@icon_and_action_registry.register
+class RobotmkErrorIcon(Icon):
+    @classmethod
+    def ident(cls) -> str:
+        return "robotmk_error"
+
+    @classmethod
+    def title(cls) -> str:
+        return _("Robot Framework: Last error log")
+
+    def service_columns(self) -> List[str]:
+        return ["labels"]
+
+    def render(
+        self,
+        what: str,
+        row: Row,
+        tags: List[TagID],
+        custom_vars: Dict[str, str],
+    ) -> Union[None, str, HTML, Tuple[str, str], Tuple[str, str, str]]:
+        if not row.get("service_labels", {}).get("robotmk/html_last_error_log"):
+            return None
+
+        return (
+            "robotmk_error",
+            self.title(),
+            makeuri_contextless(
+                request,
+                [
+                    ("report_type", self.ident()),
+                    ("site", row["site"]),
+                    ("host", row["host_name"]),
+                    ("service", row["service_description"]),
+                ],
+                filename="robotmk.py",
+            ),
+        )
+
+
+# .

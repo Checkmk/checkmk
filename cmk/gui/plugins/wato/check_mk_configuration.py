@@ -2606,6 +2606,9 @@ class ConfigVariableUseNewDescriptionsFor(ConfigVariable):
                     ("liebert_bat_temp", _("Liebert UPS Device: Temperature sensor")),
                     ("logwatch", _("Check logfiles for relevant new messages")),
                     ("logwatch_groups", _("Check logfile groups")),
+                    ("megaraid_pdisks", _("LSI MegaRAID: Physical Disks")),
+                    ("megaraid_pdisks", _("LSI MegaRAID: Logical Disks")),
+                    ("megaraid_pdisks", _("LSI MegaRAID: Battery Backup Unit")),
                     ("mem_used", _("Main memory usage (UNIX / Other Devices)")),
                     ("mem_win", _("Memory usage for %s hosts") % "Windows"),
                     ("mknotifyd", _("Notification Spooler")),
@@ -4386,7 +4389,7 @@ def _valuespec_metrics_node() -> _Tuple[str, ConfigHostname]:
         "metrics_node",
         ConfigHostname(
             title=_("Override automatic metric selection"),
-            label=_("Use Metrics of"),
+            label=_("Use metrics of"),
             help=_(
                 "Since all nodes yield metrics with the same name, Checkmk has to decide which "
                 "nodes' metrics to keep. By default, it will select the node that was crucial "

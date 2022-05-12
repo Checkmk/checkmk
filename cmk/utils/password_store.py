@@ -121,13 +121,13 @@ def replace_passwords() -> None:
         sys.argv[num_arg] = arg[:pos_in_arg] + password + arg[pos_in_arg + len(password) :]
 
 
-def save(stored_passwords: Mapping[str, str]) -> None:
+def save(stored_passwords: Mapping[str, str], custom_path: Optional[Path] = None) -> None:
     """Save the passwords to the pre-activation path"""
     content = ""
     for ident, pw in stored_passwords.items():
         content += "%s:%s\n" % (ident, pw)
 
-    store.save_bytes_to_file(password_store_path(), _obfuscate(content))
+    store.save_bytes_to_file(custom_path or password_store_path(), _obfuscate(content))
 
 
 def load() -> dict[str, str]:

@@ -1,6 +1,6 @@
 Title: oracle_jobs: correct usage of user-defined parameters for missing jobs
 Class: fix
-Compatible: comp
+Compatible: compat
 Component: checks
 Date: 1606721994
 Edition: cre

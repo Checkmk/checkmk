@@ -71,19 +71,12 @@ pub enum StatusError {
     CertificateInvalid,
 
     #[error(transparent)]
-    UnspecifiedError(#[from] AnyhowError),
+    Other(#[from] AnyhowError),
 }
 
-fn check_response_204(response: reqwest::blocking::Response) -> AnyhowResult<()> {
-    if let StatusCode::NO_CONTENT = response.status() {
-        Ok(())
-    } else {
-        Err(anyhow!(
-            "Request failed with code {}: {}",
-            response.status(),
-            response.text().unwrap_or_else(|_| String::from(""))
-        ))
-    }
+#[derive(Deserialize)]
+struct ErrorResponse {
+    pub detail: String,
 }
 
 fn encode_pem_cert_base64(cert: &str) -> AnyhowResult<String> {
@@ -127,9 +120,7 @@ pub trait AgentData {
     fn agent_data(
         &self,
         base_url: &reqwest::Url,
-        root_cert: &str,
-        uuid: &uuid::Uuid,
-        certificate: &str,
+        connection: &config::Connection,
         compression_algorithm: &str,
         monitoring_data: &[u8],
     ) -> AnyhowResult<()>;
@@ -139,13 +130,13 @@ pub trait Status {
     fn status(
         &self,
         base_url: &reqwest::Url,
-        root_cert: &str,
-        uuid: &uuid::Uuid,
-        certificate: &str,
+        connection: &config::Connection,
     ) -> Result<StatusResponse, StatusError>;
 }
 
-pub struct Api {}
+pub struct Api {
+    pub use_proxy: bool,
+}
 
 impl Api {
     fn endpoint_url(
@@ -163,6 +154,35 @@ impl Api {
             endpoint_segments.join(", ")
         ))
     }
+
+    fn error_response_description(status: StatusCode, body: Option<String>) -> String {
+        match body {
+            None => format!(
+                "Request failed with code {}, could not obtain response body",
+                status
+            ),
+            Some(body) => format!(
+                "Request failed with code {}: {}",
+                status,
+                match serde_json::from_str::<ErrorResponse>(&body) {
+                    Ok(error_response) => error_response.detail,
+                    _ => body,
+                }
+            ),
+        }
+    }
+
+    fn check_response_204(response: reqwest::blocking::Response) -> AnyhowResult<()> {
+        let status = response.status();
+        if status == StatusCode::NO_CONTENT {
+            Ok(())
+        } else {
+            Err(anyhow!(Api::error_response_description(
+                status,
+                response.text().ok()
+            )))
+        }
+    }
 }
 
 impl Pairing for Api {
@@ -173,21 +193,22 @@ impl Pairing for Api {
         csr: String,
         credentials: &types::Credentials,
     ) -> AnyhowResult<PairingResponse> {
-        let response = certs::client(root_cert)?
+        let response = certs::client(root_cert, None, self.use_proxy)?
             .post(Self::endpoint_url(base_url, &["pairing"])?)
             .basic_auth(&credentials.username, Some(&credentials.password))
             .json(&PairingBody { csr })
             .send()?;
         let status = response.status();
-        // Get the text() instead of directly calling json(), because both methods would consume the response.
-        // Otherwise, in case of a json parsing error, we would have no information about the body.
-        let body = response.text()?;
 
-        if let StatusCode::OK = status {
-            Ok(serde_json::from_str::<PairingResponse>(&body)
-                .context(format!("Error parsing this response body: {}", body))?)
+        if status == StatusCode::OK {
+            let body = response.text().context("Failed to obtain response body")?;
+            serde_json::from_str::<PairingResponse>(&body)
+                .context(format!("Error parsing this response body: {}", body))
         } else {
-            Err(anyhow!("Request failed with code {}: {}", status, body))
+            Err(anyhow!(Api::error_response_description(
+                status,
+                response.text().ok()
+            )))
         }
     }
 }
@@ -201,8 +222,8 @@ impl Registration for Api {
         uuid: &uuid::Uuid,
         host_name: &str,
     ) -> AnyhowResult<()> {
-        check_response_204(
-            certs::client(Some(root_cert))?
+        Api::check_response_204(
+            certs::client(Some(root_cert), None, self.use_proxy)?
                 .post(Self::endpoint_url(base_url, &["register_with_hostname"])?)
                 .basic_auth(&credentials.username, Some(&credentials.password))
                 .json(&RegistrationWithHNBody {
@@ -221,8 +242,8 @@ impl Registration for Api {
         uuid: &uuid::Uuid,
         agent_labels: &types::AgentLabels,
     ) -> AnyhowResult<()> {
-        check_response_204(
-            certs::client(Some(root_cert))?
+        Api::check_response_204(
+            certs::client(Some(root_cert), None, self.use_proxy)?
                 .post(Self::endpoint_url(base_url, &["register_with_labels"])?)
                 .basic_auth(&credentials.username, Some(&credentials.password))
                 .json(&RegistrationWithALBody {
@@ -238,30 +259,36 @@ impl AgentData for Api {
     fn agent_data(
         &self,
         base_url: &reqwest::Url,
-        root_cert: &str,
-        uuid: &uuid::Uuid,
-        certificate: &str,
+        connection: &config::Connection,
         compression_algorithm: &str,
         monitoring_data: &[u8],
     ) -> AnyhowResult<()> {
-        check_response_204(
-            certs::client(Some(root_cert))?
-                .post(Self::endpoint_url(
-                    base_url,
-                    &["agent_data", &uuid.to_string()],
-                )?)
-                .header("certificate", encode_pem_cert_base64(certificate)?)
-                .header("compression", compression_algorithm)
-                .multipart(
-                    reqwest::blocking::multipart::Form::new().part(
-                        "monitoring_data",
-                        reqwest::blocking::multipart::Part::bytes(monitoring_data.to_owned())
-                            // Note: We need to set the file name, otherwise the request won't have the
-                            // right format. However, the value itself does not matter.
-                            .file_name("agent_data"),
-                    ),
-                )
-                .send()?,
+        Api::check_response_204(
+            certs::client(
+                Some(&connection.root_cert),
+                Some(connection.identity()?),
+                self.use_proxy,
+            )?
+            .post(Self::endpoint_url(
+                base_url,
+                &["agent_data", &connection.uuid.to_string()],
+            )?)
+            .header(
+                // TODO: Remove this header once the agent receiver doesn't need it any longer
+                "certificate",
+                encode_pem_cert_base64(&connection.certificate)?,
+            )
+            .header("compression", compression_algorithm)
+            .multipart(
+                reqwest::blocking::multipart::Form::new().part(
+                    "monitoring_data",
+                    reqwest::blocking::multipart::Part::bytes(monitoring_data.to_owned())
+                        // Note: We need to set the file name, otherwise the request won't have the
+                        // right format. However, the value itself does not matter.
+                        .file_name("agent_data"),
+                ),
+            )
+            .send()?,
         )
     }
 }
@@ -270,33 +297,41 @@ impl Status for Api {
     fn status(
         &self,
         base_url: &reqwest::Url,
-        root_cert: &str,
-        uuid: &uuid::Uuid,
-        certificate: &str,
+        connection: &config::Connection,
     ) -> Result<StatusResponse, StatusError> {
-        let response = certs::client(Some(root_cert))?
+        let identity = match connection.identity() {
+            Ok(ident) => ident,
+            Err(_) => {
+                return Err(StatusError::Other(anyhow!(
+                    "Error loading client certificate"
+                )))
+            }
+        };
+        let response = certs::client(Some(&connection.root_cert), Some(identity), self.use_proxy)?
             .get(Self::endpoint_url(
                 base_url,
-                &["registration_status", &uuid.to_string()],
+                &["registration_status", &connection.uuid.to_string()],
             )?)
-            .header("certificate", encode_pem_cert_base64(certificate)?)
+            .header(
+                // TODO: Remove this header once the agent receiver doesn't need it any longer
+                "certificate",
+                encode_pem_cert_base64(&connection.certificate)?,
+            )
             .send()
             .map_err(StatusError::ConnectionRefused)?;
 
         match response.status() {
-            StatusCode::OK => Ok(serde_json::from_str::<StatusResponse>(
-                &response.text().context("Failed to obtain response body")?,
-            )
-            .context("Failed to deserialize response body")?),
+            StatusCode::OK => {
+                let body = response
+                    .text()
+                    .map_err(|_| StatusError::Other(anyhow!("Failed to obtain response body")))?;
+                Ok(serde_json::from_str::<StatusResponse>(&body)
+                    .context(format!("Failed to deserialize response body: {}", body))?)
+            }
             StatusCode::UNAUTHORIZED => Err(StatusError::CertificateInvalid),
-            _ => Err(StatusError::UnspecifiedError(anyhow!(format!(
-                "{}",
-                response
-                    .json::<serde_json::Value>()
-                    .context("Failed to deserialize response body to JSON")?
-                    .get("detail")
-                    .context("Unknown failure")?
-            )))),
+            _ => Err(StatusError::Other(anyhow!(
+                Api::error_response_description(response.status(), response.text().ok())
+            ))),
         }
     }
 }
@@ -316,5 +351,64 @@ mod test_api {
             .to_string(),
             "https://my_server:7766/site2/agent-receiver/some/endpoint"
         );
+    }
+
+    #[test]
+    fn test_error_response_description_body_missing() {
+        assert_eq!(
+            Api::error_response_description(StatusCode::INTERNAL_SERVER_ERROR, None,),
+            "Request failed with code 500 Internal Server Error, could not obtain response body"
+        )
+    }
+
+    #[test]
+    fn test_error_response_description_body_parsable() {
+        assert_eq!(
+            Api::error_response_description(
+                StatusCode::BAD_REQUEST,
+                Some(String::from("{\"detail\": \"Something went wrong\"}")),
+            ),
+            "Request failed with code 400 Bad Request: Something went wrong"
+        )
+    }
+
+    #[test]
+    fn test_error_response_description_body_not_parsable() {
+        assert_eq!(
+            Api::error_response_description(
+                StatusCode::NOT_FOUND,
+                Some(String::from("{\"detail\": {\"title\": \"whatever\"}}")),
+            ),
+            "Request failed with code 404 Not Found: {\"detail\": {\"title\": \"whatever\"}}"
+        )
+    }
+
+    #[test]
+    fn test_check_response_204_ok() {
+        assert!(Api::check_response_204(reqwest::blocking::Response::from(
+            http::Response::builder()
+                .status(StatusCode::NO_CONTENT)
+                .body("")
+                .unwrap(),
+        ))
+        .is_ok());
+    }
+
+    #[test]
+    fn test_check_response_204_error() {
+        match Api::check_response_204(reqwest::blocking::Response::from(
+            http::Response::builder()
+                .status(StatusCode::UNAUTHORIZED)
+                .body("{\"detail\": \"Insufficient permissions\"}")
+                .unwrap(),
+        )) {
+            Err(err) => {
+                assert_eq!(
+                    format!("{}", err),
+                    "Request failed with code 401 Unauthorized: Insufficient permissions"
+                )
+            }
+            _ => panic!("Expected an error"),
+        }
     }
 }

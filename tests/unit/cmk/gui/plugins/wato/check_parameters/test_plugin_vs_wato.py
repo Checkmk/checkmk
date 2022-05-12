@@ -271,7 +271,6 @@ class ErrorReporter:
         ("discovery", "discovery_netapp_api_fan_rules"),
         ("discovery", "discovery_netapp_api_ports_ignored"),
         ("discovery", "discovery_netapp_api_psu_rules"),
-        ("discovery", "discovery_systemd_units_services_rules"),
         ("discovery", "discovery_win_dhcp_pools"),
         ("discovery", "ewon_discovery_rules"),
         ("discovery", "inventory_df_rules"),
@@ -375,7 +374,6 @@ class ErrorReporter:
         ("check", "apc_symmetra_test", "checkgroup_parameters:ups_test"),
         ("check", "appdynamics_sessions", "checkgroup_parameters:jvm_sessions"),
         ("check", "appdynamics_web_container", "checkgroup_parameters:jvm_threads"),
-        ("check", "apt", "checkgroup_parameters:apt"),
         ("check", "avaya_88xx_cpu", "checkgroup_parameters:cpu_utilization"),
         (
             "check",

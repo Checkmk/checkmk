@@ -1,4 +1,4 @@
-$CMK_VERSION = "2.1.0b5"
+$CMK_VERSION = "2.1.0b9"
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
@@ -122,17 +122,17 @@ Function debug_echo {
 # filename for timestamp
 $MK_CONFDIR = $env:MK_CONFDIR
 
-# Fallback if the (old) agent does not provide the MK_CONFDIR
+# To execute the script standalone in the environment of the installed agent
 if (!$MK_CONFDIR) {
-     $MK_CONFDIR = "c:\Program Files (x86)\check_mk\config"
+     $MK_CONFDIR = "C:\ProgramData\checkmk\agent\config"
 }
 
 # directory for tempfiles
 $MK_TEMPDIR = $env:MK_TEMPDIR
 
-# Fallback if the (old) agent does not provide the MK_TEMPDIR
+# To execute the script standalone in the environment of the installed agent
 if (!$MK_TEMPDIR) {
-     $MK_TEMPDIR = "C:\Program Files (x86)\check_mk\temp"
+     $MK_TEMPDIR = "C:\ProgramData\checkmk\agent\tmp"
 }
 
 
@@ -2178,8 +2178,17 @@ if ($the_count -gt 0) {
           $inst.name = $inst.name.replace("OracleService", "")
           $inst_name = $inst.name.replace("OracleASMService", "")
           $ORACLE_SID = $inst_name
-          $key = 'HKLM:\SYSTEM\CurrentControlSet\services\OracleService' + $ORACLE_SID
-          $val = (Get-ItemProperty -Path $key).ImagePath
+
+          # in some environments HKLM:\SYSTEM\CurrentControlSet\services\OracleService{ORACLE_SID}
+          # wasn't present, see SUP-10065
+          try {
+              $key = 'HKLM:\SYSTEM\CurrentControlSet\services\OracleService' + $ORACLE_SID
+              $val = (Get-ItemProperty -Path $key).ImagePath
+          }
+          catch {
+              $key = 'HKLM:\SYSTEM\CurrentControlSet\services\OracleASMService' + $ORACLE_SID
+              $val = (Get-ItemProperty -Path $key).ImagePath
+          }
           $ORACLE_HOME = $val.SubString(0, $val.LastIndexOf('\') - 4)
 
           # reset errors found for this instance to zero

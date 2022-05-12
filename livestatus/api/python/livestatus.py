@@ -14,9 +14,26 @@ import socket
 import ssl
 import threading
 import time
+from dataclasses import dataclass, field
 from enum import Enum
+from functools import lru_cache
 from io import BytesIO
-from typing import Any, AnyStr, Dict, List, NewType, Optional, Pattern, Set, Tuple, Type, Union
+from typing import (
+    Any,
+    AnyStr,
+    Dict,
+    Iterator,
+    List,
+    NamedTuple,
+    NewType,
+    Optional,
+    Pattern,
+    Sequence,
+    Set,
+    Tuple,
+    Type,
+    Union,
+)
 
 # TODO: Find a better solution for this issue. Astroid 2.x bug prevents us from using NewType :(
 # (https://github.com/PyCQA/pylint/issues/2296)
@@ -277,6 +294,52 @@ class Helpers:
         return [sum(column) for column in zip(*data)]
 
 
+@lru_cache
+def get_livestatus_blob_columns() -> Set[LivestatusColumn]:
+    # These columns should get queried from the core
+    return {
+        "current_host_mk_inventory",
+        "current_host_mk_inventory_gz",
+        "current_host_structured_status",
+        "current_service_robotmk_last_error_log",
+        "current_service_robotmk_last_error_log_gz",
+        "current_service_robotmk_last_log",
+        "current_service_robotmk_last_log_gz",
+        "host_mk_inventory",
+        "host_mk_inventory_gz",
+        "host_structured_status",
+        "license_usage_history",
+        "mk_inventory",
+        "mk_inventory_gz",
+        "robotmk_last_error_log",
+        "robotmk_last_error_log_gz",
+        "robotmk_last_log",
+        "robotmk_last_log_gz",
+        "service_robotmk_last_error_log",
+        "service_robotmk_last_error_log_gz",
+        "service_robotmk_last_log",
+        "service_robotmk_last_log_gz",
+        "structured_status",
+    }
+
+
+@dataclass
+class QuerySpecification:
+    table: str
+    columns: Sequence[LivestatusColumn] = field(default_factory=list)
+    headers: str = ""
+
+    def __str__(self) -> str:
+        query = f"GET {self.table}\n"
+        if self.columns:
+            query += f"Columns: {' '.join(self.columns)}\n"
+        query += self.headers
+        return query
+
+    def supports_json_format(self) -> bool:
+        return not set(self.columns).intersection(get_livestatus_blob_columns())
+
+
 # TODO: Add more functionality to the Query class:
 # - set_prepend_site
 # - set_only_sites
@@ -294,20 +357,24 @@ class Query:
 
     def __init__(
         self,
-        query: Union[str, bytes],
+        query: Union[str, bytes, QuerySpecification],
         suppress_exceptions: Optional[Tuple[Type[Exception], ...]] = None,
     ) -> None:
-        super().__init__()
-
-        self._query = _ensure_unicode(query)
-
+        self._query = query
         if suppress_exceptions is None:
             self.suppress_exceptions = self.default_suppressed_exceptions
         else:
             self.suppress_exceptions = suppress_exceptions
 
     def __str__(self) -> str:
-        return self._query
+        if isinstance(self._query, QuerySpecification):
+            return str(self._query)
+        return _ensure_unicode(self._query)
+
+    def supports_json_format(self) -> bool:
+        if not isinstance(self._query, QuerySpecification):
+            return False
+        return self._query.supports_json_format()
 
 
 QueryTypes = Union[str, bytes, Query]
@@ -551,10 +618,17 @@ class SingleSiteConnection(Helpers):
 
         return data.getvalue()
 
-    def do_query(self, query_obj: Query, add_headers: str = "") -> LivestatusResponse:
-        query = self.build_query(query_obj, add_headers)
-        self.send_query(query)
-        return self.recv_response(query, query_obj.suppress_exceptions)
+    def do_query(self, query: Query, add_headers: str = "") -> LivestatusResponse:
+        with _livestatus_output_format_switcher(query, self):
+            str_query = self.build_query(query, add_headers)
+            self.send_query(str_query)
+            try:
+                return self.parse_raw_response(
+                    self.receive_raw_response(str_query, query.suppress_exceptions), query
+                )
+            except MKLivestatusQueryError:
+                self.disconnect()
+                raise
 
     def build_query(self, query_obj: Query, add_headers: str) -> str:
         query = str(query_obj)
@@ -598,12 +672,12 @@ class SingleSiteConnection(Helpers):
     # Reads a response from the livestatus socket. If the socket is closed
     # by the livestatus server, we automatically make a reconnect and send
     # the query again (once). This is due to timeouts during keepalive.
-    def recv_response(
+    def receive_raw_response(
         self,
         query: str,
         suppress_exceptions: Tuple[Type[Exception], ...],
         timeout_at: Optional[float] = None,
-    ) -> LivestatusResponse:
+    ) -> bytes:
         try:
             # Headers are always ASCII encoded
             resp = self.receive_data(16)
@@ -621,30 +695,19 @@ class SingleSiteConnection(Helpers):
             # in the socket. The liveproxyd (same system) has the complete data available
             # while the data from a standard connection can still take some time.
             # 30 seconds should be more than enough for the maximum telegram size of 100MB
-            data = self.receive_data(length, 30).decode("utf-8")
+            data = self.receive_data(length, 30)
 
             if code == "200":
-                try:
-                    if self._output_format == LivestatusOutputFormat.PYTHON:
-                        return ast.literal_eval(data)
+                return data
 
-                    if self._output_format == LivestatusOutputFormat.JSON:
-                        return json.loads(data)
+            error_info = data.decode("utf-8")
+            if code == "404":
+                raise MKLivestatusTableNotFoundError("Not Found (%s): %r" % (code, error_info))
 
-                    raise MKLivestatusQueryError("Unknown OutputFormat %r" % self._output_format)
+            if code == "502":
+                raise MKLivestatusBadGatewayError(error_info)
 
-                except (ValueError, SyntaxError):
-                    self.disconnect()
-                    raise MKLivestatusSocketError("Malformed output")
-
-            elif code == "404":
-                raise MKLivestatusTableNotFoundError("Not Found (%s): %s" % (code, data.strip()))
-
-            elif code == "502":
-                raise MKLivestatusBadGatewayError(data.strip())
-
-            else:
-                raise MKLivestatusQueryError("%s: %s" % (code, data.strip()))
+            raise MKLivestatusQueryError("%s: %s" % (code, error_info))
 
         except (MKLivestatusSocketClosed, IOError) as e:
             # In case of an IO error or the other side having
@@ -671,7 +734,7 @@ class SingleSiteConnection(Helpers):
                 self.connect()
                 self.send_query(query)
                 # do not send query again -> danger of infinite loop
-                return self.recv_response(query, suppress_exceptions, timeout_at)
+                return self.receive_raw_response(query, suppress_exceptions, timeout_at)
             raise MKLivestatusSocketError(str(e))
 
         except suppress_exceptions:
@@ -683,6 +746,15 @@ class SingleSiteConnection(Helpers):
             # MKLivestatusSocketError
             # FIXME: ? self.disconnect()
             raise MKLivestatusSocketError("Unhandled exception: %s" % e)
+
+    def parse_raw_response(self, raw_response: bytes, query: Query) -> LivestatusResponse:
+        data = raw_response.decode("utf-8")
+        try:
+            if query.supports_json_format():
+                return json.loads(data)
+            return ast.literal_eval(data)
+        except (ValueError, SyntaxError):
+            raise MKLivestatusQueryError("Malformed raw response output")
 
     def set_prepend_site(self, p: bool) -> None:
         self.prepend_site = p
@@ -700,7 +772,6 @@ class SingleSiteConnection(Helpers):
         self.limit = limit
 
     def query(self, query: "QueryTypes", add_headers: Union[str, bytes] = "") -> LivestatusResponse:
-
         # Normalize argument types
         normalized_add_headers = _ensure_unicode(add_headers)
         normalized_query = Query(query) if not isinstance(query, Query) else query
@@ -773,6 +844,15 @@ class SingleSiteConnection(Helpers):
 # it possible to connect/disconnect while an object is instantiated.
 
 
+class ConnectedSite(NamedTuple):
+    id: SiteId
+    config: SiteConfiguration
+    connection: SingleSiteConnection
+
+
+ConnectedSites = List[ConnectedSite]
+
+
 class MultiSiteConnection(Helpers):
     def __init__(
         self, sites: SiteConfigurations, disabled_sites: Optional[SiteConfigurations] = None
@@ -781,7 +861,7 @@ class MultiSiteConnection(Helpers):
             disabled_sites = {}
 
         self.sites = sites
-        self.connections: List[Tuple[SiteId, SiteConfiguration, SingleSiteConnection]] = []
+        self.connections: ConnectedSites = []
         self.deadsites: Dict[SiteId, DeadSite] = {}
         self.prepend_site = False
         self.only_sites: OnlySites = None
@@ -837,7 +917,7 @@ class MultiSiteConnection(Helpers):
             else:
                 try:
                     connection = self.connect_to_site(sitename, site)
-                    self.connections.append((sitename, site, connection))
+                    self.connections.append(ConnectedSite(sitename, site, connection))
                 except Exception as e:
                     self.deadsites[sitename] = {
                         "exception": e,
@@ -882,7 +962,7 @@ class MultiSiteConnection(Helpers):
                 if shs == 0 or shs is None:
                     try:
                         connection = self.connect_to_site(sitename, site)
-                        self.connections.append((sitename, site, connection))
+                        self.connections.append(ConnectedSite(sitename, site, connection))
                     except Exception as e:
                         self.deadsites[sitename] = {
                             "exception": e,
@@ -932,22 +1012,22 @@ class MultiSiteConnection(Helpers):
         return connection
 
     def disconnect(self) -> None:
-        for _name, _site, connection in self.connections:
-            connection.disconnect()
+        for connected_site in self.connections:
+            connected_site.connection.disconnect()
         self.connections.clear()
 
     # Needed for temporary connection for status_hosts in disabled sites
     def _disconnect_site(self, sitename: SiteId) -> None:
         i = 0
-        for name, _site, _connection in self.connections:
-            if name == sitename:
+        for connected_site in self.connections:
+            if connected_site.id == sitename:
                 del self.connections[i]
                 return
             i += 1
 
     def add_header(self, header: str) -> None:
-        for _sitename, _site, connection in self.connections:
-            connection.add_header(header)
+        for connected_site in self.connections:
+            connected_site.connection.add_header(header)
 
     def set_prepend_site(self, p: bool) -> None:
         self.prepend_site = p
@@ -968,70 +1048,70 @@ class MultiSiteConnection(Helpers):
         return self.deadsites
 
     def alive_sites(self) -> List[SiteId]:
-        return [s[0] for s in self.connections]
+        return [s.id for s in self.connections]
 
     def successfully_persisted(self) -> bool:
-        for _sitename, _site, connection in self.connections:
-            if connection.successfully_persisted():
+        for connected_site in self.connections:
+            if connected_site.connection.successfully_persisted():
                 return True
         return False
 
     def set_output_format(self, output_format: LivestatusOutputFormat):
-        for _sitename, _site, connection in self.connections:
-            connection.set_output_format(output_format)
+        for connected_site in self.connections:
+            connected_site.connection.set_output_format(output_format)
 
     def get_output_format(self) -> LivestatusOutputFormat:
         # Since all connections share the same output format, simple return the first connection
         if not self.connections:
             return LivestatusOutputFormat.PYTHON
-        return self.connections[0][2].get_output_format()
+        return self.connections[0].connection.get_output_format()
 
     def set_auth_user(self, domain: str, user: UserId) -> None:
-        for _sitename, _site, connection in self.connections:
-            connection.set_auth_user(domain, user)
+        for connected_site in self.connections:
+            connected_site.connection.set_auth_user(domain, user)
 
     def set_auth_domain(self, domain: str) -> None:
-        for _sitename, _site, connection in self.connections:
-            connection.set_auth_domain(domain)
+        for connected_site in self.connections:
+            connected_site.connection.set_auth_domain(domain)
 
     def query(self, query: "QueryTypes", add_headers: Union[str, bytes] = "") -> LivestatusResponse:
-
         # Normalize argument types
         normalized_add_headers = _ensure_unicode(add_headers)
         normalized_query = Query(query) if not isinstance(query, Query) else query
 
-        if self.parallelize:
-            return self.query_parallel(normalized_query, normalized_add_headers)
-        return self.query_non_parallel(normalized_query, normalized_add_headers)
+        with _livestatus_output_format_switcher(normalized_query, self):
+            if self.parallelize:
+                return self.query_parallel(normalized_query, normalized_add_headers)
+            return self.query_non_parallel(normalized_query, normalized_add_headers)
 
     def query_non_parallel(self, query: Query, add_headers: str = "") -> LivestatusResponse:
         result = LivestatusResponse([])
         stillalive = []
         limit = self.limit
-        for sitename, site, connection in self.connections:
-            if self.only_sites is not None and sitename not in self.only_sites:
-                stillalive.append((sitename, site, connection))  # state unknown, assume still alive
+        for connected_site in self.connections:
+            if self.only_sites is not None and connected_site.id not in self.only_sites:
+                stillalive.append(connected_site)  # state unknown, assume still alive
                 continue
             try:
                 if limit is not None:
                     limit_header = "Limit: %d\n" % limit
                 else:
                     limit_header = ""
-                r = connection.query(query, add_headers + limit_header)
+                r = connected_site.connection.query(query, add_headers + limit_header)
                 if self.prepend_site:
                     for row in r:
-                        row.insert(0, sitename)
+                        row.insert(0, connected_site.id)
                 if limit is not None:
                     limit -= len(r)  # Account for portion of limit used by this site
                 result += r
-                stillalive.append((sitename, site, connection))
+                stillalive.append(connected_site)
             except LivestatusTestingError:
                 raise
             except Exception as e:
-                connection.disconnect()
-                self.deadsites[sitename] = {
+                connected_site.connection.disconnect()
+                self.deadsites[connected_site.id] = {
                     "exception": e,
-                    "site": site,
+                    "site": connected_site.config,
                 }
         self.connections = stillalive
         return result
@@ -1055,40 +1135,65 @@ class MultiSiteConnection(Helpers):
             limit_header = ""
 
         # First send all queries
-        for sitename, site, connection in connect_to_sites:
+        retrieve_responses: List[Tuple[str, ConnectedSite]] = []
+        for connected_site in connect_to_sites:
             try:
-                str_query = connection.build_query(query, add_headers + limit_header)
-                connection.send_query(str_query)
+                str_query = connected_site.connection.build_query(query, add_headers + limit_header)
+                connected_site.connection.send_query(str_query)
+                retrieve_responses.append((str_query, connected_site))
             except LivestatusTestingError:
                 raise
             except Exception as e:
-                self.deadsites[sitename] = {
+                self.deadsites[connected_site.id] = {
                     "exception": e,
-                    "site": site,
+                    "site": connected_site.config,
                 }
 
-        # Then retrieve all answers. We will be as slow as the slowest of all
-        # connections.
-        result = LivestatusResponse([])
-        for sitename, site, connection in connect_to_sites:
+        # Then retrieve all raw responses. We will be as slow as the slowest of all connections.
+        site_responses: List[Tuple[ConnectedSite, bytes]] = []
+        for str_query, connected_site in retrieve_responses:
             try:
-                str_query = connection.build_query(query, add_headers + limit_header)
-                r = connection.recv_response(str_query, query.suppress_exceptions)
-                stillalive.append((sitename, site, connection))
-                if self.prepend_site:
-                    for row in r:
-                        row.insert(0, sitename)
-                result += r
+                site_responses.append(
+                    (
+                        connected_site,
+                        connected_site.connection.receive_raw_response(
+                            str_query, query.suppress_exceptions
+                        ),
+                    )
+                )
             except query.suppress_exceptions:
-                stillalive.append((sitename, site, connection))
+                # Mostly handles exception types MKLivestatusTableNotFoundError
+                stillalive.append(connected_site)
                 continue
             except LivestatusTestingError:
                 raise
             except Exception as e:
-                connection.disconnect()
-                self.deadsites[sitename] = {
+                connected_site.connection.disconnect()
+                self.deadsites[connected_site.id] = {
                     "exception": e,
-                    "site": site,
+                    "site": connected_site.config,
+                }
+
+        # Convert responses to python format
+        result = LivestatusResponse([])
+        for connected_site, raw_response in site_responses:
+            try:
+                rows = connected_site.connection.parse_raw_response(raw_response, query)
+                stillalive.append(connected_site)
+                if self.prepend_site:
+                    for row in rows:
+                        row.insert(0, connected_site.id)
+                result.extend(rows)
+            except query.suppress_exceptions:
+                stillalive.append(connected_site)
+                continue
+            except LivestatusTestingError:
+                raise
+            except Exception as e:
+                connected_site.connection.disconnect()
+                self.deadsites[connected_site.id] = {
+                    "exception": e,
+                    "site": connected_site.config,
                 }
 
         self.connections = stillalive
@@ -1121,6 +1226,19 @@ class MultiSiteConnection(Helpers):
             if this_site_id == site_id:
                 return connection
         raise KeyError("Connection does not exist")
+
+
+@contextlib.contextmanager
+def _livestatus_output_format_switcher(
+    query: Query, connection: Union[MultiSiteConnection, SingleSiteConnection]
+) -> Iterator[None]:
+    previous_format = connection.get_output_format()
+    try:
+        if query.supports_json_format():
+            connection.set_output_format(LivestatusOutputFormat.JSON)
+        yield
+    finally:
+        connection.set_output_format(previous_format)
 
 
 # .

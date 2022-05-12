@@ -126,7 +126,10 @@ function update(handler_data, response) {
     utils.execute_javascript_by_object(container);
 
     if (response.pending_changes_info) {
-        utils.update_pending_changes(response.pending_changes_info);
+        utils.update_pending_changes(
+            response.pending_changes_info,
+            response.pending_changes_tooltip
+        );
     }
 
     // Also execute delayed active checks once to trigger delayed checks that are initially visible.

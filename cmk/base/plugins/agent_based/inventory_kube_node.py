@@ -20,9 +20,16 @@ def inventory_kube_node(
     if section_kube_node_info is None or section_kube_node_kubelet is None:
         return
     yield Attributes(
+        path=["software", "applications", "kube", "metadata"],
+        inventory_attributes={
+            "object": "Node",
+            "name": section_kube_node_info.name,
+        },
+    )
+
+    yield Attributes(
         path=["software", "applications", "kube", "node"],
         inventory_attributes={
-            "name": section_kube_node_info.name,
             "operating_system": section_kube_node_info.operating_system,
             "os_image": section_kube_node_info.os_image,
             "kernel_version": section_kube_node_info.kernel_version,

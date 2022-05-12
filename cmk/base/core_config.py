@@ -19,6 +19,7 @@ from typing import (
     Iterable,
     Iterator,
     List,
+    Literal,
     Optional,
     Sequence,
     Tuple,
@@ -398,8 +399,12 @@ def _verify_non_deprecated_checkgroups() -> None:
                 "by any check plugin. Maybe this check group has been renamed during an update, "
                 "in this case you will have to migrate your configuration to the new ruleset manually. "
                 "Please check out the release notes of the involved versions. "
-                'You may use the page "Deprecated rules" in the "Rule search" to view your rules'
-                "and move them to the new rulesets." % checkgroup
+                'You may use the page "Deprecated rules" in the "Rule search" to view your rules '
+                "and move them to the new rulesets. "
+                "If this is not the case, the rules could be related to a disabled or removed "
+                "extension package (mkp). You would have to enable/upload the corresponding package "
+                "and remove the related rules before disabling/removing the package again."
+                % checkgroup
             )
 
 
@@ -596,6 +601,20 @@ def _extra_service_attributes(
 #   +----------------------------------------------------------------------+
 #   | Managing of host attributes                                          |
 #   '----------------------------------------------------------------------'
+def _set_addresses(
+    attrs: ObjectAttributes,
+    addresses: Optional[List[HostAddress]],
+    what: Literal["4", "6"],
+) -> None:
+    key_base = f"_ADDRESSES_{what}"
+    if not addresses:
+        # If other addresses are not available, set to empty string in order to avoid unresolved macros
+        attrs[key_base] = ""
+        return
+    attrs[key_base] = " ".join(addresses)
+    for nr, address in enumerate(addresses):
+        key = f"{key_base}_{nr + 1}"
+        attrs[key] = address
 
 
 def get_host_attributes(hostname: HostName, config_cache: ConfigCache) -> ObjectAttributes:
@@ -639,17 +658,8 @@ def get_host_attributes(hostname: HostName, config_cache: ConfigCache) -> Object
         attrs["_ADDRESS_FAMILY"] = "4"
 
     add_ipv4addrs, add_ipv6addrs = host_config.additional_ipaddresses
-    if add_ipv4addrs:
-        attrs["_ADDRESSES_4"] = " ".join(add_ipv4addrs)
-        for nr, ipv4_address in enumerate(add_ipv4addrs):
-            key = "_ADDRESS_4_%s" % (nr + 1)
-            attrs[key] = ipv4_address
-
-    if add_ipv6addrs:
-        attrs["_ADDRESSES_6"] = " ".join(add_ipv6addrs)
-        for nr, ipv6_address in enumerate(add_ipv6addrs):
-            key = "_ADDRESS_6_%s" % (nr + 1)
-            attrs[key] = ipv6_address
+    _set_addresses(attrs, add_ipv4addrs, "4")
+    _set_addresses(attrs, add_ipv6addrs, "6")
 
     # Add the optional WATO folder path
     path = config.host_paths.get(hostname)

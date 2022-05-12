@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
@@ -71,6 +70,11 @@ def check_mailboxes(args: Args) -> CheckResult:
     args.fetch_password = args.fetch_password or getpass()
     if args.fetch_protocol == "POP3":
         raise RuntimeError("check_mailboxes does not operate on POP servers, sorry.")
+    if type(args.crit_age_newest) is not type(args.warn_age_newest):
+        raise RuntimeError("--warn-age-newest and --crit-age-newest must be provided together")
+    if type(args.crit_age_oldest) is not type(args.warn_age_oldest):
+        raise RuntimeError("--warn-age-oldest and --crit-age-oldest must be provided together")
+
     socket.setdefaulttimeout(args.connect_timeout)
     status_icon = {0: "", 1: "(!) ", 2: "(!!) "}
     messages = []
@@ -107,57 +111,47 @@ def check_mailboxes(args: Args) -> CheckResult:
                     )
                 )
 
-            if args.crit_age_oldest and args.warn_age_oldest:
+            if args.crit_age_oldest is not None and args.warn_age_oldest is not None:
                 old_mails = sorted(mailbox.mails_by_date(before=now - args.warn_age_oldest))
-                if old_mails:
-                    oldest = now - old_mails[0]
-                    status = (
-                        2
-                        if oldest >= args.crit_age_oldest
-                        else 1
-                        if oldest >= args.warn_age_oldest
-                        else 0
-                    )
-                    if status > 0:
-                        messages.append(
-                            (
-                                status,
-                                "oldest mail in %r is at least %s old %s(warn/crit at %s/%s)"
-                                % (
-                                    folder,
-                                    cmk.utils.render.Age(oldest),
-                                    status_icon[status],
-                                    cmk.utils.render.Age(args.warn_age_oldest),
-                                    cmk.utils.render.Age(args.crit_age_oldest),
-                                ),
-                            )
-                        )
-
-            if args.crit_age_newest and args.warn_age_newest:
-                new_mails = sorted(mailbox.mails_by_date(after=(now - args.crit_age_newest)))
-                # crit per default in case there are no new mails
-                status, newest = 2, args.crit_age_newest
-                if new_mails:
-                    newest = now - new_mails[-1]
-                    status = (
-                        2
-                        if newest >= args.crit_age_newest
-                        else 1
-                        if newest >= args.warn_age_newest
-                        else 0
-                    )
-                if status > 0:
+                logging.debug("timestamps fetched from folder %r: %s", folder, old_mails)
+                if old_mails and (oldest := now - old_mails[0]) >= args.warn_age_oldest:
+                    status = 2 if oldest >= args.crit_age_oldest else 1
                     messages.append(
                         (
                             status,
-                            "newest mail in %r is at least %s old %s(warn/crit at %s/%s)"
-                            % (
-                                folder,
-                                cmk.utils.render.Age(newest),
-                                status_icon[status],
-                                cmk.utils.render.Age(args.warn_age_newest),
-                                cmk.utils.render.Age(args.crit_age_newest),
-                            ),
+                            f"Oldest mail in {folder!r} is at least "
+                            f"{cmk.utils.render.Age(oldest)} old "
+                            f"{status_icon[status]}"
+                            f"(warn/crit at {cmk.utils.render.Age(args.warn_age_oldest)}"
+                            f"/{cmk.utils.render.Age(args.crit_age_oldest)})",
+                        )
+                    )
+
+            if args.crit_age_newest is not None and args.warn_age_newest is not None:
+                new_mails = sorted(mailbox.mails_by_date(after=(now - args.crit_age_newest)))
+                logging.debug("timestamps fetched from folder %r: %s", folder, new_mails)
+
+                if new_mails and (newest := now - new_mails[-1]) >= args.warn_age_newest:
+                    status = 2 if newest >= args.crit_age_newest else 1
+                    messages.append(
+                        (
+                            status,
+                            f"Newest mail in {folder!r} is at least "
+                            f"{cmk.utils.render.Age(newest)} old "
+                            f"{status_icon[status]}"
+                            f"(warn/crit at {cmk.utils.render.Age(args.warn_age_newest)}"
+                            f"/{cmk.utils.render.Age(args.crit_age_newest)})",
+                        )
+                    )
+                elif not new_mails:
+                    # crit in case there are no new mails
+                    status = 2
+                    messages.append(
+                        (
+                            status,
+                            f"No new mails found in {folder!r} {status_icon[status]}"
+                            f"(warn/crit at {cmk.utils.render.Age(args.warn_age_newest)}"
+                            f"/{cmk.utils.render.Age(args.crit_age_newest)})",
                         )
                     )
 

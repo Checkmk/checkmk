@@ -1,0 +1,20 @@
+Title: Agent controller on Unix: Deny registration if agent socket is not operational
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1650637258
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b9
+
+Upon startup, the agent controller (<tt>cmk-agent-ctl</tt>) now checks if the
+agent socket is operational on Unix systems. If not, we refuse the agent
+registration (subcommands <tt>register</tt>, <tt>import</tt>), because a non-
+operational socket can hint at <tt>xinetd</tt> systems. On such systems, a
+successful registration would mislead the user into believing that the agent
+communication is now TLS-encrypted, which is not the case.
+
+Furthermore, the operational status of the agent socket is also reported by
+the <tt>status</tt> subcommand.

@@ -29,6 +29,7 @@ from .utils_inventory import sort_inventory_result
                 name="minikube",
                 creation_timestamp=1640000000.0,
                 labels={},
+                annotations={},
                 addresses=[
                     NodeAddress(type_="Hostname", address="k8-21"),
                     NodeAddress(type_="ExternalIP", address="10.200.3.21"),
@@ -42,9 +43,15 @@ from .utils_inventory import sort_inventory_result
             ),
             [
                 Attributes(
+                    path=["software", "applications", "kube", "metadata"],
+                    inventory_attributes={
+                        "object": "Node",
+                        "name": "minikube",
+                    },
+                ),
+                Attributes(
                     path=["software", "applications", "kube", "node"],
                     inventory_attributes={
-                        "name": "minikube",
                         "operating_system": "linux",
                         "os_image": "Ubuntu 20.04.2 LTS",
                         "kernel_version": "5.13.0-27-generic",

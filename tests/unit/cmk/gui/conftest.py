@@ -7,10 +7,8 @@
 # pylint: disable=redefined-outer-name
 from __future__ import annotations
 
-import ast
 import json
 import threading
-import urllib.parse
 from contextlib import contextmanager
 from http.cookiejar import CookieJar
 from typing import Any, Dict, Iterator, Literal, NamedTuple, Optional
@@ -25,6 +23,7 @@ from mock import MagicMock
 from tests.testlib.users import create_and_destroy_user
 
 import cmk.utils.log
+from cmk.utils.plugin_loader import load_plugins_with_exceptions
 from cmk.utils.type_defs import UserId
 
 import cmk.gui.config as config_module
@@ -96,6 +95,16 @@ def load_plugins() -> None:
     main_modules.load_plugins()
     if errors := get_failed_plugins():
         raise Exception(f"The following errors occured during plugin loading: {errors}")
+
+    # our test environment does not deal with namespace packages properly.
+    # Load plus plugins explicitly:
+    try:
+        load_plugins = list(load_plugins_with_exceptions("plus.cmk.gui.plugins"))
+    except ModuleNotFoundError:
+        pass
+    else:
+        for _plugin, exception in load_plugins:
+            raise exception
 
 
 @pytest.fixture(name="patch_json", autouse=True)
@@ -210,7 +219,7 @@ class WebTestAppForCMK(webtest.TestApp):
     def __init__(self, *args, **kw) -> None:
         super().__init__(*args, **kw)
         self.username: Optional[str] = None
-        self.password: Optional[str]= None
+        self.password: Optional[str] = None
 
     def set_credentials(self, username, password) -> None:
         self.username = username
@@ -247,39 +256,6 @@ class WebTestAppForCMK(webtest.TestApp):
                 params["content_type"] = "application/json"
             resp = self.call_method(link["method"], link["href"], **params)
         return resp
-
-    def api_request(self, action, request, output_format="json", **kw):
-        if self.username is None or self.password is None:
-            raise RuntimeError("Not logged in.")
-        qs = urllib.parse.urlencode(
-            [
-                ("_username", self.username),
-                ("_secret", self.password),
-                ("request_format", output_format),
-                ("action", action),
-            ]
-        )
-        if output_format == "python":
-            request = repr(request)
-        elif output_format == "json":
-            request = json.dumps(request)
-        else:
-            raise NotImplementedError("Format %s not implemented" % output_format)
-
-        _resp = self.call_method(
-            "post",
-            "/NO_SITE/check_mk/webapi.py?" + qs,
-            params={"request": request, "_username": self.username, "_secret": self.password},
-            **kw,
-        )
-        assert "Invalid automation secret for user" not in _resp.body
-        assert "API is only available for automation users" not in _resp.body
-
-        if output_format == "python":
-            return ast.literal_eval(_resp.body)
-        if output_format == "json":
-            return json.loads(_resp.body)
-        raise NotImplementedError("Format %s not implemented" % output_format)
 
     @contextmanager
     def set_config(self, **kwargs: Any) -> Iterator[None]:

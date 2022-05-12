@@ -214,6 +214,45 @@ from cmk.base.plugins.agent_based.wmi_cpuload import check_wmi_cpuload, parse_wm
             [
                 ["[system_perf]"],
                 [
+                    "Name",
+                    "ProcessorQueueLength",
+                    "Timestamp_PerfTime",
+                    "Frequency_PerfTime",
+                    "WMIStatus",
+                ],
+                [
+                    "",
+                    "0",
+                    "957584259508",
+                    "10000000",
+                    "OK",
+                ],
+                ["[computer_system]"],
+                [
+                    "Name",
+                    "NumberOfLogicalProcessors",
+                    "NumberOfProcessors",
+                    "WMIStatus",
+                ],
+                [
+                    "SERG-DELL",
+                    "16",
+                    "",
+                    "OK",
+                ],
+            ],
+            Section(
+                load=0,
+                timestamp=95758.4259508,
+                processor_type=ProcessorType.logical,
+                n_cores=16,
+            ),
+            id="perf case 1",
+        ),
+        pytest.param(
+            [
+                ["[system_perf]"],
+                [
                     "AlignmentFixupsPersec",
                     "Caption",
                     "ContextSwitchesPersec",

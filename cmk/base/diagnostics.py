@@ -290,7 +290,12 @@ class OMDConfigCollector(ABCCollector):
 
 class CheckmkServerNameCollector(ABCCollector):
     def _collect_infos(self) -> Optional[HostName]:
-        query = "GET hosts\nColumns: host_name\nFilter: host_labels = 'cmk/check_mk_server' 'yes'\n"
+        query = (
+            "GET services\nColumns: host_name\nFilter: service_description ~ OMD %s performance\n"
+            % omd_site()
+        )
+        result = livestatus.LocalConnection().query(query)
+
         result = livestatus.LocalConnection().query(query)
         try:
             return HostName(result[0][0])
@@ -809,7 +814,7 @@ class PerformanceGraphsDiagnosticsElement(ABCDiagnosticsElement):
             ]
         )
 
-        return requests.post(url, verify=False)  # nosec
+        return requests.post(url)
 
     def _get_automation_secret(self) -> str:
         automation_secret_filepath = Path(cmk.utils.paths.var_dir).joinpath(

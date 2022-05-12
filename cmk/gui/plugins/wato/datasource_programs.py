@@ -565,6 +565,10 @@ rulespec_registry.register(
 )
 
 
+###########################################################################
+# NOTE: _transform_kubernetes_connection_params is deprecated and will be
+#       removed in Checkmk version 2.2.
+###########################################################################
 def _transform_kubernetes_connection_params(value):
     """Check_mk version 2.0: rework input of connection paramters to improve intuitive use.
     Note that keys are removed from the parameters dictionary!
@@ -650,6 +654,10 @@ def _filter_kubernetes_namespace_element():
     )
 
 
+###########################################################################
+# NOTE: _valuespec_special_agents_kubernetes is deprecated and will be
+#       removed in Checkmk version 2.2.
+###########################################################################
 def _valuespec_special_agents_kubernetes():
     return Transform(
         Dictionary(
@@ -761,6 +769,10 @@ def _valuespec_special_agents_kubernetes():
     )
 
 
+###########################################################################
+# NOTE: special_agents:kubernetes is deprecated and will be
+#       removed in Checkmk version 2.2.
+###########################################################################
 rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupVMCloudContainer,
@@ -903,6 +915,7 @@ def _valuespec_special_agents_kube():
                         ("deployments", _("Deployments")),
                         ("daemonsets", _("DaemonSets")),
                         ("statefulsets", _("StatefulSets")),
+                        ("namespaces", _("Namespaces")),
                         ("nodes", _("Nodes")),
                         ("pods", _("Pods")),
                         ("cronjobs_pods", _("Pods of CronJobs")),
@@ -911,6 +924,7 @@ def _valuespec_special_agents_kube():
                         "deployments",
                         "daemonsets",
                         "statefulsets",
+                        "namespaces",
                         "nodes",
                         "pods",
                     ],
@@ -977,8 +991,83 @@ def _valuespec_special_agents_kube():
                     ),
                 ),
             ),
+            (
+                "cluster-resource-aggregation",
+                CascadingDropdown(
+                    title=("Cluster resource aggregation"),
+                    choices=[
+                        (
+                            "cluster-aggregation-exclude-node-roles",
+                            _("Exclude Nodes based on their role"),
+                            ListOf(
+                                valuespec=RegExp(
+                                    mode=RegExp.infix,
+                                    allow_empty=False,
+                                    size=50,
+                                ),
+                                add_label=_("Add new role"),
+                                allow_empty=True,
+                                movable=False,
+                                default_value=["control-plane", "infra"],
+                            ),
+                        ),
+                        ("cluster-aggregation-include-all-nodes", _("Include all Nodes"), None),
+                    ],
+                    orientation="horizontal",
+                    help=_(
+                        "You may find that some Nodes don't add resources to the overall "
+                        "workload your Cluster can handle. This option allows you to remove "
+                        "Nodes from aggregations on the Cluster host based on their role. A "
+                        "node will be omitted, if any of the listed {role}s matches a label "
+                        "with name 'node-role.kubernetes.io/{role}'.  This affects the "
+                        "following services: Memory resources, CPU resources, Pod resources. "
+                        "Only Services on the Cluster host are affected. By default, Nodes "
+                        "with role control-plane and infra are omitted.",
+                    ),
+                ),
+            ),
+            (
+                "import-annotations",
+                CascadingDropdown(
+                    title=("Import annotations as host labels"),
+                    choices=[
+                        (
+                            "include-matching-annotations-as-host-labels",
+                            _("Filter valid annotations by key pattern"),
+                            RegExp(
+                                mode=RegExp.infix,
+                                allow_empty=False,
+                                default_value="checkmk-monitoring$",
+                                size=50,
+                            ),
+                        ),
+                        (
+                            "include-annotations-as-host-labels",
+                            _("Import all valid annotations"),
+                            None,
+                        ),
+                    ],
+                    orientation="horizontal",
+                    help=_(
+                        "By default, Checkmk does not imports annotations. If "
+                        "this option is enabled, Checkmk will import any "
+                        "annotation that is a valid Kubernetes label. These "
+                        "imported annotations are added as host labels to their "
+                        "respective piggyback host using the syntax "
+                        "'cmk/kubernetes/annotation/{key}:{value}'. You can "
+                        "further restrict the imported annotations by specifying "
+                        "a pattern which Checkmk searches for in the key of the "
+                        "annotation."
+                    ),
+                ),
+            ),
         ],
-        optional_keys=["namespaces", "cluster-collector"],
+        optional_keys=[
+            "namespaces",
+            "cluster-collector",
+            "cluster-resource-aggregation",
+            "import-annotations",
+        ],
         default_keys=["cluster-collector"],
         title=_("Kubernetes"),
     )

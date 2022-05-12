@@ -1,0 +1,13 @@
+Title: Fix SyntaxError on CSV and JSON export of views containing labels
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1650363253
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b6
+
+If you exported a view with label painters via "Export CSV" or "Export JSON" or
+the URL parameter "output_format=json" or "output_format=csv", the created file
+only contained a SyntaxError.

@@ -31,10 +31,12 @@ DomainType = Literal[
     "bi_pack",
     "bi_rule",
     "contact_group_config",
+    "discovery_run",
     "downtime",
     "folder_config",
     "host",
     "host_config",
+    "host_config_internal",
     "hostgroup",
     "host_group_config",
     "host_tag_group",
@@ -60,6 +62,7 @@ CmkEndpointName = Literal[
     "cmk/bake_and_sign",
     "cmk/cancel",
     "cmk/bulk_create",
+    "cmk/bulk_discovery",
     "cmk/bulk_update",
     "cmk/create",
     "cmk/create_host",
@@ -391,6 +394,7 @@ ParameterKey = Tuple[str, ...]
 StatusCodeInt = Literal[
     200, 204, 301, 302, 400, 401, 403, 404, 405, 406, 409, 412, 415, 422, 423, 428
 ]
+ErrorStatusCodeInt = Literal[400, 401, 403, 404, 405, 406, 409, 412, 415, 422, 423, 428, 500]
 StatusCode = Literal[
     "200",
     "204",

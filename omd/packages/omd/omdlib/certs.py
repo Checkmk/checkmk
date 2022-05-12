@@ -57,6 +57,6 @@ class CertificateAuthority:
         """Creates the key / certificate for the given Check_MK site"""
         self.root_ca.save_new_signed_cert(self._site_certificate_path(site_id), site_id, days_valid)
 
-    def create_agent_receiver_certificate(self, days_valid: int) -> None:
+    def create_agent_receiver_certificate(self, site_id: str, days_valid: int) -> None:
         """Creates the key / certificate for agent-receiver server"""
-        self.root_ca.save_new_signed_cert(self._agent_receiver_cert_path, "localhost", days_valid)
+        self.root_ca.save_new_signed_cert(self._agent_receiver_cert_path, site_id, days_valid)

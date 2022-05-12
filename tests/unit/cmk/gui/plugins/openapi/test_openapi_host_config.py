@@ -16,6 +16,7 @@ from cmk.utils import version
 
 from cmk.automations.results import DeleteHostsResult, RenameHostsResult
 
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.type_defs import CustomAttr
 from cmk.gui.watolib.custom_attributes import save_custom_attrs_to_mk_file
 from cmk.gui.watolib.hosts_and_folders import Folder
@@ -23,9 +24,19 @@ from cmk.gui.watolib.hosts_and_folders import Folder
 managedtest = pytest.mark.skipif(not version.is_managed_edition(), reason="see #7213")
 
 
-@pytest.fixture(name="base")
-def fixture_base() -> str:
-    return "/NO_SITE/check_mk/api/1.0"
+def test_openapi_missing_host(base: str, aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
+    resp = aut_user_auth_wsgi_app.call_method(
+        "get",
+        base + "/objects/host_config/foobar",
+        status=404,
+        headers={"Accept": "application/json"},
+    )
+    assert resp.json_body == {
+        "detail": "These fields have problems: host_name",
+        "fields": {"host_name": ["Host not found: 'foobar'"]},
+        "status": 404,
+        "title": "Not Found",
+    }
 
 
 @pytest.mark.usefixtures("with_host")
@@ -659,6 +670,37 @@ def test_openapi_bulk_simple(aut_user_auth_wsgi_app: WebTestAppForCMK):
     )
 
 
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
+def test_openapi_bulk_with_failed(
+    base: str,
+    monkeypatch: pytest.MonkeyPatch,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+):
+    def _raise(_self, _host_name, _attributes):
+        if _host_name == "foobar":
+            raise MKUserError(None, "fail")
+
+    monkeypatch.setattr("cmk.gui.watolib.hosts_and_folders.CREFolder.verify_host_details", _raise)
+
+    resp = aut_user_auth_wsgi_app.call_method(
+        "post",
+        base + "/domain-types/host_config/actions/bulk-create/invoke",
+        params=json.dumps(
+            {
+                "entries": [
+                    {"host_name": "foobar", "folder": "/", "attributes": {}},
+                    {"host_name": "example.com", "folder": "/", "attributes": {}},
+                ]
+            }
+        ),
+        status=400,
+        headers={"Accept": "application/json"},
+        content_type="application/json",
+    )
+    assert resp.json["ext"]["failed_hosts"] == {"foobar": "Validation failed: fail"}
+    assert [e["id"] for e in resp.json["ext"]["succeeded_hosts"]["value"]] == ["example.com"]
+
+
 @pytest.fixture(name="custom_host_attribute")
 def _custom_host_attribute():
     try:
@@ -1081,3 +1123,27 @@ def test_openapi_create_host_with_custom_attributes(
     )
     assert "ipaddress" in resp.json["extensions"]["attributes"]
     assert "foo" in resp.json["extensions"]["attributes"]
+
+
+@managedtest
+def test_openapi_host_with_inventory_failed(
+    base: str,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+) -> None:
+    json_data = {
+        "folder": "/",
+        "host_name": "example.com",
+        "attributes": {
+            "ipaddress": "192.168.0.123",
+            "inventory_failed": True,
+        },
+    }
+    resp = aut_user_auth_wsgi_app.call_method(
+        "post",
+        f"{base}/domain-types/host_config/collections/all",
+        params=json.dumps(json_data),
+        status=200,
+        content_type="application/json",
+        headers={"Accept": "application/json"},
+    )
+    assert resp.json["extensions"]["attributes"]["inventory_failed"] is True

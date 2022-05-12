@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Mapping, TypedDict
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
@@ -51,7 +50,10 @@ def parse_proxmox_ve_vm_backup_status(string_table: StringTable) -> Section:
     result = BackupData()
     backup_data = json.loads(string_table[0][0])["last_backup"] or {}
     if "started_time" in backup_data:
-        result["started_time"] = datetime.strptime(backup_data["started_time"], "%Y-%m-%d %H:%M:%S")
+        # the datetime object has timezone information
+        result["started_time"] = datetime.strptime(
+            backup_data["started_time"], "%Y-%m-%d %H:%M:%S%z"
+        )
     if "total_duration" in backup_data:
         result["total_duration"] = int(backup_data["total_duration"])
     if "bytes_written_size" in backup_data:
@@ -95,28 +97,39 @@ def check_proxmox_ve_vm_backup_status(
     """If conditions provided calculate and compare age of last backup agains provided
     levels and define result status accordingly
     >>> for result in check_proxmox_ve_vm_backup_status(
-    ...     datetime.strptime("2020-12-07 21:28:02", '%Y-%m-%d %H:%M:%S'),
+    ...     datetime.strptime("2020-12-07 21:28:02+01:00", '%Y-%m-%d %H:%M:%S%z'),
     ...     {'age_levels_upper': (93600, 180000)},
     ...     parse_proxmox_ve_vm_backup_status([[
     ...     '  {"last_backup": {'
-    ...     '     "started_time": "2020-12-06 21:28:02",'
+    ...     '     "started_time": "2020-12-06 21:28:02+0000",'
     ...     '     "total_duration": 140,'
     ...     '     "archive_name": "/tmp/vzdump-qemu-109-2020_12_06-21_28_02.vma.zst",'
     ...     '     "upload_amount": 10995116277,'
     ...     '     "upload_total": 1099511627776,'
-    ...     '     "upload_time": 120'
-    ...     '  }}'
+    ...     '     "upload_time": 120}}'
     ...     ]])):
     ...   print(result)
-    Result(state=<State.OK: 0>, summary='Age: 1 day 0 hours')
-    Metric('age', 86400.0, levels=(93600.0, 180000.0), boundaries=(0.0, None))
-    Result(state=<State.OK: 0>, summary='Time: 2020-12-06 21:28:02')
+    Result(state=<State.OK: 0>, summary='Age: 23 hours 0 minutes')
+    Metric('age', 82800.0, levels=(93600.0, 180000.0), boundaries=(0.0, None))
+    Result(state=<State.OK: 0>, summary='Server local start time: 2020-12-06 21:28:02+00:00')
     Result(state=<State.OK: 0>, summary='Duration: 2 minutes 20 seconds')
+    Metric('backup_duration', 140.0, boundaries=(0.0, None))
     Result(state=<State.OK: 0>, summary='Name: /tmp/vzdump-qemu-109-2020_12_06-21_28_02.vma.zst')
     Result(state=<State.OK: 0>, summary='Dedup rate: 100.00')
     Result(state=<State.OK: 0>, summary='Bandwidth: 91.6 MB/s')
+    Metric('backup_avgspeed', 91625968.975, boundaries=(0.0, None))
     """
     age_levels_upper = params.get("age_levels_upper")
+    duration_levels_upper = params.get("duration_levels_upper")
+    bandwidth_levels_lower_bytes = params.get("bandwidth_levels_lower")
+    bandwidth_levels_lower = (
+        (
+            bandwidth_levels_lower_bytes[0] * 1000 * 1000,
+            bandwidth_levels_lower_bytes[1] * 1000 * 1000,
+        )
+        if bandwidth_levels_lower_bytes
+        else None
+    )
     last_backup = section.get("last_backup")
     if not last_backup:
         yield (
@@ -132,12 +145,12 @@ def check_proxmox_ve_vm_backup_status(
         )
         return
 
-    # Proxmox VE backup logs only provide time stamps without time zone so we have to hope
-    # the Proxmox VE node is located close to us
+    # Proxmox VE backup logs only provide time stamps without time zone so the special agent
+    # explicitly converted them to utc
     started_time = last_backup.get("started_time")
     if started_time:
         yield from check_levels(
-            value=(now - started_time).total_seconds(),
+            value=(now - started_time.astimezone(timezone.utc)).total_seconds(),
             levels_upper=age_levels_upper,
             metric_name="age",
             render_func=render.timespan,
@@ -146,11 +159,16 @@ def check_proxmox_ve_vm_backup_status(
         )
     yield Result(
         state=State.OK,
-        summary=f"Time: {started_time}",
+        summary=f"Server local start time: {started_time}",
     )
-    yield Result(
-        state=State.OK,
-        summary=f"Duration: {render.timespan(last_backup['total_duration'])}",
+
+    yield from check_levels(
+        value=last_backup["total_duration"],
+        levels_upper=duration_levels_upper,
+        metric_name="backup_duration",
+        render_func=render.timespan,
+        label="Duration",
+        boundaries=(0, None),
     )
 
     if "archive_name" in last_backup:
@@ -181,7 +199,14 @@ def check_proxmox_ve_vm_backup_status(
     else:
         return
 
-    yield Result(state=State.OK, summary=f"Bandwidth: {render.iobandwidth(bandwidth)}")
+    yield from check_levels(
+        value=bandwidth,
+        levels_lower=bandwidth_levels_lower,
+        metric_name="backup_avgspeed",
+        render_func=render.iobandwidth,
+        label="Bandwidth",
+        boundaries=(0, None),
+    )
 
 
 register.agent_section(
@@ -195,7 +220,8 @@ def check_proxmox_ve_vm_backup_status_unpure(
 ) -> CheckResult:
     """Because of datetime.now() this function is not testable.
     Test check_proxmox_ve_vm_backup_status() instead."""
-    yield from check_proxmox_ve_vm_backup_status(datetime.now(), params, section)
+    # the datetime object is always utc
+    yield from check_proxmox_ve_vm_backup_status(datetime.now(tz=timezone.utc), params, section)
 
 
 register.check_plugin(
@@ -208,6 +234,8 @@ register.check_plugin(
         "age_levels_upper": (
             60 * 60 * 26,
             60 * 60 * 50,
-        )
+        ),
+        "duration_levels_upper": None,
+        "bandwidth_levels_lower": None,
     },
 )

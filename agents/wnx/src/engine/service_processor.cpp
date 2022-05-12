@@ -15,6 +15,7 @@
 #include "agent_controller.h"
 #include "cap.h"
 #include "commander.h"
+#include "common/cma_yml.h"
 #include "common/mailslot_transport.h"
 #include "common/wtools.h"
 #include "common/wtools_service.h"
@@ -393,16 +394,28 @@ bool ServiceProcessor::conditionallyStartOhm() noexcept {
     return true;
 }
 
+namespace {
+bool UsePerfCpuLoad(const YAML::Node &config) {
+    const auto g = yml::GetNode(config, std::string{cfg::groups::kGlobal});
+    return yml::GetVal(g, std::string{cfg::vars::kCpuLoadMethod},
+                       std::string{cfg::defaults::kCpuLoad}) ==
+           cfg::values::kCpuLoadPerf;
+}
+}  // namespace
+
 // This is relative simple function which kicks to call
 // different providers
 int ServiceProcessor::startProviders(AnswerId answer_id,
                                      const std::string &ip_addr) {
+    bool use_perf_cpuload = UsePerfCpuLoad(cfg::GetLoadedConfig());
     vf_.clear();
     max_wait_time_ = 0;
 
     // call of sensible to CPU-load sections
     auto started_sync =
-        tryToDirectCall(wmi_cpuload_provider_, answer_id, ip_addr);
+        use_perf_cpuload
+            ? tryToDirectCall(perf_cpuload_provider_, answer_id, ip_addr)
+            : tryToDirectCall(wmi_cpuload_provider_, answer_id, ip_addr);
 
     // sections to be kicked out
     tryToKick(uptime_provider_, answer_id, ip_addr);
@@ -429,6 +442,7 @@ int ServiceProcessor::startProviders(AnswerId answer_id,
     tryToKick(skype_provider_, answer_id, ip_addr);
     tryToKick(spool_provider_, answer_id, ip_addr);
     tryToKick(ohm_provider_, answer_id, ip_addr);
+    tryToKick(agent_plugins_, answer_id, ip_addr);
 
     checkMaxWaitTime();
 
@@ -482,6 +496,21 @@ ByteVector ServiceProcessor::generateAnswer(const std::string &ip_from) {
     return makeTestString("No Answer");
 }
 
+namespace {
+bool FindProcessByPid(uint32_t pid) {
+    bool found = false;
+    wtools::ScanProcessList(
+        [&found, pid ](const PROCESSENTRY32 &entry) -> auto {
+            if (entry.th32ProcessID == pid) {
+                found = true;
+            }
+            return true;
+        });
+    return found;
+}
+
+}  // namespace
+
 bool ServiceProcessor::restartBinariesIfCfgChanged(uint64_t &last_cfg_id) {
     // this may race condition, still probability is zero
     // Config Reload is for manual usage
@@ -497,7 +526,8 @@ bool ServiceProcessor::restartBinariesIfCfgChanged(uint64_t &last_cfg_id) {
 }
 
 // returns break type(what todo)
-ServiceProcessor::Signal ServiceProcessor::mainWaitLoop() {
+ServiceProcessor::Signal ServiceProcessor::mainWaitLoop(
+    std::optional<ControllerParam> &controller_param) {
     XLOG::l.i("main Wait Loop");
     // memorize vars to check for changes in loop below
     auto ipv6 = cfg::groups::global.ipv6();
@@ -505,14 +535,16 @@ ServiceProcessor::Signal ServiceProcessor::mainWaitLoop() {
     auto uniq_cfg_id = cfg::GetCfg().uniqId();
     ProcessServiceConfiguration(kServiceName);
 
+    auto last_check = std::chrono::steady_clock::now();
+
     // Perform main service function here...
     while (true) {
         if (!callback_(static_cast<const void *>(this))) {
-            break;  // special case when thread is one time run
+            break;
         }
 
         if (delay_ == 0ms) {
-            break;
+            break;  // special case when thread is one time run
         }
 
         // check for config update and inform external port
@@ -522,6 +554,19 @@ ServiceProcessor::Signal ServiceProcessor::mainWaitLoop() {
             XLOG::l.i("Restarting server with new parameters [{}] ipv6:[{}]",
                       new_port, new_port);
             return Signal::restart;
+        }
+
+        if (controller_param.has_value() &&
+            (std::chrono::steady_clock::now() - last_check) > 30s) {
+            if (!FindProcessByPid(controller_param->pid)) {
+                XLOG::d("Process of the controller is dead [{}]",
+                        controller_param->pid);
+                if (ac::IsConfiguredEmergencyOnCrash()) {
+                    controller_param.reset();
+                    return Signal::restart;
+                }
+            }
+            last_check = std::chrono::steady_clock::now();
         }
 
         // wait and check
@@ -567,13 +612,8 @@ void WaitForNetwork(std::chrono::seconds period) {
     }
 }
 
-struct ControllerParam {
-    uint16_t port;
-    uint32_t pid;
-};
-
 ///  returns non empty port if controller had been started
-std::optional<ControllerParam> OptionallyStartAgentController(
+std::optional<ServiceProcessor::ControllerParam> OptionallyStartAgentController(
     std::chrono::milliseconds validate_process_delay) {
     if (!ac ::IsRunController(cfg::GetLoadedConfig())) {
         return {};
@@ -587,8 +627,10 @@ std::optional<ControllerParam> OptionallyStartAgentController(
             ac::DeleteControllerInBin(wtools::GetArgv(0));
             return {};
         }
-        return ControllerParam{.port = ac::GetConfiguredAgentChannelPort(),
-                               .pid = *pid};
+        return ServiceProcessor::ControllerParam{
+            .port = ac::GetConfiguredAgentChannelPort(),
+            .pid = *pid,
+        };
     }
 
     return {};
@@ -633,10 +675,6 @@ void ServiceProcessor::mainThread(world::ExternalPort *ex_port,
                 ac::kCmkAgentUnistall,
             controller_params.has_value());
     }
-    uint16_t use_port = controller_params
-                            ? controller_params->port
-                            : cfg::GetVal(cfg::groups::kGlobal,
-                                          cfg::vars::kPort, cfg::kMainPort);
     MailSlot mailbox(
         IsService() ? cfg::kServiceMailSlot : cfg::kTestingMailSlot, 0);
     internal_port_ = carrier::BuildPortName(carrier::kCarrierMailslotName,
@@ -666,6 +704,11 @@ void ServiceProcessor::mainThread(world::ExternalPort *ex_port,
 
         // Main Processing Loop
         while (true) {
+            uint16_t use_port =
+                controller_params
+                    ? controller_params->port
+                    : cfg::GetVal(cfg::groups::kGlobal, cfg::vars::kPort,
+                                  cfg::kMainPort);
             rt_device.start();
             auto io_started = ex_port->startIo(
                 [this, &rt_device,
@@ -698,7 +741,7 @@ void ServiceProcessor::mainThread(world::ExternalPort *ex_port,
             }
 
             // we wait her to the end of the External port
-            if (mainWaitLoop() == Signal::quit) {
+            if (mainWaitLoop(controller_params) == Signal::quit) {
                 break;
             }
             XLOG::l.i("restart main loop");
@@ -736,24 +779,23 @@ bool SystemMailboxCallback(const MailSlot * /*nothing*/, const void *data,
     }
 
     const auto *dt = static_cast<const carrier::CarrierDataHeader *>(data);
-    XLOG::d.i("Received [{}] bytes from '{}'\n", len, dt->providerId());
     switch (dt->type()) {
         case carrier::DataType::kLog:
-            // IMPORTANT ENTRY POINT
             // Receive data for Logging to file
             if (dt->data() != nullptr) {
                 std::string to_log;
                 const auto *data = static_cast<const char *>(dt->data());
                 to_log.assign(data, data + dt->length());
-                XLOG::l(XLOG::kNoPrefix)("{} : {}", dt->providerId(), to_log);
+                XLOG::l(XLOG::kNoPrefix)("[{}] {}", dt->providerId(), to_log);
             } else
-                XLOG::l(XLOG::kNoPrefix)("{} : null", dt->providerId());
+                XLOG::l(XLOG::kNoPrefix)("[{}] null", dt->providerId());
             break;
 
         case carrier::DataType::kSegment:
-            // IMPORTANT ENTRY POINT
             // Receive data for Section
             {
+                XLOG::d.i("Received [{}] bytes from '{}'\n", len,
+                          dt->providerId());
                 std::chrono::nanoseconds duration_since_epoch{dt->answerId()};
                 std::chrono::time_point<std::chrono::steady_clock> tp(
                     duration_since_epoch);

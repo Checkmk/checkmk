@@ -1,0 +1,13 @@
+Title: inventory_lnx_packages: Fix package version parsing for deb packages
+Class: fix
+Compatible: compat
+Component: inv
+Date: 1652098843
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b9
+
+Package version of deb packages in inventory was always "-". Now,
+the package version is correctly parsed from the version.

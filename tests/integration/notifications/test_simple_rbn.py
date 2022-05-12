@@ -80,13 +80,13 @@ def test_simple_rbn_host_notification(test_log: WatchLog, site: Site) -> None:
 
 
 def test_simple_rbn_service_notification(test_log: WatchLog, site: Site) -> None:
-    site.send_service_check_result("notify-test", "PING", 2, "FAKE CRIT")
+    site.send_service_check_result("notify-test", "Check_MK", 2, "FAKE CRIT")
 
     # NOTE: "] " is necessary to get the actual log line and not the external command execution
     test_log.check_logged(
-        "] SERVICE NOTIFICATION: check-mk-notify;notify-test;PING;CRITICAL;check-mk-notify;FAKE CRIT"
+        "] SERVICE NOTIFICATION: check-mk-notify;notify-test;Check_MK;CRITICAL;check-mk-notify;FAKE CRIT"
     )
-    test_log.check_logged("] SERVICE NOTIFICATION: hh;notify-test;PING;CRITICAL;mail;FAKE CRIT")
+    test_log.check_logged("] SERVICE NOTIFICATION: hh;notify-test;Check_MK;CRITICAL;mail;FAKE CRIT")
     test_log.check_logged(
-        "] SERVICE NOTIFICATION RESULT: hh;notify-test;PING;OK;mail;Spooled mail to local mail transmission agent;"
+        "] SERVICE NOTIFICATION RESULT: hh;notify-test;Check_MK;OK;mail;Spooled mail to local mail transmission agent;"
     )

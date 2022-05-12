@@ -12,8 +12,74 @@ from pydantic import BaseModel, Field
 from cmk.base.plugins.agent_based.agent_based_api.v1 import HostLabel
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import HostLabelGenerator
 
-LabelName = NewType("LabelName", str)
 LabelValue = NewType("LabelValue", str)
+"""
+
+A string consisting of alphanumeric characters, '-', '_' or '.', and must
+start and end with an alphanumeric character.
+
+    Examples:
+        >>> import re
+        >>> validation_value = re.compile(r'(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])?')
+        >>> is_value = lambda x: bool(validation_value.fullmatch(x))
+        >>> is_value('MyName')
+        True
+        >>> is_value('my.name')
+        True
+        >>> is_value('123-abc')
+        True
+        >>> is_value('a..a') # repeating '.', '_' or '-' characters in the middle is ok
+        True
+        >>> is_value('')  # empty values are allowed
+        True
+        >>> is_value('a-')  # does not end with alphanumeric character
+        False
+        >>> is_value('a&a')  # & not allowed
+        False
+"""
+
+LabelName = NewType("LabelName", str)
+"""
+
+A string consisting of a name part and an optional prefix part. The validation
+for the name part is the same as that of a `LabelValue`. The prefix part is a
+lowercase RFC 1123 DNS subdomain, which consists of lowercase alphanumeric
+characters, '-', '_' or '.' Note, that these subdomains are more restrictive
+than general DNS domains, which are allowed to have empty DNS labels and DNS
+labels with other special characters.
+
+    Examples:
+        >>> import re
+        >>> validation_name_part = re.compile(r'([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9]')
+        >>> is_name_part = lambda x: bool(validation_name_part.fullmatch(x))
+        >>> validation_prefix_part = re.compile(r'[a-z0-9]([-a-z0-9]*[a-z0-9])?([.][a-z0-9]([-a-z0-9]*[a-z0-9])?)*')
+        >>> is_prefix_part = lambda x: bool(validation_prefix_part.fullmatch(x))
+        >>> is_prefix_part('a-a')  #  DNS label
+        True
+        >>> is_prefix_part('a.a')  # Two DNS labels seperated by a dot
+        True
+        >>> is_prefix_part('A')  # not a DNS label, upper case not allowed
+        False
+        >>> is_prefix_part('.a')  # not a prefix, each prefix must start and with a non-empty DNS label
+        False
+        >>> is_prefix_part('a..a')  # Empty DNS label in the middle is not allowed
+        False
+        >>> def is_name(x: str) -> bool:
+        ...     *prefix_part, name_part = x.split('/', maxsplit=1)
+        ...     if len(prefix_part) > 0:
+        ...         return is_prefix_part(prefix_part[0]) and is_name_part(name_part)
+        ...     return is_name_part(name_part)
+        >>> is_name('a')  #  A valid name_part without prefix
+        True
+        >>> is_name('a/A')  #  A valid name part and a valid prefix part
+        True
+        >>> is_name('/A')  #  Empty prefix is not allowed
+        False
+        >>> is_name('./a')  # '.' is not a valid prefix part
+        False
+        >>> is_name('a/a/a')  #  Multiple slashes are not allowed
+        False
+"""
 
 
 class Label(BaseModel):
@@ -23,10 +89,11 @@ class Label(BaseModel):
 
 ContainerName = NewType("ContainerName", str)
 Labels = Mapping[LabelName, Label]
+FilteredAnnotations = Mapping[LabelName, LabelValue]
 CreationTimestamp = NewType("CreationTimestamp", float)
 HostName = NewType("HostName", str)
 IpAddress = NewType("IpAddress", str)
-Namespace = NewType("Namespace", str)
+NamespaceName = NewType("NamespaceName", str)
 NodeName = NewType("NodeName", str)
 OsName = NewType("OsName", str)
 PodUID = NewType("PodUID", str)
@@ -34,6 +101,7 @@ PodSequence = Sequence[str]
 PythonCompiler = NewType("PythonCompiler", str)
 Timestamp = NewType("Timestamp", float)
 Version = NewType("Version", str)
+GitVersion = NewType("GitVersion", str)
 
 
 # This information is from the one-page API overview v1.22
@@ -48,15 +116,15 @@ QosClass = Literal["burstable", "besteffort", "guaranteed"]
 
 class ControllerType(enum.Enum):
     deployment = "deployment"
-    daemon_set = "daemon_set"
+    daemonset = "daemonset"
     statefulset = "statefulset"
 
     @staticmethod
     def from_str(label):
         if label == "deployment":
             return ControllerType.deployment
-        if label == "daemon_set":
-            return ControllerType.daemon_set
+        if label == "daemonset":
+            return ControllerType.daemonset
         if label == "statefulset":
             return ControllerType.statefulset
         raise ValueError(f"Unknown controller type: {label}")
@@ -93,11 +161,53 @@ def condition_detailed_description(
     return f"{condition_short_description(name, status)} ({reason}: {message})"
 
 
+# TODO: CMK-10380 (the change will incompatible)
 def kube_labels_to_cmk_labels(labels: Labels) -> HostLabelGenerator:
+    """Convert Kubernetes Labels to HostLabels.
+
+    Key-value pairs of Kubernetes labels are valid checkmk labels (see
+    `LabelName` and `LabelValue`). However, a user can add labels to their
+    Kubernetes objects, which overwrite existing checkmk labels, if we simply
+    add `HostLabel(label.name, label.value)`. To circumvent this problem, we
+    prepend every label name with 'kube/'.
+
+    >>> list(kube_labels_to_cmk_labels({
+    ... 'k8s.io/app': Label(name='k8s.io/app', value='nginx'),
+    ... 'infra': Label(name='infra', value='yes'),
+    ... }))
+    [HostLabel('cmk/kubernetes/label/k8s.io/app', 'nginx'), HostLabel('cmk/kubernetes/label/infra', 'yes')]
+    """
     for label in labels.values():
         if (value := label.value) == "":
             value = LabelValue("true")
-        yield HostLabel(label.name, value)
+        yield HostLabel(f"cmk/kubernetes/label/{label.name}", value)
+
+
+# TODO: CMK-10380 (the change will incompatible)
+def kube_annotations_to_cmk_labels(annotations: FilteredAnnotations) -> HostLabelGenerator:
+    """Convert Kubernetes Annotations to HostLabels.
+
+    Kubernetes annotations are not valid Checkmk labels, but agent_kube makes
+    sure that annotations only arrive here, if we want to yield it as a
+    HostLabel, e.g. a restricted set of characters.
+
+    Directly yielding `HostLabel(annotation.name, annotation.value)` is
+    problematic. This is because a user can add annotations to their Kubernetes
+    objects, which overwrite existing Checkmk labels. For instance, the
+    annotation `cmk/os_name=` would overwrite the cmk label
+    `cmk/os_name:linux`. To circumvent this problem, we prepend every
+    annotation key with 'cmk/kubernetes/annotation/'.
+
+    >>> annotations = {
+    ... 'k8s.io/app': 'nginx',
+    ... 'infra': 'yes',
+    ... 'empty': '',
+    ... }
+    >>> list(kube_annotations_to_cmk_labels(annotations))
+    [HostLabel('cmk/kubernetes/annotation/k8s.io/app', 'nginx'), HostLabel('cmk/kubernetes/annotation/infra', 'yes'), HostLabel('cmk/kubernetes/annotation/empty', 'true')]
+    """
+    for name, value in annotations.items():
+        yield HostLabel(f"cmk/kubernetes/annotation/{name}", value or "true")
 
 
 class KubernetesError(Exception):
@@ -241,7 +351,7 @@ class FalsyNodeCustomCondition(FalsyNodeCondition):
 
 
 class NodeConditions(BaseModel):
-    """section: k8s_node_conditions_v1"""
+    """section: kube_node_conditions_v1"""
 
     ready: TruthyNodeCondition
     memorypressure: FalsyNodeCondition
@@ -251,7 +361,7 @@ class NodeConditions(BaseModel):
 
 
 class NodeCustomConditions(BaseModel):
-    """section: k8s_node_custom_conditions_v1"""
+    """section: kube_node_custom_conditions_v1"""
 
     custom_conditions: Sequence[FalsyNodeCustomCondition]
 
@@ -281,6 +391,7 @@ class ClusterInfo(BaseModel):
     """section: kube_cluster_info_v1"""
 
     name: str
+    version: GitVersion
 
 
 VSResultAge = Union[Tuple[Literal["levels"], Tuple[int, int]], Literal["no_levels"]]
@@ -307,6 +418,7 @@ class NodeInfo(BaseModel):
     name: NodeName
     creation_timestamp: CreationTimestamp
     labels: Labels
+    annotations: FilteredAnnotations
     addresses: NodeAddresses
     cluster: str
 
@@ -334,10 +446,11 @@ class APIHealth(BaseModel):
 class PodInfo(BaseModel):
     """section: kube_pod_info_v1"""
 
-    namespace: Optional[Namespace]
+    namespace: Optional[NamespaceName]
     name: str
     creation_timestamp: Optional[CreationTimestamp]
     labels: Labels  # used for host labels
+    annotations: FilteredAnnotations  # used for host labels
     node: Optional[NodeName]  # this is optional, because there may be pods, which are not
     # scheduled on any node (e.g., no node with enough capacity is available).
     host_network: Optional[str]
@@ -496,8 +609,9 @@ class DeploymentInfo(BaseModel):
     """section: kube_deployment_info_v1"""
 
     name: str
-    namespace: Namespace
+    namespace: NamespaceName
     labels: Labels
+    annotations: FilteredAnnotations
     selector: Selector
     creation_timestamp: CreationTimestamp
     containers: ThinContainers
@@ -508,8 +622,9 @@ class DaemonSetInfo(BaseModel):
     """section: kube_daemonset_info_v1"""
 
     name: str
-    namespace: Namespace
+    namespace: NamespaceName
     labels: Labels
+    annotations: FilteredAnnotations
     selector: Selector
     creation_timestamp: CreationTimestamp
     containers: ThinContainers
@@ -520,8 +635,9 @@ class StatefulSetInfo(BaseModel):
     """section: kube_statefulset_info_v1"""
 
     name: str
-    namespace: Namespace
+    namespace: NamespaceName
     labels: Labels
+    annotations: FilteredAnnotations
     selector: Selector
     creation_timestamp: CreationTimestamp
     containers: ThinContainers
@@ -534,17 +650,26 @@ class PodContainers(BaseModel):
     containers: Mapping[str, ContainerStatus]
 
 
-class Replicas(BaseModel):
-    replicas: int
-    updated: int
-    available: int
-    ready: int
-    unavailable: int
-
-
 class RollingUpdate(BaseModel):
+    """
+
+    This model is used for DaemonSets and Deployments. Although the models are
+    identical, the underlying strategies differ for the two. For a Deployment,
+    max_unavailable refers to how much the old ReplicaSet can be scaled down.
+    Thus, max_unavailable refers to the maximum number of Pods that may be
+    unavailable during the update. max_unavailable for a DaemonSet refers to
+    the number of Nodes that should be running the daemon Pod (despite what is
+    mentioned in the docs). If the number of Nodes with unavailable daemon Pods
+    reaches max_unavailable, then Kubernetes will not stop Pods on other Nodes
+    in order to update them. The same distinction applies to max_surge.
+
+    The documentation claims, that only one DaemonSet Pod is created, but as of
+    v1.21, max_surge allows a second Pod to be scheduled for the duration of
+    the update.
+    """
+
     type_: Literal["RollingUpdate"] = Field("RollingUpdate", const=True)
-    max_surge: str
+    max_surge: str  # This field was introduced in Kubernetes v1.21.
     max_unavailable: str
 
 
@@ -556,24 +681,143 @@ class OnDelete(BaseModel):
     type_: Literal["OnDelete"] = Field("OnDelete", const=True)
 
 
-class DeploymentStrategy(BaseModel):
-    """section: kube_deployment_strategy_v1"""
-
-    strategy: Union[Recreate, RollingUpdate] = Field(discriminator="type_")
-
-
-class DaemonSetStrategy(BaseModel):
-    """section: kube_daemonset_strategy_v1"""
-
-    strategy: Union[OnDelete, RollingUpdate] = Field(discriminator="type_")
-
-
 class StatefulSetRollingUpdate(BaseModel):
-    type_: Literal["RollingUpdate"] = Field("RollingUpdate", const=True)
+    type_: Literal["StatefulSetRollingUpdate"] = Field("StatefulSetRollingUpdate", const=True)
     partition: int
 
 
-class StatefulSetStrategy(BaseModel):
-    """section: kube_statefulset_strategy_v1"""
+DisplayableStrategy = Union[OnDelete, Recreate, RollingUpdate, StatefulSetRollingUpdate]
 
-    strategy: Union[OnDelete, StatefulSetRollingUpdate] = Field(discriminator="type_")
+
+class UpdateStrategy(BaseModel):
+    """section: kube_update_strategy_v1"""
+
+    strategy: DisplayableStrategy = Field(discriminator="type_")
+
+
+class CommonReplicas(BaseModel):
+    """Model shared among controllers.
+
+    Note: All controllers are relatively similiar in how they claim a Pod. A Pod will be claimed
+    if the following criterions match:
+    * the Selector matches
+    * the Pods controller field is empty or equal to that of the claiming Controller
+    * the Pod is not Succeeded or Failed
+    * neither the Pod nor the Controller have been deleted (DeletionTimestamp is null)
+    Note, that this list is somewhat heuristic and reality is a bit more complicated. For instance,
+    a Pod can sometimes still be claimed, if the DaemonSet has been deleted.
+    """
+
+    desired: int
+    ready: int
+    updated: int
+
+
+class DaemonSetReplicas(CommonReplicas):
+    """section: kube_daemonset_replicas_v1
+
+    Model for a given DaemonSet supplied to the kube_replicas check.
+
+    The key distinction to Deployments and StatefulSets is the fact, that this section counts Nodes
+    rather than Pods. On each Node only the oldest Pod is considered, that has been claimed by the
+    DaemonSet.
+    """
+
+    # desired (status.desiredNumberScheduled): the number of Nodes, which match the NodeAffinity
+    # specified by the DaemonSet.
+    # ready (status.numberReady): the number of Nodes, where the oldest claimed Pod is ready.
+    # updated (status.updatedNumberScheduled): the number of Nodes, where the oldest claimed Pod is
+    # updated. A Pod is updated, if the hash of the Pod template matches the template of the
+    # DaemonSet.
+    # misscheduled (status.numberMisscheduled): the number of Nodes, on which there is a Pod claimed
+    # by the DaemonSet (not necessarily running or ready), but which is not supposed to run a
+    # daemon Pod (since the NodeSelector or NodeAffinity term does not match the Node). In
+    # particular, there is no overlap between Nodes counted by desired and Nodes counted by
+    # misscheduled.
+    misscheduled: int
+
+
+class StatefulSetReplicas(CommonReplicas):
+    """section: kube_statefulset_replicas_v1
+
+    Model for a given StatefulSet supplied to the kube_replicas check.
+
+    The key distinction to DaemonSets and Deployments is the concept of ordinals. Ordinals give Pods
+    a unique identity, which is persistent across being rescheduled on a different Node. The ordinal
+    affects the order of creation and updates (see below).
+    """
+
+    # desired (spec.replicas): the number of Pods, which should be claimed, available and up-to-date
+    # ready (status.readyReplicas): the number of claimed Pods, which are ready. StatefulSets can
+    # achieve readiness in different fashions depending on the value of spec.podManagementPolicy.
+    # By default, a new Pod is only created after all the Pods with lower ordinals (the ordinal is
+    # appended to the name of the Pod) are available. As of Kubernetes v1.7 Pods can be configured
+    # to be created in parallel.
+    # updated (status.updatedReplicas): the number of claimed Pods, which match updateRevision of
+    # the StatefulSet. The StatefulSet only allows updating in order of the ordinals. Unlike the Pod
+    # creation, this behaviour can't be configured as of v1.23.
+
+
+class DeploymentReplicas(CommonReplicas):
+    """section: kube_deployment_replicas_v1
+
+    Model for a given Deployment supplied to the kube_replicas check.
+
+    The key distinction to DaemonSets and StatefulSets is that Deployments manage their Pods via
+    ReplicaSets. A Deployment controls either one or two ReplicaSets. The second ReplicaSet is
+    created whenever a Deployment needs to update its Pods. The quantities in status of Deployment
+    are often sums over the status of the two ReplicaSets.
+
+    Example: The number of unavailableReplicas may be twice the number of desired replicas, because
+    it corresponds to the number of Pods not available for both ReplicaSets. Whereas for other
+    controllers unavailableReplicas (StatefulSet) or numberUnavailable (DaemonSet) is equal to
+    desired - availableReplicas or desired - numberAvailable.
+    """
+
+    # desired (spec.replicas): the number of Pods, which should be claimed, available and
+    # up-to-date.
+    # ready (status.readyReplicas): the number of claimed Pods, which are ready. This is calculated
+    # across both ReplicaSets (if present).
+    # updated (status.updatedReplicas): the number of claimed Pods, belonging the ReplicaSet with
+    # the up-to-date Pod template.
+
+
+class NamespaceInfo(BaseModel):
+    """section: kube_namespace_info_v1"""
+
+    name: NamespaceName
+    creation_timestamp: Optional[CreationTimestamp]
+    labels: Labels
+    annotations: FilteredAnnotations
+    cluster: str
+
+
+class IdentificationError(BaseModel):
+    """Errors due to incorrect labels set by the user."""
+
+    duplicate_machine_collector: bool
+    duplicate_container_collector: bool
+    unknown_collector: bool
+
+
+class NodeCollectorReplica(BaseModel):
+    # This model reports api data of a node collector DaemonSet.
+    # We identify this DaemonSet via certain labels and provide the counts to the
+    # Cluster object via the CollectorDaemons section. The data is also available in
+    # a more generic way as part of the Replicas service on a DaemonSet, but we want
+    # to show this information on the cluster object.
+    available: int
+    desired: int
+
+
+class CollectorDaemons(BaseModel):
+    """section: kube_collector_daemons_v1
+
+    Model containing information about the DaemonSets of the node-collectors.
+    The section is intended for the cluster host. `None` indicates, that the
+    corresponding DaemonSet is not among the API data.
+    """
+
+    machine: Optional[NodeCollectorReplica]
+    container: Optional[NodeCollectorReplica]
+    errors: IdentificationError

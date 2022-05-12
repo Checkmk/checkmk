@@ -4,7 +4,7 @@
 
 # Disable unused variable error (needed to keep track of version)
 # shellcheck disable=SC2034
-CMK_VERSION="2.1.0b5"
+CMK_VERSION="2.1.0b9"
 
 if [ -r /var/run/haproxy.stat ]; then
 	echo "<<<haproxy:sep(44)>>>"

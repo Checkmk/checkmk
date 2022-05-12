@@ -7,10 +7,19 @@ set -ex
 unset LANG
 
 log() { echo "[$(date '+%F %T')] ==============================" "$@"; }
-die() { log "$@"; exit 1; }
+die() {
+    log "$@"
+    exit 1
+}
 
-# Tag Containers and push them to a Registry
-docker_push () {
+clean_up() {
+    log "Räume temporäres Verzeichnis $TMP_PATH weg"
+    rm -rf "$TMP_PATH"
+}
+trap clean_up SIGTERM SIGHUP SIGINT EXIT
+
+docker_tag() {
+    # Tag images
     REGISTRY=$1
     FOLDER=$2
 
@@ -22,6 +31,12 @@ docker_push () {
 
     log "Erstelle \"latest\" tag..."
     docker tag "checkmk/check-mk-${EDITION}${DEMO}:${VERSION}" "$REGISTRY$FOLDER/check-mk-${EDITION}${DEMO}:latest"
+}
+
+docker_push () {
+    # Push images to a Registry
+    REGISTRY=$1
+    FOLDER=$2
 
     log "Lade zu ($REGISTRY) hoch..."
     docker login ${REGISTRY} -u ${DOCKER_USERNAME} -p ${DOCKER_PASSPHRASE}
@@ -30,6 +45,35 @@ docker_push () {
     if [ "$SET_LATEST_TAG" = "yes" ]; then
         DOCKERCLOUD_NAMESPACE=checkmk docker push "$REGISTRY$FOLDER/check-mk-${EDITION}${DEMO}:latest"
     fi
+}
+
+build_image() {
+   log "Unpack source tar to $TMP_PATH"
+   tar -xz -C "$TMP_PATH" -f "$PACKAGE_PATH/${VERSION}/check-mk-${EDITION}-${VERSION}${SUFFIX}${DEMO}.tar.gz"
+
+   log "Copy debian package..."
+   cp "$PACKAGE_PATH/${VERSION}/${PKG_FILE}" "$DOCKER_PATH/"
+
+   log "Building container image"
+   make -C "$DOCKER_PATH" "$DOCKER_IMAGE_ARCHIVE"
+
+   log "Verschiebe Image-Tarball..."
+   mv -v "$DOCKER_PATH/$DOCKER_IMAGE_ARCHIVE" "$PACKAGE_PATH/${VERSION}/"
+
+   if [ $EDITION = raw ]; then
+       docker_tag "" "checkmk"
+   else
+       docker_tag "registry.checkmk.com" "/${EDITION}"
+   fi
+}
+
+push_image() {
+   if [ $EDITION = raw ]; then
+       docker_push "" "checkmk"
+   else
+       docker_push "registry.checkmk.com" "/${EDITION}"
+   fi
+
 }
 
 if [ "$1" = "-h" ] || [ "$1" = "--help" ] || [ "$1" = "" ] || [ "$2" = "" ] || [ "$3" = "" ] || [ "$4" = "" ]; then
@@ -43,6 +87,7 @@ BRANCH=$1
 EDITION=$2
 VERSION=$3
 SET_LATEST_TAG=$4
+ACTION=$5
 
 if [ $EDITION = raw ]; then
     SUFFIX=.cre
@@ -65,7 +110,6 @@ DOCKER_IMAGE_ARCHIVE="check-mk-${EDITION}-docker-${VERSION}${DEMO}.tar.gz"
 PKG_NAME="check-mk-${EDITION}-${VERSION}${DEMO}"
 PKG_FILE="${PKG_NAME}_0.buster_$(dpkg --print-architecture).deb"
 
-trap "rm -rf \"$TMP_PATH\"" SIGTERM SIGHUP SIGINT
 
 
 if [ -n "$NEXUS_USERNAME" ] ; then
@@ -73,25 +117,10 @@ if [ -n "$NEXUS_USERNAME" ] ; then
     docker login "artifacts.lan.tribe29.com:4000" -u "${NEXUS_USERNAME}" -p "${NEXUS_PASSWORD}"
 fi
 
-log "Unpack source tar to $TMP_PATH"
-tar -xz -C "$TMP_PATH" -f "$PACKAGE_PATH/${VERSION}/check-mk-${EDITION}-${VERSION}${SUFFIX}${DEMO}.tar.gz"
-
-log "Copy debian package..."
-cp "$PACKAGE_PATH/${VERSION}/${PKG_FILE}" "$DOCKER_PATH/"
-
-log "Building container image"
-make -C "$DOCKER_PATH" "$DOCKER_IMAGE_ARCHIVE"
-
-log "Verschiebe Image-Tarball..."
-mv -v "$DOCKER_PATH/$DOCKER_IMAGE_ARCHIVE" "$PACKAGE_PATH/${VERSION}/"
-
-if [ $EDITION = raw ]; then
-    docker_push "" "checkmk"
+if [ $ACTION = build ]; then
+    build_image
+elif [ $ACTION = push ]; then
+    push_image
 else
-    docker_push "registry.checkmk.com" "/${EDITION}"
+    die "FEHLER: Unbekannte action '$ACTION'"
 fi
-
-log "Räume temporäres Verzeichnis $TMP_PATH weg"
-rm -rf "$TMP_PATH"
-
-

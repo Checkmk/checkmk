@@ -13,10 +13,11 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes
 from cmk.base.plugins.agent_based.inventory_kube_deployment import inventory_kube_deployment
 from cmk.base.plugins.agent_based.utils.kube import (
     DeploymentInfo,
-    DeploymentStrategy,
+    Recreate,
     RollingUpdate,
     Selector,
     ThinContainers,
+    UpdateStrategy,
 )
 
 from .utils_inventory import sort_inventory_result
@@ -30,12 +31,13 @@ from .utils_inventory import sort_inventory_result
                 name="oh-lord",
                 namespace="have-mercy",
                 labels={},
+                annotations={},
                 selector=Selector(match_labels={}, match_expressions=[]),
                 creation_timestamp=1600000000.0,
                 containers=ThinContainers(images={"i/name:0.5"}, names=["name"]),
                 cluster="cluster",
             ),
-            DeploymentStrategy(
+            UpdateStrategy(
                 strategy=RollingUpdate(
                     max_surge="25%",
                     max_unavailable="25%",
@@ -43,10 +45,16 @@ from .utils_inventory import sort_inventory_result
             ),
             [
                 Attributes(
-                    path=["software", "applications", "kube", "deployment"],
+                    path=["software", "applications", "kube", "metadata"],
                     inventory_attributes={
+                        "object": "Deployment",
                         "name": "oh-lord",
                         "namespace": "have-mercy",
+                    },
+                ),
+                Attributes(
+                    path=["software", "applications", "kube", "deployment"],
+                    inventory_attributes={
                         "strategy": "RollingUpdate (max surge: 25%, max unavailable: 25%)",
                         "match_labels": "",
                         "match_expressions": "",
@@ -60,7 +68,7 @@ from .utils_inventory import sort_inventory_result
 )
 def test_inventory_kube_deployment(
     section_info: DeploymentInfo,
-    section_strategy: DeploymentStrategy,
+    section_strategy: UpdateStrategy,
     expected_check_result: Sequence[Any],
 ) -> None:
     assert sort_inventory_result(
@@ -78,10 +86,7 @@ def test_inventory_kube_deployment_calls_labels_to_table(mocker):
 
     section_info = DeploymentInfoFactory.build()
 
-    class DeploymentStrategyFactory(ModelFactory):
-        __model__ = DeploymentStrategy
-
-    section_strategy = DeploymentStrategyFactory.build()
+    section_strategy = UpdateStrategy(strategy=Recreate())
 
     mock = mocker.patch("cmk.base.plugins.agent_based.inventory_kube_deployment.labels_to_table")
     list(inventory_kube_deployment(section_info, section_strategy))

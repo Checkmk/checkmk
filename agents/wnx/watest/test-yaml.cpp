@@ -305,7 +305,7 @@ TEST(AgentConfig, SmartMerge) {
         ASSERT_EQ(run_node.size(), 3);
 
         sections_enabled = GetInternalArray(gl, vars::kSectionsEnabled);
-        ASSERT_EQ(sections_enabled.size(), 20);
+        ASSERT_EQ(sections_enabled.size(), 21);
 
         ASSERT_EQ(gl[vars::kSectionsDisabled].size(), 0);
     }
@@ -546,7 +546,7 @@ TEST(AgentConfig, LogFile) {
 }
 
 TEST(AgentConfig, YamlRead) {
-    auto file = tst::MakePathToConfigTestFiles() / files::kDefaultDevMinimum;
+    auto file = tst::MakePathToConfigTestFiles() / tst::kDefaultDevMinimum;
     auto ret = fs::exists(file);
     ASSERT_TRUE(ret);
 
@@ -676,7 +676,7 @@ TEST(AgentConfig, FactoryConfig) {
     {
         auto sections_enabled =
             GetInternalArray(groups::kGlobal, vars::kSectionsEnabled);
-        EXPECT_EQ(sections_enabled.size(), 20);
+        EXPECT_EQ(sections_enabled.size(), 21);
 
         auto sections_disabled =
             GetInternalArray(groups::kGlobal, vars::kSectionsDisabled);
@@ -692,6 +692,13 @@ TEST(AgentConfig, FactoryConfig) {
 
         auto rt_port = GetVal(realtime, vars::kRtPort, 111);
         EXPECT_EQ(rt_port, kDefaultRealtimePort);
+
+        EXPECT_EQ(GetVal(groups::kGlobal, vars::kGlobalWmiTimeout, 1),
+                  kDefaultWmiTimeout);
+
+        EXPECT_EQ(GetVal(groups::kGlobal, vars::kCpuLoadMethod,
+                         std::string{values::kCpuLoadWmi}),
+                  values::kCpuLoadPerf);
 
         auto passphrase =
             GetVal(realtime, vars::kGlobalPassword, std::string());
@@ -799,7 +806,7 @@ TEST(AgentConfig, FactoryConfig) {
     // controller
     auto controller = GetNode(groups::kSystem, vars::kController);
     EXPECT_TRUE(GetVal(controller, vars::kControllerRun, false));
-    EXPECT_FALSE(GetVal(controller, vars::kControllerCheck, true));
+    EXPECT_TRUE(GetVal(controller, vars::kControllerCheck, false));
     EXPECT_FALSE(GetVal(controller, vars::kControllerForceLegacy, true));
     EXPECT_EQ(GetVal(controller, vars::kControllerAgentChannel, ""s),
               defaults::kControllerAgentChannelDefault);
@@ -842,7 +849,7 @@ TEST(AgentConfig, UTF16LE) {
     details::KillDefaultConfig();
 
     auto file_utf16 =
-        tst::MakePathToConfigTestFiles() / files::kDefaultDevConfigUTF16;
+        tst::MakePathToConfigTestFiles() / tst::kDefaultDevConfigUTF16;
     bool success = loader(file_utf16.wstring());
     EXPECT_TRUE(success);
 
@@ -882,7 +889,7 @@ TEST(AgentConfig, FailScenario_Long) {
     auto test_config_path = tst::MakePathToConfigTestFiles();
 
     auto file_1 = (test_config_path / files::kDefaultMainConfig).wstring();
-    auto file_2 = (test_config_path / files::kDefaultDevMinimum).wstring();
+    auto file_2 = (test_config_path / tst::kDefaultDevMinimum).wstring();
 
     EXPECT_TRUE(loader(file_1, file_2));
     EXPECT_FALSE(loader(L"StrangeName<GTEST>.yml"));

@@ -1,0 +1,19 @@
+Title: Windows agent uses perflib to obtain wmi_cpuload data
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1651747631
+Edition: cre
+Knowledge: undoc
+Level: 2
+State: unknown
+Version: 2.1.0b8
+
+Windows agent uses now the Perflib API for service wmi_cpuload 
+as a more reliable and stable source of information compared 
+to the previously used WMI API. 
+
+If, for some reasons, the new functionality causes problems, 
+it is possible to return to the WMI API, using the appropriate 
+key in the user config. To do it, set in section  global the key
+cpuload_method to 'use_wmi'.

@@ -11,7 +11,7 @@ PYTHON3_MODULES_DEPS := $(REPO_PATH)/Pipfile.lock \
 	$(wildcard $(REPO_PATH)/agent-receiver/agent_receiver/*.py)
 
 # Increase the number before the "-" to enforce a recreation of the build cache
-PYTHON3_MODULES_BUILD_ID := $(call cache_pkg_build_id,15,$(PYTHON3_MODULES_DEPS))
+PYTHON3_MODULES_BUILD_ID := $(call cache_pkg_build_id,16,$(PYTHON3_MODULES_DEPS))
 
 PYTHON3_MODULES_UNPACK:= $(BUILD_HELPER_DIR)/$(PYTHON3_MODULES_DIR)-unpack
 PYTHON3_MODULES_PATCHING := $(BUILD_HELPER_DIR)/$(PYTHON3_MODULES_DIR)-patching

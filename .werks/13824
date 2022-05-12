@@ -1,0 +1,12 @@
+Title: Bake mk_filestats for solaris
+Class: feature
+Compatible: compat
+Component: packages
+Date: 1649332110
+Edition: cee
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0b6
+
+mk_filestats can now be distributed to solaris systems via the agent bakery.

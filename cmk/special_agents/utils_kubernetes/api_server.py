@@ -4,13 +4,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import ast
 import itertools
 from dataclasses import dataclass
 from typing import (
     Dict,
     Generic,
     Iterable,
-    Iterator,
     List,
     Literal,
     Mapping,
@@ -22,15 +22,17 @@ from typing import (
     Union,
 )
 
-from kubernetes import client  # type: ignore[import] # pylint: disable=import-error
+from kubernetes import client  # type: ignore[import]
 
 from cmk.special_agents.utils_kubernetes.schemata import api
 from cmk.special_agents.utils_kubernetes.transform import (
     cron_job_from_client,
     daemonset_from_client,
     deployment_from_client,
+    namespace_from_client,
     node_from_client,
     pod_from_client,
+    resource_quota_from_client,
     statefulset_from_client,
 )
 
@@ -42,10 +44,10 @@ class BatchAPI:
         self.raw_jobs = self._query_raw_jobs()
         self.raw_cron_jobs = self._query_raw_cron_jobs()
 
-    def _query_raw_cron_jobs(self) -> Iterator[client.V1CronJob]:
+    def _query_raw_cron_jobs(self) -> Sequence[client.V1CronJob]:
         return self.connection.list_cron_job_for_all_namespaces(_request_timeout=self.timeout).items
 
-    def _query_raw_jobs(self) -> Iterator[client.V1Job]:
+    def _query_raw_jobs(self) -> Sequence[client.V1Job]:
         return self.connection.list_job_for_all_namespaces(_request_timeout=self.timeout).items
 
 
@@ -59,12 +61,20 @@ class CoreAPI:
         self.timeout = timeout
         self.raw_pods = self._query_raw_pods()
         self.raw_nodes = self._query_raw_nodes()
+        self.raw_namespaces = self._query_raw_namespaces()
+        self.raw_resource_quotas = self._query_raw_resource_quotas()
 
     def _query_raw_nodes(self) -> Sequence[client.V1Node]:
         return self.connection.list_node(_request_timeout=self.timeout).items
 
     def _query_raw_pods(self) -> Sequence[client.V1Pod]:
         return self.connection.list_pod_for_all_namespaces(_request_timeout=self.timeout).items
+
+    def _query_raw_resource_quotas(self) -> Sequence[client.V1ResourceQuota]:
+        return self.connection.list_resource_quota_for_all_namespaces().items
+
+    def _query_raw_namespaces(self):
+        return self.connection.list_namespace(_request_timeout=self.timeout).items
 
 
 class AppsAPI:
@@ -90,7 +100,7 @@ class AppsAPI:
             _request_timeout=self.timeout
         ).items
 
-    def _query_raw_statefulsets(self) -> Sequence[client.V1DaemonSet]:
+    def _query_raw_statefulsets(self) -> Sequence[client.V1StatefulSet]:
         return self.connection.list_stateful_set_for_all_namespaces(
             _request_timeout=self.timeout
         ).items
@@ -161,6 +171,14 @@ class RawAPI:
             status_code=status_code,
             verbose_response=verbose_response,
         )
+
+    def query_version(self) -> api.GitVersion:
+        # We cannot use json instead of ast here, because the Kubernetes client converts the JSON
+        # to a string by replacing " by ' (hence it no longer is JSON). It may be possible to fix
+        # this by looking into the parameters for client.APIClient.call_api.
+        return ast.literal_eval(self._request("GET", "/version", response_type=str).response)[
+            "gitVersion"
+        ]
 
     def query_api_health(self) -> api.APIHealth:
         return api.APIHealth(ready=self._get_healthz("/readyz"), live=self._get_healthz("/livez"))
@@ -239,6 +257,7 @@ class APIServer:
             for raw_node in self._core_api.raw_nodes
         }
         self.api_health = raw_api.query_api_health()
+        self.version = raw_api.query_version()
 
         self._controller_to_pods = _match_controllers(
             pods=self._core_api.raw_pods,
@@ -282,6 +301,11 @@ class APIServer:
             for raw_statefulset in self._external_api.raw_statefulsets
         ]
 
+    def namespaces(self) -> Sequence[api.Namespace]:
+        return [
+            namespace_from_client(raw_namespace) for raw_namespace in self._core_api.raw_namespaces
+        ]
+
     def nodes(self) -> Sequence[api.Node]:
         return [
             node_from_client(raw_node, self.node_to_kubelet_health[raw_node.metadata.name])
@@ -291,5 +315,12 @@ class APIServer:
     def pods(self) -> Sequence[api.Pod]:
         return [pod_from_client(pod) for pod in self._core_api.raw_pods]
 
+    def resource_quotas(self) -> Sequence[api.ResourceQuota]:
+        return [
+            api_resource_quota
+            for resource_quota in self._core_api.raw_resource_quotas
+            if (api_resource_quota := resource_quota_from_client(resource_quota)) is not None
+        ]
+
     def cluster_details(self) -> api.ClusterDetails:
-        return api.ClusterDetails(api_health=self.api_health)
+        return api.ClusterDetails(api_health=self.api_health, version=self.version)

@@ -64,7 +64,11 @@ controller:
 	rm -f linux/cmk-agent-ctl
 	(cd cmk-agent-ctl; ../../scripts/run-cargo-command build --release) \
 	&& mkdir -p linux \
-	&& cp cmk-agent-ctl/target/x86_64-unknown-linux-musl/release/cmk-agent-ctl linux
+	&& cp cmk-agent-ctl/target/x86_64-unknown-linux-musl/release/cmk-agent-ctl linux \
+	&& strip linux/cmk-agent-ctl ; \
+	which upx >/dev/null 2>&1 \
+	&& upx linux/cmk-agent-ctl \
+	|| true
 
 packages: $(DEB_PACKAGE) $(RPM_PACKAGE)
 

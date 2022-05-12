@@ -3,6 +3,8 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from typing import Optional
+from typing import Tuple as _Tuple
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
@@ -10,7 +12,66 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-from cmk.gui.valuespec import Dictionary, Integer, ListOf, MonitoringState, RegExp, Tuple
+from cmk.gui.valuespec import (
+    Age,
+    Alternative,
+    Dictionary,
+    FixedValue,
+    ListOf,
+    MonitoringState,
+    RegExp,
+    Tuple,
+)
+
+
+def _NoLevels() -> FixedValue:
+    return FixedValue(
+        value=None,
+        title=_("No Levels"),
+        totext=_("Do not impose levels, always be OK"),
+    )
+
+
+def _FixedLevels(
+    default_value: _Tuple[float, float],
+) -> Tuple:
+    return Tuple(
+        title=_("Fixed Levels"),
+        elements=[
+            Age(
+                title=_("Warning at"),
+                default_value=default_value[0],
+            ),
+            Age(
+                title=_("Critical at"),
+                default_value=default_value[1],
+            ),
+        ],
+    )
+
+
+def SimpleLevels(
+    help: str,  # pylint: disable=redefined-builtin
+    title: str,
+    default_levels: _Tuple[int, int] = (0, 0),
+    default_value: Optional[_Tuple[int, int]] = None,
+) -> Alternative:
+    def match_levels_alternative(v: Optional[_Tuple[int, int]]) -> int:
+        if v is None:
+            return 0
+        return 1
+
+    elements = [
+        _NoLevels(),
+        _FixedLevels(default_value=default_levels),
+    ]
+    return Alternative(
+        title=title,
+        help=help,
+        elements=elements,
+        match=match_levels_alternative,
+        default_value=default_value,
+    )
 
 
 def _parameter_valuespec_systemd_services():
@@ -71,41 +132,32 @@ def _parameter_valuespec_systemd_services():
             ),
             (
                 "activating_levels",
-                Tuple(
+                SimpleLevels(
                     title=_("Define a tolerating time period for activating services"),
                     help=_(
-                        "Choose time levels (in seconds) for which a service is allowed to be in an 'activating' state"
+                        "Choose time levels for which a service is allowed to be in an 'activating' state"
                     ),
-                    elements=[
-                        Integer(title=_("Warning at"), unit=_("seconds"), default_value=30),
-                        Integer(title=_("Critical at"), unit=_("seconds"), default_value=60),
-                    ],
+                    default_levels=(30, 60),
                 ),
             ),
             (
                 "deactivating_levels",
-                Tuple(
+                SimpleLevels(
                     title=_("Define a tolerating time period for deactivating services"),
                     help=_(
                         "Choose time levels (in seconds) for which a service is allowed to be in an 'deactivating' state"
                     ),
-                    elements=[
-                        Integer(title=_("Warning at"), unit=_("seconds"), default_value=30),
-                        Integer(title=_("Critical at"), unit=_("seconds"), default_value=60),
-                    ],
+                    default_value=(30, 60),
                 ),
             ),
             (
                 "reloading_levels",
-                Tuple(
+                SimpleLevels(
                     title=_("Define a tolerating time period for reloading services"),
                     help=_(
                         "Choose time levels (in seconds) for which a service is allowed to be in a 'reloading' state"
                     ),
-                    elements=[
-                        Integer(title=_("Warning at"), unit=_("seconds"), default_value=30),
-                        Integer(title=_("Critical at"), unit=_("seconds"), default_value=60),
-                    ],
+                    default_value=(30, 60),
                 ),
             ),
         ],

@@ -12,9 +12,10 @@ data structures to version independent data structured defined in schemata.api
 from __future__ import annotations
 
 import datetime
-from typing import Dict, List, Mapping, Optional, Sequence, Type, Union
+import re
+from typing import Any, Dict, List, Literal, Mapping, Optional, Sequence, Type, Union
 
-from kubernetes import client  # type: ignore[import] # pylint: disable=import-error
+from kubernetes import client  # type: ignore[import]
 
 from .schemata import api
 from .schemata.api import Label, LabelName, LabelValue
@@ -73,26 +74,66 @@ def parse_memory(value: str) -> float:
 
 
 # TODO: change to Timestamp type
-def convert_to_timestamp(k8s_date_time: Union[str, datetime.datetime]) -> float:
-    if isinstance(k8s_date_time, str):
-        date_time = datetime.datetime.strptime(k8s_date_time, "%Y-%m-%dT%H:%M:%SZ").replace(
+def convert_to_timestamp(kube_date_time: Union[str, datetime.datetime]) -> float:
+    if isinstance(kube_date_time, str):
+        date_time = datetime.datetime.strptime(kube_date_time, "%Y-%m-%dT%H:%M:%SZ").replace(
             tzinfo=datetime.timezone.utc
         )
-    elif isinstance(k8s_date_time, datetime.datetime):
-        date_time = k8s_date_time
+    elif isinstance(kube_date_time, datetime.datetime):
+        date_time = kube_date_time
         if date_time.tzinfo is None:
-            raise ValueError(f"Can not convert to timestamp: '{k8s_date_time}' is missing tzinfo")
+            raise ValueError(f"Can not convert to timestamp: '{kube_date_time}' is missing tzinfo")
     else:
         raise TypeError(
-            f"Can not convert to timestamp: '{k8s_date_time}' of type {type(k8s_date_time)}"
+            f"Can not convert to timestamp: '{kube_date_time}' of type {type(kube_date_time)}"
         )
 
     return date_time.timestamp()
 
 
-def parse_labels(labels: Mapping[str, str]) -> Optional[Mapping[LabelName, Label]]:
+# See LabelValue for details
+__validation_value = re.compile(r"(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])?")
+
+
+def _is_valid_label_value(value: Any) -> bool:
+    # The length of a Kubernetes label value at most 63 chars
+    return isinstance(value, str) and bool(__validation_value.fullmatch(value)) and len(value) < 64
+
+
+def parse_annotations(annotations: Optional[Mapping[LabelName, str]]) -> api.Annotations:
+    """Select annotations, if they are valid.
+
+    Kubernetes allows the annotations to be arbitrary byte strings with a
+    length of at most 256Kb. The python client will try to decode these with
+    utf8, but appears to return raw data if an exception occurs. We have not
+    tested whether this will happen. The current commit, when this information
+    was obtained, was
+    https://github.com/kubernetes/kubernetes/commit/a83cc51a19d1b5f2b2d3fb75574b04f587ec0054
+
+    Since not every annotation can be converted to a HostLabel, we decided to
+    only use annotations, which are also valid Kubernetes labels. Kubernetes
+    makes sure that the annotation has a valid name, so we only verify, that
+    the key is also valid as a label.
+
+    >>> parse_annotations(None)  # no annotation specified for the object
+    {}
+    >>> parse_annotations({
+    ... '1': '',
+    ... '2': 'a-',
+    ... '3': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+    ... '4': 'a&a',
+    ... '5': 'valid-key',
+    ... })
+    {'1': '', '5': 'valid-key'}
+    """
+    if annotations is None:
+        return {}
+    return {k: LabelValue(v) for k, v in annotations.items() if _is_valid_label_value(v)}
+
+
+def parse_labels(labels: Optional[Mapping[str, str]]) -> Mapping[LabelName, Label]:
     if labels is None:
-        return None
+        return {}
     return {LabelName(k): Label(name=LabelName(k), value=LabelValue(v)) for k, v in labels.items()}
 
 
@@ -104,6 +145,16 @@ def parse_metadata(
         namespace=metadata.namespace,
         creation_timestamp=convert_to_timestamp(metadata.creation_timestamp),
         labels=parse_labels(metadata.labels),
+        annotations=parse_annotations(metadata.annotations),
+    )
+
+
+def parse_namespace_metadata(metadata: client.V1ObjectMeta) -> api.NamespaceMetaData:
+    return api.NamespaceMetaData(
+        name=api.NamespaceName(metadata.name),
+        creation_timestamp=convert_to_timestamp(metadata.creation_timestamp),
+        labels=parse_labels(metadata.labels),
+        annotations=parse_annotations(metadata.annotations),
     )
 
 
@@ -152,6 +203,8 @@ def pod_spec(pod: client.V1Pod) -> api.PodSpec:
         init_containers=containers_spec(
             pod.spec.init_containers if pod.spec.init_containers is not None else []
         ),
+        priority_class_name=pod.spec.priority_class_name,
+        active_deadline_seconds=pod.spec.active_deadline_seconds,
     )
 
 
@@ -243,15 +296,31 @@ def pod_conditions(
     return result
 
 
-def is_control_plane(labels: Optional[Mapping[LabelName, Label]]) -> bool:
-    return labels is not None and (
-        # 1.18 returns an empty string, 1.20 returns 'true'
-        "node-role.kubernetes.io/master" in labels
-        or "node-role.kubernetes.io/control-plane" in labels
-    )
+def _give_root_if_prefix_present(label: LabelName, prefix: str) -> Optional[str]:
+    """
+    >>> _give_root_if_prefix_present("123asd", "123")
+    'asd'
+    >>> _give_root_if_prefix_present("asd123", "123") is None
+    True
+    >>> _give_root_if_prefix_present("asd", "123") is None
+    True
+    """
+    if label.startswith(prefix):
+        return label[len(prefix) :]
+    return None
 
 
-def node_conditions(status: client.V1Status) -> Optional[Sequence[api.NodeCondition]]:
+def parse_node_roles(labels: Optional[Mapping[LabelName, Label]]) -> Sequence[str]:
+    if labels is None:
+        return []
+    return [
+        role
+        for label in labels
+        if (role := _give_root_if_prefix_present(label, "node-role.kubernetes.io/")) is not None
+    ]
+
+
+def node_conditions(status: client.V1NodeStatus) -> Optional[Sequence[api.NodeCondition]]:
     conditions = status.conditions
     if not conditions:
         return None
@@ -379,7 +448,7 @@ def node_from_client(node: client.V1Node, kubelet_health: api.HealthZ) -> api.No
             addresses=node_addresses_from_client(node.status.addresses),
         ),
         resources=parse_node_resources(node),
-        control_plane=is_control_plane(metadata.labels),
+        roles=parse_node_roles(metadata.labels),
         kubelet_info=api.KubeletInfo(
             version=node.status.node_info.kubelet_version,
             proxy_version=node.status.node_info.kube_proxy_version,
@@ -445,6 +514,16 @@ def cron_job_from_client(
     )
 
 
+def parse_daemonset_status(status: client.V1DaemonSetStatus) -> api.DaemonSetStatus:
+    return api.DaemonSetStatus(
+        desired_number_scheduled=status.desired_number_scheduled,
+        updated_number_scheduled=status.updated_number_scheduled or 0,
+        number_misscheduled=status.number_misscheduled,
+        number_ready=status.number_ready,
+        number_available=status.number_available or 0,
+    )
+
+
 def parse_daemonset_spec(daemonset_spec: client.V1DaemonSetSpec) -> api.DaemonSetSpec:
     if daemonset_spec.update_strategy.type == "OnDelete":
         return api.DaemonSetSpec(
@@ -468,7 +547,15 @@ def daemonset_from_client(
     return api.DaemonSet(
         metadata=parse_metadata(daemonset.metadata),
         spec=parse_daemonset_spec(daemonset.spec),
+        status=parse_daemonset_status(status=daemonset.status),
         pods=pod_uids,
+    )
+
+
+def parse_statefulset_status(status: client.V1StatefulSetStatus) -> api.StatefulSetStatus:
+    return api.StatefulSetStatus(
+        ready_replicas=status.ready_replicas or 0,
+        updated_replicas=status.updated_replicas or 0,
     )
 
 
@@ -477,13 +564,18 @@ def parse_statefulset_spec(statefulset_spec: client.V1StatefulSetSpec) -> api.St
         return api.StatefulSetSpec(
             strategy=api.OnDelete(),
             selector=parse_selector(statefulset_spec.selector),
+            replicas=statefulset_spec.replicas,
         )
     if statefulset_spec.update_strategy.type == "RollingUpdate":
+        partition = (
+            rolling_update.partition
+            if (rolling_update := statefulset_spec.update_strategy.rolling_update)
+            else 0
+        )
         return api.StatefulSetSpec(
-            strategy=api.StatefulSetRollingUpdate(
-                partition=statefulset_spec.update_strategy.rolling_update.partition,
-            ),
+            strategy=api.StatefulSetRollingUpdate(partition=partition),
             selector=parse_selector(statefulset_spec.selector),
+            replicas=statefulset_spec.replicas,
         )
     raise ValueError(f"Unknown strategy type: {statefulset_spec.update_strategy.type}")
 
@@ -494,5 +586,89 @@ def statefulset_from_client(
     return api.StatefulSet(
         metadata=parse_metadata(statefulset.metadata),
         spec=parse_statefulset_spec(statefulset.spec),
+        status=parse_statefulset_status(statefulset.status),
         pods=pod_uids,
+    )
+
+
+def namespace_from_client(namespace: client.V1Namespace) -> api.Namespace:
+    return api.Namespace(
+        metadata=parse_namespace_metadata(namespace.metadata),
+    )
+
+
+def parse_resource_quota_spec(
+    spec: client.V1ResourceQuotaSpec,
+) -> api.ResourceQuotaSpec:
+    # TODO: CMK-10288 add validation logic
+    try:
+        scope_selector = parse_scope_selector(spec.scope_selector)
+        scopes = (
+            [api.QuotaScope(scope) for scope in spec.scopes] if spec.scopes is not None else None
+        )
+    except ValueError:
+        raise NotImplementedError("At least one of the given scopes is not supported")
+
+    return api.ResourceQuotaSpec(
+        hard=api.HardRequirement(
+            memory=parse_resource_requirement("memory", spec.hard),
+            cpu=parse_resource_requirement("cpu", spec.hard),
+        )
+        if spec.hard is not None
+        else None,
+        scope_selector=scope_selector,
+        scopes=scopes,
+    )
+
+
+def parse_resource_requirement(resource: Literal["memory", "cpu"], hard: Mapping[str, str]):
+    # request & limit are only defined once for each requirement. It is possible to double
+    # define them in the yaml file but only one value is taken into account.
+    requirements = {}
+    for requirement, value in hard.items():
+        if resource not in requirement:
+            continue
+        requirement_type = "limit" if "limits" in requirement else "request"
+        requirements[requirement_type] = (
+            parse_frac_prefix(value) if resource == "cpu" else parse_memory(value)
+        )
+
+    if not requirements:
+        return None
+    return api.HardResourceRequirement(**requirements)
+
+
+def parse_scope_selector(
+    scope_selector: Optional[client.V1ScopeSelector],
+) -> Optional[api.ScopeSelector]:
+    if scope_selector is None:
+        return None
+    return api.ScopeSelector(
+        match_expressions=[
+            api.ScopedResourceMatchExpression(
+                operator=match_expression.operator,
+                scope_name=match_expression.scope_name,
+                values=match_expression.values,
+            )
+            for match_expression in scope_selector.match_expressions
+        ]
+    )
+
+
+def resource_quota_from_client(
+    resource_quota: client.V1ResourceQuota,
+) -> Optional[api.ResourceQuota]:
+    """Parse Kubernetes resource quota client object
+
+    * Resource quotas which include the CrossNamespacePodAffinity scope
+    are currently not supported and treated as non existent
+    """
+    try:
+        spec = parse_resource_quota_spec(resource_quota.spec)
+    except NotImplementedError:
+        return None
+
+    return api.ResourceQuota(
+        metadata=parse_metadata(resource_quota.metadata),
+        spec=spec,
     )

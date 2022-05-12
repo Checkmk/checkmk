@@ -2,7 +2,9 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use super::{site_spec, types};
+use super::site_spec;
+#[cfg(windows)]
+use super::types;
 use structopt::StructOpt;
 
 #[derive(StructOpt)]
@@ -24,6 +26,14 @@ impl LoggingOpts {
             _ => String::from("warn"),
         }
     }
+}
+
+#[derive(StructOpt)]
+pub struct ClientOpts {
+    /// Detect and use proxy settings configured on this system for outgoing HTTPS connections.
+    /// The default is to ignore configured proxies and to connect directly.
+    #[structopt(long, short = "d")]
+    pub detect_proxy: bool,
 }
 
 #[derive(StructOpt)]
@@ -55,6 +65,9 @@ pub struct RegistrationArgs {
     pub trust_server_cert: bool,
 
     #[structopt(flatten)]
+    pub client_opts: ClientOpts,
+
+    #[structopt(flatten)]
     pub logging_opts: LoggingOpts,
 }
 
@@ -63,6 +76,9 @@ pub struct StatusArgs {
     /// Write output in JSON format
     #[structopt(long)]
     pub json: bool,
+
+    #[structopt(flatten)]
+    pub client_opts: ClientOpts,
 
     #[structopt(flatten)]
     pub logging_opts: LoggingOpts,
@@ -78,12 +94,32 @@ pub struct DeleteArgs {
     pub logging_opts: LoggingOpts,
 }
 
-// TODO (sk): Remove port and allowed_ip and instead read from a toml file, as is done under unix
 #[derive(StructOpt)]
-pub struct PullArgs {
+pub struct PushArgs {
+    #[structopt(flatten)]
+    pub client_opts: ClientOpts,
+
+    #[structopt(flatten)]
+    pub logging_opts: LoggingOpts,
+}
+
+#[derive(StructOpt)]
+pub struct DeleteAllArgs {
+    /// Enable insecure connections (no TLS, agent output will be accessible via TCP agent port without encryption)
+    #[structopt(long)]
+    pub enable_insecure_connections: bool,
+
+    #[structopt(flatten)]
+    pub logging_opts: LoggingOpts,
+}
+
+// TODO (sk): Remove port and allowed_ip and instead read from a toml file, as is done under unix
+#[cfg(windows)]
+#[derive(StructOpt)]
+pub struct PullOpts {
     /// TCP port to listen on for incoming pull connections
-    #[structopt(long, short = "P", parse(try_from_str))]
-    pub port: Option<types::Port>,
+    #[structopt(long, short = "P", parse(try_from_str = site_spec::parse_port))]
+    pub port: Option<u16>,
 
     /// List of IP addresses & templates separated with ' '
     #[structopt(long, short = "A", parse(from_str))]
@@ -91,9 +127,38 @@ pub struct PullArgs {
 
     /// TCP connection "ip:port"
     /// None means default behavior
-    #[cfg(windows)]
     #[structopt(long, parse(from_str))]
-    pub agent_channel: Option<String>,
+    pub agent_channel: Option<types::AgentChannel>,
+}
+
+#[cfg(unix)]
+#[derive(StructOpt)]
+pub struct PullOpts {
+    /// TCP port to listen on for incoming pull connections
+    #[structopt(long, short = "P", parse(try_from_str = site_spec::parse_port))]
+    pub port: Option<u16>,
+
+    /// List of IP addresses & templates separated with ' '
+    #[structopt(long, short = "A", parse(from_str))]
+    pub allowed_ip: Option<Vec<String>>,
+}
+
+#[derive(StructOpt)]
+pub struct PullArgs {
+    #[structopt(flatten)]
+    pub pull_opts: PullOpts,
+
+    #[structopt(flatten)]
+    pub logging_opts: LoggingOpts,
+}
+
+#[derive(StructOpt)]
+pub struct DaemonArgs {
+    #[structopt(flatten)]
+    pub pull_opts: PullOpts,
+
+    #[structopt(flatten)]
+    pub client_opts: ClientOpts,
 
     #[structopt(flatten)]
     pub logging_opts: LoggingOpts,
@@ -137,7 +202,7 @@ pub enum Args {
     /// This command will collect monitoring data, send them to all
     /// Checkmk site configured for 'push' and exit.
     #[structopt()]
-    Push(SharedArgsOnly),
+    Push(PushArgs),
 
     /// Handle incoming connections from Checkmk sites collecting monitoring data
     ///
@@ -151,7 +216,8 @@ pub enum Args {
     /// and send data to all Checkmk sites configured for 'push'
     /// (as the 'push' command does) once a minute.
     #[structopt()]
-    Daemon(PullArgs),
+    Daemon(DaemonArgs),
+
     /// Collect monitoring data and write it to standard output
     #[structopt()]
     Dump(SharedArgsOnly),
@@ -170,7 +236,7 @@ pub enum Args {
 
     /// Delete all connections to Checkmk sites
     #[structopt()]
-    DeleteAll(SharedArgsOnly),
+    DeleteAll(DeleteAllArgs),
 
     /// Import a pull connection from file or standard input
     ///

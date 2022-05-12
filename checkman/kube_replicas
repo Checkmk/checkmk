@@ -8,14 +8,16 @@ description:
 
  In the event that the number of ready or up-to-date replicas is below the
  number of desired replicas, the check shows a WARN and CRIT state if this
- persists for more than 5 minutes and 10 minutes respectively.
+ persists for more than 5 minutes and 10 minutes respectively. Moreover,
+ if there are misscheduled Pods controlled by a DaemonSet, then the check
+ will also show WARN/CRIT, after 5/10 minutes.
 
  It is possible to configure the grace period for each state using the
  "Kubernetes: Replicas" ruleset.
 
- Please note that replicas may temporarily be in a not ready or out-of-date
- state during the process of an update. It is therefore advised to always have a
- grace period configured.
+ Please note that replicas may temporarily be in a not ready, out-of-date or
+ misscheduled state during the process of an update. It is therefore advised to
+ always have a grace period configured.
 
 discovery:
  One service is created for each Kubernetes object which supports replicas.

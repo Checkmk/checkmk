@@ -1,0 +1,11 @@
+Title: Add template graph to dashboard
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 2.1.0b9
+Date: 1652252553
+
+Adding template graphs to a dashboard through the popup menu's "Add to ..." entries was broken. The concerning context information is fixed and the expected behavior restored.

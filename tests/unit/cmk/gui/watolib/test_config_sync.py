@@ -9,7 +9,7 @@ import tarfile
 import time
 from io import BufferedIOBase
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Union
 
 import pytest
 import responses  # type: ignore[import]
@@ -106,6 +106,10 @@ def _create_test_sync_config(monkeypatch):
     with gui_conf_dir.joinpath("global.mk").open("w", encoding="utf-8") as f:
         f.write("# 123\n")
 
+    stored_passwords_dir = Path(cmk.utils.paths.var_dir)
+    with stored_passwords_dir.joinpath("stored_passwords").open("w", encoding="utf-8") as f:
+        f.write("DUMMY_PWD_ENTRY \n")
+
     if cmk_version.is_managed_edition():
         monkeypatch.setattr(
             config,
@@ -116,6 +120,22 @@ def _create_test_sync_config(monkeypatch):
                 },
             },
             raising=False,
+        )
+        dummy_password: Dict[str, Dict[str, Union[None, str, List]]] = {
+            "password_1": {
+                "title": "testpwd",
+                "comment": "",
+                "docu_url": "",
+                "password": "",
+                "owned_by": None,
+                "shared_with": [],
+                "customer": "provider",
+            }
+        }
+        monkeypatch.setattr(
+            cmk.gui.watolib.password_store.PasswordStore,
+            "load_for_reading",
+            lambda x: dummy_password,
         )
 
 
@@ -255,6 +275,7 @@ def _get_expected_paths(user_id, is_pre_17_site, with_local):
         "var/check_mk/web/%s/last_pw_change.mk" % user_id,
         "var/check_mk/web/%s/num_failed_logins.mk" % user_id,
         "var/check_mk/web/%s/serial.mk" % user_id,
+        "var/check_mk/stored_passwords",
     ]
 
     if with_local:
@@ -319,6 +340,7 @@ def _get_expected_paths(user_id, is_pre_17_site, with_local):
         expected_paths += [
             "etc/check_mk/conf.d/customer.mk",
             "etc/check_mk/conf.d/wato/groups.mk",
+            "etc/check_mk/conf.d/wato/passwords.mk",
             "etc/check_mk/mkeventd.d/wato/rules.mk",
             "etc/check_mk/multisite.d/customer.mk",
             "etc/check_mk/multisite.d/wato/bi_config.bi",
@@ -428,6 +450,7 @@ def test_generate_pre_17_site_snapshot(
         "mkeventd.tar",
         "multisite.tar",
         "sitespecific.tar",
+        "stored_passwords.tar",
         "usersettings.tar",
     ]
 
@@ -472,6 +495,7 @@ def test_generate_pre_17_site_snapshot(
         "htpasswd.tar": ["htpasswd"],
         "liveproxyd.tar": [],
         "sitespecific.tar": ["sitespecific.mk"],
+        "stored_passwords.tar": ["stored_passwords"],
         "auth.secret.tar": [],
         "password_store.secret.tar": [],
         "dcd.tar": [],
@@ -495,7 +519,7 @@ def test_generate_pre_17_site_snapshot(
                 "gui_logo_facelift.tar": [],
                 # TODO: Shouldn't we clean up these subtle differences?
                 "mkeventd.tar": ["rules.mk"],
-                "check_mk.tar": ["groups.mk", "contacts.mk"],
+                "check_mk.tar": ["groups.mk", "contacts.mk", "passwords.mk"],
                 "multisite.tar": [
                     "bi_config.bi",
                     "customers.mk",

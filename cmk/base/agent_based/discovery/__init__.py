@@ -317,10 +317,7 @@ def automation_discovery(
         if mode is DiscoveryMode.REFRESH:
             result.self_removed += host_config.remove_autochecks()  # this is cluster-aware!
 
-        if host_config.is_cluster:
-            ipaddress = None
-        else:
-            ipaddress = config.lookup_ip_address(host_config)
+        ipaddress = None if host_config.is_cluster else config.lookup_ip_address(host_config)
 
         parsed_sections_broker, _source_results = make_broker(
             config_cache=config_cache,
@@ -348,6 +345,8 @@ def automation_discovery(
             if mode is DiscoveryMode.ONLY_HOST_LABELS:
                 result.diff_text = _make_diff(host_labels.vanished, host_labels.new, (), ())
                 return result
+        else:
+            host_labels = QualifiedDiscovery.empty()
 
         # Compute current state of new and existing checks
         services = _get_host_services(
@@ -1130,7 +1129,7 @@ def _get_cluster_services(
             parsed_sections_broker=parsed_sections_broker,
             run_plugin_names=EVERYTHING,
             forget_existing=False,
-            keep_vanished=True,
+            keep_vanished=False,
             on_error=on_error,
         )
 

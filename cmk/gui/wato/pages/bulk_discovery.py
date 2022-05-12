@@ -22,8 +22,12 @@ from cmk.gui.type_defs import ActionResult
 from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.watolib.bulk_discovery import (
     BulkDiscoveryBackgroundJob,
+    BulkSize,
     DiscoveryHost,
-    get_tasks,
+    DiscoveryMode,
+    DoFullScan,
+    IgnoreErrors,
+    start_bulk_discovery,
     vs_bulk_discovery,
 )
 from cmk.gui.watolib.hosts_and_folders import Folder
@@ -64,11 +68,11 @@ class ModeBulkDiscovery(WatoMode):
             Tuple[bool, bool, bool, bool], self._bulk_discovery_params["selection"]
         )
 
-        self._do_scan, self._bulk_size = self._get_performance_params()
-        self._mode = self._bulk_discovery_params["mode"]
-        self._error_handling = self._bulk_discovery_params["error_handling"]
+        self._do_full_scan, self._bulk_size = self._get_performance_params()
+        self._mode = DiscoveryMode(self._bulk_discovery_params["mode"])
+        self._ignore_errors = IgnoreErrors(self._bulk_discovery_params["error_handling"])
 
-    def _get_performance_params(self) -> Tuple[bool, int]:
+    def _get_performance_params(self) -> Tuple[DoFullScan, BulkSize]:
         performance_params = self._bulk_discovery_params["performance"]
         assert isinstance(performance_params, tuple)
 
@@ -81,7 +85,7 @@ class ModeBulkDiscovery(WatoMode):
 
         assert isinstance(do_scan, bool)
         assert isinstance(bulk_size, int)
-        return do_scan, bulk_size
+        return DoFullScan(do_scan), BulkSize(bulk_size)
 
     def title(self):
         return _("Bulk discovery")
@@ -98,14 +102,17 @@ class ModeBulkDiscovery(WatoMode):
     def action(self) -> ActionResult:
         user.need_permission("wato.services")
 
-        tasks = get_tasks(self._get_hosts_to_discover(), self._bulk_size)
-
         try:
             transactions.check_transaction()
-            self._job.set_function(
-                self._job.do_execute, self._mode, self._do_scan, self._error_handling, tasks
+            start_bulk_discovery(
+                self._job,
+                self._get_hosts_to_discover(),
+                self._mode,
+                self._do_full_scan,
+                self._ignore_errors,
+                self._bulk_size,
             )
-            self._job.start()
+
         except Exception as e:
             if config.debug:
                 raise

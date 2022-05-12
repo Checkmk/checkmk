@@ -71,7 +71,8 @@ global:
         - ps 
         - fileinfo 
         - logwatch 
-        - openhardwaremonitor 
+        - openhardwaremonitor
+        - agent_plugins
     
     # sections to be skipped
     disabled_sections: []
@@ -107,6 +108,8 @@ global:
     # Windows may be slow during WMI, increase the value when you have problems
     # In seconds 
     wmi_timeout: 5 
+
+    cpuload_method: 'use_perf' # set use_wmi if you have serious problems with the section
 
     # Internal log of agent
     # Write a logfile for tackling down crashes of the agent
@@ -279,10 +282,13 @@ system:
     controller:
         run: yes                            # start controller if controller presented
 
-        check: no                           # if yes that only controller process connections are accepted
+        check: yes                          # if yes that only the controller process connections could access agent monitoring data
+                                            # set no if monitoring is lost and in log you find 'Connection forbidden: address'
         force_legacy: no                    # if yes always created for version with controller
         agent_channel: "localhost:50001"    # for controller
         local_only: yes                     # bind to 127.0.0.1 or 0.0.0.0
+        on_crash: "ignore"                  # possible values "ignore" or "emergency_mode". This is safety switch.
+                                            # Use "emergency_mode" if controller crashes/disappear.
 
 
     firewall:

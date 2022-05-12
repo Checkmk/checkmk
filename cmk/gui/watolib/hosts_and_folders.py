@@ -1387,6 +1387,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         attributes = self._add_missing_meta_data(attributes)
         attributes = self._transform_tag_snmp_ds(attributes)
         attributes = self._transform_cgconf_attributes(attributes)
+        attributes = self._cleanup_pre_210_hostname_attribute(attributes)
         return attributes
 
     def _transform_cgconf_attributes(self, attributes):
@@ -1401,6 +1402,23 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
     def _transform_tag_snmp_ds(self, attributes):
         if "tag_snmp" in attributes:
             attributes["tag_snmp_ds"] = attributes.pop("tag_snmp")
+        return attributes
+
+    def _cleanup_pre_210_hostname_attribute(self, attributes):
+        """Cleanup accidentally added hostname host attribute
+
+        The host diagnostic page was adding the field "hostname" to the "attributes"
+        dictionary before 2.0.0p24 and 2.1.0b6 when clicking on "Save and go to host
+        properties".
+
+        Args:
+            attributes: The attributes dictionary
+
+        Returns:
+            The modified 'attributes' dictionary. It actually is modified in-place though.
+
+        """
+        attributes.pop("hostname", None)
         return attributes
 
     def _add_missing_meta_data(self, attributes):
@@ -2501,18 +2519,28 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         # 2. Actual modification
         affected_sites = subfolder.all_site_ids()
         old_filesystem_path = subfolder.filesystem_path()
-        del self._subfolders[subfolder.name()]
-        subfolder._parent = target_folder
-        target_folder._subfolders[subfolder.name()] = subfolder
-        shutil.move(old_filesystem_path, subfolder.filesystem_path())
-        subfolder.rewrite_hosts_files()  # fixes changed inheritance
+        shutil.move(old_filesystem_path, target_folder.filesystem_path())
+
         self._clear_id_cache()
         Folder.invalidate_caches()
-        affected_sites = list(set(affected_sites + subfolder.all_site_ids()))
+
+        # Reload folder at new location and rewrite host files
+        # Again, some special handling because of the missing slash in the main folder
+        if not target_folder.is_root():
+            moved_subfolder = Folder.folder(f"{target_folder.path()}/{subfolder.name()}")
+        else:
+            moved_subfolder = Folder.folder(subfolder.name())
+
+        with disable_redis():
+            # Do not update redis while rewriting a plethora of host files
+            # Redis automatically updates on the next request
+            moved_subfolder.rewrite_hosts_files()  # fixes changed inheritance
+
+        affected_sites = list(set(affected_sites + moved_subfolder.all_site_ids()))
         add_change(
             "move-folder",
             _("Moved folder %s to %s") % (original_alias_path, target_folder.alias_path()),
-            object_ref=subfolder.object_ref(),
+            object_ref=moved_subfolder.object_ref(),
             sites=affected_sites,
         )
         need_sidebar_reload()
@@ -2676,17 +2704,22 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         return result
 
     # Group the given host names by their site and delete their files
-    def _delete_host_files(self, host_names):
-        hosts_by_site: Dict[SiteId, List[str]] = {}
-        for host_name in host_names:
-            host = self.hosts()[host_name]
-            hosts_by_site.setdefault(host.site_id(), []).append(host_name)
-
-        for site_id, site_host_names in hosts_by_site.items():
+    def _delete_host_files(self, host_names: Sequence[HostName]) -> None:
+        for site_id, site_host_names in self.get_hosts_by_site(host_names).items():
             delete_hosts(
                 site_id,
                 site_host_names,
             )
+
+    def get_hosts_by_site(
+        self, host_names: Sequence[HostName]
+    ) -> Mapping[SiteId, Sequence[HostName]]:
+        hosts_by_site: Dict[SiteId, List[HostName]] = {}
+        hosts = self.hosts()
+        for host_name in host_names:
+            host = hosts[host_name]
+            hosts_by_site.setdefault(host.site_id(), []).append(host_name)
+        return hosts_by_site
 
     def move_hosts(self, host_names, target_folder):
         # 1. Check preconditions

@@ -4,12 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import json
 from typing import Optional
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes, register
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import InventoryResult, StringTable
-from cmk.base.plugins.agent_based.utils.kube import DaemonSetInfo, DaemonSetStrategy
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import InventoryResult
+from cmk.base.plugins.agent_based.utils.kube import DaemonSetInfo, UpdateStrategy
 from cmk.base.plugins.agent_based.utils.kube_inventory import (
     labels_to_table,
     match_expressions_to_str,
@@ -18,37 +17,25 @@ from cmk.base.plugins.agent_based.utils.kube_inventory import (
 from cmk.base.plugins.agent_based.utils.kube_strategy import strategy_text
 
 
-def parse_kube_daemonset_strategy(string_table: StringTable) -> DaemonSetStrategy:
-    """
-    >>> parse_kube_daemonset_strategy([['{"strategy": {"type_": "OnDelete"}}']])
-    DaemonSetStrategy(strategy=OnDelete(type_='OnDelete'))
-    >>> parse_kube_daemonset_strategy([['{"strategy": {"type_": "RollingUpdate", "max_surge": "25%", "max_unavailable": "25%"}}']])
-    DaemonSetStrategy(strategy=RollingUpdate(type_='RollingUpdate', max_surge='25%', max_unavailable='25%'))
-    """
-
-    return DaemonSetStrategy(**json.loads(string_table[0][0]))
-
-
-register.agent_section(
-    name="kube_daemonset_strategy_v1",
-    parsed_section_name="kube_daemonset_strategy",
-    parse_function=parse_kube_daemonset_strategy,
-)
-
-
 def inventory_kube_daemonset(
     section_kube_daemonset_info: Optional[DaemonSetInfo],
-    section_kube_daemonset_strategy: Optional[DaemonSetStrategy],
+    section_kube_update_strategy: Optional[UpdateStrategy],
 ) -> InventoryResult:
-    if section_kube_daemonset_info is None or section_kube_daemonset_strategy is None:
+    if section_kube_daemonset_info is None or section_kube_update_strategy is None:
         return
+    yield Attributes(
+        path=["software", "applications", "kube", "metadata"],
+        inventory_attributes={
+            "object": "DaemonSet",
+            "name": section_kube_daemonset_info.name,
+            "namespace": section_kube_daemonset_info.namespace,
+        },
+    )
     selector = section_kube_daemonset_info.selector
     yield Attributes(
         path=["software", "applications", "kube", "daemonset"],
         inventory_attributes={
-            "name": section_kube_daemonset_info.name,
-            "namespace": section_kube_daemonset_info.namespace,
-            "strategy": strategy_text(section_kube_daemonset_strategy.strategy),
+            "strategy": strategy_text(section_kube_update_strategy.strategy),
             "match_labels": match_labels_to_str(selector.match_labels),
             "match_expressions": match_expressions_to_str(selector.match_expressions),
         },
@@ -58,6 +45,6 @@ def inventory_kube_daemonset(
 
 register.inventory_plugin(
     name="kube_daemonset",
-    sections=["kube_daemonset_info", "kube_daemonset_strategy"],
+    sections=["kube_daemonset_info", "kube_update_strategy"],
     inventory_function=inventory_kube_daemonset,
 )

@@ -21,6 +21,7 @@
 #include "tools/_xlog.h"
 #include "upgrade.h"
 namespace fs = std::filesystem;
+using namespace std::chrono_literals;
 
 namespace {
 std::string ErrorCodeToMessage(std::error_code ec) {
@@ -54,9 +55,9 @@ namespace cma::cfg::cap {
 
 // calculate valid path and create folder
 // returns path
-std::wstring ProcessPluginPath(const std::string &File) {
+std::wstring ProcessPluginPath(const std::string &name) {
     // Extract basename and dirname from path
-    fs::path fpath(File);
+    fs::path fpath(name);
     fs::path plugin_folder = cma::cfg::GetUserDir();
 
     plugin_folder /= fpath;
@@ -67,12 +68,14 @@ std::wstring ProcessPluginPath(const std::string &File) {
 // -1 means FAILURE
 // 0 means end of file
 // all other name should be read
-uint32_t ReadFileNameLength(std::ifstream &CapFile) {
+uint32_t ReadFileNameLength(std::ifstream &cap_file) {
     uint8_t length = 0;
-    CapFile.read(reinterpret_cast<char *>(&length), sizeof(length));
-    if (CapFile.good()) return length;
+    cap_file.read(reinterpret_cast<char *>(&length), sizeof(length));
+    if (cap_file.good()) {
+        return length;
+    }
 
-    if (CapFile.eof()) {
+    if (cap_file.eof()) {
         XLOG::l.t("End of CAP-file. OK!");
         return 0;
     }
@@ -83,19 +86,19 @@ uint32_t ReadFileNameLength(std::ifstream &CapFile) {
 
 // File format
 // [BYTE][variable][INT32][variable]
-std::string ReadFileName(std::ifstream &CapFile, uint32_t Length) {
-    size_t buffer_length = Length;
+std::string ReadFileName(std::ifstream &cap_file, uint32_t length) {
+    size_t buffer_length = length;
     ++buffer_length;
 
     std::vector<char> dataBuffer(buffer_length, 0);
-    CapFile.read(dataBuffer.data(), Length);
+    cap_file.read(dataBuffer.data(), length);
 
-    if (!CapFile.good()) {
+    if (!cap_file.good()) {
         XLOG::l("Unexpected problems with CAP-file name body");
         return {};
     }
 
-    dataBuffer[Length] = '\0';
+    dataBuffer[length] = '\0';
 
     XLOG::d.t("Processing file '{}'", dataBuffer.data());
 
@@ -165,8 +168,8 @@ FileInfo ExtractFile(std::ifstream &cap_file) {
 
 // may create dirs too
 // may create empty file
-bool StoreFile(const std::wstring &Name, const std::vector<char> &Data) {
-    fs::path fpath = Name;
+bool StoreFile(const std::wstring &name, const std::vector<char> &data) {
+    fs::path fpath = name;
     std::error_code ec;
     if (!fs::create_directories(fpath.parent_path(), ec) && ec.value() != 0) {
         XLOG::l.crit("Cannot create path to '{}', status = {}",
@@ -176,9 +179,9 @@ bool StoreFile(const std::wstring &Name, const std::vector<char> &Data) {
 
     // Write plugin
     try {
-        std::ofstream ofs(Name, std::ios::binary | std::ios::trunc);
+        std::ofstream ofs(name, std::ios::binary | std::ios::trunc);
         if (ofs.good()) {
-            ofs.write(Data.data(), Data.size());
+            ofs.write(data.data(), data.size());
             return true;
         }
         XLOG::l.crit("Cannot create file to '{}', status = {}",
@@ -239,10 +242,11 @@ const std::array<std::wstring, 3> TryToKillAllowedNames = {
 [[nodiscard]] bool StoreFileAgressive(const std::wstring &name,
                                       const std::vector<char> &data,
                                       uint32_t attempts_count) {
-    using namespace std::chrono;
     for (uint32_t i = 0; i < attempts_count + 1; ++i) {
         auto success = StoreFile(name, data);
-        if (success) return true;
+        if (success) {
+            return true;
+        }
 
         // we try to kill potentially running process
         auto proc_name = GetProcessToKill(name);
@@ -252,33 +256,33 @@ const std::array<std::wstring, 3> TryToKillAllowedNames = {
             return false;
         }
 
-        auto allowed_to_kill = IsAllowedToKill(proc_name);
-
-        if (!allowed_to_kill) return false;
+        if (!IsAllowedToKill(proc_name)) {
+            return false;
+        }
 
         wtools::KillProcessFully(proc_name);
-        constexpr auto delay = 500ms;
-        tools::sleep(delay);
+        tools::sleep(500ms);
     }
 
     return false;
 }
 
 [[nodiscard]] bool IsStoreFileAgressive() noexcept {
-    // stub function
-    return GetTryKillMode() != cma::cfg::values::kTryKillNo;
+    return GetTryKillMode() != cfg::values::kTryKillNo;
 }
 
-bool CheckAllFilesWritable(const std::string &Directory) {
+bool CheckAllFilesWritable(const std::string &directory) {
     bool all_writable = true;
-    for (const auto &p : fs::recursive_directory_iterator(Directory)) {
+    for (const auto &p : fs::recursive_directory_iterator(directory)) {
         std::error_code ec;
         auto const &path = p.path();
-        if (fs::is_directory(path, ec)) continue;
-        if (!fs::is_regular_file(path, ec)) continue;
+        if (fs::is_directory(path, ec) || !fs::is_regular_file(path, ec))
+            continue;
 
         auto path_string = path.wstring();
-        if (path_string.empty()) continue;
+        if (path_string.empty()) {
+            continue;
+        }
 
         auto *handle =
             ::CreateFile(path_string.c_str(),                 // file to open
@@ -336,7 +340,9 @@ bool Process(const std::string &cap_name, ProcMode mode,
 
     while (!ifs.eof()) {
         auto [name, data, eof] = ExtractFile(ifs);
-        if (eof) return true;
+        if (eof) {
+            return true;
+        }
 
         if (name.empty()) {
             XLOG::l("CAP file {} looks as bad", cap_name);

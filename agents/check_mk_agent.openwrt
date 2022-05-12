@@ -123,9 +123,11 @@ preamble_1() {
         export REMOTE=${SSH_CLIENT%% *}
     fi
 
-    # Make sure, locally installed binaries are found
-    PATH=${PATH}:/usr/local/bin
-    [ -d /var/qmail/bin ] && PATH=${PATH}:/var/qmail/bin
+    # Make sure locally installed binaries are found
+    # Only add binaries if they are not already in the path! If you append to path in a loop the process will
+    # eventually each the 128k size limit for the environment and become a zombie process. See execve manpage.
+    [ "${PATH#*"/usr/local/bin"}" != "${PATH}" ] || PATH="${PATH}:/usr/local/bin"
+    [ -d "/var/qmail/bin" ] && { [ "${PATH#*"/var/qmail/bin"}" != "${PATH}" ] || PATH="${PATH}:/var/qmail/bin"; }
 
     # All executables in PLUGINSDIR will simply be executed and their
     # ouput appended to the output of the agent. Plugins define their own
@@ -256,7 +258,7 @@ section_cpu() {
 
 section_checkmk() {
     echo "<<<check_mk>>>"
-    echo "Version: 2.1.0b5"
+    echo "Version: 2.1.0b9"
     echo "AgentOS: openwrt"
     echo "Hostname: $(hostname)"
     echo "AgentDirectory: ${MK_CONFDIR}"

@@ -1,0 +1,13 @@
+Title: Speedup label autocompletion
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1652089961
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b9
+
+When auto-completing labels, far too much redundant information was retrieved from remote sites.
+This slowed down or prevented the entire label synchronisation for large configurations.

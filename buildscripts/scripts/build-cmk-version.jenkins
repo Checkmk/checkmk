@@ -38,7 +38,8 @@ properties([
     string(name: 'DOCKER_TAG_BUILD', defaultValue: '', description: 'DOCKER_TAG_BUILD: Custom Docker Tag to use for this build. Leave empty for default' ),
     booleanParam(name: 'FAKE_WINDOWS_ARTIFACTS', defaultValue: false, description: 'Use faked windows agent artifacts instead of building them'),
     booleanParam(name: 'USE_OMD_PACKAGE_CACHE', defaultValue: USE_OMD_PACKAGE_CACHE_DEFAULT, description: 'Use OMD package cache (NEXUS_ environment variables needed)'),
-    booleanParam(name: 'DEPLOY_TO_WEBSITE', defaultValue: false, description: 'Upload and deploy the packages to the website')
+    booleanParam(name: 'DEPLOY_TO_WEBSITE', defaultValue: false, description: 'Upload and deploy the packages to the website'),
+    booleanParam(name: 'DEPLOY_TO_WEBSITE_ONLY', defaultValue: false, description: 'Do (almost) nothing, except upload & deployment of already built packages to the website')
   ])
 ])
 
@@ -78,20 +79,17 @@ timeout(time: 12, unit: 'HOURS') {
     node(NODE) {
         SOURCE_DIR = WORKSPACE + "/git"
 
-        stage('Prepare version directory') {
-            sh('rm -rf "${WORKSPACE}/versions/"*')
-            sh('mkdir -p "${WORKSPACE}/versions"')
-        }
-    
-        stage('Checkout sources') {
+        cleanup_versions(WORKSPACE)
+
+        stage('Checkout, clean-up git, load groovy libs') {
             /// takes place as regular Jenkins user
             dir(SOURCE_DIR) {
                 checkout_git(scm, VERSION)
-    
+
                 // Clean up left overs from previous runs, but keep previously
                 // created virtual environments to save some time
                 sh("make buildclean")
-    
+
                 // Load libraries
                 versioning = load 'buildscripts/scripts/lib/versioning.groovy'
                 windows = load 'buildscripts/scripts/lib/windows.groovy'
@@ -99,21 +97,38 @@ timeout(time: 12, unit: 'HOURS') {
                 notify = load 'buildscripts/scripts/lib/notify.groovy'
                 upload_artifacts = load 'buildscripts/scripts/lib/upload_artifacts.groovy'
                 docker_util = load 'buildscripts/scripts/lib/docker_util.groovy'
-    
+            }
+        }
+
+        if (params.DEPLOY_TO_WEBSITE_ONLY) {
+            // This stage is used only by bauwelt/bw-release in order to publish an already built release
+            stage('Deploying previously build version to website only') {
+                def BUILD_IMAGE = docker.build("build-image:${env.BUILD_ID}", "--pull ${WORKSPACE}/git/buildscripts/docker_image_aliases/IMAGE_TESTING")
+                BUILD_IMAGE.inside(DOCKER_ARGS) {
+                    upload_artifacts.deploy_to_website(WEB_DEPLOY_URL, WEB_DEPLOY_PORT, CMK_VERS)
+                }
+            }
+            // The job is already done here, so terminate it.
+            currentBuild.result = 'SUCCESS'
+            return
+        }
+
+        stage('Patch repo & get additional params') {
+            dir(SOURCE_DIR) {
                 docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
                     def BUILD_IMAGE = docker.build("build-image:${env.BUILD_ID}", "--pull ${WORKSPACE}/git/buildscripts/docker_image_aliases/IMAGE_TESTING")
                     BUILD_IMAGE.inside(DOCKER_ARGS) {
-    
+
                         withFolderProperties{
                             DOCKER_TAG = versioning.select_docker_tag(BRANCH, DOCKER_TAG_BUILD, DOCKER_TAG_DEFAULT)
                         }
-    
+
                         versioning.patch_git_after_checkout(EDITION, CMK_VERS)
                         BRANCH_VERSION = versioning.get_branch_version()
-    
+
                         DOCKER_REGISTRY_NO_HTTP = str_mod.strip_protocol_from_url(DOCKER_REGISTRY)
                     }
-    
+
                     // Get the ID of the docker group from the node(!). This must not be
                     // executed inside the container (as long as the IDs are different)
                     DOCKER_GROUP_ID = docker_util.get_docker_group_id()
@@ -133,7 +148,7 @@ timeout(time: 12, unit: 'HOURS') {
                             def FOLDER_ID = currentBuild.fullProjectName.split('/')[0]
                             def WIN_PROJECT = "${FOLDER_ID}/windows-agent-build"
                             def WIN_PY_PROJECT = "${FOLDER_ID}/Windows-Python-Build"
-    
+
                             def WIN_BUILD = build(job: WIN_PROJECT, parameters: [string(name: 'VERSION', value: VERSION)])
                             copyArtifacts(
                                 projectName: WIN_PROJECT,
@@ -141,7 +156,7 @@ timeout(time: 12, unit: 'HOURS') {
                                 target: 'agents',
                                 fingerprintArtifacts: true
                             )
-    
+
                             def WIN_PY_BUILD = build(job: WIN_PY_PROJECT, parameters: [string(name: 'VERSION', value: VERSION)])
                             copyArtifacts(
                                 projectName: WIN_PY_PROJECT,
@@ -149,7 +164,7 @@ timeout(time: 12, unit: 'HOURS') {
                                 target: 'agents',
                                 fingerprintArtifacts: true
                             )
-    
+
                         }
                         else if (EDITION != 'raw') {
                             docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
@@ -173,16 +188,16 @@ timeout(time: 12, unit: 'HOURS') {
             def BUILD_IMAGE = docker.build("build-image:${env.BUILD_ID}", "--pull ${WORKSPACE}/git/buildscripts/docker_image_aliases/IMAGE_TESTING")
             BUILD_IMAGE.inside(DOCKER_ARGS) {
                 create_source_package(WORKSPACE, CMK_VERS)
-    
+
                 def SOURCE_PACKAGE_NAME = get_source_package_name(WORKSPACE, EDITION, CMK_VERS)
                 def BUILD_SOURCE_PACKAGE_PATH = SOURCE_DIR + "/" + SOURCE_PACKAGE_NAME
                 def FINAL_SOURCE_PACKAGE_PATH = get_versions_dir(WORKSPACE, CMK_VERS) + "/" + SOURCE_PACKAGE_NAME
-    
+
                 copy_source_package(BUILD_SOURCE_PACKAGE_PATH, FINAL_SOURCE_PACKAGE_PATH)
-    
+
                 cleanup_source_package(WORKSPACE, FINAL_SOURCE_PACKAGE_PATH)
                 test_package(FINAL_SOURCE_PACKAGE_PATH, "source", WORKSPACE, SOURCE_DIR, CMK_VERS)
-    
+
                 upload_artifacts.upload(
                     NAME: "source",
                     FILE_PATH: FINAL_SOURCE_PACKAGE_PATH,
@@ -193,7 +208,7 @@ timeout(time: 12, unit: 'HOURS') {
                 )
             }
         }
-    
+
         try {
             DISTRO_LIST.each { DISTRO ->
                 PACKAGE_BUILDS[DISTRO] = {
@@ -209,26 +224,27 @@ timeout(time: 12, unit: 'HOURS') {
                     node(NODE) {
                         docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
                             def DISTRO_DIR = WORKSPACE + "/git"
-    
+
                             docker.image(DISTRO + ':' + DOCKER_TAG).inside(DOCKER_ARGS + " -v ${SOURCE_DIR}:${SOURCE_DIR}:ro --hostname ${DISTRO}") {
+                                cleanup_versions(WORKSPACE)
                                 initialize_workspace(DISTRO, SOURCE_DIR, DISTRO_DIR)
-    
+
                                 withCredentials([usernamePassword(credentialsId: 'nexus', passwordVariable: 'NEXUS_PASSWORD', usernameVariable: 'NEXUS_USERNAME')]) {
                                     versioning.print_image_tag()
                                     build_package(DISTRO, OMD_ENV_VARS)
                                 }
                             }
-    
+
                             def BUILD_IMAGE = docker.build("build-image:${env.BUILD_ID}", "--pull ${WORKSPACE}/git/buildscripts/docker_image_aliases/IMAGE_TESTING")
                             BUILD_IMAGE.inside(DOCKER_ARGS + " -v ${SOURCE_DIR}:${SOURCE_DIR}:ro") {
                                 def PACKAGE_NAME = get_package_name(WORKSPACE, DISTRO, CMK_VERS)
                                 def BUILD_PACKAGE_PATH = DISTRO_DIR + "/" + PACKAGE_NAME
                                 def FINAL_PACKAGE_PATH = get_versions_dir(WORKSPACE, CMK_VERS) + "/" + PACKAGE_NAME
-    
+
                                 sign_package(BUILD_PACKAGE_PATH, DISTRO, WORKSPACE)
                                 test_package(BUILD_PACKAGE_PATH, DISTRO, WORKSPACE, SOURCE_DIR, CMK_VERS)
                                 copy_package(BUILD_PACKAGE_PATH, DISTRO, FINAL_PACKAGE_PATH)
-    
+
                                 upload_artifacts.upload(
                                     NAME: DISTRO,
                                     FILE_PATH: FINAL_PACKAGE_PATH,
@@ -237,7 +253,7 @@ timeout(time: 12, unit: 'HOURS') {
                                     UPLOAD_DEST: INTERNAL_UPLOAD_DEST,
                                     PORT: INTERNAL_DEPLOY_PORT,
                                 )
-    
+
                             }
                         }
                     }
@@ -266,6 +282,13 @@ timeout(time: 12, unit: 'HOURS') {
 //
 // FUNCTIONS
 //
+
+def cleanup_versions(WORKSPACE) {
+    stage('Prepare version directory') {
+        sh('rm -rf "' + WORKSPACE + '/versions/"*')
+        sh('mkdir -p "' + WORKSPACE + '/versions"')
+    }
+}
 
 def get_versions_dir(WORKSPACE, CMK_VERS) {
     return WORKSPACE + "/versions/" + CMK_VERS
@@ -398,7 +421,7 @@ def create_source_package(WORKSPACE, CMK_VERS) {
                 sh "touch ${WORKSPACE}/agents/cmk-update-agent"
                 sh "touch ${WORKSPACE}/agents/cmk-update-agent-32"
             }
-            sh "touch ${WORKSPACE}/agents/{check_mk_agent-64.exe,check_mk_agent.exe,check_mk_agent.msi,check_mk.user.yml,python-3.cab,python-3.4.cab}"
+            sh "touch ${WORKSPACE}/agents/{check_mk_agent-64.exe,check_mk_agent.exe,check_mk_agent.msi,check_mk_agent_unsigned.msi,check_mk.user.yml,python-3.cab,python-3.4.cab}"
         }
 
         dir("git") {
@@ -406,7 +429,7 @@ def create_source_package(WORKSPACE, CMK_VERS) {
                 sh "cp ${WORKSPACE}/agents/cmk-update-agent enterprise/agents/plugins/"
                 sh "cp ${WORKSPACE}/agents/cmk-update-agent-32 enterprise/agents/plugins/"
             }
-            sh "cp ${WORKSPACE}/agents/{check_mk_agent-64.exe,check_mk_agent.exe,check_mk_agent.msi,check_mk.user.yml,python-3.cab,python-3.4.cab} agents/windows"
+            sh "cp ${WORKSPACE}/agents/{check_mk_agent-64.exe,check_mk_agent.exe,check_mk_agent.msi,check_mk_agent_unsigned.msi,check_mk.user.yml,python-3.cab,python-3.4.cab} agents/windows"
             sh 'make dist || cat /root/.npm/_logs/*-debug.log'
         }
     }

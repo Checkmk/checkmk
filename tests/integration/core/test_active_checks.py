@@ -37,25 +37,14 @@ def test_cfg_fixture(site: Site) -> Iterator[None]:
 
 
 def test_active_check_execution(site: Site, web):
+    rule_id = site.openapi.create_rule(
+        ruleset_name="custom_checks",
+        value={
+            "service_description": "\xc4ctive-Check",
+            "command_line": 'echo "123"',
+        },
+    )
     try:
-        web.set_ruleset(  # Replace with RestAPI, see CMK-9251
-            "custom_checks",
-            {
-                "ruleset": {
-                    # Main folder
-                    "": [
-                        {
-                            "value": {
-                                "service_description": "\xc4ctive-Check",
-                                "command_line": 'echo "123"',
-                            },
-                            "condition": {},
-                            "options": {},
-                        },
-                    ],
-                }
-            },
-        )
         site.activate_changes_and_wait_for_core_reload()
 
         site.schedule_check("test-host", "\xc4ctive-Check", 0)
@@ -70,14 +59,7 @@ def test_active_check_execution(site: Site, web):
         assert result[2] == 0
         assert result[3] == "123"
     finally:
-        web.set_ruleset(  # Replace with RestAPI, see CMK-9251
-            "custom_checks",
-            {
-                "ruleset": {
-                    "": [],  # -> folder
-                }
-            },
-        )
+        site.openapi.delete_rule(rule_id)
         site.activate_changes_and_wait_for_core_reload()
 
 
@@ -113,28 +95,18 @@ def test_active_check_macros(test_cfg, site, web):
     def descr(var):
         return "Macro %s" % var.strip("$")
 
-    ruleset = []
-    for var, value in macros.items():
-        ruleset.append(
-            {
-                "value": {
-                    "service_description": descr(var),
-                    "command_line": 'echo "Output: %s"' % var,
-                },
-                "condition": {},
-            }
-        )
-
+    rule_ids = []
     try:
-        web.set_ruleset(  # Replace with RestAPI, see CMK-9251
-            "custom_checks",
-            {
-                "ruleset": {
-                    # Main folder
-                    "": ruleset,
-                }
-            },
-        )
+        for var, value in macros.items():
+            rule_ids.append(
+                site.openapi.create_rule(
+                    ruleset_name="custom_checks",
+                    value={
+                        "service_description": descr(var),
+                        "command_line": 'echo "Output: %s"' % var,
+                    },
+                )
+            )
         site.activate_changes_and_wait_for_core_reload()
 
         for var, value in macros.items():
@@ -170,12 +142,6 @@ def test_active_check_macros(test_cfg, site, web):
             ), "Macro %s has wrong value (%r instead of %r)" % (var, plugin_output, expected_output)
 
     finally:
-        web.set_ruleset(  # Replace with RestAPI, see CMK-9251
-            "custom_checks",
-            {
-                "ruleset": {
-                    "": [],  # -> folder
-                }
-            },
-        )
+        for rule_id in rule_ids:
+            site.openapi.delete_rule(rule_id)
         site.activate_changes_and_wait_for_core_reload()

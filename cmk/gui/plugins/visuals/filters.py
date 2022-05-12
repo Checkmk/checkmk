@@ -1583,7 +1583,7 @@ def filter_kubernetes_register(
     filter_registry.register(
         AjaxDropdownFilter(
             title=title,
-            sort_index=-1,  # TODO!
+            sort_index=550,
             info="host",
             autocompleter=GroupAutocompleterConfig(
                 ident="kubernetes_labels",
@@ -1601,8 +1601,8 @@ filter_kubernetes_register(_("Kubernetes Cluster"), "cluster")
 filter_kubernetes_register(_("Kubernetes Namespace"), "namespace")
 filter_kubernetes_register(_("Kubernetes Node"), "node")
 filter_kubernetes_register(_("Kubernetes Deployment"), "deployment")
-filter_kubernetes_register(_("Kubernetes Daemonset"), "daemonset")
-filter_kubernetes_register(_("Kubernetes Statefulset"), "statefulset")
+filter_kubernetes_register(_("Kubernetes DaemonSet"), "daemonset")
+filter_kubernetes_register(_("Kubernetes StatefulSet"), "statefulset")
 
 
 class FilterCustomAttribute(Filter):

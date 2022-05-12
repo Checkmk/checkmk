@@ -11,10 +11,12 @@ have any friction during testing with these helpers themselves.
 """
 from __future__ import annotations
 
+import ast
 import collections
 import datetime as dt
 import io
 import itertools
+import json
 import operator
 import re
 import socket
@@ -22,7 +24,7 @@ import statistics
 import time
 from typing import Any, Callable, Dict, List, Literal, Mapping, Optional, Tuple, Union
 
-from livestatus import LivestatusTestingError
+from livestatus import LivestatusTestingError, MKLivestatusQueryError, Query
 
 # TODO: Make livestatus.py a well tested package on pypi
 # TODO: Move this code to the livestatus package
@@ -389,6 +391,20 @@ program_start num_hosts num_services core_pid'
             for single_conn in self.connections.values():
                 single_conn.expect_query(query, match_type, force_pos)
         return self
+
+    def parse_json_or_python3_raw_response(self, raw_response: bytes, query: Query):
+        data = raw_response.decode("utf-8")
+        try:
+            return ast.literal_eval(data)
+        except (ValueError, SyntaxError):
+            pass
+
+        try:
+            return json.loads(data)
+        except (ValueError, SyntaxError):
+            pass
+
+        raise MKLivestatusQueryError("Malformed raw response output")
 
 
 def execute_query(

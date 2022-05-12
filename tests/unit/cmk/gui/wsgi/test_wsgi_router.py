@@ -5,9 +5,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import os
 import typing
-from pathlib import Path
-
-import pytest
 
 import cmk.utils.paths
 import cmk.utils.store as store
@@ -104,68 +101,9 @@ def test_openapi_app_exception(wsgi_app_debug_off, with_automation_user):
     )
     assert "detail" in resp.json
     assert "title" in resp.json
-    assert "crash_report" in resp.json
-    assert "check_mk" in resp.json["crash_report"]["href"]
-    assert "crash_id" in resp.json
-
-
-@pytest.mark.skip
-def test_legacy_webapi(wsgi_app, with_automation_user):
-    username, password = with_automation_user
-    wsgi_app.set_credentials(username, password)
-    hostname = "foobar"
-
-    try:
-        ipaddress = "127.0.0.1"
-        wsgi_app.api_request(
-            "add_host",
-            {
-                "hostname": hostname,
-                "folder": "eins/zwei",
-                # Optional
-                "attributes": {"ipaddress": ipaddress},
-                "create_folders": True,
-                "nodes": [],
-            },
-        )
-
-        resp = wsgi_app.api_request(
-            "foo_host",
-            {"hostname": hostname},
-        )
-        assert "Unknown API action" in resp["result"]
-        assert resp["result_code"] == 1
-
-        resp = wsgi_app.api_request(
-            "get_host",
-            {
-                "hostname": hostname,
-            },
-            output_format="python",
-        )
-        assert isinstance(resp, dict), resp
-        assert isinstance(resp["result"], dict), resp["result"]
-        assert resp["result"]["hostname"] == hostname
-        assert resp["result"]["attributes"]["ipaddress"] == ipaddress
-
-    finally:
-
-        # FIXME: Testing of delete_host can't be done until the local automation call doesn't call
-        #        out to "check_mk" via subprocess anymore. In order to not break the subsequent
-        #        test, we have to delete the host ourselves. This can and will actually break
-        #        unit/cmk/base/test_config.py::test_get_config_file_paths_with_confd again if
-        #        more files should be created by add_host in the future.
-
-        (Path(cmk.utils.paths.check_mk_config_dir) / "fs_cap.mk").unlink(missing_ok=True)
-        (Path(cmk.utils.paths.check_mk_config_dir) / "wato/global.mk").unlink(missing_ok=True)
-        (Path(cmk.utils.paths.check_mk_config_dir) / "wato/groups.mk").unlink(missing_ok=True)
-        (Path(cmk.utils.paths.check_mk_config_dir) / "wato/notifications.mk").unlink(
-            missing_ok=True
-        )
-        (Path(cmk.utils.paths.check_mk_config_dir) / "wato/tags.mk").unlink(missing_ok=True)
-        (Path(cmk.utils.paths.check_mk_config_dir) / "wato/eins/zwei/hosts.mk").unlink(
-            missing_ok=True
-        )
+    assert "crash_report" in resp.json["ext"]
+    assert "check_mk" in resp.json["ext"]["crash_report"]["href"]
+    assert "crash_id" in resp.json["ext"]
 
 
 def test_cmk_run_cron(wsgi_app):

@@ -2,7 +2,7 @@ MONITORING_PLUGINS := monitoring-plugins
 MONITORING_PLUGINS_VERS := 2.3.1
 MONITORING_PLUGINS_DIR := $(MONITORING_PLUGINS)-$(MONITORING_PLUGINS_VERS)
 # Increase this to enforce a recreation of the build cache
-MONITORING_PLUGINS_BUILD_ID := 7
+MONITORING_PLUGINS_BUILD_ID := 10
 
 MONITORING_PLUGINS_PATCHING := $(BUILD_HELPER_DIR)/$(MONITORING_PLUGINS_DIR)-patching
 MONITORING_PLUGINS_BUILD := $(BUILD_HELPER_DIR)/$(MONITORING_PLUGINS_DIR)-build
@@ -14,11 +14,14 @@ MONITORING_PLUGINS_INSTALL_DIR := $(INTERMEDIATE_INSTALL_BASE)/$(MONITORING_PLUG
 MONITORING_PLUGINS_BUILD_DIR := $(PACKAGE_BUILD_DIR)/$(MONITORING_PLUGINS_DIR)
 #MONITORING_PLUGINS_WORK_DIR := $(PACKAGE_WORK_DIR)/$(MONITORING_PLUGINS_DIR)
 
+# We're using here only the relative folder for snmp commands:
+# the full path will be dynamically calculated in the check_snmp/check_hpjd binary.
+# That way we can use cached builds in multiple checkmk versions.
 MONITORING_PLUGINS_CONFIGUREOPTS := \
     --prefix="" \
     --libexecdir=/lib/nagios/plugins \
-    --with-snmpget-command=$(OMD_ROOT)/bin/snmpget \
-    --with-snmpgetnext-command=$(OMD_ROOT)/bin/snmpgetnext
+    --with-snmpget-command=/bin/snmpget \
+    --with-snmpgetnext-command=/bin/snmpgetnext
 
 $(MONITORING_PLUGINS): $(MONITORING_PLUGINS_BUILD)
 

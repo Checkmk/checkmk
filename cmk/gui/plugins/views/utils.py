@@ -38,7 +38,7 @@ from typing import (
 )
 
 import livestatus
-from livestatus import LivestatusColumn, LivestatusRow, OnlySites, SiteId
+from livestatus import LivestatusColumn, LivestatusRow, OnlySites, Query, QuerySpecification, SiteId
 
 import cmk.utils.plugin_registry
 import cmk.utils.regex
@@ -838,11 +838,8 @@ class RowTableLivestatus(RowTable):
         # columns to allow for repeatable tests.
         return [c for c in sorted(columns) if c not in datasource.add_columns], dynamic_columns
 
-    def prepare_lql(self, columns: List[ColumnName], headers: str) -> LivestatusQuery:
-        query = "GET %s\n" % self.table_name
-        query += "Columns: %s\n" % " ".join(columns)
-        query += headers
-        return query
+    def create_livestatus_query(self, columns: Sequence[LivestatusColumn], headers) -> Query:
+        return Query(QuerySpecification(table=self.table_name, columns=columns, headers=headers))
 
     def query(
         self,
@@ -866,8 +863,12 @@ class RowTableLivestatus(RowTable):
         datasource = view.datasource
 
         columns, dynamic_columns = self._prepare_columns(columns, view)
-        query = self.prepare_lql(columns, headers + datasource.add_headers)
-        data = query_livestatus(query, only_sites, limit, datasource.auth_domain)
+        data = query_livestatus(
+            self.create_livestatus_query(columns, headers + datasource.add_headers),
+            only_sites,
+            limit,
+            datasource.auth_domain,
+        )
 
         if datasource.merge_by:
             data = _merge_data(data, columns)
@@ -885,7 +886,7 @@ class RowTableLivestatus(RowTable):
 
 
 def query_livestatus(
-    query: LivestatusQuery, only_sites: OnlySites, limit: Optional[int], auth_domain: str
+    query: Query, only_sites: OnlySites, limit: Optional[int], auth_domain: str
 ) -> List[LivestatusRow]:
 
     if all(
@@ -896,7 +897,7 @@ def query_livestatus(
         )
     ):
         html.open_div(class_=["livestatus", "message"])
-        html.tt(query.replace("\n", "<br>\n"))
+        html.tt(str(query).replace("\n", "<br>\n"))
         html.close_div()
 
     sites.live().set_auth_domain(auth_domain)
@@ -1228,10 +1229,12 @@ def paint_stalified(row: Row, text: CellContent) -> CellSpec:
 
 
 def paint_host_list(site: SiteId, hosts: List[HostName]) -> CellSpec:
-    return "", ", ".join(
-        cmk.gui.view_utils.get_host_list_links(
-            site,
-            [str(host) for host in hosts],
+    return "", HTML(
+        ", ".join(
+            cmk.gui.view_utils.get_host_list_links(
+                site,
+                [str(host) for host in hosts],
+            )
         )
     )
 
@@ -2290,6 +2293,24 @@ class Cell:
             or len(result) != 2
             or not isinstance(result[1], (str, HTML))
         ):
+            output_formats: List[str] = [
+                "csv_export",
+                "csv",
+                "json_export",
+                "json",
+            ]
+            if (
+                request.var("output_format") in output_formats
+                and isinstance(
+                    painter,
+                    (
+                        cmk.gui.plugins.views.painters.PainterHostLabels,
+                        cmk.gui.plugins.views.painters.PainterServiceLabels,
+                    ),
+                )
+                and isinstance(result[1], dict)
+            ):
+                return result
             raise Exception(_("Painter %r returned invalid result: %r") % (painter.ident, result))
         return result
 

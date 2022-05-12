@@ -1,10 +1,16 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 import datetime
 import json
 from unittest import TestCase
 from unittest.mock import Mock
 
 from dateutil.tz import tzutc
-from kubernetes import client  # type: ignore[import] # pylint: disable=import-error
+from kubernetes import client  # type: ignore[import]
 from mocket import Mocketizer  # type: ignore[import]
 from mocket.mockhttp import Entry  # type: ignore[import]
 
@@ -12,6 +18,7 @@ from cmk.special_agents.agent_kube import Pod
 from cmk.special_agents.utils_kubernetes.schemata import api, section
 from cmk.special_agents.utils_kubernetes.transform import (
     convert_to_timestamp,
+    parse_metadata,
     pod_conditions,
     pod_containers,
     pod_spec,
@@ -19,6 +26,93 @@ from cmk.special_agents.utils_kubernetes.transform import (
 
 
 class TestAPIPod:
+    def test_parse_metadata(self, core_client, dummy_host):
+        mocked_pods = {
+            "kind": "PodList",
+            "apiVersion": "v1",
+            "metadata": {"selfLink": "/api/v1/pods", "resourceVersion": "6605101"},
+            "items": [
+                {
+                    "metadata": {
+                        "name": "cluster-collector-595b64557d-x9t5q",
+                        "generateName": "cluster-collector-595b64557d-",
+                        "namespace": "checkmk-monitoring",
+                        "uid": "b1c113f5-ee08-44c2-8438-a83ca240e04a",
+                        "resourceVersion": "221646",
+                        "creationTimestamp": "2022-03-28T09:19:41Z",
+                        "labels": {"app": "cluster-collector"},
+                        "annotations": {"foo": "case"},
+                        "ownerReferences": [
+                            {
+                                "apiVersion": "apps/v1",
+                                "kind": "ReplicaSet",
+                                "name": "cluster-collector-595b64557d",
+                                "uid": "547e9da2-cbfa-4116-9cb6-67487b11a786",
+                                "controller": "true",
+                                "blockOwnerDeletion": "true",
+                            }
+                        ],
+                    },
+                },
+            ],
+        }
+        Entry.single_register(
+            Entry.GET,
+            f"{dummy_host}/api/v1/pods",
+            body=json.dumps(mocked_pods),
+            headers={"content-type": "application/json"},
+        )
+        with Mocketizer():
+            pod = list(core_client.list_pod_for_all_namespaces().items)[0]
+
+        metadata = parse_metadata(pod.metadata, model=api.PodMetaData)
+        assert metadata.name == "cluster-collector-595b64557d-x9t5q"
+        assert metadata.namespace == "checkmk-monitoring"
+        assert isinstance(metadata.creation_timestamp, float)
+        assert metadata.labels == {"app": api.Label(name="app", value="cluster-collector")}
+        assert metadata.annotations == {"foo": "case"}
+
+    def test_parse_metadata_missing_annotations_and_labels(self, core_client, dummy_host):
+        mocked_pods = {
+            "kind": "PodList",
+            "apiVersion": "v1",
+            "metadata": {"selfLink": "/api/v1/pods", "resourceVersion": "6605101"},
+            "items": [
+                {
+                    "metadata": {
+                        "name": "cluster-collector-595b64557d-x9t5q",
+                        "generateName": "cluster-collector-595b64557d-",
+                        "namespace": "checkmk-monitoring",
+                        "uid": "b1c113f5-ee08-44c2-8438-a83ca240e04a",
+                        "resourceVersion": "221646",
+                        "creationTimestamp": "2022-03-28T09:19:41Z",
+                        "ownerReferences": [
+                            {
+                                "apiVersion": "apps/v1",
+                                "kind": "ReplicaSet",
+                                "name": "cluster-collector-595b64557d",
+                                "uid": "547e9da2-cbfa-4116-9cb6-67487b11a786",
+                                "controller": "true",
+                                "blockOwnerDeletion": "true",
+                            }
+                        ],
+                    },
+                },
+            ],
+        }
+        Entry.single_register(
+            Entry.GET,
+            f"{dummy_host}/api/v1/pods",
+            body=json.dumps(mocked_pods),
+            headers={"content-type": "application/json"},
+        )
+        with Mocketizer():
+            pod = list(core_client.list_pod_for_all_namespaces().items)[0]
+
+        metadata = parse_metadata(pod.metadata, model=api.PodMetaData)
+        assert metadata.labels == {}
+        assert metadata.annotations == {}
+
     def test_parse_conditions(self, core_client, dummy_host):
         node_with_conditions = {
             "items": [

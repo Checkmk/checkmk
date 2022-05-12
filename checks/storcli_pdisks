@@ -4,26 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-factory_settings["storcli_pdisks_default_levels"] = {
-    "Dedicated Hot Spare": 0,
-    "Global Hot Spare": 0,
-    "Unconfigured Good": 0,
-    "Unconfigured Bad": 1,
-    "Online": 0,
-    "Offline": 2,
-}
+from cmk.base.plugins.agent_based.utils import megaraid
+
+factory_settings["storcli_pdisks_default_levels"] = megaraid.PDISKS_DEFAULTS
 
 
 def parse_storcli_pdisks(info):
-
-    statenames = {
-        "DHS": "Dedicated Hot Spare",
-        "GHS": "Global Hot Spare",
-        "UGood": "Unconfigured Good",
-        "Ubad": "Unconfigured Bad",
-        "Onln": "Online",
-        "Offln": "Offline",
-    }
 
     parsed = {}
 
@@ -35,7 +21,7 @@ def parse_storcli_pdisks(info):
         elif separator_count == 2:
             eid_and_slot, device, state, _drivegroup, size, size_unit = line[:6]
             parsed["C%i.%s-%s" % (controller_num, eid_and_slot, device)] = {
-                "state": statenames.get(state, state),
+                "state": megaraid.expand_abbreviation(state),
                 "size": (float(size), size_unit),
             }
         if separator_count == 3:

@@ -1,0 +1,21 @@
+Title: KUBE: add cmk/kubernetes/label/ to host label keys
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1650379028
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b6
+
+This fix affects users who use Kubernetes host labels.
+
+Previously, labels which are set by Kubernetes would be mapped one-to-one to Checkmk labels. This
+would mean that setting labels in Kubernetes could overwrite Checkmk labels, which should not be
+overwritten. For instance, setting the label <tt>cmk/os_family=something</tt> would incorrectly set the
+corresponding Checkmk label to <tt>cmk/os_family:something</tt>.  With this werk, Checkmk labels are
+prefixed with <tt>cmk/kubernetes/label/</tt>. For example, Checkmk now sets the aforementioned label to
+<tt>cmk/kubernetes/label/cmk/os_family:something</tt>.
+
+User-defined rules with old host labels need to be updated.

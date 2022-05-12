@@ -1,0 +1,21 @@
+Title: RobotMK: Add page to view and download HTML reports
+Class: feature
+Compatible: compat
+Component: multisite
+Date: 1647957644
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0b5
+
+If you use the RobotMK extension package, you can now view and download RobotMK
+HTML reports of RobotMK services.
+
+Each RobotMK service will have an icon "RobotMK report of this service" in the
+action menu, leading to the HTML report page.
+This page contains a download option to download the shown report as *.tar.gz
+file.
+
+The content of the log files is fetched via livestatus and the logfiles within
+~/local/share/addons/robotmk/HOSTNAME/SERVICE_DESCRIPTION.

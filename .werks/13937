@@ -1,0 +1,13 @@
+Title: contact/service/host group responses now contain links to entries
+Class: feature
+Compatible: compat
+Component: rest-api
+Date: 1649683866
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0b6
+
+Before, the REST API would only return the title of the objects in calls to the get all endpoints.
+Now it will return a full link style data set.

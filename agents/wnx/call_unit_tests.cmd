@@ -34,6 +34,7 @@
 
 
 set arte=%cd%\..\..\artefacts
+set results=unit_tests_results.zip
 
 if "%1" == "SIMULATE_OK" powershell Write-Host "Unit test SUCCESS" -Foreground Green  && exit /b 0
 if "%1" == "SIMULATE_FAIL" powershell Write-Host "Unit test FAIL" -Foreground Red && del %arte%\check_mk_service.msi && exit /b 100
@@ -61,11 +62,20 @@ WNX_TEST_ROOT%\watest64.exe %param%
 if not %errorlevel% == 0 echo %level% && goto error
 %Print%{0;255;255}This is end of testing. FULL test was requested.\n
 :success
-%Print%{0;255;0}Unit test SUCCESS\n
+%Print%{0;255;0}Unit test: SUCCESS\n
+call :zip_results
 exit /b 0
 :error
-%Print%{255;0;0} Test failed with error level "%errorlevel%" \n
+%Print%{255;0;0} Unit test: failed with error level "%errorlevel%" \n
+call :zip_results
 exit /b 78
-:end
-cd %WNX_TEST_ROOT%
-if "%cwd%"==%WNX_TEST_ROOT% echo del /f/q/s *.* > nul
+
+:zip_results
+del %arte%\%results% 2> nul
+pushd %WNX_TEST_ROOT% && ( call :zip_and_remove & popd )
+exit /b
+
+:zip_and_remove
+7z a -r -y -tzip %arte%\%results% >nul 
+rmdir /s/q "%WNX_TEST_ROOT%" 2>nul
+exit /b

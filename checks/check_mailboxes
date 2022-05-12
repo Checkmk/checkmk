@@ -1,55 +1,82 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
 def check_mailboxes_arguments(params):
-    args = []
+    """
+    >>> for l in check_mailboxes_arguments({  # v2.1.0 / EWS
+    ...     'service_description': 'SD',
+    ...     'fetch': ('EWS', {
+    ...       'server': 'srv', 'connection': {},
+    ...       'auth': ('usr', ('password', 'pw')),
+    ...       'connection': {'disable_tls': True, 'disable_cert_validation': False, 'tcp_port': 123}}),
+    ...     'age': (1, 2), 'age_newest': (3, 4), 'count': (5, 6),
+    ...     'mailboxes': ['abc', 'def']}):
+    ...   print(l)
+    --fetch-protocol=EWS
+    --fetch-server=srv
+    --fetch-port=123
+    --fetch-username=usr
+    --fetch-password=pw
+    --warn-age-oldest=1
+    --crit-age-oldest=2
+    --warn-age-newest=3
+    --crit-age-newest=4
+    --warn-count=5
+    --crit-count=6
+    --mailbox=abc
+    --mailbox=def
+    """
+    try:
+        fetch_protocol, fetch_params = params["fetch"]
+        connection_params = fetch_params["connection"]
+        username, password = fetch_params["auth"]
+    except KeyError as exc:
+        raise ValueError(
+            f"Params for check_mailboxes are faulty (missing {exc}), did you update the config?"
+        )
 
-    fetch_params = params["imap_parameters"]
+    args = [
+        f"--fetch-protocol={fetch_protocol}",
+        f"--fetch-server={fetch_params.get('server', '$HOSTADDRESS$')}",
+    ]
 
-    if "server" in fetch_params:
-        args.append("--fetch-server=%s" % fetch_params["server"])
-    else:
-        args.append("--fetch-server=$HOSTADDRESS$")
-
-    fetch_use_ssl, fetch_port = fetch_params["ssl"]
-    if fetch_use_ssl:
+    # NOTE: this argument will be turned into `--fetch-disable-tls` when
+    # refactoring all mailbox based active checks
+    if not connection_params.get("disable_tls"):
         args.append("--fetch-tls")
 
-    if fetch_port is not None:
-        args.append("--fetch-port=%d" % fetch_port)
+    if connection_params.get("disable_cert_validation"):
+        args.append("--fetch-disable-cert-validation")
 
-    username, password = fetch_params["auth"]
-    args.append("--fetch-username=%s" % username)
+    if (fetch_port := connection_params.get("tcp_port")) is not None:
+        args.append(f"--fetch-port={fetch_port}")
+
+    args.append(f"--fetch-username={username}")
     args.append(passwordstore_get_cmdline("--fetch-password=%s", password))
 
     if "connect_timeout" in params:
-        args.append("--connect-timeout=%d" % params["connect_timeout"])
+        args.append(f"--connect-timeout={params['connect_timeout']}")
 
     if "retrieve_max" in params:
-        args.append("--retrieve-max=%d" % params["retrieve_max"])
+        args.append(f"--retrieve-max={params['retrieve_max']}")
 
     if "age" in params:
         warn, crit = params["age"]
-        args.append("--warn-age-oldest=%d" % warn)
-        args.append("--crit-age-oldest=%d" % crit)
+        args += [f"--warn-age-oldest={warn}", f"--crit-age-oldest={crit}"]
 
     if "age_newest" in params:
         warn, crit = params["age_newest"]
-        args.append("--warn-age-newest=%d" % warn)
-        args.append("--crit-age-newest=%d" % crit)
+        args += [f"--warn-age-newest={warn}", f"--crit-age-newest={crit}"]
 
     if "count" in params:
         warn, crit = params["count"]
-        args.append("--warn-count=%d" % warn)
-        args.append("--crit-count=%d" % crit)
+        args += [f"--warn-count={warn}", f"--crit-count={crit}"]
 
-    if "mailboxes" in params:
-        for mb in params["mailboxes"]:
-            args.append("--mailbox=%s" % mb)
+    for mb in params.get("mailboxes", []):
+        args.append(f"--mailbox={mb}")
 
     return args
 

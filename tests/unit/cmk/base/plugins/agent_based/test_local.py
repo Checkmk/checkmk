@@ -11,6 +11,27 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Stat
 from cmk.base.plugins.agent_based.utils.cache_helper import CacheInfo
 
 
+def test_invalid_metric_name_does_not_crash() -> None:
+    assert list(
+        local.check_local(
+            "MyService",
+            {},
+            local.parse_local([["0", "MyService", "invalid:name=1", "This", "is", "a", "summary"]]),
+        )
+    ) == [
+        Result(state=State.OK, summary="This is a summary"),
+        Result(
+            state=State.WARN,
+            summary="Invalid metric name: 'invalid:name'",
+            details=(
+                "The metric name 'invalid:name' is invalid. It will not be recorded. "
+                "Problem: invalid character(s) in metric name: ':'"
+            ),
+        ),
+        Result(state=State.OK, summary="Invalid:name: 1.00"),
+    ]
+
+
 @pytest.mark.parametrize(
     "check_line,expected_components",
     [
@@ -244,12 +265,7 @@ def test_local_format_error(string_table, exception_reason):
     ],
 )
 def test_parse(string_table_row, expected_parsed_data):
-    result = local.parse_local([string_table_row])
-    print()
-    print(string_table_row)
-    print(expected_parsed_data)
-    print(result)
-    assert result == expected_parsed_data
+    assert local.parse_local([string_table_row]) == expected_parsed_data
 
 
 def test_fix_state():

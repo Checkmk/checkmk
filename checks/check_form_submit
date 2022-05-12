@@ -7,40 +7,31 @@
 
 def check_form_submit_arguments(params):
     _description, settings = params
-    args = []
-
-    if "virthost" in settings:
-        args += ["-H", settings["virthost"]]
+    args = [*settings.get("hosts", ["$HOSTADDRESS$"])]
 
     if "port" in settings:
-        args += ["-p", settings["port"]]
+        args += ["--port", settings["port"]]
 
     if "uri" in settings:
-        args += ["-u", settings["uri"]]
+        args += ["--uri", settings["uri"]]
 
-    if settings.get("ssl"):
-        args.append("-s")
+    if "tls_configuration" in settings:
+        args += ["--tls_configuration", settings["tls_configuration"]]
 
     if "timeout" in settings:
-        args += ["-t", settings["timeout"]]
+        args += ["--timeout", settings["timeout"]]
 
     if "expect_regex" in settings:
-        args += ["-e", settings["expect_regex"]]
+        args += ["--expected_regex", settings["expect_regex"]]
 
     if "form_name" in settings:
-        args += ["-f", settings["form_name"]]
+        args += ["--form_name", settings["form_name"]]
 
     if "query" in settings:
-        args += ["-q", settings["query"]]
+        args += ["--query_params", settings["query"]]
 
-    if "num_succeeded" in settings:
-        args += ["-n", ",".join(map(str, settings["num_succeeded"]))]
-
-    if not settings.get("hosts"):
-        args += ["-I", "$HOSTADDRESS$"]
-    else:
-        for address in settings["hosts"]:
-            args += ["-I", address]
+    if levels := settings.get("num_succeeded"):
+        args += ["--levels", *levels]
 
     return args
 

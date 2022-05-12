@@ -27,14 +27,14 @@ pub async fn one_time_agent_response(
     agent_response(stream, output.into(), expected_input).await
 }
 
-pub async fn agent_response_loop(socket_address: String, output: &str) -> AnyhowResult<()> {
+pub async fn agent_response_loop(socket_address: String, output: String) -> AnyhowResult<()> {
     #[cfg(unix)]
     let socket = UnixListener::bind(socket_address).unwrap();
     #[cfg(windows)]
     let socket = TcpListener::bind(socket_address).await?;
     loop {
         let (stream, _) = socket.accept().await?;
-        tokio::spawn(agent_response(stream, output.into(), None));
+        tokio::spawn(agent_response(stream, output.clone(), None));
     }
 }
 
@@ -67,7 +67,7 @@ pub async fn agent_response(
     tokio::time::timeout(tokio::time::Duration::from_secs(1), async {
         loop {
             stream.read_buf(&mut buf).await?;
-            tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
+            tokio::time::sleep(tokio::time::Duration::from_millis(20)).await;
             if !buf.is_empty() {
                 return Ok::<(), AnyhowError>(());
             }

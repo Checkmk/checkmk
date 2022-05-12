@@ -34,22 +34,22 @@ struct RemoteConnectionStatus {
 }
 
 #[derive(serde::Serialize)]
-enum RemoteConnectionError {
+enum RemoteError {
     #[serde(rename = "invalid_url")]
     InvalidUrl,
     #[serde(rename = "connection_refused")]
     ConnRefused,
     #[serde(rename = "certificate_invalid")]
     CertInvalid,
-    #[serde(rename = "unspeficied_error")]
-    Unspecified,
+    #[serde(rename = "other_error")]
+    Other(String),
 }
 
 #[derive(serde::Serialize)]
 #[serde(untagged)]
 enum RemoteConnectionStatusResponse {
     Success(RemoteConnectionStatus),
-    Error(RemoteConnectionError),
+    Error(RemoteError),
 }
 
 #[serde_with::serde_as]
@@ -65,6 +65,7 @@ struct ConnectionStatus {
 #[derive(serde::Serialize)]
 struct Status {
     version: String,
+    agent_socket_operational: bool,
     ip_allowlist: Vec<String>,
     allow_legacy_pull: bool,
     connections: Vec<ConnectionStatus>,
@@ -91,32 +92,26 @@ impl CertParsingResult {
     }
 }
 
-impl RemoteConnectionError {
-    fn from(status_err: agent_receiver_api::StatusError) -> RemoteConnectionError {
+impl RemoteError {
+    fn from(status_err: agent_receiver_api::StatusError) -> RemoteError {
         match status_err {
-            agent_receiver_api::StatusError::ConnectionRefused(..) => {
-                RemoteConnectionError::ConnRefused
-            }
-            agent_receiver_api::StatusError::CertificateInvalid => {
-                RemoteConnectionError::CertInvalid
-            }
-            agent_receiver_api::StatusError::UnspecifiedError(..) => {
-                RemoteConnectionError::Unspecified
-            }
+            agent_receiver_api::StatusError::ConnectionRefused(..) => RemoteError::ConnRefused,
+            agent_receiver_api::StatusError::CertificateInvalid => RemoteError::CertInvalid,
+            agent_receiver_api::StatusError::Other(err) => RemoteError::Other(format!("{}", err)),
         }
     }
 }
 
-impl std::fmt::Display for RemoteConnectionError {
+impl std::fmt::Display for RemoteError {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(
             f,
             "{}",
             match self {
-                RemoteConnectionError::InvalidUrl => "URL invalid",
-                RemoteConnectionError::ConnRefused => "refused",
-                RemoteConnectionError::CertInvalid => "certificate invalid",
-                RemoteConnectionError::Unspecified => "unspecified error",
+                RemoteError::InvalidUrl => "URL invalid",
+                RemoteError::ConnRefused => "connection refused",
+                RemoteError::CertInvalid => "certificate invalid",
+                RemoteError::Other(err) => err,
             }
         )
     }
@@ -129,26 +124,17 @@ impl RemoteConnectionStatusResponse {
         agent_rec_api: &impl agent_receiver_api::Status,
     ) -> RemoteConnectionStatusResponse {
         match coordinates.to_url() {
-            Ok(url) => {
-                match agent_rec_api.status(
-                    &url,
-                    &connection.root_cert,
-                    &connection.uuid,
-                    &connection.certificate,
-                ) {
-                    Ok(status_response) => {
-                        RemoteConnectionStatusResponse::Success(RemoteConnectionStatus {
-                            connection_type: status_response.connection_type,
-                            registration_state: status_response.status,
-                            host_name: status_response.hostname,
-                        })
-                    }
-                    Err(err) => {
-                        RemoteConnectionStatusResponse::Error(RemoteConnectionError::from(err))
-                    }
+            Ok(url) => match agent_rec_api.status(&url, connection) {
+                Ok(status_response) => {
+                    RemoteConnectionStatusResponse::Success(RemoteConnectionStatus {
+                        connection_type: status_response.connection_type,
+                        registration_state: status_response.status,
+                        host_name: status_response.hostname,
+                    })
                 }
-            }
-            _ => RemoteConnectionStatusResponse::Error(RemoteConnectionError::InvalidUrl),
+                Err(err) => RemoteConnectionStatusResponse::Error(RemoteError::from(err)),
+            },
+            _ => RemoteConnectionStatusResponse::Error(RemoteError::InvalidUrl),
         }
     }
 }
@@ -199,25 +185,25 @@ impl ConnectionStatus {
                 ));
             }
             CertParsingResult::Error(..) => {
-                lines.push(String::from("Certificate parsing failed (!!)"))
+                lines.push(mark_problematic("Certificate parsing failed"))
             }
         }
         lines
     }
 
-    fn remote_conn_type_marker(
+    fn remote_conn_type_str(
         local_conn_type: &config::ConnectionType,
         remote_conn_type: &Option<config::ConnectionType>,
     ) -> String {
         match remote_conn_type {
             Some(ct) => {
                 if ct == local_conn_type {
-                    String::from("")
+                    format!("{}", ct)
                 } else {
-                    String::from(" (!!)")
+                    mark_problematic(&format!("{}", ct))
                 }
             }
-            None => String::from(" (!!)"),
+            None => mark_problematic("unknown"),
         }
     }
 
@@ -229,7 +215,7 @@ impl ConnectionStatus {
                 {
                     String::from("operational")
                 } else {
-                    String::from("unknown (!!)")
+                    mark_problematic("unknown")
                 }
             }
         }
@@ -241,9 +227,8 @@ impl ConnectionStatus {
     ) -> Vec<String> {
         vec![
             format!(
-                "Connection type: {}{}",
-                fmt_option_to_str(&remote_conn_stat.connection_type, "unknown"),
-                ConnectionStatus::remote_conn_type_marker(
+                "Connection type: {}",
+                ConnectionStatus::remote_conn_type_str(
                     local_conn_type,
                     &remote_conn_stat.connection_type
                 ),
@@ -254,7 +239,10 @@ impl ConnectionStatus {
             ),
             format!(
                 "Host name: {}",
-                fmt_option_to_str(&remote_conn_stat.host_name, "unknown"),
+                match &remote_conn_stat.host_name {
+                    Some(hn) => hn,
+                    None => "unknown",
+                }
             ),
         ]
     }
@@ -269,7 +257,7 @@ impl ConnectionStatus {
                     )
                 }
                 RemoteConnectionStatusResponse::Error(err) => {
-                    vec![format!("Connection error: {} (!!)", err)]
+                    vec![mark_problematic(&format!("Error: {}", err))]
                 }
             },
             None => vec![String::from("No remote address (imported connection)")],
@@ -299,8 +287,7 @@ impl std::fmt::Display for ConnectionStatus {
 impl Status {
     fn from(
         registry: &config::Registry,
-        ip_allowlist: Vec<String>,
-        allow_legacy_pull: bool,
+        pull_config: &config::PullConfig,
         agent_rec_api: &impl agent_receiver_api::Status,
     ) -> Status {
         let mut conn_stats = Vec::new();
@@ -327,8 +314,9 @@ impl Status {
 
         Status {
             version: String::from(constants::VERSION),
-            ip_allowlist,
-            allow_legacy_pull,
+            agent_socket_operational: pull_config.agent_channel.operational(),
+            ip_allowlist: pull_config.allowed_ip.to_vec(),
+            allow_legacy_pull: pull_config.allow_legacy_pull(),
             connections: conn_stats,
         }
     }
@@ -350,8 +338,12 @@ impl std::fmt::Display for Status {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(
             f,
-            "Version: {}\nIP allowlist: {}{}{}",
+            "Version: {}\nAgent socket: {}\nIP allowlist: {}{}{}",
             self.version,
+            match self.agent_socket_operational {
+                true => String::from("operational"),
+                false => mark_problematic("inoperational"),
+            },
             match self.ip_allowlist.is_empty() {
                 true => String::from("any"),
                 false => self.ip_allowlist.join(" "),
@@ -376,11 +368,8 @@ impl std::fmt::Display for Status {
     }
 }
 
-fn fmt_option_to_str(op: &Option<impl std::fmt::Display>, none_str: &str) -> String {
-    match op {
-        Some(formattable) => format!("{}", formattable),
-        None => String::from(none_str),
-    }
+fn mark_problematic(to_mark: &str) -> String {
+    format!("{} (!!)", to_mark)
 }
 
 fn _status(
@@ -389,23 +378,25 @@ fn _status(
     json: bool,
     agent_rec_api: &impl agent_receiver_api::Status,
 ) -> AnyhowResult<String> {
-    Status::from(
-        registry,
-        pull_config.allowed_ip.to_vec(),
-        pull_config.allow_legacy_pull(),
-        agent_rec_api,
-    )
-    .to_string(json)
+    Status::from(registry, pull_config, agent_rec_api).to_string(json)
 }
 
 pub fn status(
     registry: &config::Registry,
     pull_config: &config::PullConfig,
+    client_config: config::ClientConfig,
     json: bool,
 ) -> AnyhowResult<()> {
     println!(
         "{}",
-        _status(registry, pull_config, json, &agent_receiver_api::Api {})?
+        _status(
+            registry,
+            pull_config,
+            json,
+            &agent_receiver_api::Api {
+                use_proxy: client_config.use_proxy
+            }
+        )?
     );
     Ok(())
 }
@@ -544,7 +535,7 @@ mod test_status {
                         cert_info: CertParsingResult::Error(String::from("parsing_error"))
                     },
                     remote: Some(RemoteConnectionStatusResponse::Error(
-                        RemoteConnectionError::InvalidUrl
+                        RemoteError::InvalidUrl
                     ))
                 }
             ),
@@ -555,7 +546,7 @@ mod test_status {
                  \t\tConnection type: pull-agent\n\
                  \t\tCertificate parsing failed (!!)\n\
                  \tRemote:\n\
-                 \t\tConnection error: URL invalid (!!)"
+                 \t\tError: URL invalid (!!)"
             )
         );
     }
@@ -574,9 +565,11 @@ mod test_status {
                         connection_type: config::ConnectionType::Pull,
                         cert_info: CertParsingResult::Error(String::from("parsing_error"))
                     },
-                    remote: Some(RemoteConnectionStatusResponse::Error(
-                        RemoteConnectionError::Unspecified
-                    ))
+                    remote: Some(RemoteConnectionStatusResponse::Error(RemoteError::Other(
+                        String::from(
+                            "Request failed with code 400 Bad Request: Unable to load certificate"
+                        )
+                    )))
                 }
             ),
             String::from(
@@ -586,7 +579,7 @@ mod test_status {
                  \t\tConnection type: pull-agent\n\
                  \t\tCertificate parsing failed (!!)\n\
                  \tRemote:\n\
-                 \t\tConnection error: unspecified error (!!)"
+                 \t\tError: Request failed with code 400 Bad Request: Unable to load certificate (!!)"
             )
         );
     }
@@ -608,7 +601,7 @@ mod test_status {
                         })
                     },
                     remote: Some(RemoteConnectionStatusResponse::Error(
-                        RemoteConnectionError::ConnRefused
+                        RemoteError::ConnRefused
                     ))
                 }
             ),
@@ -620,7 +613,7 @@ mod test_status {
                  \t\tCertificate issuer: Site 'site' local CA\n\
                  \t\tCertificate validity: Thu, 16 Dec 2021 08:18:41 +0000 - Tue, 18 Apr 3020 08:18:41 +0000\n\
                  \tRemote:\n\
-                 \t\tConnection error: refused (!!)"
+                 \t\tError: connection refused (!!)"
             )
         );
     }
@@ -708,6 +701,7 @@ mod test_status {
     fn build_status() -> Status {
         Status {
             version: String::from("1.0.0"),
+            agent_socket_operational: true,
             ip_allowlist: vec![String::from("192.168.1.13"), String::from("[::1]")],
             allow_legacy_pull: false,
             connections: vec![
@@ -762,6 +756,7 @@ mod test_status {
         assert_eq!(
             build_status().to_string(false).unwrap(),
             "Version: 1.0.0\n\
+             Agent socket: operational\n\
              IP allowlist: 192.168.1.13 [::1]\n\n\n\
              Connection: localhost:8000/site\n\
              \tUUID: 50611369-7a42-4c0b-927e-9a14330401fe\n\
@@ -799,6 +794,7 @@ mod test_status {
         assert_eq!(
             Status {
                 version: String::from("2.3r18"),
+                agent_socket_operational: false,
                 ip_allowlist: vec![],
                 allow_legacy_pull: true,
                 connections: vec![],
@@ -806,6 +802,7 @@ mod test_status {
             .to_string(false)
             .unwrap(),
             "Version: 2.3r18\n\
+             Agent socket: inoperational (!!)\n\
              IP allowlist: any\n\
              Legacy mode: enabled\n\
              No connections"
@@ -818,9 +815,7 @@ mod test_status {
         fn status(
             &self,
             _base_url: &reqwest::Url,
-            _root_cert: &str,
-            _uuid: &uuid::Uuid,
-            _certificate: &str,
+            _connection: &config::Connection,
         ) -> Result<agent_receiver_api::StatusResponse, agent_receiver_api::StatusError> {
             Ok(agent_receiver_api::StatusResponse {
                 hostname: Some(String::from("host")),
@@ -849,7 +844,7 @@ mod test_status {
                 pull: std::collections::HashMap::new(),
                 pull_imported: std::collections::HashSet::new(),
             },
-            std::path::PathBuf::from(&tempfile::NamedTempFile::new().unwrap().into_temp_path()),
+            tempfile::NamedTempFile::new().unwrap(),
         )
         .unwrap();
 
@@ -857,17 +852,14 @@ mod test_status {
             _status(
                 &registry,
                 &config::PullConfig::new(
-                    config::ConfigFromDisk::new().unwrap(),
-                    cli::PullArgs {
+                    config::RuntimeConfig::new().unwrap(),
+                    cli::PullOpts {
                         port: None,
                         #[cfg(windows)]
                         agent_channel: None,
                         allowed_ip: None,
-                        logging_opts: cli::LoggingOpts { verbose: 0 },
                     },
-                    config::LegacyPullMarker::new(&std::path::PathBuf::from(
-                        &tempfile::NamedTempFile::new().unwrap().into_temp_path()
-                    )),
+                    config::LegacyPullMarker::new(tempfile::NamedTempFile::new().unwrap()),
                     registry.clone()
                 )
                 .unwrap(),
@@ -875,7 +867,9 @@ mod test_status {
                 &MockApi {},
             )
             .unwrap(),
-            "Version: 0.1.0\n\
+            format!(
+                "Version: 0.1.0\n\
+             Agent socket: {}\n\
              IP allowlist: any\n\n\n\
              Connection: server:8000/push-site\n\
              \tUUID: 99f56bbc-5965-4b34-bc70-1959ad1d32d6\n\
@@ -885,7 +879,13 @@ mod test_status {
              \tRemote:\n\
              \t\tConnection type: pull-agent (!!)\n\
              \t\tRegistration state: operational\n\
-             \t\tHost name: host"
+             \t\tHost name: host",
+                if cfg!(unix) {
+                    "inoperational (!!)"
+                } else {
+                    "operational"
+                }
+            )
         );
     }
 }

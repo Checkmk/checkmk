@@ -1,0 +1,14 @@
+Title: KUBE kube_node_container_count: adjustment to properly handle configured levels
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1650539832
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b6
+
+Previously, configuring any levels for the kube_node_container_count check
+resulted in an error because the check was unable to process the specified
+format. This werk fixes this behaviour.

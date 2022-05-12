@@ -32,7 +32,7 @@ pub fn testing_registry(
 
 pub fn testing_pull_setup(
     path: &Path,
-    port: &str,
+    port: u16,
     agent_channel: types::AgentChannel,
 ) -> (String, config::PullConfig, certs::X509Certs) {
     let controller_uuid = uuid::Uuid::new_v4();
@@ -51,19 +51,23 @@ pub fn testing_pull_setup(
     )
 }
 
+pub fn legacy_pull_marker(path: &Path) -> config::LegacyPullMarker {
+    config::LegacyPullMarker::new(&path.join("allow_legacy_pull"))
+}
+
 pub fn testing_pull_config(
     path: &Path,
-    port: &str,
+    port: u16,
     agent_channel: types::AgentChannel,
     registry: config::Registry,
 ) -> config::PullConfig {
     config::PullConfig {
         allowed_ip: vec![],
-        port: types::Port::from_str(port).unwrap(),
+        port,
         max_connections: 3,
         connection_timeout: 1,
         agent_channel,
-        legacy_pull_marker: config::LegacyPullMarker::new(&path.join("allow_legacy_pull")),
+        legacy_pull_marker: legacy_pull_marker(path),
         registry,
     }
 }
@@ -111,4 +115,18 @@ pub async fn flatten(handle: tokio::task::JoinHandle<AnyhowResult<()>>) -> Anyho
         Ok(Err(err)) => Err(err),
         Err(_) => Err(anyhow!("handling failed")),
     }
+}
+
+pub fn setup_test_dir(prefix: &str) -> tempfile::TempDir {
+    tempfile::Builder::new().prefix(prefix).tempdir().unwrap()
+}
+
+#[cfg(unix)]
+pub fn setup_agent_socket_path(home_dir: &std::path::Path) -> String {
+    std::fs::create_dir(home_dir.join("run")).unwrap();
+    home_dir
+        .join("run/check-mk-agent.socket")
+        .to_str()
+        .unwrap()
+        .to_string()
 }

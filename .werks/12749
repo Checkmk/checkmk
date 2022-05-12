@@ -1,6 +1,6 @@
 Title: Fix missing confirm dialog on editing used tag ID
 Class: fix
-Compatible: comp
+Compatible: compat
 Component: multisite
 Date: 1619163636
 Edition: cre

@@ -7,20 +7,7 @@
 import ast
 import itertools
 from dataclasses import dataclass
-from typing import (
-    Dict,
-    Generic,
-    Iterable,
-    List,
-    Literal,
-    Mapping,
-    Optional,
-    Sequence,
-    Tuple,
-    Type,
-    TypeVar,
-    Union,
-)
+from typing import Dict, Iterable, List, Literal, Mapping, Optional, Sequence, Tuple, Union
 
 from kubernetes import client  # type: ignore[import]
 
@@ -111,12 +98,9 @@ class AppsAPI:
         ).items
 
 
-T = TypeVar("T")
-
-
 @dataclass
-class RawAPIResponse(Generic[T]):
-    response: T
+class RawAPIResponse:
+    response: str
     status_code: int
     headers: Dict[str, str]
 
@@ -134,10 +118,8 @@ class RawAPI:
         self,
         method: Literal["GET", "POST", "PUT", "OPTIONS", "DELETE"],
         resource_path: str,
-        *,
-        response_type: Type[T],
         query_params: Optional[Dict[str, str]] = None,
-    ) -> RawAPIResponse[T]:
+    ) -> RawAPIResponse:
         # Found the auth_settings here:
         # https://github.com/kubernetes-client/python/issues/528
         response, status_code, headers = self._api_client.call_api(
@@ -154,7 +136,7 @@ class RawAPI:
         def get_health(query_params=None) -> Tuple[int, str]:
             # https://kubernetes.io/docs/reference/using-api/health-checks/
             try:
-                response = self._request("GET", url, response_type=str, query_params=query_params)
+                response = self._request("GET", url, query_params=query_params)
             except client.rest.ApiException as e:
                 return e.status, e.body
             return response.status_code, response.response
@@ -176,9 +158,7 @@ class RawAPI:
         # We cannot use json instead of ast here, because the Kubernetes client converts the JSON
         # to a string by replacing " by ' (hence it no longer is JSON). It may be possible to fix
         # this by looking into the parameters for client.APIClient.call_api.
-        return ast.literal_eval(self._request("GET", "/version", response_type=str).response)[
-            "gitVersion"
-        ]
+        return ast.literal_eval(self._request("GET", "/version").response)["gitVersion"]
 
     def query_api_health(self) -> api.APIHealth:
         return api.APIHealth(ready=self._get_healthz("/readyz"), live=self._get_healthz("/livez"))

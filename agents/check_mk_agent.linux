@@ -938,12 +938,18 @@ foreach (@patterns) {
 # Since cd is a shell builtin the check does not affect the performance
 # on non-OMD machines.
 if cd /omd/sites; then
+    _sites_cmd() {
+        # DO NOT ACCESS /omd/sites/${site}/bin/cmd directly.
+        # bin might point anywhere -> priv escalation.
+        printf "/omd/versions/%s/bin/%s" "$(realpath "${1}/version" | sed 's|.*/||')" "${2}"
+    }
+
     echo '<<<livestatus_status:sep(59)>>>'
     for site in *; do
         if [ -S "/omd/sites/$site/tmp/run/live" ]; then
             echo "[$site]"
             echo -e "GET status" |
-                waitmax 3 "/omd/sites/$site/bin/unixcat" "/omd/sites/$site/tmp/run/live"
+                waitmax 3 "$(_sites_cmd "${site}" unixcat)" "/omd/sites/${site}/tmp/run/live"
         fi
     done
 
@@ -964,7 +970,7 @@ if cd /omd/sites; then
         if [ -S "/omd/sites/$site/tmp/run/mkeventd/status" ]; then
             echo "[\"$site\"]"
             echo -e "GET status\nOutputFormat: json" |
-                waitmax 3 "/omd/sites/$site/bin/unixcat" "/omd/sites/$site/tmp/run/mkeventd/status"
+                waitmax 3 "$(_sites_cmd "${site}" unixcat)" "/omd/sites/${site}/tmp/run/mkeventd/status"
         fi
     done
 fi

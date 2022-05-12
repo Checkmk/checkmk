@@ -414,7 +414,7 @@ int ServiceProcessor::startProviders(AnswerId answer_id,
     // call of sensible to CPU-load sections
     auto started_sync =
         use_perf_cpuload
-            ? false
+            ? tryToDirectCall(perf_cpuload_provider_, answer_id, ip_addr)
             : tryToDirectCall(wmi_cpuload_provider_, answer_id, ip_addr);
 
     // sections to be kicked out
@@ -423,10 +423,6 @@ int ServiceProcessor::startProviders(AnswerId answer_id,
     if (cfg::groups::winperf.enabledInConfig() &&
         cfg::groups::global.allowedSection(cfg::vars::kWinPerfPrefixDefault)) {
         kickWinPerf(answer_id, ip_addr);
-    }
-
-    if (use_perf_cpuload) {
-        tryToKick(perf_cpuload_provider_, answer_id, ip_addr);
     }
 
     tryToKick(df_provider_, answer_id, ip_addr);

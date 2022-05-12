@@ -102,7 +102,11 @@ impl Coordinates {
             server: String::from(server),
             port: match port {
                 Some(p) => p,
-                None => Self::port_from_checkmk_rest_api(server, site)?,
+                None => AgentRecvPortDiscoverer {
+                    server: server.to_string(),
+                    site: site.to_string(),
+                }
+                .discover()?,
             },
             site: String::from(site),
         })
@@ -115,20 +119,27 @@ impl Coordinates {
         ))
         .context(format!("Failed to convert {} into a URL", &self))
     }
+}
 
-    fn checkmk_rest_api_port_url(server: &str, site: &str) -> AnyhowResult<reqwest::Url> {
+struct AgentRecvPortDiscoverer {
+    server: String,
+    site: String,
+}
+
+impl AgentRecvPortDiscoverer {
+    fn url(&self, protocol: &str) -> AnyhowResult<reqwest::Url> {
         reqwest::Url::parse(&format!(
-            "http://{}/{}/check_mk/api/1.0/domain-types/internal/actions/discover-receiver/invoke",
-            server, site,
+            "{}://{}/{}/check_mk/api/1.0/domain-types/internal/actions/discover-receiver/invoke",
+            protocol, self.server, self.site,
         ))
         .context(format!(
             "Failed to construct URL for discovering agent receiver port using server {} and site {}",
-            server, site,
+            self.server, self.site,
         ))
     }
 
-    fn port_from_checkmk_rest_api(server: &str, site: &str) -> AnyhowResult<u16> {
-        let url = Self::checkmk_rest_api_port_url(server, site)?;
+    fn discover_with_protocol(&self, protocol: &str) -> AnyhowResult<u16> {
+        let url = Self::url(self, protocol)?;
         let error_msg = format!("Failed to discover agent receiver port from {}", &url);
         reqwest::blocking::get(url)
             .context(error_msg.clone())?
@@ -136,6 +147,32 @@ impl Coordinates {
             .context(error_msg.clone())?
             .parse::<u16>()
             .context(error_msg)
+    }
+
+    fn anyhow_error_to_string(err: &AnyhowError) -> String {
+        err.chain()
+            .map(|e| e.to_string())
+            .collect::<Vec<String>>()
+            .join("\n")
+    }
+
+    pub fn discover(&self) -> AnyhowResult<u16> {
+        let mut error_messages = std::collections::HashMap::new();
+
+        for protocol in ["http", "https"] {
+            match Self::discover_with_protocol(self, protocol) {
+                Ok(p) => return Ok(p),
+                Err(err) => {
+                    error_messages.insert(protocol, err);
+                }
+            }
+        }
+
+        return Err(anyhow!(
+            "Failed to discover agent receiver port from Checkmk REST API, both with http and https.\n\nError with http:\n{}\n\nError with https:\n{}",
+            Self::anyhow_error_to_string(&error_messages["http"]),
+            Self::anyhow_error_to_string(&error_messages["https"]),
+        ));
     }
 }
 
@@ -238,13 +275,33 @@ mod test_coordinates {
             "https://my.server.something:7893/cool-site"
         )
     }
+}
+
+#[cfg(test)]
+mod test_agent_recv_port_discoverer {
+    use super::*;
 
     #[test]
-    fn test_checkmk_rest_api_port_url() {
-        let url = Coordinates::checkmk_rest_api_port_url("some-server", "some-site").unwrap();
+    fn test_url() {
         assert_eq!(
-            url.to_string(),
+            AgentRecvPortDiscoverer {
+                server: String::from("some-server"),
+                site: String::from("some-site"),
+            }
+            .url("http")
+            .unwrap()
+            .to_string(),
             "http://some-server/some-site/check_mk/api/1.0/domain-types/internal/actions/discover-receiver/invoke",
-        );
+        )
+    }
+
+    #[test]
+    fn test_anyhow_error_to_string() {
+        assert_eq!(
+            AgentRecvPortDiscoverer::anyhow_error_to_string(
+                &anyhow!("something went wrong").context("some context")
+            ),
+            "some context\nsomething went wrong"
+        )
     }
 }

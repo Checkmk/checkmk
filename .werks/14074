@@ -1,0 +1,17 @@
+Title: Agent controller: Try to query port both via <tt>http</tt> and <tt>https</tt>
+Class: feature
+Compatible: compat
+Component: agents
+Date: 1652366920
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1
+
+When registering at a site, the agent controller (<tt>cmk-agent-ctl</tt>) needs to
+know the port at which the site is reachable. If not explicitly passed via the
+command line, the controller tries to query this port from the REST API of the site.
+
+Up to now, the controller only attempted to contact the REST API via <tt>http</tt>.
+Now, the controller tries both <tt>http</tt> and <tt>https</tt> and only fails if
+neither of the two suceeded.

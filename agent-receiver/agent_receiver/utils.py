@@ -12,6 +12,8 @@ from uuid import UUID
 
 from agent_receiver.models import HostTypeEnum, RegistrationData, RegistrationStatusEnum
 from agent_receiver.site_context import agent_output_dir, r4r_dir
+from cryptography.x509 import load_pem_x509_csr
+from cryptography.x509.oid import NameOID
 
 
 class Host:
@@ -82,3 +84,14 @@ def get_registration_status_from_file(uuid: UUID) -> Optional[RegistrationData]:
             return RegistrationData(status=status, message=message)
 
     return None
+
+
+def uuid_from_pem_csr(pem_csr: str) -> str:
+    try:
+        return (
+            load_pem_x509_csr(pem_csr.encode())
+            .subject.get_attributes_for_oid(NameOID.COMMON_NAME)[0]
+            .value
+        )
+    except ValueError:
+        return "[CSR parsing failed]"

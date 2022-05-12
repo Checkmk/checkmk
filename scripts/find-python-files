@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # Find and print the absolute paths of all Python source code files
-set -e
 
 usage() {
     cat >&2 <<-HERE
@@ -17,13 +16,14 @@ HERE
 
 get_candidates_from_stdin() {
     while read -r line; do
-        printf "%s\000" "${line}"
+        # gracefully ignore non-existing files
+        [ -e "${line}" ] && printf "%s\000" "${line}"
     done
 }
 
 get_candidates_fallback() {
 
-    cd "$(dirname "$(dirname "$(realpath "$0")")")"
+    cd "$(dirname "$(dirname "$(realpath "$0")")")" || exit $?
 
     SEARCH=
     PRUNE=
@@ -102,7 +102,7 @@ get_candidates_fallback() {
 }
 
 filter_for_python_files() {
-    sort -z | xargs -0 grep --binary-files=without-match -l '^#!.*python3$'
+    sort -z | xargs --no-run-if-empty -0 grep --binary-files=without-match -l '^#!.*python3$'
 }
 
 main() {
@@ -112,6 +112,7 @@ main() {
             ;;
         "--filter")
             get_candidates_from_stdin | filter_for_python_files
+            true # in the filtering case, no match by grep is OK!
             ;;
         *)
             usage

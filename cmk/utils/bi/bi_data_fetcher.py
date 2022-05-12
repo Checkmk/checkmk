@@ -110,14 +110,16 @@ class BIStructureFetcher:
             self._host_structure_columns())
         host_rows = self._sites_callback.query(host_query,
                                                list(only_sites.keys()),
-                                               output_format=LivestatusOutputFormat.JSON)
+                                               output_format=LivestatusOutputFormat.JSON,
+                                               fetch_full_data=True)
 
         service_query = "GET services\nColumns: %s\nCache: reload\n" % " ".join(
             self._service_structure_columns())
         host_service_lookup: Dict[HostName, List] = {}
         for row in self._sites_callback.query(service_query,
                                               list(only_sites.keys()),
-                                              output_format=LivestatusOutputFormat.JSON):
+                                              output_format=LivestatusOutputFormat.JSON,
+                                              fetch_full_data=True):
             host_service_lookup.setdefault(row[1], []).append(row[2:])
 
         site_data: Dict[str, Dict] = {x: {} for x in only_sites.keys()}

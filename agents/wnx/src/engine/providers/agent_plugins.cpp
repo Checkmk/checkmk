@@ -17,7 +17,7 @@ using namespace std::string_literals;
 
 namespace cma::provider {
 namespace {
-enum class FileType { ps1, cmd, vbs, other };
+enum class FileType { ps1, cmd, vbs, py, other };
 
 size_t GetLength(std::ifstream &ifs) {
     ifs.seekg(0, ifs.end);
@@ -51,6 +51,8 @@ std::string Marker(FileType file_type) {
             return "$CMK_VERSION = "s;
         case FileType::vbs:
             return "Const CMK_VERSION = "s;
+        case FileType::py:
+            return "__version__ = "s;
         case FileType::other:
             return {};
     }
@@ -101,6 +103,7 @@ std::vector<std::string> ScanDir(const fs::path dir) {
             {L".cmd", FileType::cmd},
             {L".bat", FileType::cmd},
             {L".vbs", FileType::vbs},
+            {L".py", FileType::py},
         };
         auto type =
             map.contains(extension) ? map.at(extension) : FileType::other;

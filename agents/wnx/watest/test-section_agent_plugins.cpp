@@ -87,6 +87,14 @@ TEST_F(AgentPluginsTest, FileMix) {
         {fs::path{cfg::GetLocalDir()} / "unversioned.cmd",
          "@rem \n",
          "unversioned"},
+        {fs::path{cfg::GetUserPluginsDir()} / "p.py",
+         "#\n"
+         "__version__ = {}\n",
+         "\"2.2.0i1\""},
+        {fs::path{cfg::GetLocalDir()} / "p.py",
+         "#\n"
+         "__version__ = {}\n",
+         "\"2.2.0i1\""},
     };
 
     for (const auto [p, s, ver] : to_create) {

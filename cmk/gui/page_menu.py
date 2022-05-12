@@ -38,11 +38,11 @@ from cmk.gui.utils.urls import (
 )
 
 
-def enable_page_menu_entry(name: str):
+def enable_page_menu_entry(name: str) -> None:
     _toggle_page_menu_entry(name, state=True)
 
 
-def disable_page_menu_entry(name: str):
+def disable_page_menu_entry(name: str) -> None:
     _toggle_page_menu_entry(name, state=False)
 
 
@@ -52,11 +52,11 @@ def _toggle_page_menu_entry(name: str, state: bool) -> None:
     )
 
 
-def enable_page_menu_entries(css_class: str):
+def enable_page_menu_entries(css_class: str) -> None:
     toggle_page_menu_entries(css_class, state=True)
 
 
-def disable_page_menu_entries(css_class: str):
+def disable_page_menu_entries(css_class: str) -> None:
     toggle_page_menu_entries(css_class, state=False)
 
 
@@ -208,7 +208,7 @@ class PageMenu:
     has_pending_changes: bool = False
     pending_changes_tooltip: Optional[str] = None
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         # Add the display options dropdown
         self.dropdowns.append(make_display_options_dropdown())
 
@@ -219,7 +219,7 @@ class PageMenu:
         if self.breadcrumb and len(self.breadcrumb) > 1 and self.breadcrumb[-2].url:
             self.dropdowns.append(make_up_link(self.breadcrumb))
 
-    def __getitem__(self, name):
+    def __getitem__(self, name: str) -> PageMenuDropdown:
         for dropdown in self.dropdowns:
             if dropdown.name == name:
                 return dropdown

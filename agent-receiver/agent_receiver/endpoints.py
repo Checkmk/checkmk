@@ -11,7 +11,7 @@ from contextlib import suppress
 from pathlib import Path
 from uuid import UUID
 
-from agent_receiver.apps import agent_receiver_app, cert_validation_router
+from agent_receiver.apps import agent_receiver_app, uuid_validation_router
 from agent_receiver.checkmk_rest_api import (
     cmk_edition,
     get_root_cert,
@@ -204,7 +204,7 @@ def _move_ready_file(uuid: UUID) -> None:
         )
 
 
-@cert_validation_router.post(
+@uuid_validation_router.post(
     "/agent_data/{uuid}",
     status_code=HTTP_204_NO_CONTENT,
 )
@@ -286,7 +286,10 @@ async def agent_data(
     return Response(status_code=HTTP_204_NO_CONTENT)
 
 
-@cert_validation_router.get("/registration_status/{uuid}", response_model=RegistrationStatus)
+@uuid_validation_router.get(
+    "/registration_status/{uuid}",
+    response_model=RegistrationStatus,
+)
 async def registration_status(
     uuid: UUID,
 ) -> RegistrationStatus:

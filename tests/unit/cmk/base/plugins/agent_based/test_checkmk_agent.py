@@ -302,13 +302,19 @@ def test_check_warn_upon_old_update_check(fix_time, duplicate: bool) -> None:
                         version_int=2000050020,
                         cache_interval=None,
                     ),
+                    Plugin(
+                        name="plugin3",
+                        version="unversioned",
+                        version_int=None,
+                        cache_interval=None,
+                    ),
                 ],
                 local_checks=[],
             ),
             [
                 Result(
                     state=State.OK,
-                    summary="Agent plugins: 2",
+                    summary="Agent plugins: 3",
                 ),
                 Result(
                     state=State.OK,
@@ -334,6 +340,12 @@ def test_check_warn_upon_old_update_check(fix_time, duplicate: bool) -> None:
                         version_int=1000000000,
                         cache_interval=None,
                     ),
+                    Plugin(
+                        name="check3.py",
+                        version="unversioned",
+                        version_int=None,
+                        cache_interval=None,
+                    ),
                 ],
             ),
             [
@@ -343,7 +355,7 @@ def test_check_warn_upon_old_update_check(fix_time, duplicate: bool) -> None:
                 ),
                 Result(
                     state=State.OK,
-                    summary="Local checks: 2",
+                    summary="Local checks: 3",
                 ),
             ],
             id="local checks only",
@@ -385,6 +397,12 @@ def test_check_warn_upon_old_update_check(fix_time, duplicate: bool) -> None:
                         version_int=None,
                         cache_interval=None,
                     ),
+                    Plugin(
+                        name="custom_plugin4",
+                        version="unversioned",
+                        version_int=None,
+                        cache_interval=None,
+                    ),
                 ],
                 local_checks=[
                     Plugin(
@@ -405,16 +423,22 @@ def test_check_warn_upon_old_update_check(fix_time, duplicate: bool) -> None:
                         version_int=None,
                         cache_interval=None,
                     ),
+                    Plugin(
+                        name="check4.py",
+                        version="unversioned",
+                        version_int=None,
+                        cache_interval=None,
+                    ),
                 ],
             ),
             [
                 Result(
                     state=State.OK,
-                    summary="Agent plugins: 3",
+                    summary="Agent plugins: 4",
                 ),
                 Result(
                     state=State.OK,
-                    summary="Local checks: 3",
+                    summary="Local checks: 4",
                 ),
                 Result(
                     state=State.OK,
@@ -430,6 +454,10 @@ def test_check_warn_upon_old_update_check(fix_time, duplicate: bool) -> None:
                 ),
                 Result(
                     state=State.OK,
+                    notice="Agent plugin 'custom_plugin4': no version specified",
+                ),
+                Result(
+                    state=State.OK,
                     notice="Local check 'check1.sh': 1.3.45",
                 ),
                 Result(
@@ -439,6 +467,10 @@ def test_check_warn_upon_old_update_check(fix_time, duplicate: bool) -> None:
                 Result(
                     state=State.WARN,
                     summary="Local check 'check3.py': unable to parse version '[fill in later]'",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="Local check 'check4.py': no version specified",
                 ),
             ],
             id="version checks",
@@ -482,6 +514,12 @@ def test_check_warn_upon_old_update_check(fix_time, duplicate: bool) -> None:
                         version_int=None,
                         cache_interval=None,
                     ),
+                    Plugin(
+                        name="custom_plugin4",
+                        version="unversioned",
+                        version_int=None,
+                        cache_interval=None,
+                    ),
                 ],
                 local_checks=[
                     Plugin(
@@ -502,16 +540,22 @@ def test_check_warn_upon_old_update_check(fix_time, duplicate: bool) -> None:
                         version_int=None,
                         cache_interval=None,
                     ),
+                    Plugin(
+                        name="check4.py",
+                        version="unversioned",
+                        version_int=None,
+                        cache_interval=None,
+                    ),
                 ],
             ),
             [
                 Result(
                     state=State.OK,
-                    summary="Agent plugins: 3",
+                    summary="Agent plugins: 4",
                 ),
                 Result(
                     state=State.OK,
-                    summary="Local checks: 3",
+                    summary="Local checks: 4",
                 ),
                 Result(
                     state=State.OK,
@@ -528,6 +572,10 @@ def test_check_warn_upon_old_update_check(fix_time, duplicate: bool) -> None:
                 Result(
                     state=State.CRIT,
                     summary="Local check 'check2.py': 1.0 (warn/crit below 1.2/1.1)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="Local check 'check4.py': no version specified",
                 ),
             ],
             id="version checks with excludes",

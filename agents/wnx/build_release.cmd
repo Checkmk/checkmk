@@ -112,9 +112,9 @@ if not %errorlevel% == 0 goto error
 powershell Write-Host "Unit test SUCCESS" -Foreground Green
 goto end
 :error
-powershell Write-Host "Unit test failed" -Foreground Red 
-powershell Write-Host "Killing msi in artefacts" -Foreground Red 
-call %cur_dir%\clean_artefacts.cmd 
+powershell Write-Host "Unit test failed" -Foreground Red
+powershell Write-Host "Killing msi in artefacts" -Foreground Red
+call %cur_dir%\scripts\clean_artifacts.cmd
 exit 100
 :end
 

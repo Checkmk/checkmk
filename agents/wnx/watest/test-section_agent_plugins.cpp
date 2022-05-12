@@ -60,46 +60,47 @@ TEST_F(AgentPluginsTest, File) {
 }
 
 TEST_F(AgentPluginsTest, FileMix) {
-    const std::string ver{"\"2.2.0i1\""};
-    const std::vector<std::pair<fs::path, std::string>> to_create = {
+    const std::vector<std::tuple<fs::path, std::string, std::string>> to_create = {
         {fs::path{cfg::GetUserPluginsDir()} / "p.ps1",
          "#\n"
-         "$CMK_VERSION = {}\n"},
+         "$CMK_VERSION = {}\n",
+         "\"2.2.0i1\""},
         {fs::path{cfg::GetUserPluginsDir()} / "p.bat",
          "@rem \n"
-         "set CMK_VERSION={}\nxxxx\n"},
+         "set CMK_VERSION={}\nxxxx\n",
+         "\"2.2.0i1\""},
         {fs::path{cfg::GetUserPluginsDir()} / "p.vbs",
          "\n"
-         "Const CMK_VERSION = {}\nxxxx\n"},
+         "Const CMK_VERSION = {}\nxxxx\n",
+         "\"2.2.0i1\""},
         {fs::path{cfg::GetLocalDir()} / "p.ps1",
          "#\n"
-         "$CMK_VERSION = {}\n"},
-        {fs::path{cfg::GetLocalDir()} / "bad.ps1",
-         "#\n"
-         "CMK_VERSION = {}\n"},
+         "$CMK_VERSION = {}\n",
+         "\"2.2.0i1\""},
         {fs::path{cfg::GetLocalDir()} / "p.cmd",
          "@rem \n"
-         "set CMK_VERSION={}\nxxxx\n"},
-        {fs::path{cfg::GetUserPluginsDir()} / "bad.ps1",
-         "#\n"
-         "CMK_VERSION = {}\n"},
+         "set CMK_VERSION={}\nxxxx\n",
+         "\"2.2.0i1\""},
+        {fs::path{cfg::GetUserPluginsDir()} / "unversioned.ps1",
+         "#\n",
+         "unversioned"},
+        {fs::path{cfg::GetLocalDir()} / "unversioned.cmd",
+         "@rem \n",
+         "unversioned"},
     };
 
-    for (const auto [p, s] : to_create) {
-        tst::CreateTextFile(p, fmt::format(s, ver));
+    for (const auto [p, s, ver] : to_create) {
+        tst::CreateTextFile(p, ((ver == "unversioned") ? s : fmt::format(s, ver)));
     }
     auto rows = getRows();
-    EXPECT_EQ(rows.size(), to_create.size() + 3 - 2);  // 2 bad files
+    EXPECT_EQ(rows.size(), to_create.size() + 3);
     EXPECT_EQ(rows[0] + "\n", section::MakeHeader(section::kAgentPlugins));
     EXPECT_EQ(rows[1], fmt::format("pluginsdir {}",
                                    wtools::ToUtf8(cfg::GetUserPluginsDir())));
     EXPECT_EQ(rows[2],
               fmt::format("localdir {}", wtools::ToUtf8(cfg::GetLocalDir())));
 
-    for (const auto [p, _] : to_create) {
-        if (p.filename() == "bad.ps1") {
-            continue;
-        }
+    for (const auto [p, _, ver] : to_create) {
         EXPECT_TRUE(std::ranges::any_of(rows, [&](const std::string &row) {
             return row == fmt::format("{}:CMK_VERSION = {}", p, ver);
         }));

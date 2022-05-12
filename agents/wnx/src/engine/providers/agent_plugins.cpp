@@ -68,8 +68,7 @@ std::string FindVersionInfo(const fs::path &file, FileType file_type) {
         }
         const auto offset = ret.find(marker);
         if (offset == std::string::npos) {
-            XLOG::t("This file type '{}' is not supported", file);
-            return {};
+            return fmt::format("{}:CMK_VERSION = unversioned", file);
         }
         const auto end = ret.find("\n", offset);
         if (end == std::string::npos) {

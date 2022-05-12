@@ -352,7 +352,12 @@ def _check_min_version(
     render_info.update(zip(levels, levels_str))
 
     for plugin in plugins:
-        if plugin.version_int is None:
+        if plugin.version == "unversioned":
+            yield Result(
+                state=State.OK,
+                notice=f"{type_} {plugin.name!r}: no version specified",
+            )
+        elif plugin.version_int is None:
             yield Result(
                 state=mon_state_unparsable,
                 summary=f"{type_} {plugin.name!r}: unable to parse version {plugin.version!r}",

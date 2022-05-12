@@ -324,8 +324,16 @@ section_checkmk_agent_plugins() {
     printf "<<<checkmk_agent_plugins_lnx:sep(0)>>>\n"
     printf "pluginsdir %s\n" "${PLUGINSDIR}"
     printf "localdir %s\n" "${LOCALDIR}"
-    grep -r '^__version__' "${LOCALDIR}" "${PLUGINSDIR}"
-    grep -r '^CMK_VERSION' "${LOCALDIR}" "${PLUGINSDIR}"
+    for script in \
+        "${PLUGINSDIR}"/* \
+        "${PLUGINSDIR}"/[1-9]*/* \
+        "${LOCALDIR}"/* \
+        "${LOCALDIR}"/[1-9]*/*; do
+        if is_valid_plugin "${script}"; then
+            script_version=$(grep -e '^__version__' -e '^CMK_VERSION' "${script}" || echo 'CMK_VERSION="unversioned"')
+            printf "%s:%s\n" "${script}" "${script_version}"
+        fi
+    done
 }
 
 section_checkmk_failed_plugin() {

@@ -22,14 +22,6 @@ from fastapi.testclient import TestClient
 from pytest_mock import MockerFixture
 
 
-@pytest.fixture(autouse=True)
-def deactivate_certificate_validation(mocker: MockerFixture) -> None:
-    mocker.patch(
-        "agent_receiver.certificates._invalid_certificate_response",
-        lambda _h: None,
-    )
-
-
 @pytest.fixture(name="symlink_push_host")
 def fixture_symlink_push_host(
     tmp_path: Path,
@@ -285,7 +277,6 @@ def test_register_with_labels_folder_exists(
 @pytest.fixture(name="agent_data_headers")
 def fixture_agent_data_headers() -> Mapping[str, str]:
     return {
-        "certificate": "irrelevant",
         "compression": "zlib",
     }
 
@@ -437,7 +428,7 @@ def test_registration_status_declined(
 
     response = client.get(
         f"/registration_status/{uuid}",
-        headers={"certificate": "cert", "authentication": "auth"},
+        headers={"authentication": "auth"},
     )
 
     assert response.status_code == 200
@@ -455,7 +446,7 @@ def test_registration_status_host_not_registered(
 ) -> None:
     response = client.get(
         f"/registration_status/{uuid}",
-        headers={"certificate": "cert", "authentication": "auth"},
+        headers={"authentication": "auth"},
     )
 
     assert response.status_code == 404
@@ -472,7 +463,7 @@ def test_registration_status_push_host(
 
     response = client.get(
         f"/registration_status/{uuid}",
-        headers={"certificate": "cert", "authentication": "auth"},
+        headers={"authentication": "auth"},
     )
 
     assert response.status_code == 200
@@ -495,7 +486,7 @@ def test_registration_status_pull_host(
 
     response = client.get(
         f"/registration_status/{uuid}",
-        headers={"certificate": "cert", "authentication": "auth"},
+        headers={"authentication": "auth"},
     )
 
     assert response.status_code == 200

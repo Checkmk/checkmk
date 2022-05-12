@@ -212,7 +212,6 @@ def _move_ready_file(uuid: UUID) -> None:
 async def agent_data(
     uuid: UUID,
     *,
-    certificate: str = Header(...),
     compression: str = Header(...),
     monitoring_data: UploadFile = File(...),
 ) -> Response:
@@ -291,7 +290,6 @@ async def agent_data(
 @cert_validation_router.get("/registration_status/{uuid}", response_model=RegistrationStatus)
 async def registration_status(
     uuid: UUID,
-    certificate: str = Header(...),
 ) -> RegistrationStatus:
     host = Host(uuid)
     registration_data = get_registration_status_from_file(uuid)

@@ -1072,11 +1072,11 @@ def reclassify_config_by_annotation(history_entry, annotation, new_entry, new_co
         if history_entry.get("in_host_downtime") \
             and annotation["downtime"] is False:
             new_entry["in_host_downtime"] = 0
-    if new_config.host_state:
+    if new_config.host_state is not None:
         new_host_state = annotation.get('host_state', history_entry.get("host_state"))
         new_entry["state"] = new_host_state
         new_entry["host_down"] = 1 if new_host_state else 0
-    if new_config.service_state:
+    if new_config.service_state is not None:
         new_entry["state"] = annotation.get('service_state', history_entry.get("state"))
 
     return new_entry

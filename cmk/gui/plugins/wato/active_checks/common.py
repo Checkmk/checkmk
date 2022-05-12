@@ -41,3 +41,10 @@ class RulespecGroupActiveChecks(RulespecGroup):
             "monitoring. The services are provided by so called active checks that allow "
             "you to monitor network services directly from the outside."
         )
+
+
+# Several active checks just had crit levels as one integer
+def transform_cert_days(cert_days):
+    if not isinstance(cert_days, tuple):
+        return (cert_days, 0)
+    return cert_days

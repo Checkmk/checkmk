@@ -9,14 +9,16 @@ from typing import Any, Mapping, Union
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
+from cmk.gui.plugins.wato.active_checks.common import (
+    RulespecGroupActiveChecks,
+    RulespecGroupIntegrateOtherServices,
+)
 from cmk.gui.plugins.wato.utils import (
     HostRulespec,
     IndividualOrStoredPassword,
     PasswordFromStore,
     PluginCommandLine,
-    rulespec_group_registry,
     rulespec_registry,
-    RulespecGroup,
 )
 from cmk.gui.valuespec import (
     Age,
@@ -39,43 +41,6 @@ from cmk.gui.valuespec import (
     Transform,
     Tuple,
 )
-
-
-@rulespec_group_registry.register
-class RulespecGroupIntegrateOtherServices(RulespecGroup):
-    @property
-    def name(self):
-        return "custom_checks"
-
-    @property
-    def title(self):
-        return _("Other services")
-
-    @property
-    def help(self):
-        return _(
-            "This services are provided by so called active checks. "
-            "You can also integrate custom nagios plugins."
-        )
-
-
-@rulespec_group_registry.register
-class RulespecGroupActiveChecks(RulespecGroup):
-    @property
-    def name(self):
-        return "activechecks"
-
-    @property
-    def title(self):
-        return _("HTTP, TCP, Email, ...")
-
-    @property
-    def help(self):
-        return _(
-            "Rules to add [active_checks|network services] like HTTP and TCP to the "
-            "monitoring. The services are provided by so called active checks that allow "
-            "you to monitor network services directly from the outside."
-        )
 
 
 # These elements are also used in check_parameters.py

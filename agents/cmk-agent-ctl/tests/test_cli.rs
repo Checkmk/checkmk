@@ -52,8 +52,17 @@ fn test_help() {
     output.assert().success();
 }
 
+/// Generates `random` port in the range 30'000..32'000
+/// The reason is to avoid re-using expiring ports which may make troubles
+/// if we are testing too often
+/// `/ 4` - in windows PID is multiple of 4
+fn get_pseudo_random_port() -> u16 {
+    (std::process::id() / 4 % 2_000u32) as u16 + 30_000u16
+}
+
 #[tokio::test(flavor = "multi_thread")]
 async fn test_dump() -> AnyhowResult<()> {
+    let port = get_pseudo_random_port();
     let test_dir = common::setup_test_dir("cmk_agent_ctl_test_dump-");
 
     let test_agent_output = "some test agent output";
@@ -62,7 +71,7 @@ async fn test_dump() -> AnyhowResult<()> {
     #[cfg(unix)]
     let expected_remote_address = Some("\n");
     #[cfg(windows)]
-    let agent_socket_address = "localhost:1997".to_string();
+    let agent_socket_address = format!("localhost:{}", &port).to_string();
     #[cfg(windows)]
     let expected_remote_address: Option<&str> = None;
     let agent_stream_thread = tokio::spawn(common::agent::one_time_agent_response(
@@ -74,7 +83,7 @@ async fn test_dump() -> AnyhowResult<()> {
     let mut cmd = Command::cargo_bin(BINARY)?;
 
     cmd.env("DEBUG_HOME_DIR", test_dir.path())
-        .env("DEBUG_WINDOWS_INTERNAL_PORT", "1997")
+        .env("DEBUG_WINDOWS_INTERNAL_PORT", port.to_string())
         .arg("dump")
         .arg("-vv")
         .unwrap()

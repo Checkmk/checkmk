@@ -2716,3 +2716,59 @@ def get_check_information() -> Mapping[CheckPluginName, Mapping[str, str]]:
 @request_memoize()
 def get_section_information() -> Mapping[str, Mapping[str, str]]:
     return get_section_information_automation().section_infos
+
+
+def check_icmp_params():
+    return [
+        (
+            "rta",
+            Tuple(
+                title=_("Round trip average"),
+                elements=[
+                    Float(title=_("Warning if above"), unit="ms", default_value=200.0),
+                    Float(title=_("Critical if above"), unit="ms", default_value=500.0),
+                ],
+            ),
+        ),
+        (
+            "loss",
+            Tuple(
+                title=_("Packet loss"),
+                help=_(
+                    "When the percentage of lost packets is equal or greater then "
+                    "this level, then the according state is triggered. The default for critical "
+                    "is 100%. That means that the check is only critical if <b>all</b> packets "
+                    "are lost."
+                ),
+                elements=[
+                    Percentage(title=_("Warning at"), default_value=80.0),
+                    Percentage(title=_("Critical at"), default_value=100.0),
+                ],
+            ),
+        ),
+        (
+            "packets",
+            Integer(
+                title=_("Number of packets"),
+                help=_(
+                    "Number ICMP echo request packets to send to the target host on each "
+                    "check execution. All packets are sent directly on check execution. Afterwards "
+                    "the check waits for the incoming packets."
+                ),
+                minvalue=1,
+                maxvalue=20,
+                default_value=5,
+            ),
+        ),
+        (
+            "timeout",
+            Integer(
+                title=_("Total timeout of check"),
+                help=_(
+                    "After this time (in seconds) the check is aborted, regardless "
+                    "of how many packets have been received yet."
+                ),
+                minvalue=1,
+            ),
+        ),
+    ]

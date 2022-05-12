@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import rulespec_group_registry, RulespecGroup
+from cmk.gui.valuespec import DropdownChoice
 
 
 @rulespec_group_registry.register
@@ -48,3 +49,18 @@ def transform_cert_days(cert_days):
     if not isinstance(cert_days, tuple):
         return (cert_days, 0)
     return cert_days
+
+
+def ip_address_family_element():
+    return (
+        "address_family",
+        DropdownChoice(
+            title=_("IP address family"),
+            choices=[
+                (None, _("Primary address family")),
+                ("ipv4", _("Enforce IPv4")),
+                ("ipv6", _("Enforce IPv6")),
+            ],
+            default_value=None,
+        ),
+    )

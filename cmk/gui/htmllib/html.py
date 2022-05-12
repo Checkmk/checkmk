@@ -23,7 +23,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import Request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.page_menu import enable_page_menu_entry
+from cmk.gui.page_menu_entry import enable_page_menu_entry
 from cmk.gui.type_defs import (
     Choice,
     ChoiceGroup,
@@ -328,7 +328,7 @@ class HTMLGenerator(HTMLWriter):
 
     def body_end(self) -> None:
         if self.have_help:
-            enable_page_menu_entry("inline_help")
+            enable_page_menu_entry(self, "inline_help")
         self.write_final_javascript()
         self.javascript("cmk.visibility_detection.initialize();")
         self.close_body()

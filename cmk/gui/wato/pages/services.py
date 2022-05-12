@@ -44,8 +44,6 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _, ungettext
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import (
-    disable_page_menu_entry,
-    enable_page_menu_entry,
     make_display_options_dropdown,
     make_javascript_action,
     make_javascript_link,
@@ -56,6 +54,7 @@ from cmk.gui.page_menu import (
     PageMenuRenderer,
     PageMenuTopic,
 )
+from cmk.gui.page_menu_entry import disable_page_menu_entry, enable_page_menu_entry
 from cmk.gui.pages import AjaxPage, page_registry
 from cmk.gui.plugins.wato.utils import mode_registry, WatoMode
 from cmk.gui.plugins.wato.utils.context_buttons import make_host_status_link
@@ -550,7 +549,7 @@ class DiscoveryPageRenderer:
     def render(self, discovery_result: DiscoveryResult, api_request: dict) -> str:
         with output_funnel.plugged():
             self._toggle_action_page_menu_entries(discovery_result)
-            enable_page_menu_entry("inline_help")
+            enable_page_menu_entry(html, "inline_help")
             self._show_discovered_host_labels(discovery_result)
             self._show_discovery_details(discovery_result, api_request)
             return output_funnel.drain()
@@ -815,9 +814,9 @@ class DiscoveryPageRenderer:
                 changed_host_labels,
             ]
         ):
-            enable_page_menu_entry("fixall")
+            enable_page_menu_entry(html, "fixall")
         else:
-            disable_page_menu_entry("fixall")
+            disable_page_menu_entry(html, "fixall")
 
     def _toggle_action_page_menu_entries(self, discovery_result: DiscoveryResult) -> None:
         if not user.may("wato.services"):
@@ -832,18 +831,18 @@ class DiscoveryPageRenderer:
                 fixall += 1
 
         if self._is_active(discovery_result):
-            enable_page_menu_entry("stop")
+            enable_page_menu_entry(html, "stop")
             return
 
-        disable_page_menu_entry("stop")
-        enable_page_menu_entry("refresh")
+        disable_page_menu_entry(html, "stop")
+        enable_page_menu_entry(html, "refresh")
 
         if (
             fixall >= 1
             and user.may("wato.service_discovery_to_monitored")
             and user.may("wato.service_discovery_to_removed")
         ):
-            enable_page_menu_entry("fix_all")
+            enable_page_menu_entry(html, "fix_all")
 
         if (
             already_has_services
@@ -852,16 +851,16 @@ class DiscoveryPageRenderer:
             and user.may("wato.service_discovery_to_ignored")
             and user.may("wato.service_discovery_to_removed")
         ):
-            enable_page_menu_entry("tabula_rasa")
+            enable_page_menu_entry(html, "tabula_rasa")
 
         if discovery_result.host_labels:
-            enable_page_menu_entry("update_host_labels")
+            enable_page_menu_entry(html, "update_host_labels")
 
         if already_has_services:
-            enable_page_menu_entry("show_checkboxes")
-            enable_page_menu_entry("show_parameters")
-            enable_page_menu_entry("show_discovered_labels")
-            enable_page_menu_entry("show_plugin_names")
+            enable_page_menu_entry(html, "show_checkboxes")
+            enable_page_menu_entry(html, "show_parameters")
+            enable_page_menu_entry(html, "show_discovered_labels")
+            enable_page_menu_entry(html, "show_plugin_names")
 
     def _toggle_bulk_action_page_menu_entries(self, discovery_result, table_source):
         if not user.may("wato.services"):
@@ -892,7 +891,7 @@ class DiscoveryPageRenderer:
                 self._enable_bulk_button(table_source, DiscoveryState.IGNORED)
 
     def _enable_bulk_button(self, source, target):
-        enable_page_menu_entry("bulk_%s_%s" % (source, target))
+        enable_page_menu_entry(html, "bulk_%s_%s" % (source, target))
 
     def _show_check_row(
         self, table, discovery_result, api_request, entry: CheckPreviewEntry, show_bulk_actions

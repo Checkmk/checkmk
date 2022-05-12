@@ -81,8 +81,8 @@ from cmk.gui.page_menu import (
     PageMenuPopup,
     PageMenuSidePopup,
     PageMenuTopic,
-    toggle_page_menu_entries,
 )
+from cmk.gui.page_menu_entry import toggle_page_menu_entries
 from cmk.gui.pages import AjaxPage, AjaxPageResult, page_registry
 from cmk.gui.permissions import (
     declare_dynamic_permissions,
@@ -891,6 +891,7 @@ class GUIViewRenderer(ABCViewRenderer):
             if self._show_buttons:
                 # don't take display_options into account here ('c' is set during reload)
                 toggle_page_menu_entries(
+                    html,
                     css_class="command",
                     state=row_count > 0
                     and _should_show_command_form(self.view.datasource, ignore_display_option=True),
@@ -901,7 +902,7 @@ class GUIViewRenderer(ABCViewRenderer):
                 play_alarm_sounds()
         else:
             # Always hide action related context links in this situation
-            toggle_page_menu_entries(css_class="command", state=False)
+            toggle_page_menu_entries(html, css_class="command", state=False)
 
         # In multi site setups error messages of single sites do not block the
         # output and raise now exception. We simply print error messages here.

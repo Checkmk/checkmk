@@ -1,0 +1,12 @@
+Title: SLA: Fix reclassifying states to OK
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1652355391
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b9
+
+If you reclassified host or service states to OK, the change had no effect.

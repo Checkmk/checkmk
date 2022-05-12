@@ -10,25 +10,22 @@
 from __future__ import annotations
 
 import logging
-from typing import List, Optional, TYPE_CHECKING
+from typing import List, Optional
 
 from werkzeug.local import LocalStack
 
+from cmk.gui import http, userdb
+from cmk.gui.config import Config
+from cmk.gui.display_options import DisplayOptions
+from cmk.gui.htmllib.html import HTMLGenerator
+from cmk.gui.i18n import Translation
+from cmk.gui.logged_in import LoggedInUser
+from cmk.gui.plugins.openapi.restful_objects import Endpoint
+from cmk.gui.utils.output_funnel import OutputFunnel
+from cmk.gui.utils.theme import Theme
+from cmk.gui.utils.timeout_manager import TimeoutManager
+from cmk.gui.utils.transaction_manager import TransactionManager
 from cmk.gui.utils.user_errors import UserErrors
-
-if TYPE_CHECKING:
-    # Cyclical import
-    from cmk.gui import http, userdb
-    from cmk.gui.config import Config
-    from cmk.gui.display_options import DisplayOptions
-    from cmk.gui.htmllib.html import HTMLGenerator
-    from cmk.gui.i18n import Translation
-    from cmk.gui.logged_in import LoggedInUser
-    from cmk.gui.plugins.openapi.restful_objects import Endpoint
-    from cmk.gui.utils.output_funnel import OutputFunnel
-    from cmk.gui.utils.theme import Theme
-    from cmk.gui.utils.timeout_manager import TimeoutManager
-    from cmk.gui.utils.transaction_manager import TransactionManager
 
 _sentinel = object()
 

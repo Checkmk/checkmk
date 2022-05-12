@@ -1,0 +1,13 @@
+Title: apache_status plugin falls back on ss if netstat is not installed
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1661857259
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p12
+
+If netstat is not installed the apache status plugin will fallback to ss.
+

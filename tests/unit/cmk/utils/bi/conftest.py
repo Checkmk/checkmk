@@ -37,6 +37,7 @@ def mock_query_callback(
     query: str,
     only_sites: Optional[List[str]] = None,
     output_format: LivestatusOutputFormat = LivestatusOutputFormat.PYTHON,
+    fetch_full_data: bool = False,
 ) -> LivestatusResponse:
     return LivestatusResponse([])
 

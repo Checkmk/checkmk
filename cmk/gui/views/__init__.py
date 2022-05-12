@@ -56,7 +56,7 @@ from cmk.gui.config import active_config, builtin_role_ids, register_post_config
 from cmk.gui.ctx_stack import g
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKGeneralException, MKInternalError, MKUserError
-from cmk.gui.htmllib.context import html
+from cmk.gui.htmllib.html import html
 from cmk.gui.htmllib.top_heading import top_heading
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _, _u

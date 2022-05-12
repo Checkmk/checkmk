@@ -12,7 +12,7 @@ from cmk.utils.plugin_registry import Registry
 
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.exceptions import HTTPRedirect
-from cmk.gui.htmllib.context import html
+from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.main_menu import mega_menu_registry

@@ -21,7 +21,7 @@ from cmk.utils.type_defs import HostName, TaggroupIDToTagID, TagID
 
 from cmk.gui.config import active_config, register_post_config_load_hook
 from cmk.gui.exceptions import MKGeneralException, MKUserError
-from cmk.gui.htmllib.context import html
+from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _u
 from cmk.gui.site_config import allsites

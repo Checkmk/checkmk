@@ -9,7 +9,7 @@ from typing import List, Optional, Type
 from cmk.utils.password_store import Password
 
 from cmk.gui.groups import load_contact_group_information
-from cmk.gui.htmllib.context import html
+from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.plugins.wato.utils import (

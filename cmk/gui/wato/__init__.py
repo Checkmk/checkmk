@@ -91,7 +91,7 @@ import cmk.gui.watolib.user_scripts
 import cmk.gui.watolib.utils
 import cmk.gui.weblib as weblib
 from cmk.gui.exceptions import MKGeneralException as _MKGeneralException
-from cmk.gui.htmllib.context import html
+from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.pages import Page, page_registry

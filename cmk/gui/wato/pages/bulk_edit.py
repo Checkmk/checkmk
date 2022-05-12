@@ -12,7 +12,7 @@ from typing import Optional, Type
 
 import cmk.gui.forms as forms
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.htmllib.context import html
+from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user

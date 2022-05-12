@@ -14,8 +14,8 @@ from cmk.utils.defines import short_service_state_name
 
 import cmk.gui.bi as bi
 import cmk.gui.utils.escaping as escaping
-from cmk.gui.htmllib.context import html
 from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.plugins.views.utils import (

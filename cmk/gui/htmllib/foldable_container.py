@@ -9,7 +9,7 @@ import json
 from contextlib import contextmanager
 from typing import Iterator, Optional, Union
 
-from cmk.gui.htmllib.context import html
+from cmk.gui.htmllib.html import html
 from cmk.gui.logged_in import user
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.theme import theme

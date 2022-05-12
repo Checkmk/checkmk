@@ -7,7 +7,7 @@
 import abc
 
 import cmk.gui.sites as sites
-from cmk.gui.htmllib.context import html
+from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.plugins.sidebar.utils import bulletlink, SidebarSnapin, snapin_registry
 from cmk.gui.utils.urls import urlencode

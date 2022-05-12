@@ -34,8 +34,8 @@ from cmk.gui.availability import (
 )
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.htmllib.context import html
 from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.htmllib.html import html
 from cmk.gui.htmllib.top_heading import top_heading
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _

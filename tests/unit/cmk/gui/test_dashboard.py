@@ -10,7 +10,7 @@ import cmk.utils.version as cmk_version
 
 import cmk.gui.dashboard as dashboard  # pylint: disable=reimported
 from cmk.gui.config import builtin_role_ids
-from cmk.gui.htmllib.context import html
+from cmk.gui.htmllib.html import html
 
 
 class DummyDashlet(dashboard.Dashlet):

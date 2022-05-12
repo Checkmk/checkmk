@@ -6,7 +6,7 @@
 
 from typing import List, Optional, Tuple, Union
 
-from cmk.gui.htmllib.context import html
+from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.utils.html import HTML

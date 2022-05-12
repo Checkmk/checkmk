@@ -8,13 +8,13 @@ import base64
 from typing import Callable, Optional, Tuple, Union
 
 import cmk.gui.utils.escaping as escaping
-from cmk.gui.htmllib.context import html
 from cmk.gui.htmllib.foldable_container import (
     foldable_container_id,
     foldable_container_img_id,
     foldable_container_onclick,
 )
 from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.htmllib.html import html
 from cmk.gui.logged_in import user
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.theme import theme

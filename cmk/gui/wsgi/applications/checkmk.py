@@ -33,9 +33,8 @@ from cmk.gui.exceptions import (
     MKUnauthenticatedException,
     MKUserError,
 )
-from cmk.gui.htmllib.context import html
 from cmk.gui.htmllib.header import make_header
-from cmk.gui.htmllib.html import HTMLGenerator
+from cmk.gui.htmllib.html import html, HTMLGenerator
 from cmk.gui.http import request, response, Response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger

@@ -16,7 +16,7 @@ import cmk.gui.forms as forms
 import cmk.gui.gui_background_job as gui_background_job
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import HTTPRedirect, MKUserError
-from cmk.gui.htmllib.context import html
+from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger

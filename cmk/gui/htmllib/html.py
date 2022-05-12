@@ -19,6 +19,7 @@ import cmk.gui.log as log
 import cmk.gui.utils as utils
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.config import active_config
+from cmk.gui.ctx_stack import request_local_attr
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import Request
 from cmk.gui.i18n import _
@@ -1307,3 +1308,6 @@ class HTMLGenerator(HTMLWriter):
             onmousedown="cmk.element_dragging.start(event, this, %s, %s"
             % (json.dumps(dragging_tag.upper()), drop_handler),
         )
+
+
+html: HTMLGenerator = request_local_attr("html")

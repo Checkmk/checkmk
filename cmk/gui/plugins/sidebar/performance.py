@@ -7,8 +7,8 @@
 import cmk.gui.site_config as site_config
 import cmk.gui.sites as sites
 import cmk.gui.user_sites as user_sites
-from cmk.gui.htmllib.context import html
 from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.plugins.sidebar.utils import SidebarSnapin, snapin_registry, snapin_site_choice
 

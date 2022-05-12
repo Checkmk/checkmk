@@ -19,7 +19,7 @@ from cmk.utils.encryption import Encrypter
 import cmk.gui.valuespec as vs
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.htmllib.context import html
+from cmk.gui.htmllib.html import html
 
 
 @pytest.mark.parametrize(

@@ -10,7 +10,7 @@ import pytest
 
 import cmk.gui.sidebar as sidebar
 from cmk.gui.config import active_config
-from cmk.gui.htmllib.context import html
+from cmk.gui.htmllib.html import html
 from cmk.gui.logged_in import user
 from cmk.gui.sidebar import UserSidebarSnapin
 

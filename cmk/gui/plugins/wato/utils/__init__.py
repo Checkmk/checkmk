@@ -44,9 +44,9 @@ from cmk.gui.groups import (
     load_service_group_information,
 )
 from cmk.gui.hooks import request_memoize
-from cmk.gui.htmllib.context import html
 from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _u
 from cmk.gui.logged_in import user

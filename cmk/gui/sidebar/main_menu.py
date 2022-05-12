@@ -12,8 +12,8 @@ from typing import List, NamedTuple, Optional, Union
 import cmk.gui.message as message
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKAuthException
-from cmk.gui.htmllib.context import html
 from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _, ungettext
 from cmk.gui.logged_in import user

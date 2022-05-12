@@ -44,7 +44,7 @@ from cmk.gui.config import active_config, builtin_role_ids
 from cmk.gui.exceptions import MKGeneralException, MKMissingDataError, MKTimeout, MKUserError
 from cmk.gui.figures import create_figures_response
 from cmk.gui.hooks import request_memoize
-from cmk.gui.htmllib.context import html
+from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _u
 from cmk.gui.main_menu import mega_menu_registry

@@ -15,9 +15,9 @@ from cmk.utils.site import url_prefix
 
 import cmk.gui.pages
 import cmk.gui.pagetypes as pagetypes
-from cmk.gui.htmllib.context import html
 from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.permissions import declare_permission, permission_section_registry, PermissionSection

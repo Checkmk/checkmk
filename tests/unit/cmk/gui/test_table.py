@@ -11,7 +11,7 @@ from bs4 import BeautifulSoup as bs  # type: ignore[import]
 
 from tests.testlib import compare_html
 
-from cmk.gui.htmllib.context import html
+from cmk.gui.htmllib.html import html
 from cmk.gui.http import response
 from cmk.gui.logged_in import LoggedInNobody
 from cmk.gui.table import table_element

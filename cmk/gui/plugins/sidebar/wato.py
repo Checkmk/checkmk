@@ -11,9 +11,9 @@ import cmk.gui.site_config as site_config
 import cmk.gui.sites as sites
 import cmk.gui.views as views
 from cmk.gui.config import active_config
-from cmk.gui.htmllib.context import html
 from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import mega_menu_registry

@@ -7,9 +7,9 @@
 from typing import Optional
 
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.htmllib.context import html
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.header import make_header
+from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 
 # TODO: Change all call sites to directly import from cmk.gui.page_menu

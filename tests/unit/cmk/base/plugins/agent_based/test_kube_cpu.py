@@ -392,7 +392,9 @@ def test_overview_limits_contained(usage_section, check_result, resources_sectio
 def test_stored_usage_value(
     usage_section: Optional[cmk.base.plugins.agent_based.utils.kube.PerformanceUsage], value_store
 ):
-    performance_cpu = kube_cpu.performance_cpu(usage_section, TIMESTAMP, value_store)
+    performance_cpu = cmk.base.plugins.agent_based.utils.kube_resources.performance_cpu(
+        usage_section, TIMESTAMP, value_store, "cpu_usage"
+    )
     assert performance_cpu is not None
 
 
@@ -400,5 +402,7 @@ def test_stored_usage_value(
 def test_stored_outdated_usage_value(
     usage_section: Optional[cmk.base.plugins.agent_based.utils.kube.PerformanceUsage], value_store
 ):
-    performance_cpu = kube_cpu.performance_cpu(usage_section, TIMESTAMP, value_store)
+    performance_cpu = cmk.base.plugins.agent_based.utils.kube_resources.performance_cpu(
+        usage_section, TIMESTAMP, value_store, "cpu_usage"
+    )
     assert performance_cpu is None

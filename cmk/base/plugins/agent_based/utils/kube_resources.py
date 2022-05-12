@@ -5,7 +5,19 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from typing import Callable, cast, Iterable, Literal, Mapping, Optional, Tuple, TypedDict, Union
+from typing import (
+    Any,
+    Callable,
+    cast,
+    Iterable,
+    Literal,
+    Mapping,
+    MutableMapping,
+    Optional,
+    Tuple,
+    TypedDict,
+    Union,
+)
 
 from pydantic import BaseModel
 
@@ -134,6 +146,9 @@ absolute_title: Mapping[Union[RequirementType, AllocatableKubernetesObject], str
     "limit": "Limits",
     "allocatable": "Allocatable",
 }
+
+
+CPU_RENDER_FUNC = lambda x: f"{x:0.3f}"
 
 
 def check_with_utilization(
@@ -290,3 +305,26 @@ def check_resource_quota_resource(
                 render_func=render_func,
                 boundaries=(0.0, None),
             )
+
+
+def performance_cpu(
+    section_kube_performance_cpu: Optional[PerformanceUsage],
+    current_timestamp: float,
+    host_value_store: MutableMapping[str, Any],
+    value_store_key: Literal["cpu_usage", "resource_quota_cpu_usage"],
+) -> Optional[PerformanceUsage]:
+    """Persists the performance usage and uses the stored value for a certain period of time if
+    no new data is available.
+    """
+    if section_kube_performance_cpu is not None:
+        host_value_store[value_store_key] = (current_timestamp, section_kube_performance_cpu.json())
+        return section_kube_performance_cpu
+
+    if (timestamped_usage := host_value_store.get(value_store_key)) is not None:
+        timestamp, usage = timestamped_usage
+        if current_timestamp - timestamp <= 60:
+            return PerformanceUsage(**json.loads(usage))
+        # remove the stored value if older than 60 seconds
+        host_value_store.pop(value_store_key)
+
+    return None

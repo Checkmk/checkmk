@@ -100,14 +100,16 @@ rulespec_registry.register(
 )
 
 
-def _parameter_valuespec_cpu():
-    return Dictionary(
-        help=_(
-            "Here you can configure levels for usage, requests "
-            "utilization and limits utilization, respectively."
-        ),
-        title=_("CPU"),
-        elements=[
+def _parameter_valuespec_cpu(
+    valuespec_help: str,
+    options: Optional[Sequence[Literal["usage", "request", "limit", "cluster", "node"]]] = None,
+):
+    elements = []
+    if options is None:
+        options = ["usage", "request", "limit", "cluster", "node"]
+
+    if "usage" in options:
+        elements.append(
             (
                 "usage",
                 wrap_with_no_levels_dropdown(
@@ -119,24 +121,27 @@ def _parameter_valuespec_cpu():
                         ]
                     ),
                 ),
-            ),
-            (
-                "request",
-                valuespec_percentual(title=_("Upper levels for requests utilization")),
-            ),
-            (
-                "limit",
-                valuespec_percentual(title=_("Upper levels for limits utilization")),
-            ),
-            (
-                "cluster",
-                valuespec_percentual(title=_("Upper levels for cluster utilization")),
-            ),
-            (
-                "node",
-                valuespec_percentual(title=_("Upper levels for node utilization")),
-            ),
-        ],
+            )
+        )
+
+    for option, help_text in (
+        ("request", _("Upper levels for requests utilization")),
+        ("limit", _("Upper levels for limits utilization")),
+        ("cluster", _("Upper levels for cluster utilization")),
+        ("node", _("Upper levels for node utilization")),
+    ):
+        if option in options:
+            elements.append(
+                (
+                    option,
+                    valuespec_percentual(title=help_text),
+                )
+            )
+
+    return Dictionary(
+        help=valuespec_help,
+        title=_("CPU"),
+        elements=elements,
     )
 
 
@@ -152,5 +157,22 @@ rulespec_registry.register(
             )
         ),
         title=lambda: _("Kubernetes CPU resource utilization"),
+    )
+)
+
+
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="kube_resource_quota_cpu",
+        group=RulespecGroupCheckParametersApplications,
+        match_type="dict",
+        parameter_valuespec=lambda: _parameter_valuespec_cpu(
+            valuespec_help=_(
+                "Here you can configure levels for usage, requests "
+                "utilization and limits utilization, respectively."
+            ),
+            options=["usage", "request", "limit"],
+        ),
+        title=lambda: _("Kubernetes resource quota cpu utilization"),
     )
 )

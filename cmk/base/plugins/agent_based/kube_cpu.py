@@ -3,7 +3,6 @@
 # Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-import json
 import time
 from typing import Any, MutableMapping, Optional
 
@@ -13,11 +12,13 @@ from cmk.base.plugins.agent_based.utils.kube import PerformanceUsage
 from cmk.base.plugins.agent_based.utils.kube_resources import (
     AllocatableResource,
     check_resource,
+    CPU_RENDER_FUNC,
     DEFAULT_PARAMS,
     Params,
     parse_allocatable_resource,
     parse_performance_usage,
     parse_resources,
+    performance_cpu,
     Resources,
 )
 
@@ -28,28 +29,6 @@ def discovery_kube_cpu(
     section_kube_allocatable_cpu_resource: Optional[AllocatableResource],
 ) -> DiscoveryResult:
     yield Service()
-
-
-def performance_cpu(
-    section_kube_performance_cpu: Optional[PerformanceUsage],
-    current_timestamp: float,
-    host_value_store: MutableMapping[str, Any],
-) -> Optional[PerformanceUsage]:
-    """Persists the performance usage and uses the stored value for a certain period of time if
-    no new data is available.
-    """
-    if section_kube_performance_cpu is not None:
-        host_value_store["cpu_usage"] = (current_timestamp, section_kube_performance_cpu.json())
-        return section_kube_performance_cpu
-
-    if (timestamped_usage := host_value_store.get("cpu_usage")) is not None:
-        timestamp, usage = timestamped_usage
-        if current_timestamp - timestamp <= 60:
-            return PerformanceUsage(**json.loads(usage))
-        # remove the stored value if older than 60 seconds
-        host_value_store.pop("cpu_usage")
-
-    return None
 
 
 def check_kube_cpu(
@@ -79,11 +58,16 @@ def _check_kube_cpu(
     assert section_kube_cpu_resources is not None
     yield from check_resource(
         params,
-        performance_cpu(section_kube_performance_cpu, current_timestamp, host_value_store),
+        performance_cpu(
+            section_kube_performance_cpu,
+            current_timestamp,
+            host_value_store,
+            value_store_key="cpu_usage",
+        ),
         section_kube_cpu_resources,
         section_kube_allocatable_cpu_resource,
         "cpu",
-        lambda x: f"{x:0.3f}",
+        CPU_RENDER_FUNC,
     )
 
 

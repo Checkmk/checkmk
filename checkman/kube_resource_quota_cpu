@@ -1,0 +1,24 @@
+title: Kubernetes: Resource Quota CPU
+agents: kubernetes
+catalog: containerization/kubernetes
+license: GPLv2
+distribution: check_mk
+description:
+ This check shows the CPU usage of the pods of a Kubernetes Resource Quota, its
+ requests utilization and its limits utilization.
+
+ Requests utilization is the CPU usage divided by the configured hard spec CPU request value.
+ Limit utilization is computed in the same manner with the respective hard spec CPU limit value.
+ The utilization percentage values are omitted if any of the associated request/limit value are not
+ configured for the Resource Quota.
+
+ The service includes metrics for the CPU usage, the requests utilization, the limits utilization,
+ the CPU requests and CPU limits of the Kubernetes object.
+
+ There are no default thresholds for this service. However, thresholds can be configured via the
+ "Kubernetes resource quota CPU resource utilization" ruleset.
+
+ The check requires that the special agent kube is configured.
+
+discovery:
+ One service is created per Kubernetes Resource Quota.

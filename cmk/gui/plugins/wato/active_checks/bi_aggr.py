@@ -114,13 +114,18 @@ def _valuespec_active_checks_bi_aggr():
                                 "auth_mode",
                                 DropdownChoice(
                                     title=_("Authentication Mode"),
-                                    default_value="cookie",
+                                    default_value="header",
                                     choices=[
-                                        ("cookie", _("Form (Cookie) based")),
+                                        ("header", _("Authorization Header")),
                                         ("basic", _("HTTP Basic")),
                                         ("digest", _("HTTP Digest")),
                                         ("kerberos", _("Kerberos")),
                                     ],
+                                    deprecated_choices=("cookie",),
+                                    invalid_choice_error=_(
+                                        "The specified choice is no longer available. "
+                                        "Please use another, like 'header' instead."
+                                    ),
                                 ),
                             ),
                             (

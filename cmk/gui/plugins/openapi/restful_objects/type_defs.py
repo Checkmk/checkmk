@@ -94,6 +94,7 @@ CmkEndpointName = Literal[
     "cmk/put_bi_packs",
     "cmk/get_bi_rule",
     "cmk/get_bi_aggregation",
+    "cmk/get_bi_aggregation_state",
     "cmk/get_bi_pack",
     "cmk/get_bi_packs",
     "cmk/put_bi_pack",

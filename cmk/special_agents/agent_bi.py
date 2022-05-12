@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import ast
+import json
 import sys
 from multiprocessing.pool import ThreadPool
 from pathlib import Path
@@ -169,14 +170,16 @@ class AggregationRawdataGenerator:
             return AggregationData(None, self._config, "Request Error %s" % e)
 
     def _fetch_aggregation_data(self):
+        filter_query = self._config.get("filter") or {}
+
         response = requests.post(
-            "%s/check_mk/webapi.py?action=get_bi_aggregations" % self._site_url,
-            data={
-                "_username": self._username,
-                "_secret": self._secret,
-                "request": repr({"filter": self._config.get("filter", {})}),
-                "request_format": "python",
-                "output_format": "python",
+            f"{self._site_url}"
+            + "/check_mk/api/1.0"
+            + "/domain-types/bi_aggregation/actions/aggregation_state/invoke",
+            headers={"Authorization": f"Bearer {self._username} {self._secret.strip()}"},
+            json={
+                "filter_names": filter_query.get("names") or [],
+                "filter_groups": filter_query.get("groups") or [],
             },
         )
         response.raise_for_status()
@@ -184,25 +187,18 @@ class AggregationRawdataGenerator:
 
     def _parse_response_text(self, response_text):
         try:
-            rawdata = ast.literal_eval(response_text)
-        except (ValueError, SyntaxError):  # ast.literal_eval
+            data = json.loads(response_text)
+        except ValueError:
             if "automation secret" in response_text:
                 raise RawdataException(
                     "Error: Unable to parse data from monitoring instance. Please check the login credentials"
                 )
             raise RawdataException("Error: Unable to parse data from monitoring instance")
 
-        if not isinstance(rawdata, dict):
+        if not isinstance(data, dict):
             raise RawdataException("Error: Unable to process parsed data from monitoring instance")
 
-        result_code = rawdata.get("result_code")
-        if result_code is None:
-            raise RawdataException("API Error: No error description available")
-
-        if result_code != 0:
-            raise RawdataException("API Error: %r" % (rawdata,))
-
-        return rawdata["result"]
+        return data
 
 
 class AggregationOutputRenderer:

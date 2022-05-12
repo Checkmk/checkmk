@@ -8,6 +8,8 @@ import json
 
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
+from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
+
 
 def test_openapi_get_bi_packs(aut_user_auth_wsgi_app: WebTestAppForCMK):
     base = "/NO_SITE/check_mk/api/1.0"
@@ -385,3 +387,47 @@ def test_openapi_delete_pack_forbidden(aut_user_auth_wsgi_app: WebTestAppForCMK)
         headers={"Accept": "application/json"},
         status=404,
     )
+
+
+def test_get_aggregation_state_empty(aut_user_auth_wsgi_app, mock_livestatus):
+    base = "/NO_SITE/check_mk/api/1.0"
+    postfix = "/domain-types/bi_aggregation/actions/aggregation_state/invoke"
+    url = f"{base}{postfix}"
+
+    live: MockLiveStatusConnection = mock_livestatus
+    live.set_sites(["NO_SITE"])
+    live.expect_query("GET status\nColumns: program_start")
+    live.expect_query("GET status\nColumns: program_start")
+    live.expect_query(
+        "GET hosts\nColumns: host_name host_tags host_labels host_childs host_parents host_alias host_filename"
+    )
+
+    with live():
+        _response = aut_user_auth_wsgi_app.post(
+            url,
+            headers={"Accept": "application/json", "Content-Type": "application/json"},
+            status=200,
+            params=json.dumps({}),
+        )
+
+
+def test_get_aggregation_state_filter_names(aut_user_auth_wsgi_app, mock_livestatus):
+    base = "/NO_SITE/check_mk/api/1.0"
+    postfix = "/domain-types/bi_aggregation/actions/aggregation_state/invoke"
+    url = f"{base}{postfix}"
+
+    live: MockLiveStatusConnection = mock_livestatus
+    live.set_sites(["NO_SITE"])
+    live.expect_query("GET status\nColumns: program_start")
+    live.expect_query("GET status\nColumns: program_start")
+    live.expect_query(
+        "GET hosts\nColumns: host_name host_tags host_labels host_childs host_parents host_alias host_filename"
+    )
+
+    with live():
+        _response = aut_user_auth_wsgi_app.post(
+            url,
+            headers={"Accept": "application/json", "Content-Type": "application/json"},
+            status=200,
+            params=json.dumps({"filter_names": ["Host heute"]}),
+        )

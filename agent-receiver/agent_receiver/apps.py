@@ -4,13 +4,27 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from agent_receiver.certificates import CertValidationRoute
+from typing import Any, Callable, Coroutine
+
 from agent_receiver.log import configure_logger
 from agent_receiver.site_context import log_path, site_name
-from fastapi import APIRouter, FastAPI
+from fastapi import APIRouter, FastAPI, Request, Response
+from fastapi.routing import APIRoute
+
+
+class _CertValidationRoute(APIRoute):
+    def get_route_handler(self) -> Callable[[Request], Coroutine[Any, Any, Response]]:
+        original_route_handler = super().get_route_handler()
+
+        async def custom_route_handler(request: Request) -> Response:
+            response: Response = await original_route_handler(request)
+            return response
+
+        return custom_route_handler
+
 
 agent_receiver_app = FastAPI(title="Checkmk Agent Receiver")
-cert_validation_router = APIRouter(route_class=CertValidationRoute)
+cert_validation_router = APIRouter(route_class=_CertValidationRoute)
 
 
 def main_app() -> FastAPI:

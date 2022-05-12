@@ -12,7 +12,6 @@ from pathlib import Path
 from uuid import UUID
 
 from agent_receiver.apps import agent_receiver_app, cert_validation_router
-from agent_receiver.certificates import uuid_from_pem_csr
 from agent_receiver.checkmk_rest_api import (
     cmk_edition,
     get_root_cert,
@@ -34,7 +33,7 @@ from agent_receiver.models import (
     RegistrationWithLabelsBody,
 )
 from agent_receiver.site_context import r4r_dir, site_name
-from agent_receiver.utils import get_registration_status_from_file, Host
+from agent_receiver.utils import get_registration_status_from_file, Host, uuid_from_pem_csr
 from fastapi import Depends, File, Header, HTTPException, Response, UploadFile
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from starlette.status import HTTP_204_NO_CONTENT, HTTP_403_FORBIDDEN, HTTP_501_NOT_IMPLEMENTED

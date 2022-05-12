@@ -10,26 +10,21 @@ from pathlib import Path
 import pytest
 
 import cmk.gui.key_mgmt as key_mgmt
-from cmk.gui.logged_in import user
+from cmk.gui.logged_in import UserContext
+from cmk.gui.type_defs import UserId
 
 
 @pytest.mark.usefixtures("request_context")
 def test_key_mgmt_create_key(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-    monkeypatch.setattr(user, "id", "dingdöng")
     monkeypatch.setattr(time, "time", lambda: 123)
 
-    key_dict = key_mgmt.PageEditKey(key_mgmt.KeypairStore(str(tmp_path), "test"))._generate_key(
-        "älias", "passphra$e"
-    )
-    assert isinstance(key_dict, dict)
-    assert sorted(key_dict.keys()) == ["alias", "certificate", "date", "owner", "private_key"]
-    assert isinstance(key_dict["alias"], str)
-    assert key_dict["alias"] == "älias"
-
-    assert key_dict["date"] == 123
-
-    assert isinstance(key_dict["owner"], str)
-    assert key_dict["owner"] == "dingdöng"
-
-    assert key_dict["certificate"].startswith("-----BEGIN CERTIFICATE---")
-    assert key_dict["private_key"].startswith("-----BEGIN ENCRYPTED PRIVATE KEY---")
+    with UserContext(UserId("dingdöng")):
+        key = key_mgmt.PageEditKey(key_mgmt.KeypairStore(str(tmp_path), "test"))._generate_key(
+            "älias", "passphra$e"
+        )
+    assert isinstance(key, key_mgmt.Key)
+    assert key.alias == "älias"
+    assert key.date == 123
+    assert key.owner == "dingdöng"
+    assert key.certificate.startswith("-----BEGIN CERTIFICATE---")
+    assert key.private_key.startswith("-----BEGIN ENCRYPTED PRIVATE KEY---")

@@ -12,6 +12,7 @@ import cmk.utils.paths
 
 import cmk.gui.backup as backup
 import cmk.gui.wato as wato
+from cmk.gui.logged_in import user
 
 
 @pytest.mark.parametrize(
@@ -38,7 +39,8 @@ def test_is_canonical(monkeypatch, path, expected):
 
 
 @pytest.mark.usefixtures("request_context")
-def test_backup_key_create_web() -> None:
+def test_backup_key_create_web(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(user, "id", "dingdöng")
     store_path = Path(cmk.utils.paths.default_config_dir, "backup_keys.mk")
 
     assert not store_path.exists()

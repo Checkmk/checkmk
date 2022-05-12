@@ -1679,7 +1679,7 @@ class PageBackupEditKey(key_mgmt.PageEditKey):
         key = super()._generate_key(alias, passphrase)
         # Mark key as not downloaded yet to issue a warning to the user that the key
         # should be backed up. The warning is removed on first download.
-        key["not_downloaded"] = True
+        key.not_downloaded = True
         return key
 
 
@@ -1707,16 +1707,15 @@ class PageBackupDownloadKey(key_mgmt.PageDownloadKey):
 
     def _send_download(self, keys: dict[int, key_mgmt.Key], key_id: int) -> None:
         super()._send_download(keys, key_id)
-        if "not_downloaded" in keys[key_id]:
-            del keys[key_id]["not_downloaded"]
+        keys[key_id].not_downloaded = True
         self.key_store.save(keys)
 
-    def _file_name(self, key_id, key):
+    def _file_name(self, key_id: int, key: key_mgmt.Key) -> str:
         raise NotImplementedError()
 
 
 def show_key_download_warning(keys: dict[int, key_mgmt.Key]) -> None:
-    to_load = [k["alias"] for k in keys.values() if "not_downloaded" in k]
+    to_load = [k.alias for k in keys.values() if k.not_downloaded]
     if to_load:
         html.show_warning(
             _(
@@ -1933,7 +1932,7 @@ class PageBackupRestore:
                     passphrase = value["passphrase"]
 
                     # Validate the passphrase
-                    key_mgmt.decrypt_private_key(key["private_key"], passphrase)
+                    key_mgmt.decrypt_private_key(key.private_key, passphrase)
 
                     transactions.check_transaction()  # invalidate transid
                     RestoreJob(self._target_ident, backup_ident, passphrase).start()

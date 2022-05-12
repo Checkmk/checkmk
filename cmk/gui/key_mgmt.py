@@ -7,9 +7,10 @@
 import pprint
 import time
 from pathlib import Path
-from typing import Any, Literal, Optional, Union
+from typing import Any, Literal, Mapping, Optional, Union
 
 from OpenSSL import crypto
+from pydantic import BaseModel
 
 import cmk.utils.render
 import cmk.utils.store as store
@@ -30,7 +31,7 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.table import table_element
-from cmk.gui.type_defs import ActionResult
+from cmk.gui.type_defs import ActionResult, UserId
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import make_confirm_link, makeactionuri, makeuri_contextless
 from cmk.gui.valuespec import (
@@ -42,7 +43,18 @@ from cmk.gui.valuespec import (
     TextInput,
 )
 
-Key = dict[str, Any]
+
+class Key(BaseModel):
+    certificate: str
+    private_key: str
+    alias: str
+    owner: UserId
+    date: float
+    # Before 2.2 this field was only used for WATO backup keys. Now we add it to all key, because it
+    # won't hurt for other types of keys (e.g. the bakery signing keys). We set a default of False
+    # to initialize it for all existing keys assuming it was already downloaded. It is still only
+    # used in the context of the backup keys.
+    not_downloaded: bool = False
 
 
 class KeypairStore:
@@ -55,27 +67,37 @@ class KeypairStore:
         if not self._path.exists():
             return {}
 
-        variables: dict[str, dict[int, Key]] = {self._attr: {}}
+        variables: dict[str, dict[int, dict[str, Any]]] = {self._attr: {}}
         with self._path.open("rb") as f:
             exec(f.read(), variables, variables)
-        return variables[self._attr]
+        return self._parse(variables[self._attr])
 
-    def save(self, keys: dict[int, Key]) -> None:
+    def save(self, keys: Mapping[int, Key]) -> None:
         store.makedirs(self._path.parent)
-        store.save_mk_file(self._path, "%s.update(%s)" % (self._attr, pprint.pformat(keys)))
+        store.save_mk_file(
+            self._path, "%s.update(%s)" % (self._attr, pprint.pformat(self._unparse(keys)))
+        )
+
+    def _parse(self, raw_keys: Mapping[int, dict[str, Any]]) -> dict[int, Key]:
+        return {key_id: Key.parse_obj(raw_key) for key_id, raw_key in raw_keys.items()}
+
+    def _unparse(self, keys: Mapping[int, Key]) -> dict[int, dict[str, Any]]:
+        return {key_id: key.dict() for key_id, key in keys.items()}
 
     def choices(self) -> list[tuple[str, str]]:
         choices = []
         for key in self.load().values():
-            cert = crypto.load_certificate(crypto.FILETYPE_PEM, key["certificate"])
+            cert = crypto.load_certificate(crypto.FILETYPE_PEM, key.certificate.encode("ascii"))
             digest = cert.digest("md5").decode("ascii")
-            choices.append((digest, key["alias"]))
+            choices.append((digest, key.alias))
 
         return sorted(choices, key=lambda x: x[1])
 
     def get_key_by_digest(self, digest: str) -> tuple[int, Key]:
         for key_id, key in self.load().items():
-            other_cert = crypto.load_certificate(crypto.FILETYPE_PEM, key["certificate"])
+            other_cert = crypto.load_certificate(
+                crypto.FILETYPE_PEM, key.certificate.encode("ascii")
+            )
             other_digest = other_cert.digest("md5").decode("ascii")
             if other_digest == digest:
                 return key_id, key
@@ -172,16 +194,15 @@ class PageKeyManagement:
         with table_element(title=self._table_title(), searchable=False, sortable=False) as table:
 
             for key_id, key in sorted(self.key_store.load().items()):
-                cert = crypto.load_certificate(crypto.FILETYPE_PEM, key["certificate"])
+                cert = crypto.load_certificate(crypto.FILETYPE_PEM, key.certificate.encode("ascii"))
 
                 table.row()
                 table.cell(_("Actions"), css=["buttons"])
                 if self._may_edit_config():
                     message = self._delete_confirm_msg()
-                    if key["owner"] != user.id:
+                    if key.owner != user.id:
                         message += (
-                            _("<br><b>Note</b>: this key has created by user <b>%s</b>")
-                            % key["owner"]
+                            _("<br><b>Note</b>: this key has created by user <b>%s</b>") % key.owner
                         )
 
                     delete_url = make_confirm_link(
@@ -194,9 +215,9 @@ class PageKeyManagement:
                     [("mode", self.download_mode), ("key", key_id)],
                 )
                 html.icon_button(download_url, _("Download this key"), "download")
-                table.cell(_("Description"), key["alias"])
-                table.cell(_("Created"), cmk.utils.render.date(key["date"]))
-                table.cell(_("By"), key["owner"])
+                table.cell(_("Description"), key.alias)
+                table.cell(_("Created"), cmk.utils.render.date(key.date))
+                table.cell(_("By"), key.owner)
                 table.cell(_("Digest (MD5)"), cert.digest("md5").decode("ascii"))
 
 
@@ -247,15 +268,16 @@ class PageEditKey:
         pkey.generate_key(crypto.TYPE_RSA, 2048)
 
         cert = create_self_signed_cert(pkey)
-        return {
-            "certificate": crypto.dump_certificate(crypto.FILETYPE_PEM, cert).decode("ascii"),
-            "private_key": crypto.dump_privatekey(
+        return Key(
+            certificate=crypto.dump_certificate(crypto.FILETYPE_PEM, cert).decode("ascii"),
+            private_key=crypto.dump_privatekey(
                 crypto.FILETYPE_PEM, pkey, "AES256", passphrase.encode("utf-8")
             ).decode("ascii"),
-            "alias": alias,
-            "owner": user.id,
-            "date": time.time(),
-        }
+            alias=alias,
+            owner=user.id,
+            date=time.time(),
+            not_downloaded=True,
+        )
 
     def page(self) -> None:
         # Currently only "new" is supported
@@ -360,13 +382,15 @@ class PageUploadKey:
 
         this_digest = certificate.digest("md5").decode("ascii")
         for key_id, key in keys.items():
-            other_cert = crypto.load_certificate(crypto.FILETYPE_PEM, key["certificate"])
+            other_cert = crypto.load_certificate(
+                crypto.FILETYPE_PEM, key.certificate.encode("ascii")
+            )
             other_digest = other_cert.digest("md5").decode("ascii")
             if other_digest == this_digest:
                 raise MKUserError(
                     None,
                     _("The key / certificate already exists (Key: %d, " "Description: %s)")
-                    % (key_id, key["alias"]),
+                    % (key_id, key.alias),
                 )
 
         # Use time from certificate
@@ -385,13 +409,14 @@ class PageUploadKey:
         key_pem = parts[0] + "-----END ENCRYPTED PRIVATE KEY-----\n"
         cert_pem = parts[1]
 
-        key = {
-            "certificate": cert_pem,
-            "private_key": key_pem,
-            "alias": alias,
-            "owner": user.id,
-            "date": created,
-        }
+        key = Key(
+            certificate=cert_pem,
+            private_key=key_pem,
+            alias=alias,
+            owner=user.id,
+            date=created,
+            not_downloaded=False,
+        )
 
         keys[new_id] = key
         self.key_store.save(keys)
@@ -471,7 +496,7 @@ class PageDownloadKey:
             if key_id not in keys:
                 raise MKUserError(None, _("You need to provide a valid key id."))
 
-            private_key = keys[key_id]["private_key"]
+            private_key = keys[key_id].private_key
 
             value = self._vs_key().from_html_vars("key")
             self._vs_key().validate_value(value, "key")
@@ -487,7 +512,7 @@ class PageDownloadKey:
             key_id, key
         )
         response.headers["Content-type"] = "application/x-pem-file"
-        response.set_data(key["private_key"] + key["certificate"])
+        response.set_data(key.private_key + key.certificate)
 
     def _file_name(self, key_id: int, key: Key) -> str:
         raise NotImplementedError()

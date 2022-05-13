@@ -87,7 +87,7 @@ def get_bi_rule(params):
     bi_packs.load_config()
     try:
         bi_rule = bi_packs.get_rule_mandatory(params["rule_id"])
-    except KeyError:
+    except MKGeneralException:
         _bailout_with_message("Unknown bi_rule: %s" % params["rule_id"])
 
     data = {"pack_id": bi_rule.pack_id}
@@ -203,7 +203,7 @@ def get_bi_aggregation(params):
     bi_packs.load_config()
     try:
         bi_aggregation = bi_packs.get_aggregation_mandatory(params["aggregation_id"])
-    except KeyError:
+    except MKGeneralException:
         _bailout_with_message("Unknown bi_aggregation: %s" % params["aggregation_id"])
 
     data = {"pack_id": bi_aggregation.pack_id}

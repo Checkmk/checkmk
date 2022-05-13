@@ -146,21 +146,27 @@ FileInfo ExtractFile(std::ifstream &cap_file) {
         return {{}, {}, true};
     }
 
-    constexpr uint32_t kInternalNax = 256;
-    if (l > kInternalNax) return {{}, {}, false};
+    constexpr uint32_t kInternalMax = 256;
+    if (l > kInternalMax) {
+        XLOG::l.crit("Invalid cap file, to long name {}", l);
+        return {{}, {}, false};
+    }
 
     const auto name = ReadFileName(cap_file, l);
 
     if (name.empty() || !cap_file.good()) {
-        if (cap_file.eof()) return {{}, {}, false};
+        if (cap_file.eof()) {
+            return {{}, {}, false};
+        }
 
         XLOG::l.crit("Invalid cap file, [name]");
         return {{}, {}, false};
     }
 
     const auto content = ReadFileData(cap_file);
-    if (content.has_value() && cap_file.good())
+    if (content.has_value() && cap_file.good()) {
         return {name, content.value(), false};
+    }
 
     XLOG::l.crit("Invalid cap file, [name] {}", name);
     return {{}, {}, false};

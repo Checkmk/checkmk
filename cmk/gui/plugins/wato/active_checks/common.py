@@ -64,3 +64,8 @@ def ip_address_family_element():
             default_value=None,
         ),
     )
+
+
+def transform_add_address_family(v):
+    v.setdefault("address_family", None)
+    return v

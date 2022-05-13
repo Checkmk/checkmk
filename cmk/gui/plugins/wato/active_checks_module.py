@@ -6,11 +6,7 @@
 
 
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.active_checks.common import (
-    ip_address_family_element,
-    RulespecGroupActiveChecks,
-    RulespecGroupIntegrateOtherServices,
-)
+from cmk.gui.plugins.wato.active_checks.common import RulespecGroupIntegrateOtherServices
 from cmk.gui.plugins.wato.utils import (
     HostRulespec,
     PasswordFromStore,
@@ -20,22 +16,14 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.valuespec import (
     Age,
     Alternative,
-    Checkbox,
     Dictionary,
     DropdownChoice,
     FixedValue,
     Integer,
-    ListOf,
     ListOfStrings,
     TextInput,
-    Transform,
     Tuple,
 )
-
-
-def _transform_add_address_family(v):
-    v.setdefault("address_family", None)
-    return v
 
 
 def _valuespec_custom_checks():
@@ -149,83 +137,6 @@ rulespec_registry.register(
         match_type="all",
         name="custom_checks",
         valuespec=_valuespec_custom_checks,
-    )
-)
-
-
-def _valuespec_active_checks_traceroute():
-    return Transform(
-        valuespec=Dictionary(
-            title=_("Check current routing"),
-            help=_(
-                "This active check uses <tt>traceroute</tt> in order to determine the current "
-                "routing from the monitoring host to the target host. You can specify any number "
-                "of missing or expected routes in order to detect e.g. an (unintended) failover "
-                "to a secondary route."
-            ),
-            elements=[
-                (
-                    "dns",
-                    Checkbox(
-                        title=_("Name resolution"),
-                        label=_("Use DNS to convert IP addresses into hostnames"),
-                        help=_(
-                            "If you use this option, then <tt>traceroute</tt> is <b>not</b> being "
-                            "called with the option <tt>-n</tt>. That means that all IP addresses "
-                            "are tried to be converted into names. This usually adds additional "
-                            "execution time. Also DNS resolution might fail for some addresses."
-                        ),
-                    ),
-                ),
-                ip_address_family_element(),
-                (
-                    "routers",
-                    ListOf(
-                        valuespec=Tuple(
-                            elements=[
-                                TextInput(
-                                    title=_("Router (FQDN, IP-Address)"),
-                                    allow_empty=False,
-                                ),
-                                DropdownChoice(
-                                    title=_("How"),
-                                    choices=[
-                                        ("W", _("WARN - if this router is not being used")),
-                                        ("C", _("CRIT - if this router is not being used")),
-                                        ("w", _("WARN - if this router is being used")),
-                                        ("c", _("CRIT - if this router is being used")),
-                                    ],
-                                ),
-                            ]
-                        ),
-                        title=_("Router that must or must not be used"),
-                        add_label=_("Add Condition"),
-                    ),
-                ),
-                (
-                    "method",
-                    DropdownChoice(
-                        title=_("Method of probing"),
-                        choices=[
-                            (None, _("UDP (default behaviour of traceroute)")),
-                            ("icmp", _("ICMP Echo Request")),
-                            ("tcp", _("TCP SYN")),
-                        ],
-                    ),
-                ),
-            ],
-            optional_keys=False,
-        ),
-        forth=_transform_add_address_family,
-    )
-
-
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupActiveChecks,
-        match_type="all",
-        name="active_checks:traceroute",
-        valuespec=_valuespec_active_checks_traceroute,
     )
 )
 

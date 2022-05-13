@@ -44,7 +44,7 @@ if ([Environment]::OSVersion.Version.Major -ge "5"){
 	try {
 		Write-Host "<<<winperf_if_get_netadapter:sep(124)>>>"
 		foreach ($net in Get-NetAdapter -IncludeHidden){
-			$description = $($net.InterfaceDescription).replace('|', '/')`
+			$description = $($net.InterfaceDescription).replace('|', '/')
 			$alias = $($net.InterfaceAlias).replace('|', '/')
 			Write-Host ("$description|" +
 			            "$alias|" +

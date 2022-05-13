@@ -24,6 +24,8 @@ from typing import (
     Union,
 )
 
+from pydantic import BaseModel
+
 from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.type_defs import ContactgroupName, DisabledNotificationsOptions, EventRule, UserId
 
@@ -387,3 +389,16 @@ CustomAttr = TypedDict(
     },
     total=True,
 )
+
+
+class Key(BaseModel):
+    certificate: str
+    private_key: str
+    alias: str
+    owner: UserId
+    date: float
+    # Before 2.2 this field was only used for WATO backup keys. Now we add it to all key, because it
+    # won't hurt for other types of keys (e.g. the bakery signing keys). We set a default of False
+    # to initialize it for all existing keys assuming it was already downloaded. It is still only
+    # used in the context of the backup keys.
+    not_downloaded: bool = False

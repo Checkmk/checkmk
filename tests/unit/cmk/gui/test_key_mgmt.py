@@ -19,9 +19,7 @@ def test_key_mgmt_create_key(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) ->
     monkeypatch.setattr(time, "time", lambda: 123)
 
     with UserContext(UserId("dingdöng")):
-        key = key_mgmt.PageEditKey(key_mgmt.KeypairStore(str(tmp_path), "test"))._generate_key(
-            "älias", "passphra$e"
-        )
+        key = key_mgmt.generate_key("älias", "passphra$e")
     assert isinstance(key, key_mgmt.Key)
     assert key.alias == "älias"
     assert key.date == 123

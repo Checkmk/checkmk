@@ -10,7 +10,6 @@ from pathlib import Path
 from typing import Any, Literal, Mapping, Optional, Union
 
 from OpenSSL import crypto
-from pydantic import BaseModel
 
 import cmk.utils.render
 import cmk.utils.store as store
@@ -31,7 +30,7 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.table import table_element
-from cmk.gui.type_defs import ActionResult, UserId
+from cmk.gui.type_defs import ActionResult, Key
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import make_confirm_link, makeactionuri, makeuri_contextless
 from cmk.gui.valuespec import (
@@ -42,19 +41,6 @@ from cmk.gui.valuespec import (
     TextAreaUnicode,
     TextInput,
 )
-
-
-class Key(BaseModel):
-    certificate: str
-    private_key: str
-    alias: str
-    owner: UserId
-    date: float
-    # Before 2.2 this field was only used for WATO backup keys. Now we add it to all key, because it
-    # won't hurt for other types of keys (e.g. the bakery signing keys). We set a default of False
-    # to initialize it for all existing keys assuming it was already downloaded. It is still only
-    # used in the context of the backup keys.
-    not_downloaded: bool = False
 
 
 class KeypairStore:
@@ -260,24 +246,8 @@ class PageEditKey:
         for key_id in keys:
             new_id = max(new_id, key_id + 1)
 
-        keys[new_id] = self._generate_key(alias, passphrase)
+        keys[new_id] = generate_key(alias, passphrase)
         self.key_store.save(keys)
-
-    def _generate_key(self, alias: str, passphrase: str) -> Key:
-        pkey = crypto.PKey()
-        pkey.generate_key(crypto.TYPE_RSA, 2048)
-
-        cert = create_self_signed_cert(pkey)
-        return Key(
-            certificate=crypto.dump_certificate(crypto.FILETYPE_PEM, cert).decode("ascii"),
-            private_key=crypto.dump_privatekey(
-                crypto.FILETYPE_PEM, pkey, "AES256", passphrase.encode("utf-8")
-            ).decode("ascii"),
-            alias=alias,
-            owner=user.id,
-            date=time.time(),
-            not_downloaded=True,
-        )
 
     def page(self) -> None:
         # Currently only "new" is supported
@@ -548,6 +518,23 @@ class PageDownloadKey:
             optional_keys=False,
             render="form",
         )
+
+
+def generate_key(alias: str, passphrase: str) -> Key:
+    pkey = crypto.PKey()
+    pkey.generate_key(crypto.TYPE_RSA, 2048)
+
+    cert = create_self_signed_cert(pkey)
+    return Key(
+        certificate=crypto.dump_certificate(crypto.FILETYPE_PEM, cert).decode("ascii"),
+        private_key=crypto.dump_privatekey(
+            crypto.FILETYPE_PEM, pkey, "AES256", passphrase.encode("utf-8")
+        ).decode("ascii"),
+        alias=alias,
+        owner=user.id,
+        date=time.time(),
+        not_downloaded=True,
+    )
 
 
 def create_self_signed_cert(pkey: crypto.PKey) -> crypto.X509:

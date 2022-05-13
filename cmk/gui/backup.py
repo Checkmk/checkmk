@@ -1676,7 +1676,7 @@ class PageBackupEditKey(key_mgmt.PageEditKey):
         )
 
     def _generate_key(self, alias: str, passphrase: str) -> key_mgmt.Key:
-        key = super()._generate_key(alias, passphrase)
+        key = key_mgmt.generate_key(alias, passphrase)
         # Mark key as not downloaded yet to issue a warning to the user that the key
         # should be backed up. The warning is removed on first download.
         key.not_downloaded = True

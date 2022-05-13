@@ -34,6 +34,7 @@ from cmk.gui.permissions import (  # noqa: F401 # pylint: disable=unused-import
     declare_permission_section,
 )
 from cmk.gui.plugins.config.base import CREConfig
+from cmk.gui.type_defs import Key
 
 if not cmk_version.is_raw_edition():
     from cmk.gui.cee.plugins.config.cee import CEEConfig  # pylint: disable=no-name-in-module
@@ -153,6 +154,14 @@ def load_config() -> None:
 
     raw_config["sites"] = prepare_raw_site_config(raw_config["sites"])
     raw_config["tags"] = cmk.utils.tags.get_effective_tag_config(raw_config["wato_tags"])
+
+    # TODO: Temporary local hack to transform the values to the correct type. This needs
+    # to be done in make_config_object() in the next step.
+    if "agent_signature_keys" in raw_config:
+        raw_config["agent_signature_keys"] = {
+            key_id: Key.parse_obj(raw_key)
+            for key_id, raw_key in raw_config["agent_signature_keys"].items()
+        }
 
     # Make sure, builtin roles are present, even if not modified and saved with WATO.
     for br in builtin_role_ids:

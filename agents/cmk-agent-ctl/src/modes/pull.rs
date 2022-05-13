@@ -411,15 +411,23 @@ mod tests {
         assert_eq!(agout.encode(b"abc").unwrap(), expected_result);
     }
 
+    const LISTENER_PORT: u16 = 45147;
+    fn expected_addr() -> String {
+        format!("[::1]:{}", LISTENER_PORT)
+    }
+
     #[test]
     fn test_tcp_listener() {
         assert_eq!(
-            tcp_listener(SocketAddr::new(IpAddr::from_str("::1").unwrap(), 50147))
-                .unwrap()
-                .local_addr()
-                .unwrap()
-                .to_string(),
-            "[::1]:50147"
+            tcp_listener(SocketAddr::new(
+                IpAddr::from_str("::1").unwrap(),
+                LISTENER_PORT
+            ))
+            .unwrap()
+            .local_addr()
+            .unwrap()
+            .to_string(),
+            expected_addr()
         );
     }
 

@@ -1,0 +1,13 @@
+Title: REST API bi: changed 500 response to 404 for unknown rule
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1652449512
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0p2
+
+
+

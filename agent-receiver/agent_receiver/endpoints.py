@@ -286,7 +286,8 @@ async def agent_data(
     return Response(status_code=HTTP_204_NO_CONTENT)
 
 
-@uuid_validation_router.get(
+# @uuid_validation_router.get(
+@agent_receiver_app.get(
     "/registration_status/{uuid}",
     response_model=RegistrationStatus,
 )

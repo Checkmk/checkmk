@@ -32,12 +32,9 @@ APACHE_MODULES := \
     mod_mime_magic.so \
     mod_mpm_prefork.so \
     mod_negotiation.so \
-    mod_proxy.so \
-    mod_proxy_http.so \
     mod_rewrite.so \
     mod_setenvif.so \
     mod_status.so \
-    mod_ssl.so \
     mod_unixd.so \
     mod_version.so
 

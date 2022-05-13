@@ -19,7 +19,7 @@ class _UUIDValidationRoute(APIRoute):
     def _mismatch_header_vs_url_uuid_response(request: Request) -> Optional[JSONResponse]:
         return (
             None
-            if (header_uuid := request.headers["verified-uuid"])
+            if (header_uuid := request.headers.get("verified-uuid", "header missing"))
             == (url_uuid := request.url.path.split("/")[-1])
             else JSONResponse(
                 status_code=HTTP_400_BAD_REQUEST,

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cd "${OMD_ROOT:?}"
+cd ###ROOT###
 . .profile
 . lib/omd/init_profile
 . etc/omd/site.conf
@@ -15,14 +15,11 @@ HTTPD_LANG="C"
 # mod_ssl needs a pass-phrase from the user.
 INITLOG_ARGS=""
 
-APACHE_RUN_USER="${OMD_SITE:?}"
-APACHE_RUN_GROUP="${OMD_SITE:?}"
+APACHE_RUN_USER="###SITE###"
+APACHE_RUN_GROUP="###SITE###"
 
-PID_FILE="${OMD_ROOT:?}/tmp/apache/run/apache.pid"
-CONFIG_FILE="${OMD_ROOT:?}/etc/apache/apache.conf"
-
-# These are accessed in the apache conf files:
-export CONFIG_AGENT_RECEIVER_PORT
+PID_FILE=###ROOT###/tmp/apache/run/apache.pid
+CONFIG_FILE=###ROOT###/etc/apache/apache.conf
 
 apache_bin() {
     if [ -e /usr/sbin/apache2 ]; then
@@ -117,7 +114,7 @@ apache_wait_start() {
     return 0
   fi
 
-  mkdir -p "${OMD_ROOT:?}"/tmp/apache/run
+  mkdir -p ###ROOT###/tmp/apache/run
 
   # (nearly) reproducible problems with apache at boot-time. (alloc_listener: failed to set up sockaddr for 127.0.0.1)
   # With this ping the problem disappears.
@@ -148,8 +145,8 @@ apache_wait_start() {
 kill_stale_php_cgis() 
 {
     i=1
-    killall -e $(php_cgi_bin) -u "${OMD_SITE:?}" >/dev/null 2>&1
-    while killall -e $(php_cgi_bin) -u "${OMD_SITE:?}" >/dev/null 2>&1
+    killall -e $(php_cgi_bin) -u ###SITE### >/dev/null 2>&1 
+    while killall -e $(php_cgi_bin) -u ###SITE### >/dev/null 2>&1
     do
         i=$((i+1))
         if [ $i -gt 50 ] ; then 

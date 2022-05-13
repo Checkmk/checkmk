@@ -1,0 +1,12 @@
+Title: Fix failed "Migrate LDAP connections" of connections without bind credentials
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1652474401
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0i1
+
+

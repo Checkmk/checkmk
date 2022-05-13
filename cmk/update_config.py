@@ -1163,10 +1163,11 @@ class UpdateConfig:
         for connection in connections:
             connection.setdefault("type", "ldap")
 
-            dn, password = connection["bind"]
-            if isinstance(password, tuple):
-                continue
-            connection["bind"] = (dn, ("password", password))
+            if "bind" in connection:
+                dn, password = connection["bind"]
+                if isinstance(password, tuple):
+                    continue
+                connection["bind"] = (dn, ("password", password))
 
         save_connection_config(connections)
 

@@ -1,0 +1,14 @@
+Title: Unknown enforced services on clusters
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1652441800
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p25
+
+This fixes a regression in Checkmk versions 2.0.0 - 2.0.0p25.
+Enforced services on a cluster would go to UNKNOWN if the corresponding services were not additionally configured to be clustered on at least one node.
+
+This werk restores the original behaviour, where in such cases the data of <b>all</b> nodes is passed to the clustered service.

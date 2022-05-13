@@ -12,29 +12,29 @@ from six import ensure_str
 # No stub file
 from testlib.base import Scenario  # type: ignore[import]
 
-from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject
-from cmk.utils.exceptions import MKGeneralException
-import cmk.utils.version as cmk_version
 import cmk.utils.paths
 import cmk.utils.piggyback as piggyback
+import cmk.utils.version as cmk_version
+from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject
 from cmk.utils.type_defs import (
     CheckPluginName,
+    ConfigSerial,
     HostKey,
+    LATEST_SERIAL,
     SectionName,
     SourceType,
-    ConfigSerial,
-    LATEST_SERIAL,
 )
 
 from cmk.fetchers.type_defs import Mode
 
-from cmk.base.caching import config_cache as _config_cache
-import cmk.base.config as config
-from cmk.base.check_utils import Service
-from cmk.base.discovered_labels import DiscoveredServiceLabels, ServiceLabel
 import cmk.base.api.agent_based.register as agent_based_register
+import cmk.base.config as config
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.api.agent_based.type_defs import ParsedSectionName, SNMPSectionPlugin
+from cmk.base.caching import config_cache as _config_cache
+from cmk.base.check_utils import Service
+from cmk.base.discovered_labels import DiscoveredServiceLabels, ServiceLabel
 
 
 def test_duplicate_hosts(monkeypatch):
@@ -1719,13 +1719,16 @@ def test_config_cache_get_clustered_service_node_keys_cluster_no_service(monkeyp
         'Test Service',
         lambda _x: "dummy.test.ip.0",
     ) is None
-    # empty list for cluster (we have not clustered the service)
+    # all nodes for cluster (we have not clustered the service -> use all nodes)
     assert config_cache.get_clustered_service_node_keys(
         'cluster.test',
         SourceType.HOST,
         'Test Service',
         lambda _x: "dummy.test.ip.0",
-    ) == []
+    ) == [
+        HostKey(hostname='node1.test', ipaddress='dummy.test.ip.0', source_type=SourceType.HOST),
+        HostKey(hostname='node2.test', ipaddress='dummy.test.ip.0', source_type=SourceType.HOST),
+    ]
 
 
 def test_config_cache_get_clustered_service_node_keys_clustered(monkeypatch):
@@ -1756,7 +1759,10 @@ def test_config_cache_get_clustered_service_node_keys_clustered(monkeypatch):
         SourceType.HOST,
         'Test Unclustered',
         lambda _x: "dummy.test.ip.0",
-    ) == []
+    ) == [
+        HostKey(hostname='node1.test', ipaddress='dummy.test.ip.0', source_type=SourceType.HOST),
+        HostKey(hostname='node2.test', ipaddress='dummy.test.ip.0', source_type=SourceType.HOST),
+    ]
     # regardless of config: descr == None -> return None
     assert config_cache.get_clustered_service_node_keys(
         'cluster.test',

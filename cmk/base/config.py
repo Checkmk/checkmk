@@ -3824,14 +3824,16 @@ class ConfigCache:
         if nodes is None:
             return None
 
+        used_nodes = [
+            nn for nn in nodes if hostname == self.host_of_clustered_service(nn, service_descr)
+        ] or nodes
+
         return [
             HostKey(
                 nodename,
                 lookup_ip_address(self.get_host_config(nodename)),
                 source_type,
-            )
-            for nodename in nodes
-            if hostname == self.host_of_clustered_service(nodename, service_descr)
+            ) for nodename in used_nodes
         ]
 
     def get_piggybacked_hosts_time_settings(

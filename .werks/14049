@@ -1,0 +1,23 @@
+Title: cmk-agent-ctl: Agent controller can be disabled on Linux
+Class: feature
+Compatible: incomp
+Component: agents
+Date: 1652429684
+Edition: cee
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0b10
+
+It was possible to disable agent controller in agent bakery for Windows.
+Now, it's also possible for the Linux distributions.
+
+Disabling the agent controller is not advised unless you experience
+problems with it. In this case, the agent will work in legacy pull mode.
+Please note: In the legacy pull mode, the transported data is not encrypted.
+
+If you created a "Windows agent controller" rule previously in on one of
+2.1.0b versions, you will have to create two new rules, Setup -> Agents ->
+Windows, Linux, Solaris, AIX -> Agent rules -> Windows agent controller troubleshooting
+and Setup -> Agents -> Windows, Linux, Solaris, AIX -> Agent rules -> Agent controller
+to get the same behavior.

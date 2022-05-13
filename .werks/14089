@@ -1,0 +1,22 @@
+Title: Checkmk agent TLS encryption and compression
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1652439737
+Edition: cre
+Knowledge: undoc
+Level: 2
+Version: 2.1.0b9
+
+In Checkmk version 2.1 the monitoring data sent from the monitored host to the monitoring server is TLS encrypted and compressed by default.
+
+This is realized by a new component on the monitored hosts:
+The Checkmk agent controller <tt>cmk-agent-ctl</tt>.
+
+The added executable is called <tt>cmk-agent-ctl</tt>.
+On Linux systems, the agent controller will be run as a dedicated user <i>cmk-agent</i>, which is added during installation.
+As a result the process listening on the TCP port will have limited privileges, and the agent output is not available to any other local user.
+
+While upgraded setups will continue to work as before, in order to enable TLS encryption an additional registration step is required.
+More information on the registration step, the installation and the provided commands can be found <a href="https://docs.checkmk.com/master/en/agent_linux.html">in our online documentation</a>.
+

@@ -7,7 +7,7 @@ use std::collections::HashMap;
 use std::error::Error;
 use std::sync::Arc;
 
-use crate::{config, constants, monitoring_data, tls_server, types};
+use crate::{config, monitoring_data, tls_server, types};
 use anyhow::{anyhow, Context, Error as AnyhowError, Result as AnyhowResult};
 use async_trait::async_trait;
 use log::{debug, info, warn};
@@ -216,12 +216,12 @@ fn tcp_listener(listening_address: SocketAddr) -> AnyhowResult<TcpListenerStd> {
     socket.set_only_v6(false)?;
     socket.set_nonblocking(true)?;
 
-    // The socket is apparently not freed fast enough to re-run our tests multiple times. Note that
-    // #[cfg(test)] does not work here because we spawn separate threads which themself don't know
-    // that they are used for testing.
-    if std::env::var(constants::ENV_HOME_DIR).is_ok() {
-        socket.set_reuse_address(true)?;
-    }
+    // https://stackoverflow.com/questions/3229860/what-is-the-meaning-of-so-reuseaddr-setsockopt-option-linux
+    // Allow re-using the address, even if there are still connections. After sending the agent
+    // data, we end up with a waiting connection which will be dropped at some point, but not
+    // immediately (this is OK, standard TCP protocol). However, this will block the re-creation
+    // of the socket if the agent controller is restarted (agent update or manual restart).
+    socket.set_reuse_address(true)?;
 
     socket.bind(&SockAddr::from(listening_address))?;
     socket.listen(4096)?;

@@ -8,7 +8,10 @@
 import re
 from typing import List, Optional, Tuple, Union
 
+from cmk.gui.hooks import request_memoize
 
+
+@request_memoize(maxsize=100000)
 def num_split(s: str) -> Tuple[Union[int, str], ...]:
     """Splits a word into sequences of numbers and non-numbers.
 
@@ -25,6 +28,7 @@ def num_split(s: str) -> Tuple[Union[int, str], ...]:
     return tuple(parts)
 
 
+@request_memoize(maxsize=100000)
 def cmp_num_split(a: str, b: str) -> int:
     """Compare two strings, separate numbers and non-numbers from before."""
     return (num_split(a) > num_split(b)) - (num_split(a) < num_split(b))

@@ -11,14 +11,14 @@ from .utils.mobileiron import Section
 
 def check_mobileiron_compliance(params: Mapping[str, Any], section: Section) -> CheckResult:
 
-    if policy_violation_count := section.policyViolationCount:
-        yield from check_levels(
-            label="Policy violation count",
-            value=policy_violation_count,
-            levels_upper=params.get("policy_violation_levels"),
-            metric_name="mobileiron_policyviolationcount",
-            render_func=lambda v: f"{v:.0f}",
-        )
+    count = section.policyViolationCount or 0
+    yield from check_levels(
+        label="Policy violation count",
+        value=count,
+        levels_upper=params.get("policy_violation_levels"),
+        metric_name="mobileiron_policyviolationcount",
+        render_func=lambda v: str(int(v)),
+    )
 
     yield Result(
         state=State.OK if section.complianceState else State.CRIT,

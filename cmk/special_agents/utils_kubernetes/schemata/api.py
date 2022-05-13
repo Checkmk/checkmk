@@ -603,6 +603,16 @@ class ClusterDetails(BaseModel):
     version: GitVersion
 
 
+class UnknownKubernetesVersion(BaseModel):
+    git_version: GitVersion
+
+
+class KubernetesVersion(BaseModel):
+    git_version: GitVersion
+    major: int
+    minor: int
+
+
 class API(Protocol):
     def cron_jobs(self) -> Sequence[CronJob]:
         ...

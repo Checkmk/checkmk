@@ -1,5 +1,5 @@
 @echo off
-set CMK_VERSION="2.1.0b10"
+set CMK_VERSION="2.1.0b9"
 
 REM ***
 REM * To be able to run this plugin you need to install dmidecode

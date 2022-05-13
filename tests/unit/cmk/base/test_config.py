@@ -2295,7 +2295,10 @@ def test_config_cache_get_clustered_service_node_keys_cluster_no_service(
     )
 
     # empty for cluster (we have not clustered the service)
-    assert [] == config_cache.get_clustered_service_node_keys(
+    assert [
+        HostKey(hostname="node1.test", ipaddress="dummy.test.ip.0", source_type=SourceType.HOST),
+        HostKey(hostname="node2.test", ipaddress="dummy.test.ip.0", source_type=SourceType.HOST),
+    ] == config_cache.get_clustered_service_node_keys(
         config_cache.get_host_config(cluster_test),
         SourceType.HOST,
         "Test Service",
@@ -2341,7 +2344,10 @@ def test_config_cache_get_clustered_service_node_keys_clustered(monkeypatch: Mon
         "lookup_ip_address",
         lambda host_config, *, family=None: "dummy.test.ip.0",
     )
-    assert [] == config_cache.get_clustered_service_node_keys(
+    assert [
+        HostKey(hostname="node1.test", ipaddress="dummy.test.ip.0", source_type=SourceType.HOST),
+        HostKey(hostname="node2.test", ipaddress="dummy.test.ip.0", source_type=SourceType.HOST),
+    ] == config_cache.get_clustered_service_node_keys(
         config_cache.get_host_config(cluster),
         SourceType.HOST,
         "Test Unclustered",

@@ -4097,11 +4097,16 @@ class ConfigCache:
         service_descr: ServiceName,
     ) -> Sequence[HostKey]:
         """Returns the node keys if a service is clustered, otherwise an empty sequence"""
-        node_configs = [
-            self.get_host_config(nodename)
-            for nodename in (host_config.nodes or ())
-            if host_config.hostname == self.host_of_clustered_service(nodename, service_descr)
-        ]
+        used_nodes = (
+            [
+                nn
+                for nn in (host_config.nodes or ())
+                if host_config.hostname == self.host_of_clustered_service(nn, service_descr)
+            ]
+            or host_config.nodes
+            or ()
+        )
+
         return [
             HostKey(
                 nc.hostname,
@@ -4111,7 +4116,8 @@ class ConfigCache:
                 else lookup_ip_address(nc),
                 source_type,
             )
-            for nc in node_configs
+            for nodename in used_nodes
+            if (nc := self.get_host_config(nodename))
         ]
 
     def get_piggybacked_hosts_time_settings(

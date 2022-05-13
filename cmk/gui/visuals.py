@@ -50,6 +50,7 @@ from cmk.gui import hooks
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_main_menu_breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import g
+from cmk.gui.default_name import unique_default_name_suggestion
 from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKGeneralException, MKUserError
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
@@ -97,7 +98,6 @@ from cmk.gui.type_defs import (
     VisualName,
     VisualTypeName,
 )
-from cmk.gui.utils import unique_default_name_suggestion, validate_id
 from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
@@ -111,6 +111,7 @@ from cmk.gui.utils.urls import (
     makeuri_contextless,
     urlencode,
 )
+from cmk.gui.validate import validate_id
 from cmk.gui.valuespec import (
     ABCPageListOfMultipleGetChoice,
     CascadingDropdown,

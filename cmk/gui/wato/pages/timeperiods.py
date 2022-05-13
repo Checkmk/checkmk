@@ -24,6 +24,7 @@ import cmk.gui.watolib.changes as _changes
 import cmk.gui.watolib.groups as groups
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
+from cmk.gui.default_name import unique_default_name_suggestion
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, UploadedFile
@@ -46,7 +47,6 @@ from cmk.gui.plugins.wato.utils import (
 )
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult
-from cmk.gui.utils import unique_default_name_suggestion
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import (
     CascadingDropdown,

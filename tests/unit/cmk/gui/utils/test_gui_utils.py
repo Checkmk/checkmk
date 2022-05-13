@@ -6,7 +6,7 @@
 
 import pytest
 
-from cmk.gui.utils import unique_default_name_suggestion
+from cmk.gui.default_name import unique_default_name_suggestion
 
 
 @pytest.mark.parametrize(

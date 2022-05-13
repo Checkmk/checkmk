@@ -21,6 +21,7 @@ from livestatus import SiteId
 import cmk.gui.forms as forms
 import cmk.gui.watolib.changes as _changes
 from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.default_name import unique_default_name_suggestion
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -38,7 +39,6 @@ from cmk.gui.plugins.wato.utils.base_modes import mode_url, redirect, WatoMode
 from cmk.gui.plugins.watolib.utils import ABCConfigDomain
 from cmk.gui.table import Table, table_element
 from cmk.gui.type_defs import ActionResult
-from cmk.gui.utils import unique_default_name_suggestion
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import make_confirm_link, makeuri_contextless

@@ -1,0 +1,12 @@
+Title: Tidying Up of the problems table in the Kubernetes dashboards
+Class: feature
+Compatible: compat
+Component: multisite
+Date: 1652436990
+Edition: cee
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b10
+
+Instead of a long and complicated name, the problems tables in the kubernetes dashboards now shows a tidy overview
+with multiple columns.

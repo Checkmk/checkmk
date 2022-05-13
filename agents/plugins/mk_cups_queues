@@ -9,7 +9,7 @@
 
 # Disable unused variable error (needed to keep track of version)
 # shellcheck disable=SC2034
-CMK_VERSION="2.1.0b9"
+CMK_VERSION="2.1.0b10"
 
 if type lpstat >/dev/null 2>&1; then
     export LC_TIME="en_US.UTF-8"

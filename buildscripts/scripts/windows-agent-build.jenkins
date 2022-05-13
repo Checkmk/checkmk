@@ -3,7 +3,7 @@ properties([
 ])
 
 timeout(time: 12, unit: 'HOURS') {
-    node('windows') {
+    node('win3') {
         stage('git checkout') {
             checkout(scm)
         }

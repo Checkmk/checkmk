@@ -11,10 +11,10 @@ from typing import List, Optional, Tuple, Union
 import cmk.utils.defines as defines
 
 import cmk.gui.query_filters as query_filters
-import cmk.gui.utils as utils
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _, _l
+from cmk.gui.num_split import cmp_version
 from cmk.gui.plugins.visuals.utils import (
     CheckboxRowFilter,
     display_filter_radiobuttons,
@@ -396,7 +396,7 @@ class FilterInvHasSoftwarePackage(Filter):
         return a != b and not self.version_is_higher(a, b)
 
     def version_is_higher(self, a: Optional[str], b: Optional[str]) -> bool:
-        return utils.cmp_version(a, b) == 1
+        return cmp_version(a, b) == 1
 
 
 @visual_info_registry.register

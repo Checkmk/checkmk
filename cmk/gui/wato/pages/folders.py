@@ -13,7 +13,6 @@ from typing import Dict, Iterator, List, Optional, Tuple, Type
 from cmk.utils.type_defs import HostName
 
 import cmk.gui.forms as forms
-import cmk.gui.utils as utils
 import cmk.gui.view_utils
 import cmk.gui.weblib as weblib
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
@@ -25,6 +24,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
+from cmk.gui.num_split import key_num_split
 from cmk.gui.page_menu import (
     make_checkbox_selection_json_text,
     make_checkbox_selection_topic,
@@ -329,7 +329,7 @@ class ModeFolder(WatoMode):
         if not user.may("wato.edit_hosts") and not user.may("wato.manage_hosts"):
             return
 
-        hostnames = sorted(self._folder.hosts().keys(), key=utils.key_num_split)
+        hostnames = sorted(self._folder.hosts().keys(), key=key_num_split)
         is_enabled = bool(self._folder.has_hosts())
         search_text = request.var("search")
 
@@ -856,7 +856,7 @@ class ModeFolder(WatoMode):
         if not self._folder.has_hosts():
             return
 
-        hostnames = sorted(self._folder.hosts().keys(), key=utils.key_num_split)
+        hostnames = sorted(self._folder.hosts().keys(), key=key_num_split)
 
         html.div("", id_="row_info")
 

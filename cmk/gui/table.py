@@ -25,7 +25,6 @@ from typing import (
     Union,
 )
 
-import cmk.gui.utils as utils
 import cmk.gui.utils.escaping as escaping
 import cmk.gui.weblib as weblib
 from cmk.gui.config import active_config
@@ -36,6 +35,7 @@ from cmk.gui.htmllib.tag_rendering import HTMLContent
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
+from cmk.gui.num_split import key_num_split
 from cmk.gui.utils.escaping import escape_to_html_permissive
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
@@ -710,7 +710,7 @@ def _sort_rows(rows: TableRows, sort_col: int, sort_reverse: int) -> TableRows:
     # see the table in the first place.
     try:
         rows.sort(
-            key=lambda x: utils.key_num_split(escaping.strip_tags(x[0][sort_col][0])),
+            key=lambda x: key_num_split(escaping.strip_tags(x[0][sort_col][0])),
             reverse=sort_reverse == 1,
         )
     except IndexError:

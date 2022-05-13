@@ -18,11 +18,11 @@ import cmk.utils.version as cmk_version
 import cmk.gui.inventory as inventory
 import cmk.gui.site_config as site_config
 import cmk.gui.sites as sites
-import cmk.gui.utils as utils
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
+from cmk.gui.num_split import cmp_version
 from cmk.gui.type_defs import FilterHeader, FilterHTTPVariables, Row, Rows, VisualContext
 from cmk.gui.utils.labels import encode_labels_for_livestatus, Label, Labels, parse_labels_value
 from cmk.gui.utils.user_errors import user_errors
@@ -367,9 +367,9 @@ def version_in_range(
     new_rows = []
     for row in rows:
         version = row.get(ident, "")
-        if from_version and utils.cmp_version(version, from_version) == -1:
+        if from_version and cmp_version(version, from_version) == -1:
             continue
-        if to_version and utils.cmp_version(version, to_version) == 1:
+        if to_version and cmp_version(version, to_version) == 1:
             continue
         new_rows.append(row)
 

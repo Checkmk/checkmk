@@ -13,6 +13,7 @@ from cmk.utils.structured_data import StructuredDataNode
 
 import cmk.gui.inventory
 import cmk.gui.utils
+from cmk.gui.num_split import cmp_version
 from cmk.gui.plugins.visuals.inventory import FilterInvtableVersion
 from cmk.gui.views import View
 from cmk.gui.views.inventory import RowTableInventory, RowTableInventoryHistory
@@ -315,7 +316,7 @@ def test__cmp_inventory_node(monkeypatch, val_a, val_b, result):
             ".software.packages:*.version",
             {
                 "title": "Version",
-                "sort": cmk.gui.utils.cmp_version,
+                "sort": cmp_version,
                 "filter": FilterInvtableVersion,
             },
         ),

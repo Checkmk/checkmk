@@ -10,8 +10,8 @@
 # at your choice adding temporarily in the style file the option:
 # each_dict_entry_on_separate_line=False
 
-import cmk.gui.utils
 from cmk.gui.i18n import _l
+from cmk.gui.num_split import cmp_version
 from cmk.gui.plugins.views.utils import inventory_displayhints
 from cmk.gui.plugins.visuals.inventory import (
     FilterInvtableAdminStatus,
@@ -976,11 +976,11 @@ inventory_displayhints.update({
     ".software.packages:*.package_type": {"title": _l("Type")},
     ".software.packages:*.summary": {"title": _l("Description")},
     ".software.packages:*.version": {
-        "title": _l("Version"), "sort": cmk.gui.utils.cmp_version, "filter": FilterInvtableVersion
+        "title": _l("Version"), "sort": cmp_version, "filter": FilterInvtableVersion
     },
     ".software.packages:*.vendor": {"title": _l("Publisher")},
     ".software.packages:*.package_version": {
-        "title": _l("Package Version"), "sort": cmk.gui.utils.cmp_version, "filter": FilterInvtableVersion
+        "title": _l("Package Version"), "sort": cmp_version, "filter": FilterInvtableVersion
     },
     ".software.packages:*.install_date": {"title": _l("Install Date"), "paint": "date"},
     ".software.packages:*.size": {"title": _l("Size"), "paint": "count"},

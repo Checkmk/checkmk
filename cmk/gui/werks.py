@@ -19,7 +19,6 @@ import cmk.utils.werks
 from cmk.utils.version import __version__, Edition, Version
 
 import cmk.gui.pages
-import cmk.gui.utils as utils
 from cmk.gui.breadcrumb import (
     Breadcrumb,
     BreadcrumbItem,
@@ -35,6 +34,7 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import mega_menu_registry
+from cmk.gui.num_split import cmp_version
 from cmk.gui.page_menu import (
     make_display_options_dropdown,
     make_simple_link,
@@ -638,10 +638,10 @@ def werk_matches_options(werk, werk_table_options):
         return False
 
     from_version, to_version = werk_table_options["version"]
-    if from_version and utils.cmp_version(werk["version"], from_version) < 0:
+    if from_version and cmp_version(werk["version"], from_version) < 0:
         return False
 
-    if to_version and utils.cmp_version(werk["version"], to_version) > 0:
+    if to_version and cmp_version(werk["version"], to_version) > 0:
         return False
 
     if werk_table_options["werk_content"]:

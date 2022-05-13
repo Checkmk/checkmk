@@ -74,6 +74,7 @@ from cmk.gui.i18n import _, _u, ungettext
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import mega_menu_registry
+from cmk.gui.num_split import cmp_num_split as _cmp_num_split
 from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.permissions import Permission, permission_registry
 from cmk.gui.plugins.visuals.utils import visual_info_registry, visual_type_registry, VisualType
@@ -1562,7 +1563,7 @@ def cmp_simple_number(column: ColumnName, r1: Row, r2: Row) -> int:
 
 
 def cmp_num_split(column: ColumnName, r1: Row, r2: Row) -> int:
-    return cmk.gui.utils.cmp_num_split(r1[column].lower(), r2[column].lower())
+    return _cmp_num_split(r1[column].lower(), r2[column].lower())
 
 
 def cmp_simple_string(column: ColumnName, r1: Row, r2: Row) -> int:

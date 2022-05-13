@@ -35,13 +35,13 @@ from cmk.utils.prediction import lq_logic
 from cmk.utils.type_defs import HostName, ServiceName
 
 import cmk.gui.sites as sites
-import cmk.gui.utils as utils
 from cmk.gui.bi import BIManager
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
+from cmk.gui.num_split import key_num_split
 from cmk.gui.plugins.views.utils import cmp_service_name_equiv
 from cmk.gui.type_defs import (
     FilterHeader,
@@ -2788,10 +2788,10 @@ def key_av_entry(
     _Tuple[Union[int, str], ...], int, _Tuple[Union[int, str], ...], _Tuple[Union[int, str], ...]
 ]:
     return (
-        utils.key_num_split(a["service"]),
+        key_num_split(a["service"]),
         cmp_service_name_equiv(a["service"]),
-        utils.key_num_split(a["host"]),
-        utils.key_num_split(a["site"]),
+        key_num_split(a["host"]),
+        key_num_split(a["site"]),
     )
 
 

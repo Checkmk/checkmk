@@ -30,7 +30,7 @@ SHELL_FILES := \
 # until we have a feasible solution or we drop the support for 2.6 completly.
 PYTHON_VERSIONS := 2.7 3.3 3.4 3.5 3.6 3.7 3.8
 
-.PHONY: clean format-shell help prepare-node-modules bandit.ini \
+.PHONY: clean format-shell help bandit.ini \
 	$(foreach VERS,$(PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-docker) \
 	test-bandit test-composition test-composition-docker test-composition-docker-debug \
 	test-docker test-format-python test-format-python-docker test-format-shell \
@@ -135,16 +135,14 @@ test-bandit: bandit.ini
 # go and enable the medium/low checks.
 	$(BANDIT) -c ../bandit.yaml -r -lll --ini bandit.ini $(BANDIT_OUTPUT_ARGS)
 
-prepare-node-modules:
-	$(MAKE) -C .. node_modules/.bin/webpack
 
-test-integration-docker-debug test-composition-docker-debug: prepare-node-modules
+test-integration-docker-debug test-composition-docker-debug:
 	$(PIPENV) run scripts/run-dockerized.py debug
 
 test-composition-docker:
 	$(PIPENV) run scripts/run-dockerized.py "test-composition"
 
-test-composition: prepare-node-modules
+test-composition:
 	$(PYTEST) -p no:cov -T composition $(realpath composition)
 
 test-docker:
@@ -182,13 +180,13 @@ test-format-css:
 test-format-css-docker:
 	../scripts/run-in-docker.sh make --quiet test-format-css
 
-test-gui-crawl: prepare-node-modules
+test-gui-crawl:
 	$(PYTEST) -T gui_crawl $(realpath gui_crawl/test_gui_crawl.py)
 
 test-gui-crawl-docker:
 	$(PIPENV) run scripts/run-dockerized.py "test-gui-crawl"
 
-test-integration: prepare-node-modules
+test-integration:
 	CI=true $(PIPENV) run scripts/run-integration-test.py $(realpath integration)
 
 test-integration-docker:

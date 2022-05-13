@@ -1,6 +1,7 @@
 // Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-// conditions defined in the file COPYING, which is part of this source code package.
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
 // provides basic api to start and stop service
 
@@ -151,11 +152,15 @@ inline bool GlobMatch(const T *Glob, const T *Target) {
     return std::regex_match(std::basic_string<T>(Target), match, reg);
 }
 
-template <typename T>
-inline bool GlobMatch(const std::basic_string<T> &glob,
-                      const std::basic_string<T> &target) {
+inline bool GlobMatch(const std::string &glob, const std::string &target) {
     const auto reg = gm::GlobToRegex(glob);
-    std::match_results<std::basic_string<T>::const_iterator> match;
+    std::match_results<std::string::const_iterator> match;
+    return std::regex_match(target, match, reg);
+}
+
+inline bool GlobMatch(const std::wstring &glob, const std::wstring &target) {
+    const auto reg = gm::GlobToRegex(glob);
+    std::match_results<std::wstring::const_iterator> match;
     return std::regex_match(target, match, reg);
 }
 

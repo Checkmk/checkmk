@@ -1,0 +1,15 @@
+Title: Dynamic host management: Do not fail to start on missing automation user
+Class: fix
+Compatible: compat
+Component: dcd
+Date: 1652475546
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.1.0b9
+
+In some sites the 'automation' user might be missing. Even if the dynamic host
+management was not configured, this made the DCD fail to start. Leading to
+partially started sites.
+
+This change restores the behavior of the 2.0.

@@ -20,7 +20,6 @@ def test_init_scripts(site: Site):
         "pnp_gearman_worker",
         "rrdcached",
         "xinetd",
-        "systemd",
         "stunnel",
         "redis",
         "agent-receiver",

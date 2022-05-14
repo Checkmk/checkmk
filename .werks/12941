@@ -1,7 +1,7 @@
 Title: REST API: convert known host attributes to well defined structure
 Class: fix
 Compatible: incomp
-Component: core
+Component: rest-api
 Date: 1622623227
 Edition: cre
 Knowledge: doc

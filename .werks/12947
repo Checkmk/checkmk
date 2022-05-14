@@ -1,7 +1,7 @@
 Title: REST API: ETag validation is not less strict
 Class: fix
 Compatible: compat
-Component: core
+Component: rest-api
 Date: 1624374192
 Edition: cre
 Knowledge: doc

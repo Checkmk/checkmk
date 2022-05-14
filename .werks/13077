@@ -1,7 +1,7 @@
 Title: fix REST API ETag configuration option
 Class: fix
 Compatible: compat
-Component: core
+Component: rest-api
 Date: 1634654524
 Edition: cre
 Knowledge: doc

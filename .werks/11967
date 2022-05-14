@@ -1,7 +1,7 @@
 Title: REST API: fixing password get endpoint
 Class: fix
 Compatible: compat
-Component: core
+Component: rest-api
 Date: 1611227723
 Edition: cre
 Knowledge: doc

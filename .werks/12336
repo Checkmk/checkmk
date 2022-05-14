@@ -1,7 +1,7 @@
 Title: REST API: single folder/folder list, additional parameter "show_hosts"
 Class: feature
 Compatible: compat
-Component: core
+Component: rest-api
 Date: 1614790140
 Edition: cre
 Knowledge: undoc

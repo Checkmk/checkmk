@@ -1,7 +1,7 @@
 Title: RESTAPI: fix agent information and agent download
 Class: fix
 Compatible: compat
-Component: core
+Component: rest-api
 Date: 1633074257
 Edition: cre
 Knowledge: doc

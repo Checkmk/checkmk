@@ -1,7 +1,7 @@
 Title: REST API: explicit documentation of HTTP status codes
 Class: feature
 Compatible: compat
-Component: core
+Component: rest-api
 Date: 1613657297
 Edition: cre
 Knowledge: undoc

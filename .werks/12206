@@ -1,7 +1,7 @@
 Title: downtime_script: changing script to use REST API endpoints
 Class: feature
 Compatible: compat
-Component: core
+Component: rest-api
 Date: 1613739094
 Edition: cre
 Knowledge: undoc

@@ -1,7 +1,7 @@
 Title: adjust Rule response format in REST API
 Class: fix
 Compatible: compat
-Component: core
+Component: rest-api
 Date: 1651132428
 Edition: cre
 Knowledge: doc

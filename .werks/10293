@@ -1,7 +1,7 @@
 Title: REST API: allow effective host attributes to be queries
 Class: feature
 Compatible: compat
-Component: core
+Component: rest-api
 Date: 1610375536
 Edition: cre
 Knowledge: undoc

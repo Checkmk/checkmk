@@ -1,7 +1,7 @@
 Title: add validation for custom tags to REST API
 Class: fix
 Compatible: compat
-Component: core
+Component: rest-api
 Date: 1631534547
 Edition: cre
 Knowledge: doc

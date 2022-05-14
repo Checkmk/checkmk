@@ -1,7 +1,7 @@
 Title: REST API crash when setting SNMP credential
 Class: fix
 Compatible: compat
-Component: core
+Component: rest-api
 Date: 1636114880
 Edition: cre
 Knowledge: doc

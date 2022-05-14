@@ -1,7 +1,7 @@
 Title: REST API: support users authenticated via site Apache
 Class: feature
 Compatible: compat
-Component: core
+Component: rest-api
 Date: 1610553332
 Edition: cre
 Knowledge: undoc

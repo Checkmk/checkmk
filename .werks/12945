@@ -1,7 +1,7 @@
 Title: REST API: option to show folders recursively and return type
 Class: feature
 Compatible: compat
-Component: core
+Component: rest-api
 Date: 1624348513
 Edition: cre
 Knowledge: undoc

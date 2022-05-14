@@ -1,7 +1,7 @@
 Title: REST API: fix column parameter on Livestatus endpoints
 Class: fix
 Compatible: compat
-Component: core
+Component: rest-api
 Date: 1613734420
 Edition: cre
 Knowledge: doc

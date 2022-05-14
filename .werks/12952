@@ -1,7 +1,7 @@
 Title: REST API: make endpoint responses more specific
 Class: fix
 Compatible: incomp
-Component: core
+Component: rest-api
 Date: 1626111036
 Edition: cre
 Knowledge: doc

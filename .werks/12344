@@ -1,7 +1,7 @@
 Title: Status GUI: prevent duplicated export links to REST API
 Class: fix
 Compatible: compat
-Component: core
+Component: rest-api
 Date: 1619761054
 Edition: cre
 Knowledge: doc

@@ -1,7 +1,7 @@
 Title: validation of error responses of the REST API
 Class: fix
 Compatible: incomp
-Component: core
+Component: rest-api
 Date: 1649174159
 Edition: cre
 Knowledge: doc

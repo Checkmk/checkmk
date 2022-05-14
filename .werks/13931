@@ -1,7 +1,7 @@
 Title: wrong labels not raising errors in the REST API
 Class: fix
 Compatible: compat
-Component: core
+Component: rest-api
 Date: 1651485790
 Edition: cre
 Knowledge: doc

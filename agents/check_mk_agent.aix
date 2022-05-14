@@ -317,7 +317,7 @@ section_cmk_agent_ctl_status() {
     cmk-agent-ctl --version 2>/dev/null >&2 || return
 
     printf "<<<cmk_agent_ctl_status:sep(0)>>>\n"
-    cmk-agent-ctl status --json
+    cmk-agent-ctl status --json --no-query-remote
 }
 
 section_checkmk_agent_plugins() {

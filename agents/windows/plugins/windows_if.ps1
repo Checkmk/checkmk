@@ -1,4 +1,4 @@
-$CMK_VERSION = "2.1.0b10"
+$CMK_VERSION = "2.1.0b9"
 
 ## runs on windows 2012 or newer
 ## TeamName        TeamingMode     LoadBalancingAlgorithm  MemberMACAddresses      MemberNames     MemberDescriptions      Speed   GUID

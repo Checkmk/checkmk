@@ -1,7 +1,7 @@
 Title: REST API folder_config host_config sub resource
 Class: fix
 Compatible: compat
-Component: core
+Component: rest-api
 Date: 1615327901
 Edition: cre
 Knowledge: doc

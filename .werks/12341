@@ -1,7 +1,7 @@
 Title: REST API: agent bakery urls
 Class: fix
 Compatible: incomp
-Component: core
+Component: rest-api
 Date: 1616752373
 Edition: cre
 Knowledge: doc

@@ -1,7 +1,7 @@
 Title: REST API: acquire wato configuration lock before changing files
 Class: fix
 Compatible: compat
-Component: core
+Component: rest-api
 Date: 1624010963
 Edition: cre
 Knowledge: doc

@@ -1,7 +1,7 @@
 Title: REST API: allow hostnames for ipaddress attribute
 Class: fix
 Compatible: compat
-Component: core
+Component: rest-api
 Date: 1623830978
 Edition: cre
 Knowledge: doc

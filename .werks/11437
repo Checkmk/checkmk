@@ -1,7 +1,7 @@
 Title: BI REST API: Added interfaces delete_rule and delete_aggregation
 Class: feature
 Compatible: compat
-Component: wato
+Component: rest-api
 Date: 1604407333
 Edition: cre
 Knowledge: undoc

@@ -1,7 +1,7 @@
 Title: REST API: acknowledgement - not found on update is a 400
 Class: fix
 Compatible: compat
-Component: core
+Component: rest-api
 Date: 1615309104
 Edition: cre
 Knowledge: doc

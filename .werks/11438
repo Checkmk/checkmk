@@ -1,7 +1,7 @@
 Title: BI aggregations: REST API: only delete a rule if it is not referenced by aggregations/rules
 Class: fix
 Compatible: compat
-Component: bi
+Component: rest-api
 Date: 1604409083
 Edition: cre
 Knowledge: doc

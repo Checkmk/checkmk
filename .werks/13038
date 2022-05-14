@@ -1,7 +1,7 @@
 Title: REST API: title should be optional on update
 Class: fix
 Compatible: compat
-Component: core
+Component: rest-api
 Date: 1629973934
 Edition: cre
 Knowledge: doc

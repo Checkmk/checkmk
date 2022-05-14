@@ -1,7 +1,7 @@
 Title: missing default tag groups in the REST API
 Class: fix
 Compatible: compat
-Component: core
+Component: rest-api
 Date: 1625561499
 Edition: cre
 Knowledge: doc

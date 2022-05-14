@@ -1,7 +1,7 @@
 Title: REST API: links in responses are now absolute
 Class: fix
 Compatible: compat
-Component: core
+Component: rest-api
 Date: 1613657177
 Edition: cre
 Knowledge: doc

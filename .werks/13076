@@ -1,7 +1,7 @@
 Title: REST API missing and duplicated hosts problem
 Class: fix
 Compatible: compat
-Component: core
+Component: rest-api
 Date: 1634566838
 Edition: cre
 Knowledge: doc

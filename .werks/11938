@@ -1,7 +1,7 @@
 Title: REST API: make optimistic locking via ETags configurable
 Class: feature
 Compatible: compat
-Component: core
+Component: rest-api
 Date: 1613652848
 Edition: cre
 Knowledge: undoc

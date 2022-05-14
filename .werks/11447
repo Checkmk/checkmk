@@ -1,7 +1,7 @@
 Title: BI REST API: Introduced PUT/POST requests for BI packs
 Class: feature
 Compatible: compat
-Component: wato
+Component: rest-api
 Date: 1612863418
 Edition: cre
 Knowledge: undoc

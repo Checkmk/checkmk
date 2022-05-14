@@ -1,7 +1,7 @@
 Title: REST API ETag handling
 Class: fix
 Compatible: compat
-Component: core
+Component: rest-api
 Date: 1624512507
 Edition: cre
 Knowledge: doc

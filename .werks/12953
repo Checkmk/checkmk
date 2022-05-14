@@ -1,7 +1,7 @@
 Title: response conversion of all endpoints of REST API
 Class: fix
 Compatible: incomp
-Component: core
+Component: rest-api
 Date: 1626186374
 Edition: cre
 Knowledge: doc

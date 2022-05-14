@@ -92,6 +92,7 @@ pub fn run_requested_mode(args: cli::Args, paths: setup::PathResolver) -> Anyhow
             )?,
             config::ClientConfig::new(runtime_config, status_args.client_opts),
             status_args.json,
+            !status_args.no_query_remote,
         ),
         cli::Args::Delete(delete_args) => delete(&mut registry, &delete_args.connection),
         cli::Args::DeleteAll(delete_all_args) => delete_all(

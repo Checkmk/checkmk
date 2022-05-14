@@ -77,6 +77,10 @@ pub struct StatusArgs {
     #[structopt(long)]
     pub json: bool,
 
+    /// Do not query the remote about our status
+    #[structopt(long)]
+    pub no_query_remote: bool,
+
     #[structopt(flatten)]
     pub client_opts: ClientOpts,
 

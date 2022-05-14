@@ -145,6 +145,7 @@ impl ConnectionStatus {
         conn: &config::Connection,
         conn_type: config::ConnectionType,
         agent_rec_api: &impl agent_receiver_api::Status,
+        query_remote: bool,
     ) -> ConnectionStatus {
         ConnectionStatus {
             coordinates: Some(coordinates.clone()),
@@ -153,11 +154,15 @@ impl ConnectionStatus {
                 connection_type: conn_type,
                 cert_info: CertParsingResult::from(&conn.certificate),
             },
-            remote: Some(RemoteConnectionStatusResponse::from(
-                coordinates,
-                conn,
-                agent_rec_api,
-            )),
+            remote: if query_remote {
+                Some(RemoteConnectionStatusResponse::from(
+                    coordinates,
+                    conn,
+                    agent_rec_api,
+                ))
+            } else {
+                None
+            },
         }
     }
 
@@ -260,7 +265,7 @@ impl ConnectionStatus {
                     vec![mark_problematic(&format!("Error: {}", err))]
                 }
             },
-            None => vec![String::from("No remote address (imported connection)")],
+            None => vec![String::from("(not available)")],
         }
     }
 
@@ -289,6 +294,7 @@ impl Status {
         registry: &config::Registry,
         pull_config: &config::PullConfig,
         agent_rec_api: &impl agent_receiver_api::Status,
+        query_remote: bool,
     ) -> Status {
         let mut conn_stats = Vec::new();
 
@@ -298,6 +304,7 @@ impl Status {
                 push_conn,
                 config::ConnectionType::Push,
                 agent_rec_api,
+                query_remote,
             ));
         }
         for (coordinates, pull_conn) in registry.standard_pull_connections() {
@@ -306,6 +313,7 @@ impl Status {
                 pull_conn,
                 config::ConnectionType::Pull,
                 agent_rec_api,
+                query_remote,
             ));
         }
         for imp_pull_conn in registry.imported_pull_connections() {
@@ -377,8 +385,9 @@ fn _status(
     pull_config: &config::PullConfig,
     json: bool,
     agent_rec_api: &impl agent_receiver_api::Status,
+    query_remote: bool,
 ) -> AnyhowResult<String> {
-    Status::from(registry, pull_config, agent_rec_api).to_string(json)
+    Status::from(registry, pull_config, agent_rec_api, query_remote).to_string(json)
 }
 
 pub fn status(
@@ -386,6 +395,7 @@ pub fn status(
     pull_config: &config::PullConfig,
     client_config: config::ClientConfig,
     json: bool,
+    query_remote: bool,
 ) -> AnyhowResult<()> {
     println!(
         "{}",
@@ -395,7 +405,8 @@ pub fn status(
             json,
             &agent_receiver_api::Api {
                 use_proxy: client_config.use_proxy
-            }
+            },
+            query_remote,
         )?
     );
     Ok(())
@@ -515,7 +526,7 @@ mod test_status {
                  \t\tCertificate issuer: Site 'site' local CA\n\
                  \t\tCertificate validity: Thu, 16 Dec 2021 08:18:41 +0000 - Tue, 18 Apr 3020 08:18:41 +0000\n\
                  \tRemote:\n\
-                 \t\tNo remote address (imported connection)"
+                 \t\t(not available)"
             )
         );
     }
@@ -865,6 +876,7 @@ mod test_status {
                 .unwrap(),
                 false,
                 &MockApi {},
+                true,
             )
             .unwrap(),
             format!(

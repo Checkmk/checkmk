@@ -1997,7 +1997,7 @@ def make_api_client(arguments: argparse.Namespace) -> client.ApiClient:
     if arguments.verify_cert_api:
         config.ssl_ca_cert = get_requests_ca()
     else:
-        logging.info("Disabling SSL certificate verification")
+        LOGGER.info("Disabling SSL certificate verification")
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
         config.verify_ssl = False
 
@@ -2512,7 +2512,7 @@ def main(args: Optional[List[str]] = None) -> int:  # pylint: disable=too-many-b
 
     try:
         setup_logging(arguments.verbose)
-        logging.debug("parsed arguments: %s\n", arguments)
+        LOGGER.debug("parsed arguments: %s\n", arguments)
 
         with cmk.utils.profile.Profile(
             enabled=bool(arguments.profile), profile_file=arguments.profile

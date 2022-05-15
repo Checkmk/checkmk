@@ -136,7 +136,6 @@ def test_section_parse_function_does_something(fix_register):
         "appdynamics_web_container",
         "arc_raid_status",
         "arcserve_backup",
-        "citrix_controller",
         "citrix_serverload",
         "citrix_sessions",
         "db2_mem",

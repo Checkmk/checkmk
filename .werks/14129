@@ -1,0 +1,19 @@
+Title: KUBE kube_pod_status: Option Interpretation of pod status matches inline help
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1652639302
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b10
+
+Previously, if the option 'Interpretation of pod status' was used to assign a
+Pod to a group, the performed search would be a prefix search. This was
+inconsistent with the inline help, which promises an infix search. With this
+werk, an infix search is now performed by the agent. Those users who have
+configured the option 'Interpretation of pod status' to be sensitive to the
+type of regex matching performed need to verify that the agent is still
+performing as expected.
+

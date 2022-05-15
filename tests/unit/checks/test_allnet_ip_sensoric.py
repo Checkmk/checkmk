@@ -8,6 +8,8 @@ import pytest
 
 from tests.testlib import Check
 
+from cmk.base.plugins.agent_based.allnet_ip_sensoric import parse_allnet_ip_sensoric
+
 pytestmark = pytest.mark.checks
 
 _SECTION = {
@@ -107,7 +109,7 @@ _SECTION = {
 
 def test_parse_allnet_ip_sensoric() -> None:
     assert (
-        Check("allnet_ip_sensoric").run_parse(
+        parse_allnet_ip_sensoric(
             [
                 ["sensor1.max_abs_float", "38.18"],
                 ["sensor1.max_day_float", "25.31"],

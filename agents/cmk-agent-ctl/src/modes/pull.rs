@@ -305,16 +305,17 @@ fn is_addr_allowed(addr: &SocketAddr, allowed_ip: &[String]) -> bool {
     if allowed_ip.is_empty() {
         return true;
     }
+    let can_addr = to_canonical(addr.ip());
     for ip in allowed_ip {
         // Our list may contain both network, ip addresses and bad data(!)
         // Examples: network - 192.168.1.14/24, address - 127.0.0.1
         if let Ok(allowed_net) = ip.parse::<ipnet::IpNet>() {
-            if allowed_net.contains(&addr.ip()) {
+            if allowed_net.contains(&can_addr) {
                 return true;
             }
         }
         if let Ok(allowed_addr) = ip.parse::<IpAddr>() {
-            if allowed_addr == addr.ip() {
+            if allowed_addr == can_addr {
                 return true;
             }
         }
@@ -323,6 +324,22 @@ fn is_addr_allowed(addr: &SocketAddr, allowed_ip: &[String]) -> bool {
         // to have invalid settings we should check and report this once
     }
     false
+}
+
+fn to_canonical(ip_addr: IpAddr) -> IpAddr {
+    //IpAddr::to_canonical is unstable API :-(
+    match ip_addr {
+        IpAddr::V4(_v4) => ip_addr,
+        IpAddr::V6(v6) => {
+            let v4_map_subnet =
+                ipnet::Ipv6Net::new(Ipv6Addr::new(0, 0, 0, 0, 0, 0xffff, 0, 0), 96).unwrap();
+            if v4_map_subnet.contains(&v6) {
+                IpAddr::V4(v6.to_ipv4().unwrap())
+            } else {
+                ip_addr
+            }
+        }
+    }
 }
 
 async fn handle_request(
@@ -456,6 +473,24 @@ mod tests {
             format!("{}:80", addr).parse::<SocketAddr>().unwrap()
         }
 
+        fn to_ip_addr(addr: &str) -> IpAddr {
+            IpAddr::from_str(addr).unwrap()
+        }
+
+        #[test]
+        fn test_to_canonical() {
+            assert_eq!(
+                to_canonical(to_ip_addr("::ffff:1.2.3.4")),
+                to_ip_addr("1.2.3.4")
+            );
+            assert_eq!(
+                to_canonical(to_ip_addr("::fffe:1.2.3.4")),
+                to_ip_addr("::fffe:1.2.3.4")
+            );
+            assert_eq!(to_canonical(to_ip_addr("::1")), to_ip_addr("::1"));
+            assert_eq!(to_canonical(to_ip_addr("fd05::3")), to_ip_addr("fd05::3"));
+            assert_eq!(to_canonical(to_ip_addr("1.2.3.4")), to_ip_addr("1.2.3.4"));
+        }
         #[test]
         fn test_empty_list() {
             let args = &vec![];
@@ -467,6 +502,8 @@ mod tests {
             let args = &args_good();
             assert!(is_addr_allowed(&to_sock_addr("127.0.0.1"), args));
             assert!(!is_addr_allowed(&to_sock_addr("127.0.0.2"), args));
+            assert!(is_addr_allowed(&to_sock_addr("[::ffff:127.0.0.1]"), args));
+            assert!(!is_addr_allowed(&to_sock_addr("[::ffff:127.0.0.2]"), args));
             assert!(is_addr_allowed(&to_sock_addr("[::1]"), args));
             assert!(!is_addr_allowed(&to_sock_addr("[::2]"), args));
             assert!(is_addr_allowed(&to_sock_addr("[fd05::3]"), args));
@@ -475,14 +512,24 @@ mod tests {
         #[test]
         fn test_bad_list_ipaddr() {
             let args = &args_bad();
-            assert!(!is_addr_allowed(&to_sock_addr("127.0.0.2"), args));
             assert!(is_addr_allowed(&to_sock_addr("127.0.0.1"), args));
+            assert!(!is_addr_allowed(&to_sock_addr("127.0.0.2"), args));
+            assert!(is_addr_allowed(&to_sock_addr("[::ffff:127.0.0.1]"), args));
+            assert!(!is_addr_allowed(&to_sock_addr("[::ffff:127.0.0.2]"), args));
         }
         #[test]
         fn test_valid_list_net() {
             let args = &args_good();
             assert!(is_addr_allowed(&to_sock_addr("192.168.1.13"), args));
             assert!(!is_addr_allowed(&to_sock_addr("172.168.1.13"), args));
+            assert!(is_addr_allowed(
+                &to_sock_addr("[::ffff:192.168.1.13]"),
+                args
+            ));
+            assert!(!is_addr_allowed(
+                &to_sock_addr("[::ffff:172.168.1.13]"),
+                args
+            ));
             assert!(is_addr_allowed(&to_sock_addr("[fd00::1]"), args));
             assert!(!is_addr_allowed(&to_sock_addr("[fd01::1]"), args));
         }

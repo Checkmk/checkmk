@@ -1049,7 +1049,7 @@ def _valuespec_special_agents_kube():
                     ],
                     orientation="horizontal",
                     help=_(
-                        "By default, Checkmk does not imports annotations. If "
+                        "By default, Checkmk does not import annotations. If "
                         "this option is enabled, Checkmk will import any "
                         "annotation that is a valid Kubernetes label. These "
                         "imported annotations are added as host labels to their "

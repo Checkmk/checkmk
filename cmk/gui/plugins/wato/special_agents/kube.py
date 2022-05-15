@@ -180,7 +180,7 @@ def _valuespec_special_agents_kube():
                             _("Monitor namespaces matching"),
                             ListOf(
                                 valuespec=RegExp(
-                                    mode=RegExp.complete,
+                                    mode=RegExp.infix,
                                     title=_("Pattern"),
                                     allow_empty=False,
                                 ),
@@ -198,7 +198,7 @@ def _valuespec_special_agents_kube():
                             _("Exclude namespaces matching"),
                             ListOf(
                                 valuespec=RegExp(
-                                    mode=RegExp.complete,
+                                    mode=RegExp.infix,
                                     title=_("Pattern"),
                                     allow_empty=False,
                                 ),

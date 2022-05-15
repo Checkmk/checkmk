@@ -1,0 +1,16 @@
+Title: KUBE agent_kube: Option Monitor namespaces matches inline help
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1652638888
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+Previously, if the option 'Monitor namespace' was used to filter namespaces, the performed search
+would be a prefix search. This was inconsistent with the inline help, which promises a complete
+search. With this werk, an infix search is now performed by the agent, which is the default in
+Checkmk. Those users who have configured the option 'Monitor namespaces' to be sensitive to the 
+type of regex matching performed need to verify that the agent is still performing as expected.
+

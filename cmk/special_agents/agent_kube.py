@@ -2266,12 +2266,11 @@ def _filter_namespaces(
          ... api.NamespaceName("man")}, ["foo", "man"]))
          ['foo', 'man']
     """
-    filtered_namespaces = set()
-    compiled_re = re.compile(f"({'|'.join(re_patterns)})")
-    for namespace in kubernetes_namespaces:
-        if compiled_re.match(namespace):
-            filtered_namespaces.add(namespace)
-    return filtered_namespaces
+    return {
+        namespace
+        for namespace in kubernetes_namespaces
+        if any_match_from_list_of_infix_patterns(re_patterns, namespace)
+    }
 
 
 def cluster_piggyback_formatter(cluster_name: str, object_type: str, namespaced_name: str) -> str:

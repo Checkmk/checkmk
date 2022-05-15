@@ -5,16 +5,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import Any, Iterator, Mapping, NamedTuple, Optional, Sequence
+from typing import Any, Mapping, NamedTuple, Optional, Sequence
 
-StringTable = list[list[str]]
-
-Service = tuple[Optional[str], Mapping[str, str]]
-
-DiscoveryResult = Iterator[Service]
-
-CheckResult = Iterator[tuple[int, str]]
-
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    DiscoveryResult,
+    StringTable,
+)
 
 # Example outputs from agent:
 # <<<heartbeat_crm>>>
@@ -221,11 +219,13 @@ def parse_heartbeat_crm(string_table: StringTable) -> Optional[Section]:
 
 def discover_heartbeat_crm(section: Section) -> DiscoveryResult:
     params = host_extra_conf_merged(host_name(), inventory_heartbeat_crm_rules)
-    yield None, {
-        "num_nodes": section.cluster.num_nodes,
-        "num_resources": section.cluster.num_resources,
-        **({"dc": section.cluster.dc} if params.get("naildown_dc", False) else {}),
-    }
+    yield Service(
+        parameters={
+            "num_nodes": section.cluster.num_nodes,
+            "num_resources": section.cluster.num_resources,
+            **({"dc": section.cluster.dc} if params.get("naildown_dc", False) else {}),
+        }
+    )
 
 
 def check_heartbeat_crm(_no_item, params: Mapping[str, Any], section: Section) -> CheckResult:
@@ -242,36 +242,44 @@ def check_heartbeat_crm(_no_item, params: Mapping[str, Any], section: Section) -
     now = time.time()
     delta = now - dt
     if delta > params["max_age"]:
-        yield 2, "Ignoring reported data (Status output too old: %s)" % (
-            get_age_human_readable(delta),
+        yield Result(
+            state=State.CRIT,
+            summary="Ignoring reported data (Status output too old: %s)"
+            % (get_age_human_readable(delta),),
         )
         return
 
     # Check for correct DC when enabled
     if params.get("dc") is None or dc == params["dc"]:
-        yield 0, "DC: %s" % (dc,)
+        yield Result(state=State.OK, summary=f"DC: {dc}")
     else:
-        yield 2, "DC: %s (Expected %s)" % (dc, params["dc"])
+        yield Result(state=State.CRIT, summary=f"DC: {dc} (Expected {params['dc']})")
 
     # Check for number of nodes when enabled
     if params["num_nodes"] is not None and num_nodes is not None:
         if num_nodes == params["num_nodes"]:
-            yield 0, "Nodes: %d" % (num_nodes,)
+            yield Result(state=State.OK, summary="Nodes: %d" % (num_nodes,))
         else:
-            yield 2, "Nodes: %d (Expected %d)" % (num_nodes, params["num_nodes"])
+            yield Result(
+                state=State.CRIT,
+                summary="Nodes: %d (Expected %d)" % (num_nodes, params["num_nodes"]),
+            )
 
     # Check for number of resources when enabled
     if params["num_resources"] is not None and num_resources is not None:
         if num_resources == params["num_resources"]:
-            yield 0, "Resources: %d" % (num_resources,)
+            yield Result(state=State.OK, summary="Resources: %d" % (num_resources,))
         else:
-            yield 2, "Resources: %d (Expected %d)" % (num_resources, params["num_resources"])
+            yield Result(
+                state=State.CRIT,
+                summary="Resources: %d (Expected %d)" % (num_resources, params["num_resources"]),
+            )
 
     if not params.get("show_failed_actions"):
         return
 
     for action in section.resources.failed_actions:
-        yield 1, f"Failed: {action}"
+        yield Result(state=State.WARN, summary=f"Failed: {action}")
 
 
 check_info["heartbeat_crm"] = {
@@ -353,34 +361,37 @@ def inventory_heartbeat_crm_resources(section: Section) -> DiscoveryResult:
         # In naildown mode only resources which are started somewhere can be
         # inventorized
         if settings.get("naildown_resources", False) and resources[0][2] != "Stopped":
-            yield name, {"expected_node": resources[0][3]}
+            yield Service(item=name, parameters={"expected_node": resources[0][3]})
         else:
-            yield name, {}
+            yield Service(item=name)
 
 
 def check_heartbeat_crm_resources(
     item: str,
-    params: Mapping[str, str],
+    params: Mapping[str, Optional[str]],
     section: Section,
 ) -> CheckResult:
     if (resources := section.resources.resources.get(item)) is None:
         return
 
     if not len(resources):
-        yield 0, "No resources found"
+        yield Result(state=State.OK, summary="No resources found")
 
     for resource in resources:
-        yield 0, " ".join([isinstance(p, list) and ", ".join(p) or p for p in resource])
+        yield Result(
+            state=State.OK,
+            summary=" ".join([isinstance(p, list) and ", ".join(p) or p for p in resource]),
+        )
 
         if len(resource) == 3 and resource[2] != "Started":
-            yield 2, 'Resource is in state "%s"' % (resource[2],)
+            yield Result(state=State.CRIT, summary='Resource is in state "%s"' % (resource[2],))
         elif (
             (target_node := params.get("expected_node"))
             and target_node != resource[3]
             and resource[1] != "Slave"
             and resource[1] != "Clone"
         ):
-            yield 2, "Expected node: %s" % (target_node,)
+            yield Result(state=State.CRIT, summary="Expected node: %s" % (target_node,))
 
 
 check_info["heartbeat_crm.resources"] = {

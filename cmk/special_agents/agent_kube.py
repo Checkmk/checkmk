@@ -2238,11 +2238,6 @@ def filter_monitored_namespaces(
         ['bar', 'foo']
 
     """
-    if (
-        namespace_include_patterns and namespace_exclude_patterns
-    ):  # this should be handled by argparse
-        raise ValueError("It is not possible to define patterns for both filter mechanisms")
-
     if namespace_include_patterns:
         LOGGER.debug("Filtering for included namespaces")
         return _filter_namespaces(cluster_namespaces, namespace_include_patterns)

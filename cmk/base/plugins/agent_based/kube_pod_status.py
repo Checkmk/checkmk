@@ -56,7 +56,7 @@ DEFAULT_PARAMS = Params(
 
 def _get_group_from_params(status_message: str, params: Params) -> Group:
     for group in params["groups"]:
-        if any(re.match(status_regex, status_message) for status_regex in group[1]):
+        if any(re.search(status_regex, status_message) for status_regex in group[1]):
             return group
     return "no_levels", []
 

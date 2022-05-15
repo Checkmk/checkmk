@@ -32,24 +32,17 @@ def test_create_section_plugin_from_legacy(fix_plugin_legacy):
 
 def test_migrated_inventory_plugin(fix_plugin_legacy, fix_register):
     # pick an automigrated plugin
-    test_plugin_name = "aix_baselevel"
+    test_plugin_name = "perle_chassis"
     assert test_plugin_name in fix_plugin_legacy.inv_info
 
     plugin = fix_register.inventory_plugins.get(InventoryPluginName(test_plugin_name))
     assert plugin is not None
 
-    # think of a version, and remember it:
-    result = list(plugin.inventory_function([["42.23"]]))
+    # think of a model, and remember it:
+    result = list(plugin.inventory_function([["42.23", "", "", "", "", "", ""]]))
 
     assert len(result) == 1
 
     attr = result[0]
     assert isinstance(attr, Attributes)
-    assert attr.path == ["software", "os"]
-    assert attr.status_attributes == {}
-    assert attr.inventory_attributes == {
-        "version": "42.23",  # abracadabra! Is this your version?
-        "vendor": "IBM",
-        "type": "aix",
-        "name": "IBM AIX 42.23",
-    }
+    assert attr.inventory_attributes["model"] == "42.23"  # abracadabra! Is this your model?

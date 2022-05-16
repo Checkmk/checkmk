@@ -68,7 +68,7 @@ build_image() {
 }
 
 push_image() {
-   if [ "$EDITION" = raw ] || [ "$EDITION" = free ]; then
+   if [ $EDITION = raw ]; then
        docker_push "" "checkmk"
    else
        docker_push "registry.checkmk.com" "/${EDITION}"

@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import abc
 import time
+from dataclasses import dataclass
 from functools import partial
 from typing import (
     Any,
@@ -695,14 +696,26 @@ def inv_paint_service_status(status: str) -> PaintResult:
 
 
 def _get_raw_path(path: SDPath) -> str:
-    return ".".join(map(str, path)).strip(".")
+    return ".".join(map(str, path))
 
 
-def _get_node_display_hint(path: SDPath) -> tuple[str, InventoryHintSpec]:
-    """Generic access function to display hints for nodes/categories
-    Don't use other methods to access the hints!"""
-    raw_path = ".%s." % _get_raw_path(path)
-    return raw_path, {}
+@dataclass(frozen=True)
+class NodeDisplayHint:
+    raw_path: str
+    icon: Optional[str]
+
+    @classmethod
+    def make(cls, path: SDPath) -> NodeDisplayHint:
+        raw_path = f".{_get_raw_path(path)}." if path else "."
+        raw_hint = (
+            {}
+            if (hint_id := _find_display_hint_id(raw_path)) is None
+            else inventory_displayhints.get(hint_id, {})
+        )
+        return cls(
+            raw_path=raw_path,
+            icon=raw_hint.get("icon"),
+        )
 
 
 def _get_table_display_hint(path: SDPath) -> tuple[str, InventoryHintSpec]:
@@ -804,11 +817,8 @@ def _convert_display_hint(hint: InventoryHintSpec) -> InventoryHintSpec:
     return hint
 
 
-def _inv_titleinfo(
-    invpath: SDRawPath,
-) -> Tuple[Optional[str], str]:
+def _inv_titleinfo(invpath: SDRawPath) -> str:
     hint = _get_display_hint(invpath)
-    icon = hint.get("icon")
     if "title" in hint:
         title = hint["title"]
         if hasattr(title, "__call__"):
@@ -818,15 +828,15 @@ def _inv_titleinfo(
         title = (
             invpath.rstrip(".").rstrip(":").split(".")[-1].split(":")[-1].replace("_", " ").title()
         )
-    return icon, title
+    return title
 
 
 def inv_titleinfo_long(invpath: SDRawPath) -> str:
     """Return the titles of the last two path components of the node, e.g. "BIOS / Vendor"."""
-    _icon, last_title = _inv_titleinfo(invpath)
+    last_title = _inv_titleinfo(invpath)
     parent = _get_parent_from_invpath(invpath)
     if parent:
-        _icon, parent_title = _inv_titleinfo(parent)
+        parent_title = _inv_titleinfo(parent)
         return parent_title + " ➤ " + last_title
     return last_title
 
@@ -929,7 +939,7 @@ def _declare_invtable_column(
         paint_name = "str"
         paint_function = inv_paint_generic
 
-    title = _inv_titleinfo(sub_invpath)[1]
+    title = _inv_titleinfo(sub_invpath)
 
     # Sync this with _declare_inv_column()
     filter_class = hint.get("filter")
@@ -1892,13 +1902,13 @@ class ABCNodeRenderer(abc.ABC):
     #   ---node-----------------------------------------------------------------
 
     def show_node(self, node: StructuredDataNode) -> None:
-        raw_path, _node_hint = _get_node_display_hint(list(node.path))
+        node_hint = NodeDisplayHint.make(list(node.path))
 
-        icon, title = _inv_titleinfo(raw_path)
+        title = _inv_titleinfo(node_hint.raw_path)
 
         # Replace placeholders in title with the real values for this path
         if "%d" in title or "%s" in title:
-            title = self._replace_placeholders(title, raw_path)
+            title = self._replace_placeholders(title, node_hint.raw_path)
 
         header = self._get_header(title, ".".join(map(str, node.path)), "#666")
         fetch_url = makeuri_contextless(
@@ -1906,7 +1916,7 @@ class ABCNodeRenderer(abc.ABC):
             [
                 ("site", self._site_id),
                 ("host", self._hostname),
-                ("path", raw_path),
+                ("path", node_hint.raw_path),
                 ("show_internal_tree_paths", self._show_internal_tree_paths),
                 ("treeid", self._tree_id),
             ],
@@ -1915,10 +1925,10 @@ class ABCNodeRenderer(abc.ABC):
 
         with foldable_container(
             treename="inv_%s%s" % (self._hostname, self._tree_id),
-            id_=raw_path,
+            id_=node_hint.raw_path,
             isopen=False,
             title=header,
-            icon=icon,
+            icon=node_hint.icon,
             fetch_url=fetch_url,
         ) as is_open:
             if is_open:
@@ -1956,7 +1966,7 @@ class ABCNodeRenderer(abc.ABC):
         titles: TableTitles = []
         for key in keyorder:
             raw_col_path, col_hint = _get_column_display_hint(list(table.path), 0, key)
-            _icon, title = _inv_titleinfo(raw_col_path)
+            title = _inv_titleinfo(raw_col_path)
             short_title = col_hint.get("short", title)
             titles.append((short_title, key, key in table.key_columns))
 
@@ -1965,7 +1975,7 @@ class ABCNodeRenderer(abc.ABC):
         extratitles: TableTitles = []
         for key in set(key for row in table.rows for key in row):
             if key not in keyorder:
-                _icon, title = _inv_titleinfo("%s0.%s" % (raw_table_path, key))
+                title = _inv_titleinfo("%s0.%s" % (raw_table_path, key))
                 extratitles.append((title, key, key in table.key_columns))
         titles += sorted(extratitles)
 
@@ -2057,7 +2067,7 @@ class ABCNodeRenderer(abc.ABC):
         html.open_table()
         for key, value in sorted(attributes.pairs.items(), key=sort_func):
             raw_attr_path, attr_hint = _get_attribute_display_hint(list(attributes.path), key)
-            _icon, title = _inv_titleinfo(raw_attr_path)
+            title = _inv_titleinfo(raw_attr_path)
 
             html.open_tr()
             html.th(self._get_header(title, key, "#DDD"), title=raw_attr_path)

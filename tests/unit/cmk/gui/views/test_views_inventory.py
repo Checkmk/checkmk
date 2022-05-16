@@ -9,14 +9,14 @@ from typing import Any, Mapping
 # No stub file
 import pytest
 
-from cmk.utils.structured_data import StructuredDataNode
+from cmk.utils.structured_data import SDPath, StructuredDataNode
 
 import cmk.gui.inventory
 import cmk.gui.utils
 from cmk.gui.num_split import cmp_version
 from cmk.gui.plugins.visuals.inventory import FilterInvtableVersion
 from cmk.gui.views import View
-from cmk.gui.views.inventory import RowTableInventory, RowTableInventoryHistory
+from cmk.gui.views.inventory import NodeDisplayHint, RowTableInventory, RowTableInventoryHistory
 
 RAW_ROWS = [("this_site", "this_hostname")]
 RAW_ROWS2 = [("this_site", "this_hostname", "foobar")]
@@ -335,3 +335,33 @@ def test__cmp_inventory_node(monkeypatch, val_a, val_b, result):
 )
 def test__get_display_hint(invpath: str, expected_hint: Mapping[str, Any]) -> None:
     assert cmk.gui.views.inventory._get_display_hint(invpath) == expected_hint
+
+
+@pytest.mark.parametrize(
+    "node_path, expected",
+    [
+        (
+            tuple(),
+            NodeDisplayHint(
+                raw_path=".",
+                icon=None,
+            ),
+        ),
+        (
+            ("hardware",),
+            NodeDisplayHint(
+                raw_path=".hardware.",
+                icon="hardware",
+            ),
+        ),
+        (
+            ("path", "to", "node"),
+            NodeDisplayHint(
+                raw_path=".path.to.node.",
+                icon=None,
+            ),
+        ),
+    ],
+)
+def test_make_node_displayhint(node_path: SDPath, expected: NodeDisplayHint):
+    assert NodeDisplayHint.make(node_path) == expected

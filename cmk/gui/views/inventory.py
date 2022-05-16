@@ -125,7 +125,7 @@ def _paint_host_inventory_tree(
 
     assert isinstance(struct_tree, StructuredDataNode)
 
-    tree_renderer = _get_tree_renderer(row, column, invpath)
+    tree_renderer = _get_tree_renderer(row, column)
 
     parsed_path, attribute_keys = inventory.parse_tree_path(invpath)
     child: Union[None, StructuredDataNode, Table, Attributes]
@@ -168,13 +168,12 @@ def _get_sites_with_same_named_hosts_cache() -> Mapping[HostName, Sequence[SiteI
     return cache
 
 
-def _get_tree_renderer(row: Row, column: str, invpath: SDRawPath) -> ABCNodeRenderer:
+def _get_tree_renderer(row: Row, column: str) -> ABCNodeRenderer:
     if column == "host_inventory":
         painter_options = PainterOptions.get_instance()
         return NodeRenderer(
             row["site"],
             row["host_name"],
-            invpath,
             show_internal_tree_paths=painter_options.get("show_internal_tree_paths"),
         )
 
@@ -182,7 +181,6 @@ def _get_tree_renderer(row: Row, column: str, invpath: SDRawPath) -> ABCNodeRend
     return DeltaNodeRenderer(
         row["site"],
         row["host_name"],
-        invpath,
         tree_id=tree_id,
     )
 
@@ -696,28 +694,43 @@ def inv_paint_service_status(status: str) -> PaintResult:
 #   '----------------------------------------------------------------------'
 
 
-def _get_table_display_hint(invpath: SDRawPath) -> InventoryHintSpec:
+def _get_raw_path(path: SDPath) -> str:
+    return ".".join(map(str, path)).strip(".")
+
+
+def _get_node_display_hint(path: SDPath) -> tuple[str, InventoryHintSpec]:
+    """Generic access function to display hints for nodes/categories
+    Don't use other methods to access the hints!"""
+    raw_path = ".%s." % _get_raw_path(path)
+    return raw_path, {}
+
+
+def _get_table_display_hint(path: SDPath) -> tuple[str, InventoryHintSpec]:
     """Generic access function to display hints for tables
     Don't use other methods to access the hints!"""
-    return _get_display_hint(invpath)
+    raw_path = ".%s:" % _get_raw_path(path)
+    return raw_path, _get_display_hint(raw_path)
 
 
-def _get_column_display_hint(invpath: SDRawPath) -> InventoryHintSpec:
+def _get_column_display_hint(path: SDPath, index: int, key: str) -> tuple[str, InventoryHintSpec]:
     """Generic access function to display hints for table columns
     Don't use other methods to access the hints!"""
-    return _get_display_hint(invpath)
+    raw_path = ".%s:%d.%s" % (_get_raw_path(path), index, key)
+    return raw_path, _get_display_hint(raw_path)
 
 
-def _get_attributes_display_hint(invpath: SDRawPath) -> InventoryHintSpec:
+def _get_attributes_display_hint(path: SDPath) -> tuple[str, InventoryHintSpec]:
     """Generic access function to display hints for attributes
     Don't use other methods to access the hints!"""
-    return _get_display_hint(invpath)
+    raw_path = ".%s." % _get_raw_path(path)
+    return raw_path, _get_display_hint(raw_path)
 
 
-def _get_attribute_display_hint(invpath: SDRawPath) -> InventoryHintSpec:
+def _get_attribute_display_hint(path: SDPath, key: str) -> tuple[str, InventoryHintSpec]:
     """Generic access function to display hints for attribute keys
     Don't use other methods to access the hints!"""
-    return _get_display_hint(invpath)
+    raw_path = "%s.%s" % (_get_raw_path(path), key)
+    return raw_path, _get_display_hint(raw_path)
 
 
 def _get_display_hint(invpath: SDRawPath) -> InventoryHintSpec:
@@ -1212,8 +1225,9 @@ def _declare_views(
 ) -> None:
     is_show_more = True
     if len(invpaths) == 1:
-        hint = _get_table_display_hint(invpaths[0])
-        is_show_more = hint.get("is_show_more", True)
+        parsed_path, _attribute_keys = inventory.parse_tree_path(invpaths[0] or "")
+        _raw_path, table_hint = _get_table_display_hint(parsed_path)
+        is_show_more = table_hint.get("is_show_more", True)
 
     # Declare two views: one for searching globally. And one
     # for the items of one host.
@@ -1864,13 +1878,11 @@ class ABCNodeRenderer(abc.ABC):
         self,
         site_id: SiteId,
         hostname: HostName,
-        invpath: SDRawPath,
         tree_id: str = "",
         show_internal_tree_paths: bool = False,
     ) -> None:
         self._site_id = site_id
         self._hostname = hostname
-        self._invpath = invpath
         self._tree_id = tree_id
         if show_internal_tree_paths:
             self._show_internal_tree_paths = "on"
@@ -1880,13 +1892,13 @@ class ABCNodeRenderer(abc.ABC):
     #   ---node-----------------------------------------------------------------
 
     def show_node(self, node: StructuredDataNode) -> None:
-        invpath = ".%s." % self._get_raw_path(list(node.path))
+        raw_path, _node_hint = _get_node_display_hint(list(node.path))
 
-        icon, title = _inv_titleinfo(invpath)
+        icon, title = _inv_titleinfo(raw_path)
 
         # Replace placeholders in title with the real values for this path
         if "%d" in title or "%s" in title:
-            title = self._replace_placeholders(title, invpath)
+            title = self._replace_placeholders(title, raw_path)
 
         header = self._get_header(title, ".".join(map(str, node.path)), "#666")
         fetch_url = makeuri_contextless(
@@ -1894,7 +1906,7 @@ class ABCNodeRenderer(abc.ABC):
             [
                 ("site", self._site_id),
                 ("host", self._hostname),
-                ("path", invpath),
+                ("path", raw_path),
                 ("show_internal_tree_paths", self._show_internal_tree_paths),
                 ("treeid", self._tree_id),
             ],
@@ -1903,7 +1915,7 @@ class ABCNodeRenderer(abc.ABC):
 
         with foldable_container(
             treename="inv_%s%s" % (self._hostname, self._tree_id),
-            id_=invpath,
+            id_=raw_path,
             isopen=False,
             title=header,
             icon=icon,
@@ -1937,17 +1949,15 @@ class ABCNodeRenderer(abc.ABC):
     def show_table(self, table: Table) -> None:
         # FIXME these kind of paths are required for hints.
         # Clean this up one day.
-        invpath = ".%s:" % self._get_raw_path(list(table.path))
-        hint = _get_table_display_hint(invpath)
-        keyorder = hint.get("keyorder", [])  # well known keys
+        raw_table_path, table_hint = _get_table_display_hint(list(table.path))
+        keyorder = table_hint.get("keyorder", [])  # well known keys
 
         # Add titles for those keys
         titles: TableTitles = []
         for key in keyorder:
-            sub_invpath = "%s0.%s" % (invpath, key)
-            _icon, title = _inv_titleinfo(sub_invpath)
-            sub_hint = _get_column_display_hint(sub_invpath)
-            short_title = sub_hint.get("short", title)
+            raw_col_path, col_hint = _get_column_display_hint(list(table.path), 0, key)
+            _icon, title = _inv_titleinfo(raw_col_path)
+            short_title = col_hint.get("short", title)
             titles.append((short_title, key, key in table.key_columns))
 
         # Determine *all* keys, in order to find unknown ones
@@ -1955,16 +1965,16 @@ class ABCNodeRenderer(abc.ABC):
         extratitles: TableTitles = []
         for key in set(key for row in table.rows for key in row):
             if key not in keyorder:
-                _icon, title = _inv_titleinfo("%s0.%s" % (invpath, key))
+                _icon, title = _inv_titleinfo("%s0.%s" % (raw_table_path, key))
                 extratitles.append((title, key, key in table.key_columns))
         titles += sorted(extratitles)
 
         # Link to Multisite view with exactly this table
-        if "view" in hint:
+        if "view" in table_hint:
             url = makeuri_contextless(
                 request,
                 [
-                    ("view_name", hint["view"]),
+                    ("view_name", table_hint["view"]),
                     ("host", self._hostname),
                 ],
                 filename="view.py",
@@ -1974,10 +1984,10 @@ class ABCNodeRenderer(abc.ABC):
                 class_="invtablelink",
             )
 
-        self._show_table_data(hint, table, titles, invpath)
+        self._show_table_data(table_hint, table, titles)
 
     def _show_table_data(
-        self, hint: InventoryHintSpec, table: Table, titles: TableTitles, invpath: SDRawPath
+        self, table_hint: InventoryHintSpec, table: Table, titles: TableTitles
     ) -> None:
         # TODO: Use table.open_table() below.
         html.open_table(class_="data")
@@ -1987,33 +1997,34 @@ class ABCNodeRenderer(abc.ABC):
 
         html.close_tr()
 
-        for index, entry in enumerate(self._sort_table_rows(hint, table)):
+        for index, entry in enumerate(self._sort_table_rows(table_hint, table)):
             html.open_tr(class_="even0")
             for title, key, _is_key_column in titles:
                 value = entry.get(key)
-                sub_invpath = "%s%d.%s" % (invpath, index, key)
-                hint = _get_column_display_hint(sub_invpath)
-                if "paint_function" in hint:
+                _raw_col_path, col_hint = _get_column_display_hint(list(table.path), index, key)
+                if "paint_function" in col_hint:
                     # FIXME At the moment  we need it to get tdclass
                     # Clean this up one day.
                     # The value is not really needed, but we need to deal with the delta mode
                     unused_value = value[1] if isinstance(value, tuple) else value
-                    tdclass, _ = hint["paint_function"](unused_value)
+                    tdclass, _ = col_hint["paint_function"](unused_value)
                 else:
                     tdclass = None
 
                 html.open_td(class_=tdclass)
                 self._show_table_value(
                     value,
-                    hint,
+                    col_hint,
                     retention_intervals=table.get_retention_intervals(key, entry),
                 )
                 html.close_td()
             html.close_tr()
         html.close_table()
 
-    def _sort_table_rows(self, hint: InventoryHintSpec, table: Table) -> inventory.InventoryRows:
-        if (keyorder := hint.get("keyorder")) is None:
+    def _sort_table_rows(
+        self, table_hint: InventoryHintSpec, table: Table
+    ) -> inventory.InventoryRows:
+        if (keyorder := table_hint.get("keyorder")) is None:
             return table.rows
 
         sorting_keys = tuple(k for k in keyorder if k in table.key_columns)
@@ -2023,7 +2034,7 @@ class ABCNodeRenderer(abc.ABC):
     def _show_table_value(
         self,
         value: Any,
-        hint: InventoryHintSpec,
+        col_hint: InventoryHintSpec,
         retention_intervals: Optional[RetentionIntervals] = None,
     ) -> None:
         raise NotImplementedError()
@@ -2031,10 +2042,9 @@ class ABCNodeRenderer(abc.ABC):
     #   ---attributes-----------------------------------------------------------
 
     def show_attributes(self, attributes: Attributes) -> None:
-        invpath = ".%s" % self._get_raw_path(list(attributes.path))
-        hint = _get_attributes_display_hint(invpath)
+        _raw_attrs_path, attrs_hint = _get_attributes_display_hint(list(attributes.path))
 
-        keyorder = hint.get("keyorder")
+        keyorder = attrs_hint.get("keyorder")
         if keyorder:
             sort_func: Union[partial[Tuple[str, Any]], Callable[[Tuple[str, Any]], str]] = partial(
                 _sort_by_index, keyorder
@@ -2046,16 +2056,15 @@ class ABCNodeRenderer(abc.ABC):
 
         html.open_table()
         for key, value in sorted(attributes.pairs.items(), key=sort_func):
-            sub_invpath = "%s.%s" % (invpath, key)
-            _icon, title = _inv_titleinfo(sub_invpath)
-            hint = _get_attribute_display_hint(sub_invpath)
+            raw_attr_path, attr_hint = _get_attribute_display_hint(list(attributes.path), key)
+            _icon, title = _inv_titleinfo(raw_attr_path)
 
             html.open_tr()
-            html.th(self._get_header(title, key, "#DDD"), title=sub_invpath)
+            html.th(self._get_header(title, key, "#DDD"), title=raw_attr_path)
             html.open_td()
             self._show_attribute(
                 value,
-                hint,
+                attr_hint,
                 retention_intervals=attributes.get_retention_intervals(key),
             )
             html.close_td()
@@ -2066,16 +2075,12 @@ class ABCNodeRenderer(abc.ABC):
     def _show_attribute(
         self,
         value: Any,
-        hint: InventoryHintSpec,
+        attr_hint: InventoryHintSpec,
         retention_intervals: Optional[RetentionIntervals] = None,
     ) -> None:
         raise NotImplementedError()
 
     #   ---helper---------------------------------------------------------------
-
-    def _get_raw_path(self, path: Optional[SDPath]) -> str:
-        raw_path = ".".join(map(str, path)) if path else self._invpath
-        return raw_path.strip(".")
 
     def _get_header(
         self,
@@ -2138,36 +2143,36 @@ class NodeRenderer(ABCNodeRenderer):
     def _show_table_value(
         self,
         value: Any,
-        hint: InventoryHintSpec,
+        col_hint: InventoryHintSpec,
         retention_intervals: Optional[RetentionIntervals] = None,
     ) -> None:
-        self._show_child_value(value, hint, retention_intervals)
+        self._show_child_value(value, col_hint, retention_intervals)
 
     def _show_attribute(
         self,
         value: Any,
-        hint: InventoryHintSpec,
+        attr_hint: InventoryHintSpec,
         retention_intervals: Optional[RetentionIntervals] = None,
     ) -> None:
-        self._show_child_value(value, hint, retention_intervals)
+        self._show_child_value(value, attr_hint, retention_intervals)
 
 
 class DeltaNodeRenderer(ABCNodeRenderer):
     def _show_table_value(
         self,
         value: Any,
-        hint: InventoryHintSpec,
+        col_hint: InventoryHintSpec,
         retention_intervals: Optional[RetentionIntervals] = None,
     ) -> None:
-        self._show_delta_child_value(value, hint)
+        self._show_delta_child_value(value, col_hint)
 
     def _show_attribute(
         self,
         value: Any,
-        hint: InventoryHintSpec,
+        attr_hint: InventoryHintSpec,
         retention_intervals: Optional[RetentionIntervals] = None,
     ) -> None:
-        self._show_delta_child_value(value, hint)
+        self._show_delta_child_value(value, attr_hint)
 
     def _show_delta_child_value(self, value: Any, hint: InventoryHintSpec) -> None:
         if value is None:
@@ -2221,7 +2226,6 @@ def ajax_inv_render_tree() -> None:
         tree_renderer: ABCNodeRenderer = DeltaNodeRenderer(
             site_id,
             hostname,
-            invpath,
             tree_id=tree_id,
         )
 
@@ -2241,7 +2245,6 @@ def ajax_inv_render_tree() -> None:
         tree_renderer = NodeRenderer(
             site_id,
             hostname,
-            invpath,
             show_internal_tree_paths=show_internal_tree_paths,
         )
 

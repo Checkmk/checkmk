@@ -51,7 +51,7 @@ mkdir %WNX_TEST_ROOT%
 call prepare_to_tests.cmd %WNX_TEST_ROOT%\test
 mklink %WNX_TEST_ROOT%\watest32.exe %arte%\watest32.exe 
 %WNX_TEST_ROOT%\watest32.exe %param%
-if not %errorlevel% == 0 goto error
+if not %errorlevel% == 0 powershell Write-Host "This is ERROR %errorlevel% in testing 32" -Foreground Red && goto error
 if NOT "%sec_param%" == "both" powershell Write-Host "This is end of testing. QUICK test was requested." -Foreground Cyan && goto success
 
 @rem 64-bit is tested quickly
@@ -59,7 +59,7 @@ powershell Write-Host "64-bit test" -Foreground Cyan
 if "%1" == "" set param=--gtest_filter=-PluginTest.Sync*:PluginTest.Async*
 mklink %WNX_TEST_ROOT%\watest32.exe %arte%\watest32.exe 
 WNX_TEST_ROOT%\watest64.exe %param%
-if not %errorlevel% == 0 echo %level% && goto error
+if not %errorlevel% == 0 powershell Write-Host "This is ERROR %errorlevel% in testing 64" -Foreground Red && goto error
 %Print%{0;255;255}This is end of testing. FULL test was requested.\n
 :success
 %Print%{0;255;0}Unit test: SUCCESS\n
@@ -71,11 +71,12 @@ call :zip_results
 exit /b 78
 
 :zip_results
-del %arte%\%results% 2> nul
+ren %arte%\%results% %arte%\%results%.bak 2> nul
 pushd %WNX_TEST_ROOT% && ( call :zip_and_remove & popd )
 exit /b
 
 :zip_and_remove
+echo zipping results with remove
 7z a -r -y -tzip %arte%\%results% >nul 
 rmdir /s/q "%WNX_TEST_ROOT%" 2>nul
 exit /b

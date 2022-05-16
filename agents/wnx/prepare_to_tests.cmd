@@ -65,7 +65,6 @@ xcopy .\test_files\config\*.yml 		    %root% /D /Y> nul         || powershell Wr
 %Print%{128;255;0}2. Test machine preparation: User Folder\n
 xcopy .\test_files\config\*.cfg      	%user_dir% /D /Y> nul      || powershell Write-Host "Failed test cfgs copy" -Foreground Red	&&  exit /b 8 
 xcopy .\test_files\config\*.test.ini 	%user_dir% /D /Y> nul	  || powershell Write-Host "Failed test inis copy" -Foreground Red	&&  exit /b 9
-xcopy .\test_files\config\*.test.out 	%user_dir% /D /Y> nul	  || powershell Write-Host "Failed test outs copy" -Foreground Red	&&  exit /b 10
 xcopy .\test_files\cap\*.test.cap 	    %user_dir% /D /Y> nul      || powershell Write-Host "Failed test caps copy" -Foreground Red	&&  exit /b 11
 xcopy .\test_files\unit_test\*.ini 	    %user_dir% /D /Y> nul      || powershell Write-Host "Failed test ini copy" -Foreground Red	&&  exit /b 12
 xcopy .\test_files\unit_test\*.dat 	    %user_dir% /D /Y> nul      || powershell Write-Host "Failed test dat copy" -Foreground Red	&&  exit /b 13

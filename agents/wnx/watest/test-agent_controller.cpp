@@ -407,7 +407,9 @@ TEST(AgentController, SimulationIntegration) {
         fs::path{cfg::GetUserBinDir()} / cfg::files::kAgentCtl;
     EXPECT_TRUE(ac::StartAgentController(service));
     EXPECT_TRUE(fs::exists(expected));
+    EXPECT_TRUE(fs::exists(ac::TomlConfigFile()));
     EXPECT_TRUE(ac::KillAgentController(service));
     EXPECT_FALSE(fs::exists(expected));
+    EXPECT_FALSE(fs::exists(ac::TomlConfigFile()));
 }
 }  // namespace cma::ac

@@ -238,6 +238,8 @@ std::optional<uint32_t> StartAgentController(const fs::path &service) {
         return {};
     }
 
+    ac::CreateTomlConfig(ac::TomlConfigFile());
+
     wtools::AppRunner ar;
     const auto cmdline = BuildCommandLine(controller_name);
     auto proc_id = ar.goExecAsDetached(cmdline);
@@ -295,6 +297,8 @@ bool KillAgentController(const fs::path &service) {
             XLOG::d("error deleting controller");
             std::this_thread::sleep_for(200ms);
         }
+        std::error_code ec;
+        fs::remove(ac::TomlConfigFile(), ec);
         return ret;
     }
     return false;

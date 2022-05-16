@@ -2,9 +2,9 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use super::site_spec;
 #[cfg(windows)]
 use super::types;
+use super::{constants, site_spec};
 use structopt::StructOpt;
 
 #[derive(StructOpt)]
@@ -185,7 +185,7 @@ pub struct SharedArgsOnly {
 }
 
 #[derive(StructOpt)]
-#[structopt(name = "cmk-agent-ctl", about = "Checkmk agent controller.")]
+#[structopt(about = "Checkmk agent controller.", version = constants::VERSION)]
 pub enum Args {
     /// Register with a Checkmk site
     ///

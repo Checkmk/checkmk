@@ -389,7 +389,7 @@
 
             ul {
               display: flex;
-              flex-flow: column wrap;
+              flex-direction: column;
               max-height: calc(100vh - 165px);
               padding-bottom: $menu-item-spacing;
               box-sizing: border-box;

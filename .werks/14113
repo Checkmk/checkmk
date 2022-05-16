@@ -1,0 +1,15 @@
+Title: Fix arrangement of search results using "Show all results" in monitoring search
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1652694450
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0i1
+
+If many search results were found, the results were shown in multiple columns,
+leading to unreadable entries because of the menu width.
+
+This was now changed to one column with scrollbar.

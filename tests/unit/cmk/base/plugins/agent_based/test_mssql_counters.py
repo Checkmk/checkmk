@@ -317,6 +317,16 @@ big_services = [
 
 @pytest.mark.parametrize("string_table,expected_parsed_data", [
     (big_string_table, big_parsed_data),
+    (
+        [
+            ['None', 'utc_time', 'None', '19.08.2020'],
+            ['MSSQL_VEEAMSQL2012:Memory_Broker_Clerks', 'memory_broker_clerk_size', 'Buffer_Pool', '180475']
+        ],
+        {
+            ('MSSQL_VEEAMSQL2012:Memory_Broker_Clerks', 'Buffer_Pool'): {'memory_broker_clerk_size': 180475},
+            ('None', 'None'): {'utc_time': 1597795200.0}
+        },
+    )
 ])
 def test_parse_mssql_counters(string_table, expected_parsed_data):
     assert parse_mssql_counters(string_table) == expected_parsed_data

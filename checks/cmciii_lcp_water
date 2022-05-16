@@ -57,7 +57,7 @@ def parse_cmciii_lcp_water(info):
 
 def inventory_cmciii_lcp_water(parsed):
     if parsed:
-        yield (None, {})
+        yield ("LCP", {})
 
 
 def check_cmciii_lcp_water(item, params, parsed):
@@ -105,7 +105,7 @@ check_info["cmciii_lcp_water"] = {
     "check_function": check_cmciii_lcp_water,
     "inventory_function": inventory_cmciii_lcp_water,
     "has_perfdata": True,
-    "service_description": "Temperature Water LCP %s",
+    "service_description": "Temperature Water %s",
     "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.1.0").startswith("Rittal LCP")
     and oid(".1.3.6.1.4.1.2606.7.4.2.2.1.3.2.6").startswith("Air.Temperature.DescName"),
     "snmp_info": (".1.3.6.1.4.1.2606.7.4.2.2.1.10", [2]),

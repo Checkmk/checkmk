@@ -699,6 +699,14 @@ def _get_raw_path(path: SDPath) -> str:
     return ".".join(map(str, path))
 
 
+def _get_raw_display_hint(raw_path: str) -> InventoryHintSpec:
+    return (
+        {}
+        if (hint_id := _find_display_hint_id(raw_path)) is None
+        else inventory_displayhints.get(hint_id, {})
+    )
+
+
 @dataclass(frozen=True)
 class NodeDisplayHint:
     raw_path: str
@@ -707,11 +715,7 @@ class NodeDisplayHint:
     @classmethod
     def make(cls, path: SDPath) -> NodeDisplayHint:
         raw_path = f".{_get_raw_path(path)}." if path else "."
-        raw_hint = (
-            {}
-            if (hint_id := _find_display_hint_id(raw_path)) is None
-            else inventory_displayhints.get(hint_id, {})
-        )
+        raw_hint = _get_raw_display_hint(raw_path)
         return cls(
             raw_path=raw_path,
             icon=raw_hint.get("icon"),
@@ -732,11 +736,17 @@ def _get_column_display_hint(path: SDPath, index: int, key: str) -> tuple[str, I
     return raw_path, _get_display_hint(raw_path)
 
 
-def _get_attributes_display_hint(path: SDPath) -> tuple[str, InventoryHintSpec]:
-    """Generic access function to display hints for attributes
-    Don't use other methods to access the hints!"""
-    raw_path = ".%s." % _get_raw_path(path)
-    return raw_path, _get_display_hint(raw_path)
+@dataclass(frozen=True)
+class AttributesDisplayHint:
+    key_order: Sequence[str]
+
+    @classmethod
+    def make(cls, path: SDPath) -> AttributesDisplayHint:
+        raw_path = f".{_get_raw_path(path)}." if path else "."
+        raw_hint = _get_raw_display_hint(raw_path)
+        return cls(
+            key_order=raw_hint.get("keyorder", []),
+        )
 
 
 def _get_attribute_display_hint(path: SDPath, key: str) -> tuple[str, InventoryHintSpec]:
@@ -2052,12 +2062,11 @@ class ABCNodeRenderer(abc.ABC):
     #   ---attributes-----------------------------------------------------------
 
     def show_attributes(self, attributes: Attributes) -> None:
-        _raw_attrs_path, attrs_hint = _get_attributes_display_hint(list(attributes.path))
+        attrs_hint = AttributesDisplayHint.make(list(attributes.path))
 
-        keyorder = attrs_hint.get("keyorder")
-        if keyorder:
+        if key_order := attrs_hint.key_order:
             sort_func: Union[partial[Tuple[str, Any]], Callable[[Tuple[str, Any]], str]] = partial(
-                _sort_by_index, keyorder
+                _sort_by_index, key_order
             )
         else:
             # Simply sort by keys

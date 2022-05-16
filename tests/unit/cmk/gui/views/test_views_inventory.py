@@ -16,7 +16,12 @@ import cmk.gui.utils
 from cmk.gui.num_split import cmp_version
 from cmk.gui.plugins.visuals.inventory import FilterInvtableVersion
 from cmk.gui.views import View
-from cmk.gui.views.inventory import NodeDisplayHint, RowTableInventory, RowTableInventoryHistory
+from cmk.gui.views.inventory import (
+    AttributesDisplayHint,
+    NodeDisplayHint,
+    RowTableInventory,
+    RowTableInventoryHistory,
+)
 
 RAW_ROWS = [("this_site", "this_hostname")]
 RAW_ROWS2 = [("this_site", "this_hostname", "foobar")]
@@ -365,3 +370,42 @@ def test__get_display_hint(invpath: str, expected_hint: Mapping[str, Any]) -> No
 )
 def test_make_node_displayhint(node_path: SDPath, expected: NodeDisplayHint):
     assert NodeDisplayHint.make(node_path) == expected
+
+
+@pytest.mark.parametrize(
+    "attrs_path, expected",
+    [
+        (
+            tuple(),
+            AttributesDisplayHint(
+                key_order=[],
+            ),
+        ),
+        (
+            ("hardware", "cpu"),
+            AttributesDisplayHint(
+                key_order=[
+                    "arch",
+                    "max_speed",
+                    "model",
+                    "type",
+                    "threads",
+                    "smt_threads",
+                    "sharing_mode",
+                    "implementation_mode",
+                    "entitlement",
+                    "cpu_max_capa",
+                    "logical_cpus",
+                ],
+            ),
+        ),
+        (
+            ("path", "to", "node"),
+            AttributesDisplayHint(
+                key_order=[],
+            ),
+        ),
+    ],
+)
+def test_make_attributes_displayhint(attrs_path: SDPath, expected: AttributesDisplayHint):
+    assert AttributesDisplayHint.make(attrs_path) == expected

@@ -1,0 +1,13 @@
+Title: mssql_counters: Fix crash in parsing mssql_counters
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1652706633
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0i1
+
+Parsing mssql_counters failed for timestamps in format "%d.%m.%Y".
+Now, we additionally support this format.

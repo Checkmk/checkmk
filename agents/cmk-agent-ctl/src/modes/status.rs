@@ -928,17 +928,17 @@ mod test_status {
             .unwrap(),
             format!(
                 "Version: {}\n\
-             Agent socket: {}\n\
-             IP allowlist: any\n\n\n\
-             Connection: server:8000/push-site\n\
-             \tUUID: 99f56bbc-5965-4b34-bc70-1959ad1d32d6\n\
-             \tLocal:\n\
-             \t\tConnection type: push-agent\n\
-             \t\tCertificate parsing failed (!!)\n\
-             \tRemote:\n\
-             \t\tConnection type: pull-agent (!!)\n\
-             \t\tRegistration state: operational\n\
-             \t\tHost name: host",
+                 Agent socket: {}\n\
+                 IP allowlist: any\n\n\n\
+                 Connection: server:8000/push-site\n\
+                 \tUUID: 99f56bbc-5965-4b34-bc70-1959ad1d32d6\n\
+                 \tLocal:\n\
+                 \t\tConnection type: push-agent\n\
+                 \t\tCertificate parsing failed (!!)\n\
+                 \tRemote:\n\
+                 \t\tConnection type: pull-agent (!!)\n\
+                 \t\tRegistration state: operational\n\
+                 \t\tHost name: host",
                 constants::VERSION,
                 if cfg!(unix) {
                     "inoperational (!!)"

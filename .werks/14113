@@ -6,7 +6,7 @@ Date: 1652694450
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0b9
+Version: 2.1.0b10
 
 If many search results were found, the results were shown in multiple columns,
 leading to unreadable entries because of the menu width.

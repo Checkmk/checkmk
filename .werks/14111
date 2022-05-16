@@ -6,7 +6,7 @@ Date: 1652680704
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.1.0b09
+Version: 2.1.0b010
 
 If the global option "Connection to the Web API" was changed, the error
 "MKAPIError: {"title": "You need to be authenticated to use the REST API.",

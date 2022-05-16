@@ -1,0 +1,15 @@
+Title: KUBE kube_cpu: changing check parameters back to cpu default values
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1652681912
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b10
+
+Previously, the kube_cpu check plugin used the Kubernetes
+memory ruleset instead of the cpu ruleset. This caused
+some options to display the wrong default values. This
+werk fixes this issue.

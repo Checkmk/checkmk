@@ -1,7 +1,7 @@
 Title: Secure path for OMD hooks
 Class: security
 Compatible: compat
-Component: OMD
+Component: omd
 Date: 1652079530
 Edition: cre
 Knowledge: doc

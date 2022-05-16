@@ -1,0 +1,11 @@
+Title: Fix non functional "Show all results" button in monitoring search
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1652684078
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b9
+
+Even if used, the same mount of search results was shown.

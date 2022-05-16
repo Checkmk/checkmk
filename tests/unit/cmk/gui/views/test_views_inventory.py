@@ -17,7 +17,12 @@ from cmk.gui.num_split import cmp_version
 from cmk.gui.plugins.visuals.inventory import FilterInvtableVersion
 from cmk.gui.views import View
 from cmk.gui.views.inventory import (
+    AttributeDisplayHint,
     AttributesDisplayHint,
+    ColumnDisplayHint,
+    inv_paint_generic,
+    inv_paint_if_oper_status,
+    inv_paint_size,
     NodeDisplayHint,
     RowTableInventory,
     RowTableInventoryHistory,
@@ -418,6 +423,50 @@ def test_make_table_displayhint(table_path: SDPath, expected: TableDisplayHint):
 
 
 @pytest.mark.parametrize(
+    "col_path, index, key, expected",
+    [
+        (
+            tuple(),
+            0,
+            "key",
+            ColumnDisplayHint(
+                raw_path=".",
+                short=None,
+                data_type="str",
+                paint_function=inv_paint_generic,
+            ),
+        ),
+        (
+            ("networking", "interfaces"),
+            0,
+            "oper_status",
+            ColumnDisplayHint(
+                raw_path=".networking.interfaces:0.oper_status",
+                short="Status",
+                data_type="if_oper_status",
+                paint_function=inv_paint_if_oper_status,
+            ),
+        ),
+        (
+            ("path", "to", "node"),
+            0,
+            "key",
+            ColumnDisplayHint(
+                raw_path=".path.to.node:0.key",
+                short=None,
+                data_type="str",
+                paint_function=inv_paint_generic,
+            ),
+        ),
+    ],
+)
+def test_make_column_displayhint(
+    col_path: SDPath, index: int, key: str, expected: ColumnDisplayHint
+):
+    assert ColumnDisplayHint.make(col_path, index, key) == expected
+
+
+@pytest.mark.parametrize(
     "attrs_path, expected",
     [
         (
@@ -454,3 +503,39 @@ def test_make_table_displayhint(table_path: SDPath, expected: TableDisplayHint):
 )
 def test_make_attributes_displayhint(attrs_path: SDPath, expected: AttributesDisplayHint):
     assert AttributesDisplayHint.make(attrs_path) == expected
+
+
+@pytest.mark.parametrize(
+    "attr_path, key, expected",
+    [
+        (
+            tuple(),
+            "key",
+            AttributeDisplayHint(
+                raw_path=".",
+                data_type="str",
+                paint_function=inv_paint_generic,
+            ),
+        ),
+        (
+            ("hardware", "storage", "disks"),
+            "size",
+            AttributeDisplayHint(
+                raw_path=".hardware.storage.disks.size",
+                data_type="size",
+                paint_function=inv_paint_size,
+            ),
+        ),
+        (
+            ("path", "to", "node"),
+            "key",
+            AttributeDisplayHint(
+                raw_path=".path.to.node.key",
+                data_type="str",
+                paint_function=inv_paint_generic,
+            ),
+        ),
+    ],
+)
+def test_make_attribute_displayhint(attr_path: SDPath, key: str, expected: AttributeDisplayHint):
+    assert AttributeDisplayHint.make(attr_path, key) == expected

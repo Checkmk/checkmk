@@ -707,6 +707,15 @@ def _get_raw_display_hint(raw_path: str) -> InventoryHintSpec:
     )
 
 
+def _get_paint_function(raw_hint: InventoryHintSpec) -> tuple[str, PaintFunction]:
+    # FIXME At the moment  we need it to get tdclass: Clean this up one day.
+    if "paint" in raw_hint:
+        data_type = raw_hint["paint"]
+        return data_type, globals()["inv_paint_" + data_type]
+
+    return "str", inv_paint_generic
+
+
 @dataclass(frozen=True)
 class NodeDisplayHint:
     raw_path: str
@@ -741,11 +750,24 @@ class TableDisplayHint:
         )
 
 
-def _get_column_display_hint(path: SDPath, index: int, key: str) -> tuple[str, InventoryHintSpec]:
-    """Generic access function to display hints for table columns
-    Don't use other methods to access the hints!"""
-    raw_path = ".%s:%d.%s" % (_get_raw_path(path), index, key)
-    return raw_path, _get_display_hint(raw_path)
+@dataclass(frozen=True)
+class ColumnDisplayHint:
+    raw_path: str
+    short: Optional[str]
+    data_type: str
+    paint_function: PaintFunction
+
+    @classmethod
+    def make(cls, path: SDPath, index: int, key: str) -> ColumnDisplayHint:
+        raw_path = f".{_get_raw_path(path)}:{index}.{key}" if path else "."
+        raw_hint = _get_raw_display_hint(raw_path)
+        data_type, paint_function = _get_paint_function(raw_hint)
+        return cls(
+            raw_path=raw_path,
+            short=raw_hint.get("short"),
+            data_type=data_type,
+            paint_function=paint_function,
+        )
 
 
 @dataclass(frozen=True)
@@ -761,11 +783,22 @@ class AttributesDisplayHint:
         )
 
 
-def _get_attribute_display_hint(path: SDPath, key: str) -> tuple[str, InventoryHintSpec]:
-    """Generic access function to display hints for attribute keys
-    Don't use other methods to access the hints!"""
-    raw_path = "%s.%s" % (_get_raw_path(path), key)
-    return raw_path, _get_display_hint(raw_path)
+@dataclass(frozen=True)
+class AttributeDisplayHint:
+    raw_path: str
+    data_type: str
+    paint_function: PaintFunction
+
+    @classmethod
+    def make(cls, path: SDPath, key: str) -> AttributeDisplayHint:
+        raw_path = f".{_get_raw_path(path)}.{key}" if path else "."
+        raw_hint = _get_raw_display_hint(raw_path)
+        data_type, paint_function = _get_paint_function(raw_hint)
+        return cls(
+            raw_path=raw_path,
+            data_type=data_type,
+            paint_function=paint_function,
+        )
 
 
 def _get_display_hint(invpath: SDRawPath) -> InventoryHintSpec:
@@ -1984,10 +2017,10 @@ class ABCNodeRenderer(abc.ABC):
         # Add titles for those keys
         titles: TableTitles = []
         for key in table_hint.key_order:
-            raw_col_path, col_hint = _get_column_display_hint(list(table.path), 0, key)
-            title = _inv_titleinfo(raw_col_path)
-            short_title = col_hint.get("short", title)
-            titles.append((short_title, key, key in table.key_columns))
+            col_hint = ColumnDisplayHint.make(list(table.path), 0, key)
+            titles.append(
+                (col_hint.short or _inv_titleinfo(col_hint.raw_path), key, key in table.key_columns)
+            )
 
         # Determine *all* keys, in order to find unknown ones
         # Order not well-known keys alphabetically
@@ -2030,15 +2063,10 @@ class ABCNodeRenderer(abc.ABC):
             html.open_tr(class_="even0")
             for title, key, _is_key_column in titles:
                 value = entry.get(key)
-                _raw_col_path, col_hint = _get_column_display_hint(list(table.path), index, key)
-                if "paint_function" in col_hint:
-                    # FIXME At the moment  we need it to get tdclass
-                    # Clean this up one day.
-                    # The value is not really needed, but we need to deal with the delta mode
-                    unused_value = value[1] if isinstance(value, tuple) else value
-                    tdclass, _ = col_hint["paint_function"](unused_value)
-                else:
-                    tdclass = None
+                col_hint = ColumnDisplayHint.make(list(table.path), index, key)
+                tdclass, _ = col_hint.paint_function(
+                    value[1] if isinstance(value, tuple) else value
+                )
 
                 html.open_td(class_=tdclass)
                 self._show_table_value(
@@ -2063,7 +2091,7 @@ class ABCNodeRenderer(abc.ABC):
     def _show_table_value(
         self,
         value: Any,
-        col_hint: InventoryHintSpec,
+        col_hint: ColumnDisplayHint,
         retention_intervals: Optional[RetentionIntervals] = None,
     ) -> None:
         raise NotImplementedError()
@@ -2084,11 +2112,11 @@ class ABCNodeRenderer(abc.ABC):
 
         html.open_table()
         for key, value in sorted(attributes.pairs.items(), key=sort_func):
-            raw_attr_path, attr_hint = _get_attribute_display_hint(list(attributes.path), key)
-            title = _inv_titleinfo(raw_attr_path)
+            attr_hint = AttributeDisplayHint.make(list(attributes.path), key)
+            title = _inv_titleinfo(attr_hint.raw_path)
 
             html.open_tr()
-            html.th(self._get_header(title, key, "#DDD"), title=raw_attr_path)
+            html.th(self._get_header(title, key, "#DDD"), title=attr_hint.raw_path)
             html.open_td()
             self._show_attribute(
                 value,
@@ -2103,7 +2131,7 @@ class ABCNodeRenderer(abc.ABC):
     def _show_attribute(
         self,
         value: Any,
-        attr_hint: InventoryHintSpec,
+        attr_hint: AttributeDisplayHint,
         retention_intervals: Optional[RetentionIntervals] = None,
     ) -> None:
         raise NotImplementedError()
@@ -2127,23 +2155,14 @@ class ABCNodeRenderer(abc.ABC):
     def _show_child_value(
         self,
         value: Any,
-        hint: InventoryHintSpec,
+        hint: Union[ColumnDisplayHint, AttributeDisplayHint],
         retention_intervals: Optional[RetentionIntervals] = None,
     ) -> None:
-        if "paint_function" in hint:
-            paint_function: PaintFunction = hint["paint_function"]
-            _tdclass, code = paint_function(value)
-            html.write_text(code)
-        elif isinstance(value, str):
-            html.write_text(value)
-        elif isinstance(value, int):
-            html.write_text(str(value))
-        elif isinstance(value, float):
-            html.write_text("%.2f" % value)
-        elif isinstance(value, HTML):
+        if isinstance(value, HTML):
             html.write_html(value)
-        elif value is not None:
-            html.write_text(str(value))
+        else:
+            _tdclass, code = hint.paint_function(value)
+            html.write_text(code)
 
         if (ret_value_to_write := self._get_retention_value(retention_intervals)) is not None:
             html.write_html(ret_value_to_write)
@@ -2171,7 +2190,7 @@ class NodeRenderer(ABCNodeRenderer):
     def _show_table_value(
         self,
         value: Any,
-        col_hint: InventoryHintSpec,
+        col_hint: ColumnDisplayHint,
         retention_intervals: Optional[RetentionIntervals] = None,
     ) -> None:
         self._show_child_value(value, col_hint, retention_intervals)
@@ -2179,7 +2198,7 @@ class NodeRenderer(ABCNodeRenderer):
     def _show_attribute(
         self,
         value: Any,
-        attr_hint: InventoryHintSpec,
+        attr_hint: AttributeDisplayHint,
         retention_intervals: Optional[RetentionIntervals] = None,
     ) -> None:
         self._show_child_value(value, attr_hint, retention_intervals)
@@ -2189,7 +2208,7 @@ class DeltaNodeRenderer(ABCNodeRenderer):
     def _show_table_value(
         self,
         value: Any,
-        col_hint: InventoryHintSpec,
+        col_hint: ColumnDisplayHint,
         retention_intervals: Optional[RetentionIntervals] = None,
     ) -> None:
         self._show_delta_child_value(value, col_hint)
@@ -2197,12 +2216,16 @@ class DeltaNodeRenderer(ABCNodeRenderer):
     def _show_attribute(
         self,
         value: Any,
-        attr_hint: InventoryHintSpec,
+        attr_hint: AttributeDisplayHint,
         retention_intervals: Optional[RetentionIntervals] = None,
     ) -> None:
         self._show_delta_child_value(value, attr_hint)
 
-    def _show_delta_child_value(self, value: Any, hint: InventoryHintSpec) -> None:
+    def _show_delta_child_value(
+        self,
+        value: Any,
+        hint: Union[ColumnDisplayHint, AttributeDisplayHint],
+    ) -> None:
         if value is None:
             value = (None, None)
 

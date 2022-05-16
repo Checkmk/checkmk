@@ -21,6 +21,7 @@ from cmk.gui.views.inventory import (
     NodeDisplayHint,
     RowTableInventory,
     RowTableInventoryHistory,
+    TableDisplayHint,
 )
 
 RAW_ROWS = [("this_site", "this_hostname")]
@@ -370,6 +371,50 @@ def test__get_display_hint(invpath: str, expected_hint: Mapping[str, Any]) -> No
 )
 def test_make_node_displayhint(node_path: SDPath, expected: NodeDisplayHint):
     assert NodeDisplayHint.make(node_path) == expected
+
+
+@pytest.mark.parametrize(
+    "table_path, expected",
+    [
+        (
+            tuple(),
+            TableDisplayHint(
+                raw_path=".",
+                key_order=[],
+                is_show_more=True,
+                view_name=None,
+            ),
+        ),
+        (
+            ("software", "applications", "docker", "images"),
+            TableDisplayHint(
+                raw_path=".software.applications.docker.images:",
+                key_order=[
+                    "id",
+                    "creation",
+                    "size",
+                    "labels",
+                    "amount_containers",
+                    "repotags",
+                    "repodigests",
+                ],
+                is_show_more=False,
+                view_name="invdockerimages_of_host",
+            ),
+        ),
+        (
+            ("path", "to", "node"),
+            TableDisplayHint(
+                raw_path=".path.to.node:",
+                key_order=[],
+                is_show_more=True,
+                view_name=None,
+            ),
+        ),
+    ],
+)
+def test_make_table_displayhint(table_path: SDPath, expected: TableDisplayHint):
+    assert TableDisplayHint.make(table_path) == expected
 
 
 @pytest.mark.parametrize(

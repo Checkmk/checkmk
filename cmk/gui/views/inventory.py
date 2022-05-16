@@ -722,11 +722,23 @@ class NodeDisplayHint:
         )
 
 
-def _get_table_display_hint(path: SDPath) -> tuple[str, InventoryHintSpec]:
-    """Generic access function to display hints for tables
-    Don't use other methods to access the hints!"""
-    raw_path = ".%s:" % _get_raw_path(path)
-    return raw_path, _get_display_hint(raw_path)
+@dataclass(frozen=True)
+class TableDisplayHint:
+    raw_path: str
+    key_order: Sequence[str]
+    is_show_more: bool
+    view_name: Optional[str]
+
+    @classmethod
+    def make(cls, path: SDPath) -> TableDisplayHint:
+        raw_path = f".{_get_raw_path(path)}:" if path else "."
+        raw_hint = _get_raw_display_hint(raw_path)
+        return cls(
+            raw_path=raw_path,
+            key_order=raw_hint.get("keyorder", []),
+            is_show_more=raw_hint.get("is_show_more", True),
+            view_name=raw_hint.get("view"),
+        )
 
 
 def _get_column_display_hint(path: SDPath, index: int, key: str) -> tuple[str, InventoryHintSpec]:
@@ -1246,8 +1258,8 @@ def _declare_views(
     is_show_more = True
     if len(invpaths) == 1:
         parsed_path, _attribute_keys = inventory.parse_tree_path(invpaths[0] or "")
-        _raw_path, table_hint = _get_table_display_hint(parsed_path)
-        is_show_more = table_hint.get("is_show_more", True)
+        table_hint = TableDisplayHint.make(list(parsed_path))
+        is_show_more = table_hint.is_show_more
 
     # Declare two views: one for searching globally. And one
     # for the items of one host.
@@ -1967,14 +1979,11 @@ class ABCNodeRenderer(abc.ABC):
     #   ---table----------------------------------------------------------------
 
     def show_table(self, table: Table) -> None:
-        # FIXME these kind of paths are required for hints.
-        # Clean this up one day.
-        raw_table_path, table_hint = _get_table_display_hint(list(table.path))
-        keyorder = table_hint.get("keyorder", [])  # well known keys
+        table_hint = TableDisplayHint.make(list(table.path))
 
         # Add titles for those keys
         titles: TableTitles = []
-        for key in keyorder:
+        for key in table_hint.key_order:
             raw_col_path, col_hint = _get_column_display_hint(list(table.path), 0, key)
             title = _inv_titleinfo(raw_col_path)
             short_title = col_hint.get("short", title)
@@ -1984,17 +1993,17 @@ class ABCNodeRenderer(abc.ABC):
         # Order not well-known keys alphabetically
         extratitles: TableTitles = []
         for key in set(key for row in table.rows for key in row):
-            if key not in keyorder:
-                title = _inv_titleinfo("%s0.%s" % (raw_table_path, key))
+            if key not in table_hint.key_order:
+                title = _inv_titleinfo("%s0.%s" % (table_hint.raw_path, key))
                 extratitles.append((title, key, key in table.key_columns))
         titles += sorted(extratitles)
 
         # Link to Multisite view with exactly this table
-        if "view" in table_hint:
+        if table_hint.view_name:
             url = makeuri_contextless(
                 request,
                 [
-                    ("view_name", table_hint["view"]),
+                    ("view_name", table_hint.view_name),
                     ("host", self._hostname),
                 ],
                 filename="view.py",
@@ -2007,7 +2016,7 @@ class ABCNodeRenderer(abc.ABC):
         self._show_table_data(table_hint, table, titles)
 
     def _show_table_data(
-        self, table_hint: InventoryHintSpec, table: Table, titles: TableTitles
+        self, table_hint: TableDisplayHint, table: Table, titles: TableTitles
     ) -> None:
         # TODO: Use table.open_table() below.
         html.open_table(class_="data")
@@ -2042,12 +2051,12 @@ class ABCNodeRenderer(abc.ABC):
         html.close_table()
 
     def _sort_table_rows(
-        self, table_hint: InventoryHintSpec, table: Table
+        self, table_hint: TableDisplayHint, table: Table
     ) -> inventory.InventoryRows:
-        if (keyorder := table_hint.get("keyorder")) is None:
+        if table_hint.key_order:
             return table.rows
 
-        sorting_keys = tuple(k for k in keyorder if k in table.key_columns)
+        sorting_keys = tuple(k for k in table_hint.key_order if k in table.key_columns)
         return sorted(table.rows, key=lambda r: tuple(r.get(k) or "" for k in sorting_keys))
 
     @abc.abstractmethod

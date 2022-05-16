@@ -1,0 +1,13 @@
+Title: Add support for Cet Power Equipment UPS
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1658472828
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0p9
+
+Checkmk now recognizes the cet power equipment ups.
+

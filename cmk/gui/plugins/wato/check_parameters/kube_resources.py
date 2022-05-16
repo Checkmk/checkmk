@@ -150,7 +150,7 @@ rulespec_registry.register(
         check_group_name="kube_cpu",
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
-        parameter_valuespec=lambda: _parameter_valuespec_memory(
+        parameter_valuespec=lambda: _parameter_valuespec_cpu(
             valuespec_help=_(
                 "Here you can configure levels for usage, requests "
                 "utilization, limits utilization and node utilization, respectively."

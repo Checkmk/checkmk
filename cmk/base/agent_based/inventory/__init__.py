@@ -270,7 +270,7 @@ def _inventorize_host(
     ipaddress = config.lookup_ip_address(host_config)
     config_cache = config.get_config_cache()
 
-    broker, results = make_broker(
+    broker, results, _fetcher_messages = make_broker(
         config_cache=config_cache,
         host_config=host_config,
         ip_address=ipaddress,

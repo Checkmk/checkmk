@@ -166,7 +166,7 @@ def commandline_discovery(
         host_config = config_cache.get_host_config(host_name)
         section.section_begin(host_name)
         try:
-            parsed_sections_broker, _results = make_broker(
+            parsed_sections_broker, _results, _fetcher_messages = make_broker(
                 config_cache=config_cache,
                 host_config=host_config,
                 ip_address=config.lookup_ip_address(host_config),
@@ -324,7 +324,7 @@ def automation_discovery(
 
         ipaddress = None if host_config.is_cluster else config.lookup_ip_address(host_config)
 
-        parsed_sections_broker, _source_results = make_broker(
+        parsed_sections_broker, _source_results, _fetcher_messages = make_broker(
             config_cache=config_cache,
             host_config=host_config,
             ip_address=ipaddress,
@@ -543,7 +543,7 @@ def active_check_discovery(
     if ipaddress is None and not host_config.is_cluster:
         ipaddress = config.lookup_ip_address(host_config)
 
-    parsed_sections_broker, source_results = make_broker(
+    parsed_sections_broker, source_results, _fetcher_messages = make_broker(
         config_cache=config_cache,
         host_config=host_config,
         ip_address=ipaddress,
@@ -1207,7 +1207,7 @@ def get_check_preview(
     cmk.core_helpers.cache.FileCacheFactory.use_outdated = True
     cmk.core_helpers.cache.FileCacheFactory.maybe = use_cached_snmp_data
 
-    parsed_sections_broker, _source_results = make_broker(
+    parsed_sections_broker, _source_results, _fetcher_messages = make_broker(
         config_cache=config_cache,
         host_config=host_config,
         ip_address=ip_address,

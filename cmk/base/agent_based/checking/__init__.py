@@ -32,7 +32,6 @@ from cmk.utils.type_defs import (
     EVERYTHING,
     ExitSpec,
     HostAddress,
-    HostKey,
     HostName,
     MetricTuple,
     ParsedSectionName,
@@ -159,7 +158,8 @@ def _execute_checkmk_checks(
                 key=lambda service: service.description,
             ),
         )
-        broker, source_results = make_broker(
+
+        broker, source_results, fetcher_messages = make_broker(
             config_cache=config_cache,
             host_config=host_config,
             ip_address=ipaddress,

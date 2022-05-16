@@ -368,7 +368,7 @@ def make_broker(
     fetcher_messages: Sequence[FetcherMessage],
     force_snmp_cache_refresh: bool,
     on_scan_error: OnError,
-) -> Tuple[ParsedSectionsBroker, SourceResults]:
+) -> Tuple[ParsedSectionsBroker, SourceResults, Sequence[FetcherMessage]]:
     sources = (
         make_sources(
             host_config,
@@ -421,4 +421,9 @@ def make_broker(
             }
         ),
         results,
+        # fetcher messages are needed during checking, in order to compute the correct stats.
+        # This back-and-forth passing of fetcher messsages is far from ideal, but we have to fix
+        # this close to the release, and this is the most uninvasive solution.
+        # The 2.2 branch solves this in a better way.
+        fetcher_messages,
     )

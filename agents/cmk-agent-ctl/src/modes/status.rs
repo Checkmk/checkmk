@@ -52,6 +52,27 @@ enum RemoteConnectionStatusResponse {
     Error(RemoteError),
 }
 
+enum Remote {
+    StatusResponse(RemoteConnectionStatusResponse),
+    Imported,
+    QueryDisabled,
+}
+
+impl serde::ser::Serialize for Remote {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::ser::Serializer,
+    {
+        match self {
+            Self::StatusResponse(remote_conn_stat_resp) => {
+                remote_conn_stat_resp.serialize(serializer)
+            }
+            Self::Imported => serializer.serialize_str("imported_connection"),
+            Self::QueryDisabled => serializer.serialize_str("remote_query_disabled"),
+        }
+    }
+}
+
 #[serde_with::serde_as]
 #[derive(serde::Serialize)]
 struct ConnectionStatus {
@@ -59,7 +80,7 @@ struct ConnectionStatus {
     #[serde_as(as = "DisplayFromStr")]
     uuid: uuid::Uuid,
     local: LocalConnectionStatus,
-    remote: Option<RemoteConnectionStatusResponse>,
+    remote: Remote,
 }
 
 #[derive(serde::Serialize)]
@@ -144,8 +165,7 @@ impl ConnectionStatus {
         coordinates: &site_spec::Coordinates,
         conn: &config::Connection,
         conn_type: config::ConnectionType,
-        agent_rec_api: &impl agent_receiver_api::Status,
-        query_remote: bool,
+        agent_rec_api: &Option<impl agent_receiver_api::Status>,
     ) -> ConnectionStatus {
         ConnectionStatus {
             coordinates: Some(coordinates.clone()),
@@ -154,14 +174,11 @@ impl ConnectionStatus {
                 connection_type: conn_type,
                 cert_info: CertParsingResult::from(&conn.certificate),
             },
-            remote: if query_remote {
-                Some(RemoteConnectionStatusResponse::from(
-                    coordinates,
-                    conn,
-                    agent_rec_api,
-                ))
-            } else {
-                None
+            remote: match agent_rec_api {
+                Some(agent_rec_api) => Remote::StatusResponse(
+                    RemoteConnectionStatusResponse::from(coordinates, conn, agent_rec_api),
+                ),
+                None => Remote::QueryDisabled,
             },
         }
     }
@@ -174,7 +191,7 @@ impl ConnectionStatus {
                 connection_type: config::ConnectionType::Pull,
                 cert_info: CertParsingResult::from(&conn.certificate),
             },
-            remote: None,
+            remote: Remote::Imported,
         }
     }
 
@@ -254,7 +271,7 @@ impl ConnectionStatus {
 
     fn remote_lines_readable(&self) -> Vec<String> {
         match &self.remote {
-            Some(remote_stat_resp) => match &remote_stat_resp {
+            Remote::StatusResponse(remote_stat_resp) => match &remote_stat_resp {
                 RemoteConnectionStatusResponse::Success(remote_conn_stat) => {
                     ConnectionStatus::remote_lines_success_readable(
                         remote_conn_stat,
@@ -265,7 +282,8 @@ impl ConnectionStatus {
                     vec![mark_problematic(&format!("Error: {}", err))]
                 }
             },
-            None => vec![String::from("(not available)")],
+            Remote::Imported => vec![String::from("No remote address (imported connection)")],
+            Remote::QueryDisabled => vec![String::from("Remote query disabled")],
         }
     }
 
@@ -293,8 +311,7 @@ impl Status {
     fn from(
         registry: &config::Registry,
         pull_config: &config::PullConfig,
-        agent_rec_api: &impl agent_receiver_api::Status,
-        query_remote: bool,
+        agent_rec_api: &Option<impl agent_receiver_api::Status>,
     ) -> Status {
         let mut conn_stats = Vec::new();
 
@@ -304,7 +321,6 @@ impl Status {
                 push_conn,
                 config::ConnectionType::Push,
                 agent_rec_api,
-                query_remote,
             ));
         }
         for (coordinates, pull_conn) in registry.standard_pull_connections() {
@@ -313,7 +329,6 @@ impl Status {
                 pull_conn,
                 config::ConnectionType::Pull,
                 agent_rec_api,
-                query_remote,
             ));
         }
         for imp_pull_conn in registry.imported_pull_connections() {
@@ -384,10 +399,9 @@ fn _status(
     registry: &config::Registry,
     pull_config: &config::PullConfig,
     json: bool,
-    agent_rec_api: &impl agent_receiver_api::Status,
-    query_remote: bool,
+    agent_rec_api: &Option<impl agent_receiver_api::Status>,
 ) -> AnyhowResult<String> {
-    Status::from(registry, pull_config, agent_rec_api, query_remote).to_string(json)
+    Status::from(registry, pull_config, agent_rec_api).to_string(json)
 }
 
 pub fn status(
@@ -403,10 +417,12 @@ pub fn status(
             registry,
             pull_config,
             json,
-            &agent_receiver_api::Api {
-                use_proxy: client_config.use_proxy
-            },
-            query_remote,
+            &match query_remote {
+                true => Some(agent_receiver_api::Api {
+                    use_proxy: client_config.use_proxy
+                }),
+                false => None,
+            }
         )?
     );
     Ok(())
@@ -418,6 +434,38 @@ mod test_status {
     use crate::cli;
     use crate::config::TOMLLoader;
     use std::str::FromStr;
+
+    #[test]
+    fn test_connection_status_remote_disabled() {
+        assert_eq!(
+            format!(
+                "{}",
+                ConnectionStatus {
+                    coordinates: Some(site_spec::Coordinates::from_str("localhost:8000/site").unwrap()),
+                    uuid: uuid::Uuid::from_str("99f56bbc-5965-4b34-bc70-1959ad1d32d6").unwrap(),
+                    local: LocalConnectionStatus {
+                        connection_type: config::ConnectionType::Pull,
+                        cert_info: CertParsingResult::Success(CertInfo {
+                            issuer: String::from("Site 'site' local CA"),
+                            from: String::from("Thu, 16 Dec 2021 08:18:41 +0000"),
+                            to: String::from("Tue, 18 Apr 3020 08:18:41 +0000"),
+                        })
+                    },
+                    remote: Remote::QueryDisabled
+                }
+            ),
+            String::from(
+                "Connection: localhost:8000/site\n\
+                 \tUUID: 99f56bbc-5965-4b34-bc70-1959ad1d32d6\n\
+                 \tLocal:\n\
+                 \t\tConnection type: pull-agent\n\
+                 \t\tCertificate issuer: Site 'site' local CA\n\
+                 \t\tCertificate validity: Thu, 16 Dec 2021 08:18:41 +0000 - Tue, 18 Apr 3020 08:18:41 +0000\n\
+                 \tRemote:\n\
+                 \t\tRemote query disabled"
+            )
+        );
+    }
 
     #[test]
     fn test_connection_status_fmt_normal() {
@@ -435,7 +483,7 @@ mod test_status {
                             to: String::from("Tue, 18 Apr 3020 08:18:41 +0000"),
                         })
                     },
-                    remote: Some(RemoteConnectionStatusResponse::Success(
+                    remote: Remote::StatusResponse(RemoteConnectionStatusResponse::Success(
                         RemoteConnectionStatus {
                             connection_type: Some(config::ConnectionType::Pull),
                             registration_state: None,
@@ -475,7 +523,7 @@ mod test_status {
                             to: String::from("Tue, 18 Apr 3020 08:18:41 +0000"),
                         })
                     },
-                    remote: Some(RemoteConnectionStatusResponse::Success(
+                    remote: Remote::StatusResponse(RemoteConnectionStatusResponse::Success(
                         RemoteConnectionStatus {
                             connection_type: Some(config::ConnectionType::Pull),
                             registration_state: Some(agent_receiver_api::HostStatus::Discoverable),
@@ -515,7 +563,7 @@ mod test_status {
                             to: String::from("Tue, 18 Apr 3020 08:18:41 +0000"),
                         })
                     },
-                    remote: None
+                    remote: Remote::Imported,
                 }
             ),
             String::from(
@@ -526,7 +574,7 @@ mod test_status {
                  \t\tCertificate issuer: Site 'site' local CA\n\
                  \t\tCertificate validity: Thu, 16 Dec 2021 08:18:41 +0000 - Tue, 18 Apr 3020 08:18:41 +0000\n\
                  \tRemote:\n\
-                 \t\t(not available)"
+                 \t\tNo remote address (imported connection)"
             )
         );
     }
@@ -545,7 +593,7 @@ mod test_status {
                         connection_type: config::ConnectionType::Pull,
                         cert_info: CertParsingResult::Error(String::from("parsing_error"))
                     },
-                    remote: Some(RemoteConnectionStatusResponse::Error(
+                    remote: Remote::StatusResponse(RemoteConnectionStatusResponse::Error(
                         RemoteError::InvalidUrl
                     ))
                 }
@@ -576,7 +624,7 @@ mod test_status {
                         connection_type: config::ConnectionType::Pull,
                         cert_info: CertParsingResult::Error(String::from("parsing_error"))
                     },
-                    remote: Some(RemoteConnectionStatusResponse::Error(RemoteError::Other(
+                    remote: Remote::StatusResponse(RemoteConnectionStatusResponse::Error(RemoteError::Other(
                         String::from(
                             "Request failed with code 400 Bad Request: Unable to load certificate"
                         )
@@ -611,7 +659,7 @@ mod test_status {
                             to: String::from("Tue, 18 Apr 3020 08:18:41 +0000"),
                         })
                     },
-                    remote: Some(RemoteConnectionStatusResponse::Error(
+                    remote: Remote::StatusResponse(RemoteConnectionStatusResponse::Error(
                         RemoteError::ConnRefused
                     ))
                 }
@@ -645,7 +693,7 @@ mod test_status {
                             to: String::from("Tue, 18 Apr 3020 08:18:41 +0000"),
                         })
                     },
-                    remote: Some(RemoteConnectionStatusResponse::Success(
+                    remote: Remote::StatusResponse(RemoteConnectionStatusResponse::Success(
                         RemoteConnectionStatus {
                             connection_type: Some(config::ConnectionType::Push),
                             registration_state: None,
@@ -685,7 +733,7 @@ mod test_status {
                             to: String::from("Tue, 18 Apr 3020 08:18:41 +0000"),
                         })
                     },
-                    remote: Some(RemoteConnectionStatusResponse::Success(
+                    remote: Remote::StatusResponse(RemoteConnectionStatusResponse::Success(
                         RemoteConnectionStatus {
                             connection_type: Some(config::ConnectionType::Pull),
                             registration_state: None,
@@ -729,7 +777,7 @@ mod test_status {
                             to: String::from("Tue, 18 Apr 3020 08:18:41 +0000"),
                         }),
                     },
-                    remote: Some(RemoteConnectionStatusResponse::Success(
+                    remote: Remote::StatusResponse(RemoteConnectionStatusResponse::Success(
                         RemoteConnectionStatus {
                             connection_type: Some(config::ConnectionType::Pull),
                             registration_state: None,
@@ -750,7 +798,7 @@ mod test_status {
                             to: String::from("Tue, 18 Apr 3020 08:18:41 +0000"),
                         }),
                     },
-                    remote: Some(RemoteConnectionStatusResponse::Success(
+                    remote: Remote::StatusResponse(RemoteConnectionStatusResponse::Success(
                         RemoteConnectionStatus {
                             connection_type: Some(config::ConnectionType::Push),
                             registration_state: None,
@@ -875,8 +923,7 @@ mod test_status {
                 )
                 .unwrap(),
                 false,
-                &MockApi {},
-                true,
+                &Some(MockApi {}),
             )
             .unwrap(),
             format!(

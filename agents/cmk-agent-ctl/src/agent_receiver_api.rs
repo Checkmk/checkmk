@@ -3,7 +3,7 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 use super::{certs, config, types};
-use anyhow::{anyhow, Context, Error as AnyhowError, Result as AnyhowResult};
+use anyhow::{anyhow, bail, Context, Result as AnyhowResult};
 use http::StatusCode;
 use serde::{Deserialize, Serialize};
 use serde_with::DisplayFromStr;
@@ -59,21 +59,6 @@ pub struct StatusResponse {
     pub message: Option<String>,
 }
 
-#[derive(thiserror::Error, Debug)]
-pub enum StatusError {
-    #[error(transparent)]
-    // Note: we deliberately do not use '#[from] reqwest::Error' here because we do not want to
-    // create this variant from any reqwest::Error (otherwise, we could for example write
-    // 'response.text()?', which would then result in this variant)
-    ConnectionRefused(reqwest::Error),
-
-    #[error("Client certificate invalid")]
-    CertificateInvalid,
-
-    #[error(transparent)]
-    Other(#[from] AnyhowError),
-}
-
 #[derive(Deserialize)]
 struct ErrorResponse {
     pub detail: String,
@@ -124,7 +109,7 @@ pub trait Status {
         &self,
         base_url: &reqwest::Url,
         connection: &config::Connection,
-    ) -> Result<StatusResponse, StatusError>;
+    ) -> AnyhowResult<StatusResponse>;
 }
 
 pub struct Api {
@@ -286,35 +271,28 @@ impl Status for Api {
         &self,
         base_url: &reqwest::Url,
         connection: &config::Connection,
-    ) -> Result<StatusResponse, StatusError> {
+    ) -> AnyhowResult<StatusResponse> {
         let identity = match connection.identity() {
             Ok(ident) => ident,
-            Err(_) => {
-                return Err(StatusError::Other(anyhow!(
-                    "Error loading client certificate"
-                )))
-            }
+            _ => bail!("Error loading client certificate"),
         };
         let response = certs::client(Some(&connection.root_cert), Some(identity), self.use_proxy)?
             .get(Self::endpoint_url(
                 base_url,
                 &["registration_status", &connection.uuid.to_string()],
             )?)
-            .send()
-            .map_err(StatusError::ConnectionRefused)?;
+            .send()?;
 
         match response.status() {
             StatusCode::OK => {
-                let body = response
-                    .text()
-                    .map_err(|_| StatusError::Other(anyhow!("Failed to obtain response body")))?;
+                let body = response.text()?;
                 Ok(serde_json::from_str::<StatusResponse>(&body)
                     .context(format!("Failed to deserialize response body: {}", body))?)
             }
-            StatusCode::UNAUTHORIZED => Err(StatusError::CertificateInvalid),
-            _ => Err(StatusError::Other(anyhow!(
-                Api::error_response_description(response.status(), response.text().ok())
-            ))),
+            _ => bail!(Api::error_response_description(
+                response.status(),
+                response.text().ok()
+            )),
         }
     }
 }

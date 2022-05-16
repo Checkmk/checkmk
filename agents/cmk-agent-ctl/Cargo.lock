@@ -380,7 +380,6 @@ dependencies = [
  "string_enum",
  "structopt",
  "tempfile",
- "thiserror",
  "tokio",
  "tokio-rustls",
  "toml",

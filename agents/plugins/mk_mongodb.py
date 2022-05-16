@@ -24,7 +24,7 @@ version of pymongo (at least 2.8).
 
 """
 
-__version__ = "2.1.0b9"
+__version__ = "2.1.0b10"
 
 import argparse
 import configparser

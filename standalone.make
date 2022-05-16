@@ -3,9 +3,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # TODO(sp) We should really use autotools here...
-# NOTE: g++ >= 8 and clang++ >= 7 already support "-std=c++2a", but all clang-based
-# tools don't really work with GCC-10's headers yet, so we stay at "-std=c++12".
-ifneq ($(shell which clang++-13 2>/dev/null),)
+ifneq ($(shell which g++-12 2>/dev/null),)
+        CXX := g++-12 -std=c++17
+else ifneq ($(shell which clang++-14 2>/dev/null),)
+        CXX := clang++-14 -std=c++17
+else ifneq ($(shell which clang++-13 2>/dev/null),)
         CXX := clang++-13 -std=c++17
 else ifneq ($(shell which g++-11 2>/dev/null),)
         CXX := g++-11 -std=c++17

@@ -18,12 +18,12 @@ AC_REQUIRE_AUX_FILE([config.guess])
 AC_REQUIRE_AUX_FILE([config.sub])
 
 # Checks for programs.
-AC_PROG_CC([clang-13 gcc-11 clang-12 gcc-10 clang-11 clang-10 gcc-9 clang-9 clang-8 gcc-8 clang-7 gcc-7 clang-6.0 clang-5.0 gcc clang])
+AC_PROG_CC([gcc-12 clang-14 clang-13 gcc-11 clang-12 gcc-10 clang-11 clang-10 gcc-9 clang-9 clang-8 gcc-8 clang-7 gcc-7 clang-6.0 clang-5.0 gcc clang])
 AC_PROG_CC_C99([], [])
 if test "x$ac_cv_prog_cc_c99" = xno; then
   AC_MSG_ERROR([Need a C99-compliant C compiler])
 fi
-AC_PROG_CXX([clang++-13 g++-11 clang++-12 g++-10 clang++-11 clang++-10 g++-9 clang++-9 clang++-8 g++-8 clang++-7 g++-7 clang++-6.0 clang++-5.0 g++ clang++])
+AC_PROG_CXX([g++-12 clang++-14 clang++-13 g++-11 clang++-12 g++-10 clang++-11 clang++-10 g++-9 clang++-9 clang++-8 g++-8 clang++-7 g++-7 clang++-6.0 clang++-5.0 g++ clang++])
 AC_DEFINE_UNQUOTED([BUILD_CXX], ["`$CXX --version | head -n1`"], [C++ compiler])
 AX_CXX_COMPILE_STDCXX([17], [noext], [mandatory])
 AC_PROG_RANLIB

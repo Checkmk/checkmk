@@ -136,7 +136,7 @@ export function on_click_show_all_results(topic, popup_menu_id) {
     remove_class(current_topic, "extendable");
     add_class(current_topic, "extended");
     add_class(current_topic.closest(".content, .inner, .search"), "extended_topic");
-    topic_results.forEach(li => {
+    Array.from(topic_results).forEach(li => {
         if (li.dataset.extended == "false") {
             li.dataset.extended = "true";
             remove_class(li, "hidden");

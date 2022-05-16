@@ -343,7 +343,7 @@ mod tests {
             &self,
             base_url: &reqwest::Url,
             _connection: &config::Connection,
-        ) -> Result<agent_receiver_api::StatusResponse, agent_receiver_api::StatusError> {
+        ) -> AnyhowResult<agent_receiver_api::StatusResponse> {
             assert!(base_url.to_string() == SITE_URL);
             Ok(agent_receiver_api::StatusResponse {
                 hostname: Some(String::from(HOST_NAME)),

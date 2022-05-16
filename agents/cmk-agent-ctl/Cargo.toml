@@ -26,7 +26,6 @@ anyhow = { version = "1.0", features = ["backtrace"]}
 nix = { version = "0.24" }
 string_enum = { version = "0.3" }
 x509-parser = { version = "0.13" }
-thiserror = { version = "1.0" }
 tempfile = { version = "3.3" }
 flate2 = { version = "1.0" }
 rand = { version = "0.8" }

@@ -61,7 +61,6 @@ setversion:
 	    check_mk_agent.openwrt \
 	    check_mk_agent.solaris
 	sed -i "s/^#define CMK_WIN_AGENT_VERSION .*/#define CMK_WIN_AGENT_VERSION \"$(NEW_VERSION)\"/" wnx/src/common/wnx_version.h
-	sed -i 's/^version = .*/version = "$(NEW_VERSION)"/' cmk-agent-ctl/Cargo.toml
 
 build: $(DEB_PACKAGE) $(RPM_PACKAGE) $(WIN_PACKAGE) controller
 

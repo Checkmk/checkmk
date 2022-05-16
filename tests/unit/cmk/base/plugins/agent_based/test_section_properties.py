@@ -191,7 +191,6 @@ def test_section_parse_function_does_something(fix_register):
         "oracle_locks",
         "oracle_logswitches",
         "oracle_longactivesessions",
-        "oracle_processes",
         "oracle_recovery_area",
         "oracle_recovery_status",
         "oracle_rman_backups",

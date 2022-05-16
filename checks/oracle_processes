@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import typing
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.oracle import *  # pylint: disable=wildcard-import,unused-wildcard-import
@@ -21,51 +23,89 @@ factory_settings["oracle_processes_defaults"] = {
 }
 
 
-def inventory_oracle_processes(info):
+class OracleProcess(typing.NamedTuple):
+    name: str
+    processes_count: int
+    processes_limit: int
 
-    return [(line[0], {}) for line in info]
+
+ErrorProcesses = typing.Mapping[str, typing.Optional[typing.Tuple[int, str]]]
+OracleProcesses = typing.Mapping[str, OracleProcess]
 
 
-def check_oracle_processes(item, params, info):
+class SectionOracleProcesses(typing.NamedTuple):
+    error_processes: ErrorProcesses
+    oracle_processes: OracleProcesses
+
+
+def parse_oracle_processes(info):
+    valid_oracle_processes: typing.MutableMapping[str, OracleProcess] = {}
+    error_processes: typing.MutableMapping[str, typing.Tuple[int, str]] = {}
+
     for line in info:
-        if line[0] == item:
-            err = oracle_handle_ora_errors(line)
-            if err is False:
-                continue
-            elif isinstance(err, tuple):
-                return err
-
-            processes_num = int(line[1])
-            processes_max = int(line[2])
-            processes_pct = float(processes_num) / float(processes_max) * 100
-
-            warn, crit = params["levels"]
-            processes_warn = processes_max * warn / 100
-            processes_crit = processes_max * crit / 100
-
-            if processes_pct >= crit:
-                state = 2
-            elif processes_pct >= warn:
-                state = 1
-            else:
-                state = 0
-
-            return (
-                state,
-                "%d of %d processes are used (%d%%, warn/crit at %d%%/%d%%)"
-                % (processes_num, processes_max, processes_pct, warn, crit),
-                [("processes", processes_num, processes_warn, processes_crit)],
+        err = oracle_handle_ora_errors(line)
+        process_name = line[0]
+        if err is False:
+            continue
+        if isinstance(err, tuple):
+            error_processes[process_name] = err
+        else:
+            valid_oracle_processes[process_name] = OracleProcess(
+                name=process_name, processes_count=int(line[1]), processes_limit=int(line[2])
             )
+
+    return SectionOracleProcesses(
+        error_processes=error_processes, oracle_processes=valid_oracle_processes
+    )
+
+
+def discover_oracle_processes(section):
+    for process in section.error_processes:
+        yield process, {}
+
+    for process in section.oracle_processes:
+        yield process, {}
+
+
+def check_oracle_processes(item, params, section):
+
+    if ora_error := section.error_processes.get(item):
+        return ora_error[0], ora_error[1]
 
     # In case of missing information we assume that the login into
     # the database has failed and we simply skip this check. It won't
     # switch to UNKNOWN, but will get stale.
-    raise MKCounterWrapped("Login into database failed")
+    if not (process := section.oracle_processes.get(item)):
+        raise MKCounterWrapped("Login into database failed")
+
+    processes_pct = float(process.processes_count / process.processes_limit) * 100
+
+    warn, crit = params["levels"]
+    state, summary, _ = check_levels(
+        value=processes_pct,
+        dsname=None,
+        params=(warn, crit),
+        infoname=f"{process.processes_count} of {process.processes_limit} processes are used",
+        human_readable_func=get_percent_human_readable,
+    )
+    return (
+        state,
+        summary,
+        [
+            (
+                "processes",
+                process.processes_count,
+                process.processes_limit * (warn / 100),
+                process.processes_limit * (crit / 100),
+            )
+        ],
+    )
 
 
 check_info["oracle_processes"] = {
+    "parse_function": parse_oracle_processes,
     "check_function": check_oracle_processes,
-    "inventory_function": inventory_oracle_processes,
+    "inventory_function": discover_oracle_processes,
     "service_description": "ORA %s Processes",
     "has_perfdata": True,
     "default_levels_variable": "oracle_processes_defaults",

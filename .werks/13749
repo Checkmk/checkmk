@@ -6,7 +6,7 @@ Date: 1652255128
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.0.0p24
+Version: 2.0.0p25
 
 The Support Diagnostics dumps now contain a csv file that lists the file sizes for all files in the site.
 That is relevant for support cases related to performance issues.

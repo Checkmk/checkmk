@@ -1,0 +1,27 @@
+Title: Secure path for OMD hooks
+Class: security
+Compatible: compat
+Component: omd
+Date: 1652079530
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p25
+
+OMD executes several hooks to determine configuration options (e.g. which port
+to use for the site apache). These hooks are version dependent, so OMD executed
+these hooks via a symlink in the site to get the hooks matching the version of
+the site.
+
+The symlinks belong to the site user in order to be able to update
+the version. Since a <i>OMD status</i> executes those hooks as root, it was
+possible for a site user to create a malicious hook and execute code as root.
+
+All maintained versions (>=1.6) are subject to this vulnerability. It is likely
+that also previous versions were vulnerable.
+
+CVE will be added later here.
+CVSS: CVSS:3.1/AV:L/AC:L/PR:H/UI:N/S:C/C:H/I:H/A:H 8.2
+
+We thank Timo Klecker for reporting this issue!

@@ -880,7 +880,7 @@ mod test_status {
             )
             .unwrap(),
             format!(
-                "Version: 0.1.0\n\
+                "Version: {}\n\
              Agent socket: {}\n\
              IP allowlist: any\n\n\n\
              Connection: server:8000/push-site\n\
@@ -892,6 +892,7 @@ mod test_status {
              \t\tConnection type: pull-agent (!!)\n\
              \t\tRegistration state: operational\n\
              \t\tHost name: host",
+                constants::VERSION,
                 if cfg!(unix) {
                     "inoperational (!!)"
                 } else {

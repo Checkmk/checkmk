@@ -1158,13 +1158,13 @@ class TimeperiodValuespec(ValueSpec[dict[str, Any]]):
         return isinstance(value, dict) and self.tp_default_value_key in value
 
     # Returns simply the value or converts a plain value to a tp-value
-    def _get_timeperiod_value(self, value):
+    def _get_timeperiod_value(self, value: dict[str, Any]) -> dict[str, Any]:
         if isinstance(value, dict) and self.tp_default_value_key in value:
             return value
         return {self.tp_values_key: [], self.tp_default_value_key: value}
 
     # Returns simply the value or converts tp-value back to a plain value
-    def _get_timeless_value(self, value):
+    def _get_timeless_value(self, value: dict[str, Any]) -> Any:
         if isinstance(value, dict) and self.tp_default_value_key in value:
             return value.get(self.tp_default_value_key)
         return value

@@ -1971,7 +1971,7 @@ def _show_filter_form_buttons(
 
 # Realizes a Multisite/visual filter in a valuespec. It can render the filter form, get
 # the filled in values and provide the filled in information for persistance.
-class VisualFilter(ValueSpec):
+class VisualFilter(ValueSpec[FilterHTTPVariables]):
     def __init__(  # pylint: disable=redefined-builtin
         self,
         *,
@@ -1979,14 +1979,14 @@ class VisualFilter(ValueSpec):
         # ValueSpec
         title: Optional[str] = None,
         help: Optional[ValueSpecHelp] = None,
-        default_value: ValueSpecDefault[T] = DEF_VALUE,
-        validate: Optional[ValueSpecValidateFunc[T]] = None,
+        default_value: ValueSpecDefault[FilterHTTPVariables] = DEF_VALUE,
+        validate: Optional[ValueSpecValidateFunc[FilterHTTPVariables]] = None,
     ):
         self._name = name
         self._filter = filter_registry[name]
         super().__init__(title=title, help=help, default_value=default_value, validate=validate)
 
-    def title(self):
+    def title(self) -> str:
         return self._filter.title
 
     def canonical_value(self) -> FilterHTTPVariables:
@@ -2000,7 +2000,7 @@ class VisualFilter(ValueSpec):
         # A filter can not be used twice on a page, because the varprefix is not used
         return self._filter.value()
 
-    def validate_datatype(self, value: Any, varprefix: str) -> None:
+    def validate_datatype(self, value: FilterHTTPVariables, varprefix: str) -> None:
         if not isinstance(value, dict):
             raise MKUserError(
                 varprefix, _("The value must be of type dict, but it has type %s") % type(value)

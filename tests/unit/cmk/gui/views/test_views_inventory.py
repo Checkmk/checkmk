@@ -9,7 +9,7 @@ from typing import Any, Mapping, Sequence, Tuple
 # No stub file
 import pytest
 
-from cmk.utils.structured_data import SDKey, SDPairs, SDPath, SDValue, StructuredDataNode
+from cmk.utils.structured_data import SDKey, SDPairs, SDPath, SDRow, SDValue, StructuredDataNode
 
 import cmk.gui.inventory
 import cmk.gui.utils
@@ -420,6 +420,32 @@ def test_make_node_displayhint(node_path: SDPath, expected: NodeDisplayHint):
 )
 def test_make_table_displayhint(table_path: SDPath, expected: TableDisplayHint):
     assert TableDisplayHint.make(table_path) == expected
+
+
+@pytest.mark.parametrize(
+    "rows, expected",
+    [
+        ([], []),
+        ([{}], [(0, {})]),
+        (
+            [
+                {"sid": "SID 2", "flashback": "Flashback 2", "other": "Other 2"},
+                {"sid": "SID 1", "flashback": "Flashback 1", "other": "Other 1"},
+            ],
+            [
+                (0, {"flashback": "Flashback 1", "other": "Other 1", "sid": "SID 1"}),
+                (1, {"flashback": "Flashback 2", "other": "Other 2", "sid": "SID 2"}),
+            ],
+        ),
+    ],
+)
+def test_sort_table_rows_displayhint(
+    rows: Sequence[SDRow],
+    expected: Sequence[Tuple[int, SDRow]],
+):
+    path = ["software", "applications", "oracle", "dataguard_stats"]
+    table_hint = TableDisplayHint.make(path)
+    assert list(table_hint.sort_rows(rows, table_hint.make_titles(rows, ["sid"], path))) == expected
 
 
 @pytest.mark.parametrize(

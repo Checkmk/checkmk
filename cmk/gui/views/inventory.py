@@ -16,6 +16,7 @@ from typing import (
     Iterable,
     List,
     Mapping,
+    NamedTuple,
     Optional,
     Sequence,
     Tuple,
@@ -32,9 +33,11 @@ from cmk.utils.structured_data import (
     Attributes,
     RetentionIntervals,
     SDKey,
+    SDKeyColumns,
     SDKeys,
     SDPath,
     SDRawPath,
+    SDRow,
     SDValue,
     StructuredDataNode,
     Table,
@@ -732,6 +735,12 @@ class NodeDisplayHint:
         )
 
 
+class TableTitle(NamedTuple):
+    title: str
+    key: str
+    is_key_column: bool
+
+
 @dataclass(frozen=True)
 class TableDisplayHint:
     raw_path: str
@@ -749,6 +758,23 @@ class TableDisplayHint:
             is_show_more=raw_hint.get("is_show_more", True),
             view_name=raw_hint.get("view"),
         )
+
+    def make_titles(
+        self, rows: Sequence[SDRow], key_columns: SDKeyColumns, path: SDPath
+    ) -> Sequence[TableTitle]:
+        sorting_keys = list(self.key_order) + sorted(
+            set(k for r in rows for k in r) - set(self.key_order)
+        )
+        return [
+            TableTitle(col_hint.short or _inv_titleinfo(col_hint.raw_path), k, k in key_columns)
+            for k in sorting_keys
+            for col_hint in (ColumnDisplayHint.make(path, 0, k),)
+        ]
+
+    def sort_rows(
+        self, rows: Sequence[SDRow], titles: Sequence[TableTitle]
+    ) -> Iterable[Tuple[int, SDRow]]:
+        return enumerate(sorted(rows, key=lambda r: tuple(r.get(t.key) or "" for t in titles)))
 
 
 @dataclass(frozen=True)
@@ -1925,9 +1951,6 @@ def render_inv_dicttable(*args):
     pass
 
 
-TableTitles = List[Tuple[str, str, bool]]
-
-
 class ABCNodeRenderer(abc.ABC):
     def __init__(
         self,
@@ -2004,23 +2027,6 @@ class ABCNodeRenderer(abc.ABC):
     def show_table(self, table: Table) -> None:
         table_hint = TableDisplayHint.make(list(table.path))
 
-        # Add titles for those keys
-        titles: TableTitles = []
-        for key in table_hint.key_order:
-            col_hint = ColumnDisplayHint.make(list(table.path), 0, key)
-            titles.append(
-                (col_hint.short or _inv_titleinfo(col_hint.raw_path), key, key in table.key_columns)
-            )
-
-        # Determine *all* keys, in order to find unknown ones
-        # Order not well-known keys alphabetically
-        extratitles: TableTitles = []
-        for key in set(key for row in table.rows for key in row):
-            if key not in table_hint.key_order:
-                title = _inv_titleinfo("%s0.%s" % (table_hint.raw_path, key))
-                extratitles.append((title, key, key in table.key_columns))
-        titles += sorted(extratitles)
-
         # Link to Multisite view with exactly this table
         if table_hint.view_name:
             url = makeuri_contextless(
@@ -2036,25 +2042,28 @@ class ABCNodeRenderer(abc.ABC):
                 class_="invtablelink",
             )
 
-        self._show_table_data(table_hint, table, titles)
+        titles = table_hint.make_titles(table.rows, table.key_columns, list(table.path))
 
-    def _show_table_data(
-        self, table_hint: TableDisplayHint, table: Table, titles: TableTitles
-    ) -> None:
         # TODO: Use table.open_table() below.
         html.open_table(class_="data")
         html.open_tr()
-        for title, key, is_key_column in titles:
-            html.th(self._get_header(title, key, "#DDD", is_key_column=is_key_column))
-
+        for table_title in titles:
+            html.th(
+                self._get_header(
+                    table_title.title,
+                    table_title.key,
+                    "#DDD",
+                    is_key_column=table_title.is_key_column,
+                )
+            )
         html.close_tr()
 
-        for index, entry in enumerate(self._sort_table_rows(table_hint, table)):
+        for index, entry in table_hint.sort_rows(table.rows, titles):
             html.open_tr(class_="even0")
-            for title, key, _is_key_column in titles:
-                value = entry.get(key)
-                col_hint = ColumnDisplayHint.make(list(table.path), index, key)
-                tdclass, _ = col_hint.paint_function(
+            for table_title in titles:
+                value = entry.get(table_title.key)
+                col_hint = ColumnDisplayHint.make(list(table.path), index, table_title.key)
+                tdclass, _rendered_value = col_hint.paint_function(
                     value[1] if isinstance(value, tuple) else value
                 )
 
@@ -2062,20 +2071,11 @@ class ABCNodeRenderer(abc.ABC):
                 self._show_table_value(
                     value,
                     col_hint,
-                    retention_intervals=table.get_retention_intervals(key, entry),
+                    retention_intervals=table.get_retention_intervals(table_title.key, entry),
                 )
                 html.close_td()
             html.close_tr()
         html.close_table()
-
-    def _sort_table_rows(
-        self, table_hint: TableDisplayHint, table: Table
-    ) -> inventory.InventoryRows:
-        if table_hint.key_order:
-            return table.rows
-
-        sorting_keys = tuple(k for k in table_hint.key_order if k in table.key_columns)
-        return sorted(table.rows, key=lambda r: tuple(r.get(k) or "" for k in sorting_keys))
 
     @abc.abstractmethod
     def _show_table_value(

@@ -4,13 +4,13 @@
 
 # Process this file with autoconf to produce a configure script.
 
-AC_PREREQ(2.61)
-AC_INIT([MK Livestatus], [2.2.0i1], [mk@mathias-kettner.de])
+AC_PREREQ([2.61])
+AC_INIT([MK Livestatus],[2.2.0i1],[mk@mathias-kettner.de])
 AM_INIT_AUTOMAKE([-Wall -Wno-portability foreign subdir-objects])
 AM_EXTRA_RECURSIVE_TARGETS([all-packaging])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_SRCDIR([config.h.in])
-AC_CONFIG_HEADER([config.h])
+AC_CONFIG_HEADERS([config.h])
 AC_DEFINE_UNQUOTED([BUILD_DATE], ["`date -R`"], [build date])
 AC_DEFINE_UNQUOTED([BUILD_HOSTNAME], ["`uname -n`"], [name of the build host])
 AC_REQUIRE_AUX_FILE([compile])
@@ -19,10 +19,6 @@ AC_REQUIRE_AUX_FILE([config.sub])
 
 # Checks for programs.
 AC_PROG_CC([gcc-12 clang-14 clang-13 gcc-11 clang-12 gcc-10 clang-11 clang-10 gcc-9 clang-9 clang-8 gcc-8 clang-7 gcc-7 clang-6.0 clang-5.0 gcc clang])
-AC_PROG_CC_C99([], [])
-if test "x$ac_cv_prog_cc_c99" = xno; then
-  AC_MSG_ERROR([Need a C99-compliant C compiler])
-fi
 AC_PROG_CXX([g++-12 clang++-14 clang++-13 g++-11 clang++-12 g++-10 clang++-11 clang++-10 g++-9 clang++-9 clang++-8 g++-8 clang++-7 g++-7 clang++-6.0 clang++-5.0 g++ clang++])
 AC_DEFINE_UNQUOTED([BUILD_CXX], ["`$CXX --version | head -n1`"], [C++ compiler])
 AX_CXX_COMPILE_STDCXX([17], [noext], [mandatory])
@@ -37,7 +33,6 @@ AC_CHECK_LIB(socket, shutdown)
 
 # Checks for header files.
 AC_HEADER_DIRENT
-AC_HEADER_STDC
 AC_HEADER_SYS_WAIT
 AC_CHECK_HEADERS([arpa/inet.h fcntl.h limits.h netdb.h netinet/in.h stdint.h stdlib.h string.h strings.h sys/socket.h sys/time.h syslog.h unistd.h])
 
@@ -110,17 +105,15 @@ AC_TYPE_INT32_T
 AC_TYPE_INT64_T
 AC_TYPE_SIZE_T
 AC_TYPE_SSIZE_T
-AC_HEADER_TIME
 AC_TYPE_UINT32_T
 AC_TYPE_UINT64_T
 
 # Checks for library functions.
 AC_FUNC_SELECT_ARGTYPES
-AC_TYPE_SIGNAL
 AC_FUNC_STAT
 AC_CHECK_FUNCS([memmove select socket strerror strtoul])
 
-AC_ARG_WITH(nagios4,AC_HELP_STRING([--with-nagios4],[enabled compilation for nagios 4]), [
+AC_ARG_WITH(nagios4,AS_HELP_STRING([--with-nagios4],[enabled compilation for nagios 4]), [
     CPPFLAGS="${CFLAGS} -DNAGIOS4"
     nagios_headers=nagios4
     ],

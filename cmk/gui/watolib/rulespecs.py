@@ -22,6 +22,7 @@ from cmk.gui.type_defs import HTTPVariables
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, makeuri_contextless_rulespec_group
 from cmk.gui.valuespec import (
+    DEF_VALUE,
     Dictionary,
     DropdownChoice,
     DropdownChoiceEntries,
@@ -33,7 +34,10 @@ from cmk.gui.valuespec import (
     Transform,
     Tuple,
     ValueSpec,
+    ValueSpecDefault,
+    ValueSpecHelp,
     ValueSpecText,
+    ValueSpecValidateFunc,
 )
 from cmk.gui.watolib.check_mk_automations import get_check_information
 from cmk.gui.watolib.main_menu import ABCMainModule, ModuleRegistry
@@ -991,8 +995,26 @@ class RulespecRegistry(cmk.utils.plugin_registry.Registry[Rulespec]):
 
 
 class CheckTypeGroupSelection(ElementSelection):
-    def __init__(self, checkgroup, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(  # pylint: disable=redefined-builtin
+        self,
+        checkgroup,
+        # ElementSelection
+        label: Optional[str] = None,
+        empty_text: Optional[str] = None,
+        # ValueSpec
+        title: Optional[str] = None,
+        help: Optional[ValueSpecHelp] = None,
+        default_value: ValueSpecDefault[str] = DEF_VALUE,
+        validate: Optional[ValueSpecValidateFunc[Optional[str]]] = None,
+    ):
+        super().__init__(
+            label=label,
+            empty_text=empty_text,
+            title=title,
+            help=help,
+            default_value=default_value,
+            validate=validate,
+        )
         self._checkgroup = checkgroup
 
     def get_elements(self):
@@ -1004,7 +1026,7 @@ class CheckTypeGroupSelection(ElementSelection):
         }
         return elements
 
-    def value_to_html(self, value: str) -> ValueSpecText:
+    def value_to_html(self, value: Optional[str]) -> ValueSpecText:
         return HTMLWriter.render_tt(value)
 
 

@@ -5867,7 +5867,7 @@ class Dictionary(ValueSpec[dict[str, Any]]):
 
 # TODO: Cleanup this and all call sites. Replace it with some kind of DropdownChoice
 # based valuespec
-class ElementSelection(ValueSpec):
+class ElementSelection(ValueSpec[_Optional[str]]):
     """Base class for selection of a Nagios element out of a given list that must be loaded from a file.
 
     Example: GroupSelection. Child class must define
@@ -5882,7 +5882,7 @@ class ElementSelection(ValueSpec):
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
         default_value: ValueSpecDefault[str] = DEF_VALUE,
-        validate: _Optional[ValueSpecValidateFunc[str]] = None,
+        validate: _Optional[ValueSpecValidateFunc[_Optional[str]]] = None,
     ):
         super().__init__(title=title, help=help, default_value=default_value, validate=validate)
         self._loaded_at: _Optional[int] = None
@@ -5893,11 +5893,12 @@ class ElementSelection(ValueSpec):
             else _("There are no elements defined for this selection yet.")
         )
 
-    def load_elements(self):
+    def load_elements(self) -> None:
         if self._loaded_at != id(html):
             self._elements = self.get_elements()
             self._loaded_at = id(html)  # unique for each query!
 
+    @abc.abstractmethod
     def get_elements(self) -> dict[str, str]:
         raise NotImplementedError()
 
@@ -5907,7 +5908,7 @@ class ElementSelection(ValueSpec):
             return list(self._elements.keys())[0]
         return None
 
-    def render_input(self, varprefix: str, value: str) -> None:
+    def render_input(self, varprefix: str, value: _Optional[str]) -> None:
         self.load_elements()
         if len(self._elements) == 0:
             html.write_text(self._empty_text)
@@ -5916,20 +5917,16 @@ class ElementSelection(ValueSpec):
                 html.span(self._label, class_="vs_floating_text")
             html.dropdown(varprefix, self._elements.items(), deflt=value, ordered=True)
 
-    def value_to_text(self, value: str) -> ValueSpecText:
-        self.load_elements()
-        return self._elements.get(value, value)
-
-    def value_to_json(self, value: str) -> JSONValue:
+    def value_to_json(self, value: _Optional[str]) -> JSONValue:
         return value
 
-    def value_from_json(self, json_value: JSONValue) -> str:
+    def value_from_json(self, json_value: JSONValue) -> _Optional[str]:
         return json_value
 
     def from_html_vars(self, varprefix: str) -> _Optional[str]:
         return request.var(varprefix)
 
-    def _validate_value(self, value: str, varprefix: str) -> None:
+    def _validate_value(self, value: _Optional[str], varprefix: str) -> None:
         self.load_elements()
         if len(self._elements) == 0:
             raise MKUserError(varprefix, _("You cannot save this rule.") + " " + self._empty_text)
@@ -5938,7 +5935,7 @@ class ElementSelection(ValueSpec):
                 varprefix, _("%s is not an existing element in this selection.") % (value,)
             )
 
-    def validate_datatype(self, value: Any, varprefix: str) -> None:
+    def validate_datatype(self, value: _Optional[str], varprefix: str) -> None:
         self.load_elements()
         # When no elements exists the default value is None and e.g. in wato.mode_edit_rule()
         # handed over to validate_datatype() before rendering the input form. Disable the

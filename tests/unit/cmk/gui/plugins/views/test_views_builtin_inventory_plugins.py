@@ -9,8 +9,14 @@ from cmk.gui.views.inventory import _convert_display_hint
 
 
 def test__convert_display_hint():
-    for hint in inventory_displayhints.values():
-        _convert_display_hint(hint)
+    missing_titles = []
+    for raw_path, hint in inventory_displayhints.items():
+        converted = _convert_display_hint(hint)
+
+        if "title" not in converted:
+            missing_titles.append(raw_path)
+
+    assert missing_titles == []
 
 
 def test_missing_table_keyorder():

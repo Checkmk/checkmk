@@ -16,7 +16,6 @@ Cache hierarchy
         - {abstract} _from_cache_file(bytes) : TRawData
         - {abstract} _to_cache_file(TRawData) : bytes
     }
-    abstract AgentFileCache {}
     class DefaultAgentFileCache {
         + make_path(Mode) : Path
         - _from_cache_file(bytes) : TRawData
@@ -38,10 +37,9 @@ Cache hierarchy
     class SNMPFetcher {}
     class PiggybackFetcher {}
 
-    FileCache <|.. AgentFileCache : <<bind>>\nTRawData::AgentRawData
+    FileCache <|.. DefaultAgentFileCache : <<bind>>\nTRawData::AgentRawData
+    FileCache <|.. NoCache : <<bind>>\nTRawData::AgentRawData
     FileCache <|.. SNMPFileCache : <<bind>>\nTRawData::SNMPRawData
-    AgentFileCache <|-- DefaultAgentFileCache
-    AgentFileCache <|-- NoCache
     DefaultAgentFileCache *-- TCPFetcher
     DefaultAgentFileCache *-- ProgramFetcher
     DefaultAgentFileCache *-- IPMIFetcher
@@ -440,7 +438,8 @@ class FileCacheFactory(Generic[TRawData], abc.ABC):
 
     # TODO: Clean these options up! We need to change all call sites to use
     #       a single Checkers() object during processing first. Then we
-    #       can change these class attributes to object attributes.
+    #       can change these class attributes to object attributes and finally
+    #       get rid of these otherwise useless "factory" classes.
     #
     # Set by the user via command line to prevent using cached information at all.
     disabled: bool = False

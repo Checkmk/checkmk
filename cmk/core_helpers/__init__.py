@@ -43,7 +43,6 @@ from cmk.utils import version
 
 from . import cache
 from ._base import Fetcher, FileCache, Parser, Summarizer, verify_ipaddress
-from .agent import AgentFileCache
 from .ipmi import IPMIFetcher
 from .piggyback import PiggybackFetcher
 from .program import ProgramFetcher

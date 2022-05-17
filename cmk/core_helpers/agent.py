@@ -36,11 +36,7 @@ from .host_sections import HostSections
 from .type_defs import AgentRawDataSection, Mode, NO_SELECTION, SectionNameCollection
 
 
-class AgentFileCache(FileCache[AgentRawData]):
-    pass
-
-
-class DefaultAgentFileCache(AgentFileCache):
+class DefaultAgentFileCache(FileCache[AgentRawData]):
     @staticmethod
     def _from_cache_file(raw_data: bytes) -> AgentRawData:
         return AgentRawData(raw_data)
@@ -54,7 +50,7 @@ class DefaultAgentFileCache(AgentFileCache):
         return self.base_path / self.hostname
 
 
-class NoCache(AgentFileCache):
+class NoCache(FileCache[AgentRawData]):
     """Noop cache for fetchers that do not cache."""
 
     def __init__(

@@ -48,7 +48,6 @@ from .type_defs import Mode, SectionNameCollection
 
 __all__ = [
     "SNMPFetcher",
-    "SNMPFileCache",
     "SNMPParser",
     "SNMPPluginStore",
     "SNMPPluginStoreItem",

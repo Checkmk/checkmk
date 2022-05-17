@@ -73,9 +73,9 @@ info = [[u'Stack:', u'corosync'],
 
 
 discovery = {'': [(None, {'num_nodes': 2, 'num_resources': 6})],
-             'resources': [(u'cluster1_fence(stonith:fence_ipmilan):', None),
-                           (u'cluster2_fence(stonith:fence_ipmilan):', None),
-                           (u'mysqldb1', None)]}
+             'resources': [(u'cluster1_fence(stonith:fence_ipmilan):', {}),
+                           (u'cluster2_fence(stonith:fence_ipmilan):', {}),
+                           (u'mysqldb1', {})]}
 
 
 checks = {

@@ -447,7 +447,6 @@ class ErrorReporter:
         ("check", "fortimail_cpu_load", "checkgroup_parameters:fortimail_cpu_load"),
         ("check", "fortimail_disk_usage", "checkgroup_parameters:fortimail_disk_usage"),
         ("check", "genua_pfstate", "checkgroup_parameters:pf_used_states"),
-        ("check", "heartbeat_crm_resources", "checkgroup_parameters:heartbeat_crm_resources"),
         ("check", "hitachi_hnas_bossock", "checkgroup_parameters:bossock_fibers"),
         ("check", "hivemanager_devices", "checkgroup_parameters:hivemanager_devices"),
         ("check", "hp_proliant_power", "checkgroup_parameters:epower_single"),

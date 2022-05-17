@@ -5,11 +5,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import Any, Iterator, Mapping, NamedTuple, Optional, Sequence, Union
+from typing import Any, Iterator, Mapping, NamedTuple, Optional, Sequence
 
 StringTable = list[list[str]]
 
-Service = tuple[Optional[str], Union[dict, str, None]]
+Service = tuple[Optional[str], Mapping[str, str]]
 
 DiscoveryResult = Iterator[Service]
 
@@ -353,14 +353,14 @@ def inventory_heartbeat_crm_resources(section: Section) -> DiscoveryResult:
         # In naildown mode only resources which are started somewhere can be
         # inventorized
         if settings.get("naildown_resources", False) and resources[0][2] != "Stopped":
-            yield name, '"%s"' % resources[0][3]
+            yield name, {"expected_node": resources[0][3]}
         else:
-            yield name, None
+            yield name, {}
 
 
 def check_heartbeat_crm_resources(
     item: str,
-    target_node: Optional[str],
+    params: Mapping[str, str],
     section: Section,
 ) -> CheckResult:
     if (resources := section.resources.resources.get(item)) is None:
@@ -375,7 +375,7 @@ def check_heartbeat_crm_resources(
         if len(resource) == 3 and resource[2] != "Started":
             yield 2, 'Resource is in state "%s"' % (resource[2],)
         elif (
-            target_node
+            (target_node := params.get("expected_node"))
             and target_node != resource[3]
             and resource[1] != "Slave"
             and resource[1] != "Clone"

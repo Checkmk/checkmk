@@ -111,12 +111,12 @@ info = [[u'Stack:', u'corosync'],
 
 
 discovery = {'': [(None, {'num_nodes': 2, 'num_resources': 10})],
-             'resources': [(u'clone_nfs_sapmnt_IFG', None),
-                           (u'clone_nfs_usr_sap_IFG', None),
-                           (u'grp_IFG_ASCS22', None),
-                           (u'grp_IFG_ERS23', None),
-                           (u'st-vmware', None),
-                           (u'st-vmware2', None)]}
+             'resources': [(u'clone_nfs_sapmnt_IFG', {}),
+                           (u'clone_nfs_usr_sap_IFG', {}),
+                           (u'grp_IFG_ASCS22', {}),
+                           (u'grp_IFG_ERS23', {}),
+                           (u'st-vmware', {}),
+                           (u'st-vmware2', {})]}
 
 
 checks = {'': [(None,

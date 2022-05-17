@@ -12,8 +12,6 @@ Base classes and finite-state machine for the parser
 
 .. automodule:: cmk.core_helpers.agent
 
-.. autoclass:: cmk.core_helpers.agent.AgentFetcher
-
 .. autoclass:: cmk.core_helpers.agent.AgentParser
 
 .. autoclass:: cmk.core_helpers.agent.ParserState

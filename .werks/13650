@@ -1,0 +1,27 @@
+Title: Updated rule export page for REST API
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1652793558
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0i1
+
+The rule export page of the Setup is needed to help users working with the new
+rule related REST API endpoints.
+
+To set the value of a rule using the REST API, you need to set the value_raw
+field. The value of that field is individual for each rule set. To help you
+understand what kind of data structure you need to provide, this rule export
+mechanism is showing you the value you need to set for a given rule. The value
+needs to be a string representation of a compatible Python data structure.
+
+You can copy and use the data structure below in your REST API requests.
+
+The previous export of the whole internal rule data structure was only relevant
+for use with the now deprecated Web API and misleading when using the REST API.
+For example the conditions field is represented differently for the REST API.
+To get an idea of this data structure looks like, have a look at the REST API
+documentation of the relevant endpoints.

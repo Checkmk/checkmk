@@ -1953,28 +1953,6 @@ class ABCEditRuleMode(WatoMode):
     def _vs_explicit_conditions(self, **kwargs) -> VSExplicitConditions:
         return VSExplicitConditions(rulespec=self._rulespec, **kwargs)
 
-    def _show_rule_representation(self) -> None:
-        pretty_rule_config = pprint.pformat(self._rule.to_config()).replace("\n", "<br>")
-        content = escape_to_html_permissive(pretty_rule_config)
-
-        html.write_text(_("This rule representation can be used for Web API calls."))
-        html.br()
-        html.br()
-
-        html.open_center()
-        html.open_table(class_="progress")
-
-        html.open_tr()
-        html.th("Rule representation for Web API")
-        html.close_tr()
-
-        html.open_tr()
-        html.td(HTMLWriter.render_div(content, id_="rule_representation"), class_="log")
-        html.close_tr()
-
-        html.close_table()
-        html.close_center()
-
     def _vs_rule_options(self, rule: Rule, disabling: bool = True) -> Dictionary:
         return Dictionary(
             title=_("Rule Properties"),
@@ -2731,23 +2709,33 @@ class ModeExportRule(ABCEditRuleMode):
         pass
 
     def page(self) -> None:
-        pretty_rule_config = pprint.pformat(self._rule.to_config())
+        pretty_rule_config = pprint.pformat(self._rule.value)
         content_id = "rule_representation"
         success_msg_id = "copy_success"
 
         html.begin_form("rule_representation")
         html.div(
-            _("Successfully copied rule representation to the clipboard."),
+            _("Successfully copied rule value representation to the clipboard."),
             id_=success_msg_id,
             class_=["success", "hidden"],
         )
 
-        forms.header(_("Rule representation for web API"))
-        forms.section("Rule representation")
-        html.text_area(content_id, deflt=pretty_rule_config, id_=content_id, readonly="true")
+        html.p(
+            _(
+                "To set the value of a rule using the REST API, you need to set the "
+                "<tt>value_raw</tt> field. The value of this fields is individual for each rule set. "
+                "To help you understand what kind of data structure you need to provide, this rule "
+                "export mechanism is showing you the value you need to set for a given rule. The "
+                "value needs to be a string representation of a compatible Python data structure."
+            )
+        )
+        html.p(_("You can copy and use the data structure below in your REST API requests."))
+        forms.header(_("Rule value representation for REST API"))
+        forms.section("Rule value representation")
+        html.text_area(content_id, deflt=repr(pretty_rule_config), id_=content_id, readonly="true")
         html.icon_button(
             url=None,
-            title=_("Copy rule representation to clipboard"),
+            title=_("Copy rule value representation to clipboard"),
             icon="clone",
             onclick="cmk.utils.copy_to_clipboard(%s, %s)"
             % (json.dumps(content_id), json.dumps(success_msg_id)),

@@ -509,6 +509,7 @@ CLOUDSQL = Service(
             name="cloudsql.googleapis.com/database/state",
             aggregation=Aggregation(
                 per_series_aligner=Aligner.ALIGN_NEXT_OLDER,
+                cross_series_reducer=Reducer.REDUCE_NONE,
             ),
         ),
         Metric(

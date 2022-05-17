@@ -584,6 +584,7 @@ class BICompiledAggregation:
         if isinstance(node, BICompiledRule):
             result["type"] = 2
             result["title"] = node.properties.title
+            result["docu_url"] = node.properties.docu_url
             result["rule_id"] = node.id
             result["reqhosts"] = list(node.required_hosts)
             result["nodes"] = list(map(self.eval_result_node, node.nodes))

@@ -107,7 +107,6 @@ from cmk.gui.valuespec import (
     ListOfStrings,
     Optional,
     RuleComment,
-    T,
     TextInput,
     Transform,
     ValueSpec,
@@ -1512,7 +1511,7 @@ def _finalize_preview_response(response):
     return response
 
 
-class NodeVisualizationLayoutStyle(ValueSpec):
+class NodeVisualizationLayoutStyle(ValueSpec[dict[str, Any]]):
     def __init__(  # pylint: disable=redefined-builtin
         self,
         *,
@@ -1520,21 +1519,21 @@ class NodeVisualizationLayoutStyle(ValueSpec):
         # ValueSpec
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
-        default_value: ValueSpecDefault[T] = DEF_VALUE,
-        validate: _Optional[ValueSpecValidateFunc[T]] = None,
+        default_value: ValueSpecDefault[dict[str, Any]] = DEF_VALUE,
+        validate: _Optional[ValueSpecValidateFunc[dict[str, Any]]] = None,
     ):
         super().__init__(title=title, help=help, default_value=default_value, validate=validate)
         self._style_type = type
 
-    def render_input(self, varprefix: str, value: Any) -> None:
+    def render_input(self, varprefix: str, value: dict[str, Any]) -> None:
         html.div("", id_=varprefix)
         html.javascript(
             "let example = new cmk.node_visualization_layout_styles.LayoutStyleExampleGenerator(%s);"
             "example.create_example(%s)" % (json.dumps(varprefix), json.dumps(value))
         )
 
-    def canonical_value(self) -> _Optional[dict[str, Any]]:
-        return None
+    def canonical_value(self) -> dict[str, Any]:
+        return {}
 
     def value_to_html(self, value: dict[str, Any]) -> ValueSpecText:
         return ""

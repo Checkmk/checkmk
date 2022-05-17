@@ -29,7 +29,6 @@ import cmk.gui.forms as forms
 import cmk.gui.hooks as hooks
 import cmk.gui.mkeventd
 import cmk.gui.userdb as userdb
-import cmk.gui.watolib as watolib
 import cmk.gui.watolib.host_attributes as _host_attributes
 import cmk.gui.watolib.hosts_and_folders as _hosts_and_folders
 import cmk.gui.watolib.rulespecs as _rulespecs
@@ -84,7 +83,10 @@ from cmk.gui.plugins.wato.utils.simple_modes import (  # noqa: F401 # pylint: di
     SimpleListMode,
     SimpleModeType,
 )
-from cmk.gui.site_config import get_site_config, is_wato_slave_site
+from cmk.gui.site_config import (  # noqa: F401 # pylint: disable=unused-import
+    get_site_config,
+    is_wato_slave_site,
+)
 from cmk.gui.type_defs import Choices
 from cmk.gui.user_sites import get_activation_site_choices
 from cmk.gui.utils.escaping import escape_to_html
@@ -2287,10 +2289,10 @@ class DictHostTagCondition(Transform):
         )
 
 
-class HostTagCondition(ValueSpec):
+class HostTagCondition(ValueSpec[Sequence[str]]):
     """ValueSpec for editing a tag-condition"""
 
-    def render_input(self, varprefix: str, value: Any) -> None:
+    def render_input(self, varprefix: str, value: Sequence[str]) -> None:
         self._render_condition_editor(varprefix, value)
 
     def from_html_vars(self, varprefix: str) -> Sequence[str]:
@@ -2329,10 +2331,10 @@ class HostTagCondition(ValueSpec):
     def canonical_value(self) -> Sequence[str]:
         return []
 
-    def value_to_html(self, value: list[str]) -> ValueSpecText:
+    def value_to_html(self, value: Sequence[str]) -> ValueSpecText:
         return "|".join(value)
 
-    def validate_datatype(self, value: Any, varprefix: str) -> None:
+    def validate_datatype(self, value: Sequence[str], varprefix: str) -> None:
         if not isinstance(value, list):
             raise MKUserError(
                 varprefix, _("The list of host tags must be a list, but " "is %r") % type(value)
@@ -2345,7 +2347,7 @@ class HostTagCondition(ValueSpec):
                     % x,
                 )
 
-    def _render_condition_editor(self, varprefix, tag_specs):
+    def _render_condition_editor(self, varprefix: str, tag_specs: Sequence[str]) -> None:
         """Render HTML input fields for editing a tag based condition"""
         if varprefix:
             varprefix += "_"
@@ -2408,7 +2410,9 @@ class HostTagCondition(ValueSpec):
 
                 html.close_table()
 
-    def _current_tag_setting(self, choices, tag_specs):
+    def _current_tag_setting(
+        self, choices: Sequence[tuple[_Optional[str], str]], tag_specs: Sequence[str]
+    ) -> tuple[Any, str]:
         """Determine current (default) setting of tag by looking into tag_specs (e.g. [ "snmp", "!tcp", "test" ] )"""
         default_tag = None
         ignore = True
@@ -2430,7 +2434,7 @@ class HostTagCondition(ValueSpec):
             deflt = "is"
         return default_tag, deflt
 
-    def _tag_condition_dropdown(self, varprefix, tagtype, deflt, id_):
+    def _tag_condition_dropdown(self, varprefix: str, tagtype: str, deflt: str, id_: str) -> None:
         """Show dropdown with "is/isnot/ignore" and beginning of div that is switched visible by is/isnot"""
         html.open_td()
         dropdown_id = varprefix + tagtype + "_" + id_

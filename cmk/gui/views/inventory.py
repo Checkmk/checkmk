@@ -196,13 +196,7 @@ def _get_filtered_attributes(
     return attributes.get_filtered_attributes(lambda key: key == keys[-1])
 
 
-def _declare_inv_column(
-    invpath: SDRawPath,
-    datatype: str,
-    title: str,
-    short: Optional[str] = None,
-    is_show_more: bool = True,
-) -> None:
+def _declare_inv_column(invpath: SDRawPath, hint: InventoryHintSpec) -> None:
     """Declares painters, sorters and filters to be used in views based on all host related
     datasources."""
     if invpath == ".":
@@ -211,6 +205,8 @@ def _declare_inv_column(
         name = "inv_" + invpath.replace(":", "_").replace(".", "_").strip("_")
 
     is_attribute = invpath[-1] not in ":."
+
+    title = inv_titleinfo_long(invpath)
 
     # Declare column painter
     painter_spec = {
@@ -238,12 +234,16 @@ def _declare_inv_column(
         "paint": lambda row: _paint_host_inventory_tree(row, invpath),
         "sorter": name,
     }
-    if short:
-        painter_spec["short"] = short
+
+    painter_spec["short"] = hint.get("short", hint["title"])
+
     register_painter(name, painter_spec)
 
     # Sorters and Filters only for attributes
     if is_attribute:
+        datatype = hint.get("paint", "str")
+        is_show_more = hint.get("is_show_more", True)
+
         # Declare sorter. It will detect numbers automatically
         register_sorter(
             name,
@@ -803,9 +803,7 @@ class AttributeDisplayHint:
 
 def _get_display_hint(invpath: SDRawPath) -> InventoryHintSpec:
     hint_id = _find_display_hint_id(invpath)
-    if hint_id is None:
-        return {}
-    return _convert_display_hint(inventory_displayhints.get(hint_id, {}))
+    return _convert_display_hint({} if hint_id is None else inventory_displayhints.get(hint_id, {}))
 
 
 def _find_display_hint_id(invpath: SDRawPath) -> Optional[str]:
@@ -911,16 +909,10 @@ def _get_parent_from_invpath(invpath: SDRawPath) -> Optional[SDRawPath]:
 def declare_inventory_columns() -> None:
     # create painters for node with a display hint
     for invpath, hint in inventory_displayhints.items():
-        if "*" not in invpath:
-            datatype = hint.get("paint", "str")
-            long_title = inv_titleinfo_long(invpath)
-            _declare_inv_column(
-                invpath,
-                datatype,
-                long_title,
-                hint.get("short", hint["title"]),
-                is_show_more=hint.get("is_show_more", True),
-            )
+        if "*" in invpath:
+            continue
+
+        _declare_inv_column(invpath, _convert_display_hint(hint))
 
 
 # .
@@ -948,7 +940,7 @@ def _inv_find_subtable_columns(invpath: SDRawPath) -> List[str]:
     display hint.
 
     Also use the names found in keyorder to get even more of the available columns."""
-    subtable_hint = inventory_displayhints[invpath]
+    subtable_hint = _convert_display_hint(inventory_displayhints[invpath])
 
     # Create dict from column name to its order number in the list
     with_numbers = enumerate(subtable_hint.get("keyorder", []))
@@ -985,7 +977,7 @@ def _declare_invtable_column(
     infoname: str, invpath: SDRawPath, topic: str, name: str, column: str
 ) -> None:
     sub_invpath = invpath + "*." + name
-    hint = inventory_displayhints.get(sub_invpath, {})
+    hint = _convert_display_hint(inventory_displayhints.get(sub_invpath, {}))
 
     if "paint" in hint:
         paint_name = hint["paint"]

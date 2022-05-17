@@ -8,12 +8,8 @@ import calendar
 import time
 from typing import Any, Mapping, NamedTuple, Optional, Sequence
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import render, Result, Service, State
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
-    CheckResult,
-    DiscoveryResult,
-    StringTable,
-)
+from .agent_based_api.v1 import register, render, Result, Service, State
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 # Example outputs from agent:
 # <<<heartbeat_crm>>>
@@ -33,15 +29,6 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
 #     resource_slapmaster (ocf::heartbeat:OpenLDAP):  Started mwp
 # resource_slapslave  (ocf::heartbeat:OpenLDAP):  Started smwp
 
-# Holds a dict of settings which tell the inventory functions whether or not
-# some options like the resources and DC role shal be nailed down to the
-# node which holds these resources during inventory.
-inventory_heartbeat_crm_rules = []
-
-factory_settings["heartbeat_crm_default_levels"] = {
-    "max_age": 60,
-}
-
 
 class _Cluster(NamedTuple):
     last_updated: str
@@ -52,7 +39,7 @@ class _Cluster(NamedTuple):
 
 
 class _Resources(NamedTuple):
-    resources: Mapping[str, Any]
+    resources: Mapping[str, list[list[str]]]
     failed_actions: Any
 
 
@@ -139,7 +126,7 @@ def heartbeat_crm_parse_resources(string_table: StringTable) -> _Resources:
         A dict of resources and possibly additional information (like error messages).
     """
     block_start = False
-    resources: dict[str, Any] = {}
+    resources: dict[str, list[list[str]]] = {}
     resource = ""
     list_start = False
     lines = []
@@ -183,7 +170,11 @@ def heartbeat_crm_parse_resources(string_table: StringTable) -> _Resources:
                     resources[resource].append(parts[1:])
                 elif mode == "cloneset":
                     if parts[1] == "Started:":
-                        resources[resource].append([resource, "Clone", "Started", parts[3:-1]])
+                        # Resources are only used to check that the master does not switch nodes.
+                        # Clone and Slave information is discarded in the check function.
+                        resources[resource].append(
+                            [resource, "Clone", "Started", ", ".join(parts[3:-1])]
+                        )
                 elif mode == "masterslaveset":
                     if parts[1] == "Masters:":
                         resources[resource].append([resource, "Master", "Started", parts[3]])
@@ -208,6 +199,11 @@ def parse_heartbeat_crm(string_table: StringTable) -> Optional[Section]:
     return None
 
 
+register.agent_section(
+    name="heartbeat_crm",
+    parse_function=parse_heartbeat_crm,
+)
+
 #   .--CRM-----------------------------------------------------------------.
 #   |                          ____ ____  __  __                           |
 #   |                         / ___|  _ \|  \/  |                          |
@@ -218,18 +214,20 @@ def parse_heartbeat_crm(string_table: StringTable) -> Optional[Section]:
 #   '----------------------------------------------------------------------'
 
 
-def discover_heartbeat_crm(section: Section) -> DiscoveryResult:
-    params = host_extra_conf_merged(host_name(), inventory_heartbeat_crm_rules)
+def discover_heartbeat_crm(
+    params: Mapping[str, bool],
+    section: Section,
+) -> DiscoveryResult:
     yield Service(
         parameters={
             "num_nodes": section.cluster.num_nodes,
             "num_resources": section.cluster.num_resources,
-            **({"dc": section.cluster.dc} if params.get("naildown_dc", False) else {}),
+            **({"dc": section.cluster.dc} if params["naildown_dc"] else {}),
         }
     )
 
 
-def check_heartbeat_crm(_no_item, params: Mapping[str, Any], section: Section) -> CheckResult:
+def check_heartbeat_crm(params: Mapping[str, Any], section: Section) -> CheckResult:
 
     last_updated, dc, num_nodes, num_resources, error = section.cluster
 
@@ -250,10 +248,10 @@ def check_heartbeat_crm(_no_item, params: Mapping[str, Any], section: Section) -
         return
 
     # Check for correct DC when enabled
-    if params.get("dc") is None or dc == params["dc"]:
+    if (p_dc := params["dc"]) is None or dc == p_dc:
         yield Result(state=State.OK, summary=f"DC: {dc}")
     else:
-        yield Result(state=State.CRIT, summary=f"DC: {dc} (Expected {params['dc']})")
+        yield Result(state=State.CRIT, summary=f"DC: {dc} (Expected {p_dc})")
 
     # Check for number of nodes when enabled
     if params["num_nodes"] is not None and num_nodes is not None:
@@ -282,14 +280,21 @@ def check_heartbeat_crm(_no_item, params: Mapping[str, Any], section: Section) -
         yield Result(state=State.WARN, summary=f"Failed: {action}")
 
 
-check_info["heartbeat_crm"] = {
-    "parse_function": parse_heartbeat_crm,
-    "check_function": check_heartbeat_crm,
-    "inventory_function": discover_heartbeat_crm,
-    "service_description": "Heartbeat CRM General",
-    "group": "heartbeat_crm",
-    "default_levels_variable": "heartbeat_crm_default_levels",
-}
+register.check_plugin(
+    name="heartbeat_crm",
+    service_name="Heartbeat CRM General",
+    discovery_function=discover_heartbeat_crm,
+    discovery_ruleset_name="inventory_heartbeat_crm_rules",
+    discovery_default_parameters={
+        "naildown_dc": False,
+        "naildown_resources": False,
+    },
+    check_function=check_heartbeat_crm,
+    check_ruleset_name="heartbeat_crm",
+    check_default_parameters={
+        "max_age": 60,
+    },
+)
 
 # .
 #   .--Resources-----------------------------------------------------------.
@@ -348,7 +353,10 @@ def _join_lines(lines: Sequence[str]) -> Sequence[str]:
     return joined
 
 
-def discover_heartbeat_crm_resources(section: Section) -> DiscoveryResult:
+def discover_heartbeat_crm_resources(
+    params: Mapping[str, bool],
+    section: Section,
+) -> DiscoveryResult:
     # Full list of resources:
     # Resource Group: group_slapmaster
     #     resource_virtip1  (ocf::heartbeat:IPaddr):  Started mwp
@@ -356,11 +364,10 @@ def discover_heartbeat_crm_resources(section: Section) -> DiscoveryResult:
     #     resource_pingnodes  (ocf::heartbeat:pingd): Started mwp
     #     resource_slapmaster (ocf::heartbeat:OpenLDAP):  Started mwp
     # resource_slapslave  (ocf::heartbeat:OpenLDAP):  Started smwp
-    settings = host_extra_conf_merged(host_name(), inventory_heartbeat_crm_rules)
     for name, resources in section.resources.resources.items():
         # In naildown mode only resources which are started somewhere can be
         # inventorized
-        if settings.get("naildown_resources", False) and resources[0][2] != "Stopped":
+        if params.get("naildown_resources", False) and resources[0][2] != "Stopped":
             yield Service(item=name, parameters={"expected_node": resources[0][3]})
         else:
             yield Service(item=name)
@@ -378,15 +385,12 @@ def check_heartbeat_crm_resources(
         yield Result(state=State.OK, summary="No resources found")
 
     for resource in resources:
-        yield Result(
-            state=State.OK,
-            summary=" ".join([isinstance(p, list) and ", ".join(p) or p for p in resource]),
-        )
+        yield Result(state=State.OK, summary=" ".join(resource))
 
         if len(resource) == 3 and resource[2] != "Started":
             yield Result(state=State.CRIT, summary='Resource is in state "%s"' % (resource[2],))
         elif (
-            (target_node := params.get("expected_node"))
+            (target_node := params["expected_node"])
             and target_node != resource[3]
             and resource[1] != "Slave"
             and resource[1] != "Clone"
@@ -394,9 +398,17 @@ def check_heartbeat_crm_resources(
             yield Result(state=State.CRIT, summary="Expected node: %s" % (target_node,))
 
 
-check_info["heartbeat_crm.resources"] = {
-    "check_function": check_heartbeat_crm_resources,
-    "inventory_function": discover_heartbeat_crm_resources,
-    "service_description": "Heartbeat CRM %s",
-    "group": "heartbeat_crm_resources",
-}
+register.check_plugin(
+    name="heartbeat_crm_resources",
+    service_name="Heartbeat CRM %s",
+    sections=["heartbeat_crm"],
+    discovery_function=discover_heartbeat_crm_resources,
+    discovery_ruleset_name="inventory_heartbeat_crm_rules",
+    discovery_default_parameters={
+        "naildown_dc": False,
+        "naildown_resources": False,
+    },
+    check_function=check_heartbeat_crm_resources,
+    check_ruleset_name="heartbeat_crm_resources",
+    check_default_parameters={"expected_node": None},
+)

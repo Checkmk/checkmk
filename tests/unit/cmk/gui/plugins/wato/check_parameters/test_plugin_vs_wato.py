@@ -272,7 +272,6 @@ class ErrorReporter:
         ("discovery", "ewon_discovery_rules"),
         ("discovery", "inventory_df_rules"),
         ("discovery", "inventory_fujitsu_ca_ports"),
-        ("discovery", "inventory_heartbeat_crm_rules"),
         ("discovery", "inventory_sap_values"),
         ("discovery", "inventory_solaris_services_rules"),
         ("discovery", "oracle_performance_discovery"),

@@ -6,14 +6,18 @@
 
 import pytest
 
-from cmk.utils.type_defs import CheckPluginName, SectionName
-
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
+from cmk.base.plugins.agent_based.heartbeat_crm import (
+    check_heartbeat_crm_resources,
+    discover_heartbeat_crm_resources,
+    parse_heartbeat_crm,
+    Section,
+)
 
 
 @pytest.fixture(name="section_1", scope="module")
-def _get_section_1(fix_register):
-    return fix_register.agent_sections[SectionName("heartbeat_crm")].parse_function(
+def _get_section_1() -> Section:
+    section = parse_heartbeat_crm(
         [
             ["Stack:", "corosync"],
             [
@@ -106,11 +110,13 @@ def _get_section_1(fix_register):
             ],
         ]
     )
+    assert section
+    return section
 
 
 @pytest.fixture(name="section_2", scope="module")
-def _get_section_2(fix_register):
-    return fix_register.agent_sections[SectionName("heartbeat_crm")].parse_function(
+def _get_section_2() -> Section:
+    section = parse_heartbeat_crm(
         [
             ["Stack:", "corosync"],
             [
@@ -177,50 +183,49 @@ def _get_section_2(fix_register):
             ],
         ]
     )
+    assert section
+    return section
 
 
-@pytest.fixture(name="discover_heartbeat_crm_resources")
-def _get_discovery_function_resources(fix_register):
-    return fix_register.check_plugins[CheckPluginName("heartbeat_crm_resources")].discovery_function
+def test_discovery_heartbeat_crm_resources_nothing(section_1: Section) -> None:
+    section = Section(section_1.cluster, section_1.resources._replace(resources={}))
+    assert not list(discover_heartbeat_crm_resources({}, section))
 
 
-@pytest.fixture(name="check_heartbeat_crm_resources")
-def _get_check_function_resources(fix_register):
-    return lambda i, p, s: fix_register.check_plugins[
-        CheckPluginName("heartbeat_crm_resources")
-    ].check_function(item=i, params=p, section=s)
+def test_discovery_heartbeat_crm_resources_something(section_2: Section) -> None:
+    assert list(discover_heartbeat_crm_resources({}, section_2)) == [
+        Service(item="mysqldb1"),
+        Service(item="cluster1_fence(stonith:fence_ipmilan):"),
+        Service(item="cluster2_fence(stonith:fence_ipmilan):"),
+    ]
 
 
-# enable/fix once migrated
-#
-# def test_discovery_heartbeat_crm_resources_nothing(section_1, discover_heartbeat_crm_resources) -> None:
-#    assert not list(discover_heartbeat_crm_resources(section_1))
-#
-# def test_discovery_heartbeat_crm_resources_something(section_2, discover_heartbeat_crm_resources) -> None:
-#    assert list(discover_heartbeat_crm_resources(section_2)) == []
-#
-
-
-def test_check_heartbeat_crm_resources_no_data(section_2, check_heartbeat_crm_resources) -> None:
+def test_check_heartbeat_crm_resources_no_data(section_2: Section) -> None:
     assert not list(check_heartbeat_crm_resources("no such item", {}, section_2))
 
 
-def test_check_heartbeat_crm_resources_no_resources(
-    section_2, check_heartbeat_crm_resources
-) -> None:
-    section_2.resources.resources["faked empty ressource"] = []
+def test_check_heartbeat_crm_resources_no_resources(section_2: Section) -> None:
+    section_2.resources.resources["faked empty ressource"] = []  # type: ignore[index]
     assert list(check_heartbeat_crm_resources("faked empty ressource", {}, section_2)) == [
         Result(state=State.OK, summary="No resources found")
     ]
 
 
-def test_check_heartbeat_crm_resources_ok(section_1, check_heartbeat_crm_resources) -> None:
-    assert list(check_heartbeat_crm_resources("clone_nfs_sapmnt_IFG", {}, section_1)) == [
+def test_check_heartbeat_crm_resources_ok(section_1: Section) -> None:
+    assert list(
+        check_heartbeat_crm_resources(
+            "clone_nfs_sapmnt_IFG",
+            {
+                "expected_node": "nevermind",
+            },
+            section_1,
+        )
+    ) == [
         Result(state=State.OK, summary="clone_nfs_sapmnt_IFG Clone Started hrssc61i01, hrssc61i02"),
     ]
 
 
-def test_check_heartbeat_crm_resources_started(section_2, check_heartbeat_crm_resources) -> None:
+def test_check_heartbeat_crm_resources_started(section_2: Section) -> None:
     assert list(
         check_heartbeat_crm_resources(
             "cluster1_fence(stonith:fence_ipmilan):",

@@ -8,14 +8,18 @@ import pytest
 
 from tests.testlib import on_time
 
-from cmk.utils.type_defs import CheckPluginName, SectionName
-
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
+from cmk.base.plugins.agent_based.heartbeat_crm import (
+    check_heartbeat_crm,
+    discover_heartbeat_crm,
+    parse_heartbeat_crm,
+    Section,
+)
 
 
 @pytest.fixture(name="section_1", scope="module")
-def _get_section_1(fix_register):
-    return fix_register.agent_sections[SectionName("heartbeat_crm")].parse_function(
+def _get_section_1() -> Section:
+    section = parse_heartbeat_crm(
         [
             ["Cluster", "Summary:"],
             ["_*", "Stack:", "corosync"],
@@ -58,11 +62,13 @@ def _get_section_1(fix_register):
             ["_", "*", "Started:", "[", "ha01", "ha02", "]"],
         ]
     )
+    assert section
+    return section
 
 
 @pytest.fixture(name="section_2", scope="module")
-def _get_section_2(fix_register):
-    return fix_register.agent_sections[SectionName("heartbeat_crm")].parse_function(
+def _get_section_2() -> Section:
+    section = parse_heartbeat_crm(
         [
             ["Stack:", "corosync"],
             [
@@ -129,49 +135,39 @@ def _get_section_2(fix_register):
             ],
         ]
     )
+    assert section
+    return section
 
 
-@pytest.fixture(name="discover_heartbeat_crm")
-def _get_discovery_function(fix_register):
-    return fix_register.check_plugins[CheckPluginName("heartbeat_crm")].discovery_function
+def test_discover_heartbeat_crm(section_1: Section) -> None:
+    assert list(discover_heartbeat_crm({"naildown_dc": False}, section_1)) == [
+        Service(parameters={"num_nodes": 2, "num_resources": 3}),
+    ]
 
 
-@pytest.fixture(name="check_heartbeat_crm")
-def _get_check_function(fix_register):
-    return lambda p, s: fix_register.check_plugins[CheckPluginName("heartbeat_crm")].check_function(
-        params=p, section=s
-    )
+def test_discovery_heartbeat_crm_dc_naildown(section_1: Section) -> None:
+    assert list(discover_heartbeat_crm({"naildown_dc": True}, section_1)) == [
+        Service(parameters={"num_nodes": 2, "num_resources": 3, "dc": "ha02"}),
+    ]
 
 
-# enable/fix once migrated
-# def test_discover_heartbeat_crm(section_1, discover_heartbeat_crm) -> None:
-#    assert list(discover_heartbeat_crm(section_1, {})) == [
-#        Service(parameters={"num_nodes": 2, "num_resources": 3}),
-#    ]
-#
-# def test_discovery_section_1(section_1, discover_heartbeat_crm) -> None:
-#    assert list(discover_heartbeat_crm(section_1, {"naildown_dc": True])) == [
-#        Service(parameters={"num_nodes": 2, "num_resources": 3}),
-#    ]
-#
-
-
-def test_check_heartbeat_crm_too_old(section_1, check_heartbeat_crm) -> None:
+def test_check_heartbeat_crm_too_old(section_1: Section) -> None:
     (result,) = check_heartbeat_crm(
         {"max_age": 60, "num_nodes": 2, "num_resources": 3},
         section_1,
     )
 
+    assert isinstance(result, Result)
     assert result.state is State.CRIT
     # Note: going crit is not the same as ignoring data.
     assert result.summary.startswith("Ignoring reported data ")
 
 
-def test_check_heartbeat_crm_ok(section_1, check_heartbeat_crm) -> None:
+def test_check_heartbeat_crm_ok(section_1: Section) -> None:
     with on_time("2020-09-08 10:36:36", "UTC"):
         assert list(
             check_heartbeat_crm(
-                {"max_age": 60, "num_nodes": 2, "num_resources": 3},
+                {"max_age": 60, "num_nodes": 2, "num_resources": 3, "dc": None},
                 section_1,
             )
         ) == [
@@ -181,7 +177,7 @@ def test_check_heartbeat_crm_ok(section_1, check_heartbeat_crm) -> None:
         ]
 
 
-def test_check_heartbeat_crm_crit(section_2, check_heartbeat_crm) -> None:
+def test_check_heartbeat_crm_crit(section_2: Section) -> None:
     with on_time("2019-08-18 10:36:36", "UTC"):
         assert list(
             check_heartbeat_crm(

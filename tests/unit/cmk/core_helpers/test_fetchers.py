@@ -37,7 +37,7 @@ from cmk.core_helpers import (
     PushAgentFetcher as FallbackPushAgentFetcher,  # We must test the FetcherType factory agains the fallback class, because during import we are not a CPE. Patching this during the test will make no difference...
 )
 from cmk.core_helpers import snmp
-from cmk.core_helpers.agent import DefaultAgentFileCache, NoCache
+from cmk.core_helpers.agent import AgentFileCache, NoCache
 from cmk.core_helpers.cache import FileCache, MaxAge
 from cmk.core_helpers.ipmi import IPMIFetcher
 from cmk.core_helpers.piggyback import PiggybackFetcher
@@ -82,7 +82,7 @@ def clone_file_cache(file_cache: FileCache) -> FileCache:
 
 
 class TestFileCache:
-    @pytest.fixture(params=[DefaultAgentFileCache, NoCache, SNMPFileCache])
+    @pytest.fixture(params=[AgentFileCache, NoCache, SNMPFileCache])
     def file_cache(self, request) -> FileCache:
         return request.param(
             HostName("hostname"),
@@ -148,7 +148,7 @@ class TestNoCache:
         assert file_cache.read(mode) is None
 
 
-# This is horrible to type since the DefaultAgentFileCache needs the AgentRawData and the
+# This is horrible to type since the AgentFileCache needs the AgentRawData and the
 # SNMPFileCache needs SNMPRawData, this matches here (I think) but the Union types would not
 # help anybody... And mypy cannot handle the conditions so we would need to ignore the errors
 # anyways...
@@ -157,7 +157,7 @@ class TestDefaultFileCache_and_SNMPFileCache:
     def path(self, tmp_path: Path) -> Path:
         return tmp_path / "database"
 
-    @pytest.fixture(params=[DefaultAgentFileCache, SNMPFileCache])
+    @pytest.fixture(params=[AgentFileCache, SNMPFileCache])
     def file_cache(self, path: Path, request):
         return request.param(
             HostName("hostname"),
@@ -170,7 +170,7 @@ class TestDefaultFileCache_and_SNMPFileCache:
 
     @pytest.fixture
     def raw_data(self, file_cache):
-        if isinstance(file_cache, DefaultAgentFileCache):
+        if isinstance(file_cache, AgentFileCache):
             return AgentRawData(b"<<<check_mk>>>\nagent raw data")
         assert isinstance(file_cache, SNMPFileCache)
         table: Sequence[SNMPTable] = []
@@ -216,7 +216,7 @@ class TestDefaultFileCache_and_SNMPFileCache:
         assert file_cache.read(mode) is None
 
 
-class StubFileCache(DefaultAgentFileCache):
+class StubFileCache(AgentFileCache):
     """Holds the data to be cached in-memory for testing"""
 
     def __init__(self, *args, **kwargs):
@@ -232,7 +232,7 @@ class StubFileCache(DefaultAgentFileCache):
 
 class TestIPMIFetcher:
     @pytest.fixture
-    def file_cache(self) -> DefaultAgentFileCache:
+    def file_cache(self) -> AgentFileCache:
         return StubFileCache(
             HostName("hostname"),
             base_path=Path(os.devnull),
@@ -243,7 +243,7 @@ class TestIPMIFetcher:
         )
 
     @pytest.fixture
-    def fetcher(self, file_cache: DefaultAgentFileCache) -> IPMIFetcher:
+    def fetcher(self, file_cache: AgentFileCache) -> IPMIFetcher:
         return IPMIFetcher(
             file_cache,
             address="1.2.3.4",
@@ -263,7 +263,7 @@ class TestIPMIFetcher:
         assert other.password == fetcher.password
 
     def test_with_cached_does_not_open(
-        self, file_cache: DefaultAgentFileCache, monkeypatch: MonkeyPatch
+        self, file_cache: AgentFileCache, monkeypatch: MonkeyPatch
     ) -> None:
         def open_(*args):
             raise IpmiException()
@@ -282,7 +282,7 @@ class TestIPMIFetcher:
         assert fetched.is_ok()
 
     def test_command_raises_IpmiException_handling(
-        self, file_cache: DefaultAgentFileCache, monkeypatch: MonkeyPatch
+        self, file_cache: AgentFileCache, monkeypatch: MonkeyPatch
     ) -> None:
         def open_(*args):
             raise IpmiException()
@@ -360,8 +360,8 @@ class TestPiggybackFetcher:
 
 class TestProgramFetcher:
     @pytest.fixture
-    def file_cache(self) -> DefaultAgentFileCache:
-        return DefaultAgentFileCache(
+    def file_cache(self) -> AgentFileCache:
+        return AgentFileCache(
             HostName("hostname"),
             base_path=Path(os.devnull),
             max_age=MaxAge.none(),
@@ -371,7 +371,7 @@ class TestProgramFetcher:
         )
 
     @pytest.fixture
-    def fetcher(self, file_cache: DefaultAgentFileCache) -> ProgramFetcher:
+    def fetcher(self, file_cache: AgentFileCache) -> ProgramFetcher:
         return ProgramFetcher(
             file_cache,
             cmdline="/bin/true",
@@ -801,7 +801,7 @@ class _MockSock:
 
 class TestTCPFetcher:
     @pytest.fixture
-    def file_cache(self) -> DefaultAgentFileCache:
+    def file_cache(self) -> AgentFileCache:
         return StubFileCache(
             HostName("hostname"),
             base_path=Path(os.devnull),
@@ -812,7 +812,7 @@ class TestTCPFetcher:
         )
 
     @pytest.fixture
-    def fetcher(self, file_cache: DefaultAgentFileCache) -> TCPFetcher:
+    def fetcher(self, file_cache: AgentFileCache) -> TCPFetcher:
         return TCPFetcher(
             file_cache,
             family=socket.AF_INET,
@@ -836,7 +836,7 @@ class TestTCPFetcher:
         assert other.use_only_cache == fetcher.use_only_cache
 
     def test_with_cached_does_not_open(
-        self, file_cache: DefaultAgentFileCache, monkeypatch: MonkeyPatch
+        self, file_cache: AgentFileCache, monkeypatch: MonkeyPatch
     ) -> None:
         file_cache.write(AgentRawData(b"<<<whatever>>>"), Mode.CHECKING)
         with TCPFetcher(
@@ -876,7 +876,7 @@ class TestTCPFetcher:
                 assert isinstance(fetched.error, MKFetcherError)
 
     def test_open_exception_becomes_fetcher_rerror(
-        self, file_cache: DefaultAgentFileCache, monkeypatch: MonkeyPatch
+        self, file_cache: AgentFileCache, monkeypatch: MonkeyPatch
     ) -> None:
         with TCPFetcher(
             file_cache,
@@ -891,7 +891,7 @@ class TestTCPFetcher:
 
         assert isinstance(fetched.error, MKFetcherError)
 
-    def test_decrypt_plaintext_is_noop(self, file_cache: DefaultAgentFileCache) -> None:
+    def test_decrypt_plaintext_is_noop(self, file_cache: AgentFileCache) -> None:
         settings = {"use_regular": "allow"}
         output = b"<<<section:sep(0)>>>\nbody\n"
         fetcher = TCPFetcher(
@@ -906,7 +906,7 @@ class TestTCPFetcher:
         assert fetcher._decrypt(TransportProtocol(output[:2]), AgentRawData(output[2:])) == output
 
     def test_validate_protocol_plaintext_with_enforce_raises(
-        self, file_cache: DefaultAgentFileCache
+        self, file_cache: AgentFileCache
     ) -> None:
         settings = {"use_regular": "enforce"}
         fetcher = TCPFetcher(
@@ -923,7 +923,7 @@ class TestTCPFetcher:
             fetcher._validate_protocol(TransportProtocol.PLAIN, is_registered=False)
 
     def test_validate_protocol_no_tls_with_registered_host_raises(
-        self, file_cache: DefaultAgentFileCache
+        self, file_cache: AgentFileCache
     ) -> None:
         fetcher = TCPFetcher(
             file_cache,
@@ -940,7 +940,7 @@ class TestTCPFetcher:
             with pytest.raises(MKFetcherError):
                 fetcher._validate_protocol(p, is_registered=True)
 
-    def test_validate_protocol_tls_always_ok(self, file_cache: DefaultAgentFileCache) -> None:
+    def test_validate_protocol_tls_always_ok(self, file_cache: AgentFileCache) -> None:
         for setting, is_registered in cartesian_product(
             ("tls", "enforce", "enable", "disable"),
             (True, False),
@@ -956,7 +956,7 @@ class TestTCPFetcher:
             )._validate_protocol(TransportProtocol.TLS, is_registered=is_registered)
 
     def test_validate_protocol_encryption_with_disabled_raises(
-        self, file_cache: DefaultAgentFileCache
+        self, file_cache: AgentFileCache
     ) -> None:
         settings = {"use_regular": "disable"}
         fetcher = TCPFetcher(
@@ -971,7 +971,7 @@ class TestTCPFetcher:
         with pytest.raises(MKFetcherError):
             fetcher._validate_protocol(TransportProtocol.PBKDF2, is_registered=False)
 
-    def test_validate_protocol_tls_required(self, file_cache: DefaultAgentFileCache) -> None:
+    def test_validate_protocol_tls_required(self, file_cache: AgentFileCache) -> None:
         settings = {"use_regular": "tls"}
         fetcher = TCPFetcher(
             file_cache,
@@ -1029,8 +1029,8 @@ class TestTCPFetcher:
 
 class TestFetcherCaching:
     @pytest.fixture
-    def file_cache(self) -> DefaultAgentFileCache:
-        return DefaultAgentFileCache(
+    def file_cache(self) -> AgentFileCache:
+        return AgentFileCache(
             HostName("hostname"),
             base_path=Path(os.devnull),
             max_age=MaxAge.none(),
@@ -1040,7 +1040,7 @@ class TestFetcherCaching:
         )
 
     @pytest.fixture
-    def fetcher(self, monkeypatch: MonkeyPatch, file_cache: DefaultAgentFileCache) -> TCPFetcher:
+    def fetcher(self, monkeypatch: MonkeyPatch, file_cache: AgentFileCache) -> TCPFetcher:
         # We use the TCPFetcher to test a general feature of the fetchers.
         return TCPFetcher(
             StubFileCache.from_json(file_cache.to_json()),

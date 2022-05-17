@@ -17,14 +17,14 @@ from six import ensure_str
 from cmk.utils.exceptions import MKFetcherError
 from cmk.utils.type_defs import AgentRawData
 
-from .agent import AgentFetcher, DefaultAgentFileCache
+from .agent import AgentFetcher, AgentFileCache
 from .type_defs import Mode
 
 
 class ProgramFetcher(AgentFetcher):
     def __init__(
         self,
-        file_cache: DefaultAgentFileCache,
+        file_cache: AgentFileCache,
         *,
         cmdline: Union[bytes, str],
         stdin: Optional[str],
@@ -57,7 +57,7 @@ class ProgramFetcher(AgentFetcher):
     def _from_json(cls, serialized: Mapping[str, Any]) -> "ProgramFetcher":
         serialized_ = copy.deepcopy(dict(serialized))
         return cls(
-            DefaultAgentFileCache.from_json(serialized_.pop("file_cache")),
+            AgentFileCache.from_json(serialized_.pop("file_cache")),
             **serialized_,
         )
 

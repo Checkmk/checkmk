@@ -19,7 +19,7 @@ from cmk.utils.exceptions import MKFetcherError
 from cmk.utils.type_defs import AgentRawData, HostAddress, HostName
 
 from ._base import verify_ipaddress
-from .agent import AgentFetcher, DefaultAgentFileCache
+from .agent import AgentFetcher, AgentFileCache
 from .tcp_agent_ctl import AgentCtlMessage
 from .type_defs import Mode
 
@@ -27,7 +27,7 @@ from .type_defs import Mode
 class TCPFetcher(AgentFetcher):
     def __init__(
         self,
-        file_cache: DefaultAgentFileCache,
+        file_cache: AgentFileCache,
         *,
         family: socket.AddressFamily,
         address: Tuple[Optional[HostAddress], int],
@@ -74,7 +74,7 @@ class TCPFetcher(AgentFetcher):
         address: Tuple[Optional[HostAddress], int] = serialized_.pop("address")
         host_name = HostName(serialized_.pop("host_name"))
         return cls(
-            DefaultAgentFileCache.from_json(serialized_.pop("file_cache")),
+            AgentFileCache.from_json(serialized_.pop("file_cache")),
             address=address,
             host_name=host_name,
             **serialized_,

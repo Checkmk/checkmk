@@ -36,7 +36,7 @@ from .host_sections import HostSections
 from .type_defs import AgentRawDataSection, Mode, NO_SELECTION, SectionNameCollection
 
 
-class DefaultAgentFileCache(FileCache[AgentRawData]):
+class AgentFileCache(FileCache[AgentRawData]):
     @staticmethod
     def _from_cache_file(raw_data: bytes) -> AgentRawData:
         return AgentRawData(raw_data)
@@ -86,11 +86,11 @@ class NoCache(FileCache[AgentRawData]):
         return Path(os.devnull)
 
 
-class DefaultAgentFileCacheFactory(FileCacheFactory[AgentRawData]):
+class AgentFileCacheFactory(FileCacheFactory[AgentRawData]):
     # force_cache_refresh is currently only used by SNMP. It's probably less irritating
     # to implement it here anyway:
-    def make(self, *, force_cache_refresh: bool = False) -> DefaultAgentFileCache:
-        return DefaultAgentFileCache(
+    def make(self, *, force_cache_refresh: bool = False) -> AgentFileCache:
+        return AgentFileCache(
             self.hostname,
             base_path=self.base_path,
             max_age=MaxAge.none() if force_cache_refresh else self.max_age,

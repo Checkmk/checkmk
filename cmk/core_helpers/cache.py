@@ -16,7 +16,7 @@ Cache hierarchy
         - {abstract} _from_cache_file(bytes) : TRawData
         - {abstract} _to_cache_file(TRawData) : bytes
     }
-    class DefaultAgentFileCache {
+    class AgentFileCache {
         + make_path(Mode) : Path
         - _from_cache_file(bytes) : TRawData
         - _to_cache_file(TRawData) : bytes
@@ -37,12 +37,12 @@ Cache hierarchy
     class SNMPFetcher {}
     class PiggybackFetcher {}
 
-    FileCache <|.. DefaultAgentFileCache : <<bind>>\nTRawData::AgentRawData
+    FileCache <|.. AgentFileCache : <<bind>>\nTRawData::AgentRawData
     FileCache <|.. NoCache : <<bind>>\nTRawData::AgentRawData
     FileCache <|.. SNMPFileCache : <<bind>>\nTRawData::SNMPRawData
-    DefaultAgentFileCache *-- TCPFetcher
-    DefaultAgentFileCache *-- ProgramFetcher
-    DefaultAgentFileCache *-- IPMIFetcher
+    AgentFileCache *-- TCPFetcher
+    AgentFileCache *-- ProgramFetcher
+    AgentFileCache *-- IPMIFetcher
     NoCache *-- PiggybackFetcher
     SNMPFileCache *-- SNMPFetcher
 

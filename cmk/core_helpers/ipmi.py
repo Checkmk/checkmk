@@ -26,7 +26,7 @@ from cmk.utils.log import VERBOSE
 from cmk.utils.type_defs import AgentRawData, HostAddress
 
 from ._base import Summarizer
-from .agent import AgentFetcher, DefaultAgentFileCache
+from .agent import AgentFetcher, AgentFileCache
 from .type_defs import Mode
 
 
@@ -43,7 +43,7 @@ class IPMIFetcher(AgentFetcher):
 
     def __init__(
         self,
-        file_cache: DefaultAgentFileCache,
+        file_cache: AgentFileCache,
         *,
         address: HostAddress,  # Could actually be HostName as well.
         username: Optional[str],
@@ -73,7 +73,7 @@ class IPMIFetcher(AgentFetcher):
     def _from_json(cls, serialized: Mapping[str, Any]) -> IPMIFetcher:
         serialized_ = copy.deepcopy(dict(serialized))
         return cls(
-            DefaultAgentFileCache.from_json(serialized_.pop("file_cache")),
+            AgentFileCache.from_json(serialized_.pop("file_cache")),
             **serialized_,
         )
 

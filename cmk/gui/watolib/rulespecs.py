@@ -997,7 +997,7 @@ class RulespecRegistry(cmk.utils.plugin_registry.Registry[Rulespec]):
 class CheckTypeGroupSelection(ElementSelection):
     def __init__(  # pylint: disable=redefined-builtin
         self,
-        checkgroup,
+        checkgroup: str,
         # ElementSelection
         label: Optional[str] = None,
         empty_text: Optional[str] = None,
@@ -1030,7 +1030,7 @@ class CheckTypeGroupSelection(ElementSelection):
         return HTMLWriter.render_tt(value)
 
 
-class TimeperiodValuespec(ValueSpec):
+class TimeperiodValuespec(ValueSpec[dict[str, Any]]):
     # Used by GUI switch
     # The actual set mode
     # "0" - no timespecific settings
@@ -1041,18 +1041,18 @@ class TimeperiodValuespec(ValueSpec):
     tp_default_value_key = "tp_default_value"  # Used in valuespec
     tp_values_key = "tp_values"  # Used in valuespec
 
-    def __init__(self, valuespec):
+    def __init__(self, valuespec: ValueSpec[dict[str, Any]]):
         super().__init__(
             title=valuespec.title(),
             help=valuespec.help(),
         )
         self._enclosed_valuespec = valuespec
 
-    def default_value(self) -> Any:
+    def default_value(self) -> dict[str, Any]:
         # If nothing is configured, simply return the default value of the enclosed valuespec
         return self._enclosed_valuespec.default_value()
 
-    def render_input(self, varprefix: str, value: Any) -> None:
+    def render_input(self, varprefix: str, value: dict[str, Any]) -> None:
         # The display mode differs when the valuespec is activated
         vars_copy = dict(request.itervars())
 
@@ -1082,16 +1082,14 @@ class TimeperiodValuespec(ValueSpec):
             )
         else:
             value = self._get_timeless_value(value)
-            r = self._enclosed_valuespec.render_input(varprefix, value)
+            self._enclosed_valuespec.render_input(varprefix, value)
             html.buttonlink(
                 toggle_url,
                 _("Enable timespecific parameters"),
                 class_=["toggle_timespecific_parameter"],
             )
-            return r
-        return None
 
-    def value_to_html(self, value: Any) -> ValueSpecText:
+    def value_to_html(self, value: dict[str, Any]) -> ValueSpecText:
         return self._get_used_valuespec(value).value_to_html(value)
 
     def from_html_vars(self, varprefix: str) -> dict[str, Any]:
@@ -1114,11 +1112,11 @@ class TimeperiodValuespec(ValueSpec):
         super()._validate_value(value, varprefix)
         self._get_used_valuespec(value).validate_value(value, varprefix)
 
-    def validate_datatype(self, value: Any, varprefix: str) -> None:
+    def validate_datatype(self, value: dict[str, Any], varprefix: str) -> None:
         super().validate_datatype(value, varprefix)
         self._get_used_valuespec(value).validate_datatype(value, varprefix)
 
-    def _get_timeperiod_valuespec(self):
+    def _get_timeperiod_valuespec(self) -> ValueSpec[dict[str, Any]]:
         return Dictionary(
             elements=[
                 (
@@ -1152,11 +1150,11 @@ class TimeperiodValuespec(ValueSpec):
         )
 
     # Checks whether the tp-mode is switched on through the gui
-    def _is_switched_on(self):
+    def _is_switched_on(self) -> bool:
         return request.var(self.tp_toggle_var) == "1"
 
     # Checks whether the value itself already uses the tp-mode
-    def is_active(self, value):
+    def is_active(self, value: dict[str, Any]) -> bool:
         return isinstance(value, dict) and self.tp_default_value_key in value
 
     # Returns simply the value or converts a plain value to a tp-value
@@ -1172,12 +1170,12 @@ class TimeperiodValuespec(ValueSpec):
         return value
 
     # Returns the currently used ValueSpec based on the current value
-    def _get_used_valuespec(self, value: Any) -> ValueSpec:
+    def _get_used_valuespec(self, value: dict[str, Any]) -> ValueSpec[dict[str, Any]]:
         return (
             self._get_timeperiod_valuespec() if self.is_active(value) else self._enclosed_valuespec
         )
 
-    def transform_value(self, value: Any) -> Any:
+    def transform_value(self, value: dict[str, Any]) -> dict[str, Any]:
         return self._get_used_valuespec(value).transform_value(value)
 
     def value_to_json(self, value: dict[str, Any]) -> JSONValue:

@@ -1842,6 +1842,6 @@ def test_rulespec_groups_have_unique_names():
 
 def test_validate_datatype_timeperiod_valuespec_inner():
     # make sure TimeperiodValuespec does propagate validate_datatype to its child
-    value_spec = TimeperiodValuespec(TextInput(title="testing"))
+    value_spec = TimeperiodValuespec(Dictionary(elements=[]))
     with pytest.raises(MKUserError):
-        value_spec.validate_datatype(["not", "a", "string"], "")
+        value_spec.validate_datatype(["not", "a", "string"], "")  # type: ignore[arg-type]

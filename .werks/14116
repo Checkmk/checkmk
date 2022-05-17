@@ -1,0 +1,12 @@
+Title: Fix missing reports in menu "Monitor"
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1652801180
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p25
+
+Werk #13873 removed the reports from the sidebar snapin but also from the menu.
+The reports are now shown as before.

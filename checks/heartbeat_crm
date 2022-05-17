@@ -4,10 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import calendar
 import time
 from typing import Any, Mapping, NamedTuple, Optional, Sequence
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import render, Result, Service, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     CheckResult,
     DiscoveryResult,
@@ -43,7 +44,7 @@ factory_settings["heartbeat_crm_default_levels"] = {
 
 
 class _Cluster(NamedTuple):
-    last_updated: Optional[str]
+    last_updated: str
     dc: Optional[str]
     num_nodes: Optional[int]
     num_resources: Optional[int]
@@ -71,9 +72,9 @@ def _parse_for_error(first_line: str) -> Optional[str]:
 
 def heartbeat_crm_parse_general(string_table: StringTable) -> _Cluster:
     if (error := _parse_for_error(" ".join(string_table[0]))) is not None:
-        return _Cluster(None, None, None, None, error)
+        return _Cluster("", None, None, None, error)
 
-    last_updated = None
+    last_updated = ""
     dc = None
     num_nodes = None
     num_resources = None
@@ -233,19 +234,18 @@ def check_heartbeat_crm(_no_item, params: Mapping[str, Any], section: Section) -
     last_updated, dc, num_nodes, num_resources, error = section.cluster
 
     if error is not None:
-        yield 2, error
+        yield Result(state=State.CRIT, summary=error)
         return
 
     # Check the freshness of the crm_mon output and terminate with CRITICAL
     # when too old information are found
-    dt = utc_mktime(time.strptime(last_updated, "%a %b %d %H:%M:%S %Y"))
+    dt = calendar.timegm((time.strptime(last_updated, "%a %b %d %H:%M:%S %Y")))
     now = time.time()
     delta = now - dt
     if delta > params["max_age"]:
         yield Result(
             state=State.CRIT,
-            summary="Ignoring reported data (Status output too old: %s)"
-            % (get_age_human_readable(delta),),
+            summary=f"Ignoring reported data (Status output too old: {render.timespan(delta)})",
         )
         return
 
@@ -348,7 +348,7 @@ def _join_lines(lines: Sequence[str]) -> Sequence[str]:
     return joined
 
 
-def inventory_heartbeat_crm_resources(section: Section) -> DiscoveryResult:
+def discover_heartbeat_crm_resources(section: Section) -> DiscoveryResult:
     # Full list of resources:
     # Resource Group: group_slapmaster
     #     resource_virtip1  (ocf::heartbeat:IPaddr):  Started mwp
@@ -396,7 +396,7 @@ def check_heartbeat_crm_resources(
 
 check_info["heartbeat_crm.resources"] = {
     "check_function": check_heartbeat_crm_resources,
-    "inventory_function": inventory_heartbeat_crm_resources,
+    "inventory_function": discover_heartbeat_crm_resources,
     "service_description": "Heartbeat CRM %s",
     "group": "heartbeat_crm_resources",
 }

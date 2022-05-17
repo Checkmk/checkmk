@@ -856,7 +856,6 @@ class ModeBIRules(ABCBIMode):
             html.dropdown(
                 "bulk_moveto",
                 move_choices,
-                "@",
                 onchange="cmk.selection.update_bulk_moveto(this.value)",
                 class_="bulk_moveto",
                 label=_("Move to pack: "),
@@ -2092,7 +2091,6 @@ class BIModeAggregations(ABCBIMode):
             html.dropdown(
                 "bulk_moveto",
                 move_choices,
-                "@",
                 onchange="cmk.selection.update_bulk_moveto(this.value)",
                 class_="bulk_moveto",
                 label=_("Move to pack: "),

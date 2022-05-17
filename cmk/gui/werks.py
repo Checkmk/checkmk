@@ -478,7 +478,9 @@ def _werk_table_option_entries():
                     (None, _("All editions")),
                     *(
                         (e.short, _("Werks only concerning the %s") % e.title)
-                        for e in (Edition.CPE, Edition.CME, Edition.CEE, Edition.CRE)
+                        # Enable this once we release a plus edition. CMK-10535
+                        # for e in (Edition.CPE, Edition.CME, Edition.CEE, Edition.CRE)
+                        for e in (Edition.CME, Edition.CEE, Edition.CRE)
                     ),
                 ],
             ),
@@ -617,6 +619,10 @@ def werk_matches_options(werk, werk_table_options):
         and werk["date"] >= werk_table_options["date_range"][0]
         and werk["date"] <= werk_table_options["date_range"][1]
     ):
+        return False
+
+    # remove this block with CMK-10535
+    if werk_table_options["edition"] is None and werk["edition"] == Edition.CPE.short:
         return False
 
     if werk_table_options["edition"] and werk["edition"] != werk_table_options["edition"]:

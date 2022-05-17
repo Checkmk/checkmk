@@ -6,6 +6,8 @@
 
 from typing import List, Tuple
 
+import cmk.utils.version as cmk_version
+
 import cmk.gui.dashboard as dashboard
 import cmk.gui.pagetypes as pagetypes
 import cmk.gui.views as views
@@ -24,6 +26,11 @@ from cmk.gui.plugins.sidebar.utils import (
 )
 from cmk.gui.type_defs import MegaMenu, TopicMenuTopic, Visual
 
+if not cmk_version.is_raw_edition():
+    import cmk.gui.cee.reporting as reporting  # pylint: disable=no-name-in-module
+else:
+    reporting = None  # type: ignore[assignment]
+
 
 @snapin_registry.register
 class Views(SidebarSnapin):
@@ -40,7 +47,7 @@ class Views(SidebarSnapin):
         return _("Links to global views and dashboards")
 
     def show(self):
-        show_topic_menu(treename="views", menu=get_view_menu_items())
+        show_topic_menu(treename="views", menu=get_view_menu_items(include_reports=False))
 
         links = []
         if user.may("general.edit_views"):
@@ -50,7 +57,7 @@ class Views(SidebarSnapin):
             footnotelinks(links)
 
 
-def get_view_menu_items() -> List[TopicMenuTopic]:
+def get_view_menu_items(include_reports: bool) -> List[TopicMenuTopic]:
     # The page types that are implementing the PageRenderer API should also be
     # part of the menu. Bring them into a visual like structure to make it easy to
     # integrate them.
@@ -83,6 +90,10 @@ def get_view_menu_items() -> List[TopicMenuTopic]:
     visuals_to_show += [("pages", e) for e in pages_to_show]
     visuals_to_show += page_type_items
 
+    if reporting and include_reports:
+        reporting.load_reports()
+        visuals_to_show += [("reports", e) for e in reporting.permitted_reports().items()]
+
     return make_topic_menu(visuals_to_show)
 
 
@@ -92,7 +103,7 @@ mega_menu_registry.register(
         title=_l("Monitor"),
         icon="main_monitoring",
         sort_index=5,
-        topics=get_view_menu_items,
+        topics=lambda: get_view_menu_items(include_reports=True),
         search=search.MonitoringSearch("monitoring_search"),
     )
 )

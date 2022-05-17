@@ -17,11 +17,12 @@ from six import ensure_str
 from cmk.utils.exceptions import MKFetcherError
 from cmk.utils.type_defs import AgentRawData
 
-from .agent import AgentFetcher, AgentFileCache
+from ._base import Fetcher
+from .agent import AgentFileCache
 from .type_defs import Mode
 
 
-class ProgramFetcher(AgentFetcher):
+class ProgramFetcher(Fetcher[AgentRawData]):
     def __init__(
         self,
         file_cache: AgentFileCache,

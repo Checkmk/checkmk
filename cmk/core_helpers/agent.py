@@ -29,7 +29,7 @@ from cmk.utils.check_utils import ActiveCheckResult
 from cmk.utils.translations import TranslationOptions
 from cmk.utils.type_defs import AgentRawData, HostName, SectionName
 
-from ._base import Fetcher, Parser, Summarizer
+from ._base import Parser, Summarizer
 from ._markers import PiggybackMarker, SectionMarker
 from .cache import FileCache, FileCacheFactory, MaxAge, SectionStore
 from .host_sections import HostSections
@@ -112,10 +112,6 @@ class NoCacheFactory(FileCacheFactory[AgentRawData]):
             use_outdated=False if force_cache_refresh else self.use_outdated,
             simulation=self.simulation,
         )
-
-
-class AgentFetcher(Fetcher[AgentRawData]):
-    pass
 
 
 MutableSection = MutableMapping[SectionMarker, List[AgentRawData]]

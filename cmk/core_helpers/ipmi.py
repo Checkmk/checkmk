@@ -25,12 +25,12 @@ from cmk.utils.exceptions import MKFetcherError
 from cmk.utils.log import VERBOSE
 from cmk.utils.type_defs import AgentRawData, HostAddress
 
-from ._base import Summarizer
-from .agent import AgentFetcher, AgentFileCache
+from ._base import Fetcher, Summarizer
+from .agent import AgentFileCache
 from .type_defs import Mode
 
 
-class IPMIFetcher(AgentFetcher):
+class IPMIFetcher(Fetcher[AgentRawData]):
     """Fetch IPMI data using `pyghmi`.
 
     Note:

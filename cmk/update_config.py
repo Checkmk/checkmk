@@ -183,6 +183,7 @@ REMOVED_GLOBALS_MAP: List[Tuple[str, str, Dict]] = [
 
 REMOVED_WATO_RULESETS_MAP = {
     "non_inline_snmp_hosts": "snmp_backend_hosts",
+    "agent_config:package_compression": "agent_config:bakery_packages",
 }
 
 _MATCH_SINGLE_BACKSLASH = re.compile(r"[^\\]\\[^\\]")

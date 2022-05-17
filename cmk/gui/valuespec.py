@@ -7194,7 +7194,7 @@ def Fontsize(  # pylint: disable=redefined-builtin
     )
 
 
-class Color(ValueSpec):
+class Color(ValueSpec[_Optional[str]]):
     def __init__(  # pylint: disable=redefined-builtin
         self,
         on_change: _Optional[str] = None,
@@ -7202,8 +7202,8 @@ class Color(ValueSpec):
         # ValueSpec
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
-        default_value: ValueSpecDefault[T] = DEF_VALUE,
-        validate: _Optional[ValueSpecValidateFunc[T]] = None,
+        default_value: ValueSpecDefault[_Optional[str]] = DEF_VALUE,
+        validate: _Optional[ValueSpecValidateFunc[_Optional[str]]] = None,
     ):
         # TODO: Should this actually subclass TextInput?
         # kwargs["regex"] = "#[0-9]{3,6}"
@@ -7215,7 +7215,7 @@ class Color(ValueSpec):
     def allow_empty(self) -> bool:
         return self._allow_empty
 
-    def render_input(self, varprefix: str, value: Any) -> None:
+    def render_input(self, varprefix: str, value: _Optional[str]) -> None:
         if not value:
             value = "#FFFFFF"
 
@@ -7246,20 +7246,20 @@ class Color(ValueSpec):
             return None
         return color
 
-    def value_to_html(self, value: str) -> ValueSpecText:
+    def value_to_html(self, value: _Optional[str]) -> ValueSpecText:
+        return "" if value is None else value
+
+    def value_to_json(self, value: _Optional[str]) -> JSONValue:
         return value
 
-    def value_to_json(self, value: str) -> JSONValue:
-        return value
-
-    def value_from_json(self, json_value: JSONValue) -> str:
+    def value_from_json(self, json_value: JSONValue) -> _Optional[str]:
         return json_value
 
-    def validate_datatype(self, value: Any, varprefix: str) -> None:
+    def validate_datatype(self, value: _Optional[str], varprefix: str) -> None:
         if value is not None and not isinstance(value, str):
             raise MKUserError(varprefix, _("The type is %s, but should be str") % type(value))
 
-    def _validate_value(self, value: str, varprefix: str) -> None:
+    def _validate_value(self, value: _Optional[str], varprefix: str) -> None:
         if not self._allow_empty and not value:
             raise MKUserError(varprefix, _("You need to select a color."))
 

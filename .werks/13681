@@ -1,0 +1,28 @@
+Title: Agent Bakery: Target platform selection
+Class: feature
+Compatible: compat
+Component: agents
+Date: 1652773056
+Edition: cee
+Knowledge: undoc
+Level: 1
+Version: 2.1.0p4
+
+It's now possible to narrow down the target platforms (i.e., the operating system and
+package format) for baked agent packages.
+
+This can be configured by choosing the desired platforms at the "Select packages" entry of the
+"Agent Bakery Packages" ruleset. Unselected packages will show the text "Not available" instead
+of a download button in the baked packages overview. If no "Select packages" rule entry is
+activated, the agent bakery defaults to bake for all platforms.
+
+As the selection is done via a ruleset, it only influences the matching agent configurations,
+rather than narrowing down the target platforms globally.
+As a result, if you unselect all target platforms, the resulting agent configurations/packages
+will vanish completely from the agent bakery.
+Also, you can't narrow down the VANILLA packages with this rule. (However, they have a minimal
+impact on the overall baking time, so there's no need to deactivate unneeded packages)
+
+Note: To keep things together, the new "Agent Bakery Packages" ruleset is also used to
+activate/deactivate agent package compression, which has been configured at the "Agent bakery
+package compression" ruleset before. Your existing configurations are ported automatically.

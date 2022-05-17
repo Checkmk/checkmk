@@ -34,7 +34,7 @@ def test_swagger_ui_https(aut_user_auth_wsgi_app):
 def test_swagger_ui_resource_urls(aut_user_auth_wsgi_app):
     wsgi_app = aut_user_auth_wsgi_app
     resp = wsgi_app.get("/NO_SITE/check_mk/api/0/ui/swagger-ui.js", status=200)
-    assert resp.headers["content-type"] == "application/javascript"
+    assert resp.headers["content-type"] in ("application/javascript", "text/javascript")
     resp = wsgi_app.get("/NO_SITE/check_mk/api/0/ui/swagger-ui.css", status=200)
     assert resp.headers["content-type"] == "text/css"
     resp = wsgi_app.get("/NO_SITE/check_mk/api/0/ui/swagger-ui.css.map", status=200)

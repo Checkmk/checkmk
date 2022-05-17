@@ -37,11 +37,11 @@ class Fetcher(Generic[TRawData], abc.ABC):
 
     def __init__(
         self,
-        file_cache: FileCache,
+        file_cache: FileCache[TRawData],
         logger: logging.Logger,
     ) -> None:
         super().__init__()
-        self.file_cache: Final[FileCache[TRawData]] = file_cache
+        self.file_cache: Final = file_cache
         self._logger = logger
 
     @final

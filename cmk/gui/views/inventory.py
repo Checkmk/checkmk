@@ -9,7 +9,6 @@ from __future__ import annotations
 import abc
 import time
 from dataclasses import dataclass
-from functools import partial
 from typing import (
     Any,
     Callable,
@@ -32,9 +31,11 @@ from cmk.utils.regex import regex
 from cmk.utils.structured_data import (
     Attributes,
     RetentionIntervals,
+    SDKey,
     SDKeys,
     SDPath,
     SDRawPath,
+    SDValue,
     StructuredDataNode,
     Table,
 )
@@ -781,6 +782,10 @@ class AttributesDisplayHint:
         return cls(
             key_order=raw_hint.get("keyorder", []),
         )
+
+    def sort_pairs(self, pairs: Mapping[SDKey, SDValue]) -> Sequence[Tuple[SDKey, SDValue]]:
+        sorting_keys = list(self.key_order) + sorted(set(pairs) - set(self.key_order))
+        return [(k, pairs[k]) for k in sorting_keys if k in pairs]
 
 
 @dataclass(frozen=True)
@@ -1920,13 +1925,6 @@ def render_inv_dicttable(*args):
     pass
 
 
-def _sort_by_index(keyorder, item):
-    try:
-        return keyorder.index(item[0])
-    except ValueError:
-        return len(keyorder) + 1
-
-
 TableTitles = List[Tuple[str, str, bool]]
 
 
@@ -2093,17 +2091,8 @@ class ABCNodeRenderer(abc.ABC):
     def show_attributes(self, attributes: Attributes) -> None:
         attrs_hint = AttributesDisplayHint.make(list(attributes.path))
 
-        if key_order := attrs_hint.key_order:
-            sort_func: Union[partial[Tuple[str, Any]], Callable[[Tuple[str, Any]], str]] = partial(
-                _sort_by_index, key_order
-            )
-        else:
-            # Simply sort by keys
-            def sort_func(item):
-                return item[0]
-
         html.open_table()
-        for key, value in sorted(attributes.pairs.items(), key=sort_func):
+        for key, value in attrs_hint.sort_pairs(attributes.pairs):
             attr_hint = AttributeDisplayHint.make(list(attributes.path), key)
             title = _inv_titleinfo(attr_hint.raw_path)
 

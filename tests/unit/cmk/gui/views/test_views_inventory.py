@@ -4,12 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Mapping
+from typing import Any, Mapping, Sequence, Tuple
 
 # No stub file
 import pytest
 
-from cmk.utils.structured_data import SDPath, StructuredDataNode
+from cmk.utils.structured_data import SDKey, SDPairs, SDPath, SDValue, StructuredDataNode
 
 import cmk.gui.inventory
 import cmk.gui.utils
@@ -503,6 +503,28 @@ def test_make_column_displayhint(
 )
 def test_make_attributes_displayhint(attrs_path: SDPath, expected: AttributesDisplayHint):
     assert AttributesDisplayHint.make(attrs_path) == expected
+
+
+@pytest.mark.parametrize(
+    "pairs, expected",
+    [
+        ({}, []),
+        (
+            {"namespace": "Namespace", "name": "Name", "object": "Object", "other": "Other"},
+            [
+                ("object", "Object"),
+                ("name", "Name"),
+                ("namespace", "Namespace"),
+                ("other", "Other"),
+            ],
+        ),
+    ],
+)
+def test_sort_attributes_pairs_displayhint(
+    pairs: SDPairs, expected: Sequence[Tuple[SDKey, SDValue]]
+):
+    attrs_hint = AttributesDisplayHint.make(["software", "applications", "kube", "metadata"])
+    assert attrs_hint.sort_pairs(pairs) == expected
 
 
 @pytest.mark.parametrize(

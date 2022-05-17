@@ -720,10 +720,23 @@ def _get_paint_function(raw_hint: InventoryHintSpec) -> tuple[str, PaintFunction
     return "str", inv_paint_generic
 
 
+def _make_title_function(raw_hint: InventoryHintSpec) -> Callable[[SDRawPath], str]:
+    if "title" not in raw_hint:
+        return lambda raw_path: (
+            raw_path.rstrip(".").rstrip(":").split(".")[-1].split(":")[-1].replace("_", " ").title()
+        )
+
+    if callable(title := raw_hint["title"]):
+        return lambda raw_path: title(inventory.parse_tree_path(raw_path)[0][-1] or "")
+
+    return lambda raw_path: title
+
+
 @dataclass(frozen=True)
 class NodeDisplayHint:
     raw_path: str
     icon: Optional[str]
+    title: str
 
     @classmethod
     def make(cls, path: SDPath) -> NodeDisplayHint:
@@ -732,6 +745,7 @@ class NodeDisplayHint:
         return cls(
             raw_path=raw_path,
             icon=raw_hint.get("icon"),
+            title=_make_title_function(raw_hint)(raw_path),
         )
 
 
@@ -766,7 +780,7 @@ class TableDisplayHint:
             set(k for r in rows for k in r) - set(self.key_order)
         )
         return [
-            TableTitle(col_hint.short or _inv_titleinfo(col_hint.raw_path), k, k in key_columns)
+            TableTitle(col_hint.short or col_hint.title, k, k in key_columns)
             for k in sorting_keys
             for col_hint in (ColumnDisplayHint.make(path, 0, k),)
         ]
@@ -783,6 +797,7 @@ class ColumnDisplayHint:
     short: Optional[str]
     data_type: str
     paint_function: PaintFunction
+    title: str
 
     @classmethod
     def make(cls, path: SDPath, index: int, key: str) -> ColumnDisplayHint:
@@ -794,6 +809,7 @@ class ColumnDisplayHint:
             short=raw_hint.get("short"),
             data_type=data_type,
             paint_function=paint_function,
+            title=_make_title_function(raw_hint)(raw_path) if path else key.title(),
         )
 
 
@@ -819,6 +835,7 @@ class AttributeDisplayHint:
     raw_path: str
     data_type: str
     paint_function: PaintFunction
+    title: str
 
     @classmethod
     def make(cls, path: SDPath, key: str) -> AttributeDisplayHint:
@@ -829,6 +846,7 @@ class AttributeDisplayHint:
             raw_path=raw_path,
             data_type=data_type,
             paint_function=paint_function,
+            title=_make_title_function(raw_hint)(raw_path) if path else key.title(),
         )
 
 
@@ -1972,7 +1990,7 @@ class ABCNodeRenderer(abc.ABC):
     def show_node(self, node: StructuredDataNode) -> None:
         node_hint = NodeDisplayHint.make(list(node.path))
 
-        title = _inv_titleinfo(node_hint.raw_path)
+        title = node_hint.title
 
         # Replace placeholders in title with the real values for this path
         if "%d" in title or "%s" in title:
@@ -2094,10 +2112,9 @@ class ABCNodeRenderer(abc.ABC):
         html.open_table()
         for key, value in attrs_hint.sort_pairs(attributes.pairs):
             attr_hint = AttributeDisplayHint.make(list(attributes.path), key)
-            title = _inv_titleinfo(attr_hint.raw_path)
 
             html.open_tr()
-            html.th(self._get_header(title, key, "#DDD"), title=attr_hint.raw_path)
+            html.th(self._get_header(attr_hint.title, key, "#DDD"), title=attr_hint.raw_path)
             html.open_td()
             self._show_attribute(
                 value,

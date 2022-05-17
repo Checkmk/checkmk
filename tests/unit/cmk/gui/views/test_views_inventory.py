@@ -356,6 +356,7 @@ def test__get_display_hint(invpath: str, expected_hint: Mapping[str, Any]) -> No
             NodeDisplayHint(
                 raw_path=".",
                 icon=None,
+                title="Inventory",
             ),
         ),
         (
@@ -363,6 +364,7 @@ def test__get_display_hint(invpath: str, expected_hint: Mapping[str, Any]) -> No
             NodeDisplayHint(
                 raw_path=".hardware.",
                 icon="hardware",
+                title="Hardware",
             ),
         ),
         (
@@ -370,6 +372,7 @@ def test__get_display_hint(invpath: str, expected_hint: Mapping[str, Any]) -> No
             NodeDisplayHint(
                 raw_path=".path.to.node.",
                 icon=None,
+                title="Node",
             ),
         ),
     ],
@@ -460,6 +463,7 @@ def test_sort_table_rows_displayhint(
                 short=None,
                 data_type="str",
                 paint_function=inv_paint_generic,
+                title="Key",
             ),
         ),
         (
@@ -471,6 +475,7 @@ def test_sort_table_rows_displayhint(
                 short="Status",
                 data_type="if_oper_status",
                 paint_function=inv_paint_if_oper_status,
+                title="Operational Status",
             ),
         ),
         (
@@ -482,6 +487,7 @@ def test_sort_table_rows_displayhint(
                 short=None,
                 data_type="str",
                 paint_function=inv_paint_generic,
+                title="Key",
             ),
         ),
     ],
@@ -563,6 +569,7 @@ def test_sort_attributes_pairs_displayhint(
                 raw_path=".",
                 data_type="str",
                 paint_function=inv_paint_generic,
+                title="Key",
             ),
         ),
         (
@@ -572,6 +579,7 @@ def test_sort_attributes_pairs_displayhint(
                 raw_path=".hardware.storage.disks.size",
                 data_type="size",
                 paint_function=inv_paint_size,
+                title="Size",
             ),
         ),
         (
@@ -581,6 +589,7 @@ def test_sort_attributes_pairs_displayhint(
                 raw_path=".path.to.node.key",
                 data_type="str",
                 paint_function=inv_paint_generic,
+                title="Key",
             ),
         ),
     ],

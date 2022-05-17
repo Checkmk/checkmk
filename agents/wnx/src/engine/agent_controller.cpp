@@ -356,7 +356,8 @@ bool CreateLegacyModeFile(const fs::path &marker) {
                                              "is bad, assuming fresh install");
     }
 
-    bool reinstall_new = (*data).starts_with(kCmkAgentMarkerNew);
+    bool reinstall_new = (*data).starts_with(kCmkAgentMarkerNewDeprecated) ||
+                         (*data).starts_with(kCmkAgentMarkerLatest);
     if (reinstall_new) {
         XLOG::l.i("File '{}' is from 2.1+ legacy pull mode  N/A", marker);
         return false;

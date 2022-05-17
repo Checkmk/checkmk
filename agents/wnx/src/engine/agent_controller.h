@@ -21,8 +21,10 @@ namespace cma::ac {
 constexpr std::string_view kLegacyPullFile{"allow-legacy-pull"};
 constexpr std::string_view kControllerFlagFile{"controller-flag"};
 constexpr std::string_view kCmkAgentUnistall{"cmk_agent_uninstall.txt"};
-constexpr std::string_view kCmkAgentMarkerNew{
+constexpr std::string_view kCmkAgentMarkerNewDeprecated{
     "Check MK monitoring and management Service - "};
+constexpr std::string_view kCmkAgentMarkerLatest{
+    "Checkmk monitoring agent service - "};
 constexpr std::string_view kCmdLineAsDaemon{"daemon"};
 constexpr std::string_view kCmdLinePort{"-P"};
 constexpr std::string_view kCmdLineChannel{"--agent-channel"};

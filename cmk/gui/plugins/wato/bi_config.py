@@ -801,7 +801,7 @@ class ModeBIRules(ABCBIMode):
         for rule_id in selection:
             bi_rule = self.bi_pack.get_rule_mandatory(rule_id)
             target_pack.add_rule(bi_rule)
-            self._bi_packs.delete_rule(bi_rule.id)
+            self.bi_pack.delete_rule(bi_rule.id)
             self._add_change(
                 "bi-move-rule",
                 _("Moved BI rule with ID %s to BI pack %s") % (rule_id, target_pack_id),

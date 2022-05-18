@@ -15,7 +15,10 @@ export const browser = {
         return this.agent.indexOf("opera") != -1;
     },
     is_firefox: function () {
-        return this.agent.indexOf("firefox") != -1 || this.agent.indexOf("namoroka") != -1;
+        return (
+            this.agent.indexOf("firefox") != -1 ||
+            this.agent.indexOf("namoroka") != -1
+        );
     },
     is_ie_below_9: function () {
         return document.all && !document.addEventListener;
@@ -83,7 +86,11 @@ export function is_window_active() {
 // Predicate analogous to that used in JQuery to check whether an element is visible:
 // https://github.com/jquery/jquery/blob/master/src/css/hiddenVisibleSelectors.js
 export function is_visible(elem) {
-    return !!(elem.offsetWidth || elem.offsetHeight || elem.getClientRects().length);
+    return !!(
+        elem.offsetWidth ||
+        elem.offsetHeight ||
+        elem.getClientRects().length
+    );
 }
 
 export function has_class(o, cn) {
@@ -156,8 +163,13 @@ export function get_target(event) {
 export function get_button(event) {
     if (event.which == null)
         /* IE case */
-        return event.button < 2 ? "LEFT" : event.button == 4 ? "MIDDLE" : "RIGHT";
-    /* All others */ else return event.which < 2 ? "LEFT" : event.which == 2 ? "MIDDLE" : "RIGHT";
+        return event.button < 2
+            ? "LEFT"
+            : event.button == 4
+            ? "MIDDLE"
+            : "RIGHT";
+    /* All others */ else
+        return event.which < 2 ? "LEFT" : event.which == 2 ? "MIDDLE" : "RIGHT";
 }
 
 export function page_height() {
@@ -195,11 +207,19 @@ export function content_wrapper_size() {
     }
 
     const vert_paddings =
-        parseInt(get_computed_style(container, "padding-top")!.replace("px", "")) +
-        parseInt(get_computed_style(container, "padding-bottom")!.replace("px", ""));
+        parseInt(
+            get_computed_style(container, "padding-top")!.replace("px", "")
+        ) +
+        parseInt(
+            get_computed_style(container, "padding-bottom")!.replace("px", "")
+        );
     const hor_paddings =
-        parseInt(get_computed_style(container, "padding-right")!.replace("px", "")) +
-        parseInt(get_computed_style(container, "padding-left")!.replace("px", ""));
+        parseInt(
+            get_computed_style(container, "padding-right")!.replace("px", "")
+        ) +
+        parseInt(
+            get_computed_style(container, "padding-left")!.replace("px", "")
+        );
 
     return {
         height: container.clientHeight - vert_paddings,
@@ -225,8 +245,10 @@ export function get_content_wrapper_object() {
 // Whether or not an element is partially in the the visible viewport
 export function is_in_viewport(element) {
     var rect = element.getBoundingClientRect(),
-        window_height = window.innerHeight || document.documentElement.clientHeight,
-        window_width = window.innerWidth || document.documentElement.clientWidth;
+        window_height =
+            window.innerHeight || document.documentElement.clientHeight,
+        window_width =
+            window.innerWidth || document.documentElement.clientWidth;
 
     return (
         rect.top <= window_height &&
@@ -257,7 +279,10 @@ export function update_header_timer() {
     var month = ("0" + (t.getMonth() + 1)).slice(-2);
     var year = t.getFullYear().toString();
     var date_format = date.getAttribute("format");
-    date.innerHTML = date_format!.replace(/yyyy/, year).replace(/mm/, month).replace(/dd/, day);
+    date.innerHTML = date_format!
+        .replace(/yyyy/, year)
+        .replace(/mm/, month)
+        .replace(/dd/, day);
 }
 
 export function has_row_info() {
@@ -348,7 +373,9 @@ export function makeuri_contextless(vars, filename) {
     var params: string[] = [];
     // Add new params
     for (var key in vars) {
-        params.push(encodeURIComponent(key) + "=" + encodeURIComponent(vars[key]));
+        params.push(
+            encodeURIComponent(key) + "=" + encodeURIComponent(vars[key])
+        );
     }
 
     return filename + "?" + params.join("&");
@@ -511,7 +538,11 @@ function get_clip_path_polygon(perc) {
      */
 
     if (perc > 87.5) {
-        return "polygon(50% 50%, 50% 0, " + Math.floor(100 - ((perc - 87.5) / 12.5) * 50) + "% 0)";
+        return (
+            "polygon(50% 50%, 50% 0, " +
+            Math.floor(100 - ((perc - 87.5) / 12.5) * 50) +
+            "% 0)"
+        );
     } else if (perc > 62.5) {
         return (
             "polygon(50% 50%, 50% 0, 100% 0, 100% " +
@@ -572,26 +603,33 @@ function do_reload(url) {
         var i;
         for (i = 0; i < opts.length; i++) {
             if (display_options.indexOf(opts[i].toUpperCase()) > -1)
-                display_options = display_options.replace(opts[i].toUpperCase(), opts[i]);
+                display_options = display_options.replace(
+                    opts[i].toUpperCase(),
+                    opts[i]
+                );
             else display_options += opts[i];
         }
 
         // Add optional display_options if not defined in original display_options
         opts = ["w"];
         for (i = 0; i < opts.length; i++) {
-            if (display_options.indexOf(opts[i].toUpperCase()) == -1) display_options += opts[i];
+            if (display_options.indexOf(opts[i].toUpperCase()) == -1)
+                display_options += opts[i];
         }
 
         var params = {_display_options: display_options};
         var real_display_options = get_url_param("display_options");
-        if (real_display_options !== "") params["display_options"] = real_display_options;
+        if (real_display_options !== "")
+            params["display_options"] = real_display_options;
 
         params["_do_actions"] = get_url_param("_do_actions");
 
         // For dashlet reloads add a parameter to mark this request as reload
-        if (window.location.href.indexOf("dashboard_dashlet.py") != -1) params["_reload"] = "1";
+        if (window.location.href.indexOf("dashboard_dashlet.py") != -1)
+            params["_reload"] = "1";
 
-        if (selection.is_selection_enabled()) params["selection"] = selection.get_selection_id();
+        if (selection.is_selection_enabled())
+            params["selection"] = selection.get_selection_id();
 
         ajax.call_ajax(makeuri(params), {
             response_handler: handle_content_reload,
@@ -651,7 +689,11 @@ export function mouse_position(event) {
 }
 
 export function wheel_event_delta(event) {
-    return event.deltaY ? event.deltaY : event.detail ? event.detail * -120 : event.wheelDelta;
+    return event.deltaY
+        ? event.deltaY
+        : event.detail
+        ? event.detail * -120
+        : event.wheelDelta;
 }
 
 export function wheel_event_name() {
@@ -666,7 +708,8 @@ export function toggle_more(trigger, toggle_id, dom_levels_up) {
     let state;
     for (var i = 0; i < dom_levels_up; i++) {
         container = container.parentNode;
-        while (container.className.includes("simplebar-")) container = container.parentNode;
+        while (container.className.includes("simplebar-"))
+            container = container.parentNode;
     }
 
     if (has_class(container, "more")) {
@@ -691,7 +734,9 @@ export function toggle_more(trigger, toggle_id, dom_levels_up) {
 }
 
 export function add_simplebar_scrollbar(scrollable_id) {
-    return add_simplebar_scrollbar_to_object(document.getElementById(scrollable_id));
+    return add_simplebar_scrollbar_to_object(
+        document.getElementById(scrollable_id)
+    );
 }
 
 export function add_simplebar_scrollbar_to_object(obj) {
@@ -702,12 +747,16 @@ export function add_simplebar_scrollbar_to_object(obj) {
 }
 
 export function content_scrollbar(scrollable_id: string | null = null) {
-    if (g_content_scrollbar === null) g_content_scrollbar = add_simplebar_scrollbar(scrollable_id);
+    if (g_content_scrollbar === null)
+        g_content_scrollbar = add_simplebar_scrollbar(scrollable_id);
     return g_content_scrollbar;
 }
 
 export function set_focus_by_name(form_name, field_name) {
-    set_focus((document.getElementById("form_" + form_name) as HTMLFormElement).elements[field_name]);
+    set_focus(
+        (document.getElementById("form_" + form_name) as HTMLFormElement)
+            .elements[field_name]
+    );
 }
 
 export function set_focus_by_id(dom_id) {
@@ -729,7 +778,9 @@ export function update_pending_changes(changes_info, changes_tooltip) {
     }
 
     // Update container div CSS class and tooltip
-    const page_state_div = document.getElementsByClassName("page_state")[0] as HTMLElement;
+    const page_state_div = document.getElementsByClassName(
+        "page_state"
+    )[0] as HTMLElement;
     change_class(page_state_div, "no_changes", "pending_changes");
     page_state_div.title = changes_tooltip;
 
@@ -737,8 +788,10 @@ export function update_pending_changes(changes_info, changes_tooltip) {
     const [changes_number, changes_str] = changes_info.split(" ", 2);
     const text_container = document.getElementById("changes_info");
     if (text_container) {
-        const changes_number_span = text_container.getElementsByClassName("changes_number")[0];
-        const changes_str_span = text_container.getElementsByClassName("changes_str")[0];
+        const changes_number_span =
+            text_container.getElementsByClassName("changes_number")[0];
+        const changes_str_span =
+            text_container.getElementsByClassName("changes_str")[0];
         changes_number_span.innerHTML = changes_number;
         changes_str_span.innerHTML = changes_str;
     }
@@ -760,7 +813,9 @@ export function update_pending_changes(changes_info, changes_tooltip) {
 }
 
 export function get_computed_style(object, property) {
-    return object ? window.getComputedStyle(object).getPropertyValue(property) : null;
+    return object
+        ? window.getComputedStyle(object).getPropertyValue(property)
+        : null;
 }
 
 export function copy_to_clipboard(node_id, success_msg_id = "") {

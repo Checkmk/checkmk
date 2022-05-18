@@ -328,6 +328,15 @@ def test_openapi_show_ruleset(ruleset_client: RulesetTestClient, ruleset: str) -
     assert resp.json["extensions"]["name"] == ruleset
 
 
+def test_openapi_show_non_existing_ruleset(
+    ruleset_client: RulesetTestClient,
+) -> None:
+    ruleset_client.get(
+        ruleset_id="non_existing_ruleset",
+        expect_ok=False,
+    ).assert_status_code(404)
+
+
 def test_openapi_list_rulesets(
     ruleset_client: RulesetTestClient,
 ) -> None:

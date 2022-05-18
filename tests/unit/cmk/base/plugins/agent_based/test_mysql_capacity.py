@@ -89,3 +89,10 @@ def test_check(check):
         Result(state=State.OK, summary="Size: 42 B"),
         Metric("database_size", 42.0),
     ]
+
+
+def test_check_item_not_found_yields_no_results(check):
+    item = "mysql:reddb"
+    params = {"levels": (None, None)}
+    section = {"mysql": {"nothere": 42}}
+    assert list(check(item=item, params=params, section=section)) == []

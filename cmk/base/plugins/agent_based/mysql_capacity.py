@@ -57,18 +57,15 @@ def discover_mysql_size(section: Section) -> DiscoveryResult:
 
 def check_mysql_size(item: str, params: Mapping[str, Any], section: Mapping) -> CheckResult:
     instance, dbname = item.split(":", 1)
-    size = section.get(instance, {}).get(dbname, None)
-    if not isinstance(size, int):
-        return
-
     # size and avail are given as bytes
-    yield from check_levels(
-        size,
-        metric_name="database_size",
-        levels_upper=params["levels"],
-        render_func=render.bytes,
-        label="Size",
-    )
+    if (size := section.get(instance, {}).get(dbname, None)) is not None:
+        yield from check_levels(
+            size,
+            metric_name="database_size",
+            levels_upper=params["levels"],
+            render_func=render.bytes,
+            label="Size",
+        )
 
 
 register.check_plugin(

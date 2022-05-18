@@ -4,33 +4,37 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# {} -> Default was 'This host'
+# server: None -> 'This host'
+# server: "default DNS server" -> will omit the option "-s" for check_dns
+# server: "str"
+
 
 def check_dns_arguments(params):
-    description, settings = params
-    args = ["-H", description]
+    args = ["-H", params["hostname"]]
 
-    if "server" in settings:
-        if settings["server"] not in {None, "default DNS server"}:
-            args += ["-s", settings["server"]]
-    else:
+    dns_server = params["server"]
+    if dns_server is None:
         args += ["-s", "$HOSTADDRESS$"]
+    elif dns_server != "default DNS server":
+        args += ["-s", dns_server]
 
-    if settings.get("expect_all_addresses", True):
+    if params.get("expect_all_addresses", True):
         args.append("-L")
 
-    for address in settings.get("expected_addresses_list", ()):
+    for address in params.get("expected_addresses_list", ()):
         args += ["-a", address]
 
-    if settings.get("expected_authority"):
+    if params.get("expected_authority"):
         args.append("-A")
 
-    if "response_time" in settings:
-        warn, crit = settings["response_time"]
+    if "response_time" in params:
+        warn, crit = params["response_time"]
         args += ["-w", "%f" % float(warn)]
         args += ["-c", "%f" % float(crit)]
 
-    if "timeout" in settings:
-        args += ["-t", settings["timeout"]]
+    if "timeout" in params:
+        args += ["-t", params["timeout"]]
 
     return args
 

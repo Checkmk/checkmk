@@ -29,7 +29,9 @@ RUN apt-get update \
     flex \
     g++ \
     gettext \
+    git=1:2.17.0-1ubuntu1 \
     git-buildpackage \
+    git-man=1:2.17.0-1ubuntu1 \
     ksh \
     libboost-all-dev \
     libboost-dev \
@@ -109,5 +111,5 @@ RUN apt-get update \
 # Addd missing packages
 RUN apt-get update \
     && apt-get install -y \
-    ping \
+    iputils-ping \
     && rm -rf /var/lib/apt/lists/*

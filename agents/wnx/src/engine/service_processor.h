@@ -195,7 +195,7 @@ public:
         uint32_t pid;
     };
 
-    using thread_callback = std::function<bool(const void *)>;
+    using thread_callback = std::function<bool()>;
     using AnswerDataBlock = cma::srv::AsyncAnswer::DataBlock;
     ServiceProcessor(std::chrono::milliseconds delay, thread_callback callback)
         : delay_(delay), callback_(callback), external_port_(this) {}
@@ -292,7 +292,7 @@ private:
     std::condition_variable stop_thread_;
     std::mutex lock_stopper_;
     bool stop_requested_ = false;
-    thread_callback callback_ = [](const void *) { return true; };  // nothing
+    thread_callback callback_ = []() { return true; };  // nothing
 
     uint16_t working_port_ = cma::cfg::kMainPort;
 

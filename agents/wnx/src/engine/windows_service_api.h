@@ -65,10 +65,9 @@ int ExecExtractCap(std::wstring_view cap_file,
 int ExecSection(const std::wstring &SecName,
                 int RepeatPause,      // if 0 no repeat
                 StdioLog stdio_log);  // on section
-int ServiceAsService(std::wstring_view app_name,
-                     std::chrono::milliseconds delay,
-                     const std::function<bool(const void *some_context)>
-                         &internal_callback);  // service execution
+int ServiceAsService(
+    std::wstring_view app_name, std::chrono::milliseconds delay,
+    const std::function<bool()> &internal_callback);  // service execution
 
 /// returns -1 for all ports
 int GetFirewallPort();

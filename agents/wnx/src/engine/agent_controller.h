@@ -35,7 +35,7 @@ constexpr uint16_t kWindowsInternalPort{50001};
 
 std::filesystem::path GetController(const std::filesystem::path &service);
 std::filesystem::path GetWorkController();
-bool CreateTomlConfig(const std::filesystem::path &service);
+bool CreateTomlConfig(const std::filesystem::path &toml_file);
 std::wstring BuildCommandLine(const std::filesystem::path &controller);
 std::optional<uint32_t> StartAgentController(
     const std::filesystem::path &service);

@@ -198,8 +198,6 @@ bool CreateTomlConfig(const fs::path &toml_file) {
 }
 
 std::wstring BuildCommandLine(const fs::path &controller) {
-    auto port =
-        cfg::GetVal(cfg::groups::kGlobal, cfg::vars::kPort, cfg::kMainPort);
     auto only_from =
         cfg::GetInternalArray(cfg::groups::kGlobal, cfg::vars::kOnlyFrom);
     auto agent_channel = GetConfiguredAgentChannel();

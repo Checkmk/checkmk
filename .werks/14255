@@ -1,0 +1,13 @@
+Title: host_config: created_at timestamp is no longer updated with the update host endpoint
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1652880003
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+Previously, on updating the config host endpoint, the meta_data, created_at
+timestamp was being changed along side the updated_at timestamp. This werk
+fixes this issue by leaving the created_at unaffected.

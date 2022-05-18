@@ -54,12 +54,7 @@ def discover_mysql_size(section):
 
 
 def check_mysql_size(item: str, params: Mapping[str, Any], section: Mapping) -> CheckResult:
-    if ":" not in item:
-        # support items discovered before 1.2.7
-        instance, dbname = "mysql", item
-    else:
-        instance, dbname = item.split(":", 1)
-
+    instance, dbname = item.split(":", 1)
     size, _avail = section.get(instance, {}).get(dbname, (None, None))
     if not isinstance(size, int):
         return

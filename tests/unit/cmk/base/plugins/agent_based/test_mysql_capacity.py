@@ -3,12 +3,60 @@
 # Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Callable
+from typing import Callable, Optional
 
 import pytest
 
 from cmk.base.api.agent_based.checking_classes import Metric, Result, Service, State
+from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.plugins.agent_based import mysql_capacity
+
+
+@pytest.mark.parametrize(
+    "sub_section, instance_name",
+    [
+        pytest.param(None, "mysql", id="default instance"),
+        pytest.param("[[]]", "mysql", id="empty instance"),
+        pytest.param("[[cmk]]", "cmk", id="named instance"),
+    ],
+)
+def test_parse(sub_section: Optional[str], instance_name: str):
+    args: StringTable = [
+        ["greendb", "163840", "1428160512"],
+    ]
+    if sub_section is not None:
+        args = [
+            [
+                sub_section,
+            ],
+            args[0],
+        ]
+    expected = {instance_name: {"greendb": 163840}}
+    assert mysql_capacity.parse_mysql_capacity(args) == expected
+
+
+def test_parse_empty_instance_default_to_previous():
+    args = [
+        ["[[some]]"],
+        ["greendb", "163840", "1428160512"],
+        ["[[]]"],
+        ["reddb", "163840", "1428160512"],
+    ]
+    expected = {
+        "some": {
+            "greendb": 163840,
+            "reddb": 163840,
+        }
+    }
+    assert mysql_capacity.parse_mysql_capacity(args) == expected
+
+
+def test_parse_exclude_non_int_size_info():
+    args = [
+        ["greendb", "1dd63840", "1428160512"],
+    ]
+    expected: dict[str, dict[str, int]] = {}
+    assert mysql_capacity.parse_mysql_capacity(args) == expected
 
 
 @pytest.fixture(name="check")

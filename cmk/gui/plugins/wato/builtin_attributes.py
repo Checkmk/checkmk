@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import time
-from typing import Any
+from typing import Any, Callable, Literal, Optional
 
 import cmk.utils.tags
 from cmk.utils.type_defs import HostName, List
@@ -38,8 +38,10 @@ from cmk.gui.valuespec import (
     AbsoluteDate,
     Age,
     Alternative,
+    AlternativeModel,
     CascadingDropdown,
     Checkbox,
+    DEF_VALUE,
     Dictionary,
     DropdownChoice,
     FixedValue,
@@ -56,7 +58,10 @@ from cmk.gui.valuespec import (
     TimeofdayRange,
     Transform,
     Tuple,
+    ValueSpecDefault,
+    ValueSpecHelp,
     ValueSpecText,
+    ValueSpecValidateFunc,
 )
 from cmk.gui.watolib.host_attributes import host_attribute_registry
 from cmk.gui.watolib.hosts_and_folders import Host
@@ -913,16 +918,36 @@ class HostAttributeManagementSNMPCommunity(ABCHostAttributeValueSpec):
 
 
 class IPMICredentials(Alternative):
-    def __init__(self, **kwargs):
-        kwargs["elements"] = [
-            FixedValue(
-                value=None,
-                title=_("No explicit credentials"),
-                totext="",
-            ),
-            IPMIParameters(),
-        ]
-        super().__init__(**kwargs)
+    def __init__(  # pylint: disable=redefined-builtin
+        self,
+        match: Optional[Callable[[AlternativeModel], int]] = None,
+        show_alternative_title: bool = False,
+        on_change: Optional[str] = None,
+        orientation: Literal["horizontal", "vertical"] = "vertical",
+        # ValueSpec
+        title: Optional[str] = None,
+        help: Optional[ValueSpecHelp] = None,
+        default_value: ValueSpecDefault[AlternativeModel] = DEF_VALUE,
+        validate: Optional[ValueSpecValidateFunc[AlternativeModel]] = None,
+    ):
+        super().__init__(
+            elements=[
+                FixedValue(
+                    value=None,
+                    title=_("No explicit credentials"),
+                    totext="",
+                ),
+                IPMIParameters(),
+            ],
+            match=match,
+            show_alternative_title=show_alternative_title,
+            on_change=on_change,
+            orientation=orientation,
+            title=title,
+            help=help,
+            default_value=default_value,
+            validate=validate,
+        )
 
 
 @host_attribute_registry.register

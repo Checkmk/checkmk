@@ -5203,7 +5203,10 @@ class Optional(ValueSpec[_Optional[T]]):
         return value
 
 
-class Alternative(ValueSpec):
+AlternativeModel = Any
+
+
+class Alternative(ValueSpec[AlternativeModel]):
     """Handle case when there are several possible allowed formats
     for the value (e.g. strings, 4-tuple or 6-tuple like in SNMP-Communities)
     The different alternatives must have different data types that can
@@ -5211,16 +5214,16 @@ class Alternative(ValueSpec):
 
     def __init__(  # pylint: disable=redefined-builtin
         self,
-        elements: Sequence[ValueSpec],
-        match: _Optional[Callable[[Any], int]] = None,
+        elements: Sequence[ValueSpec[AlternativeModel]],
+        match: _Optional[Callable[[AlternativeModel], int]] = None,
         show_alternative_title: bool = False,
         on_change: _Optional[str] = None,
         orientation: Literal["horizontal", "vertical"] = "vertical",
         # ValueSpec
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
-        default_value: ValueSpecDefault[Any] = DEF_VALUE,
-        validate: _Optional[ValueSpecValidateFunc[Any]] = None,
+        default_value: ValueSpecDefault[AlternativeModel] = DEF_VALUE,
+        validate: _Optional[ValueSpecValidateFunc[AlternativeModel]] = None,
     ):
         super().__init__(title=title, help=help, default_value=default_value, validate=validate)
         self._elements = elements
@@ -5234,7 +5237,9 @@ class Alternative(ValueSpec):
     # that always one matches. No error handling here.
     # This may also tranform the input value in case it gets
     # "decorated" in the from_html_vars function
-    def matching_alternative(self, value: Any) -> tuple[_Optional[ValueSpec], Any]:
+    def matching_alternative(
+        self, value: AlternativeModel
+    ) -> tuple[_Optional[ValueSpec[AlternativeModel]], AlternativeModel]:
         if self._match:
             return self._elements[self._match(value)], value
 
@@ -5247,7 +5252,7 @@ class Alternative(ValueSpec):
 
         return None, value
 
-    def render_input(self, varprefix: str, value: Any) -> None:
+    def render_input(self, varprefix: str, value: AlternativeModel) -> None:
         mvs, value = self.matching_alternative(value)
         options: list[tuple[_Optional[str], str]] = []
         sel_option = request.var(varprefix + "_use")
@@ -5297,10 +5302,10 @@ class Alternative(ValueSpec):
         # TODO: Set focus to currently active option
         pass
 
-    def canonical_value(self) -> Any:
+    def canonical_value(self) -> AlternativeModel:
         return self._elements[0].canonical_value()
 
-    def default_value(self) -> Any:
+    def default_value(self) -> AlternativeModel:
         if callable(self._default_value):
             try:
                 value = self._default_value()
@@ -5313,7 +5318,7 @@ class Alternative(ValueSpec):
             return self._elements[0].default_value()
         return value
 
-    def value_to_html(self, value: Any) -> ValueSpecText:
+    def value_to_html(self, value: AlternativeModel) -> ValueSpecText:
         vs, value = self.matching_alternative(value)
         if vs:
             output = HTML()
@@ -5322,31 +5327,31 @@ class Alternative(ValueSpec):
             return output + vs.value_to_html(value)
         return _("invalid:") + " " + str(value)
 
-    def value_to_json(self, value: Any) -> JSONValue:
+    def value_to_json(self, value: AlternativeModel) -> JSONValue:
         vs, match_value = self.matching_alternative(value)
         if vs is None:
             raise ValueError(_("Invalid value: %s") % vs)
         return vs.value_to_json(match_value)
 
-    def value_from_json(self, json_value: JSONValue) -> Any:
+    def value_from_json(self, json_value: JSONValue) -> AlternativeModel:
         # FIXME: This is wrong! value_to_json transforms tuples to lists. json_value could
         # contain a list that should be a tuple at ANY level. So we would need to run
         # self.matching_value(json_value) with every permutation from list to tuple
         # inside json_value here. An example ruleset is "ESX Multipath Count".
         return json_value
 
-    def value_to_json_safe(self, value: Any) -> JSONValue:
+    def value_to_json_safe(self, value: AlternativeModel) -> JSONValue:
         vs, match_value = self.matching_alternative(value)
         if vs is None:
             raise ValueError(_("Invalid value: %s") % vs)
         return vs.value_to_json_safe(match_value)
 
-    def from_html_vars(self, varprefix: str) -> Any:
+    def from_html_vars(self, varprefix: str) -> AlternativeModel:
         nr = request.get_integer_input_mandatory(varprefix + "_use")
         vs = self._elements[nr]
         return vs.from_html_vars(varprefix + "_%d" % nr)
 
-    def validate_datatype(self, value: Any, varprefix: str) -> None:
+    def validate_datatype(self, value: AlternativeModel, varprefix: str) -> None:
         for vs in self._elements:
             try:
                 vs.validate_datatype(value, "")
@@ -5358,7 +5363,7 @@ class Alternative(ValueSpec):
             _("The data type of the value does not match any of the allowed alternatives."),
         )
 
-    def _validate_value(self, value: Any, varprefix: str) -> None:
+    def _validate_value(self, value: AlternativeModel, varprefix: str) -> None:
         vs, value = self.matching_alternative(value)
         for nr, v in enumerate(self._elements):
             if vs == v:

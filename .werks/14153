@@ -1,0 +1,15 @@
+Title: dcd: resolving wrong format for phase_1 result
+Class: fix
+Compatible: compat
+Component: dcd
+Date: 1652856194
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b10
+
+The dcd execute_phase1_result using the REST-API returned
+the wrong data type compared to the Web-API. This resulted in
+an internal server error on the dcd side. This werk fixes
+this issue.

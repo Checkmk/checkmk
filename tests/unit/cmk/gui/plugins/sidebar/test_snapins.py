@@ -50,6 +50,7 @@ def test_refresh_snapins():
     expected_refresh_snapins = [
         "admin_mini",
         "performance",
+        "master_control",
         "mkeventd_performance",
         "sitestatus",
         "tactical_overview",

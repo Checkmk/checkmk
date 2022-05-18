@@ -72,6 +72,10 @@ class MasterControlSnapin(SidebarSnapin):
                     logger.exception("error rendering master control for site %s", site_id)
                     write_snapin_exception(e)
 
+    @classmethod
+    def refresh_regularly(cls) -> bool:
+        return True
+
     def _core_toggles(self) -> List[Tuple[str, str]]:
         return [
             ("enable_notifications", _("Notifications")),

@@ -6814,10 +6814,10 @@ IconSelectorModel = Any
 class IconSelector(ValueSpec[IconSelectorModel]):
     def __init__(  # pylint: disable=redefined-builtin
         self,
-        allow_empty=True,
-        empty_img="empty",
-        show_builtin_icons=True,
-        with_emblem=True,
+        allow_empty: bool = True,
+        empty_img: str = "empty",
+        show_builtin_icons: bool = True,
+        with_emblem: bool = True,
         # ValueSpec
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
@@ -6959,11 +6959,11 @@ class IconSelector(ValueSpec[IconSelectorModel]):
         return {"icon": value, "emblem": None}
 
     def render_input(self, varprefix: str, value: IconSelectorModel) -> None:
-        value = self._transform_icon_str(value)
+        icon_dict = self._transform_icon_str(value)
 
-        self._render_input(varprefix, value["icon"])
+        self._render_input(varprefix, icon_dict["icon"])
         if self._with_emblem:
-            self._render_input(varprefix + "_emblem", value["emblem"])
+            self._render_input(varprefix + "_emblem", icon_dict["emblem"])
 
     def _render_input(self, varprefix: str, value: _Optional[str]) -> None:
         # Handle complain phase with validation errors correctly and get the value
@@ -7112,26 +7112,26 @@ class IconSelector(ValueSpec[IconSelectorModel]):
         if not self._with_emblem and not isinstance(value, str):
             raise MKUserError(varprefix, "The type is %s, but should be str or dict" % type(value))
 
-        value = self._transform_icon_str(value)
-        if not (value["icon"] is None or isinstance(value["icon"], str)):
+        icon_dict = self._transform_icon_str(value)
+        if not (icon_dict["icon"] is None or isinstance(icon_dict["icon"], str)):
             raise MKUserError(
-                varprefix, _("The icon type is %s, but should be str") % type(value["icon"])
+                varprefix, _("The icon type is %s, but should be str") % type(icon_dict["icon"])
             )
-        if not (value["emblem"] is None or isinstance(value["emblem"], str)):
+        if not (icon_dict["emblem"] is None or isinstance(icon_dict["emblem"], str)):
             raise MKUserError(
-                varprefix, _("The emblem type is %s, but should be str") % type(value["emblem"])
+                varprefix, _("The emblem type is %s, but should be str") % type(icon_dict["emblem"])
             )
 
     def _validate_value(self, value: IconSelectorModel, varprefix: str) -> None:
-        value = self._transform_icon_str(value)
+        icon_dict = self._transform_icon_str(value)
 
-        if not self._allow_empty and not value["icon"]:
+        if not self._allow_empty and not icon_dict["icon"]:
             raise MKUserError(varprefix, _("You need to select an icon."))
 
-        if value["icon"] and value["icon"] not in self.available_icons():
+        if icon_dict["icon"] and icon_dict["icon"] not in self.available_icons():
             raise MKUserError(varprefix, _("The selected icon does not exist."))
 
-        if value["emblem"] and value["emblem"] not in self.available_emblems():
+        if icon_dict["emblem"] and icon_dict["emblem"] not in self.available_emblems():
             raise MKUserError(varprefix, _("The selected emblem does not exist."))
 
 

@@ -47,6 +47,7 @@ RUN apt-get update \
     texinfo \
     tk-dev \
     uuid-dev \
+    python3-importlib-metadata \
     && rm -rf /var/lib/apt/lists/*
 
 ARG ARTIFACT_STORAGE
@@ -66,7 +67,6 @@ RUN apt-get update \
     joe \
     iputils-ping \
     vim \
-    python3-importlib-metadata \
     && rm -rf /var/lib/apt/lists/*
 
 ARG VERS_TAG

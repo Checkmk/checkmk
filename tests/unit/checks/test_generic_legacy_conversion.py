@@ -755,7 +755,6 @@ def test_all_check_variables_present(fix_plugin_legacy):
         "safenet_hsm_default_levels",
         "safenet_hsm_events_default_levels",
         "sansymphony_alerts_default_values",
-        "sansymphony_pool_default_values",
         "sap_hana_connect_state_map",
         "sap_hana_ess_migration_state_map",
         "sap_hana_mem_database_default_levels",

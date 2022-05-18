@@ -36,7 +36,7 @@ def test_discover_sansymphony_pool(check_plugin: CheckPlugin) -> None:
                 ]
             ]
         )
-    ) == [Service(item="Disk_pool_1", parameters={"auto-migration-wrapper-key": (80, 90)})]
+    ) == [Service(item="Disk_pool_1")]
 
 
 def test_check_sansymphony_pool_item_not_found(check_plugin: CheckPlugin) -> None:
@@ -53,7 +53,7 @@ def test_check_sansymphony_pool_item_not_found(check_plugin: CheckPlugin) -> Non
         list(
             check_plugin.check_function(
                 item="Disk_pool_2",
-                params={"auto-migration-wrapper-key": (80, 90)},
+                params={"allocated_pools_percentage_upper": (80.0, 90.0)},
                 section=string_table,
             )
         )
@@ -74,7 +74,7 @@ def test_check_sansymphony_pool(check_plugin: CheckPlugin) -> None:
     assert list(
         check_plugin.check_function(
             item="Disk_pool_1",
-            params={"auto-migration-wrapper-key": (80, 90)},
+            params={"allocated_pools_percentage_upper": (80.0, 90.0)},
             section=string_table,
         )
     ) == [

@@ -4,16 +4,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-sansymphony_pool_default_values = (80, 90)
+factory_settings["allocated_pools_percentage_upper"] = (80.0, 90.0)
 
 
 def inventory_sansymphony_pool(info):
     for line in info:
-        yield line[0], "sansymphony_pool_default_values"
+        yield line[0], {}
 
 
 def check_sansymphony_pool(item, params, info):
-    warn, crit = params
+    warn, crit = params["allocated_pools_percentage_upper"]
     for poolname, allocated, poolstatus, cachemode, pooltype in info:
         if poolname == item:
             if poolstatus == "Running" and cachemode == "ReadWrite":

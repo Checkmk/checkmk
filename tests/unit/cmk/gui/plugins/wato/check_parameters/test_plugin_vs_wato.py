@@ -521,7 +521,6 @@ class ErrorReporter:
         ("check", "safenet_ntls_clients", "checkgroup_parameters:safenet_ntls_clients"),
         ("check", "safenet_ntls_links", "checkgroup_parameters:safenet_ntls_links"),
         ("check", "sansymphony_alerts", "checkgroup_parameters:sansymphony_alerts"),
-        ("check", "sansymphony_pool", "checkgroup_parameters:sansymphony_pool"),
         ("check", "siemens_plc_flag", "checkgroup_parameters:siemens_plc_flag"),
         ("check", "skype_conferencing", "checkgroup_parameters:skype_conferencing"),
         ("check", "skype_sip_stack", "checkgroup_parameters:skype_sip"),

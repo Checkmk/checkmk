@@ -63,7 +63,11 @@ def check_mysql_size(item, params, parsed):
 
     # size and avail are given as bytes
     yield check_levels(
-        size, "database_size", params, human_readable_func=get_bytes_human_readable, infoname="Size"
+        size,
+        "database_size",
+        params["levels"],
+        human_readable_func=get_bytes_human_readable,
+        infoname="Size",
     )
 
 

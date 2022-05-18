@@ -498,7 +498,6 @@ class ErrorReporter:
         ("check", "mssql_connections", "checkgroup_parameters:mssql_connections"),
         ("check", "mssql_jobs", "checkgroup_parameters:mssql_jobs"),
         ("check", "multipath", "checkgroup_parameters:multipath"),
-        ("check", "mysql_capacity", "checkgroup_parameters:mysql_db_size"),
         ("check", "mysql_slave", "checkgroup_parameters:mysql_slave"),
         ("check", "netapp_api_connection", "checkgroup_parameters:netapp_instance"),
         ("check", "netapp_api_cpu_utilization", "checkgroup_parameters:cpu_utilization"),

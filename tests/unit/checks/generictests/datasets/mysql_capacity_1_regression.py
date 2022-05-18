@@ -30,12 +30,12 @@ checks = {
     '': [
         (
             'mysql:test',
-            {},
+            {"levels": {}},
             [(0, 'Size: 390.30 MB', [('database_size', 409255936, None, None, None, None)])]
         ),
         (
             'mysql:test',
-            (40960, 51200),
+            {"levels":(40960, 51200)},
             [
                 (
                     2,
@@ -46,7 +46,7 @@ checks = {
         ),
         (
             'mysql:test',
-            (40960000000, 51200000000),
+            {"levels":(40960000000, 51200000000)},
             [
                 (
                     0,

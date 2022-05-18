@@ -37,7 +37,7 @@ def test_discovery(discovery):
 
 def test_check(check):
     item = "mysql:reddb"
-    params = {"auto-migration-wrapper-key": (None, None)}
+    params = {"levels": (None, None)}
     section = {"mysql": {"reddb": (42, 0)}}
     with cmk.base.plugin_contexts.current_host("my_host"):
         assert list(check(item=item, params=params, section=section)) == [

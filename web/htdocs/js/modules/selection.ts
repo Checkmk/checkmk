@@ -6,11 +6,11 @@ import * as utils from "utils";
 import * as ajax from "ajax";
 
 interface Selection_Propoerties {
-    page_id : null | string,
-    selection_id : null | string,
-    selected_rows : string[]
+    page_id: null | string;
+    selection_id: null | string;
+    selected_rows: string[];
 }
-var selection_properties : Selection_Propoerties = {
+var selection_properties: Selection_Propoerties = {
     // The unique ID to identify the current page and its selections of a user
     page_id: null,
     selection_id: null,
@@ -77,7 +77,11 @@ function get_all_checkboxes(container) {
     var checkboxes: HTMLInputElement[] = [],
         childs,
         i;
-    if (typeof container === "object" && container.length && !container.tagName) {
+    if (
+        typeof container === "object" &&
+        container.length &&
+        !container.tagName
+    ) {
         // Array given - at the moment this is a list of TR objects
         // Skip the header checkboxes
         for (i = 0; i < container.length; i++) {
@@ -267,16 +271,23 @@ export function toggle_all_rows(obj, name_select, name_deselect) {
     var none_selected = true;
     var some_failed = false;
     for (var i = 0; i < checkboxes.length; i++) {
-        if (selection_properties.selected_rows.indexOf(checkboxes[i].name) === -1)
+        if (
+            selection_properties.selected_rows.indexOf(checkboxes[i].name) ===
+            -1
+        )
             all_selected = false;
         else none_selected = false;
-        if (checkboxes[i].classList && checkboxes[i].classList.contains("failed"))
+        if (
+            checkboxes[i].classList &&
+            checkboxes[i].classList.contains("failed")
+        )
             some_failed = true;
     }
     var span: ChildNode | null = null;
     // Toggle the state
     if (name_select || name_deselect) {
-        var span = document.getElementById("menu_entry_checkbox_selection")!.childNodes[0].lastChild;
+        var span = document.getElementById("menu_entry_checkbox_selection")!
+            .childNodes[0].lastChild;
     }
     if (all_selected) {
         remove_selected_rows(checkboxes);
@@ -311,7 +322,9 @@ function select_all_rows(elems, only_failed) {
     for (var i = 0; i < elems.length; i++) {
         if (!only_failed || elems[i].classList.contains("failed")) {
             elems[i].checked = true;
-            if (selection_properties.selected_rows.indexOf(elems[i].name) === -1)
+            if (
+                selection_properties.selected_rows.indexOf(elems[i].name) === -1
+            )
                 selection_properties.selected_rows.push(elems[i].name);
         }
     }
@@ -355,7 +368,7 @@ export function toggle_group_rows(checkbox) {
     if (group_end === null) group_end = rows.length;
 
     // Found the group start and end row of the checkbox!
-    var group_rows :HTMLTableRowElement[] = [];
+    var group_rows: HTMLTableRowElement[] = [];
     for (var a = group_start; a < group_end!; a++) {
         if (rows[a].tagName === "TR") {
             group_rows.push(rows[a]);
@@ -365,8 +378,11 @@ export function toggle_group_rows(checkbox) {
 }
 
 export function update_bulk_moveto(val) {
-    var fields = document.getElementsByClassName("bulk_moveto") as HTMLCollectionOf<HTMLSelectElement>;
+    var fields = document.getElementsByClassName(
+        "bulk_moveto"
+    ) as HTMLCollectionOf<HTMLSelectElement>;
     for (var i = 0; i < fields.length; i++)
         for (var a = 0; a < fields[i].options.length; a++)
-            if (fields[i].options[a].value == val) fields[i].options[a].selected = true;
+            if (fields[i].options[a].value == val)
+                fields[i].options[a].selected = true;
 }

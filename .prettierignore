@@ -1,5 +1,3 @@
 web/htdocs/js/*_min.js*
 # colorpicker.js is a 3rd party module, so do not format it
 web/htdocs/js/modules/colorpicker.js
-
-web/htdocs/js/modules/selection.ts

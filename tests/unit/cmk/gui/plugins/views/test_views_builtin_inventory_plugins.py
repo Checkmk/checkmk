@@ -5,11 +5,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.plugins.views.builtin_inventory_plugins import inventory_displayhints
-from cmk.gui.views.inventory import _convert_display_hint
 
 
 def test__convert_display_hint() -> None:
-    assert all("title" in _convert_display_hint(hint) for hint in inventory_displayhints.values())
+    assert all("title" in hint for hint in inventory_displayhints.values())
 
 
 def test_missing_table_keyorder() -> None:

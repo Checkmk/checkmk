@@ -924,11 +924,6 @@ class AttributeDisplayHint:
         )
 
 
-def _get_display_hint(invpath: SDRawPath) -> InventoryHintSpec:
-    hint_id = _find_display_hint_id(invpath)
-    return _convert_display_hint({} if hint_id is None else inventory_displayhints.get(hint_id, {}))
-
-
 def _find_display_hint_id(invpath: SDRawPath) -> Optional[str]:
     """Looks up the display hint for the given inventory path.
 
@@ -984,25 +979,21 @@ def _find_display_hint_id(invpath: SDRawPath) -> Optional[str]:
     return None
 
 
-def _convert_display_hint(hint: InventoryHintSpec) -> InventoryHintSpec:
-    """Convert paint type to paint function, for the convenciance of the called"""
-    if "paint" in hint:
-        paint_function_name = "inv_paint_" + hint["paint"]
-        hint["paint_function"] = globals()[paint_function_name]
+def _inv_titleinfo(raw_path: SDRawPath) -> str:
+    hint = (
+        inventory_displayhints.get(hint_id, {})
+        if (hint_id := _find_display_hint_id(raw_path))
+        else {}
+    )
 
-    return hint
-
-
-def _inv_titleinfo(invpath: SDRawPath) -> str:
-    hint = _get_display_hint(invpath)
     if "title" in hint:
         title = hint["title"]
         if hasattr(title, "__call__"):
-            parsed_path, _attribute_keys = inventory.parse_tree_path(invpath)
+            parsed_path, _attribute_keys = inventory.parse_tree_path(raw_path)
             title = title(parsed_path[-1] or "")
     else:
         title = (
-            invpath.rstrip(".").rstrip(":").split(".")[-1].split(":")[-1].replace("_", " ").title()
+            raw_path.rstrip(".").rstrip(":").split(".")[-1].split(":")[-1].replace("_", " ").title()
         )
     return title
 

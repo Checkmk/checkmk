@@ -1,0 +1,12 @@
+Title: Crash during automation discovery related to clusters
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1652875624
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p25
+
+Automated discoveries on hosts with clustered services in some situations failed with the message
+<i>discovery failed: 'DiscoveryResult' object has no attribute 'clustered_ignored'</i>.

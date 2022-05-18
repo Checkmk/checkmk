@@ -692,8 +692,14 @@ def _get_post_discovery_services(
         if check_source.startswith("clustered_"):
             # Silently keep clustered services
             post_discovery_services.extend(discovered_services_with_nodes)
-            setattr(result, check_source,
-                    getattr(result, check_source) + len(discovered_services_with_nodes))
+            if check_source == "clustered_new":
+                result.clustered_new += len(discovered_services_with_nodes)
+            elif check_source == "clustered_old":
+                result.clustered_old += len(discovered_services_with_nodes)
+            elif check_source == "clustered_vanished":
+                result.clustered_vanished += len(discovered_services_with_nodes)
+            elif check_source == "clustered_ignored":
+                result.clustered_ignored += len(discovered_services_with_nodes)
             continue
 
         raise MKGeneralException("Unknown check source '%s'" % check_source)

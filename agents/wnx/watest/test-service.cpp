@@ -11,6 +11,8 @@
 #include "tools/_process.h"
 #include "windows_service_api.h"
 
+using namespace std::chrono_literals;
+
 namespace wtools {  // to become friendly for wtools classes
 class TestProcessor : public wtools::BaseServiceProcessor {
 public:
@@ -77,13 +79,10 @@ TEST(ServiceControllerTest, InstallUninstall) {
 }
 
 TEST(ServiceControllerTest, StartStop) {
-    using namespace cma::srv;
-    using namespace std::chrono;
     int counter = 0;
 
-    wtools::ServiceController controller(std::make_unique<ServiceProcessor>(
-        100ms, [&counter](const void *Processor) {
-            xlog::l("pip").print();
+    wtools::ServiceController controller(
+        std::make_unique<cma::srv::ServiceProcessor>(100ms, [&counter]() {
             counter++;
             return true;
         }));
@@ -94,31 +93,26 @@ TEST(ServiceControllerTest, StartStop) {
     EXPECT_EQ(controller.can_pause_continue_, false);
     EXPECT_NE(controller.processor_, nullptr);
 
-    // special case with "no connect" case
-    {
-        auto ret =
-            wtools::InstallService(test_service_name,  // name of service
-                                   L"Test Name",  // service name to display
-                                   SERVICE_DEMAND_START,  // start type
-                                   nullptr,               // dependencies
-                                   nullptr,               // no account
-                                   nullptr                // no password
-            );
-        EXPECT_TRUE(ret);
-
-        if (ret) {
-            ON_OUT_OF_SCOPE(wtools::UninstallService(test_service_name));
-            auto success = wtools::ServiceController::StopType::fail;
-            std::thread t([&]() {
-                success = controller.registerAndRun(test_service_name, true,
-                                                    true, true);
-            });
-            if (t.joinable()) t.join();
-
-            EXPECT_EQ(success, wtools::ServiceController::StopType::no_connect);
-            EXPECT_EQ(counter, 0);
-        }
+    wtools::UninstallService(test_service_name);
+    ASSERT_TRUE(wtools::InstallService(test_service_name,  // name of service
+                                       L"Test Name",  // service name to display
+                                       SERVICE_DEMAND_START,  // start type
+                                       nullptr,               // dependencies
+                                       nullptr,               // no account
+                                       nullptr                // no password
+                                       ));
+    ON_OUT_OF_SCOPE(wtools::UninstallService(test_service_name));
+    auto success = wtools::ServiceController::StopType::fail;
+    std::thread t([&]() {
+        success =
+            controller.registerAndRun(test_service_name, true, true, true);
+    });
+    if (t.joinable()) {
+        t.join();
     }
+
+    EXPECT_EQ(success, wtools::ServiceController::StopType::no_connect);
+    EXPECT_EQ(counter, 0);
 }
 
 }  // namespace wtools

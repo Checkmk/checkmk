@@ -539,7 +539,7 @@ ServiceProcessor::Signal ServiceProcessor::mainWaitLoop(
 
     // Perform main service function here...
     while (true) {
-        if (!callback_(static_cast<const void *>(this))) {
+        if (!callback_()) {
             break;
         }
 

@@ -360,16 +360,16 @@ namespace srv {
 int RunService(std::wstring_view app_name) {
     cma::details::g_is_service = true;  // we know that we are service
 
-    auto ret = ServiceAsService(app_name, 1000ms, [](const void * /*nothing*/) {
+    auto ret = ServiceAsService(app_name, 1000ms, []() -> bool {
         // Auto Update when  MSI file is located by specified address
         // this part of code have to be tested manually
-        auto [command, ret] = cma::install::CheckForUpdateFile(
+        auto [command, started] = cma::install::CheckForUpdateFile(
             cma::install::kDefaultMsiFileName,     // file we are looking for
             cma::cfg::GetUpdateDir(),              // dir with file
             cma::install::UpdateProcess::execute,  // operation if file found
             cma::cfg::GetUserInstallDir());        // dir where file to backup
 
-        if (ret) {
+        if (started) {
             XLOG::l.i(
                 "Install process with command '{}' was initiated - waiting for restart",
                 wtools::ToUtf8(command));
@@ -378,7 +378,9 @@ int RunService(std::wstring_view app_name) {
         return true;
     });
 
-    if (ret == 0) cma::cmdline::ServiceUsage(L"");
+    if (ret == 0) {
+        cma::cmdline::ServiceUsage(L"");
+    }
 
     return ret == 0 ? 0 : 1;
 }

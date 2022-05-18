@@ -4,16 +4,21 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# {} -> Default was 'This host'
+# server: None -> 'This host'
+# server: "default DNS server" -> will omit the option "-s" for check_dns
+# server: "str"
+
 
 def check_dns_arguments(params):
     description, settings = params
     args = ["-H", description]
 
-    if "server" in settings:
-        if settings["server"] not in {None, "default DNS server"}:
-            args += ["-s", settings["server"]]
-    else:
+    dns_server = settings.get("server")
+    if dns_server is None:
         args += ["-s", "$HOSTADDRESS$"]
+    elif dns_server != "default DNS server":
+        args += ["-s", settings["server"]]
 
     if settings.get("expect_all_addresses", True):
         args.append("-L")

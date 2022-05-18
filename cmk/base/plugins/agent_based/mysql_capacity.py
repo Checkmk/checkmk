@@ -19,7 +19,7 @@
 # performance_schema      0       0
 # test 409255936       54525952
 from collections import defaultdict
-from typing import Any, Mapping
+from typing import Any, Mapping, Union
 
 from .agent_based_api.v1 import check_levels, register, render, Service
 from .agent_based_api.v1.type_defs import CheckResult
@@ -27,16 +27,16 @@ from .agent_based_api.v1.type_defs import CheckResult
 
 def parse_mysql_capacity(string_table):
     item = "mysql"
-    section: dict[str, dict[str, tuple]] = defaultdict(dict)
+    section: dict[str, dict[str, Union[int, str]]] = defaultdict(dict)
     for line in string_table:
         if line[0].startswith("[["):
             item = " ".join(line).strip("[ ]") or item
             continue
-        dbname, size, avail = " ".join(line[:-2]), line[-2], line[-1]
+        dbname, size = " ".join(line[:-2]), line[-2]
         try:
-            section[item][dbname] = (int(size), int(avail))
+            section[item][dbname] = int(size)
         except ValueError:
-            section[item][dbname] = (size, avail)
+            section[item][dbname] = size
     return section
 
 
@@ -48,14 +48,14 @@ def discover_mysql_size(section):
         for dbname, values in data.items():
             if (
                 dbname not in ("information_schema", "mysql", "performance_schema")
-                and "NULL" not in values
+                and values != "NULL"
             ):
                 yield Service(item=f"{instance}:{dbname}")
 
 
 def check_mysql_size(item: str, params: Mapping[str, Any], section: Mapping) -> CheckResult:
     instance, dbname = item.split(":", 1)
-    size, _avail = section.get(instance, {}).get(dbname, (None, None))
+    size = section.get(instance, {}).get(dbname, None)
     if not isinstance(size, int):
         return
 

@@ -24,10 +24,10 @@ def _discovery(fix_register) -> Callable:
 def test_discovery(discovery):
     section = {
         "mysql": {
-            "red": (12, 0),
-            "information_schema": (12, 0),
-            "performance_schema": (12, 0),
-            "mysql": (12, 0),
+            "red": 12,
+            "information_schema": 12,
+            "performance_schema": 12,
+            "mysql": 12,
         }
     }
     assert list(discovery(section)) == [Service(item="mysql:red")]
@@ -36,7 +36,7 @@ def test_discovery(discovery):
 def test_check(check):
     item = "mysql:reddb"
     params = {"levels": (None, None)}
-    section = {"mysql": {"reddb": (42, 0)}}
+    section = {"mysql": {"reddb": 42}}
     assert list(check(item=item, params=params, section=section)) == [
         Result(state=State.OK, summary="Size: 42 B"),
         Metric("database_size", 42.0),

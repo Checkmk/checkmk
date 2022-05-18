@@ -1057,26 +1057,26 @@ def declare_inventory_columns() -> None:
 #   '----------------------------------------------------------------------'
 
 
-def _inv_find_subtable_columns(invpath: SDRawPath) -> List[str]:
+def _inv_find_subtable_columns(raw_path: SDRawPath) -> List[str]:
     """Find the name of all columns of an embedded table that have a display
     hint. Respects the order of the columns if one is specified in the
     display hint.
 
     Also use the names found in keyorder to get even more of the available columns."""
-    subtable_hint = _convert_display_hint(inventory_displayhints[invpath])
+    table_hint = TableDisplayHint.make_from_hint(raw_path, inventory_displayhints[raw_path])
 
     # Create dict from column name to its order number in the list
-    with_numbers = enumerate(subtable_hint.get("keyorder", []))
+    with_numbers = enumerate(table_hint.key_order)
     swapped = [(t[1], t[0]) for t in with_numbers]
     order = dict(swapped)
 
     columns = []
     for path in inventory_displayhints:
-        if path.startswith(invpath + "*."):
+        if path.startswith(raw_path + "*."):
             # ".networking.interfaces:*.port_type" -> "port_type"
             columns.append(path.split(".")[-1])
 
-    for key in subtable_hint.get("keyorder", []):
+    for key in table_hint.key_order:
         if key not in columns:
             columns.append(key)
 

@@ -6923,12 +6923,12 @@ class IconSelector(ValueSpec):
             by_cat.setdefault(category_name, [])
             by_cat[category_name].append(icon_name)
 
-        categories = self.categories()
+        categories = list(self.categories())
         if self._show_builtin_icons:
             categories.append(("builtin", _("Builtin")))
 
         icon_categories = []
-        for category_name, category_alias in self.categories():
+        for category_name, category_alias in categories:
             if category_name in by_cat:
                 icon_categories.append((category_name, category_alias, by_cat[category_name]))
         return icon_categories

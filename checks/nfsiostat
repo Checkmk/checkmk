@@ -64,8 +64,8 @@ def parse_nfsiostat(info):
     parsed = {
         m[0]: m[1:]
         for m in re.findall(
-            r"(\S+:/\S+)%s" % (r".*?(\d+\.\d+|\d+)" * 16),
-            str(new_info).strip("[]"),
+            r"(\S+:/\S+) mounted on \S+:%s" % (r".*?(\d+\.\d+|\d+)" * 16),
+            " ".join(new_info),
             flags=re.DOTALL,
         )
     }

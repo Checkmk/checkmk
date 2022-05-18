@@ -76,7 +76,7 @@ def parse_nfsmounts_v2(string_table: StringTable) -> NetworkFSSection:
                     free_blocks=int(usage["free_blocks"]),
                     blocksize=int(usage["blocksize"]),
                 )
-                if (usage := data["usage"])
+                if (usage := data.get("usage"))
                 else None,
                 source=None if (s := data.get("source")) is None else str(s),
             ),
@@ -157,7 +157,7 @@ def check_network_fs_mount(
         return
 
     if mount.source:
-        yield Result(state=State.OK, summary=f"Device: {mount.source}")
+        yield Result(state=State.OK, summary=f"Source: {mount.source}")
 
     state = NetworkFSState(mount.state)
     if state is not NetworkFSState.OK:

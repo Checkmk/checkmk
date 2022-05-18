@@ -223,7 +223,7 @@ def test_network_fs_mounts_check(
             ],
             "/mnt/test_client",
             [
-                Result(state=State.OK, summary="Device: 127.0.0.1:/mnt/test"),
+                Result(state=State.OK, summary="Source: 127.0.0.1:/mnt/test"),
                 Result(state=State.OK, summary="37.06% used (85.8 of 232 GiB)"),
                 Result(state=State.OK, summary="trend per 1 day 0 hours: -4.35 GiB"),
                 Result(state=State.OK, summary="trend per 1 day 0 hours: -1.88%"),

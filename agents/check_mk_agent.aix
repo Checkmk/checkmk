@@ -370,12 +370,12 @@ section_nfs_mounts() {
         echo '{"mountpoint": "'"${1}"'", "source": "'"${2}"'", "state": "ok", "mount_seems_okay": "true"}'
     }
     json_templ_empty() {
-        echo '{"mountpoint": "'"${1}"'", "source": "'"${2}"'", "state": "hanging", "usage": {"total_blocks": 0, "free_blocks_su": 0, "free_blocks": 0, "blocksize": 0}}'
+        echo '{"mountpoint": "'"${1}"'", "source": "'"${2}"'", "state": "hanging", "mount_seems_okay": "false"}'
     }
     if inpath stat; then
         echo '<<<nfsmounts_v2:sep(0)>>>'
         mount | grep ' nfs' | while read -r HN MD MP _; do
-            waitmax 5 stat -f -c "$(json_templ "${MP}" "'${HN}':'${MD}'")" "${MP}" || json_templ_empty "${MP}" "'${HN}':'${MD}'"
+            waitmax 5 stat -f -c "'$(json_templ "${MP}" "${HN}:${MD}")'" "${MP}" || json_templ_empty "${MP}" "${HN}:${MD}"
         done
         echo '<<<cifsmounts>>>'
         mount | grep ' cifs' | while read -r _ _ MP _; do

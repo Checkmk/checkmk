@@ -7,20 +7,18 @@ from typing import Callable
 
 import pytest
 
-from cmk.utils.type_defs.pluginname import CheckPluginName
-
-import cmk.base.plugin_contexts
 from cmk.base.api.agent_based.checking_classes import Metric, Result, Service, State
+from cmk.base.plugins.agent_based import mysql_capacity
 
 
 @pytest.fixture(name="check")
 def _check(fix_register) -> Callable:
-    return fix_register.check_plugins[CheckPluginName("mysql_capacity")].check_function
+    return mysql_capacity.check_mysql_size
 
 
 @pytest.fixture(name="discovery")
 def _discovery(fix_register) -> Callable:
-    return fix_register.check_plugins[CheckPluginName("mysql_capacity")].discovery_function
+    return mysql_capacity.discover_mysql_size
 
 
 def test_discovery(discovery):
@@ -39,8 +37,7 @@ def test_check(check):
     item = "mysql:reddb"
     params = {"levels": (None, None)}
     section = {"mysql": {"reddb": (42, 0)}}
-    with cmk.base.plugin_contexts.current_host("my_host"):
-        assert list(check(item=item, params=params, section=section)) == [
-            Result(state=State.OK, summary="Size: 42.00 B"),
-            Metric("database_size", 42.0),
-        ]
+    assert list(check(item=item, params=params, section=section)) == [
+        Result(state=State.OK, summary="Size: 42 B"),
+        Metric("database_size", 42.0),
+    ]

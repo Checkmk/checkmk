@@ -83,9 +83,6 @@ def _transform(
     params: Union[dict, tuple[float, float]]
 ) -> dict[str, Optional[tuple[float, float]]]:
     if isinstance(params, dict):
-        # old style check api default
-        if params == {}:
-            return {"levels": None}
         return params
     return {"levels": params}
 

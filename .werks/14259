@@ -1,0 +1,19 @@
+Title: check_mailboxes: EWS protocol: Account email address can now be customized
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1652951880
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0p1
+
+Using EWS the account (used for both sending and receiving mails among other features) is
+associated with identifiers, and the credentials username might be one of them for
+convenience (but doesn't have to be).
+This change provides an option to set the email address used to specify the account to be
+contacted (i.e. PrimarySmtpAddress) in case it's different from the username.
+If not specified the credentials username is being used as before.
+This feature is only available for EWS and doesn't affect other email related active checks.
+

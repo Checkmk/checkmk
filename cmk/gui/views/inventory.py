@@ -786,7 +786,7 @@ class TableDisplayHint:
             set(k for r in rows for k in r) - set(self.key_order)
         )
         return [
-            TableTitle(col_hint.short or col_hint.title, k, k in key_columns)
+            TableTitle(col_hint.short_title, k, k in key_columns)
             for k in sorting_keys
             for col_hint in (ColumnDisplayHint.make(path, k),)
         ]
@@ -798,22 +798,38 @@ class TableDisplayHint:
 @dataclass(frozen=True)
 class ColumnDisplayHint:
     raw_path: str
-    short: Optional[str]
+    title: str
+    short_title: str
     data_type: str
     paint_function: PaintFunction
-    title: str
+    sort_function: Callable[[Any, Any], int]  # TODO improve type hints for args
 
     @classmethod
     def make(cls, path: SDPath, key: str) -> ColumnDisplayHint:
         raw_path = f".{_get_raw_path(path)}:*.{key}" if path else "."
         raw_hint = inventory_displayhints.get(raw_path, {})
         data_type, paint_function = _get_paint_function(raw_hint)
+        title = _make_title_function(raw_hint)(raw_path) if path else key.title()
         return cls(
             raw_path=raw_path,
-            short=raw_hint.get("short"),
+            title=title,
+            short_title=raw_hint.get("short", title),
             data_type=data_type,
             paint_function=paint_function,
-            title=_make_title_function(raw_hint)(raw_path) if path else key.title(),
+            sort_function=raw_hint.get("sort", _cmp_inv_generic),
+        )
+
+    @classmethod
+    def make_from_hint(cls, raw_path: SDRawPath, raw_hint: InventoryHintSpec) -> ColumnDisplayHint:
+        data_type, paint_function = _get_paint_function(raw_hint)
+        title = _make_title_function(raw_hint)(raw_path)
+        return cls(
+            raw_path=raw_path,
+            title=title,
+            short_title=raw_hint.get("short", title),
+            data_type=data_type,
+            paint_function=paint_function,
+            sort_function=raw_hint.get("sort", _cmp_inv_generic),
         )
 
 
@@ -837,9 +853,9 @@ class AttributesDisplayHint:
 @dataclass(frozen=True)
 class AttributeDisplayHint:
     raw_path: str
+    title: str
     data_type: str
     paint_function: PaintFunction
-    title: str
 
     @classmethod
     def make(cls, path: SDPath, key: str) -> AttributeDisplayHint:
@@ -848,9 +864,9 @@ class AttributeDisplayHint:
         data_type, paint_function = _get_paint_function(raw_hint)
         return cls(
             raw_path=raw_path,
+            title=_make_title_function(raw_hint)(raw_path) if path else key.title(),
             data_type=data_type,
             paint_function=paint_function,
-            title=_make_title_function(raw_hint)(raw_path) if path else key.title(),
         )
 
 
@@ -1027,28 +1043,22 @@ def _decorate_sort_func(f):
 
 
 def _declare_invtable_column(
-    infoname: str, invpath: SDRawPath, topic: str, name: str, column: str
+    infoname: str, raw_table_path: SDRawPath, topic: str, name: str, column: str
 ) -> None:
-    sub_invpath = invpath + "*." + name
-    hint = _convert_display_hint(inventory_displayhints.get(sub_invpath, {}))
+    raw_col_path = raw_table_path + "*." + name
+    raw_col_hint = inventory_displayhints.get(raw_col_path, {})
+    col_hint = ColumnDisplayHint.make_from_hint(raw_col_path, raw_col_hint)
 
-    if "paint" in hint:
-        paint_name = hint["paint"]
-        paint_function: PaintFunction = globals()["inv_paint_" + paint_name]
-    else:
-        paint_name = "str"
-        paint_function = inv_paint_generic
-
-    title = _inv_titleinfo(sub_invpath)
-
-    # Sync this with _declare_inv_column()
-    filter_class = hint.get("filter")
+    # TODO
+    # - Sync this with _declare_inv_column()
+    # - filter -> ColumnDisplayHint
+    filter_class = raw_col_hint.get("filter")
     if filter_class:
         filter_registry.register(
             filter_class(
                 inv_info=infoname,
                 ident=infoname + "_" + name,
-                title=topic + ": " + title,
+                title=topic + ": " + col_hint.title,
             )
         )
     elif (ranged_table := get_ranged_table(infoname)) is not None:
@@ -1056,7 +1066,7 @@ def _declare_invtable_column(
             FilterInvtableIDRange(
                 inv_info=ranged_table,
                 ident=infoname + "_" + name,
-                title=topic + ": " + title,
+                title=topic + ": " + col_hint.title,
             )
         )
     else:
@@ -1064,29 +1074,29 @@ def _declare_invtable_column(
             FilterInvtableText(
                 inv_info=infoname,
                 ident=infoname + "_" + name,
-                title=topic + ": " + title,
+                title=topic + ": " + col_hint.title,
             )
         )
 
     register_painter(
         column,
         {
-            "title": topic + ": " + title,
-            "short": hint.get("short", title),
+            "title": topic + ": " + col_hint.title,
+            "short": col_hint.short_title,
             "columns": [column],
-            "paint": lambda row: paint_function(row.get(column)),
+            "paint": lambda row: col_hint.paint_function(row.get(column)),
             "sorter": column,
         },
     )
 
-    sortfunc = hint.get("sort", _cmp_inv_generic)
-
     register_sorter(
         column,
         {
-            "title": _("Inventory") + ": " + title,
+            "title": _("Inventory") + ": " + col_hint.title,
             "columns": [column],
-            "cmp": lambda self, a, b: _decorate_sort_func(sortfunc)(a.get(column), b.get(column)),
+            "cmp": lambda self, a, b: _decorate_sort_func(col_hint.sort_function)(
+                a.get(column), b.get(column)
+            ),
         },
     )
 

@@ -9,19 +9,30 @@ from typing import Any, Mapping, Sequence, Tuple
 # No stub file
 import pytest
 
-from cmk.utils.structured_data import SDKey, SDPairs, SDPath, SDRow, SDValue, StructuredDataNode
+from cmk.utils.structured_data import (
+    SDKey,
+    SDPairs,
+    SDPath,
+    SDRawPath,
+    SDRow,
+    SDValue,
+    StructuredDataNode,
+)
 
 import cmk.gui.inventory
 import cmk.gui.utils
 from cmk.gui.num_split import cmp_version
+from cmk.gui.plugins.views.utils import inventory_displayhints
 from cmk.gui.plugins.visuals.inventory import FilterInvtableVersion
 from cmk.gui.views import View
 from cmk.gui.views.inventory import (
+    _cmp_inv_generic,
     AttributeDisplayHint,
     AttributesDisplayHint,
     ColumnDisplayHint,
     inv_paint_generic,
     inv_paint_if_oper_status,
+    inv_paint_number,
     inv_paint_size,
     NodeDisplayHint,
     RowTableInventory,
@@ -456,10 +467,11 @@ def test_sort_table_rows_displayhint(rows: Sequence[SDRow], expected: Sequence[S
             "key",
             ColumnDisplayHint(
                 raw_path=".",
-                short=None,
+                short_title="Key",
                 data_type="str",
                 paint_function=inv_paint_generic,
                 title="Key",
+                sort_function=_cmp_inv_generic,
             ),
         ),
         (
@@ -467,10 +479,11 @@ def test_sort_table_rows_displayhint(rows: Sequence[SDRow], expected: Sequence[S
             "oper_status",
             ColumnDisplayHint(
                 raw_path=".networking.interfaces:*.oper_status",
-                short="Status",
+                short_title="Status",
                 data_type="if_oper_status",
                 paint_function=inv_paint_if_oper_status,
                 title="Operational Status",
+                sort_function=_cmp_inv_generic,
             ),
         ),
         (
@@ -478,16 +491,78 @@ def test_sort_table_rows_displayhint(rows: Sequence[SDRow], expected: Sequence[S
             "key",
             ColumnDisplayHint(
                 raw_path=".path.to.node:*.key",
-                short=None,
+                short_title="Key",
                 data_type="str",
                 paint_function=inv_paint_generic,
                 title="Key",
+                sort_function=_cmp_inv_generic,
             ),
         ),
     ],
 )
 def test_make_column_displayhint(col_path: SDPath, key: str, expected: ColumnDisplayHint) -> None:
     assert ColumnDisplayHint.make(col_path, key) == expected
+
+
+@pytest.mark.parametrize(
+    "raw_col_path, expected",
+    [
+        (
+            ".foo:*.bar",
+            ColumnDisplayHint(
+                raw_path=".foo:*.bar",
+                short_title="Bar",
+                data_type="str",
+                paint_function=inv_paint_generic,
+                title="Bar",
+                sort_function=_cmp_inv_generic,
+            ),
+        ),
+        (
+            ".software.packages:*.package_version",
+            ColumnDisplayHint(
+                raw_path=".software.packages:*.package_version",
+                short_title="Package Version",
+                data_type="str",
+                paint_function=inv_paint_generic,
+                title="Package Version",
+                sort_function=cmp_version,
+            ),
+        ),
+        (
+            ".networking.interfaces:*.index",
+            ColumnDisplayHint(
+                raw_path=".networking.interfaces:*.index",
+                short_title="Index",
+                data_type="number",
+                paint_function=inv_paint_number,
+                title="Index",
+                sort_function=_cmp_inv_generic,
+            ),
+        ),
+        (
+            ".networking.interfaces:*.oper_status",
+            ColumnDisplayHint(
+                raw_path=".networking.interfaces:*.oper_status",
+                short_title="Status",
+                data_type="if_oper_status",
+                paint_function=inv_paint_if_oper_status,
+                title="Operational Status",
+                sort_function=_cmp_inv_generic,
+            ),
+        ),
+    ],
+)
+def test_make_column_displayhint_from_hint(
+    raw_col_path: SDRawPath, expected: ColumnDisplayHint
+) -> None:
+    assert (
+        ColumnDisplayHint.make_from_hint(
+            raw_col_path,
+            inventory_displayhints.get(raw_col_path, {}),
+        )
+        == expected
+    )
 
 
 @pytest.mark.parametrize(

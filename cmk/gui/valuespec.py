@@ -6808,7 +6808,10 @@ class PageAutocompleteLabels(AjaxPage):
         return get_labels_cache().get_labels_list()
 
 
-class IconSelector(ValueSpec):
+IconSelectorModel = Any
+
+
+class IconSelector(ValueSpec[IconSelectorModel]):
     def __init__(  # pylint: disable=redefined-builtin
         self,
         allow_empty=True,
@@ -6818,8 +6821,8 @@ class IconSelector(ValueSpec):
         # ValueSpec
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
-        default_value: ValueSpecDefault[T] = DEF_VALUE,
-        validate: _Optional[ValueSpecValidateFunc[T]] = None,
+        default_value: ValueSpecDefault[IconSelectorModel] = DEF_VALUE,
+        validate: _Optional[ValueSpecValidateFunc[IconSelectorModel]] = None,
     ):
         super().__init__(title=title, help=help, default_value=default_value, validate=validate)
         self._allow_empty = allow_empty
@@ -6950,19 +6953,19 @@ class IconSelector(ValueSpec):
 
         return icon_tag
 
-    def _transform_icon_str(self, value: str) -> Mapping[str, _Optional[str]]:
+    def _transform_icon_str(self, value: IconSelectorModel) -> Mapping[str, _Optional[str]]:
         if isinstance(value, dict):
             return value
         return {"icon": value, "emblem": None}
 
-    def render_input(self, varprefix: str, value: Any) -> None:
+    def render_input(self, varprefix: str, value: IconSelectorModel) -> None:
         value = self._transform_icon_str(value)
 
         self._render_input(varprefix, value["icon"])
         if self._with_emblem:
             self._render_input(varprefix + "_emblem", value["emblem"])
 
-    def _render_input(self, varprefix: str, value: Any) -> None:
+    def _render_input(self, varprefix: str, value: _Optional[str]) -> None:
         # Handle complain phase with validation errors correctly and get the value
         # from the HTML vars
         if value is None:
@@ -6996,13 +6999,16 @@ class IconSelector(ValueSpec):
             resizable=True,
         )
 
-    def render_popup_input(self, varprefix: str, value: Any) -> None:
+    def render_popup_input(self, varprefix: str, value: _Optional[str]) -> None:
         html.open_div(class_="icons", id_="%s_icons" % varprefix)
 
         is_emblem = varprefix.endswith("_emblem")
         icons_name_and_cat = self.available_emblems() if is_emblem else self.available_icons()
         available_icons = self._available_icons_by_category(icons_name_and_cat)
-        active_category = icons_name_and_cat.get(value, available_icons[0][0])
+        default_category = available_icons[0][0]
+        active_category = (
+            default_category if value is None else icons_name_and_cat.get(value, default_category)
+        )
 
         # Render tab navigation
         html.open_ul()
@@ -7071,10 +7077,10 @@ class IconSelector(ValueSpec):
 
         html.close_div()
 
-    def canonical_value(self) -> _Optional[str]:
+    def canonical_value(self) -> IconSelectorModel:
         return None
 
-    def from_html_vars(self, varprefix: str) -> Union[_Optional[str], Mapping[str, _Optional[str]]]:
+    def from_html_vars(self, varprefix: str) -> IconSelectorModel:
         icon = self._from_html_vars(varprefix)
         if not self._with_emblem:
             return icon
@@ -7091,16 +7097,16 @@ class IconSelector(ValueSpec):
             return None
         return icon
 
-    def value_to_html(self, value: Any) -> ValueSpecText:
+    def value_to_html(self, value: IconSelectorModel) -> ValueSpecText:
         return self._render_icon(value["icon"] if isinstance(value, dict) else value)
 
     def value_to_json(self, value: Any) -> JSONValue:
         return value
 
-    def value_from_json(self, json_value: JSONValue) -> Any:
+    def value_from_json(self, json_value: JSONValue) -> IconSelectorModel:
         return json_value
 
-    def validate_datatype(self, value: Any, varprefix: str) -> None:
+    def validate_datatype(self, value: IconSelectorModel, varprefix: str) -> None:
         if self._with_emblem and not isinstance(value, (str, dict)):
             raise MKUserError(varprefix, "The type is %s, but should be str or dict" % type(value))
         if not self._with_emblem and not isinstance(value, str):
@@ -7116,7 +7122,7 @@ class IconSelector(ValueSpec):
                 varprefix, _("The emblem type is %s, but should be str") % type(value["emblem"])
             )
 
-    def _validate_value(self, value: Any, varprefix: str) -> None:
+    def _validate_value(self, value: IconSelectorModel, varprefix: str) -> None:
         value = self._transform_icon_str(value)
 
         if not self._allow_empty and not value["icon"]:

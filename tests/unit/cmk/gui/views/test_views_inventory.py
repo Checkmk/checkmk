@@ -429,34 +429,30 @@ def test_make_table_displayhint(table_path: SDPath, expected: TableDisplayHint):
     "rows, expected",
     [
         ([], []),
-        ([{}], [(0, {})]),
+        ([{}], [{}]),
         (
             [
                 {"sid": "SID 2", "flashback": "Flashback 2", "other": "Other 2"},
                 {"sid": "SID 1", "flashback": "Flashback 1", "other": "Other 1"},
             ],
             [
-                (0, {"flashback": "Flashback 1", "other": "Other 1", "sid": "SID 1"}),
-                (1, {"flashback": "Flashback 2", "other": "Other 2", "sid": "SID 2"}),
+                {"flashback": "Flashback 1", "other": "Other 1", "sid": "SID 1"},
+                {"flashback": "Flashback 2", "other": "Other 2", "sid": "SID 2"},
             ],
         ),
     ],
 )
-def test_sort_table_rows_displayhint(
-    rows: Sequence[SDRow],
-    expected: Sequence[Tuple[int, SDRow]],
-):
+def test_sort_table_rows_displayhint(rows: Sequence[SDRow], expected: Sequence[SDRow]) -> None:
     path = ["software", "applications", "oracle", "dataguard_stats"]
     table_hint = TableDisplayHint.make(path)
-    assert list(table_hint.sort_rows(rows, table_hint.make_titles(rows, ["sid"], path))) == expected
+    assert table_hint.sort_rows(rows, table_hint.make_titles(rows, ["sid"], path)) == expected
 
 
 @pytest.mark.parametrize(
-    "col_path, index, key, expected",
+    "col_path, key, expected",
     [
         (
             tuple(),
-            0,
             "key",
             ColumnDisplayHint(
                 raw_path=".",
@@ -468,10 +464,9 @@ def test_sort_table_rows_displayhint(
         ),
         (
             ("networking", "interfaces"),
-            0,
             "oper_status",
             ColumnDisplayHint(
-                raw_path=".networking.interfaces:0.oper_status",
+                raw_path=".networking.interfaces:*.oper_status",
                 short="Status",
                 data_type="if_oper_status",
                 paint_function=inv_paint_if_oper_status,
@@ -480,10 +475,9 @@ def test_sort_table_rows_displayhint(
         ),
         (
             ("path", "to", "node"),
-            0,
             "key",
             ColumnDisplayHint(
-                raw_path=".path.to.node:0.key",
+                raw_path=".path.to.node:*.key",
                 short=None,
                 data_type="str",
                 paint_function=inv_paint_generic,
@@ -492,10 +486,8 @@ def test_sort_table_rows_displayhint(
         ),
     ],
 )
-def test_make_column_displayhint(
-    col_path: SDPath, index: int, key: str, expected: ColumnDisplayHint
-):
-    assert ColumnDisplayHint.make(col_path, index, key) == expected
+def test_make_column_displayhint(col_path: SDPath, key: str, expected: ColumnDisplayHint):
+    assert ColumnDisplayHint.make(col_path, key) == expected
 
 
 @pytest.mark.parametrize(

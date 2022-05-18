@@ -703,14 +703,6 @@ def _get_raw_path(path: SDPath) -> str:
     return ".".join(map(str, path))
 
 
-def _get_raw_display_hint(raw_path: str) -> InventoryHintSpec:
-    return (
-        {}
-        if (hint_id := _find_display_hint_id(raw_path)) is None
-        else inventory_displayhints.get(hint_id, {})
-    )
-
-
 def _get_paint_function(raw_hint: InventoryHintSpec) -> tuple[str, PaintFunction]:
     # FIXME At the moment  we need it to get tdclass: Clean this up one day.
     if "paint" in raw_hint:
@@ -740,13 +732,27 @@ class NodeDisplayHint:
 
     @classmethod
     def make(cls, path: SDPath) -> NodeDisplayHint:
-        raw_path = f".{_get_raw_path(path)}." if path else "."
-        raw_hint = _get_raw_display_hint(raw_path)
+        raw_path, raw_hint = cls._get_raw_path_or_hint(path)
         return cls(
             raw_path=raw_path,
             icon=raw_hint.get("icon"),
             title=_make_title_function(raw_hint)(raw_path),
         )
+
+    @staticmethod
+    def _get_raw_path_or_hint(path: SDPath) -> Tuple[str, InventoryHintSpec]:
+        if not path:
+            raw_path = "."
+            return raw_path, inventory_displayhints.get(raw_path, {})
+
+        # We either have attributes or a table.
+        base_path = f".{_get_raw_path(path)}"
+        for suffix in [".", ":"]:
+            raw_path = f"{base_path}{suffix}"
+            if hint := inventory_displayhints.get(raw_path, {}):
+                return raw_path, hint
+
+        return f"{base_path}.", {}
 
 
 class TableTitle(NamedTuple):
@@ -765,7 +771,7 @@ class TableDisplayHint:
     @classmethod
     def make(cls, path: SDPath) -> TableDisplayHint:
         raw_path = f".{_get_raw_path(path)}:" if path else "."
-        raw_hint = _get_raw_display_hint(raw_path)
+        raw_hint = inventory_displayhints.get(raw_path, {})
         return cls(
             raw_path=raw_path,
             key_order=raw_hint.get("keyorder", []),
@@ -782,13 +788,11 @@ class TableDisplayHint:
         return [
             TableTitle(col_hint.short or col_hint.title, k, k in key_columns)
             for k in sorting_keys
-            for col_hint in (ColumnDisplayHint.make(path, 0, k),)
+            for col_hint in (ColumnDisplayHint.make(path, k),)
         ]
 
-    def sort_rows(
-        self, rows: Sequence[SDRow], titles: Sequence[TableTitle]
-    ) -> Iterable[Tuple[int, SDRow]]:
-        return enumerate(sorted(rows, key=lambda r: tuple(r.get(t.key) or "" for t in titles)))
+    def sort_rows(self, rows: Sequence[SDRow], titles: Sequence[TableTitle]) -> Sequence[SDRow]:
+        return sorted(rows, key=lambda r: tuple(r.get(t.key) or "" for t in titles))
 
 
 @dataclass(frozen=True)
@@ -800,9 +804,9 @@ class ColumnDisplayHint:
     title: str
 
     @classmethod
-    def make(cls, path: SDPath, index: int, key: str) -> ColumnDisplayHint:
-        raw_path = f".{_get_raw_path(path)}:{index}.{key}" if path else "."
-        raw_hint = _get_raw_display_hint(raw_path)
+    def make(cls, path: SDPath, key: str) -> ColumnDisplayHint:
+        raw_path = f".{_get_raw_path(path)}:*.{key}" if path else "."
+        raw_hint = inventory_displayhints.get(raw_path, {})
         data_type, paint_function = _get_paint_function(raw_hint)
         return cls(
             raw_path=raw_path,
@@ -820,7 +824,7 @@ class AttributesDisplayHint:
     @classmethod
     def make(cls, path: SDPath) -> AttributesDisplayHint:
         raw_path = f".{_get_raw_path(path)}." if path else "."
-        raw_hint = _get_raw_display_hint(raw_path)
+        raw_hint = inventory_displayhints.get(raw_path, {})
         return cls(
             key_order=raw_hint.get("keyorder", []),
         )
@@ -840,7 +844,7 @@ class AttributeDisplayHint:
     @classmethod
     def make(cls, path: SDPath, key: str) -> AttributeDisplayHint:
         raw_path = f".{_get_raw_path(path)}.{key}" if path else "."
-        raw_hint = _get_raw_display_hint(raw_path)
+        raw_hint = inventory_displayhints.get(raw_path, {})
         data_type, paint_function = _get_paint_function(raw_hint)
         return cls(
             raw_path=raw_path,
@@ -2076,17 +2080,17 @@ class ABCNodeRenderer(abc.ABC):
             )
         html.close_tr()
 
-        for index, entry in table_hint.sort_rows(table.rows, titles):
+        for entry in table_hint.sort_rows(table.rows, titles):
             html.open_tr(class_="even0")
             for table_title in titles:
                 value = entry.get(table_title.key)
-                col_hint = ColumnDisplayHint.make(list(table.path), index, table_title.key)
+                col_hint = ColumnDisplayHint.make(list(table.path), table_title.key)
                 tdclass, _rendered_value = col_hint.paint_function(
                     value[1] if isinstance(value, tuple) else value
                 )
 
                 html.open_td(class_=tdclass)
-                self._show_table_value(
+                self._show_row_value(
                     value,
                     col_hint,
                     retention_intervals=table.get_retention_intervals(table_title.key, entry),
@@ -2096,7 +2100,7 @@ class ABCNodeRenderer(abc.ABC):
         html.close_table()
 
     @abc.abstractmethod
-    def _show_table_value(
+    def _show_row_value(
         self,
         value: Any,
         col_hint: ColumnDisplayHint,
@@ -2185,7 +2189,7 @@ class ABCNodeRenderer(abc.ABC):
 
 
 class NodeRenderer(ABCNodeRenderer):
-    def _show_table_value(
+    def _show_row_value(
         self,
         value: Any,
         col_hint: ColumnDisplayHint,
@@ -2203,7 +2207,7 @@ class NodeRenderer(ABCNodeRenderer):
 
 
 class DeltaNodeRenderer(ABCNodeRenderer):
-    def _show_table_value(
+    def _show_row_value(
         self,
         value: Any,
         col_hint: ColumnDisplayHint,

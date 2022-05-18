@@ -61,7 +61,9 @@ def test_check_sansymphony_pool_item_not_found(check_plugin: CheckPlugin) -> Non
     )
 
 
-def test_check_sansymphony_pool(check_plugin: CheckPlugin) -> None:
+def test_check_sansymphony_pool_status_running_cache_mode_readwrite(
+    check_plugin: CheckPlugin,
+) -> None:
     string_table = [
         [
             "Disk_pool_1",
@@ -84,4 +86,88 @@ def test_check_sansymphony_pool(check_plugin: CheckPlugin) -> None:
         ),
         Result(state=State.OK, summary="Pool allocation: 57%"),
         Metric("pool_allocation", 57.0, levels=(80.0, 90.0)),
+    ]
+
+
+def test_check_sansymphony_pool_status_running_cache_mode_read(
+    check_plugin: CheckPlugin,
+) -> None:
+    string_table = [
+        [
+            "Disk_pool_1",
+            "57",
+            "Running",
+            "Read",  # this is made up
+            "Dynamic",
+        ]
+    ]
+    assert list(
+        check_plugin.check_function(
+            item="Disk_pool_1",
+            params={"allocated_pools_percentage_upper": (80, 90)},
+            section=string_table,
+        )
+    ) == [
+        Result(
+            state=State.WARN,
+            summary="Dynamic Pool Disk_pool_1 is Running, its cache is Read",
+        ),
+        Result(state=State.OK, summary="Pool allocation: 57%"),
+        Metric("pool_allocation", 57.0, levels=(80.0, 90.0)),
+    ]
+
+
+def test_check_sansymphony_pool_status_stale(
+    check_plugin: CheckPlugin,
+) -> None:
+    string_table = [
+        [
+            "Disk_pool_1",
+            "57",
+            "Stale",  # this is made up
+            "ReadWrite",
+            "Dynamic",
+        ]
+    ]
+    assert list(
+        check_plugin.check_function(
+            item="Disk_pool_1",
+            params={"allocated_pools_percentage_upper": (80, 90)},
+            section=string_table,
+        )
+    ) == [
+        Result(
+            state=State.CRIT,
+            summary="Dynamic pool Disk_pool_1 is Stale, its cache is in ReadWrite mode",
+        ),
+        Result(state=State.OK, summary="Pool allocation: 57%"),
+        Metric("pool_allocation", 57.0, levels=(80.0, 90.0)),
+    ]
+
+
+def test_check_sansymphony_pool_allocation(
+    check_plugin: CheckPlugin,
+) -> None:
+    string_table = [
+        [
+            "Disk_pool_1",
+            "90",
+            "Running",
+            "ReadWrite",
+            "Dynamic",
+        ]
+    ]
+    assert list(
+        check_plugin.check_function(
+            item="Disk_pool_1",
+            params={"allocated_pools_percentage_upper": (80, 90)},
+            section=string_table,
+        )
+    ) == [
+        Result(
+            state=State.OK,
+            summary="Dynamic pool Disk_pool_1 is running, its cache is in ReadWrite mode",
+        ),
+        Result(state=State.CRIT, summary="Pool allocation: 90% (warn/crit at 80/90%)"),
+        Metric("pool_allocation", 90.0, levels=(80.0, 90.0)),
     ]

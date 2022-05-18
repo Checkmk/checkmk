@@ -3635,6 +3635,7 @@ def ajax_popup_icon_selector() -> None:
     show_builtin_icons = request.var("show_builtin_icons") == "1"
 
     vs = IconSelector(allow_empty=allow_empty, show_builtin_icons=show_builtin_icons)
+    assert varprefix is not None  # Hmmm...
     vs.render_popup_input(varprefix, value)
 
 

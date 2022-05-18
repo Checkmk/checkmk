@@ -6677,7 +6677,10 @@ class TextOrRegExp(Alternative):
 TextOrRegExpUnicode = TextOrRegExp  # alias added in 2.1.0 for compatibility
 
 
-class Labels(ValueSpec):
+LabelsModel = dict[str, str]
+
+
+class Labels(ValueSpec[LabelsModel]):
     """Valuespec to render and input a collection of object labels"""
 
     class World(Enum):
@@ -6697,8 +6700,8 @@ class Labels(ValueSpec):
         # ValueSpec
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
-        default_value: ValueSpecDefault[dict[str, Any]] = DEF_VALUE,
-        validate: _Optional[ValueSpecValidateFunc[dict[str, Any]]] = None,
+        default_value: ValueSpecDefault[LabelsModel] = DEF_VALUE,
+        validate: _Optional[ValueSpecValidateFunc[LabelsModel]] = None,
     ):
         super().__init__(title=title, help=help, default_value=default_value, validate=validate)
         self._world = world
@@ -6713,20 +6716,20 @@ class Labels(ValueSpec):
             ("" if h is None else str(h)) + label_help_text(), escape_links=False
         )
 
-    def canonical_value(self) -> dict[str, Any]:
+    def canonical_value(self) -> LabelsModel:
         return {}
 
-    def from_html_vars(self, varprefix: str) -> dict[str, str]:
+    def from_html_vars(self, varprefix: str) -> LabelsModel:
         value = html.request.get_str_input_mandatory(varprefix, "[]")
         return self._from_html_vars(value, varprefix)
 
-    def _from_html_vars(self, value: str, varprefix) -> dict[str, str]:
+    def _from_html_vars(self, value: str, varprefix: str) -> LabelsModel:
         try:
             return {label.id: label.value for label in parse_labels_value(value)}
         except ValueError as e:
             raise MKUserError(varprefix, "%s" % e)
 
-    def _validate_value(self, value: dict[str, Any], varprefix: str) -> None:
+    def _validate_value(self, value: LabelsModel, varprefix: str) -> None:
         if not isinstance(value, dict):
             raise MKUserError(
                 varprefix,
@@ -6744,11 +6747,11 @@ class Labels(ValueSpec):
                     _("The label value %r is of type %s, but should be %s") % (k, type(v), str),
                 )
 
-    def value_to_html(self, value: dict[str, Any]) -> ValueSpecText:
+    def value_to_html(self, value: LabelsModel) -> ValueSpecText:
         label_sources = {k: self._label_source.value for k in value} if self._label_source else {}
         return render_labels(value, "host", with_links=False, label_sources=label_sources)
 
-    def render_input(self, varprefix: str, value: Any) -> None:
+    def render_input(self, varprefix: str, value: LabelsModel) -> None:
         html.help(self.help())
         label_type = "host_label" if "host_labels" in varprefix else "service_label"
         html.text_input(
@@ -6760,10 +6763,10 @@ class Labels(ValueSpec):
             data_max_labels=self._max_labels,
         )
 
-    def value_to_json(self, value: dict[str, Any]) -> JSONValue:
+    def value_to_json(self, value: LabelsModel) -> JSONValue:
         return value
 
-    def value_from_json(self, json_value: JSONValue) -> dict[str, Any]:
+    def value_from_json(self, json_value: JSONValue) -> LabelsModel:
         return json_value
 
 
@@ -6776,9 +6779,9 @@ def SingleLabel(  # pylint: disable=redefined-builtin
     # ValueSpec
     title: _Optional[str] = None,
     help: _Optional[ValueSpecHelp] = None,
-    default_value: ValueSpecDefault[dict[str, Any]] = DEF_VALUE,
-    validate: _Optional[ValueSpecValidateFunc[dict[str, Any]]] = None,
-):
+    default_value: ValueSpecDefault[LabelsModel] = DEF_VALUE,
+    validate: _Optional[ValueSpecValidateFunc[LabelsModel]] = None,
+) -> Labels:
     """Input element for a single label"""
     return Labels(
         world=world,

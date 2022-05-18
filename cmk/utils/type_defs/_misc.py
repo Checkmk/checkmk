@@ -261,6 +261,7 @@ class DiscoveryResult:
     clustered_new: int = 0
     clustered_old: int = 0
     clustered_vanished: int = 0
+    clustered_ignored: int = 0
 
     # None  -> No error occured
     # ""    -> Not monitored (disabled host)

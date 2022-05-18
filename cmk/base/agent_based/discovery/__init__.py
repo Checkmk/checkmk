@@ -37,6 +37,7 @@ from cmk.utils.exceptions import MKGeneralException, MKTimeout, OnError
 from cmk.utils.log import console
 from cmk.utils.parameters import TimespecificParameters
 from cmk.utils.type_defs import (
+    assert_never,
     CheckPluginName,
     DiscoveryResult,
     EVERYTHING,
@@ -83,7 +84,8 @@ from .utils import DiscoveryMode, QualifiedDiscovery, TimeLimitFilter
 
 _BasicTransition = Literal["old", "new", "vanished"]
 _Transition = Union[
-    _BasicTransition, Literal["ignored", "clustered_old", "clustered_new", "clustered_vanished"]
+    _BasicTransition,
+    Literal["ignored", "clustered_old", "clustered_new", "clustered_vanished", "clustered_ignored"],
 ]
 
 
@@ -431,17 +433,17 @@ def _get_post_discovery_autocheck_services(
                 }
                 result.self_new += len(new)
                 post_discovery_services.update(new)
-            continue
 
-        if check_source in ("old", "ignored"):
+        elif (
+            check_source == "old" or check_source == "ignored"  # pylint: disable=consider-using-in
+        ):
             # keep currently existing valid services in any case
             post_discovery_services.update(
                 (s.service.id(), s) for s in discovered_services_with_nodes
             )
             result.self_kept += len(discovered_services_with_nodes)
-            continue
 
-        if check_source == "vanished":
+        elif check_source == "vanished":
             # keep item, if we are currently only looking for new services
             # otherwise fix it: remove ignored and non-longer existing services
             for entry in discovered_services_with_nodes:
@@ -455,21 +457,22 @@ def _get_post_discovery_autocheck_services(
                 else:
                     post_discovery_services[entry.service.id()] = entry
                     result.self_kept += 1
-            continue
 
-        if check_source.startswith("clustered_"):
+        else:
             # Silently keep clustered services
             post_discovery_services.update(
                 (s.service.id(), s) for s in discovered_services_with_nodes
             )
-            setattr(
-                result,
-                check_source,
-                getattr(result, check_source) + len(discovered_services_with_nodes),
-            )
-            continue
-
-        raise MKGeneralException("Unknown check source '%s'" % check_source)
+            if check_source == "clustered_new":
+                result.clustered_new += len(discovered_services_with_nodes)
+            elif check_source == "clustered_old":
+                result.clustered_old += len(discovered_services_with_nodes)
+            elif check_source == "clustered_vanished":
+                result.clustered_vanished += len(discovered_services_with_nodes)
+            elif check_source == "clustered_ignored":
+                result.clustered_ignored += len(discovered_services_with_nodes)
+            else:
+                assert_never(check_source)
 
     return post_discovery_services
 

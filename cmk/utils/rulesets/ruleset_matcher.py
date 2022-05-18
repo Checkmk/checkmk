@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """This module provides generic Check_MK ruleset processing functionality"""
 
-from typing import Any, cast, Dict, Generator, List, Optional, Pattern, Set, Tuple
+from typing import Any, cast, Dict, Generator, Iterable, List, Optional, Pattern, Set, Tuple
 
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.labels import BuiltinHostLabelsStore, DiscoveredHostLabelsStore, LabelManager
@@ -366,7 +366,7 @@ class RulesetOptimizer:
         """Returns a set of all processed hosts"""
         return self._all_processed_hosts
 
-    def set_all_processed_hosts(self, all_processed_hosts: Set[HostName]) -> None:
+    def set_all_processed_hosts(self, all_processed_hosts: Iterable[HostName]) -> None:
         self._all_processed_hosts = set(all_processed_hosts)
 
         nodes_and_clusters: Set[HostName] = set()

@@ -6835,26 +6835,26 @@ class IconSelector(ValueSpec):
         return self._allow_empty
 
     @classmethod
-    def categories(cls):
+    def categories(cls) -> Iterable[tuple[str, str]]:
         return active_config.wato_icon_categories
 
     @classmethod
-    def category_alias(cls, category_name):
+    def category_alias(cls, category_name: str) -> str:
         return dict(cls.categories()).get(category_name, category_name)
 
     # All icons within the images/icons directory have the ident of a category
     # witten in the PNG meta data. For the default images we have done this scripted.
     # During upload of user specific icons, the meta data is added to the images.
-    def available_icons(self, only_local: bool = False) -> dict[str, str]:
-        icons = {}
+    def available_icons(self, only_local: bool = False) -> Mapping[str, str]:
+        icons: dict[str, str] = {}
         icons.update(self._available_builtin_icons("icon_", only_local))
         icons.update(self._available_user_icons(only_local))
         return icons
 
-    def available_emblems(self, only_local: bool = False) -> dict[str, str]:
+    def available_emblems(self, only_local: bool = False) -> Mapping[str, str]:
         return self._available_builtin_icons("emblem_", only_local)
 
-    def _available_builtin_icons(self, prefix: str, only_local: bool = False) -> dict[str, str]:
+    def _available_builtin_icons(self, prefix: str, only_local: bool = False) -> Mapping[str, str]:
         if not self._show_builtin_icons:
             return {}
 
@@ -6871,7 +6871,7 @@ class IconSelector(ValueSpec):
                     icons[file_stem[len(prefix) :]] = category
         return icons
 
-    def _available_user_icons(self, only_local=False) -> dict[str, str]:
+    def _available_user_icons(self, only_local: bool = False) -> Mapping[str, str]:
         dirs = [Path(cmk.utils.paths.local_web_dir) / "htdocs/images/icons"]
         if not only_local:
             dirs.append(Path(cmk.utils.paths.web_dir) / "htdocs/images/icons")
@@ -6879,8 +6879,8 @@ class IconSelector(ValueSpec):
         return self._get_icons_from_directories(dirs, default_category="misc")
 
     def _get_icons_from_directories(
-        self, dirs: list[Path], default_category: str
-    ) -> dict[str, str]:
+        self, dirs: Iterable[Path], default_category: str
+    ) -> Mapping[str, str]:
         icons: dict[str, str] = {}
         for directory in dirs:
             try:
@@ -6917,7 +6917,9 @@ class IconSelector(ValueSpec):
             return default
         return category
 
-    def _available_icons_by_category(self, icons):
+    def _available_icons_by_category(
+        self, icons: Mapping[str, str]
+    ) -> Sequence[tuple[str, str, Sequence[str]]]:
         by_cat: dict[str, list[str]] = {}
         for icon_name, category_name in icons.items():
             by_cat.setdefault(category_name, [])
@@ -6933,7 +6935,7 @@ class IconSelector(ValueSpec):
                 icon_categories.append((category_name, category_alias, by_cat[category_name]))
         return icon_categories
 
-    def _render_icon(self, icon, onclick="", title="", id_="") -> HTML:
+    def _render_icon(self, icon: str, onclick: str = "", title: str = "", id_: str = "") -> HTML:
         if not icon:
             icon = self._empty_img
 
@@ -6948,7 +6950,7 @@ class IconSelector(ValueSpec):
 
         return icon_tag
 
-    def _transform_icon_str(self, value: str) -> dict[str, _Optional[str]]:
+    def _transform_icon_str(self, value: str) -> Mapping[str, _Optional[str]]:
         if isinstance(value, dict):
             return value
         return {"icon": value, "emblem": None}
@@ -6960,7 +6962,7 @@ class IconSelector(ValueSpec):
         if self._with_emblem:
             self._render_input(varprefix + "_emblem", value["emblem"])
 
-    def _render_input(self, varprefix, value):
+    def _render_input(self, varprefix: str, value: Any) -> None:
         # Handle complain phase with validation errors correctly and get the value
         # from the HTML vars
         if value is None:
@@ -6994,7 +6996,7 @@ class IconSelector(ValueSpec):
             resizable=True,
         )
 
-    def render_popup_input(self, varprefix, value):
+    def render_popup_input(self, varprefix: str, value: Any) -> None:
         html.open_div(class_="icons", id_="%s_icons" % varprefix)
 
         is_emblem = varprefix.endswith("_emblem")
@@ -7072,7 +7074,7 @@ class IconSelector(ValueSpec):
     def canonical_value(self) -> _Optional[str]:
         return None
 
-    def from_html_vars(self, varprefix: str) -> Union[_Optional[str], dict[str, _Optional[str]]]:
+    def from_html_vars(self, varprefix: str) -> Union[_Optional[str], Mapping[str, _Optional[str]]]:
         icon = self._from_html_vars(varprefix)
         if not self._with_emblem:
             return icon

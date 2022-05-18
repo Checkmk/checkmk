@@ -200,21 +200,21 @@ def _get_filtered_attributes(
     return attributes.get_filtered_attributes(lambda key: key == keys[-1])
 
 
-def _declare_inv_column(invpath: SDRawPath, hint: InventoryHintSpec) -> None:
+def _declare_inv_column(raw_path: SDRawPath, raw_hint: InventoryHintSpec) -> None:
     """Declares painters, sorters and filters to be used in views based on all host related
     datasources."""
-    if invpath == ".":
+    if raw_path == ".":
         name = "inv"
     else:
-        name = "inv_" + invpath.replace(":", "_").replace(".", "_").strip("_")
+        name = "inv_" + raw_path.replace(":", "_").replace(".", "_").strip("_")
 
-    is_attribute = invpath[-1] not in ":."
+    hint = _make_hint_from_raw(raw_path, raw_hint)
 
-    title = inv_titleinfo_long(invpath)
+    title = inv_titleinfo_long(raw_path)
 
     # Declare column painter
     painter_spec = {
-        "title": invpath == "." and _("Inventory Tree") or (_("Inventory") + ": " + title),
+        "title": raw_path == "." and _("Inventory Tree") or (_("Inventory") + ": " + title),
         "columns": ["host_inventory", "host_structured_status"],
         "options": ["show_internal_tree_paths"],
         "params": Dictionary(
@@ -233,26 +233,23 @@ def _declare_inv_column(invpath: SDRawPath, hint: InventoryHintSpec) -> None:
         # Only attributes can be shown in reports. There is currently no way to render trees.
         # The HTML code would simply be stripped by the default rendering mechanism which does
         # not look good for the HW/SW inventory tree
-        "printable": is_attribute,
+        "printable": isinstance(hint, AttributeDisplayHint),
         "load_inv": True,
-        "paint": lambda row: _paint_host_inventory_tree(row, invpath),
+        "paint": lambda row: _paint_host_inventory_tree(row, raw_path),
         "sorter": name,
     }
 
-    painter_spec["short"] = hint.get("short", hint["title"])
+    painter_spec["short"] = hint.short_title
 
     register_painter(name, painter_spec)
 
     # Sorters and Filters only for attributes
-    if is_attribute:
-        datatype = hint.get("paint", "str")
-        is_show_more = hint.get("is_show_more", True)
-
+    if isinstance(hint, AttributeDisplayHint):
         # Declare sorter. It will detect numbers automatically
         register_sorter(
             name,
             {
-                "_inv_path": invpath,
+                "_inv_path": raw_path,
                 "title": _("Inventory") + ": " + title,
                 "columns": ["host_inventory", "host_structured_status"],
                 "load_inv": True,
@@ -261,36 +258,48 @@ def _declare_inv_column(invpath: SDRawPath, hint: InventoryHintSpec) -> None:
         )
 
         # Declare filter. Sync this with _declare_invtable_column()
-        if datatype == "str":
+        if hint.data_type == "str":
             filter_registry.register(
                 FilterInvText(
                     ident=name,
                     title=title,
-                    inv_path=invpath,
-                    is_show_more=is_show_more,
+                    inv_path=raw_path,
+                    is_show_more=hint.is_show_more,
                 )
             )
-        elif datatype == "bool":
+        elif hint.data_type == "bool":
             filter_registry.register(
                 FilterInvBool(
                     ident=name,
                     title=title,
-                    inv_path=invpath,
-                    is_show_more=is_show_more,
+                    inv_path=raw_path,
+                    is_show_more=hint.is_show_more,
                 )
             )
         else:
-            filter_info = _inv_filter_info().get(datatype, {})
+            filter_info = _inv_filter_info().get(hint.data_type, {})
             filter_registry.register(
                 FilterInvFloat(
                     ident=name,
                     title=title,
-                    inv_path=invpath,
+                    inv_path=raw_path,
                     unit=filter_info.get("unit"),
                     scale=filter_info.get("scale", 1.0),
-                    is_show_more=is_show_more,
+                    is_show_more=hint.is_show_more,
                 )
             )
+
+
+def _make_hint_from_raw(
+    raw_path: SDRawPath, raw_hint: InventoryHintSpec
+) -> Union[NodeDisplayHint, TableDisplayHint, AttributeDisplayHint]:
+    if raw_path.endswith("."):
+        return NodeDisplayHint.make_from_hint(raw_path, raw_hint)
+
+    if raw_path.endswith(":"):
+        return TableDisplayHint.make_from_hint(raw_path, raw_hint)
+
+    return AttributeDisplayHint.make_from_hint(raw_path, raw_hint)
 
 
 def _inv_filter_info():
@@ -729,14 +738,17 @@ class NodeDisplayHint:
     raw_path: str
     icon: Optional[str]
     title: str
+    short_title: str
 
     @classmethod
     def make(cls, path: SDPath) -> NodeDisplayHint:
         raw_path, raw_hint = cls._get_raw_path_or_hint(path)
+        title = _make_title_function(raw_hint)(raw_path)
         return cls(
             raw_path=raw_path,
             icon=raw_hint.get("icon"),
-            title=_make_title_function(raw_hint)(raw_path),
+            title=title,
+            short_title=raw_hint.get("short", title),
         )
 
     @staticmethod
@@ -754,6 +766,16 @@ class NodeDisplayHint:
 
         return f"{base_path}.", {}
 
+    @classmethod
+    def make_from_hint(cls, raw_path: SDRawPath, raw_hint: InventoryHintSpec) -> NodeDisplayHint:
+        title = _make_title_function(raw_hint)(raw_path)
+        return cls(
+            raw_path=raw_path,
+            icon=raw_hint.get("icon"),
+            title=title,
+            short_title=raw_hint.get("short", title),
+        )
+
 
 class TableTitle(NamedTuple):
     title: str
@@ -767,6 +789,7 @@ class TableDisplayHint:
     key_order: Sequence[str]
     is_show_more: bool
     view_name: Optional[str]
+    short_title: str
 
     @classmethod
     def make(cls, path: SDPath) -> TableDisplayHint:
@@ -777,6 +800,17 @@ class TableDisplayHint:
             key_order=raw_hint.get("keyorder", []),
             is_show_more=raw_hint.get("is_show_more", True),
             view_name=raw_hint.get("view"),
+            short_title=raw_hint.get("short", _make_title_function(raw_hint)(raw_path)),
+        )
+
+    @classmethod
+    def make_from_hint(cls, raw_path: SDRawPath, raw_hint: InventoryHintSpec) -> TableDisplayHint:
+        return cls(
+            raw_path=raw_path,
+            key_order=raw_hint.get("keyorder", []),
+            is_show_more=raw_hint.get("is_show_more", True),
+            view_name=raw_hint.get("view"),
+            short_title=raw_hint.get("short", _make_title_function(raw_hint)(raw_path)),
         )
 
     def make_titles(
@@ -854,19 +888,39 @@ class AttributesDisplayHint:
 class AttributeDisplayHint:
     raw_path: str
     title: str
+    short_title: str
     data_type: str
     paint_function: PaintFunction
+    is_show_more: bool
 
     @classmethod
     def make(cls, path: SDPath, key: str) -> AttributeDisplayHint:
         raw_path = f".{_get_raw_path(path)}.{key}" if path else "."
         raw_hint = inventory_displayhints.get(raw_path, {})
         data_type, paint_function = _get_paint_function(raw_hint)
+        title = _make_title_function(raw_hint)(raw_path) if path else key.title()
         return cls(
             raw_path=raw_path,
-            title=_make_title_function(raw_hint)(raw_path) if path else key.title(),
+            title=title,
+            short_title=raw_hint.get("short", title),
             data_type=data_type,
             paint_function=paint_function,
+            is_show_more=raw_hint.get("is_show_more", True),
+        )
+
+    @classmethod
+    def make_from_hint(
+        cls, raw_path: SDRawPath, raw_hint: InventoryHintSpec
+    ) -> AttributeDisplayHint:
+        data_type, paint_function = _get_paint_function(raw_hint)
+        title = _make_title_function(raw_hint)(raw_path)
+        return cls(
+            raw_path=raw_path,
+            title=title,
+            short_title=raw_hint.get("short", title),
+            data_type=data_type,
+            paint_function=paint_function,
+            is_show_more=raw_hint.get("is_show_more", True),
         )
 
 
@@ -977,11 +1031,11 @@ def _get_parent_from_invpath(invpath: SDRawPath) -> Optional[SDRawPath]:
 
 def declare_inventory_columns() -> None:
     # create painters for node with a display hint
-    for invpath, hint in inventory_displayhints.items():
-        if "*" in invpath:
+    for raw_path, raw_hint in inventory_displayhints.items():
+        if "*" in raw_path:
             continue
 
-        _declare_inv_column(invpath, _convert_display_hint(hint))
+        _declare_inv_column(raw_path, raw_hint)
 
 
 # .

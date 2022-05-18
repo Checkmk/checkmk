@@ -368,6 +368,7 @@ def test__get_display_hint(invpath: str, expected_hint: Mapping[str, Any]) -> No
                 raw_path=".",
                 icon=None,
                 title="Inventory",
+                short_title="Inventory",
             ),
         ),
         (
@@ -376,6 +377,7 @@ def test__get_display_hint(invpath: str, expected_hint: Mapping[str, Any]) -> No
                 raw_path=".hardware.",
                 icon="hardware",
                 title="Hardware",
+                short_title="Hardware",
             ),
         ),
         (
@@ -384,12 +386,48 @@ def test__get_display_hint(invpath: str, expected_hint: Mapping[str, Any]) -> No
                 raw_path=".path.to.node.",
                 icon=None,
                 title="Node",
+                short_title="Node",
             ),
         ),
     ],
 )
 def test_make_node_displayhint(node_path: SDPath, expected: NodeDisplayHint) -> None:
     assert NodeDisplayHint.make(node_path) == expected
+
+
+@pytest.mark.parametrize(
+    "raw_node_path, expected",
+    [
+        (
+            ".foo.bar.",
+            NodeDisplayHint(
+                raw_path=".foo.bar.",
+                icon=None,
+                title="Bar",
+                short_title="Bar",
+            ),
+        ),
+        (
+            ".software.",
+            NodeDisplayHint(
+                raw_path=".software.",
+                icon="software",
+                title="Software",
+                short_title="Software",
+            ),
+        ),
+    ],
+)
+def test_make_node_displayhint_from_hint(
+    raw_node_path: SDRawPath, expected: NodeDisplayHint
+) -> None:
+    assert (
+        NodeDisplayHint.make_from_hint(
+            raw_node_path,
+            inventory_displayhints.get(raw_node_path, {}),
+        )
+        == expected
+    )
 
 
 @pytest.mark.parametrize(
@@ -402,6 +440,7 @@ def test_make_node_displayhint(node_path: SDPath, expected: NodeDisplayHint) -> 
                 key_order=[],
                 is_show_more=True,
                 view_name=None,
+                short_title="Inventory",
             ),
         ),
         (
@@ -419,6 +458,7 @@ def test_make_node_displayhint(node_path: SDPath, expected: NodeDisplayHint) -> 
                 ],
                 is_show_more=False,
                 view_name="invdockerimages_of_host",
+                short_title="Images",
             ),
         ),
         (
@@ -428,12 +468,50 @@ def test_make_node_displayhint(node_path: SDPath, expected: NodeDisplayHint) -> 
                 key_order=[],
                 is_show_more=True,
                 view_name=None,
+                short_title="Node",
             ),
         ),
     ],
 )
 def test_make_table_displayhint(table_path: SDPath, expected: TableDisplayHint) -> None:
     assert TableDisplayHint.make(table_path) == expected
+
+
+@pytest.mark.parametrize(
+    "raw_table_path, expected",
+    [
+        (
+            ".foo.bar:",
+            TableDisplayHint(
+                raw_path=".foo.bar:",
+                key_order=[],
+                is_show_more=True,
+                view_name=None,
+                short_title="Bar",
+            ),
+        ),
+        (
+            ".software.applications.docker.containers:",
+            TableDisplayHint(
+                raw_path=".software.applications.docker.containers:",
+                key_order=["id", "creation", "name", "labels", "status", "image"],
+                is_show_more=False,
+                view_name="invdockercontainers_of_host",
+                short_title="Containers",
+            ),
+        ),
+    ],
+)
+def test_make_table_displayhint_from_hint(
+    raw_table_path: SDRawPath, expected: TableDisplayHint
+) -> None:
+    assert (
+        TableDisplayHint.make_from_hint(
+            raw_table_path,
+            inventory_displayhints.get(raw_table_path, {}),
+        )
+        == expected
+    )
 
 
 @pytest.mark.parametrize(
@@ -637,6 +715,8 @@ def test_sort_attributes_pairs_displayhint(
                 data_type="str",
                 paint_function=inv_paint_generic,
                 title="Key",
+                short_title="Key",
+                is_show_more=True,
             ),
         ),
         (
@@ -647,6 +727,8 @@ def test_sort_attributes_pairs_displayhint(
                 data_type="size",
                 paint_function=inv_paint_size,
                 title="Size",
+                short_title="Size",
+                is_show_more=True,
             ),
         ),
         (
@@ -657,6 +739,8 @@ def test_sort_attributes_pairs_displayhint(
                 data_type="str",
                 paint_function=inv_paint_generic,
                 title="Key",
+                short_title="Key",
+                is_show_more=True,
             ),
         ),
     ],
@@ -665,3 +749,53 @@ def test_make_attribute_displayhint(
     attr_path: SDPath, key: str, expected: AttributeDisplayHint
 ) -> None:
     assert AttributeDisplayHint.make(attr_path, key) == expected
+
+
+@pytest.mark.parametrize(
+    "raw_attr_path, expected",
+    [
+        (
+            ".foo.bar",
+            AttributeDisplayHint(
+                raw_path=".foo.bar",
+                data_type="str",
+                paint_function=inv_paint_generic,
+                title="Bar",
+                short_title="Bar",
+                is_show_more=True,
+            ),
+        ),
+        (
+            ".hardware.cpu.arch",
+            AttributeDisplayHint(
+                raw_path=".hardware.cpu.arch",
+                data_type="str",
+                paint_function=inv_paint_generic,
+                title="CPU Architecture",
+                short_title="CPU Arch",
+                is_show_more=True,
+            ),
+        ),
+        (
+            ".hardware.system.product",
+            AttributeDisplayHint(
+                raw_path=".hardware.system.product",
+                data_type="str",
+                paint_function=inv_paint_generic,
+                title="Product",
+                short_title="Product",
+                is_show_more=False,
+            ),
+        ),
+    ],
+)
+def test_make_attribute_displayhint_from_hint(
+    raw_attr_path: SDRawPath, expected: AttributeDisplayHint
+) -> None:
+    assert (
+        AttributeDisplayHint.make_from_hint(
+            raw_attr_path,
+            inventory_displayhints.get(raw_attr_path, {}),
+        )
+        == expected
+    )

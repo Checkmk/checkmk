@@ -225,8 +225,8 @@ def test_network_fs_mounts_check(
             [
                 Result(state=State.OK, summary="Device: 127.0.0.1:/mnt/test"),
                 Result(state=State.OK, summary="37.06% used (85.8 of 232 GiB)"),
-                Result(state=State.OK, summary="trend per 1 day 0 hours: -1.53 GiB"),
-                Result(state=State.OK, summary="trend per 1 day 0 hours: -0.66%"),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: -4.35 GiB"),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: -1.88%"),
             ],
         ),
     ],
@@ -238,7 +238,8 @@ def test_nfsmount_v2_check(
     value_store_patch,
 ):
     section = network_fs_mounts.parse_nfsmounts_v2(string_table)
-    assert (
-        list(network_fs_mounts.check_network_fs_mount(item, FILESYSTEM_DEFAULT_LEVELS, section))
-        == check_result
-    )
+    with on_time(*NOW_SIMULATED):
+        assert (
+            list(network_fs_mounts.check_network_fs_mount(item, FILESYSTEM_DEFAULT_LEVELS, section))
+            == check_result
+        )

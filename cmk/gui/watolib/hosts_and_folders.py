@@ -1538,7 +1538,6 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
 
         all_hosts: List[str] = []
         clusters: Dict[str, List[str]] = {}
-        hostnames = sorted(self.hosts().keys())
         # collect value for attributes that are to be present in Nagios
         custom_macros: Dict[str, Dict[str, str]] = {}
         # collect value for attributes that are explicitly set for one host
@@ -1558,11 +1557,9 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             ("management_protocol", "management_protocol", {}),
         ]
 
-        for hostname in hostnames:
-            host = self.hosts()[hostname]
+        for hostname, host in sorted(self.hosts().items()):
             effective = host.effective_attributes()
-            cleaned_hosts[hostname] = host.attributes()
-            cleaned_hosts[hostname] = update_metadata(cleaned_hosts[hostname], created_by=user.id)
+            cleaned_hosts[hostname] = update_metadata(host.attributes(), created_by=user.id)
 
             tag_groups = host.tag_groups()
             if tag_groups:

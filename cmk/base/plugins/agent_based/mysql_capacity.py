@@ -19,15 +19,19 @@
 # performance_schema      0       0
 # test 409255936       54525952
 from collections import defaultdict
-from typing import Any, Mapping, Union
+from typing import Any, Mapping
 
 from .agent_based_api.v1 import check_levels, register, render, Service
-from .agent_based_api.v1.type_defs import CheckResult
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+
+InstanceName = str
+DBName = str
+Section = Mapping[InstanceName, Mapping[DBName, int]]
 
 
-def parse_mysql_capacity(string_table):
+def parse_mysql_capacity(string_table: StringTable) -> Section:
     item = "mysql"
-    section: dict[str, dict[str, Union[int, str]]] = defaultdict(dict)
+    section: dict[str, dict[str, int]] = defaultdict(dict)
     for line in string_table:
         if line[0].startswith("[["):
             item = " ".join(line).strip("[ ]") or item
@@ -36,21 +40,19 @@ def parse_mysql_capacity(string_table):
         try:
             section[item][dbname] = int(size)
         except ValueError:
-            section[item][dbname] = size
+            pass
     return section
 
 
 register.agent_section(name="mysql_capacity", parse_function=parse_mysql_capacity)
 
 
-def discover_mysql_size(section):
-    for instance, data in section.items():
-        for dbname, values in data.items():
-            if (
-                dbname not in ("information_schema", "mysql", "performance_schema")
-                and values != "NULL"
-            ):
-                yield Service(item=f"{instance}:{dbname}")
+def discover_mysql_size(section: Section) -> DiscoveryResult:
+    for instance, databases in section.items():
+        for dbname in databases:
+            if dbname in ("information_schema", "mysql", "performance_schema"):
+                continue
+            yield Service(item=f"{instance}:{dbname}")
 
 
 def check_mysql_size(item: str, params: Mapping[str, Any], section: Mapping) -> CheckResult:

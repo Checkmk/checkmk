@@ -1,0 +1,19 @@
+title: GCP GCE: Network
+agents: gcp
+catalog: cloud/gcp
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the network of GCE VMs.
+
+ - total number of bytes received in the last minute
+ - total number of bytes sent in the last minute
+
+ To make this check work you have to configure the related
+ special agent {Google Cloud Platform (GCP)}.
+
+ There are no default levels. Upper levels on the received bytes
+ are configurable via the rule "Network Interfaces and switch ports".
+
+discovery:
+ One service is created.

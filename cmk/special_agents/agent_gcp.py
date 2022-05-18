@@ -622,15 +622,25 @@ GCE = PiggyBackService(
             metrics=[
                 Metric(
                     name="compute.googleapis.com/instance/cpu/utilization",
-                    aggregation=Aggregation(
-                        per_series_aligner=Aligner.ALIGN_MAX,
-                    ),
+                    aggregation=Aggregation(per_series_aligner=Aligner.ALIGN_MAX),
                 ),
                 Metric(
                     name="compute.googleapis.com/instance/cpu/reserved_cores",
-                    aggregation=Aggregation(
-                        per_series_aligner=Aligner.ALIGN_MAX,
-                    ),
+                    aggregation=Aggregation(per_series_aligner=Aligner.ALIGN_MAX),
+                ),
+            ],
+        ),
+        Service(
+            name="network",
+            default_groupby="resource.instance_id",
+            metrics=[
+                Metric(
+                    name="compute.googleapis.com/instance/network/received_bytes_count",
+                    aggregation=Aggregation(per_series_aligner=Aligner.ALIGN_RATE),
+                ),
+                Metric(
+                    name="compute.googleapis.com/instance/network/sent_bytes_count",
+                    aggregation=Aggregation(per_series_aligner=Aligner.ALIGN_RATE),
                 ),
             ],
         ),

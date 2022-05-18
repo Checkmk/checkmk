@@ -8,6 +8,7 @@ from typing import Any, Mapping, Optional
 from .agent_based_api.v1 import register, render, Service
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils import gcp, uptime
+from .utils.interfaces import CHECK_DEFAULT_PARAMETERS, check_single_interface, Interface
 
 
 def parse_gce_uptime(string_table: StringTable) -> Optional[uptime.Section]:
@@ -31,7 +32,7 @@ register.agent_section(
 )
 
 
-def parse_cpu(string_table: StringTable) -> Optional[gcp.PiggyBackSection]:
+def parse_default(string_table: StringTable) -> Optional[gcp.PiggyBackSection]:
     if not string_table:
         return None
     return gcp.parse_piggyback(string_table)
@@ -40,11 +41,11 @@ def parse_cpu(string_table: StringTable) -> Optional[gcp.PiggyBackSection]:
 register.agent_section(
     name="gcp_service_gce_cpu",
     parsed_section_name="gcp_gce_cpu",
-    parse_function=parse_cpu,
+    parse_function=parse_default,
 )
 
 
-def discover_cpu(section: gcp.PiggyBackSection) -> DiscoveryResult:
+def discover_default(section: gcp.PiggyBackSection) -> DiscoveryResult:
     yield Service()
 
 
@@ -68,8 +69,57 @@ def check_cpu(params: Mapping[str, Any], section: gcp.PiggyBackSection) -> Check
 register.check_plugin(
     name="gcp_gce_cpu",
     service_name="CPU",
-    discovery_function=discover_cpu,
+    discovery_function=discover_default,
     check_function=check_cpu,
     check_ruleset_name="gcp_gce_cpu",
     check_default_parameters={"util": (80.0, 90.0), "vcores": None},
+)
+
+
+register.agent_section(
+    name="gcp_service_gce_network",
+    parsed_section_name="gcp_gce_network",
+    parse_function=parse_default,
+)
+
+
+def discover_network(section: gcp.PiggyBackSection) -> DiscoveryResult:
+    yield Service(item="nic0")
+
+
+def check_network(
+    item: str, params: Mapping[str, Any], section: gcp.PiggyBackSection
+) -> CheckResult:
+    metric_descs = {
+        "in": gcp.MetricSpec(
+            "compute.googleapis.com/instance/network/received_bytes_count",
+            "",
+            render.timespan,
+        ),
+        "out": gcp.MetricSpec(
+            "compute.googleapis.com/instance/network/sent_bytes_count",
+            "",
+            render.timespan,
+        ),
+    }
+    metrics = {k: gcp._get_value(section, desc) for k, desc in metric_descs.items()}
+    interface = Interface(
+        index="0",
+        descr=item,
+        alias=item,
+        type="1",
+        oper_status="1",
+        in_octets=metrics["in"],
+        out_octets=metrics["out"],
+    )
+    yield from check_single_interface(item, params, interface, input_is_rate=True)
+
+
+register.check_plugin(
+    name="gcp_gce_network",
+    service_name="Network IO %s",
+    discovery_function=discover_network,
+    check_ruleset_name="if",
+    check_default_parameters=CHECK_DEFAULT_PARAMETERS,
+    check_function=check_network,
 )

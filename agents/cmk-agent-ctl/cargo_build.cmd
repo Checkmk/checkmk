@@ -1,5 +1,5 @@
 @echo off
-:: Script to Build Rust executable and sing it
+:: Script to Build Rust executable and sign it
 :: 
 :: Sign mode:
 :: cargo_build file password
@@ -15,7 +15,6 @@
 SETLOCAL EnableDelayedExpansion
 
 echo --- info ---
-echo USERNAME=%username%
 echo PATH=%path%
 echo ------------
 set RUST_BACKTRACE=1
@@ -35,24 +34,32 @@ set exe=target\%target%\release\%exe_name%
 
 del /Q %arte%\%exe_name% 2> nul
 
+:: 1. Clippy
 powershell Write-Host "Run Rust clippy" -Foreground White
 cargo clippy --release --target %target% 2>&1
 if not "%errorlevel%" == "0" powershell Write-Host "Failed cargo clippy" -Foreground Red && exit /b 17
+powershell Write-Host "Checking Rust SUCCESS" -Foreground Green
+
+:: 2. Build
 powershell Write-Host "Building Rust executables" -Foreground White
 cargo build --release --target %target% 2>&1
 if not "%errorlevel%" == "0" powershell Write-Host "Failed cargo build" -Foreground Red && exit /b 18
 powershell Write-Host "Building Rust SUCCESS" -Foreground Green
+
+:: 3. Test
 powershell Write-Host "Testing Rust executables" -Foreground White
 cargo test --release --target %target% -- --test-threads=4 2>&1
 if not "%errorlevel%" == "0" powershell Write-Host "Failed cargo build" -Foreground Red && exit /b 19
 powershell Write-Host "Testing Rust SUCCESS" -Foreground Green
 
+:: 4. [optional] Signing
 if not "%2" == "" (
 powershell Write-Host "Signing Rust executables" -Foreground White
 @call ..\wnx\sign_windows_exe c:\common\store\%1 %2 %exe%
 if not %errorlevel% == 0 powershell Write-Host "Failed signing %exe%" -Foreground Red && exit /b 20
 )
 
+:: 5. Storing artifacts
 powershell Write-Host "Uploading artifacts: [ %exe% ] ..." -Foreground White
 copy %exe% %arte%\%exe_name%
 powershell Write-Host "Done." -Foreground Green

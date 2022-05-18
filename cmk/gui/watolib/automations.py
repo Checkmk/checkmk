@@ -296,8 +296,10 @@ def execute_phase1_result(site_id: SiteId, connection_id: str) -> PhaseOneResult
             {"action": "get_phase1_result", "kwargs": {"connection_id": connection_id}}
         ),
     }
-    return do_remote_automation(
-        site=get_site_config(site_id), command="execute-dcd-command", vars_=command_args
+    return ast.literal_eval(
+        do_remote_automation(
+            site=get_site_config(site_id), command="execute-dcd-command", vars_=command_args
+        )
     )
 
 

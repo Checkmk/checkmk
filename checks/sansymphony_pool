@@ -4,55 +4,68 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import typing
+
 factory_settings["allocated_pools_percentage_upper"] = (80.0, 90.0)
 
 
-def inventory_sansymphony_pool(info):
-    for line in info:
-        yield line[0], {}
+class SansymphonyPool(typing.NamedTuple):
+    name: str
+    percent_allocated: float
+    status: str
+    cache_mode: str
+    pool_type: str
 
 
-def check_sansymphony_pool(item, params, info):
-    warn, crit = params["allocated_pools_percentage_upper"]
-    for poolname, allocated, poolstatus, cachemode, pooltype in info:
-        if poolname == item:
-            if poolstatus == "Running" and cachemode == "ReadWrite":
-                yield 0, "%s pool %s is running, its cache is in %s mode" % (
-                    pooltype,
-                    poolname,
-                    cachemode,
-                )
-            elif poolstatus == "Running" and cachemode != "ReadWrite":
-                yield 1, "%s Pool %s is %s, its cache is %s" % (
-                    pooltype,
-                    poolname,
-                    poolstatus,
-                    cachemode,
-                )
-            else:
-                yield 2, "%s pool %s is %s, its cache is in %s mode" % (
-                    pooltype,
-                    poolname,
-                    poolstatus,
-                    cachemode,
-                )
+Section = typing.Mapping[str, SansymphonyPool]
 
-            allocated = int(allocated)
-            infotxt = "Pool allocation: %d%%" % allocated
-            levels = " (warn/crit at %d/%d%%)" % (warn, crit)
-            perfdata = [("pool_allocation", allocated, warn, crit)]
 
-            if allocated >= crit:
-                yield 2, infotxt + levels, perfdata
-            elif allocated >= warn:
-                yield 1, infotxt + levels, perfdata
-            else:
-                yield 0, infotxt, perfdata
+def parse_sansymphony_pool(string_table) -> Section:
+    return {
+        name: SansymphonyPool(
+            name=name,
+            percent_allocated=float(percent_allocated),
+            status=status,
+            cache_mode=cache_mode,
+            pool_type=type_,
+        )
+        for name, percent_allocated, status, cache_mode, type_ in string_table
+    }
+
+
+def discover_sansymphony_pool(section: Section):
+    yield from ((item, {}) for item in section)
+
+
+def check_sansymphony_pool(
+    item: str,
+    params: typing.Mapping[str, typing.Any],
+    section: Section,
+):
+    if (pool := section.get(item)) is None:
+        return
+
+    if pool.status == "Running" and pool.cache_mode == "ReadWrite":
+        state = 0
+    elif pool.status == "Running" and pool.cache_mode != "ReadWrite":
+        state = 1
+    else:
+        state = 2
+    yield state, f"{pool.pool_type} pool {pool.name} is {pool.status}, its cache is in {pool.cache_mode} mode"
+
+    yield check_levels(
+        value=pool.percent_allocated,
+        dsname="pool_allocation",
+        params=params["allocated_pools_percentage_upper"],
+        human_readable_func=get_percent_human_readable,
+        infoname="Pool allocation",
+    )
 
 
 check_info["sansymphony_pool"] = {
+    "parse_function": parse_sansymphony_pool,
     "check_function": check_sansymphony_pool,
-    "inventory_function": inventory_sansymphony_pool,
+    "inventory_function": discover_sansymphony_pool,
     "service_description": "sansymphony Pool %s",
     "has_perfdata": True,
     "group": "sansymphony_pool",

@@ -203,7 +203,6 @@ def test_section_parse_function_does_something(fix_register):
         "plesk_domains",
         "qmail_stats",
         "sansymphony_alerts",
-        "sansymphony_pool",
         "sansymphony_ports",
         "sansymphony_serverstatus",
         "sap_hana_filesystem",

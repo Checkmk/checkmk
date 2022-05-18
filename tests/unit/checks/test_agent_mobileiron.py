@@ -3,17 +3,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Any, Mapping, Sequence
+
 import pytest
 
 from tests.testlib import SpecialAgent
 
-pytestmark = pytest.mark.checks
-
 
 @pytest.mark.parametrize(
-    "params, expected_args",
+    ["params", "expected_args"],
     [
-        (
+        pytest.param(
             {
                 "username": "mobileironuser",
                 "password": ("password", "mobileironpassword"),
@@ -26,7 +26,6 @@ pytestmark = pytest.mark.checks
                 "port": 443,
                 "no-cert-check": True,
                 "partition": ["10"],
-                "hostname": "mobileironhostname",
             },
             [
                 "-u",
@@ -49,10 +48,29 @@ pytestmark = pytest.mark.checks
                 "--proxy-password",
                 "mobileironproxypassword",
             ],
+            id="explicit_password",
+        ),
+        pytest.param(
+            {
+                "username": "mobileironuser",
+                "password": ("store", "mobileironpassword"),
+            },
+            [
+                "-u",
+                "mobileironuser",
+                "-p",
+                ("store", "mobileironpassword", "%s"),
+                "--hostname",
+                "mobileironhostname",
+            ],
+            id="password_from_store",
         ),
     ],
 )
-def test_mobileiron_argument_parsing(params, expected_args):
+def test_agent_mobileiron_arguments(
+    params: Mapping[str, Any],
+    expected_args: Sequence[Any],
+) -> None:
     """Tests if all required arguments are present."""
     agent = SpecialAgent("agent_mobileiron")
     arguments = agent.argument_func(params, "mobileironhostname", "address")

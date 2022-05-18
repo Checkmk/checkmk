@@ -5,8 +5,6 @@
 
 from typing import Any, Mapping, Optional, Sequence, Tuple, Union
 
-from cmk.utils import password_store
-
 
 def _get_proxy_args_and_secrets(details):
     proxy_args = ["--proxy-host", details["proxy_host"]]
@@ -18,7 +16,7 @@ def _get_proxy_args_and_secrets(details):
         proxy_args += ["--proxy-user", str(proxy_user)]
 
     if proxy_password := details.get("proxy_password"):
-        proxy_args += ["--proxy-password", password_store.extract(proxy_password)]
+        proxy_args += ["--proxy-password", passwordstore_get_cmdline("%s", proxy_password)]
 
     return proxy_args
 
@@ -31,7 +29,9 @@ def agent_mobileiron_arguments(
         elem
         for chunk in (
             ("-u", params["username"]) if "username" in params else (),
-            ("-p", password_store.extract(params["password"])) if "password" in params else (),
+            ("-p", passwordstore_get_cmdline("%s", params["password"]))
+            if "password" in params
+            else (),
             ("--port", params["port"]) if "port" in params else (),
             ("--no-cert-check",) if params.get("no-cert-check") else (),
             ("--partition", ",".join(params["partition"])) if "partition" in params else (),

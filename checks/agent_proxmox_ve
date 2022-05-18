@@ -6,8 +6,6 @@
 
 from typing import Any, Mapping, Optional, Sequence, Tuple, Union
 
-from cmk.utils import password_store
-
 
 def agent_proxmox_ve_arguments(
     params: Mapping[str, Any], hostname: str, ipaddress: Optional[str]
@@ -16,7 +14,9 @@ def agent_proxmox_ve_arguments(
         elem
         for chunk in (
             ("-u", params["username"]) if "username" in params else (),
-            ("-p", password_store.extract(params["password"])) if "password" in params else (),
+            ("-p", passwordstore_get_cmdline("%s", params["password"]))
+            if "password" in params
+            else (),
             ("--port", params["port"]) if "port" in params else (),
             ("--no-cert-check",) if params.get("no-cert-check") else (),
             ("--timeout", params["timeout"]) if "timeout" in params else (),

@@ -66,6 +66,7 @@ RUN apt-get update \
     joe \
     iputils-ping \
     vim \
+    python3-importlib-metadata \
     && rm -rf /var/lib/apt/lists/*
 
 ARG VERS_TAG

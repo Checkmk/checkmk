@@ -82,7 +82,15 @@ from cmk.gui.http import request, UploadedFile
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.pages import AjaxPage, AjaxPageResult, page_registry
-from cmk.gui.type_defs import ChoiceGroup, ChoiceId, Choices, ChoiceText, GroupedChoices
+from cmk.gui.type_defs import (
+    _Icon,
+    ChoiceGroup,
+    ChoiceId,
+    Choices,
+    ChoiceText,
+    GroupedChoices,
+    Icon,
+)
 from cmk.gui.utils.autocompleter_config import AutocompleterConfig, ContextAutocompleterConfig
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.labels import (
@@ -6808,7 +6816,7 @@ class PageAutocompleteLabels(AjaxPage):
         return get_labels_cache().get_labels_list()
 
 
-IconSelectorModel = Any
+IconSelectorModel = _Optional[Icon]
 
 
 class IconSelector(ValueSpec[IconSelectorModel]):
@@ -6953,10 +6961,10 @@ class IconSelector(ValueSpec[IconSelectorModel]):
 
         return icon_tag
 
-    def _transform_icon_str(self, value: IconSelectorModel) -> Mapping[str, _Optional[str]]:
+    def _transform_icon_str(self, value: IconSelectorModel) -> _Icon:
         if isinstance(value, dict):
             return value
-        return {"icon": value, "emblem": None}
+        return {"icon": "empty" if value is None else value, "emblem": None}
 
     def render_input(self, varprefix: str, value: IconSelectorModel) -> None:
         icon_dict = self._transform_icon_str(value)
@@ -7089,7 +7097,7 @@ class IconSelector(ValueSpec[IconSelectorModel]):
         if not emblem:
             return icon
 
-        return {"icon": icon, "emblem": emblem}
+        return {"icon": "empty" if icon is None else icon, "emblem": emblem}
 
     def _from_html_vars(self, varprefix: str) -> _Optional[str]:
         icon = request.var(varprefix + "_value")
@@ -7098,7 +7106,7 @@ class IconSelector(ValueSpec[IconSelectorModel]):
         return icon
 
     def value_to_html(self, value: IconSelectorModel) -> ValueSpecText:
-        return self._render_icon(value["icon"] if isinstance(value, dict) else value)
+        return self._render_icon(self._transform_icon_str(value)["icon"])
 
     def value_to_json(self, value: Any) -> JSONValue:
         return value

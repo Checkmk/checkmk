@@ -27,7 +27,7 @@ from cmk.gui.config import active_config
 from cmk.gui.default_name import unique_default_name_suggestion
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import request, UploadedFile
+from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.page_menu import (
     make_simple_form_page_menu,
@@ -52,6 +52,7 @@ from cmk.gui.valuespec import (
     CascadingDropdown,
     Dictionary,
     FileUpload,
+    FileUploadModel,
     FixedValue,
     Integer,
     ListChoice,
@@ -447,7 +448,8 @@ class ModeTimeperiodImportICal(WatoMode):
             ],
         )
 
-    def _validate_ical_file(self, value: UploadedFile, varprefix: str) -> None:
+    def _validate_ical_file(self, value: FileUploadModel, varprefix: str) -> None:
+        assert isinstance(value, tuple)  # Hmmm...
         filename, _ty, content = value
         if not filename.endswith(".ics"):
             raise MKUserError(

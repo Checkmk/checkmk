@@ -6427,7 +6427,11 @@ class PasswordSpec(Password):
         self.password_plaintext_warning()
 
 
-class FileUpload(ValueSpec):
+# TODO: This is totally broken, it should probably be just UploadedFile
+FileUploadModel = Union[None, bytes, UploadedFile]
+
+
+class FileUpload(ValueSpec[FileUploadModel]):
     def __init__(  # pylint: disable=redefined-builtin
         self,
         allow_empty: bool = False,
@@ -6436,8 +6440,8 @@ class FileUpload(ValueSpec):
         # ValueSpec
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
-        default_value: ValueSpecDefault[T] = DEF_VALUE,
-        validate: _Optional[ValueSpecValidateFunc[T]] = None,
+        default_value: ValueSpecDefault[FileUploadModel] = DEF_VALUE,
+        validate: _Optional[ValueSpecValidateFunc[FileUploadModel]] = None,
     ) -> None:
         super().__init__(title=title, help=help, default_value=default_value, validate=validate)
         self._allow_empty = allow_empty
@@ -6447,14 +6451,13 @@ class FileUpload(ValueSpec):
     def allow_empty(self) -> bool:
         return self._allow_empty
 
-    def canonical_value(self) -> _Optional[bytes]:
-        if self._allow_empty:
-            return None
-        return b""
+    def canonical_value(self) -> FileUploadModel:
+        return None if self._allow_empty else b""
 
-    def _validate_value(self, value: _Optional[UploadedFile], varprefix: str) -> None:
+    def _validate_value(self, value: FileUploadModel, varprefix: str) -> None:
         if not value:
             raise MKUserError(varprefix, _("Please select a file."))
+        assert isinstance(value, tuple)  # Hmmm...
 
         file_name, _mime_type, content = value
 
@@ -6478,19 +6481,19 @@ class FileUpload(ValueSpec):
                     % ", ".join(self._allowed_extensions),
                 )
 
-    def render_input(self, varprefix: str, value: _Optional[bytes]) -> None:
+    def render_input(self, varprefix: str, value: FileUploadModel) -> None:
         html.upload_file(varprefix)
 
-    def from_html_vars(self, varprefix: str) -> UploadedFile:
+    def from_html_vars(self, varprefix: str) -> FileUploadModel:
         return request.uploaded_file(varprefix)
 
-    def value_to_json(self, value: Any) -> JSONValue:
+    def value_to_json(self, value: FileUploadModel) -> JSONValue:
         return value
 
-    def value_from_json(self, json_value: JSONValue) -> Any:
+    def value_from_json(self, json_value: JSONValue) -> FileUploadModel:
         return json_value
 
-    def value_to_html(self, value: _Optional[bytes]) -> ValueSpecText:
+    def value_to_html(self, value: FileUploadModel) -> ValueSpecText:
         raise NotImplementedError()  # FIXME! Violates LSP!
 
 
@@ -6506,8 +6509,8 @@ class ImageUpload(FileUpload):
         # ValueSpec
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
-        default_value: ValueSpecDefault[T] = DEF_VALUE,
-        validate: _Optional[ValueSpecValidateFunc[T]] = None,
+        default_value: ValueSpecDefault[FileUploadModel] = DEF_VALUE,
+        validate: _Optional[ValueSpecValidateFunc[FileUploadModel]] = None,
     ) -> None:
         self._max_size: Final = max_size
         self._show_current_image: Final = show_current_image
@@ -6521,11 +6524,12 @@ class ImageUpload(FileUpload):
             validate=validate,
         )
 
-    def render_input(self, varprefix: str, value: _Optional[bytes]) -> None:
+    def render_input(self, varprefix: str, value: FileUploadModel) -> None:
         if isinstance(value, str):
             # since latin_1 only uses one byte, we can use it for str->byte conversion
             value = value.encode("latin_1")
         if self._show_current_image and value:
+            assert isinstance(value, bytes)  # Hmmm...
             html.open_table()
             html.open_tr()
             html.td(_("Current image:"))
@@ -6543,9 +6547,10 @@ class ImageUpload(FileUpload):
         else:
             super().render_input(varprefix, value)
 
-    def _validate_value(self, value: _Optional[UploadedFile], varprefix: str) -> None:
+    def _validate_value(self, value: FileUploadModel, varprefix: str) -> None:
         if not value:
             raise MKUserError(varprefix, _("Please choose a PNG image."))
+        assert isinstance(value, tuple)  # Hmmm...
 
         file_name, mime_type, content = value
 
@@ -6587,7 +6592,7 @@ class UploadOrPasteTextFile(Alternative):
         validate: _Optional[ValueSpecValidateFunc[Any]] = None,
     ):
         f_title = _("File") if file_title is None else file_title
-        additional_elements = [
+        additional_elements: list[ValueSpec] = [
             FileUpload(title=_("Upload %s") % f_title, allow_empty=allow_empty),
             TextAreaUnicode(
                 title=_("Content of %s") % f_title,

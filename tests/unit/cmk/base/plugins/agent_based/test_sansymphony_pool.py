@@ -4,8 +4,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import typing
-
 import pytest
 
 from tests.unit.conftest import FixRegister
@@ -15,14 +13,7 @@ from cmk.utils.type_defs import CheckPluginName, SectionName
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.api.agent_based.type_defs import AgentSectionPlugin
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
-
-
-class SansymphonyPool(typing.NamedTuple):
-    name: str
-    percent_allocated: float
-    status: str
-    cache_mode: str
-    pool_type: str
+from cmk.base.plugins.agent_based.sansymphony_pool import SansymphonyPool
 
 
 @pytest.fixture(scope="session", name="check_plugin")
@@ -126,8 +117,8 @@ def test_check_sansymphony_pool_status_running_cache_mode_readwrite(
             state=State.OK,
             summary="Dynamic pool Disk_pool_1 is Running, its cache is in ReadWrite mode",
         ),
-        Result(state=State.OK, summary="Pool allocation: 57.0%"),
-        Metric("pool_allocation", 57.0, levels=(80.0, 90.0)),
+        Result(state=State.OK, summary="Pool allocation: 57.00%"),
+        Metric("pool_allocation", 57.0, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
     ]
 
 
@@ -154,8 +145,8 @@ def test_check_sansymphony_pool_status_running_cache_mode_read(
             state=State.WARN,
             summary="Dynamic pool Disk_pool_1 is Running, its cache is in Read mode",
         ),
-        Result(state=State.OK, summary="Pool allocation: 57.0%"),
-        Metric("pool_allocation", 57.0, levels=(80.0, 90.0)),
+        Result(state=State.OK, summary="Pool allocation: 57.00%"),
+        Metric("pool_allocation", 57.0, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
     ]
 
 
@@ -182,8 +173,8 @@ def test_check_sansymphony_pool_status_stale(
             state=State.CRIT,
             summary="Dynamic pool Disk_pool_1 is Stale, its cache is in ReadWrite mode",
         ),
-        Result(state=State.OK, summary="Pool allocation: 57.0%"),
-        Metric("pool_allocation", 57.0, levels=(80.0, 90.0)),
+        Result(state=State.OK, summary="Pool allocation: 57.00%"),
+        Metric("pool_allocation", 57.0, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
     ]
 
 
@@ -210,6 +201,6 @@ def test_check_sansymphony_pool_percent_allocated(
             state=State.OK,
             summary="Dynamic pool Disk_pool_1 is Running, its cache is in ReadWrite mode",
         ),
-        Result(state=State.CRIT, summary="Pool allocation: 90.0% (warn/crit at 80.0%/90.0%)"),
-        Metric("pool_allocation", 90.0, levels=(80.0, 90.0)),
+        Result(state=State.CRIT, summary="Pool allocation: 90.00% (warn/crit at 80.00%/90.00%)"),
+        Metric("pool_allocation", 90.0, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
     ]

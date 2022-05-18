@@ -2289,7 +2289,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy):
         "safenet_ntls",
         "salesforce_instances",
         "sansymphony_alerts",
-        "sansymphony_pool",
         "sansymphony_ports",
         "sansymphony_serverstatus",
         "sansymphony_virtualdiskstatus",

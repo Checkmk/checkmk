@@ -17,11 +17,19 @@ const color_gradient = 0.2; // ranges from 0 to 1
 const curve_line_width = 2.0;
 const rule_line_width = 2.0;
 const g_page_update_delay = 60; // prevent page update for X seconds
-const g_delayed_graphs = [];
+const g_delayed_graphs: DelayedGraph[] = [];
 
 // Global graph constructs to store the graphs etc.
 const g_graphs = {};
 var g_current_graph_id = 0;
+
+interface DelayedGraph {
+    graph_load_container: HTMLElement | Node | null,
+    graph_recipe,
+    graph_data_range,
+    graph_render_options,
+    script_object: HTMLElement | SVGElement,
+}
 
 //#   .-Creation-----------------------------------------------------------.
 //#   |              ____                _   _                             |
@@ -72,6 +80,7 @@ export function create_graph(html_code, graph_artwork, graph_render_options, aja
     var embedded_script = get_current_script();
 
     // Insert the new container right after the script tag
+    // @ts-ignore
     embedded_script.parentNode.insertBefore(container_div, embedded_script.nextSibling);
 
     // Now register and paint the graph
@@ -134,6 +143,7 @@ export function register_delayed_graph_listener() {
     if (num_delayed == 0) return; // no delayed graphs: Nothing to do
 
     // Start of delayed graph renderer listening
+    // @ts-ignore
     utils.content_scrollbar().getScrollElement().addEventListener("scroll", delayed_graph_renderer);
     utils.add_event_handler("resize", delayed_graph_renderer);
 }
@@ -243,7 +253,7 @@ function update_delayed_graphs_timerange(start_time, end_time) {
 //#   '----------------------------------------------------------------------'
 
 // Keep draw contex as global variable for conveniance
-var ctx = null;
+var ctx: null | CanvasRenderingContext2D = null;
 
 // Notes:
 // - In JS canvas 0,0 is at top left
@@ -258,7 +268,7 @@ function render_graph(graph) {
     var container = document.getElementById(graph["id"]);
     if (!container) return;
 
-    var canvas = container.childNodes[0].getElementsByTagName("canvas")[0];
+    var canvas = (container.childNodes[0] as HTMLElement).getElementsByTagName("canvas")[0];
     if (!canvas) return;
 
     update_graph_styling(graph, container);
@@ -267,6 +277,8 @@ function render_graph(graph) {
 
     ctx = canvas.getContext("2d"); // Create one ctx for all operations
 
+    if(!ctx) throw new Error("ctx shouldn't be null!");
+    
     var font_size = from_display_coord(graph.render_options.font_size);
     ctx.font = font_size + "pt sans-serif";
 
@@ -448,7 +460,9 @@ function render_graph(graph) {
         ctx.fillStyle = graph.render_options.foreground_color;
         let labels = graph["time_axis"]["labels"];
         labels.forEach(([position, label, _]) => {
-            if (label != null) ctx.fillText(label, trans(position, 0)[0], v_orig + t_label_margin);
+            if (label != null) { // @ts-ignore
+                ctx.fillText(label, trans(position, 0)[0], v_orig + t_label_margin);
+            }
         });
         ctx.restore();
     }
@@ -633,6 +647,7 @@ function graph_bottom_border(graph) {
 }
 
 function paint_line(p0, p1, color) {
+    if(!ctx) throw new Error("ctx shouldn't be null!");
     ctx.save();
     ctx.strokeStyle = color;
     ctx.beginPath();
@@ -644,6 +659,7 @@ function paint_line(p0, p1, color) {
 }
 
 function paint_rect(p, width, height, color) {
+    if(!ctx) throw new Error("ctx shouldn't be null!");
     ctx.save();
     ctx.fillStyle = color;
     ctx.fillRect(p[0], p[1], width, height);
@@ -651,6 +667,7 @@ function paint_rect(p, width, height, color) {
 }
 
 function paint_dot(p, color) {
+    if(!ctx) throw new Error("ctx shouldn't be null!");
     ctx.save();
     ctx.beginPath();
     ctx.arc(p[0], p[1], 5, 0, 2 * Math.PI);
@@ -668,11 +685,11 @@ function parse_color(hexcolor) {
     return [r, g, b];
 }
 
-function render_color(rgb) {
+function render_color(rgb: [number, number, number]) {
     var r = rgb[0];
     var g = rgb[1];
     var b = rgb[2];
-    var bits = parseInt(b * 255) + 256 * parseInt(g * 255) + 65536 * parseInt(r * 255);
+    var bits = Math.trunc((b * 255) + 256 * (g * 255) + 65536 * (r * 255));
     var hex = bits.toString(16);
     while (hex.length < 6) hex = "0" + hex;
     return "#" + hex;
@@ -699,7 +716,7 @@ function darken_color(rgb, v) {
     return [darken(rgb[0], v), darken(rgb[1], v), darken(rgb[2], v)];
 }
 
-function invert_color(rgb) {
+function invert_color(rgb): [number, number, number]{
     var invert = function (x) {
         return 1.0 - x;
     };
@@ -718,9 +735,14 @@ function invert_color(rgb) {
 //#   |  Code for handling dragging and zooming via the scroll whell.        |
 //#   '----------------------------------------------------------------------'
 
-var g_dragging_graph = null;
-var g_resizing_graph = null;
-
+var g_dragging_graph: null | {
+    pos: [number, number];
+    graph: any;
+} = null;
+var g_resizing_graph: null | {
+    pos: [number, number];
+    graph: any;
+} = null;
 // Is set to True when one graph is started being updated via AJAX.
 // It is set to False when the update has finished.
 var g_graph_update_in_process = false;
@@ -731,7 +753,7 @@ var g_graph_in_cooldown_period = false;
 
 // Holds the timeout object which triggers an AJAX update of all other graphs
 // on the page 500ms after the last mouse wheel zoom step.
-var g_graph_wheel_timeout = null;
+var g_graph_wheel_timeout: null | number = null;
 
 // Returns the graph container node. Can be called with any DOM node as
 // parameter which is part of a graph
@@ -857,7 +879,7 @@ function graph_mouse_resize(event) {
 // Get the mouse position of an event in coords of the
 // shown time/value system. Return null if the coords
 // lie outside.
-function graph_get_mouse_position(event, graph) {
+function graph_get_mouse_position(event, graph): null | [number, number] {
     var time = graph_get_click_time(event, graph);
     if (time < graph["time_axis"]["range"][0] || time > graph["time_axis"]["range"][1]) return null; // out of range
 
@@ -990,7 +1012,7 @@ function graph_mouse_move(event, graph) {
 
     // Compute vertical zoom
     var value = graph_get_click_value(event, graph);
-    var vertical_zoom = value / g_dragging_graph.pos[1];
+    var vertical_zoom: null | number = value / g_dragging_graph.pos[1];
     if (vertical_zoom <= 0) vertical_zoom = null; // No mirroring, no zero range
 
     update_graph(event, graph, time_shift, null, null, vertical_zoom, null, null);
@@ -1010,7 +1032,7 @@ function update_mouse_hovering(event) {
     var graph_id = get_graph_id_of_dom_node(graph_node);
     var graph = g_graphs[graph_id];
 
-    hover.add(graph_node);
+    hover.add();
 
     if (!graph.render_options.interaction) return; // don't do anything when this graph is not allowed to set the pin
 
@@ -1065,6 +1087,7 @@ function update_mouse_indicator(canvas, graph, graph_node, x) {
 function remove_all_mouse_indicators() {
     var indicators = document.getElementsByClassName("indicator");
     for (var i = 0, len = indicators.length; i < len; i++) {
+        // @ts-ignore
         indicators[i].parentNode.removeChild(indicators[i]);
     }
 }
@@ -1079,7 +1102,7 @@ function graph_mouse_wheel(event, graph) {
     var time_zoom_center = graph_get_click_time(event, graph);
     var delta = utils.wheel_event_delta(event);
 
-    var zoom = null;
+    var zoom: null | number = null;
     if (delta > 0) {
         zoom = 1.1;
     } else {
@@ -1098,7 +1121,7 @@ function graph_mouse_wheel(event, graph) {
     /* Also zoom all other graphs on the page */
     var graph_id = graph.id;
     if (g_graph_wheel_timeout) clearTimeout(g_graph_wheel_timeout);
-    g_graph_wheel_timeout = setTimeout(function () {
+    g_graph_wheel_timeout = window.setTimeout(function () {
         sync_all_graph_timeranges(graph_id);
     }, 500);
 
@@ -1332,8 +1355,8 @@ function update_graph(
     }
 
     // Vertical zoom
-    var range_from = null;
-    var range_to = null;
+    var range_from: null | number = null;
+    var range_to: null | number = null;
     if (vertical_zoom != null) {
         var old_range_from = graph["vertical_axis"]["range"][0];
         var old_range_to = graph["vertical_axis"]["range"][1];
@@ -1367,7 +1390,7 @@ function update_graph(
             "&range_from=" +
             encodeURIComponent(range_from) +
             "&range_to=" +
-            encodeURIComponent(range_to);
+            encodeURIComponent(String(range_to));
     }
 
     if (pin_timestamp != null) {
@@ -1488,12 +1511,12 @@ function update_pdf_export_link_timerange(start_time, end_time) {
     }
 }
 
-var g_timerange_update_queue = [];
+var g_timerange_update_queue: [string, number, number][] = [];
 
 // Syncs all graphs on this page to the same time range as the selected graph.
 // Be aware: set_graph_timerange triggers an AJAX request. Most browsers have
 // a limit on the concurrent AJAX requests, so we need to slice the requests.
-function sync_all_graph_timeranges(graph_id, skip_origin) {
+function sync_all_graph_timeranges(graph_id, skip_origin: boolean | undefined = undefined) {
     if (skip_origin === undefined) skip_origin = true;
 
     g_timerange_update_queue = []; // abort all pending requests

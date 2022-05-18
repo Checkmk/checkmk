@@ -8,18 +8,11 @@ from cmk.gui.plugins.views.builtin_inventory_plugins import inventory_displayhin
 from cmk.gui.views.inventory import _convert_display_hint
 
 
-def test__convert_display_hint():
-    missing_titles = []
-    for raw_path, hint in inventory_displayhints.items():
-        converted = _convert_display_hint(hint)
-
-        if "title" not in converted:
-            missing_titles.append(raw_path)
-
-    assert missing_titles == []
+def test__convert_display_hint() -> None:
+    assert all("title" in _convert_display_hint(hint) for hint in inventory_displayhints.values())
 
 
-def test_missing_table_keyorder():
+def test_missing_table_keyorder() -> None:
     ignore_paths = [
         ".hardware.memory.arrays:",  # Has no table
     ]

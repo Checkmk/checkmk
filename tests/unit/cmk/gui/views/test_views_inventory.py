@@ -377,7 +377,7 @@ def test__get_display_hint(invpath: str, expected_hint: Mapping[str, Any]) -> No
         ),
     ],
 )
-def test_make_node_displayhint(node_path: SDPath, expected: NodeDisplayHint):
+def test_make_node_displayhint(node_path: SDPath, expected: NodeDisplayHint) -> None:
     assert NodeDisplayHint.make(node_path) == expected
 
 
@@ -421,7 +421,7 @@ def test_make_node_displayhint(node_path: SDPath, expected: NodeDisplayHint):
         ),
     ],
 )
-def test_make_table_displayhint(table_path: SDPath, expected: TableDisplayHint):
+def test_make_table_displayhint(table_path: SDPath, expected: TableDisplayHint) -> None:
     assert TableDisplayHint.make(table_path) == expected
 
 
@@ -486,7 +486,7 @@ def test_sort_table_rows_displayhint(rows: Sequence[SDRow], expected: Sequence[S
         ),
     ],
 )
-def test_make_column_displayhint(col_path: SDPath, key: str, expected: ColumnDisplayHint):
+def test_make_column_displayhint(col_path: SDPath, key: str, expected: ColumnDisplayHint) -> None:
     assert ColumnDisplayHint.make(col_path, key) == expected
 
 
@@ -525,7 +525,7 @@ def test_make_column_displayhint(col_path: SDPath, key: str, expected: ColumnDis
         ),
     ],
 )
-def test_make_attributes_displayhint(attrs_path: SDPath, expected: AttributesDisplayHint):
+def test_make_attributes_displayhint(attrs_path: SDPath, expected: AttributesDisplayHint) -> None:
     assert AttributesDisplayHint.make(attrs_path) == expected
 
 
@@ -546,7 +546,7 @@ def test_make_attributes_displayhint(attrs_path: SDPath, expected: AttributesDis
 )
 def test_sort_attributes_pairs_displayhint(
     pairs: SDPairs, expected: Sequence[Tuple[SDKey, SDValue]]
-):
+) -> None:
     attrs_hint = AttributesDisplayHint.make(["software", "applications", "kube", "metadata"])
     assert attrs_hint.sort_pairs(pairs) == expected
 
@@ -586,5 +586,7 @@ def test_sort_attributes_pairs_displayhint(
         ),
     ],
 )
-def test_make_attribute_displayhint(attr_path: SDPath, key: str, expected: AttributeDisplayHint):
+def test_make_attribute_displayhint(
+    attr_path: SDPath, key: str, expected: AttributeDisplayHint
+) -> None:
     assert AttributeDisplayHint.make(attr_path, key) == expected

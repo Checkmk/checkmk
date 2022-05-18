@@ -6998,9 +6998,9 @@ class IconSelector(ValueSpec):
         html.open_div(class_="icons", id_="%s_icons" % varprefix)
 
         is_emblem = varprefix.endswith("_emblem")
-        icons = self.available_emblems() if is_emblem else self.available_icons()
-        available_icons = self._available_icons_by_category(icons)
-        active_category = icons.get(value, available_icons[0][0])
+        icons_name_and_cat = self.available_emblems() if is_emblem else self.available_icons()
+        available_icons = self._available_icons_by_category(icons_name_and_cat)
+        active_category = icons_name_and_cat.get(value, available_icons[0][0])
 
         # Render tab navigation
         html.open_ul()

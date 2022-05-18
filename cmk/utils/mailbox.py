@@ -262,7 +262,8 @@ class Mailbox:
 
             connection = EWS(
                 Account(
-                    self._args.fetch_username,
+                    primary_smtp_address=self._args.fetch_email_address
+                    or self._args.fetch_username,
                     autodiscover=False,
                     access_type=DELEGATE,
                     config=Configuration(
@@ -522,6 +523,13 @@ def parse_arguments(parser: argparse.ArgumentParser, argv: Sequence[str]) -> Arg
         required=True,
         metavar="USER",
         help="Username to use for IMAP/POP3/EWS",
+    )
+    parser.add_argument(
+        "--fetch-email-address",
+        type=str,
+        required=False,
+        metavar="EMAIL-ADDRESS",
+        help="Email address (default: same as username, only effects EWS protocol)",
     )
     parser.add_argument(
         "--fetch-password",

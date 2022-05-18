@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_api import passwordstore_get_cmdline
+
 
 def check_mailboxes_arguments(params):
     """
@@ -11,6 +13,7 @@ def check_mailboxes_arguments(params):
     ...     'fetch': ('EWS', {
     ...       'server': 'srv', 'connection': {},
     ...       'auth': ('usr', ('password', 'pw')),
+    ...       'email_address': 'usr@srv.com',
     ...       'connection': {'disable_tls': True, 'disable_cert_validation': False, 'tcp_port': 123}}),
     ...     'age': (1, 2), 'age_newest': (3, 4), 'count': (5, 6),
     ...     'mailboxes': ['abc', 'def']}):
@@ -20,6 +23,7 @@ def check_mailboxes_arguments(params):
     --fetch-port=123
     --fetch-username=usr
     --fetch-password=pw
+    --fetch-email-address=usr@srv.com
     --warn-age-oldest=1
     --crit-age-oldest=2
     --warn-age-newest=3
@@ -56,6 +60,9 @@ def check_mailboxes_arguments(params):
 
     args.append(f"--fetch-username={username}")
     args.append(passwordstore_get_cmdline("--fetch-password=%s", password))
+
+    if "email_address" in fetch_params:
+        args.append(f"--fetch-email-address={fetch_params['email_address']}")
 
     if "connect_timeout" in params:
         args.append(f"--connect-timeout={params['connect_timeout']}")

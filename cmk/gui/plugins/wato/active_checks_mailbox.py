@@ -30,7 +30,7 @@ from cmk.gui.valuespec import (
 def _common_email_parameters(protocol, port_defaults):
     return Dictionary(
         title=protocol,
-        optional_keys=["server"],
+        optional_keys=["server", "email_address"],
         elements=[
             (
                 "server",
@@ -78,12 +78,31 @@ def _common_email_parameters(protocol, port_defaults):
                 Tuple(
                     title=_("Authentication"),
                     elements=[
-                        TextInput(title=_("Username"), allow_empty=False, size=24),
+                        TextInput(title=_("Username"), allow_empty=False),
                         IndividualOrStoredPassword(title=_("Password"), allow_empty=False, size=12),
                     ],
                 ),
             ),
-        ],
+        ]
+        + (
+            [
+                (
+                    "email_address",
+                    EmailAddress(
+                        title=_("Email address used for account identification"),
+                        label=_("(overrides <b>username</b>)"),
+                        help=_(
+                            "Used to specify the account to be contacted"
+                            " (aka. 'PrimarySmtpAddress') in case it's different from the"
+                            " username. If not specified the credentials username is used."
+                        ),
+                        allow_empty=False,
+                    ),
+                )
+            ]
+            if protocol == "EWS"
+            else []
+        ),  # type: ignore[arg-type]
     )
 
 
@@ -222,7 +241,7 @@ def _valuespec_active_checks_mail_loop():
                     "item",
                     TextInput(
                         title=_("Name"),
-                        help=_("The service description will be <b>Mail Loop</b> plus this name"),
+                        help=_("The service name will be <b>Mail Loop</b> plus this name"),
                         allow_empty=False,
                     ),
                 ),
@@ -419,7 +438,7 @@ def _valuespec_active_checks_mail():
                 (
                     "service_description",
                     TextInput(
-                        title=_("Service description"),
+                        title=_("Service name"),
                         help=_(
                             "Please make sure that this is unique per host "
                             "and does not collide with other services."
@@ -723,7 +742,7 @@ def _valuespec_active_checks_mailboxes():
                 (
                     "service_description",
                     TextInput(
-                        title=_("Service description"),
+                        title=_("Service name"),
                         help=_(
                             "Please make sure that this is unique per host "
                             "and does not collide with other services."

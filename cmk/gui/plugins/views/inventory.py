@@ -66,6 +66,23 @@ from cmk.gui.utils.urls import makeuri_contextless
 
 PaintResult = Tuple[str, Union[str, HTML]]
 
+_PAINT_FUNCTION_NAME_PREFIX = "inv_paint_"
+_PAINT_FUNCTIONS = {}
+
+
+def update_paint_functions(mapping):
+    # Update paint functions from
+    # 1. views (local web plugins are loaded including display hints and paint functions)
+    # 2. here
+    _PAINT_FUNCTIONS.update(
+        {k: v for k, v in mapping.items() if k.startswith(_PAINT_FUNCTION_NAME_PREFIX)})
+
+
+def _get_paint_function_from_globals(paint_name):
+    # Do not overwrite local paint functions
+    update_paint_functions({k: v for k, v in globals().items() if k not in _PAINT_FUNCTIONS})
+    return _PAINT_FUNCTIONS[_PAINT_FUNCTION_NAME_PREFIX + paint_name]
+
 
 def paint_host_inventory_tree(row, invpath=".", column="host_inventory"):
     hostname = row.get("host_name")
@@ -693,8 +710,7 @@ def _find_display_hint_id(invpath):
 def _convert_display_hint(hint):
     """Convert paint type to paint function, for the convenciance of the called"""
     if "paint" in hint:
-        paint_function_name = "inv_paint_" + hint["paint"]
-        hint["paint_function"] = globals()[paint_function_name]
+        hint["paint_function"] = _get_paint_function_from_globals(hint["paint"])
 
     return hint
 
@@ -803,7 +819,7 @@ def _declare_invtable_column(infoname, invpath, topic, name, column):
     sortfunc = hint.get("sort", cmp_func)
     if "paint" in hint:
         paint_name = hint["paint"]
-        paint_function = globals()["inv_paint_" + paint_name]
+        paint_function = _get_paint_function_from_globals(paint_name)
     else:
         paint_name = "str"
         paint_function = inv_paint_generic

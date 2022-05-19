@@ -1055,6 +1055,8 @@ def load_plugins(force):
         return
 
     utils.load_web_plugins("views", globals())
+    cmk.gui.plugins.views.inventory.update_paint_functions(globals())
+
     utils.load_web_plugins('icons', globals())
     utils.load_web_plugins("perfometer", globals())
     clear_alarm_sound_states()

@@ -213,18 +213,20 @@ class ABCGlobalSettingsMode(WatoMode):
                 forms.section(title, simple=simple)
 
                 if varname in self._current_settings:
-                    modified_cls: Optional[str] = "modified"
+                    modified_cls = ["modified"]
                     value_title: Optional[str] = _("This option has been modified.")
                 elif varname in self._global_settings:
-                    modified_cls = "modified globally"
+                    modified_cls = ["modified globally"]
                     value_title = _("This option has been modified in global settings.")
                 else:
-                    modified_cls = None
+                    modified_cls = []
                     value_title = None
 
                 if is_a_checkbox(valuespec):
                     html.open_div(
-                        class_=["toggle_switch_container", modified_cls, "on" if value else None]
+                        class_=["toggle_switch_container"]
+                        + modified_cls
+                        + (["on"] if value else [])
                     )
                     html.toggle_switch(
                         enabled=value,
@@ -232,7 +234,7 @@ class ABCGlobalSettingsMode(WatoMode):
                         href=makeactionuri(
                             request, transactions, [("_action", "toggle"), ("_varname", varname)]
                         ),
-                        class_=[modified_cls],
+                        class_=modified_cls,
                         title=value_title,
                     )
                     html.close_div()

@@ -229,11 +229,9 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
                     filename="view.py",
                 )
                 html.open_td(
-                    class_=[
-                        td_class,
-                        "states prob" if value != 0 else None,
-                        "show_more_mode" if ty == "handled" else "basic",
-                    ]
+                    class_=[td_class]
+                    + ([] if value == 0 else ["states prob"])
+                    + ["show_more_mode" if ty == "handled" else "basic"]
                 )
                 link(str(value), url)
                 html.close_td()
@@ -245,7 +243,7 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
                         row.views.stale + context_vars,
                         filename="view.py",
                     )
-                    html.open_td(class_=[td_class, "states prob" if stales != 0 else None])
+                    html.open_td(class_=[td_class] + ([] if stales == 0 else ["states prob"]))
                     link(str(stales), url)
                     html.close_td()
                 else:

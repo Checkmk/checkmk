@@ -46,7 +46,7 @@ class PageStateRenderer:
             )
 
     def _get_css_classes(self, page_state: PageState) -> CSSSpec:
-        classes: list[Optional[str]] = ["page_state"]
+        classes = ["page_state"]
         if isinstance(page_state.css_classes, list):
             classes.extend(c for c in page_state.css_classes if c is not None)
         elif page_state.css_classes is not None:

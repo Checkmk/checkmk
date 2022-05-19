@@ -500,7 +500,7 @@ class PageMenuRenderer:
 
             html.open_div(
                 id_="page_menu_dropdown_%s" % dropdown.name,
-                class_=["menucontainer", "disabled" if not dropdown.is_enabled else None],
+                class_=["menucontainer"] + (["disabled"] if not dropdown.is_enabled else []),
             )
 
             self._show_dropdown_trigger(dropdown)
@@ -545,10 +545,8 @@ class PageMenuRenderer:
         html.open_div(class_="topic")
         html.div(
             topic.title,
-            class_=[
-                "topic_title",
-                "show_more_mode" if all(entry.is_show_more for entry in topic.entries) else None,
-            ],
+            class_=["topic_title"]
+            + (["show_more_mode"] if all(entry.is_show_more for entry in topic.entries) else []),
         )
 
         for entry in topic.entries:
@@ -560,7 +558,7 @@ class PageMenuRenderer:
         html.close_div()
 
     def _show_entry(self, entry: PageMenuEntry) -> None:
-        classes: List[Optional[str]] = ["entry"]
+        classes = ["entry"]
         classes += self._get_entry_css_classes(entry)
 
         html.open_div(
@@ -587,7 +585,7 @@ class PageMenuRenderer:
         html.open_tr(id_="suggestions")
         html.open_td(colspan=3)
         for entry in entries:
-            classes: List[Optional[str]] = ["suggestion"]
+            classes = ["suggestion"]
             classes += self._get_entry_css_classes(entry)
             html.open_div(class_=classes)
             SuggestedEntryRenderer().show(entry)
@@ -595,12 +593,12 @@ class PageMenuRenderer:
         html.close_td()
         html.close_tr()
 
-    def _get_entry_css_classes(self, entry: PageMenuEntry) -> List[Optional[str]]:
-        classes: List[Optional[str]] = [
+    def _get_entry_css_classes(self, entry: PageMenuEntry) -> list[str]:
+        classes = [
             ("enabled" if entry.is_enabled else "disabled"),
             ("show_more_mode" if entry.is_show_more else "basic"),
         ]
-        classes += entry.css_classes
+        classes += [c for c in entry.css_classes if c is not None]
         return classes
 
     def _show_inpage_search_field(self, item: PageMenuSearch) -> None:
@@ -801,8 +799,8 @@ class PageMenuPopupsRenderer:
         if entry.name is None:
             raise ValueError('Missing "name" attribute on entry "%s"' % entry.title)
 
-        classes: List[Optional[str]] = ["page_menu_popup"]
-        classes += entry.item.css_classes
+        classes = ["page_menu_popup"]
+        classes += [c for c in entry.item.css_classes if c is not None]
         if isinstance(entry.item, PageMenuSidePopup):
             classes.append("side_popup")
 

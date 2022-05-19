@@ -265,7 +265,7 @@ class PainterPerfometer(Painter):
             content=content,
             href=url,
             title=escaping.strip_tags(title),
-            class_=["disabled" if disabled else None],
+            class_=["disabled"] if disabled else [],
         )
 
 

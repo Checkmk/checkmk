@@ -100,11 +100,10 @@ class MainMenuRenderer:
             menu = mega_menu_registry[menu_item.name]
             html.open_div(
                 id_="popup_menu_%s" % menu_item.name,
-                class_=[
-                    "popup_menu",
-                    "main_menu_popup",
-                    "min" if user.get_attribute("nav_hide_icons_title") else None,
-                ],
+                class_=(
+                    ["popup_menu", "main_menu_popup"]
+                    + (["min"] if user.get_attribute("nav_hide_icons_title") else [])
+                ),
             )
             MegaMenuRenderer().show(menu)
             html.close_div()

@@ -387,7 +387,7 @@ class Age(ValueSpec[Seconds]):
         self._label = label
         self._bounds = Bounds[Seconds](minvalue, maxvalue)
         self._display = display if display is not None else ["days", "hours", "minutes", "seconds"]
-        self._cssclass = cssclass
+        self._cssclass = [] if cssclass is None else [cssclass]
 
     def canonical_value(self) -> Seconds:
         return self._bounds.lower(0)
@@ -397,7 +397,7 @@ class Age(ValueSpec[Seconds]):
         hours, rest = divmod(rest, 60 * 60)
         minutes, seconds = divmod(rest, 60)
 
-        html.open_div(class_=["vs_age", self._cssclass])
+        html.open_div(class_=["vs_age"] + self._cssclass)
         if self._label:
             html.span(self._label, class_="vs_floating_text")
 
@@ -2254,7 +2254,7 @@ class ListOfMultiple(ValueSpec[ListOfMultipleModel]):
         # a wrong user input.
 
         # Special styling for filters
-        extra_css = "filter" if self._delete_style == "filter" else None
+        extra_css = ["filter"] if self._delete_style == "filter" else []
 
         # In the 'complain' phase, where the user already saved the
         # form but the validation failed, we must not display the
@@ -2277,7 +2277,7 @@ class ListOfMultiple(ValueSpec[ListOfMultipleModel]):
         )
 
         # Actual table of currently existing entries
-        html.open_table(id_="%s_table" % varprefix, class_=["valuespec_listof", extra_css])
+        html.open_table(id_="%s_table" % varprefix, class_=["valuespec_listof"] + extra_css)
         html.open_tbody()
 
         for ident in sorted_idents:
@@ -4008,7 +4008,7 @@ class OptionalDropdownChoice(DropdownChoice):
 
         html.open_span(
             id_="%s_ex" % varprefix,
-            style=["white-space: nowrap;", None if div_is_open else "display:none;"],
+            style=["white-space: nowrap;"] + ([] if div_is_open else ["display:none;"]),
         )
         html.nbsp()
 
@@ -5130,10 +5130,8 @@ class Optional(ValueSpec[_Optional[T]]):
 
         html.open_span(
             id_=div_id,
-            style=[
-                "margin-left: %dpx;" % indent,
-                "display:none;" if checked == self._negate else None,
-            ],
+            style=["margin-left: %dpx;" % indent]
+            + (["display:none;"] if checked == self._negate else []),
         )
         if value is None:
             value = self._valuespec.default_value()
@@ -5654,7 +5652,7 @@ class Dictionary(ValueSpec[DictionaryModel]):
 
             html.open_div(
                 id_=div_id,
-                class_=["dictelement", "indent" if (self._indent and not two_columns) else None],
+                class_=["dictelement"] + (["indent"] if self._indent and not two_columns else []),
                 style="display:none;" if not visible else None,
             )
 

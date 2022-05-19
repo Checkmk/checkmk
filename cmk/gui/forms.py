@@ -46,15 +46,18 @@ def header(
     isopen = user.get_tree_state(treename, id_, isopen)
     container_id = foldable_container_id(treename, id_)
 
+    class_ = ["nform"]
+    if narrow:
+        class_.append("narrow")
+    if css:
+        class_.append(css)
+    class_.append("open" if isopen else "closed")
+    if user.get_show_more_setting("foldable_%s" % id_) or show_more_mode:
+        class_.append("more")
+
     html.open_table(
         id_=table_id if table_id else None,
-        class_=[
-            "nform",
-            "narrow" if narrow else None,
-            css if css else None,
-            "open" if isopen else "closed",
-            "more" if user.get_show_more_setting("foldable_%s" % id_) or show_more_mode else None,
-        ],
+        class_=class_,
     )
 
     if show_table_head:
@@ -131,19 +134,20 @@ def section(
     section_close()
     html.open_tr(
         id_=section_id,
-        class_=[css, "show_more_mode" if is_show_more and not is_changed else "basic"],
+        class_=([] if css is None else [css])
+        + ["show_more_mode" if is_show_more and not is_changed else "basic"],
         style="display:none;" if hide else None,
     )
 
     if legend:
-        html.open_td(class_=["legend", "simple" if simple else None])
+        html.open_td(class_=["legend"] + (["simple"] if simple else []))
         if title:
             html.open_div(
-                class_=["title", "withcheckbox" if checkbox else None],
+                class_=["title"] + (["withcheckbox"] if checkbox else []),
                 title=escaping.strip_tags(title),
             )
             html.write_text(title)
-            html.span("." * 200, class_=["dots", "required" if is_required else None])
+            html.span("." * 200, class_=["dots"] + (["required"] if is_required else []))
             html.close_div()
         if checkbox:
             html.open_div(class_="checkbox")
@@ -156,7 +160,7 @@ def section(
                 )
             html.close_div()
         html.close_td()
-    html.open_td(class_=["content", "simple" if simple else None])
+    html.open_td(class_=["content"] + (["simple"] if simple else []))
     g_section_open = True
 
 

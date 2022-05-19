@@ -437,7 +437,7 @@ def _show_topic(treename: str, topic: TopicMenuTopic, show_item_icons: bool) -> 
 
         for item in topic.items:
             if show_item_icons:
-                html.open_li(class_=["sidebar", "show_more_mode" if item.is_show_more else None])
+                html.open_li(class_=["sidebar"] + (["show_more_mode"] if item.is_show_more else []))
                 iconlink(item.title, item.url, item.icon or "icon_missing")
                 html.close_li()
             else:

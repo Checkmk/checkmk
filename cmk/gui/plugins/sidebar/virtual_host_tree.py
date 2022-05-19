@@ -188,7 +188,7 @@ class VirtualHostTree(SidebarSnapin):
     def _tag_tree_bullet(self, state, path, leaf) -> HTML:
         code = HTMLWriter.render_div(
             "&nbsp;",
-            class_=["tagtree", "leaf" if leaf else None, "statebullet", "state%d" % state],
+            class_=["tagtree"] + (["leaf"] if leaf else []) + ["statebullet", "state%d" % state],
         )
         if not leaf:
             code = HTMLWriter.render_a(

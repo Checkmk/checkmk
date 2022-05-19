@@ -800,7 +800,7 @@ class ModeNotifications(ABCNotificationsMode):
                     if context.get("SERVICESTATE"):
                         statename = context["SERVICESTATE"][:4]
                         state = context["SERVICESTATEID"]
-                        css: list[Optional[str]] = ["state svcstate state%s" % state]
+                        css = ["state svcstate state%s" % state]
                     else:
                         statename = context.get("HOSTSTATE")[:4]
                         state = context["HOSTSTATEID"]

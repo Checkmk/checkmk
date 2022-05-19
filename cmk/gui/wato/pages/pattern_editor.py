@@ -285,9 +285,12 @@ class ModePatternEditor(WatoMode):
                     table.cell(_("Match"))
                     html.icon("rule%s" % match_img, match_title)
 
-                    cls: list[Optional[str]] = []
-                    if match_class == "match first":
-                        cls = ["state%d" % logwatch.level_state(state), "fillbackground"]
+                    cls = (
+                        ["state%d" % logwatch.level_state(state), "fillbackground"]
+                        if match_class == "match first"
+                        else []
+                    )
+
                     table.cell(
                         _("State"), HTMLWriter.render_span(logwatch.level_name(state)), css=cls
                     )

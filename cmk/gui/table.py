@@ -202,7 +202,7 @@ class Table:
 
         self.empty_text = empty_text if empty_text is not None else _("No entries.")
         self.help = help
-        self.css = css
+        self.css = [] if css is None else [css]
         self.mode = "row"
         self.isopen: Final = isopen
 
@@ -476,7 +476,7 @@ class Table:
         if self.options["omit_empty_columns"]:
             num_cols -= len([v for v in empty_columns if v])
 
-        html.open_table(class_=["data", "oddeven", self.css])
+        html.open_table(class_=["data", "oddeven"] + self.css)
 
         # If we have no group headers then paint the headers now
         if self.rows and not isinstance(self.rows[0], GroupHeader):

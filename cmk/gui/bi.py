@@ -610,18 +610,17 @@ class FoldableTreeRendererTree(ABCFoldableTreeRenderer):
     def _show_node(self, tree, show_host, mousecode=None, img_class=None):
         # Check if we have an assumed state: comparing assumed state (tree[1]) with state (tree[0])
         if tree[1] and tree[0] != tree[1]:
-            addclass: Optional[str] = "assumed"
+            addclass = ["assumed"]
             effective_state = tree[1]
         else:
-            addclass = None
+            addclass = []
             effective_state = tree[0]
 
-        class_: List[Optional[str]] = [
-            "content",  #
+        class_ = [
+            "content",
             "state",
             "state%d" % (effective_state["state"] if effective_state["state"] is not None else -1),
-            addclass,
-        ]
+        ] + addclass
         html.open_span(class_=class_)
         html.write_text(self._render_bi_state(effective_state["state"]))
         html.close_span()
@@ -687,10 +686,10 @@ class FoldableTreeRendererBoxes(ABCFoldableTreeRenderer):
     def _show_subtree(self, tree, path, show_host):
         # Check if we have an assumed state: comparing assumed state (tree[1]) with state (tree[0])
         if tree[1] and tree[0] != tree[1]:
-            addclass: Optional[str] = "assumed"
+            addclass = ["assumed"]
             effective_state = tree[1]
         else:
-            addclass = None
+            addclass = []
             effective_state = tree[0]
 
         is_leaf = self._is_leaf(tree)
@@ -707,8 +706,7 @@ class FoldableTreeRendererBoxes(ABCFoldableTreeRenderer):
             "open" if self._is_open(path) else "closed",
             "state",
             "state%d" % effective_state["state"],
-            addclass,
-        ]
+        ] + addclass
 
         omit = self._omit_root and len(path) == 1
         if not omit:

@@ -10,7 +10,7 @@ import json
 import pprint
 import re
 from pathlib import Path
-from typing import Any, Callable, cast, Iterable, Mapping, Optional, Sequence, Union
+from typing import Any, Callable, Iterable, Mapping, Optional, Sequence, Union
 
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
@@ -504,7 +504,7 @@ class HTMLGenerator(HTMLWriter):
             name=varname,
             type_="submit",
             id_=varname,
-            class_=["button", cssclass if cssclass else None],
+            class_=["button"] + ([cssclass] if cssclass else []),
             value=title,
             title=help_,
             style=style,
@@ -530,7 +530,7 @@ class HTMLGenerator(HTMLWriter):
             obj_id = utils.gen_id()
 
         # Same API as other elements: class_ can be a list or string/None
-        css_classes: list[Optional[str]] = ["button", "buttonlink"]
+        css_classes = ["button", "buttonlink"]
         if class_:
             if not isinstance(class_, list):
                 css_classes.append(class_)
@@ -567,13 +567,14 @@ class HTMLGenerator(HTMLWriter):
         disabled: bool = False,
         class_: Optional[CSSSpec] = None,
     ) -> None:
-        if not isinstance(class_, list):
-            class_ = [class_]
-        # TODO: Investigate why mypy complains about the latest argument
-        classes = ["button", cssclass] + cast(list[Optional[str]], class_)
+        classes = (
+            ["button"]
+            + ([] if cssclass is None else [cssclass])
+            + ([] if class_ is None else class_)
+        )
 
         if disabled:
-            class_.append("disabled")
+            classes.append("disabled")
             disabled_arg: Optional[str] = ""
         else:
             disabled_arg = None
@@ -645,27 +646,27 @@ class HTMLGenerator(HTMLWriter):
         # TODO: Move styling away from py code
         # Until we get there: Try to simplify these width stylings and put them in a helper function
         # that's shared by text_input and text_area
-        style_size: Optional[str] = None
+        style_size: list[str] = []
         field_size: Optional[str] = None
 
         if size is not None:
             if try_max_width:
                 assert isinstance(size, int)
-                style_size = "min-width: %d.8ex;" % size
+                style_size = ["min-width: %d.8ex;" % size]
                 cssclass += " try_max_width"
             else:
                 if size == "max":
-                    style_size = "width: 100%;"
+                    style_size = ["width: 100%;"]
                 else:
                     assert isinstance(size, int)
                     field_size = "%d" % (size + 1)
                     if (style is None or "width:" not in style) and not self.mobile:
-                        style_size = "width: %d.8ex;" % size
+                        style_size = ["width: %d.8ex;" % size]
 
         attributes: HTMLTagAttributes = {
             "class": cssclass,
             "id": ("ti_%s" % varname) if (submit or label) and not id_ else id_,
-            "style": [style_size] + ([] if style is None else [style]),
+            "style": style_size + ([] if style is None else [style]),
             "size": field_size,
             "autocomplete": autocomplete,
             "readonly": "true" if read_only else None,
@@ -711,11 +712,10 @@ class HTMLGenerator(HTMLWriter):
         **attrs: HTMLTagAttributeValue,
     ) -> None:
         """Shows a colored button with text (used in site and customer status snapins)"""
-        button_cls = "button" if onclick else None
         self.div(
             content,
             title=title,
-            class_=["status_label", button_cls, status],
+            class_=["status_label"] + (["button"] if onclick else []) + [status],
             onclick=onclick,
             **attrs,
         )
@@ -728,17 +728,14 @@ class HTMLGenerator(HTMLWriter):
         href: str = "javascript:void(0)",
         **attrs: HTMLTagAttributeValue,
     ) -> None:
-        # Same API as other elements: class_ can be a list or string/None
-        if not isinstance(class_, list):
-            class_ = [class_]
-
-        class_ += [
+        classes = [] if class_ is None else class_
+        classes += [
             "toggle_switch",
             "on" if enabled else "off",
         ]
         onclick = attrs.pop("onclick", None)
 
-        self.open_div(class_=class_, **attrs)
+        self.open_div(class_=classes, **attrs)
         self.a(
             content=_("on") if enabled else _("off"),
             href=href,
@@ -872,13 +869,15 @@ class HTMLGenerator(HTMLWriter):
 
         # Do not enable select2 for select fields that allow multiple
         # selections like the dual list choice valuespec
-        css_classes: list[Optional[str]] = ["select2-enable"]
-        if "multiple" in attrs or (isinstance(class_, list) and "ajax-vals" in class_):
-            css_classes = []
+        css_classes = (
+            []
+            if "multiple" in attrs or (isinstance(class_, list) and "ajax-vals" in class_)
+            else ["select2-enable"]
+        )
 
         if isinstance(class_, list):
             css_classes.extend(class_)
-        else:
+        elif class_ is not None:
             css_classes.append(class_)
 
         self.open_select(
@@ -1066,10 +1065,10 @@ class HTMLGenerator(HTMLWriter):
         cssclass: Optional[str] = None,
         class_: Optional[CSSSpec] = None,
     ) -> HTML:
-        classes = ["icon", cssclass]
+        classes = ["icon"] + ([] if cssclass is None else [cssclass])
         if isinstance(class_, list):
             classes.extend(class_)
-        else:
+        elif class_ is not None:
             classes.append(class_)
 
         icon_name = icon["icon"] if isinstance(icon, dict) else icon
@@ -1131,11 +1130,10 @@ class HTMLGenerator(HTMLWriter):
         cssclass: Optional[str] = None,
         class_: Optional[CSSSpec] = None,
     ) -> HTML:
-        # Same API as other elements: class_ can be a list or string/None
-        classes = [cssclass]
+        classes = [] if cssclass is None else [cssclass]
         if isinstance(class_, list):
             classes.extend(class_)
-        else:
+        elif class_ is not None:
             classes.append(class_)
 
         href = url if not onclick else "javascript:void(0)"
@@ -1270,7 +1268,7 @@ class HTMLGenerator(HTMLWriter):
             onmouseleave=onmouseleave,
         )
 
-        classes: list[Optional[str]] = ["popup_trigger"]
+        classes = ["popup_trigger"]
         if isinstance(cssclass, list):
             classes.extend(cssclass)
         elif cssclass:

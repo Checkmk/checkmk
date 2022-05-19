@@ -347,7 +347,7 @@ class SidebarRenderer:
         html.body_end()
 
     def _show_body_start(self) -> None:
-        body_classes = ["side", "screenshotmode" if active_config.screenshotmode else None]
+        body_classes = ["side"] + (["screenshotmode"] if active_config.screenshotmode else [])
 
         if not user.may("general.see_sidebar"):
             html.open_body(class_=body_classes, data_theme=theme.get())
@@ -385,7 +385,9 @@ class SidebarRenderer:
             key="ui_sidebar_position",
             parser=lambda x: None if x == "None" else "left",
         )
-        html.open_div(id_="check_mk_sidebar", class_=[sidebar_position])
+        html.open_div(
+            id_="check_mk_sidebar", class_=[] if sidebar_position is None else [sidebar_position]
+        )
 
         self._show_snapin_bar(user_config)
 

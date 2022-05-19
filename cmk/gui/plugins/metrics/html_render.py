@@ -239,7 +239,7 @@ def _show_html_graph_title(graph_artwork, graph_render_options) -> None:
 
     html.div(
         title,
-        class_=["title", "inline" if graph_render_options["show_title"] == "inline" else None],
+        class_=["title"] + (["inline"] if graph_render_options["show_title"] == "inline" else []),
     )
 
 
@@ -256,7 +256,7 @@ def _show_graph_html_content(graph_artwork, graph_data_range, graph_render_optio
     graph_render_options = artwork.add_default_render_options(graph_render_options)
 
     html.open_div(
-        class_=["graph", "preview" if graph_render_options["preview"] else None],
+        class_=["graph"] + (["preview"] if graph_render_options["preview"] else []),
         style="font-size: %.1fpt;%s"
         % (graph_render_options["font_size"], _graph_padding_styles(graph_render_options)),
     )
@@ -272,7 +272,7 @@ def _show_graph_html_content(graph_artwork, graph_data_range, graph_render_optio
     if graph_render_options["show_graph_time"] and not graph_render_options["preview"]:
         html.div(
             graph_artwork["time_axis"]["title"] or "",
-            css=["time", "inline" if graph_render_options["show_title"] == "inline" else None],
+            css=["time"] + (["inline"] if graph_render_options["show_title"] == "inline" else []),
         )
 
     if graph_render_options["show_controls"] and graph_render_options["resizable"]:
@@ -464,7 +464,7 @@ def _show_graph_legend(graph_artwork, graph_render_options) -> None:
     if graph_artwork["horizontal_rules"]:
         first = True
         for _value, readable, color, title in graph_artwork["horizontal_rules"]:
-            html.open_tr(class_=["scalar", "first" if first else None])
+            html.open_tr(class_=["scalar"] + (["first"] if first else []))
             html.open_td(style=font_size_style)
             html.write_html(render_color_icon(color))
             html.write_text(title)

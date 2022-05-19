@@ -973,20 +973,22 @@ class PageAbstractBackupJobState:
 
         html.open_table(class_=["data", "backup_job"])
 
-        css: Optional[str] = "state0"
-        state_txt = job.state_name(state["state"])
-        if state["state"] == "finished":
-            if not state["success"]:
-                css = "state2"
-                state_txt = _("Failed")
-            else:
-                state_txt = _("Finished")
-        elif state["state"] is None:
-            css = None
+        if state["state"] is None:
+            css = []
+            state_txt = job.state_name(state["state"])
+        elif state["state"] != "finished":
+            css = ["state0"]
+            state_txt = job.state_name(state["state"])
+        elif state["success"]:
+            css = ["state0"]
+            state_txt = _("Finished")
+        else:
+            css = ["state2"]
+            state_txt = _("Failed")
 
         html.open_tr(class_=["data", "even0"])
         html.td(_("State"), class_=["left", "legend"])
-        html.td(state_txt, class_=["state", css])
+        html.td(state_txt, class_=["state"] + css)
         html.close_tr()
 
         html.open_tr(class_=["data", "odd0"])

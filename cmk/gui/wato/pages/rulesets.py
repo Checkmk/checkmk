@@ -243,11 +243,13 @@ class ABCRulesetMode(WatoMode):
                 forms.container()
 
                 for ruleset in group_rulesets:
-                    float_cls = None
-                    if not active_config.wato_hide_help_in_lists:
-                        float_cls = "nofloat" if user.show_help else "float"
+                    float_cls = (
+                        []
+                        if active_config.wato_hide_help_in_lists
+                        else ["nofloat" if user.show_help else "float"]
+                    )
                     html.open_div(
-                        class_=["ruleset", float_cls], title=strip_tags(ruleset.help() or "")
+                        class_=["ruleset"] + float_cls, title=strip_tags(ruleset.help() or "")
                     )
                     html.open_div(class_="text")
 
@@ -1037,7 +1039,7 @@ class ModeEditRuleset(WatoMode):
         html.javascript("cmk.utils.update_row_info(%s);" % json.dumps(row_info))
 
     @staticmethod
-    def _css_for_rule(search_options, rule: Rule) -> list[Optional[str]]:
+    def _css_for_rule(search_options, rule: Rule) -> list[str]:
         css = []
         if rule.is_disabled():
             css.append("disabled")

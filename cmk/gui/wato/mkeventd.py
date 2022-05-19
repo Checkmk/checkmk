@@ -1738,11 +1738,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
             for nr, rule_pack in enumerate(self._rule_packs):
                 id_ = rule_pack["id"]
                 type_ = ec.RulePackType.type_of(rule_pack, id_to_mkp)
-
-                css_matches_search: list[_Optional[str]] = (
-                    ["matches_search"] if id_ in found_packs else []
-                )
-                table.row(css=css_matches_search)
+                table.row(css=["matches_search"] if id_ in found_packs else [])
                 table.cell(_("Actions"), css=["buttons"])
 
                 edit_url = makeuri_contextless(
@@ -2153,12 +2149,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
         with table_element(title=_("Rules"), css="ruleset", limit=None, sortable=False) as table:
             have_match = False
             for nr, rule in enumerate(self._rules):
-                if rule in found_rules:
-                    css_matches_search: list[_Optional[str]] = ["matches_search"]
-                else:
-                    css_matches_search = []
-
-                table.row(css=css_matches_search)
+                table.row(css=["matches_search"] if rule in found_rules else [])
                 delete_url = make_confirm_link(
                     url=make_action_link(
                         [

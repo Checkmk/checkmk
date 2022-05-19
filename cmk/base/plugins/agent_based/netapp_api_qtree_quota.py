@@ -39,10 +39,14 @@ def iter_netapp_api_qtree_quota(
         string_table, custom_keys=["quota", "quota-users"]
     ).items():
         for instance in instances:
+            if (quota_type := instance.get("quota-type", "")) != "tree":
+                # The same netapp quota could exist of both type "tree" and "user",
+                # which would mean the "tree" quotas would be overwritten.
+                continue
             qtree = Qtree(
                 quota=instance.get("quota", ""),
                 quota_users=instance.get("quota-users", ""),
-                quota_type=instance.get("quota-type", ""),
+                quota_type=quota_type,
                 volume=instance.get("volume", ""),
                 disk_limit=instance.get("disk-limit", ""),
                 disk_used=instance.get("disk-used", ""),
@@ -70,7 +74,7 @@ def get_item_names(qtree: Qtree):
 def discover_netapp_api_qtree_quota(params: Mapping[str, Any], section: Section) -> DiscoveryResult:
     exclude_volume = params.get("exclude_volume", False)
     for name, qtree in section.items():
-        if qtree.quota_type == "tree" and qtree.disk_limit.isdigit():
+        if qtree.disk_limit.isdigit():
             short_name, long_name = get_item_names(qtree)
 
             if (exclude_volume and name == short_name) or (

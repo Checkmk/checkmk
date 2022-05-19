@@ -238,7 +238,9 @@ def agent_mobileiron_main(args: Args) -> None:
         else None,
     ) as mobileiron_api:
 
-        all_devices = mobileiron_api.get_all_devices(partitions=args.partition)
+        all_devices = mobileiron_api.get_all_devices(
+            partitions=[] if args.partition is None else args.partition
+        )
 
     if args.debug:
         LOGGER.debug("Received the following devices: %s", all_devices)

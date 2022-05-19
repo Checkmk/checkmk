@@ -28,7 +28,7 @@
 from __future__ import annotations
 
 import json
-from typing import final, Final, List, Literal, Optional, Union
+from typing import final, Final, Literal, Optional, Union
 
 from cmk.utils.exceptions import MKGeneralException
 
@@ -88,7 +88,7 @@ class HTMLWriter:
         self.render_headfoot = True
         self.link_target: Optional[str] = None
         self.browser_reload = 0.0
-        self._final_javascript: List[str] = []
+        self._final_javascript: list[str] = []
 
     def write_text(self, text: HTMLContent) -> None:
         """Write text. Highlighting tags such as h2|b|tt|i|br|pre|a|sup|p|li|ul|ol are not escaped."""

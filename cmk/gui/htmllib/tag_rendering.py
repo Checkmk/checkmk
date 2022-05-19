@@ -6,7 +6,7 @@
 """Internal helper for rendering HTML tags"""
 
 import re
-from typing import cast, Dict, Iterator, List, Optional, Union
+from typing import cast, Iterator, Optional, Union
 
 from cmk.gui.type_defs import CSSSpec
 from cmk.gui.utils import escaping
@@ -15,8 +15,8 @@ from cmk.gui.utils.html import HTML
 HTMLTagName = str
 HTMLTagValue = Optional[str]
 HTMLContent = Union[None, int, HTML, str]
-HTMLTagAttributeValue = Union[None, CSSSpec, HTMLTagValue, List[str]]
-HTMLTagAttributes = Dict[str, HTMLTagAttributeValue]
+HTMLTagAttributeValue = Union[None, CSSSpec, HTMLTagValue, list[str]]
+HTMLTagAttributes = dict[str, HTMLTagAttributeValue]
 
 __all__ = [
     "HTMLTagValue",
@@ -117,7 +117,7 @@ def _render_attributes(**attrs: HTMLTagAttributeValue) -> Iterator[str]:
         yield " %s=''" % k
 
 
-def normalize_css_spec(css_classes: CSSSpec) -> List[str]:
+def normalize_css_spec(css_classes: CSSSpec) -> list[str]:
     if isinstance(css_classes, list):
         return [c for c in css_classes if c is not None]
 
@@ -127,9 +127,9 @@ def normalize_css_spec(css_classes: CSSSpec) -> List[str]:
     return []
 
 
-def _get_normalized_css_classes(attrs: HTMLTagAttributes) -> List[str]:
+def _get_normalized_css_classes(attrs: HTMLTagAttributes) -> list[str]:
     # make class attribute foolproof
-    css: List[str] = []
+    css: list[str] = []
     for k in ["class_", "css", "cssclass", "class"]:
         if k in attrs:
             cls_spec = cast(CSSSpec, attrs.pop(k))

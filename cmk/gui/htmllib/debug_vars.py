@@ -6,7 +6,7 @@
 
 from __future__ import annotations
 
-from typing import Dict, Optional
+from typing import Mapping, Optional
 
 from cmk.gui.http import Request
 from cmk.gui.i18n import _
@@ -19,7 +19,7 @@ def debug_vars(
     request: Request,
     prefix: Optional[str] = None,
     hide_with_mouse: bool = True,
-    vars_: Optional[Dict[str, str]] = None,
+    vars_: Optional[Mapping[str, str]] = None,
 ) -> None:
     it = request.itervars() if vars_ is None else vars_.items()
     hover = "this.style.display='none';"

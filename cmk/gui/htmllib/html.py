@@ -10,7 +10,7 @@ import json
 import pprint
 import re
 from pathlib import Path
-from typing import Any, Callable, cast, Dict, Iterable, List, Optional, Set, Tuple, Union
+from typing import Any, Callable, cast, Iterable, Mapping, Optional, Sequence, Union
 
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
@@ -72,7 +72,7 @@ class HTMLGenerator(HTMLWriter):
 
         # Forms
         self.form_name: Optional[str] = None
-        self.form_vars: List[str] = []
+        self.form_vars: list[str] = []
         self.form_has_submit_button: bool = False
 
         self.request = request
@@ -163,7 +163,7 @@ class HTMLGenerator(HTMLWriter):
         # text = ".*[<page_name>#<anchor_name>|<link_title>].*"
         # e.g. text = "[intro_setup#install|Welcome]" returns
         #      <a href="https://docs.checkmk.com/master/en/intro_setup.html#install">Welcome</a>
-        urls: List[Optional[str]] = []
+        urls: list[Optional[str]] = []
         if matches := re.findall(r"(\[([a-z0-9_-]+#?[a-z0-9_-]+|)\|([^\]]+)\])", text):
             for match in matches:
                 try:
@@ -204,7 +204,7 @@ class HTMLGenerator(HTMLWriter):
             )
         )
 
-    def _head(self, title: str, javascripts: Optional[List[str]] = None) -> None:
+    def _head(self, title: str, javascripts: Optional[Sequence[str]] = None) -> None:
         javascripts = javascripts if javascripts else []
 
         self.open_head()
@@ -225,7 +225,7 @@ class HTMLGenerator(HTMLWriter):
         self._add_custom_style_sheet()
 
         # Load all scripts
-        for js in self._default_javascripts + javascripts:
+        for js in self._default_javascripts + list(javascripts):
             filename_for_browser = HTMLGenerator.javascript_filename_for_browser(js)
             if filename_for_browser:
                 self.javascript_file(filename_for_browser)
@@ -246,8 +246,8 @@ class HTMLGenerator(HTMLWriter):
             )
 
     @staticmethod
-    def _plugin_stylesheets() -> Set[str]:
-        plugin_stylesheets = set([])
+    def _plugin_stylesheets() -> Iterable[str]:
+        plugin_stylesheets = set()
         for directory in [
             Path(cmk.utils.paths.web_dir, "htdocs", "css"),
             cmk.utils.paths.local_web_dir / "htdocs" / "css",
@@ -291,7 +291,7 @@ class HTMLGenerator(HTMLWriter):
         return None
 
     def html_head(
-        self, title: str, javascripts: Optional[List[str]] = None, force: bool = False
+        self, title: str, javascripts: Optional[Sequence[str]] = None, force: bool = False
     ) -> None:
         if force or not self._header_sent:
             self.write_html(HTML("<!DOCTYPE HTML>\n"))
@@ -300,12 +300,12 @@ class HTMLGenerator(HTMLWriter):
             self._header_sent = True
 
     def body_start(
-        self, title: str = "", javascripts: Optional[List[str]] = None, force: bool = False
+        self, title: str = "", javascripts: Optional[Sequence[str]] = None, force: bool = False
     ) -> None:
         self.html_head(title, javascripts, force)
         self.open_body(class_=self._get_body_css_classes(), data_theme=theme.get())
 
-    def _get_body_css_classes(self) -> List[str]:
+    def _get_body_css_classes(self) -> list[str]:  # TODO: Sequence!
         classes = self._body_classes[:]
         if self.screenshotmode:
             classes += ["screenshotmode"]
@@ -400,7 +400,7 @@ class HTMLGenerator(HTMLWriter):
     # field. (this is the reason why you must not add any further
     # input fields after this method has been called).
     def hidden_fields(
-        self, varlist: Optional[List[str]] = None, add_action_vars: bool = False
+        self, varlist: Optional[Sequence[str]] = None, add_action_vars: bool = False
     ) -> None:
         if varlist is not None:
             for var in varlist:
@@ -530,7 +530,7 @@ class HTMLGenerator(HTMLWriter):
             obj_id = utils.gen_id()
 
         # Same API as other elements: class_ can be a list or string/None
-        css_classes: List[Optional[str]] = ["button", "buttonlink"]
+        css_classes: list[Optional[str]] = ["button", "buttonlink"]
         if class_:
             if not isinstance(class_, list):
                 css_classes.append(class_)
@@ -570,7 +570,7 @@ class HTMLGenerator(HTMLWriter):
         if not isinstance(class_, list):
             class_ = [class_]
         # TODO: Investigate why mypy complains about the latest argument
-        classes = ["button", cssclass] + cast(List[Optional[str]], class_)
+        classes = ["button", cssclass] + cast(list[Optional[str]], class_)
 
         if disabled:
             class_.append("disabled")
@@ -872,7 +872,7 @@ class HTMLGenerator(HTMLWriter):
 
         # Do not enable select2 for select fields that allow multiple
         # selections like the dual list choice valuespec
-        css_classes: List[Optional[str]] = ["select2-enable"]
+        css_classes: list[Optional[str]] = ["select2-enable"]
         if "multiple" in attrs or (isinstance(class_, list) and "ajax-vals" in class_):
             css_classes = []
 
@@ -911,7 +911,7 @@ class HTMLGenerator(HTMLWriter):
             self.close_x()
 
     def icon_dropdown(
-        self, varname: str, choices: List[Tuple[str, str, str]], deflt: str = ""
+        self, varname: str, choices: Sequence[tuple[str, str, str]], deflt: str = ""
     ) -> None:
         current = self.request.var(varname, deflt)
         if varname:
@@ -1266,7 +1266,7 @@ class HTMLGenerator(HTMLWriter):
             onmouseleave=onmouseleave,
         )
 
-        classes: List[Optional[str]] = ["popup_trigger"]
+        classes: list[Optional[str]] = ["popup_trigger"]
         if isinstance(cssclass, list):
             classes.extend(cssclass)
         elif cssclass:
@@ -1287,7 +1287,7 @@ class HTMLGenerator(HTMLWriter):
         )
 
     def element_dragger_js(
-        self, dragging_tag: str, drop_handler: str, handler_args: Dict[str, Any]
+        self, dragging_tag: str, drop_handler: str, handler_args: Mapping[str, Any]
     ) -> None:
         self.write_html(
             HTMLGenerator.render_element_dragger(

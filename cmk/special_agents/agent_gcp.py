@@ -617,6 +617,20 @@ GCE = PiggyBackService(
             ],
         ),
         Service(
+            name="disk",
+            default_groupby="resource.instance_id",
+            metrics=[
+                Metric(
+                    name="compute.googleapis.com/instance/disk/read_bytes_count",
+                    aggregation=Aggregation(per_series_aligner=Aligner.ALIGN_MAX),
+                ),
+                Metric(
+                    name="compute.googleapis.com/instance/disk/write_bytes_count",
+                    aggregation=Aggregation(per_series_aligner=Aligner.ALIGN_MAX),
+                ),
+            ],
+        ),
+        Service(
             name="cpu",
             default_groupby="resource.instance_id",
             metrics=[

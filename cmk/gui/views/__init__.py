@@ -208,7 +208,11 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.view_utils import get_labels, render_labels, render_tag_groups
 from cmk.gui.views.builtin_views import builtin_views
-from cmk.gui.views.inventory import declare_inventory_columns, declare_invtable_views
+from cmk.gui.views.inventory import (
+    declare_inventory_columns,
+    declare_invtable_views,
+    update_paint_functions,
+)
 from cmk.gui.watolib.activate_changes import get_pending_changes_info, get_pending_changes_tooltip
 
 if not cmk_version.is_raw_edition():
@@ -1246,6 +1250,8 @@ def load_plugins() -> None:
     """Plugin initialization hook (Called by cmk.gui.main_modules.load_plugins())"""
     _register_pre_21_plugin_api()
     utils.load_web_plugins("views", globals())
+    update_paint_functions(globals())
+
     utils.load_web_plugins("icons", globals())
     utils.load_web_plugins("perfometer", globals())
 

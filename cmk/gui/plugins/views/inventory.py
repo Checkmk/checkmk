@@ -115,7 +115,10 @@ def _get_paint_function_from_globals(paint_name: str) -> PaintFunction:
 
 
 def _paint_host_inventory_tree(
-    row: Row, invpath: SDRawPath = ".", column: str = "host_inventory"
+    row: Row,
+    invpath: SDRawPath = ".",
+    column: str = "host_inventory",
+    render_single_attribute: bool = False,
 ) -> CellSpec:
     raw_hostname = row.get("host_name")
     assert isinstance(raw_hostname, str)
@@ -160,8 +163,17 @@ def _paint_host_inventory_tree(
         return "", ""
 
     with output_funnel.plugged():
-        child.show(tree_renderer)
+        if isinstance(child, Attributes) and render_single_attribute:
+            # In host views like "Switch port statistics" the value is rendered as a single
+            # attribute and not within a table.
+            if len(attributes := list(child.pairs.items())) == 1:
+                key, value = attributes[-1]
+                tree_renderer.show_attribute(value, _get_display_hint("%s.%s" % (invpath, key)))
+        else:
+            child.show(tree_renderer)
+
         code = HTML(output_funnel.drain())
+
     return td_class, code
 
 
@@ -247,7 +259,9 @@ def _declare_inv_column(
         # not look good for the HW/SW inventory tree
         "printable": is_attribute,
         "load_inv": True,
-        "paint": lambda row: _paint_host_inventory_tree(row, invpath),
+        "paint": lambda row: _paint_host_inventory_tree(
+            row, invpath, render_single_attribute=is_attribute
+        ),
         "sorter": name,
     }
     if short:
@@ -2057,7 +2071,7 @@ class ABCNodeRenderer(abc.ABC):
             html.open_tr()
             html.th(self._get_header(title, key, "#DDD"), title=sub_invpath)
             html.open_td()
-            self._show_attribute(
+            self.show_attribute(
                 value,
                 hint,
                 retention_intervals=attributes.get_retention_intervals(key),
@@ -2067,7 +2081,7 @@ class ABCNodeRenderer(abc.ABC):
         html.close_table()
 
     @abc.abstractmethod
-    def _show_attribute(
+    def show_attribute(
         self,
         value: Any,
         hint: InventoryHintSpec,
@@ -2147,7 +2161,7 @@ class NodeRenderer(ABCNodeRenderer):
     ) -> None:
         self._show_child_value(value, hint, retention_intervals)
 
-    def _show_attribute(
+    def show_attribute(
         self,
         value: Any,
         hint: InventoryHintSpec,
@@ -2165,7 +2179,7 @@ class DeltaNodeRenderer(ABCNodeRenderer):
     ) -> None:
         self._show_delta_child_value(value, hint)
 
-    def _show_attribute(
+    def show_attribute(
         self,
         value: Any,
         hint: InventoryHintSpec,

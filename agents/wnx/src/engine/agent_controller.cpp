@@ -230,6 +230,9 @@ std::optional<uint32_t> StartAgentController(const fs::path &service) {
             "Checkmk rule set \"Windows agent controller\" for this host.");
         return false;
     }
+    auto killed_count = wtools::KillProcessesByDir(cfg::GetUserBinDir());
+    XLOG::d.i("killed {} processes in '{}'", killed_count,
+              wtools::ToUtf8(cfg::GetUserBinDir()));
     auto controller_name = CopyControllerToBin(service);
     if (controller_name.empty()) {
         XLOG::l("can't copy controller");

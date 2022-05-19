@@ -4,7 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Mapping, NamedTuple, Optional, Sequence, Tuple, Union
+
+from typing import Sequence, Union
 
 import pytest
 
@@ -14,23 +15,10 @@ from cmk.utils.type_defs import CheckPluginName, SectionName
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+from cmk.base.plugins.agent_based.oracle_processes import OracleProcess, SectionOracleProcesses
+from cmk.base.plugins.agent_based.utils.oracle import OraErrors
 
 pytestmark = pytest.mark.checks
-
-
-class OracleProcess(NamedTuple):
-    name: str
-    processes_count: int
-    processes_limit: int
-
-
-ErrorProcesses = Mapping[str, Optional[Tuple[int, str]]]
-OracleProcesses = Mapping[str, OracleProcess]
-
-
-class SectionOracleProcesses(NamedTuple):
-    error_processes: ErrorProcesses
-    oracle_processes: OracleProcesses
 
 
 @pytest.mark.parametrize(
@@ -48,14 +36,6 @@ class SectionOracleProcesses(NamedTuple):
             ),
             id="Parsing one valid Oracle process from the input",
         ),
-        pytest.param(
-            [["Error", "Message:"]],
-            SectionOracleProcesses(
-                error_processes={"Error": (3, 'Found error in agent output "Message:"')},
-                oracle_processes={},
-            ),
-            id="Parsing one error Oracle process from the input",
-        ),
     ],
 )
 def test_parse_oracle_processes(
@@ -65,6 +45,35 @@ def test_parse_oracle_processes(
 ) -> None:
     check = fix_register.agent_sections[SectionName("oracle_processes")]
     assert check.parse_function(info) == parse_result
+
+
+@pytest.mark.parametrize(
+    "info, parse_result",
+    [
+        pytest.param(
+            [["Error", "Message:"]],
+            SectionOracleProcesses(
+                error_processes={"Error": OraErrors(["Error", "Message:"])},
+                oracle_processes={},
+            ),
+            id="Parsing one error Oracle process from the input",
+        ),
+    ],
+)
+def test_parse_error_oracle_processes(
+    info: StringTable,
+    parse_result: SectionOracleProcesses,
+    fix_register: FixRegister,
+) -> None:
+    check = fix_register.agent_sections[SectionName("oracle_processes")]
+    process_name = info[0][0]
+
+    parse_value = check.parse_function(info).error_processes[process_name]
+    error_parse_result = parse_result.error_processes[process_name]
+    assert parse_value.has_error == error_parse_result.has_error
+    assert parse_value.ignore == error_parse_result.ignore
+    assert parse_value.error_text == error_parse_result.error_text
+    assert parse_value.error_severity == error_parse_result.error_severity
 
 
 @pytest.mark.parametrize(
@@ -86,7 +95,7 @@ def test_parse_oracle_processes(
         ),
         pytest.param(
             SectionOracleProcesses(
-                error_processes={"Error": (3, 'Found error in agent output "Message:"')},
+                error_processes={"Error": OraErrors(["Error", "Message:"])},
                 oracle_processes={},
             ),
             [Service(item="Error")],
@@ -141,7 +150,7 @@ def test_discover_oracle_processes(
             [
                 Result(
                     state=State.WARN,
-                    summary="1152 of 1500 processes are used: 76.8% (warn/crit at 70.0%/90.0%)",
+                    summary="1152 of 1500 processes are used: 76.80% (warn/crit at 70.00%/90.00%)",
                 ),
                 Metric(name="processes", value=1152, levels=(1050, 1350)),
             ],
@@ -160,7 +169,7 @@ def test_discover_oracle_processes(
             [
                 Result(
                     state=State.CRIT,
-                    summary="1450 of 1500 processes are used: 96.67% (warn/crit at 70.0%/90.0%)",
+                    summary="1450 of 1500 processes are used: 96.67% (warn/crit at 70.00%/90.00%)",
                 ),
                 Metric(name="processes", value=1450, levels=(1050, 1350)),
             ],
@@ -168,7 +177,7 @@ def test_discover_oracle_processes(
         ),
         pytest.param(
             SectionOracleProcesses(
-                error_processes={"Error": (3, 'Found error in agent output "Message:"')},
+                error_processes={"Error": OraErrors(["Error", "Message:"])},
                 oracle_processes={},
             ),
             "Error",

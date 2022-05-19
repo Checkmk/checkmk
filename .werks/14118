@@ -1,0 +1,16 @@
+Title: Notification spooler: Fix execution of notifications on sites only forwarding
+Class: fix
+Compatible: compat
+Component: notifications
+Date: 1652947508
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p1
+
+On sites which had the option "Forward to remote site by notification spooler"
+configured, the answer of the target site also lead to execution of of the
+notification at this site, leading to duplicated notifications.
+
+Furthermore, the result of the execution was not logged to history.

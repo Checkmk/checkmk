@@ -7,7 +7,7 @@
 import os
 import subprocess
 from logging import Logger
-from typing import Dict, List, NewType, Optional
+from typing import Dict, List, NewType, Optional, TypedDict
 
 import cmk.utils.defines
 from cmk.utils.exceptions import MKGeneralException
@@ -22,7 +22,15 @@ MAX_PLUGIN_OUTPUT_LENGTH = 1000
 # 2 -> permanent issue
 NotificationResultCode = NewType("NotificationResultCode", int)
 NotificationPluginName = NewType("NotificationPluginName", str)
-NotificationContext = NewType("NotificationContext", Dict)
+NotificationContext = NewType("NotificationContext", Dict[str, str])
+
+
+class NotificationResult(TypedDict, total=False):
+    plugin: NotificationPluginName
+    status: NotificationResultCode
+    output: List[str]
+    forward: bool
+    context: NotificationContext
 
 
 def _state_for(exit_code: NotificationResultCode) -> str:

@@ -208,7 +208,7 @@ class Table:
 
     def row(
         self,
-        css: Optional["CSSSpec"] = None,
+        css: "CSSSpec" = None,
         state: int = 0,
         collect_headers: bool = True,
         fixed: bool = False,
@@ -225,7 +225,7 @@ class Table:
         self,
         title: HTMLContent = "",
         text: HTMLContent = "",
-        css: Optional["CSSSpec"] = None,
+        css: "CSSSpec" = None,
         help_txt: Optional[str] = None,
         colspan: Optional[int] = None,
         sortable: bool = True,
@@ -246,7 +246,7 @@ class Table:
 
     def _add_row(
         self,
-        css: Optional["CSSSpec"] = None,
+        css: "CSSSpec" = None,
         state: int = 0,
         collect_headers: bool = True,
         fixed: bool = False,
@@ -280,7 +280,7 @@ class Table:
         self,
         title: HTMLContent = "",
         text: HTMLContent = "",
-        css: Optional["CSSSpec"] = None,
+        css: "CSSSpec" = None,
         help_txt: Optional[str] = None,
         colspan: Optional[int] = None,
         sortable: bool = True,

@@ -28,12 +28,15 @@ from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildc
 
 
 def parse_netapp_api_qtree_quota(info):
-    return netapp_api_parse_lines(info, custom_keys=["quota", "quota-users"])
+    # The same netapp quota could exist of both type "tree" and "user",
+    # which would mean the "tree" quotas would be overwritten.
+    return netapp_api_parse_lines((l for l in info if "quota-type tree" in l),
+                                  custom_keys=["quota", "quota-users"])
 
 
 def inventory_netapp_api_qtree_quota(parsed):
     for qtree, attrs in parsed.items():
-        if attrs.get("quota-type") == "tree" and attrs.get("disk-limit").isdigit():
+        if attrs.get("disk-limit").isdigit():
             yield qtree, {}
 
 

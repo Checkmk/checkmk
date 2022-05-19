@@ -6,7 +6,7 @@
 """Mode for trying out the logwatch patterns"""
 
 import re
-from typing import Iterable, List, Optional, Type
+from typing import Iterable, Optional, Type
 
 from cmk.utils.type_defs import CheckPluginNameStr, HostName, Item, ServiceName
 
@@ -285,7 +285,7 @@ class ModePatternEditor(WatoMode):
                     table.cell(_("Match"))
                     html.icon("rule%s" % match_img, match_title)
 
-                    cls: List[str] = []
+                    cls: list[Optional[str]] = []
                     if match_class == "match first":
                         cls = ["state%d" % logwatch.level_state(state), "fillbackground"]
                     table.cell(

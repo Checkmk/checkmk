@@ -210,11 +210,11 @@ def _declare_inv_column(raw_path: SDRawPath, raw_hint: InventoryHintSpec) -> Non
 
     hint = _make_hint_from_raw(raw_path, raw_hint)
 
-    title = inv_titleinfo_long(raw_path)
-
     # Declare column painter
     painter_spec = {
-        "title": raw_path == "." and _("Inventory Tree") or (_("Inventory") + ": " + title),
+        "title": (
+            raw_path == "." and _("Inventory Tree") or (_("Inventory") + ": " + hint.long_title)
+        ),
         "columns": ["host_inventory", "host_structured_status"],
         "options": ["show_internal_tree_paths"],
         "params": Dictionary(
@@ -250,7 +250,7 @@ def _declare_inv_column(raw_path: SDRawPath, raw_hint: InventoryHintSpec) -> Non
             name,
             {
                 "_inv_path": raw_path,
-                "title": _("Inventory") + ": " + title,
+                "title": _("Inventory") + ": " + hint.long_title,
                 "columns": ["host_inventory", "host_structured_status"],
                 "load_inv": True,
                 "cmp": lambda self, a, b: _cmp_inventory_node(a, b, self._spec["_inv_path"]),
@@ -262,7 +262,7 @@ def _declare_inv_column(raw_path: SDRawPath, raw_hint: InventoryHintSpec) -> Non
             filter_registry.register(
                 FilterInvText(
                     ident=name,
-                    title=title,
+                    title=hint.long_title,
                     inv_path=raw_path,
                     is_show_more=hint.is_show_more,
                 )
@@ -271,7 +271,7 @@ def _declare_inv_column(raw_path: SDRawPath, raw_hint: InventoryHintSpec) -> Non
             filter_registry.register(
                 FilterInvBool(
                     ident=name,
-                    title=title,
+                    title=hint.long_title,
                     inv_path=raw_path,
                     is_show_more=hint.is_show_more,
                 )
@@ -281,7 +281,7 @@ def _declare_inv_column(raw_path: SDRawPath, raw_hint: InventoryHintSpec) -> Non
             filter_registry.register(
                 FilterInvFloat(
                     ident=name,
-                    title=title,
+                    title=hint.long_title,
                     inv_path=raw_path,
                     unit=filter_info.get("unit"),
                     scale=filter_info.get("scale", 1.0),
@@ -733,12 +733,19 @@ def _make_title_function(raw_hint: InventoryHintSpec) -> Callable[[SDRawPath], s
     return lambda raw_path: title
 
 
+def _make_long_title(title: str, parent_path: SDPath) -> str:
+    if parent_path:
+        return NodeDisplayHint.make(parent_path).title + " ➤ " + title
+    return title
+
+
 @dataclass(frozen=True)
 class NodeDisplayHint:
     raw_path: str
     icon: Optional[str]
     title: str
     short_title: str
+    long_title: str
 
     @classmethod
     def make(cls, path: SDPath) -> NodeDisplayHint:
@@ -749,6 +756,7 @@ class NodeDisplayHint:
             icon=raw_hint.get("icon"),
             title=title,
             short_title=raw_hint.get("short", title),
+            long_title=_make_long_title(title, path[:-1]),
         )
 
     @staticmethod
@@ -768,12 +776,14 @@ class NodeDisplayHint:
 
     @classmethod
     def make_from_hint(cls, raw_path: SDRawPath, raw_hint: InventoryHintSpec) -> NodeDisplayHint:
+        parsed_path, _attribute_keys = inventory.parse_tree_path(raw_path)
         title = _make_title_function(raw_hint)(raw_path)
         return cls(
             raw_path=raw_path,
             icon=raw_hint.get("icon"),
             title=title,
             short_title=raw_hint.get("short", title),
+            long_title=_make_long_title(title, parsed_path[:-1]),
         )
 
 
@@ -790,27 +800,33 @@ class TableDisplayHint:
     is_show_more: bool
     view_name: Optional[str]
     short_title: str
+    long_title: str
 
     @classmethod
     def make(cls, path: SDPath) -> TableDisplayHint:
         raw_path = f".{_get_raw_path(path)}:" if path else "."
         raw_hint = inventory_displayhints.get(raw_path, {})
+        title = _make_title_function(raw_hint)(raw_path)
         return cls(
             raw_path=raw_path,
             key_order=raw_hint.get("keyorder", []),
             is_show_more=raw_hint.get("is_show_more", True),
             view_name=raw_hint.get("view"),
-            short_title=raw_hint.get("short", _make_title_function(raw_hint)(raw_path)),
+            short_title=raw_hint.get("short", title),
+            long_title=_make_long_title(title, path[:-1]),
         )
 
     @classmethod
     def make_from_hint(cls, raw_path: SDRawPath, raw_hint: InventoryHintSpec) -> TableDisplayHint:
+        parsed_path, _attribute_keys = inventory.parse_tree_path(raw_path)
+        title = _make_title_function(raw_hint)(raw_path)
         return cls(
             raw_path=raw_path,
             key_order=raw_hint.get("keyorder", []),
             is_show_more=raw_hint.get("is_show_more", True),
             view_name=raw_hint.get("view"),
-            short_title=raw_hint.get("short", _make_title_function(raw_hint)(raw_path)),
+            short_title=raw_hint.get("short", title),
+            long_title=_make_long_title(title, parsed_path[:-1]),
         )
 
     def make_titles(
@@ -889,6 +905,7 @@ class AttributeDisplayHint:
     raw_path: str
     title: str
     short_title: str
+    long_title: str
     data_type: str
     paint_function: PaintFunction
     is_show_more: bool
@@ -903,6 +920,7 @@ class AttributeDisplayHint:
             raw_path=raw_path,
             title=title,
             short_title=raw_hint.get("short", title),
+            long_title=_make_long_title(title, path),
             data_type=data_type,
             paint_function=paint_function,
             is_show_more=raw_hint.get("is_show_more", True),
@@ -912,12 +930,14 @@ class AttributeDisplayHint:
     def make_from_hint(
         cls, raw_path: SDRawPath, raw_hint: InventoryHintSpec
     ) -> AttributeDisplayHint:
+        parsed_path, _attribute_keys = inventory.parse_tree_path(raw_path)
         data_type, paint_function = _get_paint_function(raw_hint)
         title = _make_title_function(raw_hint)(raw_path)
         return cls(
             raw_path=raw_path,
             title=title,
             short_title=raw_hint.get("short", title),
+            long_title=_make_long_title(title, parsed_path),
             data_type=data_type,
             paint_function=paint_function,
             is_show_more=raw_hint.get("is_show_more", True),
@@ -979,45 +999,14 @@ def _find_display_hint_id(invpath: SDRawPath) -> Optional[str]:
     return None
 
 
-def _inv_titleinfo(raw_path: SDRawPath) -> str:
-    hint = (
-        inventory_displayhints.get(hint_id, {})
-        if (hint_id := _find_display_hint_id(raw_path))
-        else {}
-    )
-
-    if "title" in hint:
-        title = hint["title"]
-        if hasattr(title, "__call__"):
-            parsed_path, _attribute_keys = inventory.parse_tree_path(raw_path)
-            title = title(parsed_path[-1] or "")
-    else:
-        title = (
-            raw_path.rstrip(".").rstrip(":").split(".")[-1].split(":")[-1].replace("_", " ").title()
-        )
-    return title
-
-
-def inv_titleinfo_long(invpath: SDRawPath) -> str:
+def inv_titleinfo_long(raw_path: SDRawPath) -> str:
     """Return the titles of the last two path components of the node, e.g. "BIOS / Vendor"."""
-    last_title = _inv_titleinfo(invpath)
-    parent = _get_parent_from_invpath(invpath)
-    if parent:
-        parent_title = _inv_titleinfo(parent)
-        return parent_title + " ➤ " + last_title
-    return last_title
+    parsed_path, attribute_keys = inventory.parse_tree_path(raw_path)
 
+    if attribute_keys:
+        return AttributeDisplayHint.make(parsed_path, attribute_keys[0]).long_title
 
-def _get_parent_from_invpath(invpath: SDRawPath) -> Optional[SDRawPath]:
-    """Gets the parent path by dropping the last component"""
-    if invpath == ".":
-        return None  # No parent
-
-    if invpath[-1] in ".:":  # drop trailing type specifyer
-        invpath = invpath[:-1]
-
-    last_sep = max(invpath.rfind(":"), invpath.rfind("."))
-    return invpath[: last_sep + 1]
+    return NodeDisplayHint.make(parsed_path).long_title
 
 
 def declare_inventory_columns() -> None:

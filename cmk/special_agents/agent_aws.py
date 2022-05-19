@@ -5234,8 +5234,16 @@ def parse_arguments(argv):
         action="store_true",
         help="Execute all sections, do not rely on cached data. Cached data will not be overwritten.",
     )
-    parser.add_argument("--access-key-id", help="The access key ID for your AWS account")
-    parser.add_argument("--secret-access-key", help="The secret access key for your AWS account.")
+    parser.add_argument(
+        "--access-key-id",
+        required=True,
+        help="The access key ID for your AWS account",
+    )
+    parser.add_argument(
+        "--secret-access-key",
+        required=True,
+        help="The secret access key for your AWS account.",
+    )
     parser.add_argument("--proxy-host", help="The address of the proxy server")
     parser.add_argument("--proxy-port", help="The port of the proxy server")
     parser.add_argument("--proxy-user", help="The username for authentication of the proxy server")
@@ -5422,36 +5430,24 @@ def _proxy_address(
     return f"{authentication}{address}"
 
 
-def _get_credentials(args: argparse.Namespace, stdin_args: Mapping[str, str]) -> Tuple[str, str]:
-    access_key_id = stdin_args.get("access_key_id") or args.access_key_id
-    secret_access_key = stdin_args.get("secret_access_key") or args.secret_access_key
-
-    if access_key_id and secret_access_key:
-        return access_key_id, secret_access_key
-
-    raise AWSAccessCredentialsError("Access credentials not set properly")
-
-
 class AWSAccessCredentialsError(Exception):
     pass
 
 
-def _get_proxy(args: argparse.Namespace, stdin_args: Mapping[str, str]) -> botocore.config.Config:
-
-    if not args.proxy_host:
-        return None
-
-    proxy_user = stdin_args.get("proxy_user") or args.proxy_user
-    proxy_password = stdin_args.get("proxy_password") or args.proxy_password
-    return botocore.config.Config(
-        proxies={
-            "https": _proxy_address(
-                args.proxy_host,
-                args.proxy_port,
-                proxy_user,
-                proxy_password,
-            )
-        }
+def _get_proxy(args: argparse.Namespace) -> Optional[botocore.config.Config]:
+    return (
+        botocore.config.Config(
+            proxies={
+                "https": _proxy_address(
+                    args.proxy_host,
+                    args.proxy_port,
+                    args.proxy_user,
+                    args.proxy_password,
+                )
+            }
+        )
+        if args.proxy_host
+        else None
     )
 
 
@@ -5502,22 +5498,10 @@ def main(sys_argv=None):
         sys_argv = sys.argv[1:]
 
     args = parse_arguments(sys_argv)
-    # secrets can be passed in as a command line argument for testing,
-    # BUT the standard method is to pass them via stdin so that they
-    # are not accessible from outside, e.g. visible on the ps output
-
-    stdin_args = json.loads(sys.stdin.read() or "{}")
-
     _setup_logging(args.debug, args.verbose)
 
-    try:
-        access_key_id, secret_access_key = _get_credentials(args, stdin_args)
-    except AWSAccessCredentialsError as e:
-        logging.error(e)
-        return 1
-
     hostname = args.hostname
-    proxy_config = _get_proxy(args, stdin_args)
+    proxy_config = _get_proxy(args)
 
     aws_config = _configure_aws(args, sys_argv)
 
@@ -5551,10 +5535,18 @@ def main(sys_argv=None):
             try:
                 if args.assume_role:
                     session = _sts_assume_role(
-                        access_key_id, secret_access_key, args.role_arn, args.external_id, region
+                        args.access_key_id,
+                        args.secret_access_key,
+                        args.role_arn,
+                        args.external_id,
+                        region,
                     )
                 else:
-                    session = _create_session(access_key_id, secret_access_key, region)
+                    session = _create_session(
+                        args.access_key_id,
+                        args.secret_access_key,
+                        region,
+                    )
 
                 sections = aws_sections(hostname, session, debug=args.debug, config=proxy_config)
                 sections.init_sections(

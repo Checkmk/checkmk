@@ -9,7 +9,7 @@ Cares about the page state rendering. Each page can produce a page state that is
 top right of the page.
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Optional, Union
 
 from cmk.gui.htmllib.html import html
@@ -21,7 +21,7 @@ from cmk.gui.utils.html import HTML
 class PageState:
     text: Union[str, HTML]
     icon_name: Optional[str] = None
-    css_classes: CSSSpec = None
+    css_classes: CSSSpec = field(default_factory=list)
     url: Optional[str] = None
     tooltip_text: str = ""
 

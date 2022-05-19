@@ -2711,7 +2711,7 @@ class DropdownChoice(ValueSpec[DropdownChoiceModel]):
             onchange=self._on_change,
             ordered=self._sorted,
             label=None,
-            class_=None,
+            class_=[],
             size=1,
             read_only=self._read_only,
             **self._html_attrs,

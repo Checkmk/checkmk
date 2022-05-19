@@ -208,7 +208,7 @@ class Table:
 
     def row(
         self,
-        css: "CSSSpec" = None,
+        css: "Optional[CSSSpec]" = None,
         state: int = 0,
         collect_headers: bool = True,
         fixed: bool = False,
@@ -218,14 +218,14 @@ class Table:
     ) -> None:
         self._finish_previous()
         self.next_func = lambda: self._add_row(
-            css, state, collect_headers, fixed, id_, onmouseover, onmouseout
+            [] if css is None else css, state, collect_headers, fixed, id_, onmouseover, onmouseout
         )
 
     def cell(
         self,
         title: HTMLContent = "",
         text: HTMLContent = "",
-        css: "CSSSpec" = None,
+        css: "Optional[CSSSpec]" = None,
         help_txt: Optional[str] = None,
         colspan: Optional[int] = None,
         sortable: bool = True,
@@ -234,7 +234,7 @@ class Table:
         self.next_func = lambda: self._add_cell(
             title=title,
             text=text,
-            css=css,
+            css=[] if css is None else css,
             help_txt=help_txt,
             colspan=colspan,
             sortable=sortable,
@@ -246,13 +246,13 @@ class Table:
 
     def _add_row(
         self,
-        css: "CSSSpec" = None,
-        state: int = 0,
-        collect_headers: bool = True,
-        fixed: bool = False,
-        id_: Optional[str] = None,
-        onmouseover: Optional[str] = None,
-        onmouseout: Optional[str] = None,
+        css: "CSSSpec",
+        state: int,
+        collect_headers: bool,
+        fixed: bool,
+        id_: Optional[str],
+        onmouseover: Optional[str],
+        onmouseout: Optional[str],
     ) -> None:
         if self.next_header:
             self.rows.append(
@@ -278,12 +278,12 @@ class Table:
 
     def _add_cell(
         self,
-        title: HTMLContent = "",
-        text: HTMLContent = "",
-        css: "CSSSpec" = None,
-        help_txt: Optional[str] = None,
-        colspan: Optional[int] = None,
-        sortable: bool = True,
+        title: HTMLContent,
+        text: HTMLContent,
+        css: "CSSSpec",
+        help_txt: Optional[str],
+        colspan: Optional[int],
+        sortable: bool,
     ):
         if isinstance(text, HTML):
             content = text

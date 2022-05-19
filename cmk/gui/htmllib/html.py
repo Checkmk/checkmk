@@ -418,7 +418,7 @@ class HTMLGenerator(HTMLWriter):
         value: HTMLTagValue,
         id_: Optional[str] = None,
         add_var: bool = False,
-        class_: CSSSpec = None,
+        class_: Optional[CSSSpec] = None,
     ) -> None:
         self.write_html(
             self.render_hidden_field(var=var, value=value, id_=id_, add_var=add_var, class_=class_)
@@ -430,7 +430,7 @@ class HTMLGenerator(HTMLWriter):
         value: HTMLTagValue,
         id_: Optional[str] = None,
         add_var: bool = False,
-        class_: CSSSpec = None,
+        class_: Optional[CSSSpec] = None,
     ) -> HTML:
         if value is None:
             return HTML("")
@@ -521,7 +521,7 @@ class HTMLGenerator(HTMLWriter):
         style: Optional[str] = None,
         title: Optional[str] = None,
         disabled: Optional[str] = None,
-        class_: CSSSpec = None,
+        class_: Optional[CSSSpec] = None,
     ) -> None:
         if add_transid:
             href += "&_transid=%s" % transactions.get()
@@ -565,7 +565,7 @@ class HTMLGenerator(HTMLWriter):
         cssclass: Optional[str] = None,
         title: str = "",
         disabled: bool = False,
-        class_: CSSSpec = None,
+        class_: Optional[CSSSpec] = None,
     ) -> None:
         if not isinstance(class_, list):
             class_ = [class_]
@@ -724,7 +724,7 @@ class HTMLGenerator(HTMLWriter):
         self,
         enabled: bool,
         help_txt: str,
-        class_: CSSSpec = None,
+        class_: Optional[CSSSpec] = None,
         href: str = "javascript:void(0)",
         **attrs: HTMLTagAttributeValue,
     ) -> None:
@@ -840,7 +840,7 @@ class HTMLGenerator(HTMLWriter):
         deflt: ChoiceId = "",
         ordered: bool = False,
         label: Optional[str] = None,
-        class_: CSSSpec = None,
+        class_: Optional[CSSSpec] = None,
         size: int = 1,
         read_only: bool = False,
         **attrs: HTMLTagAttributeValue,
@@ -1043,11 +1043,15 @@ class HTMLGenerator(HTMLWriter):
         title: Optional[str] = None,
         id_: Optional[str] = None,
         cssclass: Optional[str] = None,
-        class_: CSSSpec = None,
+        class_: Optional[CSSSpec] = None,
     ) -> None:
         self.write_html(
             HTMLGenerator.render_icon(
-                icon=icon, title=title, id_=id_, cssclass=cssclass, class_=class_
+                icon=icon,
+                title=title,
+                id_=id_,
+                cssclass=cssclass,
+                class_=[] if class_ is None else class_,
             )
         )
 
@@ -1060,7 +1064,7 @@ class HTMLGenerator(HTMLWriter):
         title: Optional[str] = None,
         id_: Optional[str] = None,
         cssclass: Optional[str] = None,
-        class_: CSSSpec = None,
+        class_: Optional[CSSSpec] = None,
     ) -> HTML:
         classes = ["icon", cssclass]
         if isinstance(class_, list):
@@ -1125,7 +1129,7 @@ class HTMLGenerator(HTMLWriter):
         style: Optional[str] = None,
         target: Optional[str] = None,
         cssclass: Optional[str] = None,
-        class_: CSSSpec = None,
+        class_: Optional[CSSSpec] = None,
     ) -> HTML:
         # Same API as other elements: class_ can be a list or string/None
         classes = [cssclass]
@@ -1159,7 +1163,7 @@ class HTMLGenerator(HTMLWriter):
         style: Optional[str] = None,
         target: Optional[str] = None,
         cssclass: Optional[str] = None,
-        class_: CSSSpec = None,
+        class_: Optional[CSSSpec] = None,
     ) -> None:
         self.write_html(
             HTMLGenerator.render_icon_button(
@@ -1198,7 +1202,7 @@ class HTMLGenerator(HTMLWriter):
         method: PopupMethod,
         data: Any = None,
         style: Optional[str] = None,
-        cssclass: CSSSpec = None,
+        cssclass: Optional[CSSSpec] = None,
         onclose: Optional[str] = None,
         onopen: Optional[str] = None,
         resizable: bool = False,
@@ -1228,7 +1232,7 @@ class HTMLGenerator(HTMLWriter):
         method: PopupMethod,
         data: Any = None,
         style: Optional[str] = None,
-        cssclass: CSSSpec = None,
+        cssclass: Optional[CSSSpec] = None,
         onclose: Optional[str] = None,
         onopen: Optional[str] = None,
         resizable: bool = False,

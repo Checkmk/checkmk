@@ -93,6 +93,12 @@ TEST_F(WmiWrapperFixture, Enumerating) {
     EXPECT_EQ(header[1], L"CommandLine");
 }
 
+TEST_F(WmiWrapperFixture, QueryTableTimeout) {
+    auto [result, status] = wmi.queryTable({}, L"Win32_Process", L",", 0);
+    EXPECT_EQ(status, WmiStatus::timeout);
+    EXPECT_TRUE(result.empty());
+}
+
 TEST_F(WmiWrapperFixture, TablePostProcess) {
     auto [result, status] = wmi.queryTable(
         {}, L"Win32_Process", L",", cma::cfg::groups::global.getWmiTimeout());

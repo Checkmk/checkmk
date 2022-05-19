@@ -61,6 +61,9 @@ std::unordered_map<std::string, std::string> GetComputerSystemInfo(
         wmi.queryTable({}, L"Win32_ComputerSystem", separator,
                        cfg::groups::global.getWmiTimeout());
     auto rows = tools::SplitString(table, L"\n");
+    if (rows.size() < 2) {
+        return {};
+    }
     auto all_names = tools::SplitString(rows[0], separator);
     // case when last value is empty
     if (rows[1].back() == separator[0]) {
@@ -92,6 +95,11 @@ std::string PerfCpuLoad::makeBody() {
         "Name", "NumberOfLogicalProcessors", "NumberOfProcessors"};
     auto sep = wtools::ConvertToUTF16(fmt::format("{}", separator()));
     auto values = GetComputerSystemInfo(names, sep);
+    if (values.empty()) {
+        values = computer_info_cache_;
+    } else {
+        computer_info_cache_ = values;
+    }
     auto processor_queue_length = ReadSingleCounter(kProcessorQueueLength);
     auto perf_time = wtools::QueryPerformanceCo();
     auto perf_freq = wtools::QueryPerformanceFreq();
@@ -101,16 +109,18 @@ std::string PerfCpuLoad::makeBody() {
         kSepChar);
     out += fmt::format("{0}{1}{0}{2}{0}{3}{0}OK\n", separator(),
                        processor_queue_length, perf_time, perf_freq);
-    out += section::MakeSubSectionHeader(kSubSectionComputerSystem);
-    for (const auto &n : names) {
-        out += n + separator();
-    }
-    out += "WMIStatus\n";
+    if (!values.empty()) {
+        out += section::MakeSubSectionHeader(kSubSectionComputerSystem);
+        for (const auto &n : names) {
+            out += n + separator();
+        }
+        out += "WMIStatus\n";
 
-    for (const auto &n : names) {
-        out += (values.contains(n) ? values.at(n) : "") + separator();
+        for (const auto &n : names) {
+            out += (values.contains(n) ? values.at(n) : "") + separator();
+        }
+        out += "OK\n";
     }
-    out += "OK\n";
 
     return out;
 }

@@ -1,0 +1,23 @@
+Title: Fix section parsing with different separators
+Class: fix
+Compatible: compat
+Component: core
+Date: 1652969997
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b10
+
+In checkmk it's possible to transport a single section with different separators:
+
+<code>
+&lt;&lt;&lt;section:sep(44)&gt;&gt;&gt;
+a,1
+&lt;&lt;&lt;section:sep(124)&gt;&gt;&gt;
+b|2
+&lt;&lt;&lt;section:sep(44)&gt;&gt;&gt;
+c,3
+</code>
+
+Up until this werk, the ordering of the lines where not preserved, the check
+function would have received them as a,1 c,3 b,2

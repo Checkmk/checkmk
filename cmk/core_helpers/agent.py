@@ -16,6 +16,7 @@ from typing import (
     List,
     Mapping,
     MutableMapping,
+    NamedTuple,
     Optional,
     Sequence,
     Tuple,
@@ -122,8 +123,13 @@ class AgentFetcher(Fetcher[AgentRawData]):
     pass
 
 
-MutableSection = MutableMapping[SectionMarker, List[AgentRawData]]
-ImmutableSection = Mapping[SectionMarker, Sequence[AgentRawData]]
+class SectionWithHeader(NamedTuple):
+    header: SectionMarker
+    section: List[AgentRawData]
+
+
+MutableSection = List[SectionWithHeader]
+ImmutableSection = Sequence[SectionWithHeader]
 
 
 class ParserState(abc.ABC):
@@ -222,7 +228,8 @@ class ParserState(abc.ABC):
             type(self).__name__,
             HostSectionParser.__name__,
         )
-        self.sections.setdefault(section_header, [])
+        if not self.sections or self.sections[-1].header != section_header:
+            self.sections.append(SectionWithHeader(section_header, []))
         return HostSectionParser(
             self.hostname,
             self.sections,
@@ -243,7 +250,7 @@ class ParserState(abc.ABC):
             type(self).__name__,
             PiggybackParser.__name__,
         )
-        self.piggyback_sections.setdefault(header, {})
+        self.piggyback_sections.setdefault(header, [])
         return PiggybackParser(
             self.hostname,
             self.sections,
@@ -266,7 +273,11 @@ class ParserState(abc.ABC):
             type(self).__name__,
             PiggybackSectionParser.__name__,
         )
-        self.piggyback_sections[current_host].setdefault(section_header, [])
+        if (
+            not self.piggyback_sections[current_host]
+            or self.piggyback_sections[current_host][-1].header != section_header
+        ):
+            self.piggyback_sections[current_host].append(SectionWithHeader(section_header, []))
         return PiggybackSectionParser(
             self.hostname,
             self.sections,
@@ -426,7 +437,8 @@ class PiggybackSectionParser(ParserState):
         self.current_section: Final = current_section
 
     def do_action(self, line: bytes) -> "ParserState":
-        self.piggyback_sections[self.current_host][self.current_section].append(AgentRawData(line))
+        assert self.piggyback_sections[self.current_host][-1].header == self.current_section
+        self.piggyback_sections[self.current_host][-1].section.append(AgentRawData(line))
         return self
 
     def on_piggyback_header(self, line: bytes) -> "ParserState":
@@ -527,7 +539,8 @@ class HostSectionParser(ParserState):
         if not self.current_section.nostrip:
             line = line.strip()
 
-        self.sections[self.current_section].append(AgentRawData(line))
+        assert self.sections[-1].header == self.current_section
+        self.sections[-1].section.append(AgentRawData(line))
         return self
 
     def on_piggyback_header(self, line: bytes) -> "ParserState":
@@ -592,7 +605,7 @@ class AgentParser(Parser[AgentRawData, AgentRawDataSection]):
         raw_sections, piggyback_sections = self._parse_host_section(raw_data)
         section_info = {
             header.name: header
-            for header in raw_sections
+            for header, _ in raw_sections
             if selection is NO_SELECTION or header.name in selection
         }
 
@@ -600,7 +613,7 @@ class AgentParser(Parser[AgentRawData, AgentRawDataSection]):
             sections: ImmutableSection,
         ) -> MutableMapping[SectionName, List[AgentRawDataSection]]:
             out: MutableMapping[SectionName, List[AgentRawDataSection]] = {}
-            for header, content in sections.items():
+            for header, content in sections:
                 out.setdefault(header.name, []).extend(header.parse_line(line) for line in content)
             return out
 
@@ -611,7 +624,7 @@ class AgentParser(Parser[AgentRawData, AgentRawDataSection]):
             cache_for: int,
             selection: SectionNameCollection,
         ) -> Iterator[bytes]:
-            for header, content in sections.items():
+            for header, content in sections:
                 if not (selection is NO_SELECTION or header.name in selection):
                     continue
 
@@ -679,7 +692,7 @@ class AgentParser(Parser[AgentRawData, AgentRawDataSection]):
         """Split agent output in chunks, splits lines by whitespaces."""
         parser: ParserState = NOOPParser(
             self.hostname,
-            {},
+            [],
             {},
             translation=self.translation,
             encoding_fallback=self.encoding_fallback,

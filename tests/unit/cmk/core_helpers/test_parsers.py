@@ -386,11 +386,13 @@ class TestAgentParser:
                 b"<<<a_section:cached(1000,900)>>>",
                 b"first line",
                 b"second line",
-                b"third line",
-                b"forth line",
                 b"<<<another_section:cached(1000,900)>>>",
                 b"a line",
                 b"b line",
+                b"<<<a_section:cached(1000,900)>>>",
+                b"third line",
+                b"forth line",
+                b"<<<another_section:cached(1000,900)>>>",
                 b"c line",
                 b"d line",
             ],
@@ -545,6 +547,67 @@ class TestAgentParser:
                 b"3rd line",
                 b"4th line",
             ]
+        }
+        assert store.load() == {}
+
+    def test_section_lines_are_correctly_ordered_with_different_separators(self, parser, store):
+        raw_data = AgentRawData(
+            b"\n".join(
+                (
+                    b"<<<section:sep(124)>>>",
+                    b"a|1",
+                    b"<<<section:sep(44)>>>",
+                    b"b,2",
+                    b"<<<section:sep(124)>>>",
+                    b"c|3",
+                )
+            )
+        )
+
+        ahs = parser.parse(raw_data, selection=NO_SELECTION)
+        assert ahs.sections == {
+            SectionName("section"): [
+                ["a", "1"],
+                ["b", "2"],
+                ["c", "3"],
+            ],
+        }
+        assert ahs.cache_info == {}
+        assert ahs.piggybacked_raw_data == {}
+        assert store.load() == {}
+
+    def test_section_lines_are_correctly_ordered_with_different_separators_and_piggyback(
+        self, parser, store, monkeypatch
+    ):
+        monkeypatch.setattr(time, "time", lambda c=itertools.count(1000, 50): next(c))
+        monkeypatch.setattr(parser, "cache_piggybacked_data_for", 900)
+
+        raw_data = AgentRawData(
+            b"\n".join(
+                (
+                    b"<<<<piggy>>>>",
+                    b"<<<section:sep(124)>>>",
+                    b"a|1",
+                    b"<<<section:sep(44)>>>",
+                    b"b,2",
+                    b"<<<section:sep(124)>>>",
+                    b"c|3",
+                )
+            )
+        )
+
+        ahs = parser.parse(raw_data, selection=NO_SELECTION)
+        assert ahs.sections == {}
+        assert ahs.cache_info == {}
+        assert ahs.piggybacked_raw_data == {
+            "piggy": [
+                b"<<<section:cached(1000,900):sep(124)>>>",
+                b"a|1",
+                b"<<<section:cached(1000,900):sep(44)>>>",
+                b"b,2",
+                b"<<<section:cached(1000,900):sep(124)>>>",
+                b"c|3",
+            ],
         }
         assert store.load() == {}
 

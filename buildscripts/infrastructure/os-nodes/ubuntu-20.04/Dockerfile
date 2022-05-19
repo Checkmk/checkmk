@@ -27,6 +27,7 @@ RUN apt-get update \
     strace \
     sudo \
     vim \
+    python3-importlib-metadata \
     && pip3 install --upgrade setuptools \
     && pip3 install git+https://github.com/pypa/pipenv.git@v2020.6.2 \
     && curl -sL https://deb.nodesource.com/setup_12.x | bash - \

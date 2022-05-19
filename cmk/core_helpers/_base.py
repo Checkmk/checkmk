@@ -95,18 +95,9 @@ class Fetcher(Generic[TRawData], abc.ABC):
             return result.Error(exc)
 
     def _fetch(self, mode: Mode) -> TRawData:
-        self._logger.debug(
-            "[%s] Fetch with cache settings: %r",
-            self.__class__.__name__,
-            self.file_cache,
-        )
         raw_data = self.file_cache.read(mode)
         if raw_data is not None:
-            self._logger.log(VERBOSE, "[%s] Use cached data", self.__class__.__name__)
             return raw_data
-
-        if self.file_cache.simulation:
-            raise MKFetcherError("Got no data (Simulation mode enabled and no cached data present)")
 
         self._logger.log(VERBOSE, "[%s] Execute data source", self.__class__.__name__)
 

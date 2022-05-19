@@ -71,7 +71,7 @@ from typing import (
 
 import cmk.utils
 import cmk.utils.store as _store
-from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.exceptions import MKFetcherError, MKGeneralException
 from cmk.utils.log import VERBOSE
 from cmk.utils.type_defs import HostName, SectionName
 
@@ -382,6 +382,18 @@ class FileCache(Generic[TRawData], abc.ABC):
         return True
 
     def read(self, mode: Mode) -> Optional[TRawData]:
+        self._logger.debug("Read from cache: %r", self)
+        raw_data = self._read(mode)
+        if raw_data is not None:
+            self._logger.debug("Got %r bytes data from cache", len(raw_data))
+            return raw_data
+
+        if self.simulation:
+            raise MKFetcherError("Got no data (Simulation mode enabled and no cached data present)")
+
+        return raw_data
+
+    def _read(self, mode: Mode) -> Optional[TRawData]:
         if not self._do_cache(mode):
             return None
 
@@ -408,10 +420,7 @@ class FileCache(Generic[TRawData], abc.ABC):
             return None
 
         self._logger.log(VERBOSE, "Using data from cache file %s", path)
-        raw_data = self._from_cache_file(cache_file)
-        if raw_data is not None:
-            self._logger.debug("Got %r bytes data from cache", len(raw_data))
-        return raw_data
+        return self._from_cache_file(cache_file)
 
     def write(self, raw_data: TRawData, mode: Mode) -> None:
         if not self._do_cache(mode):

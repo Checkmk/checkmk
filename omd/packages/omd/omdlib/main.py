@@ -24,36 +24,37 @@
 # Boston, MA 02110-1301 USA.
 """The command line tool specific implementations of the omd command and main entry point"""
 
-import os
-import re
-import sys
 import abc
-import grp
-import pwd
-import tty
-import time
+import contextlib
 import errno
 import fcntl
-import shlex
+import grp
+import os
+import pwd
 import random
+import re
+import shlex
 import shutil
+import signal
 import string
+import subprocess
+import sys
 import tarfile
 import termios
+import time
 import traceback
-import subprocess
-import signal
-import contextlib
+import tty
 from typing import Dict  # pylint: disable=unused-import
-from passlib.hash import sha256_crypt  # type: ignore
+
 import psutil  # type: ignore
+from passlib.hash import sha256_crypt  # type: ignore
 from pathlib2 import Path
 
 import omdlib
-import omdlib.certs
 import omdlib.backup
-
+import omdlib.certs
 from cmk.utils.paths import mkbackup_lock_dir
+
 #   .--Logging-------------------------------------------------------------.
 #   |                _                      _                              |
 #   |               | |    ___   __ _  __ _(_)_ __   __ _                  |
@@ -1958,8 +1959,10 @@ def save_site_conf(site):
 def load_config_hooks(site):
     config_hooks = {}
 
-    hook_dir = site.dir + "/lib/omd/hooks"
-    for hook_name in os.listdir(hook_dir):
+    hook_files = []
+    if site.hook_dir:
+        hook_files = os.listdir(site.hook_dir)
+    for hook_name in hook_files:
         try:
             if hook_name[0] != '.':
                 hook = config_load_hook(site, hook_name)
@@ -1978,9 +1981,13 @@ def config_load_hook(site, hook_name):
         "deprecated": False,
     }
 
+    if not site.hook_dir:
+        # IMHO this should be unreachable...
+        bail_out("Site has no version and therefore no hooks")
+
     description = ""
     description_active = False
-    for line in file(site.dir + "/lib/omd/hooks/" + hook_name):
+    for line in file(site.hook_dir + hook_name):
         if line.startswith("# Alias:"):
             hook["alias"] = line[8:].strip()
         elif line.startswith("# Menu:"):
@@ -2043,12 +2050,18 @@ def sort_hooks(hook_names):
 
 
 def hook_exists(site, hook_name):
-    hook_file = site.dir + "/lib/omd/hooks/" + hook_name
+    if not site.hook_dir:
+        return False
+    hook_file = site.hook_dir + hook_name
     return os.path.exists(hook_file)
 
 
 def call_hook(site, hook_name, args):
-    hook_file = site.dir + "/lib/omd/hooks/" + hook_name
+    if not site.hook_dir:
+        # IMHO this should be unreachable...
+        bail_out("Site has no version and therefore no hooks")
+
+    hook_file = site.hook_dir + hook_name
     argsstring = " ".join(["'%s'" % arg for arg in args])
     command = hook_file + " " + argsstring
     if opt_verbose:
@@ -4138,6 +4151,12 @@ class SiteContext(AbstractSiteContext):
             return None
 
     @property
+    def hook_dir(self):
+        if self.version is None:
+            return None
+        return "/omd/versions/%s/lib/omd/hooks/" % self.version
+
+    @property
     def replacements(self):
         """Dictionary of key/value for replacing macros in skel files"""
         return {
@@ -4156,9 +4175,8 @@ class SiteContext(AbstractSiteContext):
         # Get the default values of all config hooks that are not contained
         # in the site configuration. This can happen if there are new hooks
         # after an update or when a site is being created.
-        hook_dir = self.dir + "/lib/omd/hooks"
-        if os.path.exists(hook_dir):
-            for hook_name in sort_hooks(os.listdir(hook_dir)):
+        if self.hook_dir and os.path.exists(self.hook_dir):
+            for hook_name in sort_hooks(os.listdir(self.hook_dir)):
                 if hook_name[0] != '.' and hook_name not in self._config:
                     content = call_hook(self, hook_name, ["default"])[1]
                     self._config[hook_name] = content

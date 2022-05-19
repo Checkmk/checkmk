@@ -392,4 +392,4 @@ def test_discover_netapp_api_qtree_quota_duplicate_item_names(fix_register: FixR
             params={}, section=section_plugin.parse_function(string_table)
         )
     )
-    assert discovered_items == []
+    assert discovered_items == [Service(item="vol0/somequota")]

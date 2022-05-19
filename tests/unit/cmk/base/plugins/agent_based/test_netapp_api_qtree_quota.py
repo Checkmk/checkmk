@@ -364,3 +364,32 @@ def test_check_netapp_api_qtree_quota(
     check_plugin = fix_register.check_plugins[CheckPluginName("netapp_api_qtree_quota")]
     result = list(check_plugin.check_function(item=item, params={}, section=parsed))
     assert result == expected_result
+
+
+def test_discover_netapp_api_qtree_quota_duplicate_item_names(fix_register: FixRegister) -> None:
+    check_plugin = fix_register.check_plugins[CheckPluginName("netapp_api_qtree_quota")]
+    section_plugin = fix_register.agent_sections[SectionName("netapp_api_qtree_quota")]
+
+    string_table = [
+        [
+            "quota somequota",
+            "disk-limit 83886080",
+            "disk-used 60654012",
+            "quota-type tree",
+            "volume vol0",
+        ],
+        [
+            "quota somequota",
+            "disk-limit 83886080",
+            "disk-used 4388",
+            "quota-type user",
+            "volume vol0",
+        ],
+    ]
+
+    discovered_items = list(
+        check_plugin.discovery_function(
+            params={}, section=section_plugin.parse_function(string_table)
+        )
+    )
+    assert discovered_items == []

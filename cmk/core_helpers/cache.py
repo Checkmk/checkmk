@@ -400,12 +400,6 @@ class FileCache(Generic[TRawData], abc.ABC):
             )
             return None
 
-        raw_data = self._read(path)
-        if raw_data is not None:
-            self._logger.debug("Got %r bytes data from cache", len(raw_data))
-        return raw_data
-
-    def _read(self, path: Path) -> Optional[TRawData]:
         # TODO: Use some generic store file read function to generalize error handling,
         # but there is currently no function that simply reads data from the file
         cache_file = path.read_bytes()
@@ -414,7 +408,10 @@ class FileCache(Generic[TRawData], abc.ABC):
             return None
 
         self._logger.log(VERBOSE, "Using data from cache file %s", path)
-        return self._from_cache_file(cache_file)
+        raw_data = self._from_cache_file(cache_file)
+        if raw_data is not None:
+            self._logger.debug("Got %r bytes data from cache", len(raw_data))
+        return raw_data
 
     def write(self, raw_data: TRawData, mode: Mode) -> None:
         if not self._do_cache(mode):

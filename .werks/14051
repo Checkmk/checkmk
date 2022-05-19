@@ -1,0 +1,13 @@
+Title: Fix crash in activate changes
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1652947407
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0i1
+
+Activate changes would crash on activation of some mkps when
+Global settings -> Logging -> Automation calls was on DEBUG.

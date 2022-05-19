@@ -25,6 +25,7 @@ public:
 
 private:
     std::string makeBody() override;
+    std::unordered_map<std::string, std::string> computer_info_cache_;
 };
 
 }  // namespace provider

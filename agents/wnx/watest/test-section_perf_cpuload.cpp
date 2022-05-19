@@ -77,4 +77,34 @@ TEST_F(PerfCpuLoadTest, Generation) {
     EXPECT_EQ(cpus[3], "OK");
 }
 
+constexpr std::string_view cfg_with_timeout_0 =
+    "global:\n"
+    "  enabled: yes\n"
+    "  wmi_timeout: 0\n"
+    "  cpuload_method: use_perf\n";
+
+constexpr std::string_view cfg_with_timeout_5 =
+    "global:\n"
+    "  enabled: yes\n"
+    "  wmi_timeout: 5\n"
+    "  cpuload_method: use_perf\n";
+
+constexpr size_t SIZE_OF_TABLE_ON_TIMEOUT = 4U;
+constexpr size_t SIZE_OF_TABLE_ON_OK = 7U;
+TEST_F(PerfCpuLoadTest, GenerationOnTimeoutIntegration) {
+    auto temp_fs = tst::TempCfgFs::CreateNoIo();
+
+    ASSERT_TRUE(temp_fs->loadContent(cfg_with_timeout_0));
+    auto t = getOutput();
+    EXPECT_EQ(t.size(), SIZE_OF_TABLE_ON_TIMEOUT);
+
+    ASSERT_TRUE(temp_fs->loadContent(cfg_with_timeout_5));
+    t = getOutput();
+    EXPECT_EQ(t.size(), SIZE_OF_TABLE_ON_OK);
+
+    ASSERT_TRUE(temp_fs->loadContent(cfg_with_timeout_0));
+    t = getOutput();
+    EXPECT_EQ(t.size(), SIZE_OF_TABLE_ON_OK);
+}
+
 }  // namespace cma::provider

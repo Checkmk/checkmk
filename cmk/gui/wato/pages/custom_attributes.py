@@ -483,7 +483,7 @@ class ModeCustomAttrs(WatoMode, abc.ABC):
             for custom_attr in sorted(self._attrs, key=lambda x: x["title"]):
                 table.row()
 
-                table.cell(_("Actions"), css="buttons")
+                table.cell(_("Actions"), css=["buttons"])
                 edit_url = folder_preserving_link(
                     [("mode", "edit_%s_attr" % self._type), ("edit", custom_attr["name"])]
                 )

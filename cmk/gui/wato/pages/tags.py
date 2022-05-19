@@ -369,7 +369,7 @@ class ModeTags(ABCTagMode):
 
             for nr, tag_group in enumerate(self._effective_config.tag_groups):
                 table.row()
-                table.cell(_("Actions"), css="buttons")
+                table.cell(_("Actions"), css=["buttons"])
                 self._show_tag_icons(tag_group, nr)
 
                 table.cell(_("ID"), tag_group.id)
@@ -421,7 +421,7 @@ class ModeTags(ABCTagMode):
 
             for aux_tag in self._effective_config.aux_tag_list.get_tags():
                 table.row()
-                table.cell(_("Actions"), css="buttons")
+                table.cell(_("Actions"), css=["buttons"])
                 self._show_aux_tag_icons(aux_tag)
 
                 table.cell(_("ID"), aux_tag.id)
@@ -550,7 +550,7 @@ class ModeTagUsage(ABCTagMode):
     ) -> None:
         table.row()
 
-        table.cell(_("Actions"), css="buttons")
+        table.cell(_("Actions"), css=["buttons"])
         self._show_tag_group_icons(tag_group)
 
         table.cell(_("Tag group"), _u(tag_group.choice_title))
@@ -600,7 +600,7 @@ class ModeTagUsage(ABCTagMode):
     def _show_aux_tag_row(self, table: Table, aux_tag: cmk.utils.tags.AuxTag) -> None:
         table.row()
 
-        table.cell(_("Actions"), css="buttons")
+        table.cell(_("Actions"), css=["buttons"])
         self._show_aux_tag_icons(aux_tag)
 
         table.cell(_("Tag"), _u(aux_tag.choice_title))

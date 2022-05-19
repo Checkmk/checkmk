@@ -212,7 +212,7 @@ class ModeRoles(RoleManagement, WatoMode):
                 table.row()
 
                 # Actions
-                table.cell(_("Actions"), css="buttons")
+                table.cell(_("Actions"), css=["buttons"])
                 edit_url = folder_preserving_link([("mode", "edit_role"), ("edit", rid)])
                 clone_url = make_action_link([("mode", "roles"), ("_clone", rid)])
                 delete_url = make_confirm_link(
@@ -486,12 +486,12 @@ class ModeRoleMatrix(WatoMode):
 
                 if not permission_list:
                     table.row()
-                    table.cell(_("Permission"), _("No entries"), css="wide")
+                    table.cell(_("Permission"), _("No entries"), css=["wide"])
                     continue
 
                 for perm in permission_list:
                     table.row()
-                    table.cell(_("Permission"), perm.title, css="wide")
+                    table.cell(_("Permission"), perm.title, css=["wide"])
 
                     html.help(perm.description)
                     for role_id, role in role_list:
@@ -505,7 +505,7 @@ class ModeRoleMatrix(WatoMode):
                         else:
                             icon_name = "perm_%s" % (pvalue and "yes" or "no")
 
-                        table.cell(role_id, css="center")
+                        table.cell(role_id, css=["center"])
                         if icon_name:
                             html.icon(icon_name)
 

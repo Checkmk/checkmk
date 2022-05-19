@@ -1037,7 +1037,7 @@ class ModeEditRuleset(WatoMode):
         html.javascript("cmk.utils.update_row_info(%s);" % json.dumps(row_info))
 
     @staticmethod
-    def _css_for_rule(search_options, rule: Rule) -> Optional[str]:
+    def _css_for_rule(search_options, rule: Rule) -> list[Optional[str]]:
         css = []
         if rule.is_disabled():
             css.append("disabled")
@@ -1050,7 +1050,7 @@ class ModeEditRuleset(WatoMode):
             )
         ):
             css.append("matches_search")
-        return " ".join(css) if css else None
+        return [" ".join(css)]
 
     def _set_focus(self, rule: Rule) -> None:
         if self._just_edited_rule and self._just_edited_rule.id == rule.id:
@@ -1069,7 +1069,7 @@ class ModeEditRuleset(WatoMode):
             title, img = self._match(match_state, rule)
             html.icon("rule%s" % img, title)
 
-        table.cell("", css="buttons")
+        table.cell("", css=["buttons"])
         if rule.is_disabled():
             html.icon("disabled", _("This rule is currently disabled and will not be applied"))
         else:
@@ -1085,7 +1085,7 @@ class ModeEditRuleset(WatoMode):
             ("rule_folder", folder.path()),
         ]
 
-        table.cell(_("Actions"), css="buttons rulebuttons")
+        table.cell(_("Actions"), css=["buttons rulebuttons"])
         edit_url = folder_preserving_link([("mode", "edit_rule"), *folder_preserving_vars])
         html.icon_button(edit_url, _("Edit this rule"), "edit")
 
@@ -1210,11 +1210,11 @@ class ModeEditRuleset(WatoMode):
         rule_options = rule.rule_options
 
         # Conditions
-        table.cell(_("Conditions"), css="condition")
+        table.cell(_("Conditions"), css=["condition"])
         self._rule_conditions(rule)
 
         # Value
-        table.cell(_("Value"), css="value")
+        table.cell(_("Value"), css=["value"])
         try:
             value_html = self._valuespec.value_to_html(value)
         except Exception as e:
@@ -1232,7 +1232,7 @@ class ModeEditRuleset(WatoMode):
         html.write_text(value_html)
 
         # Comment
-        table.cell(_("Description"), css="description")
+        table.cell(_("Description"), css=["description"])
         if docu_url := rule_options.docu_url:
             html.icon_button(
                 docu_url,

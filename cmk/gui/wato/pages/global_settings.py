@@ -232,7 +232,7 @@ class ABCGlobalSettingsMode(WatoMode):
                         href=makeactionuri(
                             request, transactions, [("_action", "toggle"), ("_varname", varname)]
                         ),
-                        class_=modified_cls,
+                        class_=[modified_cls],
                         title=value_title,
                     )
                     html.close_div()

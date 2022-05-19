@@ -580,7 +580,7 @@ class SidebarRenderer:
         html.open_div(
             id_="side_fold", title=_("Toggle the sidebar"), onclick="cmk.sidebar.toggle_sidebar()"
         )
-        html.icon("sidebar_folded", class_="folded")
+        html.icon("sidebar_folded", class_=["folded"])
         html.icon("sidebar")
         if not user.get_attribute("nav_hide_icons_title"):
             html.div(_("Sidebar"))

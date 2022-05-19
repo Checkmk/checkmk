@@ -283,17 +283,17 @@ class ModeAuditLog(WatoMode):
                 table.cell(
                     _("Time"),
                     HTMLWriter.render_nobr(render.date_and_time(float(entry.time))),
-                    css="narrow",
+                    css=["narrow"],
                 )
                 user_txt = ("<i>%s</i>" % _("internal")) if entry.user_id == "-" else entry.user_id
-                table.cell(_("User"), user_txt, css="nobreak narrow")
+                table.cell(_("User"), user_txt, css=["nobreak narrow"])
 
                 table.cell(
                     _("Object type"),
                     entry.object_ref.object_type.name if entry.object_ref else "",
-                    css="narrow",
+                    css=["narrow"],
                 )
-                table.cell(_("Object"), render_object_ref(entry.object_ref) or "", css="narrow")
+                table.cell(_("Object"), render_object_ref(entry.object_ref) or "", css=["narrow"])
 
                 text = HTML(escaping.escape_text(entry.text).replace("\n", "<br>\n"))
                 table.cell(_("Summary"), text)

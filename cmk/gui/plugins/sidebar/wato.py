@@ -53,7 +53,7 @@ def render_wato(mini):
             for item in topic.items:
                 html.icon_button(
                     url=item.url,
-                    class_="show_more_mode" if item.is_show_more else None,
+                    class_=["show_more_mode"] if item.is_show_more else [],
                     title=item.title,
                     icon=item.icon or "wato",
                     target="main",

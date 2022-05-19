@@ -795,7 +795,7 @@ class ModeLDAPConfig(LDAPMode):
             for index, connection in enumerate(load_connection_config()):
                 table.row()
 
-                table.cell(_("Actions"), css="buttons")
+                table.cell(_("Actions"), css=["buttons"])
                 edit_url = folder_preserving_link(
                     [("mode", "edit_ldap_connection"), ("id", connection["id"])]
                 )
@@ -814,7 +814,7 @@ class ModeLDAPConfig(LDAPMode):
                 html.element_dragger_url("tr", base_url=drag_url)
                 html.icon_button(delete_url, _("Delete this LDAP connection"), "delete")
 
-                table.cell("", css="narrow")
+                table.cell("", css=["narrow"])
                 if connection.get("disabled"):
                     html.icon(
                         "disabled",

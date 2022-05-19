@@ -163,7 +163,7 @@ class ModeGroups(WatoMode, abc.ABC):
         pass
 
     def _show_row_cells(self, table: Table, name: GroupName, group: GroupSpec) -> None:
-        table.cell(_("Actions"), css="buttons")
+        table.cell(_("Actions"), css=["buttons"])
         edit_url = folder_preserving_link(
             [("mode", "edit_%s_group" % self.type_name), ("edit", name)]
         )

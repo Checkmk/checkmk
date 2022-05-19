@@ -1739,13 +1739,11 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                 id_ = rule_pack["id"]
                 type_ = ec.RulePackType.type_of(rule_pack, id_to_mkp)
 
-                if id_ in found_packs:
-                    css_matches_search: _Optional[str] = "matches_search"
-                else:
-                    css_matches_search = None
-
+                css_matches_search: list[_Optional[str]] = (
+                    ["matches_search"] if id_ in found_packs else []
+                )
                 table.row(css=css_matches_search)
-                table.cell(_("Actions"), css="buttons")
+                table.cell(_("Actions"), css=["buttons"])
 
                 edit_url = makeuri_contextless(
                     request,
@@ -1825,7 +1823,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                             },
                         )
 
-                    table.cell("", css="buttons")
+                    table.cell("", css=["buttons"])
                     if type_ == ec.RulePackType.unmodified_mkp:
                         html.icon(
                             "mkps", _("This rule pack is provided via the MKP %s.") % id_to_mkp[id_]
@@ -1914,11 +1912,11 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                 table.cell(
                     _("Rules"),
                     HTMLWriter.render_a("%d" % len(rule_pack["rules"]), href=rules_url),
-                    css="number",
+                    css=["number"],
                 )
 
                 hits = rule_pack.get("hits")
-                table.cell(_("Hits"), str(hits) if hits else "", css="number")
+                table.cell(_("Hits"), str(hits) if hits else "", css=["number"])
 
     def _filter_mkeventd_rule_packs(self, search_expression, rule_packs):
         found_packs: Dict[str, List[ec.ECRuleSpec]] = {}
@@ -2156,9 +2154,9 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
             have_match = False
             for nr, rule in enumerate(self._rules):
                 if rule in found_rules:
-                    css_matches_search: _Optional[str] = "matches_search"
+                    css_matches_search: list[_Optional[str]] = ["matches_search"]
                 else:
-                    css_matches_search = None
+                    css_matches_search = []
 
                 table.row(css=css_matches_search)
                 delete_url = make_confirm_link(
@@ -2185,13 +2183,13 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                     ],
                 )
 
-                table.cell(_("Actions"), css="buttons")
+                table.cell(_("Actions"), css=["buttons"])
                 html.icon_button(edit_url, _("Edit this rule"), "edit")
                 html.icon_button(clone_url, _("Create a copy of this rule"), "clone")
                 html.element_dragger_url("tr", base_url=drag_url)
                 html.icon_button(delete_url, _("Delete this rule"), "delete")
 
-                table.cell("", css="buttons")
+                table.cell("", css=["buttons"])
                 if rule.get("disabled"):
                     html.icon(
                         "disabled", _("This rule is currently disabled and will not be applied")
@@ -2241,7 +2239,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                         html.write_text(managed.get_customer_name(rule))
 
                 if rule.get("drop"):
-                    table.cell(_("State"), css="state statep nowrap")
+                    table.cell(_("State"), css=["state statep nowrap"])
                     if rule["drop"] == "skip_pack":
                         html.write_text(_("SKIP PACK"))
                     else:
@@ -2262,7 +2260,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                     table.cell(
                         _("State"),
                         HTMLWriter.render_span(txt, class_="state_rounded_fill"),
-                        css="state state%s" % stateval,
+                        css=["state state%s" % stateval],
                     )
 
                 # Syslog priority
@@ -2289,7 +2287,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                     ),
                 )
                 hits = rule.get("hits")
-                table.cell(_("Hits"), str(hits) if hits else "", css="number")
+                table.cell(_("Hits"), str(hits) if hits else "", css=["number"])
 
                 # Text to match
                 table.cell(_("Text to match"), rule.get("match"))
@@ -3057,7 +3055,7 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
                     )
                     html.checkbox("_c_mib_%s" % filename, deflt=False)
 
-                table.cell(_("Actions"), css="buttons")
+                table.cell(_("Actions"), css=["buttons"])
                 if is_custom_dir:
                     delete_url = make_confirm_link(
                         url=make_action_link([("mode", "mkeventd_mibs"), ("_delete", filename)]),
@@ -3069,7 +3067,9 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
                 table.cell(_("Filename"), filename)
                 table.cell(_("MIB"), mib.get("name", ""))
                 table.cell(_("Organization"), mib.get("organization", ""))
-                table.cell(_("Size"), cmk.utils.render.fmt_bytes(mib.get("size", 0)), css="number")
+                table.cell(
+                    _("Size"), cmk.utils.render.fmt_bytes(mib.get("size", 0)), css=["number"]
+                )
 
         if is_custom_dir:
             html.hidden_fields()

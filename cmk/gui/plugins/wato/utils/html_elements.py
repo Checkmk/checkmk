@@ -76,7 +76,7 @@ def _make_wato_page_state() -> PageState:
             icon_name="pending_changes",
             url=changelog_url,
             tooltip_text=tooltip,
-            css_classes="pending_changes",
+            css_classes=["pending_changes"],
         )
     return PageState(
         text=HTMLWriter.render_span(
@@ -86,5 +86,5 @@ def _make_wato_page_state() -> PageState:
         ),
         url=changelog_url,
         tooltip_text=tooltip,
-        css_classes="no_changes",
+        css_classes=["no_changes"],
     )

@@ -2095,10 +2095,10 @@ class ListOf(ValueSpec[ListOfModel[T]]):
         html.open_td(class_="vlof_buttons")
 
         html.hidden_field(
-            varprefix + "_indexof_" + index, "", add_var=True, class_="index"
+            varprefix + "_indexof_" + index, "", add_var=True, class_=["index"]
         )  # reconstruct order after moving stuff
         html.hidden_field(
-            varprefix + "_orig_indexof_" + index, "", add_var=True, class_="orig_index"
+            varprefix + "_orig_indexof_" + index, "", add_var=True, class_=["orig_index"]
         )
         if self._movable:
             html.element_dragger_js(
@@ -2114,7 +2114,7 @@ class ListOf(ValueSpec[ListOfModel[T]]):
 
     def _del_button(self, vp: str, nr: str) -> None:
         js = "cmk.valuespecs.listof_delete(%s, %s)" % (json.dumps(vp), json.dumps(nr))
-        html.icon_button("#", self._del_label, "close", onclick=js, class_="delete_button")
+        html.icon_button("#", self._del_label, "close", onclick=js, class_=["delete_button"])
 
     def canonical_value(self) -> ListOfModel[T]:
         return []
@@ -2243,7 +2243,7 @@ class ListOfMultiple(ValueSpec[ListOfMultipleModel]):
             json.dumps(varprefix),
             json.dumps(ident),
         )
-        html.icon_button("#", self._del_label, "close", onclick=js, class_="delete_button")
+        html.icon_button("#", self._del_label, "close", onclick=js, class_=["delete_button"])
 
     def render_input(self, varprefix: str, value: ListOfMultipleModel) -> None:
         # Beware: the 'value' is only the default value in case the form
@@ -2302,7 +2302,7 @@ class ListOfMultiple(ValueSpec[ListOfMultipleModel]):
             varprefix + "_choice",
             choices,
             style="width: %dex" % self._size if self._size is not None else None,
-            class_="vlof_filter" if self._delete_style == "filter" else None,
+            class_=["vlof_filter"] if self._delete_style == "filter" else [],
         )
         html.javascript("cmk.valuespecs.listofmultiple_init(%s);" % json.dumps(varprefix))
         html.jsbutton(
@@ -7262,7 +7262,7 @@ class Color(ValueSpec[_Optional[str]]):
             indicator,
             varprefix + "_popup",
             MethodColorpicker(varprefix, value),
-            cssclass="colorpicker",
+            cssclass=["colorpicker"],
             onclose=self._on_change,
         )
 

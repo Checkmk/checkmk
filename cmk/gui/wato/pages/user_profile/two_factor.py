@@ -200,7 +200,7 @@ class UserTwoFactorOverview(ABCUserProfilePage):
         with table_element(title=None, searchable=False, sortable=False) as table:
             for credential in webauthn_credentials.values():
                 table.row()
-                table.cell(_("Actions"), css="buttons")
+                table.cell(_("Actions"), css=["buttons"])
                 delete_url = make_confirm_link(
                     url=makeactionuri(
                         request, transactions, [("_delete", credential["credential_id"])]

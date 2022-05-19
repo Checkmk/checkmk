@@ -95,7 +95,7 @@ def render_user_message_table(what: str) -> None:
             datetime = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(entry["time"]))
             msg = entry["text"].replace("\n", " ")
 
-            table.cell(_("Actions"), css="buttons", sortable=False)
+            table.cell(_("Actions"), css=["buttons"], sortable=False)
             onclick = (
                 "cmk.utils.delete_user_message('%s', this);cmk.utils.reload_whole_page();" % msg_id
                 if what == "gui_hint"

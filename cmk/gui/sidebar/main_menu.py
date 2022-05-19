@@ -56,7 +56,7 @@ class MainMenuRenderer:
                 (self._get_popup_trigger_content(active_icon, menu_item)),
                 ident="mega_menu_" + menu_item.name,
                 method=MethodInline(self._get_mega_menu_content(menu_item)),
-                cssclass=menu_item.name,
+                cssclass=[menu_item.name],
                 popup_group="main_menu_popup",
                 hover_switch_delay=150,  # ms
                 onopen=menu_item.onopen,
@@ -70,7 +70,9 @@ class MainMenuRenderer:
             html.close_li()
 
     def _get_popup_trigger_content(self, active_icon: Icon, menu_item: MainMenuItem) -> HTML:
-        content = html.render_icon(menu_item.icon) + html.render_icon(active_icon, class_="active")
+        content = html.render_icon(menu_item.icon) + html.render_icon(
+            active_icon, class_=["active"]
+        )
 
         if not user.get_attribute("nav_hide_icons_title"):
             content += HTMLWriter.render_div(menu_item.title)

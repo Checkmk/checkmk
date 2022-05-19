@@ -349,7 +349,7 @@ class ModeUsers(WatoMode):
                         value="X",
                     ),
                     sortable=False,
-                    css="checkbox",
+                    css=["checkbox"],
                 )
 
                 if uid != user.id:
@@ -359,7 +359,7 @@ class ModeUsers(WatoMode):
                 connection = get_connection(user_connection_id)
 
                 # Buttons
-                table.cell(_("Actions"), css="buttons")
+                table.cell(_("Actions"), css=["buttons"])
                 if connection:  # only show edit buttons when the connector is available and enabled
                     edit_url = folder_preserving_link([("mode", "edit_user"), ("edit", uid)])
                     html.icon_button(edit_url, _("Properties"), "edit")
@@ -424,7 +424,7 @@ class ModeUsers(WatoMode):
                     table.cell(
                         _("Connection"),
                         "%s (%s) (%s)" % (_("UNKNOWN"), user_connection_id, _("disabled")),
-                        css="error",
+                        css=["error"],
                     )
                     locked_attributes = []
 

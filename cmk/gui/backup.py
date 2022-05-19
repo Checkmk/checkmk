@@ -443,7 +443,7 @@ class Jobs(BackupEntityCollection):
 
             for job_ident, job in sorted(self.objects.items()):
                 table.row()
-                table.cell(_("Actions"), css="buttons")
+                table.cell(_("Actions"), css=["buttons"])
                 delete_url = make_confirm_link(
                     url=makeactionuri_contextless(
                         request,
@@ -510,7 +510,7 @@ class Jobs(BackupEntityCollection):
                 elif state["state"] is None:
                     css = ""
 
-                table.cell(_("State"), css=css)
+                table.cell(_("State"), css=[css])
                 html.write_html(HTMLWriter.render_span(state_txt))
 
                 table.cell(_("Runtime"))
@@ -1071,7 +1071,7 @@ class Target(BackupEntity):
                     continue
 
                 table.row()
-                table.cell(_("Actions"), css="buttons")
+                table.cell(_("Actions"), css=["buttons"])
 
                 delete_url = make_confirm_link(
                     url=makeactionuri(
@@ -1157,7 +1157,7 @@ class Targets(BackupEntityCollection):
 
             for target_ident, target in sorted(self.objects.items()):
                 table.row()
-                table.cell(_("Actions"), css="buttons")
+                table.cell(_("Actions"), css=["buttons"])
                 restore_url = makeuri_contextless(
                     request,
                     [("mode", "backup_restore"), ("target", target_ident)],

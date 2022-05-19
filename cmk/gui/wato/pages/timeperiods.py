@@ -331,7 +331,7 @@ class ModeTimeperiods(WatoMode):
             for name, timeperiod in sorted(self._timeperiods.items()):
                 table.row()
 
-                table.cell(_("Actions"), css="buttons")
+                table.cell(_("Actions"), css=["buttons"])
                 if name in watolib.timeperiods.builtin_timeperiods():
                     html.i(_("(builtin)"))
                 else:

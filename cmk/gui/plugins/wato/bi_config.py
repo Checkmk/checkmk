@@ -529,7 +529,7 @@ class ModeBIPacks(ABCBIMode):
                     continue
 
                 table.row()
-                table.cell(_("Actions"), css="buttons")
+                table.cell(_("Actions"), css=["buttons"])
                 if user.may("wato.bi_admin"):
                     target_mode = "bi_edit_pack"
                     edit_url = makeuri_contextless(
@@ -555,8 +555,8 @@ class ModeBIPacks(ABCBIMode):
                 table.cell(_("ID"), pack.id)
                 table.cell(_("Title"), pack.title)
                 table.cell(_("Public"), pack.public and _("Yes") or _("No"))
-                table.cell(_("Aggregations"), str(len(pack.aggregations)), css="number")
-                table.cell(_("Rules"), str(len(pack.rules)), css="number")
+                table.cell(_("Aggregations"), str(len(pack.aggregations)), css=["number"])
+                table.cell(_("Rules"), str(len(pack.rules)), css=["number"])
                 table.cell(
                     _("Contact groups"),
                     HTML(", ").join(map(self._render_contact_group, pack.contact_groups)),
@@ -857,7 +857,7 @@ class ModeBIRules(ABCBIMode):
                 "bulk_moveto",
                 move_choices,
                 onchange="cmk.selection.update_bulk_moveto(this.value)",
-                class_="bulk_moveto",
+                class_=["bulk_moveto"],
                 label=_("Move to pack: "),
                 form="form_bulk_action_form",
             )
@@ -901,11 +901,11 @@ class ModeBIRules(ABCBIMode):
                             value="X",
                         ),
                         sortable=False,
-                        css="checkbox",
+                        css=["checkbox"],
                     )
                     html.checkbox("_c_rule_%s" % rule_id)
 
-                    table.cell(_("Actions"), css="buttons")
+                    table.cell(_("Actions"), css=["buttons"])
                     edit_url = self.url_to_pack(
                         [("mode", "bi_edit_rule"), ("id", rule_id)], self.bi_pack
                     )
@@ -947,7 +947,7 @@ class ModeBIRules(ABCBIMode):
                         )
                         html.icon_button(delete_url, _("Delete this rule"), "delete")
 
-                    table.cell("", css="narrow")
+                    table.cell("", css=["narrow"])
                     if bi_rule.computation_options.disabled:
                         html.icon(
                             "disabled", _("This rule is currently disabled and will not be applied")
@@ -955,7 +955,7 @@ class ModeBIRules(ABCBIMode):
                     else:
                         html.empty_icon_button()
 
-                    table.cell(_("Level"), level or "", css="number")
+                    table.cell(_("Level"), level or "", css=["number"])
                     table.cell(_("ID"), HTMLWriter.render_a(rule_id, edit_url))
                     table.cell(_("Parameters"), " ".join(bi_rule.params.arguments))
 
@@ -977,7 +977,7 @@ class ModeBIRules(ABCBIMode):
                     ]
 
                     table.cell(_("Aggregation Function"), str(aggr_func_gui(aggr_func_data)))
-                    table.cell(_("Nodes"), str(bi_rule.num_nodes()), css="number")
+                    table.cell(_("Nodes"), str(bi_rule.num_nodes()), css=["number"])
                     table.cell(_("Used by"))
                     have_this = set([])
                     for (pack_id, aggr_id, bi_aggregation) in aggregations_that_use_rule.get(
@@ -2092,7 +2092,7 @@ class BIModeAggregations(ABCBIMode):
                 "bulk_moveto",
                 move_choices,
                 onchange="cmk.selection.update_bulk_moveto(this.value)",
-                class_="bulk_moveto",
+                class_=["bulk_moveto"],
                 label=_("Move to pack: "),
                 form="form_bulk_action_form",
             )
@@ -2122,11 +2122,11 @@ class BIModeAggregations(ABCBIMode):
                         value="X",
                     ),
                     sortable=False,
-                    css="checkbox",
+                    css=["checkbox"],
                 )
                 html.checkbox("_c_aggregation_%s" % aggregation_id)
 
-                table.cell(_("Actions"), css="buttons")
+                table.cell(_("Actions"), css=["buttons"])
                 edit_url = makeuri_contextless(
                     request,
                     [
@@ -2157,7 +2157,7 @@ class BIModeAggregations(ABCBIMode):
                     if bi_aggregation.customer:
                         html.write_text(managed.get_customer_name_by_id(bi_aggregation.customer))
 
-                table.cell(_("Options"), css="buttons")
+                table.cell(_("Options"), css=["buttons"])
 
                 if bi_aggregation.computation_options.disabled:
                     html.icon("disabled", _("This aggregation is currently disabled."))
@@ -2186,7 +2186,7 @@ class BIModeAggregations(ABCBIMode):
                     request,
                     [("mode", "bi_edit_rule"), ("pack", self.bi_pack.id), ("id", rule_id)],
                 )
-                table.cell(_("Rule Tree"), css="bi_rule_tree")
+                table.cell(_("Rule Tree"), css=["bi_rule_tree"])
                 self.render_aggregation_rule_tree(bi_aggregation)
 
     def render_aggregation_rule_tree(self, bi_aggregation):
@@ -2244,7 +2244,7 @@ class ModeBIRuleTree(ABCBIMode):
         if rule_refs == 0:
             with table_element(sortable=False, searchable=False) as table:
                 table.row()
-                table.cell(_("Rule Tree"), css="bi_rule_tree")
+                table.cell(_("Rule Tree"), css=["bi_rule_tree"])
                 self.render_rule_tree(self._rule_id, self._rule_id)
 
 

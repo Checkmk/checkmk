@@ -295,7 +295,7 @@ class ABCNotificationsMode(ABCEventsMode):
 
                 # Analyse
                 if analyse:
-                    table.cell(css="buttons")
+                    table.cell(css=["buttons"])
                     what, _anarule, reason = analyse_rules[nr + start_nr]
                     if what == "match":
                         html.icon("rulematch", _("This rule matches"))
@@ -303,7 +303,7 @@ class ABCNotificationsMode(ABCEventsMode):
                         html.icon("rulenmatch", _("This rule does not match: %s") % reason)
 
                 if show_buttons and self._actions_allowed(rule):
-                    table.cell(_("Actions"), css="buttons")
+                    table.cell(_("Actions"), css=["buttons"])
                     links = self._rule_links(rule, nr, profilemode, userid)
                     html.icon_button(links.edit, _("Edit this notification rule"), "edit")
                     html.icon_button(
@@ -312,11 +312,11 @@ class ABCNotificationsMode(ABCEventsMode):
                     html.element_dragger_url("tr", base_url=links.drag)
                     html.icon_button(links.delete, _("Delete this notification rule"), "delete")
                 else:
-                    table.cell("", css="buttons")
+                    table.cell("", css=["buttons"])
                     for _x in range(4):
                         html.empty_icon_button()
 
-                table.cell("", css="narrow")
+                table.cell("", css=["narrow"])
                 if rule.get("disabled"):
                     html.icon(
                         "disabled", _("This rule is currently disabled and will not be applied")
@@ -331,15 +331,15 @@ class ABCNotificationsMode(ABCEventsMode):
                     notify_method = (None, [])
                 notify_plugin = notify_method[0]
 
-                table.cell(_("Type"), css="narrow")
+                table.cell(_("Type"), css=["narrow"])
                 if notify_method[1] is None:
                     html.icon("notify_cancel", _("Cancel notifications for this plugin type"))
                 else:
                     html.icon("notify_create", _("Create a notification"))
 
-                table.cell(_("Plugin"), notify_plugin or _("Plain Email"), css="narrow nowrap")
+                table.cell(_("Plugin"), notify_plugin or _("Plain Email"), css=["narrow nowrap"])
 
-                table.cell(_("Bulk"), css="narrow")
+                table.cell(_("Bulk"), css=["narrow"])
                 if "bulk" in rule or "bulk_period" in rule:
                     html.icon("bulk", _("This rule configures bulk notifications."))
 
@@ -362,7 +362,7 @@ class ABCNotificationsMode(ABCEventsMode):
                         html.li(line)
                     html.close_ul()
 
-                table.cell(_("Conditions"), css="rule_conditions")
+                table.cell(_("Conditions"), css=["rule_conditions"])
                 num_conditions = len([key for key in rule if key.startswith("match_")])
                 if num_conditions:
                     title = _("%d conditions") % num_conditions
@@ -727,13 +727,13 @@ class ModeNotifications(ABCNotificationsMode):
                 table.cell(_("Contact"), contact)
                 table.cell(_("Method"), method)
                 table.cell(_("Bulk ID"), bulk_id)
-                table.cell(_("Max. Age (sec)"), str(interval), css="number")
-                table.cell(_("Age (sec)"), str(age), css="number")
+                table.cell(_("Max. Age (sec)"), str(interval), css=["number"])
+                table.cell(_("Age (sec)"), str(age), css=["number"])
                 if interval and age >= float(interval):
                     html.icon("warning", _("Age of oldest notification is over maximum age"))
                 table.cell(_("Timeperiod"), str(timeperiod))
-                table.cell(_("Max. Count"), str(maxcount), css="number")
-                table.cell(_("Count"), str(len(uuids)), css="number")
+                table.cell(_("Max. Count"), str(maxcount), css=["number"])
+                table.cell(_("Count"), str(len(uuids)), css=["number"])
                 if len(uuids) >= maxcount:
                     html.icon(
                         "warning", _("Number of notifications exceeds maximum allowed number")
@@ -757,7 +757,7 @@ class ModeNotifications(ABCNotificationsMode):
         ) as table:
             for nr, context in enumerate(backlog):
                 table.row()
-                table.cell("&nbsp;", css="buttons")
+                table.cell("&nbsp;", css=["buttons"])
 
                 analyse_url = makeuri(request, [("analyse", str(nr))])
                 html.icon_button(
@@ -779,7 +779,7 @@ class ModeNotifications(ABCNotificationsMode):
                 if request.var("analyse") and nr == request.get_integer_input_mandatory("analyse"):
                     html.icon("rulematch", _("You are analysing this notification"))
 
-                table.cell(_("Nr."), str(nr + 1), css="number")
+                table.cell(_("Nr."), str(nr + 1), css=["number"])
                 if "MICROTIME" in context:
                     date: str = time.strftime(
                         "%Y-%m-%d %H:%M:%S", time.localtime(int(context["MICROTIME"]) / 1000000.0)
@@ -792,7 +792,7 @@ class ModeNotifications(ABCNotificationsMode):
                         or _("Unknown date")
                     )
 
-                table.cell(_("Date/Time"), date, css="nobr")
+                table.cell(_("Date/Time"), date, css=["nobr"])
                 nottype = context.get("NOTIFICATIONTYPE", "")
                 table.cell(_("Type"), nottype)
 
@@ -800,11 +800,11 @@ class ModeNotifications(ABCNotificationsMode):
                     if context.get("SERVICESTATE"):
                         statename = context["SERVICESTATE"][:4]
                         state = context["SERVICESTATEID"]
-                        css = "state svcstate state%s" % state
+                        css: list[Optional[str]] = ["state svcstate state%s" % state]
                     else:
                         statename = context.get("HOSTSTATE")[:4]
                         state = context["HOSTSTATEID"]
-                        css = "state hstate hstate%s" % state
+                        css = ["state hstate hstate%s" % state]
                     table.cell(
                         _("State"),
                         HTMLWriter.render_span(statename, class_=["state_rounded_fill"]),
@@ -834,7 +834,7 @@ class ModeNotifications(ABCNotificationsMode):
                 )
 
                 # Add toggleable notitication context
-                table.row(css="notification_context hidden", id_="notification_context_%d" % nr)
+                table.row(css=["notification_context hidden"], id_="notification_context_%d" % nr)
                 table.cell(colspan=8)
 
                 html.open_table()
@@ -848,7 +848,7 @@ class ModeNotifications(ABCNotificationsMode):
                 html.close_table()
 
                 # This dummy row is needed for not destroying the odd/even row highlighting
-                table.row(css="notification_context hidden")
+                table.row(css=["notification_context hidden"])
 
     # TODO: Refactor this
     def _show_rules(self):

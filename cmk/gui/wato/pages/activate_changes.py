@@ -362,15 +362,15 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
                 if not user.may("wato.activateforeign"):
                     css.append("not_permitted")
 
-                table.row(css=" ".join(css))
+                table.row(css=[" ".join(css)])
 
-                table.cell("", css="buttons")
+                table.cell("", css=["buttons"])
                 rendered = render_object_ref_as_icon(change["object"])
                 if rendered:
                     html.write_html(rendered)
 
-                table.cell(_("Time"), render.date_and_time(change["time"]), css="narrow nobr")
-                table.cell(_("User"), css="narrow nobr")
+                table.cell(_("Time"), render.date_and_time(change["time"]), css=["narrow nobr"])
+                table.cell(_("User"), css=["narrow nobr"])
                 html.write_text(change["user_id"] if change["user_id"] else "")
                 if self._is_foreign(change):
                     html.icon("foreign_changes", _("This change has been made by another user"))
@@ -380,7 +380,7 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
                 # cleaner to transport the text type (like AuditLogStore is doing it).
                 table.cell(_("Change"), HTML(change["text"]))
 
-                table.cell(_("Affected sites"), css="affected_sites")
+                table.cell(_("Affected sites"), css=["affected_sites"])
                 if self._affects_all_sites(change):
                     html.write_text("<i>%s</i>" % _("All sites"))
                 else:
@@ -416,12 +416,12 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
                 nr_changes = len(self._changes_of_site(site_id))
 
                 # Activation checkbox
-                table.cell("", css="buttons")
+                table.cell("", css=["buttons"])
                 if can_activate_all and nr_changes:
                     html.checkbox("site_%s" % site_id, need_action, cssclass="site_checkbox")
 
                 # Iconbuttons
-                table.cell(_("Actions"), css="buttons")
+                table.cell(_("Actions"), css=["buttons"])
 
                 if user.may("wato.sites"):
                     edit_url = folder_preserving_link([("mode", "edit_site"), ("site", site_id)])
@@ -462,28 +462,28 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
                         target="_blank",
                     )
 
-                table.cell(_("Site"), site.get("alias", site_id), css="narrow nobr")
+                table.cell(_("Site"), site.get("alias", site_id), css=["narrow nobr"])
 
                 # Livestatus
-                table.cell(_("Status"), css="narrow nobr")
+                table.cell(_("Status"), css=["narrow nobr"])
                 html.status_label(
                     content=status, status=status, title=_("This site is %s") % status
                 )
 
                 # Livestatus-/Checkmk-Version
                 table.cell(
-                    _("Version"), site_status.get("livestatus_version", ""), css="narrow nobr"
+                    _("Version"), site_status.get("livestatus_version", ""), css=["narrow nobr"]
                 )
 
-                table.cell(_("Changes"), "%d" % nr_changes, css="number narrow nobr")
+                table.cell(_("Changes"), "%d" % nr_changes, css=["number narrow nobr"])
 
-                table.cell(_("Progress"), css="repprogress")
+                table.cell(_("Progress"), css=["repprogress"])
                 html.open_div(id_="site_%s_status" % site_id, class_=["msg"])
                 html.close_div()
                 html.open_div(id_="site_%s_progress" % site_id, class_=["progress"])
                 html.close_div()
 
-                table.cell(_("Details"), css="details")
+                table.cell(_("Details"), css=["details"])
                 html.open_div(id_="site_%s_details" % site_id)
 
                 last_state = self._last_activation_state(site_id)

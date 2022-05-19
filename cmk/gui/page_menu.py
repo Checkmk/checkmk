@@ -697,7 +697,7 @@ class ShortcutRenderer:
             title=entry.shortcut_title or entry.title,
             icon=entry.icon_name,
             target=target,
-            class_=" ".join(classes),
+            class_=[" ".join(classes)],
             id_=("menu_shortcut_%s" % entry.name if entry.name else None),
         )
 

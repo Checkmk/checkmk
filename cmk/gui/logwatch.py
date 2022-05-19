@@ -280,10 +280,10 @@ def list_logs(site, host_name, logfile_names):
                 state = worst_log["level"]
                 state_name = form_level(state)
 
-                table.cell(_("Level"), state_name, css="state%d" % state)
+                table.cell(_("Level"), state_name, css=["state%d" % state])
                 table.cell(_("Logfile"), logfile_link)
                 table.cell(_("Last Entry"), form_datetime(last_log["datetime"]))
-                table.cell(_("Entries"), len(log_chunks), css="number")
+                table.cell(_("Entries"), len(log_chunks), css=["number"])
 
             except Exception:
                 if active_config.debug:

@@ -585,7 +585,7 @@ def _render_availability_timeline(
                 onmouseout="cmk.availability.timetable_hover(%d, %d, 0);" % (timeline_nr, row_nr),
             )
 
-            table.cell(_("Links"), css="buttons")
+            table.cell(_("Links"), css=["buttons"])
             if what == "bi":
                 url = makeuri(request, [("timewarp", str(int(row["from"])))])
                 if request.var("timewarp") and request.get_integer_input_mandatory(
@@ -609,9 +609,9 @@ def _render_availability_timeline(
                 )
                 html.icon_button(url, _("Create an annotation for this period"), "annotation")
 
-            table.cell(_("From"), row["from_text"], css="nobr narrow")
-            table.cell(_("Until"), row["until_text"], css="nobr narrow")
-            table.cell(_("Duration"), row["duration_text"], css="narrow number")
+            table.cell(_("From"), row["from_text"], css=["nobr narrow"])
+            table.cell(_("Until"), row["until_text"], css=["nobr narrow"])
+            table.cell(_("Duration"), row["duration_text"], css=["narrow number"])
             table.cell(
                 _("State"),
                 HTMLWriter.render_span(row["state_name"], class_=["state_rounded_fill"]),
@@ -688,7 +688,7 @@ def render_availability_table(group_title, availability_table, what, avoptions):
             timeline_url = None
             if row["urls"]:
                 show_urls = True
-                table.cell("", css="buttons")
+                table.cell("", css=["buttons"])
                 for image, tooltip, url in row["urls"]:
                     html.icon_button(url, tooltip, image)
                     if image == "timeline":
@@ -700,7 +700,7 @@ def render_availability_table(group_title, availability_table, what, avoptions):
 
             if "timeline" in row:
                 show_timeline = True
-                table.cell(_("Timeline"), css="timeline")
+                table.cell(_("Timeline"), css=["timeline"])
                 html.open_a(href=timeline_url)
                 render_timeline_bar(row["timeline"], "inline")
                 html.close_a()
@@ -710,10 +710,10 @@ def render_availability_table(group_title, availability_table, what, avoptions):
                 table.cell(title, HTMLWriter.render_span(text), css=css, help_txt=help_txt)
 
         if "summary" in av_table:
-            table.row(css="summary", fixed=True)
+            table.row(css=["summary"], fixed=True)
             if show_urls:
                 table.cell("", "")  # Empty cell in URLs column
-            table.cell("", _("Summary"), css="heading")
+            table.cell("", _("Summary"), css=["heading"])
             for _x in range(1, len(av_table["object_titles"])):
                 table.cell("", "")  # empty cells, of more object titles than one
             if show_timeline:
@@ -1040,7 +1040,7 @@ def show_annotations(annotations, av_rawdata, what, avoptions, omit_service):
     with table_element(title=_("Annotations"), omit_if_empty=True) as table:
         for (site_id, host, service), annotation in annos_to_render:
             table.row()
-            table.cell("", css="buttons")
+            table.cell("", css=["buttons"])
             anno_vars = [
                 ("anno_site", site_id),
                 ("anno_host", host),
@@ -1080,9 +1080,9 @@ def show_annotations(annotations, av_rawdata, what, avoptions, omit_service):
                     else:
                         table.cell(_("Service"), "")  # Host annotation in service table
 
-            table.cell(_("From"), render_date(annotation["from"]), css="nobr narrow")
-            table.cell(_("Until"), render_date(annotation["until"]), css="nobr narrow")
-            table.cell("", css="buttons")
+            table.cell(_("From"), render_date(annotation["from"]), css=["nobr narrow"])
+            table.cell(_("Until"), render_date(annotation["until"]), css=["nobr narrow"])
+            table.cell("", css=["buttons"])
             if annotation.get("downtime") is True:
                 html.icon(
                     "downtime", _("This period has been reclassified as a scheduled downtime")
@@ -1111,7 +1111,7 @@ def show_annotations(annotations, av_rawdata, what, avoptions, omit_service):
                 _("Annotation"), escape_to_html_permissive(annotation["text"], escape_links=False)
             )
             table.cell(_("Author"), annotation["author"])
-            table.cell(_("Entry"), render_date(annotation["date"]), css="nobr narrow")
+            table.cell(_("Entry"), render_date(annotation["date"]), css=["nobr narrow"])
             if not cmk_version.is_raw_edition():
                 table.cell(
                     _("Hide in report"), _("Yes") if annotation.get("hide_from_report") else _("No")

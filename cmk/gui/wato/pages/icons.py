@@ -155,13 +155,13 @@ class ModeIcons(WatoMode):
             for icon_name, category_name in icons:
                 table.row()
 
-                table.cell(_("Actions"), css="buttons")
+                table.cell(_("Actions"), css=["buttons"])
                 delete_url = make_confirm_link(
                     url=make_action_link([("mode", "icons"), ("_delete", icon_name)]),
                     message=_("Do you really want to delete the icon <b>%s</b>?") % icon_name,
                 )
                 html.icon_button(delete_url, _("Delete this Icon"), "delete")
 
-                table.cell(_("Icon"), html.render_icon(icon_name), css="buttons")
+                table.cell(_("Icon"), html.render_icon(icon_name), css=["buttons"])
                 table.cell(_("Name"), icon_name)
                 table.cell(_("Category"), IconSelector.category_alias(category_name))

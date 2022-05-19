@@ -177,7 +177,7 @@ class PageKeyManagement:
                 cert = crypto.load_certificate(crypto.FILETYPE_PEM, key["certificate"])
 
                 table.row()
-                table.cell(_("Actions"), css="buttons")
+                table.cell(_("Actions"), css=["buttons"])
                 if self._may_edit_config():
                     message = self._delete_confirm_msg()
                     if key["owner"] != user.id:

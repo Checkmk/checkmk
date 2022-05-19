@@ -1449,7 +1449,7 @@ class TagFilter(Filter):
                 operators,
                 style="width:36px",
                 ordered=True,
-                class_="op",
+                class_=["op"],
             )
             html.close_td()
             html.open_td()
@@ -1513,7 +1513,7 @@ class FilterHostAuxTags(Filter):
         for num in range(self.query_filter.count):
             varname = "%s_%d" % (self.query_filter.var_prefix, num)
             html.dropdown(
-                varname, self._options(), deflt=value.get(varname, ""), ordered=True, class_="neg"
+                varname, self._options(), deflt=value.get(varname, ""), ordered=True, class_=["neg"]
             )
             html.open_nobr()
             html.checkbox(varname + "_neg", bool(value.get(varname)), label=_("negate"))

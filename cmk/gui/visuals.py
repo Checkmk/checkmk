@@ -771,10 +771,10 @@ def page_list(
         with table_element(css="data", limit=None) as table:
 
             for owner, visual_name, visual in visual_group:
-                table.row(css="data")
+                table.row(css=["data"])
 
                 # Actions
-                table.cell(_("Actions"), css="buttons visuals")
+                table.cell(_("Actions"), css=["buttons visuals"])
 
                 # Clone / Customize
                 buttontext = _("Create a customized copy of this")

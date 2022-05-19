@@ -274,7 +274,7 @@ class SimpleListMode(_SimpleWatoModeBase[_T]):
         self._show_entry_cells(table, ident, entry)
 
     def _show_action_cell(self, table: Table, ident: str) -> None:
-        table.cell(_("Actions"), css="buttons")
+        table.cell(_("Actions"), css=["buttons"])
 
         edit_url = makeuri_contextless(
             request,

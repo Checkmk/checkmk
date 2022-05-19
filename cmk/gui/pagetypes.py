@@ -1173,12 +1173,12 @@ class Overridable(Base):
                                 value="X",
                             ),
                             sortable=False,
-                            css="checkbox",
+                            css=["checkbox"],
                         )
                         html.checkbox("_c_%s+%s" % (instance.owner(), instance.name()))
 
                     # Actions
-                    table.cell(_("Actions"), css="buttons visuals")
+                    table.cell(_("Actions"), css=["buttons visuals"])
 
                     # View
                     if isinstance(instance, PageRenderer):
@@ -1200,7 +1200,7 @@ class Overridable(Base):
                     cls.custom_list_buttons(instance)
 
                     # Internal ID of instance (we call that 'name')
-                    table.cell(_("ID"), instance.name(), css="narrow")
+                    table.cell(_("ID"), instance.name(), css=["narrow"])
 
                     # Title
                     table.cell(_("Title"))

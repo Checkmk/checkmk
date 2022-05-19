@@ -131,7 +131,19 @@ def _special_agent_main_core(
 
     logging.debug("args: %r", args.__dict__)
 
-    main_fn(args)
+    try:
+        main_fn(args)
+    except Exception:
+        if args.debug:
+            raise
+        exctype, value, tb = sys.exc_info()
+        assert exctype is not None and tb is not None
+        print(
+            f"Caught unhandled {exctype.__name__}({value})"
+            f" in {tb.tb_frame.f_code.co_filename}:{tb.tb_lineno}",
+            file=sys.stderr,
+        )
+        raise SystemExit(1)
 
 
 def special_agent_main(

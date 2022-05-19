@@ -26,8 +26,7 @@ static std::atomic<bool> S_OnStartCalled = false;
 
 bool ConfigLoaded() { return S_ConfigLoaded; }
 
-std::pair<std::filesystem::path, std::filesystem::path> FindTestDirs(
-    const std::filesystem::path &base) {
+std::pair<fs::path, fs::path> FindTestDirs(const fs::path &base) {
     auto root_dir = fs::path{base} / "test" / "root";
     auto data_dir = fs::path{base} / "test" / "data";
     std::error_code ec;
@@ -39,35 +38,36 @@ std::pair<std::filesystem::path, std::filesystem::path> FindTestDirs(
     return {};
 }
 
-std::pair<std::filesystem::path, std::filesystem::path> FindAlternateDirs(
-    AppType app_type) {
-    std::wstring dir;
+std::pair<fs::path, fs::path> FindAlternateDirs(AppType app_type) {
     switch (app_type) {
         case AppType::exe:
-            dir = tools::win::GetEnv(env::test_integration_root);
-            if (dir.empty()) {
-                return {};
+            for (const auto &env_var :
+                 {env::test_integration_root, env::integration_base_dir}) {
+                auto dir = tools::win::GetEnv(env_var);
+                if (!dir.empty()) {
+                    XLOG::l.i(
+                        "YOU ARE USING '{}' set by environment variable '{}'",
+                        wtools::ToUtf8(dir), wtools::ToUtf8(env_var));
+                    return FindTestDirs(dir);
+                }
             }
-            XLOG::l.i("YOU ARE USING '{}' set by environment variable '{}'",
-                      wtools::ToUtf8(dir),
-                      wtools::ToUtf8(env::test_integration_root));
             break;
 
         case AppType::test: {
-            dir = tools::win::GetEnv(env::test_root);
-            if (!dir.empty()) {
-                break;
+            const auto &dir = tools::win::GetEnv(env::unit_base_dir);
+            if (dir.empty()) {
+                XLOG::l.i(
+                    "Environment variable '{}' not found, fallback to SOLUTION_DIR",
+                    wtools::ToUtf8(env::unit_base_dir));
+                return {fs::path{SOLUTION_DIR} / "install" / "resources", {}};
             }
-            XLOG::l.i(
-                "Environment variable {} not found, fallback to SOLUTION_DIR");
-            return {fs::path{SOLUTION_DIR} / "install" / "resources", {}};
+            return FindTestDirs(dir);
         }
         default:
             XLOG::l("Bad Mode [{}]", static_cast<int>(app_type));
             return {};
     }
-
-    return FindTestDirs(dir);
+    return {};
 }
 
 namespace cfg {

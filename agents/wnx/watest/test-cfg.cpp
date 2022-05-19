@@ -371,7 +371,7 @@ TEST(Cma, FindAlternateDirs) {
         EXPECT_EQ(d, "");
     }
 
-    auto expected = tools::win::GetEnv(env::test_root);
+    auto expected = tools::win::GetEnv(env::unit_base_dir);
     auto [r, d] = cma::FindAlternateDirs(AppType::test);
     EXPECT_TRUE(r.wstring().find(expected) != std::wstring::npos);
     EXPECT_TRUE(d.wstring().find(expected) != std::wstring::npos);

@@ -15,10 +15,11 @@ namespace cma {
 enum class AppType { automatic = 99, srv = 0, test, exe, failed };
 enum class YamlCacheOp { nothing, update };
 namespace env {
-constexpr const std::wstring_view test_integration_root{
-    L"WNX_TEST_I_ROOT"};  // integration
-constexpr const std::wstring_view test_root{L"WNX_TEST_ROOT"};
-constexpr const std::wstring_view auto_reload{L"CMA_AUTO_RELOAD"};
+// TODO(s): deprecated, remove
+constexpr std::wstring_view test_integration_root{L"WNX_TEST_I_ROOT"};
+constexpr std::wstring_view integration_base_dir{L"WNX_INTEGRATION_BASE_DIR"};
+constexpr std::wstring_view unit_base_dir{L"WNX_TEST_ROOT"};
+constexpr std::wstring_view auto_reload{L"CMA_AUTO_RELOAD"};
 }  // namespace env
 
 AppType AppDefaultType();  // defined by main

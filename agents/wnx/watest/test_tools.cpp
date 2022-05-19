@@ -65,9 +65,9 @@ public:
     virtual ~TestEnvironment() = default;
 
     void SetUp() override {
-        auto test_root = cma::tools::win::GetEnv(cma::env::test_root);
-        if (!test_root.empty() && fs::exists(test_root)) {
-            temp_dir_ = fs::path(test_root) / temp_test_prefix_;
+        auto base_dir = cma::tools::win::GetEnv(cma::env::unit_base_dir);
+        if (!base_dir.empty() && fs::exists(base_dir)) {
+            temp_dir_ = fs::path(base_dir) / temp_test_prefix_;
         } else {
             auto folder_name = fmt::format("{}_{}", temp_test_prefix_,
                                            ::GetCurrentProcessId());

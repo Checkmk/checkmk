@@ -194,6 +194,7 @@ def test_automation_discovery_not_existing_host(test_cfg, site):
             u'clustered_new': 0,
             u'clustered_old': 0,
             u'clustered_vanished': 0,
+            u'clustered_ignored': 0,
             u'diff_text': None,
             u'error_text': u'',
             u'self_kept': 0,

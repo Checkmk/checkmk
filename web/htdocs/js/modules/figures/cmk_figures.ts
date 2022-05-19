@@ -245,7 +245,7 @@ export class FigureBase {
     _div_selection;
     svg;
     plot;
-    _fixed_size: ElementSize | null;
+    _fixed_size: string | ElementSize | null;
     margin: ELementMargin;
     _fetch_start: number;
     _fetch_data_latency: number;
@@ -265,7 +265,7 @@ export class FigureBase {
         return "figure_base_class";
     }
 
-    constructor(div_selector, fixed_size = null) {
+    constructor(div_selector, fixed_size: string | ElementSize | null = null) {
         this._div_selector = div_selector; // The main container
         this._div_selection = d3.select(this._div_selector); // The d3-seletion of the main container
 

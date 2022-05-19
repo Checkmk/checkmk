@@ -1233,6 +1233,8 @@ def load_plugins() -> None:
     """Plugin initialization hook (Called by cmk.gui.main_modules.load_plugins())"""
     _register_pre_21_plugin_api()
     utils.load_web_plugins("views", globals())
+    cmk.gui.plugins.views.inventory.update_paint_functions(globals())
+
     utils.load_web_plugins("icons", globals())
     utils.load_web_plugins("perfometer", globals())
 

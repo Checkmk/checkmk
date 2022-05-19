@@ -31,7 +31,7 @@ import socket
 import time
 import urllib.parse
 import uuid
-from collections.abc import MutableMapping
+from collections.abc import Container, MutableMapping
 from collections.abc import Sequence as ABCSequence
 from enum import Enum
 from pathlib import Path
@@ -376,7 +376,7 @@ class Age(ValueSpec[Seconds]):
         label: _Optional[str] = None,
         minvalue: _Optional[Seconds] = None,
         maxvalue: _Optional[Seconds] = None,
-        display: _Optional[list[str]] = None,
+        display: _Optional[Container[str]] = None,
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
         default_value: ValueSpecDefault[Seconds] = DEF_VALUE,
@@ -1336,7 +1336,7 @@ class HostAddress(TextInput):
             return False
         return True
 
-    def _allowed_type_names(self) -> list[str]:
+    def _allowed_type_names(self) -> Iterable[str]:
         allowed: list[str] = []
         if self._allow_host_name:
             allowed.append(_("Host- or DNS name"))
@@ -1881,7 +1881,7 @@ def NetworkPort(  # pylint: disable=redefined-builtin
 
 
 # FIXME: Using a ListOfStrings for a list of ints is fundamentally wrong! Perhaps we should use ListOf here.
-def ListOfNetworkPorts(title: _Optional[str], default_value: list[int]) -> ListOfStrings:
+def ListOfNetworkPorts(title: _Optional[str], default_value: Sequence[int]) -> ListOfStrings:
     return ListOfStrings(
         valuespec=cast(ValueSpec[str], NetworkPort(title=_("Port"))),
         title=title,
@@ -2134,7 +2134,7 @@ class ListOf(ValueSpec[ListOfModel[T]]):
             )
         )
 
-    def get_indexes(self, varprefix: str) -> dict[int, int]:
+    def get_indexes(self, varprefix: str) -> Mapping[int, int]:
         count = request.get_integer_input_mandatory(varprefix + "_count", 0)
         n = 1
         indexes = {}
@@ -2191,7 +2191,7 @@ class ListOfMultipleChoiceGroup(NamedTuple):
     choices: ListOfMultipleChoices
 
 
-GroupedListOfMultipleChoices = list[ListOfMultipleChoiceGroup]
+GroupedListOfMultipleChoices = Sequence[ListOfMultipleChoiceGroup]
 ListOfMultipleModel = Mapping[str, Any]
 
 
@@ -2204,7 +2204,7 @@ class ListOfMultiple(ValueSpec[ListOfMultipleModel]):
         self,
         choices: Union[GroupedListOfMultipleChoices, ListOfMultipleChoices],
         choice_page_name: str,
-        page_request_vars: _Optional[dict[str, Any]] = None,
+        page_request_vars: _Optional[Mapping[str, Any]] = None,
         size: _Optional[int] = None,
         add_label: _Optional[str] = None,
         del_label: _Optional[str] = None,
@@ -2387,7 +2387,7 @@ class ListOfMultiple(ValueSpec[ListOfMultipleModel]):
 
 class ABCPageListOfMultipleGetChoice(AjaxPage, abc.ABC):
     @abc.abstractmethod
-    def _get_choices(self, api_request: dict[str, str]) -> list[tuple[str, ValueSpec]]:
+    def _get_choices(self, api_request: Mapping[str, str]) -> Sequence[tuple[str, ValueSpec]]:
         raise NotImplementedError()
 
     def page(self) -> dict:
@@ -2972,7 +2972,7 @@ class WatoFolderChoices(AjaxDropdownChoice):
 class DropdownChoiceWithHostAndServiceHints(AjaxDropdownChoice):
     def __init__(  # pylint: disable=redefined-builtin
         self,
-        css_spec: list[str],
+        css_spec: Sequence[str],
         hint_label: str,
         # AjaxDropdownChoice
         regex: Union[None, str, Pattern[str]] = None,
@@ -3018,7 +3018,7 @@ class DropdownChoiceWithHostAndServiceHints(AjaxDropdownChoice):
             varprefix,
             self._options_for_html(self._choices_from_value(value)),
             deflt=self._option_for_html(value),
-            class_=self._css_spec,
+            class_=list(self._css_spec),  # TODO: Fix dropdown's signature!
             style="width: 250px;",
             data_autocompleter=json.dumps(self._autocompleter.config),
             read_only=self._read_only,
@@ -3566,15 +3566,16 @@ ListChoiceChoice = tuple[ListChoiceChoiceIdent, str]
 ListChoiceChoices = Union[
     None,
     Promise[Sequence[ListChoiceChoice]],
-    dict[ListChoiceChoiceIdent, str],
+    Mapping[ListChoiceChoiceIdent, str],
 ]
+ListChoiceModel = Sequence[ListChoiceChoiceIdent]
 
 
-class ListChoice(ValueSpec[Sequence[ListChoiceChoiceIdent]]):
+class ListChoice(ValueSpec[ListChoiceModel]):
     """A list of checkboxes representing a list of values"""
 
     @staticmethod
-    def dict_choices(choices: dict[ListChoiceChoiceIdent, str]) -> list[tuple[str, str]]:
+    def dict_choices(choices: Mapping[ListChoiceChoiceIdent, str]) -> Sequence[tuple[str, str]]:
         return [
             (str(type_id), f"{type_id} - {type_name}")
             for (type_id, type_name) in sorted(choices.items())
@@ -3598,8 +3599,8 @@ class ListChoice(ValueSpec[Sequence[ListChoiceChoiceIdent]]):
         # ValueSpec
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
-        default_value: ValueSpecDefault[Sequence[ListChoiceChoiceIdent]] = DEF_VALUE,
-        validate: _Optional[ValueSpecValidateFunc[Sequence[ListChoiceChoiceIdent]]] = None,
+        default_value: ValueSpecDefault[ListChoiceModel] = DEF_VALUE,
+        validate: _Optional[ValueSpecValidateFunc[ListChoiceModel]] = None,
     ):
         super().__init__(title=title, help=help, default_value=default_value, validate=validate)
         self._choices = choices
@@ -3637,24 +3638,20 @@ class ListChoice(ValueSpec[Sequence[ListChoiceChoiceIdent]]):
         else:
             raise ValueError("illegal type for choices")
 
-    def get_elements(self) -> list[tuple[ListChoiceChoiceIdent, str]]:
+    def get_elements(self) -> Sequence[tuple[ListChoiceChoiceIdent, str]]:
         raise NotImplementedError()
 
-    def canonical_value(self) -> list:
+    def canonical_value(self) -> ListChoiceModel:
         return []
 
-    def _draw_listchoice(
-        self, varprefix: str, value: Sequence[ListChoiceChoiceIdent], elements, columns, toggle_all
-    ) -> None:
-
+    def _draw_listchoice(self, varprefix: str, value: ListChoiceModel) -> None:
         if self._toggle_all:
             html.a(
                 _("Check / Uncheck all"),
                 href="javascript:cmk.valuespecs.list_choice_toggle_all('%s')" % varprefix,
             )
-
         html.open_table(id_="%s_tbl" % varprefix, class_=["listchoice"])
-        for nr, (key, title) in enumerate(elements):
+        for nr, (key, title) in enumerate(self._elements):
             if nr % self._columns == 0:
                 if nr > 0:
                     html.close_tr()
@@ -3665,18 +3662,18 @@ class ListChoice(ValueSpec[Sequence[ListChoiceChoiceIdent]]):
         html.close_tr()
         html.close_table()
 
-    def render_input(self, varprefix: str, value: Sequence[ListChoiceChoiceIdent]) -> None:
+    def render_input(self, varprefix: str, value: ListChoiceModel) -> None:
         self.load_elements()
         if not self._elements:
             html.write_text(self._no_elements_text)
             return
 
-        self._draw_listchoice(varprefix, value, self._elements, self._columns, self._toggle_all)
+        self._draw_listchoice(varprefix, value)
 
         # Make sure that at least one variable with the prefix is present
         html.hidden_field(varprefix, "1", add_var=True)
 
-    def value_to_html(self, value: Sequence[ListChoiceChoiceIdent]) -> ValueSpecText:
+    def value_to_html(self, value: ListChoiceModel) -> ValueSpecText:
         if not value:
             return self._empty_text
 
@@ -3690,7 +3687,7 @@ class ListChoice(ValueSpec[Sequence[ListChoiceChoiceIdent]]):
             HTMLWriter.render_tr(HTMLWriter.render_td(HTMLWriter.render_br().join(texts)))
         )
 
-    def from_html_vars(self, varprefix: str) -> list[ListChoiceChoiceIdent]:
+    def from_html_vars(self, varprefix: str) -> ListChoiceModel:
         self.load_elements()
         return [
             key  #
@@ -3698,19 +3695,19 @@ class ListChoice(ValueSpec[Sequence[ListChoiceChoiceIdent]]):
             if html.get_checkbox("%s_%d" % (varprefix, nr))
         ]
 
-    def value_to_json(self, value: Sequence[ListChoiceChoiceIdent]) -> JSONValue:
+    def value_to_json(self, value: ListChoiceModel) -> JSONValue:
         return value
 
-    def value_from_json(self, json_value: JSONValue) -> list[ListChoiceChoiceIdent]:
+    def value_from_json(self, json_value: JSONValue) -> ListChoiceModel:
         return json_value
 
-    def validate_datatype(self, value: Sequence[ListChoiceChoiceIdent], varprefix: str) -> None:
+    def validate_datatype(self, value: ListChoiceModel, varprefix: str) -> None:
         if not isinstance(value, list):
             raise MKUserError(
                 varprefix, _("The datatype must be list, but is %s") % _type_name(value)
             )
 
-    def _validate_value(self, value: Sequence[ListChoiceChoiceIdent], varprefix: str) -> None:
+    def _validate_value(self, value: ListChoiceModel, varprefix: str) -> None:
         if not self._allow_empty and not value:
             raise MKUserError(varprefix, _("You have to select at least one element."))
         self.load_elements()
@@ -3758,8 +3755,8 @@ class DualListChoice(ListChoice):
         # ValueSpec
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
-        default_value: ValueSpecDefault[Sequence[ListChoiceChoiceIdent]] = DEF_VALUE,
-        validate: _Optional[ValueSpecValidateFunc[Sequence[ListChoiceChoiceIdent]]] = None,
+        default_value: ValueSpecDefault[ListChoiceModel] = DEF_VALUE,
+        validate: _Optional[ValueSpecValidateFunc[ListChoiceModel]] = None,
         locked_choices: _Optional[Sequence[str]] = None,
         locked_choices_text_singular: _Optional[ChoiceText] = None,
         locked_choices_text_plural: _Optional[ChoiceText] = None,
@@ -3800,7 +3797,7 @@ class DualListChoice(ListChoice):
             else _("%%d locked elements")
         )
 
-    def render_input(self, varprefix: str, value: Sequence[ListChoiceChoiceIdent]) -> None:
+    def render_input(self, varprefix: str, value: ListChoiceModel) -> None:
         self.load_elements()
         if not self._elements:
             html.write_text(_("There are no elements for selection."))
@@ -3891,7 +3888,7 @@ class DualListChoice(ListChoice):
             varprefix, "|".join([str(k) for k, v in selected]), id_=varprefix, add_var=True
         )
 
-    def _locked_choice_text(self, value: Sequence[ListChoiceChoiceIdent]) -> _Optional[ChoiceText]:
+    def _locked_choice_text(self, value: ListChoiceModel) -> _Optional[ChoiceText]:
         num_locked_choices = sum(1 for choice_id in value if choice_id in self._locked_choices)
         return (  #
             self._locked_choices_text_singular % num_locked_choices
@@ -3906,7 +3903,7 @@ class DualListChoice(ListChoice):
         all_elements.extend(self._locked_choices)
         return all(value != val for val in all_elements)
 
-    def from_html_vars(self, varprefix: str) -> list[ListChoiceChoiceIdent]:
+    def from_html_vars(self, varprefix: str) -> ListChoiceModel:
         self.load_elements()
         value: list = []
         selection_str = request.var(varprefix, "")
@@ -4700,7 +4697,7 @@ class Timerange(CascadingDropdown):
     def __init__(  # pylint: disable=redefined-builtin
         self,
         include_time: bool = False,
-        choices: _Optional[Promise[list[CascadingDropdownChoice]]] = None,
+        choices: _Optional[CascadingDropdownChoices] = None,
         # CascadingDropdown
         # TODO: Make this more specific
         label: _Optional[str] = None,
@@ -4738,14 +4735,14 @@ class Timerange(CascadingDropdown):
         self._include_time = include_time
         self._fixed_choices = choices
 
-    def _prepare_choices(self) -> list[CascadingDropdownChoice]:
+    def _prepare_choices(self) -> Sequence[CascadingDropdownChoice]:
         # TODO: We have dispatching code like this all over place...
         if self._fixed_choices is None:
             choices: list[CascadingDropdownChoice] = []
         elif isinstance(self._fixed_choices, list):
             choices = list(self._fixed_choices)
         elif callable(self._fixed_choices):
-            choices = self._fixed_choices()
+            choices = list(self._fixed_choices())
         else:
             raise ValueError("invalid type for choices")
 
@@ -5380,7 +5377,7 @@ class Tuple(ValueSpec):
 
     def __init__(  # pylint: disable=redefined-builtin
         self,
-        elements: list[ValueSpec],
+        elements: Sequence[ValueSpec],
         show_titles: bool = True,
         orientation: str = "vertical",
         separator: str = " ",
@@ -5513,33 +5510,36 @@ class Tuple(ValueSpec):
 DictionaryEntry = tuple[str, ValueSpec]
 DictionaryElements = Iterable[DictionaryEntry]
 DictionaryElementsRaw = Promise[DictionaryElements]
+DictionaryModel = dict[str, Any]
 
 
-class Dictionary(ValueSpec[dict[str, Any]]):
+class Dictionary(ValueSpec[DictionaryModel]):
     # TODO: Cleanup ancient "migrate"
     def __init__(  # pylint: disable=redefined-builtin
         self,
         elements: DictionaryElementsRaw,
         empty_text: _Optional[str] = None,
         default_text: _Optional[str] = None,
-        optional_keys: Union[bool, list[str]] = True,
-        required_keys: _Optional[list[str]] = None,
-        show_more_keys: _Optional[list[str]] = None,
-        ignored_keys: _Optional[list[str]] = None,
-        default_keys: _Optional[list[str]] = None,
-        hidden_keys: _Optional[list[str]] = None,
+        optional_keys: Union[bool, Sequence[str]] = True,
+        required_keys: _Optional[Sequence[str]] = None,
+        show_more_keys: _Optional[Sequence[str]] = None,
+        ignored_keys: _Optional[Sequence[str]] = None,
+        default_keys: _Optional[Sequence[str]] = None,
+        hidden_keys: _Optional[Sequence[str]] = None,
         columns: Literal[1, 2] = 1,
         render: Literal["normal", "form", "form_part"] = "normal",
         form_narrow: bool = False,
         form_isopen: bool = True,
-        headers: _Optional[list[Union[tuple[str, list[str]], tuple[str, str, list[str]]]]] = None,
+        headers: _Optional[
+            Sequence[Union[tuple[str, Sequence[str]], tuple[str, str, Sequence[str]]]]
+        ] = None,
         migrate: _Optional[Callable[[tuple], dict]] = None,
         indent: bool = True,
         # ValueSpec
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
-        default_value: ValueSpecDefault[dict[str, Any]] = DEF_VALUE,
-        validate: _Optional[ValueSpecValidateFunc[dict[str, Any]]] = None,
+        default_value: ValueSpecDefault[DictionaryModel] = DEF_VALUE,
+        validate: _Optional[ValueSpecValidateFunc[DictionaryModel]] = None,
     ):
         super().__init__(title=title, help=help, default_value=default_value, validate=validate)
         if callable(elements):
@@ -5575,22 +5575,22 @@ class Dictionary(ValueSpec[dict[str, Any]]):
         self._migrate = migrate  # value migration from old tuple version
         self._indent = indent
 
-    def migrate(self, value):
+    def migrate(self, value: Any) -> DictionaryModel:
         return self._migrate(value) if self._migrate else value
 
     def _get_elements(self) -> DictionaryElements:
         yield from self._elements()
 
     # TODO: Optional has to be cleaned up to make the type signature compatible with the base class
-    def render_input_as_form(self, varprefix: str, value: _Optional[dict[str, Any]]) -> None:
+    def render_input_as_form(self, varprefix: str, value: _Optional[DictionaryModel]) -> None:
         self._render_input(varprefix, value, "form")
 
     # TODO: Optional has to be cleaned up to make the type signature compatible with the base class
-    def render_input(self, varprefix: str, value: _Optional[dict[str, Any]]) -> None:
+    def render_input(self, varprefix: str, value: _Optional[DictionaryModel]) -> None:
         self._render_input(varprefix, value, self._render)
 
     # TODO: Optional has to be cleaned up to make the type signature compatible with the base class
-    def _render_input(self, varprefix: str, value: _Optional[dict[str, Any]], render: str) -> None:
+    def _render_input(self, varprefix: str, value: _Optional[DictionaryModel], render: str) -> None:
         value = self.migrate(value)
         if not isinstance(value, MutableMapping):
             value = {}  # makes code simpler in complain phase
@@ -5603,7 +5603,7 @@ class Dictionary(ValueSpec[dict[str, Any]]):
             self._render_input_normal(varprefix, value, two_columns=self._columns == 2)
 
     def _render_input_normal(
-        self, varprefix: str, value: dict[str, Any], two_columns: bool
+        self, varprefix: str, value: DictionaryModel, two_columns: bool
     ) -> None:
         html.open_table(class_=["dictionary"])
         for param, vs in self._get_elements():
@@ -5672,7 +5672,7 @@ class Dictionary(ValueSpec[dict[str, Any]]):
         html.close_table()
 
     def _render_input_form(
-        self, varprefix: str, value: dict[str, Any], as_part: bool = False
+        self, varprefix: str, value: DictionaryModel, as_part: bool = False
     ) -> None:
         headers = self._headers or [(self.title() or _("Properties"), [])]
         for header, css, section_elements in map(self._normalize_header, headers):
@@ -5699,7 +5699,7 @@ class Dictionary(ValueSpec[dict[str, Any]]):
             raise ValueError("invalid header tuple length")
         raise ValueError("invalid header type")
 
-    def _section_has_show_more(self, section_elements: list[str]) -> bool:
+    def _section_has_show_more(self, section_elements: Sequence[str]) -> bool:
         """Valuespec Dictionary has option "show_more_keys" but can be buried under
         multiple different valuespecs"""
         # visuals deliver no section_elements
@@ -5756,21 +5756,21 @@ class Dictionary(ValueSpec[dict[str, Any]]):
         if first_element:
             first_element[1].set_focus(varprefix + "_p_" + first_element[0])
 
-    def canonical_value(self) -> dict[str, Any]:
+    def canonical_value(self) -> DictionaryModel:
         return {
             name: vs.canonical_value()
             for (name, vs) in self._get_elements()
             if name in self._required_keys or not self._optional_keys
         }
 
-    def default_value(self) -> dict[str, Any]:
+    def default_value(self) -> DictionaryModel:
         return {
             name: vs.default_value()
             for name, vs in self._get_elements()
             if name in self._required_keys or not self._optional_keys or name in self._default_keys
         }
 
-    def value_to_html(self, value: dict[str, Any]) -> ValueSpecText:
+    def value_to_html(self, value: DictionaryModel) -> ValueSpecText:
         value = self.migrate(value)
         if not value:
             return self._empty_text
@@ -5781,7 +5781,7 @@ class Dictionary(ValueSpec[dict[str, Any]]):
         elem = self._get_elements()
         return self._value_to_html_multiline(elem, value)
 
-    def _value_to_html_multiline(self, elem: DictionaryElements, value: Any) -> HTML:
+    def _value_to_html_multiline(self, elem: DictionaryElements, value: DictionaryModel) -> HTML:
         s = HTML()
         for param, vs in elem:
             if param in value:
@@ -5791,28 +5791,28 @@ class Dictionary(ValueSpec[dict[str, Any]]):
                 )
         return HTMLWriter.render_table(s)
 
-    def value_to_json(self, value: dict[str, Any]) -> JSONValue:
+    def value_to_json(self, value: DictionaryModel) -> JSONValue:
         return {
             param: vs.value_to_json(value[param])
             for param, vs in self._get_elements()
             if param in value
         }
 
-    def value_from_json(self, json_value: JSONValue) -> dict[str, Any]:
+    def value_from_json(self, json_value: JSONValue) -> DictionaryModel:
         return {
             param: vs.value_from_json(json_value[param])
             for param, vs in self._get_elements()
             if param in json_value
         }
 
-    def value_to_json_safe(self, value: dict[str, Any]) -> JSONValue:
+    def value_to_json_safe(self, value: DictionaryModel) -> JSONValue:
         return {
             param: vs.value_to_json_safe(value[param])
             for param, vs in self._get_elements()
             if param in value
         }
 
-    def from_html_vars(self, varprefix: str) -> dict[str, Any]:
+    def from_html_vars(self, varprefix: str) -> DictionaryModel:
         return {
             param: vs.from_html_vars(f"{varprefix}_p_{param}")
             for param, vs in self._get_elements()
@@ -5823,7 +5823,7 @@ class Dictionary(ValueSpec[dict[str, Any]]):
             )
         }
 
-    def validate_datatype(self, value: Any, varprefix: str) -> None:
+    def validate_datatype(self, value: DictionaryModel, varprefix: str) -> None:
         value = self.migrate(value)
 
         if not isinstance(value, dict):
@@ -5852,7 +5852,7 @@ class Dictionary(ValueSpec[dict[str, Any]]):
                     % (param, ", ".join(allowed_keys)),
                 )
 
-    def _validate_value(self, value: dict[str, Any], varprefix: str) -> None:
+    def _validate_value(self, value: DictionaryModel, varprefix: str) -> None:
         value = self.migrate(value)
 
         for param, vs in self._get_elements():
@@ -5861,7 +5861,7 @@ class Dictionary(ValueSpec[dict[str, Any]]):
             elif not self._optional_keys or param in self._required_keys:
                 raise MKUserError(varprefix, _("The entry %s is missing") % vs.title())
 
-    def transform_value(self, value: dict[str, Any]) -> dict[str, Any]:
+    def transform_value(self, value: DictionaryModel) -> DictionaryModel:
         assert isinstance(value, dict), "Dictionary.transform_value() got a non-dict: %r" % (value,)
         return {
             **{
@@ -5912,7 +5912,7 @@ class ElementSelection(ValueSpec[_Optional[str]]):
             self._loaded_at = id(html)  # unique for each query!
 
     @abc.abstractmethod
-    def get_elements(self) -> dict[str, str]:
+    def get_elements(self) -> Mapping[str, str]:
         raise NotImplementedError()
 
     def canonical_value(self) -> _Optional[str]:
@@ -6108,7 +6108,7 @@ class Transform(ValueSpec):
     def render_input(self, varprefix: str, value: Any) -> None:
         self._valuespec.render_input(varprefix, self.forth(value))
 
-    def render_input_as_form(self, varprefix: str, value: dict[str, Any]) -> None:
+    def render_input_as_form(self, varprefix: str, value: Mapping[str, Any]) -> None:
         if not isinstance(self._valuespec, Dictionary):
             raise NotImplementedError()
         self._valuespec.render_input_as_form(varprefix, self.forth(value))
@@ -6682,7 +6682,7 @@ class TextOrRegExp(Alternative):
 TextOrRegExpUnicode = TextOrRegExp  # alias added in 2.1.0 for compatibility
 
 
-LabelsModel = dict[str, str]
+LabelsModel = Mapping[str, str]
 
 
 class Labels(ValueSpec[LabelsModel]):
@@ -6809,7 +6809,7 @@ class PageAutocompleteLabels(AjaxPage):
             self._get_labels(Labels.World(api_request["world"]), api_request["search_label"])
         )
 
-    def _get_labels(self, world, search_label: str) -> list[tuple[str, str]]:
+    def _get_labels(self, world, search_label: str) -> Sequence[tuple[str, str]]:
         if world is Labels.World.CONFIG:
             return self._get_labels_from_config(search_label)
 
@@ -6818,14 +6818,14 @@ class PageAutocompleteLabels(AjaxPage):
 
         raise NotImplementedError()
 
-    def _get_labels_from_config(self, search_label: str) -> list[tuple[str, str]]:
+    def _get_labels_from_config(self, search_label: str) -> Sequence[tuple[str, str]]:
         # TODO: Until we have a config specific implementation we now use the labels known to the
         # core. This is not optimal, but better than doing nothing.
         # To implement a setup specific search, we need to decide which occurrences of labels we
         # want to search: hosts / folders, rules, ...?
         return self._get_labels_from_core(search_label)
 
-    def _get_labels_from_core(self, search_label: str) -> list[tuple[str, str]]:
+    def _get_labels_from_core(self, search_label: str) -> Sequence[tuple[str, str]]:
         return get_labels_cache().get_labels_list()
 
 

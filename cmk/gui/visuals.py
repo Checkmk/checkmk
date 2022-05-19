@@ -13,6 +13,7 @@ import pickle
 import re
 import sys
 import traceback
+from collections.abc import Mapping
 from enum import Enum
 from itertools import chain, starmap
 from pathlib import Path
@@ -1936,7 +1937,7 @@ def show_filter_form(
 def _show_filter_form_buttons(
     varprefix: str,
     filter_list_id: str,
-    page_request_vars: Optional[Dict[str, Any]],
+    page_request_vars: Optional[Mapping[str, Any]],
     view_name: str,
     reset_ajax_page: str,
 ) -> None:

@@ -7,6 +7,7 @@
 import abc
 import signal
 import os
+import cmk.utils.log as log
 from contextlib import redirect_stdout
 from types import FrameType
 from typing import NoReturn, Dict, Any, List, Optional
@@ -50,6 +51,7 @@ class Automations:
 
             if automation.needs_checks:
                 with redirect_stdout(open(os.devnull, "w")):
+                    log.setup_console_logging()
                     config.load_all_agent_based_plugins(check_api.get_check_api_context)
 
             if automation.needs_config:

@@ -40,7 +40,7 @@ def get_cmk_version(BRANCH, VERSION){
 }
 
 def registry_credentials_id() {
-    return (EDITION == "raw") ? '11fb3d5f-e44e-4f33-a651-274227cc48ab' : "registry.checkmk.com"
+    return (EDITION == "raw" || EDITION == "free") ? '11fb3d5f-e44e-4f33-a651-274227cc48ab' : "registry.checkmk.com"
 }
 
 timeout(time: 12, unit: 'HOURS') {

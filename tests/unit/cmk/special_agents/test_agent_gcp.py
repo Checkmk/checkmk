@@ -284,3 +284,34 @@ def test_gce_host_name_mangling(gce_sections: Sequence[agent_gcp.PiggyBackSectio
 
 def test_gce_metric_filtering(gce_sections: Sequence[agent_gcp.PiggyBackSection]):
     assert 1 == len(list(list(gce_sections[0].sections)[0].results))
+
+
+def test_metric_requests():
+    metric = agent_gcp.Metric(
+        name="compute.googleapis.com/instance/uptime",
+        aggregation=agent_gcp.Aggregation(
+            per_series_aligner=Aligner.ALIGN_MAX, cross_series_reducer=Reducer.REDUCE_NONE
+        ),
+    )
+    interval = monitoring_v3.TimeInterval(
+        {
+            "end_time": {"seconds": 100000, "nanos": 0},
+            "start_time": {"seconds": (100000 - 1200), "nanos": 0},
+        }
+    )
+    request = metric.request(interval=interval, groupby="resource.thisone", project="fun")
+    expected = {
+        "name": "projects/fun",
+        "filter": 'metric.type = "compute.googleapis.com/instance/uptime"',
+        "interval": interval,
+        "view": monitoring_v3.ListTimeSeriesRequest.TimeSeriesView.FULL,
+        "aggregation": monitoring_v3.Aggregation(
+            {
+                "alignment_period": {"seconds": 60},
+                "group_by_fields": ["resource.thisone"],
+                "per_series_aligner": Aligner.ALIGN_MAX,
+                "cross_series_reducer": Reducer.REDUCE_NONE,
+            }
+        ),
+    }
+    assert request == expected

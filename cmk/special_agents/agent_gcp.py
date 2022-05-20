@@ -64,21 +64,34 @@ class Aggregation:
     cross_series_reducer: int = Reducer.REDUCE_SUM
     alignment_period: int = 60
 
-    def to_dict(self, default_groupby: str) -> Mapping[str, Any]:
-        return {
-            "alignment_period": {"seconds": self.alignment_period},
-            "group_by_fields": [
-                default_groupby,
-            ],
-            "per_series_aligner": self.per_series_aligner,
-            "cross_series_reducer": self.cross_series_reducer,
-        }
+    def to_obj(self, default_groupby: str) -> monitoring_v3.Aggregation:
+        return monitoring_v3.Aggregation(
+            {
+                "alignment_period": {"seconds": self.alignment_period},
+                "group_by_fields": [
+                    default_groupby,
+                ],
+                "per_series_aligner": self.per_series_aligner,
+                "cross_series_reducer": self.cross_series_reducer,
+            }
+        )
 
 
 @dataclass(frozen=True)
 class Metric:
     name: str
     aggregation: Aggregation
+
+    def request(
+        self, interval: monitoring_v3.TimeInterval, groupby: str, project: str
+    ) -> Mapping[str, Any]:
+        return {
+            "name": f"projects/{project}",
+            "filter": f'metric.type = "{self.name}"',
+            "interval": interval,
+            "view": monitoring_v3.ListTimeSeriesRequest.TimeSeriesView.FULL,
+            "aggregation": self.aggregation.to_obj(groupby),
+        }
 
 
 @dataclass(frozen=True)
@@ -232,17 +245,7 @@ def time_series(
         }
     )
     for metric in service.metrics:
-        filter_rule = f'metric.type = "{metric.name}"'
-
-        request = {
-            "name": f"projects/{client.project}",
-            "filter": filter_rule,
-            "interval": interval,
-            "view": monitoring_v3.ListTimeSeriesRequest.TimeSeriesView.FULL,
-            "aggregation": monitoring_v3.Aggregation(
-                metric.aggregation.to_dict(service.default_groupby)
-            ),
-        }
+        request = metric.request(interval, groupby=service.default_groupby, project=client.project)
         try:
             results = client.monitoring().list_time_series(request=request)
         except Exception as e:

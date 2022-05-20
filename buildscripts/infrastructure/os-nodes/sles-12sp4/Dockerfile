@@ -8,6 +8,8 @@ ARG PACKAGES
 
 RUN zypper addrepo -G ${ARTIFACT_STORAGE}/repository/sles12sp4 sles12sp4 \
     && zypper addrepo -G ${ARTIFACT_STORAGE}/repository/sles12spx-web-scripting web-scripting \
+    && zypper in -f -y \
+    libpcre1-8.39-8.3.1 \
     && zypper -n --no-gpg-checks in --replacefiles \
     gawk \
     && zypper -n --no-gpg-checks in --replacefiles \

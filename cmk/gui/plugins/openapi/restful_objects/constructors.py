@@ -60,8 +60,7 @@ def absolute_url(href):
 
     Examples:
 
-
-        This function has to be used within an request context.
+        This function has to be used within a request context.
 
         >>> with _request_context(secure=False):
         ...     absolute_url("objects/host_config/example.com")
@@ -75,6 +74,7 @@ def absolute_url(href):
         href:
 
     Returns:
+        An absolute URL.
 
     """
     if href.startswith("/"):

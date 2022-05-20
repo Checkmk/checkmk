@@ -6,6 +6,7 @@
 import json
 import os
 import typing
+import urllib
 
 import pytest
 import webtest  # type: ignore[import]
@@ -117,6 +118,21 @@ def test_openapi_create_rule_regression(logged_in_admin_wsgi_app):
         headers={"Accept": "application/json", "Content-Type": "application/json"},
         params=json.dumps(values),
         status=200,
+    )
+
+
+def test_openapi_rules_href_escaped(logged_in_admin_wsgi_app):
+    wsgi_app = logged_in_admin_wsgi_app
+    base = "/NO_SITE/check_mk/api/1.0"
+    resp = wsgi_app.get(
+        base + "/domain-types/ruleset/collections/all",
+        headers={"Accept": "application/json", "Content-Type": "application/json"},
+        status=200,
+    )
+    ruleset = next(r for r in resp.json["value"] if "special_agents:gcp" == r["id"])
+    assert (
+        ruleset["links"][0]["href"]
+        == "http://localhost/NO_SITE/check_mk/api/1.0/objects/ruleset/special_agents%253Agcp"
     )
 
 
@@ -263,14 +279,15 @@ def test_openapi_delete_rule(logged_in_admin_wsgi_app, new_rule):
     )
 
 
-def test_openapi_show_ruleset(logged_in_admin_wsgi_app):
+@pytest.mark.parametrize("ruleset", ["host_groups", "special_agents:gcp"])
+def test_openapi_show_ruleset(logged_in_admin_wsgi_app, ruleset):
     wsgi_app = logged_in_admin_wsgi_app
     base = "/NO_SITE/check_mk/api/1.0"
     resp = wsgi_app.get(
-        base + "/objects/ruleset/host_groups",
+        base + f"/objects/ruleset/{urllib.parse.quote(ruleset)}",
         headers={"Accept": "application/json", "Content-Type": "application/json"},
     )
-    assert resp.json["extensions"]["name"] == "host_groups"
+    assert resp.json["extensions"]["name"] == ruleset
 
     # Request a ruleset that doesn't exist should return a 400 Bad Request.
     wsgi_app.get(

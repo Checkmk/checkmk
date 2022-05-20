@@ -34,7 +34,6 @@ class TCPFetcher(Fetcher[AgentRawData]):
         timeout: float,
         host_name: HostName,
         encryption_settings: Mapping[str, str],
-        use_only_cache: bool,
     ) -> None:
         super().__init__(file_cache, logging.getLogger("cmk.helper.tcp"))
         self.family: Final = socket.AddressFamily(family)
@@ -43,7 +42,6 @@ class TCPFetcher(Fetcher[AgentRawData]):
         self.timeout: Final = timeout
         self.host_name: Final = host_name
         self.encryption_settings: Final = encryption_settings
-        self.use_only_cache: Final = use_only_cache
         self._opt_socket: Optional[socket.socket] = None
 
     @property
@@ -62,7 +60,6 @@ class TCPFetcher(Fetcher[AgentRawData]):
                     f"timeout={self.timeout!r}",
                     f"host_name={self.host_name!r}",
                     f"encryption_settings={self.encryption_settings!r}",
-                    f"use_only_cache={self.use_only_cache!r}",
                 )
             )
             + ")"
@@ -88,7 +85,6 @@ class TCPFetcher(Fetcher[AgentRawData]):
             "timeout": self.timeout,
             "host_name": str(self.host_name),
             "encryption_settings": self.encryption_settings,
-            "use_only_cache": self.use_only_cache,
         }
 
     def open(self) -> None:
@@ -124,11 +120,6 @@ class TCPFetcher(Fetcher[AgentRawData]):
     def _fetch_from_io(self, mode: Mode) -> AgentRawData:
         if mode is not Mode.CHECKING:
             raise MKFetcherError(f"Refusing to fetch live data during {mode.name.lower()}")
-
-        if self.use_only_cache:
-            raise MKFetcherError(
-                "Got no data: No usable cache file present at %s" % self.file_cache.base_path
-            )
 
         agent_data, protocol = self._get_agent_data()
         return self._validate_decrypted_data(self._decrypt(protocol, agent_data))

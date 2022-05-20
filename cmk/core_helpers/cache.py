@@ -292,6 +292,7 @@ class FileCache(Generic[TRawData], abc.ABC):
         disabled: bool,
         use_outdated: bool,
         simulation: bool,
+        use_only_cache: bool,
     ) -> None:
         super().__init__()
         self.hostname: Final = hostname
@@ -299,7 +300,11 @@ class FileCache(Generic[TRawData], abc.ABC):
         self.max_age = max_age
         self.disabled = disabled
         self.use_outdated = use_outdated
+        # TODO(ml): Make sure simulation and use_only_cache are identical
+        #           and find a better, more generic name such as "force"
+        #           to produce the intended behavior.
         self.simulation = simulation
+        self.use_only_cache = use_only_cache
         self._logger: Final = logging.getLogger("cmk.helper")
 
     def __repr__(self) -> str:
@@ -313,6 +318,7 @@ class FileCache(Generic[TRawData], abc.ABC):
                     f"disabled={self.disabled}",
                     f"use_outdated={self.use_outdated}",
                     f"simulation={self.simulation}",
+                    f"use_only_cache={self.use_only_cache}",
                 )
             )
             + ")"
@@ -329,6 +335,7 @@ class FileCache(Generic[TRawData], abc.ABC):
                 self.disabled == other.disabled,
                 self.use_outdated == other.use_outdated,
                 self.simulation == other.simulation,
+                self.use_only_cache == other.use_only_cache,
             )
         )
 
@@ -340,6 +347,7 @@ class FileCache(Generic[TRawData], abc.ABC):
             "disabled": self.disabled,
             "use_outdated": self.use_outdated,
             "simulation": self.simulation,
+            "use_only_cache": self.use_only_cache,
         }
 
     @classmethod
@@ -390,6 +398,9 @@ class FileCache(Generic[TRawData], abc.ABC):
 
         if self.simulation:
             raise MKFetcherError("Got no data (Simulation mode enabled and no cached data present)")
+
+        if self.use_only_cache:
+            raise MKFetcherError("Got not data (use_only_cache)")
 
         return raw_data
 
@@ -466,12 +477,14 @@ class FileCacheFactory(Generic[TRawData], abc.ABC):
         *,
         max_age: MaxAge,
         simulation: bool = False,
+        use_only_cache: bool = False,
     ):
         super().__init__()
         self.hostname: Final = hostname
         self.base_path: Final[Path] = Path(base_path)
         self.max_age: Final = max_age
         self.simulation: Final[bool] = simulation
+        self.use_only_cache: Final = use_only_cache
 
     @abc.abstractmethod
     def make(self, *, force_cache_refresh: bool = False) -> FileCache[TRawData]:

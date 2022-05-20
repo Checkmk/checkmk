@@ -78,6 +78,7 @@ def clone_file_cache(file_cache: FileCache) -> FileCache:
         disabled=file_cache.disabled,
         use_outdated=file_cache.use_outdated,
         simulation=file_cache.simulation,
+        use_only_cache=file_cache.use_only_cache,
     )
 
 
@@ -91,6 +92,7 @@ class TestFileCache:
             disabled=True,
             use_outdated=False,
             simulation=True,
+            use_only_cache=True,
         )
 
     def test_repr(self, file_cache: FileCache) -> None:
@@ -114,6 +116,7 @@ class TestNoCache:
             disabled=False,
             use_outdated=False,
             simulation=False,
+            use_only_cache=False,
         )
 
     @pytest.fixture
@@ -166,6 +169,7 @@ class TestDefaultFileCache_and_SNMPFileCache:
             disabled=False,
             use_outdated=False,
             simulation=False,
+            use_only_cache=False,
         )
 
     @pytest.fixture
@@ -240,6 +244,7 @@ class TestIPMIFetcher:
             disabled=True,
             use_outdated=True,
             simulation=False,
+            use_only_cache=False,
         )
 
     @pytest.fixture
@@ -336,6 +341,7 @@ class TestPiggybackFetcher:
             disabled=True,
             use_outdated=True,
             simulation=True,
+            use_only_cache=True,
         )
 
     @pytest.fixture
@@ -368,6 +374,7 @@ class TestProgramFetcher:
             disabled=True,
             use_outdated=True,
             simulation=True,
+            use_only_cache=True,
         )
 
     @pytest.fixture
@@ -569,6 +576,7 @@ class TestSNMPFetcherDeserialization(ABCTestSNMPFetcher):
             disabled=True,
             use_outdated=True,
             simulation=True,
+            use_only_cache=True,
         )
 
     def test_fetcher_inline_backend_deserialization(self, fetcher_inline: SNMPFetcher) -> None:
@@ -609,6 +617,7 @@ class TestSNMPFetcherFetch(ABCTestSNMPFetcher):
             disabled=True,
             use_outdated=True,
             simulation=False,
+            use_only_cache=False,
         )
 
     def test_fetch_from_io_non_empty(self, monkeypatch: MonkeyPatch, fetcher: SNMPFetcher) -> None:
@@ -753,6 +762,7 @@ class TestSNMPFetcherFetchCache(ABCTestSNMPFetcher):
             disabled=True,
             use_outdated=True,
             simulation=False,
+            use_only_cache=False,
         )
 
     @pytest.fixture(autouse=True)
@@ -809,6 +819,7 @@ class TestTCPFetcher:
             disabled=True,
             use_outdated=True,
             simulation=True,
+            use_only_cache=False,
         )
 
     @pytest.fixture
@@ -820,7 +831,6 @@ class TestTCPFetcher:
             host_name=HostName("irrelevant_for_this_test"),
             timeout=0.1,
             encryption_settings={"use_regular": "allow"},
-            use_only_cache=False,
         )
 
     def test_repr(self, fetcher: TCPFetcher) -> None:
@@ -833,7 +843,6 @@ class TestTCPFetcher:
         assert other.address == fetcher.address
         assert other.timeout == fetcher.timeout
         assert other.encryption_settings == fetcher.encryption_settings
-        assert other.use_only_cache == fetcher.use_only_cache
 
     def test_with_cached_does_not_open(
         self, file_cache: AgentFileCache, monkeypatch: MonkeyPatch
@@ -846,7 +855,6 @@ class TestTCPFetcher:
             host_name=HostName("irrelevant_for_this_test"),
             timeout=0.1,
             encryption_settings={"use_regular": "allow"},
-            use_only_cache=False,
         ) as fetcher:
             fetched = fetcher.fetch(Mode.CHECKING)
 
@@ -861,13 +869,13 @@ class TestTCPFetcher:
                 disabled=False,
                 use_outdated=True,
                 simulation=False,
+                use_only_cache=False,
             ),
             family=socket.AF_INET,
             address=("127.0.0.1", 6556),
             host_name=HostName("irrelevant_for_this_test"),
             timeout=0.1,
             encryption_settings={"use_regular": "allow"},
-            use_only_cache=False,
         ) as fetcher:
             for mode in Mode:
                 if mode is Mode.CHECKING:
@@ -885,7 +893,6 @@ class TestTCPFetcher:
             host_name=HostName("irrelevant_for_this_test"),
             timeout=0.1,
             encryption_settings={"use_regular": "allow"},
-            use_only_cache=False,
         ) as fetcher:
             fetched = fetcher.fetch(Mode.CHECKING)
 
@@ -901,7 +908,6 @@ class TestTCPFetcher:
             host_name=HostName("irrelevant_for_this_test"),
             timeout=0.0,
             encryption_settings=settings,
-            use_only_cache=False,
         )
         assert fetcher._decrypt(TransportProtocol(output[:2]), AgentRawData(output[2:])) == output
 
@@ -916,7 +922,6 @@ class TestTCPFetcher:
             host_name=HostName("irrelevant_for_this_test"),
             timeout=0.0,
             encryption_settings=settings,
-            use_only_cache=False,
         )
 
         with pytest.raises(MKFetcherError):
@@ -932,7 +937,6 @@ class TestTCPFetcher:
             host_name=HostName("irrelevant_for_this_test"),
             timeout=0.0,
             encryption_settings={},
-            use_only_cache=False,
         )
         for p in TransportProtocol:
             if p is TransportProtocol.TLS:
@@ -952,7 +956,6 @@ class TestTCPFetcher:
                 host_name=HostName("irrelevant_for_this_test"),
                 timeout=0.0,
                 encryption_settings={"use_regular": setting},
-                use_only_cache=False,
             )._validate_protocol(TransportProtocol.TLS, is_registered=is_registered)
 
     def test_validate_protocol_encryption_with_disabled_raises(
@@ -966,7 +969,6 @@ class TestTCPFetcher:
             host_name=HostName("irrelevant_for_this_test"),
             timeout=0.0,
             encryption_settings=settings,
-            use_only_cache=False,
         )
         with pytest.raises(MKFetcherError):
             fetcher._validate_protocol(TransportProtocol.PBKDF2, is_registered=False)
@@ -980,7 +982,6 @@ class TestTCPFetcher:
             host_name=HostName("irrelevant_for_this_test"),
             timeout=0.0,
             encryption_settings=settings,
-            use_only_cache=False,
         )
         for p in TransportProtocol:
             if p is TransportProtocol.TLS:
@@ -1037,6 +1038,7 @@ class TestFetcherCaching:
             disabled=True,
             use_outdated=True,
             simulation=False,
+            use_only_cache=False,
         )
 
     @pytest.fixture
@@ -1049,7 +1051,6 @@ class TestFetcherCaching:
             timeout=0.0,
             host_name=HostName("irrelevant_for_this_test"),
             encryption_settings={},
-            use_only_cache=False,
         )
 
     @pytest.fixture(autouse=True)

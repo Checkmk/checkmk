@@ -34,6 +34,7 @@ def test_attribute_defaults(monkeypatch):
             "base_path": "/my/path",
             "simulation": False,
             "use_outdated": False,
+            "use_only_cache": False,
         },
         "family": socket.AF_INET,
         "address": (ipaddress, 6556),
@@ -43,7 +44,6 @@ def test_attribute_defaults(monkeypatch):
             "use_realtime": "enforce",
             "use_regular": "disable",
         },
-        "use_only_cache": False,
     }
     assert source.description == "TCP: %s:%s" % (ipaddress, 6556)
     assert source.id == "agent"

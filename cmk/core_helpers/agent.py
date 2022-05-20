@@ -63,6 +63,7 @@ class NoCache(FileCache[AgentRawData]):
         disabled: bool,
         use_outdated: bool,
         simulation: bool,
+        use_only_cache: bool,
     ) -> None:
         # Force disable
         disabled = True
@@ -73,6 +74,7 @@ class NoCache(FileCache[AgentRawData]):
             disabled=disabled,
             use_outdated=use_outdated,
             simulation=simulation,
+            use_only_cache=use_only_cache,
         )
 
     @staticmethod
@@ -98,6 +100,7 @@ class AgentFileCacheFactory(FileCacheFactory[AgentRawData]):
             disabled=self.disabled,
             use_outdated=False if force_cache_refresh else self.use_outdated,
             simulation=self.simulation,
+            use_only_cache=self.use_only_cache,
         )
 
 
@@ -112,6 +115,7 @@ class NoCacheFactory(FileCacheFactory[AgentRawData]):
             disabled=self.disabled,
             use_outdated=False if force_cache_refresh else self.use_outdated,
             simulation=self.simulation,
+            use_only_cache=self.use_only_cache,
         )
 
 

@@ -19,6 +19,10 @@ from .agent import AgentSource
 
 
 class TCPSource(AgentSource):
+    # TODO(ml): Global caching options usually go to the FileCacheFactory,
+    #           actually, the "factory" has no other purpose than to hold
+    #           all of this at one place.  Would it be possible to move this
+    #           option there as well?
     use_only_cache = False
 
     def __init__(
@@ -46,6 +50,7 @@ class TCPSource(AgentSource):
             self.hostname,
             base_path=self.file_cache_base_path,
             simulation=config.simulation_mode,
+            use_only_cache=self.use_only_cache,
             max_age=self.file_cache_max_age,
         ).make()
 
@@ -57,7 +62,6 @@ class TCPSource(AgentSource):
             host_name=self.host_name,
             timeout=self.timeout or self.host_config.tcp_connect_timeout,
             encryption_settings=self.host_config.agent_encryption,
-            use_only_cache=self.use_only_cache,
         )
 
     def _make_summarizer(self) -> AgentSummarizerDefault:

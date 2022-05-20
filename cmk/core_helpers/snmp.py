@@ -161,6 +161,7 @@ class SNMPFileCacheFactory(FileCacheFactory[SNMPRawData]):
             disabled=self.disabled,
             use_outdated=False if force_cache_refresh else self.disabled,
             simulation=self.simulation,
+            use_only_cache=self.use_only_cache,
         )
 
 

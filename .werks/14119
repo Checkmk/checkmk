@@ -1,0 +1,12 @@
+Title: Fix ignored site filter on exporting views as PDF report
+Class: fix
+Compatible: compat
+Component: reporting
+Date: 1653052712
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.0.0p25
+
+If you used site filters in views and the option "Export" -> "This view as
+PDF", the generated report contained all site results.

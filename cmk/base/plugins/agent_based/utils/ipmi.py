@@ -137,9 +137,17 @@ def check_ipmi_detailed(
     status_txt_mapping: StatusTxtMapping,
 ) -> type_defs.CheckResult:
 
+    overwrite_state = State(2)
+
+    for wato_status_txt, wato_status in params.get("sensor_states", []):
+        if sensor.status_txt.startswith(wato_status_txt):
+            overwrite_state = State(wato_status)
+            yield Result(state=overwrite_state, summary="User-defined state")
+            break
+
     # stay compatible with older versions
     yield Result(
-        state=status_txt_mapping(sensor.status_txt),
+        state=State.best(status_txt_mapping(sensor.status_txt), overwrite_state),
         summary="Status: %s" % sensor.status_txt,
     )
 
@@ -182,11 +190,6 @@ def check_ipmi_detailed(
         )
         if num_result is not None:
             yield num_result
-
-    for wato_status_txt, wato_status in params.get("sensor_states", []):
-        if sensor.status_txt.startswith(wato_status_txt):
-            yield Result(state=State(wato_status), summary="User-defined state")
-            break
 
     # Sensor reports 'nc' ('non critical'), so we set the state to WARNING
     if sensor.status_txt.startswith("nc"):

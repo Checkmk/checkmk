@@ -77,7 +77,7 @@ class GraphIdentificationTemplate(GraphIdentification):
     def template_tuning(graph_template: GraphTemplate, **context: str) -> Optional[GraphTemplate]:
         return graph_template
 
-    def create_graph_recipes(self, ident_info, destination=None) -> Sequence[GraphRecipe]:
+    def create_graph_recipes(self, ident_info, destination=None) -> list[GraphRecipe]:
         graph_identification_info = ident_info
 
         def get_info(key):

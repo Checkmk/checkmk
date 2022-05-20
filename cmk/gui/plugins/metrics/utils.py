@@ -79,6 +79,9 @@ GraphPresentation = str  # TODO: Improve Literal["lines", "stacked", "sum", "ave
 ScalarDefinition = Union[str, Tuple[str, Union[str, LazyString]]]
 GraphConsoldiationFunction = Literal["max", "min", "average"]
 
+GraphArtwork = dict[str, Any]
+GraphRenderOptions = dict[str, Any]
+GraphDataRange = dict[str, Any]
 
 GraphRangeSpec = Tuple[Union[int, str], Union[int, str]]
 GraphRange = Tuple[Optional[float], Optional[float]]

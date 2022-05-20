@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-from typing import MutableMapping, Sequence, Type
+from typing import MutableMapping, Type
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
@@ -52,7 +52,7 @@ class GraphIdentificationTypes:
         self,
         graph_identification: GraphIdentifier,
         destination=None,
-    ) -> Sequence[GraphRecipe]:
+    ) -> list[GraphRecipe]:
         type_ident, spec_info = graph_identification
         type_cls = self._types[type_ident]
         return type_cls().create_graph_recipes(spec_info, destination=destination)
@@ -70,7 +70,7 @@ class GraphIdentification(abc.ABC):
         ...
 
     @abc.abstractmethod
-    def create_graph_recipes(self, ident_info, destination=None) -> Sequence[GraphRecipe]:
+    def create_graph_recipes(self, ident_info, destination=None) -> list[GraphRecipe]:
         ...
 
 
@@ -79,7 +79,7 @@ class GraphIdentificationExplicit(GraphIdentification):
     def ident(cls):
         return "explicit"
 
-    def create_graph_recipes(self, ident_info, destination=None) -> Sequence[GraphRecipe]:
+    def create_graph_recipes(self, ident_info, destination=None) -> list[GraphRecipe]:
         graph_recipe = ident_info.copy()
         graph_recipe["specification"] = ("explicit", ident_info)
         return [graph_recipe]

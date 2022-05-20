@@ -8,18 +8,41 @@ import math
 import time
 from functools import partial
 from itertools import zip_longest
-from typing import Callable, Iterable, List, Optional, Tuple, Union
+from typing import Any, Callable, Iterable, List, Optional, Sequence, Tuple, TypedDict, Union
 
 import cmk.utils.render
+from cmk.utils.prediction import TimeSeries, TimeSeriesValue
+from cmk.utils.type_defs import Seconds, Timestamp
 
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.plugins.metrics import rrd_fetch, timeseries
-from cmk.gui.plugins.metrics.utils import unit_info
+from cmk.gui.plugins.metrics.utils import (
+    GraphArtwork,
+    GraphDataRange,
+    GraphRecipe,
+    GraphRenderOptions,
+    unit_info,
+    UnitInfo,
+)
+from cmk.gui.type_defs import UnitRenderFunc
 from cmk.gui.utils.theme import theme
 
-Label = Tuple[int, Optional[str], int]
+Label = Tuple[float, Optional[str], int]
+
+Curve = dict[str, Any]
+LayoutedCurve = dict[str, Any]
+VerticalAxis = dict[str, Any]
+TimeAxis = dict[str, Any]
+SizeEx = int
+
+
+class CurveValue(TypedDict):
+    title: str
+    color: str
+    rendered_value: tuple[TimeSeriesValue, str]
+
 
 #   .--Default Render Options----------------------------------------------.
 #   |                   ____                _                              |
@@ -37,7 +60,7 @@ Label = Tuple[int, Optional[str], int]
 #   '----------------------------------------------------------------------'
 
 
-def get_default_graph_render_options():
+def get_default_graph_render_options() -> GraphRenderOptions:
     return {
         "font_size": 8.0,  # pt
         "resizable": True,
@@ -62,29 +85,43 @@ def get_default_graph_render_options():
     }
 
 
-def _graph_colors(theme_id):
+class GraphColors(TypedDict):
+    background_color: Optional[str]
+    foreground_color: Optional[str]
+    canvas_color: Optional[str]
+
+
+def _graph_colors(theme_id: str) -> GraphColors:
     return {
-        "modern-dark": {
-            "background_color": None,
-            "foreground_color": "#ffffff",
-            "canvas_color": None,
-        },
-        "pdf": {
-            "background_color": "#f8f4f0",
-            "foreground_color": "#000000",
-            "canvas_color": "#ffffff",
-        },
+        "modern-dark": GraphColors(
+            {
+                "background_color": None,
+                "foreground_color": "#ffffff",
+                "canvas_color": None,
+            }
+        ),
+        "pdf": GraphColors(
+            {
+                "background_color": "#f8f4f0",
+                "foreground_color": "#000000",
+                "canvas_color": "#ffffff",
+            }
+        ),
     }.get(
         theme_id,
-        {
-            "background_color": None,
-            "foreground_color": "#000000",
-            "canvas_color": None,
-        },
+        GraphColors(
+            {
+                "background_color": None,
+                "foreground_color": "#000000",
+                "canvas_color": None,
+            }
+        ),
     )
 
 
-def add_default_render_options(graph_render_options, render_unthemed=False):
+def add_default_render_options(
+    graph_render_options: GraphRenderOptions, render_unthemed: bool = False
+) -> GraphRenderOptions:
     options = get_default_graph_render_options()
     options.update(graph_render_options)
     options.setdefault("size", user.load_file("graph_size", (70, 16)))
@@ -112,7 +149,11 @@ def add_default_render_options(graph_render_options, render_unthemed=False):
 #   '----------------------------------------------------------------------'
 
 
-def compute_graph_artwork(graph_recipe, graph_data_range, graph_render_options):
+def compute_graph_artwork(
+    graph_recipe: GraphRecipe,
+    graph_data_range: GraphDataRange,
+    graph_render_options: GraphRenderOptions,
+) -> GraphArtwork:
     graph_render_options = add_default_render_options(graph_render_options)
 
     curves = compute_graph_artwork_curves(graph_recipe, graph_data_range)
@@ -173,7 +214,7 @@ def compute_graph_artwork(graph_recipe, graph_data_range, graph_render_options):
 # Compute the location of the curves of the graph, implement
 # stacking and mirroring (displaying positive values in negative
 # direction).
-def layout_graph_curves(curves):
+def layout_graph_curves(curves: Sequence[Curve]) -> tuple[list[LayoutedCurve], bool]:
     mirrored = False  # True if negative area shows positive values
 
     # Build positive and optional negative stack.
@@ -184,7 +225,7 @@ def layout_graph_curves(curves):
     # For areas we put (lower, higher) as point into the list of points.
     # For lines simply the values. For mirrored values from is >= to.
 
-    def mirror_point(p):
+    def mirror_point(p: Optional[int]) -> Optional[int]:
         if p is None:
             return p
         return -p
@@ -258,7 +299,9 @@ def areastack(raw_points, base):
     return list(map(fix_swap, zip_longest(base, edge)))
 
 
-def compute_graph_artwork_curves(graph_recipe, graph_data_range):
+def compute_graph_artwork_curves(
+    graph_recipe: GraphRecipe, graph_data_range: GraphDataRange
+) -> list[Curve]:
     # Fetch all raw RRD data
     rrd_data = rrd_fetch.fetch_rrd_data_for_graph(graph_recipe, graph_data_range)
 
@@ -306,7 +349,9 @@ def halfstep_interpolation(rrddata):
 #   '----------------------------------------------------------------------'
 
 
-def _compute_scalars(graph_recipe, curves, pin_time):
+def _compute_scalars(
+    graph_recipe: GraphRecipe, curves: Sequence[Curve], pin_time: Optional[int]
+) -> None:
     unit = unit_info[graph_recipe["unit"]]
 
     for curve in curves:
@@ -337,7 +382,9 @@ def _compute_scalars(graph_recipe, curves, pin_time):
             curve["scalars"][key] = _render_scalar_value(value, unit)
 
 
-def _compute_curve_values_at_timestamp(graph_recipe, curves, hover_time):
+def _compute_curve_values_at_timestamp(
+    graph_recipe: GraphRecipe, curves: Sequence[Curve], hover_time: int
+) -> list[CurveValue]:
     unit = unit_info[graph_recipe["unit"]]
 
     curve_values = []
@@ -350,23 +397,25 @@ def _compute_curve_values_at_timestamp(graph_recipe, curves, hover_time):
         value = _get_value_at_timestamp(hover_time, rrddata)
 
         curve_values.append(
-            {
-                "title": curve["title"],
-                "color": curve["color"],
-                "rendered_value": _render_scalar_value(value, unit),
-            }
+            CurveValue(
+                {
+                    "title": curve["title"],
+                    "color": curve["color"],
+                    "rendered_value": _render_scalar_value(value, unit),
+                }
+            )
         )
 
     return curve_values
 
 
-def _render_scalar_value(value, unit):
+def _render_scalar_value(value, unit) -> tuple[TimeSeriesValue, str]:
     if value is None:
         return None, _("n/a")
     return value, unit["render"](value)
 
 
-def _get_value_at_timestamp(pin_time, rrddata):
+def _get_value_at_timestamp(pin_time: int, rrddata: TimeSeries) -> TimeSeriesValue:
     start_time, _, step = rrddata.twindow
     nth_value = (pin_time - start_time) // step
     if 0 <= nth_value < len(rrddata):
@@ -394,7 +443,13 @@ def _get_value_at_timestamp(pin_time, rrddata):
 # without a - sign.
 #
 # height -> Graph area height in ex
-def compute_graph_v_axis(graph_recipe, graph_data_range, height_ex, layouted_curves, mirrored):
+def compute_graph_v_axis(
+    graph_recipe: GraphRecipe,
+    graph_data_range: GraphDataRange,
+    height_ex: SizeEx,
+    layouted_curves: Sequence[LayoutedCurve],
+    mirrored: bool,
+) -> VerticalAxis:
     unit = unit_info[graph_recipe["unit"]]
 
     # Calculate the the value range
@@ -475,28 +530,37 @@ def compute_graph_v_axis(graph_recipe, graph_data_range, height_ex, layouted_cur
     # strange things can happen due to internal precision limitation.
     # Here we compute the number of decimal digits we need
 
+    # Adds "labels", "max_label_length" and updates "axis_label" in case
+    # of units which use a graph global unit
+    rendered_labels, max_label_length, graph_unit = create_vertical_axis_labels(
+        min_value, max_value, unit, label_distance, sub_distance, mirrored
+    )
+
     v_axis = {
         "range": (min_value, max_value),
         "real_range": real_range,
         "label_distance": label_distance,
         "sub_distance": sub_distance,
         "axis_label": None,
+        "rendered_labels": rendered_labels,
+        "max_label_length": max_label_length,
     }
 
-    # Adds "labels", "max_label_length" and updates "axis_label" in case
-    # of units which use a graph global unit
-    v_axis.update(
-        create_vertical_axis_labels(
-            min_value, max_value, unit, label_distance, sub_distance, mirrored
-        )
-    )
+    if graph_unit is not None:
+        v_axis["graph_unit"] = graph_unit
+
     return v_axis
 
 
-def compute_v_axis_min_max(graph_recipe, graph_data_range, height, layouted_curves, mirrored):
-
-    min_value, max_value = _get_min_max_from_curves(layouted_curves)
-    min_value, max_value = _purge_min_max(min_value, max_value, mirrored)
+def compute_v_axis_min_max(
+    graph_recipe: GraphRecipe,
+    graph_data_range: GraphDataRange,
+    height: SizeEx,
+    layouted_curves: Sequence[LayoutedCurve],
+    mirrored: bool,
+) -> tuple[tuple[float, float], float, float, float]:
+    opt_min_value, opt_max_value = _get_min_max_from_curves(layouted_curves)
+    min_value, max_value = _purge_min_max(opt_min_value, opt_max_value, mirrored)
 
     # Apply explicit range if defined in graph
     explicit_min_value, explicit_max_value = graph_recipe["explicit_vertical_range"]
@@ -544,7 +608,9 @@ def compute_v_axis_min_max(graph_recipe, graph_data_range, height, layouted_curv
     return real_range, vrange, min_value, max_value
 
 
-def _purge_min_max(min_value, max_value, mirrored):
+def _purge_min_max(
+    min_value: Optional[float], max_value: Optional[float], mirrored: bool
+) -> tuple[float, float]:
     # If all of our data points are None, then we have no
     # min/max values. In this case we assume 0 as a minimum
     # value and 1 as a maximum. Otherwise we will run into
@@ -552,25 +618,35 @@ def _purge_min_max(min_value, max_value, mirrored):
     if min_value is None and max_value is None:
         min_value = -1.0 if mirrored else 0.0
         max_value = 1.0
+        return min_value, max_value
 
-    elif min_value is None and max_value > 0:
-        min_value = -1 * max_value if mirrored else 0.0
-    elif max_value is None and min_value < 0:
-        max_value = 1.0
+    if min_value is None and max_value is not None:
+        if max_value > 0:
+            min_value = -1 * max_value if mirrored else 0.0
+            return min_value, max_value
 
-    elif min_value is None and max_value is not None:
         if mirrored:
             min_value = -1 * max_value
         else:
             min_value = max_value - 1.0
+        return min_value, max_value
 
-    elif max_value is None and min_value is not None:
+    if max_value is None and min_value is not None:
+        if min_value < 0:
+            max_value = 1.0
+            return min_value, max_value
+
         max_value = min_value + 1.0
+        return min_value, max_value
 
+    assert min_value is not None
+    assert max_value is not None
     return min_value, max_value
 
 
-def _get_min_max_from_curves(layouted_curves):
+def _get_min_max_from_curves(
+    layouted_curves: Sequence[LayoutedCurve],
+) -> tuple[Optional[float], Optional[float]]:
     min_value, max_value = None, None
 
     # Now make sure that all points are within the range.
@@ -608,7 +684,14 @@ def _get_min_max_from_curves(layouted_curves):
 
 
 # Create labels for the neccessary range
-def create_vertical_axis_labels(min_value, max_value, unit, label_distance, sub_distance, mirrored):
+def create_vertical_axis_labels(
+    min_value: float,
+    max_value: float,
+    unit: UnitInfo,
+    label_distance: float,
+    sub_distance: float,
+    mirrored: bool,
+) -> tuple[list[Label], int, Optional[str]]:
     # round_to is the precision (number of digits after the decimal point)
     # that we round labels to.
     round_to = max(0, 3 - math.trunc(math.log10(max(abs(min_value), abs(max_value)))))
@@ -655,32 +738,42 @@ def create_vertical_axis_labels(min_value, max_value, unit, label_distance, sub_
     return render_labels_with_graph_unit(label_specs, unit)
 
 
-def render_labels_with_individual_units(label_specs, unit):
-    return render_labels(label_specs, unit["render"])
+def render_labels_with_individual_units(
+    label_specs: Sequence[tuple[float, Optional[float], int]], unit: UnitInfo
+) -> tuple[list[Label], int, None]:
+    rendered_labels, max_label_length = render_labels(label_specs, unit["render"])
+    return rendered_labels, max_label_length, None
 
 
-def render_labels_with_graph_unit(label_specs, unit):
+def render_labels_with_graph_unit(
+    label_specs: Sequence[tuple[float, Optional[float], int]], unit: UnitInfo
+) -> tuple[list[Label], int, str]:
     # Build list of real values (not 0 or None) for the graph_unit function
     # which is then calculating the graph global unit
-    ignored_values = [0, None]
+    ignored_values = (0, None)
 
-    values = [l[1] for l in label_specs if l[1] not in ignored_values]
+    values = [l[1] for l in label_specs if l[1] is not None and l[1] not in ignored_values]
 
     graph_unit, scaled_labels = unit["graph_unit"](values)
 
+    scaled_label_specs: list[tuple[float, Union[None, str, float], int]] = []
     # Merge the scaled labels into the label specifications
     for index, label_spec in enumerate(label_specs):
         if label_spec[1] not in ignored_values:
-            label_specs[index] = (label_spec[0], scaled_labels.pop(0), label_spec[2])
+            scaled_label_specs[index] = (label_spec[0], scaled_labels.pop(0), label_spec[2])
+        else:
+            scaled_label_specs[index] = (label_spec[0], label_spec[1], label_spec[2])
 
-    v_axis_attributes = render_labels(label_specs)
-    v_axis_attributes["axis_label"] = graph_unit
-    return v_axis_attributes
+    rendered_labels, max_label_length = render_labels(scaled_label_specs)
+    return rendered_labels, max_label_length, graph_unit
 
 
-def render_labels(label_specs, render_func=None):
+def render_labels(
+    label_specs: Sequence[tuple[float, Union[None, str, float], int]],
+    render_func: Optional[UnitRenderFunc] = None,
+) -> tuple[list[Label], int]:
     max_label_length = 0
-    rendered_labels: List[Label] = []
+    rendered_labels: list[Label] = []
 
     for pos, label_value, line_width in label_specs:
         if label_value is not None:
@@ -690,7 +783,7 @@ def render_labels(label_specs, render_func=None):
                 if render_func:
                     label = render_func(label_value)
                 else:
-                    label = "%s" % label_value
+                    label = str(label_value)
 
                 # Generally remove useless zeroes in fixed point numbers.
                 # This is a bit hacky. Got no idea how to make this better...
@@ -701,13 +794,10 @@ def render_labels(label_specs, render_func=None):
         else:
             rendered_labels.append((pos, None, line_width))
 
-    return {
-        "labels": rendered_labels,
-        "max_label_length": max_label_length,
-    }
+    return rendered_labels, max_label_length
 
 
-def remove_useless_zeroes(label):
+def remove_useless_zeroes(label: str) -> str:
     if "." not in label:
         return label
 
@@ -727,7 +817,9 @@ def remove_useless_zeroes(label):
 #   '----------------------------------------------------------------------'
 
 
-def compute_graph_t_axis(start_time, end_time, width, step):
+def compute_graph_t_axis(
+    start_time: Timestamp, end_time: Timestamp, width: int, step: Seconds
+) -> TimeAxis:
     # Depending on which time range is being shown we have different
     # steps of granularity
 
@@ -747,7 +839,7 @@ def compute_graph_t_axis(start_time, end_time, width, step):
     time_range_days = time_range / 86400
 
     label_shift = 0  # shift seconds to future in order to center it
-    label_distance_at_least = 0
+    label_distance_at_least = 0.0
     if start_date == end_date:
         title_label = str(cmk.utils.render.date(start_time))
     else:
@@ -811,7 +903,7 @@ def compute_graph_t_axis(start_time, end_time, width, step):
         (5760, 720),
     ]:
         if label_distance_at_least <= dist_minutes * 60:
-            dist_function: Callable[[int, int], Iterable[Tuple[int, int, bool]]] = partial(
+            dist_function: Callable[[int, int], Iterable[Tuple[float, int, bool]]] = partial(
                 dist_equal, distance=dist_minutes * 60, subdivision=subdivision * 60
             )
             break
@@ -863,14 +955,14 @@ def compute_graph_t_axis(start_time, end_time, width, step):
     }
 
 
-def add_step_to_title(title_label, step):
+def add_step_to_title(title_label: str, step: Seconds) -> str:
     step_label = get_step_label(step)
     if title_label is None:
         return step_label
     return "%s @ %s" % (title_label, step_label)
 
 
-def get_step_label(step):
+def get_step_label(step: Seconds) -> str:
     if step < 3600:
         return "%dm" % (step / 60)
     if step < 86400:
@@ -878,7 +970,7 @@ def get_step_label(step):
     return "%dd" % (step / 86400)
 
 
-def dist_week(start_time, end_time):
+def dist_week(start_time: int, end_time: int) -> Iterable[tuple[float, int, bool]]:
     # Shift time back to monday
     wday_of_start_time = time.localtime(start_time).tm_wday
     monday_week = start_time - 86400 * wday_of_start_time
@@ -889,7 +981,7 @@ def dist_week(start_time, end_time):
             yield (pos, line_width, has_label)
 
 
-def dist_month(start_time, end_time, months):
+def dist_month(start_time: int, end_time: int, months: int) -> Iterable[tuple[float, int, bool]]:
     # Jump to beginning of month
     broken = time.localtime(start_time)
     broken_tm_year = broken[0]
@@ -950,7 +1042,9 @@ def dist_month(start_time, end_time, months):
 # labels. These points have the label (None). The function
 # returns tuples of the form (time, line), where
 # line is one of 0, 1, 2 (none, thin, thick)
-def dist_equal(start_time, end_time, distance, subdivision):
+def dist_equal(
+    start_time: int, end_time: int, distance: int, subdivision: float
+) -> Iterable[tuple[float, int, bool]]:
     # First align start_time to the next time that can be divided
     # distance, but align this at 00:00 localtime!
     align_broken = time.localtime(start_time)
@@ -996,7 +1090,7 @@ def dist_equal(start_time, end_time, distance, subdivision):
 #   '----------------------------------------------------------------------'
 
 
-def load_graph_pin():
+def load_graph_pin() -> Optional[int]:
     return user.load_file("graph_pin", None)
 
 

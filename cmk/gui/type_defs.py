@@ -299,19 +299,24 @@ SearchResultsByTopic = Iterable[Tuple[str, Iterable[SearchResult]]]
 
 # Metric & graph specific
 
+UnitRenderFunc = Callable[[Any], str]
+
 
 class _UnitInfoRequired(TypedDict):
     title: str
     symbol: str
-    render: Callable[[Any], str]
+    render: UnitRenderFunc
     js_render: str
+
+
+GraphUnitRenderFunc = Callable[[List[Union[int, float]]], Tuple[str, List[str]]]
 
 
 class UnitInfo(_UnitInfoRequired, TypedDict, total=False):
     id: str
     stepping: str
     color: str
-    graph_unit: Callable[[List[Union[int, float]]], Tuple[str, List[str]]]
+    graph_unit: GraphUnitRenderFunc
     description: str
     valuespec: Any  # TODO: better typing
 

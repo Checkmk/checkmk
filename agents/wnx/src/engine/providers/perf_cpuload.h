@@ -10,6 +10,7 @@
 #define perf_cpuload_h__
 
 #include <string>
+#include <string_view>
 
 #include "providers/internal.h"
 #include "section_header.h"
@@ -27,6 +28,10 @@ private:
     std::string makeBody() override;
     std::unordered_map<std::string, std::string> computer_info_cache_;
 };
+
+constexpr std::wstring_view kProcessorQueueLength{
+    L"\\System\\Processor Queue Length"};
+bool CheckSingleCounter(std::wstring_view path);
 
 }  // namespace provider
 

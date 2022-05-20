@@ -6,22 +6,22 @@ from typing import NamedTuple, Optional
 
 
 class Section(NamedTuple):
-    policyViolationCount: Optional[int]
-    complianceState: Optional[bool]
-    osBuildVersion: Optional[str]
-    androidSecurityPatchLevel: Optional[str]
-    platformVersion: Optional[str]
-    clientVersion: Optional[str]
+    policy_violation_count: Optional[int]
+    compliance_state: Optional[bool]
+    os_build_version: Optional[str]
+    android_security_patch_level: Optional[str]
+    platform_version: Optional[str]
+    client_version: Optional[str]
     uptime: Optional[int]
-    ipAddress: Optional[str]
-    deviceModel: Optional[str]
-    platformType: Optional[str]
-    registrationState: Optional[str]
+    ip_address: Optional[str]
+    device_model: Optional[str]
+    platform_type: Optional[str]
+    registration_state: Optional[str]
     manufacturer: Optional[str]
-    serialNumber: Optional[str]
-    dmPartitionName: Optional[str]
+    serial_number: Optional[str]
+    dm_partition_name: Optional[str]
 
 
 class SourceHostSection(NamedTuple):
-    queryTime: Optional[int]
+    query_time: Optional[int]
     total_count: Optional[int]

@@ -11,7 +11,7 @@ from .utils.mobileiron import Section
 
 def check_mobileiron_compliance(params: Mapping[str, Any], section: Section) -> CheckResult:
 
-    count = section.policyViolationCount or 0
+    count = section.policy_violation_count or 0
     yield from check_levels(
         label="Policy violation count",
         value=count,
@@ -21,8 +21,8 @@ def check_mobileiron_compliance(params: Mapping[str, Any], section: Section) -> 
     )
 
     yield Result(
-        state=State.OK if section.complianceState else State.CRIT,
-        summary=f"Compliance state: {section.complianceState}",
+        state=State.OK if section.compliance_state else State.CRIT,
+        summary=f"Compliance state: {section.compliance_state}",
     )
 
 

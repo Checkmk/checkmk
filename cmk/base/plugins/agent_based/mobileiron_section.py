@@ -14,27 +14,27 @@ from .agent_based_api.v1.type_defs import StringTable
 def parse_mobileiron(string_table: StringTable) -> Section:
     json_raw = json.loads(string_table[0][0])
     return Section(
-        policyViolationCount=json_raw.get("policyViolationCount"),
-        complianceState=json_raw.get("complianceState"),
-        osBuildVersion=json_raw.get("osBuildVersion"),
-        androidSecurityPatchLevel=json_raw.get("androidSecurityPatchLevel"),
-        platformVersion=json_raw.get("platformVersion"),
-        clientVersion=json_raw.get("clientVersion"),
+        policy_violation_count=json_raw.get("policyViolationCount"),
+        compliance_state=json_raw.get("complianceState"),
+        os_build_version=json_raw.get("osBuildVersion"),
+        android_security_patch_level=json_raw.get("androidSecurityPatchLevel"),
+        platform_version=json_raw.get("platformVersion"),
+        client_version=json_raw.get("clientVersion"),
         uptime=json_raw.get("uptime"),
-        ipAddress=json_raw.get("ipAddress"),
-        deviceModel=json_raw.get("deviceModel"),
-        platformType=json_raw.get("platformType"),
-        registrationState=json_raw.get("registrationState"),
+        ip_address=json_raw.get("ipAddress"),
+        device_model=json_raw.get("deviceModel"),
+        platform_type=json_raw.get("platformType"),
+        registration_state=json_raw.get("registrationState"),
         manufacturer=json_raw.get("manufacturer"),
-        serialNumber=json_raw.get("serialNumber"),
-        dmPartitionName=json_raw.get("dmPartitionName"),
+        serial_number=json_raw.get("serialNumber"),
+        dm_partition_name=json_raw.get("dmPartitionName"),
     )
 
 
 def parse_mobileiron_source_host(string_table: StringTable) -> SourceHostSection:
     json_raw = json.loads(string_table[0][0])
     return SourceHostSection(
-        queryTime=json_raw.get("queryTime"),
+        query_time=json_raw.get("queryTime"),
         total_count=json_raw.get("total_count"),
     )
 

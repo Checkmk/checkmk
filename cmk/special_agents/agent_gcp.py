@@ -63,14 +63,15 @@ class Aggregation:
     per_series_aligner: int
     cross_series_reducer: int = Reducer.REDUCE_SUM
     alignment_period: int = 60
+    group_by_fields: Sequence[str] = field(default_factory=list)
 
     def to_obj(self, default_groupby: str) -> monitoring_v3.Aggregation:
+        groupbyfields = [default_groupby]
+        groupbyfields.extend(self.group_by_fields)
         return monitoring_v3.Aggregation(
             {
                 "alignment_period": {"seconds": self.alignment_period},
-                "group_by_fields": [
-                    default_groupby,
-                ],
+                "group_by_fields": groupbyfields,
                 "per_series_aligner": self.per_series_aligner,
                 "cross_series_reducer": self.cross_series_reducer,
             }
@@ -625,11 +626,17 @@ GCE = PiggyBackService(
             metrics=[
                 Metric(
                     name="compute.googleapis.com/instance/disk/read_bytes_count",
-                    aggregation=Aggregation(per_series_aligner=Aligner.ALIGN_MAX),
+                    aggregation=Aggregation(
+                        group_by_fields=["metric.device_name"],
+                        per_series_aligner=Aligner.ALIGN_MAX,
+                    ),
                 ),
                 Metric(
                     name="compute.googleapis.com/instance/disk/write_bytes_count",
-                    aggregation=Aggregation(per_series_aligner=Aligner.ALIGN_MAX),
+                    aggregation=Aggregation(
+                        group_by_fields=["metric.device_name"],
+                        per_series_aligner=Aligner.ALIGN_MAX,
+                    ),
                 ),
             ],
         ),

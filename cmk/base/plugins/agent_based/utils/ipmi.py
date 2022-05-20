@@ -8,6 +8,7 @@ from typing import (
     Any,
     Callable,
     Dict,
+    Iterable,
     Literal,
     Mapping,
     Optional,
@@ -128,6 +129,24 @@ def _sensor_levels_to_check_levels(
     return warn, sensor_crit
 
 
+def _check_status_txt(
+    status_txt: str,
+    status_txt_mapping: StatusTxtMapping,
+    user_configured_states: Iterable[tuple[str, State]],
+) -> Result:
+    for status_txt_beginning, mon_state in user_configured_states:
+        if status_txt.startswith(status_txt_beginning):
+            return Result(
+                state=mon_state,
+                summary=f"Status: {status_txt}",
+                details="Monitoring state of sensor status set by user-configured rules",
+            )
+    return Result(
+        state=status_txt_mapping(status_txt),
+        summary=f"Status: {status_txt}",
+    )
+
+
 def check_ipmi_detailed(
     item: str,
     params: Mapping[str, Any],
@@ -135,11 +154,13 @@ def check_ipmi_detailed(
     temperature_metrics_only: bool,
     status_txt_mapping: StatusTxtMapping,
 ) -> type_defs.CheckResult:
-
-    # stay compatible with older versions
-    yield Result(
-        state=status_txt_mapping(sensor.status_txt),
-        summary="Status: %s" % sensor.status_txt,
+    yield _check_status_txt(
+        sensor.status_txt,
+        status_txt_mapping,
+        (
+            (status_txt_beginning, State(mon_state_int))
+            for status_txt_beginning, mon_state_int in params.get("sensor_states", [])
+        ),
     )
 
     if sensor.value is not None:
@@ -181,11 +202,6 @@ def check_ipmi_detailed(
         )
         if num_result is not None:
             yield num_result
-
-    for wato_status_txt, wato_status in params.get("sensor_states", []):
-        if sensor.status_txt.startswith(wato_status_txt):
-            yield Result(state=State(wato_status), summary="User-defined state")
-            break
 
 
 def check_ipmi_summarized(  # pylint: disable=too-many-branches

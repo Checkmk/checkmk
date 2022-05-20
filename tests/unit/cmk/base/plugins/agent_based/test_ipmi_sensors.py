@@ -479,8 +479,11 @@ def test_discover_ipmi_sensors(
             },
             _SECTIONS[1],
             [
-                Result(state=State.OK, summary="Status: Presence detected"),
-                Result(state=State.UNKNOWN, summary="User-defined state"),
+                Result(
+                    state=State.UNKNOWN,
+                    summary="Status: Presence detected",
+                    details="Monitoring state of sensor status set by user-configured rules",
+                ),
             ],
         ),
         pytest.param(

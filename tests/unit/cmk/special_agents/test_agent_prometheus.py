@@ -7,6 +7,7 @@
 from typing import Mapping
 
 import pytest
+from pytest_mock import MockerFixture
 
 from cmk.special_agents.agent_prometheus import _extract_connection_args
 
@@ -56,7 +57,7 @@ from cmk.special_agents.agent_prometheus import _extract_connection_args
                 "host_name": "prometheus",
             },
             {
-                "auth": ("user", "prometheus"),
+                "auth": ("user", "very_secret"),
                 "port": "",
                 "protocol": "https",
                 "url_custom": "my-host.com",
@@ -66,7 +67,15 @@ from cmk.special_agents.agent_prometheus import _extract_connection_args
     ],
 )
 def test_extract_connection_args(
+    mocker: MockerFixture,
     config: Mapping[str, object],
     expected_result: Mapping[str, object],
 ) -> None:
+    mocker.patch(
+        "cmk.utils.password_store.load",
+        return_value={
+            "prometheus": "very_secret",
+            "something_else": "123",
+        },
+    )
     assert _extract_connection_args(config) == expected_result

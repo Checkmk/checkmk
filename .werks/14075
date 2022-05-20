@@ -1,0 +1,13 @@
+Title: Prometheus special agent: Handle credentials from password store correctly
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1653033911
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p25
+
+The Prometheus special agent did not handle credentials from the password
+store correctly, leading to connection failures.

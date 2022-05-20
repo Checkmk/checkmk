@@ -15,14 +15,16 @@ import logging
 import traceback
 from typing import List, Dict, Any, Mapping, DefaultDict, Optional, Iterator, Tuple, Callable, Union
 from collections import OrderedDict, defaultdict
+import math
+from urllib.parse import quote
+import requests
+
 from cmk.special_agents.utils.request_helper import (
     create_api_connect_session,
     parse_api_url,
     parse_api_custom_url,
 )
-import math
-from urllib.parse import quote
-import requests
+from cmk.utils import password_store
 
 PromQLMetric = Dict[str, Any]
 
@@ -1947,7 +1949,12 @@ def _extract_connection_args(config):
 
     if "auth_basic" in config:
         auth_info = config["auth_basic"]
-        connection_args.update({"auth": (auth_info["username"], auth_info["password"][1])})
+        connection_args.update({
+            "auth": (
+                auth_info["username"],
+                password_store.extract(auth_info["password"]),
+            ),
+        })
 
     return connection_args
 

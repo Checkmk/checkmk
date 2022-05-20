@@ -1,0 +1,22 @@
+Title: <tt>ipmi</tt>, <tt>ipmi_sensors</tt>: Fix user-configured status overrides
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1656594450
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p5
+
+The check plugins <tt>ipmi</tt> and <tt>ipmi_sensors</tt> both monitor IPMI sensors. They are user-
+configurable via the ruleset "IPMI sensors". There, users can define custom monitoring states based
+on the status text reported by the sensors (option "Set states of IPMI sensor status texts").
+
+Before this werk, these settings were evaluated and a corresponding service output was created,
+however, this output did not override the default behaviour of these check plugins. For example,
+the sensor status text "non-critical" results in WARNING by default. Users could configure a rule
+to instead map "non-critical" to OK, however, the overall service state would still be WARNING in
+this case.
+
+With this werk, users can fully override the default behaviour and set e.g. "non-critical" to OK.

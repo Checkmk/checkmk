@@ -188,16 +188,12 @@ def _asset_serializer(section: AssetSection):
     with SectionWriter("gcp_assets") as w:
         w.append(json.dumps(dict(project=section.project)))
         for a in section.assets:
-            if not isinstance(a, Asset):
-                raise RuntimeError
             w.append(Asset.serialize(a))
 
 
 def _result_serializer(section: ResultSection):
     with SectionWriter(f"gcp_service_{section.name}") as w:
         for r in section.results:
-            if not isinstance(r, Result):
-                raise RuntimeError
             w.append(Result.serialize(r))
 
 
@@ -219,7 +215,7 @@ def gcp_serializer(sections: Iterable[Section]) -> None:
         elif isinstance(section, PiggyBackSection):
             _piggyback_serializer(section)
         else:
-            pass
+            raise NotImplementedError
 
 
 ###########

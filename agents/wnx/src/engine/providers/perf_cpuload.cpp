@@ -37,7 +37,8 @@ uint64_t ReadSingleCounter(std::wstring_view path) {
     PDH_HCOUNTER counter{nullptr};
     DWORD type{0u};
     PDH_RAW_COUNTER value;
-    if (::PdhAddCounter(query, path.data(), 0, &counter) == ERROR_SUCCESS &&
+    if (::PdhAddEnglishCounter(query, path.data(), 0, &counter) ==
+            ERROR_SUCCESS &&
         ::PdhCollectQueryData(query) == ERROR_SUCCESS &&
         ::PdhGetRawCounterValue(counter, &type, &value) == ERROR_SUCCESS) {
         return static_cast<uint64_t>(value.FirstValue);

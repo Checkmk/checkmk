@@ -5,12 +5,24 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-# Note: This node is also being filled by dmidecode
-def inv_lnx_cpuinfo(info):
-    node = inv_tree("hardware.cpu.")
+import re
+from typing import Mapping, Union
+
+from .agent_based_api.v1 import Attributes, register
+from .agent_based_api.v1.type_defs import InventoryResult, StringTable
+
+Section = Mapping[str, Union[str, int]]
+
+
+def parse_lnx_cpuinfo(string_table: StringTable) -> Section:
+    """
+    The parse / inventorize separation in this plugin is a result of a brainless migration --
+    feel free to improve it.
+    """
+    node: dict[str, Union[str, int]] = {}
     num_threads_total = 0
     sockets = set([])
-    for varname, value in info:
+    for varname, value in string_table:
         if varname == "cpu cores":
             node["cores_per_cpu"] = int(value)
         elif varname == "siblings":
@@ -45,7 +57,24 @@ def inv_lnx_cpuinfo(info):
         node["threads"] = num_sockets * node["threads_per_cpu"]
         node["cpus"] = num_sockets
 
+    return node
 
-inv_info["lnx_cpuinfo"] = {
-    "inv_function": inv_lnx_cpuinfo,
-}
+
+register.agent_section(
+    name="lnx_cpuinfo",
+    parse_function=parse_lnx_cpuinfo,
+)
+
+
+# Note: This node is also being filled by dmidecode
+def inventory_lnx_cpuinfo(section: Section) -> InventoryResult:
+    yield Attributes(
+        path=["hardware", "cpu"],
+        inventory_attributes=section,
+    )
+
+
+register.inventory_plugin(
+    name="lnx_cpuinfo",
+    inventory_function=inventory_lnx_cpuinfo,
+)

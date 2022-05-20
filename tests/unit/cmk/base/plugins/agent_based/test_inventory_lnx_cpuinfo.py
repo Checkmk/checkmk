@@ -6,9 +6,12 @@
 
 import pytest
 
-from cmk.utils.type_defs import InventoryPluginName
-
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes
+from cmk.base.plugins.agent_based.lnx_cpuinfo import (
+    inventory_lnx_cpuinfo,
+    parse_lnx_cpuinfo,
+    Section,
+)
 
 OUTPUT_1 = """processor:0
 vendor_id:AuthenticAMD
@@ -180,19 +183,13 @@ power management:
 """
 
 
-@pytest.fixture(scope="module", name="info_1")
+@pytest.fixture(scope="module", name="section_1")
 def _get_info_1():
-    return [line.split(":") for line in OUTPUT_1.split("\n") if line.strip()]
+    return parse_lnx_cpuinfo([line.split(":") for line in OUTPUT_1.split("\n") if line.strip()])
 
 
-@pytest.fixture(scope="module", name="inventory_lnx_cpuinfo")
-def _get_inventory_lnx_cpuinfo(fix_register):
-    ipn = InventoryPluginName("lnx_cpuinfo")
-    return fix_register.inventory_plugins[ipn].inventory_function
-
-
-def test_inventory_lnx_cpuinfo(info_1, inventory_lnx_cpuinfo) -> None:
-    assert list(inventory_lnx_cpuinfo(info_1)) == [
+def test_inventory_lnx_cpuinfo(section_1: Section) -> None:
+    assert list(inventory_lnx_cpuinfo(section_1)) == [
         Attributes(
             path=["hardware", "cpu"],
             inventory_attributes={

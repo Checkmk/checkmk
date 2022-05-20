@@ -91,7 +91,7 @@ constexpr std::string_view cfg_with_timeout_5 =
 
 constexpr size_t SIZE_OF_TABLE_ON_TIMEOUT = 4U;
 constexpr size_t SIZE_OF_TABLE_ON_OK = 7U;
-TEST_F(PerfCpuLoadTest, GenerationOnTimeoutIntegration) {
+TEST_F(PerfCpuLoadTest, GenerationOnTimeout) {
     auto temp_fs = tst::TempCfgFs::CreateNoIo();
 
     ASSERT_TRUE(temp_fs->loadContent(cfg_with_timeout_0));

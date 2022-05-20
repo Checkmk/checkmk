@@ -259,7 +259,8 @@ private:
     std::filesystem::path data_;
     std::filesystem::path base_;
     Mode mode_;
-    YAML::Node yaml_;
+    YAML::Node old_yaml_config_;
+    bool content_loaded_{false};
 };
 
 std::filesystem::path GetFabricYml();

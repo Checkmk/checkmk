@@ -1859,17 +1859,13 @@ bool ConfigInfo::loadDirect(const fs::path &file) {
 
 bool ConfigInfo::loadDirect(std::string_view text) {
     auto new_yaml = YAML::Load(std::string{text});
-    if (0 == new_yaml.size()) return false;
+    if (new_yaml.size() == 0) {
+        return false;
+    }
 
     std::lock_guard lk(lock_);
     yaml_ = new_yaml;
 
-    // setting up paths  to the other files
-    user_yaml_path_.clear();
-    user_yaml_path_.clear();
-    bakery_yaml_path_.clear();
-    aggregated_ = false;
-    ok_ = true;
     g_uniq_id++;
     return true;
 }

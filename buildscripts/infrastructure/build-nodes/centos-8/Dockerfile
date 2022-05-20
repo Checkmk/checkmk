@@ -2,6 +2,9 @@ FROM centos:centos8
 
 SHELL ["/bin/bash", "-c"]
 
+RUN sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-*
+RUN sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-*
+
 RUN yum -y makecache \
     && yum -y --enablerepo=powertools --allowerasing install \
     bind-utils \
@@ -35,7 +38,7 @@ RUN yum -y makecache \
     mariadb-devel \
     mpfr-devel \
     ncurses-devel \
-    openssh-clients \ 
+    openssh-clients \
     openssl-devel \
     pango-devel \
     patch \

@@ -6,12 +6,7 @@
 
 import pytest
 
-from cmk.gui.htmllib.tag_rendering import (
-    normalize_css_spec,
-    render_element,
-    render_end_tag,
-    render_start_tag,
-)
+from cmk.gui.htmllib.tag_rendering import render_element, render_end_tag, render_start_tag
 from cmk.gui.utils.html import HTML
 
 
@@ -111,8 +106,3 @@ def test_render_element_do_not_escape_html():
     tag = render_element("a", HTML("b<script>alert(1)</script>la"), href="ding")
     assert isinstance(tag, HTML)
     assert str(tag) == '<a href="ding">b<script>alert(1)</script>la</a>'
-
-
-@pytest.mark.parametrize("value", [["1"], "1", ["1", None]])
-def test_normalize_css_spec_skip_nones(value):
-    assert normalize_css_spec(value) == ["1"]

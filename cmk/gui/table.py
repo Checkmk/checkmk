@@ -519,12 +519,7 @@ class Table:
                 continue
 
             oddeven_name = "even" if nr % 2 == 0 else "odd"
-            class_ = ["data", "%s%d" % (oddeven_name, row.state)]
-
-            if isinstance(row.css, list):
-                class_.extend([c for c in row.css if c is not None])
-            elif row.css is not None:
-                class_.append(row.css)
+            class_ = ["data", f"{oddeven_name}{row.state}"] + row.css
 
             html.open_tr(
                 class_=class_, id_=row.id_, onmouseover=row.onmouseover, onmouseout=row.onmouseout
@@ -613,13 +608,7 @@ class Table:
             else:
                 header_title = header.title
 
-            if not isinstance(header.css, list):
-                css_class: "CSSSpec" = [header.css]
-            else:
-                css_class = header.css
-
-            assert isinstance(css_class, list)
-            css_class = [("header_%s" % c) for c in css_class if c is not None]
+            css_class = [f"header_{c}" for c in header.css]
 
             if not self.options["sortable"] or not header.sortable:
                 html.open_th(class_=css_class)
@@ -686,9 +675,7 @@ def _filter_rows(rows: TableRows, search_term: str) -> TableRows:
 
         for cell in row.cells:
             # Filter out buttons
-            if cell.css is not None and "buttons" in cell.css:
-                continue
-            if match_regex.search(str(cell.content)):
+            if "buttons" not in cell.css and match_regex.search(str(cell.content)):
                 filtered_rows.append(row)
                 break  # skip other cells when matched
     return filtered_rows

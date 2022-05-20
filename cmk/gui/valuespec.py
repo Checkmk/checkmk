@@ -7164,9 +7164,9 @@ def ListOfTimeRanges(  # pylint: disable=redefined-builtin
     # ValueSpec
     title: _Optional[str] = None,
     help: _Optional[ValueSpecHelp] = None,
-    default_value: ValueSpecDefault[ListOfModel[T]] = DEF_VALUE,
-    validate: _Optional[ValueSpecValidateFunc[ListOfModel[T]]] = None,
-):
+    default_value: ValueSpecDefault[ListOfModel[TimeofdayRangeValue]] = DEF_VALUE,
+    validate: _Optional[ValueSpecValidateFunc[ListOfModel[TimeofdayRangeValue]]] = None,
+) -> ListOf:
     return ListOf(
         valuespec=TimeofdayRange(allow_empty=True),
         magic="#!#",
@@ -7202,7 +7202,7 @@ def Fontsize(  # pylint: disable=redefined-builtin
     help: _Optional[ValueSpecHelp] = None,
     default_value: ValueSpecDefault[float] = 10,  # NOTE: Different!
     validate: _Optional[ValueSpecValidateFunc[float]] = None,
-):
+) -> Float:
     return Float(
         decimal_separator=decimal_separator,
         allow_int=allow_int,

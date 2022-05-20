@@ -928,7 +928,52 @@ filter_table_tests = [
     # Testing base class FilterInvtableOperStatus
     FilterTableTest(
         ident="invinterface_oper_status",
+        request_vars=[],
+        rows=[
+            {"invinterface_oper_status": 1},
+            {"invinterface_oper_status": 3},
+            {"invinterface_oper_status": 5},
+        ],
+        expected_rows=[
+            {"invinterface_oper_status": 1},
+            {"invinterface_oper_status": 3},
+            {"invinterface_oper_status": 5},
+        ],
+    ),
+    FilterTableTest(
+        ident="invinterface_oper_status",
         request_vars=[
+            ("invinterface_oper_status_1", ""),
+            ("invinterface_oper_status_3", "on"),
+            ("invinterface_oper_status_5", ""),
+        ],
+        rows=[
+            {"invinterface_oper_status": 1},
+            {"invinterface_oper_status": 3},
+            {"invinterface_oper_status": 5},
+        ],
+        expected_rows=[
+            {"invinterface_oper_status": 3},
+        ],
+    ),
+    FilterTableTest(
+        ident="invinterface_oper_status",
+        request_vars=[
+            ("invinterface_oper_status_1", ""),
+            ("invinterface_oper_status_3", ""),
+            ("invinterface_oper_status_5", ""),
+        ],
+        rows=[
+            {"invinterface_oper_status": 1},
+            {"invinterface_oper_status": 3},
+            {"invinterface_oper_status": 5},
+        ],
+        expected_rows=[],
+    ),
+    FilterTableTest(
+        ident="invinterface_oper_status",
+        request_vars=[
+            ("invinterface_oper_status_1", ""),
             ("invinterface_oper_status_3", "on"),
         ],
         rows=[
@@ -938,6 +983,7 @@ filter_table_tests = [
         ],
         expected_rows=[
             {"invinterface_oper_status": 3},
+            {"invinterface_oper_status": 5},
         ],
     ),
     # Testing base class FilterInvtableAdminStatus

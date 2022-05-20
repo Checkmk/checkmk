@@ -942,17 +942,15 @@ def log_class_filter(value: FilterHTTPVariables) -> FilterHeader:
 
 
 def if_oper_status_filter_table(ident: str, context: VisualContext, rows: Rows) -> Rows:
-
     values = context.get(ident, {})
-    assert not isinstance(values, str)
-    # We consider the filter active if not all checkboxes
-    # are either on (default) or off (unset)
-    settings = set(values.values())
 
-    if len(settings) == 1 and len(values) > 1:
-        return rows
+    def _add_row(row) -> bool:
+        # Apply filter if and only if a filter value is set
+        if (filter_key := "%s_%d" % (ident, row["invinterface_oper_status"])) in values:
+            return values[filter_key] == "on"
+        return True
 
-    return [row for row in rows if values.get("%s_%d" % (ident, row["invinterface_oper_status"]))]
+    return [row for row in rows if _add_row(row)]
 
 
 def cre_sites_options() -> Options:

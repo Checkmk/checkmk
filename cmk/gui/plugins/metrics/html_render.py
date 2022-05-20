@@ -324,13 +324,13 @@ def _show_graph_add_to_icon_for_popup(
 def _show_graph_canvas(graph_render_options) -> None:
     """Create canvas where actual graph will be rendered"""
     size = graph_render_options["size"]
-    graph_width = size[0] * html_size_per_ex
-    graph_height = size[1] * html_size_per_ex
+    graph_width: float = size[0] * html_size_per_ex
+    graph_height: float = size[1] * html_size_per_ex
     html.canvas(
         "",
         style="position: relative; width: %dpx; height: %dpx;" % (graph_width, graph_height),
-        width=graph_width * 2,
-        height=graph_height * 2,
+        width=str(graph_width * 2),
+        height=str(graph_height * 2),
     )
 
 

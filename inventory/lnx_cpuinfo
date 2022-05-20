@@ -4,36 +4,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# Example output:
-# <<<lnx_cpuinfo:sep(58)>>>
-# processor:0
-# vendor_id:GenuineIntel
-# cpu family:6
-# model:45
-# model name:Intel(R) Core(TM) i7-3930K CPU @ 3.20GHz
-# stepping:7
-# microcode:0x70c
-# cpu MHz:1200.000
-# cache size:12288 KB
-# physical id:0
-# siblings:12
-# core id:0
-# cpu cores:6
-# apicid:0
-# initial apicid:0
-# fpu:yes
-# fpu_exception:yes
-# cpuid level:13
-# wp:yes
-# bogomips:6399.88
-# clflush size:64
-# cache_alignment:64
-# address sizes:46 bits physical, 48 bits virtual
-# power management:
-#
-# processor:1
-# ...
-
 
 # Note: This node is also being filled by dmidecode
 def inv_lnx_cpuinfo(info):

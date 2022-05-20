@@ -58,11 +58,11 @@ main() {
     # Create home directory manually instead of doing this on user creation,
     # because it might already exist with wrong ownership
     mkdir -p ${HOMEDIR}
+    chown -R cmk-agent:cmk-agent ${HOMEDIR}
     if [ "${user_is_new}" ]; then
         _allow_legacy_pull
         _issue_legacy_pull_warning
     fi
-    chown -R cmk-agent:cmk-agent ${HOMEDIR}
     unset homedir comment usershell
 
 }

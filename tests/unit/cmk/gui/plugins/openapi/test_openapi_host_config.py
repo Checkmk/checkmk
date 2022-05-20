@@ -188,7 +188,7 @@ def test_openapi_host_update_after_move(
         "/NO_SITE/check_mk/api/1.0/objects/host_config/heute",
     )
 
-    moved_heute = wsgi_app.call_method(
+    _moved_heute = wsgi_app.call_method(
         'post',
         "/NO_SITE/check_mk/api/1.0/objects/host_config/heute/actions/move/invoke",
         params='{"target_folder": "/new_folder"}',
@@ -438,6 +438,57 @@ def _custom_host_attribute():
         yield
     finally:
         save_custom_attrs_to_mk_file({})
+
+
+def test_openapi_host_created_timestamp(wsgi_app, with_automation_user) -> None:
+
+    base = '/NO_SITE/check_mk/api/1.0'
+
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(('Bearer', username + " " + secret))
+
+    json_data = {
+        "folder": "/",
+        "host_name": "foobar.com",
+        "attributes": {
+            "ipaddress": "192.168.0.123",
+        },
+    }
+
+    resp_post = wsgi_app.call_method(
+        "post",
+        base + "/domain-types/host_config/collections/all",
+        params=json.dumps(json_data),
+        status=200,
+        content_type="application/json",
+        headers={"Accept": "application/json"},
+    )
+
+    created_at_post = resp_post.json["extensions"]["attributes"]["meta_data"]["created_at"]
+
+    resp_get = wsgi_app.call_method(
+        "get",
+        base + "/objects/host_config/foobar.com",
+        status=200,
+        headers={"Accept": "application/json"},
+    )
+
+    created_at_get = resp_get.json["extensions"]["attributes"]["meta_data"]["created_at"]
+
+    resp_put = wsgi_app.call_method(
+        "put",
+        base + "/objects/host_config/foobar.com",
+        status=200,
+        params='{"attributes": {"ipaddress": "192.168.0.124"}}',
+        content_type="application/json",
+        headers={
+            "If-Match": resp_get.headers["ETag"],
+            "Accept": "application/json"
+        },
+    )
+
+    created_at_put = resp_put.json["extensions"]["attributes"]["meta_data"]["created_at"]
+    assert created_at_post == created_at_get == created_at_put
 
 
 def test_openapi_host_custom_attributes(

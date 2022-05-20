@@ -211,6 +211,7 @@ def update_host(params):
     _require_host_etag(host)
 
     if new_attributes:
+        new_attributes["meta_data"] = host.attributes().get("meta_data", {})
         host.edit(new_attributes, None)
 
     if update_attributes:

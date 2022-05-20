@@ -514,8 +514,12 @@ def _valuespec_active_checks_dns():
     return Tuple(
         title=_("Check DNS service"),
         help=_(
-            "Check the resolution of a hostname into an IP address by a DNS server. "
-            "This check uses <tt>check_dns</tt> from the standard Nagios plugins."
+            "Check the resolution of a hostname into an IP address by a DNS "
+            "server. This check uses <tt>check_dns</tt> from the standard "
+            "Nagios plugins. Note, that check_dns will always be executed in "
+            "the monitoring site. By default, the configured host(s) that "
+            "this rule applies to is used as DNS server. This behaviour can "
+            "be configured by using the option <tt>DNS Server</tt>. "
         ),
         elements=[
             TextInput(
@@ -543,20 +547,22 @@ def _valuespec_active_checks_dns():
                                 elements=[
                                     FixedValue(
                                         value=None,
-                                        totext=_("this host"),
-                                        title=_("Use this host as a DNS server for the lookup"),
+                                        title=_(
+                                            "Use the address of the host for which the service is generated"
+                                        ),
+                                        totext=_(
+                                            "This is the default behaviour if the option is not set."
+                                        ),
                                     ),
                                     TextInput(
                                         title=_("Specify DNS Server"),
                                         allow_empty=False,
-                                        help=_(
-                                            "Optional DNS server you want to use for the lookup"
-                                        ),
                                     ),
                                     FixedValue(
                                         value="default DNS server",
-                                        totext=_("default DNS server"),
-                                        title=_("Use default DNS server"),
+                                        title=_(
+                                            "Use the default DNS server(s) specified in /etc/resolv.conf"
+                                        ),
                                     ),
                                 ],
                             ),

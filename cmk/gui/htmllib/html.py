@@ -529,11 +529,19 @@ class HTMLGenerator(HTMLWriter):
         if not obj_id:
             obj_id = utils.gen_id()
 
+        # Same API as other elements: class_ can be a list or string/None
+        css_classes = ["button", "buttonlink"]
+        if class_:
+            if not isinstance(class_, list):
+                css_classes.append(class_)
+            else:
+                css_classes.extend(class_)
+
         self.input(
             name=obj_id,
             type_="button",
             id_=obj_id,
-            class_=["button", "buttonlink"] + ([] if class_ is None else class_),
+            class_=css_classes,
             value=text,
             style=style,
             title=title,
@@ -720,7 +728,8 @@ class HTMLGenerator(HTMLWriter):
         href: str = "javascript:void(0)",
         **attrs: HTMLTagAttributeValue,
     ) -> None:
-        classes = ([] if class_ is None else class_) + [
+        classes = [] if class_ is None else class_
+        classes += [
             "toggle_switch",
             "on" if enabled else "off",
         ]
@@ -862,9 +871,14 @@ class HTMLGenerator(HTMLWriter):
         # selections like the dual list choice valuespec
         css_classes = (
             []
-            if "multiple" in attrs or (class_ is not None and "ajax-vals" in class_)
+            if "multiple" in attrs or (isinstance(class_, list) and "ajax-vals" in class_)
             else ["select2-enable"]
-        ) + ([] if class_ is None else class_)
+        )
+
+        if isinstance(class_, list):
+            css_classes.extend(class_)
+        elif class_ is not None:
+            css_classes.append(class_)
 
         self.open_select(
             name=varname, id_=varname, label=label, class_=css_classes, size=str(size), **attrs
@@ -1051,14 +1065,16 @@ class HTMLGenerator(HTMLWriter):
         cssclass: Optional[str] = None,
         class_: Optional[CSSSpec] = None,
     ) -> HTML:
+        classes = ["icon"] + ([] if cssclass is None else [cssclass])
+        if isinstance(class_, list):
+            classes.extend(class_)
+        elif class_ is not None:
+            classes.append(class_)
+
         icon_name = icon["icon"] if isinstance(icon, dict) else icon
         src = icon_name if "/" in icon_name else theme.detect_icon_path(icon_name, prefix="icon_")
-        classes = (
-            ["icon"]
-            + ([] if cssclass is None else [cssclass])
-            + ([] if class_ is None else class_)
-            + (["png"] if src.endswith(".png") else [])
-        )
+        if src.endswith(".png"):
+            classes.append("png")
         if src.endswith("/icon_missing.svg") and title:
             title += " (%s)" % _("icon not found")
 
@@ -1114,7 +1130,12 @@ class HTMLGenerator(HTMLWriter):
         cssclass: Optional[str] = None,
         class_: Optional[CSSSpec] = None,
     ) -> HTML:
-        classes = [] if cssclass is None else [cssclass] + ([] if class_ is None else class_)
+        classes = [] if cssclass is None else [cssclass]
+        if isinstance(class_, list):
+            classes.extend(class_)
+        elif class_ is not None:
+            classes.append(class_)
+
         href = url if not onclick else "javascript:void(0)"
         assert href is not None
 
@@ -1247,7 +1268,11 @@ class HTMLGenerator(HTMLWriter):
             onmouseleave=onmouseleave,
         )
 
-        classes = ["popup_trigger"] + ([] if cssclass is None else cssclass)
+        classes = ["popup_trigger"]
+        if isinstance(cssclass, list):
+            classes.extend(cssclass)
+        elif cssclass:
+            classes.append(cssclass)
 
         # TODO: Make method.content return HTML
         return HTMLWriter.render_div(

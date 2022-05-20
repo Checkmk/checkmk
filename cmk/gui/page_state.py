@@ -28,7 +28,7 @@ class PageState:
 
 class PageStateRenderer:
     def show(self, page_state: PageState) -> None:
-        html.open_div(class_=["page_state"] + page_state.css_classes, title=page_state.tooltip_text)
+        html.open_div(class_=self._get_css_classes(page_state), title=page_state.tooltip_text)
         if page_state.url:
             html.open_a(page_state.url)
             self._show_content(page_state)
@@ -44,3 +44,11 @@ class PageStateRenderer:
                 html.render_icon(page_state.icon_name, id_="page_state_icon"),
                 class_="icon_container",
             )
+
+    def _get_css_classes(self, page_state: PageState) -> CSSSpec:
+        classes = ["page_state"]
+        if isinstance(page_state.css_classes, list):
+            classes.extend(c for c in page_state.css_classes if c is not None)
+        elif page_state.css_classes is not None:
+            classes.append(page_state.css_classes)
+        return classes

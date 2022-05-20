@@ -6,7 +6,7 @@
 """Internal helper for rendering HTML tags"""
 
 import re
-from typing import Iterator, Optional, Union
+from typing import cast, Iterator, Optional, Union
 
 from cmk.gui.type_defs import CSSSpec
 from cmk.gui.utils import escaping
@@ -26,6 +26,7 @@ __all__ = [
     "render_start_tag",
     "render_end_tag",
     "render_element",
+    "normalize_css_spec",
 ]
 
 
@@ -62,7 +63,10 @@ def render_element(
 
 
 def _render_attributes(**attrs: HTMLTagAttributeValue) -> Iterator[str]:
-    _normalize_css_classes(attrs)
+    css = _get_normalized_css_classes(attrs)
+    if css:
+        attrs["class"] = css
+
     # options such as 'selected' and 'checked' dont have a value in html tags
     options = []
 
@@ -88,7 +92,7 @@ def _render_attributes(**attrs: HTMLTagAttributeValue) -> Iterator[str]:
             options.append(key)
             continue
 
-        if isinstance(v, str):
+        if not isinstance(v, list):
             v = escaping.escape_attribute(v)
         else:
             if key == "class":
@@ -99,7 +103,7 @@ def _render_attributes(**attrs: HTMLTagAttributeValue) -> Iterator[str]:
                 # TODO: Can we drop this special Feature? No idea what it is used for.
                 sep = "_"
 
-            joined_value = sep.join(ea for a in v if (ea := escaping.escape_attribute(a)))
+            joined_value = sep.join([a for a in (escaping.escape_attribute(vi) for vi in v) if a])
 
             # TODO: Can we drop this special feature? Find an cleanup the call sites
             if sep.startswith(";"):
@@ -113,16 +117,21 @@ def _render_attributes(**attrs: HTMLTagAttributeValue) -> Iterator[str]:
         yield " %s=''" % k
 
 
-def _normalize_css_classes(attrs: HTMLTagAttributes) -> None:
+def normalize_css_spec(css_classes: CSSSpec) -> list[str]:
+    if isinstance(css_classes, list):
+        return [c for c in css_classes if c is not None]
+
+    if css_classes is not None:
+        return [css_classes]
+
+    return []
+
+
+def _get_normalized_css_classes(attrs: HTMLTagAttributes) -> list[str]:
     # make class attribute foolproof
     css: list[str] = []
     for k in ["class_", "css", "cssclass", "class"]:
-        value = attrs.pop(k, None)
-        if value is None:
-            pass
-        elif isinstance(value, str):
-            css.append(value)
-        else:
-            css.extend(value)
-    if css:
-        attrs["class"] = css
+        if k in attrs:
+            cls_spec = cast(CSSSpec, attrs.pop(k))
+            css += normalize_css_spec(cls_spec)
+    return css

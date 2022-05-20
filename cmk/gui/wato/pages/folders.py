@@ -8,7 +8,7 @@
 import abc
 import json
 import operator
-from typing import Dict, Iterator, List, Optional, Tuple, Type
+from typing import Any, Dict, Iterator, List, Optional, Tuple, Type
 
 from cmk.utils.type_defs import HostName
 
@@ -49,7 +49,7 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.plugins.wato.utils.base_modes import mode_url, redirect, WatoMode
 from cmk.gui.plugins.wato.utils.context_buttons import make_folder_status_link
 from cmk.gui.plugins.wato.utils.main_menu import MainMenu, MenuItem
-from cmk.gui.table import init_rowselect, table_element
+from cmk.gui.table import init_rowselect, Table, table_element
 from cmk.gui.type_defs import ActionResult, Choices
 from cmk.gui.utils.agent_registration import remove_tls_registration_help
 from cmk.gui.utils.escaping import escape_to_html_permissive
@@ -104,7 +104,7 @@ class ModeFolder(WatoMode):
     def permissions(cls):
         return ["hosts"]
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self._folder = Folder.current()
 
@@ -853,7 +853,7 @@ class ModeFolder(WatoMode):
             style=style,
         )
 
-    def _show_hosts(self):
+    def _show_hosts(self) -> None:
         if not self._folder.has_hosts():
             return
 
@@ -905,8 +905,14 @@ class ModeFolder(WatoMode):
         init_rowselect("wato-folder-/" + self._folder.path())
 
     def _show_host_row(
-        self, rendered_hosts, table, hostname, colspan, host_errors, contact_group_names
-    ):
+        self,
+        rendered_hosts: list[str],
+        table: Table,
+        hostname: str,
+        colspan: int,
+        host_errors: dict[str, list[str]],
+        contact_group_names: dict[str, dict[str, Any]],
+    ) -> None:
         host = self._folder.load_host(hostname)
         rendered_hosts.append(hostname)
         effective = host.effective_attributes()
@@ -924,19 +930,19 @@ class ModeFolder(WatoMode):
                 value="X",
             ),
             sortable=False,
-            css="checkbox",
+            css=["checkbox"],
         )
         # Use CSS class "failed" in order to provide information about
         # selective toggling inventory-failed hosts for Javascript
         html.input(
             name="_c_%s" % hostname,
             type_="checkbox",
-            value=colspan,
+            value=str(colspan),
             class_="failed" if host.discovery_failed() else None,
         )
         html.label("", "_c_%s" % hostname)
 
-        table.cell(_("Actions"), css="buttons", sortable=False)
+        table.cell(_("Actions"), css=["buttons"], sortable=False)
         self._show_host_actions(host)
 
         # Hostname with link to details page (edit host)
@@ -969,7 +975,7 @@ class ModeFolder(WatoMode):
                 else:
                     tdclass, tdcontent = attr.paint(effective.get(attrname), hostname)
                     tdclass += " inherited"
-                table.cell(attr.title(), tdcontent, css=tdclass)
+                table.cell(attr.title(), tdcontent, css=[tdclass])
 
         # Am I authorized?
         reason = host.reason_why_may_not("read")
@@ -980,7 +986,7 @@ class ModeFolder(WatoMode):
             icon = "autherr"
             title = reason
 
-        table.cell(_("Auth"), html.render_icon(icon, title), css="buttons", sortable=False)
+        table.cell(_("Auth"), html.render_icon(icon, title), css=["buttons"], sortable=False)
 
         # Permissions and Contact groups - through complete recursion and inhertance
         permitted_groups, host_contact_groups, _use_for_services = host.groups()
@@ -998,7 +1004,7 @@ class ModeFolder(WatoMode):
         )
 
         if not active_config.wato_hide_hosttags and user.wato_folders_show_tags:
-            table.cell(_("Tags"), css="tag-ellipsis")
+            table.cell(_("Tags"), css=["tag-ellipsis"])
             tag_groups, show_all_code = self._limit_labels(host.tag_groups())
             html.write_html(
                 cmk.gui.view_utils.render_tag_groups(tag_groups, "host", with_links=False)
@@ -1006,7 +1012,7 @@ class ModeFolder(WatoMode):
             html.write_html(show_all_code)
 
         if user.wato_folders_show_labels:
-            table.cell(_("Explicit labels"), css="tag-ellipsis")
+            table.cell(_("Explicit labels"), css=["tag-ellipsis"])
             labels, show_all_code = self._limit_labels(host.labels())
             html.write_html(
                 cmk.gui.view_utils.render_labels(

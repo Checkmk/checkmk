@@ -924,7 +924,7 @@ class BaseFolder:
 
         return breadcrumb
 
-    def host_names(self):
+    def host_names(self) -> Sequence[str]:
         return self.hosts().keys()
 
     def load_host(self, host_name: str) -> CREHost:
@@ -942,7 +942,7 @@ class BaseFolder:
     def has_hosts(self):
         return len(self.hosts()) != 0
 
-    def host_validation_errors(self):
+    def host_validation_errors(self) -> dict[str, list[str]]:
         return validate_all_hosts(self.host_names())
 
     def is_disk_folder(self):
@@ -3901,7 +3901,7 @@ def call_hook_hosts_changed(folder: CREFolder) -> None:
 # hostnames. These informations are used for displaying warning
 # symbols in the host list and the host detail view
 # Returns dictionary { hostname: [errors] }
-def validate_all_hosts(hostnames, force_all=False):
+def validate_all_hosts(hostnames: Sequence[str], force_all=False) -> dict[str, list[str]]:
     if hooks.registered("validate-all-hosts") and (len(hostnames) > 0 or force_all):
         hosts_errors = {}
         all_hosts = _collect_hosts(Folder.root_folder())

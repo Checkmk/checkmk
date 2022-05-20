@@ -22,29 +22,29 @@ def inventory_mobileiron(
     yield Attributes(
         path=["hardware", "system"],
         inventory_attributes={
-            "model": section_mobileiron_section.deviceModel,
+            "model": section_mobileiron_section.device_model,
             "manufacturer": section_mobileiron_section.manufacturer,
-            "serial": section_mobileiron_section.serialNumber,
+            "serial": section_mobileiron_section.serial_number,
         },
     )
     yield Attributes(
         path=["networking", "addresses"],
         inventory_attributes={
-            "address": section_mobileiron_section.ipAddress,
+            "address": section_mobileiron_section.ip_address,
         },
     )
     yield Attributes(
         path=["software", "os"],
         inventory_attributes={
-            "type": section_mobileiron_section.platformType,
+            "type": section_mobileiron_section.platform_type,
         },
     )
 
     yield Attributes(
         path=["software", "applications", "mobileiron"],
         inventory_attributes={
-            "registration_state": section_mobileiron_section.registrationState,
-            "partition_name": section_mobileiron_section.dmPartitionName,
+            "registration_state": section_mobileiron_section.registration_state,
+            "partition_name": section_mobileiron_section.dm_partition_name,
         },
     )
 

@@ -63,24 +63,24 @@ def _check_android_patch_level(params: Params, patch_level: str) -> CheckResult:
 def _check_os_build_version(params: Params, section: Section) -> CheckResult:
     try:
         build_version_is_too_old, days_old = is_too_old(
-            str(section.osBuildVersion), params["os_age"]
+            str(section.os_build_version), params["os_age"]
         )
     except ValueError:
         yield Result(
             state=State(params["os_build_unparsable"]),
-            summary=f"OS build version has an invalid date format: {section.osBuildVersion}",
+            summary=f"OS build version has an invalid date format: {section.os_build_version}",
         )
     else:
         if build_version_is_too_old is True:
             yield Result(
                 state=State.CRIT,
-                summary=f"OS build version is {days_old} days old: {section.osBuildVersion}",
+                summary=f"OS build version is {days_old} days old: {section.os_build_version}",
             )
 
         else:
             yield Result(
                 state=State.OK,
-                summary=f"OS build version: {section.osBuildVersion}",
+                summary=f"OS build version: {section.os_build_version}",
             )
 
 
@@ -88,20 +88,20 @@ def _check_os_version(section: Section, user_regex: str) -> Result:
     if not user_regex:
         return Result(
             state=State.OK,
-            summary=f"OS version: {section.platformVersion}",
+            summary=f"OS version: {section.platform_version}",
         )
     try:
-        match = regex(user_regex).search(str(section.platformVersion))
+        match = regex(user_regex).search(str(section.platform_version))
     except Exception:
         match = None
     if match:
         return Result(
             state=State.OK,
-            summary=f"OS version: {section.platformVersion}",
+            summary=f"OS version: {section.platform_version}",
         )
     return Result(
         state=State.CRIT,
-        summary=f"OS version mismatch: {section.platformVersion}",
+        summary=f"OS version mismatch: {section.platform_version}",
     )
 
 
@@ -109,22 +109,22 @@ def check_mobileiron_versions(params: Params, section: Section) -> CheckResult:
 
     yield from _check_os_build_version(params, section)
 
-    if section.androidSecurityPatchLevel:
-        yield from _check_android_patch_level(params, section.androidSecurityPatchLevel)
+    if section.android_security_patch_level:
+        yield from _check_android_patch_level(params, section.android_security_patch_level)
 
-    if section.platformType == "ANDROID":
+    if section.platform_type == "ANDROID":
         yield _check_os_version(section, params["android_version_regexp"])
-    elif section.platformType == "IOS":
+    elif section.platform_type == "IOS":
         yield _check_os_version(section, params["ios_version_regexp"])
     else:
         yield Result(
             state=State(params["os_version_other"]),
-            summary=f"OS version: {section.platformVersion}",
+            summary=f"OS version: {section.platform_version}",
         )
 
     yield Result(
         state=State.OK,
-        summary=f"Client version: {section.clientVersion}",
+        summary=f"Client version: {section.client_version}",
     )
 
 

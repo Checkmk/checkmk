@@ -150,7 +150,7 @@ timeout(time: 12, unit: 'HOURS') {
     AGENT_LIST.each { AGENT ->
         AGENT_BUILDS['build agent ' + AGENT] = {
             if (AGENT == 'windows') {
-                node('windows') {
+                node('win3') {
                     bat 'powershell Remove-Item .\\* -Recurse -Force'
                     unstash name: 'WinDep'
                     bat 'cd agents\\wnx && call build_release.cmd'

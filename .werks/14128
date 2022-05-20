@@ -9,9 +9,10 @@ Level: 1
 State: unknown
 Version: 2.1.0b10
 
-Previously, if the option 'Monitor namespace' was used to filter namespaces, the performed search
-would be a prefix search. This was inconsistent with the inline help, which promises a complete
-search. With this werk, an infix search is now performed by the agent, which is the default in
-Checkmk. Those users who have configured the option 'Monitor namespaces' to be sensitive to the
-type of regex matching performed need to verify that the agent is still performing as expected.
+Previously, if the option 'Monitor namespace' was used to filter namespaces,
+the performed search would be a prefix search. This was inconsistent with the
+inline help, which promises a complete search. With this werk, an infix search
+is now performed by the agent. Those users who have configured the option
+'Monitor namespaces' to be sensitive to the type of regex matching performed
+need to verify that the agent is still performing as expected.
 

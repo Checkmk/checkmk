@@ -72,8 +72,8 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
     def permissions(cls):
         return []
 
-    def __init__(self):
-        self._value = {}
+    def __init__(self) -> None:
+        self._value: dict = {}
         super().__init__()
         super().load()
 

@@ -8,8 +8,8 @@
 class CheckHandler:
     """Collect the info on all checks"""
 
-    def __init__(self):
-        self.cache = {}
+    def __init__(self) -> None:
+        self.cache: dict = {}
 
     def get_applicables(self, checkname, check_info):
         """get a list of names of all (sub)checks that apply"""

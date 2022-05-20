@@ -406,13 +406,13 @@ class ResultDistributor:
     in order to reduce queries to AWS account.
     """
 
-    def __init__(self):
-        self._colleagues = []
+    def __init__(self) -> None:
+        self._colleagues: list = []
 
-    def add(self, colleague):
+    def add(self, colleague) -> None:
         self._colleagues.append(colleague)
 
-    def distribute(self, sender, result):
+    def distribute(self, sender, result) -> None:
         for colleague in self._colleagues:
             if colleague.name != sender.name:
                 colleague.receive(sender, result)
@@ -426,16 +426,16 @@ class ResultDistributorS3Limits(ResultDistributor):
     same for all regions) and later distribute the results to S3Summary objects in other regions.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
-        self._received_results = {}
+        self._received_results: dict = {}
 
-    def add(self, colleague):
+    def add(self, colleague) -> None:
         super().add(colleague)
         for sender, content in self._received_results.values():
             colleague.receive(sender, content)
 
-    def distribute(self, sender, result):
+    def distribute(self, sender, result) -> None:
         self._received_results.setdefault(sender.name, (sender, result))
         super().distribute(sender, result)
 

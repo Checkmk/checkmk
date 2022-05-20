@@ -7,7 +7,7 @@
 import pprint
 import time
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Optional
 
 from OpenSSL import crypto
 
@@ -53,7 +53,7 @@ class KeypairStore:
         if not self._path.exists():
             return {}
 
-        variables: Dict[str, Any] = {self._attr: {}}
+        variables: dict[str, Any] = {self._attr: {}}
         with self._path.open("rb") as f:
             exec(f.read(), variables, variables)
         return variables[self._attr]
@@ -85,7 +85,7 @@ class PageKeyManagement:
     upload_mode = "upload_key"
     download_mode = "download_key"
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.keys = self.load()
         super().__init__()
 
@@ -205,8 +205,8 @@ class PageKeyManagement:
 class PageEditKey:
     back_mode: str
 
-    def __init__(self):
-        self._minlen = None
+    def __init__(self) -> None:
+        self._minlen: Optional[int] = None
 
     def load(self):
         raise NotImplementedError()

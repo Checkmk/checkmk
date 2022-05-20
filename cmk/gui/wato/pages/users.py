@@ -90,7 +90,7 @@ class ModeUsers(WatoMode):
     def permissions(cls):
         return ["users"]
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self._job = userdb.UserSyncBackgroundJob()
         self._job_snapshot = userdb.UserSyncBackgroundJob().get_status_snapshot()
@@ -592,7 +592,7 @@ class ModeEditUser(WatoMode):
         assert self._user_id is not None
         return self.mode_url(edit=self._user_id)
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
         # Load data that is referenced - in order to display dropdown

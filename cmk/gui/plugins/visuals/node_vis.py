@@ -73,7 +73,7 @@ class FilterRange(Filter):
 
 @filter_registry.register_instance
 class FilterTopologyMeshDepth(FilterRange):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(
             _FilterRangeConfig(
                 column="topology_mesh_depth",
@@ -88,7 +88,7 @@ class FilterTopologyMeshDepth(FilterRange):
 
 @filter_registry.register_instance
 class FilterTopologyMaxNodes(FilterRange):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(
             _FilterRangeConfig(
                 column="topology_max_nodes",

@@ -165,7 +165,7 @@ class MainModuleBI(ABCMainModule):
 
 
 class ABCBIMode(WatoMode):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self._bi_packs = get_cached_bi_packs()
         self._bi_pack = None
@@ -412,7 +412,7 @@ class ModeBIEditPack(ABCBIMode):
 
 @mode_registry.register
 class ModeBIPacks(ABCBIMode):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self._contact_group_names = load_contact_group_information()
 
@@ -602,7 +602,7 @@ class ModeBIRules(ABCBIMode):
     def mode_url(cls, **kwargs: str) -> str:
         return super().mode_url(**kwargs)
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self._view_type = request.var("view", "list")
 
@@ -1056,7 +1056,7 @@ class ModeBIEditRule(ABCBIMode):
     def permissions(cls):
         return ["bi_rules"]
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self._rule_id = request.get_str_input("id")
         self._new = self._rule_id is None
@@ -1587,7 +1587,7 @@ class BIModeEditAggregation(ABCBIMode):
     def permissions(cls):
         return ["bi_rules"]
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         aggr_id = request.get_str_input_mandatory("id", "")
         clone_id = request.get_str_input_mandatory("clone", "")
@@ -2224,7 +2224,7 @@ class ModeBIRuleTree(ABCBIMode):
     def parent_mode(cls) -> _Optional[Type[WatoMode]]:
         return ModeBIPacks
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self._rule_id = request.get_str_input_mandatory("id")
         self._rule_tree_bi_pack = self._bi_packs.get_pack_of_rule(self._rule_id)

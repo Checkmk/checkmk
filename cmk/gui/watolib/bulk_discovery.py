@@ -112,7 +112,7 @@ class BulkDiscoveryBackgroundJob(WatoBackgroundJob):
     def gui_title(cls):
         return _("Bulk Discovery")
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(
             self.job_prefix,
             title=self.gui_title(),

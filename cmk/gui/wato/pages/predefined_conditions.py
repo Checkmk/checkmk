@@ -95,7 +95,7 @@ class ModePredefinedConditions(SimpleListMode):
     def permissions(cls):
         return ["rulesets"]
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(
             mode_type=PredefinedConditionModeType(),
             store=PredefinedConditionStore(),
@@ -201,7 +201,7 @@ class ModeEditPredefinedCondition(SimpleEditMode):
     def parent_mode(cls) -> Optional[Type[WatoMode]]:
         return ModePredefinedConditions
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(
             mode_type=PredefinedConditionModeType(),
             store=PredefinedConditionStore(),

@@ -22,7 +22,7 @@ class ParagraphParser:
 
 
 class HeadlineParser:
-    def __init__(self):
+    def __init__(self) -> None:
         self._parsers: Dict[str, ParagraphParser] = {}
 
     def register_parser(self, parser: ParagraphParser) -> None:
@@ -76,7 +76,7 @@ class StatParagprahParser(ParagraphParser):
 
 
 class DockerDiskstatParser(HeadlineParser):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.time = TimeParagprahParser(self)
         self.names = NamesParagprahParser(self)

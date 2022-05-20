@@ -710,7 +710,7 @@ class DummyView(View):
     This view can be used as surrogate where a view-ish like object is needed
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__("dummy_view", {}, {})
 
 

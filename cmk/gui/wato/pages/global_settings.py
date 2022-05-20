@@ -7,7 +7,7 @@
 settings"""
 
 import abc
-from typing import Final, Iterable, Iterator, Optional, Tuple, Type
+from typing import Any, Final, Iterable, Iterator, Optional, Type
 
 import cmk.utils.version as cmk_version
 
@@ -62,15 +62,15 @@ from cmk.gui.watolib.search import (
 
 
 class ABCGlobalSettingsMode(WatoMode):
-    def __init__(self):
+    def __init__(self) -> None:
         self._search = None
         self._show_only_modified = False
 
         super().__init__()
 
         self._default_values = ABCConfigDomain.get_all_default_globals()
-        self._global_settings = {}
-        self._current_settings = {}
+        self._global_settings: dict[str, Any] = {}
+        self._current_settings: dict[str, Any] = {}
 
     def _from_vars(self):
         self._search = get_search_expression()
@@ -129,7 +129,7 @@ class ABCGlobalSettingsMode(WatoMode):
 
     def iter_all_configuration_variables(
         self,
-    ) -> Iterable[Tuple[ConfigVariableGroup, Iterable[ConfigVariable]]]:
+    ) -> Iterable[tuple[ConfigVariableGroup, Iterable[ConfigVariable]]]:
         yield from (
             (
                 group,
@@ -421,7 +421,7 @@ class ModeEditGlobals(ABCGlobalSettingsMode):
     def permissions(cls):
         return ["global"]
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self._current_settings = load_configuration_settings()
 

@@ -106,7 +106,7 @@ main_module_topic_registry = MainModuleTopicRegistry()
 
 
 class ABCMainModule(MenuItem, abc.ABC):
-    def __init__(self):
+    def __init__(self) -> None:
         # TODO: Cleanup hierarchy
         super().__init__(
             mode_or_url=None,

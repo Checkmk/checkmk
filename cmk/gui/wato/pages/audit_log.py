@@ -61,7 +61,7 @@ class ModeAuditLog(WatoMode):
     def permissions(cls):
         return ["auditlog"]
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._options = {key: vs.default_value() for key, vs in self._audit_log_options()}
         super().__init__()
         self._store = AuditLogStore(AuditLogStore.make_path())

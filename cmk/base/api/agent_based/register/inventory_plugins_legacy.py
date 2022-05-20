@@ -22,18 +22,18 @@ from cmk.base.api.agent_based.type_defs import Parameters
 
 
 class MockStructuredDataNode:
-    def __init__(self):
-        self.attributes = {}
-        self.tables = {}
+    def __init__(self) -> None:
+        self.attributes: dict[tuple[str, ...], dict] = {}
+        self.tables: dict[tuple[str, ...], list] = {}
 
     @staticmethod
-    def _normalize(path: str):
+    def _normalize(path: str) -> tuple[str, ...]:
         return tuple(path.strip(":.").split("."))
 
-    def get_dict(self, path: str):
+    def get_dict(self, path: str) -> dict:
         return self.attributes.setdefault(self._normalize(path), {})
 
-    def get_list(self, path: str):
+    def get_list(self, path: str) -> list:
         return self.tables.setdefault(self._normalize(path), [])
 
 

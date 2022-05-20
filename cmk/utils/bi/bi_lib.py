@@ -371,10 +371,10 @@ def replace_macros_in_string(pattern: str, macros: MacroMapping) -> str:
 
 
 class ABCBISearcher(abc.ABC):
-    def __init__(self):
-        self.hosts = {}
-        self._host_regex_match_cache = {}
-        self._host_regex_miss_cache = {}
+    def __init__(self) -> None:
+        self.hosts: dict[str, BIHostData] = {}
+        self._host_regex_match_cache: dict[str, dict] = {}
+        self._host_regex_miss_cache: dict[str, dict] = {}
 
     @abc.abstractmethod
     def search_hosts(self, conditions: Dict) -> List[BIHostSearchMatch]:
@@ -419,9 +419,9 @@ class ABCBIStatusFetcher(abc.ABC):
 
 
 class ABCBICompiledNode(abc.ABC):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
-        self.required_hosts = []
+        self.required_hosts: list[tuple[SiteId, str]] = []
 
     @classmethod
     @abc.abstractmethod

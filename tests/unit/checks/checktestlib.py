@@ -531,9 +531,9 @@ class ImmutablesChangedError(AssertionError):
 class Immutables:
     """Store some data and ensure it is not changed"""
 
-    def __init__(self):
-        self.refs = {}
-        self.copies = {}
+    def __init__(self) -> None:
+        self.refs: dict = {}
+        self.copies: dict = {}
 
     def register(self, v, k=None):
         if k is None:

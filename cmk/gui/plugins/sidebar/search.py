@@ -700,7 +700,7 @@ def _maybe_strip(param: Optional[str]) -> Optional[str]:
 
 @snapin_registry.register
 class QuicksearchSnapin(SidebarSnapin):
-    def __init__(self):
+    def __init__(self) -> None:
         self._quicksearch_manager = QuicksearchManager()
         super().__init__()
 
@@ -1006,7 +1006,7 @@ match_plugin_registry.register(
 
 
 class ServiceMatchPlugin(ABCLivestatusMatchPlugin):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(["services"], "services", "s")
 
     def get_match_topic(self) -> str:
@@ -1146,7 +1146,7 @@ match_plugin_registry.register(
 
 
 class HosttagMatchPlugin(ABCLivestatusMatchPlugin):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(["hosts", "services"], "hosts", "tg")
 
     def _get_hosttag_dict(self):

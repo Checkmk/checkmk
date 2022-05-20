@@ -228,7 +228,7 @@ def fixup_ip_lookup(monkeypatch):
 class FixRegister:
     """Access agent based plugins"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         # Local import to have faster pytest initialization
         import cmk.base.api.agent_based.register as register  # pylint: disable=bad-option-value,import-outside-toplevel
         import cmk.base.check_api as check_api  # pylint: disable=bad-option-value,import-outside-toplevel

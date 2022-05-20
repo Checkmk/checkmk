@@ -354,7 +354,7 @@ def setup_logging(verbosity: int) -> None:
 
 
 class PodOwner(abc.ABC):
-    def __init__(self):
+    def __init__(self) -> None:
         self._pods: List[Pod] = []
 
     def add_pod(self, pod: Pod) -> None:

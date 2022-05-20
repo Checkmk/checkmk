@@ -26,7 +26,7 @@ def test_patch_json_slash_escape() -> None:
 
 def test_patch_json_to_json_method() -> None:
     class Ding:
-        def __init__(self):
+        def __init__(self) -> None:
             self._a = 1
 
         def to_json(self):

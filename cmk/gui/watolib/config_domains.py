@@ -361,7 +361,7 @@ class ConfigDomainOMD(ABCConfigDomain):
     needs_activation = True
     omd_config_dir = "%s/etc/omd" % (cmk.utils.paths.omd_root,)
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self._logger: logging.Logger = logger.getChild("config.omd")
 
@@ -566,7 +566,7 @@ class OMDConfigChangeBackgroundJob(WatoBackgroundJob):
     def gui_title(cls):
         return _("Apply OMD config changes")
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(
             self.job_prefix,
             title=self.gui_title(),

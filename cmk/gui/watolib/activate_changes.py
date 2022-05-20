@@ -392,15 +392,15 @@ def _load_replication_status(lock=False):
 
 
 class ActivateChanges:
-    def __init__(self):
-        self._repstatus = {}
+    def __init__(self) -> None:
+        self._repstatus: dict = {}
 
         # Changes grouped by site
-        self._changes_by_site = {}
+        self._changes_by_site: dict = {}
 
         # A list of changes ordered by time and grouped by the change.
         # Each change contains a list of affected sites.
-        self._changes = []
+        self._changes: list = []
 
         super().__init__()
 
@@ -583,7 +583,7 @@ class ActivateChangesManager(ActivateChanges):
         "_time_started",
     )
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._sites: List[SiteId] = []
         self._site_snapshot_settings: Dict[SiteId, SnapshotSettings] = {}
         self._activate_until: Optional[str] = None

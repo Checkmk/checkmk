@@ -104,7 +104,7 @@ class ModeBulkRenameHost(WatoMode):
     def parent_mode(cls) -> Optional[Type[WatoMode]]:
         return ModeFolder
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
         if not user.may("wato.rename_hosts"):

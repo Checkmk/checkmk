@@ -123,7 +123,7 @@ def test_tmpfs_restore_no_tmpfs(site_context, monkeypatch, not_restored_file):
 
 
 class FakeTMPFS:
-    def __init__(self):
+    def __init__(self) -> None:
         self.mounted = True
 
     def unmount(self):

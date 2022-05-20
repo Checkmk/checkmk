@@ -67,7 +67,7 @@ class ABCHostMode(WatoMode, abc.ABC):
     def _init_host(self) -> CREHost:
         ...
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._host = self._init_host()
         self._mode = "edit"
         super().__init__()

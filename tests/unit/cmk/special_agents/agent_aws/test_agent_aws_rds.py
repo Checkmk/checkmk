@@ -23,7 +23,7 @@ class DBInstanceNotFoundFault(Exception):
 
 
 class Exceptions:
-    def __init__(self):
+    def __init__(self) -> None:
         self.DBInstanceNotFoundFault = DBInstanceNotFoundFault
 
 
@@ -43,7 +43,7 @@ class Paginator:
 
 
 class FakeRDSClient:
-    def __init__(self):
+    def __init__(self) -> None:
         self.exceptions = Exceptions()
 
     def describe_account_attributes(self):

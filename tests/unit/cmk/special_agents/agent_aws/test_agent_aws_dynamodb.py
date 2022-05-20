@@ -43,12 +43,12 @@ class ResourceNotFoundException(Exception):
 
 
 class Exceptions:
-    def __init__(self):
+    def __init__(self) -> None:
         self.ResourceNotFoundException = ResourceNotFoundException
 
 
 class FakeDynamoDBClient:
-    def __init__(self):
+    def __init__(self) -> None:
         self._tables = DynamoDBDescribeTableIB.create_instances(amount=3)
         self.exceptions = Exceptions()
 

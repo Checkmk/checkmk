@@ -963,7 +963,7 @@ def singlehost_table(
 
 
 class BIManager:
-    def __init__(self):
+    def __init__(self) -> None:
         sites_callback = SitesCallback(cmk.gui.sites.states, bi_livestatus_query)
         self.compiler = BICompiler(self.bi_configuration_file(), sites_callback)
         self.compiler.load_compiled_aggregations()

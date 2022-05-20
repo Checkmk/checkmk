@@ -260,7 +260,7 @@ class BaseApiClient(abc.ABC):
 
 
 class GraphApiClient(BaseApiClient):
-    def __init__(self):
+    def __init__(self) -> None:
         base_url = "%s/v1.0/" % self.resource
         super().__init__(base_url)
 
@@ -510,18 +510,18 @@ class UsageSection(Section):
 
 
 class IssueCollecter:
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
-        self._list = []
+        self._list: list[tuple[str, str]] = []
 
-    def add(self, issue_type, issued_by, issue_msg):
+    def add(self, issue_type, issued_by, issue_msg) -> None:
         issue = {"type": issue_type, "issued_by": issued_by, "msg": issue_msg}
         self._list.append(("issue", json.dumps(issue)))
 
-    def dumpinfo(self):
+    def dumpinfo(self) -> list[tuple[str, str]]:
         return self._list
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._list)
 
 

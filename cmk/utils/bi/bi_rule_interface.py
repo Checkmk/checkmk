@@ -73,7 +73,7 @@ class BIRuleComputationOptions(ABCWithSchema):
 
 
 class ABCBIRule(ABCWithSchema):
-    def __init__(self):
+    def __init__(self) -> None:
         self.id = ""
 
     @property

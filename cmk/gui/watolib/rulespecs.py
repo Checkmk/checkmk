@@ -128,7 +128,7 @@ class RulespecSubGroup(RulespecBaseGroup, abc.ABC):
 
 
 class RulespecGroupRegistry(cmk.utils.plugin_registry.Registry[Type[RulespecBaseGroup]]):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self._main_groups: List[Type[RulespecGroup]] = []
         self._sub_groups_by_main_group: Dict[Type[RulespecGroup], List[Type[RulespecSubGroup]]] = {}

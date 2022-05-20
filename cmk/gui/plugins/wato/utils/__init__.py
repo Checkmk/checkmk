@@ -2027,7 +2027,7 @@ def some_host_hasnt_set(folder, attrname):
 
 
 class SiteBackupJobs(backup.Jobs):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(backup.site_config_path())
 
     def _apply_cron_config(self):

@@ -667,7 +667,7 @@ filter_registry.register(
 # TODO: I would be great to split this in two filters for host & service kind of problems
 @filter_registry.register_instance
 class FilterHostgroupProblems(CheckboxRowFilter):
-    def __init__(self):
+    def __init__(self) -> None:
         self.host_problems = query_filters.host_problems_options("hostgroups_having_hosts_")
         self.host_problems.append(("hostgroups_show_unhandled_host", _("Unhandled host problems")))
 
@@ -1320,7 +1320,7 @@ filter_registry.register(
 # TODO: I would be great to split this in two filters for host & service states
 @filter_registry.register_instance
 class FilterLogState(CheckboxRowFilter):
-    def __init__(self):
+    def __init__(self) -> None:
         self.host_states = [
             ("logst_h0", _("Up")),
             ("logst_h1", _("Down")),
@@ -1497,7 +1497,7 @@ filter_registry.register(
 
 @filter_registry.register_instance
 class FilterHostAuxTags(Filter):
-    def __init__(self):
+    def __init__(self) -> None:
         self.query_filter = query_filters.AuxTagsQuery(object_type="host")
         super().__init__(
             ident=self.query_filter.ident,
@@ -1836,7 +1836,7 @@ filter_registry.register(
 
 @filter_registry.register_instance
 class FilterAggrGroup(Filter):
-    def __init__(self):
+    def __init__(self) -> None:
         self.column = "aggr_group"
         super().__init__(
             ident="aggr_group",
@@ -1871,7 +1871,7 @@ class FilterAggrGroup(Filter):
 
 @filter_registry.register_instance
 class FilterAggrGroupTree(Filter):
-    def __init__(self):
+    def __init__(self) -> None:
         self.column = "aggr_group_tree"
         super().__init__(
             ident="aggr_group_tree",
@@ -2015,7 +2015,7 @@ filter_registry.register(
 
 @filter_registry.register_instance
 class FilterAggrHosts(Filter):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(
             ident="aggr_hosts",
             title=_l("Affected hosts contain"),
@@ -2056,7 +2056,7 @@ class FilterAggrService(Filter):
     """Not performing filter(), nor filter_table(). The filtering is done directly in BI by
     bi.table(), which calls service_spec()."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(
             ident="aggr_service",
             title=_l("Affected by service"),
@@ -2432,7 +2432,7 @@ filter_registry.register(
 # TODO: Cleanup as a dropdown visual Filter later on
 @filter_registry.register_instance
 class FilterOptEventEffectiveContactgroup(FilterGroupCombo):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(
             title=_l("Contact group (effective)"),
             sort_index=212,

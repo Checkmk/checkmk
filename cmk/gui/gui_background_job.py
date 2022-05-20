@@ -279,7 +279,7 @@ class GUIBackgroundStatusSnapshot:
 
 
 class GUIBackgroundJobManager(background_job.BackgroundJobManager):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(logger=log.logger.getChild("background-job.manager"))
 
     def get_running_job_ids(self, job_class):

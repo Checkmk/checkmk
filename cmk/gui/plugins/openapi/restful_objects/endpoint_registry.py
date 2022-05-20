@@ -65,7 +65,7 @@ class EndpointRegistry:
 
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._endpoints: Dict[EndpointKey, Dict[ParameterKey, EndpointEntry]] = {}
         self._endpoint_list: List[EndpointEntry] = []
 

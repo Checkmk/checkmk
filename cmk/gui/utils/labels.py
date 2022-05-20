@@ -122,7 +122,7 @@ def label_help_text() -> str:
 
 
 class LabelsCache:
-    def __init__(self):
+    def __init__(self) -> None:
         self._namespace: str = "labels"
         self._hst_label: str = "host_labels"
         self._svc_label: str = "service_labels"

@@ -1344,7 +1344,7 @@ class SampleConfigGeneratorECSampleRulepack(SampleConfigGenerator):
 
 
 class ABCEventConsoleMode(WatoMode, abc.ABC):
-    def __init__(self):
+    def __init__(self) -> None:
         self._rule_packs = load_mkeventd_rules()
         super().__init__()
 
@@ -2766,7 +2766,7 @@ class ModeEventConsoleSettings(ABCEventConsoleMode, ABCGlobalSettingsMode):
     def parent_mode(cls) -> _Optional[Type[WatoMode]]:
         return ModeEventConsoleRulePacks
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
         self._default_values = ConfigDomainEventConsole().default_globals()
@@ -2896,7 +2896,7 @@ class ModeEventConsoleEditGlobalSetting(ABCEditGlobalSettingMode):
     def parent_mode(cls) -> _Optional[Type[WatoMode]]:
         return ModeEventConsoleSettings
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self._need_restart = None
 

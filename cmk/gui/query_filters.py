@@ -549,7 +549,7 @@ class CheckCommandQuery(TextQuery):
 
 
 class HostnameOrAliasQuery(TextQuery):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(ident="hostnameoralias", column="host_name", op="~~", negateable=False)
         self.link_columns = ["host_alias", "host_name"]
 
@@ -560,7 +560,7 @@ class HostnameOrAliasQuery(TextQuery):
 
 
 class OptEventEffectiveContactgroupQuery(TextQuery):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(
             ident="optevent_effective_contactgroup",
             request_var="optevent_effective_contact_group",

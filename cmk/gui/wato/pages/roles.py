@@ -70,7 +70,7 @@ from cmk.gui.watolib.utils import multisite_dir
 
 
 class RoleManagement:
-    def __init__(self):
+    def __init__(self) -> None:
         self._roles = userdb_utils.load_roles()
         super().__init__()
 
@@ -276,7 +276,7 @@ class ModeEditRole(RoleManagement, WatoMode):
     def parent_mode(cls) -> Optional[Type[WatoMode]]:
         return ModeRoles
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
         # Make sure that all dynamic permissions are available (e.g. those for custom

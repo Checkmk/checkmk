@@ -86,7 +86,7 @@ class ModeTimeperiods(WatoMode):
     def permissions(cls):
         return ["timeperiods"]
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self._timeperiods = watolib.timeperiods.load_timeperiods()
 

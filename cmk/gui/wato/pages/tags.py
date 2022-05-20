@@ -76,7 +76,7 @@ from cmk.gui.watolib.tags import (
 
 
 class ABCTagMode(WatoMode, abc.ABC):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self._tag_config_file = TagConfigFile()
         self._load_effective_config()
@@ -458,7 +458,7 @@ class ABCEditTagMode(ABCTagMode, abc.ABC):
     def permissions(cls):
         return ["hosttags"]
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self._id = self._get_id()
         self._new = self._is_new_tag()
@@ -646,7 +646,7 @@ class ModeEditAuxtag(ABCEditTagMode):
     def parent_mode(cls) -> Optional[Type[WatoMode]]:
         return ModeTags
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
         if self._new:

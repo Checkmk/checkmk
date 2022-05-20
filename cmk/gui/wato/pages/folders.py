@@ -1205,7 +1205,7 @@ class ABCFolderMode(WatoMode, abc.ABC):
     def parent_mode(cls) -> Optional[Type[WatoMode]]:
         return ModeFolder
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self._folder = self._init_folder()
 

@@ -22,7 +22,7 @@ from cmk.utils.version import parse_check_mk_version
 # This class is used to avoid repeated construction of dictionaries, including
 # *all* translation values.
 class WerkTranslator:
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self._classes = {
             "feature": _("New feature"),

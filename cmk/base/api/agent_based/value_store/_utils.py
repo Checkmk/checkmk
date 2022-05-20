@@ -49,7 +49,7 @@ class _DynamicDiskSyncedMapping(Dict[_TKey, _TValue]):
     being in the dict at the moment!)
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self._removed_keys: Set[_TKey] = set()
 

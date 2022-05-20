@@ -11,7 +11,9 @@ from typing import List, Optional
 
 import pytest
 
-from cmk.utils.type_defs import UserId
+from livestatus import SiteId
+
+from cmk.utils.type_defs import HostName, UserId
 
 import cmk.gui.http as http
 from cmk.gui.logged_in import LoggedInUser
@@ -38,9 +40,9 @@ def test_transaction_new_id(tm):
 
 
 class MockLoggedInUser(LoggedInUser):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(None)
-        self._ids = []
+        self._ids: list[tuple[SiteId, HostName]] = []
 
     def transids(self, lock=False):
         return self._ids

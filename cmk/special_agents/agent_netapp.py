@@ -213,8 +213,8 @@ def prettify(elem):
 
 
 class ErrorMessages:
-    def __init__(self):
-        self.messages = set()
+    def __init__(self) -> None:
+        self.messages: set[str] = set()
 
     def add_message(self, message):
         self.messages.add(message)

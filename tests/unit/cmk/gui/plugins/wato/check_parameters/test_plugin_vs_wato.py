@@ -556,7 +556,7 @@ class ErrorReporter:
         ("discovery", "hitachi_hnas_volume_virtual", "filesystem_groups"),
     }
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._last_exception: t.Optional[DefaultLoadingFailed] = None
         self._failed = False
         self._known_wato_unused = self.KNOWN_WATO_UNUSED.copy()

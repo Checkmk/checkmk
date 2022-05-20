@@ -316,7 +316,7 @@ def _get_delta(mem1: Memory, mem2: Memory) -> Memory:
 class MeasureMemory:
     __slots__ = ["pid", "mem_before", "mem_after"]
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.pid = os.getpid()
 
     def __enter__(self):

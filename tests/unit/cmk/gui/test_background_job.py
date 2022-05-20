@@ -95,7 +95,7 @@ class DummyBackgroundJob(gui_background_job.GUIBackgroundJob):
     def gui_title(cls):
         return "Dummy Job"
 
-    def __init__(self):
+    def __init__(self) -> None:
         kwargs = {}
         kwargs["title"] = self.gui_title()
         kwargs["deletable"] = False

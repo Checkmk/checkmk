@@ -19,7 +19,7 @@ class AgentOutputMalformatted(Exception):
         "Agents <= 1.5.0 are no longer supported."
     )
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(AgentOutputMalformatted.DEFAULT_MESSAGE)
 
 

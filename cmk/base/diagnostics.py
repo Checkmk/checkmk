@@ -255,7 +255,7 @@ class DiagnosticsDump:
 
 
 class Collectors:
-    def __init__(self):
+    def __init__(self) -> None:
         self._omd_config_collector = OMDConfigCollector()
         self._checkmk_server_name_collector = CheckmkServerNameCollector()
 
@@ -269,7 +269,7 @@ class Collectors:
 class ABCCollector(abc.ABC):
     """Collects information which are used by several elements"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._has_collected = False
         self._infos = None
 

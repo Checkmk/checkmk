@@ -40,7 +40,7 @@ BIAggrNode = Tuple
 
 
 class ErrorCounter:
-    def __init__(self):
+    def __init__(self) -> None:
         self._count = 0
 
     def increase_error_count(self):

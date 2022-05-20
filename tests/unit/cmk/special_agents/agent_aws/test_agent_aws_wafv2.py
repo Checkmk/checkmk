@@ -25,7 +25,7 @@ from .agent_aws_fake_clients import (
 
 
 class FakeWAFV2Client:
-    def __init__(self):
+    def __init__(self) -> None:
         self._web_acls = WAFV2GetWebACLIB.create_instances(amount=3)
 
     def list_web_acls(self, Scope=None):

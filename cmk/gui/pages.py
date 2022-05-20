@@ -60,7 +60,7 @@ class Page(abc.ABC):
 class AjaxPage(Page, abc.ABC):
     """Generic page handler that wraps page() calls into AJAX respones"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self._from_vars()
 

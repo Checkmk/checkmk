@@ -186,7 +186,7 @@ class ABCHostsStorage(Generic[THostsReadData]):
 
 
 class StandardHostsStorage(ABCHostsStorage[str]):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(StorageFormat.STANDARD)
 
     def _write(
@@ -249,7 +249,7 @@ class StandardHostsStorage(ABCHostsStorage[str]):
 
 
 class PickleHostsStorage(ABCHostsStorage[HostsData]):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(StorageFormat.PICKLE)
 
     def _write(
@@ -264,7 +264,7 @@ class PickleHostsStorage(ABCHostsStorage[HostsData]):
 
 
 class RawHostsStorage(ABCHostsStorage[HostsData]):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(StorageFormat.RAW)
 
     def _write(

@@ -130,7 +130,7 @@ class ModeEditSite(WatoMode):
     def mode_url(cls, **kwargs: str) -> str:
         return super().mode_url(**kwargs)
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self._site_mgmt = SiteManagementFactory().factory()
 
@@ -548,7 +548,7 @@ class ModeDistributedMonitoring(WatoMode):
     def permissions(cls):
         return ["sites"]
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self._site_mgmt = SiteManagementFactory().factory()
 
@@ -959,7 +959,7 @@ class ReplicationStatus(NamedTuple):
 class ReplicationStatusFetcher:
     """Helper class to retrieve the replication status of all relevant sites"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self._logger = logger.getChild("replication-status")
 
@@ -1068,7 +1068,7 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
     def mode_url(cls, **kwargs: str) -> str:
         return super().mode_url(**kwargs)
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self._site_id = SiteId(request.get_ascii_input_mandatory("site"))
         self._site_mgmt = SiteManagementFactory().factory()
@@ -1239,7 +1239,7 @@ class ModeSiteLivestatusEncryption(WatoMode):
     def parent_mode(cls) -> Optional[Type[WatoMode]]:
         return ModeEditSite
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self._site_id = SiteId(request.get_ascii_input_mandatory("site"))
         self._site_mgmt = SiteManagementFactory().factory()

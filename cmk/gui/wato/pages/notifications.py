@@ -501,7 +501,7 @@ class ModeNotifications(ABCNotificationsMode):
     def permissions(cls):
         return ["notifications"]
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         options = user.load_file("notification_display_options", {})
         self._show_user_rules = options.get("show_user_rules", False)
@@ -905,7 +905,7 @@ class ModeNotifications(ABCNotificationsMode):
 
 
 class ABCUserNotificationsMode(ABCNotificationsMode):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self._start_async_repl = False
 
@@ -1076,7 +1076,7 @@ class ModePersonalUserNotifications(ABCUserNotificationsMode):
     def permissions(cls):
         return None
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         user.need_permission("general.edit_notifications")
 
@@ -1127,7 +1127,7 @@ class ModePersonalUserNotifications(ABCUserNotificationsMode):
 
 
 class ABCEditNotificationRuleMode(ABCNotificationsMode):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self._start_async_repl = False
 
@@ -1774,7 +1774,7 @@ class ModeEditPersonalNotificationRule(ABCEditUserNotificationRuleMode):
     def permissions(cls):
         return None
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         user.need_permission("general.edit_notifications")
 

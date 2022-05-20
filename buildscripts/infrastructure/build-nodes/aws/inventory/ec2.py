@@ -244,7 +244,7 @@ class Ec2Inventory(object):
     def _empty_inventory(self):
         return {"_meta": {"hostvars": {}}}
 
-    def __init__(self):
+    def __init__(self) -> None:
         ''' Main execution path '''
 
         # Inventory grouped by instance IDs, tags, security groups, regions,

@@ -283,7 +283,7 @@ def test_read_config(config, expected_pymongo_config):
 )
 def test_transform_config(pymongo_version, pymongo_config):
     class DummyConfig(mk_mongodb.Config):  # type: ignore[name-defined]
-        def __init__(self):  # pylint: disable=super-init-not-called
+        def __init__(self) -> None:  # pylint: disable=super-init-not-called
             self.tls_enable = True
             self.tls_verify = None
             self.tls_ca_file = None

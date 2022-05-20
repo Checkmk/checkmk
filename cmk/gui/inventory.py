@@ -698,7 +698,7 @@ def _write_python(resp):
 
 
 class InventoryHousekeeping:
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self._inventory_path = Path(cmk.utils.paths.inventory_output_dir)
         self._inventory_archive_path = Path(cmk.utils.paths.inventory_archive_dir)

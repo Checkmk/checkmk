@@ -40,7 +40,7 @@ class ModeManageReadOnly(WatoMode):
     def permissions(cls):
         return ["set_read_only"]
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self._settings = active_config.wato_read_only
 

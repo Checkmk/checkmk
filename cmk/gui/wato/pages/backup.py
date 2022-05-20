@@ -21,7 +21,7 @@ from cmk.gui.watolib.audit_log import log_audit
 
 
 class SiteBackupTargets(backup.Targets):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(backup.site_config_path())
 
 
@@ -193,7 +193,7 @@ class ModeAjaxBackupJobState(AjaxPage):
 
 
 class SiteBackupKeypairStore(backup.BackupKeypairStore):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(cmk.utils.paths.default_config_dir + "/backup_keys.mk", "keys")
 
 

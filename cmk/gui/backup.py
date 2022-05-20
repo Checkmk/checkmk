@@ -707,7 +707,7 @@ class PageBackup:
 
 
 class PageEditBackupJob:
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         job_ident = request.var("job")
 
@@ -936,7 +936,7 @@ class PageEditBackupJob:
 
 
 class PageAbstractBackupJobState:
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self._job: Optional[MKBackupJob] = None
         self._ident: Optional[str] = None
@@ -1018,7 +1018,7 @@ class PageAbstractBackupJobState:
 
 
 class PageBackupJobState(PageAbstractBackupJobState):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self._from_vars()
 
@@ -1280,7 +1280,7 @@ class PageBackupTargets:
 
 
 class PageEditBackupTarget:
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         target_ident = request.var("target")
 
@@ -1406,7 +1406,7 @@ class PageEditBackupTarget:
 
 
 class SystemBackupTargetsReadOnly(Targets):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(system_config_path())
 
     # Only show the list on CMA devices
@@ -1775,7 +1775,7 @@ class RestoreJob(MKBackupJob):
 
 
 class PageBackupRestore:
-    def __init__(self):
+    def __init__(self) -> None:
         self._load_target()
         super().__init__()
 
@@ -2018,7 +2018,7 @@ class PageBackupRestore:
 
 
 class PageBackupRestoreState(PageAbstractBackupJobState):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self._job = RestoreJob(None, None)  # TODO: target_ident and backup_ident needed?
         self._ident = "restore"

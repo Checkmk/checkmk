@@ -26,12 +26,12 @@ class InventoryTrees(NamedTuple):
 
 
 class TreeAggregator:
-    def __init__(self):
+    def __init__(self) -> None:
         self.trees = InventoryTrees(
             inventory=StructuredDataNode(),
             status_data=StructuredDataNode(),
         )
-        self._class_mutex = {}
+        self._class_mutex: dict[tuple, str] = {}
 
     def aggregate_results(
         self,

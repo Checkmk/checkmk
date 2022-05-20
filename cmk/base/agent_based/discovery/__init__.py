@@ -788,7 +788,7 @@ class _AutodiscoveryQueue:
     def _file_path(self, host_name: HostName) -> Path:
         return self._dir / str(host_name)
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._dir = Path(cmk.utils.paths.var_dir, "autodiscovery")
 
     def _ls(self) -> Iterable[Path]:

@@ -63,7 +63,7 @@ class ParentScanBackgroundJob(WatoBackgroundJob):
     def gui_title(cls):
         return _("Parent scan")
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(
             self.job_prefix,
             title=_("Parent scan"),

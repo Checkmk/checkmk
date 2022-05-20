@@ -794,7 +794,7 @@ class Wait:
 
 
 class SystemInfo:
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.cpu_count = 0
         self.cpu_info: Dict[str, Any] = {}
@@ -2452,9 +2452,9 @@ class TestCase:
     RESULT_ABORTED = "aborted"
     RESULT_FAILED = "failed"
 
-    def __init__(self):
-        self.started_at = None
-        self.finished_at = None
+    def __init__(self) -> None:
+        self.started_at: Optional[float] = None
+        self.finished_at: Optional[float] = None
         self.state = None
         self.result = None
         self.result_msg = None

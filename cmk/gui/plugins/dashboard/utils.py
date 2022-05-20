@@ -811,7 +811,7 @@ class DashboardStore:
         """Load dashboards only once for each request"""
         return cls()
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.all = self._load_all()
         self.permitted = self._load_permitted(self.all)
 

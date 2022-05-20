@@ -287,9 +287,9 @@ class _RedisHelper:
     - computes the metadata out of CREFolder instances and stores it in redis
     - provides functions to compute the number of hosts and fetch the metadata for folders"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._client = get_redis_client()
-        self._folder_metadata = {}
+        self._folder_metadata: dict[str, FolderMetaData] = {}
 
         self._loaded_wato_folders: Optional[Mapping[PathWithoutSlash, CREFolder]] = None
         self._folder_paths: Optional[Tuple[PathWithSlash, ...]] = None
@@ -361,7 +361,7 @@ class _RedisHelper:
             # Remove folders without permission
             for check_path in list(path_to_title.keys()):
                 if permitted_groups := self._folder_metadata[check_path].permitted_groups:
-                    if not user_cgs.intersection(set(permitted_groups.split(","))):
+                    if not user_cgs.intersection(set(permitted_groups)):
                         del path_to_title[check_path]
 
         return [(key.rstrip("/"), value) for key, value in path_to_title.items()]
@@ -715,7 +715,7 @@ class _PickleWATOInfoStorage(_ABCWATOInfoStorage):
 class _WATOInfoStorageManager:
     """Handles read/write operations for the .wato file"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._write_storages = self._get_write_storages()
         self._read_storages = list(reversed(self._write_storages))
 

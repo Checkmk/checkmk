@@ -83,7 +83,7 @@ class ModeAnalyzeConfig(WatoMode):
     def permissions(cls):
         return []
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self._logger = logger.getChild("analyze-config")
         self._acks = self._load_acknowledgements()

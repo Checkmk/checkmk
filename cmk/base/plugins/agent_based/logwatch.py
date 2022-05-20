@@ -401,7 +401,7 @@ class LogwatchBlock:
 
 
 class LogwatchBlockCollector:
-    def __init__(self):
+    def __init__(self) -> None:
         self.worst = 0
         self.last_worst_line = ""
         self.saw_lines = False

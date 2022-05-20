@@ -65,7 +65,7 @@ class ReportSubmitDetails(TypedDict):
 
 
 class ABCCrashReportPage(cmk.gui.pages.Page, abc.ABC):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self._crash_id = request.get_str_input_mandatory("crash_id")
         self._site_id = request.get_str_input_mandatory("site")

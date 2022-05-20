@@ -13,6 +13,7 @@ RUN zypper addrepo -G ${ARTIFACT_STORAGE}/repository/sles15sp2 sles15sp2 \
     libpcre1-8.41-4.20 \
     libblkid1-2.33.1-4.5.1 \
     libuuid1-2.33.1-4.5.1 \
+    libkeyutils1-1.5.10 \
     && zypper -n --no-gpg-checks in --replacefiles \
     gawk \
     && zypper -n --no-gpg-checks in --replacefiles \

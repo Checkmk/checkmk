@@ -10,11 +10,11 @@ from freezegun import freeze_time  # type: ignore[import]
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Service, State as state, Result, Metric
 import cmk.base.plugins.agent_based.sap_hana_backup as sap_hana_backup
 
-NOW_SIMULATED = "2019-05-17 00:00:00.000000"
+NOW_SIMULATED = "2019-01-01 22:00:00.000000"
 ITEM = "inst"
 SECTION = {
     ITEM: {
-        'sys_end_time': 1557968743.0,
+        'sys_end_time': 1546300800.0,
         'backup_time_readable': '2019-01-01 00:00:00',
         'state_name': 'successful',
         'comment': '',
@@ -67,15 +67,14 @@ def test_check_sap_hana_backup_OK():
     params = {"backup_age": (24 * 60 * 60, 2 * 24 * 60 * 60)}
     yielded_results = list(sap_hana_backup.check_sap_hana_backup(ITEM, params, SECTION))
     assert yielded_results == [
-        Result(state=state.OK, summary='Status: successful'),
+        Result(state=state.OK, summary="Status: successful"),
         Result(state=state.OK,
-               summary='Last: 2019-01-01 00:00:00',
-               details='Last: 2019-01-01 00:00:00'),
-        Result(state=state.OK,
-               summary='Age: 22 hours 54 minutes',
-               details='Age: 22 hours 54 minutes'),
-        Metric('backup_age', 82457.0, levels=(86400.0, 172800.0)),
-        Result(state=state.OK, summary='Message: <ok>'),
+               summary="Last: 2019-01-01 00:00:00",
+               details="Last: 2019-01-01 00:00:00"),
+        Result(state=state.OK, summary="Age: 22 hours 0 minutes",
+               details="Age: 22 hours 0 minutes"),
+        Metric("backup_age", 79200.0, levels=(86400.0, 172800.0)),
+        Result(state=state.OK, summary="Message: <ok>"),
     ]
 
 
@@ -92,10 +91,11 @@ def test_check_sap_hana_backup_CRIT():
                details='Last: 2019-01-01 00:00:00'),
         Result(
             state=state.CRIT,
-            summary='Age: 22 hours 54 minutes (warn/crit at 1 hour 0 minutes/2 hours 0 minutes)',
-            details='Age: 22 hours 54 minutes (warn/crit at 1 hour 0 minutes/2 hours 0 minutes)'),
-        Metric('backup_age', 82457.0, levels=(3600.0, 7200.0)),
-        Result(state=state.OK, summary='Message: <ok>'),
+            summary="Age: 22 hours 0 minutes (warn/crit at 1 hour 0 minutes/2 hours 0 minutes)",
+            details="Age: 22 hours 0 minutes (warn/crit at 1 hour 0 minutes/2 hours 0 minutes)",
+        ),
+        Metric("backup_age", 79200.0, levels=(3600.0, 7200.0)),
+        Result(state=state.OK, summary="Message: <ok>"),
     ]
 
 
@@ -115,8 +115,9 @@ def test_cluster_check_sap_hana_backup_CRIT():
                details='Last: 2019-01-01 00:00:00'),
         Result(
             state=state.CRIT,
-            summary='Age: 22 hours 54 minutes (warn/crit at 1 hour 0 minutes/2 hours 0 minutes)',
-            details='Age: 22 hours 54 minutes (warn/crit at 1 hour 0 minutes/2 hours 0 minutes)'),
-        Metric('backup_age', 82457.0, levels=(3600.0, 7200.0)),
-        Result(state=state.OK, summary='Message: <ok>'),
+            summary="Age: 22 hours 0 minutes (warn/crit at 1 hour 0 minutes/2 hours 0 minutes)",
+            details="Age: 22 hours 0 minutes (warn/crit at 1 hour 0 minutes/2 hours 0 minutes)",
+        ),
+        Metric("backup_age", 79200.0, levels=(3600.0, 7200.0)),
+        Result(state=state.OK, summary="Message: <ok>"),
     ]

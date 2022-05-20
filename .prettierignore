@@ -1,3 +1,5 @@
 web/htdocs/js/*_min.js*
 # colorpicker.js is a 3rd party module, so do not format it
 web/htdocs/js/modules/colorpicker.js
+
+enterprise/web/htdocs/js/modules/figures/cmk_barplot.ts

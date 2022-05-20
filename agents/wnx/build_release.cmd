@@ -23,6 +23,11 @@ SETLOCAL EnableDelayedExpansion
 
 @echo logonserver: "%LOGONSERVER%" user: "%USERNAME%"
 
+::Get start time:
+for /F "tokens=1-4 delims=:.," %%a in ("%time%") do (
+   set /A "start=(((%%a*60)+1%%b %% 100)*60+1%%c %% 100)*100+1%%d %% 100"
+)
+
 :: CHECK FOR CHOCO
 :: if choco is absent then build is not possible(we can't dynamically control environment)
 powershell Write-Host "Looking for choco..." -Foreground White
@@ -126,6 +131,20 @@ copy install\resources\check_mk.user.yml %arte%
 copy install\resources\check_mk.yml %arte%
 powershell Write-Host "File Deployment succeeded" -Foreground Green
 
+::Get end time:
+for /F "tokens=1-4 delims=:.," %%a in ("%time%") do (
+   set /A "end=(((%%a*60)+1%%b %% 100)*60+1%%c %% 100)*100+1%%d %% 100"
+)
+
+:: Get elapsed time:
+set /A elapsed=end-start
+
+:: Show elapsed time:
+set /A hh=elapsed/(60*60*100), rest=elapsed%%(60*60*100), mm=rest/(60*100), rest%%=60*100, ss=rest/100, cc=rest%%100
+if %mm% lss 10 set mm=0%mm%
+if %ss% lss 10 set ss=0%ss%
+if %cc% lss 10 set cc=0%cc%
+powershell Write-Host "Elapsed time: %hh%:%mm%:%ss%,%cc%" -Foreground Yellow
 
 :: Additional Phase: post processing/build special modules using make
 !make_exe! msi_patch || powershell Write-Host "Failed to patch MSI exec" -Foreground Red && echo set && exit /b 36

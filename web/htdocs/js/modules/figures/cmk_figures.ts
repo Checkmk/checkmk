@@ -2,7 +2,7 @@ import * as d3 from "d3";
 import crossfilter from "crossfilter2";
 import * as utils from "../utils";
 
-interface ElementSize {
+export interface ElementSize {
     width: number | null;
     height: number | null;
 }

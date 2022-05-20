@@ -37,16 +37,58 @@ uint64_t ReadSingleCounter(std::wstring_view path) {
     PDH_HCOUNTER counter{nullptr};
     DWORD type{0u};
     PDH_RAW_COUNTER value;
-    if (::PdhAddEnglishCounter(query, path.data(), 0, &counter) ==
-            ERROR_SUCCESS &&
-        ::PdhCollectQueryData(query) == ERROR_SUCCESS &&
-        ::PdhGetRawCounterValue(counter, &type, &value) == ERROR_SUCCESS) {
-        return static_cast<uint64_t>(value.FirstValue);
+
+    auto err = ::PdhAddEnglishCounter(query, path.data(), 0, &counter);
+    if (err != ERROR_SUCCESS) {
+        XLOG::l("- Failed PdhAddEnglishCounter {:0X}", err);
+
+        return 0u;
     }
-    return 0u;
+    err = ::PdhCollectQueryData(query);
+    if (err != ERROR_SUCCESS) {
+        XLOG::l("- Failed PdhCollectQueryData {:0X}", err);
+        return 0u;
+    }
+    err = ::PdhGetRawCounterValue(counter, &type, &value);
+    if (err != ERROR_SUCCESS) {
+        XLOG::l("- Failed PdhCollectQueryData {:0X}", err);
+        return 0u;
+    }
+
+    XLOG::t.i("counter = {}", static_cast<uint64_t>(value.FirstValue));
+    return static_cast<uint64_t>(value.FirstValue);
 }
 
 namespace cma::provider {
+bool CheckSingleCounter(std::wstring_view path) {
+    PDH_HQUERY query{nullptr};
+    if (::PdhOpenQuery(NULL, 0, &query) != ERROR_SUCCESS) {
+        XLOG::l("Failed PdhOpenQuery [{}]", ::GetLastError());
+        return false;
+    }
+    ON_OUT_OF_SCOPE(::PdhCloseQuery(query));
+
+    PDH_HCOUNTER counter{nullptr};
+    DWORD type{0u};
+    PDH_RAW_COUNTER value;
+    auto err = ::PdhAddEnglishCounter(query, path.data(), 0, &counter);
+    if (err != ERROR_SUCCESS) {
+        XLOG::l("Failed PdhAddEnglishCounter {:0X}", err);
+        return false;
+    }
+    err = ::PdhCollectQueryData(query);
+    if (err != ERROR_SUCCESS) {
+        XLOG::l("Failed PdhCollectQueryData {:0X}", err);
+        return false;
+    }
+    err = ::PdhGetRawCounterValue(counter, &type, &value);
+    if (err != ERROR_SUCCESS) {
+        XLOG::l("Failed PdhCollectQueryData {:0X}", err);
+        return false;
+    }
+
+    return true;
+}
 
 std::unordered_map<std::string, std::string> GetComputerSystemInfo(
     const std::vector<std::string> &names, std::wstring_view separator) {

@@ -33,6 +33,7 @@ from typing import (
     TypeVar,
     Union,
 )
+from urllib import parse
 
 import apispec  # type: ignore[import]
 import apispec.utils  # type: ignore[import]
@@ -640,7 +641,9 @@ class Endpoint:
 
             try:
                 if path_schema:
-                    _params.update(path_schema().load(_params))
+                    _params.update(
+                        path_schema().load({k: parse.unquote(v) for k, v in _params.items()})
+                    )
             except ValidationError as exc:
                 return _problem(exc, status_code=404)
 

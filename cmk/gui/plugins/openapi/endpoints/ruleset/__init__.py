@@ -92,7 +92,7 @@ def _serialize_ruleset(ruleset: watolib.Ruleset) -> DomainObject:
 
     return constructors.domain_object(
         domain_type="ruleset",
-        identifier=ruleset.name.replace(":", "-"),
+        identifier=ruleset.name,
         title=ruleset.title() or ruleset.name,
         editable=False,
         deletable=False,

@@ -65,20 +65,31 @@
 #  ['SPARC64-VII mode']]
 #
 
+import time
+from typing import Mapping, NamedTuple, Union
 
-def inv_solaris_prtdiag(info):
-    for line in info:
+from .agent_based_api.v1 import Attributes, register
+from .agent_based_api.v1.type_defs import InventoryResult, StringTable
+
+
+class Section(NamedTuple):
+    bios: Mapping[str, Union[str, int]]
+    hardware: Mapping[str, str]
+
+
+def parse_solaris_prtdiag(string_table: StringTable) -> Section:
+    bios: dict[str, Union[str, int]] = {}
+    hardware = {}
+    for line in string_table:
         if line[0].startswith("OBP"):
-            node = inv_tree("software.bios.")
             bios_info = line[0].split()
-            node["version"] = "%s %s" % (bios_info[0], bios_info[1])
+            bios["version"] = "%s %s" % (bios_info[0], bios_info[1])
             formated_date = bios_info[2] + bios_info[3]
-            node["date"] = int(time.mktime(time.strptime(formated_date, "%Y/%m/%d%H:%M")))
-            node["vendor"] = "Oracle"
+            bios["date"] = int(time.mktime(time.strptime(formated_date, "%Y/%m/%d%H:%M")))
+            bios["vendor"] = "Oracle"
 
         elif line[0].startswith("SerialNumber:"):
-            node = inv_tree("hardware.system.")
-            node["serial"] = line[0].split(":")[1]
+            hardware["serial"] = line[0].split(":")[1]
 
         elif line[0].startswith("System Configuration:"):
             # 'System Configuration:  Oracle Corporation  sun4v SPARC T4-1'
@@ -90,7 +101,6 @@ def inv_solaris_prtdiag(info):
             # 'System Configuration: HP ProLiant DL380 G5'
             # 'System Configuration: SUN MICROSYSTEMS SUN FIRE X4270 SERVER'
             # 'System Configuration: Sun Microsystems SUN FIRE X4450'
-            node = inv_tree("hardware.system.")
             system_info = (
                 line[0].split(":", 1)[1].strip().replace("SERVER", "").replace("Server", "")
             )
@@ -115,7 +125,7 @@ def inv_solaris_prtdiag(info):
                 index = 1
 
             system_info = " ".join(system_info.split(" ")[index:]).strip()
-            node["vendor"] = vendor
+            hardware["vendor"] = vendor
 
             if "sun fire" in system_info.lower():
                 index = 3
@@ -126,13 +136,33 @@ def inv_solaris_prtdiag(info):
             else:
                 index = 1
 
-            node["product"] = " ".join(system_info.split(" ")[:index])
+            hardware["product"] = " ".join(system_info.split(" ")[:index])
             family = " ".join(system_info.split(" ")[index:])
 
             if family:
-                node["family"] = "%s-series" % family[0].upper()
+                hardware["family"] = "%s-series" % family[0].upper()
+
+    return Section(bios=bios, hardware=hardware)
 
 
-inv_info["solaris_prtdiag"] = {
-    "inv_function": inv_solaris_prtdiag,
-}
+register.agent_section(
+    name="solaris_prtdiag",
+    parse_function=parse_solaris_prtdiag,
+)
+
+
+def inventory_solaris_prtdiag(section: Section) -> InventoryResult:
+    yield Attributes(
+        path=["software", "bios"],
+        inventory_attributes=section.bios,
+    )
+    yield Attributes(
+        path=["hardware", "system"],
+        inventory_attributes=section.hardware,
+    )
+
+
+register.inventory_plugin(
+    name="solaris_prtdiag",
+    inventory_function=inventory_solaris_prtdiag,
+)

@@ -108,7 +108,6 @@ def test_no_plugins_with_trivial_sections(fix_register):
             "aix_service_packs",
             "couchbase_nodes_ports",
             "docker_container_network",
-            "docker_container_node_name",
             "docker_node_images",
             "k8s_assigned_pods",
             "k8s_daemon_pod_containers",

@@ -408,15 +408,12 @@ bool UsePerfCpuLoad(const YAML::Node &config) {
 int ServiceProcessor::startProviders(AnswerId answer_id,
                                      const std::string &ip_addr) {
     bool use_perf_cpuload = UsePerfCpuLoad(cfg::GetLoadedConfig());
-    bool counter_available =
-        provider::CheckSingleCounter(provider::kProcessorQueueLength);
-
     vf_.clear();
     max_wait_time_ = 0;
 
     // call of sensible to CPU-load sections
     auto started_sync =
-        use_perf_cpuload && counter_available
+        use_perf_cpuload
             ? tryToDirectCall(perf_cpuload_provider_, answer_id, ip_addr)
             : tryToDirectCall(wmi_cpuload_provider_, answer_id, ip_addr);
 

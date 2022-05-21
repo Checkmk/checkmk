@@ -221,9 +221,9 @@ class BIAggregationStateResponseSchema(Schema):
 )
 def get_bi_aggregation_state(params):
     """Get the state of BI aggregations"""
-    filter_names = params.get("filter_names")
-    filter_groups = params.get("filter_groups")
-
+    filter_config = params.get("body", {})
+    filter_names = filter_config.get("filter_names")
+    filter_groups = filter_config.get("filter_groups")
     return constructors.serve_json(
         api_get_aggregation_state(filter_names=filter_names, filter_groups=filter_groups)
     )

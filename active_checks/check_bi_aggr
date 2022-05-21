@@ -81,7 +81,7 @@ username = None
 password = None
 use_automation_user = False
 
-auth_mode = "cookie"
+auth_mode = "header"
 timeout = 60
 debug = False
 opt_in_downtime = None

@@ -3922,6 +3922,9 @@ msgstr "Ascude regulile de utilizator"
 msgid "Agent bakery"
 msgstr ""
 
+msgid "Agent bakery package compression"
+msgstr ""
+
 msgid "Agent baking"
 msgstr ""
 
@@ -3933,6 +3936,10 @@ msgstr ""
 
 msgid "Agent based plugins (Checks, Inventory)"
 msgstr ""
+
+#, fuzzy
+msgid "Agent controller"
+msgstr "trimite notificare"
 
 #, fuzzy
 msgid "Agent deployment"
@@ -4466,6 +4473,10 @@ msgstr "spatiu utilizat"
 
 #, fuzzy
 msgid "Allocated pod resources"
+msgstr "spatiu utilizat"
+
+#, fuzzy
+msgid "Allocated pools"
 msgstr "spatiu utilizat"
 
 #, fuzzy
@@ -5005,6 +5016,13 @@ msgstr ""
 #, fuzzy
 msgid "Apply OMD config changes"
 msgstr "%d schimbări"
+
+#, fuzzy
+msgid "Apply compression"
+msgstr "sesiuni"
+
+msgid "Apply compression to agent packages"
+msgstr ""
 
 msgid "Apply conditions"
 msgstr ""
@@ -6938,7 +6956,7 @@ msgstr ""
 
 #, python-brace-format
 msgid ""
-"By default, Checkmk does not imports annotations. If this option is enabled, "
+"By default, Checkmk does not import annotations. If this option is enabled, "
 "Checkmk will import any annotation that is a valid Kubernetes label. These "
 "imported annotations are added as host labels to their respective piggyback "
 "host using the syntax 'cmk/kubernetes/annotation/{key}:{value}'. You can "
@@ -7915,7 +7933,31 @@ msgstr ""
 
 #, python-format
 msgid ""
+"Changed properties of rule \"%s\", moved from folder \"%s\" to bottom of "
+"folder \"%s\""
+msgstr ""
+
+#, python-format
+msgid ""
+"Changed properties of rule \"%s\", moved from folder \"%s\" to top of folder "
+"\"%s\""
+msgstr ""
+
+#, python-format
+msgid ""
 "Changed properties of rule \"%s\", moved rule from folder \"%s\" to \"%s\""
+msgstr ""
+
+#, python-format
+msgid ""
+"Changed properties of rule \"%s\", moved to after rule \"%s\" in folder \"%s"
+"\""
+msgstr ""
+
+#, python-format
+msgid ""
+"Changed properties of rule \"%s\", moved to before rule \"%s\" in folder \"%s"
+"\""
 msgstr ""
 
 #, python-format
@@ -10334,7 +10376,7 @@ msgstr "(fără elemente)"
 msgid "Copy of existing view"
 msgstr "(fără elemente)"
 
-msgid "Copy rule representation to clipboard"
+msgid "Copy rule value representation to clipboard"
 msgstr ""
 
 #, python-format
@@ -14980,6 +15022,9 @@ msgstr ""
 msgid "Don't activate services matching"
 msgstr ""
 
+msgid "Don't apply compression"
+msgstr ""
+
 msgid "Don't change state"
 msgstr ""
 
@@ -17943,6 +17988,10 @@ msgstr ""
 msgid "File Parsing Settings"
 msgstr ""
 
+#, fuzzy
+msgid "File Size"
+msgstr "Dimensiunea Maxima"
+
 msgid "File Size Levels"
 msgstr ""
 
@@ -19062,6 +19111,9 @@ msgstr "Adaugă instanță NGINX"
 #, fuzzy
 msgid "GCP/Function network"
 msgstr "Conexiune Noua"
+
+msgid "GCP/GCE CPU"
+msgstr ""
 
 #, fuzzy
 msgid "GCP/GCS Network"
@@ -24814,6 +24866,10 @@ msgid "Kubernetes replicas"
 msgstr "Adresă"
 
 #, fuzzy
+msgid "Kubernetes resource quota cpu utilization"
+msgstr "Dezactiveaza Notificarile"
+
+#, fuzzy
 msgid "Kubernetes resource quota memory utilization"
 msgstr "Dezactiveaza Notificarile"
 
@@ -26170,6 +26226,9 @@ msgstr ""
 
 #, python-format
 msgid "List of %s"
+msgstr ""
+
+msgid "List of all files in the site including their size"
 msgstr ""
 
 #, fuzzy
@@ -31960,6 +32019,10 @@ msgstr ""
 msgid "Number of users"
 msgstr "Numarul maxim de mesaje"
 
+#, fuzzy
+msgid "Number of vCPUs reserved for the VM"
+msgstr "Numarul maxim de mesaje"
+
 msgid "Number of warnings"
 msgstr ""
 
@@ -34620,7 +34683,7 @@ msgid ""
 "with <tt>\\2</tt> and so on, for example <tt>\\1.example.org</tt>"
 msgstr ""
 
-msgid "Please specify a relative path only using a-z, 0-9, -, _, and ."
+msgid "Please specify a relative path only using a-z, 0-9, -, _, . and $"
 msgstr ""
 
 msgid "Please specify a secret of at least 10 characters length."
@@ -35593,9 +35656,9 @@ msgstr "Sterge Elementul"
 msgid "Push configuration to this site"
 msgstr ""
 
-#, python-format
-msgid "Push: Checkmk agent contacts the server (%s only)"
-msgstr ""
+#, fuzzy
+msgid "Push: Checkmk agent contacts the server"
+msgstr "Perioada de timp Noua"
 
 msgid "Pushover"
 msgstr ""
@@ -37775,9 +37838,6 @@ msgstr "Proprietatile Folderului"
 msgid "Rule packs"
 msgstr "Reguli"
 
-msgid "Rule representation for web API"
-msgstr ""
-
 #, fuzzy, python-format
 msgid "Rule representation: %s"
 msgstr "Numele Elementului"
@@ -37803,6 +37863,10 @@ msgstr ""
 
 msgid "Rule type"
 msgstr ""
+
+#, fuzzy
+msgid "Rule value representation for REST API"
+msgstr "Numele Elementului"
 
 msgid "Rule-ID"
 msgstr ""
@@ -40005,6 +40069,10 @@ msgid ""
 "Set upper levels on the age of the process (not the consumed CPU time, but "
 "the real time)."
 msgstr ""
+
+#, fuzzy
+msgid "Set upper thresholds for the percentage of allocated pools"
+msgstr "Nivel-urile absolute de licențe neutilizate"
 
 msgid "Set width"
 msgstr ""
@@ -43106,7 +43174,7 @@ msgstr "Parola"
 msgid "Successfully changed the credential."
 msgstr "Parola"
 
-msgid "Successfully copied rule representation to the clipboard."
+msgid "Successfully copied rule value representation to the clipboard."
 msgstr ""
 
 #, python-format
@@ -44657,8 +44725,8 @@ msgid ""
 "the monitoring site and the agent. It also provides the possibility to push "
 "monitoring data to the site (if applicable in your Checkmk edition). You may "
 "disable the agent controller if you experience problems with it. In this "
-"case the Windows agent will work in legacy pull mode. Please note: In the "
-"legacy pull mode the transported data is not encrypted."
+"case the agent will work in legacy pull mode. Please note: In the legacy "
+"pull mode the transported data is not encrypted."
 msgstr ""
 
 msgid ""
@@ -44861,11 +44929,6 @@ msgid ""
 "The check takes this state in case the inventory cannot be updated because "
 "of any possible reason. A common use is setting this to OK for workstations "
 "that can be switched off - so you will get no notifications in that case."
-msgstr ""
-
-msgid ""
-"The check will trigger a warning or critical state if the size of the "
-"database exceeds these levels."
 msgstr ""
 
 msgid ""
@@ -46804,6 +46867,11 @@ msgstr ""
 #, fuzzy
 msgid "The service name"
 msgstr "Numele Elementului"
+
+msgid ""
+"The service will trigger a warning or critical state if the size of the "
+"database exceeds these levels."
+msgstr ""
 
 msgid ""
 "The sidebar can be configured to regularly check for pending popup "
@@ -49300,9 +49368,6 @@ msgstr ""
 msgid "This rule pack is provided via the MKP %s."
 msgstr ""
 
-msgid "This rule representation can be used for Web API calls."
-msgstr ""
-
 msgid ""
 "This rule selects the ALLNET IP Sensoric agent, which fetches /xml/"
 "sensordata.xml from the device by HTTP and extracts the needed monitoring "
@@ -49471,10 +49536,6 @@ msgstr ""
 msgid ""
 "This rule sets the warn and crit levels for the number of unacknowlegded "
 "alerts"
-msgstr ""
-
-msgid ""
-"This rule sets the warn and crit levels for the percentage of allocated pools"
 msgstr ""
 
 msgid ""
@@ -50661,6 +50722,15 @@ msgstr ""
 msgid ""
 "To send data to InfluxDB with this connection, you still need to configure "
 "at least one rule that determines what data should be sent."
+msgstr ""
+
+msgid ""
+"To set the value of a rule using the REST API, you need to set the "
+"<tt>value_raw</tt> field. The value of this fields is individual for each "
+"rule set. To help you understand what kind of data structure you need to "
+"provide, this rule export mechanism is showing you the value you need to set "
+"for a given rule. The value needs to be a string representation of a "
+"compatible Python data structure."
 msgstr ""
 
 msgid "To:"
@@ -54907,6 +54977,19 @@ msgid ""
 msgstr ""
 
 msgid ""
+"When activated, the agent bakery will compress most of the agent packages. "
+"The compression applies to .deb packages, .rpm packages and to all .tar.gz "
+"packages that result from baking agents. Note: In order to avoid name "
+"changes in packages, the uncompressed TAR packages also have a suffix of ."
+"tar.gz. Technically, they are compressed using gzip with a compression level "
+"of 0.It's not recommended to activate compression unless you want to deploy "
+"large files resulting from custom files or your own bakery plugins. All "
+"large files (larger than a few kb, mainly the agent updater and the agent "
+"controller) provided by Checkmk are precompressed and won't benefit from "
+"enabling compression."
+msgstr ""
+
+msgid ""
 "When aggregation is turned on and the rule matches for two different "
 "applications then these two events will be kept separate if you check this "
 "box."
@@ -55685,7 +55768,7 @@ msgid "Windows WMI Timeout"
 msgstr "(fără Nivel de serviciu)"
 
 #, fuzzy
-msgid "Windows agent controller"
+msgid "Windows agent controller troubleshooting"
 msgstr "trimite notificare"
 
 #, fuzzy
@@ -56401,6 +56484,10 @@ msgid ""
 "full hour as cron job. Details about the execution are logged to the file "
 "<tt>var/log/diskspace.log</tt>. You can always execut this program manually "
 "(add the <tt>-v</tt> option to see details about the actions taken)."
+msgstr ""
+
+msgid ""
+"You can copy and use the data structure below in your REST API requests."
 msgstr ""
 
 #, python-format
@@ -57339,10 +57426,6 @@ msgid ""
 msgstr ""
 
 #, python-format
-msgid "Your %s element has been saved."
-msgstr ""
-
-#, python-format
 msgid "Your %s has been deleted."
 msgstr ""
 
@@ -57440,7 +57523,7 @@ msgstr ""
 
 #, python-format
 msgid ""
-"Your query matched more than %d log entries. The shown data data does not "
+"Your query matched more than %d log entries. The shown data does not "
 "necessarily reflect the matched entries and the result might be incomplete. "
 msgstr ""
 
@@ -57932,10 +58015,6 @@ msgstr ""
 
 msgid "demand"
 msgstr ""
-
-#, fuzzy
-msgid "detailed config"
-msgstr "Conexiune Noua"
 
 #, fuzzy
 msgid "detections/s"
@@ -59574,6 +59653,18 @@ msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr ""
 
 #, fuzzy
+#~ msgid "Create a service for every pinged IP address"
+#~ msgstr "Grup nou"
+
+#, fuzzy
+#~ msgid "Multiple services"
+#~ msgstr "Probleme"
+
+#, fuzzy
+#~ msgid "detailed config"
+#~ msgstr "Conexiune Noua"
+
+#, fuzzy
 #~ msgid "AWS/Lambda Concurrency"
 #~ msgstr "Starea porturilor pentru inventariere"
 
@@ -59592,12 +59683,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Lower levels for health check percentage healty"
 #~ msgstr "Nivelurile maxime pentru voltaj"
-
-#, fuzzy
-#~ msgid ""
-#~ "Specify the upper levels for the cold starts in percent of total "
-#~ "invocations."
-#~ msgstr "Nivel-urile absolute de licențe neutilizate"
 
 #, fuzzy
 #~ msgid "Specify the upper levels for the number of invocations per second."
@@ -62448,10 +62533,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Number of context buttons to show"
 #~ msgstr "Numarul maxim de conexiuni"
-
-#, fuzzy
-#~ msgid "Number of processes on OpenVMS"
-#~ msgstr "Numarul maxim de mesaje"
 
 #, fuzzy
 #~ msgid "Number of used IBM SVC licenses"

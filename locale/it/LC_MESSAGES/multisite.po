@@ -4161,6 +4161,9 @@ msgstr "Regole di accesso dell'agente"
 msgid "Agent bakery"
 msgstr "Panificio agente"
 
+msgid "Agent bakery package compression"
+msgstr ""
+
 msgid "Agent baking"
 msgstr "Cottura dell'agente"
 
@@ -4172,6 +4175,10 @@ msgstr "La cottura dell'agente è terminata."
 
 msgid "Agent based plugins (Checks, Inventory)"
 msgstr "Plugin basati su agenti (controlli, inventario)"
+
+#, fuzzy
+msgid "Agent controller"
+msgstr "Autenticazione Windows"
 
 msgid "Agent deployment"
 msgstr "Distribuzione dell'agente"
@@ -4723,6 +4730,10 @@ msgstr "Destinato all'archiviazione dei documenti"
 #, fuzzy
 msgid "Allocated pod resources"
 msgstr "Archiviazione assegnata"
+
+#, fuzzy
+msgid "Allocated pools"
+msgstr "Protocolli consentiti"
 
 msgid "Allocated space"
 msgstr "Spazio assegnato"
@@ -5288,6 +5299,13 @@ msgstr "Applicare Lag"
 #, fuzzy
 msgid "Apply OMD config changes"
 msgstr "Applicare Lag"
+
+#, fuzzy
+msgid "Apply compression"
+msgstr "Compressione"
+
+msgid "Apply compression to agent packages"
+msgstr ""
 
 msgid "Apply conditions"
 msgstr "Applicare le condizioni"
@@ -7358,7 +7376,7 @@ msgstr ""
 
 #, python-brace-format
 msgid ""
-"By default, Checkmk does not imports annotations. If this option is enabled, "
+"By default, Checkmk does not import annotations. If this option is enabled, "
 "Checkmk will import any annotation that is a valid Kubernetes label. These "
 "imported annotations are added as host labels to their respective piggyback "
 "host using the syntax 'cmk/kubernetes/annotation/{key}:{value}'. You can "
@@ -8443,12 +8461,44 @@ msgstr "Proprietà modificate del cliente"
 msgid "Changed properties of installed extension package %s"
 msgstr "Proprietà modificate del pacchetto di estensioni installato %s"
 
+#, fuzzy, python-format
+msgid ""
+"Changed properties of rule \"%s\", moved from folder \"%s\" to bottom of "
+"folder \"%s\""
+msgstr ""
+"Modificate le proprietà della regola \"%s\", spostata la regola dalla "
+"cartella \"%s\" a \"%s\""
+
+#, fuzzy, python-format
+msgid ""
+"Changed properties of rule \"%s\", moved from folder \"%s\" to top of folder "
+"\"%s\""
+msgstr ""
+"Modificate le proprietà della regola \"%s\", spostata la regola dalla "
+"cartella \"%s\" a \"%s\""
+
 #, python-format
 msgid ""
 "Changed properties of rule \"%s\", moved rule from folder \"%s\" to \"%s\""
 msgstr ""
 "Modificate le proprietà della regola \"%s\", spostata la regola dalla "
 "cartella \"%s\" a \"%s\""
+
+#, fuzzy, python-format
+msgid ""
+"Changed properties of rule \"%s\", moved to after rule \"%s\" in folder \"%s"
+"\""
+msgstr ""
+"Proprietà modificate della regola #%d nel ruleset \"%s\" nella cartella \"%s"
+"\""
+
+#, fuzzy, python-format
+msgid ""
+"Changed properties of rule \"%s\", moved to before rule \"%s\" in folder \"%s"
+"\""
+msgstr ""
+"Proprietà modificate della regola #%d nel ruleset \"%s\" nella cartella \"%s"
+"\""
 
 #, python-format
 msgid "Changed properties of rule #%d in ruleset \"%s\" in folder \"%s\""
@@ -11027,7 +11077,7 @@ msgstr "Copiare la vista esistente"
 msgid "Copy of existing view"
 msgstr "Copia della vista esistente"
 
-msgid "Copy rule representation to clipboard"
+msgid "Copy rule value representation to clipboard"
 msgstr ""
 
 #, python-format
@@ -15598,6 +15648,9 @@ msgstr "Nomi delle code di posta Domino"
 msgid "Don't activate services matching"
 msgstr "Non attivare la corrispondenza dei servizi"
 
+msgid "Don't apply compression"
+msgstr ""
+
 msgid "Don't change state"
 msgstr "Non cambiare stato"
 
@@ -18568,6 +18621,10 @@ msgstr "Modelli di raggruppamento di file"
 msgid "File Parsing Settings"
 msgstr "Impostazioni di analisi dei file"
 
+#, fuzzy
+msgid "File Size"
+msgstr "Dimensione del file"
+
 msgid "File Size Levels"
 msgstr "Livelli di dimensione dei file"
 
@@ -19752,6 +19809,9 @@ msgstr "Rilevare automaticamente le istanze"
 #, fuzzy
 msgid "GCP/Function network"
 msgstr "Test di connessione"
+
+msgid "GCP/GCE CPU"
+msgstr ""
 
 #, fuzzy
 msgid "GCP/GCS Network"
@@ -26446,6 +26506,10 @@ msgid "Kubernetes replicas"
 msgstr "Nodi Kubernetes"
 
 #, fuzzy
+msgid "Kubernetes resource quota cpu utilization"
+msgstr "Risorse di Kubernetes"
+
+#, fuzzy
 msgid "Kubernetes resource quota memory utilization"
 msgstr "Risorse di Kubernetes"
 
@@ -27733,6 +27797,9 @@ msgstr "Elencare separatamente le interfacce raggruppate"
 #, python-format
 msgid "List of %s"
 msgstr "Elenco di %s"
+
+msgid "List of all files in the site including their size"
+msgstr ""
 
 msgid "List of available NagVis maps"
 msgstr "Elenco delle mappe NagVis disponibili"
@@ -33378,6 +33445,10 @@ msgstr "Numero di stati utilizzati del motore PF di OpenBSD"
 msgid "Number of users"
 msgstr "Numero di utenti"
 
+#, fuzzy
+msgid "Number of vCPUs reserved for the VM"
+msgstr "Numero di servizi nello stato OK"
+
 msgid "Number of warnings"
 msgstr "Numero di avvertimenti"
 
@@ -36171,7 +36242,8 @@ msgstr ""
 "abbinato con <tt>\\1</tt>, al secondo con <tt>\\2</tt> e così via, per "
 "esempio <tt>\\1.example.org</tt>"
 
-msgid "Please specify a relative path only using a-z, 0-9, -, _, and ."
+#, fuzzy
+msgid "Please specify a relative path only using a-z, 0-9, -, _, . and $"
 msgstr ""
 "Si prega di specificare un percorso relativo utilizzando solo a-z, 0-9, -, _ "
 "e ."
@@ -37136,8 +37208,8 @@ msgstr "Utenti di Pulse Secure"
 msgid "Push configuration to this site"
 msgstr "Spingi la configurazione a questo sito"
 
-#, fuzzy, python-format
-msgid "Push: Checkmk agent contacts the server (%s only)"
+#, fuzzy
+msgid "Push: Checkmk agent contacts the server"
 msgstr "Servizio di rete dell'agente Checkmk (Linux)"
 
 msgid "Pushover"
@@ -39279,11 +39351,6 @@ msgstr "Proprietà del pacchetto di regole"
 msgid "Rule packs"
 msgstr "Pacchetti di regole"
 
-#, fuzzy
-msgid "Rule representation for web API"
-msgstr ""
-"Questa rappresentazione di regole può essere usata per le chiamate Web API."
-
 #, fuzzy, python-format
 msgid "Rule representation: %s"
 msgstr "Presentazioni"
@@ -39306,6 +39373,11 @@ msgstr "Regola cerca"
 
 msgid "Rule type"
 msgstr "Tipo di regola"
+
+#, fuzzy
+msgid "Rule value representation for REST API"
+msgstr ""
+"Questa rappresentazione di regole può essere usata per le chiamate Web API."
 
 msgid "Rule-ID"
 msgstr "Regola-ID"
@@ -41513,6 +41585,12 @@ msgid ""
 msgstr ""
 "Impostare livelli superiori sull'età del processo (non il tempo di CPU "
 "consumato, ma il tempo reale)."
+
+#, fuzzy
+msgid "Set upper thresholds for the percentage of allocated pools"
+msgstr ""
+"Questa regola imposta i livelli di warn e crit per la percentuale di pool "
+"allocati"
 
 msgid "Set width"
 msgstr "Impostare la larghezza"
@@ -44825,7 +44903,7 @@ msgstr "Password cambiata con successo."
 msgid "Successfully changed the credential."
 msgstr "Password cambiata con successo."
 
-msgid "Successfully copied rule representation to the clipboard."
+msgid "Successfully copied rule value representation to the clipboard."
 msgstr ""
 
 #, python-format
@@ -46605,8 +46683,8 @@ msgid ""
 "the monitoring site and the agent. It also provides the possibility to push "
 "monitoring data to the site (if applicable in your Checkmk edition). You may "
 "disable the agent controller if you experience problems with it. In this "
-"case the Windows agent will work in legacy pull mode. Please note: In the "
-"legacy pull mode the transported data is not encrypted."
+"case the agent will work in legacy pull mode. Please note: In the legacy "
+"pull mode the transported data is not encrypted."
 msgstr ""
 
 msgid ""
@@ -46901,13 +46979,6 @@ msgstr ""
 "essere aggiornato a causa di qualsiasi possibile ragione. Un uso comune è "
 "l'impostazione di questo su OK per le stazioni di lavoro che possono essere "
 "spente - così non riceverai notifiche in quel caso."
-
-msgid ""
-"The check will trigger a warning or critical state if the size of the "
-"database exceeds these levels."
-msgstr ""
-"Il controllo farà scattare un avvertimento o uno stato critico se la "
-"dimensione del database supera questi livelli."
 
 msgid ""
 "The checkbox for setting host downtimes does not work when removing "
@@ -49373,6 +49444,14 @@ msgstr ""
 
 msgid "The service name"
 msgstr "Il nome del servizio"
+
+#, fuzzy
+msgid ""
+"The service will trigger a warning or critical state if the size of the "
+"database exceeds these levels."
+msgstr ""
+"Il controllo farà scattare un avvertimento o uno stato critico se la "
+"dimensione del database supera questi livelli."
 
 msgid ""
 "The sidebar can be configured to regularly check for pending popup "
@@ -52845,11 +52924,6 @@ msgstr ""
 msgid "This rule pack is provided via the MKP %s."
 msgstr "Questo pacchetto di regole è fornito tramite il MKP %s."
 
-#, fuzzy
-msgid "This rule representation can be used for Web API calls."
-msgstr ""
-"Questa rappresentazione di regole può essere usata per le chiamate Web API."
-
 msgid ""
 "This rule selects the ALLNET IP Sensoric agent, which fetches /xml/"
 "sensordata.xml from the device by HTTP and extracts the needed monitoring "
@@ -53113,12 +53187,6 @@ msgid ""
 msgstr ""
 "Questa regola imposta i livelli di warn e crit per il numero di avvisi non "
 "confermati"
-
-msgid ""
-"This rule sets the warn and crit levels for the percentage of allocated pools"
-msgstr ""
-"Questa regola imposta i livelli di warn e crit per la percentuale di pool "
-"allocati"
 
 msgid ""
 "This rule sets the warn and crit levels for the uptime of a JVM. Other "
@@ -54662,6 +54730,15 @@ msgstr ""
 msgid ""
 "To send data to InfluxDB with this connection, you still need to configure "
 "at least one rule that determines what data should be sent."
+msgstr ""
+
+msgid ""
+"To set the value of a rule using the REST API, you need to set the "
+"<tt>value_raw</tt> field. The value of this fields is individual for each "
+"rule set. To help you understand what kind of data structure you need to "
+"provide, this rule export mechanism is showing you the value you need to set "
+"for a given rule. The value needs to be a string representation of a "
+"compatible Python data structure."
 msgstr ""
 
 msgid "To:"
@@ -58964,6 +59041,19 @@ msgstr ""
 "tempo dopo l'inizializzazione del sito."
 
 msgid ""
+"When activated, the agent bakery will compress most of the agent packages. "
+"The compression applies to .deb packages, .rpm packages and to all .tar.gz "
+"packages that result from baking agents. Note: In order to avoid name "
+"changes in packages, the uncompressed TAR packages also have a suffix of ."
+"tar.gz. Technically, they are compressed using gzip with a compression level "
+"of 0.It's not recommended to activate compression unless you want to deploy "
+"large files resulting from custom files or your own bakery plugins. All "
+"large files (larger than a few kb, mainly the agent updater and the agent "
+"controller) provided by Checkmk are precompressed and won't benefit from "
+"enabling compression."
+msgstr ""
+
+msgid ""
 "When aggregation is turned on and the rule matches for two different "
 "applications then these two events will be kept separate if you check this "
 "box."
@@ -60110,7 +60200,7 @@ msgid "Windows WMI Timeout"
 msgstr "Moduli Windows"
 
 #, fuzzy
-msgid "Windows agent controller"
+msgid "Windows agent controller troubleshooting"
 msgstr "Autenticazione Windows"
 
 msgid "Windows authentication"
@@ -60996,6 +61086,10 @@ msgstr ""
 "sull'esecuzione sono registrati nel file <tt>var/log/diskspace.log</tt>. È "
 "sempre possibile eseguire questo programma manualmente (aggiungere l'opzione "
 "<tt>-v</tt> per vedere i dettagli sulle azioni intraprese)."
+
+msgid ""
+"You can copy and use the data structure below in your REST API requests."
+msgstr ""
 
 #, python-format
 msgid "You can create predefined conditions <a href=\"%s\">here</a>."
@@ -62285,10 +62379,6 @@ msgid ""
 msgstr ""
 
 #, python-format
-msgid "Your %s element has been saved."
-msgstr "Il tuo elemento %s è stato salvato."
-
-#, python-format
 msgid "Your %s has been deleted."
 msgstr "Il tuo %s è stato cancellato."
 
@@ -62408,9 +62498,9 @@ msgstr ""
 "mostrati non riflettono necessariamente le voci corrispondenti e il "
 "risultato potrebbe essere incompleto. "
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
-"Your query matched more than %d log entries. The shown data data does not "
+"Your query matched more than %d log entries. The shown data does not "
 "necessarily reflect the matched entries and the result might be incomplete. "
 msgstr ""
 "La tua query ha trovato più di %d voci di registro. I dati mostrati non "
@@ -62911,10 +63001,6 @@ msgstr "ritardato"
 
 msgid "demand"
 msgstr "domanda"
-
-#, fuzzy
-msgid "detailed config"
-msgstr "Connessioni fallite"
 
 msgid "detections/s"
 msgstr "rilevazioni/s"
@@ -64485,6 +64571,32 @@ msgstr "z/OS"
 #, fuzzy, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Tutti i diritti riservati."
+
+#, fuzzy
+#~| msgid "Create a service for each instance"
+#~ msgid "Create a service for every pinged IP address"
+#~ msgstr "Creare un servizio per ogni istanza"
+
+#, fuzzy
+#~| msgid "Stale services"
+#~ msgid "Multiple services"
+#~ msgstr "Servizi stantii"
+
+#, fuzzy
+#~| msgid "This rule representation can be used for Web API calls."
+#~ msgid "This rule representation can be used for Web API calls."
+#~ msgstr ""
+#~ "Questa rappresentazione di regole può essere usata per le chiamate Web "
+#~ "API."
+
+#, python-format
+#~ msgid "Your %s element has been saved."
+#~ msgstr "Il tuo elemento %s è stato salvato."
+
+#, fuzzy
+#~| msgid "Failed connections"
+#~ msgid "detailed config"
+#~ msgstr "Connessioni fallite"
 
 #, fuzzy
 #~| msgid "Performance"
@@ -67692,9 +67804,6 @@ msgstr "© 2020 tribe29 GmbH. Tutti i diritti riservati."
 
 #~ msgid "Stale hosts"
 #~ msgstr "Padroni di casa stantii"
-
-#~ msgid "Stale services"
-#~ msgstr "Servizi stantii"
 
 #~ msgid "Starting up"
 #~ msgstr "Avvio"

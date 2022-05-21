@@ -4001,6 +4001,9 @@ msgstr "エージェントアクセスルール"
 msgid "Agent bakery"
 msgstr "エージェントベーカリー"
 
+msgid "Agent bakery package compression"
+msgstr ""
+
 msgid "Agent baking"
 msgstr "エージェントベーキング"
 
@@ -4012,6 +4015,10 @@ msgstr "エージェントのベーキングが終了しました。"
 
 msgid "Agent based plugins (Checks, Inventory)"
 msgstr "エージェントベースのプラグイン(チェック、インベントリ)"
+
+#, fuzzy
+msgid "Agent controller"
+msgstr "Windows認証"
 
 msgid "Agent deployment"
 msgstr "エージェントのデプロイ"
@@ -4550,6 +4557,10 @@ msgstr "ドキュメントストレージに割り当てられます"
 #, fuzzy
 msgid "Allocated pod resources"
 msgstr "割り当てられたストレージ"
+
+#, fuzzy
+msgid "Allocated pools"
+msgstr "許可されたプロトコル"
 
 msgid "Allocated space"
 msgstr "割り当てられたスペース"
@@ -5102,6 +5113,13 @@ msgstr "ラグを適用する"
 #, fuzzy
 msgid "Apply OMD config changes"
 msgstr "ラグを適用する"
+
+#, fuzzy
+msgid "Apply compression"
+msgstr "圧縮"
+
+msgid "Apply compression to agent packages"
+msgstr ""
 
 msgid "Apply conditions"
 msgstr "条件を適用する"
@@ -7090,7 +7108,7 @@ msgstr ""
 
 #, python-brace-format
 msgid ""
-"By default, Checkmk does not imports annotations. If this option is enabled, "
+"By default, Checkmk does not import annotations. If this option is enabled, "
 "Checkmk will import any annotation that is a valid Kubernetes label. These "
 "imported annotations are added as host labels to their respective piggyback "
 "host using the syntax 'cmk/kubernetes/annotation/{key}:{value}'. You can "
@@ -8107,12 +8125,44 @@ msgstr "カスタマーのプロパティを変更しました"
 msgid "Changed properties of installed extension package %s"
 msgstr ""
 
+#, fuzzy, python-format
+msgid ""
+"Changed properties of rule \"%s\", moved from folder \"%s\" to bottom of "
+"folder \"%s\""
+msgstr ""
+"ルール \"%s\"のプロパティを変更し、ルールをフォルダ \"%s\"から \"%s\"に移動し"
+"ました"
+
+#, fuzzy, python-format
+msgid ""
+"Changed properties of rule \"%s\", moved from folder \"%s\" to top of folder "
+"\"%s\""
+msgstr ""
+"ルール \"%s\"のプロパティを変更し、ルールをフォルダ \"%s\"から \"%s\"に移動し"
+"ました"
+
 #, python-format
 msgid ""
 "Changed properties of rule \"%s\", moved rule from folder \"%s\" to \"%s\""
 msgstr ""
 "ルール \"%s\"のプロパティを変更し、ルールをフォルダ \"%s\"から \"%s\"に移動し"
 "ました"
+
+#, fuzzy, python-format
+msgid ""
+"Changed properties of rule \"%s\", moved to after rule \"%s\" in folder \"%s"
+"\""
+msgstr ""
+"ルール #%d のプロパティは変更されました。ルールセットは \"%s\" フォルダは\"%s"
+"\""
+
+#, fuzzy, python-format
+msgid ""
+"Changed properties of rule \"%s\", moved to before rule \"%s\" in folder \"%s"
+"\""
+msgstr ""
+"ルール #%d のプロパティは変更されました。ルールセットは \"%s\" フォルダは\"%s"
+"\""
 
 #, python-format
 msgid "Changed properties of rule #%d in ruleset \"%s\" in folder \"%s\""
@@ -10582,7 +10632,7 @@ msgstr "既存のビューをコピーする"
 msgid "Copy of existing view"
 msgstr "既存のビューのコピー"
 
-msgid "Copy rule representation to clipboard"
+msgid "Copy rule value representation to clipboard"
 msgstr ""
 
 #, python-format
@@ -15058,6 +15108,9 @@ msgstr "Dominoメールキュー名"
 msgid "Don't activate services matching"
 msgstr "一致するサービスをアクティブ化しないでください"
 
+msgid "Don't apply compression"
+msgstr ""
+
 msgid "Don't change state"
 msgstr "状態を変更しないでください"
 
@@ -17975,6 +18028,10 @@ msgstr "ファイルのグループ化パターン"
 msgid "File Parsing Settings"
 msgstr "ファイル解析設定"
 
+#, fuzzy
+msgid "File Size"
+msgstr "ファイルサイズ"
+
 msgid "File Size Levels"
 msgstr "ファイルサイズレベル"
 
@@ -19115,6 +19172,9 @@ msgstr "インスタンスの自動検出"
 #, fuzzy
 msgid "GCP/Function network"
 msgstr "接続テスト"
+
+msgid "GCP/GCE CPU"
+msgstr ""
 
 #, fuzzy
 msgid "GCP/GCS Network"
@@ -25427,6 +25487,10 @@ msgid "Kubernetes replicas"
 msgstr "Kubernetesノード"
 
 #, fuzzy
+msgid "Kubernetes resource quota cpu utilization"
+msgstr "Kubernetesリソース"
+
+#, fuzzy
 msgid "Kubernetes resource quota memory utilization"
 msgstr "Kubernetesリソース"
 
@@ -26688,6 +26752,9 @@ msgstr "グループ化されたインターフェイスを個別に一覧表示
 #, python-format
 msgid "List of %s"
 msgstr "%s のリスト"
+
+msgid "List of all files in the site including their size"
+msgstr ""
 
 msgid "List of available NagVis maps"
 msgstr "利用可能なNagVisマップのリスト"
@@ -32211,6 +32278,10 @@ msgstr "OpenBSD PFエンジンの使用状態の数"
 msgid "Number of users"
 msgstr "ユーザー数"
 
+#, fuzzy
+msgid "Number of vCPUs reserved for the VM"
+msgstr "OK状態のサービスの数"
+
 msgid "Number of warnings"
 msgstr "警告の数"
 
@@ -34883,7 +34954,8 @@ msgstr ""
 "プを<tt>\\1</tt>で参照し、2番目のグループを<tt>\\2</tt>で参照することができま"
 "す。例: <tt>\\1.example.org</tt>。"
 
-msgid "Please specify a relative path only using a-z, 0-9, -, _, and ."
+#, fuzzy
+msgid "Please specify a relative path only using a-z, 0-9, -, _, . and $"
 msgstr "a-z 0-9 - _ および . を使用して相対パスのみを指定してください"
 
 msgid "Please specify a secret of at least 10 characters length."
@@ -35823,8 +35895,8 @@ msgstr "パルスセキュアユーザー"
 msgid "Push configuration to this site"
 msgstr "このサイトに設定をプッシュする"
 
-#, fuzzy, python-format
-msgid "Push: Checkmk agent contacts the server (%s only)"
+#, fuzzy
+msgid "Push: Checkmk agent contacts the server"
 msgstr "Checkmkエージェントネットワークサービス(Linux)"
 
 msgid "Pushover"
@@ -37925,10 +37997,6 @@ msgstr "ルールパックのプロパティ"
 msgid "Rule packs"
 msgstr "ルールパック"
 
-#, fuzzy
-msgid "Rule representation for web API"
-msgstr "このルール表現は、Web API呼び出しに使用できます。"
-
 #, fuzzy, python-format
 msgid "Rule representation: %s"
 msgstr "プレゼンテーション"
@@ -37951,6 +38019,10 @@ msgstr "ルールの試行"
 
 msgid "Rule type"
 msgstr "ルールタイプ"
+
+#, fuzzy
+msgid "Rule value representation for REST API"
+msgstr "このルール表現は、Web API呼び出しに使用できます。"
 
 msgid "Rule-ID"
 msgstr "ルールID"
@@ -40084,6 +40156,12 @@ msgid ""
 msgstr ""
 "プロセスの経過時間(消費されたCPU時間ではなく、リアルタイム)に上位レベルを設定"
 "します。"
+
+#, fuzzy
+msgid "Set upper thresholds for the percentage of allocated pools"
+msgstr ""
+"このルールは、割り当てられたプールの割合の警告レベルとクリティカルレベルを設"
+"定します"
 
 msgid "Set width"
 msgstr "幅を設定する"
@@ -43254,7 +43332,7 @@ msgstr "パスワードが正常に変更されました。"
 msgid "Successfully changed the credential."
 msgstr "パスワードが正常に変更されました。"
 
-msgid "Successfully copied rule representation to the clipboard."
+msgid "Successfully copied rule value representation to the clipboard."
 msgstr ""
 
 #, python-format
@@ -44933,8 +45011,8 @@ msgid ""
 "the monitoring site and the agent. It also provides the possibility to push "
 "monitoring data to the site (if applicable in your Checkmk edition). You may "
 "disable the agent controller if you experience problems with it. In this "
-"case the Windows agent will work in legacy pull mode. Please note: In the "
-"legacy pull mode the transported data is not encrypted."
+"case the agent will work in legacy pull mode. Please note: In the legacy "
+"pull mode the transported data is not encrypted."
 msgstr ""
 
 msgid ""
@@ -45181,13 +45259,6 @@ msgid ""
 "of any possible reason. A common use is setting this to OK for workstations "
 "that can be switched off - so you will get no notifications in that case."
 msgstr ""
-
-msgid ""
-"The check will trigger a warning or critical state if the size of the "
-"database exceeds these levels."
-msgstr ""
-"データベースのサイズがこれらのレベルを超えると、チェックによって警告またはク"
-"リティカル状態がトリガーされます。"
 
 msgid ""
 "The checkbox for setting host downtimes does not work when removing "
@@ -47417,6 +47488,14 @@ msgstr ""
 
 msgid "The service name"
 msgstr "サービス名"
+
+#, fuzzy
+msgid ""
+"The service will trigger a warning or critical state if the size of the "
+"database exceeds these levels."
+msgstr ""
+"データベースのサイズがこれらのレベルを超えると、チェックによって警告またはク"
+"リティカル状態がトリガーされます。"
 
 msgid ""
 "The sidebar can be configured to regularly check for pending popup "
@@ -50509,10 +50588,6 @@ msgstr "このルールパックが変更されました元々はMKP %s を介�
 msgid "This rule pack is provided via the MKP %s."
 msgstr "このルールパックは、MKP%sを介して提供されます。"
 
-#, fuzzy
-msgid "This rule representation can be used for Web API calls."
-msgstr "このルール表現は、Web API呼び出しに使用できます。"
-
 msgid ""
 "This rule selects the ALLNET IP Sensoric agent, which fetches /xml/"
 "sensordata.xml from the device by HTTP and extracts the needed monitoring "
@@ -50747,12 +50822,6 @@ msgid ""
 "alerts"
 msgstr ""
 "このルールは、未確認のアラート数の警告とクリティカルのレベルを設定します"
-
-msgid ""
-"This rule sets the warn and crit levels for the percentage of allocated pools"
-msgstr ""
-"このルールは、割り当てられたプールの割合の警告レベルとクリティカルレベルを設"
-"定します"
 
 msgid ""
 "This rule sets the warn and crit levels for the uptime of a JVM. Other "
@@ -52169,6 +52238,15 @@ msgstr ""
 msgid ""
 "To send data to InfluxDB with this connection, you still need to configure "
 "at least one rule that determines what data should be sent."
+msgstr ""
+
+msgid ""
+"To set the value of a rule using the REST API, you need to set the "
+"<tt>value_raw</tt> field. The value of this fields is individual for each "
+"rule set. To help you understand what kind of data structure you need to "
+"provide, this rule export mechanism is showing you the value you need to set "
+"for a given rule. The value needs to be a string representation of a "
+"compatible Python data structure."
 msgstr ""
 
 msgid "To:"
@@ -56327,6 +56405,19 @@ msgstr ""
 "ぐために、サイトの初期化後しばらくの間、ホストの削除は無効になります。"
 
 msgid ""
+"When activated, the agent bakery will compress most of the agent packages. "
+"The compression applies to .deb packages, .rpm packages and to all .tar.gz "
+"packages that result from baking agents. Note: In order to avoid name "
+"changes in packages, the uncompressed TAR packages also have a suffix of ."
+"tar.gz. Technically, they are compressed using gzip with a compression level "
+"of 0.It's not recommended to activate compression unless you want to deploy "
+"large files resulting from custom files or your own bakery plugins. All "
+"large files (larger than a few kb, mainly the agent updater and the agent "
+"controller) provided by Checkmk are precompressed and won't benefit from "
+"enabling compression."
+msgstr ""
+
+msgid ""
 "When aggregation is turned on and the rule matches for two different "
 "applications then these two events will be kept separate if you check this "
 "box."
@@ -57340,7 +57431,7 @@ msgid "Windows WMI Timeout"
 msgstr "Windowsモジュール"
 
 #, fuzzy
-msgid "Windows agent controller"
+msgid "Windows agent controller troubleshooting"
 msgstr "Windows認証"
 
 msgid "Windows authentication"
@@ -58167,6 +58258,10 @@ msgstr ""
 "行に関する詳細は、ファイル<tt> var/log/diskspace.log </tt>に記録されます。こ"
 "のプログラムはいつでも手動で実行できます(<tt> -v </tt>オプションを追加して、"
 "実行されたアクションの詳細を確認してください)。"
+
+msgid ""
+"You can copy and use the data structure below in your REST API requests."
+msgstr ""
 
 #, python-format
 msgid "You can create predefined conditions <a href=\"%s\">here</a>."
@@ -59310,10 +59405,6 @@ msgid ""
 msgstr ""
 
 #, python-format
-msgid "Your %s element has been saved."
-msgstr "%s要素が保存されました。"
-
-#, python-format
 msgid "Your %s has been deleted."
 msgstr "%s が削除されました。"
 
@@ -59427,9 +59518,9 @@ msgid ""
 "incomplete. "
 msgstr ""
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
-"Your query matched more than %d log entries. The shown data data does not "
+"Your query matched more than %d log entries. The shown data does not "
 "necessarily reflect the matched entries and the result might be incomplete. "
 msgstr ""
 "クエリが%dを超えるログエントリと一致しました。表示されるデータデータは、一致"
@@ -59916,10 +60007,6 @@ msgstr "遅延"
 
 msgid "demand"
 msgstr "要求する"
-
-#, fuzzy
-msgid "detailed config"
-msgstr "失敗した接続"
 
 msgid "detections/s"
 msgstr ""
@@ -61480,6 +61567,30 @@ msgstr "z/OS"
 #, fuzzy, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. All Rights Reserved."
+
+#, fuzzy
+#~| msgid "Create a service for each instance"
+#~ msgid "Create a service for every pinged IP address"
+#~ msgstr "インスタンスごとにサービスを作成する"
+
+#, fuzzy
+#~| msgid "Stale services"
+#~ msgid "Multiple services"
+#~ msgstr "古いサービス"
+
+#, fuzzy
+#~| msgid "This rule representation can be used for Web API calls."
+#~ msgid "This rule representation can be used for Web API calls."
+#~ msgstr "このルール表現は、Web API呼び出しに使用できます。"
+
+#, python-format
+#~ msgid "Your %s element has been saved."
+#~ msgstr "%s要素が保存されました。"
+
+#, fuzzy
+#~| msgid "Failed connections"
+#~ msgid "detailed config"
+#~ msgstr "失敗した接続"
 
 #, fuzzy
 #~| msgid "Performance"
@@ -64454,9 +64565,6 @@ msgstr "© 2020 tribe29 GmbH. All Rights Reserved."
 
 #~ msgid "Stale hosts"
 #~ msgstr "古いホスト"
-
-#~ msgid "Stale services"
-#~ msgstr "古いサービス"
 
 #~ msgid "Starting up"
 #~ msgstr "起動"

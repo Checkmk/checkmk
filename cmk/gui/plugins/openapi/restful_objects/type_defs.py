@@ -87,6 +87,7 @@ CmkEndpointName = Literal[
     "cmk/delete_bi_pack",
     "cmk/put_bi_rule",
     "cmk/post_bi_rule",
+    "cmk/get_bi_aggregation_state",
     "cmk/put_bi_aggregation",
     "cmk/post_bi_aggregation",
     "cmk/put_bi_pack",

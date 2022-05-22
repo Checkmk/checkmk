@@ -43,8 +43,8 @@ def test_compare_parsing_functions(manpage_path: Path) -> None:
     assert all(k in parsed1 for k in parsed2)
 
     for key in parsed2:
-        # for the common ones, apart from leading/trailing spaces, newlines and some html we're good
-        lines1 = parsed1[key].replace("<br>", "").splitlines()
+        # for the common ones, apart newlines we're good
+        lines1 = parsed1[key].splitlines()
         lines2 = parsed2[key].splitlines()
         for l1, l2 in itertools.zip_longest(
             (l for l in lines1 if l),

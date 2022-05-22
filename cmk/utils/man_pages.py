@@ -606,7 +606,7 @@ def _parse_to_raw(path: Path, lines: Iterable[str]) -> Mapping[str, str]:
                 empty_line_count += 1
                 if empty_line_count == 1 and current_variable:
                     name, curval = current_section[-1]
-                    current_section[-1] = (name, curval + "\n<br>\n")
+                    current_section[-1] = (name, curval + "\n\n")
                 continue
             empty_line_count = 0
 

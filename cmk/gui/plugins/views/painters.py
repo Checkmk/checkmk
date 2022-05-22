@@ -1475,6 +1475,7 @@ class PainterCheckManpage(Painter):
             .replace("{", "<b>")
             .replace("}", "</b>")
             .replace("&lt;br&gt;", "<br>")
+            .replace("\n\n", "\n<br>\n")
         )
         return "", HTML(description)
 

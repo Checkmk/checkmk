@@ -6,7 +6,7 @@
 
 from __future__ import annotations
 
-__version__ = "2.1.0"
+__version__ = "2.1.0p1"
 
 # TODO:
 # - Do not create half-initialized objects, poisoning all use sites with dynamic

@@ -565,12 +565,12 @@ def _parse_to_raw_header(path: Path, lines: Iterable[str]) -> Mapping[str, str]:
         if not line:
             parsed[key] += "\n\n"
         elif line[0] == " ":
-            parsed[key] += "\n" + line.lstrip()
+            parsed[key] += "\n" + line.strip()
         elif line[0] == "[":
             break  # End of header
         elif ":" in line:
             key, rest = line.split(":", 1)
-            parsed[key] = rest.lstrip()
+            parsed[key] = rest.strip()
         else:
             msg = "ERROR: Invalid line %d in man page %s:\n%s" % (lineno, path, line)
             if cmk.utils.debug.enabled():
@@ -594,9 +594,9 @@ def _parse_to_raw(path: Path, lines: Iterable[str]) -> Mapping[str, str]:
                 if current_variable:
                     name, curval = current_section[-1]
                     if curval.strip() == "":
-                        current_section[-1] = (name, line.rstrip()[1:])
+                        current_section[-1] = (name, line.strip())
                     else:
-                        current_section[-1] = (name, curval + "\n" + line.rstrip()[1:])
+                        current_section[-1] = (name, curval + "\n" + line.strip())
                 else:
                     raise Exception
                 continue
@@ -611,7 +611,7 @@ def _parse_to_raw(path: Path, lines: Iterable[str]) -> Mapping[str, str]:
             empty_line_count = 0
 
             current_variable, restofline = line.split(":", 1)
-            current_section.append((current_variable, restofline.lstrip()))
+            current_section.append((current_variable, restofline.strip()))
 
         except Exception as e:
             raise MKGeneralException("Syntax error in %s line %d (%s).\n" % (path, lineno + 1, e))

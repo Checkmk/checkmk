@@ -47,8 +47,8 @@ def test_compare_parsing_functions(manpage_path: Path) -> None:
         lines1 = parsed1[key].replace("<br>", "").splitlines()
         lines2 = parsed2[key].splitlines()
         for l1, l2 in itertools.zip_longest(
-            (l.strip() for l in lines1 if l.strip()),
-            (l.strip() for l in lines2 if l.strip()),
+            (l for l in lines1 if l),
+            (l for l in lines2 if l),
         ):
             assert l1 == l2
 

@@ -578,7 +578,7 @@ def _parse_to_raw_header(path: Path, lines: Iterable[str]) -> Mapping[str, str]:
             sys.stderr.write("%s\n" % msg)
             break
 
-    return parsed
+    return {k: v.strip() for k, v in parsed.items()}
 
 
 def _parse_to_raw(path: Path, lines: Iterable[str]) -> Mapping[str, str]:

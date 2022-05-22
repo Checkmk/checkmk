@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import itertools
+import re
 from pathlib import Path
 from typing import Mapping, Optional, Set
 
@@ -42,15 +42,9 @@ def test_compare_parsing_functions(manpage_path: Path) -> None:
     # header should be a subset, I think:
     assert all(k in parsed1 for k in parsed2)
 
+    # the values only differ in the treating of multiple newlines:
     for key in parsed2:
-        # for the common ones, apart newlines we're good
-        lines1 = parsed1[key].splitlines()
-        lines2 = parsed2[key].splitlines()
-        for l1, l2 in itertools.zip_longest(
-            (l for l in lines1 if l),
-            (l for l in lines2 if l),
-        ):
-            assert l1 == l2
+        assert re.sub("\n\n+", "\n\n", parsed1[key]) == re.sub("\n\n+", "\n\n", parsed2[key])
 
 
 @pytest.fixture(autouse=True)

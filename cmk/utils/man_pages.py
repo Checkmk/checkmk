@@ -16,9 +16,10 @@ import re
 import subprocess
 import sys
 from collections import defaultdict
+from dataclasses import dataclass
 from io import StringIO
 from pathlib import Path
-from typing import Final, Iterable, Literal, Mapping, NamedTuple, Optional, Sequence, TextIO, Union
+from typing import Final, Iterable, Mapping, Optional, Sequence, TextIO
 
 import cmk.utils.debug
 import cmk.utils.paths
@@ -27,28 +28,41 @@ from cmk.utils.check_utils import maincheckify
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.i18n import _
 
-# Obviously, this type is brilliant and the whole situation must not be improved.
-_ManPageValue = Union[str, Sequence[tuple[str, str]], Mapping[str, Union[str, Sequence[str]]]]
 
-# The destiction between ManPage and Manpage header is not clear to me.
-# I think we should just always parse the whole thing.
-ManPage = Mapping[Literal["header"], _ManPageValue]
-
-
-class ManPageHeader(NamedTuple):
+@dataclass
+class ManPage:
     name: str
     path: str
-    description: str
     title: str
-    agents: Union[str, Sequence[str]]
+    agents: Sequence[str]
+    catalog: Sequence[str]
     license: str
     distribution: str
-    catalog: Sequence[str]
+    description: str
+    item: Optional[str]
+    discovery: Optional[str]
+    cluster: Optional[str]
+
+    @classmethod
+    def fallback(cls, path: Path, name: str, msg: str, content: str) -> "ManPage":
+        return cls(
+            name=name,
+            path=str(path),
+            title=_("%s: Cannot parse man page: %s") % (name, msg),
+            agents=[],
+            catalog=["generic"],
+            license="unknown",
+            distribution="unknown",
+            description=content,
+            item=None,
+            discovery=None,
+            cluster=None,
+        )
 
 
 ManPageCatalogPath = tuple[str, ...]
 
-ManPageCatalog = Mapping[ManPageCatalogPath, Sequence[ManPageHeader]]
+ManPageCatalog = Mapping[ManPageCatalogPath, Sequence[ManPage]]
 
 CATALOG_TITLES: Final = {
     "hw": "Appliances, other dedicated Hardware",
@@ -362,14 +376,9 @@ def get_title_from_man_page(path: Path) -> str:
 
 
 def load_man_page_catalog() -> ManPageCatalog:
-    catalog: dict[ManPageCatalogPath, list[ManPageHeader]] = defaultdict(list)
+    catalog: dict[ManPageCatalogPath, list[ManPage]] = defaultdict(list)
     for name, path in all_man_pages().items():
-        try:
-            parsed = _parse_man_page_header(name, Path(path))
-        except Exception as e:
-            if cmk.utils.debug.enabled():
-                raise
-            parsed = _create_fallback_man_page(name, Path(path), str(e))
+        parsed = _parse_man_page(name, Path(path))
 
         if parsed.catalog[0] == "os":
             for agent in parsed.agents:
@@ -448,7 +457,7 @@ def _manpage_browser_folder(
             break
 
 
-def _manpage_browse_entries(cat: Iterable[str], entries: Iterable[ManPageHeader]) -> None:
+def _manpage_browse_entries(cat: Iterable[str], entries: Iterable[ManPage]) -> None:
     checks: list[tuple[str, str]] = []
     for e in entries:
         checks.append((e.title, e.name))
@@ -504,26 +513,13 @@ def _run_dialog(args: Sequence[str]) -> tuple[bool, bytes]:
     return completed_process.returncode == 0, completed_process.stderr
 
 
-def _create_fallback_man_page(name: str, path: Path, error_message: str) -> ManPageHeader:
+def _parse_man_page(name: str, path: Path) -> ManPage:
     with path.open(encoding="utf-8") as fp:
-        return ManPageHeader(
-            name=name,
-            path=str(path),
-            description=fp.read().strip(),
-            title=_("%s: Cannot parse man page: %s") % (name, error_message),
-            agents="",
-            license="unknown",
-            distribution="unknown",
-            catalog=["generic"],
-        )
-
-
-def _parse_man_page_header(name: str, path: Path) -> ManPageHeader:
-    with path.open(encoding="utf-8") as fp:
-        parsed = _parse_to_raw(path, fp)
+        content = fp.read()
 
     try:
-        return ManPageHeader(
+        parsed = _parse_to_raw(path, content)
+        return ManPage(
             name=name,
             path=str(path),
             title=str(parsed["title"]),
@@ -532,9 +528,19 @@ def _parse_man_page_header(name: str, path: Path) -> ManPageHeader:
             distribution=parsed["distribution"],
             description=parsed["description"],
             catalog=parsed["catalog"].split("/"),
+            item=parsed.get("item"),
+            discovery=parsed.get("discovery") or parsed.get("inventory"),
+            cluster=parsed.get("cluster"),
         )
-    except KeyError as key:
-        raise ValueError(f"Section {key} missing in man page of {name}")
+    except (KeyError, MKGeneralException) as msg:
+        if cmk.utils.debug.enabled():
+            raise
+        return ManPage.fallback(
+            name=name,
+            path=path,
+            content=content,
+            msg=str(msg),
+        )
 
 
 # TODO: accepting the path here would make things a bit easier.
@@ -543,26 +549,15 @@ def load_man_page(name: str, man_page_dirs: Optional[Iterable[Path]] = None) -> 
     if path is None:
         return None
 
-    with path.open(encoding=str("utf-8")) as fp:
-        header_raw = _parse_to_raw(path, fp)
-
-    # Watch out, the value of "header" is *not* of type ManPageHeader, it may
-    # contain discovery and item!
-    return {
-        "header": {
-            "catalog": "unsorted",  # fallback!
-            **header_raw,
-            "agents": [a.strip() for a in header_raw["agents"].split(",")],
-        }
-    }
+    return _parse_man_page(name, path)
 
 
-def _parse_to_raw(path: Path, lines: Iterable[str]) -> Mapping[str, str]:
+def _parse_to_raw(path: Path, content: str) -> Mapping[str, str]:
 
     parsed: dict[str, list[str]] = defaultdict(list)
     current: list[str] = []
 
-    for no, line in enumerate(lines, start=1):
+    for no, line in enumerate(content.splitlines(), start=1):
 
         if not line.strip() or line.startswith(" "):  # continuation line
             current.append(line.strip())
@@ -586,21 +581,7 @@ class ManPageRenderer:
         if not man_page:
             raise MKGeneralException("No manpage for %s. Sorry.\n" % self.name)
 
-        header = man_page["header"]
-        assert isinstance(header, dict)
-
-        # Force the correct type. Hope we can clean this up later.
-        self._title = str(header["title"])
-        self._distro = (
-            "official part of Check_MK"
-            if header["distribution"] == "check_mk"
-            else str(header["distribution"])
-        )
-        self._agents = [str(a) for a in header["agents"]]
-        self._license = str(header["license"])
-        self._description = str(header["description"])
-        self._item = str(item) if (item := header.get("item")) else None
-        self._discovery = str(header.get("discovery", "No discovery supported."))
+        self._page = man_page
 
     def paint(self) -> None:
         try:
@@ -610,24 +591,32 @@ class ManPageRenderer:
 
     def _paint_man_page(self) -> None:
         self._print_header()
-        self._print_manpage_title(self._title)
+        self._print_manpage_title(self._page.title)
 
         self._print_begin_splitlines()
 
-        ags = [CHECK_MK_AGENTS.get(agent, agent.upper()) for agent in self._agents]
-        self._print_info_line("Distribution:            ", self._distro)
-        self._print_info_line("License:                 ", self._license)
+        ags = [CHECK_MK_AGENTS.get(agent, agent.upper()) for agent in self._page.agents]
+        self._print_info_line(
+            "Distribution:            ",
+            "official part of Check_MK"
+            if self._page.distribution == "check_mk"
+            else self._page.distribution,
+        )
+        self._print_info_line("License:                 ", self._page.license)
         self._print_info_line("Supported Agents:        ", ", ".join(ags))
         self._print_end_splitlines()
 
         self._print_empty_line()
-        self._print_textbody(self._description)
-        if self._item:
-            self._print_subheader("Item")
-            self._print_textbody(self._item)
+        self._print_textbody(self._page.description)
 
-        self._print_subheader("Discovery")
-        self._print_textbody(self._discovery)
+        if self._page.item:
+            self._print_subheader("Item")
+            self._print_textbody(self._page.item)
+
+        if self._page.discovery:
+            self._print_subheader("Discovery")
+            self._print_textbody(self._page.discovery)
+
         self._print_empty_line()
         self._flush()
 
@@ -820,7 +809,7 @@ class NowikiManPageRenderer(ManPageRenderer):
         return '<tr><td class="tt">%s</td><td>[check_%s|%s]</td></tr>\n' % (
             self.name,
             self.name,
-            self._title,
+            self._page.title,
         )
 
     def render(self) -> str:

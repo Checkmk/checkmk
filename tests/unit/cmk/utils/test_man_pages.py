@@ -16,8 +16,6 @@ from tests.unit.conftest import FixPluginLegacy, FixRegister
 import cmk.utils.man_pages as man_pages
 from cmk.utils.type_defs import CheckPluginName
 
-# TODO: Add tests for module internal functions
-
 ManPages = Mapping[str, Optional[man_pages.ManPage]]
 
 
@@ -110,10 +108,8 @@ def test_all_man_pages(tmp_path):
 
 
 def test_load_all_man_pages(all_pages: ManPages):
-    for name, man_page in all_pages.items():
-        assert man_page is not None, name
-        assert isinstance(man_page, dict)
-        _check_man_page_structure(man_page)
+    for _name, man_page in all_pages.items():
+        assert isinstance(man_page, man_pages.ManPage)
 
 
 def test_print_man_page_table(capsys):
@@ -195,7 +191,7 @@ def test_cluster_check_functions_match_manpages_cluster_sections(
     for plugin in fix_register.check_plugins.values():
         man_page = all_pages[str(plugin.name)]
         assert man_page
-        has_cluster_doc = "cluster" in man_page["header"]
+        has_cluster_doc = bool(man_page.cluster)
         has_cluster_func = plugin.cluster_check_function is not None
         if has_cluster_doc is not has_cluster_func:
             (missing_cluster_description, unexpected_cluster_description,)[
@@ -220,31 +216,6 @@ def test_no_subtree_and_entries_on_same_level(catalog):
 
 def test_load_man_page_not_existing():
     assert man_pages.load_man_page("not_existing") is None
-
-
-# TODO: when the typing is cleaned up, then this can go.
-def _check_man_page_structure(page):
-    assert list(page) == ["header"]
-
-    for key in ["description", "license", "title", "catalog", "agents", "distribution"]:
-        assert key in page["header"]
-
-    for key in ["configuration", "parameters", "discovery"]:
-        if key in page:
-            assert isinstance(page["inventory"], list)
-
-    assert isinstance(page["header"]["agents"], list)
-
-
-def test_load_man_page_format(all_pages: ManPages):
-    page = all_pages["if64"]
-    assert isinstance(page, dict)
-
-    _check_man_page_structure(page)
-
-    # Check optional keys
-    for key in ["item", "discovery"]:
-        assert key in page["header"]
 
 
 def test_print_man_page_nowiki_index(capsys):
@@ -280,11 +251,10 @@ def test_print_man_page(capsys):
 
 
 def test_missing_catalog_entries_of_man_pages(all_pages: ManPages) -> None:
-    found_catalog_entries_from_man_pages = set()
+    found_catalog_entries_from_man_pages: set[str] = set()
     for name in man_pages.all_man_pages():
         man_page = all_pages[name]
         assert man_page is not None
-        catalog_entry = str(man_page["header"]["catalog"])  # type: ignore[index,call-overload]
-        found_catalog_entries_from_man_pages.update(catalog_entry.split("/"))
+        found_catalog_entries_from_man_pages.update(man_page.catalog)
     missing_catalog_entries = found_catalog_entries_from_man_pages - set(man_pages.CATALOG_TITLES)
     assert not missing_catalog_entries

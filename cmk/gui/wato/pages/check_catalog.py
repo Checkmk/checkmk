@@ -11,7 +11,7 @@ the global settings.
 """
 
 import re
-from typing import Any, Dict, List, Mapping, Optional, overload, Set, Tuple, Type
+from typing import Any, Dict, List, Optional, overload, Set, Tuple, Type
 
 from six import ensure_str
 
@@ -433,11 +433,13 @@ class ModeCheckManPage(WatoMode):
         # To be able to calculate the breadcrumb with ModeCheckPluginTopic as parent, we need to
         # ensure that the topic is available.
         with request.stashed_vars():
-            topic = str(self._manpage["header"]["catalog"])  # type: ignore[index,call-overload]
-            request.set_var("topic", topic)
+            # suppression: arg is Sequence[str]. Expected is str.
+            # AFAICT it's been like this for a while; it's just we now know it.
+            # The breadcrumbs look fine to me.
+            request.set_var("topic", self._manpage.catalog)  # type: ignore[arg-type]
             return super().breadcrumb()
 
-    def _from_vars(self):
+    def _from_vars(self) -> None:
         self._check_plugin_name = request.get_ascii_input_mandatory("check_type", "")
 
         check_builtins = ["check-mk", "check-mk-inventory"]
@@ -450,27 +452,25 @@ class ModeCheckManPage(WatoMode):
         manpage = man_pages.load_man_page(self._check_plugin_name)
         if manpage is None:
             raise MKUserError(None, _("There is no manpage for this check."))
-        self._manpage: Mapping[str, Any] = {"header": manpage["header"]}
+        self._manpage = manpage
 
         checks = get_check_information().plugin_infos
-        if self._check_plugin_name in checks:
-            self._manpage = {
-                "type": "check_mk",
-                **checks[self._check_plugin_name],
-                **self._manpage,
-            }
+        if (check_info := checks.get(self._check_plugin_name)) is not None:
+            self._check_type = "check_mk"
+            self._service_description = check_info["service_description"]
+            self._ruleset: Optional[
+                str
+            ] = f"checkgroup_parameters:{check_info['check_ruleset_name']}"
+        elif self._check_type in check_builtins:
+            self._check_type = "check_mk"
+            self._service_description = (
+                "Check_MK" if self._check_plugin_name == "check-mk" else "Check_MK Discovery"
+            )
+            self._ruleset = None
         elif self._check_plugin_name.startswith("check_"):  # Assume active check
-            self._manpage = {
-                "type": "active",
-                **self._manpage,
-            }
-        elif self._check_plugin_name in check_builtins:
-            self._manpage = {
-                "type": "check_mk",
-                "service_description": "Check_MK%s"
-                % ("" if self._check_plugin_name == "check-mk" else " Discovery"),
-                **self._manpage,
-            }
+            self._check_type = "active"
+            self._service_description = "Active check"  # unused
+            self._ruleset = f"active_checks:{self._check_plugin_name[6:]}"
         else:
             raise MKUserError(
                 None,
@@ -479,7 +479,7 @@ class ModeCheckManPage(WatoMode):
             )
 
     def title(self) -> str:
-        return str(self._manpage["header"]["title"])  # type: ignore[index,call-overload]
+        return self._manpage.title
 
     # TODO
     # We could simply detect on how many hosts and services this plugin
@@ -521,15 +521,12 @@ class ModeCheckManPage(WatoMode):
 
     def page(self):
 
-        # todo: remove this type hint (it is correct, though, AFAICT)
-        header: Mapping[str, Any] = self._manpage["header"]  # type: ignore[assignment]
-
         html.open_table(class_=["data", "headerleft"])
 
         html.open_tr()
         html.th(_("Title"))
         html.open_td()
-        html.b(header["title"])
+        html.b(self._manpage.title)
         html.close_td()
         html.close_tr()
 
@@ -542,34 +539,29 @@ class ModeCheckManPage(WatoMode):
 
         html.open_tr()
         html.th(_("Description"))
-        html.td(self._manpage_text(header["description"]))
+        html.td(self._manpage_text(self._manpage.description))
         html.close_tr()
 
-        if self._manpage["type"] == "check_mk":
+        if self._check_type == "check_mk":
             html.open_tr()
             html.th(_("Service name"))
-            html.td(HTML(str(self._manpage["service_description"]).replace("%s", "&#9744;")))
+            html.td(HTML(self._service_description.replace("%s", "&#9744;")))
             html.close_tr()
 
-            discovery = header.get("discovery") or header.get("inventory")
-            if discovery:
+            if discovery := self._manpage.discovery:
                 html.open_tr()
                 html.th(_("Discovery"))
                 html.td(self._manpage_text(discovery))
                 html.close_tr()
 
-            check_ruleset_name = self._manpage.get("check_ruleset_name")
-            if check_ruleset_name is not None:
-                self._show_ruleset("checkgroup_parameters:%s" % check_ruleset_name)
-
-            cluster = header.get("cluster")
-            if cluster:
+            if self._manpage.cluster:
                 html.open_tr()
                 html.th(_("Cluster behaviour"))
-                html.td(self._manpage_text(cluster))
+                html.td(self._manpage_text(self._manpage.cluster))
                 html.close_tr()
-        else:
-            self._show_ruleset("active_checks:%s" % self._check_plugin_name[6:])
+
+        if self._ruleset:
+            self._show_ruleset(self._ruleset)
 
         html.close_table()
 

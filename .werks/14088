@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 2.1.0b10
+Version: 2.1.0
 
 This check monitors the status of cache vault units on controllers that are based on LSI Megaraid chipsets, if they support cache vautls.
 The Linux agent will try find any existing controllers - if <tt>storcli</tt> or <tt>storcli64</tt> is in your PATH.

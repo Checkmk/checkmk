@@ -6,6 +6,6 @@ Date: 1653042616
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0b10
+Version: 2.1.0
 
 A regression in Checkmk 2.1.0b9 could lead to a permission error during the installation of the Checkmk agent.

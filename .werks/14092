@@ -6,6 +6,6 @@ Date: 1652705695
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0b10
+Version: 2.1.0
 
 From Checkmk versions 2.1.0b3 to 2.1.0b9 running with the nagios code the <i>Check_MK</i> service reported way to small execution times.

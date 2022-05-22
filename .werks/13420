@@ -6,7 +6,7 @@ Date: 1652969997
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0b10
+Version: 2.1.0
 
 In checkmk it's possible to transport a single section with different separators:
 

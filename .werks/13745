@@ -6,7 +6,7 @@ Date: 1651480685
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0b10
+Version: 2.1.0
 
 When using bulk move to move hosts to another folder the Main folder
 was not selectable in the dropdown menu.

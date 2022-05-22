@@ -6,7 +6,7 @@ Date: 1652851345
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0b10
+Version: 2.1.0
 
 The snapin was static and not refreshed regularly. This could lead to
 misleading informations if other users switched toggle buttons.

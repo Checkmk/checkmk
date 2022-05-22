@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0b10
+Version: 2.1.0
 
 If you linked event console views like "Events" (ec_events) in dashboards with the option
 "Add" -> "Link to existing view", the error "KeyError: 'datasource'" occurred.

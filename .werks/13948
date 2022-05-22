@@ -6,7 +6,7 @@ Date: 1652359634
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0b10
+Version: 2.1.0
 
 The BI active check and agent will now use the REST API to retrive data.
 This also means that cookie authentication mode in the active check is no longer supported.

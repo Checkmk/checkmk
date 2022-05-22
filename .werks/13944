@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0b10
+Version: 2.1.0
 
 Instead of rendering the text of the inventory dashlet on one line,
 the text will now break into multiple lines if not enough space is there.

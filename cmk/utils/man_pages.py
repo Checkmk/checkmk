@@ -520,7 +520,7 @@ def _create_fallback_man_page(name: str, path: Path, error_message: str) -> ManP
 
 def _parse_man_page_header(name: str, path: Path) -> ManPageHeader:
     with path.open(encoding="utf-8") as fp:
-        parsed = _parse_to_raw_header(path, fp)
+        parsed = _parse_to_raw(path, fp)
 
     try:
         return ManPageHeader(
@@ -555,30 +555,6 @@ def load_man_page(name: str, man_page_dirs: Optional[Iterable[Path]] = None) -> 
             "agents": [a.strip() for a in header_raw["agents"].split(",")],
         }
     }
-
-
-def _parse_to_raw_header(path: Path, lines: Iterable[str]) -> Mapping[str, str]:
-    parsed: dict[str, str] = {}
-    key = ""
-    for lineno, line in enumerate(lines, start=1):
-        line = line.rstrip()
-        if not line:
-            parsed[key] += "\n\n"
-        elif line[0] == " ":
-            parsed[key] += "\n" + line.strip()
-        elif line[0] == "[":
-            break  # End of header
-        elif ":" in line:
-            key, rest = line.split(":", 1)
-            parsed[key] = rest.strip()
-        else:
-            msg = "ERROR: Invalid line %d in man page %s:\n%s" % (lineno, path, line)
-            if cmk.utils.debug.enabled():
-                raise ValueError(msg)
-            sys.stderr.write("%s\n" % msg)
-            break
-
-    return {k: v.strip() for k, v in parsed.items()}
 
 
 def _parse_to_raw(path: Path, lines: Iterable[str]) -> Mapping[str, str]:

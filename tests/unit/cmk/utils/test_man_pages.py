@@ -4,7 +4,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import re
 from pathlib import Path
 from typing import Mapping, Optional, Set
 
@@ -20,31 +19,6 @@ from cmk.utils.type_defs import CheckPluginName
 # TODO: Add tests for module internal functions
 
 ManPages = Mapping[str, Optional[man_pages.ManPage]]
-
-
-# NOTE: this test is introduced during unification of the parsing.
-# I don't think we should keep this around.
-# It was only added to highlight wtf is going on.
-@pytest.mark.parametrize(
-    "manpage_path",
-    list(Path(cmk_path(), "checkman").iterdir()),
-)
-def test_compare_parsing_functions(manpage_path: Path) -> None:
-    if manpage_path.name == ".f12":
-        return
-
-    with manpage_path.open() as hf:
-        content = hf.read().splitlines()
-
-    parsed1 = man_pages._parse_to_raw(manpage_path, content)
-    parsed2 = man_pages._parse_to_raw_header(manpage_path, content)
-
-    # header should be a subset, I think:
-    assert all(k in parsed1 for k in parsed2)
-
-    # the values only differ in the treating of multiple newlines:
-    for key in parsed2:
-        assert re.sub("\n\n+", "\n\n", parsed1[key]) == re.sub("\n\n+", "\n\n", parsed2[key])
 
 
 @pytest.fixture(autouse=True)

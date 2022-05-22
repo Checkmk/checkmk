@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import itertools
 from pathlib import Path
 from typing import Mapping, Optional, Set
 
@@ -19,6 +20,37 @@ from cmk.utils.type_defs import CheckPluginName
 # TODO: Add tests for module internal functions
 
 ManPages = Mapping[str, Optional[man_pages.ManPage]]
+
+
+# NOTE: this test is introduced during unification of the parsing.
+# I don't think we should keep this around.
+# It was only added to highlight wtf is going on.
+@pytest.mark.parametrize(
+    "manpage_path",
+    list(Path(cmk_path(), "checkman").iterdir()),
+)
+def test_compare_parsing_functions(manpage_path: Path) -> None:
+    if manpage_path.name == ".f12":
+        return
+
+    with manpage_path.open() as hf:
+        content = hf.read().splitlines()
+
+    parsed1 = man_pages._parse_to_raw(manpage_path, content)
+    parsed2 = man_pages._parse_to_raw_header(manpage_path, content)
+
+    # header should be a subset, I think:
+    assert all(k in parsed1 for k in parsed2)
+
+    for key in parsed2:
+        # for the common ones, apart from leading/trailing spaces, newlines and some html we're good
+        lines1 = parsed1[key].replace("<br>", "").splitlines()
+        lines2 = parsed2[key].splitlines()
+        for l1, l2 in itertools.zip_longest(
+            (l.strip() for l in lines1 if l.strip()),
+            (l.strip() for l in lines2 if l.strip()),
+        ):
+            assert l1 == l2
 
 
 @pytest.fixture(autouse=True)

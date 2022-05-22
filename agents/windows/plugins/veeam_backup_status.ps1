@@ -1,4 +1,4 @@
-$CMK_VERSION = "2.1.0b10"
+$CMK_VERSION = "2.1.0"
 ## VEEAM Backups
 ## This powershell script needs to be run with the 64bit powershell
 ## and thus from a 64bit check_mk agent

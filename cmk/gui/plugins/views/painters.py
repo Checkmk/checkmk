@@ -1471,7 +1471,7 @@ class PainterCheckManpage(Painter):
             return "", _("Man page %s not found.") % checktype
 
         description = (
-            escaping.escape_attribute(page["header"]["description"])
+            escaping.escape_attribute(str(page["header"]["description"]))  # type: ignore[index,call-overload]
             .replace("{", "<b>")
             .replace("}", "</b>")
             .replace("&lt;br&gt;", "<br>")

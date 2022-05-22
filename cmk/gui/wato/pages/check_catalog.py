@@ -11,7 +11,7 @@ the global settings.
 """
 
 import re
-from typing import Any, Dict, List, Optional, overload, Set, Tuple, Type
+from typing import Any, Dict, List, Mapping, Optional, overload, Set, Tuple, Type
 
 from six import ensure_str
 
@@ -429,7 +429,8 @@ class ModeCheckManPage(WatoMode):
         # To be able to calculate the breadcrumb with ModeCheckPluginTopic as parent, we need to
         # ensure that the topic is available.
         with request.stashed_vars():
-            request.set_var("topic", self._manpage["header"]["catalog"])
+            topic = str(self._manpage["header"]["catalog"])  # type: ignore[index,call-overload]
+            request.set_var("topic", topic)
             return super().breadcrumb()
 
     def _from_vars(self):
@@ -474,7 +475,7 @@ class ModeCheckManPage(WatoMode):
             )
 
     def title(self):
-        return self._manpage["header"]["title"]
+        return self._manpage["header"]["title"]  # type: ignore[index,call-overload]
 
     # TODO
     # We could simply detect on how many hosts and services this plugin
@@ -516,7 +517,8 @@ class ModeCheckManPage(WatoMode):
 
     def page(self):
 
-        header = self._manpage["header"]
+        # todo: remove this type hint (it is correct, though, AFAICT)
+        header: Mapping[str, Any] = self._manpage["header"]  # type: ignore[assignment]
 
         html.open_table(class_=["data", "headerleft"])
 
@@ -542,7 +544,7 @@ class ModeCheckManPage(WatoMode):
         if self._manpage["type"] == "check_mk":
             html.open_tr()
             html.th(_("Service name"))
-            html.td(HTML(self._manpage["service_description"].replace("%s", "&#9744;")))
+            html.td(HTML(str(self._manpage["service_description"]).replace("%s", "&#9744;")))
             html.close_tr()
 
             discovery = header.get("discovery") or header.get("inventory")

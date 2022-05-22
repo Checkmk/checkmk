@@ -18,7 +18,7 @@ import sys
 from collections import defaultdict
 from io import StringIO
 from pathlib import Path
-from typing import Any, Final, Iterable, Mapping, Optional, Sequence, TextIO
+from typing import Any, Final, Iterable, Mapping, Optional, Sequence, TextIO, Union
 
 import cmk.utils.debug
 import cmk.utils.paths
@@ -27,7 +27,10 @@ from cmk.utils.check_utils import maincheckify
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.i18n import _
 
-ManPage = Mapping[str, Any]
+# Obviously, this type is brilliant and the whole situation must not be improved.
+_ManPageValue = Union[str, Sequence[tuple[str, str]], Mapping[str, Union[str, Sequence[str]]]]
+
+ManPage = Mapping[str, _ManPageValue]
 ManPageCatalogPath = tuple[str, ...]
 
 _ManPageHeader = Mapping[str, Any]  # improve me
@@ -564,7 +567,7 @@ def load_man_page(name: str, man_page_dirs: Optional[Iterable[Path]] = None) -> 
     if path is None:
         return None
 
-    man_page: dict[str, Any] = {}
+    man_page: dict[str, _ManPageValue] = {}
     current_section: list[tuple[str, str]] = []
     current_variable = None
     man_page["header"] = current_section
@@ -608,9 +611,8 @@ def load_man_page(name: str, man_page_dirs: Optional[Iterable[Path]] = None) -> 
                 )
 
     header: dict[str, Any] = {}
-    for key, value in man_page["header"]:
-        header[key] = value.strip()
-    header["agents"] = [a.strip() for a in header["agents"].split(",")]
+    for key, value in man_page["header"]:  # type: ignore[misc]  # yes, this is the tuple case.
+        header[key] = [a.strip() for a in value.split(",")] if key == "agents" else value.strip()
 
     if "catalog" not in header:
         header["catalog"] = "unsorted"
@@ -625,7 +627,22 @@ class ManPageRenderer:
         man_page = load_man_page(name)
         if not man_page:
             raise MKGeneralException("No manpage for %s. Sorry.\n" % self.name)
-        self._header = man_page["header"]
+
+        header = man_page["header"]
+        assert isinstance(header, dict)
+
+        # Force the correct type. Hope we can clean this up later.
+        self._title = str(header["title"])
+        self._distro = (
+            "official part of Check_MK"
+            if header["distribution"] == "check_mk"
+            else str(header["distribution"])
+        )
+        self._agents = [str(a) for a in header["agents"]]
+        self._license = str(header["license"])
+        self._description = str(header["description"])
+        self._item = str(item) if (item := header.get("item")) else None
+        self._discovery = str(header.get("discovery", "No discovery supported."))
 
     def paint(self) -> None:
         try:
@@ -635,28 +652,23 @@ class ManPageRenderer:
 
     def _paint_man_page(self) -> None:
         self._print_header()
-        self._print_manpage_title(self._header["title"])
+        self._print_manpage_title(self._title)
 
         self._print_begin_splitlines()
-        distro = (
-            "official part of Check_MK"
-            if self._header["distribution"] == "check_mk"
-            else self._header["distribution"]
-        )
-        ags = [check_mk_agents.get(agent, agent.upper()) for agent in self._header["agents"]]
-        self._print_info_line("Distribution:            ", distro)
-        self._print_info_line("License:                 ", self._header["license"])
+        ags = [check_mk_agents.get(agent, agent.upper()) for agent in self._agents]
+        self._print_info_line("Distribution:            ", self._distro)
+        self._print_info_line("License:                 ", self._license)
         self._print_info_line("Supported Agents:        ", ", ".join(ags))
         self._print_end_splitlines()
 
         self._print_empty_line()
-        self._print_textbody(self._header["description"])
-        if "item" in self._header:
+        self._print_textbody(self._description)
+        if self._item:
             self._print_subheader("Item")
-            self._print_textbody(self._header["item"])
+            self._print_textbody(self._item)
 
         self._print_subheader("Discovery")
-        self._print_textbody(self._header.get("discovery", "No discovery supported."))
+        self._print_textbody(self._discovery)
         self._print_empty_line()
         self._flush()
 
@@ -849,7 +861,7 @@ class NowikiManPageRenderer(ManPageRenderer):
         return '<tr><td class="tt">%s</td><td>[check_%s|%s]</td></tr>\n' % (
             self.name,
             self.name,
-            self._header["title"],
+            self._title,
         )
 
     def render(self) -> str:

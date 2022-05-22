@@ -292,7 +292,8 @@ def test_missing_catalog_entries_of_man_pages(all_pages: ManPages) -> None:
     for name in man_pages.all_man_pages():
         man_page = all_pages[name]
         assert man_page is not None
-        found_catalog_entries_from_man_pages |= set(man_page["header"]["catalog"].split("/"))
+        catalog_entry = str(man_page["header"]["catalog"])  # type: ignore[index,call-overload]
+        found_catalog_entries_from_man_pages.update(catalog_entry.split("/"))
     missing_catalog_entries = found_catalog_entries_from_man_pages - catalog_titles
     assert missing_catalog_entries == set(), "Found missing catalog entries: %s" % ", ".join(
         sorted(missing_catalog_entries)

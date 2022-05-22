@@ -583,40 +583,24 @@ def _parse_to_raw_header(path: Path, lines: Iterable[str]) -> Mapping[str, str]:
 
 def _parse_to_raw(path: Path, lines: Iterable[str]) -> Mapping[str, str]:
 
-    current_section: list[tuple[str, str]] = []
-    current_variable = None
-    empty_line_count = 0
+    parsed: dict[str, list[str]] = defaultdict(list)
+    current: list[str] = []
 
-    for lineno, line in enumerate(lines):
+    for no, line in enumerate(lines, start=1):
+
+        if not line.strip() or line.startswith(" "):  # continuation line
+            current.append(line.strip())
+            continue
+
         try:
-            if line.startswith(" ") and line.strip() != "":  # continuation line
-                empty_line_count = 0
-                if current_variable:
-                    name, curval = current_section[-1]
-                    if curval.strip() == "":
-                        current_section[-1] = (name, line.strip())
-                    else:
-                        current_section[-1] = (name, curval + "\n" + line.strip())
-                else:
-                    raise Exception
-                continue
+            key, restofline = line.split(":", 1)
+        except ValueError as exc:
+            raise MKGeneralException(f"Syntax error in {path} line {no} ({exc}).\n")
 
-            line = line.strip()
-            if line == "":
-                empty_line_count += 1
-                if empty_line_count == 1 and current_variable:
-                    name, curval = current_section[-1]
-                    current_section[-1] = (name, curval + "\n\n")
-                continue
-            empty_line_count = 0
+        current = parsed[key]
+        current.append(restofline.strip())
 
-            current_variable, restofline = line.split(":", 1)
-            current_section.append((current_variable, restofline.strip()))
-
-        except Exception as e:
-            raise MKGeneralException("Syntax error in %s line %d (%s).\n" % (path, lineno + 1, e))
-
-    return {k: v.strip() for k, v in current_section}
+    return {k: "\n".join(v).strip() for k, v in parsed.items()}
 
 
 class ManPageRenderer:

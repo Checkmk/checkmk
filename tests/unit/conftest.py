@@ -98,8 +98,7 @@ def patch_omd_site(monkeypatch):
     omd_config_dir = "%s/etc/omd" % (cmk.utils.paths.omd_root,)
     _dump(
         omd_config_dir + "/site.conf",
-        """
-CONFIG_ADMIN_MAIL=''
+        """CONFIG_ADMIN_MAIL=''
 CONFIG_AGENT_RECEIVER='on'
 CONFIG_AGENT_RECEIVER_PORT='8000'
 CONFIG_APACHE_MODE='own'
@@ -122,8 +121,7 @@ CONFIG_NAGIOS_THEME='classicui'
 CONFIG_NSCA='off'
 CONFIG_NSCA_TCP_PORT='5667'
 CONFIG_PNP4NAGIOS='on'
-CONFIG_TMPFS='on'
-    """,
+CONFIG_TMPFS='on'""",
     )
     _dump(
         cmk.utils.paths.default_config_dir + "/mkeventd.d/wato/rules.mk",

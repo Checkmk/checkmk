@@ -1316,57 +1316,42 @@ bool IsRunAsync(const PluginEntry &plugin) noexcept {
 }
 }  // namespace provider::config
 
-// #TODO simplify THIS TRASH, SK!
-std::vector<char> RunSyncPlugins(PluginMap &plugins, int &total, int timeout) {
-    using DataBlock = std::vector<char>;
+using DataBlock = std::vector<char>;
+void StartSyncPlugins(PluginMap &plugins,
+                      std::vector<std::future<DataBlock>> &results,
+                      int timeout) {
+    for (auto &entry_pair : plugins) {
+        auto &entry = entry_pair.second;
+        if (provider::config::IsRunAsync(entry)) {
+            continue;
+        }
+        XLOG::t("Executing '{}'", entry.path());
+        results.emplace_back(std::async(
+            std::launch::async,
+            [](cma::PluginEntry *entry, int /*timeout*/) -> DataBlock {
+                if (entry == nullptr) {
+                    return {};
+                }
+                return entry->getResultsSync(entry->path().wstring());
+            },
+            &entry, timeout));
+    }
+}
+
+DataBlock RunSyncPlugins(PluginMap &plugins, int &total, int timeout) {
     XLOG::d.t("To start [{}] sync plugins", plugins.size());
 
     std::vector<std::future<DataBlock>> results;
-    int requested_count = 0;
-    total = 0;
+    StartSyncPlugins(plugins, results, timeout);
 
-    if (timeout < 0) timeout = 1;
-
-    // sync part
-    for (auto &entry_pair : plugins) {
-        auto &entry = entry_pair.second;
-
-        // check that out plugin is ging to run as async
-        auto run_async = cma::provider::config::IsRunAsync(entry);
-        if (run_async) continue;
-
-        XLOG::t("Executing '{}'", entry.path());
-
-        // C++ async black magic
-        results.emplace_back(std::async(
-            std::launch::async,  // first param
-
-            [](cma::PluginEntry *plugin_entry,
-               int /*timeout*/) -> DataBlock {  // lambda
-                if (plugin_entry == nullptr) return {};
-                return plugin_entry->getResultsSync(
-                    plugin_entry->path().wstring());
-            },  // lambda end
-
-            &entry,  // lambda parameter
-            timeout));
-        requested_count++;
-    }
-
-    // just check for ready futures
     DataBlock out;
     int delivered_count = 0;
     for (auto &r : results) {
-        // auto status = r.wait_until(tm_to_stop);
-        // if (status == future_status::ready) {
         auto result = r.get();
         if (!result.empty()) {
             ++delivered_count;
             tools::AddVector(out, result);
         }
-        //} else {
-        //    XLOG::t("skipped plugin");
-        //}
     }
 
     total = delivered_count;

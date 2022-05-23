@@ -127,34 +127,24 @@ def _get_paint_function_from_globals(paint_name: str) -> PaintFunction:
     return _PAINT_FUNCTIONS[_PAINT_FUNCTION_NAME_PREFIX + paint_name]
 
 
-def _paint_host_inventory_tree(
-    row: Row,
-    invpath: SDRawPath = ".",
-    column: str = "host_inventory",
-    render_single_attribute: bool = False,
-) -> CellSpec:
+def _paint_host_inventory_tree(row: Row, *, raw_path: SDRawPath) -> CellSpec:
     raw_hostname = row.get("host_name")
     assert isinstance(raw_hostname, str)
 
-    if (
-        len(sites_with_same_named_hosts := _get_sites_with_same_named_hosts(HostName(raw_hostname)))
-        > 1
-    ):
+    if sites_with_same_named_hosts := _get_sites_with_same_named_hosts(raw_hostname):
         html.show_error(
             _("Cannot display inventory tree of host '%s': Found this host on multiple sites: %s")
             % (raw_hostname, ", ".join(sites_with_same_named_hosts))
         )
         return "", ""
 
-    struct_tree = row.get(column)
+    struct_tree = row.get("host_inventory")
     if struct_tree is None:
         return "", ""
 
     assert isinstance(struct_tree, StructuredDataNode)
 
-    tree_renderer = _get_tree_renderer(row, column)
-
-    parsed_path, attribute_keys = inventory.parse_tree_path(invpath)
+    parsed_path, attribute_keys = inventory.parse_tree_path(raw_path)
     child: Union[None, StructuredDataNode, Table, Attributes]
 
     if attribute_keys is None:
@@ -175,8 +165,15 @@ def _paint_host_inventory_tree(
     if child is None:
         return "", ""
 
+    painter_options = PainterOptions.get_instance()
+    tree_renderer = NodeRenderer(
+        row["site"],
+        row["host_name"],
+        show_internal_tree_paths=painter_options.get("show_internal_tree_paths"),
+    )
+
     with output_funnel.plugged():
-        if isinstance(child, Attributes) and render_single_attribute:
+        if isinstance(child, Attributes):
             # In host views like "Switch port statistics" the value is rendered as a single
             # attribute and not within a table.
             if len(attributes := list(child.pairs.items())) == 1:
@@ -190,8 +187,17 @@ def _paint_host_inventory_tree(
     return td_class, code
 
 
-def _get_sites_with_same_named_hosts(hostname: HostName) -> Sequence[SiteId]:
-    return _get_sites_with_same_named_hosts_cache().get(hostname, [])
+def _get_sites_with_same_named_hosts(raw_hostname: str) -> Optional[Sequence[SiteId]]:
+    if (
+        len(
+            sites_with_same_named_hosts := _get_sites_with_same_named_hosts_cache().get(
+                HostName(raw_hostname), []
+            )
+        )
+        > 1
+    ):
+        return sites_with_same_named_hosts
+    return None
 
 
 @request_memoize()
@@ -202,23 +208,6 @@ def _get_sites_with_same_named_hosts_cache() -> Mapping[HostName, Sequence[SiteI
         for row in sites.live().query(query_str):
             cache.setdefault(HostName(row[1]), []).append(SiteId(row[0]))
     return cache
-
-
-def _get_tree_renderer(row: Row, column: str) -> ABCNodeRenderer:
-    if column == "host_inventory":
-        painter_options = PainterOptions.get_instance()
-        return NodeRenderer(
-            row["site"],
-            row["host_name"],
-            show_internal_tree_paths=painter_options.get("show_internal_tree_paths"),
-        )
-
-    tree_id = "/" + str(row["invhist_time"])
-    return DeltaNodeRenderer(
-        row["site"],
-        row["host_name"],
-        tree_id=tree_id,
-    )
 
 
 def _get_filtered_attributes(
@@ -266,9 +255,7 @@ def _declare_inv_column(raw_path: SDRawPath, raw_hint: InventoryHintSpec) -> Non
         # not look good for the HW/SW inventory tree
         "printable": isinstance(hint, AttributeDisplayHint),
         "load_inv": True,
-        "paint": lambda row: _paint_host_inventory_tree(
-            row, raw_path, render_single_attribute=isinstance(hint, AttributeDisplayHint)
-        ),
+        "paint": lambda row: _paint_host_inventory_tree(row, raw_path=raw_path),
         "sorter": name,
     }
 
@@ -401,7 +388,7 @@ class PainterInventoryTree(Painter):
         return True
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return _paint_host_inventory_tree(row)
+        return _paint_host_inventory_tree(row, raw_path=".")
 
 
 class ABCRowTable(RowTable):
@@ -1911,7 +1898,35 @@ class PainterInvhistDelta(Painter):
         return ["invhist_delta", "invhist_time"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return _paint_host_inventory_tree(row, column="invhist_delta")
+        raw_hostname = row.get("host_name")
+        assert isinstance(raw_hostname, str)
+
+        if sites_with_same_named_hosts := _get_sites_with_same_named_hosts(raw_hostname):
+            html.show_error(
+                _(
+                    "Cannot display inventory tree of host '%s': Found this host on multiple sites: %s"
+                )
+                % (raw_hostname, ", ".join(sites_with_same_named_hosts))
+            )
+            return "", ""
+
+        struct_tree = row.get("invhist_delta")
+        if struct_tree is None:
+            return "", ""
+
+        assert isinstance(struct_tree, StructuredDataNode)
+
+        tree_renderer = DeltaNodeRenderer(
+            row["site"],
+            row["host_name"],
+            tree_id="/" + str(row["invhist_time"]),
+        )
+
+        with output_funnel.plugged():
+            struct_tree.show(tree_renderer)
+            code = HTML(output_funnel.drain())
+
+        return "invtree", code
 
 
 def _paint_invhist_count(row: Row, what: str) -> CellSpec:

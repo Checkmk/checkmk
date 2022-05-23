@@ -1,4 +1,4 @@
-title: GCP GCS: CPU
+title: GCP GCE: CPU
 agents: gcp
 catalog: cloud/gcp
 license: GPLv2

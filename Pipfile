@@ -66,6 +66,7 @@ pyls-isort = "*"  # isort plugin for python-lsp-server
 pylsp-mypy = "*"  # mypy plugin for python-lsp-server
 mypy-protobuf = "==3.0.0" # for mypy
 pipfile = "*" # for generating import names during int tests
+py-import-cycles = "*"  # used in tests/Makefile
 
 [packages]
 setuptools_scm = "==4.1.2"  # needed by various setup.py

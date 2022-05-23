@@ -98,11 +98,8 @@ def do_event_action(history: Any, settings: Settings, config: Dict[str, Any], lo
             _send_email(config, to, subject, body, logger)
             history.add(event, "EMAIL", user, "%s|%s" % (to, subject))
         elif action_type == 'script':
-            _execute_script(
-                event_columns,
-                _escape_null_bytes(
-                    _substitute_event_tags(event_columns, action_settings["script"],
-                                           _get_quoted_event(event, logger))), event, logger)
+            _execute_script(event_columns, _escape_null_bytes(action_settings["script"]), event,
+                            logger)
             history.add(event, "SCRIPT", user, action['id'])
         else:
             logger.error("Cannot execute action %s: invalid action type %s" %

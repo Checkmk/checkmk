@@ -56,6 +56,7 @@ from cmk.gui.plugins.dashboard.utils import builtin_dashboards, get_all_dashboar
 from cmk.gui.plugins.dashboard.utils import transform_stats_dashlet  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.plugins.userdb.utils import save_connection_config, load_connection_config, USER_SCHEME_SERIAL  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.plugins.watolib.utils import filter_unknown_settings  # pylint: disable=cmk-module-layer-violation
+from cmk.gui.wato.mkeventd import MACROS_AND_VARS  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.watolib.changes import AuditLogStore, ObjectRef, ObjectRefType  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.watolib.sites import site_globals_editable, SiteManagementFactory  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.watolib.rulesets import RulesetCollection  # pylint: disable=cmk-module-layer-violation
@@ -182,6 +183,7 @@ class UpdateConfig:
             (self._migrate_pre_2_0_audit_log, "Migrate audit log"),
             (self._sanitize_audit_log, "Sanitize audit log (Werk #13330)"),
             (self._rename_discovered_host_label_files, "Rename discovered host label files"),
+            (self._check_ec_rules, "Disabling unsafe EC rules"),
         ]
 
     def _initialize_base_environment(self) -> None:
@@ -1034,6 +1036,42 @@ class UpdateConfig:
                 self._logger.debug("Rename discovered host labels file from '%s' to '%s'", old_path,
                                    new_path)
                 old_path.rename(new_path)
+
+    def _check_ec_rules(self) -> None:
+        """check for macros in EC scripts and disable them if found
+
+        The macros in shell scripts cannot be gated by quotes or something, so
+        an attacker could craft malicious logs and insert code.
+
+        This routine goes through all rules, checks for macros in the scripts
+        and then disables them"""
+        global_config = cmk.gui.watolib.global_settings.load_configuration_settings(
+            full_config=True)
+        for action in global_config.get("actions", []):
+            if action["action"][0] == "script":
+                if not self._has_script_macros(action["action"][1]["script"]):
+                    self._logger.debug("Script %r doesn't use macros, that's good", action["id"])
+                    continue
+                if action["disabled"]:
+                    self._logger.info(
+                        "Script %r uses macros but was already disabled. Be careful if you enable this!",
+                        action["id"],
+                    )
+                else:
+                    self._logger.warning(
+                        "Script %r uses macros. We disable it. Please replace the macros with proper variables before enabling it again!",
+                        action["id"],
+                    )
+                    action["disabled"] = True
+        cmk.gui.watolib.global_settings.save_global_settings(global_config)
+
+    @staticmethod
+    def _has_script_macros(script_text: str) -> bool:
+        """check if a script uses macros"""
+        for macro_name, _description in MACROS_AND_VARS:
+            if f"${macro_name}$" in script_text:
+                return True
+        return False
 
 
 class PasswordSanitizer:

@@ -1,0 +1,40 @@
+Title: Remove legacy macro expansion in Event Console script actions
+Class: security
+Compatible: incomp
+Component: ec
+Date: 1646912945
+Edition: cre
+Knowledge: doc
+Level: 2
+State: unknown
+Version: 2.0.0p25
+
+The Event Console is able to execute actions, e.g. shell scripts, when opening
+or cancelling events. Details of the events are available to the script via
+environment variables <tt>CMK_</tt> as described in the user manual
+(https://docs.checkmk.com/latest/en/ec.html#_shell_scripts_and_emails). This
+mechanism will keep working as before.
+
+However, there is a second undocumented mechanism which relies on macro
+expansion in the shell scripts. Previously it was possible to use macros (e.g.
+<tt>$HOST$</tt>) in the <i>Event Console</i> scripts. These were replaced
+before executing the script. The values of these macros can be untrusted input
+and lead to command injections. You are only affected by this issue, if your
+scripts use the macro expansion.
+
+With this incompatible change we remove the macro expansion mechanism for
+security reasons. The site update mechanism tries to detect Event Console
+actions using these macros, disables the actions and informs you about this
+change. The output of an <tt>omd update</tt> for a rule being disabled would
+look like this:
+
+C+:
+"Script 'some_action_id' uses macros. We disable it. Please replace the macros
+with proper variables before enabling it again!"
+C-:
+
+If you use the <i>Event Console</i> with shell script actions you should check
+your scripts for macros and replace them with the documented environment
+variable approach (Setup > Events > Event Console rule packs > Event Console
+configuration > Event Console configuration). You can access all macro values
+with environment variables (they are prefixed with <tt>CMK_</tt>).

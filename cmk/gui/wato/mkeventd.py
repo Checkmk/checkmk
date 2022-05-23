@@ -183,44 +183,60 @@ def _compiled_mibs_dir():
 #   | Declarations of the structure of rules and actions                   |
 #   '----------------------------------------------------------------------'
 
+MACROS_AND_VARS = [
+    ("ID", _l("Event ID")),
+    ("COUNT", _l("Number of occurrances")),
+    ("TEXT", _l("Message text")),
+    ("FIRST", _l("Time of the first occurrence (time stamp)")),
+    ("LAST", _l("Time of the most recent occurrance")),
+    ("COMMENT", _l("Event comment")),
+    ("SL", _l("Service Level")),
+    ("HOST", _l("Host name (as sent by syslog)")),
+    ("ORIG_HOST", _l("Original host name when host name has been rewritten, empty otherwise")),
+    ("CONTACT", _l("Contact information")),
+    ("APPLICATION", _l("Syslog tag / Application")),
+    ("PID", _l("Process ID of the origin process")),
+    ("PRIORITY", _l("Syslog Priority")),
+    ("FACILITY", _l("Syslog Facility")),
+    ("RULE_ID", _l("ID of the rule")),
+    ("STATE", _l("State of the event (0/1/2/3)")),
+    ("PHASE", _l("Phase of the event (open in normal situations, closed when cancelling)")),
+    ("OWNER", _l("Owner of the event")),
+    ("MATCH_GROUPS", _l("Text groups from regular expression match, separated by spaces")),
+    ("MATCH_GROUP_1", _l("Text of the first match group from expression match")),
+    ("MATCH_GROUP_2", _l("Text of the second match group from expression match")),
+    (
+        "MATCH_GROUP_3",
+        _l("Text of the third match group from expression match (and so on...)"),
+    ),
+]
 
-def substitute_help():
-    _help_list = [
-        ("$ID$", _("Event ID")),
-        ("$COUNT$", _("Number of occurrances")),
-        ("$TEXT$", _("Message text")),
-        ("$FIRST$", _("Time of the first occurrence (time stamp)")),
-        ("$LAST$", _("Time of the most recent occurrance")),
-        ("$COMMENT$", _("Event comment")),
-        ("$SL$", _("Service Level")),
-        ("$HOST$", _("Host name (as sent by syslog)")),
-        ("$ORIG_HOST$", _("Original host name when host name has been rewritten, empty otherwise")),
-        ("$CONTACT$", _("Contact information")),
-        ("$APPLICATION$", _("Syslog tag / Application")),
-        ("$PID$", _("Process ID of the origin process")),
-        ("$PRIORITY$", _("Syslog Priority")),
-        ("$FACILITY$", _("Syslog Facility")),
-        ("$RULE_ID$", _("ID of the rule")),
-        ("$STATE$", _("State of the event (0/1/2/3)")),
-        ("$PHASE$", _("Phase of the event (open in normal situations, closed when cancelling)")),
-        ("$OWNER$", _("Owner of the event")),
-        ("$MATCH_GROUPS$", _("Text groups from regular expression match, separated by spaces")),
-        ("$MATCH_GROUP_1$", _("Text of the first match group from expression match")),
-        ("$MATCH_GROUP_2$", _("Text of the second match group from expression match")),
-        ("$MATCH_GROUP_3$",
-         _("Text of the third match group from expression match (and so on...)")),
-    ]
 
-    # TODO: While loading this module there is no "html" object available for generating the HTML
-    # code below. The HTML generating code could be independent of a HTML request.
+def _macros_help() -> HTML:
+    _help_list = [(f"${macro_name}$", description) for macro_name, description in MACROS_AND_VARS]
+
     _help_rows = [
-        html.render_tr(html.render_td(key) + html.render_td(value)) for key, value in _help_list
+        html.render_tr(html.render_td(key) + html.render_td(str(value)))
+        for key, value in _help_list
     ]
 
-    return _("The following macros will be substituted by value from the actual event:")\
-        + html.render_br()\
-        + html.render_br()\
-        + html.render_table(HTML().join(_help_rows), class_="help")
+    return (_("Text-body of the email to send. ") +
+            _("The following macros will be substituted by value from the actual event:") +
+            html.render_br() + html.render_br() +
+            html.render_table(HTML().join(_help_rows), class_="help"))
+
+
+def _vars_help() -> HTML:
+    _help_list = [(f"CMK_{macro_name}", description) for macro_name, description in MACROS_AND_VARS]
+
+    _help_rows = [
+        html.render_tr(html.render_td(key) + html.render_td(str(value)))
+        for key, value in _help_list
+    ]
+
+    return (_("This script will be executed using the BASH shell. ") +
+            _("This information is available as environment variables") +
+            html.render_table(HTML().join(_help_rows), class_="help"))
 
 
 def ActionList(vs, **kwargs):
@@ -3479,9 +3495,7 @@ class ConfigVariableEventConsoleActions(ConfigVariable):
                                                         "body",
                                                         TextAreaUnicode(
                                                             title=_("Body"),
-                                                            help=lambda: _(
-                                                                "Text-body of the email to send. ")
-                                                            + substitute_help(),
+                                                            help=_macros_help,
                                                             cols=64,
                                                             rows=10,
                                                             attrencode=True,
@@ -3489,23 +3503,17 @@ class ConfigVariableEventConsoleActions(ConfigVariable):
                                                     ),
                                                 ])),
                                     ("script", _("Execute Shell Script"),
-                                     Dictionary(
-                                         optional_keys=False,
-                                         elements=[
-                                             ("script",
-                                              TextAreaUnicode(
-                                                  title=_("Script body"),
-                                                  help=lambda:
-                                                  _("This script will be executed using the BASH shell. "
-                                                   ) + substitute_help() + "<br>" +
-                                                  _("These information are also available as environment variables with the prefix "
-                                                    "<tt>CMK_</tt>. For example the text of the event is available as "
-                                                    "<tt>CMK_TEXT</tt> as environment variable."),
-                                                  cols=64,
-                                                  rows=10,
-                                                  attrencode=True,
-                                              )),
-                                         ])),
+                                     Dictionary(optional_keys=False,
+                                                elements=[
+                                                    ("script",
+                                                     TextAreaUnicode(
+                                                         title=_("Script body"),
+                                                         help=_vars_help,
+                                                         cols=64,
+                                                         rows=10,
+                                                         attrencode=True,
+                                                     )),
+                                                ])),
                                 ]),
                         ),
                     ],

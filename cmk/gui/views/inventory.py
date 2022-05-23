@@ -109,10 +109,10 @@ PaintFunction = Callable[[Any], PaintResult]
 
 
 _PAINT_FUNCTION_NAME_PREFIX = "inv_paint_"
-_PAINT_FUNCTIONS = {}
+_PAINT_FUNCTIONS: dict[str, PaintFunction] = {}
 
 
-def update_paint_functions(mapping: Mapping[str, PaintFunction]) -> None:
+def update_paint_functions(mapping: Mapping[str, Any]) -> None:
     # Update paint functions from
     # 1. views (local web plugins are loaded including display hints and paint functions)
     # 2. here

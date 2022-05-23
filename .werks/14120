@@ -1,0 +1,13 @@
+Title: Fix error while removing event console rule MKPs
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1653296177
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p1
+
+If MKPs with event console rules were removed, the error "list assignment index
+out of range" could occur.

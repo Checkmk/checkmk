@@ -288,19 +288,18 @@ def remove(package: PackageInfo) -> None:
         filenames = package["files"].get(part.ident, [])
         if len(filenames) > 0:
             logger.log(VERBOSE, "  %s%s%s", tty.bold, part.title, tty.normal)
+            if part.ident == "ec_rule_packs":
+                _remove_packaged_rule_packs(filenames)
+                continue
             for fn in filenames:
                 logger.log(VERBOSE, "    %s", fn)
                 try:
-                    path = part.path + "/" + fn
-                    if part.ident == "ec_rule_packs":
-                        _remove_packaged_rule_packs(filenames)
-                    else:
-                        with suppress(FileNotFoundError):
-                            os.remove(path)
+                    file_path = Path(part.path) / fn
+                    file_path.unlink(missing_ok=True)
                 except Exception as e:
                     if cmk.utils.debug.enabled():
                         raise
-                    raise Exception("Cannot remove %s: %s\n" % (path, e))
+                    raise Exception("Cannot remove %s: %s\n" % (file_path, e))
 
     (package_dir() / package["name"]).unlink()
 
@@ -537,6 +536,7 @@ def _remove_packaged_rule_packs(file_names: Iterable[str], delete_export: bool =
         del rule_packs[index]
         if delete_export:
             ec.remove_exported_rule_pack(id_)
+        rule_pack_ids.remove(id_)
 
     ec.save_rule_packs(rule_packs)
 

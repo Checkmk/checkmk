@@ -88,7 +88,7 @@ import enum  # noqa: F401 # pylint: disable=unused-import
 import fnmatch  # noqa: F401 # pylint: disable=unused-import
 import functools
 import math  # noqa: F401 # pylint: disable=unused-import
-import os
+import os  # pylint: disable=unused-import
 
 # NOTE: We do not use pprint in this module, but it is part of the check API.
 import pprint  # noqa: F401 # pylint: disable=unused-import
@@ -96,6 +96,7 @@ import re  # noqa: F401 # pylint: disable=unused-import
 import socket  # noqa: F401 # pylint: disable=unused-import
 import sys  # noqa: F401 # pylint: disable=unused-import
 import time
+from contextlib import suppress
 from typing import Any, Callable, Dict, Iterable, List, Optional, Set, Tuple, Union
 
 import cmk.utils as _cmk_utils
@@ -618,7 +619,7 @@ def _agent_cache_file_age(
     else:
         cachefile = "%s/%s" % (_paths.tcp_cache_dir, hostname)
 
-    if os.path.exists(cachefile):
+    with suppress(FileNotFoundError):
         return _cmk_utils.cachefile_age(cachefile)
 
     return None

@@ -119,13 +119,16 @@ def branch_of_daily_build(v: str) -> str:
 
 
 def cachefile_age(path: Union[Path, str]) -> float:
+    """Return the time difference between the last modification and now.
+
+    Raises:
+        FileNotFoundError if `path` does not exist.
+
+    """
     if not isinstance(path, Path):
         path = Path(path)
 
-    try:
-        return time.time() - path.stat().st_mtime
-    except Exception as e:
-        raise MKGeneralException("Cannot determine age of cache file %s: %s" % (path, e))
+    return time.time() - path.stat().st_mtime
 
 
 def getfuncargs(func: Callable) -> List[str]:

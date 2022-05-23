@@ -8,14 +8,14 @@ import ast
 import json
 import sys
 from multiprocessing.pool import ThreadPool
-from pathlib import Path
-from typing import Dict, Set
+from typing import Any, Dict, Mapping, Set
 
 import requests
 import urllib3
 
 import cmk.utils.site
 from cmk.utils.exceptions import MKException
+from cmk.utils.paths import profile_dir
 from cmk.utils.regex import regex
 from cmk.utils.site import omd_site
 
@@ -130,20 +130,15 @@ class RawdataException(MKException):
 
 
 class AggregationRawdataGenerator:
-    def __init__(self, config):
-        super().__init__()
+    def __init__(self, config: Mapping[str, Any]) -> None:
         self._config = config
 
         self._credentials = config["credentials"]
         if self._credentials == "automation":
             self._username = self._credentials
-
-            secret_file_path = (
-                Path(cmk.utils.paths.var_dir) / "web" / self._username / "automation.secret"
+            self._secret = (profile_dir / self._username / "automation.secret").read_text(
+                encoding="utf-8"
             )
-
-            with secret_file_path.open(encoding="utf-8") as f:
-                self._secret = f.read()
         else:
             self._username, self._secret = self._credentials[1]
 
@@ -157,9 +152,7 @@ class AggregationRawdataGenerator:
         else:
             self._site_url = site_config[1]
 
-        self._errors = []
-
-    def generate_data(self):
+    def generate_data(self) -> AggregationData:
         try:
             response_text = self._fetch_aggregation_data()
             rawdata = self._parse_response_text(response_text)
@@ -232,7 +225,7 @@ class AggregationOutputRenderer:
         sys.stdout.write("\n".join(output))
 
 
-def query_data(config):
+def query_data(config: Mapping[str, Any]) -> AggregationData:
     output_generator = AggregationRawdataGenerator(config)
     return output_generator.generate_data()
 

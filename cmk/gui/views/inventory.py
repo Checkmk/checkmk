@@ -127,7 +127,7 @@ def _get_paint_function_from_globals(paint_name: str) -> PaintFunction:
     return _PAINT_FUNCTIONS[_PAINT_FUNCTION_NAME_PREFIX + paint_name]
 
 
-def _paint_host_inventory_tree(row: Row, *, raw_path: SDRawPath) -> CellSpec:
+def _paint_host_inventory_tree(row: Row, raw_path: SDRawPath) -> CellSpec:
     raw_hostname = row.get("host_name")
     assert isinstance(raw_hostname, str)
 
@@ -255,7 +255,7 @@ def _declare_inv_column(raw_path: SDRawPath, raw_hint: InventoryHintSpec) -> Non
         # not look good for the HW/SW inventory tree
         "printable": isinstance(hint, AttributeDisplayHint),
         "load_inv": True,
-        "paint": lambda row: _paint_host_inventory_tree(row, raw_path=raw_path),
+        "paint": lambda row: _paint_host_inventory_tree(row, raw_path),
         "sorter": name,
     }
 
@@ -388,7 +388,36 @@ class PainterInventoryTree(Painter):
         return True
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return _paint_host_inventory_tree(row, raw_path=".")
+        raw_hostname = row.get("host_name")
+        assert isinstance(raw_hostname, str)
+
+        if sites_with_same_named_hosts := _get_sites_with_same_named_hosts(raw_hostname):
+            html.show_error(
+                _(
+                    "Cannot display inventory tree of host '%s': Found this host on multiple sites: %s"
+                )
+                % (raw_hostname, ", ".join(sites_with_same_named_hosts))
+            )
+            return "", ""
+
+        struct_tree = row.get("host_inventory")
+        if struct_tree is None:
+            return "", ""
+
+        assert isinstance(struct_tree, StructuredDataNode)
+
+        painter_options = PainterOptions.get_instance()
+        tree_renderer = NodeRenderer(
+            row["site"],
+            row["host_name"],
+            show_internal_tree_paths=painter_options.get("show_internal_tree_paths"),
+        )
+
+        with output_funnel.plugged():
+            struct_tree.show(tree_renderer)
+            code = HTML(output_funnel.drain())
+
+        return "invtree", code
 
 
 class ABCRowTable(RowTable):

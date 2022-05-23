@@ -61,6 +61,7 @@ jobs:
         # libsasl2-dev: Needed for building python-ldap.
         # libkrb5-dev: Needed for building pykerberos.
         # gettext: Needed for some "unit tests" (test_i18n.py)
+        sudo apt-get update
         sudo apt-get install ksh librrd-dev libldap2-dev libsasl2-dev libkrb5-dev gettext
         buildscripts/infrastructure/build-nodes/scripts/install-pipenv.sh
         make .venv

@@ -239,9 +239,15 @@ class BackupTask:
                 return match[0]
             return None
 
-        def duration_from_string(string: str) -> int:
-            duration_dt = datetime.strptime(string, "%H:%M:%S")
-            return duration_dt.hour * 3600 + duration_dt.minute * 60 + duration_dt.second
+        def duration_from_string(string: str) -> float:
+            """Return number of seconds from a string like HH:MM:SS
+            >>> duration_from_string("21:43:44")
+            78224.0
+            >>> duration_from_string("44:00:44")
+            158444.0
+            """
+            h, m, s = (int(x) for x in string.split(":"))
+            return timedelta(hours=h, minutes=m, seconds=s).total_seconds()
 
         for linenr, line in enumerate(logs):
             try:

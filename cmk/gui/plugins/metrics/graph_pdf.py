@@ -7,21 +7,32 @@
 
 from typing import List, Optional
 
+from cmk.utils.type_defs import Timestamp
+
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.plugins.metrics.utils import darken_color, lighten_color, parse_color
+from cmk.gui.plugins.metrics.utils import (
+    darken_color,
+    GraphArtwork,
+    GraphDataRange,
+    GraphRenderOptions,
+    lighten_color,
+    parse_color,
+)
+
+SizeMM = float
 
 
 def render_graph_pdf(
     instance,
-    graph_artwork,
-    graph_data_range,
-    graph_render_options,
-    pos_left=None,
-    pos_top=None,
-    total_width=None,
-    total_height=None,
-):
+    graph_artwork: GraphArtwork,
+    graph_data_range: GraphDataRange,
+    graph_render_options: GraphRenderOptions,
+    pos_left: Optional[SizeMM] = None,
+    pos_top: Optional[SizeMM] = None,
+    total_width: Optional[SizeMM] = None,
+    total_height: Optional[SizeMM] = None,
+) -> None:
     pdf_document = instance["document"]
 
     logger.debug("  Render graph %r", graph_artwork["definition"]["specification"])
@@ -70,6 +81,9 @@ def render_graph_pdf(
 
     if pos_left is not None:
         # Absolute placement of graph
+        assert pos_top is not None
+        assert total_width is not None
+        assert total_height is not None
         height = total_height - title_height - legend_height
         width = total_width
 
@@ -397,7 +411,9 @@ def render_graph_pdf(
     logger.debug("  Finished rendering graph")
 
 
-def compute_pdf_graph_data_range(width, start_time, end_time):
+def compute_pdf_graph_data_range(
+    width: SizeMM, start_time: Timestamp, end_time: Timestamp
+) -> GraphDataRange:
     """Estimate step. It is depended on width of the graph in mm."""
     graph_offcut_width = 20.0  # total width - this = width of canvas in mm
     mm_per_step = 0.5  # approx. one datapoint per 0.5 mm
@@ -411,15 +427,15 @@ def compute_pdf_graph_data_range(width, start_time, end_time):
     }
 
 
-def get_mm_per_ex(font_size):
+def get_mm_per_ex(font_size: float) -> SizeMM:
     return font_size / 3.0
 
 
-def mm_per_ex_by_render_options(graph_render_options):
+def mm_per_ex_by_render_options(graph_render_options: GraphRenderOptions) -> SizeMM:
     return get_mm_per_ex(graph_render_options["font_size"])
 
 
-def _graph_bottom_border(graph_render_options):
+def _graph_bottom_border(graph_render_options: GraphRenderOptions) -> SizeMM:
     mm_per_ex = get_mm_per_ex(graph_render_options["font_size"])
     t_label_margin = _graph_time_label_margin()
 
@@ -428,19 +444,19 @@ def _graph_bottom_border(graph_render_options):
     return 0
 
 
-def _graph_legend_top_margin():
+def _graph_legend_top_margin() -> SizeMM:
     return 4.0  # mm
 
 
-def _graph_time_label_margin():
+def _graph_time_label_margin() -> SizeMM:
     return 1.0  # mm
 
 
-def get_graph_legend_lineskip(graph_render_options):
+def get_graph_legend_lineskip(graph_render_options: GraphRenderOptions) -> SizeMM:
     return mm_per_ex_by_render_options(graph_render_options) * 1.5
 
 
-def _graph_vertical_axis_width(graph_render_options):
+def _graph_vertical_axis_width(graph_render_options: GraphRenderOptions) -> SizeMM:
     if not graph_render_options["show_vertical_axis"]:
         return 0.0  # mm
 
@@ -453,43 +469,45 @@ def _graph_vertical_axis_width(graph_render_options):
     return 5 * mm_per_ex_by_render_options(graph_render_options)
 
 
-def _graph_top_margin(graph_render_options):
+def _graph_top_margin(graph_render_options: GraphRenderOptions) -> SizeMM:
     if graph_render_options["show_margin"]:
         return 1.0  # mm
     return 0.0
 
 
-def _graph_right_margin(graph_render_options):
+def _graph_right_margin(graph_render_options: GraphRenderOptions) -> SizeMM:
     if graph_render_options["show_margin"]:
         return 2.5  # mm
     return 0.0
 
 
-def _graph_bottom_margin(graph_render_options):
+def _graph_bottom_margin(graph_render_options: GraphRenderOptions) -> SizeMM:
     if graph_render_options["show_margin"]:
         return 1.0  # mm
     return 0.0
 
 
-def _graph_axis_over_width(graph_render_options):
+def _graph_axis_over_width(graph_render_options: GraphRenderOptions) -> SizeMM:
     if graph_render_options["show_margin"]:
         return 0.5  # mm
     return 0.0
 
 
-def _graph_left_margin(graph_render_options):
+def _graph_left_margin(graph_render_options: GraphRenderOptions) -> SizeMM:
     if graph_render_options["show_margin"]:
         return 2.0  # mm
     return 0.0
 
 
-def graph_title_height(graph_render_options):
+def graph_title_height(graph_render_options: GraphRenderOptions) -> SizeMM:
     if graph_render_options["show_title"] in [False, "inline"]:
         return 0
     return mm_per_ex_by_render_options(graph_render_options) * 2
 
 
-def graph_legend_height(graph_artwork, graph_render_options):
+def graph_legend_height(
+    graph_artwork: GraphArtwork, graph_render_options: GraphRenderOptions
+) -> SizeMM:
     if not graph_render_options["show_legend"]:
         return 0
 

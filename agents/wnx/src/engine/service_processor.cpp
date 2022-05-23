@@ -125,7 +125,7 @@ void ServiceProcessor::stopService() {
 void ServiceProcessor::cleanupOnStop() {
     XLOG::l.i("Cleanup called by service");
 
-    if (!IsService()) {
+    if (GetModus() != Modus::service) {
         XLOG::l("Invalid call!");
     }
     KillAllInternalUsers();
@@ -636,9 +636,17 @@ std::optional<ServiceProcessor::ControllerParam> OptionallyStartAgentController(
     return {};
 }
 
+std::wstring_view RuleName() {
+    switch (GetModus()) {
+        case Modus::service:
+            return srv::kSrvFirewallRuleName;
+        default:
+            return srv::kAppFirewallRuleName;
+    }
+}
+
 void OpenFirewall(bool controller) {
-    auto rule_name =
-        IsService() ? srv::kSrvFirewallRuleName : srv::kAppFirewallRuleName;
+    auto rule_name = RuleName();
     if (controller) {
         XLOG::l.i("Controller has started: firewall to controller");
         ProcessFirewallConfiguration(ac::GetWorkController().wstring(),
@@ -659,7 +667,8 @@ void OpenFirewall(bool controller) {
 /// Periodically checks if the service is stopping.
 void ServiceProcessor::mainThread(world::ExternalPort *ex_port,
                                   bool cap_installed) noexcept {
-    if (IsService()) {
+    auto is_service = GetModus() == Modus::service;
+    if (is_service) {
         auto wait_period =
             cfg::GetVal(cfg::groups::kSystem, cfg::vars::kWaitNetwork,
                         cfg::defaults::kServiceWaitNetwork);
@@ -675,17 +684,17 @@ void ServiceProcessor::mainThread(world::ExternalPort *ex_port,
                 ac::kCmkAgentUnistall,
             controller_params.has_value());
     }
-    MailSlot mailbox(
-        IsService() ? cfg::kServiceMailSlot : cfg::kTestingMailSlot, 0);
+    MailSlot mailbox(is_service ? cfg::kServiceMailSlot : cfg::kTestingMailSlot,
+                     0);
     internal_port_ = carrier::BuildPortName(carrier::kCarrierMailslotName,
                                             mailbox.GetName());
     try {
         mailbox.ConstructThread(SystemMailboxCallback, 20, this,
-                                IsService() ? wtools::SecurityLevel::admin
-                                            : wtools::SecurityLevel::standard);
+                                is_service ? wtools::SecurityLevel::admin
+                                           : wtools::SecurityLevel::standard);
         ON_OUT_OF_SCOPE(mailbox.DismantleThread());
 
-        if (IsService()) {
+        if (is_service) {
             mc_.InstallDefault(cfg::modules::InstallMode::normal);
             install::ClearPostInstallFlag();
         } else {

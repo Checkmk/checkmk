@@ -29,11 +29,6 @@ namespace fs = std::filesystem;
 // we want to avoid those data public
 namespace cma {
 void ResetCleanOnExit();
-
-namespace details {
-extern bool g_is_service;
-extern bool g_is_test;
-}  // namespace details
 }  // namespace cma
 
 namespace cma::commander {
@@ -415,10 +410,12 @@ TEST(Cma, CleanApi) {
     alert.set();
     ASSERT_FALSE(alert.isSet())
         << "forbidden to set for non service executable";
-    cma::details::g_is_service = true;
+    const auto m = GetModus();
+    ON_OUT_OF_SCOPE(cma::details::SetModus(m));
+    cma::details::SetModus(cma::Modus::service);
     alert.set();
     EXPECT_TRUE(alert.isSet());
-    cma::details::g_is_service = false;
+    cma::details::SetModus(m);
     alert.clear();
     EXPECT_FALSE(alert.isSet());
 }

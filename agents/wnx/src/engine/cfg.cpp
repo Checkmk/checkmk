@@ -54,14 +54,14 @@ bool RemoveNode(const std::string &name) {
 namespace cma {
 
 namespace details {
-// internal and hidden global variables
-// #GLOBAL x2
-bool g_is_service = false;  // set to true only when we run service
-bool g_is_test = false;     // set to true only when we run watest
+Modus g_modus{Modus::app};
+void SetModus(Modus m) {
+    XLOG::d.i("change modus to {}", static_cast<uint32_t>(m));
+    g_modus = m;
+}
 }  // namespace details
 
-bool IsService() { return details::g_is_service; }
-bool IsTest() { return details::g_is_test; }
+Modus GetModus() { return details::g_modus; }
 
 };  // namespace cma
 

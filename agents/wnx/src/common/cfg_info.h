@@ -20,8 +20,16 @@
 
 namespace cma {
 // set only when executable works as a service
-bool IsService();
-bool IsTest();
+enum class Modus {
+    app,
+    service,
+    test,
+    integration,
+};
+Modus GetModus();
+namespace details {
+void SetModus(Modus m);
+}
 }  // namespace cma
 
 namespace XLOG {

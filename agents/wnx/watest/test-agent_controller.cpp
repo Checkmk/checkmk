@@ -14,9 +14,6 @@
 using namespace std::chrono_literals;
 namespace fs = std::filesystem;
 namespace rs = std::ranges;
-namespace cma::details {
-extern bool g_is_service;
-}
 
 namespace cma::ac {
 TEST(AgentController, StartAgent) {
@@ -395,8 +392,9 @@ TEST_F(AgentControllerCreateArtifacts, From1620OldWithController) {
 }
 
 TEST(AgentController, SimulationIntegration) {
-    details::g_is_service = true;
-    ON_OUT_OF_SCOPE(details::g_is_service = false;);
+    const auto m = GetModus();
+    ON_OUT_OF_SCOPE(details::SetModus(m));
+    details::SetModus(Modus::service);
     auto temp_fs = tst::TempCfgFs::Create();
     ASSERT_TRUE(temp_fs->loadFactoryConfig());
     fs::copy(fs::path{"c:\\windows\\system32\\whoami.exe"},

@@ -14,6 +14,8 @@
 #include "tools/_raii.h"  // on out
 #include "tools/_tgt.h"   // we need IsDebug
 
+namespace fs = std::filesystem;
+
 namespace cma::cfg {
 
 Global::Global() {
@@ -174,14 +176,16 @@ void Global::updateLogNames() {
 
 // empty string does nothing
 // used to set values during start
-void Global::setLogFolder(const std::filesystem::path &forced_path) {
+void Global::setLogFolder(const fs::path &forced_path) {
     std::unique_lock lk(lock_);
-    if (cma::IsService()) {
+    if (GetModus() == Modus::service) {
         XLOG::details::LogWindowsEventAlways(
             XLOG::EventLevel::information, 35,
             "checkmk service uses log path '{}'", forced_path);
     }
-    if (forced_path.empty()) return;
+    if (forced_path.empty()) {
+        return;
+    }
 
     yaml_log_path_ = CheckAndCreateLogPath(forced_path);
 

@@ -2512,27 +2512,30 @@ std::wstring GenerateRandomString(size_t max_length) noexcept {
     return ret;
 }
 
-static std::wstring CmaUserPrefix() noexcept {
-    if (cma::IsService()) {
-        return L"cmk_in_";
+namespace {
+std::wstring CmaUserPrefix() noexcept {
+    switch (cma::GetModus()) {
+        case cma::Modus::service:
+            return L"cmk_in_";
+        case cma::Modus::test:
+            return L"cmk_TST_";
+        case cma::Modus::integration:
+            return L"cmk_IT_";
+        case cma::Modus::app:
+            return {};
     }
-    if (cma::IsTest()) {
-        return L"cmk_TST_";
-    }
+    // unreachable
     return {};
 }
+}  // namespace
 
 std::wstring GenerateCmaUserNameInGroup(std::wstring_view group) noexcept {
-    if (group.empty()) return {};
-
-    if (cma::IsService() || cma::IsTest()) {
-        auto prefix = CmaUserPrefix();
-        if (prefix.empty()) return {};
-
-        return prefix + group.data();
+    if (group.empty()) {
+        return {};
     }
 
-    return {};
+    auto prefix = CmaUserPrefix();
+    return prefix.empty() ? std::wstring{} : prefix + group.data();
 }
 
 InternalUser CreateCmaUserInGroup(const std::wstring &group) noexcept {
@@ -2594,13 +2597,14 @@ void ProtectPathFromUserWrite(const fs::path &path,
 
 void ProtectFileFromUserWrite(const fs::path &path,
                               std::vector<std::wstring> &commands) {
-    // CONTEXT: to prevent malicious file creation or modification  in folder
-    // "programdata/checkmk" we must remove inherited write rights for
-    // Users in checkmk root data folder.
+    // CONTEXT: to prevent malicious file creation or modification  in
+    // folder "programdata/checkmk" we must remove inherited write rights
+    // for Users in checkmk root data folder.
 
     constexpr std::wstring_view command_templates[] = {
         L"icacls \"{}\" /inheritance:d /c",           // disable inheritance
-        L"icacls \"{}\" /remove:g *S-1-5-32-545 /c",  // remove all user rights
+        L"icacls \"{}\" /remove:g *S-1-5-32-545 /c",  // remove all user
+                                                      // rights
         L"icacls \"{}\" /grant:r *S-1-5-32-545:(RX) /c"};  // read/exec
 
     for (auto const t : command_templates) {
@@ -2615,7 +2619,8 @@ void ProtectPathFromUserAccess(const fs::path &entry,
     // CONTEXT: some files must be protected from the user fully
     constexpr std::wstring_view command_templates[] = {
         L"icacls \"{}\" /inheritance:d /c",          // disable inheritance
-        L"icacls \"{}\" /remove:g *S-1-5-32-545 /c"  // remove all user rights
+        L"icacls \"{}\" /remove:g *S-1-5-32-545 /c"  // remove all user
+                                                     // rights
     };
 
     for (auto const t : command_templates) {

@@ -8,13 +8,16 @@
 #include <filesystem>
 #include <iosfwd>
 #include <iostream>
+#include <ranges>
 
 #include "cfg.h"
+#include "common/cfg_info.h"
 #include "common/cfg_yaml.h"
 #include "common/cma_yml.h"
 #include "common/wtools.h"
 
 namespace fs = std::filesystem;
+namespace rs = std::ranges;
 using namespace std::chrono_literals;
 using namespace std::string_literals;
 
@@ -216,10 +219,18 @@ std::wstring BuildCommandLine(const fs::path &controller) {
                                               agent_channel  // --channel 50001
                                               ));
 }
+namespace {
+std::vector<Modus> start_controller_moduses{Modus::service, Modus::integration};
+
+bool AllowUseController() {
+    return rs::find(start_controller_moduses, GetModus()) !=
+           start_controller_moduses.end();
+}
+}  // namespace
 
 std::optional<uint32_t> StartAgentController(const fs::path &service) {
     XLOG::l.i("starting controller");
-    if (!cma::IsService()) {
+    if (!AllowUseController()) {
         return {};
     }
 
@@ -286,7 +297,7 @@ std::string DetermineAgentCtlStatus() {
 }
 
 bool KillAgentController(const fs::path &service) {
-    if (cma::IsService()) {
+    if (AllowUseController()) {
         auto ret = wtools::KillProcess(cfg::files::kAgentCtl, 1);
         // Idiotic loop below mirrors idiotic Windows architecture.
         // MS: Even if process killed, the executable may be for some time busy.

@@ -4,6 +4,7 @@
 
 #include <chrono>
 #include <iostream>
+#include <ranges>
 
 #include "agent_controller.h"
 #include "asio.h"
@@ -13,6 +14,7 @@
 
 using asio::ip::tcp;
 using namespace std::chrono_literals;
+namespace rs = std::ranges;
 
 // This namespace contains classes used for external communication, for example
 // with Monitor
@@ -249,6 +251,16 @@ bool IsIpAllowedAsException(const std::string &ip) {
            (ip == "127.0.0.1" || ip == "::1");
 }
 
+namespace {
+std::vector<Modus> local_connection_moduses{Modus::service, Modus::test,
+                                            Modus::integration};
+
+bool AllowLocalConnection() {
+    return rs::find(local_connection_moduses, GetModus()) !=
+           local_connection_moduses.end();
+}
+}  // namespace
+
 // singleton thread
 void ExternalPort::processQueue(const world::ReplyFunc &reply) {
     while (true) {
@@ -269,7 +281,7 @@ void ExternalPort::processQueue(const world::ReplyFunc &reply) {
                     bool local_connection = ip == "127.0.0.1" || ip == "::1";
                     if (cfg::groups::global.isIpAddressAllowed(ip) ||
                         local_connection) {
-                        if (local_connection && (IsService() || IsTest())) {
+                        if (local_connection && AllowLocalConnection()) {
                             as->read_ip();
                         }
                         as->start(reply);
@@ -280,7 +292,9 @@ void ExternalPort::processQueue(const world::ReplyFunc &reply) {
                             XLOG::l.crit("Memory usage is too high [{}]",
                                          wtools::GetOwnVirtualSize());
 #if defined(TEST_RESTART_OVERLOAD)
-                            if (IsService()) std::terminate();
+                            if (GetModus() == Modus::service) {
+                                std::terminate();
+                            }
 #else
 #pragma message("**************************************")
 #pragma message("ATTENTION: Your has no RESTART on overload")

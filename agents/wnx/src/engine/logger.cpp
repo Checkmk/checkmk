@@ -281,8 +281,9 @@ void Emitter::postProcessAndPrint(const std::string &text) {
     // EVENT
     if (setup::IsEventLogEnabled() && ((dirs & xlog::kEventPrint) != 0)) {
         // we do not need to format string for the event
-        auto windows_event_log_id = cma::IsService() ? EventClass::kSrvDefault
-                                                     : EventClass::kAppDefault;
+        auto windows_event_log_id = cma::GetModus() == cma::Modus::service
+                                        ? EventClass::kSrvDefault
+                                        : EventClass::kAppDefault;
         details::LogWindowsEventCritical(windows_event_log_id, text.c_str());
     }
 

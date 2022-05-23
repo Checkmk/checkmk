@@ -14,10 +14,6 @@
 
 namespace fs = std::filesystem;
 
-namespace cma::details {
-extern bool g_is_test;
-}
-
 namespace cma {
 
 // internal global variables:
@@ -104,8 +100,13 @@ bool FindAndPrepareWorkingFolders(AppType app_type) {
 }  // namespace cfg
 
 static AppType CalcAppType(AppType app_type) {
-    if (app_type == AppType::automatic) return AppDefaultType();
-    if (app_type == AppType::test) cma::details::g_is_test = true;
+    if (app_type == AppType::automatic) {
+        return AppDefaultType();
+    }
+
+    if (app_type == AppType::test) {
+        details::SetModus(Modus::test);
+    }
 
     return app_type;
 }
@@ -125,7 +126,7 @@ void UninstallAlert::clear() noexcept {
 
 void UninstallAlert::set() noexcept {
     //
-    if (!IsService()) {
+    if (GetModus() != Modus::service) {
         XLOG::l.i("Requested clean on exit is IGNORED, not service");
         return;
     }
@@ -180,7 +181,7 @@ bool OnStart(AppType proposed_type, const std::wstring &config_file) {
     }
 
     if (!already_loaded) {
-        XLOG::setup::SetContext(cma::IsService() ? "srv" : "app");
+        XLOG::setup::SetContext(GetModus() == Modus::service ? "srv" : "app");
         return OnStartCore(type, config_file);
     }
 

@@ -12,6 +12,7 @@
 
 #include "cfg.h"
 #include "cma_core.h"
+#include "common/cfg_info.h"
 #include "common/cmdline_info.h"
 #include "common/yaml.h"
 #include "install_api.h"
@@ -263,13 +264,9 @@ void ServiceUsage(std::wstring_view comment) {
 
 }  // namespace cma::cmdline
 
-namespace cma::details {
-extern bool g_is_service;
-}  // namespace cma::details
-
 namespace cma {
 AppType AppDefaultType() {
-    return details::g_is_service ? AppType::srv : AppType::exe;
+    return GetModus() == Modus::service ? AppType::srv : AppType::exe;
 }
 
 namespace {
@@ -358,7 +355,7 @@ int CheckMainService(const std::wstring &param, int interval) {
 
 namespace srv {
 int RunService(std::wstring_view app_name) {
-    cma::details::g_is_service = true;  // we know that we are service
+    cma::details::SetModus(Modus::service);  // we know that we are service
 
     auto ret = ServiceAsService(app_name, 1000ms, []() -> bool {
         // Auto Update when  MSI file is located by specified address

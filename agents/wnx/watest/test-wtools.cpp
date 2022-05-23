@@ -40,11 +40,6 @@ constexpr CounterParam kDiskCounter = {.description_ = L"Disk",
 
 }  // namespace
 
-namespace cma::details {
-extern bool g_is_service;
-extern bool g_is_test;
-}  // namespace cma::details
-
 namespace wtools {  // to become friendly for cma::cfg classes
 
 class WtoolsKillProcFixture : public ::testing::Test {
@@ -557,16 +552,18 @@ TEST(Wtools, PatchFileLineEnding) {
 }
 
 TEST(Wtools, UserGroupName) {
+    const auto m = cma::GetModus();
+    ON_OUT_OF_SCOPE(cma::details::SetModus(m));
     EXPECT_TRUE(GenerateCmaUserNameInGroup(L"").empty());
     EXPECT_EQ(GenerateCmaUserNameInGroup(L"XX"), L"cmk_TST_XX");
 
-    cma::details::g_is_service = true;
-    ON_OUT_OF_SCOPE(cma::details::g_is_service = false;
-                    cma::details::g_is_test = true);
-
+    cma::details::SetModus(cma::Modus::service);
     EXPECT_EQ(GenerateCmaUserNameInGroup(L"XX"), L"cmk_in_XX");
-    cma::details::g_is_service = false;
-    cma::details::g_is_test = false;
+
+    cma::details::SetModus(cma::Modus::integration);
+    EXPECT_EQ(GenerateCmaUserNameInGroup(L"XX"), L"cmk_IT_XX");
+
+    cma::details::SetModus(cma::Modus::app);
     EXPECT_TRUE(GenerateCmaUserNameInGroup(L"XX").empty());
 }
 

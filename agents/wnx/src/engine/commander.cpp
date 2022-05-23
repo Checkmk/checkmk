@@ -20,31 +20,32 @@ std::mutex g_run_command_processor_lock{};
 }  // namespace
 
 bool RunCommand(std::string_view peer, std::string_view cmd) {
-    if (!cma::tools::IsEqual(peer, kMainPeer)) {
+    if (!tools::IsEqual(peer, kMainPeer)) {
         XLOG::d("Peer name '{}' is invalid", peer);
         return false;
     }
 
     if (cmd.empty()) return false;
 
-    if (cma::tools::IsEqual(cmd, kReload)) {
+    if (tools::IsEqual(cmd, kReload)) {
         XLOG::l.t("Commander: Reload");
 
-        cma::ReloadConfig();  // command line
+        ReloadConfig();  // command line
         return true;
     }
 
-    if (cma::tools::IsEqual(cmd, kPassTrue)) {
+    if (tools::IsEqual(cmd, kPassTrue)) {
         XLOG::l.t("Commander: Pass True");
         return true;
     }
 
-    if (cma::tools::IsEqual(cmd, kUninstallAlert)) {
+    if (tools::IsEqual(cmd, kUninstallAlert)) {
         XLOG::l.t("Commander: Alert of Uninstall");
-        if (cma::IsTest()) return false;
-        if (!cma::IsService()) return false;
+        if (GetModus() != Modus::service) {
+            return false;
+        }
 
-        cma::g_uninstall_alert.set();
+        g_uninstall_alert.set();
         return true;
     }
 

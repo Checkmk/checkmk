@@ -756,7 +756,7 @@ std::wstring ModuleCommander::buildCommandLine(std::string_view filename) {
 fs::path ModuleCommander::GetMoveLocation(const fs::path &module_file) {
     return fs::temp_directory_path() /
            (std::string{g_module_uninstall_path} +
-            (cma::IsService() ? "_srv" : "_app")) /
+            (GetModus() == Modus::service ? "_srv" : "_app")) /
            module_file.filename();
 }
 

@@ -19,10 +19,12 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.plugins.metrics import rrd_fetch, timeseries
 from cmk.gui.plugins.metrics.utils import (
+    Curve,
     GraphArtwork,
     GraphDataRange,
     GraphRecipe,
     GraphRenderOptions,
+    SizeEx,
     unit_info,
     UnitInfo,
 )
@@ -31,11 +33,9 @@ from cmk.gui.utils.theme import theme
 
 Label = Tuple[float, Optional[str], int]
 
-Curve = dict[str, Any]
 LayoutedCurve = dict[str, Any]
 VerticalAxis = dict[str, Any]
 TimeAxis = dict[str, Any]
-SizeEx = int
 
 
 class CurveValue(TypedDict):

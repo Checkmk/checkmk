@@ -80,11 +80,15 @@ ScalarDefinition = Union[str, Tuple[str, Union[str, LazyString]]]
 GraphConsoldiationFunction = Literal["max", "min", "average"]
 
 GraphArtwork = dict[str, Any]
+Curve = dict[str, Any]
+Scalar = tuple[str, str, bool]
 GraphRenderOptions = dict[str, Any]
 GraphDataRange = dict[str, Any]
 
 GraphRangeSpec = Tuple[Union[int, str], Union[int, str]]
 GraphRange = Tuple[Optional[float], Optional[float]]
+
+SizeEx = int
 
 
 class _GraphTemplateMandatory(TypedDict):

@@ -13,6 +13,7 @@ from typing import Any, Iterable, List, Mapping, NamedTuple, Optional, Sequence,
 import livestatus
 
 import cmk.utils.render
+from cmk.utils.type_defs import TimeRange
 
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKGeneralException
@@ -24,7 +25,16 @@ from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.plugins.metrics import artwork
 from cmk.gui.plugins.metrics.identification import graph_identification_types
-from cmk.gui.plugins.metrics.utils import GraphRecipe, render_color_icon
+from cmk.gui.plugins.metrics.utils import (
+    Curve,
+    GraphArtwork,
+    GraphDataRange,
+    GraphRecipe,
+    GraphRenderOptions,
+    render_color_icon,
+    Scalar,
+    SizeEx,
+)
 from cmk.gui.plugins.metrics.valuespecs import transform_graph_render_options_title_format
 from cmk.gui.sites import get_alias_of_host
 from cmk.gui.type_defs import GraphIdentifier
@@ -99,14 +109,18 @@ def host_service_graph_popup_cmk(site, host_name, service_description):
     )
 
 
-def render_graph_or_error_html(graph_artwork, graph_data_range, graph_render_options) -> HTML:
+def render_graph_or_error_html(
+    graph_artwork: GraphArtwork,
+    graph_data_range: GraphDataRange,
+    graph_render_options: GraphRenderOptions,
+) -> HTML:
     try:
         return render_graph_html(graph_artwork, graph_data_range, graph_render_options)
     except Exception as e:
         return render_graph_error_html(e)
 
 
-def render_graph_error_html(msg_or_exc, title=None) -> HTML:
+def render_graph_error_html(msg_or_exc: Union[Exception, str], title: Optional[str] = None) -> HTML:
     if isinstance(msg_or_exc, MKGeneralException) and not active_config.debug:
         msg = "%s" % msg_or_exc
 
@@ -128,7 +142,11 @@ def render_graph_error_html(msg_or_exc, title=None) -> HTML:
 
 # Render the complete HTML code of a graph - including its <div> container.
 # Later updates will just replace the content of that container.
-def render_graph_html(graph_artwork, graph_data_range, graph_render_options) -> HTML:
+def render_graph_html(
+    graph_artwork: GraphArtwork,
+    graph_data_range: GraphDataRange,
+    graph_render_options: GraphRenderOptions,
+) -> HTML:
     graph_render_options = artwork.add_default_render_options(graph_render_options)
 
     with output_funnel.plugged():
@@ -150,7 +168,11 @@ def render_graph_html(graph_artwork, graph_data_range, graph_render_options) -> 
 # an update of the graph should be done. It must contain everything that we need to
 # create the HTML code of the graph. The entry "graph_id" will be set by the javascript
 # code since it is not known to us.
-def graph_ajax_context(graph_artwork, graph_data_range, graph_render_options):
+def graph_ajax_context(
+    graph_artwork: GraphArtwork,
+    graph_data_range: GraphDataRange,
+    graph_render_options: GraphRenderOptions,
+) -> dict[str, Any]:
     return {
         "definition": graph_artwork["definition"],
         "data_range": graph_data_range,
@@ -162,13 +184,17 @@ def render_title_elements_plain(elements: Iterable[str]) -> str:
     return " / ".join(_u(txt) for txt in elements if txt)
 
 
-def render_plain_graph_title(graph_artwork, graph_render_options) -> str:
+def render_plain_graph_title(
+    graph_artwork: GraphArtwork, graph_render_options: GraphRenderOptions
+) -> str:
     return render_title_elements_plain(
         element[0] for element in _render_graph_title_elements(graph_artwork, graph_render_options)
     )
 
 
-def _render_graph_title_elements(graph_artwork, graph_render_options):
+def _render_graph_title_elements(
+    graph_artwork: GraphArtwork, graph_render_options: GraphRenderOptions
+) -> list[tuple[str, Optional[str]]]:
     if not graph_render_options["show_title"]:
         return []
 
@@ -193,7 +219,9 @@ def _render_graph_title_elements(graph_artwork, graph_render_options):
     return title_elements
 
 
-def title_info_elements(spec_info, title_format) -> Iterable[Tuple[str, str]]:
+def title_info_elements(
+    spec_info: dict[str, Any], title_format: Sequence[str]
+) -> Iterable[tuple[str, str]]:
     if "add_host_name" in title_format:
         host_url = makeuri_contextless(
             request,
@@ -229,7 +257,9 @@ def title_info_elements(spec_info, title_format) -> Iterable[Tuple[str, str]]:
         yield spec_info["metric"], ""
 
 
-def _show_html_graph_title(graph_artwork, graph_render_options) -> None:
+def _show_html_graph_title(
+    graph_artwork: GraphArtwork, graph_render_options: GraphRenderOptions
+) -> None:
     title = text_with_links_to_user_translated_html(
         _render_graph_title_elements(graph_artwork, graph_render_options),
         separator=" / ",
@@ -243,11 +273,17 @@ def _show_html_graph_title(graph_artwork, graph_render_options) -> None:
     )
 
 
-def _graph_legend_enabled(graph_render_options, graph_artwork) -> bool:
+def _graph_legend_enabled(
+    graph_render_options: GraphRenderOptions, graph_artwork: GraphArtwork
+) -> bool:
     return graph_render_options["show_legend"] and graph_artwork["curves"]
 
 
-def _show_graph_html_content(graph_artwork, graph_data_range, graph_render_options) -> None:
+def _show_graph_html_content(
+    graph_artwork: GraphArtwork,
+    graph_data_range: GraphDataRange,
+    graph_render_options: GraphRenderOptions,
+) -> None:
     """Render the HTML code of a graph without its container
 
     That is a canvas object for drawing the actual graph and also legend, buttons, resize handle,
@@ -299,7 +335,9 @@ def _show_graph_html_content(graph_artwork, graph_data_range, graph_render_optio
 
 
 def _show_graph_add_to_icon_for_popup(
-    graph_artwork, graph_data_range, graph_render_options
+    graph_artwork: GraphArtwork,
+    graph_data_range: GraphDataRange,
+    graph_render_options: GraphRenderOptions,
 ) -> None:
     icon_html = html.render_icon("menu", _("Add this graph to..."))
     element_type_name = "pnpgraph"
@@ -321,7 +359,7 @@ def _show_graph_add_to_icon_for_popup(
     )  # Ensures that graph canvas does not cover it
 
 
-def _show_graph_canvas(graph_render_options) -> None:
+def _show_graph_canvas(graph_render_options: GraphRenderOptions) -> None:
     """Create canvas where actual graph will be rendered"""
     size = graph_render_options["size"]
     graph_width: float = size[0] * html_size_per_ex
@@ -334,7 +372,7 @@ def _show_graph_canvas(graph_render_options) -> None:
     )
 
 
-def show_pin_time(graph_artwork, graph_render_options):
+def show_pin_time(graph_artwork: GraphArtwork, graph_render_options: GraphRenderOptions) -> bool:
     if not graph_render_options["show_pin"]:
         return False
 
@@ -345,12 +383,14 @@ def show_pin_time(graph_artwork, graph_render_options):
     )
 
 
-def render_pin_time_label(graph_artwork):
+def render_pin_time_label(graph_artwork: GraphArtwork) -> str:
     timestamp = graph_artwork["pin_time"]
     return cmk.utils.render.date_and_time(timestamp)[:-3]
 
 
-def get_scalars(graph_artwork, graph_render_options):
+def get_scalars(
+    graph_artwork: GraphArtwork, graph_render_options: GraphRenderOptions
+) -> list[Scalar]:
     scalars = []
     for scalar, title in [
         ("min", _("Minimum")),
@@ -371,7 +411,7 @@ def get_scalars(graph_artwork, graph_render_options):
     return scalars
 
 
-def graph_curves(graph_artwork):
+def graph_curves(graph_artwork: GraphArtwork) -> list[Curve]:
     curves = []
     for curve in graph_artwork["curves"][::-1]:
         if not curve.get("dont_paint"):
@@ -379,7 +419,9 @@ def graph_curves(graph_artwork):
     return curves
 
 
-def _show_graph_legend(graph_artwork, graph_render_options) -> None:
+def _show_graph_legend(
+    graph_artwork: GraphArtwork, graph_render_options: GraphRenderOptions
+) -> None:
     """Render legend that describe the metrics"""
     graph_width = graph_render_options["size"][0] * html_size_per_ex
     font_size_style = "font-size: %dpt;" % graph_render_options["font_size"]
@@ -480,17 +522,17 @@ def _show_graph_legend(graph_artwork, graph_render_options) -> None:
 
 
 class Bounds(NamedTuple):
-    top: float
-    right: float
-    bottom: float
-    left: float
+    top: int
+    right: int
+    bottom: int
+    left: int
 
 
-def _graph_padding_styles(graph_render_options):
+def _graph_padding_styles(graph_render_options: GraphRenderOptions) -> str:
     return "padding: %0.2fex %0.2fex %0.2fex %0.2fex;" % _graph_margin_ex(graph_render_options)
 
 
-def _graph_margin_ex(graph_render_options, defaults=(8, 16, 4, 8)):
+def _graph_margin_ex(graph_render_options: GraphRenderOptions, defaults=(8, 16, 4, 8)) -> Bounds:
     """Return 4-Tuple for top, right, bottom, left spacing"""
     if graph_render_options["preview"]:
         return Bounds(0, 0, 0, 0)
@@ -500,7 +542,7 @@ def _graph_margin_ex(graph_render_options, defaults=(8, 16, 4, 8)):
 
 
 @cmk.gui.pages.register("ajax_graph")
-def ajax_graph():
+def ajax_graph() -> None:
     response.set_content_type("application/json")
     try:
         context_var = request.get_str_input_mandatory("context")
@@ -514,7 +556,7 @@ def ajax_graph():
         response.set_data("ERROR: %s" % e)
 
 
-def render_ajax_graph(context):
+def render_ajax_graph(context: Mapping[str, Any]) -> dict[str, Any]:
     graph_data_range = context["data_range"]
     graph_render_options = context["render_options"]
     graph_recipe = context["definition"]
@@ -584,7 +626,7 @@ def render_ajax_graph(context):
     }
 
 
-def load_user_graph_data_range():
+def load_user_graph_data_range() -> GraphDataRange:
     return user.load_file(
         "graph_range",
         {
@@ -593,11 +635,11 @@ def load_user_graph_data_range():
     )
 
 
-def save_user_graph_data_range(graph_data_range):
+def save_user_graph_data_range(graph_data_range: GraphDataRange) -> None:
     user.save_file("graph_range", graph_data_range)
 
 
-def forget_manual_vertical_zoom():
+def forget_manual_vertical_zoom() -> None:
     user_range = load_user_graph_data_range()
     if "vertical_range" in user_range:
         del user_range["vertical_range"]
@@ -638,9 +680,9 @@ def resolve_graph_recipe_with_error_handling(
 
 def render_graphs_from_specification_html(
     graph_identification: GraphIdentifier,
-    graph_data_range,
-    graph_render_options,
-    render_async=True,
+    graph_data_range: GraphDataRange,
+    graph_render_options: GraphRenderOptions,
+    render_async: bool = True,
 ) -> HTML:
 
     graph_recipes = resolve_graph_recipe_with_error_handling(graph_identification)
@@ -653,7 +695,10 @@ def render_graphs_from_specification_html(
 
 
 def render_graphs_from_definitions(
-    graph_recipes, graph_data_range, graph_render_options, render_async=True
+    graph_recipes: Sequence[GraphRecipe],
+    graph_data_range: GraphDataRange,
+    graph_render_options: GraphDataRange,
+    render_async: bool = True,
 ) -> HTML:
     # Estimate step. Step is the number of seconds each fetched data point represents.
     # It does not make sense to fetch the data in *much* greater precision than our
@@ -676,7 +721,11 @@ def render_graphs_from_definitions(
 
 
 # cmk.graphs.load_graph_content will call ajax_render_graph_content() via JSON to finally load the graph
-def render_graph_container_html(graph_recipe, graph_data_range, graph_render_options) -> HTML:
+def render_graph_container_html(
+    graph_recipe: GraphRecipe,
+    graph_data_range: GraphDataRange,
+    graph_render_options: GraphRenderOptions,
+) -> HTML:
     graph_render_options = artwork.add_default_render_options(graph_render_options)
 
     # Estimate size of graph. This will not be the exact size of the graph, because
@@ -712,7 +761,7 @@ def render_graph_container_html(graph_recipe, graph_data_range, graph_render_opt
 
 # Called from javascript code via JSON to initially render a graph
 @cmk.gui.pages.register("ajax_render_graph_content")
-def ajax_render_graph_content():
+def ajax_render_graph_content() -> None:
     response.set_content_type("application/json")
     try:
         api_request = request.get_request()
@@ -734,7 +783,11 @@ def ajax_render_graph_content():
     response.set_data(json.dumps(resp))
 
 
-def render_graph_content_html(graph_recipe, graph_data_range, graph_render_options) -> HTML:
+def render_graph_content_html(
+    graph_recipe: GraphRecipe,
+    graph_data_range: GraphDataRange,
+    graph_render_options: GraphRenderOptions,
+) -> HTML:
     output = HTML()
     try:
         graph_artwork = artwork.compute_graph_artwork(
@@ -766,7 +819,9 @@ def render_graph_content_html(graph_recipe, graph_data_range, graph_render_optio
     return output
 
 
-def render_time_range_selection(graph_recipe, graph_render_options) -> HTML:
+def render_time_range_selection(
+    graph_recipe: GraphRecipe, graph_render_options: GraphRenderOptions
+) -> HTML:
     now = int(time.time())
     graph_render_options = copy.deepcopy(graph_render_options)
     rows = []
@@ -808,7 +863,9 @@ def render_time_range_selection(graph_recipe, graph_render_options) -> HTML:
     )
 
 
-def estimate_graph_step_for_html(time_range, graph_render_options):
+def estimate_graph_step_for_html(
+    time_range: TimeRange, graph_render_options: GraphRenderOptions
+) -> int:
     graph_render_options = artwork.add_default_render_options(graph_render_options)
     width_in_ex = graph_render_options["size"][1]
     steps_per_ex = html_size_per_ex * 4
@@ -831,7 +888,7 @@ def estimate_graph_step_for_html(time_range, graph_render_options):
 
 
 @cmk.gui.pages.register("ajax_graph_hover")
-def ajax_graph_hover():
+def ajax_graph_hover() -> None:
     response.set_content_type("application/json")
     try:
         context_var = request.get_str_input_mandatory("context")
@@ -846,7 +903,7 @@ def ajax_graph_hover():
         response.set_data("ERROR: %s" % e)
 
 
-def render_ajax_graph_hover(context, hover_time):
+def render_ajax_graph_hover(context: Mapping[str, Any], hover_time: int) -> dict[str, Any]:
     graph_data_range = context["data_range"]
     graph_recipe = context["definition"]
 
@@ -864,7 +921,9 @@ def render_ajax_graph_hover(context, hover_time):
 # TODO: This is not acurate! Especially when the font size is changed this does not lead to correct
 # results. But this is a more generic problem of the html_size_per_ex which is hard coded instead
 # of relying on the font as it should.
-def graph_legend_height_ex(graph_render_options, graph_artwork) -> float:
+def graph_legend_height_ex(
+    graph_render_options: GraphRenderOptions, graph_artwork: GraphArtwork
+) -> float:
     if not _graph_legend_enabled(graph_render_options, graph_artwork):
         return 0.0
     # Add header line + spacing: '3.0'
@@ -891,7 +950,7 @@ class GraphDestinations:
     notification = "notification"
 
     @classmethod
-    def choices(cls):
+    def choices(cls) -> list[tuple[str, str]]:
         return [
             (GraphDestinations.dashlet, _("Dashboard element")),
             (GraphDestinations.view, _("View")),
@@ -900,7 +959,7 @@ class GraphDestinations:
         ]
 
 
-def _graph_title_height_ex(graph_render_options):
+def _graph_title_height_ex(graph_render_options: GraphRenderOptions) -> SizeEx:
     if graph_render_options["show_title"] in [False, "inline"]:
         return 0
     return 1  # ex
@@ -920,8 +979,8 @@ default_dashlet_graph_render_options: Mapping[str, Any] = {
 
 def host_service_graph_dashlet_cmk(
     graph_identification: GraphIdentifier,
-    custom_graph_render_options,
-):
+    custom_graph_render_options: GraphRenderOptions,
+) -> Optional[HTML]:
     graph_render_options = {**default_dashlet_graph_render_options}
     graph_render_options = artwork.add_default_render_options(graph_render_options)
     graph_render_options.update(custom_graph_render_options)
@@ -948,7 +1007,7 @@ def host_service_graph_dashlet_cmk(
         end_time = time.time()
         start_time = end_time - float(timerange)
 
-    graph_data_range = {
+    graph_data_range: GraphDataRange = {
         "time_range": (start_time, end_time),
     }
 
@@ -960,7 +1019,7 @@ def host_service_graph_dashlet_cmk(
         graph_identification,
         destination=GraphDestinations.dashlet,
     )
-    if not isinstance(graph_recipes, list):
+    if isinstance(graph_recipes, HTML):
         return graph_recipes  # This is to html.write the exception
     if graph_recipes:
         graph_recipe = graph_recipes[0]

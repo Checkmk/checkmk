@@ -75,7 +75,7 @@ class HostParameters(BaseSchema):
         load_default=[],
     )
     query = gui_fields.query_field(Hosts, required=False)
-    columns = gui_fields.column_field(Hosts, mandatory=[Hosts.name])
+    columns = gui_fields.column_field(Hosts, mandatory=[Hosts.name], example=["name"])
 
 
 PERMISSIONS = permissions.Ignore(

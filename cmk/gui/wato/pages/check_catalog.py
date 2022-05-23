@@ -438,44 +438,44 @@ class ModeCheckManPage(WatoMode):
             return super().breadcrumb()
 
     def _from_vars(self):
-        self._check_type = request.get_ascii_input_mandatory("check_type", "")
+        self._check_plugin_name = request.get_ascii_input_mandatory("check_type", "")
 
-        builtin_check_types = ["check-mk", "check-mk-inventory"]
+        check_builtins = ["check-mk", "check-mk-inventory"]
         if (
-            not re.match("^[a-zA-Z0-9_.]+$", self._check_type)
-            and self._check_type not in builtin_check_types
+            not re.match("^[a-zA-Z0-9_.]+$", self._check_plugin_name)
+            and self._check_plugin_name not in check_builtins
         ):
             raise MKUserError("check_type", _("Invalid check type"))
 
-        manpage = man_pages.load_man_page(self._check_type)
+        manpage = man_pages.load_man_page(self._check_plugin_name)
         if manpage is None:
             raise MKUserError(None, _("There is no manpage for this check."))
         self._manpage: Mapping[str, Any] = {"header": manpage["header"]}
 
         checks = get_check_information().plugin_infos
-        if self._check_type in checks:
+        if self._check_plugin_name in checks:
             self._manpage = {
                 "type": "check_mk",
-                **checks[self._check_type],
+                **checks[self._check_plugin_name],
                 **self._manpage,
             }
-        elif self._check_type.startswith("check_"):  # Assume active check
+        elif self._check_plugin_name.startswith("check_"):  # Assume active check
             self._manpage = {
                 "type": "active",
                 **self._manpage,
             }
-        elif self._check_type in builtin_check_types:
+        elif self._check_plugin_name in check_builtins:
             self._manpage = {
                 "type": "check_mk",
                 "service_description": "Check_MK%s"
-                % ("" if self._check_type == "check-mk" else " Discovery"),
+                % ("" if self._check_plugin_name == "check-mk" else " Discovery"),
                 **self._manpage,
             }
         else:
             raise MKUserError(
                 None,
                 _("Could not detect type of manpage: %s. Maybe the check is missing ")
-                % self._check_type,
+                % self._check_plugin_name,
             )
 
     def title(self) -> str:
@@ -487,10 +487,10 @@ class ModeCheckManPage(WatoMode):
     # together with a link for searching. Then we can remove the dumb context
     # button, that will always be shown - even if the plugin is not in use.
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        if self._check_type.startswith("check_"):
-            command = "check_mk_active-" + self._check_type[6:]
+        if self._check_plugin_name.startswith("check_"):
+            command = "check_mk_active-" + self._check_plugin_name[6:]
         else:
-            command = "check_mk-" + self._check_type
+            command = "check_mk-" + self._check_plugin_name
         url = makeuri_contextless(
             request,
             [("view_name", "searchsvc"), ("check_command", command), ("filled_in", "filter")],
@@ -536,7 +536,7 @@ class ModeCheckManPage(WatoMode):
         html.open_tr()
         html.th(_("Name of plugin"))
         html.open_td()
-        html.tt(self._check_type)
+        html.tt(self._check_plugin_name)
         html.close_td()
         html.close_tr()
 
@@ -569,7 +569,7 @@ class ModeCheckManPage(WatoMode):
                 html.td(self._manpage_text(cluster))
                 html.close_tr()
         else:
-            self._show_ruleset("active_checks:%s" % self._check_type[6:])
+            self._show_ruleset("active_checks:%s" % self._check_plugin_name[6:])
 
         html.close_table()
 

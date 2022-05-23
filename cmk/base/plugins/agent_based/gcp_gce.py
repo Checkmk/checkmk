@@ -123,3 +123,55 @@ register.check_plugin(
     check_default_parameters=CHECK_DEFAULT_PARAMETERS,
     check_function=check_network,
 )
+
+register.agent_section(
+    name="gcp_service_gce_disk",
+    parsed_section_name="gcp_gce_disk",
+    parse_function=parse_default,
+)
+
+
+def check_disk_summary(params: Mapping[str, Any], section: gcp.PiggyBackSection) -> CheckResult:
+    metrics = {
+        "disk_read_throughput": gcp.MetricSpec(
+            "compute.googleapis.com/instance/disk/read_bytes_count",
+            "Read",
+            render.iobandwidth,
+            dtype=gcp.MetricSpec.DType.INT,
+        ),
+        "disk_write_throughput": gcp.MetricSpec(
+            "compute.googleapis.com/instance/disk/write_bytes_count",
+            "Write",
+            render.iobandwidth,
+            dtype=gcp.MetricSpec.DType.INT,
+        ),
+        "disk_read_ios": gcp.MetricSpec(
+            "compute.googleapis.com/instance/disk/read_ops_count",
+            "Read operations",
+            str,
+            dtype=gcp.MetricSpec.DType.INT,
+        ),
+        "disk_write_ios": gcp.MetricSpec(
+            "compute.googleapis.com/instance/disk/write_ops_count",
+            "Write operations",
+            str,
+            dtype=gcp.MetricSpec.DType.INT,
+        ),
+    }
+    yield from gcp.generic_check(metrics, section, params)
+
+
+register.check_plugin(
+    name="gcp_gce_disk_summary",
+    sections=["gcp_gce_disk"],
+    service_name="Instance disk IO",
+    discovery_function=discover_default,
+    check_ruleset_name="gcp_gce_disk",
+    check_default_parameters={
+        "disk_read_throughput": None,
+        "disk_write_throughput": None,
+        "disk_read_ios": None,
+        "disk_write_ios": None,
+    },
+    check_function=check_disk_summary,
+)

@@ -6,6 +6,7 @@
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
 from cmk.base.plugins.agent_based.gcp_gce import (
     CHECK_DEFAULT_PARAMETERS,
+    check_disk_summary,
     check_network,
     parse_gce_uptime,
 )
@@ -72,4 +73,41 @@ def test_network_check():
         Metric("outnucast", 0.0),
         Result(state=State.OK, notice="Discards out: 0 packets/s"),
         Metric("outdisc", 0.0),
+    ]
+
+
+DISK_SECTION = [
+    [
+        '{"metric": {"type": "compute.googleapis.com/instance/disk/read_bytes_count", "labels": {}}, "resource": {"type": "gce_instance", "labels": {"instance_id": "1807848413475835096", "project_id": "tribe29-check-development"}}, "metric_kind": 2, "value_type": 2, "points": [{"interval": {"start_time": "2022-05-23T12:57:11.921195Z", "end_time": "2022-05-23T12:58:11.921195Z"}, "value": {"int64_value": "2"}}], "unit": ""}'
+    ],
+    [
+        '{"metric": {"type": "compute.googleapis.com/instance/disk/read_ops_count", "labels": {}}, "resource": {"type": "gce_instance", "labels": {"project_id": "tribe29-check-development", "instance_id": "1807848413475835096"}}, "metric_kind": 2, "value_type": 2, "points": [{"interval": {"start_time": "2022-05-23T12:57:11.921195Z", "end_time": "2022-05-23T12:58:11.921195Z"}, "value": {"int64_value": "4"}}], "unit": ""}'
+    ],
+    [
+        '{"metric": {"type": "compute.googleapis.com/instance/disk/write_bytes_count", "labels": {}}, "resource": {"type": "gce_instance", "labels": {"instance_id": "1807848413475835096", "project_id": "tribe29-check-development"}}, "metric_kind": 2, "value_type": 2, "points": [{"interval": {"start_time": "2022-05-23T12:57:11.921195Z", "end_time": "2022-05-23T12:58:11.921195Z"}, "value": {"int64_value": "8"}}], "unit": ""}'
+    ],
+    [
+        '{"metric": {"type": "compute.googleapis.com/instance/disk/write_ops_count", "labels": {}}, "resource": {"type": "gce_instance", "labels": {"project_id": "tribe29-check-development", "instance_id": "1807848413475835096"}}, "metric_kind": 2, "value_type": 2, "points": [{"interval": {"start_time": "2022-05-23T12:57:11.921195Z", "end_time": "2022-05-23T12:58:11.921195Z"}, "value": {"int64_value": "16"}}], "unit": ""}'
+    ],
+]
+
+
+def test_disk_summary_check():
+    section = gcp.parse_piggyback(DISK_SECTION)
+    params = {
+        "disk_read_throughput": None,
+        "disk_write_throughput": None,
+        "disk_read_ios": None,
+        "disk_write_ios": None,
+    }
+    results = list(check_disk_summary(params, section))
+    assert results == [
+        Result(state=State.OK, summary="Read: 2.00 B/s"),
+        Metric("disk_read_throughput", 2.0),
+        Result(state=State.OK, summary="Write: 8.00 B/s"),
+        Metric("disk_write_throughput", 8.0),
+        Result(state=State.OK, summary="Read operations: 4.0"),
+        Metric("disk_read_ios", 4.0),
+        Result(state=State.OK, summary="Write operations: 16.0"),
+        Metric("disk_write_ios", 16.0),
     ]

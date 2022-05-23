@@ -378,3 +378,32 @@ rulespec_registry.register(
         title=lambda: _("GCP/GCE CPU"),
     )
 )
+
+
+def _vs_gce_disk() -> Dictionary:
+    return Dictionary(
+        title=_("Levels disk IO"),
+        elements=[
+            (
+                "disk_read_throughput",
+                SimpleLevels(Filesize, title=_("Disk read throughput per second")),
+            ),
+            (
+                "disk_write_throughput",
+                SimpleLevels(Filesize, title=_("Disk read throughput per second")),
+            ),
+            ("disk_read_ios", SimpleLevels(Integer, title=_("Disk read opertions"), unit="ops")),
+            ("disk_write_ios", SimpleLevels(Integer, title=_("Disk read opertions"), unit="ops")),
+        ],
+    )
+
+
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="gcp_gce_disk",
+        group=RulespecGroupCheckParametersApplications,
+        match_type="dict",
+        parameter_valuespec=_vs_gce_disk,
+        title=lambda: _("GCP/GCE disk IO"),
+    )
+)

@@ -622,15 +622,25 @@ GCE = PiggyBackService(
                 Metric(
                     name="compute.googleapis.com/instance/disk/read_bytes_count",
                     aggregation=Aggregation(
-                        group_by_fields=["metric.device_name"],
-                        per_series_aligner=Aligner.ALIGN_MAX,
+                        per_series_aligner=Aligner.ALIGN_SUM,
+                    ),
+                ),
+                Metric(
+                    name="compute.googleapis.com/instance/disk/read_ops_count",
+                    aggregation=Aggregation(
+                        per_series_aligner=Aligner.ALIGN_SUM,
                     ),
                 ),
                 Metric(
                     name="compute.googleapis.com/instance/disk/write_bytes_count",
                     aggregation=Aggregation(
-                        group_by_fields=["metric.device_name"],
-                        per_series_aligner=Aligner.ALIGN_MAX,
+                        per_series_aligner=Aligner.ALIGN_SUM,
+                    ),
+                ),
+                Metric(
+                    name="compute.googleapis.com/instance/disk/write_ops_count",
+                    aggregation=Aggregation(
+                        per_series_aligner=Aligner.ALIGN_SUM,
                     ),
                 ),
             ],

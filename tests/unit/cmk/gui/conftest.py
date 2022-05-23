@@ -37,7 +37,7 @@ from cmk.gui.config import active_config
 from cmk.gui.logged_in import SuperUserContext, UserContext
 from cmk.gui.utils import get_failed_plugins
 from cmk.gui.utils.json import patch_json
-from cmk.gui.utils.script_helpers import application_and_request_context, session_wsgi_app
+from cmk.gui.utils.script_helpers import session_wsgi_app
 from cmk.gui.watolib import hosts_and_folders, search
 
 SPEC_LOCK = threading.Lock()
@@ -58,13 +58,6 @@ HTTPMethod = Literal[
     "POST",
     "DELETE",
 ]  # yapf: disable
-
-
-@pytest.fixture()
-def request_context() -> Iterator[None]:
-    """This fixture registers a global htmllib.html() instance just like the regular GUI"""
-    with application_and_request_context():
-        yield
 
 
 @pytest.fixture()

@@ -37,6 +37,7 @@ import cmk.gui.default_permissions
 import cmk.gui.permissions
 import cmk.gui.views
 from cmk.gui.livestatus_utils.testing import mock_livestatus
+from cmk.gui.utils.script_helpers import application_and_request_context
 
 if is_enterprise_repo():
     import cmk.cee.dcd.plugins.connectors.connectors_api.v1  # pylint: disable=import-error,no-name-in-module
@@ -421,3 +422,10 @@ def registry_reset() -> Iterator[None]:
             for entry in list(registry):  # type: ignore[call-overload]
                 if entry not in defaults:
                     registry.unregister(entry)  # type: ignore[attr-defined]
+
+
+@pytest.fixture()
+def request_context() -> Iterator[None]:
+    """This fixture registers a global htmllib.html() instance just like the regular GUI"""
+    with application_and_request_context():
+        yield

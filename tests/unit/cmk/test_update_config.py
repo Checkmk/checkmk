@@ -10,7 +10,7 @@ import io
 import os
 import sys
 from pathlib import Path
-from typing import Any, Iterator, Mapping, MutableMapping, Sequence, Tuple
+from typing import Any, Mapping, MutableMapping, Sequence, Tuple
 
 import pytest
 from pytest_mock import MockerFixture
@@ -28,7 +28,6 @@ from cmk.utils.type_defs.pluginname import CheckPluginName
 from cmk.utils.version import is_raw_edition
 
 import cmk.gui.config
-from cmk.gui.utils.script_helpers import application_and_request_context
 from cmk.gui.watolib.audit_log import AuditLogStore
 from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.watolib.objref import ObjectRef, ObjectRefType
@@ -36,12 +35,6 @@ from cmk.gui.watolib.password_store import PasswordStore
 from cmk.gui.watolib.rulesets import Rule, Ruleset, RulesetCollection
 
 import cmk.update_config as update_config
-
-
-@pytest.fixture()
-def request_context() -> Iterator[None]:
-    with application_and_request_context():
-        yield
 
 
 @pytest.fixture(name="uc")

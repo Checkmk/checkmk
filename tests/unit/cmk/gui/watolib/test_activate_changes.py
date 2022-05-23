@@ -577,7 +577,7 @@ class TestAutomationReceiveConfigSync:
     ) -> None:
         request = Request({})
         request.set_var("site_id", "NO_SITE")
-        request.set_var("to_delete", "['x/y/z.txt', 'abc.ending']")
+        request.set_var("to_delete", "['x/y/z.txt', 'abc.ending', '/ä/☃/☕']")
         request.set_var("config_generation", "123")
         request.files = werkzeug_datastructures.ImmutableMultiDict({
             "sync_archive": werkzeug_datastructures.FileStorage(
@@ -595,7 +595,7 @@ class TestAutomationReceiveConfigSync:
                 activate_changes.ReceiveConfigSyncRequest(
                     site_id=SiteId("NO_SITE"),
                     sync_archive=b"some data",
-                    to_delete=["x/y/z.txt", "abc.ending"],
+                    to_delete=["x/y/z.txt", "abc.ending", "/ä/☃/☕"],
                     config_generation=123,
                 ))
 

@@ -2303,7 +2303,7 @@ class AutomationReceiveConfigSync(AutomationCommand):
         return ReceiveConfigSyncRequest(
             site_id,
             _request.uploaded_file("sync_archive")[2],
-            ast.literal_eval(_request.get_ascii_input_mandatory("to_delete")),
+            ast.literal_eval(_request.get_str_input_mandatory("to_delete")),
             _request.get_integer_input_mandatory("config_generation"),
         )
 

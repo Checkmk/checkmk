@@ -49,24 +49,6 @@ def get_catalog() -> man_pages.ManPageCatalog:
     return man_pages.load_man_page_catalog()
 
 
-def test_man_page_exists_only_shipped():
-    assert man_pages.man_page_exists("if64") is True
-    assert man_pages.man_page_exists("not_existant") is False
-
-
-def test_man_page_exists_both_dirs(tmp_path):
-    f1 = tmp_path / "file1"
-    f1.write_text("x", encoding="utf-8")
-
-    assert man_pages.man_page_exists("file1") is True
-    assert man_pages.man_page_exists("file2") is False
-
-    f2 = tmp_path / "if"
-    f2.write_text("x", encoding="utf-8")
-
-    assert man_pages.man_page_exists("if") is True
-
-
 def test_man_page_path_only_shipped():
     assert man_pages.man_page_path("if64") == Path(cmk_path()) / "checkman" / "if64"
     assert man_pages.man_page_path("not_existant") is None

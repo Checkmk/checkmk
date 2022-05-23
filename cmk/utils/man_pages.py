@@ -320,10 +320,6 @@ def _get_man_page_dirs() -> Sequence[Path]:
     ]
 
 
-def man_page_exists(name: str) -> bool:
-    return man_page_path(name) is not None
-
-
 def _is_valid_basename(name: str) -> bool:
     return not name.startswith(".") and not name.endswith("~")
 

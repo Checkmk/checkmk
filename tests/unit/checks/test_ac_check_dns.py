@@ -8,6 +8,8 @@ import pytest
 
 from tests.testlib import ActiveCheck
 
+from cmk.gui.plugins.wato.active_checks import _transform_check_dns_settings
+
 
 @pytest.mark.parametrize(
     "params, result",
@@ -47,3 +49,56 @@ from tests.testlib import ActiveCheck
 def test_ac_check_dns_expected_addresses(params, result):
     active_check = ActiveCheck("check_dns")
     assert active_check.run_argument_function(params) == result
+
+
+@pytest.mark.parametrize(
+    "params, result",
+    [
+        [
+            {},
+            {},
+        ],
+        [
+            {"expected_address": "1.2.3.4,C0FE::FE11"},
+            {
+                "expect_all_addresses": True,
+                "expected_addresses_list": ["1.2.3.4", "C0FE::FE11"],
+            },
+        ],
+        [
+            {
+                "expected_address": "1.2.3.4,C0FE::FE11",
+                "server": "127.0.0.53",
+                "timeout": 10,
+                "response_time": (1.0, 2.0),
+                "expected_authority": True,
+            },
+            {
+                "expect_all_addresses": True,
+                "expected_addresses_list": ["1.2.3.4", "C0FE::FE11"],
+                "server": "127.0.0.53",
+                "timeout": 10,
+                "response_time": (1.0, 2.0),
+                "expected_authority": True,
+            },
+        ],
+        [
+            {
+                "expected_addresses_list": ["1.2.3.4", "C0FE::FE11"],
+                "server": "127.0.0.53",
+                "timeout": 10,
+                "response_time": (1.0, 2.0),
+                "expected_authority": True,
+            },
+            {
+                "expected_addresses_list": ["1.2.3.4", "C0FE::FE11"],
+                "server": "127.0.0.53",
+                "timeout": 10,
+                "response_time": (1.0, 2.0),
+                "expected_authority": True,
+            },
+        ],
+    ],
+)
+def test_legacy_params(params, result):
+    assert _transform_check_dns_settings(params) == result

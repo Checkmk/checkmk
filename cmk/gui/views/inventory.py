@@ -128,14 +128,9 @@ def _get_paint_function_from_globals(paint_name: str) -> PaintFunction:
 
 
 def _paint_host_inventory_tree(row: Row, raw_path: SDRawPath) -> CellSpec:
-    raw_hostname = row.get("host_name")
-    assert isinstance(raw_hostname, str)
-
-    if sites_with_same_named_hosts := _get_sites_with_same_named_hosts(raw_hostname):
-        html.show_error(
-            _("Cannot display inventory tree of host '%s': Found this host on multiple sites: %s")
-            % (raw_hostname, ", ".join(sites_with_same_named_hosts))
-        )
+    try:
+        _validate_inventory_tree_uniqueness(row)
+    except MultipleInventoryTreesError:
         return "", ""
 
     struct_tree = row.get("host_inventory")
@@ -187,7 +182,14 @@ def _paint_host_inventory_tree(row: Row, raw_path: SDRawPath) -> CellSpec:
     return td_class, code
 
 
-def _get_sites_with_same_named_hosts(raw_hostname: str) -> Optional[Sequence[SiteId]]:
+class MultipleInventoryTreesError(Exception):
+    pass
+
+
+def _validate_inventory_tree_uniqueness(row: Row) -> None:
+    raw_hostname = row.get("host_name")
+    assert isinstance(raw_hostname, str)
+
     if (
         len(
             sites_with_same_named_hosts := _get_sites_with_same_named_hosts_cache().get(
@@ -196,8 +198,11 @@ def _get_sites_with_same_named_hosts(raw_hostname: str) -> Optional[Sequence[Sit
         )
         > 1
     ):
-        return sites_with_same_named_hosts
-    return None
+        html.show_error(
+            _("Cannot display inventory tree of host '%s': Found this host on multiple sites: %s")
+            % (raw_hostname, ", ".join(sites_with_same_named_hosts))
+        )
+        raise MultipleInventoryTreesError()
 
 
 @request_memoize()
@@ -388,16 +393,9 @@ class PainterInventoryTree(Painter):
         return True
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        raw_hostname = row.get("host_name")
-        assert isinstance(raw_hostname, str)
-
-        if sites_with_same_named_hosts := _get_sites_with_same_named_hosts(raw_hostname):
-            html.show_error(
-                _(
-                    "Cannot display inventory tree of host '%s': Found this host on multiple sites: %s"
-                )
-                % (raw_hostname, ", ".join(sites_with_same_named_hosts))
-            )
+        try:
+            _validate_inventory_tree_uniqueness(row)
+        except MultipleInventoryTreesError:
             return "", ""
 
         struct_tree = row.get("host_inventory")
@@ -1927,16 +1925,9 @@ class PainterInvhistDelta(Painter):
         return ["invhist_delta", "invhist_time"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        raw_hostname = row.get("host_name")
-        assert isinstance(raw_hostname, str)
-
-        if sites_with_same_named_hosts := _get_sites_with_same_named_hosts(raw_hostname):
-            html.show_error(
-                _(
-                    "Cannot display inventory tree of host '%s': Found this host on multiple sites: %s"
-                )
-                % (raw_hostname, ", ".join(sites_with_same_named_hosts))
-            )
+        try:
+            _validate_inventory_tree_uniqueness(row)
+        except MultipleInventoryTreesError:
             return "", ""
 
         struct_tree = row.get("invhist_delta")

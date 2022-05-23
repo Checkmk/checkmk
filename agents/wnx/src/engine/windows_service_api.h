@@ -92,7 +92,7 @@ constexpr const wchar_t *kServiceAccount = L"NT AUTHORITY\\LocalService";
 constexpr const wchar_t *kServicePassword = nullptr;
 
 constexpr std::wstring_view kSrvFirewallRuleName = L"Checkmk Agent";
-constexpr std::wstring_view kIntFirewallRuleName = L"Checkmk Agent Internal";
+constexpr std::wstring_view kIntFirewallRuleName = L"Checkmk Agent Integration";
 constexpr std::wstring_view kAppFirewallRuleName = L"Checkmk Agent application";
 constexpr std::wstring_view kTstFirewallRuleName = L"Checkmk Agent TEST";
 

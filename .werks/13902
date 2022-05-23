@@ -20,7 +20,7 @@ possible for a site user to create a malicious hook and execute code as root.
 All maintained versions (>=1.6) are subject to this vulnerability. It is likely
 that also previous versions were vulnerable.
 
-CVE will be added later here.
+CVE is CVE-2022-31258.
 CVSS: CVSS:3.1/AV:L/AC:L/PR:H/UI:N/S:C/C:H/I:H/A:H 8.2
 
 We thank Timo Klecker for reporting this issue!

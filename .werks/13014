@@ -1,0 +1,18 @@
+Title: Fix agent proxmox bug if duration is more than 24 hours
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1653323709
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+Fix a bug if duration string is more than 24 hours
+
+CMK-9146
+
+In a rare occasion if the backup takes more than 24
+hours the standard datetime string parsing fails.
+So the manual parsing and feeding bits to timedelta object
+solves the problem

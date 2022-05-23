@@ -15,6 +15,7 @@ import urllib3
 
 import cmk.utils.site
 from cmk.utils.exceptions import MKException
+from cmk.utils.password_store import extract
 from cmk.utils.paths import profile_dir
 from cmk.utils.regex import regex
 from cmk.utils.site import omd_site
@@ -140,7 +141,8 @@ class AggregationRawdataGenerator:
                 encoding="utf-8"
             )
         else:
-            self._username, self._secret = self._credentials[1]
+            self._username, automation_secret = self._credentials[1]
+            self._secret = extract(automation_secret)
 
         site_config = config["site"]
 

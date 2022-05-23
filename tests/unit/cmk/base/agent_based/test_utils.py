@@ -127,7 +127,7 @@ def test_get_section_kwargs(
                 ParsedSectionsResolver(
                     section_plugins=[SECTION_ONE, SECTION_TWO, SECTION_THREE, SECTION_FOUR]
                 ),
-                SectionsParser(host_sections=node_sections),
+                SectionsParser(host_sections=node_sections, host_name=host_key.hostname),
             ),
         }
     )
@@ -204,13 +204,13 @@ def test_get_section_cluster_kwargs(
                 ParsedSectionsResolver(
                     section_plugins=[SECTION_ONE, SECTION_TWO, SECTION_THREE, SECTION_FOUR],
                 ),
-                SectionsParser(host_sections=node1_sections),
+                SectionsParser(host_sections=node1_sections, host_name=HostName("node1")),
             ),
             HostKey(HostName("node2"), HostAddress("127.0.0.1"), SourceType.HOST): (
                 ParsedSectionsResolver(
                     section_plugins=[SECTION_ONE, SECTION_TWO, SECTION_THREE, SECTION_FOUR],
                 ),
-                SectionsParser(host_sections=node2_sections),
+                SectionsParser(host_sections=node2_sections, host_name=HostName("node2")),
             ),
         }
     )

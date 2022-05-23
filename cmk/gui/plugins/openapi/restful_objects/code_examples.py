@@ -151,8 +151,15 @@ out=$(
 {%- endfor %}
 {%- if query_params %}
  {%- for param in query_params %}
+
   {%- if param.example is defined and param.example %}
+    {%- if param.example is iterable and param.example is not string %}
+    {%- for example in param.example %}
+    --data-urlencode {{ (param.name + "=" + example) | repr }} \\
+    {%- endfor %}
+    {%- else %}
     --data-urlencode {{ (param.name + "=" + param.example) | repr }} \\
+    {%- endif %}
   {%- endif %}
  {%- endfor %}
 {%- endif %}

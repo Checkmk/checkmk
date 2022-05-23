@@ -17,7 +17,6 @@ from typing import (
 )
 from .agent_based_api.v1 import (
     check_levels,
-    Metric,
     register,
     render,
     Result,
@@ -228,11 +227,11 @@ def _process_job_stats(
             state=State.OK,
             notice="Latest job started at %s" % render.datetime(job['start_time']),
         )
-        yield Metric('start_time', job['start_time'])
 
     used_start_time = max(job['running_start_time']) if currently_running else job['start_time']
     yield from check_levels(
         time.time() - used_start_time,
+        metric_name="job_age",
         label=f"Job age{currently_running}",
         # In pre-2.0 versions of this check plugin, we had
         # check_default_parameters={"age": (0, 0)}

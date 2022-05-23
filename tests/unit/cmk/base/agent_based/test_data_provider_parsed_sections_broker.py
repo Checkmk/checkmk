@@ -120,7 +120,7 @@ def test_get_parsed_section(
                 ParsedSectionsResolver(
                     section_plugins=[SECTION_ONE, SECTION_TWO, SECTION_THREE, SECTION_FOUR],
                 ),
-                SectionsParser(host_sections=node_sections),
+                SectionsParser(host_sections=node_sections, host_name=HostName("node1")),
             ),
         }
     )
@@ -141,6 +141,7 @@ def _get_parser() -> SectionsParser:
                 SectionName("four"): NODE_1,
             }
         ),
+        host_name=HostName("some-host"),
     )
 
 

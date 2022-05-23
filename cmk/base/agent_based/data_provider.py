@@ -29,6 +29,7 @@ from cmk.utils.log import console
 from cmk.utils.type_defs import (
     HostAddress,
     HostKey,
+    HostName,
     ParsedSectionName,
     result,
     SectionName,
@@ -74,14 +75,20 @@ class SectionsParser:
     def __init__(
         self,
         host_sections: HostSections,
+        host_name: HostName,
     ) -> None:
         super().__init__()
         self._host_sections = host_sections
         self._parsing_errors: List[str] = []
         self._memoized_results: Dict[SectionName, Optional[ParsingResult]] = {}
+        self._host_name = host_name
 
     def __repr__(self) -> str:
-        return "%s(host_sections=%r)" % (type(self).__name__, self._host_sections)
+        return "%s(host_sections=%r, host_name=%r)" % (
+            type(self).__name__,
+            self._host_sections,
+            self._host_name,
+        )
 
     @property
     def parsing_errors(self) -> Sequence[str]:
@@ -121,6 +128,7 @@ class SectionsParser:
                     operation="parsing",
                     section_name=section.name,
                     section_content=raw_data,
+                    host_name=self._host_name,
                 )
             )
             return None
@@ -415,7 +423,7 @@ def make_broker(
                             for section_name in host_sections.sections
                         ],
                     ),
-                    SectionsParser(host_sections=host_sections),
+                    SectionsParser(host_sections=host_sections, host_name=host_key.hostname),
                 )
                 for host_key, host_sections in collected_host_sections.items()
             }

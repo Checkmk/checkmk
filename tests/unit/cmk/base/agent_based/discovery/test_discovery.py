@@ -693,6 +693,7 @@ def test__find_candidates() -> None:
                             SectionName("uptime"): [["123"]],  # host & mgmt
                         }
                     ),
+                    host_name=HostName("test_node"),
                 ),
             ),
             HostKey(HostName("test_node"), HostAddress("1.2.3.4"), SourceType.MANAGEMENT): (
@@ -718,6 +719,7 @@ def test__find_candidates() -> None:
                             ],
                         }
                     ),
+                    host_name=HostName("test_node"),
                 ),
             ),
         }
@@ -954,7 +956,8 @@ def _realhost_scenario(monkeypatch: MonkeyPatch) -> RealHostScenario:
                                 ],
                             ],
                         }
-                    )
+                    ),
+                    host_name=hostname,
                 ),
             ),
         }
@@ -1062,7 +1065,8 @@ def _cluster_scenario(monkeypatch) -> ClusterScenario:
                                 ],
                             ],
                         }
-                    )
+                    ),
+                    host_name=node1_hostname,
                 ),
             ),
             HostKey(hostname=node2_hostname, ipaddress=ipaddress, source_type=SourceType.HOST,): (
@@ -1101,7 +1105,8 @@ def _cluster_scenario(monkeypatch) -> ClusterScenario:
                                 ],
                             ],
                         }
-                    )
+                    ),
+                    host_name=node2_hostname,
                 ),
             ),
         }

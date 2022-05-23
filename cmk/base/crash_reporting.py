@@ -54,6 +54,7 @@ def create_section_crash_dump(
     operation: str,
     section_name: SectionName,
     section_content: object,
+    host_name: HostName,
 ) -> str:
     """Create a crash dump from an exception raised in a parse or host label function"""
 
@@ -62,6 +63,7 @@ def create_section_crash_dump(
         crash = SectionCrashReport.from_exception_and_context(
             section_name=section_name,
             section_content=section_content,
+            host_name=host_name,
         )
         CrashReportStore().save(crash)
         return f"{text} - please submit a crash report! (Crash-ID: {crash.ident_to_text()})"
@@ -116,11 +118,13 @@ class SectionCrashReport(crash_reporting.ABCCrashReport):
         *,
         section_name: SectionName,
         section_content: object,
+        host_name: HostName,
     ) -> crash_reporting.ABCCrashReport:
         return cls.from_exception(
             details={
                 "section_name": str(section_name),
                 "section_content": section_content,
+                "host_name": host_name,
             },
         )
 

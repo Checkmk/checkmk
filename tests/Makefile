@@ -8,6 +8,7 @@ FIND_PYTHON_FILES := $(SCRIPTS)/find-python-files
 PIPENV := $(SCRIPTS)/run-pipenv
 PYTEST := $(PIPENV) run py.test $(PYTEST_ARGS)
 CYCLES := $(PIPENV) run py_import_cycles
+CYCLES_THRESHOLD := 68
 PYTEST_UNIT_TEST_OPTS = \
     -T unit \
     --doctest-modules \
@@ -61,7 +62,7 @@ PYTHON_VERSIONS := 2.7 3.3 3.4 3.5 3.6 3.7 3.8 3.9
 	test-integration test-integration-docker test-integration-docker-debug \
 	test-mypy test-mypy-raw itest-mypy-docker test-packaging test-pipenv-deps test-pylint test-pylint-docker \
 	test-unit test-unit-docker test-unit-resilience test-unit-resilience-docker test-unit-coverage-html \
-	test-unit-shell test-unit-shell-docker test-shellcheck test-cycles \
+	test-unit-shell test-unit-shell-docker test-shellcheck test-cycles test-cycles-docker \
 	test-tidy-livestatus test-tidy-core test-tidy-docker test-iwyu-livestatus test-iwyu-core test-iwyu-docker \
 	test-unit-livestatus test-unit-core %-livestatus-docker %-core-docker \
 	test-cargo-check test-cargo-check-docker test-cargo-test test-cargo-test-docker \
@@ -312,7 +313,13 @@ test-cycles:
 		--graph no \
 		--map enterprise:cee managed:cme plus:cpe \
 		--project-path $$(realpath -L ..) \
-		--strategy dfs
+		--strategy dfs \
+		--verbose 2>&1 | tee .py-import-cycles.txt || true
+	(cat .py-import-cycles.txt && rm .py-import-cycles.txt) \
+	| perl -ne '/Found (\d+)/ && exit ($$1 > $(CYCLES_THRESHOLD))'
+
+test-cycles-docker:
+	../scripts/run-in-docker.sh make --quiet test-cycles
 
 test-unit: prepare-protobuf-files
 	$(PYTEST) \

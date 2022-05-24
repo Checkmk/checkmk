@@ -126,6 +126,13 @@ STAGES:
       RESULT_CHECK_TYPE: "GCC"
       RESULT_CHECK_FILE_PATTERN: "results/python-format.txt"
 
+    - NAME: 'Python Cyclic Dependencies'
+      ONLY_WHEN_NOT_EMPTY: CHANGED_TESTS_MAKEFILE,CHANGED_PIPFILE,CHANGED_PYTHON_FILES
+      DIR: 'tests'
+      COMMAND: 'make test-cycles-docker > ${RESULTS}/py-import-cycles.txt'
+      TEXT_ON_SKIP: 'No Python files changed'
+      RESULT_CHECK_FILE_PATTERN: "results/py-import-cycles.txt"
+
     - NAME: 'Python Unit Test'
       ONLY_WHEN_NOT_EMPTY: CHANGED_PYTHON_FILES,CHANGED_PIPFILE,CHANGED_PYTEST_INI_FILE,CHANGED_TESTS_MAKEFILE,CHANGED_RUN_PIPENV_SCRIPT
       DIR: 'tests'

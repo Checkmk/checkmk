@@ -47,12 +47,3 @@ def check_fireeye_states(states):
         )
 
     return states_evaluated
-
-
-def fireeye_check_generic(infotext, counter, value, warn=None, crit=None):
-    perfdata = [(counter, value, warn, crit)]
-    if crit is not None and value >= crit:
-        return (2, infotext + " (warn/crit at %d/%d)" % (warn, crit), perfdata)
-    elif warn is not None and value >= warn:
-        return (1, infotext + " (warn/crit at %d/%d)" % (warn, crit), perfdata)
-    return (0, infotext, perfdata)

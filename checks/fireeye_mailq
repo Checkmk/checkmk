@@ -4,9 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables needed for accessing discovery rulesets.
-from cmk.base.check_legacy_includes.fireeye import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.fireeye import inventory_fireeye_generic, scan_fireeye
 
 # .1.3.6.1.4.1.25597.13.1.44.0 0
 # .1.3.6.1.4.1.25597.13.1.45.0 603
@@ -23,22 +21,20 @@ factory_settings["fireeye_mailq"] = {
 
 
 def parse_fireeye_mailq(info):
-    try:
-        queue_infos = info[0]
-    except IndexError:
-        return {}
-    parsed = {}
-    for index, item in enumerate(["Deferred", "Hold", "Incoming", "Active", "Drop"]):
-        parsed.update({item: queue_infos[index]})
-    return parsed
+    if info:
+        return dict(zip(["Deferred", "Hold", "Incoming", "Active", "Drop"], info[0]))
+    return {}
 
 
 def check_fireeye_mailq(item, params, parsed):
     for queue, value in parsed.items():
-        infotext = "Mails in %s queue: %s" % (queue.lower(), value)
-        warn, crit = params.get(queue.lower(), (None, None))
-        counter = "mail_queue_%s_length" % queue.lower()
-        yield fireeye_check_generic(infotext, counter, int(value), warn, crit)
+        yield check_levels(
+            int(value),
+            "mail_queue_%s_length" % queue.lower(),
+            params.get(queue.lower()),
+            human_readable_func=str,
+            infoname="Mails in %s queue" % queue.lower(),
+        )
 
 
 check_info["fireeye_mailq"] = {

@@ -46,20 +46,20 @@ def test_discover_somehting(discover_fireeye_quarantine, section: StringTable) -
 
 def test_check_ok(check_fireeye_quarantine, section: StringTable) -> None:
     assert list(check_fireeye_quarantine({"usage": (50, 100)}, section)) == [
-        Result(state=State.OK, summary="Usage: 42%"),
+        Result(state=State.OK, summary="Usage: 42.0%"),
         Metric("quarantine", 42.0, levels=(50.0, 100.0)),
     ]
 
 
 def test_check_warn(check_fireeye_quarantine, section: StringTable) -> None:
     assert list(check_fireeye_quarantine({"usage": (23, 50)}, section)) == [
-        Result(state=State.WARN, summary="Usage: 42% (warn/crit at 23/50)"),
+        Result(state=State.WARN, summary="Usage: 42.0% (warn/crit at 23.0%/50.0%)"),
         Metric("quarantine", 42.0, levels=(23.0, 50.0)),
     ]
 
 
 def test_check_crit(check_fireeye_quarantine, section: StringTable) -> None:
     assert list(check_fireeye_quarantine({"usage": (23, 36)}, section)) == [
-        Result(state=State.CRIT, summary="Usage: 42% (warn/crit at 23/36)"),
+        Result(state=State.CRIT, summary="Usage: 42.0% (warn/crit at 23.0%/36.0%)"),
         Metric("quarantine", 42.0, levels=(23.0, 36.0)),
     ]

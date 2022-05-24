@@ -62,8 +62,8 @@ def test_check(check_fireeye_mailq, section: Mapping[str, str]) -> None:
         Metric("mail_queue_hold_length", 0.0, levels=(1.0, 5.0)),
         Result(state=State.OK, summary="Mails in incoming queue: 0"),
         Metric("mail_queue_incoming_length", 0.0),
-        Result(state=State.WARN, summary="Mails in active queue: 3 (warn/crit at 1/5)"),
+        Result(state=State.WARN, summary="Mails in active queue: 3 (warn/crit at 1.0/5.0)"),
         Metric("mail_queue_active_length", 3.0, levels=(1.0, 5.0)),
-        Result(state=State.CRIT, summary="Mails in drop queue: 5 (warn/crit at 1/5)"),
+        Result(state=State.CRIT, summary="Mails in drop queue: 5 (warn/crit at 1.0/5.0)"),
         Metric("mail_queue_drop_length", 5.0, levels=(1.0, 5.0)),
     ]

@@ -1,0 +1,16 @@
+Title: Correct ruleset links for special agents
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1653420831
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p1
+
+Previously the REST API would report incorrect ruleset names for special agents,
+including wrong links to the rulesets.
+
+This has now been fixed. No further action necessary.
+

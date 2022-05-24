@@ -148,34 +148,36 @@ def quote_shell_string(s: Any) -> Any:
     return "'" + s.replace("'", "'\"'\"'") + "'"
 
 
-def _send_email(config: Dict[str, Any], to: Any, subject: Any, body: Any, logger: Logger) -> bool:
+def _send_email(config: Dict[str, Any], to: str, subject: str, body: str, logger: Logger) -> bool:
     command_utf8 = [
-        "mail", "-S", "sendcharsets=utf-8", "-s",
+        b"mail",
+        b"-S",
+        b"sendcharsets=utf-8",
+        b"-s",
         subject.encode("utf-8"),
-        to.encode("utf-8")
+        to.encode("utf-8"),
     ]
 
     if config["debug_rules"]:
-        logger.info("  Executing: %s" % " ".join(command_utf8))
+        logger.info("  Executing: %s" % " ".join(x.decode("utf-8") for x in command_utf8))
 
-    p = subprocess.Popen(
+    # FIXME: This may lock on too large buffer. We should move all "mail sending" code
+    # to a general place and fix this for all our components (notification plugins,
+    # notify.py, this one, ...)
+    completed_process = subprocess.run(
         command_utf8,
         close_fds=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
-        stdin=subprocess.PIPE,
         encoding="utf-8",
+        input=body,
+        check=False,
     )
-    # FIXME: This may lock on too large buffer. We should move all "mail sending" code
-    # to a general place and fix this for all our components (notification plugins,
-    # notify.py, this one, ...)
-    stdout, stderr = p.communicate(input=body)
-    exitcode = p.returncode
 
-    logger.info('  Exitcode: %d' % exitcode)
-    if exitcode != 0:
+    logger.info("  Exitcode: %d" % completed_process.returncode)
+    if completed_process.returncode:
         logger.info("  Error: Failed to send the mail.")
-        for line in (stdout + stderr).splitlines():
+        for line in (completed_process.stdout + completed_process.stderr).splitlines():
             logger.info("  Output: %s" % line.rstrip())
         return False
 

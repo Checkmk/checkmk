@@ -1,0 +1,14 @@
+Title: EC send_email crash
+Class: fix
+Compatible: compat
+Component: ec
+Date: 1653414828
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.0.0p26
+
+Bytes in utf-8 are now decoded correctly
+in send_email in EC.
+
+SUP-10358

@@ -4,21 +4,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import time
+from typing import Any, Dict, Mapping, Optional, Union
 
-from typing import Dict
-
+from .agent_based_api.v1 import check_levels, register, render, Result, Service, State
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils import sap_hana
-from .agent_based_api.v1 import (
-    render,
-    check_levels,
-    register,
-    Service,
-    Result,
-    State as state,
-)
+
+Section = Mapping[str, Mapping[str, Union[float, str]]]
 
 
-def _get_sap_hana_backup_timestamp(backup_time_readable):
+def _get_sap_hana_backup_timestamp(backup_time_readable: str) -> Optional[float]:
     try:
         t_struct = time.strptime(backup_time_readable, "%Y-%m-%d %H:%M:%S")
     except ValueError:
@@ -26,19 +21,16 @@ def _get_sap_hana_backup_timestamp(backup_time_readable):
     return time.mktime(t_struct)
 
 
-def parse_sap_hana_backup(string_table):
+def parse_sap_hana_backup(string_table: StringTable) -> Section:
     parsed: Dict[str, Dict] = {}
     for sid_instance, lines in sap_hana.parse_sap_hana(string_table).items():
         for line in lines:
             if len(line) < 5:
                 continue
 
-            backup_time_readable = line[1].rsplit(".", 1)[0]
-            backup_time_stamp = _get_sap_hana_backup_timestamp(backup_time_readable)
             parsed.setdefault(
                 "%s - %s" % (sid_instance, line[0]), {
-                    "sys_end_time": backup_time_stamp,
-                    "backup_time_readable": backup_time_readable,
+                    "end_time": _get_sap_hana_backup_timestamp(line[1].rsplit(".", 1)[0]),
                     "state_name": line[2],
                     "comment": line[3],
                     "message": line[4],
@@ -52,12 +44,12 @@ register.agent_section(
 )
 
 
-def discovery_sap_hana_backup(section):
+def discovery_sap_hana_backup(section: Section) -> DiscoveryResult:
     for sid in section:
         yield Service(item=sid)
 
 
-def check_sap_hana_backup(item, params, section):
+def check_sap_hana_backup(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
     now = time.time()
 
     data = section.get(item)
@@ -66,19 +58,19 @@ def check_sap_hana_backup(item, params, section):
 
     state_name = data['state_name']
     if state_name == 'failed':
-        cur_state = state.CRIT
+        cur_state = State.CRIT
     elif state_name in ['cancel pending', 'canceled']:
-        cur_state = state.WARN
+        cur_state = State.WARN
     elif state_name in ['ok', 'successful', 'running']:
-        cur_state = state.OK
+        cur_state = State.OK
     else:
-        cur_state = state.UNKNOWN
+        cur_state = State.UNKNOWN
     yield Result(state=cur_state, summary="Status: %s" % state_name)
 
-    sys_end_time = data.get('sys_end_time')
-    if sys_end_time is not None:
-        yield Result(state=state.OK, summary="Last: %s" % data['backup_time_readable'])
-        yield from check_levels(now - sys_end_time,
+    if (end_time := data.get('end_time')) is not None:
+        assert isinstance(end_time, float)
+        yield Result(state=State.OK, summary="Last: %s" % render.datetime(end_time))
+        yield from check_levels(now - end_time,
                                 metric_name="backup_age",
                                 levels_upper=params['backup_age'],
                                 render_func=render.timespan,
@@ -86,21 +78,21 @@ def check_sap_hana_backup(item, params, section):
 
     comment = data["comment"]
     if comment:
-        yield Result(state=state.OK, summary="Comment: %s" % comment)
+        yield Result(state=State.OK, summary="Comment: %s" % comment)
 
     message = data["message"]
     if message:
-        yield Result(state=state.OK, summary="Message: %s" % message)
+        yield Result(state=State.OK, summary="Message: %s" % message)
 
 
 def cluster_check_sap_hana_backup(
-    item,
-    params,
+    item: str,
+    params: Mapping[str, Any],
     section,
 ):
     # TODO: This is *not* a real cluster check. We do not evaluate the different node results with
     # each other, but this was the behaviour before the migration to the new Check API.
-    yield Result(state=state.OK, summary='Nodes: %s' % ', '.join(section.keys()))
+    yield Result(state=State.OK, summary='Nodes: %s' % ', '.join(section.keys()))
     for node_section in section.values():
         if item in node_section:
             yield from check_sap_hana_backup(item, params, node_section)

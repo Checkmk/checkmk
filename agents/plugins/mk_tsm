@@ -56,6 +56,12 @@ EOF
 SELECT 'FOO' as foo,COALESCE(type,'Unknown') as type,stgpools.stgpool_name, sum(coalesce(logical_mb,0)) as SUM_LOGICAL_MB from occupancy full outer join stgpools on occupancy.stgpool_name=stgpools.stgpool_name group by stgpools.stgpool_name,type
 EOF
 
+    # Scratch Tapes
+    echo '<<<tsm_scratch:sep(9)>>>'
+    $dsmcmd <<EOF | sed -n "/^FOO/s//$INST/p"
+SELECT 'FOO', COUNT(*), library_name FROM libvolumes where status='Scratch' group by library_name
+EOF
+
 }
 
 # Find in the list of processes TSM daemons. Example output of 'ps xewwg'

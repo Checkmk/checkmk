@@ -75,9 +75,6 @@ def mock_livestatus(
         "livestatus.SingleSiteConnection._create_socket", new=live.create_socket
     ), mock.patch.dict(
         os.environ, {"OMD_ROOT": "/", "OMD_SITE": "NO_SITE"}
-    ), mock.patch(
-        "livestatus.SingleSiteConnection.parse_raw_response",
-        new=live.parse_json_or_python3_raw_response,
     ):
 
         # We don't want to be polluted by other tests.

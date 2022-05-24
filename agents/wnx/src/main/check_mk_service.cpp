@@ -500,13 +500,24 @@ int MainFunction(int argc, wchar_t const *argv[]) {
 
     if (param == wtools::ConvertToUTF16(kExecParam) ||
         param == wtools::ConvertToUTF16(kAdhocParam)) {
-        std::wstring second_param = argc > 2 ? argv[2] : L"";
+        std::wstring second_param{argc > 2 ? argv[2] : L""};
 
         auto log_on_screen = srv::StdioLog::no;
-        if (second_param == wtools::ConvertToUTF16(kExecParamShowAll))
+        if (second_param == wtools::ConvertToUTF16(kExecParamShowAll)) {
             log_on_screen = srv::StdioLog::extended;
-        else if (second_param == wtools::ConvertToUTF16(kExecParamShowWarn))
+        } else if (second_param == wtools::ConvertToUTF16(kExecParamShowWarn)) {
             log_on_screen = srv::StdioLog::yes;
+        } else if (second_param ==
+                   wtools::ConvertToUTF16(kExecParamIntegration)) {
+            if (cma::tools::win::GetEnv(env::integration_base_dir).empty()) {
+                fmt::print(
+                    L"Integration is requested, but env var '{}' is absent\n",
+                    env::integration_base_dir);
+                ::exit(12);
+            } else {
+                cma::details::SetModus(cma::Modus::integration);
+            }
+        }
 
         return srv::ExecMainService(log_on_screen);
     }

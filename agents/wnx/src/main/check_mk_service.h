@@ -43,10 +43,11 @@ constexpr std::string_view kExecParam = "exec";             // runs as app
 constexpr std::string_view kAdhocParam = "adhoc";           // runs as app
 constexpr std::string_view kExecParamShowWarn = "-show";    // logging sub param
 constexpr std::string_view kExecParamShowAll = "-showall";  // logging sub param
+constexpr std::string_view kExecParamIntegration = "-integration";  // internal
 
 constexpr std::string_view kCvtParam = "convert";    // convert ini to yaml
 constexpr std::string_view kCvtParamShow = "-show";  // logging sub param
-constexpr const wchar_t* kSkypeParam = L"skype";     // hidden
+constexpr const wchar_t *kSkypeParam = L"skype";     // hidden
 constexpr std::string_view kPatchHashParam = "patch_hash";      // hidden
 constexpr std::string_view kStopLegacyParam = "stop_legacy";    //
 constexpr std::string_view kStartLegacyParam = "start_legacy";  //
@@ -72,9 +73,9 @@ constexpr std::string_view kResetOhm = "resetohm";  // reset ohm as treasury
 
 // Service name and Targeting
 #if defined(CMK_SERVICE_NAME)
-constexpr const char* const kServiceExeName = "check_mk_agent.exe";
+constexpr const char *const kServiceExeName = "check_mk_agent.exe";
 #elif defined(CMK_TEST)
-constexpr const char* const kServiceExeName = L"test";
+constexpr const char *const kServiceExeName = L"test";
 #else
 #error "Target not defined properly"
 #endif
@@ -82,6 +83,6 @@ constexpr const char* const kServiceExeName = L"test";
 }  // namespace cma::cmdline
 namespace cma {
 // we want to test main function too.
-int MainFunction(int argc, wchar_t const* Argv[]);
+int MainFunction(int argc, wchar_t const *argv[]);
 }  // namespace cma
 #endif  // check_mk_service_h__

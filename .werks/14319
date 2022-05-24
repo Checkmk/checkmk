@@ -1,0 +1,14 @@
+Title: Fix error on using folder in rule search
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1653381047
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0i1
+
+If the option "Folder" was used in the rule search, submitting the search
+button lead to the error "The selected element 'None' is not longer available.
+Please select something else.".

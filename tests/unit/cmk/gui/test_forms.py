@@ -64,6 +64,7 @@ from cmk.gui.wato.pages.rulesets import _is_var_to_delete
                     "search_p_rule_ineffective",
                     "3cbc87c7681f34db4617feaa2c8801931bc5e42d8d0f560e756dd4cd92885f18",
                 ),
+                ("search_p_rule_folder_USE", "ON"),
                 (
                     "search_p_rule_folder_0",
                     "6f49cdbd80e1b95d5e6427e1501fc217790daee87055fa5b4e71064288bddede",
@@ -103,8 +104,6 @@ from cmk.gui.wato.pages.rulesets import _is_var_to_delete
                 "search_p_rule_hosttags_tagvalue_networking",
                 "search_p_rule_disabled",
                 "search_p_rule_ineffective",
-                "search_p_rule_folder_0",
-                "search_p_rule_folder_1",
             ],
             id="search_with_default_settings",
         ),

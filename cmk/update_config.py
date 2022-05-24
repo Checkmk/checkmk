@@ -101,7 +101,7 @@ from cmk.gui.plugins.userdb.utils import (
 )
 from cmk.gui.plugins.views.utils import get_all_views
 from cmk.gui.plugins.watolib.utils import config_variable_registry, filter_unknown_settings
-from cmk.gui.site_config import has_wato_slave_sites, is_wato_slave_site
+from cmk.gui.site_config import is_wato_slave_site
 from cmk.gui.userdb import load_users, save_users, Users
 from cmk.gui.utils.script_helpers import gui_context
 from cmk.gui.wato.mkeventd import MACROS_AND_VARS
@@ -1571,13 +1571,9 @@ class UpdateConfig:
 
     def _update_mknotifyd(self) -> None:
         """
-        Update the sitespecific mknotifyd config file on central site because
-        this is not handled by the global or sitespecific updates.
+        Update the sitespecific mknotifyd config file.
         The encryption key is missing on update from 2.0 to 2.1.
         """
-        if is_wato_slave_site() or not has_wato_slave_sites():
-            return
-
         sitespecific_file_path: Path = Path(
             cmk.utils.paths.default_config_dir, "mknotifyd.d", "wato", "sitespecific.mk"
         )

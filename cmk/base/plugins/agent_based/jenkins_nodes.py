@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from typing import Any, Dict, Final, List, Mapping, Sequence
+from typing import Any, Dict, Final, List, Mapping, Optional, Sequence, Union
 
 from .agent_based_api.v1 import check_levels, register, render, Result, Service, ServiceLabel, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
@@ -54,6 +54,16 @@ def discover_jenkins_nodes(section: Section) -> DiscoveryResult:
             ]
 
         yield Service(item=item, parameters={}, labels=service_labels)
+
+
+def _get_optional_value(
+    mon_data: Mapping[str, Optional[Mapping[str, Union[float, int]]]], key: str, *, value: str
+) -> Optional[Union[float, int]]:
+    k = mon_data.get(key)
+    if k is not None:
+        return k.get(value)
+
+    return None
 
 
 def check_jenkins_nodes(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
@@ -164,8 +174,8 @@ def check_jenkins_nodes(item: str, params: Mapping[str, Any], section: Section) 
             return
 
         if (
-            response_time := mon_data.get("hudson.node_monitors.ResponseTimeMonitor", {}).get(
-                "average"
+            response_time := _get_optional_value(
+                mon_data, "hudson.node_monitors.ResponseTimeMonitor", value="average"
             )
         ) is not None:
             yield from check_levels(
@@ -176,7 +186,9 @@ def check_jenkins_nodes(item: str, params: Mapping[str, Any], section: Section) 
                 render_func=render.timespan,
             )
 
-        if (diff := mon_data.get("hudson.node_monitors.ClockMonitor", {}).get("diff")) is not None:
+        if (
+            diff := _get_optional_value(mon_data, "hudson.node_monitors.ClockMonitor", value="diff")
+        ) is not None:
             yield from check_levels(
                 abs(diff) / 1000.0,
                 metric_name="jenkins_clock",
@@ -186,7 +198,9 @@ def check_jenkins_nodes(item: str, params: Mapping[str, Any], section: Section) 
             )
 
         if (
-            size := mon_data.get("hudson.node_monitors.TemporarySpaceMonitor", {}).get("size")
+            size := _get_optional_value(
+                mon_data, "hudson.node_monitors.TemporarySpaceMonitor", value="size"
+            )
         ) is not None:
             levels_lower = (
                 None

@@ -34,7 +34,18 @@ from cmk.gui.utils.theme import theme
 Label = Tuple[float, Optional[str], int]
 
 LayoutedCurve = dict[str, Any]
-VerticalAxis = dict[str, Any]
+
+
+class VerticalAxis(TypedDict):
+    range: tuple[float, float]
+    real_range: tuple[float, float]
+    label_distance: float
+    sub_distance: float
+    axis_label: Optional[str]
+    labels: list[Label]
+    max_label_length: int
+
+
 TimeAxis = dict[str, Any]
 
 
@@ -536,15 +547,17 @@ def compute_graph_v_axis(
         min_value, max_value, unit, label_distance, sub_distance, mirrored
     )
 
-    v_axis = {
-        "range": (min_value, max_value),
-        "real_range": real_range,
-        "label_distance": label_distance,
-        "sub_distance": sub_distance,
-        "axis_label": None,
-        "labels": rendered_labels,
-        "max_label_length": max_label_length,
-    }
+    v_axis = VerticalAxis(
+        {
+            "range": (min_value, max_value),
+            "real_range": real_range,
+            "label_distance": label_distance,
+            "sub_distance": sub_distance,
+            "axis_label": None,
+            "labels": rendered_labels,
+            "max_label_length": max_label_length,
+        }
+    )
 
     if graph_unit is not None:
         v_axis["axis_label"] = graph_unit

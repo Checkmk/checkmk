@@ -1555,7 +1555,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy):
         "fireeye_raid.disks",
         "fireeye_smtp_conn",
         "fireeye_sys_image",
-        "fireeye_sys_status",
         "fireeye_temp",
         "fjdarye100_cadaps",
         "fjdarye100_cmods",

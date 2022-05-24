@@ -18,7 +18,6 @@ from typing import (
     Iterable,
     Iterator,
     List,
-    Literal,
     Mapping,
     Optional,
     OrderedDict,
@@ -56,6 +55,8 @@ from cmk.gui.plugins.visuals.utils import livestatus_query_bare
 from cmk.gui.type_defs import (
     Choice,
     Choices,
+    GraphConsoldiationFunction,
+    GraphPresentation,
     MetricDefinition,
     MetricExpression,
     Perfdata,
@@ -77,9 +78,7 @@ Atom = TypeVar("Atom")
 TransformedAtom = TypeVar("TransformedAtom")
 StackElement = Union[Atom, TransformedAtom]
 
-GraphPresentation = str  # TODO: Improve Literal["lines", "stacked", "sum", "average", "min", "max"]
 ScalarDefinition = Union[str, Tuple[str, Union[str, LazyString]]]
-GraphConsoldiationFunction = Literal["max", "min", "average"]
 
 GraphArtwork = dict[str, Any]
 Curve = dict[str, Any]

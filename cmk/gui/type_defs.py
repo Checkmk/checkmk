@@ -27,7 +27,15 @@ from typing import (
 from pydantic import BaseModel
 
 from cmk.utils.cpu_tracking import Snapshot
-from cmk.utils.type_defs import ContactgroupName, DisabledNotificationsOptions, EventRule, UserId
+from cmk.utils.type_defs import (
+    ContactgroupName,
+    DisabledNotificationsOptions,
+    EventRule,
+    HostName,
+    MetricName,
+    ServiceName,
+    UserId,
+)
 
 from cmk.gui.exceptions import FinalizeRequest
 from cmk.gui.utils.speaklater import LazyString
@@ -340,7 +348,9 @@ class TranslatedMetric(_TranslatedMetricRequired, total=False):
     color: str
 
 
-GraphIdentifier = Tuple[str, Any]
+GraphPresentation = str  # TODO: Improve Literal["lines", "stacked", "sum", "average", "min", "max"]
+GraphConsoldiationFunction = Literal["max", "min", "average"]
+
 RenderingExpression = Tuple[Any, ...]
 TranslatedMetrics = Dict[str, TranslatedMetric]
 MetricExpression = str
@@ -353,6 +363,72 @@ PerfdataTuple = Tuple[
     str, float, str, Optional[float], Optional[float], Optional[float], Optional[float]
 ]
 Perfdata = List[PerfdataTuple]
+
+
+class GraphSpec(TypedDict):
+    pass
+
+
+class _TemplateGraphSpecMandatory(GraphSpec):
+    site: Optional[str]
+    host_name: HostName
+    service_description: ServiceName
+
+
+class TemplateGraphSpec(_TemplateGraphSpecMandatory, total=False):
+    graph_index: Optional[int]
+    graph_id: Optional[str]
+
+
+class ExplicitGraphSpec(GraphSpec, total=False):
+    # This is added during run time by GraphIdentificationExplicit.create_graph_recipes. Where is it
+    # used?
+    specification: tuple[Literal["explicit"], GraphSpec]  # TODO: Correct would be ExplicitGraphSpec
+    # I'd bet they are not mandatory. Needs to be figured out
+    title: str
+    unit: str
+    consolidation_function: Optional[GraphConsoldiationFunction]
+    explicit_vertical_range: tuple[Optional[float], Optional[float]]
+    omit_zero_metrics: bool
+    horizontal_rules: list  # TODO: Be more specific
+    context: VisualContext
+    add_context_to_title: bool
+    metrics: list  # TODO: Be more specific
+
+
+class _CombinedGraphSpecMandatory(GraphSpec):
+    datasource: str
+    single_infos: SingleInfos
+    presentation: GraphPresentation
+    context: VisualContext
+
+
+class CombinedGraphSpec(_CombinedGraphSpecMandatory, total=False):
+    selected_metric: MetricDefinition
+    consolidation_function: GraphConsoldiationFunction
+    graph_template: str
+
+
+class _SingleTimeseriesGraphSpecMandatory(GraphSpec):
+    site: str
+    metric: MetricName
+
+
+class SingleTimeseriesGraphSpec(_SingleTimeseriesGraphSpecMandatory, total=False):
+    host: HostName
+    service: ServiceName
+    service_description: ServiceName
+    color: Optional[str]
+
+
+GraphIdentifier = Union[
+    Tuple[Literal["custom"], str],
+    Tuple[Literal["forecast"], str],
+    Tuple[Literal["template"], TemplateGraphSpec],
+    Tuple[Literal["combined"], CombinedGraphSpec],
+    Tuple[Literal["explicit"], ExplicitGraphSpec],
+    Tuple[Literal["single_timeseries"], SingleTimeseriesGraphSpec],
+]
 
 
 class RenderableRecipe(NamedTuple):

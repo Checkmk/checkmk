@@ -4,9 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Iterable, Iterator, List, Mapping, Optional, Sequence, Tuple
+from typing import Iterable, Iterator, List, Optional, Sequence, Tuple
 
 from cmk.utils import pnp_cleanup
+from cmk.utils.type_defs import HostName, ServiceName
 
 from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.i18n import _
@@ -32,7 +33,7 @@ from cmk.gui.plugins.metrics.utils import (
     translated_metrics_from_row,
     TranslatedMetrics,
 )
-from cmk.gui.type_defs import MetricDefinition, Row
+from cmk.gui.type_defs import MetricDefinition, Row, TemplateGraphSpec
 
 RPNAtom = Tuple  # TODO: Improve this type
 
@@ -43,7 +44,7 @@ RPNAtom = Tuple  # TODO: Improve this type
 # build a corresponding transform, so even after switching to graph_id everywhere, we will need to
 # keep this functionality here for some time to support already created dashlets, reports etc.
 def matching_graph_templates(
-    graph_identification_info: Mapping,
+    graph_identification_info: TemplateGraphSpec,
     translated_metrics: TranslatedMetrics,
 ) -> Iterable[Tuple[int, GraphTemplate]]:
     graph_index = graph_identification_info.get(
@@ -68,29 +69,32 @@ def matching_graph_templates(
     )
 
 
-class GraphIdentificationTemplate(GraphIdentification):
+class GraphIdentificationTemplate(GraphIdentification[TemplateGraphSpec]):
     @classmethod
     def ident(cls) -> str:
         return "template"
 
     @staticmethod
-    def template_tuning(graph_template: GraphTemplate, **context: str) -> Optional[GraphTemplate]:
+    def template_tuning(
+        graph_template: GraphTemplate,
+        site: Optional[str],
+        host_name: Optional[HostName],
+        service_description: Optional[ServiceName],
+        destination: Optional[str],
+    ) -> Optional[GraphTemplate]:
         return graph_template
 
-    def create_graph_recipes(self, ident_info, destination=None) -> list[GraphRecipe]:
+    def create_graph_recipes(
+        self, ident_info: TemplateGraphSpec, destination: Optional[str] = None
+    ) -> list[GraphRecipe]:
         graph_identification_info = ident_info
 
-        def get_info(key):
-            try:
-                return graph_identification_info[key]
-            except KeyError:
-                raise MKUserError(
-                    None, _("Graph identification: The '%s' attribute is missing") % key
-                )
-
-        site = get_info("site")
-        host_name = get_info("host_name")
-        service_description = get_info("service_description")
+        try:
+            site = graph_identification_info["site"]
+            host_name = graph_identification_info["host_name"]
+            service_description = graph_identification_info["service_description"]
+        except KeyError as e:
+            raise MKUserError(None, _("Graph identification: The '%s' attribute is missing") % e)
         row = get_graph_data_from_livestatus(site, host_name, service_description)
         translated_metrics = translated_metrics_from_row(row)
 
@@ -115,7 +119,7 @@ class GraphIdentificationTemplate(GraphIdentification):
                 row,
             )
             # Put the specification of this graph into the graph_recipe
-            spec_info = graph_identification_info.copy()
+            spec_info = dict(graph_identification_info)
             # Performance graph dashlets already use graph_id, but for example in reports, we still
             # use graph_index. We should switch to graph_id everywhere (CMK-7308). Once this is
             # done, we can remove the line below.

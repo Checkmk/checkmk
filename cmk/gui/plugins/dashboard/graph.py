@@ -33,7 +33,13 @@ from cmk.gui.plugins.metrics.html_render import (
 )
 from cmk.gui.plugins.metrics.valuespecs import vs_graph_render_options
 from cmk.gui.plugins.visuals.utils import get_only_sites_from_context
-from cmk.gui.type_defs import Choices, GraphIdentifier, SingleInfos, VisualContext
+from cmk.gui.type_defs import (
+    Choices,
+    GraphIdentifier,
+    SingleInfos,
+    TemplateGraphSpec,
+    VisualContext,
+)
 from cmk.gui.utils.autocompleter_config import ContextAutocompleterConfig
 from cmk.gui.valuespec import (
     Dictionary,
@@ -230,19 +236,25 @@ class GraphDashlet(Dashlet):
         # handle this here
         raw_source = self._dashlet_spec["source"]
         if isinstance(raw_source, int):
-            graph_def = {"graph_index": raw_source - 1}
+            graph_spec = TemplateGraphSpec(
+                {
+                    "site": site,
+                    "host_name": host,
+                    "service_description": service,
+                    "graph_index": raw_source - 1,
+                }
+            )
         else:
-            graph_def = {"graph_id": raw_source}
+            graph_spec = TemplateGraphSpec(
+                {
+                    "site": site,
+                    "host_name": host,
+                    "service_description": service,
+                    "graph_id": raw_source,
+                }
+            )
 
-        return (
-            "template",
-            {
-                "site": site,
-                "host_name": host,
-                "service_description": service,
-                **graph_def,
-            },
-        )
+        return ("template", graph_spec)
 
     @classmethod
     def vs_parameters(cls) -> ValueSpec:

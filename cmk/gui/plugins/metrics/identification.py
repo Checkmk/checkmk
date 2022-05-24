@@ -5,12 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-from typing import MutableMapping, Type
+from typing import Generic, MutableMapping, Optional, Type, TypeVar
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.plugins.metrics.utils import GraphRecipe
-from cmk.gui.type_defs import GraphIdentifier
+from cmk.gui.type_defs import ExplicitGraphSpec, GraphIdentifier
 
 # .
 #   .--Identification------------------------------------------------------.
@@ -51,7 +51,7 @@ class GraphIdentificationTypes:
     def create_graph_recipes(
         self,
         graph_identification: GraphIdentifier,
-        destination=None,
+        destination: Optional[str] = None,
     ) -> list[GraphRecipe]:
         type_ident, spec_info = graph_identification
         type_cls = self._types[type_ident]
@@ -60,8 +60,10 @@ class GraphIdentificationTypes:
 
 graph_identification_types = GraphIdentificationTypes()
 
+T = TypeVar("T")
 
-class GraphIdentification(abc.ABC):
+
+class GraphIdentification(Generic[T], abc.ABC):
     """Abstract base class for all graph identification classes"""
 
     @classmethod
@@ -70,17 +72,21 @@ class GraphIdentification(abc.ABC):
         ...
 
     @abc.abstractmethod
-    def create_graph_recipes(self, ident_info, destination=None) -> list[GraphRecipe]:
+    def create_graph_recipes(
+        self, ident_info: T, destination: Optional[str] = None
+    ) -> list[GraphRecipe]:
         ...
 
 
-class GraphIdentificationExplicit(GraphIdentification):
+class GraphIdentificationExplicit(GraphIdentification[ExplicitGraphSpec]):
     @classmethod
     def ident(cls):
         return "explicit"
 
-    def create_graph_recipes(self, ident_info, destination=None) -> list[GraphRecipe]:
-        graph_recipe = ident_info.copy()
+    def create_graph_recipes(
+        self, ident_info: ExplicitGraphSpec, destination: Optional[str] = None
+    ) -> list[GraphRecipe]:
+        graph_recipe = dict(ident_info)
         graph_recipe["specification"] = ("explicit", ident_info)
         return [graph_recipe]
 

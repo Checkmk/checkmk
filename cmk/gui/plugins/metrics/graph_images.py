@@ -10,7 +10,7 @@ import base64
 import json
 import time
 import traceback
-from typing import Any, Optional
+from typing import Any, Literal, Optional
 
 import livestatus
 
@@ -35,6 +35,7 @@ from cmk.gui.plugins.metrics.graph_pdf import (
 )
 from cmk.gui.plugins.metrics.identification import graph_identification_types
 from cmk.gui.plugins.metrics.utils import get_graph_data_from_livestatus, GraphRecipe
+from cmk.gui.type_defs import TemplateGraphSpec
 
 
 # Provides a json list containing base64 encoded PNG images of the current 24h graphs
@@ -53,11 +54,11 @@ def ajax_graph_images_for_notifications() -> None:
 
 def _answer_graph_image_request() -> None:
     try:
-        host_name = request.var("host")
+        host_name = request.get_ascii_input_mandatory("host")
         if not host_name:
             raise MKGeneralException(_('Missing mandatory "host" parameter'))
 
-        service_description = request.var("service", "_HOST_")
+        service_description = request.get_str_input_mandatory("service", "_HOST_")
 
         site = request.var("site")
         # FIXME: We should really enforce site here. But it seems that the notification context
@@ -82,14 +83,16 @@ def _answer_graph_image_request() -> None:
 
         graph_render_options = graph_image_render_options()
 
-        graph_identification = (
+        graph_identification: tuple[Literal["template"], TemplateGraphSpec] = (
             "template",
-            {
-                "site": site,
-                "host_name": host_name,
-                "service_description": service_description,
-                "graph_index": None,  # all graphs
-            },
+            TemplateGraphSpec(
+                {
+                    "site": site,
+                    "host_name": host_name,
+                    "service_description": service_description,
+                    "graph_index": None,  # all graphs
+                }
+            ),
         )
 
         graph_data_range = graph_image_data_range(graph_render_options, start_time, end_time)

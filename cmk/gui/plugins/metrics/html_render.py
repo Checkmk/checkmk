@@ -8,7 +8,18 @@ import copy
 import json
 import time
 import traceback
-from typing import Any, Iterable, List, Mapping, NamedTuple, Optional, Sequence, Tuple, Union
+from typing import (
+    Any,
+    Iterable,
+    List,
+    Literal,
+    Mapping,
+    NamedTuple,
+    Optional,
+    Sequence,
+    Tuple,
+    Union,
+)
 
 import livestatus
 
@@ -37,7 +48,7 @@ from cmk.gui.plugins.metrics.utils import (
 )
 from cmk.gui.plugins.metrics.valuespecs import transform_graph_render_options_title_format
 from cmk.gui.sites import get_alias_of_host
-from cmk.gui.type_defs import GraphIdentifier
+from cmk.gui.type_defs import GraphIdentifier, TemplateGraphSpec
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.popups import MethodAjax
@@ -93,13 +104,15 @@ def host_service_graph_popup_cmk(site, host_name, service_description):
         "time_range": (start_time, end_time),
     }
 
-    graph_identification = (
+    graph_identification: tuple[Literal["template"], TemplateGraphSpec] = (
         "template",
-        {
-            "site": site,
-            "host_name": host_name,
-            "service_description": service_description,
-        },
+        TemplateGraphSpec(
+            {
+                "site": site,
+                "host_name": host_name,
+                "service_description": service_description,
+            }
+        ),
     )
 
     html.write_html(
@@ -647,17 +660,17 @@ def forget_manual_vertical_zoom() -> None:
 
 
 def resolve_graph_recipe(
-    graph_identification: GraphIdentifier, destination=None
+    graph_identification: GraphIdentifier, destination: Optional[str] = None
 ) -> Sequence[GraphRecipe]:
     return graph_identification_types.create_graph_recipes(
         graph_identification,
-        destination=None,
+        destination=destination,
     )
 
 
 def resolve_graph_recipe_with_error_handling(
     graph_identification: GraphIdentifier,
-    destination=None,
+    destination: Optional[str] = None,
 ) -> Union[Sequence[GraphRecipe], HTML]:
     try:
         return resolve_graph_recipe(

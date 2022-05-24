@@ -6,6 +6,7 @@
 
 import copy
 import time
+from typing import Literal
 
 from cmk.gui.config import active_config
 from cmk.gui.http import request, response
@@ -21,6 +22,7 @@ from cmk.gui.plugins.views.utils import (
     PainterOption,
     PainterOptions,
 )
+from cmk.gui.type_defs import TemplateGraphSpec
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import Dictionary, DropdownChoice, Transform
@@ -93,13 +95,15 @@ multisite_builtin_views.update(
 
 
 def paint_time_graph_cmk(row, cell, override_graph_render_options=None):
-    graph_identification = (
+    graph_identification: tuple[Literal["template"], TemplateGraphSpec] = (
         "template",
-        {
-            "site": row["site"],
-            "host_name": row["host_name"],
-            "service_description": row.get("service_description", "_HOST_"),
-        },
+        TemplateGraphSpec(
+            {
+                "site": row["site"],
+                "host_name": row["host_name"],
+                "service_description": row.get("service_description", "_HOST_"),
+            }
+        ),
     )
 
     # Load the graph render options from

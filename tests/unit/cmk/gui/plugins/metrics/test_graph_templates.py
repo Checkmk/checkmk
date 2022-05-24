@@ -4,13 +4,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Mapping, Sequence, Tuple
+from typing import Sequence, Tuple
 
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
 
 from cmk.gui.plugins.metrics import graph_templates
 from cmk.gui.plugins.metrics.utils import GraphTemplate
+from cmk.gui.type_defs import TemplateGraphSpec
 
 _GRAPH_TEMPLATES = [
     {"id": "1", "title": "Graph 1"},
@@ -66,7 +67,7 @@ _GRAPH_TEMPLATES = [
 )
 def test_matching_graph_templates(
     monkeypatch: MonkeyPatch,
-    graph_id_info: Mapping[str, str],
+    graph_id_info: TemplateGraphSpec,
     expected_result: Sequence[Tuple[int, GraphTemplate]],
 ) -> None:
     monkeypatch.setattr(

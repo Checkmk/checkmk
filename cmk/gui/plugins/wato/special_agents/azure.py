@@ -6,14 +6,13 @@
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.special_agents.common import RulespecGroupVMCloudContainer
-from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
+from cmk.gui.plugins.wato.utils import HostRulespec, IndividualOrStoredPassword, rulespec_registry
 from cmk.gui.valuespec import (
     CascadingDropdown,
     Dictionary,
     DropdownChoice,
     ListOf,
     ListOfStrings,
-    Password,
     TextInput,
     Tuple,
 )
@@ -108,7 +107,7 @@ def _valuespec_special_agents_azure():
             ),
             (
                 "secret",
-                Password(
+                IndividualOrStoredPassword(
                     title=_("Client Secret"),
                     allow_empty=False,
                     size=45,

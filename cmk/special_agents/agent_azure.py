@@ -22,7 +22,7 @@ from typing import Any, List, Mapping, Sequence, Tuple
 import adal  # type: ignore[import] # pylint: disable=import-error
 import requests
 
-import cmk.utils.password_store
+from cmk.utils import password_store
 from cmk.utils.paths import tmp_dir
 
 from cmk.special_agents.utils import DataCache, get_seconds_since_midnight, vcrtrace
@@ -30,7 +30,6 @@ from cmk.special_agents.utils import DataCache, get_seconds_since_midnight, vcrt
 Args = argparse.Namespace
 GroupLabels = Mapping[str, Mapping[str, str]]
 
-cmk.utils.password_store.replace_passwords()
 
 LOGGER = logging.getLogger()  # root logger for now
 
@@ -973,8 +972,11 @@ def main_subscription(args, selector, subscription):
 
 
 def main(argv=None):
+    if argv is None:
+        password_store.replace_passwords()
+        argv = sys.argv[1:]
 
-    args = parse_arguments(argv or sys.argv[1:])
+    args = parse_arguments(argv)
     selector = Selector(args)
     if args.dump_config:
         sys.stdout.write("Configuration:\n%s\n" % selector)

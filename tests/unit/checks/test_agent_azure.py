@@ -12,26 +12,54 @@ from tests.testlib import SpecialAgent
 
 
 @pytest.mark.parametrize(
-    "params, expected_args",
+    ["params", "expected_args"],
     [
-        (
+        pytest.param(
             {
                 "subscription": "banana",
                 "tenant": "strawberry",
                 "client": "blueberry",
-                "secret": "vurystrong",
+                "secret": ("password", "vurystrong"),
                 "config": {},
             },
             [
-                "--subscription",
-                "banana",
                 "--tenant",
                 "strawberry",
                 "--client",
                 "blueberry",
                 "--secret",
                 "vurystrong",
+                "--subscription",
+                "banana",
             ],
+            id="explicit_password",
+        ),
+        pytest.param(
+            {
+                "subscription": "banana",
+                "tenant": "strawberry",
+                "client": "blueberry",
+                "secret": ("store", "azure"),
+                "config": {
+                    "explicit": [{"group_name": "my_res_group"}],
+                    "tag_based": [("my_tag", "exists")],
+                },
+            },
+            [
+                "--tenant",
+                "strawberry",
+                "--client",
+                "blueberry",
+                "--secret",
+                ("store", "azure", "%s"),
+                "--subscription",
+                "banana",
+                "--explicit-config",
+                "group=my_res_group",
+                "--require-tag",
+                "my_tag",
+            ],
+            id="password_from_store",
         ),
     ],
 )

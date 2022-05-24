@@ -12,9 +12,16 @@ def agent_azure_arguments(
     hostname: str,
     ipaddress: Optional[str],
 ) -> Sequence[Any]:
-    args = []
+    args = [
+        "--tenant",
+        params["tenant"],
+        "--client",
+        params["client"],
+        "--secret",
+        passwordstore_get_cmdline("%s", params["secret"]),
+    ]
 
-    keys = ("subscription", "tenant", "client", "secret", "piggyback_vms", "sequential")
+    keys = ("subscription", "piggyback_vms", "sequential")
 
     for key in (k for k in keys if k in params):
         option = "--%s" % key

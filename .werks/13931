@@ -1,0 +1,15 @@
+Title: wrong labels not raising errors in the REST API
+Class: fix
+Compatible: compat
+Component: core
+Date: 1651485790
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p26
+
+Previously when trying to set an invalid "labels" value when creating or updating a host through the REST API,
+the error did not occur and a 200 OK response would be returned. The value would not be set though.
+
+This werk fixes this problem.

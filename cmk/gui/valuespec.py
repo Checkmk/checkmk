@@ -5893,6 +5893,11 @@ class Labels(ValueSpec):
         return labels
 
     def _validate_value(self, value, varprefix):
+        if not isinstance(value, dict):
+            raise MKUserError(
+                varprefix,
+                _("The value is not of type dict."),
+            )
         for k, v in value.items():
             if not isinstance(k, str):
                 raise MKUserError(

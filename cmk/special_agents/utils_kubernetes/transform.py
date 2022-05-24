@@ -221,7 +221,7 @@ def pod_status(pod: client.V1Pod) -> api.PodStatus:
         start_time=api.Timestamp(start_time) if start_time else None,
         host_ip=api.IpAddress(pod.status.host_ip) if pod.status.host_ip else None,
         pod_ip=api.IpAddress(pod.status.pod_ip) if pod.status.pod_ip else None,
-        qos_class=pod.status.qos_class.lower(),
+        qos_class=pod.status.qos_class.lower() if pod.status.qos_class else None,
     )
 
 

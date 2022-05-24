@@ -566,7 +566,7 @@ class PodStatus(BaseModel):
     start_time: Optional[Timestamp]  # None if pod is faulty
     host_ip: Optional[IpAddress] = None
     pod_ip: Optional[IpAddress] = None
-    qos_class: QosClass
+    qos_class: Optional[QosClass]
 
 
 class Pod(BaseModel):

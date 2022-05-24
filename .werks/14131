@@ -1,0 +1,17 @@
+Title: KUBE: Handle Pods without QoS class
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1653481024
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p1
+
+Previously, the Kubernetes agent would crash with the error message
+
+[special_kube] Agent exited with code 1: 'NoneType' object has no attribute 'lower'
+
+With this werk, this crash no longer occurs.
+

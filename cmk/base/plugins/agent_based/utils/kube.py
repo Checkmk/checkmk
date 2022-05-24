@@ -457,7 +457,7 @@ class PodInfo(BaseModel):
     dns_policy: Optional[str]
     host_ip: Optional[IpAddress]
     pod_ip: Optional[IpAddress]
-    qos_class: QosClass
+    qos_class: Optional[QosClass]  # can be None, if the Pod was evicted.
     restart_policy: RestartPolicy
     uid: PodUID
     # TODO: see CMK-9901

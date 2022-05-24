@@ -15,11 +15,14 @@ from jira import JIRA  # type: ignore[import]
 from jira.exceptions import JIRAError  # type: ignore[import]
 from requests.exceptions import ConnectionError as RequestsConnectionError
 
+from cmk.utils.password_store import replace_passwords
+
 urllib3.disable_warnings(urllib3.exceptions.SubjectAltNameWarning)
 
 
 def main(argv=None):
     if argv is None:
+        replace_passwords()
         argv = sys.argv[1:]
 
     args = parse_arguments(argv)

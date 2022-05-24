@@ -1,0 +1,13 @@
+Title: Jira & Jenkins special agents: fix password store usage
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1653410663
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1
+
+The special agents for Jira and Jenkins offered the password store usage in
+the user interface, but did not properly retrieve passwords from the store if
+used.

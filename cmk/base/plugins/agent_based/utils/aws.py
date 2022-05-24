@@ -6,13 +6,24 @@
 
 import json
 from dataclasses import dataclass
-from typing import Any, Dict, Iterable, Mapping, Optional, Sequence
+from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence
 
-from ..agent_based_api.v1 import Service
-from ..agent_based_api.v1.type_defs import DiscoveryResult, StringTable
+from ..agent_based_api.v1 import check_levels, Metric, render, Result, Service, State
+from ..agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
-GenericAWSSection = Sequence[Mapping[str, Any]]
+GenericAWSSection = Sequence[Any]
 AWSSectionMetrics = Mapping[str, Mapping[str, Any]]
+
+# Some limit values have dynamic names, eg.
+# 'Rules of VPC security group %s' % SECURITY_GROUP
+# At the moment we exclude them in the performance data.  If it's
+# a limit for a piggyback host, we do NOT exclude, eg. 'load_balancer_listeners'
+# and 'load_balancer_registered_instances' per load balancer piggyback host
+exclude_aws_limits_perf_vars = [
+    "vpc_sec_group_rules",
+    "vpc_sec_groups",
+    "if_vpc_sec_group",
+]
 
 
 @dataclass
@@ -23,6 +34,7 @@ class LambdaFunctionConfiguration:
 
 
 LambdaSummarySection = Mapping[str, LambdaFunctionConfiguration]
+AWSLimitsByRegion = Dict[str, List]
 
 
 def discover_lambda_functions(
@@ -42,6 +54,59 @@ def parse_aws(string_table: StringTable) -> GenericAWSSection:
         except (TypeError, IndexError):
             pass
     return loaded
+
+
+def parse_aws_limits_generic(
+    string_table: StringTable,
+) -> AWSLimitsByRegion:
+    limits_by_region: AWSLimitsByRegion = {}
+    for line in parse_aws(string_table):
+        limits_by_region.setdefault(line[-1], []).append(line[:-1] + [lambda x: "%s" % x])
+    return limits_by_region
+
+
+def is_valid_aws_limits_perf_data(perfvar: str) -> bool:
+    return perfvar not in exclude_aws_limits_perf_vars
+
+
+def check_aws_limits(
+    aws_service: str, params: Mapping[str, Any], parsed_region_data: list[list]
+) -> CheckResult:
+    for resource_key, resource_title, limit, amount, human_readable_func in parsed_region_data:
+        try:
+            p_limit, warn, crit = params[resource_key]
+        except KeyError:
+            yield Result(state=State.UNKNOWN, summary="Unknown resource %r" % str(resource_key))
+            continue
+
+        if p_limit is None:
+            limit_ref = limit
+        else:
+            limit_ref = p_limit
+
+        if is_valid_aws_limits_perf_data(resource_key):
+            yield Metric(name="aws_%s_%s" % (aws_service, resource_key), value=amount)
+
+        if not limit_ref:
+            continue
+
+        result, _ = check_levels(
+            value=100.0 * amount / limit_ref,
+            levels_upper=(warn, crit),
+            metric_name=resource_key + "_in_%",
+            render_func=render.percent,
+        )
+
+        yield Result(
+            state=result.state,
+            notice="%s: %s (of max. %s), %s"
+            % (
+                resource_title,
+                human_readable_func(amount),
+                human_readable_func(limit_ref),
+                result.summary,
+            ),
+        )
 
 
 def extract_aws_metrics_by_labels(

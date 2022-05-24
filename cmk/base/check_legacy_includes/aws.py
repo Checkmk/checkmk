@@ -18,9 +18,13 @@ from cmk.base.check_api import (
     ServiceCheckResult,
     state_markers,
 )
-from cmk.base.plugins.agent_based.utils.aws import parse_aws
+from cmk.base.plugins.agent_based.utils import aws
 
 AWSRegions = dict(agent_aws_types.AWSRegions)
+
+parse_aws_limits_generic = aws.parse_aws_limits_generic
+parse_aws = aws.parse_aws
+AWSLimitsByRegion = aws.AWSLimitsByRegion
 
 
 def inventory_aws_generic(parsed, required_metrics):
@@ -68,34 +72,6 @@ def check_aws_elb_summary_generic(item, params, load_balancers):
         yield 0, "\n%s" % "\n".join(long_output)
 
 
-# Some limit values have dynamic names, eg.
-# 'Rules of VPC security group %s' % SECURITY_GROUP
-# At the moment we exclude them in the performance data.  If it's
-# a limit for a piggyback host, we do NOT exclude, eg. 'load_balancer_listeners'
-# and 'load_balancer_registered_instances' per load balancer piggyback host
-_exclude_aws_limits_perf_vars = [
-    "vpc_sec_group_rules",
-    "vpc_sec_groups",
-    "if_vpc_sec_group",
-]
-
-AWSLimitsByRegion = Dict[str, List]
-
-
-def _is_valid_aws_limits_perf_data(perfvar):
-    if perfvar in _exclude_aws_limits_perf_vars:
-        return False
-    return True
-
-
-def parse_aws_limits_generic(info):
-    limits_by_region: AWSLimitsByRegion = {}
-    for line in parse_aws(info):
-        # FIXME: according to the type hints, "line" is Mapping[str, Any]
-        limits_by_region.setdefault(line[-1], []).append(line[:-1] + [lambda x: "%s" % x])  # type: ignore
-    return limits_by_region
-
-
 def check_aws_limits(aws_service, params, parsed_region_data):
     """
     Generic check for checking limits of AWS resource.
@@ -125,7 +101,7 @@ def check_aws_limits(aws_service, params, parsed_region_data):
             human_readable_func(limit_ref),
         )
         perfvar = "aws_%s_%s" % (aws_service, resource_key)
-        if _is_valid_aws_limits_perf_data(resource_key):
+        if aws.is_valid_aws_limits_perf_data(resource_key):
             perfdata.append((perfvar, amount))
 
         if not limit_ref:

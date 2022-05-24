@@ -4,22 +4,32 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import time
-from typing import Dict, NamedTuple, Optional
+from typing import Any, Dict, Mapping, NamedTuple, Optional
 
-from .agent_based_api.v1 import check_levels, IgnoreResultsError, register, render, Result, Service
-from .agent_based_api.v1 import State as state
+from .agent_based_api.v1 import (
+    check_levels,
+    IgnoreResultsError,
+    register,
+    render,
+    Result,
+    Service,
+    State,
+)
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils import sap_hana
 
 
 class Backup(NamedTuple):
-    sys_end_time: Optional[int] = None
-    backup_time_readable: Optional[str] = None
+    end_time: Optional[float] = None  # local time relative to monitoring server
     state_name: Optional[str] = None
     comment: Optional[str] = None
     message: Optional[str] = None
 
 
-def _get_sap_hana_backup_timestamp(backup_time_readable):
+Section = Mapping[str, Backup]
+
+
+def _get_sap_hana_backup_timestamp(backup_time_readable: str) -> Optional[float]:
     try:
         t_struct = time.strptime(backup_time_readable, "%Y-%m-%d %H:%M:%S")
     except ValueError:
@@ -27,7 +37,7 @@ def _get_sap_hana_backup_timestamp(backup_time_readable):
     return time.mktime(t_struct)
 
 
-def parse_sap_hana_backup(string_table):
+def parse_sap_hana_backup(string_table: StringTable) -> Section:
     parsed: Dict[str, Backup] = {}
     for sid_instance, lines in sap_hana.parse_sap_hana(string_table).items():
         if len(lines) == 0:
@@ -36,13 +46,10 @@ def parse_sap_hana_backup(string_table):
             if len(line) < 5:
                 continue
 
-            backup_time_readable = line[1].rsplit(".", 1)[0]
-            backup_time_stamp = _get_sap_hana_backup_timestamp(backup_time_readable)
             parsed.setdefault(
                 "%s - %s" % (sid_instance, line[0]),
                 Backup(
-                    sys_end_time=backup_time_stamp,
-                    backup_time_readable=backup_time_readable,
+                    end_time=_get_sap_hana_backup_timestamp(line[1].rsplit(".", 1)[0]),
                     state_name=line[2],
                     comment=line[3],
                     message=line[4],
@@ -57,12 +64,12 @@ register.agent_section(
 )
 
 
-def discovery_sap_hana_backup(section):
+def discovery_sap_hana_backup(section: Section) -> DiscoveryResult:
     for sid in section:
         yield Service(item=sid)
 
 
-def check_sap_hana_backup(item, params, section):
+def check_sap_hana_backup(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
     now = time.time()
 
     data = section.get(item)
@@ -70,48 +77,44 @@ def check_sap_hana_backup(item, params, section):
         raise IgnoreResultsError("Login into database failed.")
 
     if not data.state_name:
-        yield Result(state=state.WARN, summary="No backup found")
+        yield Result(state=State.WARN, summary="No backup found")
         return
 
-    state_name = data.state_name
-    if state_name == "failed":
-        cur_state = state.CRIT
-    elif state_name in ["cancel pending", "canceled"]:
-        cur_state = state.WARN
-    elif state_name in ["ok", "successful", "running"]:
-        cur_state = state.OK
+    if data.state_name == "failed":
+        cur_state = State.CRIT
+    elif data.state_name in ["cancel pending", "canceled"]:
+        cur_state = State.WARN
+    elif data.state_name in ["ok", "successful", "running"]:
+        cur_state = State.OK
     else:
-        cur_state = state.UNKNOWN
-    yield Result(state=cur_state, summary="Status: %s" % state_name)
+        cur_state = State.UNKNOWN
+    yield Result(state=cur_state, summary="Status: %s" % data.state_name)
 
-    sys_end_time = data.sys_end_time
-    if sys_end_time is not None:
-        yield Result(state=state.OK, summary="Last: %s" % data.backup_time_readable)
+    if data.end_time is not None:
+        yield Result(state=State.OK, summary="Last: %s" % render.datetime(data.end_time))
         yield from check_levels(
-            now - sys_end_time,
+            now - data.end_time,
             metric_name="backup_age",
             levels_upper=params["backup_age"],
             render_func=render.timespan,
             label="Age",
         )
 
-    comment = data.comment
-    if comment:
-        yield Result(state=state.OK, summary="Comment: %s" % comment)
+    if data.comment:
+        yield Result(state=State.OK, summary="Comment: %s" % data.comment)
 
-    message = data.message
-    if message:
-        yield Result(state=state.OK, summary="Message: %s" % message)
+    if data.message:
+        yield Result(state=State.OK, summary="Message: %s" % data.message)
 
 
 def cluster_check_sap_hana_backup(
-    item,
-    params,
+    item: str,
+    params: Mapping[str, Any],
     section,
 ):
     # TODO: This is *not* a real cluster check. We do not evaluate the different node results with
     # each other, but this was the behaviour before the migration to the new Check API.
-    yield Result(state=state.OK, summary="Nodes: %s" % ", ".join(section.keys()))
+    yield Result(state=State.OK, summary="Nodes: %s" % ", ".join(section.keys()))
     for node_section in section.values():
         if item in node_section:
             yield from check_sap_hana_backup(item, params, node_section)

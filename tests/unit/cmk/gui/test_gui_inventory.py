@@ -25,7 +25,13 @@ import cmk.gui.inventory
         (".hardware.cpu.", (["hardware", "cpu"], None)),
         (".hardware.cpu.model", (["hardware", "cpu"], ["model"])),
         (".software.packages:", (["software", "packages"], [])),
+        (".hardware.memory.arrays:*.", (["hardware", "memory", "arrays", "*"], None)),
         (".software.packages:17.name", (["software", "packages", "17"], ["name"])),
+        (".software.packages:*.name", (["software", "packages", "*"], ["name"])),
+        (
+            ".hardware.memory.arrays:*.devices:*.speed",
+            (["hardware", "memory", "arrays", "*", "devices", "*"], ["speed"]),
+        ),
     ],
 )
 def test_parse_tree_path(raw_path, expected_path):

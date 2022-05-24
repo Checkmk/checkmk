@@ -251,8 +251,7 @@ def time_series(
             result = Result(ts=ts)
             if filter_by is None:
                 yield result
-                return
-            if ts.resource.labels[filter_by.label] == filter_by.value:
+            elif ts.resource.labels[filter_by.label] == filter_by.value:
                 yield result
 
 

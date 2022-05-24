@@ -157,6 +157,23 @@ def test_metric_serialization(agent_output: Sequence[agent_gcp.Section], capsys)
         agent_gcp.Result.deserialize(line)
 
 
+def test_metric_retrieval(mocker: MockerFixture):
+    timeseries = [
+        '{"metric": {"type": "compute.googleapis.com/instance/cpu/utilization", "labels": {}}, "resource": {"type": "gce_instance", "labels": {"project_id": "tribe29-check-development", "instance_id": "4916403162284897775"}}, "metric_kind": 1, "value_type": 3, "points": [{"interval": {"start_time": "2022-04-13T11:19:37.193318Z", "end_time": "2022-04-13T11:19:37.193318Z"}, "value": {"double_value": 0.0033734199011726433}}], "unit": ""}'
+    ]
+    client = agent_gcp.Client({}, "test")
+    mocker.patch.object(client, "monitoring", FakeMonitoringClient(timeseries))
+    mocker.patch.object(client, "asset", FakeAssetClient())
+    sections: list[agent_gcp.Section] = []
+    collector = collector_factory(sections)
+    agent_gcp.run(client, [agent_gcp.RUN], [], serializer=collector)
+    result_section = next(
+        s for s in sections if isinstance(s, agent_gcp.ResultSection) and s.name == "cloud_run"
+    )
+    results = list(result_section.results)
+    assert len(results) == len(agent_gcp.RUN.metrics)
+
+
 def test_asset_serialization(agent_output: Sequence[agent_gcp.Section], capsys):
     asset_section = next(s for s in agent_output if isinstance(s, agent_gcp.AssetSection))
     agent_gcp.gcp_serializer([asset_section])

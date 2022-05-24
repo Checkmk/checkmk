@@ -155,5 +155,4 @@ def test_cluster_check_sap_hana_backup_missing_node_data():
 
     section = {"node0": None, "node1": SECTION}
 
-    with pytest.raises(TypeError):
-        list(sap_hana_backup.cluster_check_sap_hana_backup(ITEM, params, section))
+    assert list(sap_hana_backup.cluster_check_sap_hana_backup(ITEM, params, section))

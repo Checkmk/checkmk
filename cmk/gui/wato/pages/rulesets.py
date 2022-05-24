@@ -391,6 +391,10 @@ def _is_var_to_delete(form_prefix: str, varname: str, value: str) -> bool:
     and tags with an own tagvalue variable, if not 'ignored':
     'search_p_rule_hosttags_tag_address_family' : 'ignore'/'is'/'is not'
     'search_p_rule_hosttags_tagvalue_address_family' : 'ip-v4-only'
+
+    We also keep folder:
+    'search_p_rule_folder_USE' : 'on'
+    'search_p_rule_folder_1' : '60a33e6cf5151f2d52eddae9685cfa270426aa89d8dbc7dfb854606f1d1a40fe'
     """
     if "_auxtag_" in varname and value != "ignore":
         return False
@@ -406,6 +410,9 @@ def _is_var_to_delete(form_prefix: str, varname: str, value: str) -> bool:
         tag_value = html.request.var(tag_varname)
         if tag_value and tag_value != "ignore":
             return False
+
+    if "_folder_" in varname:
+        return False
 
     return True
 

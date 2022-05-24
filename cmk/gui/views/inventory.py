@@ -225,118 +225,6 @@ def _get_filtered_attributes(
     return attributes.get_filtered_attributes(lambda key: key == keys[-1])
 
 
-def _declare_inv_column(raw_path: SDRawPath, raw_hint: InventoryHintSpec) -> None:
-    """Declares painters, sorters and filters to be used in views based on all host related
-    datasources."""
-    if raw_path == ".":
-        name = "inv"
-    else:
-        name = "inv_" + raw_path.replace(":", "_").replace(".", "_").strip("_")
-
-    hint = _make_hint_from_raw(raw_path, raw_hint)
-
-    # Declare column painter
-    painter_spec = {
-        "title": (
-            raw_path == "." and _("Inventory Tree") or (_("Inventory") + ": " + hint.long_title)
-        ),
-        "columns": ["host_inventory", "host_structured_status"],
-        "options": ["show_internal_tree_paths"],
-        "params": Dictionary(
-            title=_("Report options"),
-            elements=[
-                (
-                    "use_short",
-                    Checkbox(
-                        title=_("Use short title in reports header"),
-                        default_value=False,
-                    ),
-                ),
-            ],
-            required_keys=["use_short"],
-        ),
-        # Only attributes can be shown in reports. There is currently no way to render trees.
-        # The HTML code would simply be stripped by the default rendering mechanism which does
-        # not look good for the HW/SW inventory tree
-        "printable": isinstance(hint, AttributeDisplayHint),
-        "load_inv": True,
-        "paint": lambda row: _paint_host_inventory_tree(row, raw_path),
-        "sorter": name,
-    }
-
-    painter_spec["short"] = hint.short_title
-
-    register_painter(name, painter_spec)
-
-    # Sorters and Filters only for attributes
-    if isinstance(hint, AttributeDisplayHint):
-        # Declare sorter. It will detect numbers automatically
-        register_sorter(
-            name,
-            {
-                "_inv_path": raw_path,
-                "title": _("Inventory") + ": " + hint.long_title,
-                "columns": ["host_inventory", "host_structured_status"],
-                "load_inv": True,
-                "cmp": lambda self, a, b: _cmp_inventory_node(a, b, self._spec["_inv_path"]),
-            },
-        )
-
-        # Declare filter. Sync this with _declare_invtable_column()
-        if hint.data_type == "str":
-            filter_registry.register(
-                FilterInvText(
-                    ident=name,
-                    title=hint.long_title,
-                    inv_path=raw_path,
-                    is_show_more=hint.is_show_more,
-                )
-            )
-        elif hint.data_type == "bool":
-            filter_registry.register(
-                FilterInvBool(
-                    ident=name,
-                    title=hint.long_title,
-                    inv_path=raw_path,
-                    is_show_more=hint.is_show_more,
-                )
-            )
-        else:
-            filter_info = _inv_filter_info().get(hint.data_type, {})
-            filter_registry.register(
-                FilterInvFloat(
-                    ident=name,
-                    title=hint.long_title,
-                    inv_path=raw_path,
-                    unit=filter_info.get("unit"),
-                    scale=filter_info.get("scale", 1.0),
-                    is_show_more=hint.is_show_more,
-                )
-            )
-
-
-def _make_hint_from_raw(
-    raw_path: SDRawPath, raw_hint: InventoryHintSpec
-) -> Union[NodeDisplayHint, TableDisplayHint, AttributeDisplayHint]:
-    if raw_path.endswith("."):
-        return NodeDisplayHint.make_from_hint(raw_path, raw_hint)
-
-    if raw_path.endswith(":"):
-        return TableDisplayHint.make_from_hint(raw_path, raw_hint)
-
-    return AttributeDisplayHint.make_from_hint(raw_path, raw_hint)
-
-
-def _inv_filter_info():
-    return {
-        "bytes": {"unit": _("MB"), "scale": 1024 * 1024},
-        "bytes_rounded": {"unit": _("MB"), "scale": 1024 * 1024},
-        "hz": {"unit": _("MHz"), "scale": 1000000},
-        "volt": {"unit": _("Volt")},
-        "timestamp": {"unit": _("secs")},
-    }
-
-
 def _cmp_inventory_node(
     a: Dict[str, StructuredDataNode], b: Dict[str, StructuredDataNode], invpath: str
 ) -> int:
@@ -1056,6 +944,23 @@ def inv_titleinfo_long(raw_path: SDRawPath) -> str:
     return NodeDisplayHint.make(parsed_path).long_title
 
 
+# .
+#   .--inventory columns---------------------------------------------------.
+#   |             _                      _                                 |
+#   |            (_)_ ____   _____ _ __ | |_ ___  _ __ _   _               |
+#   |            | | '_ \ \ / / _ \ '_ \| __/ _ \| '__| | | |              |
+#   |            | | | | \ V /  __/ | | | || (_) | |  | |_| |              |
+#   |            |_|_| |_|\_/ \___|_| |_|\__\___/|_|   \__, |              |
+#   |                                                  |___/               |
+#   |                          _                                           |
+#   |                 ___ ___ | |_   _ _ __ ___  _ __  ___                 |
+#   |                / __/ _ \| | | | | '_ ` _ \| '_ \/ __|                |
+#   |               | (_| (_) | | |_| | | | | | | | | \__ \                |
+#   |                \___\___/|_|\__,_|_| |_| |_|_| |_|___/                |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+
 def declare_inventory_columns() -> None:
     # create painters for node with a display hint
     for raw_path, raw_hint in inventory_displayhints.items():
@@ -1063,6 +968,118 @@ def declare_inventory_columns() -> None:
             continue
 
         _declare_inv_column(raw_path, raw_hint)
+
+
+def _declare_inv_column(raw_path: SDRawPath, raw_hint: InventoryHintSpec) -> None:
+    """Declares painters, sorters and filters to be used in views based on all host related
+    datasources."""
+    if raw_path == ".":
+        name = "inv"
+    else:
+        name = "inv_" + raw_path.replace(":", "_").replace(".", "_").strip("_")
+
+    hint = _make_hint_from_raw(raw_path, raw_hint)
+
+    # Declare column painter
+    painter_spec = {
+        "title": (
+            raw_path == "." and _("Inventory Tree") or (_("Inventory") + ": " + hint.long_title)
+        ),
+        "columns": ["host_inventory", "host_structured_status"],
+        "options": ["show_internal_tree_paths"],
+        "params": Dictionary(
+            title=_("Report options"),
+            elements=[
+                (
+                    "use_short",
+                    Checkbox(
+                        title=_("Use short title in reports header"),
+                        default_value=False,
+                    ),
+                ),
+            ],
+            required_keys=["use_short"],
+        ),
+        # Only attributes can be shown in reports. There is currently no way to render trees.
+        # The HTML code would simply be stripped by the default rendering mechanism which does
+        # not look good for the HW/SW inventory tree
+        "printable": isinstance(hint, AttributeDisplayHint),
+        "load_inv": True,
+        "paint": lambda row: _paint_host_inventory_tree(row, raw_path),
+        "sorter": name,
+    }
+
+    painter_spec["short"] = hint.short_title
+
+    register_painter(name, painter_spec)
+
+    # Sorters and Filters only for attributes
+    if isinstance(hint, AttributeDisplayHint):
+        # Declare sorter. It will detect numbers automatically
+        register_sorter(
+            name,
+            {
+                "_inv_path": raw_path,
+                "title": _("Inventory") + ": " + hint.long_title,
+                "columns": ["host_inventory", "host_structured_status"],
+                "load_inv": True,
+                "cmp": lambda self, a, b: _cmp_inventory_node(a, b, self._spec["_inv_path"]),
+            },
+        )
+
+        # Declare filter. Sync this with _declare_invtable_column()
+        if hint.data_type == "str":
+            filter_registry.register(
+                FilterInvText(
+                    ident=name,
+                    title=hint.long_title,
+                    inv_path=raw_path,
+                    is_show_more=hint.is_show_more,
+                )
+            )
+        elif hint.data_type == "bool":
+            filter_registry.register(
+                FilterInvBool(
+                    ident=name,
+                    title=hint.long_title,
+                    inv_path=raw_path,
+                    is_show_more=hint.is_show_more,
+                )
+            )
+        else:
+            filter_info = _inv_filter_info().get(hint.data_type, {})
+            filter_registry.register(
+                FilterInvFloat(
+                    ident=name,
+                    title=hint.long_title,
+                    inv_path=raw_path,
+                    unit=filter_info.get("unit"),
+                    scale=filter_info.get("scale", 1.0),
+                    is_show_more=hint.is_show_more,
+                )
+            )
+
+
+def _make_hint_from_raw(
+    raw_path: SDRawPath, raw_hint: InventoryHintSpec
+) -> Union[NodeDisplayHint, TableDisplayHint, AttributeDisplayHint]:
+    if raw_path.endswith("."):
+        return NodeDisplayHint.make_from_hint(raw_path, raw_hint)
+
+    if raw_path.endswith(":"):
+        return TableDisplayHint.make_from_hint(raw_path, raw_hint)
+
+    return AttributeDisplayHint.make_from_hint(raw_path, raw_hint)
+
+
+def _inv_filter_info():
+    return {
+        "bytes": {"unit": _("MB"), "scale": 1024 * 1024},
+        "bytes_rounded": {"unit": _("MB"), "scale": 1024 * 1024},
+        "hz": {"unit": _("MHz"), "scale": 1000000},
+        "volt": {"unit": _("Volt")},
+        "timestamp": {"unit": _("secs")},
+    }
 
 
 # .

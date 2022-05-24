@@ -289,6 +289,10 @@ def test_openapi_show_ruleset(logged_in_admin_wsgi_app, ruleset):
     )
     assert resp.json["extensions"]["name"] == ruleset
 
+
+def test_openapi_show_non_existing_ruleset(logged_in_admin_wsgi_app):
+    wsgi_app = logged_in_admin_wsgi_app
+    base = "/NO_SITE/check_mk/api/1.0"
     # Request a ruleset that doesn't exist should return a 400 Bad Request.
     wsgi_app.get(
         base + "/objects/ruleset/non_existing_ruleset",

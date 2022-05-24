@@ -88,12 +88,12 @@ def check_sap_hana_backup(item: str, params: Mapping[str, Any], section: Section
 def cluster_check_sap_hana_backup(
     item: str,
     params: Mapping[str, Any],
-    section,
+    section: Mapping[str, Optional[Section]],
 ):
     # TODO: This is *not* a real cluster check. We do not evaluate the different node results with
     # each other, but this was the behaviour before the migration to the new Check API.
     yield Result(state=State.OK, summary='Nodes: %s' % ', '.join(section.keys()))
-    for node_section in section.values():
+    for node_section in [s for s in section.values() if s is not None]:
         if item in node_section:
             yield from check_sap_hana_backup(item, params, node_section)
             return

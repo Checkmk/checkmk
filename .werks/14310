@@ -1,0 +1,14 @@
+Title: sap_hana_backup: cluster check crashes when node has no data
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1653393598
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p26
+
+The <tt>sap_hana_backup</tt> cluster check crashed when at least one node had
+no relevant data with the error message "TypeError: argument of type 'NoneType'
+is not iterable". This has been fixed.

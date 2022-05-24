@@ -13,6 +13,7 @@ import shutil
 import time
 import xml.dom.minidom  # type: ignore[import]
 from dataclasses import dataclass, field
+from enum import auto, Enum
 from pathlib import Path
 from typing import Callable, Dict, List, Literal, NamedTuple, Optional, Sequence, Set, Tuple, Union
 
@@ -26,7 +27,7 @@ import cmk.utils.store as store
 from cmk.utils.exceptions import MKException, MKGeneralException
 from cmk.utils.structured_data import (
     make_filter,
-    SDKeys,
+    SDKey,
     SDPath,
     SDRawPath,
     SDRow,
@@ -49,7 +50,7 @@ from cmk.gui.type_defs import Row
 from cmk.gui.valuespec import TextInput, ValueSpec
 
 # TODO Cleanup variation:
-#   - parse_tree_path parses NOT visible, internal tree paths used in displayhints/views
+#   - InventoryPath.parse parses NOT visible, internal tree paths used in displayhints/views
 #   - cmk.utils.structured_data.py::parse_visible_raw_path
 #     parses visible, internal tree paths for contact groups etc.
 # => Should be unified one day.
@@ -59,50 +60,69 @@ InventoryRows = List[SDRow]
 
 
 def get_inventory_table(tree: StructuredDataNode, raw_path: SDRawPath) -> Optional[InventoryRows]:
-    parsed_path, attribute_keys = parse_tree_path(raw_path)
-    if attribute_keys != []:
+    inventory_path = InventoryPath.parse(raw_path)
+    if inventory_path.source != TreeSource.table:
         return None
-    table = tree.get_table(parsed_path)
+    table = tree.get_table(inventory_path.path)
     return None if table is None else table.rows
 
 
 def get_inventory_attribute(tree: StructuredDataNode, raw_path: SDRawPath) -> InventoryValue:
-    parsed_path, attribute_keys = parse_tree_path(raw_path)
-    if not attribute_keys:
+    inventory_path = InventoryPath.parse(raw_path)
+    if inventory_path.source != TreeSource.attributes or not inventory_path.key:
         return None
-    attributes = tree.get_attributes(parsed_path)
-    return None if attributes is None else attributes.pairs.get(attribute_keys[-1])
+    attributes = tree.get_attributes(inventory_path.path)
+    return None if attributes is None else attributes.pairs.get(inventory_path.key)
 
 
-def parse_tree_path(raw_path: SDRawPath) -> Tuple[SDPath, Optional[SDKeys]]:
-    # raw_path may look like:
-    # .                          (ROOT) => path = []                            key = None
-    # .hardware.                 (dict) => path = ["hardware"],                 key = None
-    # .hardware.cpu.model        (leaf) => path = ["hardware", "cpu"],          key = "model"
-    # .hardware.cpu.             (dict) => path = ["hardware", "cpu"],          key = None
-    # .software.packages:17.name (leaf) => path = ["software", "packages", "17"], key = "name"
-    # .software.packages:        (list) => path = ["software", "packages"],     key = []
-    if not raw_path:
-        return [], None
+class TreeSource(Enum):
+    node = auto()
+    table = auto()
+    attributes = auto()
 
-    path: List[str]
-    attribute_keys: Optional[SDKeys]
 
-    if raw_path.endswith(":"):
-        path = raw_path[:-1].strip(".").split(".")
-        attribute_keys = []
-    elif raw_path.endswith("."):
-        path = raw_path[:-1].strip(".").split(".")
-        attribute_keys = None
-    else:
+@dataclass(frozen=True)
+class InventoryPath:
+    path: SDPath
+    source: TreeSource
+    key: Optional[SDKey] = None
+
+    @classmethod
+    def parse(cls, raw_path: SDRawPath) -> InventoryPath:
+        if not raw_path:
+            return InventoryPath(
+                path=[],
+                source=TreeSource.node,
+            )
+
+        if raw_path.endswith("."):
+            path = raw_path[:-1].strip(".").split(".")
+            return InventoryPath(
+                path=cls._sanitize_path(raw_path[:-1].strip(".").split(".")),
+                source=TreeSource.node,
+            )
+
+        if raw_path.endswith(":"):
+            return InventoryPath(
+                path=cls._sanitize_path(raw_path[:-1].strip(".").split(".")),
+                source=TreeSource.table,
+            )
+
         path = raw_path.strip(".").split(".")
-        attribute_keys = [path.pop(-1)]
+        return InventoryPath(
+            path=cls._sanitize_path(path[:-1]),
+            source=TreeSource.table if ":" in path[-2] else TreeSource.attributes,
+            key=path[-1],
+        )
 
-    # ":": Nested tables, see also lib/structured_data.py
-    return (
-        [p for part in path for p in (part.split(":") if ":" in part else [part]) if p],
-        attribute_keys,
-    )
+    @staticmethod
+    def _sanitize_path(path: Sequence[str]) -> SDPath:
+        # ":": Nested tables, see also lib/structured_data.py
+        return [p for part in path for p in (part.split(":") if ":" in part else [part]) if p]
+
+    @property
+    def node_name(self) -> str:
+        return self.path[-1] if self.path else ""
 
 
 def load_filtered_and_merged_tree(row: Row) -> Optional[StructuredDataNode]:
@@ -656,7 +676,13 @@ def inventory_of_host(host_name: HostName, api_request):
 
     if "paths" in api_request:
         merged_tree = merged_tree.get_filtered_node(
-            [make_filter(parse_tree_path(path)) for path in api_request["paths"]]
+            [
+                make_filter(
+                    (inventory_path.path, [inventory_path.key] if inventory_path.key else None)
+                )
+                for raw_path in api_request["paths"]
+                for inventory_path in (InventoryPath.parse(raw_path),)
+            ]
         )
 
     assert merged_tree is not None

@@ -37,7 +37,7 @@ import cmk.utils.version as cmk_version
 from cmk.utils.cpu_tracking import CPUTracker, Snapshot
 from cmk.utils.prediction import livestatus_lql
 from cmk.utils.site import omd_site
-from cmk.utils.structured_data import StructuredDataNode
+from cmk.utils.structured_data import SDRawPath, StructuredDataNode
 from cmk.utils.type_defs import HostName, ServiceName
 
 import cmk.gui.i18n
@@ -63,10 +63,10 @@ from cmk.gui.i18n import _, _u
 from cmk.gui.inventory import (
     get_short_inventory_filepath,
     get_status_data_via_livestatus,
+    InventoryPath,
     load_filtered_and_merged_tree,
     load_latest_delta_tree,
     LoadStructuredDataError,
-    parse_tree_path,
 )
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import mega_menu_registry
@@ -364,9 +364,9 @@ def _has_inventory_tree(linking_view, rows, view, context_vars, raw_path, is_his
     return _has_children(struct_tree, raw_path)
 
 
-def _has_children(struct_tree, invpath):
-    parsed_path, _attribute_keys = parse_tree_path(invpath)
-    if (node := struct_tree.get_node(parsed_path)) is None or node.is_empty():
+def _has_children(struct_tree: StructuredDataNode, raw_path: SDRawPath) -> bool:
+    inventory_path = InventoryPath.parse(raw_path)
+    if (node := struct_tree.get_node(inventory_path.path)) is None or node.is_empty():
         return False
     return True
 

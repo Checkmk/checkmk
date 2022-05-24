@@ -14,28 +14,113 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.structured_data import StructuredDataNode
 
 import cmk.gui.inventory
+from cmk.gui.inventory import InventoryPath, TreeSource
 
 
 @pytest.mark.parametrize(
-    "raw_path, expected_path",
+    "raw_path, expected_path, expected_node_name",
     [
-        ("", ([], None)),
-        (".", ([], None)),
-        (".hardware.", (["hardware"], None)),
-        (".hardware.cpu.", (["hardware", "cpu"], None)),
-        (".hardware.cpu.model", (["hardware", "cpu"], ["model"])),
-        (".software.packages:", (["software", "packages"], [])),
-        (".hardware.memory.arrays:*.", (["hardware", "memory", "arrays", "*"], None)),
-        (".software.packages:17.name", (["software", "packages", "17"], ["name"])),
-        (".software.packages:*.name", (["software", "packages", "*"], ["name"])),
+        (
+            "",
+            InventoryPath(
+                path=[],
+                source=TreeSource.node,
+            ),
+            "",
+        ),
+        (
+            ".",
+            InventoryPath(
+                path=[],
+                source=TreeSource.node,
+            ),
+            "",
+        ),
+        (
+            ".hardware.",
+            InventoryPath(
+                path=["hardware"],
+                source=TreeSource.node,
+            ),
+            "hardware",
+        ),
+        (
+            ".hardware.cpu.",
+            InventoryPath(
+                path=["hardware", "cpu"],
+                source=TreeSource.node,
+            ),
+            "cpu",
+        ),
+        (
+            ".hardware.cpu.model",
+            InventoryPath(
+                path=["hardware", "cpu"],
+                source=TreeSource.attributes,
+                key="model",
+            ),
+            "cpu",
+        ),
+        (
+            ".software.packages:",
+            InventoryPath(
+                path=["software", "packages"],
+                source=TreeSource.table,
+            ),
+            "packages",
+        ),
+        (
+            ".hardware.memory.arrays:*.",
+            InventoryPath(
+                ["hardware", "memory", "arrays", "*"],
+                source=TreeSource.node,
+            ),
+            "*",
+        ),
+        (
+            ".software.packages:17.name",
+            InventoryPath(
+                path=["software", "packages", "17"],
+                source=TreeSource.table,
+                key="name",
+            ),
+            "17",
+        ),
+        (
+            ".software.packages:*.name",
+            InventoryPath(
+                path=["software", "packages", "*"],
+                source=TreeSource.table,
+                key="name",
+            ),
+            "*",
+        ),
         (
             ".hardware.memory.arrays:*.devices:*.speed",
-            (["hardware", "memory", "arrays", "*", "devices", "*"], ["speed"]),
+            InventoryPath(
+                path=["hardware", "memory", "arrays", "*", "devices", "*"],
+                source=TreeSource.table,
+                key="speed",
+            ),
+            "*",
+        ),
+        (
+            ".path:*.to.node.key",
+            InventoryPath(
+                path=["path", "*", "to", "node"],
+                source=TreeSource.attributes,
+                key="key",
+            ),
+            "node",
         ),
     ],
 )
-def test_parse_tree_path(raw_path, expected_path):
-    assert cmk.gui.inventory.parse_tree_path(raw_path) == expected_path
+def test_parse_tree_path(
+    raw_path: str, expected_path: InventoryPath, expected_node_name: str
+) -> None:
+    inventory_path = InventoryPath.parse(raw_path)
+    assert inventory_path == expected_path
+    assert inventory_path.node_name == expected_node_name
 
 
 @pytest.mark.parametrize(

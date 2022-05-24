@@ -589,7 +589,7 @@ def _make_title_function(raw_hint: InventoryHintSpec) -> Callable[[SDRawPath], s
         )
 
     if callable(title := raw_hint["title"]):
-        return lambda raw_path: title(inventory.parse_tree_path(raw_path)[0][-1] or "")
+        return lambda raw_path: title(inventory.InventoryPath.parse(raw_path).node_name or "")
 
     return lambda raw_path: title
 
@@ -635,14 +635,14 @@ class NodeDisplayHint:
 
     @classmethod
     def make_from_hint(cls, raw_path: SDRawPath, raw_hint: InventoryHintSpec) -> NodeDisplayHint:
-        parsed_path, _attribute_keys = inventory.parse_tree_path(raw_path)
+        inventory_path = inventory.InventoryPath.parse(raw_path)
         title = _make_title_function(raw_hint)(raw_path)
         return cls(
             raw_path=raw_path,
             icon=raw_hint.get("icon"),
             title=title,
             short_title=raw_hint.get("short", title),
-            long_title=_make_long_title(title, parsed_path[:-1]),
+            long_title=_make_long_title(title, inventory_path.path[:-1]),
         )
 
 
@@ -675,14 +675,14 @@ class TableDisplayHint:
 
     @classmethod
     def make_from_hint(cls, raw_path: SDRawPath, raw_hint: InventoryHintSpec) -> TableDisplayHint:
-        parsed_path, _attribute_keys = inventory.parse_tree_path(raw_path)
+        inventory_path = inventory.InventoryPath.parse(raw_path)
         title = _make_title_function(raw_hint)(raw_path)
         return cls(
             key_order=raw_hint.get("keyorder", []),
             is_show_more=raw_hint.get("is_show_more", True),
             view_name=raw_hint.get("view"),
             short_title=raw_hint.get("short", title),
-            long_title=_make_long_title(title, parsed_path[:-1]),
+            long_title=_make_long_title(title, inventory_path.path[:-1]),
         )
 
     def make_titles(
@@ -781,13 +781,13 @@ class AttributeDisplayHint:
     def make_from_hint(
         cls, raw_path: SDRawPath, raw_hint: InventoryHintSpec
     ) -> AttributeDisplayHint:
-        parsed_path, _attribute_keys = inventory.parse_tree_path(raw_path)
+        inventory_path = inventory.InventoryPath.parse(raw_path)
         data_type, paint_function = _get_paint_function(raw_hint)
         title = _make_title_function(raw_hint)(raw_path)
         return cls(
             title=title,
             short_title=raw_hint.get("short", title),
-            long_title=_make_long_title(title, parsed_path),
+            long_title=_make_long_title(title, inventory_path.path),
             data_type=data_type,
             paint_function=paint_function,
             is_show_more=raw_hint.get("is_show_more", True),
@@ -851,12 +851,12 @@ def _find_display_hint_id(raw_path: SDRawPath) -> Optional[str]:
 
 def inv_titleinfo_long(raw_path: SDRawPath) -> str:
     """Return the titles of the last two path components of the node, e.g. "BIOS / Vendor"."""
-    parsed_path, attribute_keys = inventory.parse_tree_path(raw_path)
+    inventory_path = inventory.InventoryPath.parse(raw_path)
 
-    if attribute_keys:
-        return AttributeDisplayHint.make(parsed_path, attribute_keys[0]).long_title
+    if inventory_path.key:
+        return AttributeDisplayHint.make(inventory_path.path, inventory_path.key).long_title
 
-    return NodeDisplayHint.make(parsed_path).long_title
+    return NodeDisplayHint.make(inventory_path.path).long_title
 
 
 # .
@@ -1006,7 +1006,7 @@ def _paint_host_inventory_tree(row: Row, raw_path: SDRawPath) -> CellSpec:
 
     assert isinstance(struct_tree, StructuredDataNode)
 
-    parsed_path, attribute_keys = inventory.parse_tree_path(raw_path)
+    inventory_path = inventory.InventoryPath.parse(raw_path)
 
     painter_options = PainterOptions.get_instance()
     tree_renderer = NodeRenderer(
@@ -1017,23 +1017,22 @@ def _paint_host_inventory_tree(row: Row, raw_path: SDRawPath) -> CellSpec:
 
     td_class = ""
     with output_funnel.plugged():
-        if attribute_keys is None:
-            if node := struct_tree.get_node(parsed_path):
+        if inventory_path.source == inventory.TreeSource.node:
+            if node := struct_tree.get_node(inventory_path.path):
                 node.show(tree_renderer)
                 td_class = "invtree"
 
-        elif attribute_keys == []:
-            if table := struct_tree.get_table(parsed_path):
+        elif inventory_path.source == inventory.TreeSource.table:
+            if table := struct_tree.get_table(inventory_path.path):
                 table.show(tree_renderer)
 
-        elif attribute_keys:
-            attribute_key = attribute_keys[0]
+        elif inventory_path.source == inventory.TreeSource.attributes:
             if (
-                attributes := struct_tree.get_attributes(parsed_path)
-            ) and attribute_key in attributes.pairs:
+                attributes := struct_tree.get_attributes(inventory_path.path)
+            ) and inventory_path.key in attributes.pairs:
                 tree_renderer.show_attribute(
-                    attributes.pairs[attribute_keys[0]],
-                    AttributeDisplayHint.make(parsed_path, attribute_key),
+                    attributes.pairs[inventory_path.key],
+                    AttributeDisplayHint.make(inventory_path.path, inventory_path.key),
                 )
 
         code = HTML(output_funnel.drain())
@@ -1412,8 +1411,8 @@ def _declare_views(
 ) -> None:
     is_show_more = True
     if len(raw_paths) == 1:
-        parsed_path, _attribute_keys = inventory.parse_tree_path(raw_paths[0] or "")
-        table_hint = TableDisplayHint.make(list(parsed_path))
+        inventory_path = inventory.InventoryPath.parse(raw_paths[0] or "")
+        table_hint = TableDisplayHint.make(list(inventory_path.path))
         is_show_more = table_hint.is_show_more
 
     # Declare two views: one for searching globally. And one
@@ -2407,10 +2406,10 @@ def ajax_inv_render_tree() -> None:
         html.show_error(_("No such inventory tree."))
         return
 
-    parsed_path, _attribute_keys = inventory.parse_tree_path(raw_path or "")
-    if (node := struct_tree.get_node(parsed_path)) is None:
+    inventory_path = inventory.InventoryPath.parse(raw_path or "")
+    if (node := struct_tree.get_node(inventory_path.path)) is None:
         html.show_error(
-            _("Invalid path in inventory tree: '%s' >> %s") % (raw_path, repr(parsed_path))
+            _("Invalid path in inventory tree: '%s' >> %s") % (raw_path, repr(inventory_path.path))
         )
         return
 

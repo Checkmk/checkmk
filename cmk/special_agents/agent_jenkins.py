@@ -10,6 +10,8 @@ import json
 import sys
 import requests
 
+from cmk.utils.password_store import replace_passwords
+
 from cmk.special_agents.utils import vcrtrace
 
 Section = namedtuple('Section', ['name', 'key', 'uri'])
@@ -17,6 +19,7 @@ Section = namedtuple('Section', ['name', 'key', 'uri'])
 
 def main(argv=None):
     if argv is None:
+        replace_passwords()
         argv = sys.argv[1:]
 
     args = parse_arguments(argv)

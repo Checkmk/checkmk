@@ -7,7 +7,7 @@
 import os
 import platform
 import sys
-import telnetlib
+import telnetlib  # nosec
 import time
 from pathlib import Path
 from typing import Any, Dict, Generator, List, TypeVar

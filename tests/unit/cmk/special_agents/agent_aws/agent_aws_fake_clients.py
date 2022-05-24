@@ -3139,4 +3139,17 @@ class LambdaListProvisionedConcurrencyConfigsIB(InstanceBuilder):
         }
 
 
-# .
+class SNSListSubscriptionsIB(InstanceBuilder):
+    def _fill_instance(self):
+        return [
+            Str("SubscriptionArn"),
+            Str("Owner"),
+            Str("Protocol"),
+            Str("Endpoint"),
+            Str("TopicArn"),
+        ]
+
+
+class SNSListTopicsIB(InstanceBuilder):
+    def _fill_instance(self):
+        return [Str("TopicArn")]

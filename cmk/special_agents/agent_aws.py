@@ -15,6 +15,7 @@ import itertools
 import json
 import logging
 import sys
+from collections import Counter
 from datetime import datetime, timedelta
 from pathlib import Path
 from time import sleep
@@ -4625,6 +4626,103 @@ class Route53Cloudwatch(AWSSectionCloudwatch):
         return [AWSSectionResult("", rows) for _id, rows in computed_content.content.items()]
 
 
+#   .--SNS-----------------------------------------------------------------.
+#   |                          ____  _   _ ____                            |
+#   |                         / ___|| \ | / ___|                           |
+#   |                         \___ \|  \| \___ \                           |
+#   |                          ___) | |\  |___) |                          |
+#   |                         |____/|_| \_|____/                           |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+# SNS is a messaging service that follows the event-producers -> topics -> subscriptions model
+# producers and topics have a many-to-many-relationship.
+# topics and subscriptions also have a many-to-many-relationship.
+# It therefore makes sense to monitor Subscriptions, Topics, and Producers as the three central
+# building blocks of AWS SNS. Subscriptions and Topics have specific limits per account so they
+# are handled in the limits section. For producers it is more important to look at what exactly
+# they are producing, so the cloudwatch section monitors detailed metrics about incoming traffic.
+
+
+class SNSLimits(AWSSectionLimits):
+    """
+    AWS imposes the following per account limits.
+    Topics (Standard): 100k
+    Topics (FIFO): 1k
+    Subscriptions (Standard): 12.5M
+    Subscriptions (FIFO): 100
+    There are many other limits related to how many API requests one can make per second for
+    various tasks, but these four limits above are the most account-relevant limits.
+    This article might also be a valuable resource: https://www.serverless.com/guides/amazon-sns#:~:text=Amazon%20SNS%20limits,-%E2%80%8D&text=Both%20subscribe%20and%20unsubscribe%20transactions,the%20us%2Deast%2D1%20region
+    """
+
+    @property
+    def name(self) -> str:
+        return "sns_limits"
+
+    @property
+    def cache_interval(self) -> int:
+        return 300
+
+    @property
+    def granularity(self) -> int:
+        return 300
+
+    def _get_colleague_contents(self) -> AWSColleagueContents:
+        return AWSColleagueContents(None, 0.0)
+
+    def get_live_data(self, *args) -> Sequence[Mapping]:
+        topics = [
+            topic
+            for page in self._client.get_paginator("list_topics").paginate()
+            for topic in page["Topics"]
+        ]
+
+        num_of_subscriptions_by_topic = Counter(
+            str(subscription["TopicArn"])
+            for page in self._client.get_paginator("list_subscriptions").paginate()
+            for subscription in page["Subscriptions"]
+        )
+
+        return [
+            {
+                "arn": str(topic["TopicArn"]),
+                "is_fifo": str(topic["TopicArn"]).endswith(".fifo"),
+                "num_subscriptions": num_of_subscriptions_by_topic[str(topic["TopicArn"])],
+            }
+            for topic in topics
+        ]
+
+    def _compute_content(
+        self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
+    ) -> AWSComputedContent:
+        topics: Sequence[Mapping] = raw_content.content
+
+        self._add_limit(
+            "",
+            AWSLimit(
+                key="topics_standard",
+                title="Standard Topics",
+                limit=int(100e3),
+                amount=sum(not x["is_fifo"] for x in topics),
+            ),
+            region=self._region,
+        )
+        self._add_limit(
+            "",
+            AWSLimit(
+                key="topics_fifo",
+                title="FIFO Topics",
+                limit=int(1e3),
+                amount=sum(x["is_fifo"] for x in topics),
+            ),
+            region=self._region,
+        )
+
+        return AWSComputedContent(raw_content.content, raw_content.cache_timestamp)
+
+
 # .
 #   .--sections------------------------------------------------------------.
 #   |                               _   _                                  |
@@ -5085,6 +5183,13 @@ class AWSSectionsGeneric(AWSSections):
             self._sections.append(lambda_cloudwatch)
             self._sections.append(lambda_cloudwatch_insights)
 
+        if "sns" in services:
+            sns_client = self._init_client("sns")
+            sns_limits_distributor = ResultDistributor()
+            sns_limits = SNSLimits(sns_client, region, config, sns_limits_distributor)
+            if config.service_config.get("sns_limits"):
+                self._sections.append(sns_limits)
+
 
 # .
 #   .--main----------------------------------------------------------------.
@@ -5210,6 +5315,14 @@ AWSServices = [
         filter_by_names=True,
         filter_by_tags=True,
         limits=False,
+    ),
+    AWSServiceAttributes(
+        key="sns",
+        title="SNS",
+        global_service=False,
+        filter_by_names=True,
+        filter_by_tags=True,
+        limits=True,
     ),
 ]
 
@@ -5481,6 +5594,7 @@ def _configure_aws(args: argparse.Namespace, sys_argv: list) -> AWSConfig:
             args.lambda_limits,
         ),
         ("route53", args.route53_names, (args.route53_tag_key, args.route53_tag_values), None),
+        ("sns", args.sns_names, (args.sns_tag_key, args.sns_tag_values), args.sns_limits),
     ]:
         aws_config.add_single_service_config("%s_names" % service_key, service_names)
         aws_config.add_service_tags("%s_tags" % service_key, service_tags)

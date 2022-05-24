@@ -377,6 +377,18 @@ def _valuespec_special_agents_aws():
                                     default_keys=["limits"],
                                 ),
                             ),
+                            (
+                                "sns",
+                                Dictionary(
+                                    title=_("Simple Notification Service (SNS)"),
+                                    elements=[
+                                        _vs_element_aws_service_selection(),
+                                        _vs_element_aws_limits(),
+                                    ],
+                                    optional_keys=["limits"],
+                                    default_keys=["limits"],
+                                ),
+                            ),
                         ],
                         default_keys=[
                             "ec2",
@@ -390,6 +402,7 @@ def _valuespec_special_agents_aws():
                             "dynamodb",
                             "wafv2",
                             "lambda",
+                            "sns",
                         ],
                     ),
                 ),

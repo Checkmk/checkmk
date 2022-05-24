@@ -182,8 +182,8 @@ def _paint_host_inventory_tree(
             if len(attributes := list(child.pairs.items())) == 1:
                 key, value = attributes[-1]
                 tree_renderer.show_attribute(value, AttributeDisplayHint.make(parsed_path, key))
-            else:
-                child.show(tree_renderer)
+        else:
+            child.show(tree_renderer)
 
         code = HTML(output_funnel.drain())
 

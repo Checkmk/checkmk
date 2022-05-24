@@ -1,6 +1,6 @@
 import logging
 import time
-from typing import Any, List, NamedTuple, NewType, Optional
+from typing import Any, NamedTuple, Optional, Union
 
 import requests
 
@@ -61,11 +61,15 @@ class CMKOpenApiSession(requests.Session):
     def set_authentication_header(self, user: str, password: str):
         self.headers["Authorization"] = f"Bearer {user} {password}"
 
-    def request(self, method: str, url: str, *args, **kwargs) -> requests.Response:  # type: ignore
+    def request(
+        self, method: Union[str, bytes], url: Union[str, bytes], *args, **kwargs
+    ) -> requests.Response:
         """
         Suggested method to use a base url with a requests.Session
         see https://github.com/psf/requests/issues/2554#issuecomment-109341010
         """
+        assert isinstance(method, str)  # HACK
+        assert isinstance(url, str)  # HACK
         url = f"http://{self.host}:{self.port}/{self.site}/check_mk/api/{self.api_version}/{url.strip('/')}"
 
         logger.debug("> [%s] %s (%s, %s)", method, url, args, kwargs)
@@ -73,6 +77,7 @@ class CMKOpenApiSession(requests.Session):
         logger.debug("< [%s] %s", response.status_code, response.text)
 
         if response.status_code == 401:
+            assert isinstance(self.headers["Authorization"], str)  # HACK
             raise AuthorizationFailed(self.headers["Authorization"], self.site)
 
         return response
@@ -134,7 +139,7 @@ class CMKOpenApiSession(requests.Session):
             return True
 
     def create_user(
-        self, username: str, fullname: str, password: str, email: str, contactgroups: List[str]
+        self, username: str, fullname: str, password: str, email: str, contactgroups: list[str]
     ) -> None:
         response = self.post(
             "domain-types/user_config/collections/all",
@@ -154,7 +159,7 @@ class CMKOpenApiSession(requests.Session):
         if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)
 
-    def get_all_users(self) -> List[User]:
+    def get_all_users(self) -> list[User]:
         response = self.get("domain-types/user_config/collections/all")
         if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)

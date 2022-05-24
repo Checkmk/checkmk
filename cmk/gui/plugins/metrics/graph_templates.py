@@ -18,7 +18,7 @@ from cmk.gui.plugins.metrics.utils import (
     get_graph_template,
     get_graph_templates,
     GraphConsoldiationFunction,
-    GraphMetrics,
+    GraphMetric,
     GraphRecipe,
     GraphTemplate,
     horizontal_rules_from_thresholds,
@@ -132,7 +132,7 @@ graph_identification_types.register(GraphIdentificationTemplate)
 def create_graph_recipe_from_template(
     graph_template: GraphTemplate, translated_metrics: TranslatedMetrics, row: Row
 ) -> GraphRecipe:
-    def _metric(metric_definition: MetricDefinition) -> GraphMetrics:
+    def _metric(metric_definition: MetricDefinition) -> GraphMetric:
         unit_color = metric_unit_color(metric_definition[0], translated_metrics)
         metric = {
             "title": metric_line_title(metric_definition, translated_metrics),

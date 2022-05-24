@@ -33,6 +33,8 @@ from typing import (
 
 from six import ensure_str
 
+from livestatus import SiteId
+
 import cmk.utils.regex
 import cmk.utils.version as cmk_version
 from cmk.utils.memoize import MemoizeCache
@@ -113,8 +115,9 @@ class GraphTemplate(_GraphTemplateMandatory, total=False):
 
 
 GraphRecipe = Dict[str, Any]
-GraphMetrics = Dict[str, Any]
-RRDData = Dict[Tuple[str, str, str, str, str, str], TimeSeries]
+GraphMetric = Dict[str, Any]
+RRDDataKey = Tuple[SiteId, HostName, ServiceName, str, Optional[GraphConsoldiationFunction], float]
+RRDData = Dict[RRDDataKey, TimeSeries]
 
 
 class MetricUnitColor(TypedDict):

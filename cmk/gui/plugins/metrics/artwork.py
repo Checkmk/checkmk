@@ -542,12 +542,12 @@ def compute_graph_v_axis(
         "label_distance": label_distance,
         "sub_distance": sub_distance,
         "axis_label": None,
-        "rendered_labels": rendered_labels,
+        "labels": rendered_labels,
         "max_label_length": max_label_length,
     }
 
     if graph_unit is not None:
-        v_axis["graph_unit"] = graph_unit
+        v_axis["axis_label"] = graph_unit
 
     return v_axis
 

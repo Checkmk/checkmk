@@ -22,6 +22,7 @@ from cmk.special_agents.utils_kubernetes.transform import (
     pod_conditions,
     pod_containers,
     pod_spec,
+    pod_status,
 )
 
 
@@ -297,7 +298,7 @@ class TestPodStartUp(TestCase):
         """
         It is possible that during startup of pods, also more complete information arises.
         """
-        pod_status = api.PodStatus(
+        api_pod_status = api.PodStatus(
             start_time=int(
                 convert_to_timestamp(
                     datetime.datetime(
@@ -340,7 +341,7 @@ class TestPodStartUp(TestCase):
         )
         pod = Pod(
             uid=Mock(),
-            status=pod_status,
+            status=api_pod_status,
             metadata=Mock(),
             spec=Mock(),
             containers=Mock(),
@@ -405,3 +406,34 @@ class TestPodStartUp(TestCase):
                 ready=None,
             ),
         )
+
+
+def test_pod_status_evicted_pod() -> None:
+    client_pod_status = client.V1PodStatus(
+        conditions=None,
+        container_statuses=None,
+        ephemeral_container_statuses=None,
+        host_ip=None,
+        init_container_statuses=None,
+        message="The node was low on resource: ephemeral-storage. Container "
+        "grafana-sc-dashboard was using 4864Ki, which exceeds its request "
+        "of 0. Container grafana was using 2112Ki, which exceeds its "
+        "request of 0. Container grafana-sc-datasources was using 1280Ki, "
+        "which exceeds its request of 0. ",
+        nominated_node_name=None,
+        phase="Failed",
+        pod_i_ps=None,
+        pod_ip=None,
+        qos_class=None,
+        reason="Evicted",
+        start_time=datetime.datetime(2022, 5, 23, 5, 43, 57, tzinfo=tzutc()),
+    )
+    client_pod = client.V1Pod(status=client_pod_status)
+    assert pod_status(client_pod) == api.PodStatus(
+        conditions=None,
+        phase=api.Phase.FAILED,
+        start_time=api.Timestamp(1653284637.0),
+        host_ip=None,
+        pod_ip=None,
+        qos_class=None,
+    )

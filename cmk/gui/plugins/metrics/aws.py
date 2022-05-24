@@ -915,6 +915,17 @@ metric_info["aws_route53_time_to_first_byte"] = {
     "color": "46/a",
 }
 
+metric_info["aws_sns_topics_standard"] = {
+    "title": _l("Standard Topics"),
+    "unit": "count",
+    "color": "46/a",
+}
+
+metric_info["aws_sns_topics_fifo"] = {
+    "title": _l("FIFO Topics"),
+    "unit": "count",
+    "color": "46/a",
+}
 
 # .
 #   .--Graphs--------------------------------------------------------------.

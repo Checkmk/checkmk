@@ -1657,3 +1657,35 @@ rulespec_registry.register(
         title=lambda: _("AWS/WAFV2 Web ACL Requests"),
     )
 )
+
+#   .--SNS-----------------------------------------------------------------.
+#   |                          ____  _   _ ____                            |
+#   |                         / ___|| \ | / ___|                           |
+#   |                         \___ \|  \| \___ \                           |
+#   |                          ___) | |\  |___) |                          |
+#   |                         |____/|_| \_|____/                           |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+
+def _sns_limits() -> Dictionary:
+    return Dictionary(
+        elements=[
+            ("topics_standard", _vs_limits(_("Standard Topics"), int(1e6))),
+            ("topics_fifo", _vs_limits(_("FIFO Topics"), int(1e3))),
+        ]
+    )
+
+
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="aws_sns_limits",
+        group=RulespecGroupCheckParametersApplications,
+        item_spec=_item_spec_aws_limits_generic,
+        match_type="dict",
+        parameter_valuespec=_sns_limits,
+        title=lambda: _("AWS/SNS Limits"),
+    )
+)

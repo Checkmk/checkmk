@@ -60,7 +60,7 @@ build_image() {
    log "Verschiebe Image-Tarball..."
    mv -v "$DOCKER_PATH/$DOCKER_IMAGE_ARCHIVE" "$PACKAGE_PATH/${VERSION}/"
 
-   if [ $EDITION = raw ]; then
+   if [ $EDITION = raw ] || [ "$EDITION" = free ]; then
        docker_tag "" "checkmk"
    else
        docker_tag "registry.checkmk.com" "/${EDITION}"

@@ -985,6 +985,7 @@ def _declare_inv_column(raw_path: SDRawPath, raw_hint: InventoryHintSpec) -> Non
         "title": (
             raw_path == "." and _("Inventory Tree") or (_("Inventory") + ": " + hint.long_title)
         ),
+        "short": hint.short_title,
         "columns": ["host_inventory", "host_structured_status"],
         "options": ["show_internal_tree_paths"],
         "params": Dictionary(
@@ -1008,8 +1009,6 @@ def _declare_inv_column(raw_path: SDRawPath, raw_hint: InventoryHintSpec) -> Non
         "paint": lambda row: _paint_host_inventory_tree(row, raw_path),
         "sorter": name,
     }
-
-    painter_spec["short"] = hint.short_title
 
     register_painter(name, painter_spec)
 

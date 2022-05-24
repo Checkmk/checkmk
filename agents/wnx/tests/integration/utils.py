@@ -40,7 +40,7 @@ def get_data_from_agent(host: str, port: int) -> List[str]:
     # we have to retry connection
     for _ in range(0, 5):
         try:
-            with telnetlib.Telnet(host, port) as telnet:
+            with telnetlib.Telnet(host, port) as telnet:  # nosec
                 result = telnet.read_all().decode(encoding="cp1252")
                 return result.splitlines()
         except Exception as _:

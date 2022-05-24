@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from datetime import datetime, timezone
+
 import pytest  # type: ignore[import]
 from freezegun import freeze_time  # type: ignore[import]
 
@@ -14,7 +16,7 @@ NOW_SIMULATED = "2019-01-01 22:00:00.000000"
 ITEM = "inst"
 SECTION: sap_hana_backup.Section = {
     ITEM: {
-        'end_time': 1546300800.0,
+        'end_time': datetime(2019, 1, 1, 0, 0, tzinfo=timezone.utc),
         'state_name': 'successful',
         'comment': '',
         'message': '<ok>'

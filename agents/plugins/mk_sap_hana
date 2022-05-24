@@ -138,7 +138,7 @@ QUERY
 
 function query_sap_hana_backup_snapshots () {
     cat <<QUERY
-Select TOP 1 entry_type_name, sys_end_time, state_name, comment, message from
+Select TOP 1 entry_type_name, utc_end_time, state_name, comment, message from
 M_BACKUP_CATALOG where entry_type_name = 'data snapshot' AND state_name <>
 'running' order by sys_start_time desc
 QUERY
@@ -147,7 +147,7 @@ QUERY
 
 function query_sap_hana_backup_complete () {
     cat <<QUERY
-Select TOP 1 entry_type_name, sys_end_time, state_name, comment, message from
+Select TOP 1 entry_type_name, utc_end_time, state_name, comment, message from
 M_BACKUP_CATALOG where entry_type_name = 'complete data backup' AND state_name
 <> 'running' order by sys_start_time desc
 QUERY
@@ -156,7 +156,7 @@ QUERY
 
 function query_sap_hana_backup_log () {
     cat <<QUERY
-Select TOP 1 entry_type_name, sys_end_time, state_name, comment, message from
+Select TOP 1 entry_type_name, utc_end_time, state_name, comment, message from
 M_BACKUP_CATALOG where entry_type_name = 'log backup' AND state_name <>
 'running' order by sys_start_time desc
 QUERY
@@ -538,7 +538,7 @@ function do_query () {
         echo "$INSTANCE_NAME"
         echo "$status_output"
 
-        echo "<<<sap_hana_backup:sep(59)>>>"
+        echo "<<<sap_hana_backup_v2:sep(59)>>>"
         echo "$INSTANCE_NAME"
         mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "$(query_sap_hana_backup_snapshots)"
         mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "$(query_sap_hana_backup_complete)"

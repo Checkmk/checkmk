@@ -1,0 +1,24 @@
+Title: sap_hana_backup: backup duration shows negative timespan
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1653306010
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p26
+
+The incompatibility of this werk affects users who have SAP Hana servers that
+are not in the same timezone as their monitoring servers, and monitor their
+backup duration. It also affects users who use the <tt>sap_hana_backup</tt>
+parsed section to develop custom plugins.
+<br>
+The <tt>sap_hana_backup</tt> check either showed a negative timespan for the
+backup duration (Checkmk version <=1.6.0) or showed an error reading
+"ValueError(Cannot render negative timespan)" (Checkmk version >= 2.0.0) in the
+event that the monitoring and SAP Hana servers are not in the same timezone.
+This has been fixed. Users affected by this issue must deploy the agent plugin
+to the monitored server in order to apply the fix. Users who are sure their
+servers are in the same timezone do not need to re-deploy the agent plugin;
+however, we strongly advise to do so.

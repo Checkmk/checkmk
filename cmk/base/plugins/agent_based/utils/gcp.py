@@ -100,16 +100,15 @@ def _get_value(results: Sequence[GCPResult], spec: MetricSpec) -> float:
     # GCP does not always deliver all metrics. i.e. api/request_count only contains values if
     # api requests have occured. To ensure all metrics are displayed in check mk we default to
     # 0 in the absence of data.
+    if spec.filter_by is not None:
+        filter_func = (
+            lambda r: r.ts.metric.type == spec.metric_type
+            and r.ts.metric.labels[spec.filter_by.label] == spec.filter_by.value
+        )
+    else:
+        filter_func = lambda r: r.ts.metric.type == spec.metric_type
     try:
-        if (filter_by := spec.filter_by) is not None:
-            result = next(
-                r
-                for r in results
-                if r.ts.metric.type == spec.metric_type
-                and r.ts.metric.labels[filter_by.label] == filter_by.value
-            )
-        else:
-            result = next(r for r in results if r.ts.metric.type == spec.metric_type)
+        result = next(r for r in results if filter_func(r))
         proto_value = result.ts.points[0].value
         if spec.dtype == MetricSpec.DType.FLOAT:
             value = proto_value.double_value

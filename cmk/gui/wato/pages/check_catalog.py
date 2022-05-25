@@ -389,9 +389,6 @@ def _get_check_catalog(only_path):
             return True
         return p[0] == op[0] and path_prefix_matches(p[1:], op[1:])
 
-    def strip_manpage_entry(entry):
-        return {k: v for k, v in entry.items() if k in ["name", "agents", "title"]}
-
     tree: Dict[str, Any] = {}
 
     for path, entries in man_pages.load_man_page_catalog().items():
@@ -400,7 +397,14 @@ def _get_check_catalog(only_path):
         subtree = tree
         for component in path[:-1]:
             subtree = subtree.setdefault(component, {})
-        subtree[path[-1]] = list(map(strip_manpage_entry, entries))
+        subtree[path[-1]] = [
+            {
+                "name": e.name,
+                "agents": e.agents,
+                "title": e.title,
+            }
+            for e in entries
+        ]
 
     for p in only_path:
         try:

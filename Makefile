@@ -659,7 +659,6 @@ Pipfile.lock: Pipfile
 	    echo "Locking Python requirements..." ; \
 	    flock $(LOCK_FD); \
 	    SKIP_MAKEFILE_CALL=1 $(PIPENV) lock; RC=$$? ; \
-	    rm -rf .venv ; \
 	    exit $$RC \
 	) $(LOCK_FD)>$(LOCK_PATH)
 
@@ -672,7 +671,6 @@ Pipfile.lock: Pipfile
 	@( \
 	    echo "Creating .venv..." ; \
 	    flock $(LOCK_FD); \
-	    $(RM) -r .venv; \
 	    ( PIPENV_COLORBLIND=1 SKIP_MAKEFILE_CALL=1 VIRTUAL_ENV="" $(PIPENV) sync --dev && touch .venv ) || ( $(RM) -r .venv ; exit 1 ) \
 	) $(LOCK_FD)>$(LOCK_PATH)
 

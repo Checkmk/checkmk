@@ -14,7 +14,7 @@ def agent_ddn_s2a_arguments(
         ipaddress or hostname,
         "%d" % params.get("port", 8008),
         params["username"],
-        params["password"],
+        passwordstore_get_cmdline("%s", params["password"]),
     ]
 
 

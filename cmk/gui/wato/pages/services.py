@@ -258,7 +258,18 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             raise MKUserError("host", _("You called this page with an invalid host name."))
         self._host.need_permission("read")
 
-        self._options = self._get_discovery_options(api_request)
+        options = DiscoveryOptions(**api_request["discovery_options"])
+        # Refuse action requests in case the user is not permitted
+        if options.action != DiscoveryAction.NONE and not user.may("wato.services"):
+            options = options._replace(action=DiscoveryAction.NONE)
+        if options.action != DiscoveryAction.TABULA_RASA and not (
+            user.may("wato.service_discovery_to_undecided")
+            and user.may("wato.service_discovery_to_monitored")
+            and user.may("wato.service_discovery_to_ignored")
+            and user.may("wato.service_discovery_to_removed")
+        ):
+            options = options._replace(action=DiscoveryAction.NONE)
+        self._options = options
 
         # Reuse the discovery result already known to the GUI or fetch a new one?
         previous_discovery_result = (
@@ -271,7 +282,9 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             assert previous_discovery_result is not None
             discovery_result = previous_discovery_result
         else:
-            discovery_result = self._get_check_table()
+            discovery_result = get_check_table(
+                StartDiscoveryRequest(self._host, self._host.folder(), self._options)
+            )
 
         job_actions = [
             DiscoveryAction.NONE,
@@ -281,7 +294,42 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         ]
 
         if self._options.action not in job_actions and transactions.check_transaction():
-            discovery_result = self._handle_action(discovery_result, api_request)
+            user.need_permission("wato.services")
+            if self._options.action in [
+                DiscoveryAction.UPDATE_HOST_LABELS,
+                DiscoveryAction.FIX_ALL,
+            ]:
+                message = _("Updated discovered host labels of '%s' with %d labels") % (
+                    self._host.name(),
+                    len(discovery_result.host_labels),
+                )
+                watolib.add_service_change(self._host, "update-host-labels", message)
+                update_host_labels(
+                    self._host.site_id(),
+                    self._host.name(),
+                    discovery_result.host_labels,
+                )
+            if self._options.action in [
+                DiscoveryAction.SINGLE_UPDATE,
+                DiscoveryAction.BULK_UPDATE,
+                DiscoveryAction.FIX_ALL,
+                DiscoveryAction.UPDATE_SERVICES,
+            ]:
+                discovery = Discovery(self._host, self._options, api_request)
+                discovery.do_discovery(discovery_result)
+            if self._options.action in [
+                DiscoveryAction.SINGLE_UPDATE,
+                DiscoveryAction.BULK_UPDATE,
+                DiscoveryAction.FIX_ALL,
+                DiscoveryAction.UPDATE_SERVICES,
+                DiscoveryAction.UPDATE_HOST_LABELS,
+            ]:
+                # did discovery! update the check table
+                discovery_result = get_check_table(
+                    StartDiscoveryRequest(self._host, self._host.folder(), self._options)
+                )
+            if not self._host.locked():
+                self._host.clear_discovery_failed()
 
         if not discovery_result.check_table_created and previous_discovery_result:
             discovery_result = DiscoveryResult(
@@ -294,7 +342,18 @@ class ModeAjaxServiceDiscovery(AjaxPage):
                 changed_labels=previous_discovery_result.changed_labels,
             )
 
-        self._update_persisted_discovery_options()
+        show_checkboxes = user.discovery_checkboxes
+        if show_checkboxes != self._options.show_checkboxes:
+            user.discovery_checkboxes = self._options.show_checkboxes
+        show_parameters = user.parameter_column
+        if show_parameters != self._options.show_parameters:
+            user.parameter_column = self._options.show_parameters
+        show_discovered_labels = user.discovery_show_discovered_labels
+        if show_discovered_labels != self._options.show_discovered_labels:
+            user.discovery_show_discovered_labels = self._options.show_discovered_labels
+        show_plugin_names = user.discovery_show_plugin_names
+        if show_plugin_names != self._options.show_plugin_names:
+            user.discovery_show_plugin_names = self._options.show_plugin_names
 
         renderer = DiscoveryPageRenderer(
             self._host,
@@ -423,24 +482,6 @@ class ModeAjaxServiceDiscovery(AjaxPage):
 
         return None
 
-    def _get_discovery_options(self, api_request: dict) -> DiscoveryOptions:
-
-        options = DiscoveryOptions(**api_request["discovery_options"])
-
-        # Refuse action requests in case the user is not permitted
-        if options.action != DiscoveryAction.NONE and not user.may("wato.services"):
-            options = options._replace(action=DiscoveryAction.NONE)
-
-        if options.action != DiscoveryAction.TABULA_RASA and not (
-            user.may("wato.service_discovery_to_undecided")
-            and user.may("wato.service_discovery_to_monitored")
-            and user.may("wato.service_discovery_to_ignored")
-            and user.may("wato.service_discovery_to_removed")
-        ):
-            options = options._replace(action=DiscoveryAction.NONE)
-
-        return options
-
     def _use_previous_discovery_result(self, api_request, previous_discovery_result):
         if not previous_discovery_result:
             return False
@@ -459,75 +500,6 @@ class ModeAjaxServiceDiscovery(AjaxPage):
 
     def _is_active(self, discovery_result):
         return discovery_result.job_status["is_active"]
-
-    def _get_check_table(self) -> DiscoveryResult:
-        return get_check_table(
-            StartDiscoveryRequest(self._host, self._host.folder(), self._options)
-        )
-
-    def _update_persisted_discovery_options(self):
-        show_checkboxes = user.discovery_checkboxes
-        if show_checkboxes != self._options.show_checkboxes:
-            user.discovery_checkboxes = self._options.show_checkboxes
-
-        show_parameters = user.parameter_column
-        if show_parameters != self._options.show_parameters:
-            user.parameter_column = self._options.show_parameters
-
-        show_discovered_labels = user.discovery_show_discovered_labels
-        if show_discovered_labels != self._options.show_discovered_labels:
-            user.discovery_show_discovered_labels = self._options.show_discovered_labels
-
-        show_plugin_names = user.discovery_show_plugin_names
-        if show_plugin_names != self._options.show_plugin_names:
-            user.discovery_show_plugin_names = self._options.show_plugin_names
-
-    def _handle_action(
-        self, discovery_result: DiscoveryResult, api_request: dict
-    ) -> DiscoveryResult:
-        user.need_permission("wato.services")
-
-        if self._options.action in [
-            DiscoveryAction.UPDATE_HOST_LABELS,
-            DiscoveryAction.FIX_ALL,
-        ]:
-            self._do_update_host_labels(discovery_result)
-
-        if self._options.action in [
-            DiscoveryAction.SINGLE_UPDATE,
-            DiscoveryAction.BULK_UPDATE,
-            DiscoveryAction.FIX_ALL,
-            DiscoveryAction.UPDATE_SERVICES,
-        ]:
-            discovery = Discovery(self._host, self._options, api_request)
-            discovery.do_discovery(discovery_result)
-
-        if self._options.action in [
-            DiscoveryAction.SINGLE_UPDATE,
-            DiscoveryAction.BULK_UPDATE,
-            DiscoveryAction.FIX_ALL,
-            DiscoveryAction.UPDATE_SERVICES,
-            DiscoveryAction.UPDATE_HOST_LABELS,
-        ]:
-            # did discovery! update the check table
-            discovery_result = self._get_check_table()
-
-        if not self._host.locked():
-            self._host.clear_discovery_failed()
-
-        return discovery_result
-
-    def _do_update_host_labels(self, discovery_result):
-        message = _("Updated discovered host labels of '%s' with %d labels") % (
-            self._host.name(),
-            len(discovery_result.host_labels),
-        )
-        watolib.add_service_change(self._host, "update-host-labels", message)
-        update_host_labels(
-            self._host.site_id(),
-            self._host.name(),
-            discovery_result.host_labels,
-        )
 
 
 class DiscoveryPageRenderer:

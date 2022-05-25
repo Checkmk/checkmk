@@ -64,6 +64,9 @@ VARIABLES:
     - NAME: CHANGED_RUN_PIPENV_SCRIPT
       SH: "echo '${CHANGED_FILES_ABS}' | grep '${WORKSPACE}/scripts/run-pipenv' - || true"
 
+    - NAME: CHANGED_RUN_PRETTIER_SCRIPT
+      SH: "echo '${CHANGED_FILES_ABS}' | grep '${WORKSPACE}/scripts/run-prettier' - || true"
+
       # Gather the list of changed agent plugins
     - NAME: CHANGED_AGENT_PLUGINS
       SH: "echo '${CHANGED_FILES_REL}' | grep '^agents/plugins/' || true"
@@ -85,6 +88,10 @@ VARIABLES:
       # Gather the list of changed JavaScript and CSS files in raw and enterprise edition
     - NAME: CHANGED_JS_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep 'web/htdocs/js/' || true"
+      REPLACE_NEWLINES: true
+
+    - NAME: CHANGED_PACKAGE_JSON
+      SH: "echo '${CHANGED_FILES_REL}' | grep 'package\\(-lock\\)\\?.json' || true"
       REPLACE_NEWLINES: true
 
     - NAME: CHANGED_CSS_FILES
@@ -156,7 +163,7 @@ STAGES:
       RESULT_CHECK_FILE_PATTERN: "results/shell-unit.txt"
 
     - NAME: 'JavaScript Format'
-      ONLY_WHEN_NOT_EMPTY: CHANGED_JS_FILES,CHANGED_TESTS_MAKEFILE
+      ONLY_WHEN_NOT_EMPTY: CHANGED_JS_FILES,CHANGED_TESTS_MAKEFILE,CHANGED_RUN_PRETTIER_SCRIPT,CHANGED_PACKAGE_JSON
       DIR: 'tests'
       COMMAND: "make --quiet test-format-js-docker &> ${RESULTS}/js-prettier.txt"
       TEXT_ON_SKIP: 'No JavaScript files changed'
@@ -170,7 +177,7 @@ STAGES:
        RESULT_CHECK_FILE_PATTERN: "results/js-build.txt"
 
     - NAME: 'CSS Format'
-      ONLY_WHEN_NOT_EMPTY: CHANGED_CSS_FILES,CHANGED_TESTS_MAKEFILE
+      ONLY_WHEN_NOT_EMPTY: CHANGED_CSS_FILES,CHANGED_TESTS_MAKEFILE,CHANGED_RUN_PRETTIER_SCRIPT,CHANGED_PACKAGE_JSON
       DIR: 'tests'
       COMMAND: "make --quiet test-format-css-docker &> ${RESULTS}/css-prettier.txt"
       TEXT_ON_SKIP: 'No CSS files changed'

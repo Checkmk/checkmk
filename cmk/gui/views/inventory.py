@@ -226,10 +226,10 @@ def _get_filtered_attributes(
 
 
 def _cmp_inventory_node(
-    a: Dict[str, StructuredDataNode], b: Dict[str, StructuredDataNode], invpath: str
+    a: Dict[str, StructuredDataNode], b: Dict[str, StructuredDataNode], raw_path: SDRawPath
 ) -> int:
-    val_a = inventory.get_inventory_attribute(a["host_inventory"], invpath)
-    val_b = inventory.get_inventory_attribute(b["host_inventory"], invpath)
+    val_a = inventory.get_inventory_attribute(a["host_inventory"], raw_path)
+    val_b = inventory.get_inventory_attribute(b["host_inventory"], raw_path)
     return _decorate_sort_func(_cmp_inv_generic)(val_a, val_b)
 
 
@@ -879,10 +879,10 @@ class AttributeDisplayHint:
         )
 
 
-def _find_display_hint_id(invpath: SDRawPath) -> Optional[str]:
+def _find_display_hint_id(raw_path: SDRawPath) -> Optional[str]:
     """Looks up the display hint for the given inventory path.
 
-    It returns either the ID of the display hint matching the given invpath
+    It returns either the ID of the display hint matching the given raw_path
     or None in case no entry was found.
 
     In case no exact match is possible try to match display hints that use
@@ -894,29 +894,29 @@ def _find_display_hint_id(invpath: SDRawPath) -> Optional[str]:
     The current logic has some limitations related to the ways stars can
     be used.
     """
-    invpath = invpath.rstrip(".:")
+    raw_path = raw_path.rstrip(".:")
 
     # Convert index of lists to *-syntax
     # e.g. ".foo.bar:18.test" to ".foo.bar:*.test"
     r = regex(r"([^\.]):[0-9]+")
-    invpath = r.sub("\\1:*", invpath)
+    raw_path = r.sub("\\1:*", raw_path)
 
     candidates = [
-        invpath,
+        raw_path,
     ]
 
-    # Produce a list of invpath candidates with a "*" going from back to front.
+    # Produce a list of raw_path candidates with a "*" going from back to front.
     #
-    # This algorithm only allows one ".*" in a invpath. It finds the match with
+    # This algorithm only allows one ".*" in a raw_path. It finds the match with
     # the longest path prefix before the ".*".
     #
     # TODO: Implement a generic mechanism that allows as many stars as possible
-    invpath_parts = invpath.split(".")
-    star_index = len(invpath_parts) - 1
+    raw_path_parts = raw_path.split(".")
+    star_index = len(raw_path_parts) - 1
     while star_index >= 0:
-        parts = invpath_parts[:star_index] + ["*"] + invpath_parts[star_index + 1 :]
-        invpath_with_star = "%s" % ".".join(parts)
-        candidates.append(invpath_with_star)
+        parts = raw_path_parts[:star_index] + ["*"] + raw_path_parts[star_index + 1 :]
+        raw_path_with_star = "%s" % ".".join(parts)
+        candidates.append(raw_path_with_star)
         star_index -= 1
 
     for candidate in candidates:
@@ -1250,7 +1250,7 @@ class ABCDataSourceInventory(ABCDataSource):
 # One master function that does all
 def declare_invtable_view(
     infoname: str,
-    invpath: SDRawPath,
+    raw_path: SDRawPath,
     title_singular: str,
     title_plural: str,
     icon: Optional[Icon] = None,
@@ -1263,7 +1263,7 @@ def declare_invtable_view(
         (ABCDataSourceInventory,),
         {
             "_ident": infoname,
-            "_inventory_path": invpath,
+            "_inventory_path": raw_path,
             "_title": "%s: %s" % (_("Inventory"), title_plural),
             "_infos": ["host", infoname],
             "ident": property(lambda s: s._ident),
@@ -1279,16 +1279,16 @@ def declare_invtable_view(
 
     painters: List[Tuple[str, str, str]] = []
     filters = []
-    for name in _inv_find_subtable_columns(invpath):
+    for name in _inv_find_subtable_columns(raw_path):
         column = infoname + "_" + name
 
         # Declare a painter, sorter and filters for each path with display hint
-        _declare_invtable_column(infoname, invpath, title_singular, name, column)
+        _declare_invtable_column(infoname, raw_path, title_singular, name, column)
 
         painters.append((column, "", ""))
         filters.append(column)
 
-    _declare_views(infoname, title_plural, painters, filters, [invpath], icon)
+    _declare_views(infoname, title_plural, painters, filters, [raw_path], icon)
 
 
 InventorySourceRows = Tuple[str, inventory.InventoryRows]
@@ -1353,7 +1353,7 @@ def declare_joined_inventory_table_view(
     _register_info_class(tablename, title_singular, title_plural)
 
     info_names: List[str] = []
-    invpaths: List[str] = []
+    raw_paths: List[str] = []
     titles: List[str] = []
     errors = []
     for this_tablename in tables:
@@ -1368,7 +1368,7 @@ def declare_joined_inventory_table_view(
         assert issubclass(data_source_class, ABCDataSourceInventory)
         ds = data_source_class()
         info_names.append(ds.ident)
-        invpaths.append(ds.inventory_path)
+        raw_paths.append(ds.inventory_path)
         titles.append(visual_info_class().title)
 
     # Create the datasource (like a database view)
@@ -1377,7 +1377,7 @@ def declare_joined_inventory_table_view(
         (ABCDataSource,),
         {
             "_ident": tablename,
-            "_sources": list(zip(info_names, invpaths)),
+            "_sources": list(zip(info_names, raw_paths)),
             "_match_by": match_by,
             "_errors": errors,
             "_title": "%s: %s" % (_("Inventory"), title_plural),
@@ -1395,8 +1395,8 @@ def declare_joined_inventory_table_view(
     known_common_columns = set()
     painters: List[Tuple[str, str, str]] = []
     filters = []
-    for this_invpath, this_infoname, this_title in zip(invpaths, info_names, titles):
-        for name in _inv_find_subtable_columns(this_invpath):
+    for this_raw_path, this_infoname, this_title in zip(raw_paths, info_names, titles):
+        for name in _inv_find_subtable_columns(this_raw_path):
             if name in match_by:
                 # Filter out duplicate common columns which are used to join tables
                 if name in known_common_columns:
@@ -1406,12 +1406,12 @@ def declare_joined_inventory_table_view(
             column = this_infoname + "_" + name
 
             # Declare a painter, sorter and filters for each path with display hint
-            _declare_invtable_column(this_infoname, this_invpath, this_title, name, column)
+            _declare_invtable_column(this_infoname, this_raw_path, this_title, name, column)
 
             painters.append((column, "", ""))
             filters.append(column)
 
-    _declare_views(tablename, title_plural, painters, filters, invpaths)
+    _declare_views(tablename, title_plural, painters, filters, raw_paths)
 
 
 def _register_info_class(infoname: str, title_singular: str, title_plural: str) -> None:
@@ -1437,12 +1437,12 @@ def _declare_views(
     title_plural: str,
     painters: List[Tuple[str, str, str]],
     filters: List[FilterName],
-    invpaths: List[SDRawPath],
+    raw_paths: List[SDRawPath],
     icon: Optional[Icon] = None,
 ) -> None:
     is_show_more = True
-    if len(invpaths) == 1:
-        parsed_path, _attribute_keys = inventory.parse_tree_path(invpaths[0] or "")
+    if len(raw_paths) == 1:
+        parsed_path, _attribute_keys = inventory.parse_tree_path(raw_paths[0] or "")
         table_hint = TableDisplayHint.make(list(parsed_path))
         is_show_more = table_hint.is_show_more
 
@@ -1503,7 +1503,7 @@ def _declare_views(
         "mustsearch": False,
         "link_from": {
             "single_infos": ["host"],
-            "has_inventory_tree": invpaths,
+            "has_inventory_tree": raw_paths,
         },
         # Columns
         "painters": painters,
@@ -2152,12 +2152,12 @@ class ABCNodeRenderer(abc.ABC):
             if is_open:
                 node.show(self)
 
-    def _replace_placeholders(self, raw_title: str, invpath: SDRawPath) -> str:
-        hint_id = _find_display_hint_id(invpath)
+    def _replace_placeholders(self, raw_title: str, raw_path: SDRawPath) -> str:
+        hint_id = _find_display_hint_id(raw_path)
         if hint_id is None:
             return raw_title
 
-        invpath_parts = invpath.strip(".").split(".")
+        raw_path_parts = raw_path.strip(".").split(".")
 
         # Use the position of the stars in the path to build a list of texts
         # that should be used for replacing the tile placeholders
@@ -2165,7 +2165,7 @@ class ABCNodeRenderer(abc.ABC):
         hint_parts = hint_id.strip(".").split(".")
         for index, hint_part in enumerate(hint_parts):
             if hint_part == "*":
-                replace_vars.append(invpath_parts[index])
+                replace_vars.append(raw_path_parts[index])
 
         # Now replace the variables in the title. Handle the case where we have
         # more stars than macros in the title.
@@ -2387,7 +2387,7 @@ def ajax_inv_render_tree() -> None:
     hostname = HostName(request.get_ascii_input_mandatory("host"))
     inventory.verify_permission(hostname, site_id)
 
-    invpath = request.get_ascii_input_mandatory("path")
+    raw_path = request.get_ascii_input_mandatory("path")
     tree_id = request.get_ascii_input("treeid", "")
     show_internal_tree_paths = bool(request.var("show_internal_tree_paths"))
 
@@ -2433,10 +2433,10 @@ def ajax_inv_render_tree() -> None:
         html.show_error(_("No such inventory tree."))
         return
 
-    parsed_path, _attribute_keys = inventory.parse_tree_path(invpath or "")
+    parsed_path, _attribute_keys = inventory.parse_tree_path(raw_path or "")
     if (node := struct_tree.get_node(parsed_path)) is None:
         html.show_error(
-            _("Invalid path in inventory tree: '%s' >> %s") % (invpath, repr(parsed_path))
+            _("Invalid path in inventory tree: '%s' >> %s") % (raw_path, repr(parsed_path))
         )
         return
 

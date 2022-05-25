@@ -329,7 +329,7 @@ class VisualTypeViews(VisualType):
         return True
 
 
-def _has_inventory_tree(linking_view, rows, view, context_vars, invpath, is_history=False):
+def _has_inventory_tree(linking_view, rows, view, context_vars, raw_path, is_history=False):
     context = dict(context_vars)
     hostname = context.get("host")
     if hostname is None:
@@ -357,11 +357,11 @@ def _has_inventory_tree(linking_view, rows, view, context_vars, invpath, is_hist
     if struct_tree.is_empty():
         return False
 
-    if isinstance(invpath, list):
+    if isinstance(raw_path, list):
         # For plugins/views/inventory.py:RowMultiTableInventory we've to check
         # if a given host has inventory data below several inventory paths
-        return any(_has_children(struct_tree, ipath) for ipath in invpath)
-    return _has_children(struct_tree, invpath)
+        return any(_has_children(struct_tree, ipath) for ipath in raw_path)
+    return _has_children(struct_tree, raw_path)
 
 
 def _has_children(struct_tree, invpath):

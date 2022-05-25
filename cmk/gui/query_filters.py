@@ -14,6 +14,7 @@ from typing import Callable, List, Literal, Optional, Tuple, Union
 import livestatus
 
 import cmk.utils.version as cmk_version
+from cmk.utils.structured_data import SDRawPath
 
 import cmk.gui.inventory as inventory
 import cmk.gui.site_config as site_config
@@ -251,9 +252,9 @@ def starred(what: Literal["host", "service"]) -> Callable[[bool], FilterHeader]:
 
 
 ## Filter tables
-def inside_inventory(invpath: str) -> Callable[[bool, Row], bool]:
+def inside_inventory(raw_path: SDRawPath) -> Callable[[bool, Row], bool]:
     def keep_row(on: bool, row: Row) -> bool:
-        return inventory.get_inventory_attribute(row["host_inventory"], invpath) is on
+        return inventory.get_inventory_attribute(row["host_inventory"], raw_path) is on
 
     return keep_row
 
@@ -512,12 +513,12 @@ def filter_by_column_textregex(filtertext: str, column: str) -> Callable[[Row], 
     return lambda row: bool(regex.search(row.get(column, "")))
 
 
-def filter_by_host_inventory(invpath: str) -> Callable[[str, str], Callable[[Row], bool]]:
+def filter_by_host_inventory(raw_path: SDRawPath) -> Callable[[str, str], Callable[[Row], bool]]:
     def row_filter(filtertext: str, column: str) -> Callable[[Row], bool]:
         regex = re_ignorecase(filtertext, column)
 
         def filt(row: Row):
-            invdata = inventory.get_inventory_attribute(row["host_inventory"], invpath)
+            invdata = inventory.get_inventory_attribute(row["host_inventory"], raw_path)
             if not isinstance(invdata, str):
                 invdata = ""
             return bool(regex.search(invdata))
@@ -528,10 +529,10 @@ def filter_by_host_inventory(invpath: str) -> Callable[[str, str], Callable[[Row
 
 
 def filter_in_host_inventory_range(
-    invpath: str,
+    raw_path: SDRawPath,
 ) -> Callable[[Row, str, MaybeBounds], bool]:
     def row_filter(row: Row, column: str, bounds: MaybeBounds) -> bool:
-        invdata = inventory.get_inventory_attribute(row["host_inventory"], invpath)
+        invdata = inventory.get_inventory_attribute(row["host_inventory"], raw_path)
         if not isinstance(invdata, (int, float)):
             return False
         return value_in_range(invdata, bounds)

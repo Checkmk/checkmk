@@ -11,10 +11,10 @@ import os
 import sys
 import time
 from hashlib import sha256
-from typing import Any, Iterable, List, Mapping, NamedTuple, Sequence, Set, Tuple
+from typing import Any, Iterable, List, NamedTuple, Optional, Sequence, Set, Tuple, TypedDict
 
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
-from cmk.utils.type_defs import HostOrServiceConditions, SetAutochecksTable
+from cmk.utils.type_defs import HostOrServiceConditions, Item, SetAutochecksTable
 
 from cmk.automations.results import CheckPreviewEntry, TryDiscoveryResult
 
@@ -31,7 +31,6 @@ from cmk.gui.watolib.check_mk_automations import (
     set_autochecks,
     try_discovery,
 )
-from cmk.gui.watolib.hosts_and_folders import CREHost
 from cmk.gui.watolib.rulesets import RuleConditions, service_description_to_condition
 from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
 
@@ -140,16 +139,27 @@ class StartDiscoveryRequest(NamedTuple):
     options: DiscoveryOptions
 
 
+class DiscoveryInfo(TypedDict):
+    update_source: Optional[str]
+    update_target: Optional[str]
+    update_services: Sequence[str]
+
+
 class Discovery:
     def __init__(
-        self, host: CREHost, discovery_options: DiscoveryOptions, api_request: Mapping[str, Any]
-    ):
+        self,
+        host,
+        discovery_options,
+        update_target: Optional[str],
+        update_services: List[str],
+        update_source: Optional[str] = None,
+    ) -> None:
         self._host = host
         self._options = discovery_options
-        self._discovery_info: Mapping[str, Any] = {
-            "update_source": api_request.get("update_source"),
-            "update_target": api_request["update_target"],
-            "update_services": api_request.get("update_services", []),  # list of service hash
+        self._discovery_info: DiscoveryInfo = {
+            "update_source": update_source,
+            "update_target": update_target,
+            "update_services": update_services,  # list of service hash
         }
 
     def execute_discovery(self, discovery_result=None):
@@ -480,7 +490,7 @@ def _make_host_audit_log_object(checks: SetAutochecksTable) -> Set[str]:
     return {v[0] for v in checks.values()}
 
 
-def checkbox_id(check_type, item):
+def checkbox_id(check_type: str, item: Item) -> str:
     """Generate HTML variable for service
 
     This needs to be unique for each host. Since this text is used as

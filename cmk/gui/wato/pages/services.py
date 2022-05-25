@@ -245,9 +245,10 @@ class ModeAjaxServiceDiscovery(AjaxPage):
 
         api_request: AjaxDiscoveryRequest = self.webapi_request()
         html.request.del_var("request")  # Do not add this to URLs constructed later
-        api_request.setdefault("update_target", None)
-        api_request.setdefault("update_source", None)
+        update_target = api_request.get("update_target", None)
+        update_source = api_request.get("update_source", None)
         api_request.setdefault("update_services", [])
+        update_services = api_request.get("update_services", [])
 
         # Make Folder() be able to detect the current folder correctly
         html.request.set_var("folder", api_request["folder_path"])
@@ -314,7 +315,13 @@ class ModeAjaxServiceDiscovery(AjaxPage):
                 DiscoveryAction.FIX_ALL,
                 DiscoveryAction.UPDATE_SERVICES,
             ]:
-                discovery = Discovery(host, discovery_options, api_request)
+                discovery = Discovery(
+                    host,
+                    discovery_options,
+                    update_target=update_target,
+                    update_services=update_services,
+                    update_source=update_source,
+                )
                 discovery.do_discovery(discovery_result)
             if discovery_options.action in [
                 DiscoveryAction.SINGLE_UPDATE,

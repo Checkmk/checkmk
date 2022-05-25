@@ -26,9 +26,15 @@ from cmk.gui.config import active_config
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.site_config import get_site_config, site_is_local
+from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.watolib.activate_changes import sync_changes_before_remote_automation
 from cmk.gui.watolib.automations import do_remote_automation
-from cmk.gui.watolib.check_mk_automations import discovery, set_autochecks, try_discovery
+from cmk.gui.watolib.check_mk_automations import (
+    discovery,
+    set_autochecks,
+    try_discovery,
+    update_host_labels,
+)
 from cmk.gui.watolib.hosts_and_folders import CREFolder, CREHost
 from cmk.gui.watolib.rulesets import (
     AllRulesets,
@@ -411,6 +417,116 @@ class Discovery:
         )
 
 
+def perform_discovery_action(
+    discovery_options: DiscoveryOptions,
+    host: CREHost,
+    previous_discovery_result: Optional[DiscoveryResult],
+    update_services: List[str],
+    update_source: Optional[str],
+    update_target: Optional[str],
+) -> Tuple[DiscoveryOptions, DiscoveryResult]:
+
+    # Refuse action requests in case the user is not permitted
+    if discovery_options.action != DiscoveryAction.NONE and not user.may("wato.services"):
+        discovery_options = discovery_options._replace(action=DiscoveryAction.NONE)
+    if discovery_options.action != DiscoveryAction.TABULA_RASA and not (
+        user.may("wato.service_discovery_to_undecided")
+        and user.may("wato.service_discovery_to_monitored")
+        and user.may("wato.service_discovery_to_ignored")
+        and user.may("wato.service_discovery_to_removed")
+    ):
+        discovery_options = discovery_options._replace(action=DiscoveryAction.NONE)
+    if _use_previous_discovery_result(discovery_options.action, previous_discovery_result):
+        assert previous_discovery_result is not None
+        discovery_result = previous_discovery_result
+    else:
+        discovery_result = get_check_table(
+            StartDiscoveryRequest(host, host.folder(), discovery_options)
+        )
+    job_actions = [
+        DiscoveryAction.NONE,
+        DiscoveryAction.REFRESH,
+        DiscoveryAction.TABULA_RASA,
+        DiscoveryAction.STOP,
+    ]
+    if discovery_options.action not in job_actions and transactions.check_transaction():
+        user.need_permission("wato.services")
+        if discovery_options.action in [
+            DiscoveryAction.UPDATE_HOST_LABELS,
+            DiscoveryAction.FIX_ALL,
+        ]:
+            message = _("Updated discovered host labels of '%s' with %d labels") % (
+                host.name(),
+                len(discovery_result.host_labels),
+            )
+            _changes.add_service_change(
+                "update-host-labels",
+                message,
+                host.object_ref(),
+                host.site_id(),
+            )
+            update_host_labels(
+                host.site_id(),
+                host.name(),
+                discovery_result.host_labels,
+            )
+        if discovery_options.action in [
+            DiscoveryAction.SINGLE_UPDATE,
+            DiscoveryAction.BULK_UPDATE,
+            DiscoveryAction.FIX_ALL,
+            DiscoveryAction.UPDATE_SERVICES,
+        ]:
+            assert update_target is not None
+            Discovery(
+                host,
+                discovery_options,
+                update_target=update_target,
+                update_services=update_services,
+                update_source=update_source,
+            ).do_discovery(discovery_result)
+        if discovery_options.action in [
+            DiscoveryAction.SINGLE_UPDATE,
+            DiscoveryAction.BULK_UPDATE,
+            DiscoveryAction.FIX_ALL,
+            DiscoveryAction.UPDATE_SERVICES,
+            DiscoveryAction.UPDATE_HOST_LABELS,
+        ]:
+            # did discovery! update the check table
+            discovery_result = get_check_table(
+                StartDiscoveryRequest(host, host.folder(), discovery_options)
+            )
+        if not host.locked():
+            host.clear_discovery_failed()
+    if not discovery_result.check_table_created and previous_discovery_result:
+        discovery_result = DiscoveryResult(
+            job_status=discovery_result.job_status,
+            check_table_created=previous_discovery_result.check_table_created,
+            check_table=previous_discovery_result.check_table,
+            host_labels=previous_discovery_result.host_labels,
+            new_labels=previous_discovery_result.new_labels,
+            vanished_labels=previous_discovery_result.vanished_labels,
+            changed_labels=previous_discovery_result.changed_labels,
+        )
+    return discovery_options, discovery_result
+
+
+def _use_previous_discovery_result(discovery_action: str, previous_discovery_result) -> bool:
+    if not previous_discovery_result:
+        return False
+
+    if (
+        discovery_action
+        in [DiscoveryAction.TABULA_RASA, DiscoveryAction.REFRESH, DiscoveryAction.STOP]
+        and transactions.check_transaction()
+    ):
+        return False
+
+    if has_active_job(previous_discovery_result):
+        return False
+
+    return True
+
+
 def _apply_state_change(  # pylint: disable=too-many-branches
     table_source: str,
     table_target: str,
@@ -727,3 +843,7 @@ class ServiceDiscoveryBackgroundJob(WatoBackgroundJob):
 
     def _check_table_file_path(self):
         return os.path.join(self.get_work_dir(), "check_table.mk")
+
+
+def has_active_job(discovery_result: DiscoveryResult) -> bool:
+    return discovery_result.job_status["is_active"]

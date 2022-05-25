@@ -9,7 +9,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 # shellcheck source=buildscripts/infrastructure/build-nodes/scripts/build_lib.sh
 . "${SCRIPT_DIR}/build_lib.sh"
 
-PROTOBUF_VERSION=3.18.1
+PROTOBUF_VERSION=3.20.1
 PACKAGE_NAME=protobuf-cpp
 DIR_NAME=protobuf-${PROTOBUF_VERSION}
 ARCHIVE_NAME=${PACKAGE_NAME}-${PROTOBUF_VERSION}.tar.gz

@@ -1,9 +1,9 @@
 # This package builds the python protobuf module and also protoc (for tests)
 PROTOBUF := protobuf
-PROTOBUF_VERS := 3.18.1
+PROTOBUF_VERS := 3.20.1
 PROTOBUF_DIR := $(PROTOBUF)-$(PROTOBUF_VERS)
 # Increase this to enforce a recreation of the build cache
-PROTOBUF_BUILD_ID := 13
+PROTOBUF_BUILD_ID := 2
 
 PROTOBUF_PATCHING := $(BUILD_HELPER_DIR)/$(PROTOBUF_DIR)-patching
 PROTOBUF_CONFIGURE := $(BUILD_HELPER_DIR)/$(PROTOBUF_DIR)-configure
@@ -46,7 +46,6 @@ $(PROTOBUF_UNPACK): $(PACKAGE_DIR)/$(PROTOBUF)/protobuf-python-$(PROTOBUF_VERS).
 	$(MKDIR) $(BUILD_HELPER_DIR)
 	$(TOUCH) $@
 
-# We have hidden embedded dependency: PATCHING -> UNPACK
 $(PROTOBUF_CONFIGURE): $(PROTOBUF_PATCHING)
 	cd $(PROTOBUF_BUILD_DIR) && \
 	    export LD_LIBRARY_PATH="$(PACKAGE_PYTHON_LD_LIBRARY_PATH)" && \

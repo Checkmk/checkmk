@@ -1,0 +1,52 @@
+diff -ru protobuf-3.20.1/src/google/protobuf/extension_set.h.orig protobuf-3.20.1/src/google/protobuf/extension_set.h
+--- protobuf-3.20.1/src/google/protobuf/extension_set.h.orig	2022-04-21 21:47:49.000000000 +0200
++++ protobuf-3.20.1/src/google/protobuf/extension_set.h	2022-05-30 14:26:25.959755301 +0200
+@@ -1218,7 +1218,7 @@
+   }
+   template <typename ExtendeeT>
+   static void Register(int number, FieldType type, bool is_packed,
+-                       LazyEagerVerifyFnType fn) {
++                       LazyEagerVerifyFnType /*fn*/) {
+     ExtensionSet::RegisterEnumExtension(&ExtendeeT::default_instance(), number,
+                                         type, false, is_packed, IsValid);
+   }
+@@ -1284,7 +1284,7 @@
+   }
+   template <typename ExtendeeT>
+   static void Register(int number, FieldType type, bool is_packed,
+-                       LazyEagerVerifyFnType fn) {
++                       LazyEagerVerifyFnType /*fn*/) {
+     ExtensionSet::RegisterEnumExtension(&ExtendeeT::default_instance(), number,
+                                         type, true, is_packed, IsValid);
+   }
+diff -ru protobuf-3.20.1/src/google/protobuf/port.h.orig protobuf-3.20.1/src/google/protobuf/port.h
+--- protobuf-3.20.1/src/google/protobuf/port.h.orig	2022-04-21 21:47:49.000000000 +0200
++++ protobuf-3.20.1/src/google/protobuf/port.h	2022-05-30 14:27:51.611947900 +0200
+@@ -48,6 +48,7 @@
+   ::operator delete(p, size);
+ #else
+   ::operator delete(p);
++  (void)size;
+ #endif
+ }
+ inline void SizedArrayDelete(void* p, size_t size) {
+@@ -55,6 +56,7 @@
+   ::operator delete[](p, size);
+ #else
+   ::operator delete[](p);
++  (void)size;
+ #endif
+ }
+ 
+diff -ru protobuf-3.20.1/src/google/protobuf/repeated_ptr_field.h.orig protobuf-3.20.1/src/google/protobuf/repeated_ptr_field.h
+--- protobuf-3.20.1/src/google/protobuf/repeated_ptr_field.h.orig	2022-04-21 21:47:49.000000000 +0200
++++ protobuf-3.20.1/src/google/protobuf/repeated_ptr_field.h	2022-05-30 14:28:18.992008982 +0200
+@@ -749,7 +749,7 @@
+   static inline GenericType* New(Arena* arena, GenericType&& value) {
+     return Arena::Create<GenericType>(arena, std::move(value));
+   }
+-  static inline GenericType* NewFromPrototype(const GenericType* prototype,
++  static inline GenericType* NewFromPrototype(const GenericType* /*prototype*/,
+                                               Arena* arena = nullptr) {
+     return New(arena);
+   }

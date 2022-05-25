@@ -26,7 +26,8 @@ def parse_docker_node_info(string_table: StringTable) -> Section:
         # first loop: [string_table[0], string_table[1]]
         # second loop: [string_table[1], string_table[2]]
         # etc
-        parsed = docker.parse(local_string_table).data
+        # Argument 1 to "parse" has incompatible type "Tuple[Union[List[str], Any], Union[List[str], Any]]"; expected "List[List[str]]"
+        parsed = docker.parse(local_string_table).data  # type: ignore[arg-type]
         loaded.update(parsed)
     return loaded
 

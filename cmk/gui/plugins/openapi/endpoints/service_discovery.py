@@ -211,15 +211,8 @@ def _update_single_service_phase(
             show_plugin_names=False,
             ignore_errors=True,
         ),
-        api_request={
-            "update_target": target_phase,
-            "update_services": [
-                checkbox_id(
-                    check_type,
-                    service_item,
-                )
-            ],
-        },
+        update_target=target_phase,
+        update_services=[checkbox_id(check_type, service_item)],
     )
     discovery.execute_discovery()
 

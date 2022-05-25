@@ -23,6 +23,21 @@ using namespace std::string_literals;
 
 namespace cma::ac {
 
+namespace {
+std::vector<Modus> start_controller_moduses{Modus::service, Modus::integration};
+
+bool AllowUseController(Modus modus) {
+    return rs::find(start_controller_moduses, modus) !=
+           start_controller_moduses.end();
+}
+std::vector<Modus> use_special_port_moduses{Modus::app, Modus::integration};
+
+bool UseSpecialPort(Modus modus) {
+    return rs::find(use_special_port_moduses, modus) !=
+           use_special_port_moduses.end();
+}
+}  // namespace
+
 fs::path LegacyPullFile() {
     return fs::path{cfg::GetUserDir()} / ac::kLegacyPullFile;
 }
@@ -36,12 +51,13 @@ fs::path TomlConfigFile() {
 }
 
 namespace {
-std::pair<fs::path, fs::path> ServiceName2TargetName(const fs::path &service) {
-    return {GetController(service), GetWorkController()};
+std::pair<fs::path, fs::path> ServiceName2TargetName() {
+    return {fs::path{cfg::GetRootDir()} / cfg::files::kAgentCtl,
+            GetWorkController()};
 }
 
-fs::path CopyControllerToBin(const fs::path &service) {
-    const auto [src, tgt] = ServiceName2TargetName(service);
+fs::path CopyControllerToBin() {
+    const auto [src, tgt] = ServiceName2TargetName();
     std::error_code ec;
     fs::copy(src, tgt, fs::copy_options::overwrite_existing, ec);
     if (ec.value() == 0) {
@@ -92,7 +108,10 @@ uint16_t GetPortFromString(const std::string &str) {
     return port < 1000 ? 0 : port;
 }
 
-std::string GetConfiguredAgentChannel() {
+std::string GetConfiguredAgentChannel(Modus modus) {
+    if (UseSpecialPort(modus)) {
+        return fmt::format("localhost:{}", kWindowsInternalExePort);
+    }
     auto controller_config = GetControllerNode();
     auto result =
         cfg::GetVal(controller_config, cfg::vars::kControllerAgentChannel,
@@ -113,8 +132,8 @@ bool GetConfiguredForceLegacy() {
 
 }  // namespace
 
-uint16_t GetConfiguredAgentChannelPort() {
-    return GetPortFromString(GetConfiguredAgentChannel());
+uint16_t GetConfiguredAgentChannelPort(Modus modus) {
+    return GetPortFromString(GetConfiguredAgentChannel(modus));
 }
 
 bool GetConfiguredLocalOnly() {
@@ -137,8 +156,8 @@ bool GetConfiguredCheck() {
 }
 
 /// returns true if controller files DOES NOT exist
-bool DeleteControllerInBin(const fs::path &service) {
-    const auto [_, tgt] = ServiceName2TargetName(service);
+bool DeleteControllerInBin() {
+    const auto [_, tgt] = ServiceName2TargetName();
     std::error_code ec;
     if (!fs::exists(tgt, ec)) {
         return true;
@@ -203,7 +222,7 @@ bool CreateTomlConfig(const fs::path &toml_file) {
 std::wstring BuildCommandLine(const fs::path &controller) {
     auto only_from =
         cfg::GetInternalArray(cfg::groups::kGlobal, cfg::vars::kOnlyFrom);
-    auto agent_channel = GetConfiguredAgentChannel();
+    auto agent_channel = GetConfiguredAgentChannel(GetModus());
     std::string allowed_ip;
     if (!only_from.empty()) {
         allowed_ip = " "s + std::string{kCmdLineAllowedIp};
@@ -219,18 +238,9 @@ std::wstring BuildCommandLine(const fs::path &controller) {
                                               agent_channel  // --channel 50001
                                               ));
 }
-namespace {
-std::vector<Modus> start_controller_moduses{Modus::service, Modus::integration};
-
-bool AllowUseController() {
-    return rs::find(start_controller_moduses, GetModus()) !=
-           start_controller_moduses.end();
-}
-}  // namespace
-
-std::optional<uint32_t> StartAgentController(const fs::path &service) {
+std::optional<uint32_t> StartAgentController() {
     XLOG::l.i("starting controller");
-    if (!AllowUseController()) {
+    if (!AllowUseController(GetModus())) {
         return {};
     }
 
@@ -244,7 +254,7 @@ std::optional<uint32_t> StartAgentController(const fs::path &service) {
     auto killed_count = wtools::KillProcessesByDir(cfg::GetUserBinDir());
     XLOG::d.i("killed {} processes in '{}'", killed_count,
               wtools::ToUtf8(cfg::GetUserBinDir()));
-    auto controller_name = CopyControllerToBin(service);
+    auto controller_name = CopyControllerToBin();
     if (controller_name.empty()) {
         XLOG::l("can't copy controller");
         return {};
@@ -253,6 +263,9 @@ std::optional<uint32_t> StartAgentController(const fs::path &service) {
     ac::CreateTomlConfig(ac::TomlConfigFile());
 
     wtools::AppRunner ar;
+    if (GetModus() == Modus::integration) {
+        tools::win::SetEnv(L"DEBUG_HOME_DIR"s, cfg::GetUserDir());
+    }
     const auto cmdline = BuildCommandLine(controller_name);
     auto proc_id = ar.goExecAsDetached(cmdline);
     if (proc_id != 0) {
@@ -296,24 +309,29 @@ std::string DetermineAgentCtlStatus() {
     return RunAgentControllerWithParam(kCmdLineStatus);
 }
 
-bool KillAgentController(const fs::path &service) {
-    if (AllowUseController()) {
-        auto ret = wtools::KillProcess(cfg::files::kAgentCtl, 1);
-        // Idiotic loop below mirrors idiotic Windows architecture.
-        // MS: Even if process killed, the executable may be for some time busy.
-        // And can't be deleted.
-        for (int i = 0; i < 20; ++i) {
-            if (DeleteControllerInBin(service)) {
-                break;
-            }
-            XLOG::d("error deleting controller");
-            std::this_thread::sleep_for(200ms);
-        }
-        std::error_code ec;
-        fs::remove(ac::TomlConfigFile(), ec);
-        return ret;
+bool KillAgentController() {
+    if (!AllowUseController(GetModus())) {
+        return false;
     }
-    return false;
+
+    auto _ = wtools::KillProcessesByDir(cfg::GetUserBinDir());
+
+    // Idiotic loop below mirrors idiotic Windows architecture.
+    // MS: Even if process killed, the executable may be for some time busy.
+    // And can't be deleted.
+    bool success = false;
+    for (int i = 0; i < 20; ++i) {
+        if (DeleteControllerInBin()) {
+            XLOG::l.i("Controller is deleted");
+            success = true;
+            break;
+        }
+        XLOG::d("error deleting controller");
+        std::this_thread::sleep_for(200ms);
+    }
+    std::error_code ec;
+    fs::remove(ac::TomlConfigFile(), ec);
+    return success;
 }
 
 namespace {

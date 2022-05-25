@@ -16,13 +16,9 @@ namespace fs = std::filesystem;
 namespace rs = std::ranges;
 
 namespace cma::ac {
-TEST(AgentController, StartAgent) {
-    EXPECT_FALSE(ac::StartAgentController("cmd.exe"));
-}
+TEST(AgentController, StartAgent) { EXPECT_FALSE(ac::StartAgentController()); }
 
-TEST(AgentController, KillAgent) {
-    EXPECT_FALSE(ac::KillAgentController("anything"));
-}
+TEST(AgentController, KillAgent) { EXPECT_FALSE(ac::KillAgentController()); }
 
 constexpr std::string_view port{"1111"};
 constexpr std::string_view allowed{"::1 111.11.11/11 8.8.8.8"};
@@ -118,9 +114,9 @@ TEST_F(AgentControllerCreateToml, PortAndAllowed) {
 TEST(AgentController, BuildCommandLineAgentChannelOk) {
     std::tuple<std::string, uint16_t, std::string_view> mapping[] = {
         {"ll:12345", 12345, "ll:12345"},
-        {"ll:999", kWindowsInternalPort,
+        {"ll:999", kWindowsInternalServicePort,
          cfg::defaults::kControllerAgentChannelDefault},
-        {"ll:-1", kWindowsInternalPort,
+        {"ll:-1", kWindowsInternalServicePort,
          cfg::defaults::kControllerAgentChannelDefault},
     };
     for (const auto &e : mapping) {
@@ -136,8 +132,12 @@ TEST(AgentController, BuildCommandLineAgentChannelOk) {
         EXPECT_EQ(
             wtools::ToUtf8(ac::BuildCommandLine(fs::path("x"))),
             fmt::format("x daemon --agent-channel {} -vv", std::get<2>(e)));
-        EXPECT_EQ(GetConfiguredAgentChannelPort(), std::get<1>(e));
+        EXPECT_EQ(GetConfiguredAgentChannelPort(GetModus()), std::get<1>(e));
     }
+    EXPECT_EQ(GetConfiguredAgentChannelPort(Modus::integration),
+              kWindowsInternalExePort);
+    EXPECT_EQ(GetConfiguredAgentChannelPort(Modus::app),
+              kWindowsInternalExePort);
 }
 
 TEST(AgentController, BuildCommandLineAgentChannelMalformed) {
@@ -152,7 +152,12 @@ TEST(AgentController, BuildCommandLineAgentChannelMalformed) {
     EXPECT_EQ(wtools::ToUtf8(ac::BuildCommandLine(fs::path("x"))),
               fmt::format("x daemon --agent-channel {} -vv",
                           cfg::defaults::kControllerAgentChannelDefault));
-    EXPECT_EQ(GetConfiguredAgentChannelPort(), kWindowsInternalPort);
+    EXPECT_EQ(GetConfiguredAgentChannelPort(GetModus()),
+              kWindowsInternalServicePort);
+    EXPECT_EQ(GetConfiguredAgentChannelPort(Modus::integration),
+              kWindowsInternalExePort);
+    EXPECT_EQ(GetConfiguredAgentChannelPort(Modus::app),
+              kWindowsInternalExePort);
 }
 
 TEST(AgentController, BuildCommandLineAllowed) {
@@ -402,10 +407,10 @@ TEST(AgentController, SimulationIntegration) {
     const auto service = fs::path{cfg::GetRootDir()} / "cmd.exe";
     const auto expected =
         fs::path{cfg::GetUserBinDir()} / cfg::files::kAgentCtl;
-    EXPECT_TRUE(ac::StartAgentController(service));
+    EXPECT_TRUE(ac::StartAgentController());
     EXPECT_TRUE(fs::exists(expected));
     EXPECT_TRUE(fs::exists(ac::TomlConfigFile()));
-    EXPECT_TRUE(ac::KillAgentController(service));
+    EXPECT_TRUE(ac::KillAgentController());
     EXPECT_FALSE(fs::exists(expected));
     EXPECT_FALSE(fs::exists(ac::TomlConfigFile()));
 }

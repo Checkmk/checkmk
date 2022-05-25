@@ -619,16 +619,16 @@ std::optional<ServiceProcessor::ControllerParam> OptionallyStartAgentController(
         return {};
     }
 
-    if (auto pid = ac::StartAgentController(wtools::GetArgv(0))) {
+    if (auto pid = ac::StartAgentController()) {
         std::this_thread::sleep_for(validate_process_delay);
         if (wtools::GetProcessPath(*pid).empty()) {
             XLOG::l("Controller process pid={} died in {}ms", *pid,
                     validate_process_delay.count());
-            ac::DeleteControllerInBin(wtools::GetArgv(0));
+            ac::DeleteControllerInBin();
             return {};
         }
         return ServiceProcessor::ControllerParam{
-            .port = ac::GetConfiguredAgentChannelPort(),
+            .port = ac::GetConfiguredAgentChannelPort(GetModus()),
             .pid = *pid,
         };
     }
@@ -676,7 +676,7 @@ void ServiceProcessor::mainThread(world::ExternalPort *ex_port,
     }
 
     auto controller_params = OptionallyStartAgentController(1000ms);
-    ON_OUT_OF_SCOPE(ac::KillAgentController(wtools::GetArgv(0)));
+    ON_OUT_OF_SCOPE(ac::KillAgentController());
     OpenFirewall(controller_params.has_value());
     if (cap_installed) {
         ac::CreateArtifacts(

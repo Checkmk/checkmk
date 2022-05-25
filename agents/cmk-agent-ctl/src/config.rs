@@ -149,6 +149,7 @@ pub struct RuntimeConfig {
 
 impl TOMLLoader for RuntimeConfig {}
 
+#[derive(Debug)]
 pub struct LegacyPullMarker(std::path::PathBuf);
 
 impl LegacyPullMarker {

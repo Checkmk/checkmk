@@ -7,6 +7,8 @@ use super::{cli, constants, types};
 use anyhow::Context;
 use anyhow::Result as AnyhowResult;
 use log::debug;
+#[cfg(windows)]
+use log::info;
 #[cfg(unix)]
 use nix::unistd;
 use std::env;
@@ -201,7 +203,7 @@ fn determine_paths(user: unistd::User) -> AnyhowResult<PathResolver> {
 fn determine_paths() -> AnyhowResult<PathResolver> {
     // Alternative home dir can be passed for testing/debug reasons
     if let Ok(debug_home_dir) = std::env::var(constants::ENV_HOME_DIR) {
-        debug!("Using debug HOME_DIR: {}", debug_home_dir);
+        info!("Using debug HOME_DIR: {}", debug_home_dir);
         return Ok(PathResolver::new(&PathBuf::from(debug_home_dir)));
     }
 

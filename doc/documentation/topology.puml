@@ -50,7 +50,7 @@ package "[[../arch-comp-omd.html OMD: Checkmk run-time environment]]" as omd {
     }
     interface "call" as call_notification_plugins
 
-    component cron
+    component "[[../arch-comp-crontab.html crontab]]" as crontab
 
     component "[[../arch-comp-liveproxyd.html liveproxyd]]" as liveproxyd
     interface "[[../arch-comp-livestatus-client.html Livestatus client]]" as liveproxyd_livestatus_client
@@ -73,7 +73,7 @@ package "[[../arch-comp-omd.html OMD: Checkmk run-time environment]]" as omd {
 
 package "Other site" as other_site {
     component "[[../arch-comp-core.html Monitoring Core]]" as cmc_other_site
-    component "GUI" as gui_other_site
+    component "[[../arch-comp-gui.html GUI]]" as gui_other_site
     component "mknotifyd" as mknotifyd_other_site
 }
 interface "mknotifyd protocol" as mknotifyd_protocol

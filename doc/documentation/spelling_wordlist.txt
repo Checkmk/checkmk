@@ -5,7 +5,9 @@ Backend
 backends
 Checkmk
 cmk
+Crontab
 crontab
+cron
 keepalive
 Liveproxyd
 Livestatus
@@ -30,3 +32,4 @@ rrdcached
 localhost
 Kerberos
 Grafana
+init

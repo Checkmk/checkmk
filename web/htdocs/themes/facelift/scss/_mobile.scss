@@ -212,4 +212,41 @@ body.mobile {
       }
     }
   }
+
+  div.ui-select {
+    display: none;
+  }
+
+  .select2.select2-container {
+    width: 100% !important;
+    padding: 0.7em 1em;
+    font-size: 16px;
+    background-color: $mobile-form-element-bg-color;
+    border: $mobile-form-element-border;
+    border-radius: $theme-border-radius;
+
+    &.select2-container--focus,
+    &.select2-container--open {
+      box-shadow: $mobile-form-element-focus-box-shadow;
+      -webkit-box-shadow: $mobile-form-element-focus-box-shadow;
+      -moz-box-shadow: $mobile-form-element-focus-box-shadow;
+    }
+
+    .select2-selection--single {
+      text-align: center;
+
+      .select2-selection__rendered {
+        background-color: $mobile-form-element-bg-color;
+      }
+
+      .select2-selection__arrow {
+        top: $spacing;
+        right: $spacing;
+      }
+    }
+  }
+
+  legend {
+    margin: 0 0 4px;
+  }
 }

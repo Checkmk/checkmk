@@ -2,8 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-/* Disable data-ajax per default, as it makes problems in most
-   of our cases */
+import * as forms from "forms";
 
 // NOTE: We use an up-to-date version of jQuery from the package-lock.json together
 // with a patched version of jQuery mobile to make it compatible with jQuery:
@@ -19,6 +18,8 @@ try {
     graphs = null;
 }
 
+/* Disable data-ajax per default, as it makes problems in most
+   of our cases */
 $(document).ready(function () {
     $("a").attr("data-ajax", "false");
     $("form").attr("data-ajax", "false");
@@ -40,7 +41,7 @@ if (top != self) {
 }
 
 $(document).ready(function () {
-    $("a").click(function (event) {
+    $("a:not(.results_button)").click(function (event) {
         event.preventDefault();
         window.location.href = $(this).attr("href") as string;
     });
@@ -48,6 +49,7 @@ $(document).ready(function () {
 
 export const cmk_export = {
     cmk: {
+        forms: forms,
         graphs: graphs,
     },
 };

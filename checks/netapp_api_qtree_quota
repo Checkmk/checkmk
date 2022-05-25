@@ -27,6 +27,10 @@ from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildc
 # quota fdo03   quota-type tree disk-limit 2684354560   volume vol_bronze1_fdo2 disk-used 788905236
 
 
+def parse_netapp_api_qtree_quota(info):
+    return netapp_api_parse_lines(info, custom_keys=["quota", "quota-users"])
+
+
 def inventory_netapp_api_qtree_quota(parsed):
     for qtree, attrs in parsed.items():
         if attrs.get("quota-type") == "tree" and attrs.get("disk-limit").isdigit():
@@ -55,8 +59,7 @@ def check_netapp_api_qtree_quota(item, params, qtree):
 check_info["netapp_api_qtree_quota"] = {
     'check_function': check_netapp_api_qtree_quota,
     'inventory_function': inventory_netapp_api_qtree_quota,
-    'parse_function': lambda info: netapp_api_parse_lines(info,
-                                                          custom_keys=["quota", "quota-users"]),
+    'parse_function': parse_netapp_api_qtree_quota,
     'service_description': 'Qtree %s',
     'has_perfdata': True,
     'group': "filesystem",

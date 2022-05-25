@@ -107,8 +107,9 @@ def _get_value(results: Sequence[GCPResult], spec: MetricSpec) -> float:
         )
     else:
         filter_func = lambda r: r.ts.metric.type == spec.metric_type
-    try:
-        result = next(r for r in results if filter_func(r))
+    results = list(r for r in results if filter_func(r))
+    ret_val = 0
+    for result in results:
         proto_value = result.ts.points[0].value
         if spec.dtype == MetricSpec.DType.FLOAT:
             value = proto_value.double_value
@@ -116,9 +117,8 @@ def _get_value(results: Sequence[GCPResult], spec: MetricSpec) -> float:
             value = proto_value.int64_value
         else:
             raise NotImplementedError("unkown dtype")
-        return value * spec.scale
-    except StopIteration:
-        return 0
+        ret_val += value * spec.scale
+    return ret_val
 
 
 def generic_check(

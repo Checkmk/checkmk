@@ -239,8 +239,8 @@ def test_multiple_groupby_requests(section: Section):
     assert results == [
         Result(state=State.OK, summary="Instances: 2.0"),
         Metric("faas_total_instance_count", 2.0),
-        Result(state=State.OK, summary="Requests: 0.16666666666666666"),
-        Metric("faas_execution_count", 0.16666666666666666),
+        Result(state=State.OK, summary="Requests: 0.4866666666666667"),
+        Metric("faas_execution_count", 0.16666666666666666 + 0.32),
         Result(state=State.OK, summary="Requests 2xx (sucess): 0.16666666666666666"),
         Metric("faas_execution_count_2xx", 0.16666666666666666),
         Result(state=State.OK, summary="Requests 3xx (redirection): 0"),

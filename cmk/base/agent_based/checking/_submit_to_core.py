@@ -8,25 +8,29 @@ import errno
 import os
 import signal
 import time
+from functools import partial
 from random import Random
 from types import FrameType
-from typing import IO, Literal, Optional, Tuple, Union
+from typing import Callable, IO, Literal, Optional, Tuple, Union
 
 import cmk.utils.paths
 import cmk.utils.tty as tty
-import cmk.utils.version as cmk_version
 from cmk.utils.check_utils import ServiceCheckResult
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import console
-from cmk.utils.type_defs import HostName, ServiceDetails, ServiceName, ServiceState
+from cmk.utils.type_defs import HostName, KeepaliveAPI, ServiceDetails, ServiceName, ServiceState
 
-# TODO: make this two arguments!
-import cmk.base.config as config
+Submitter = Callable[
+    [
+        HostName,
+        ServiceName,
+        ServiceState,
+        ServiceDetails,
+        Optional[Tuple[int, int]],
+    ],
+    None,
+]
 
-if not cmk_version.is_raw_edition():
-    import cmk.base.cee.keepalive as keepalive  # type: ignore[import] # pylint: disable=no-name-in-module
-else:
-    keepalive = None  # type: ignore[assignment]
 
 # global variables used to cache temporary values that do not need
 # to be reset after a configuration change.
@@ -42,9 +46,9 @@ def check_result(
     service_name: ServiceName,
     result: ServiceCheckResult,
     cache_info: Optional[Tuple[int, int]],
-    dry_run: bool,
     show_perfdata: bool,
     perfdata_format: Literal["pnp", "standard"],
+    submitter: Submitter,
 ) -> None:
     perftext = _sanitize_perftext(result, perfdata_format)
 
@@ -52,7 +56,7 @@ def check_result(
         service_name, result.state, result.output, perftext, show_perfdata=show_perfdata
     )
 
-    _do_submit_to_core(
+    submitter(
         host_name,
         service_name,
         result.state,
@@ -60,7 +64,6 @@ def check_result(
         # Replace the ones in the output by a Uniocode "Light vertical bar"
         "%s|%s" % (result.output.replace("|", "\u2758"), perftext),
         cache_info,
-        dry_run,
     )
 
 
@@ -78,6 +81,7 @@ def _sanitize_perftext(
     return " ".join(perftexts)
 
 
+# TODO: existence of this means the submit-functions ought to be ctxt-mngr.
 def finalize() -> None:
     global _checkresult_file_fd
     if _checkresult_file_fd is not None and _checkresult_file_path is not None:
@@ -123,28 +127,25 @@ def _extract_check_command(infotext: str) -> Optional[str]:
     return infotext.split(marker, 1)[1].split("\n")[0] if marker in infotext else None
 
 
-def _do_submit_to_core(
-    host: HostName,
-    service: ServiceName,
-    state: ServiceState,
-    output: ServiceDetails,
-    cache_info: Optional[Tuple[int, int]],
+def get_submitter(
+    check_submission: str,
+    monitoring_core: str,
     dry_run: bool,
-) -> None:
+    keepalive: KeepaliveAPI,
+) -> Submitter:
     if dry_run:
-        return _submit_noop(host, service, state, output, cache_info)
-    if keepalive and keepalive.enabled():
-        return _submit_via_keepalive(host, service, state, output, cache_info)
+        return _submit_noop
 
-    if config.check_submission == "pipe" or config.monitoring_core == "cmc":
-        return _submit_via_command_pipe(host, service, state, output, cache_info)
+    if keepalive.enabled():
+        return partial(_submit_via_keepalive, keepalive)
 
-    if config.check_submission == "file":
-        return _submit_via_check_result_file(host, service, state, output, cache_info)
+    if check_submission == "pipe" or monitoring_core == "cmc":
+        return _submit_via_command_pipe
 
-    raise MKGeneralException(
-        f"Invalid setting {config.check_submission=} (expected 'pipe' or 'file')"
-    )
+    if check_submission == "file":
+        return _submit_via_check_result_file
+
+    raise MKGeneralException(f"Invalid setting {check_submission=} (expected 'pipe' or 'file')")
 
 
 def _output_check_result(
@@ -178,21 +179,21 @@ def _submit_noop(
     service: ServiceName,
     state: ServiceState,
     output: ServiceDetails,
-    cache_info: Optional[Tuple[int, int]],
+    cache_info: Optional[tuple[int, int]],
 ) -> None:
     pass
 
 
 def _submit_via_keepalive(
+    keepalive: KeepaliveAPI,
     host: HostName,
     service: ServiceName,
     state: ServiceState,
     output: ServiceDetails,
-    cache_info: Optional[Tuple[int, int]],
+    cache_info: Optional[tuple[int, int]],
 ) -> None:
     """Regular case for the CMC - check helpers are running in keepalive mode"""
-    cached_at, cache_interval = cache_info or (None, None)
-    return keepalive.add_check_result(host, service, state, output, cached_at, cache_interval)
+    return keepalive.add_check_result(host, service, state, output, cache_info)
 
 
 def _submit_via_command_pipe(
@@ -200,7 +201,7 @@ def _submit_via_command_pipe(
     service: ServiceName,
     state: ServiceState,
     output: ServiceDetails,
-    cache_info: Optional[Tuple[int, int]],
+    cache_info: Optional[tuple[int, int]],
 ) -> None:
     """In case of CMC this is used when running "cmk" manually"""
     output = output.replace("\n", "\\n")
@@ -225,7 +226,7 @@ def _submit_via_check_result_file(
     service: ServiceName,
     state: ServiceState,
     output: ServiceDetails,
-    cache_info: Optional[Tuple[int, int]],
+    cache_info: Optional[tuple[int, int]],
 ) -> None:
     output = output.replace("\n", "\\n")
     _open_checkresult_file()

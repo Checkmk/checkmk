@@ -21,6 +21,7 @@ from typing import (
     NewType,
     NoReturn,
     Optional,
+    Protocol,
     Sequence,
     Set,
     Tuple,
@@ -351,3 +352,20 @@ class HostLabelValueDict(TypedDict):
 
 
 DiscoveredHostLabelsDict = Dict[str, HostLabelValueDict]
+
+
+class KeepaliveAPI(Protocol):
+    # NOTE: This is not the full API. It's what I need now.
+
+    def enabled(self) -> bool:
+        ...
+
+    def add_check_result(
+        self,
+        host: HostName,
+        service: ServiceName,
+        state: ServiceState,
+        output: ServiceDetails,
+        cache_info: Optional[tuple[int, int]],
+    ) -> None:
+        ...

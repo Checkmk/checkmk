@@ -65,6 +65,7 @@ from cmk.base.api.agent_based import checking_classes, value_store
 from cmk.base.api.agent_based.register.check_plugins_legacy import wrap_parameters
 from cmk.base.api.agent_based.type_defs import Parameters
 from cmk.base.check_utils import ConfiguredService, LegacyCheckParameters
+from cmk.base.keepalive import get_keepalive
 from cmk.base.sources import fetch_all, make_sources, Source
 
 from . import _cluster_modes, _submit_to_core
@@ -398,7 +399,12 @@ def _execute_check(
             service_name=service.description,
             result=submittable.result,
             cache_info=submittable.cache_info,
-            dry_run=dry_run,
+            submitter=_submit_to_core.get_submitter(
+                check_submission=config.check_submission,
+                monitoring_core=config.monitoring_core,
+                dry_run=dry_run,
+                keepalive=get_keepalive(cmk_version.edition()),
+            ),
             show_perfdata=show_perfdata,
             perfdata_format="pnp" if config.perfdata_format == "pnp" else "standard",
         )

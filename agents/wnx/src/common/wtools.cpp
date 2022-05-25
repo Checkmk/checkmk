@@ -121,25 +121,29 @@ std::wstring GetProcessPath(uint32_t pid) noexcept {
 
 /// \b returns count of killed processes, -1 if dir is bad
 int KillProcessesByDir(const fs::path &dir) noexcept {
-    constexpr size_t minimum_path_len = 12;  // safety
+    constexpr size_t minimum_path_len = 12;
 
     if (dir.u8string().size() < minimum_path_len) {
-        // safety again
+        // safety: we do not want to kill as admin something important
         return -1;
     }
 
     int killed_count = 0;
 
     ScanProcessList([dir, &killed_count](const PROCESSENTRY32W &entry) -> bool {
-        ;
         auto pid = entry.th32ProcessID;
         auto exe = wtools::GetProcessPath(pid);
-        if (exe.length() < minimum_path_len) return true;  // skip short path
+        if (exe.length() < minimum_path_len) {
+            return true;  // skip short path
+        }
 
         fs::path p{exe};
-
-        auto shift = p.lexically_relative(dir).u8string();
-        if (!shift.empty() && shift[0] != '.') {
+        if (p.string().ends_with("-ctl.exe")) {
+            XLOG::l.i("file is {}", p);
+        }
+        std::error_code ec;
+        auto shift = fs::relative(p, dir).u8string();
+        if (!ec && !shift.empty() && shift[0] != '.') {
             XLOG::d.i("Killing process '{}'", p);
             KillProcess(pid, 99);
             killed_count++;

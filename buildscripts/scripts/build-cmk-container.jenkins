@@ -65,7 +65,7 @@ timeout(time: 12, unit: 'HOURS') {
 
                     stage('Build Container') {
                         def CREDENTIALS_ID
-                        if (EDITION == "raw" || "free") {
+                        if (EDITION == "raw" || EDITION == "free") {
                             CREDENTIALS_ID = '11fb3d5f-e44e-4f33-a651-274227cc48ab'
                         } else {
                             CREDENTIALS_ID = "registry.checkmk.com"

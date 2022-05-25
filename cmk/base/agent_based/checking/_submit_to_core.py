@@ -10,7 +10,7 @@ import signal
 import time
 from random import Random
 from types import FrameType
-from typing import IO, Optional, Sequence, Tuple, Union
+from typing import IO, Literal, Optional, Tuple, Union
 
 import cmk.utils.paths
 import cmk.utils.tty as tty
@@ -44,30 +44,38 @@ def check_result(
     cache_info: Optional[Tuple[int, int]],
     dry_run: bool,
     show_perfdata: bool,
+    perfdata_format: Literal["pnp", "standard"],
 ) -> None:
-    perftexts = [_serialize_metric(*mt) for mt in result.metrics]
-    if perftexts:
-        check_command = _extract_check_command(result.output)
-        if check_command and config.perfdata_format == "pnp":
-            perftexts.append("[%s]" % check_command)
-        perftext = "|" + (" ".join(perftexts))
-    else:
-        perftext = ""
+    perftext = _sanitize_perftext(result, perfdata_format)
 
     if not dry_run:
-        # make sure that plugin output does not contain a vertical bar. If that is the
-        # case then replace it with a Uniocode "Light vertical bar"
         _do_submit_to_core(
             host_name,
             service_name,
             result.state,
-            result.output.replace("|", "\u2758") + perftext,
+            # The vertical bar indicates end of service output and start of metrics.
+            # Replace the ones in the output by a Uniocode "Light vertical bar"
+            "%s|%s" % (result.output.replace("|", "\u2758"), perftext),
             cache_info,
         )
 
     _output_check_result(
-        service_name, result.state, result.output, perftexts, show_perfdata=show_perfdata
+        service_name, result.state, result.output, perftext, show_perfdata=show_perfdata
     )
+
+
+def _sanitize_perftext(
+    result: ServiceCheckResult, perfdata_format: Literal["pnp", "standard"]
+) -> str:
+    if not result.metrics:
+        return ""
+
+    perftexts = [_serialize_metric(*mt) for mt in result.metrics]
+
+    if perfdata_format == "pnp" and (check_command := _extract_check_command(result.output)):
+        perftexts.append("[%s]" % check_command)
+
+    return " ".join(perftexts)
 
 
 def finalize() -> None:
@@ -145,13 +153,13 @@ def _output_check_result(
     servicedesc: ServiceName,
     state: ServiceState,
     infotext: ServiceDetails,
-    perftexts: Sequence[str],
+    perftext: str,
     *,
     show_perfdata: bool,
 ) -> None:
     if show_perfdata:
         infotext_fmt = "%-56s"
-        p = " (%s)" % (" ".join(perftexts))
+        p = f" ({perftext})"
     else:
         p = ""
         infotext_fmt = "%s"

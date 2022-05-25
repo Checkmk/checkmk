@@ -400,6 +400,7 @@ def _execute_check(
             cache_info=submittable.cache_info,
             dry_run=dry_run,
             show_perfdata=show_perfdata,
+            perfdata_format="pnp" if config.perfdata_format == "pnp" else "standard",
         )
     else:
         console.verbose(f"{service.description:20} PEND - {submittable.result.output}\n")

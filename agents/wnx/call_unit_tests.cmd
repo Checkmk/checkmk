@@ -62,11 +62,11 @@ WNX_TEST_ROOT%\watest64.exe %param%
 if not %errorlevel% == 0 powershell Write-Host "This is ERROR %errorlevel% in testing 64" -Foreground Red && goto error
 %Print%{0;255;255}This is end of testing. FULL test was requested.\n
 :success
-%Print%{0;255;0}Unit test: SUCCESS\n
+%Print%{0;255;0}Unit test "%param%": SUCCESS\n
 call :zip_results
 exit /b 0
 :error
-%Print%{255;0;0} Unit test: failed with error level "%errorlevel%" \n
+%Print%{255;0;0} Unit test "%param%": failed with error level "%errorlevel%" \n
 call :zip_results
 exit /b 78
 

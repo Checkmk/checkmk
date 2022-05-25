@@ -30,7 +30,7 @@ from cmk.gui.plugins.views.utils import (
     PainterOptions,
 )
 from cmk.gui.plugins.visuals.utils import Filter
-from cmk.gui.type_defs import Rows
+from cmk.gui.type_defs import Rows, VisualContext
 from cmk.gui.utils.confirm_with_preview import confirm_with_preview
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.urls import makeuri, requested_file_name
@@ -64,6 +64,7 @@ def mobile_html_head(title: str) -> None:
 
 
 def mobile_html_foot() -> None:
+    html.write_final_javascript()
     html.close_body()
     html.close_html()
 
@@ -220,10 +221,7 @@ def page_index() -> None:
         if view_spec.get("mobile") and not view_spec.get("hidden"):
 
             datasource = data_source_registry[view_spec["datasource"]]()
-            context = visuals.get_merged_context(
-                visuals.get_context_from_uri_vars(datasource.infos),
-                view_spec["context"],
-            )
+            context = visuals.active_context_from_request(datasource.infos, view_spec["context"])
 
             view = views.View(view_name, view_spec, context)
             view.row_limit = views.get_limit()
@@ -274,9 +272,7 @@ def page_view() -> None:
         raise MKUserError("view_name", "No view defined with the name '%s'." % view_name)
 
     datasource = data_source_registry[view_spec["datasource"]]()
-    context = visuals.get_merged_context(
-        view_spec["context"], visuals.get_context_from_uri_vars(datasource.infos)
-    )
+    context = visuals.active_context_from_request(datasource.infos, view_spec["context"])
 
     view = views.View(view_name, view_spec, context)
     view.row_limit = views.get_limit()
@@ -344,7 +340,7 @@ class MobileViewRenderer(views.ABCViewRenderer):
 
         if page == "filter":
             jqm_page_header(_("Filter / Search"), left_button=home, id_="filter")
-            _show_filter_form(show_filters)
+            _show_filter_form(show_filters, self.view.context)
             jqm_page_navfooter(navbar, "filter", page_id)
 
         elif page == "commands":
@@ -401,7 +397,7 @@ class MobileViewRenderer(views.ABCViewRenderer):
             jqm_page_navfooter(navbar, "context", page_id)
 
 
-def _show_filter_form(show_filters: List[Filter]) -> None:
+def _show_filter_form(show_filters: List[Filter], context: VisualContext) -> None:
     # Sort filters
     s = sorted([(f.sort_index, f.title, f) for f in show_filters if f.available()])
 
@@ -410,20 +406,25 @@ def _show_filter_form(show_filters: List[Filter]) -> None:
     for _sort_index, title, f in s:
         html.open_li(**{"data-role": "fieldcontain"})
         html.legend(title)
-        f.display({"value": "from context"})
+        f.display(context.get(f.ident, {}))
         html.close_li()
     html.close_ul()
     html.hidden_fields()
     html.hidden_field("search", "Search")
     html.hidden_field("page", "data")
+    html.form_has_submit_button = True  # a.results_button functions as a submit button
     html.end_form()
-    html.javascript(
+    html.final_javascript(
         """
-      $('.results_button').live('click',function(e) {
-        e.preventDefault();
-        $('#form_filter').submit();
-      });
-    """
+        const filter_form = document.getElementById("form_filter");
+        const results_button = document.getElementsByClassName("results_button")[0];
+
+        cmk.forms.enable_select2_dropdowns(filter_form);
+        results_button.onclick = function(event) {
+            event.preventDefault();
+            filter_form.submit();
+        };
+        """
     )
 
 

@@ -262,10 +262,10 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         html.request.set_var("folder", api_request["folder_path"])
 
         folder = Folder.folder(api_request["folder_path"])
-        self._host = folder.host(api_request["host_name"])
-        if not self._host:
+        host = folder.host(api_request["host_name"])
+        if not host:
             raise MKUserError("host", _("You called this page with an invalid host name."))
-        self._host.need_permission("read")
+        host.need_permission("read")
 
         discovery_options = DiscoveryOptions(**api_request["discovery_options"])
         # Refuse action requests in case the user is not permitted
@@ -291,7 +291,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             discovery_result = previous_discovery_result
         else:
             discovery_result = get_check_table(
-                StartDiscoveryRequest(self._host, self._host.folder(), discovery_options)
+                StartDiscoveryRequest(host, host.folder(), discovery_options)
             )
 
         job_actions = [
@@ -308,18 +308,18 @@ class ModeAjaxServiceDiscovery(AjaxPage):
                 DiscoveryAction.FIX_ALL,
             ]:
                 message = _("Updated discovered host labels of '%s' with %d labels") % (
-                    self._host.name(),
+                    host.name(),
                     len(discovery_result.host_labels),
                 )
                 _changes.add_service_change(
                     "update-host-labels",
                     message,
-                    self._host.object_ref(),
-                    self._host.site_id(),
+                    host.object_ref(),
+                    host.site_id(),
                 )
                 update_host_labels(
-                    self._host.site_id(),
-                    self._host.name(),
+                    host.site_id(),
+                    host.name(),
                     discovery_result.host_labels,
                 )
             if discovery_options.action in [
@@ -328,7 +328,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
                 DiscoveryAction.FIX_ALL,
                 DiscoveryAction.UPDATE_SERVICES,
             ]:
-                discovery = Discovery(self._host, discovery_options, api_request)
+                discovery = Discovery(host, discovery_options, api_request)
                 discovery.do_discovery(discovery_result)
             if discovery_options.action in [
                 DiscoveryAction.SINGLE_UPDATE,
@@ -339,10 +339,11 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             ]:
                 # did discovery! update the check table
                 discovery_result = get_check_table(
-                    StartDiscoveryRequest(self._host, self._host.folder(), discovery_options)
+                    StartDiscoveryRequest(host, host.folder(), discovery_options)
                 )
-            if not self._host.locked():
-                self._host.clear_discovery_failed()
+
+            if not host.locked():
+                host.clear_discovery_failed()
 
         if not discovery_result.check_table_created and previous_discovery_result:
             discovery_result = DiscoveryResult(
@@ -369,7 +370,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             user.discovery_show_plugin_names = discovery_options.show_plugin_names
 
         renderer = DiscoveryPageRenderer(
-            self._host,
+            host,
             discovery_options,
         )
         page_code = renderer.render(discovery_result, api_request)
@@ -385,14 +386,14 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             "message": self._get_status_message(discovery_result, performed_action),
             "body": page_code,
             "fixall": fix_all_code,
-            "page_menu": self._get_page_menu(discovery_options),
+            "page_menu": self._get_page_menu(discovery_options, host),
             "pending_changes_info": get_pending_changes_info(),
             "pending_changes_tooltip": get_pending_changes_tooltip(),
             "discovery_options": discovery_options._asdict(),
             "discovery_result": discovery_result.serialize(),
         }
 
-    def _get_page_menu(self, discovery_options: DiscoveryOptions) -> str:
+    def _get_page_menu(self, discovery_options: DiscoveryOptions, host: CREHost) -> str:
         """Render the page menu contents to reflect contect changes
 
         The page menu needs to be updated, just like the body of the page. We previously tried an
@@ -400,18 +401,16 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         refresh), but it was a lot more complex to realize and resulted in inconsistencies. This is
         the simpler solution and less error prone.
         """
-        page_menu = service_page_menu(
-            self._get_discovery_breadcrumb(), self._host, discovery_options
-        )
+        page_menu = service_page_menu(self._get_discovery_breadcrumb(host), host, discovery_options)
         with output_funnel.plugged():
             PageMenuRenderer().show(
                 page_menu, hide_suggestions=not user.get_tree_state("suggestions", "all", True)
             )
             return output_funnel.drain()
 
-    def _get_discovery_breadcrumb(self) -> Breadcrumb:
+    def _get_discovery_breadcrumb(self, host: CREHost) -> Breadcrumb:
         with request.stashed_vars():
-            request.set_var("host", self._host.name())
+            request.set_var("host", host.name())
             mode = ModeDiscovery()
             return make_main_menu_breadcrumb(mode.main_menu()) + mode.breadcrumb()
 

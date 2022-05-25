@@ -48,19 +48,19 @@ def check_result(
 ) -> None:
     perftext = _sanitize_perftext(result, perfdata_format)
 
-    if not dry_run:
-        _do_submit_to_core(
-            host_name,
-            service_name,
-            result.state,
-            # The vertical bar indicates end of service output and start of metrics.
-            # Replace the ones in the output by a Uniocode "Light vertical bar"
-            "%s|%s" % (result.output.replace("|", "\u2758"), perftext),
-            cache_info,
-        )
-
     _output_check_result(
         service_name, result.state, result.output, perftext, show_perfdata=show_perfdata
+    )
+
+    _do_submit_to_core(
+        host_name,
+        service_name,
+        result.state,
+        # The vertical bar indicates end of service output and start of metrics.
+        # Replace the ones in the output by a Uniocode "Light vertical bar"
+        "%s|%s" % (result.output.replace("|", "\u2758"), perftext),
+        cache_info,
+        dry_run,
     )
 
 
@@ -129,24 +129,22 @@ def _do_submit_to_core(
     state: ServiceState,
     output: ServiceDetails,
     cache_info: Optional[Tuple[int, int]],
+    dry_run: bool,
 ) -> None:
+    if dry_run:
+        return _submit_noop(host, service, state, output, cache_info)
     if keepalive and keepalive.enabled():
-        cached_at, cache_interval = cache_info or (None, None)
-        # Regular case for the CMC - check helpers are running in keepalive mode
-        keepalive.add_check_result(host, service, state, output, cached_at, cache_interval)
+        return _submit_via_keepalive(host, service, state, output, cache_info)
 
-    elif config.check_submission == "pipe" or config.monitoring_core == "cmc":
-        # In case of CMC this is used when running "cmk" manually
-        _submit_via_command_pipe(host, service, state, output)
+    if config.check_submission == "pipe" or config.monitoring_core == "cmc":
+        return _submit_via_command_pipe(host, service, state, output, cache_info)
 
-    elif config.check_submission == "file":
-        _submit_via_check_result_file(host, service, state, output)
+    if config.check_submission == "file":
+        return _submit_via_check_result_file(host, service, state, output, cache_info)
 
-    else:
-        raise MKGeneralException(
-            "Invalid setting %r for check_submission. "
-            "Must be 'pipe' or 'file'" % config.check_submission
-        )
+    raise MKGeneralException(
+        f"Invalid setting {config.check_submission=} (expected 'pipe' or 'file')"
+    )
 
 
 def _output_check_result(
@@ -175,9 +173,36 @@ def _output_check_result(
     )
 
 
-def _submit_via_command_pipe(
-    host: HostName, service: ServiceName, state: ServiceState, output: ServiceDetails
+def _submit_noop(
+    host: HostName,
+    service: ServiceName,
+    state: ServiceState,
+    output: ServiceDetails,
+    cache_info: Optional[Tuple[int, int]],
 ) -> None:
+    pass
+
+
+def _submit_via_keepalive(
+    host: HostName,
+    service: ServiceName,
+    state: ServiceState,
+    output: ServiceDetails,
+    cache_info: Optional[Tuple[int, int]],
+) -> None:
+    """Regular case for the CMC - check helpers are running in keepalive mode"""
+    cached_at, cache_interval = cache_info or (None, None)
+    return keepalive.add_check_result(host, service, state, output, cached_at, cache_interval)
+
+
+def _submit_via_command_pipe(
+    host: HostName,
+    service: ServiceName,
+    state: ServiceState,
+    output: ServiceDetails,
+    cache_info: Optional[Tuple[int, int]],
+) -> None:
+    """In case of CMC this is used when running "cmk" manually"""
     output = output.replace("\n", "\\n")
     _open_command_pipe()
     if _nagios_command_pipe is not None and not isinstance(_nagios_command_pipe, bool):
@@ -196,7 +221,11 @@ def _submit_via_command_pipe(
 
 
 def _submit_via_check_result_file(
-    host: HostName, service: ServiceName, state: ServiceState, output: ServiceDetails
+    host: HostName,
+    service: ServiceName,
+    state: ServiceState,
+    output: ServiceDetails,
+    cache_info: Optional[Tuple[int, int]],
 ) -> None:
     output = output.replace("\n", "\\n")
     _open_checkresult_file()

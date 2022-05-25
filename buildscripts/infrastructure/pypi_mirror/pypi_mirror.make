@@ -2,11 +2,13 @@ EXTERNAL_PYPI_MIRROR := https://pypi.python.org/simple
 
 INTERNAL_PYPI_MIRROR :=  https://$(DEVPI_SERVER):$(DEVPI_PORT)/$(BRANCH_VERSION)/prod/+simple/
 
-ifeq (true,${USE_EXTERNAL_PIPENV_MIRROR})
+#ifeq (true,${USE_EXTERNAL_PIPENV_MIRROR})
+#PIPENV_PYPI_MIRROR  := $(EXTERNAL_PYPI_MIRROR)
+#else
+#PIPENV_PYPI_MIRROR  := $(INTERNAL_PYPI_MIRROR)
+#endif
+
 PIPENV_PYPI_MIRROR  := $(EXTERNAL_PYPI_MIRROR)
-else
-PIPENV_PYPI_MIRROR  := $(INTERNAL_PYPI_MIRROR)
-endif
 
 REPO_DIR := "$(git rev-parse --show-toplevel)"
 TMP_MIRROR := tmp-mirror-1

@@ -145,14 +145,37 @@ def check_gcp_run_requests(
             dtype=gcp.MetricSpec.DType.INT,
         ),
         "faas_execution_count": gcp.MetricSpec(
-            "run.googleapis.com/container/request_count",
+            "run.googleapis.com/request_count",
             "Requests",
             str,
-            dtype=gcp.MetricSpec.DType.INT,
+        ),
+        "faas_execution_count_2xx": gcp.MetricSpec(
+            "run.googleapis.com/request_count",
+            "Requests 2xx (sucess)",
+            str,
+            filter_by=gcp.Filter("response_code_class", "2xx"),
+        ),
+        "faas_execution_count_3xx": gcp.MetricSpec(
+            "run.googleapis.com/request_count",
+            "Requests 3xx (redirection)",
+            str,
+            filter_by=gcp.Filter("response_code_class", "3xx"),
+        ),
+        "faas_execution_count_4xx": gcp.MetricSpec(
+            "run.googleapis.com/request_count",
+            "Requests 4xx (client error)",
+            str,
+            filter_by=gcp.Filter("response_code_class", "4xx"),
+        ),
+        "faas_execution_count_5xx": gcp.MetricSpec(
+            "run.googleapis.com/request_count",
+            "Requests 5xx (server error)",
+            str,
+            filter_by=gcp.Filter("response_code_class", "5xx"),
         ),
         "gcp_billable_time": gcp.MetricSpec(
             "run.googleapis.com/container/billable_instance_time",
-            "Billable Time",
+            "Billable time",
             lambda x: f"{x:.2f} s/s",
         ),
         # timespan renderer expects seconds not milliseconds
@@ -177,6 +200,10 @@ register.check_plugin(
     check_default_parameters={
         "faas_total_instance_count": None,
         "faas_execution_count": None,
+        "faas_execution_count_2xx": None,
+        "faas_execution_count_3xx": None,
+        "faas_execution_count_4xx": None,
+        "faas_execution_count_5xx": None,
         "gcp_billable_time": None,
         "faas_execution_times": None,
     },

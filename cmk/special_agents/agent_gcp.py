@@ -440,7 +440,8 @@ RUN = Service(
             name="run.googleapis.com/request_count",
             # TODO get by different status codes
             aggregation=Aggregation(
-                per_series_aligner=Aligner.ALIGN_MAX,
+                per_series_aligner=Aligner.ALIGN_RATE,
+                group_by_fields=["metric.response_code_class"],
             ),
         ),
         Metric(

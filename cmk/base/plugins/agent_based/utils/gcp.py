@@ -6,7 +6,7 @@
 import json
 from dataclasses import dataclass
 from enum import IntEnum, unique
-from typing import Any, Callable, Iterator, Mapping, Sequence
+from typing import Any, Callable, Iterator, Mapping, Optional, Sequence
 
 from google.cloud.asset_v1 import Asset
 from google.cloud.monitoring_v3.types import TimeSeries
@@ -76,6 +76,12 @@ def parse_assets(string_table: StringTable) -> AssetSection:
 
 
 @dataclass(frozen=True)
+class Filter:
+    label: str
+    value: str
+
+
+@dataclass(frozen=True)
 class MetricSpec:
     @unique
     class DType(IntEnum):
@@ -87,6 +93,7 @@ class MetricSpec:
     render_func: Callable
     scale: float = 1.0
     dtype: DType = DType.FLOAT
+    filter_by: Optional[Filter] = None
 
 
 def _get_value(results: Sequence[GCPResult], spec: MetricSpec) -> float:
@@ -94,7 +101,15 @@ def _get_value(results: Sequence[GCPResult], spec: MetricSpec) -> float:
     # api requests have occured. To ensure all metrics are displayed in check mk we default to
     # 0 in the absence of data.
     try:
-        result = next(r for r in results if r.ts.metric.type == spec.metric_type)
+        if (filter_by := spec.filter_by) is not None:
+            result = next(
+                r
+                for r in results
+                if r.ts.metric.type == spec.metric_type
+                and r.ts.metric.labels[filter_by.label] == filter_by.value
+            )
+        else:
+            result = next(r for r in results if r.ts.metric.type == spec.metric_type)
         proto_value = result.ts.points[0].value
         if spec.dtype == MetricSpec.DType.FLOAT:
             value = proto_value.double_value

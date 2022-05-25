@@ -33,7 +33,10 @@ SECTION_TABLE = [
         '{"metric": {"type": "run.googleapis.com/container/network/sent_bytes_count", "labels": {}}, "resource": {"type": "cloud_run_revision", "labels": {"service_name": "aaaa", "project_id": "backup-255820"}}, "metric_kind": 1, "value_type": 3, "points": [{"interval": {"start_time": "2022-02-26T09:50:18.962995Z", "end_time": "2022-02-26T09:50:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:49:18.962995Z", "end_time": "2022-02-26T09:49:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:48:18.962995Z", "end_time": "2022-02-26T09:48:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:47:18.962995Z", "end_time": "2022-02-26T09:47:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:46:18.962995Z", "end_time": "2022-02-26T09:46:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:45:18.962995Z", "end_time": "2022-02-26T09:45:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:44:18.962995Z", "end_time": "2022-02-26T09:44:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:43:18.962995Z", "end_time": "2022-02-26T09:43:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:42:18.962995Z", "end_time": "2022-02-26T09:42:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:41:18.962995Z", "end_time": "2022-02-26T09:41:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:40:18.962995Z", "end_time": "2022-02-26T09:40:18.962995Z"}, "value": {"double_value": 79.78333333333333}}, {"interval": {"start_time": "2022-02-26T09:39:18.962995Z", "end_time": "2022-02-26T09:39:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:38:18.962995Z", "end_time": "2022-02-26T09:38:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:37:18.962995Z", "end_time": "2022-02-26T09:37:18.962995Z"}, "value": {"double_value": 797.8333333333334}}, {"interval": {"start_time": "2022-02-26T09:36:18.962995Z", "end_time": "2022-02-26T09:36:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:35:18.962995Z", "end_time": "2022-02-26T09:35:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:34:18.962995Z", "end_time": "2022-02-26T09:34:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:33:18.962995Z", "end_time": "2022-02-26T09:33:18.962995Z"}, "value": {"double_value": 0.0}}], "unit": ""}'
     ],
     [
-        '{"metric": {"type": "run.googleapis.com/request_count", "labels": {}}, "resource": {"type": "cloud_run_revision", "labels": {"project_id": "backup-255820", "service_name": "aaaa"}}, "metric_kind": 1, "value_type": 2, "points": [{"interval": {"start_time": "2022-02-26T09:50:18.962995Z", "end_time": "2022-02-26T09:50:18.962995Z"}, "value": {"int64_value": "0"}}, {"interval": {"start_time": "2022-02-26T09:49:18.962995Z", "end_time": "2022-02-26T09:49:18.962995Z"}, "value": {"int64_value": "0"}}, {"interval": {"start_time": "2022-02-26T09:48:18.962995Z", "end_time": "2022-02-26T09:48:18.962995Z"}, "value": {"int64_value": "0"}}, {"interval": {"start_time": "2022-02-26T09:47:18.962995Z", "end_time": "2022-02-26T09:47:18.962995Z"}, "value": {"int64_value": "0"}}, {"interval": {"start_time": "2022-02-26T09:46:18.962995Z", "end_time": "2022-02-26T09:46:18.962995Z"}, "value": {"int64_value": "0"}}, {"interval": {"start_time": "2022-02-26T09:45:18.962995Z", "end_time": "2022-02-26T09:45:18.962995Z"}, "value": {"int64_value": "0"}}, {"interval": {"start_time": "2022-02-26T09:44:18.962995Z", "end_time": "2022-02-26T09:44:18.962995Z"}, "value": {"int64_value": "0"}}, {"interval": {"start_time": "2022-02-26T09:43:18.962995Z", "end_time": "2022-02-26T09:43:18.962995Z"}, "value": {"int64_value": "0"}}, {"interval": {"start_time": "2022-02-26T09:42:18.962995Z", "end_time": "2022-02-26T09:42:18.962995Z"}, "value": {"int64_value": "0"}}, {"interval": {"start_time": "2022-02-26T09:41:18.962995Z", "end_time": "2022-02-26T09:41:18.962995Z"}, "value": {"int64_value": "0"}}, {"interval": {"start_time": "2022-02-26T09:40:18.962995Z", "end_time": "2022-02-26T09:40:18.962995Z"}, "value": {"int64_value": "1"}}, {"interval": {"start_time": "2022-02-26T09:39:18.962995Z", "end_time": "2022-02-26T09:39:18.962995Z"}, "value": {"int64_value": "0"}}, {"interval": {"start_time": "2022-02-26T09:38:18.962995Z", "end_time": "2022-02-26T09:38:18.962995Z"}, "value": {"int64_value": "2"}}, {"interval": {"start_time": "2022-02-26T09:37:18.962995Z", "end_time": "2022-02-26T09:37:18.962995Z"}, "value": {"int64_value": "8"}}, {"interval": {"start_time": "2022-02-26T09:36:18.962995Z", "end_time": "2022-02-26T09:36:18.962995Z"}, "value": {"int64_value": "0"}}, {"interval": {"start_time": "2022-02-26T09:35:18.962995Z", "end_time": "2022-02-26T09:35:18.962995Z"}, "value": {"int64_value": "0"}}, {"interval": {"start_time": "2022-02-26T09:34:18.962995Z", "end_time": "2022-02-26T09:34:18.962995Z"}, "value": {"int64_value": "0"}}, {"interval": {"start_time": "2022-02-26T09:33:18.962995Z", "end_time": "2022-02-26T09:33:18.962995Z"}, "value": {"int64_value": "0"}}], "unit": ""}'
+        '{"metric": {"labels": {"response_code_class": "2xx"}, "type": "run.googleapis.com/request_count"}, "resource": {"type": "cloud_run_revision", "labels": {"service_name": "aaaa", "project_id": "tribe29-check-development"}}, "metric_kind": 1, "value_type": 3, "points": [{"interval": {"start_time": "2022-05-25T10:55:01.012609Z", "end_time": "2022-05-25T10:55:01.012609Z"}, "value": {"double_value": 0.16666666666666666}}], "unit": ""}'
+    ],
+    [
+        '{"metric": {"labels": {"response_code_class": "4xx"}, "type": "run.googleapis.com/request_count"}, "resource": {"type": "cloud_run_revision", "labels": {"service_name": "aaaa", "project_id": "tribe29-check-development"}}, "metric_kind": 1, "value_type": 3, "points": [{"interval": {"start_time": "2022-05-25T10:55:01.012609Z", "end_time": "2022-05-25T10:55:01.012609Z"}, "value": {"double_value": 0.32}}], "unit": ""}'
     ],
     [
         '{"metric": {"type": "run.googleapis.com/container/cpu/allocation_time", "labels": {}}, "resource": {"type": "cloud_run_revision", "labels": {"service_name": "aaaa", "project_id": "backup-255820"}}, "metric_kind": 1, "value_type": 3, "points": [{"interval": {"start_time": "2022-02-26T09:50:18.962995Z", "end_time": "2022-02-26T09:50:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:49:18.962995Z", "end_time": "2022-02-26T09:49:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:48:18.962995Z", "end_time": "2022-02-26T09:48:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:47:18.962995Z", "end_time": "2022-02-26T09:47:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:46:18.962995Z", "end_time": "2022-02-26T09:46:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:45:18.962995Z", "end_time": "2022-02-26T09:45:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:44:18.962995Z", "end_time": "2022-02-26T09:44:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:43:18.962995Z", "end_time": "2022-02-26T09:43:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:42:18.962995Z", "end_time": "2022-02-26T09:42:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:41:18.962995Z", "end_time": "2022-02-26T09:41:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:40:18.962995Z", "end_time": "2022-02-26T09:40:18.962995Z"}, "value": {"double_value": 0.10000000000000009}}, {"interval": {"start_time": "2022-02-26T09:39:18.962995Z", "end_time": "2022-02-26T09:39:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:38:18.962995Z", "end_time": "2022-02-26T09:38:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:37:18.962995Z", "end_time": "2022-02-26T09:37:18.962995Z"}, "value": {"double_value": 1.0}}, {"interval": {"start_time": "2022-02-26T09:36:18.962995Z", "end_time": "2022-02-26T09:36:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:35:18.962995Z", "end_time": "2022-02-26T09:35:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:34:18.962995Z", "end_time": "2022-02-26T09:34:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:33:18.962995Z", "end_time": "2022-02-26T09:33:18.962995Z"}, "value": {"double_value": 0.0}}], "unit": ""}'
@@ -120,6 +123,10 @@ PLUGINS = [
         metrics=[
             "faas_total_instance_count",
             "faas_execution_count",
+            "faas_execution_count_2xx",
+            "faas_execution_count_3xx",
+            "faas_execution_count_4xx",
+            "faas_execution_count_5xx",
             "faas_execution_times",
             "gcp_billable_time",
         ],
@@ -210,3 +217,40 @@ class TestConfiguredNotificationLevels:
         results = [r for r in results if isinstance(r, Result)]
         for r in results:
             assert r.state == State.CRIT
+
+
+def test_multiple_groupby_requests(section: Section):
+    item = "aaaa"
+    params = {
+        "faas_total_instance_count": None,
+        "faas_execution_count": None,
+        "faas_execution_count_2xx": None,
+        "faas_execution_count_3xx": None,
+        "faas_execution_count_4xx": None,
+        "faas_execution_count_5xx": None,
+        "gcp_billable_time": None,
+        "faas_execution_times": None,
+    }
+    results = list(
+        check_gcp_run_requests(
+            item, params, section_gcp_service_cloud_run=section, section_gcp_assets=None
+        )
+    )
+    assert results == [
+        Result(state=State.OK, summary="Instances: 2.0"),
+        Metric("faas_total_instance_count", 2.0),
+        Result(state=State.OK, summary="Requests: 0.16666666666666666"),
+        Metric("faas_execution_count", 0.16666666666666666),
+        Result(state=State.OK, summary="Requests 2xx (sucess): 0.16666666666666666"),
+        Metric("faas_execution_count_2xx", 0.16666666666666666),
+        Result(state=State.OK, summary="Requests 3xx (redirection): 0"),
+        Metric("faas_execution_count_3xx", 0),
+        Result(state=State.OK, summary="Requests 4xx (client error): 0.32"),
+        Metric("faas_execution_count_4xx", 0.32),
+        Result(state=State.OK, summary="Requests 5xx (server error): 0"),
+        Metric("faas_execution_count_5xx", 0),
+        Result(state=State.OK, summary="Billable time: 0.00 s/s"),
+        Metric("gcp_billable_time", 0),
+        Result(state=State.OK, summary="Latencies: 0 seconds"),
+        Metric("faas_execution_times", 0),
+    ]

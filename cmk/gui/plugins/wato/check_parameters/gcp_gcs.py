@@ -216,6 +216,22 @@ def _vs_run_requests() -> ValueSpec:
         elements=[
             ("faas_total_instance_count", Levels(title=_("Number of running containers"))),
             ("faas_execution_count", Levels(title=_("Number of requests"))),
+            (
+                "faas_execution_count_2xx",
+                Levels(title=_("Number of requests with return code class 2xx (sucess)")),
+            ),
+            (
+                "faas_execution_count_3xx",
+                Levels(title=_("Number of requests with return code class 3xx (redirection)")),
+            ),
+            (
+                "faas_execution_count_4xx",
+                Levels(title=_("Number of requests with return code class 4xx (client error)")),
+            ),
+            (
+                "faas_execution_count_5xx",
+                Levels(title=_("Number of requests with return code class 5xx (server error)")),
+            ),
             ("gcp_billable_time", Levels(title=_("billable time"), unit="s/s")),
             ("faas_execution_times", Levels(title=_("99th percentile request latency"), unit="s")),
         ],

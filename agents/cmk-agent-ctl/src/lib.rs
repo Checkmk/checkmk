@@ -17,6 +17,7 @@ mod tls_server;
 pub mod types;
 use anyhow::{anyhow, Context, Result as AnyhowResult};
 use config::{JSONLoader, TOMLLoader};
+use log::info;
 use modes::daemon::daemon;
 use modes::delete_connection::{delete, delete_all};
 use modes::dump::dump;
@@ -36,6 +37,16 @@ pub fn run_requested_mode(args: cli::Args, paths: setup::PathResolver) -> Anyhow
     let mut registry = config::Registry::from_file(&paths.registry_path)
         .context("Error while loading registered connections.")?;
     let legacy_pull_marker = config::LegacyPullMarker::new(&paths.legacy_pull_path);
+    info!(
+        "Loaded config from '{:?}', legacy pull '{:?}' {}",
+        &paths.config_path,
+        legacy_pull_marker,
+        if legacy_pull_marker.exists() {
+            "exists"
+        } else {
+            "absent"
+        }
+    );
     match args {
         cli::Args::Register(reg_args) => {
             register(

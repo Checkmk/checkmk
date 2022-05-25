@@ -258,18 +258,17 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             raise MKUserError("host", _("You called this page with an invalid host name."))
         self._host.need_permission("read")
 
-        options = DiscoveryOptions(**api_request["discovery_options"])
+        discovery_options = DiscoveryOptions(**api_request["discovery_options"])
         # Refuse action requests in case the user is not permitted
-        if options.action != DiscoveryAction.NONE and not user.may("wato.services"):
-            options = options._replace(action=DiscoveryAction.NONE)
-        if options.action != DiscoveryAction.TABULA_RASA and not (
+        if discovery_options.action != DiscoveryAction.NONE and not user.may("wato.services"):
+            discovery_options = discovery_options._replace(action=DiscoveryAction.NONE)
+        if discovery_options.action != DiscoveryAction.TABULA_RASA and not (
             user.may("wato.service_discovery_to_undecided")
             and user.may("wato.service_discovery_to_monitored")
             and user.may("wato.service_discovery_to_ignored")
             and user.may("wato.service_discovery_to_removed")
         ):
-            options = options._replace(action=DiscoveryAction.NONE)
-        self._options = options
+            discovery_options = discovery_options._replace(action=DiscoveryAction.NONE)
 
         # Reuse the discovery result already known to the GUI or fetch a new one?
         previous_discovery_result = (
@@ -278,12 +277,12 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             else None
         )
 
-        if self._use_previous_discovery_result(api_request, previous_discovery_result):
+        if self._use_previous_discovery_result(discovery_options.action, previous_discovery_result):
             assert previous_discovery_result is not None
             discovery_result = previous_discovery_result
         else:
             discovery_result = get_check_table(
-                StartDiscoveryRequest(self._host, self._host.folder(), self._options)
+                StartDiscoveryRequest(self._host, self._host.folder(), discovery_options)
             )
 
         job_actions = [
@@ -293,9 +292,9 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             DiscoveryAction.STOP,
         ]
 
-        if self._options.action not in job_actions and transactions.check_transaction():
+        if discovery_options.action not in job_actions and transactions.check_transaction():
             user.need_permission("wato.services")
-            if self._options.action in [
+            if discovery_options.action in [
                 DiscoveryAction.UPDATE_HOST_LABELS,
                 DiscoveryAction.FIX_ALL,
             ]:
@@ -309,15 +308,15 @@ class ModeAjaxServiceDiscovery(AjaxPage):
                     self._host.name(),
                     discovery_result.host_labels,
                 )
-            if self._options.action in [
+            if discovery_options.action in [
                 DiscoveryAction.SINGLE_UPDATE,
                 DiscoveryAction.BULK_UPDATE,
                 DiscoveryAction.FIX_ALL,
                 DiscoveryAction.UPDATE_SERVICES,
             ]:
-                discovery = Discovery(self._host, self._options, api_request)
+                discovery = Discovery(self._host, discovery_options, api_request)
                 discovery.do_discovery(discovery_result)
-            if self._options.action in [
+            if discovery_options.action in [
                 DiscoveryAction.SINGLE_UPDATE,
                 DiscoveryAction.BULK_UPDATE,
                 DiscoveryAction.FIX_ALL,
@@ -326,7 +325,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             ]:
                 # did discovery! update the check table
                 discovery_result = get_check_table(
-                    StartDiscoveryRequest(self._host, self._host.folder(), self._options)
+                    StartDiscoveryRequest(self._host, self._host.folder(), discovery_options)
                 )
             if not self._host.locked():
                 self._host.clear_discovery_failed()
@@ -343,28 +342,28 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             )
 
         show_checkboxes = user.discovery_checkboxes
-        if show_checkboxes != self._options.show_checkboxes:
-            user.discovery_checkboxes = self._options.show_checkboxes
+        if show_checkboxes != discovery_options.show_checkboxes:
+            user.discovery_checkboxes = discovery_options.show_checkboxes
         show_parameters = user.parameter_column
-        if show_parameters != self._options.show_parameters:
-            user.parameter_column = self._options.show_parameters
+        if show_parameters != discovery_options.show_parameters:
+            user.parameter_column = discovery_options.show_parameters
         show_discovered_labels = user.discovery_show_discovered_labels
-        if show_discovered_labels != self._options.show_discovered_labels:
-            user.discovery_show_discovered_labels = self._options.show_discovered_labels
+        if show_discovered_labels != discovery_options.show_discovered_labels:
+            user.discovery_show_discovered_labels = discovery_options.show_discovered_labels
         show_plugin_names = user.discovery_show_plugin_names
-        if show_plugin_names != self._options.show_plugin_names:
-            user.discovery_show_plugin_names = self._options.show_plugin_names
+        if show_plugin_names != discovery_options.show_plugin_names:
+            user.discovery_show_plugin_names = discovery_options.show_plugin_names
 
         renderer = DiscoveryPageRenderer(
             self._host,
-            self._options,
+            discovery_options,
         )
         page_code = renderer.render(discovery_result, api_request)
         fix_all_code = renderer.render_fix_all(discovery_result)
 
         # Clean the requested action after performing it
-        performed_action = self._options.action
-        self._options = self._options._replace(action=DiscoveryAction.NONE)
+        performed_action = discovery_options.action
+        discovery_options = discovery_options._replace(action=DiscoveryAction.NONE)
 
         return {
             "is_finished": not self._is_active(discovery_result),
@@ -372,14 +371,14 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             "message": self._get_status_message(discovery_result, performed_action),
             "body": page_code,
             "fixall": fix_all_code,
-            "page_menu": self._get_page_menu(),
+            "page_menu": self._get_page_menu(discovery_options),
             "pending_changes_info": get_pending_changes_info(),
             "pending_changes_tooltip": get_pending_changes_tooltip(),
-            "discovery_options": self._options._asdict(),
+            "discovery_options": discovery_options._asdict(),
             "discovery_result": discovery_result.serialize(),
         }
 
-    def _get_page_menu(self) -> str:
+    def _get_page_menu(self, discovery_options: DiscoveryOptions) -> str:
         """Render the page menu contents to reflect contect changes
 
         The page menu needs to be updated, just like the body of the page. We previously tried an
@@ -387,7 +386,9 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         refresh), but it was a lot more complex to realize and resulted in inconsistencies. This is
         the simpler solution and less error prone.
         """
-        page_menu = service_page_menu(self._get_discovery_breadcrumb(), self._host, self._options)
+        page_menu = service_page_menu(
+            self._get_discovery_breadcrumb(), self._host, discovery_options
+        )
         with output_funnel.plugged():
             PageMenuRenderer().show(
                 page_menu, hide_suggestions=not user.get_tree_state("suggestions", "all", True)
@@ -482,12 +483,12 @@ class ModeAjaxServiceDiscovery(AjaxPage):
 
         return None
 
-    def _use_previous_discovery_result(self, api_request, previous_discovery_result):
+    def _use_previous_discovery_result(self, discovery_action: str, previous_discovery_result):
         if not previous_discovery_result:
             return False
 
         if (
-            self._options.action
+            discovery_action
             in [DiscoveryAction.TABULA_RASA, DiscoveryAction.REFRESH, DiscoveryAction.STOP]
             and transactions.check_transaction()
         ):

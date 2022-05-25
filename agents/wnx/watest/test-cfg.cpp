@@ -458,21 +458,6 @@ TEST(Cma, PushPop) {
 
 }  // namespace cma::cfg
 
-namespace cma::cfg {
-TEST(CmaCfg, ConfigManagement) {
-    auto node = CreateNode("test");
-    ASSERT_TRUE(node);
-    node->setConfiguredLogFileDir(L"test");
-    auto node2 = GetNode("test");
-    EXPECT_EQ(node2->getConfiguredLogFileDir(), L"test");
-    ASSERT_TRUE(node2);
-    RemoveNode("test");
-    auto node3 = GetNode("test");
-    ASSERT_FALSE(node3);
-}
-
-}  // namespace cma::cfg
-
 namespace cma::srv {
 TEST(CmaCfg, RestartBinaries) {
     cma::srv::ServiceProcessor sp;

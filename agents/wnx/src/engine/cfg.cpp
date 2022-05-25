@@ -34,23 +34,6 @@ namespace fs = std::filesystem;
 using namespace std::string_literals;
 using namespace std::string_view_literals;
 
-namespace cma::cfg {
-using ConfigRepo = MicroRepo<cma::cfg::details::ConfigInfo>;
-// #TODO (sk): rework this
-ConfigRepo g_configs;  // NOLINT
-
-CfgNode CreateNode(const std::string &name) {
-    return g_configs.createObject(name);
-}
-
-CfgNode GetNode(const std::string &name) { return g_configs.getObject(name); }
-
-bool RemoveNode(const std::string &name) {
-    return g_configs.removeObject(name);
-}
-
-}  // namespace cma::cfg
-
 namespace cma {
 
 namespace details {
@@ -873,11 +856,13 @@ bool InitializeMainConfig(const std::vector<std::wstring> &config_filenames,
                 "Loading {} direct. User and Bakery files will be IGNORED",
                 wtools::ToUtf8(name));
             auto loaded = GetCfg().loadDirect(name);
-            if (!loaded) continue;
+            if (!loaded) {
+                continue;
+            }
 
             // file is loaded, write info in config file
             fs::path root_yaml = GetRootDir();
-            XLOG::l("Loaded {} file, ONLY FOR debug/test mode", root_yaml);
+            XLOG::l.i("Loaded '{}' file, ONLY FOR debug/test mode", root_yaml);
 
             // exit because full path
             return true;
@@ -1086,7 +1071,9 @@ void PutInternalArray(YAML::Node yaml_node, std::string_view value_name,
         }
 
         auto result = cma::tools::JoinVector(arr, " ");
-        if (result.back() == ' ') result.pop_back();
+        if (result.back() == ' ') {
+            result.pop_back();
+        }
         yaml_node[value_name] = result;
     } catch (const std::exception &e) {
         XLOG::l("Cannot read yml file '{}' with '{}' code:'{}'",
@@ -1780,7 +1767,9 @@ LoadCfgStatus ConfigInfo::loadAggregated(const std::wstring &config_filename,
         }
     }
 
-    if (!changed) return LoadCfgStatus::kFileLoaded;
+    if (!changed) {
+        return LoadCfgStatus::kFileLoaded;
+    }
 
     int error_code = 0;
     try {

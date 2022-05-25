@@ -138,9 +138,6 @@ int KillProcessesByDir(const fs::path &dir) noexcept {
         }
 
         fs::path p{exe};
-        if (p.string().ends_with("-ctl.exe")) {
-            XLOG::l.i("file is {}", p);
-        }
         std::error_code ec;
         auto shift = fs::relative(p, dir).u8string();
         if (!ec && !shift.empty() && shift[0] != '.') {
@@ -148,7 +145,7 @@ int KillProcessesByDir(const fs::path &dir) noexcept {
             KillProcess(pid, 99);
             killed_count++;
         }
-        return true;  // continue, we want to scan all process in the system
+        return true;
     });
 
     return killed_count;

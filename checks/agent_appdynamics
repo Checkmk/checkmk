@@ -14,7 +14,7 @@ def agent_appdynamics_arguments(
         "-u",
         params["username"],
         "-p",
-        params["password"],
+        passwordstore_get_cmdline("%s", params["password"]),
     ]
 
     if "port" in params:

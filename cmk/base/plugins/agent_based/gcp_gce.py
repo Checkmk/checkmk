@@ -19,7 +19,6 @@ def parse_gce_uptime(string_table: StringTable) -> Optional[uptime.Section]:
         "compute.googleapis.com/instance/uptime_total",
         "uptime",
         render.timespan,
-        dtype=gcp.MetricSpec.DType.INT,
     )
     uptime_sec = gcp._get_value(section, metric)
     return uptime.Section(uptime_sec, None)
@@ -137,25 +136,21 @@ def check_disk_summary(params: Mapping[str, Any], section: gcp.PiggyBackSection)
             "compute.googleapis.com/instance/disk/read_bytes_count",
             "Read",
             render.iobandwidth,
-            dtype=gcp.MetricSpec.DType.INT,
         ),
         "disk_write_throughput": gcp.MetricSpec(
             "compute.googleapis.com/instance/disk/write_bytes_count",
             "Write",
             render.iobandwidth,
-            dtype=gcp.MetricSpec.DType.INT,
         ),
         "disk_read_ios": gcp.MetricSpec(
             "compute.googleapis.com/instance/disk/read_ops_count",
             "Read operations",
             str,
-            dtype=gcp.MetricSpec.DType.INT,
         ),
         "disk_write_ios": gcp.MetricSpec(
             "compute.googleapis.com/instance/disk/write_ops_count",
             "Write operations",
             str,
-            dtype=gcp.MetricSpec.DType.INT,
         ),
     }
     yield from gcp.generic_check(metrics, section, params)

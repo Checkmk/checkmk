@@ -138,7 +138,7 @@ def fixture_params(request):
 def fixture_results(checkplugin, section, params, mocker: MockerFixture):
     params = {k: params for k in checkplugin.metrics}
     mocker.patch(
-        "cmk.base.check_api._prediction.get_levels", return_value=(None, (2.2, 4.2, None, None))
+        "cmk.base.check_api._prediction.get_levels", return_value=(None, (3.2, 5.2, None, None))
     )
 
     with current_host("unittest"), current_service(
@@ -185,6 +185,7 @@ def test_yield_results_as_specified(results):
 
 class TestDefaultMetricValues:
     # requests does not contain example data
+    @pytest.mark.xfail(reason="all metrics available need to filter before passing to check plugin")
     def test_zero_default_if_metric_does_not_exist(self, section):
         params = {k: None for k in ["faas_total_instance_count", "faas_active_instance_count"]}
         results = (

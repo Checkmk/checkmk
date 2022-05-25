@@ -142,7 +142,6 @@ def check_gcp_run_requests(
             "run.googleapis.com/container/instance_count",
             "Instances",
             str,
-            dtype=gcp.MetricSpec.DType.INT,
         ),
         "faas_execution_count": gcp.MetricSpec(
             "run.googleapis.com/request_count",

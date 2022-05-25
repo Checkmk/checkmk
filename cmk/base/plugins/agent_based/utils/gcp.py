@@ -85,14 +85,13 @@ class Filter:
 class MetricSpec:
     @unique
     class DType(IntEnum):
-        FLOAT = 1
         INT = 2
+        FLOAT = 3
 
     metric_type: str
     label: str
     render_func: Callable
     scale: float = 1.0
-    dtype: DType = DType.FLOAT
     filter_by: Optional[Filter] = None
 
 
@@ -111,9 +110,9 @@ def _get_value(results: Sequence[GCPResult], spec: MetricSpec) -> float:
     ret_val = 0
     for result in results:
         proto_value = result.ts.points[0].value
-        if spec.dtype == MetricSpec.DType.FLOAT:
+        if result.ts.value_type == MetricSpec.DType.FLOAT:
             value = proto_value.double_value
-        elif spec.dtype == MetricSpec.DType.INT:
+        elif result.ts.value_type == MetricSpec.DType.INT:
             value = proto_value.int64_value
         else:
             raise NotImplementedError("unkown dtype")

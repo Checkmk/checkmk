@@ -638,11 +638,10 @@ def page_host_inv_api() -> None:
         _write_python(resp)
 
 
-def has_inventory(hostname):
-    if not hostname:
-        return False
-    inventory_path = "%s/%s" % (cmk.utils.paths.inventory_output_dir, hostname)
-    return os.path.exists(inventory_path)
+def has_inventory(hostname: HostName) -> bool:
+    return (
+        os.path.exists(f"{cmk.utils.paths.inventory_output_dir}/{hostname}") if hostname else False
+    )
 
 
 def inventory_of_host(host_name: HostName, api_request):

@@ -669,9 +669,7 @@ def _make_title_function(raw_hint: InventoryHintSpec) -> Callable[[SDRawPath], s
 
 
 def _make_long_title(title: str, parent_path: SDPath) -> str:
-    if parent_path:
-        return NodeDisplayHint.make(parent_path).title + " ➤ " + title
-    return title
+    return NodeDisplayHint.make(parent_path).title + " ➤ " + title if parent_path else title
 
 
 @dataclass(frozen=True)
@@ -730,7 +728,6 @@ class TableTitle(NamedTuple):
 
 @dataclass(frozen=True)
 class TableDisplayHint:
-    raw_path: str
     key_order: Sequence[str]
     is_show_more: bool
     view_name: Optional[str]
@@ -743,7 +740,6 @@ class TableDisplayHint:
         raw_hint = inventory_displayhints.get(raw_path, {})
         title = _make_title_function(raw_hint)(raw_path)
         return cls(
-            raw_path=raw_path,
             key_order=raw_hint.get("keyorder", []),
             is_show_more=raw_hint.get("is_show_more", True),
             view_name=raw_hint.get("view"),
@@ -756,7 +752,6 @@ class TableDisplayHint:
         parsed_path, _attribute_keys = inventory.parse_tree_path(raw_path)
         title = _make_title_function(raw_hint)(raw_path)
         return cls(
-            raw_path=raw_path,
             key_order=raw_hint.get("keyorder", []),
             is_show_more=raw_hint.get("is_show_more", True),
             view_name=raw_hint.get("view"),
@@ -782,7 +777,6 @@ class TableDisplayHint:
 
 @dataclass(frozen=True)
 class ColumnDisplayHint:
-    raw_path: str
     title: str
     short_title: str
     data_type: str
@@ -796,7 +790,6 @@ class ColumnDisplayHint:
         data_type, paint_function = _get_paint_function(raw_hint)
         title = _make_title_function(raw_hint)(raw_path) if path else key.title()
         return cls(
-            raw_path=raw_path,
             title=title,
             short_title=raw_hint.get("short", title),
             data_type=data_type,
@@ -809,7 +802,6 @@ class ColumnDisplayHint:
         data_type, paint_function = _get_paint_function(raw_hint)
         title = _make_title_function(raw_hint)(raw_path)
         return cls(
-            raw_path=raw_path,
             title=title,
             short_title=raw_hint.get("short", title),
             data_type=data_type,
@@ -837,7 +829,6 @@ class AttributesDisplayHint:
 
 @dataclass(frozen=True)
 class AttributeDisplayHint:
-    raw_path: str
     title: str
     short_title: str
     long_title: str
@@ -852,7 +843,6 @@ class AttributeDisplayHint:
         data_type, paint_function = _get_paint_function(raw_hint)
         title = _make_title_function(raw_hint)(raw_path) if path else key.title()
         return cls(
-            raw_path=raw_path,
             title=title,
             short_title=raw_hint.get("short", title),
             long_title=_make_long_title(title, path),
@@ -869,7 +859,6 @@ class AttributeDisplayHint:
         data_type, paint_function = _get_paint_function(raw_hint)
         title = _make_title_function(raw_hint)(raw_path)
         return cls(
-            raw_path=raw_path,
             title=title,
             short_title=raw_hint.get("short", title),
             long_title=_make_long_title(title, parsed_path),
@@ -2112,10 +2101,7 @@ class ABCNodeRenderer(abc.ABC):
         self._site_id = site_id
         self._hostname = hostname
         self._tree_id = tree_id
-        if show_internal_tree_paths:
-            self._show_internal_tree_paths = "on"
-        else:
-            self._show_internal_tree_paths = ""
+        self._show_internal_tree_paths = "on" if show_internal_tree_paths else ""
 
     #   ---node-----------------------------------------------------------------
 
@@ -2128,26 +2114,27 @@ class ABCNodeRenderer(abc.ABC):
         if "%d" in title or "%s" in title:
             title = self._replace_placeholders(title, node_hint.raw_path)
 
-        header = self._get_header(title, ".".join(map(str, node.path)), "#666")
-        fetch_url = makeuri_contextless(
-            request,
-            [
-                ("site", self._site_id),
-                ("host", self._hostname),
-                ("path", node_hint.raw_path),
-                ("show_internal_tree_paths", self._show_internal_tree_paths),
-                ("treeid", self._tree_id),
-            ],
-            "ajax_inv_render_tree.py",
-        )
-
         with foldable_container(
             treename="inv_%s%s" % (self._hostname, self._tree_id),
             id_=node_hint.raw_path,
             isopen=False,
-            title=header,
+            title=self._get_header(
+                title,
+                ".".join(map(str, node.path)),
+                "#666",
+            ),
             icon=node_hint.icon,
-            fetch_url=fetch_url,
+            fetch_url=makeuri_contextless(
+                request,
+                [
+                    ("site", self._site_id),
+                    ("host", self._hostname),
+                    ("path", node_hint.raw_path),
+                    ("show_internal_tree_paths", self._show_internal_tree_paths),
+                    ("treeid", self._tree_id),
+                ],
+                "ajax_inv_render_tree.py",
+            ),
         ) as is_open:
             if is_open:
                 node.show(self)
@@ -2246,7 +2233,13 @@ class ABCNodeRenderer(abc.ABC):
             attr_hint = AttributeDisplayHint.make(list(attributes.path), key)
 
             html.open_tr()
-            html.th(self._get_header(attr_hint.title, key, "#DDD"), title=attr_hint.raw_path)
+            html.th(
+                self._get_header(
+                    attr_hint.title,
+                    key,
+                    "#DDD",
+                )
+            )
             html.open_td()
             self.show_attribute(
                 value,

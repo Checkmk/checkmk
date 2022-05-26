@@ -324,7 +324,6 @@ def test_make_node_displayhint_from_hint(
         (
             tuple(),
             TableDisplayHint(
-                raw_path=".",
                 key_order=[],
                 is_show_more=True,
                 view_name=None,
@@ -335,7 +334,6 @@ def test_make_node_displayhint_from_hint(
         (
             ("software", "applications", "docker", "images"),
             TableDisplayHint(
-                raw_path=".software.applications.docker.images:",
                 key_order=[
                     "id",
                     "creation",
@@ -354,7 +352,6 @@ def test_make_node_displayhint_from_hint(
         (
             ("path", "to", "node"),
             TableDisplayHint(
-                raw_path=".path.to.node:",
                 key_order=[],
                 is_show_more=True,
                 view_name=None,
@@ -374,7 +371,6 @@ def test_make_table_displayhint(table_path: SDPath, expected: TableDisplayHint) 
         (
             ".foo.bar:",
             TableDisplayHint(
-                raw_path=".foo.bar:",
                 key_order=[],
                 is_show_more=True,
                 view_name=None,
@@ -385,7 +381,6 @@ def test_make_table_displayhint(table_path: SDPath, expected: TableDisplayHint) 
         (
             ".software.applications.docker.containers:",
             TableDisplayHint(
-                raw_path=".software.applications.docker.containers:",
                 key_order=["id", "creation", "name", "labels", "status", "image"],
                 is_show_more=False,
                 view_name="invdockercontainers_of_host",
@@ -437,7 +432,6 @@ def test_sort_table_rows_displayhint(rows: Sequence[SDRow], expected: Sequence[S
             tuple(),
             "key",
             ColumnDisplayHint(
-                raw_path=".",
                 short_title="Key",
                 data_type="str",
                 paint_function=inv_paint_generic,
@@ -449,7 +443,6 @@ def test_sort_table_rows_displayhint(rows: Sequence[SDRow], expected: Sequence[S
             ("networking", "interfaces"),
             "oper_status",
             ColumnDisplayHint(
-                raw_path=".networking.interfaces:*.oper_status",
                 short_title="Status",
                 data_type="if_oper_status",
                 paint_function=inv_paint_if_oper_status,
@@ -461,7 +454,6 @@ def test_sort_table_rows_displayhint(rows: Sequence[SDRow], expected: Sequence[S
             ("path", "to", "node"),
             "key",
             ColumnDisplayHint(
-                raw_path=".path.to.node:*.key",
                 short_title="Key",
                 data_type="str",
                 paint_function=inv_paint_generic,
@@ -481,7 +473,6 @@ def test_make_column_displayhint(col_path: SDPath, key: str, expected: ColumnDis
         (
             ".foo:*.bar",
             ColumnDisplayHint(
-                raw_path=".foo:*.bar",
                 short_title="Bar",
                 data_type="str",
                 paint_function=inv_paint_generic,
@@ -492,7 +483,6 @@ def test_make_column_displayhint(col_path: SDPath, key: str, expected: ColumnDis
         (
             ".software.packages:*.package_version",
             ColumnDisplayHint(
-                raw_path=".software.packages:*.package_version",
                 short_title="Package Version",
                 data_type="str",
                 paint_function=inv_paint_generic,
@@ -503,7 +493,6 @@ def test_make_column_displayhint(col_path: SDPath, key: str, expected: ColumnDis
         (
             ".networking.interfaces:*.index",
             ColumnDisplayHint(
-                raw_path=".networking.interfaces:*.index",
                 short_title="Index",
                 data_type="number",
                 paint_function=inv_paint_number,
@@ -514,7 +503,6 @@ def test_make_column_displayhint(col_path: SDPath, key: str, expected: ColumnDis
         (
             ".networking.interfaces:*.oper_status",
             ColumnDisplayHint(
-                raw_path=".networking.interfaces:*.oper_status",
                 short_title="Status",
                 data_type="if_oper_status",
                 paint_function=inv_paint_if_oper_status,
@@ -604,7 +592,6 @@ def test_sort_attributes_pairs_displayhint(
             tuple(),
             "key",
             AttributeDisplayHint(
-                raw_path=".",
                 data_type="str",
                 paint_function=inv_paint_generic,
                 title="Key",
@@ -617,7 +604,6 @@ def test_sort_attributes_pairs_displayhint(
             ("hardware", "storage", "disks"),
             "size",
             AttributeDisplayHint(
-                raw_path=".hardware.storage.disks.size",
                 data_type="size",
                 paint_function=inv_paint_size,
                 title="Size",
@@ -630,7 +616,6 @@ def test_sort_attributes_pairs_displayhint(
             ("path", "to", "node"),
             "key",
             AttributeDisplayHint(
-                raw_path=".path.to.node.key",
                 data_type="str",
                 paint_function=inv_paint_generic,
                 title="Key",
@@ -653,7 +638,6 @@ def test_make_attribute_displayhint(
         (
             ".foo.bar",
             AttributeDisplayHint(
-                raw_path=".foo.bar",
                 data_type="str",
                 paint_function=inv_paint_generic,
                 title="Bar",
@@ -665,7 +649,6 @@ def test_make_attribute_displayhint(
         (
             ".hardware.cpu.arch",
             AttributeDisplayHint(
-                raw_path=".hardware.cpu.arch",
                 data_type="str",
                 paint_function=inv_paint_generic,
                 title="CPU Architecture",
@@ -677,7 +660,6 @@ def test_make_attribute_displayhint(
         (
             ".hardware.system.product",
             AttributeDisplayHint(
-                raw_path=".hardware.system.product",
                 data_type="str",
                 paint_function=inv_paint_generic,
                 title="Product",

@@ -6,13 +6,9 @@
 
 import pytest
 
-from tests.unit.conftest import FixRegister
-
-from cmk.utils.type_defs import InventoryPluginName
-
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
-from cmk.base.plugins.agent_based.win_system import parse, Section
+from cmk.base.plugins.agent_based.win_system import inventory, parse, Section
 
 
 @pytest.mark.parametrize(
@@ -114,12 +110,7 @@ def test_parse(
     ],
 )
 def test_inventory(
-    fix_register: FixRegister,
     section: Section,
     expected_result: Attributes,
 ) -> None:
-    assert list(
-        fix_register.inventory_plugins[InventoryPluginName("win_system")].inventory_function(
-            section
-        )
-    ) == [expected_result]
+    assert list(inventory(section)) == [expected_result]

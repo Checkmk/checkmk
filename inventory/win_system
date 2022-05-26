@@ -15,22 +15,12 @@
 # SerialNumber :
 
 
-def inv_win_system(info):
+def inv_win_system(section):
     node = inv_tree("hardware.system.")
-    for line in info:
-        if len(line) > 2:
-            line = [line[0], ":".join(line[1:])]
-        varname, value = line
-        varname = re.sub(" *", "", varname)
-        value = re.sub("^ ", "", value)
-        if varname == "SerialNumber":
-            node["serial"] = value
-        elif varname == "Manufacturer":
-            node["manufacturer"] = value
-        elif varname == "Name":
-            node["product"] = value
-        elif varname == "Model":
-            node["family"] = value
+    node["serial"] = section.serial
+    node["manufacturer"] = section.manufacturer
+    node["product"] = section.product
+    node["family"] = section.family
 
 
 inv_info["win_system"] = {

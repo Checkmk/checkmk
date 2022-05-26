@@ -12,6 +12,7 @@ from cmk.utils.type_defs import InventoryPluginName
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+from cmk.base.plugins.agent_based.win_system import parse, Section
 
 
 @pytest.mark.parametrize(
@@ -34,15 +35,11 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTabl
                 ["SerialNumber ", " 54P4MR2"],
                 ["Model ", " PowerEdge R640"],
             ],
-            Attributes(
-                path=["hardware", "system"],
-                inventory_attributes={
-                    "manufacturer": "Dell Inc.",
-                    "product": "System Enclosure",
-                    "serial": "54P4MR2",
-                    "family": "PowerEdge R640",
-                },
-                status_attributes={},
+            Section(
+                serial="54P4MR2",
+                manufacturer="Dell Inc.",
+                product="System Enclosure",
+                family="PowerEdge R640",
             ),
             id="physical_machine",
         ),
@@ -56,6 +53,52 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTabl
                 ["PartNumber", ""],
                 ["SerialNumber", ""],
             ],
+            Section(
+                serial="",
+                manufacturer="Oracle Corporation",
+                product="System Enclosure",
+                family="",
+            ),
+            id="virtual_machine",
+        ),
+    ],
+)
+def test_parse(
+    string_table: StringTable,
+    expected_result: Section,
+) -> None:
+    assert parse(string_table) == expected_result
+
+
+@pytest.mark.parametrize(
+    ["section", "expected_result"],
+    [
+        pytest.param(
+            Section(
+                serial="54P4MR2",
+                manufacturer="Dell Inc.",
+                product="System Enclosure",
+                family="PowerEdge R640",
+            ),
+            Attributes(
+                path=["hardware", "system"],
+                inventory_attributes={
+                    "manufacturer": "Dell Inc.",
+                    "product": "System Enclosure",
+                    "serial": "54P4MR2",
+                    "family": "PowerEdge R640",
+                },
+                status_attributes={},
+            ),
+            id="physical_machine",
+        ),
+        pytest.param(
+            Section(
+                serial="",
+                manufacturer="Oracle Corporation",
+                product="System Enclosure",
+                family="",
+            ),
             Attributes(
                 path=["hardware", "system"],
                 inventory_attributes={
@@ -72,11 +115,11 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTabl
 )
 def test_inventory(
     fix_register: FixRegister,
-    string_table: StringTable,
+    section: Section,
     expected_result: Attributes,
 ) -> None:
     assert list(
         fix_register.inventory_plugins[InventoryPluginName("win_system")].inventory_function(
-            string_table
+            section
         )
     ) == [expected_result]

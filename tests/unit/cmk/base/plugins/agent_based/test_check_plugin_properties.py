@@ -138,7 +138,6 @@ def test_no_plugins_with_trivial_sections(fix_register):
             "win_networkadapter",
             "win_os",
             "win_reg_uninstall",
-            "win_system",
             "win_video",
             "win_wmi_software",
             "win_wmi_updates",

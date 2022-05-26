@@ -180,13 +180,13 @@ def vs_inventory_path_or_keys_help():
 _DEFAULT_PATH_TO_TREE = Path()
 
 
-class TreePath(NamedTuple):
+class InventoryHistoryPath(NamedTuple):
     path: Path
     timestamp: Optional[int]
 
     @classmethod
-    def default(cls) -> TreePath:
-        return TreePath(
+    def default(cls) -> InventoryHistoryPath:
+        return InventoryHistoryPath(
             path=_DEFAULT_PATH_TO_TREE,
             timestamp=None,
         )
@@ -204,21 +204,25 @@ class HistoryEntry(NamedTuple):
     delta_tree: StructuredDataNode
 
 
-class FilteredTreePaths(NamedTuple):
-    start_tree_path: TreePath
-    tree_paths: Sequence[TreePath]
+class FilteredInventoryHistoryPaths(NamedTuple):
+    start_tree_path: InventoryHistoryPath
+    tree_paths: Sequence[InventoryHistoryPath]
 
 
-class FilterTreePathsError(Exception):
+class FilterInventoryHistoryPathsError(Exception):
     pass
 
 
 def load_latest_delta_tree(hostname: HostName) -> Optional[StructuredDataNode]:
-    def _get_latest_timestamps(tree_paths: Sequence[TreePath]) -> FilteredTreePaths:
+    def _get_latest_timestamps(
+        tree_paths: Sequence[InventoryHistoryPath],
+    ) -> FilteredInventoryHistoryPaths:
         if len(tree_paths) == 0:
-            raise FilterTreePathsError()
-        return FilteredTreePaths(
-            start_tree_path=TreePath.default() if len(tree_paths) == 1 else tree_paths[-2],
+            raise FilterInventoryHistoryPathsError()
+        return FilteredInventoryHistoryPaths(
+            start_tree_path=InventoryHistoryPath.default()
+            if len(tree_paths) == 1
+            else tree_paths[-2],
             tree_paths=[tree_paths[-1]],
         )
 
@@ -240,15 +244,17 @@ def load_delta_tree(
     # tree we will just return the complete tree - without any delta
     # computation.
 
-    def _search_timestamps(tree_paths: Sequence[TreePath], timestamp: int) -> FilteredTreePaths:
+    def _search_timestamps(
+        tree_paths: Sequence[InventoryHistoryPath], timestamp: int
+    ) -> FilteredInventoryHistoryPaths:
         for idx, tree_path in enumerate(tree_paths):
             if tree_path.timestamp == timestamp:
                 if idx == 0:
-                    return FilteredTreePaths(
-                        start_tree_path=TreePath.default(),
+                    return FilteredInventoryHistoryPaths(
+                        start_tree_path=InventoryHistoryPath.default(),
                         tree_paths=[tree_path],
                     )
-                return FilteredTreePaths(
+                return FilteredInventoryHistoryPaths(
                     start_tree_path=tree_paths[idx - 1],
                     tree_paths=[tree_path],
                 )
@@ -271,8 +277,8 @@ def load_delta_tree(
 def get_history(hostname: HostName) -> Tuple[Sequence[HistoryEntry], Sequence[str]]:
     return _get_history(
         hostname,
-        filter_tree_paths=lambda tree_paths: FilteredTreePaths(
-            start_tree_path=TreePath.default(),
+        filter_tree_paths=lambda tree_paths: FilteredInventoryHistoryPaths(
+            start_tree_path=InventoryHistoryPath.default(),
             tree_paths=tree_paths,
         ),
     )
@@ -281,17 +287,17 @@ def get_history(hostname: HostName) -> Tuple[Sequence[HistoryEntry], Sequence[st
 def _get_history(
     hostname: HostName,
     *,
-    filter_tree_paths: Callable[[Sequence[TreePath]], FilteredTreePaths],
+    filter_tree_paths: Callable[[Sequence[InventoryHistoryPath]], FilteredInventoryHistoryPaths],
 ) -> Tuple[Sequence[HistoryEntry], Sequence[str]]:
     if "/" in hostname:
         return [], []  # just for security reasons
 
-    if not (tree_paths := _get_tree_paths(hostname)):
+    if not (tree_paths := _get_inventory_history_paths(hostname)):
         return [], []
 
     try:
         filtered_tree_paths = filter_tree_paths(tree_paths)
-    except FilterTreePathsError:
+    except FilterInventoryHistoryPathsError:
         return [], []
 
     cached_tree_loader = _CachedTreeLoader()
@@ -329,13 +335,13 @@ def _get_history(
     return history, sorted([str(path) for path in corrupted_history_files])
 
 
-def _get_tree_paths(hostname: HostName) -> Sequence[TreePath]:
+def _get_inventory_history_paths(hostname: HostName) -> Sequence[InventoryHistoryPath]:
     inventory_path = Path(cmk.utils.paths.inventory_output_dir, hostname)
     inventory_archive_dir = Path(cmk.utils.paths.inventory_archive_dir, hostname)
 
     try:
         archived_tree_paths = [
-            TreePath(
+            InventoryHistoryPath(
                 path=filepath,
                 timestamp=int(filepath.name),
             )
@@ -346,7 +352,7 @@ def _get_tree_paths(hostname: HostName) -> Sequence[TreePath]:
 
     try:
         archived_tree_paths.append(
-            TreePath(
+            InventoryHistoryPath(
                 path=inventory_path,
                 timestamp=int(inventory_path.stat().st_mtime),
             )
@@ -357,10 +363,12 @@ def _get_tree_paths(hostname: HostName) -> Sequence[TreePath]:
     return archived_tree_paths
 
 
-def _get_pairs(filtered_tree_paths: FilteredTreePaths) -> Sequence[Tuple[TreePath, TreePath]]:
+def _get_pairs(
+    filtered_tree_paths: FilteredInventoryHistoryPaths,
+) -> Sequence[Tuple[InventoryHistoryPath, InventoryHistoryPath]]:
     start_tree_path = filtered_tree_paths.start_tree_path
 
-    pairs: List[Tuple[TreePath, TreePath]] = []
+    pairs: List[Tuple[InventoryHistoryPath, InventoryHistoryPath]] = []
     for tree_path in filtered_tree_paths.tree_paths:
         pairs.append((start_tree_path, tree_path))
         start_tree_path = tree_path

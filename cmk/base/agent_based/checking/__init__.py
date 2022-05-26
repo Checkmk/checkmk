@@ -13,6 +13,7 @@ from typing import (
     Iterable,
     List,
     Mapping,
+    NamedTuple,
     Optional,
     Sequence,
     Set,
@@ -69,7 +70,14 @@ from cmk.base.keepalive import get_keepalive
 from cmk.base.sources import fetch_all, make_sources, Source
 
 from . import _cluster_modes, _submit_to_core
-from .utils import AggregatedResult
+
+
+class _AggregatedResult(NamedTuple):
+    submit: bool
+    data_received: bool
+    result: ServiceCheckResult
+    cache_info: Optional[Tuple[int, int]]
+
 
 # .
 #   .--Checking------------------------------------------------------------.
@@ -422,13 +430,13 @@ def get_aggregated_result(
     *,
     value_store_manager: value_store.ValueStoreManager,
     persist_value_store_changes: bool,
-) -> AggregatedResult:
+) -> _AggregatedResult:
     """Run the check function and aggregate the subresults
 
     This function is also called during discovery.
     """
     if plugin is None:
-        return AggregatedResult(
+        return _AggregatedResult(
             submit=True,
             data_received=True,
             result=ServiceCheckResult.check_not_implemented(),
@@ -459,7 +467,7 @@ def get_aggregated_result(
         plugin.sections,
     )
     if not section_kws:  # no data found
-        return AggregatedResult(
+        return _AggregatedResult(
             submit=False,
             data_received=False,
             result=error_result,
@@ -487,7 +495,7 @@ def get_aggregated_result(
 
     except (item_state.MKCounterWrapped, checking_classes.IgnoreResultsError) as e:
         msg = str(e) or "No service summary available"
-        return AggregatedResult(
+        return _AggregatedResult(
             submit=False,
             data_received=True,
             result=ServiceCheckResult(output=msg),
@@ -510,7 +518,7 @@ def get_aggregated_result(
             ),
         )
 
-    return AggregatedResult(
+    return _AggregatedResult(
         submit=True,
         data_received=True,
         result=result,

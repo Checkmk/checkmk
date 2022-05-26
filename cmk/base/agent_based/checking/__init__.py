@@ -16,7 +16,6 @@ from typing import (
     NamedTuple,
     Optional,
     Sequence,
-    Set,
     Tuple,
     Union,
 )
@@ -73,6 +72,7 @@ from . import _cluster_modes, _submit_to_core
 
 
 class _AggregatedResult(NamedTuple):
+    service: ConfiguredService
     submit: bool
     data_received: bool
     result: ServiceCheckResult
@@ -320,19 +320,12 @@ def check_host_services(
     * calls the check
     * examines the result and sends it to the core (unless `dry_run` is True).
     """
-    num_success = 0
-    plugins_missing_data: Set[CheckPluginName] = set()
     with plugin_contexts.current_host(host_config.hostname):
         with value_store.load_host_value_store(
             host_config.hostname, store_changes=not dry_run
         ) as value_store_manager:
-            for service in _filter_services_to_check(
-                services=services,
-                run_plugin_names=run_plugin_names,
-                config_cache=config_cache,
-                host_name=host_config.hostname,
-            ):
-                success = _execute_check(
+            submittables = [
+                _execute_check(
                     parsed_sections_broker,
                     host_config,
                     ipaddress,
@@ -341,12 +334,18 @@ def check_host_services(
                     show_perfdata=show_perfdata,
                     value_store_manager=value_store_manager,
                 )
-                if success:
-                    num_success += 1
-                else:
-                    plugins_missing_data.add(service.check_plugin_name)
+                for service in _filter_services_to_check(
+                    services=services,
+                    run_plugin_names=run_plugin_names,
+                    config_cache=config_cache,
+                    host_name=host_config.hostname,
+                )
+            ]
 
-    return num_success, sorted(plugins_missing_data)
+    return (
+        sum(1 for s in submittables if s.data_received),
+        sorted({s.service.check_plugin_name for s in submittables if not s.data_received}),
+    )
 
 
 def _filter_services_to_check(
@@ -390,7 +389,7 @@ def _execute_check(
     dry_run: bool,
     show_perfdata: bool,
     value_store_manager: value_store.ValueStoreManager,
-) -> bool:
+) -> _AggregatedResult:
     plugin = agent_based_register.get_check_plugin(service.check_plugin_name)
     submittable = get_aggregated_result(
         parsed_sections_broker,
@@ -418,7 +417,8 @@ def _execute_check(
         )
     else:
         console.verbose(f"{service.description:20} PEND - {submittable.result.output}\n")
-    return submittable.data_received
+
+    return submittable
 
 
 def get_aggregated_result(
@@ -437,6 +437,7 @@ def get_aggregated_result(
     """
     if plugin is None:
         return _AggregatedResult(
+            service=service,
             submit=True,
             data_received=True,
             result=ServiceCheckResult.check_not_implemented(),
@@ -468,6 +469,7 @@ def get_aggregated_result(
     )
     if not section_kws:  # no data found
         return _AggregatedResult(
+            service=service,
             submit=False,
             data_received=False,
             result=error_result,
@@ -496,6 +498,7 @@ def get_aggregated_result(
     except (item_state.MKCounterWrapped, checking_classes.IgnoreResultsError) as e:
         msg = str(e) or "No service summary available"
         return _AggregatedResult(
+            service=service,
             submit=False,
             data_received=True,
             result=ServiceCheckResult(output=msg),
@@ -519,6 +522,7 @@ def get_aggregated_result(
         )
 
     return _AggregatedResult(
+        service=service,
         submit=True,
         data_received=True,
         result=result,

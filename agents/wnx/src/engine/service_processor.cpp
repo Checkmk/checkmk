@@ -533,7 +533,9 @@ ServiceProcessor::Signal ServiceProcessor::mainWaitLoop(
     auto ipv6 = cfg::groups::global.ipv6();
     auto port = cfg::groups::global.port();
     auto uniq_cfg_id = cfg::GetCfg().uniqId();
-    ProcessServiceConfiguration(kServiceName);
+    if (GetModus() == Modus::service) {
+        ProcessServiceConfiguration(kServiceName);
+    }
 
     auto last_check = std::chrono::steady_clock::now();
 

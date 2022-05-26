@@ -328,14 +328,14 @@ def check_host_services(
             host_config.hostname, store_changes=not dry_run
         ) as value_store_manager:
             submittables = [
-                _execute_check(
+                get_aggregated_result(
                     parsed_sections_broker,
                     host_config,
                     ipaddress,
                     service,
-                    dry_run=dry_run,
-                    show_perfdata=show_perfdata,
+                    agent_based_register.get_check_plugin(service.check_plugin_name),
                     value_store_manager=value_store_manager,
+                    persist_value_store_changes=not dry_run,
                 )
                 for service in _filter_services_to_check(
                     services=services,
@@ -344,6 +344,8 @@ def check_host_services(
                     host_name=host_config.hostname,
                 )
             ]
+
+    _submit_aggregated_results(submittables, host_config.hostname, dry_run, show_perfdata)
 
     return submittables
 
@@ -380,45 +382,35 @@ def service_outside_check_period(
     return True
 
 
-def _execute_check(
-    parsed_sections_broker: ParsedSectionsBroker,
-    host_config: config.HostConfig,
-    ipaddress: Optional[HostAddress],
-    service: ConfiguredService,
-    *,
+def _submit_aggregated_results(
+    submittables: Iterable[_AggregatedResult],
+    host_name: HostName,
     dry_run: bool,
     show_perfdata: bool,
-    value_store_manager: value_store.ValueStoreManager,
-) -> _AggregatedResult:
-    plugin = agent_based_register.get_check_plugin(service.check_plugin_name)
-    submittable = get_aggregated_result(
-        parsed_sections_broker,
-        host_config,
-        ipaddress,
-        service,
-        plugin,
-        value_store_manager=value_store_manager,
-        persist_value_store_changes=not dry_run,
+) -> None:
+    submitter = _submit_to_core.get_submitter(
+        check_submission=config.check_submission,
+        monitoring_core=config.monitoring_core,
+        dry_run=dry_run,
+        keepalive=get_keepalive(cmk_version.edition()),
     )
-    if submittable.submit:
+
+    for submittable in submittables:
+        if not submittable.submit:
+            console.verbose(
+                f"{submittable.service.description:20} PEND - {submittable.result.output}\n"
+            )
+            continue
+
         _submit_to_core.check_result(
-            host_name=host_config.hostname,
-            service_name=service.description,
+            host_name=host_name,
+            service_name=submittable.service.description,
             result=submittable.result,
+            submitter=submitter,
             cache_info=submittable.cache_info,
-            submitter=_submit_to_core.get_submitter(
-                check_submission=config.check_submission,
-                monitoring_core=config.monitoring_core,
-                dry_run=dry_run,
-                keepalive=get_keepalive(cmk_version.edition()),
-            ),
             show_perfdata=show_perfdata,
             perfdata_format="pnp" if config.perfdata_format == "pnp" else "standard",
         )
-    else:
-        console.verbose(f"{service.description:20} PEND - {submittable.result.output}\n")
-
-    return submittable
 
 
 def get_aggregated_result(

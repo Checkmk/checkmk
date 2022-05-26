@@ -22,7 +22,9 @@ export function fetch_site_status() {
             }
 
             for (let [site_id, site_status] of Object.entries(site_states)) {
-                var livestatus_container = document.getElementById("livestatus_status_" + site_id)!;
+                var livestatus_container = document.getElementById(
+                    "livestatus_status_" + site_id
+                )!;
                 livestatus_container.innerHTML = site_status.livestatus;
 
                 var replication_container = document.getElementById(
@@ -33,7 +35,12 @@ export function fetch_site_status() {
         },
         error_handler: function (handler_data, status_code, error_msg) {
             if (status_code != 0) {
-                show_error("Site status update failed [" + status_code + "]: " + error_msg);
+                show_error(
+                    "Site status update failed [" +
+                        status_code +
+                        "]: " +
+                        error_msg
+                );
             }
         },
         method: "POST",

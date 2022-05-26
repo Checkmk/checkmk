@@ -18,8 +18,8 @@ import dataclasses
 import re
 from typing import Optional
 
-from .agent_based_api.v1 import register
-from .agent_based_api.v1.type_defs import StringTable
+from .agent_based_api.v1 import Attributes, register
+from .agent_based_api.v1.type_defs import InventoryResult, StringTable
 
 
 @dataclasses.dataclass
@@ -52,4 +52,17 @@ def parse(string_table: StringTable) -> Section:
 register.agent_section(
     name="win_system",
     parse_function=parse,
+)
+
+
+def inventory(section: Section) -> InventoryResult:
+    yield Attributes(
+        path=["hardware", "system"],
+        inventory_attributes=dataclasses.asdict(section),
+    )
+
+
+register.inventory_plugin(
+    name="win_system",
+    inventory_function=inventory,
 )

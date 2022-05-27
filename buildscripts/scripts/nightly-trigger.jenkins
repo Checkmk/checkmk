@@ -83,7 +83,7 @@ node: {
         stage('Build CMK IMAGE') {
             build(job: "${FOLDER_ID}/nightly-${JOB_EDITION}/build-cmk-image",
                 parameters: [
-                    [$class: 'StringParameterValue', name: 'EDITION', value: EDITION]
+                    [$class: 'StringParameterValue', name: 'EDITION', value: EDITION],
                     [$class: 'BooleanParameterValue', name: 'PUSH_TO_REGISTRY', value: DEPLOY_TO_WEBSITE],
                 ]
             )

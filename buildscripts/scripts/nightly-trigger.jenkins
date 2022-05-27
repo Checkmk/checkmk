@@ -104,35 +104,31 @@ node: {
         }
     }
 
-    def TEST_STAGES = []
+    def TEST_STAGES = [:]
 
     if (RUN_IMAGE_TESTS) {
-        TEST_STAGES += [
-            'Integration Test for Docker Container': {
-                stage('Integration Test for Docker Container') {
-                    build(job: "${FOLDER_ID}/nightly-${JOB_EDITION}/test-docker-integration",
-                        parameters: [
-                            [$class: 'StringParameterValue', name: 'EDITION', value: EDITION]
-                        ]
-                    )
-                }
+        TEST_STAGES['Integration Test for Docker Container'] = {
+            stage('Integration Test for Docker Container') {
+                build(job: "${FOLDER_ID}/nightly-${JOB_EDITION}/test-docker-integration",
+                    parameters: [
+                        [$class: 'StringParameterValue', name: 'EDITION', value: EDITION]
+                    ]
+                )
             }
-        ]
+        }
     }
 
     if (RUN_INTEGRATION_TESTS) {
-        TEST_STAGES += [
-            'Composition Test for Packages': {
-                stage('Composition Test for Packages') {
-                    build(job: "${FOLDER_ID}/nightly-${JOB_EDITION}/test-composition",
-                        parameters: [
-                            [$class: 'StringParameterValue', name: 'DISTROS', value: DISTROS],
-                            [$class: 'StringParameterValue', name: 'EDITION', value: EDITION]
-                        ]
-                    )
-                }
-            },
-        ]
+        TEST_STAGES['Composition Test for Packages'] = {
+            stage('Composition Test for Packages') {
+                build(job: "${FOLDER_ID}/nightly-${JOB_EDITION}/test-composition",
+                    parameters: [
+                        [$class: 'StringParameterValue', name: 'DISTROS', value: DISTROS],
+                        [$class: 'StringParameterValue', name: 'EDITION', value: EDITION]
+                    ]
+                )
+            }
+        }
     }
 
     parallel(TEST_STAGES)

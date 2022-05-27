@@ -15,6 +15,7 @@ from typing import cast
 
 from cmk.utils import version
 
+from cmk.gui.globals import user
 from cmk.gui.http import Response
 from cmk.gui.plugins.openapi.endpoints.utils import complement_customer, update_customer_info
 from cmk.gui.plugins.openapi.restful_objects import (
@@ -35,7 +36,20 @@ from cmk.gui.watolib.passwords import (
     save_password,
 )
 
-PERMISSIONS = permissions.Perm("wato.edit_all_passwords")
+PERMISSIONS = permissions.AllPerm(
+    [
+        permissions.Perm("wato.passwords"),
+        permissions.Optional(permissions.Perm("wato.edit_all_passwords")),
+    ]
+)
+
+RW_PERMISSIONS = permissions.AllPerm(
+    [
+        permissions.Perm("wato.edit"),
+        permissions.Perm("wato.passwords"),
+        permissions.Optional(permissions.Perm("wato.edit_all_passwords")),
+    ]
+)
 
 
 @Endpoint(
@@ -45,10 +59,12 @@ PERMISSIONS = permissions.Perm("wato.edit_all_passwords")
     request_schema=request_schemas.InputPassword,
     etag="output",
     response_schema=response_schemas.PasswordObject,
-    permissions_required=PERMISSIONS,
+    permissions_required=RW_PERMISSIONS,
 )
 def create_password(params):
     """Create a password"""
+    user.need_permission("wato.edit")
+    user.need_permission("wato.passwords")
     body = params["body"]
     ident = body["ident"]
     password_details = cast(
@@ -79,10 +95,12 @@ def create_password(params):
     request_schema=request_schemas.UpdatePassword,
     etag="both",
     response_schema=response_schemas.PasswordObject,
-    permissions_required=PERMISSIONS,
+    permissions_required=RW_PERMISSIONS,
 )
 def update_password(params):
     """Update a password"""
+    user.need_permission("wato.edit")
+    user.need_permission("wato.passwords")
     body = params["body"]
     ident = params["name"]
     try:
@@ -104,10 +122,12 @@ def update_password(params):
     method="delete",
     path_params=[NAME_FIELD],
     output_empty=True,
-    permissions_required=PERMISSIONS,
+    permissions_required=RW_PERMISSIONS,
 )
 def delete_password(params):
     """Delete a password"""
+    user.need_permission("wato.edit")
+    user.need_permission("wato.passwords")
     ident = params["name"]
     if ident not in load_passwords():
         return problem(
@@ -129,6 +149,7 @@ def delete_password(params):
 )
 def show_password(params):
     """Show a password"""
+    user.need_permission("wato.passwords")
     ident = params["name"]
     passwords = load_passwords()
     if ident not in passwords:
@@ -150,6 +171,7 @@ def show_password(params):
 )
 def list_passwords(params):
     """Show all passwords"""
+    user.need_permission("wato.passwords")
     password_collection = {
         "id": "password",
         "domainType": "password",

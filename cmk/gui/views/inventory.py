@@ -34,7 +34,6 @@ from cmk.utils.structured_data import (
     RetentionIntervals,
     SDKey,
     SDKeyColumns,
-    SDKeys,
     SDPath,
     SDRawPath,
     SDRow,
@@ -140,25 +139,6 @@ def _paint_host_inventory_tree(row: Row, raw_path: SDRawPath) -> CellSpec:
     assert isinstance(struct_tree, StructuredDataNode)
 
     parsed_path, attribute_keys = inventory.parse_tree_path(raw_path)
-    child: Union[None, StructuredDataNode, Table, Attributes]
-
-    if attribute_keys is None:
-        child = struct_tree.get_node(parsed_path)
-        td_class = "invtree"
-
-    elif attribute_keys == []:
-        child = struct_tree.get_table(parsed_path)
-        td_class = ""
-
-    elif attribute_keys:
-        child = _get_filtered_attributes(struct_tree, parsed_path, attribute_keys)
-        td_class = ""
-
-    else:
-        raise NotImplementedError()
-
-    if child is None:
-        return "", ""
 
     painter_options = PainterOptions.get_instance()
     tree_renderer = NodeRenderer(
@@ -167,15 +147,26 @@ def _paint_host_inventory_tree(row: Row, raw_path: SDRawPath) -> CellSpec:
         show_internal_tree_paths=painter_options.get("show_internal_tree_paths"),
     )
 
+    td_class = ""
     with output_funnel.plugged():
-        if isinstance(child, Attributes):
-            # In host views like "Switch port statistics" the value is rendered as a single
-            # attribute and not within a table.
-            if len(attributes := list(child.pairs.items())) == 1:
-                key, value = attributes[-1]
-                tree_renderer.show_attribute(value, AttributeDisplayHint.make(parsed_path, key))
-        else:
-            child.show(tree_renderer)
+        if attribute_keys is None:
+            if node := struct_tree.get_node(parsed_path):
+                node.show(tree_renderer)
+                td_class = "invtree"
+
+        elif attribute_keys == []:
+            if table := struct_tree.get_table(parsed_path):
+                table.show(tree_renderer)
+
+        elif attribute_keys:
+            attribute_key = attribute_keys[0]
+            if (
+                attributes := struct_tree.get_attributes(parsed_path)
+            ) and attribute_key in attributes.pairs:
+                tree_renderer.show_attribute(
+                    attributes.pairs[attribute_keys[0]],
+                    AttributeDisplayHint.make(parsed_path, attribute_key),
+                )
 
         code = HTML(output_funnel.drain())
 
@@ -213,16 +204,6 @@ def _get_sites_with_same_named_hosts_cache() -> Mapping[HostName, Sequence[SiteI
         for row in sites.live().query(query_str):
             cache.setdefault(HostName(row[1]), []).append(SiteId(row[0]))
     return cache
-
-
-def _get_filtered_attributes(
-    struct_tree: StructuredDataNode,
-    path: SDPath,
-    keys: SDKeys,
-) -> Optional[Attributes]:
-    if (attributes := struct_tree.get_attributes(path)) is None:
-        return None
-    return attributes.get_filtered_attributes(lambda key: key == keys[-1])
 
 
 def _cmp_inventory_node(

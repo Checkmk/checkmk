@@ -97,6 +97,8 @@ elif [ $EDITION = enterprise ]; then
     SUFFIX=.cee
 elif [ $EDITION = managed ]; then
     SUFFIX=.cme
+elif [ $EDITION = plus ]; then
+    SUFFIX=.cpe
 else
     die "FEHLER: Unbekannte Edition '$EDITION'"
 fi

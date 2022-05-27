@@ -13,6 +13,7 @@
     "not dead"
   ],
   "scripts": {
+    "build": "webpack",
     "test": "echo \"Error: no test specified\" && exit 1",
     "//": "COMMENT: Process 'resolutions' key below",
     "watch": "webpack --mode development --watch",

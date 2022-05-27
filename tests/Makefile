@@ -183,6 +183,9 @@ prepare-playwright:
 test-integration-docker-debug test-composition-docker-debug:
 	$(PIPENV) run scripts/run-dockerized.py debug
 
+test-build-js:
+	../scripts/check-webpack-build
+
 test-composition-docker:
 	$(PIPENV) run scripts/run-dockerized.py "test-composition"
 

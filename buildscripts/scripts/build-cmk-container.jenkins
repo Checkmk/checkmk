@@ -98,15 +98,20 @@ timeout(time: 12, unit: 'HOURS') {
                                 ./buildscripts/scripts/build-cmk-container.sh ${BRANCH} ${EDITION} ${CMK_VERS} ${SET_LATEST_TAG} "build"
                             """
                         }
-                        withCredentials([file(credentialsId: 'Release_Key', variable: 'RELEASE_KEY')]) {
-                            sh """
-                                cd ${PACKAGE_DIR}/${CMK_VERS}
-                                rsync -av --relative \
-                                    --exclude '*dbgsym*.deb' \
-                                    -e "ssh -o StrictHostKeyChecking=no -i ${RELEASE_KEY} -p 52022" \
-                                    ${PACKAGE_DIR}/./${CMK_VERS}/check-mk-*-docker-*.tar.gz \
-                                    ${WEB_DEPLOY_DEST}
-                            """
+                    }
+
+                    stage('Upload image to download mirror') {
+                        if (params.PUSH_TO_REGISTRY) {
+                            withCredentials([file(credentialsId: 'Release_Key', variable: 'RELEASE_KEY')]) {
+                                sh """
+                                    cd ${PACKAGE_DIR}/${CMK_VERS}
+                                    rsync -av --relative \
+                                        --exclude '*dbgsym*.deb' \
+                                        -e "ssh -o StrictHostKeyChecking=no -i ${RELEASE_KEY} -p 52022" \
+                                        ${PACKAGE_DIR}/./${CMK_VERS}/check-mk-*-docker-*.tar.gz \
+                                        ${WEB_DEPLOY_DEST}
+                                """
+                            }
                         }
                     }
 

@@ -1460,7 +1460,7 @@ def _register_host_tag_painters():
                 "render": lambda self, row, cell: _paint_host_tag(row, self._tag_group_id),
                 # Use title of the tag value for grouping, not the complete
                 # dictionary of custom variables!
-                "group_by": lambda self, row: _paint_host_tag(row, self._tag_group_id)[1],
+                "group_by": lambda self, row, _cell: _paint_host_tag(row, self._tag_group_id)[1],
             },
         )
         painter_registry.register(cls)

@@ -10,9 +10,16 @@ from cmk.gui.globals import user
 from cmk.gui.plugins.views.utils import (
     _encode_sorter_url,
     _parse_url_sorters,
+    Cell,
+    group_value,
+    Painter,
+    painter_registry,
+    register_painter,
     replace_action_url_macros,
     SorterSpec,
 )
+from cmk.gui.type_defs import PainterSpec
+from cmk.gui.views import View
 
 
 @pytest.mark.parametrize(
@@ -72,3 +79,27 @@ def test_replace_action_url_macros(
         "user",
     )
     assert replace_action_url_macros(url, what, row) == result
+
+
+def test_group_value() -> None:
+    def rendr(row) -> tuple[str, str]:
+        return ("abc", "xyz")
+
+    register_painter(
+        "tag_painter",
+        {
+            "title": "Tag painter",
+            "short": "tagpaint",
+            "columns": ["x"],
+            "sorter": "aaaa",
+            "options": ["opt1"],
+            "printable": False,
+            "paint": rendr,
+            "groupby": "dmz",
+        },
+    )
+
+    painter: Painter = painter_registry["tag_painter"]()
+    dummy_cell: Cell = Cell(View("", {}, {}), PainterSpec(painter.ident))
+
+    assert group_value({"host_tags": {"networking": "dmz"}}, [dummy_cell]) == ("dmz",)

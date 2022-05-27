@@ -6,7 +6,7 @@ Date: 1653420515
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.1.0p1
 
 Previously the REST API sent links containing characters (e.g. ':') which were not properly escaped.
 Using them directly without additional escaping could result in a HTTP 404 error.

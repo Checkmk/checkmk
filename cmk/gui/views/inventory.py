@@ -594,8 +594,10 @@ def _make_title_function(raw_hint: InventoryHintSpec) -> Callable[[SDRawPath], s
     return lambda raw_path: title
 
 
-def _make_long_title(title: str, parent_path: SDPath) -> str:
-    return NodeDisplayHint.make(parent_path).title + " ➤ " + title if parent_path else title
+def _make_long_title_function(title: str, parent_path: SDPath) -> Callable[[], str]:
+    return lambda: (
+        NodeDisplayHint.make(parent_path).title + " ➤ " + title if parent_path else title
+    )
 
 
 @dataclass(frozen=True)
@@ -604,7 +606,11 @@ class NodeDisplayHint:
     icon: Optional[str]
     title: str
     short_title: str
-    long_title: str
+    _long_title_function: Callable[[], str]
+
+    @property
+    def long_title(self) -> str:
+        return self._long_title_function()
 
     @classmethod
     def make(cls, path: SDPath) -> NodeDisplayHint:
@@ -615,7 +621,7 @@ class NodeDisplayHint:
             icon=raw_hint.get("icon"),
             title=title,
             short_title=raw_hint.get("short", title),
-            long_title=_make_long_title(title, path[:-1]),
+            _long_title_function=_make_long_title_function(title, path[:-1]),
         )
 
     @staticmethod
@@ -642,7 +648,7 @@ class NodeDisplayHint:
             icon=raw_hint.get("icon"),
             title=title,
             short_title=raw_hint.get("short", title),
-            long_title=_make_long_title(title, inventory_path.path[:-1]),
+            _long_title_function=_make_long_title_function(title, inventory_path.path[:-1]),
         )
 
 
@@ -658,7 +664,11 @@ class TableDisplayHint:
     is_show_more: bool
     view_name: Optional[str]
     short_title: str
-    long_title: str
+    _long_title_function: Callable[[], str]
+
+    @property
+    def long_title(self) -> str:
+        return self._long_title_function()
 
     @classmethod
     def make(cls, path: SDPath) -> TableDisplayHint:
@@ -670,7 +680,7 @@ class TableDisplayHint:
             is_show_more=raw_hint.get("is_show_more", True),
             view_name=raw_hint.get("view"),
             short_title=raw_hint.get("short", title),
-            long_title=_make_long_title(title, path[:-1]),
+            _long_title_function=_make_long_title_function(title, path[:-1]),
         )
 
     @classmethod
@@ -682,7 +692,7 @@ class TableDisplayHint:
             is_show_more=raw_hint.get("is_show_more", True),
             view_name=raw_hint.get("view"),
             short_title=raw_hint.get("short", title),
-            long_title=_make_long_title(title, inventory_path.path[:-1]),
+            _long_title_function=_make_long_title_function(title, inventory_path.path[:-1]),
         )
 
     def make_titles(
@@ -757,10 +767,14 @@ class AttributesDisplayHint:
 class AttributeDisplayHint:
     title: str
     short_title: str
-    long_title: str
+    _long_title_function: Callable[[], str]
     data_type: str
     paint_function: PaintFunction
     is_show_more: bool
+
+    @property
+    def long_title(self) -> str:
+        return self._long_title_function()
 
     @classmethod
     def make(cls, path: SDPath, key: str) -> AttributeDisplayHint:
@@ -771,7 +785,7 @@ class AttributeDisplayHint:
         return cls(
             title=title,
             short_title=raw_hint.get("short", title),
-            long_title=_make_long_title(title, path),
+            _long_title_function=_make_long_title_function(title, path),
             data_type=data_type,
             paint_function=paint_function,
             is_show_more=raw_hint.get("is_show_more", True),
@@ -787,7 +801,7 @@ class AttributeDisplayHint:
         return cls(
             title=title,
             short_title=raw_hint.get("short", title),
-            long_title=_make_long_title(title, inventory_path.path),
+            _long_title_function=_make_long_title_function(title, inventory_path.path),
             data_type=data_type,
             paint_function=paint_function,
             is_show_more=raw_hint.get("is_show_more", True),

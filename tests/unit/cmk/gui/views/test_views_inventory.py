@@ -252,7 +252,7 @@ def test__cmp_inventory_node(monkeypatch, val_a, val_b, result):
                 icon=None,
                 title="Inventory",
                 short_title="Inventory",
-                long_title="Inventory",
+                _long_title_function=lambda: "Inventory",
             ),
         ),
         (
@@ -262,7 +262,7 @@ def test__cmp_inventory_node(monkeypatch, val_a, val_b, result):
                 icon="hardware",
                 title="Hardware",
                 short_title="Hardware",
-                long_title="Hardware",
+                _long_title_function=lambda: "Hardware",
             ),
         ),
         (
@@ -272,13 +272,19 @@ def test__cmp_inventory_node(monkeypatch, val_a, val_b, result):
                 icon=None,
                 title="Node",
                 short_title="Node",
-                long_title="To ➤ Node",
+                _long_title_function=lambda: "To ➤ Node",
             ),
         ),
     ],
 )
 def test_make_node_displayhint(node_path: SDPath, expected: NodeDisplayHint) -> None:
-    assert NodeDisplayHint.make(node_path) == expected
+    hint = NodeDisplayHint.make(node_path)
+
+    assert hint.raw_path == expected.raw_path
+    assert hint.icon == expected.icon
+    assert hint.title == expected.title
+    assert hint.short_title == expected.short_title
+    assert hint.long_title == expected.long_title
 
 
 @pytest.mark.parametrize(
@@ -291,7 +297,7 @@ def test_make_node_displayhint(node_path: SDPath, expected: NodeDisplayHint) -> 
                 icon=None,
                 title="Bar",
                 short_title="Bar",
-                long_title="Foo ➤ Bar",
+                _long_title_function=lambda: "Foo ➤ Bar",
             ),
         ),
         (
@@ -301,7 +307,7 @@ def test_make_node_displayhint(node_path: SDPath, expected: NodeDisplayHint) -> 
                 icon="software",
                 title="Software",
                 short_title="Software",
-                long_title="Software",
+                _long_title_function=lambda: "Software",
             ),
         ),
     ],
@@ -309,13 +315,16 @@ def test_make_node_displayhint(node_path: SDPath, expected: NodeDisplayHint) -> 
 def test_make_node_displayhint_from_hint(
     raw_node_path: SDRawPath, expected: NodeDisplayHint
 ) -> None:
-    assert (
-        NodeDisplayHint.make_from_hint(
-            raw_node_path,
-            inventory_displayhints.get(raw_node_path, {}),
-        )
-        == expected
+    hint = NodeDisplayHint.make_from_hint(
+        raw_node_path,
+        inventory_displayhints.get(raw_node_path, {}),
     )
+
+    assert hint.raw_path == expected.raw_path
+    assert hint.icon == expected.icon
+    assert hint.title == expected.title
+    assert hint.short_title == expected.short_title
+    assert hint.long_title == expected.long_title
 
 
 @pytest.mark.parametrize(
@@ -328,7 +337,7 @@ def test_make_node_displayhint_from_hint(
                 is_show_more=True,
                 view_name=None,
                 short_title="Inventory",
-                long_title="Inventory",
+                _long_title_function=lambda: "Inventory",
             ),
         ),
         (
@@ -346,7 +355,7 @@ def test_make_node_displayhint_from_hint(
                 is_show_more=False,
                 view_name="invdockerimages_of_host",
                 short_title="Images",
-                long_title="Docker ➤ Images",
+                _long_title_function=lambda: "Docker ➤ Images",
             ),
         ),
         (
@@ -356,13 +365,19 @@ def test_make_node_displayhint_from_hint(
                 is_show_more=True,
                 view_name=None,
                 short_title="Node",
-                long_title="To ➤ Node",
+                _long_title_function=lambda: "To ➤ Node",
             ),
         ),
     ],
 )
 def test_make_table_displayhint(table_path: SDPath, expected: TableDisplayHint) -> None:
-    assert TableDisplayHint.make(table_path) == expected
+    hint = TableDisplayHint.make(table_path)
+
+    assert hint.key_order == expected.key_order
+    assert hint.is_show_more == expected.is_show_more
+    assert hint.view_name == expected.view_name
+    assert hint.short_title == expected.short_title
+    assert hint.long_title == expected.long_title
 
 
 @pytest.mark.parametrize(
@@ -375,7 +390,7 @@ def test_make_table_displayhint(table_path: SDPath, expected: TableDisplayHint) 
                 is_show_more=True,
                 view_name=None,
                 short_title="Bar",
-                long_title="Foo ➤ Bar",
+                _long_title_function=lambda: "Foo ➤ Bar",
             ),
         ),
         (
@@ -385,7 +400,7 @@ def test_make_table_displayhint(table_path: SDPath, expected: TableDisplayHint) 
                 is_show_more=False,
                 view_name="invdockercontainers_of_host",
                 short_title="Containers",
-                long_title="Docker ➤ Containers",
+                _long_title_function=lambda: "Docker ➤ Containers",
             ),
         ),
     ],
@@ -393,13 +408,16 @@ def test_make_table_displayhint(table_path: SDPath, expected: TableDisplayHint) 
 def test_make_table_displayhint_from_hint(
     raw_table_path: SDRawPath, expected: TableDisplayHint
 ) -> None:
-    assert (
-        TableDisplayHint.make_from_hint(
-            raw_table_path,
-            inventory_displayhints.get(raw_table_path, {}),
-        )
-        == expected
+    hint = TableDisplayHint.make_from_hint(
+        raw_table_path,
+        inventory_displayhints.get(raw_table_path, {}),
     )
+
+    assert hint.key_order == expected.key_order
+    assert hint.is_show_more == expected.is_show_more
+    assert hint.view_name == expected.view_name
+    assert hint.short_title == expected.short_title
+    assert hint.long_title == expected.long_title
 
 
 @pytest.mark.parametrize(
@@ -464,7 +482,13 @@ def test_sort_table_rows_displayhint(rows: Sequence[SDRow], expected: Sequence[S
     ],
 )
 def test_make_column_displayhint(col_path: SDPath, key: str, expected: ColumnDisplayHint) -> None:
-    assert ColumnDisplayHint.make(col_path, key) == expected
+    hint = ColumnDisplayHint.make(col_path, key)
+
+    assert hint.title == expected.title
+    assert hint.short_title == expected.short_title
+    assert hint.data_type == expected.data_type
+    assert hint.paint_function == expected.paint_function
+    assert hint.sort_function == expected.sort_function
 
 
 @pytest.mark.parametrize(
@@ -515,13 +539,16 @@ def test_make_column_displayhint(col_path: SDPath, key: str, expected: ColumnDis
 def test_make_column_displayhint_from_hint(
     raw_col_path: SDRawPath, expected: ColumnDisplayHint
 ) -> None:
-    assert (
-        ColumnDisplayHint.make_from_hint(
-            raw_col_path,
-            inventory_displayhints.get(raw_col_path, {}),
-        )
-        == expected
+    hint = ColumnDisplayHint.make_from_hint(
+        raw_col_path,
+        inventory_displayhints.get(raw_col_path, {}),
     )
+
+    assert hint.title == expected.title
+    assert hint.short_title == expected.short_title
+    assert hint.data_type == expected.data_type
+    assert hint.paint_function == expected.paint_function
+    assert hint.sort_function == expected.sort_function
 
 
 @pytest.mark.parametrize(
@@ -560,7 +587,9 @@ def test_make_column_displayhint_from_hint(
     ],
 )
 def test_make_attributes_displayhint(attrs_path: SDPath, expected: AttributesDisplayHint) -> None:
-    assert AttributesDisplayHint.make(attrs_path) == expected
+    hint = AttributesDisplayHint.make(attrs_path)
+
+    assert hint.key_order == expected.key_order
 
 
 @pytest.mark.parametrize(
@@ -596,7 +625,7 @@ def test_sort_attributes_pairs_displayhint(
                 paint_function=inv_paint_generic,
                 title="Key",
                 short_title="Key",
-                long_title="Key",
+                _long_title_function=lambda: "Key",
                 is_show_more=True,
             ),
         ),
@@ -608,7 +637,7 @@ def test_sort_attributes_pairs_displayhint(
                 paint_function=inv_paint_size,
                 title="Size",
                 short_title="Size",
-                long_title="Block Devices ➤ Size",
+                _long_title_function=lambda: "Block Devices ➤ Size",
                 is_show_more=True,
             ),
         ),
@@ -620,7 +649,7 @@ def test_sort_attributes_pairs_displayhint(
                 paint_function=inv_paint_generic,
                 title="Key",
                 short_title="Key",
-                long_title="Node ➤ Key",
+                _long_title_function=lambda: "Node ➤ Key",
                 is_show_more=True,
             ),
         ),
@@ -629,7 +658,14 @@ def test_sort_attributes_pairs_displayhint(
 def test_make_attribute_displayhint(
     attr_path: SDPath, key: str, expected: AttributeDisplayHint
 ) -> None:
-    assert AttributeDisplayHint.make(attr_path, key) == expected
+    hint = AttributeDisplayHint.make(attr_path, key)
+
+    assert hint.data_type == expected.data_type
+    assert hint.paint_function == expected.paint_function
+    assert hint.title == expected.title
+    assert hint.short_title == expected.short_title
+    assert hint.long_title == expected.long_title
+    assert hint.is_show_more == expected.is_show_more
 
 
 @pytest.mark.parametrize(
@@ -642,7 +678,7 @@ def test_make_attribute_displayhint(
                 paint_function=inv_paint_generic,
                 title="Bar",
                 short_title="Bar",
-                long_title="Foo ➤ Bar",
+                _long_title_function=lambda: "Foo ➤ Bar",
                 is_show_more=True,
             ),
         ),
@@ -653,7 +689,7 @@ def test_make_attribute_displayhint(
                 paint_function=inv_paint_generic,
                 title="CPU Architecture",
                 short_title="CPU Arch",
-                long_title="Processor ➤ CPU Architecture",
+                _long_title_function=lambda: "Processor ➤ CPU Architecture",
                 is_show_more=True,
             ),
         ),
@@ -664,7 +700,7 @@ def test_make_attribute_displayhint(
                 paint_function=inv_paint_generic,
                 title="Product",
                 short_title="Product",
-                long_title="System ➤ Product",
+                _long_title_function=lambda: "System ➤ Product",
                 is_show_more=False,
             ),
         ),
@@ -673,10 +709,14 @@ def test_make_attribute_displayhint(
 def test_make_attribute_displayhint_from_hint(
     raw_attr_path: SDRawPath, expected: AttributeDisplayHint
 ) -> None:
-    assert (
-        AttributeDisplayHint.make_from_hint(
-            raw_attr_path,
-            inventory_displayhints.get(raw_attr_path, {}),
-        )
-        == expected
+    hint = AttributeDisplayHint.make_from_hint(
+        raw_attr_path,
+        inventory_displayhints.get(raw_attr_path, {}),
     )
+
+    assert hint.data_type == expected.data_type
+    assert hint.paint_function == expected.paint_function
+    assert hint.title == expected.title
+    assert hint.short_title == expected.short_title
+    assert hint.long_title == expected.long_title
+    assert hint.is_show_more == expected.is_show_more

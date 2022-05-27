@@ -26,6 +26,8 @@ import sys
 from pathlib import Path
 from typing import Any, Dict
 
+from cmk.utils.password_store import replace_passwords
+
 
 def usage():
     sys.stderr.write(
@@ -70,6 +72,7 @@ OPTIONS:
 
 def main(sys_argv=None):
     if sys_argv is None:
+        replace_passwords()
         sys_argv = sys.argv[1:]
 
     short_options = "hu:p:t:m:i:"

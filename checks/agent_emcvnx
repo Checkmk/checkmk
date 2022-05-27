@@ -14,7 +14,7 @@ def agent_emcvnx_arguments(
     if params["user"] != "":
         args += ["-u", params["user"]]
     if params["password"] != "":
-        args += ["-p", params["password"]]
+        args += ["-p", passwordstore_get_cmdline("%s", params["password"])]
     args += ["-i", ",".join(params["infos"])]
 
     args.append(ipaddress or hostname)

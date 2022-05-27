@@ -1708,7 +1708,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
             },
         )
 
-    def _synchronize_site(self):
+    def _synchronize_site(self) -> None:
         """This is done on the central site to initiate the sync process"""
         self._set_sync_state()
 

@@ -8,10 +8,11 @@ import shutil
 import tarfile
 import time
 from pathlib import Path
-from typing import Dict, List, Union
+from typing import Dict, Iterable, List, Union
 
 import pytest
-import responses  # type: ignore[import]
+import responses
+from pytest_mock import MockerFixture
 
 from tests.testlib.utils import is_enterprise_repo
 
@@ -19,6 +20,7 @@ from livestatus import SiteId
 
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
+from cmk.utils.type_defs import UserId
 
 import cmk.gui.wato.mkeventd
 import cmk.gui.wato.mkeventdstore
@@ -29,13 +31,13 @@ from cmk.gui.config import active_config
 
 
 @pytest.fixture(name="mocked_responses")
-def fixture_mocked_responses():
+def fixture_mocked_responses() -> Iterable[responses.RequestsMock]:
     with responses.RequestsMock() as rsps:
         yield rsps
 
 
 @pytest.fixture(autouse=True)
-def fixture_fake_site_states(monkeypatch):
+def fixture_fake_site_states(monkeypatch: pytest.MonkeyPatch) -> None:
     # During these tests we treat all sites a being online
     monkeypatch.setattr(
         activate_changes.ActivateChanges,
@@ -56,7 +58,7 @@ def fixture_fake_site_states(monkeypatch):
 
 
 @pytest.fixture(autouse=True)
-def fixture_disable_ec_rule_stats_loading(monkeypatch):
+def fixture_disable_ec_rule_stats_loading(monkeypatch: pytest.MonkeyPatch) -> None:
     # During CME config computation the EC rule packs are loaded which currently also load the
     # rule usage information from the running EC. Since we do not have a EC running this fails
     # and causes timeouts. Disable this for these tests.
@@ -64,7 +66,7 @@ def fixture_disable_ec_rule_stats_loading(monkeypatch):
 
 
 @pytest.fixture(autouse=True)
-def fixture_disable_cmk_update_config(monkeypatch):
+def fixture_disable_cmk_update_config(monkeypatch: pytest.MonkeyPatch) -> None:
     # During CME config computation the EC rule packs are loaded which currently also load the
     # rule usage information from the running EC. Since we do not have a EC running this fails
     # and causes timeouts. Disable this for these tests.
@@ -74,14 +76,14 @@ def fixture_disable_cmk_update_config(monkeypatch):
 
 
 def _create_sync_snapshot(
-    activation_manager,
-    snapshot_data_collector_class,
-    monkeypatch,
-    tmp_path,
-    is_pre_17_site,
-    remote_site,
+    activation_manager: activate_changes.ActivateChangesManager,
+    snapshot_data_collector_class: str,
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    is_pre_17_site: bool,
+    remote_site: SiteId,
     edition: cmk_version.Edition,
-):
+) -> activate_changes.SnapshotSettings:
     _create_test_sync_config(monkeypatch)
     return _generate_sync_snapshot(
         activation_manager,
@@ -93,7 +95,7 @@ def _create_sync_snapshot(
     )
 
 
-def _create_test_sync_config(monkeypatch):
+def _create_test_sync_config(monkeypatch: pytest.MonkeyPatch) -> None:
     """Create some config files to be synchronized"""
     conf_dir = Path(cmk.utils.paths.check_mk_config_dir, "wato")
     conf_dir.mkdir(parents=True, exist_ok=True)
@@ -141,7 +143,9 @@ def _create_test_sync_config(monkeypatch):
         )
 
 
-def _get_activation_manager(monkeypatch, remote_site="unit_remote_1"):
+def _get_activation_manager(
+    monkeypatch: pytest.MonkeyPatch, remote_site: SiteId = SiteId("unit_remote_1")
+) -> activate_changes.ActivateChangesManager:
     # TODO: Make this better testable: Extract site snapshot setting calculation
     remote_sites = {
         "unit_remote_1": {
@@ -221,14 +225,15 @@ def _get_activation_manager(monkeypatch, remote_site="unit_remote_1"):
 
 
 def _generate_sync_snapshot(
-    activation_manager,
-    snapshot_data_collector_class,
-    tmp_path,
-    is_pre_17_site,
-    remote_site,
+    activation_manager: activate_changes.ActivateChangesManager,
+    snapshot_data_collector_class: str,
+    tmp_path: Path,
+    is_pre_17_site: bool,
+    remote_site: SiteId,
     *,
     edition: cmk_version.Edition,
-):
+) -> activate_changes.SnapshotSettings:
+    assert activation_manager._activation_id is not None
     site_snapshot_settings = activation_manager._get_site_snapshot_settings(
         activation_manager._activation_id, activation_manager._sites
     )
@@ -252,7 +257,7 @@ def _generate_sync_snapshot(
     return snapshot_settings
 
 
-def _get_expected_paths(user_id, is_pre_17_site, with_local):
+def _get_expected_paths(user_id: UserId, is_pre_17_site: bool, with_local: bool) -> list[str]:
     expected_paths = [
         "etc",
         "var",
@@ -364,10 +369,14 @@ def _get_expected_paths(user_id, is_pre_17_site, with_local):
 
 
 @pytest.mark.usefixtures("request_context")
-@pytest.mark.parametrize("remote_site", ["unit_remote_1", "unit_remote_2"])
+@pytest.mark.parametrize("remote_site", [SiteId("unit_remote_1"), SiteId("unit_remote_2")])
 def test_generate_snapshot(
-    edition: cmk_version.Edition, monkeypatch, tmp_path, with_user_login, remote_site
-):
+    edition: cmk_version.Edition,
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    with_user_login: UserId,
+    remote_site: SiteId,
+) -> None:
     snapshot_data_collector_class = (
         "CMESnapshotDataCollector"
         if edition is cmk_version.Edition.CME
@@ -404,10 +413,14 @@ def test_generate_snapshot(
 
 
 @pytest.mark.usefixtures("request_context")
-@pytest.mark.parametrize("remote_site", ["unit_remote_1", "unit_remote_2"])
+@pytest.mark.parametrize("remote_site", [SiteId("unit_remote_1"), SiteId("unit_remote_2")])
 def test_generate_pre_17_site_snapshot(
-    edition: cmk_version.Edition, monkeypatch, tmp_path, with_user_login, remote_site
-):
+    edition: cmk_version.Edition,
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    with_user_login: UserId,
+    remote_site: SiteId,
+) -> None:
     snapshot_data_collector_class = (
         "CMESnapshotDataCollector"
         if edition is cmk_version.Edition.CME
@@ -609,7 +622,7 @@ def test_generate_pre_17_site_snapshot(
         ),
     ],
 )
-def test_update_contacts_dict(master, slave, result):
+def test_update_contacts_dict(master: dict, slave: dict, result: dict) -> None:
     assert config_sync._update_contacts_dict(master, slave) == result
 
 
@@ -617,7 +630,11 @@ def test_update_contacts_dict(master, slave, result):
 # the remote site HTTP calls
 @pytest.mark.usefixtures("request_context")
 def test_synchronize_site(
-    mocked_responses, monkeypatch, edition: cmk_version.Edition, tmp_path, mocker
+    mocked_responses: responses.RequestsMock,
+    monkeypatch: pytest.MonkeyPatch,
+    edition: cmk_version.Edition,
+    tmp_path: Path,
+    mocker: MockerFixture,
 ):
     if edition is cmk_version.Edition.CME:
         pytest.skip("Seems faked site environment is not 100% correct")
@@ -672,13 +689,14 @@ def test_synchronize_site(
     monkeypatch.setattr(utils, "is_pre_17_remote_site", lambda s: is_pre_17_site)
 
     activation_manager = _get_activation_manager(monkeypatch)
+    assert activation_manager._activation_id is not None
     snapshot_settings = _create_sync_snapshot(
         activation_manager,
         snapshot_data_collector_class,
         monkeypatch,
         tmp_path,
         is_pre_17_site=is_pre_17_site,
-        remote_site="unit_remote_1",
+        remote_site=SiteId("unit_remote_1"),
         edition=edition,
     )
 

@@ -48,10 +48,12 @@ class InternalInterfaceAttributes(TypedDict, total=False):
     show_mode: Optional[Literal["default_show_less", "default_show_more", "enforce_show_more"]]
 
 
-EDIT_PERMISSIONS = permissions.AllPerm(
+PERMISSIONS = permissions.Perm("wato.users")
+
+RW_PERMISSIONS = permissions.AllPerm(
     [
-        permissions.Perm("wato.users"),
         permissions.Perm("wato.edit"),
+        PERMISSIONS,
     ]
 )
 
@@ -63,7 +65,7 @@ EDIT_PERMISSIONS = permissions.AllPerm(
     path_params=[USERNAME],
     etag="output",
     response_schema=response_schemas.UserObject,
-    permissions_required=permissions.Perm("wato.users"),
+    permissions_required=PERMISSIONS,
 )
 def show_user(params):
     """Show an user"""
@@ -84,7 +86,7 @@ def show_user(params):
     ".../collection",
     method="get",
     response_schema=response_schemas.UserCollection,
-    permissions_required=permissions.Perm("wato.users"),
+    permissions_required=PERMISSIONS,
 )
 def list_users(params):
     """Show all users"""
@@ -108,7 +110,7 @@ def list_users(params):
     response_schema=response_schemas.UserObject,
     permissions_required=permissions.AllPerm(
         [
-            *EDIT_PERMISSIONS.perms,
+            *RW_PERMISSIONS.perms,
             permissions.Optional(permissions.Perm("wato.groups")),
         ]
     ),
@@ -142,7 +144,7 @@ def create_user(params):
     method="delete",
     path_params=[USERNAME],
     output_empty=True,
-    permissions_required=EDIT_PERMISSIONS,
+    permissions_required=RW_PERMISSIONS,
 )
 def delete_user(params):
     """Delete a user"""
@@ -166,7 +168,7 @@ def delete_user(params):
     etag="both",
     request_schema=request_schemas.UpdateUser,
     response_schema=response_schemas.UserObject,
-    permissions_required=EDIT_PERMISSIONS,
+    permissions_required=RW_PERMISSIONS,
 )
 def edit_user(params):
     """Edit an user"""

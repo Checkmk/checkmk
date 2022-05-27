@@ -11,7 +11,7 @@ the global settings.
 """
 
 import re
-from typing import Any, Dict, List, Optional, overload, Set, Tuple, Type
+from typing import Any, Dict, List, Mapping, Optional, overload, Set, Tuple, Type
 
 from six import ensure_str
 
@@ -370,29 +370,29 @@ def _man_page_catalog_topics():
             "agentless",
             False,
             _("Networking checks without agent"),
-            _("Plugins that directly check networking " "protocols like HTTP or IMAP"),
+            _("Plugins that directly check networking protocols like HTTP or IMAP"),
         ),
         (
             "generic",
             False,
             _("Generic check plugins"),
-            _("Plugins for local agent extensions or " "communication with the agent in general"),
+            _("Plugins for local agent extensions or communication with the agent in general"),
         ),
     ]
 
 
-def _get_check_catalog(only_path):
-    def path_prefix_matches(p, op):
-        if op and not p:
-            return False
-        if not op:
-            return True
-        return p[0] == op[0] and path_prefix_matches(p[1:], op[1:])
+def _get_check_catalog(only_path: tuple[str, ...]) -> Mapping[str, Any]:
+    # Note: this is impossible to type, since the type is recursive.
+    # The return type `Monster` would be something like
+    # Monster = Mapping[str, Union[Sequence[_ManPageSummary], Monster]]
 
-    tree: Dict[str, Any] = {}
+    def path_prefix_matches(p: tuple[str, ...]) -> bool:
+        return p[: len(only_path)] == only_path
+
+    tree: dict[str, Any] = {}
 
     for path, entries in man_pages.load_man_page_catalog().items():
-        if not path_prefix_matches(path, only_path):
+        if not path_prefix_matches(path):
             continue
         subtree = tree
         for component in path[:-1]:
@@ -410,7 +410,7 @@ def _get_check_catalog(only_path):
         try:
             tree = tree[p]
         except KeyError:
-            pass
+            break
 
     return tree
 

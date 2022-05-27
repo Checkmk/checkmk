@@ -126,53 +126,6 @@ def _get_paint_function_from_globals(paint_name: str) -> PaintFunction:
     return _PAINT_FUNCTIONS[_PAINT_FUNCTION_NAME_PREFIX + paint_name]
 
 
-def _paint_host_inventory_tree(row: Row, raw_path: SDRawPath) -> CellSpec:
-    try:
-        _validate_inventory_tree_uniqueness(row)
-    except MultipleInventoryTreesError:
-        return "", ""
-
-    struct_tree = row.get("host_inventory")
-    if struct_tree is None:
-        return "", ""
-
-    assert isinstance(struct_tree, StructuredDataNode)
-
-    parsed_path, attribute_keys = inventory.parse_tree_path(raw_path)
-
-    painter_options = PainterOptions.get_instance()
-    tree_renderer = NodeRenderer(
-        row["site"],
-        row["host_name"],
-        show_internal_tree_paths=painter_options.get("show_internal_tree_paths"),
-    )
-
-    td_class = ""
-    with output_funnel.plugged():
-        if attribute_keys is None:
-            if node := struct_tree.get_node(parsed_path):
-                node.show(tree_renderer)
-                td_class = "invtree"
-
-        elif attribute_keys == []:
-            if table := struct_tree.get_table(parsed_path):
-                table.show(tree_renderer)
-
-        elif attribute_keys:
-            attribute_key = attribute_keys[0]
-            if (
-                attributes := struct_tree.get_attributes(parsed_path)
-            ) and attribute_key in attributes.pairs:
-                tree_renderer.show_attribute(
-                    attributes.pairs[attribute_keys[0]],
-                    AttributeDisplayHint.make(parsed_path, attribute_key),
-                )
-
-        code = HTML(output_funnel.drain())
-
-    return td_class, code
-
-
 class MultipleInventoryTreesError(Exception):
     pass
 
@@ -204,14 +157,6 @@ def _get_sites_with_same_named_hosts_cache() -> Mapping[HostName, Sequence[SiteI
         for row in sites.live().query(query_str):
             cache.setdefault(HostName(row[1]), []).append(SiteId(row[0]))
     return cache
-
-
-def _cmp_inventory_node(
-    a: Dict[str, StructuredDataNode], b: Dict[str, StructuredDataNode], raw_path: SDRawPath
-) -> int:
-    val_a = inventory.get_inventory_attribute(a["host_inventory"], raw_path)
-    val_b = inventory.get_inventory_attribute(b["host_inventory"], raw_path)
-    return _decorate_sort_func(_cmp_inv_generic)(val_a, val_b)
 
 
 def _cmp_inv_generic(val_a: object, val_b: object) -> int:
@@ -1039,6 +984,61 @@ def _make_hint_from_raw(
         return TableDisplayHint.make_from_hint(raw_path, raw_hint)
 
     return AttributeDisplayHint.make_from_hint(raw_path, raw_hint)
+
+
+def _cmp_inventory_node(
+    a: Dict[str, StructuredDataNode], b: Dict[str, StructuredDataNode], raw_path: SDRawPath
+) -> int:
+    val_a = inventory.get_inventory_attribute(a["host_inventory"], raw_path)
+    val_b = inventory.get_inventory_attribute(b["host_inventory"], raw_path)
+    return _decorate_sort_func(_cmp_inv_generic)(val_a, val_b)
+
+
+def _paint_host_inventory_tree(row: Row, raw_path: SDRawPath) -> CellSpec:
+    try:
+        _validate_inventory_tree_uniqueness(row)
+    except MultipleInventoryTreesError:
+        return "", ""
+
+    struct_tree = row.get("host_inventory")
+    if struct_tree is None:
+        return "", ""
+
+    assert isinstance(struct_tree, StructuredDataNode)
+
+    parsed_path, attribute_keys = inventory.parse_tree_path(raw_path)
+
+    painter_options = PainterOptions.get_instance()
+    tree_renderer = NodeRenderer(
+        row["site"],
+        row["host_name"],
+        show_internal_tree_paths=painter_options.get("show_internal_tree_paths"),
+    )
+
+    td_class = ""
+    with output_funnel.plugged():
+        if attribute_keys is None:
+            if node := struct_tree.get_node(parsed_path):
+                node.show(tree_renderer)
+                td_class = "invtree"
+
+        elif attribute_keys == []:
+            if table := struct_tree.get_table(parsed_path):
+                table.show(tree_renderer)
+
+        elif attribute_keys:
+            attribute_key = attribute_keys[0]
+            if (
+                attributes := struct_tree.get_attributes(parsed_path)
+            ) and attribute_key in attributes.pairs:
+                tree_renderer.show_attribute(
+                    attributes.pairs[attribute_keys[0]],
+                    AttributeDisplayHint.make(parsed_path, attribute_key),
+                )
+
+        code = HTML(output_funnel.drain())
+
+    return td_class, code
 
 
 def _inv_filter_info():

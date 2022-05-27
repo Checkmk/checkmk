@@ -21,7 +21,7 @@ TMP_DIR := tmp_devpi_pkg
 requirements.txt: Pipfile.lock
 	@( \
 	    echo "Creating $@" ; \
-	    USE_EXTERNAL_PIPENV_MIRROR=true $(PIPENV) lock --dev -r > $@; \
+	    USE_EXTERNAL_PIPENV_MIRROR=true $(PIPENV) requirements --dev --hash> $@; \
             sed -i "1s|-i.*|-i https://pypi.python.org/simple/|" $@ \
 	)
 
@@ -29,7 +29,7 @@ requirements.txt: Pipfile.lock
 runtime-requirements.txt: Pipfile.lock
 	@( \
 	    echo "Creating $@" ; \
-	    USE_EXTERNAL_PIPENV_MIRROR=true $(PIPENV) lock -r > $@; \
+	    USE_EXTERNAL_PIPENV_MIRROR=true $(PIPENV) requirements --hash > $@; \
             sed -i "/^-i.*\|^-e.*/d" $@ \
 	)
 
@@ -57,11 +57,11 @@ pip-mirror-dl-pkgs:
 
 # 2. Downlaod all packages from mirror created in pip-mirror-dl-pkgs to local machime
 # Cannot be easily dockerized in Make, since passing the key is not trivial
-pip-mirror-scp-pkgs-internal: 
+pip-mirror-scp-pkgs-internal:
 	mkdir -p ${TMP_DIR} ; \
 	scp -o StrictHostKeyChecking=no -i $(DEVPI_KEY) -r devpi@${DEVPI_SERVER}:/var/devpi/+files/$(BRANCH_VERSION)/$(TMP_MIRROR)/+f/ ${TMP_DIR}
 
-# 3-i Populate or update the production mirror with the previously downloaded packages 
+# 3-i Populate or update the production mirror with the previously downloaded packages
 pip-mirror-ul-pkgs-internal:
 	$(PIPENV) run devpi use https://$(DEVPI_SERVER); \
         $(PIPENV) run devpi login $(DEVPI_USER) --password $(DEVPI_PWD); \

@@ -49,7 +49,7 @@ $(PYTHON3_MODULES_BUILD): $(PYTHON_CACHE_PKG_PROCESS) $(OPENSSL_CACHE_PKG_PROCES
 	    `: rrdtool module is built with rrdtool omd package` \
 	    `: protobuf module is built with protobuf omd package` \
 	    `: fixup git local dependencies` \
-		pipenv lock -r | grep -Ev '(protobuf|rrdtool)' | sed 's|-e \.\/\(.*\)|$(REPO_PATH)\/\1|g' > requirements-dist.txt ; \
+		pipenv requirements --hash | grep -Ev '(protobuf|rrdtool)' | sed 's|-e \.\/\(.*\)|$(REPO_PATH)\/\1|g' > requirements-dist.txt ; \
 # rpath: Create some dummy rpath which has enough space for later replacement
 # by the final rpath
 	set -e ; cd $(PYTHON3_MODULES_BUILD_DIR) ; \

@@ -48,16 +48,7 @@ export function start(siteid, est, progress_text) {
     });
 
     profile_replication_progress[siteid] = 20; // 10 of 10 10ths
-    setTimeout(
-        "cmk.profile_replication.step('" +
-            siteid +
-            "', " +
-            est +
-            ", '" +
-            progress_text +
-            "');",
-        est / 20
-    );
+    setTimeout(step, est / 20, siteid, est, progress_text);
 }
 
 function set_status(siteid, image, text) {
@@ -78,16 +69,7 @@ export function step(siteid, est, progress_text) {
         else if (perc >= 25) img = "repl_25";
         else img = "repl_pending";
         set_status(siteid, img, progress_text);
-        setTimeout(
-            "cmk.profile_replication.step('" +
-                siteid +
-                "'," +
-                est +
-                ", '" +
-                progress_text +
-                "');",
-            est / 20
-        );
+        setTimeout(step, est / 20, siteid, est, progress_text);
     }
 }
 

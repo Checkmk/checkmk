@@ -35,19 +35,28 @@ def create_protocol_file(directory: Path) -> None:
         f.write("Upgraded:\n   time: '2019-05-20 18:21:53.164")
 
 
+def create_legacy_pull_file(directory: Path) -> None:
+    # allow legacy communication
+    allow_legacy_pull_file = directory / "allow-legacy-pull"
+    with open(allow_legacy_pull_file, "w") as f:
+        f.write("Created by integration tests")
+
+
 def get_data_from_agent(host: str, port: int) -> List[str]:
     # overloaded node may delay start of agent process
     # we have to retry connection
-    for _ in range(0, 5):
+    for _ in range(5):
         try:
-            with telnetlib.Telnet(host, port) as telnet:  # nosec
+            with telnetlib.Telnet(host, port, timeout=10) as telnet:  # nosec
                 result = telnet.read_all().decode(encoding="cp1252")
-                return result.splitlines()
+                if result:
+                    return result.splitlines()
+                time.sleep(2)
         except Exception as _:
             # print('No connect, waiting for agent')
-            time.sleep(1)
+            time.sleep(2)
 
-    raise ConnectionRefusedError("can't connect")
+    return []
 
 
 def get_path_from_env(env: str) -> Path:

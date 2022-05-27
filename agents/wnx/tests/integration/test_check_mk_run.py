@@ -7,8 +7,6 @@
 from typing import List
 
 import pytest  # type: ignore
-from _pytest.fixtures import SubRequest
-from conftest import YieldFixture
 from utils import YamlDict
 
 
@@ -16,18 +14,24 @@ from utils import YamlDict
     name="work_config",
     params=[
         {"only_from": []},
-        {"only_from": ["127.0.0.1", "10.1.2.3"]},
+        {"only_from": ["127.0.0.1", "::1", "10.1.2.3"]},
     ],
-    ids=["only_from=None", "only_from=127.0.0.1_10.1.2.3"],
+    ids=[
+        "only_from=None",
+        "only_from=127.0.0.1_10.1.2.3",
+    ],
 )
-def work_config_fixture(request: SubRequest, default_yaml_config: YamlDict) -> YamlDict:
+def work_config_fixture(request, default_yaml_config: YamlDict) -> YamlDict:
     if request.param["only_from"]:
         default_yaml_config["global"]["only_from"] = request.param["only_from"]
     return default_yaml_config
 
 
 def test_check_mk_controller(
-    obtain_output: YieldFixture[List[str]],
+    obtain_output: List[str],
     work_config: YamlDict,
 ):
-    assert True
+    sections = [line for line in obtain_output if line[:3] == "<<<"]
+    assert sections[0] == "<<<check_mk>>>"
+    assert sections[-1] == "<<<systemtime>>>"
+    assert len(sections) >= 17

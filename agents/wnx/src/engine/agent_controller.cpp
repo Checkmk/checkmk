@@ -264,7 +264,14 @@ std::optional<uint32_t> StartAgentController() {
 
     wtools::AppRunner ar;
     if (GetModus() == Modus::integration) {
-        tools::win::SetEnv(L"DEBUG_HOME_DIR"s, cfg::GetUserDir());
+        auto env_value = tools::win::GetEnv(L"DEBUG_HOME_DIR"s);
+        if (env_value.empty()) {
+            XLOG::d.i("Set DEBUG_HOME_DIR to '{}'",
+                      wtools::ToUtf8(cfg::GetUserDir()));
+            tools::win::SetEnv(L"DEBUG_HOME_DIR"s, cfg::GetUserDir());
+        } else {
+            XLOG::d.i("Use DEBUG_HOME_DIR as '{}'", wtools::ToUtf8(env_value));
+        }
     }
     const auto cmdline = BuildCommandLine(controller_name);
     auto proc_id = ar.goExecAsDetached(cmdline);

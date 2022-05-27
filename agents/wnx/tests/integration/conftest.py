@@ -8,12 +8,13 @@ import os
 import shutil
 import subprocess
 from pathlib import Path
-from typing import Final, Generator, List
+from typing import Final, List
 
 import pytest
 import yaml
 from utils import (
     check_os,
+    create_legacy_pull_file,
     create_protocol_file,
     get_data_from_agent,
     get_path_from_env,
@@ -81,13 +82,14 @@ def setup_all(
     root_dir: Path,
 ) -> YieldFixture[None]:
     shutil.rmtree(main_dir, ignore_errors=True)
-    os.makedirs(root_dir)
-    os.makedirs(data_dir)
-    os.makedirs(data_dir / "bin")
-    os.makedirs(data_dir / "log")
+    os.makedirs(root_dir, exist_ok=True)
+    os.makedirs(data_dir, exist_ok=True)
+    os.makedirs(data_dir / "bin", exist_ok=True)
+    os.makedirs(data_dir / "log", exist_ok=True)
     for f in [_FACTORY_YAML_CONFIG, _AGENT_EXE_NAME, _CTL_EXE_NAME]:
         shutil.copy(artifacts_dir / f, root_dir)
     create_protocol_file(data_dir)
+    create_legacy_pull_file(data_dir)
     yield
     shutil.rmtree(main_dir, ignore_errors=True)
 
@@ -105,14 +107,16 @@ def write_config_fixture(work_config: YamlDict, data_dir: Path) -> YieldFixture[
 @pytest.fixture(name="obtain_output")
 def obtain_output_fixture(
     main_exe: Path,
-    write_config: Generator[None, None, None],
+    write_config: YieldFixture[None],
+    data_dir: Path,
 ) -> YieldFixture[List[str]]:
     with subprocess.Popen(
         [main_exe, "exec", "-integration"],
         stdout=subprocess.PIPE,
+        stdin=subprocess.PIPE,
         stderr=subprocess.PIPE,
     ) as p:
         yield get_data_from_agent(_HOST, _INTEGRATION_PORT)
-        p.terminate()
-        # hammer kill of the process, terminate may be too long
-        subprocess.call(f'taskkill /F /FI "pid eq {p.pid}" /FI "IMAGENAME eq {_AGENT_EXE_NAME}"')
+        # we kill both process as a tree, we do not need it more
+        # any graceful killing may require a lot of time and gives nothing to testing
+        subprocess.call(f'taskkill /F /T /FI "pid eq {p.pid}" /FI "IMAGENAME eq {_AGENT_EXE_NAME}"')

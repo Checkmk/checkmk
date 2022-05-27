@@ -10,7 +10,10 @@ item:
 description:
  This is an active check that sends a DNS query to a DNS nameserver.
 
- You can give the DNS name to query for.
+ You can give the DNS name to query for. This can serve different purposes. For
+ one, you can monitor whether a DNS server is operational. Another purpose is
+ to check whether specific DNS queries are resolved in an expected manner. The
+ DNS nameserver needs to be specified accordingly.
 
  It can compare the IP it gets back against a given IP and return {CRIT} if
  they do not match. It can check the DNS server to be authoritativ for the
@@ -18,4 +21,3 @@ description:
  and {CRIT}.
 
  This check can be configured by Wato.
-

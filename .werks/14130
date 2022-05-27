@@ -1,0 +1,26 @@
+Title: Clarify "Check DNS service"
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1653311365
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p26
+
+Previously, the parameter <tt>DNS Server</tt> of <tt>Check DNS service</tt> rule was optional.
+Moreover, the options <tt>this host</tt> and <tt>default DNS Server</tt> would both do the same:
+They would use the default DNS server(s) specified inside of /etc/resolve.conf.  With this werk, the
+option <tt>this host</tt> now (again) will use the address of the host on which the service is
+generated. Secondly, the rule has been reworked to be more concise.
+
+Intervention is necessary if
+
+<ul>
+<li>you have explicitely set the DNS Server to <tt>this host</tt> and</li>
+<li>want your site to operate in the same fashion as before.</li>
+</ul>
+
+In this case, you can set the option <tt>DNS Server</tt> to <tt>Use the default DNS server(s)
+specified in /etc/resolv.conf</tt>.

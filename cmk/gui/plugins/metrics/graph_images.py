@@ -261,7 +261,7 @@ def graph_spec_from_request(api_request: dict[str, Any]) -> dict[str, Any]:
 
     for c in curves:
         start_time, end_time, step = c["rrddata"].twindow
-        api_curve = c.copy()
+        api_curve: dict[str, Any] = dict(c)
         api_curve["rrddata"] = c["rrddata"].values
         api_curves.append(api_curve)
 

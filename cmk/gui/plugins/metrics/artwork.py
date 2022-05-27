@@ -375,15 +375,15 @@ def _compute_scalars(
         if pin_time is not None:
             pin = _get_value_at_timestamp(pin_time, rrddata)
 
-        rrddata = timeseries.clean_time_series_point(rrddata)
-        if rrddata:
+        clean_rrddata = timeseries.clean_time_series_point(rrddata)
+        if clean_rrddata:
             scalars = {
                 "pin": pin,
-                "first": rrddata[0],
-                "last": rrddata[-1],
-                "max": max(rrddata),
-                "min": min(rrddata),
-                "average": sum(rrddata) / float(len(rrddata)),
+                "first": clean_rrddata[0],
+                "last": clean_rrddata[-1],
+                "max": max(clean_rrddata),
+                "min": min(clean_rrddata),
+                "average": sum(clean_rrddata) / float(len(clean_rrddata)),
             }
         else:
             scalars = {x: None for x in ["pin", "first", "last", "max", "min", "average"]}

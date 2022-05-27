@@ -38,7 +38,7 @@ import cmk.utils.regex
 import cmk.utils.version as cmk_version
 from cmk.utils.memoize import MemoizeCache
 from cmk.utils.plugin_registry import Registry
-from cmk.utils.prediction import livestatus_lql, TimeSeries
+from cmk.utils.prediction import livestatus_lql, TimeSeries, TimeSeriesValue
 from cmk.utils.type_defs import HostName
 from cmk.utils.type_defs import MetricName as _MetricName
 from cmk.utils.type_defs import ServiceName
@@ -57,6 +57,7 @@ from cmk.gui.type_defs import (
     Choices,
     GraphConsoldiationFunction,
     GraphPresentation,
+    LineType,
     MetricDefinition,
     MetricExpression,
     Perfdata,
@@ -81,7 +82,21 @@ StackElement = Union[Atom, TransformedAtom]
 ScalarDefinition = Union[str, Tuple[str, Union[str, LazyString]]]
 
 GraphArtwork = dict[str, Any]
-Curve = dict[str, Any]
+
+
+class _CurveMandatory(TypedDict):
+    line_type: LineType
+    color: str
+    title: str
+    rrddata: TimeSeries
+
+
+class Curve(_CurveMandatory, total=False):
+    dont_paint: bool
+    # Added during runtime by _compute_scalars
+    scalars: dict[str, tuple[TimeSeriesValue, str]]
+
+
 Scalar = tuple[str, str, bool]
 GraphRenderOptions = dict[str, Any]
 GraphDataRange = dict[str, Any]

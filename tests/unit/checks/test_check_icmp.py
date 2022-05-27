@@ -33,7 +33,7 @@ pytestmark = pytest.mark.checks
         ),
         pytest.param(
             {"address": ("indexed_ipv4address", 1)},
-            "-w 200.00,80% -c 500.00,100% $_HOSTADDRESS_4_1$",
+            "-w 200.00,80% -c 500.00,100% $_HOSTADDRESSES_4_1$",
             id="indexed ipv4 address",
         ),
         pytest.param(

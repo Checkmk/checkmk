@@ -14,7 +14,8 @@ withFolderProperties{
             DISTRO_LIST_DEFAULT = env.DISTRO_LIST
             EDITION_DEFAULT = 'enterprise'
             START_HOUR = '0'
-            RUN_TESTS = true
+            RUN_INTEGRATION_TESTS = true
+            RUN_IMAGE_TESTS = true
             DEPLOY_TO_WEBSITE = !FOLDER_ID.startsWith('Testing') // Do not deploy from Testing folder.
             BUILD_IMAGE = true
             BUILD_AMI_IMAGE = false
@@ -23,7 +24,8 @@ withFolderProperties{
             DISTRO_LIST_DEFAULT = env.DISTRO_LIST_CRE
             EDITION_DEFAULT = 'raw'
             START_HOUR = '2'
-            RUN_TESTS = true
+            RUN_INTEGRATION_TESTS = true
+            RUN_IMAGE_TESTS = true
             DEPLOY_TO_WEBSITE = false
             BUILD_IMAGE = true
             BUILD_AMI_IMAGE = false
@@ -32,7 +34,9 @@ withFolderProperties{
             DISTRO_LIST_DEFAULT = env.DISTRO_LIST_CFE
             EDITION_DEFAULT = 'free'
             START_HOUR = '4'
-            RUN_TESTS = false // CFE is basically a CEE, so we do not need to test it
+            // CFE is basically a CEE, so we do not need to test it
+            RUN_INTEGRATION_TESTS = false
+            RUN_IMAGE_TESTS = false
             DEPLOY_TO_WEBSITE = false
             BUILD_IMAGE = false
             BUILD_AMI_IMAGE = true
@@ -43,7 +47,8 @@ withFolderProperties{
             START_HOUR = '4'
             // Enable this later when we have CPE specific integration tests.
             // Until then it's similar to the CEE.
-            RUN_TESTS = false
+            RUN_INTEGRATION_TESTS = false
+            RUN_IMAGE_TESTS = true
             // Do not publish anything, no docker and no AMI images. We only
             // use the packages for our own tests - for now.
             DEPLOY_TO_WEBSITE = false
@@ -98,8 +103,11 @@ node: {
             )
         }
     }
-    if (RUN_TESTS) {
-        parallel([
+
+    def TEST_STAGES = []
+
+    if (RUN_IMAGE_TESTS) {
+        TEST_STAGES += [
             'Integration Test for Docker Container': {
                 stage('Integration Test for Docker Container') {
                     build(job: "${FOLDER_ID}/nightly-${JOB_EDITION}/test-docker-integration",
@@ -108,8 +116,12 @@ node: {
                         ]
                     )
                 }
-            },
+            }
+        ]
+    }
 
+    if (RUN_INTEGRATION_TESTS) {
+        TEST_STAGES += [
             'Composition Test for Packages': {
                 stage('Composition Test for Packages') {
                     build(job: "${FOLDER_ID}/nightly-${JOB_EDITION}/test-composition",
@@ -119,9 +131,13 @@ node: {
                         ]
                     )
                 }
-            }
-        ])
+            },
+        ]
+    }
 
+    parallel(TEST_STAGES)
+
+    if (RUN_INTEGRATION_TESTS) {
         stage('Integration Test for Packages') {
             build(job: "${FOLDER_ID}/nightly-${JOB_EDITION}/test-integration",
                 parameters: [

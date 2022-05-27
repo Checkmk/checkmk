@@ -19,6 +19,7 @@ class CMKVersion:
 
     CEE = "cee"
     CRE = "cre"
+    CPE = "cpe"
     CME = "cme"
 
     def __init__(self, version_spec, edition, branch):
@@ -30,12 +31,12 @@ class CMKVersion:
 
     def _set_edition(self, edition):
         # Allow short (cre) and long (raw) notation as input
-        if edition not in [CMKVersion.CRE, CMKVersion.CEE, CMKVersion.CME]:
+        if edition not in [CMKVersion.CRE, CMKVersion.CEE, CMKVersion.CME, CMKVersion.CPE]:
             edition_short = self._get_short_edition(edition)
         else:
             edition_short = edition
 
-        if edition_short not in [CMKVersion.CRE, CMKVersion.CEE, CMKVersion.CME]:
+        if edition_short not in [CMKVersion.CRE, CMKVersion.CEE, CMKVersion.CME, CMKVersion.CPE]:
             raise NotImplementedError("Unknown short edition: %s" % edition_short)
 
         self.edition_short = edition_short
@@ -47,6 +48,8 @@ class CMKVersion:
             return "cee"
         if edition == "managed":
             return "cme"
+        if edition == "plus":
+            return "cpe"
         raise NotImplementedError("Unknown edition: %s" % edition)
 
     def get_default_version(self):
@@ -82,6 +85,8 @@ class CMKVersion:
             return "enterprise"
         if self.edition_short == CMKVersion.CME:
             return "managed"
+        if self.edition_short == CMKVersion.CPE:
+            return "plus"
         raise NotImplementedError()
 
     def is_managed_edition(self):

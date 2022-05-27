@@ -55,9 +55,9 @@ PYTHON_VERSIONS := 2.7 3.3 3.4 3.5 3.6 3.7 3.8 3.9
 
 .PHONY: clean format-shell help prepare-protobuf-files prepare-playwright  bandit.ini \
 	$(foreach VERS,$(PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-docker) \
-	test-bandit test-composition test-composition-docker test-composition-docker-debug \
-	test-docker test-docker-docker test-format-python test-format-python-docker test-format-shell \
-	test-format-js test-format-js-docker test-format-css test-format-css-docker \
+	test-bandit test-code-quality test-code-quality-docker test-composition test-composition-docker \
+	test-composition-docker-debug test-docker test-docker-docker test-format-python test-format-python-docker \
+	test-format-shell test-format-js test-format-js-docker test-format-css test-format-css-docker \
 	test-gui-crawl test-gui-crawl-docker test-xss-crawl test-xss-crawl-docker test-gui-e2e test-gui-e2e-docker \
 	test-integration test-integration-docker test-integration-docker-debug \
 	test-mypy test-mypy-raw itest-mypy-docker test-packaging test-pipenv-deps test-pylint test-pylint-docker \
@@ -77,6 +77,8 @@ help:
 	    echo "test-agent-plugin-unit-py$${i}-docker - Run Agent plugin tests in container with Python $${i}"; \
 	done
 	@echo "test-bandit                         - Run bandit (security) tests"
+	@echo "test-code-quality                   - Run code quality tests locally"
+	@echo "test-code-quality-docker            - Run code quality tests in container"
 	@echo "test-composition                    - Run composition tests locally"
 	@echo "test-composition-docker             - Run composition tests in container"
 	@echo "test-composition-docker-debug       - Run test container for manual debugging"
@@ -272,6 +274,14 @@ test-gui-e2e-docker:
 
 test-integration-docker:
 	$(PIPENV) run scripts/run-dockerized.py "test-integration"
+
+test-code-quality:
+	if test -z "$$PYTHON_FILES"; then $(FIND_PYTHON_FILES); else echo "$$PYTHON_FILES"; fi | \
+	xargs -n 1500 $(PYTEST) -T code_quality --log-cli-level=INFO $(realpath code_quality) --python_files;\
+	exit $${PIPESTATUS[1]}
+
+test-code-quality-docker:
+	$(PIPENV) run scripts/run-dockerized.py "test-code-quality"
 
 test-mypy: prepare-protobuf-files
 	PYTHON_FILES=$$($(FIND_PYTHON_FILES) | \

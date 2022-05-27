@@ -67,6 +67,8 @@ from cmk.utils.password_store import replace_passwords
 
 from cmk.special_agents.utils import vcrtrace
 
+# pylint: disable=inconsistent-return-statements
+
 # Hackish early conditional import for legacy mode
 # TODO: Check whether or not we can drop this
 
@@ -335,7 +337,6 @@ class NetAppConnection:
         response = self.get_response(invoke_list)
         if response:
             return response.get_results()
-        return None
 
     def set_vfiler(self, name):
         self.vfiler = name
@@ -353,7 +354,6 @@ class NetAppNode:
             return self.node.tag.split("}")[-1]
         if what == "content":
             return self.node.text or ""
-        return None
 
     def __getattr__(self, what):
         return object.__getattribute__(self, what)
@@ -502,7 +502,7 @@ def create_dict(instances, custom_key=None, is_counter=True):
 
 
 # Format config as one liner. Might add extra info identified by config_key
-def format_config(  # pylint: disable=too-many-branches
+def format_config(
     instances,
     prefix,
     config_key,
@@ -513,7 +513,7 @@ def format_config(  # pylint: disable=too-many-branches
     extra_info_report="all",
     delimeter="\t",
     skip_missing_config_key=False,
-):
+):  # pylint: disable=too-many-branches
 
     config_scale = {} if config_scale is None else config_scale
     config_rename = {} if config_rename is None else config_rename
@@ -654,7 +654,7 @@ def query_nodes(args, server, nodes, what, node_attribute="node-name"):
             response = server.get_response([what, [[node_attribute, node]]])
 
             if response.results_status() != "passed":
-                return None
+                return
 
             results["%s.%s" % (what, node)] = response.get_results()
 
@@ -673,7 +673,7 @@ def query(args, server, what, return_toplevel_node=False):  # pylint: disable=to
 
         if results.results_status() == "failed":
             section_errors.append("In class %s: %s" % (what, results.results_reason()))
-            return None
+            return
     else:
         max_records = "2000"
         if isinstance(what, str):
@@ -685,7 +685,7 @@ def query(args, server, what, return_toplevel_node=False):  # pylint: disable=to
             response = server.get_response(what)
 
         if response.results_status() != "passed":
-            return None
+            return
 
         results = response.get_results()
         tag_string = results.child_get_string("next-tag")
@@ -695,7 +695,7 @@ def query(args, server, what, return_toplevel_node=False):  # pylint: disable=to
                 [what, [["max-records", max_records], ["tag", tag_string]]]
             )
             if tag_response.results_status() != "passed":
-                return None
+                return
             if tag_response.get_results().child_get_string("num-records") == "0":
                 break
 
@@ -709,7 +709,6 @@ def query(args, server, what, return_toplevel_node=False):  # pylint: disable=to
     data = results.children_get()
     if data:
         return data[0]
-    return None
 
 
 def query_counters(args, server, netapp_mode, what):  # pylint: disable=too-many-branches
@@ -733,7 +732,7 @@ def query_counters(args, server, netapp_mode, what):  # pylint: disable=too-many
                     instance_uuids.append(instance_data.child_get_string("uuid"))
                 if not instance_uuids:
                     # Nothing to query..
-                    return None
+                    return
 
                 instances_to_query = NaElement(
                     "instance-uuids"
@@ -742,7 +741,7 @@ def query_counters(args, server, netapp_mode, what):  # pylint: disable=too-many
                     instances_to_query.child_add_string("instance-uuid", uuid)
                 counter_query.child_add(instances_to_query)
             else:
-                return None
+                return
 
         # Query counters
         response = server.invoke_elem(counter_query)
@@ -771,7 +770,7 @@ def query_counters(args, server, netapp_mode, what):  # pylint: disable=too-many
                     ]
                 )
                 if tag_response.results_status() != "passed":
-                    return None
+                    return
                 if tag_response.get_results().child_get_string("num-records") == "0":
                     break
 
@@ -781,17 +780,17 @@ def query_counters(args, server, netapp_mode, what):  # pylint: disable=too-many
                 results.extend_attributes_list(attr_children)
 
             if response.results_status() != "passed":
-                return None
+                return
 
             instance_list = results.child_get("attributes-list")
             if not instance_list:
-                return None
+                return
 
             for instance_data in instance_list.children_get():
                 instance_uuids.append(instance_data.child_get_string("uuid"))
 
             if not instance_uuids:
-                return None  # Nothing to query..
+                return  # Nothing to query..
 
             # I was unable to find an iterator API to query clustermode perfcounters...
             # Maybe the perf-object-get-instances is already able to provide huge amounts
@@ -812,7 +811,7 @@ def query_counters(args, server, netapp_mode, what):  # pylint: disable=too-many
                 response = server.get_response(perfobject_node)
 
                 if response.results_status() != "passed":
-                    return None
+                    return
 
                 responses.append(response)
                 instance_uuids = instance_uuids[max_instances_per_request:]
@@ -830,7 +829,7 @@ def query_counters(args, server, netapp_mode, what):  # pylint: disable=too-many
         tag = results.child_get_string("tag")
 
         if not records or records == "0":
-            return None
+            return
 
         responses = []
         while records != "0":
@@ -853,7 +852,6 @@ def query_counters(args, server, netapp_mode, what):  # pylint: disable=too-many
             if the_instances:
                 initial_results.extend_instances_list(the_instances)
         return initial_results.child_get("instances")
-    return None
 
 
 def fetch_netapp_mode(args, server):

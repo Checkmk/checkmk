@@ -90,6 +90,12 @@ class Optional(BasePerm):
         return self.perm.iter_perms()
 
 
+class Ignore(Optional):
+    """A permission which shall not be documented, but may occur.
+
+    Structurally similar to `Optional` but with a different name."""
+
+
 class MultiPerm(BasePerm, abc.ABC):
     def __init__(self, perms: List[BasePerm]):
         self.perms = perms

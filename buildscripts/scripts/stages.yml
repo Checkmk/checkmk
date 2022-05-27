@@ -143,6 +143,16 @@ STAGES:
       TEXT_ON_SKIP: 'No Python files changed'
       RESULT_CHECK_FILE_PATTERN: "results/python3-unit-junit.xml"
 
+    - NAME: 'Python Code Quality Test'
+      ONLY_WHEN_NOT_EMPTY: CHANGED_PYTHON_FILES
+      DIR: 'tests'
+      ENV_VARS:
+        PYTEST_ADDOPTS: "--junitxml=${RESULTS}/python3-code-quality-junit.xml --color=no"
+        PYTHON_FILES: "${CHANGED_PYTHON_FILES}"
+      COMMAND: "make test-code-quality-docker"
+      TEXT_ON_SKIP: 'No Python files changed'
+      RESULT_CHECK_FILE_PATTERN: "results/python3-code-quality-junit.xml"
+
     - NAME: 'Python Linting'
       ONLY_WHEN_NOT_EMPTY: CHANGED_PYLINT_RC_FILE,CHANGED_PYTHON_FILES,CHANGED_PIPFILE,CHANGED_PYTEST_INI_FILE,CHANGED_TESTS_MAKEFILE,CHANGED_RUN_PIPENV_SCRIPT
       DIR: 'tests'

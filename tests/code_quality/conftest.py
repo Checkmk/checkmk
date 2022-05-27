@@ -9,12 +9,12 @@ import pytest
 
 
 def pytest_addoption(parser):
-    parser.addoption("--python_files", nargs="*", default=[], help="python files to check")
+    parser.addoption("--python-files", nargs="*", default=[], help="python files to check")
 
 
 @pytest.fixture
 def python_files(request) -> Sequence[str]:
-    files = request.config.getoption("--python_files")
+    files = request.config.getoption("--python-files")
     if files is None:
         pytest.skip()
     return files

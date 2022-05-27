@@ -277,11 +277,12 @@ test-integration-docker:
 
 test-code-quality:
 	if test -z "$$PYTHON_FILES"; then $(FIND_PYTHON_FILES); else echo "$$PYTHON_FILES"; fi | \
-	xargs -n 1500 $(PYTEST) -T code_quality --log-cli-level=INFO $(realpath code_quality) --python_files;\
+	xargs -n 1500 $(PYTEST) -T code_quality --log-cli-level=INFO $(realpath code_quality/test_license_headers.py) \
+	--python-files;\
 	exit $${PIPESTATUS[1]}
 
 test-code-quality-docker:
-	$(PIPENV) run scripts/run-dockerized.py "test-code-quality"
+	../scripts/run-in-docker.sh make --quiet test-code-quality
 
 test-mypy: prepare-protobuf-files
 	PYTHON_FILES=$$($(FIND_PYTHON_FILES) | \

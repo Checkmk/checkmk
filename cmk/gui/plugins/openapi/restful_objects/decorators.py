@@ -1293,6 +1293,19 @@ def _permission_descriptions(
         'This endpoint requires the following permissions: \n * `wato.edit_folders`: Allowed to cook the books.\n'
 
         >>> _permission_descriptions(
+        ...     permissions.AllPerm([permissions.Perm("wato.edit_folders")]),
+        ...     {'wato.edit_folders': 'Allowed to cook the books.'},
+        ... )
+        'This endpoint requires the following permissions: \n * `wato.edit_folders`: Allowed to cook the books.\n'
+
+        >>> _permission_descriptions(
+        ...     permissions.AllPerm([permissions.Perm("wato.edit_folders"),
+        ...                          permissions.Ignore(permissions.Perm("wato.edit"))]),
+        ...     {'wato.edit_folders': 'Allowed to cook the books.'},
+        ... )
+        'This endpoint requires the following permissions: \n * `wato.edit_folders`: Allowed to cook the books.\n'
+
+        >>> _permission_descriptions(
         ...     permissions.AnyPerm([permissions.Perm("wato.edit_folders"), permissions.Perm("wato.edit_folders")]),
         ...     {'wato.edit_folders': 'Allowed to cook the books.'},
         ... )
@@ -1325,6 +1338,9 @@ def _permission_descriptions(
     description_map: Dict[str, str] = descriptions if descriptions is not None else {}
     _description: List[str] = ["This endpoint requires the following permissions: "]
 
+    def _count_perms(_perms):
+        return len([p for p in _perms if not isinstance(p, permissions.Ignore)])
+
     def _add_desc(permission: permissions.BasePerm, indent: int, desc_list: List[str]) -> None:
         # We indent by two spaces, as is required by markdown.
         prefix = "  " * indent
@@ -1333,16 +1349,27 @@ def _permission_descriptions(
             desc = description_map.get(perm_name) or permission_registry[perm_name].description
             _description.append(f"{prefix} * `{perm_name}`: {desc}")
         elif isinstance(permission, permissions.AllPerm):
-            desc_list.append(f"{prefix} * All of:")
-            for perm in permission.perms:
-                _add_desc(perm, indent + 1, desc_list)
+            # If AllOf only contains one permission, we don't need to show the AllOf
+            if _count_perms(permission.perms) == 1:
+                _add_desc(permission.perms[0], indent, desc_list)
+            else:
+                desc_list.append(f"{prefix} * All of:")
+                for perm in permission.perms:
+                    _add_desc(perm, indent + 1, desc_list)
         elif isinstance(permission, permissions.AnyPerm):
-            desc_list.append(f"{prefix} * Any of:")
-            for perm in permission.perms:
-                _add_desc(perm, indent + 1, desc_list)
+            # If AnyOf only contains one permission, we don't need to show the AnyOf
+            if _count_perms(permission.perms) == 1:
+                _add_desc(permission.perms[0], indent, desc_list)
+            else:
+                desc_list.append(f"{prefix} * Any of:")
+                for perm in permission.perms:
+                    _add_desc(perm, indent + 1, desc_list)
         elif isinstance(permission, permissions.Optional):
             desc_list.append(f"{prefix} * Optionally:")
             _add_desc(permission.perm, indent + 1, desc_list)
+        elif isinstance(permission, permissions.Ignore):
+            # Don't render
+            pass
         else:
             raise NotImplementedError(f"Printing of {permission!r} not yet implemented.")
 

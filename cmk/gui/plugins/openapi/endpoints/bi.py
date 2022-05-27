@@ -75,7 +75,7 @@ class BIRuleEndpointSchema(BIRuleSchema):
     pack_id = ReqString(
         dump_default="",
         example="pack1",
-        description="TODO: Hier muß Andreas noch etwas reinschreiben!",
+        description="The identifier of the BI pack.",
     )
 
 
@@ -228,7 +228,7 @@ class BIAggregationEndpointSchema(BIAggregationSchema):
     pack_id = ReqString(
         dump_default="",
         example="pack1",
-        description="TODO: Hier muß Andreas noch etwas reinschreiben!",
+        description="The identifier of the BI pack.",
     )
 
 
@@ -515,18 +515,18 @@ class BIPackEndpointSchema(Schema):
     title = ReqString(
         dump_default="",
         example="BI Title",
-        description="TODO: Hier muß Andreas noch etwas reinschreiben!",
+        description="The title of the BI pack.",
     )
     contact_groups = ReqList(
         fields.String(),
         dump_default=[],
         example=["contact", "contactgroup_b"],
-        description="TODO: Hier muß Andreas noch etwas reinschreiben!",
+        description="A list of contact group identifiers.",
     )
     public = ReqBoolean(
         dump_default=False,
         example="false",
-        description="TODO: Hier muß Andreas noch etwas reinschreiben!",
+        description="Should the BI pack be public or not.",
     )
 
 

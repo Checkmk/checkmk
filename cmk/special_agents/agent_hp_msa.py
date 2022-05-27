@@ -17,6 +17,8 @@ import requests
 import urllib3
 from requests.structures import CaseInsensitiveDict
 
+from cmk.utils.password_store import replace_passwords
+
 LOGGER = logging.getLogger(__name__)
 
 
@@ -184,6 +186,7 @@ class HPMSAConnection:
 
 
 def main(argv=None):
+    replace_passwords()
     args = parse_arguments(argv or sys.argv[1:])
     opt_timeout = 10
 

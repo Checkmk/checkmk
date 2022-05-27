@@ -67,7 +67,7 @@ class TreeAggregator:
             retentions_tracker.may_add_cache_info(
                 now=now,
                 node_name=TABLE_KEY,
-                path=tabr.path,
+                path=tuple(tabr.path),
                 raw_cache_info=raw_cache_info,
             )
 
@@ -76,7 +76,7 @@ class TreeAggregator:
             retentions_tracker.may_add_cache_info(
                 now=now,
                 node_name=ATTRIBUTES_KEY,
-                path=attr.path,
+                path=tuple(attr.path),
                 raw_cache_info=raw_cache_info,
             )
 
@@ -111,11 +111,11 @@ class TreeAggregator:
         attributes: Attributes,
     ) -> None:
         if attributes.inventory_attributes:
-            node = self.trees.inventory.setdefault_node(attributes.path)
+            node = self.trees.inventory.setdefault_node(tuple(attributes.path))
             node.attributes.add_pairs(attributes.inventory_attributes)
 
         if attributes.status_attributes:
-            node = self.trees.status_data.setdefault_node(attributes.path)
+            node = self.trees.status_data.setdefault_node(tuple(attributes.path))
             node.attributes.add_pairs(attributes.status_attributes)
 
     def _add_row(

@@ -202,7 +202,7 @@ def _check_inventory_tree(
         ActiveCheckResult(0, f"Found {trees.inventory.count_entries()} inventory entries")
     ]
 
-    swp_table = trees.inventory.get_table(["software", "packages"])
+    swp_table = trees.inventory.get_table(("software", "packages"))
     if swp_table is not None and swp_table.is_empty() and sw_missing:
         subresults.append(ActiveCheckResult(sw_missing, "software packages information is missing"))
 
@@ -229,8 +229,8 @@ def _tree_nodes_are_equal(
     if inv_tree is None:
         return False
 
-    old_node = old_tree.get_node([edge])
-    inv_node = inv_tree.get_node([edge])
+    old_node = old_tree.get_node((edge,))
+    inv_node = inv_tree.get_node((edge,))
     if old_node is None:
         return inv_node is None
 
@@ -335,7 +335,7 @@ def _do_inv_for_cluster(host_config: config.HostConfig) -> InventoryTrees:
         return InventoryTrees(inventory_tree, StructuredDataNode())
 
     node = inventory_tree.setdefault_node(
-        ["software", "applications", "check_mk", "cluster", "nodes"]
+        ("software", "applications", "check_mk", "cluster", "nodes")
     )
     node.table.add_key_columns(["name"])
     node.table.add_rows([{"name": node_name} for node_name in host_config.nodes])
@@ -413,7 +413,7 @@ def _set_cluster_property(
     inventory_tree: StructuredDataNode,
     host_config: config.HostConfig,
 ) -> None:
-    node = inventory_tree.setdefault_node(["software", "applications", "check_mk", "cluster"])
+    node = inventory_tree.setdefault_node(("software", "applications", "check_mk", "cluster"))
     node.attributes.add_pairs({"is_cluster": host_config.is_cluster})
 
 

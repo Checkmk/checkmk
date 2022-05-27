@@ -676,11 +676,11 @@ class CheckmkOverviewDiagnosticsElement(ABCDiagnosticsElementJSONDump):
             )
 
         infos = {}
-        attrs = tree.get_attributes(["software", "applications", "check_mk"])
+        attrs = tree.get_attributes(("software", "applications", "check_mk"))
         if attrs:
             infos.update(attrs.serialize())
 
-        node = tree.get_node(["software", "applications", "check_mk"])
+        node = tree.get_node(("software", "applications", "check_mk"))
         if node:
             infos.update(node.serialize())
 

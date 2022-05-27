@@ -23,7 +23,7 @@ from cmk.gui.inventory import InventoryPath, TreeSource
         (
             "",
             InventoryPath(
-                path=[],
+                path=tuple(),
                 source=TreeSource.node,
             ),
             "",
@@ -31,7 +31,7 @@ from cmk.gui.inventory import InventoryPath, TreeSource
         (
             ".",
             InventoryPath(
-                path=[],
+                path=tuple(),
                 source=TreeSource.node,
             ),
             "",
@@ -39,7 +39,7 @@ from cmk.gui.inventory import InventoryPath, TreeSource
         (
             ".hardware.",
             InventoryPath(
-                path=["hardware"],
+                path=("hardware",),
                 source=TreeSource.node,
             ),
             "hardware",
@@ -47,7 +47,7 @@ from cmk.gui.inventory import InventoryPath, TreeSource
         (
             ".hardware.cpu.",
             InventoryPath(
-                path=["hardware", "cpu"],
+                path=("hardware", "cpu"),
                 source=TreeSource.node,
             ),
             "cpu",
@@ -55,7 +55,7 @@ from cmk.gui.inventory import InventoryPath, TreeSource
         (
             ".hardware.cpu.model",
             InventoryPath(
-                path=["hardware", "cpu"],
+                path=("hardware", "cpu"),
                 source=TreeSource.attributes,
                 key="model",
             ),
@@ -64,7 +64,7 @@ from cmk.gui.inventory import InventoryPath, TreeSource
         (
             ".software.packages:",
             InventoryPath(
-                path=["software", "packages"],
+                path=("software", "packages"),
                 source=TreeSource.table,
             ),
             "packages",
@@ -72,7 +72,7 @@ from cmk.gui.inventory import InventoryPath, TreeSource
         (
             ".hardware.memory.arrays:*.",
             InventoryPath(
-                ["hardware", "memory", "arrays", "*"],
+                ("hardware", "memory", "arrays", "*"),
                 source=TreeSource.node,
             ),
             "*",
@@ -80,7 +80,7 @@ from cmk.gui.inventory import InventoryPath, TreeSource
         (
             ".software.packages:17.name",
             InventoryPath(
-                path=["software", "packages", "17"],
+                path=("software", "packages", "17"),
                 source=TreeSource.table,
                 key="name",
             ),
@@ -89,7 +89,7 @@ from cmk.gui.inventory import InventoryPath, TreeSource
         (
             ".software.packages:*.name",
             InventoryPath(
-                path=["software", "packages", "*"],
+                path=("software", "packages", "*"),
                 source=TreeSource.table,
                 key="name",
             ),
@@ -98,7 +98,7 @@ from cmk.gui.inventory import InventoryPath, TreeSource
         (
             ".hardware.memory.arrays:*.devices:*.speed",
             InventoryPath(
-                path=["hardware", "memory", "arrays", "*", "devices", "*"],
+                path=("hardware", "memory", "arrays", "*", "devices", "*"),
                 source=TreeSource.table,
                 key="speed",
             ),
@@ -107,7 +107,7 @@ from cmk.gui.inventory import InventoryPath, TreeSource
         (
             ".path:*.to.node.key",
             InventoryPath(
-                path=["path", "*", "to", "node"],
+                path=("path", "*", "to", "node"),
                 source=TreeSource.attributes,
                 key="key",
             ),

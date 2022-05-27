@@ -91,7 +91,7 @@ class InventoryPath:
     def parse(cls, raw_path: SDRawPath) -> InventoryPath:
         if not raw_path:
             return InventoryPath(
-                path=[],
+                path=tuple(),
                 source=TreeSource.node,
             )
 
@@ -118,7 +118,7 @@ class InventoryPath:
     @staticmethod
     def _sanitize_path(path: Sequence[str]) -> SDPath:
         # ":": Nested tables, see also lib/structured_data.py
-        return [p for part in path for p in (part.split(":") if ":" in part else [part]) if p]
+        return tuple(p for part in path for p in (part.split(":") if ":" in part else [part]) if p)
 
     @property
     def node_name(self) -> str:

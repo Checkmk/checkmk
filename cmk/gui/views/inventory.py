@@ -1444,7 +1444,7 @@ def _declare_views(
     is_show_more = True
     if len(raw_paths) == 1:
         is_show_more = NodeDisplayHint.make(
-            list(inventory.InventoryPath.parse(raw_paths[0] or "").path)
+            inventory.InventoryPath.parse(raw_paths[0] or "").path
         ).table_hint.is_show_more
 
     # Declare two views: one for searching globally. And one
@@ -2118,7 +2118,7 @@ class ABCNodeRenderer(abc.ABC):
     #   ---node-----------------------------------------------------------------
 
     def show_node(self, node: StructuredDataNode) -> None:
-        node_hint = NodeDisplayHint.make(list(node.path))
+        node_hint = NodeDisplayHint.make(node.path)
 
         title = node_hint.title
 
@@ -2174,7 +2174,7 @@ class ABCNodeRenderer(abc.ABC):
     #   ---table----------------------------------------------------------------
 
     def show_table(self, table: Table) -> None:
-        table_hint = NodeDisplayHint.make(list(table.path)).table_hint
+        table_hint = NodeDisplayHint.make(table.path).table_hint
 
         # Link to Multisite view with exactly this table
         if table_hint.view_name:
@@ -2191,7 +2191,7 @@ class ABCNodeRenderer(abc.ABC):
                 class_="invtablelink",
             )
 
-        titles = table_hint.make_titles(table.rows, table.key_columns, list(table.path))
+        titles = table_hint.make_titles(table.rows, table.key_columns, table.path)
 
         # TODO: Use table.open_table() below.
         html.open_table(class_="data")
@@ -2211,7 +2211,7 @@ class ABCNodeRenderer(abc.ABC):
             html.open_tr(class_="even0")
             for table_title in titles:
                 value = entry.get(table_title.key)
-                col_hint = ColumnDisplayHint.make(list(table.path), table_title.key)
+                col_hint = ColumnDisplayHint.make(table.path, table_title.key)
                 tdclass, _rendered_value = col_hint.paint_function(
                     value[1] if isinstance(value, tuple) else value
                 )
@@ -2238,11 +2238,11 @@ class ABCNodeRenderer(abc.ABC):
     #   ---attributes-----------------------------------------------------------
 
     def show_attributes(self, attributes: Attributes) -> None:
-        attrs_hint = NodeDisplayHint.make(list(attributes.path)).attributes_hint
+        attrs_hint = NodeDisplayHint.make(attributes.path).attributes_hint
 
         html.open_table()
         for key, value in attrs_hint.sort_pairs(attributes.pairs):
-            attr_hint = AttributeDisplayHint.make(list(attributes.path), key)
+            attr_hint = AttributeDisplayHint.make(attributes.path, key)
 
             html.open_tr()
             html.th(

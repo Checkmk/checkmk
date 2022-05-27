@@ -42,9 +42,9 @@ def _create_empty_tree():
 
     root = StructuredDataNode()
 
-    root.setdefault_node(["path", "to", "nta", "nt"])
-    root.setdefault_node(["path", "to", "nta", "na"])
-    root.setdefault_node(["path", "to", "nta", "ta"])
+    root.setdefault_node(("path", "to", "nta", "nt"))
+    root.setdefault_node(("path", "to", "nta", "na"))
+    root.setdefault_node(("path", "to", "nta", "ta"))
 
     return root
 
@@ -58,9 +58,9 @@ def _create_filled_tree():
 
     root = StructuredDataNode()
 
-    nt = root.setdefault_node(["path", "to", "nta", "nt"])
-    na = root.setdefault_node(["path", "to", "nta", "na"])
-    ta = root.setdefault_node(["path", "to", "nta", "ta"])
+    nt = root.setdefault_node(("path", "to", "nta", "nt"))
+    na = root.setdefault_node(("path", "to", "nta", "na"))
+    ta = root.setdefault_node(("path", "to", "nta", "ta"))
 
     nt.table.add_key_columns(["nt0"])
     nt.table.add_rows(
@@ -87,10 +87,10 @@ def _create_filled_tree():
 def test_get_node():
     root = _create_empty_tree()
 
-    nta = root.get_node(["path", "to", "nta"])
-    nt = root.get_node(["path", "to", "nta", "nt"])
-    na = root.get_node(["path", "to", "nta", "na"])
-    ta = root.get_node(["path", "to", "nta", "ta"])
+    nta = root.get_node(("path", "to", "nta"))
+    nt = root.get_node(("path", "to", "nta", "nt"))
+    na = root.get_node(("path", "to", "nta", "na"))
+    ta = root.get_node(("path", "to", "nta", "ta"))
 
     assert nta is not None
     assert nt is not None
@@ -103,10 +103,10 @@ def test_get_node():
 def test_set_path():
     root = _create_empty_tree()
 
-    nta = root.get_node(["path", "to", "nta"])
-    nt = root.get_node(["path", "to", "nta", "nt"])
-    na = root.get_node(["path", "to", "nta", "na"])
-    ta = root.get_node(["path", "to", "nta", "ta"])
+    nta = root.get_node(("path", "to", "nta"))
+    nt = root.get_node(("path", "to", "nta", "nt"))
+    na = root.get_node(("path", "to", "nta", "na"))
+    ta = root.get_node(("path", "to", "nta", "ta"))
 
     assert nta.attributes.path == tuple(["path", "to", "nta"])
     assert nta.table.path == tuple(["path", "to", "nta"])
@@ -127,10 +127,10 @@ def test_set_path():
 
 def test_set_path_sub_nodes_error():
     root = _create_empty_tree()
-    nta = root.get_node(["path", "to", "nta"])
+    nta = root.get_node(("path", "to", "nta"))
 
     sub_node = StructuredDataNode()
-    sub_node.setdefault_node(["sub-path", "sub-to", "sub-node"])
+    sub_node.setdefault_node(("sub-path", "sub-to", "sub-node"))
 
     with pytest.raises(ValueError):
         nta.add_node(sub_node)
@@ -138,10 +138,10 @@ def test_set_path_sub_nodes_error():
 
 def test_set_path_sub_nodes():
     root = _create_empty_tree()
-    nta = root.get_node(["path", "to", "nta"])
+    nta = root.get_node(("path", "to", "nta"))
 
     sub_node = StructuredDataNode(name="node")
-    sub_node.setdefault_node(["sub-path-to", "sub-node"])
+    sub_node.setdefault_node(("sub-path-to", "sub-node"))
 
     nta.add_node(sub_node)
 
@@ -981,8 +981,8 @@ class ExpectedFilterResults(NamedTuple):
     [
         # Tuple format
         (
-            (["path", "to", "node"], None),
-            ["path", "to", "node"],
+            (("path", "to", "node"), None),
+            ("path", "to", "node"),
             ExpectedFilterResults(
                 nodes=True,
                 restricted_nodes=True,
@@ -993,8 +993,8 @@ class ExpectedFilterResults(NamedTuple):
             ),
         ),
         (
-            (["path", "to", "node"], []),
-            ["path", "to", "node"],
+            (("path", "to", "node"), []),
+            ("path", "to", "node"),
             ExpectedFilterResults(
                 nodes=False,
                 restricted_nodes=False,
@@ -1005,8 +1005,8 @@ class ExpectedFilterResults(NamedTuple):
             ),
         ),
         (
-            (["path", "to", "node"], ["key"]),
-            ["path", "to", "node"],
+            (("path", "to", "node"), ["key"]),
+            ("path", "to", "node"),
             ExpectedFilterResults(
                 nodes=False,
                 restricted_nodes=False,
@@ -1021,7 +1021,7 @@ class ExpectedFilterResults(NamedTuple):
             {
                 "visible_raw_path": "path.to.node",
             },
-            ["path", "to", "node"],
+            ("path", "to", "node"),
             ExpectedFilterResults(
                 nodes=True,
                 restricted_nodes=True,
@@ -1036,7 +1036,7 @@ class ExpectedFilterResults(NamedTuple):
                 "visible_raw_path": "path.to.node",
                 "nodes": ("choices", ["node"]),
             },
-            ["path", "to", "node"],
+            ("path", "to", "node"),
             ExpectedFilterResults(
                 nodes=True,
                 restricted_nodes=False,
@@ -1051,7 +1051,7 @@ class ExpectedFilterResults(NamedTuple):
                 "visible_raw_path": "path.to.node",
                 "attributes": ("choices", ["key"]),
             },
-            ["path", "to", "node"],
+            ("path", "to", "node"),
             ExpectedFilterResults(
                 nodes=True,
                 restricted_nodes=True,
@@ -1066,7 +1066,7 @@ class ExpectedFilterResults(NamedTuple):
                 "visible_raw_path": "path.to.node",
                 "columns": ("choices", ["key"]),
             },
-            ["path", "to", "node"],
+            ("path", "to", "node"),
             ExpectedFilterResults(
                 nodes=True,
                 restricted_nodes=True,
@@ -1078,7 +1078,7 @@ class ExpectedFilterResults(NamedTuple):
         ),
         (
             {"visible_raw_path": "path.to.node", "nodes": "nothing"},
-            ["path", "to", "node"],
+            ("path", "to", "node"),
             ExpectedFilterResults(
                 nodes=False,
                 restricted_nodes=False,
@@ -1093,7 +1093,7 @@ class ExpectedFilterResults(NamedTuple):
                 "visible_raw_path": "path.to.node",
                 "attributes": "nothing",
             },
-            ["path", "to", "node"],
+            ("path", "to", "node"),
             ExpectedFilterResults(
                 nodes=True,
                 restricted_nodes=True,
@@ -1108,7 +1108,7 @@ class ExpectedFilterResults(NamedTuple):
                 "visible_raw_path": "path.to.node",
                 "columns": "nothing",
             },
-            ["path", "to", "node"],
+            ("path", "to", "node"),
             ExpectedFilterResults(
                 nodes=True,
                 restricted_nodes=True,
@@ -1141,8 +1141,8 @@ def test_make_filter(entry, expected_path, expected_filter_results):
 @pytest.mark.parametrize(
     "raw_path, expected_path",
     [
-        ("", []),
-        ("path.to.node_1", ["path", "to", "node_1"]),
+        ("", tuple()),
+        ("path.to.node_1", ("path", "to", "node_1")),
     ],
 )
 def test_parse_visible_tree_path(raw_path, expected_path):
@@ -1208,39 +1208,39 @@ def test__is_table():
 
     tree = StructuredDataNode.deserialize(raw_tree)
 
-    idx_node_attr = tree.get_node(["path-to", "idx-node", "0"])
+    idx_node_attr = tree.get_node(("path-to", "idx-node", "0"))
     assert idx_node_attr is not None
     assert idx_node_attr.attributes.pairs == {"idx-attr": "value"}
     assert idx_node_attr.table._rows == {}
     assert idx_node_attr.table.rows == []
 
     idx_sub_idx_node_attr = tree.get_node(
-        ["path-to", "idx-node", "0", "idx-sub-idx-node", "0", "bar-node"]
+        ("path-to", "idx-node", "0", "idx-sub-idx-node", "0", "bar-node")
     )
     assert idx_sub_idx_node_attr is not None
     assert idx_sub_idx_node_attr.attributes.pairs == {"bar-attr": "value"}
     assert idx_sub_idx_node_attr.table._rows == {}
     assert idx_sub_idx_node_attr.table.rows == []
 
-    idx_sub_node_attr = tree.get_node(["path-to", "idx-node", "0", "idx-sub-node", "foo-node"])
+    idx_sub_node_attr = tree.get_node(("path-to", "idx-node", "0", "idx-sub-node", "foo-node"))
     assert idx_sub_node_attr is not None
     assert idx_sub_node_attr.attributes.pairs == {"foo-attr": "value"}
     assert idx_sub_node_attr.table._rows == {}
     assert idx_sub_node_attr.table.rows == []
 
-    idx_table = tree.get_node(["path-to", "idx-node", "0", "idx-table"])
+    idx_table = tree.get_node(("path-to", "idx-node", "0", "idx-table"))
     assert idx_table is not None
     assert idx_table.attributes.pairs == {}
     assert idx_table.table._rows == {("value",): {"idx-col": "value"}}
     assert idx_table.table.rows == [{"idx-col": "value"}]
 
-    attr_node = tree.get_node(["path-to", "node"])
+    attr_node = tree.get_node(("path-to", "node"))
     assert attr_node is not None
     assert attr_node.attributes.pairs == {"attr": "value"}
     assert attr_node.table._rows == {}
     assert attr_node.table.rows == []
 
-    table_node = tree.get_node(["path-to", "table"])
+    table_node = tree.get_node(("path-to", "table"))
     assert table_node is not None
     assert table_node.attributes.pairs == {}
     assert table_node.table._rows == {("value",): {"col": "value"}}

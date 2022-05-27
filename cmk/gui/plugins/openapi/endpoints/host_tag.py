@@ -20,10 +20,12 @@ from typing import Any, Dict
 from cmk.utils.tags import BuiltinTagConfig, TagGroup, TaggroupSpec
 
 import cmk.gui.watolib as watolib
+from cmk.gui.globals import user
 from cmk.gui.http import Response
 from cmk.gui.plugins.openapi.restful_objects import (
     constructors,
     Endpoint,
+    permissions,
     request_schemas,
     response_schemas,
 )
@@ -43,6 +45,21 @@ from cmk.gui.watolib.tags import (
 )
 
 from cmk import fields
+
+PERMISSIONS = permissions.AllPerm(
+    [
+        permissions.Perm("wato.hosttags"),
+        permissions.Optional(permissions.Perm("wato.all_folders")),
+    ]
+)
+
+RW_PERMISSIONS = permissions.AllPerm(
+    [
+        permissions.Perm("wato.edit"),
+        permissions.Perm("wato.hosttags"),
+        permissions.Optional(permissions.Perm("wato.all_folders")),
+    ]
+)
 
 
 class HostTagGroupName(fields.String):
@@ -76,9 +93,12 @@ HOST_TAG_GROUP_NAME = {
     etag="output",
     request_schema=request_schemas.InputHostTagGroup,
     response_schema=response_schemas.DomainObject,
+    permissions_required=RW_PERMISSIONS,
 )
 def create_host_tag_group(params):
     """Create a host tag group"""
+    user.need_permission("wato.edit")
+    user.need_permission("wato.hosttags")
     host_tag_group_details = params["body"]
     save_tag_group(TagGroup.from_config(host_tag_group_details))
     return _serve_host_tag_group(_retrieve_group(host_tag_group_details["id"]).get_dict_format())
@@ -91,9 +111,11 @@ def create_host_tag_group(params):
     etag="output",
     path_params=[HOST_TAG_GROUP_NAME],
     response_schema=response_schemas.ConcreteHostTagGroup,
+    permissions_required=PERMISSIONS,
 )
 def show_host_tag_group(params):
     """Show a host tag group"""
+    user.need_permission("wato.hosttags")
     ident = params["name"]
     tag_group = _retrieve_group(ident=ident)
     return _serve_host_tag_group(tag_group.get_dict_format())
@@ -104,9 +126,11 @@ def show_host_tag_group(params):
     ".../collection",
     method="get",
     response_schema=response_schemas.DomainObjectCollection,
+    permissions_required=PERMISSIONS,
 )
 def list_host_tag_groups(params):
     """Show all host tag groups"""
+    user.need_permission("wato.hosttags")
     tag_config = load_tag_config()
     tag_config += BuiltinTagConfig()
     tag_groups_collection = {
@@ -133,11 +157,14 @@ def list_host_tag_groups(params):
     path_params=[HOST_TAG_GROUP_NAME],
     additional_status_codes=[401, 405],
     request_schema=request_schemas.UpdateHostTagGroup,
+    permissions_required=RW_PERMISSIONS,
     response_schema=response_schemas.ConcreteHostTagGroup,
 )
 def update_host_tag_group(params):
     """Update a host tag group"""
     # TODO: ident verification mechanism with ParamDict replacement
+    user.need_permission("wato.edit")
+    user.need_permission("wato.hosttags")  # see cmk.gui.wato.pages.tags
     body = params["body"]
     ident = params["name"]
     if is_builtin(ident):
@@ -174,10 +201,13 @@ def update_host_tag_group(params):
     path_params=[HOST_TAG_GROUP_NAME],
     additional_status_codes=[405],
     query_params=[request_schemas.DeleteHostTagGroup],
+    permissions_required=RW_PERMISSIONS,
     output_empty=True,
 )
 def delete_host_tag_group(params):
     """Delete a host tag group"""
+    user.need_permission("wato.edit")
+    user.need_permission("wato.hosttags")
     ident = params["name"]
     if is_builtin(ident):
         return problem(

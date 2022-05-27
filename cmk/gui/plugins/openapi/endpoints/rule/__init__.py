@@ -44,6 +44,12 @@ PERMISSIONS = permissions.AllPerm(
     ]
 )
 
+RW_PERMISSIONS = permissions.AllPerm(
+    [
+        permissions.Perm("wato.edit"),
+        *PERMISSIONS.perms,
+    ]
+)
 
 # NOTE: This is a dataclass and no namedtuple because it needs to be mutable. See `move_rule_to`
 @dataclasses.dataclass
@@ -64,10 +70,11 @@ class RuleEntry:
     path_params=[RULE_ID],
     request_schema=MoveRuleTo,
     response_schema=RuleObject,
-    permissions_required=PERMISSIONS,
+    permissions_required=RW_PERMISSIONS,
 )
 def move_rule_to(param: typing.Mapping[str, typing.Any]) -> http.Response:
     """Move a rule to a specific location"""
+    user.need_permission("wato.edit")
     user.need_permission("wato.rulesets")
     rule_id = param["rule_id"]
 
@@ -162,10 +169,11 @@ def move_rule_to(param: typing.Mapping[str, typing.Any]) -> http.Response:
     etag="output",
     request_schema=InputRuleObject,
     response_schema=RuleObject,
-    permissions_required=PERMISSIONS,
+    permissions_required=RW_PERMISSIONS,
 )
 def create_rule(param):
     """Create rule"""
+    user.need_permission("wato.edit")
     user.need_permission("wato.rulesets")
     body = param["body"]
     folder: watolib.CREFolder = body["folder"]
@@ -235,7 +243,7 @@ def create_rule(param):
     ".../collection",
     method="get",
     response_schema=RuleCollection,
-    permissions_required=permissions.Perm("wato.rulesets"),
+    permissions_required=PERMISSIONS,
     query_params=[RuleSearchOptions],
 )
 def list_rules(param):
@@ -285,7 +293,7 @@ def list_rules(param):
     method="get",
     response_schema=RuleObject,
     path_params=[RULE_ID],
-    permissions_required=permissions.Perm("wato.rulesets"),
+    permissions_required=PERMISSIONS,
 )
 def show_rule(param):
     """Show a rule"""
@@ -334,10 +342,11 @@ def _get_rule_by_id(rule_uuid: str, all_rulesets=None) -> RuleEntry:
         204,
         404,
     ],
-    permissions_required=PERMISSIONS,
+    permissions_required=RW_PERMISSIONS,
 )
 def delete_rule(param):
     """Delete a rule"""
+    user.need_permission("wato.edit")
     user.need_permission("wato.rulesets")
     rule_id = param["rule_id"]
     rule: watolib.Rule

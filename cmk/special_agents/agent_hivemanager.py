@@ -10,9 +10,12 @@ import sys
 
 import requests
 
+from cmk.utils.password_store import replace_passwords
+
 
 def main(sys_argv=None):
     if sys_argv is None:
+        replace_passwords()
         sys_argv = sys.argv[1:]
 
     try:

@@ -6,8 +6,8 @@
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.special_agents.common import RulespecGroupDatasourceProgramsHardware
-from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
-from cmk.gui.valuespec import Password, TextInput, Tuple
+from cmk.gui.plugins.wato.utils import HostRulespec, IndividualOrStoredPassword, rulespec_registry
+from cmk.gui.valuespec import TextInput, Tuple
 from cmk.gui.watolib.rulespecs import Rulespec
 
 
@@ -22,7 +22,7 @@ def _valuespec_special_agents_hivemanager():
         help=_("Activate monitoring of host via a HTTP connect to the HiveManager"),
         elements=[
             TextInput(title=_("Username")),
-            Password(title=_("Password")),
+            IndividualOrStoredPassword(title=_("Password")),
         ],
     )
 

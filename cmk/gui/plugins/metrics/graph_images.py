@@ -212,7 +212,7 @@ def graph_recipes_for_api_request(
     graph_identification_types.verify(graph_identification[0])
 
     # Default to 25h view
-    default_time_range = (time.time() - (25 * 3600), time.time())
+    default_time_range = ((now := int(time.time())) - (25 * 3600), now)
 
     # Get and validate the data range
     graph_data_range: GraphDataRange = api_request.get("data_range", {})

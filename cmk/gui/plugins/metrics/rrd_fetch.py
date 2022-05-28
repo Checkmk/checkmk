@@ -7,7 +7,7 @@
 
 import collections
 import time
-from typing import Any, Callable, Iterator, List, Optional, Set, Union
+from typing import Any, Callable, Iterator, List, Optional, Set
 
 import livestatus
 from livestatus import SiteId
@@ -173,7 +173,7 @@ def fetch_rrd_data(
 ) -> list[tuple[MetricProperties, TimeSeriesValues]]:
     start_time, end_time = graph_data_range["time_range"]
 
-    step: Union[int, float, str] = graph_data_range["step"]
+    step = graph_data_range["step"]
     # assumes str step is well formatted, colon separated step length & rrd point count
     if not isinstance(step, str):
         step = max(1, step)

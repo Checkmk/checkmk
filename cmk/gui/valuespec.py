@@ -65,7 +65,7 @@ import cmk.utils.regex
 from cmk.utils.encryption import Encrypter, fetch_certificate_details
 from cmk.utils.plugin_registry import Registry
 from cmk.utils.render import SecondsRenderer
-from cmk.utils.type_defs import Seconds
+from cmk.utils.type_defs import Seconds, TimeRange
 
 import cmk.gui.forms as forms
 import cmk.gui.site_config as site_config
@@ -4690,7 +4690,7 @@ TimerangeValue = Union[None, int, str, tuple[str, Any]]  # TODO: Be more specifi
 
 
 class ComputedTimerange(NamedTuple):
-    range: tuple[int, int]
+    range: TimeRange
     title: str
 
 

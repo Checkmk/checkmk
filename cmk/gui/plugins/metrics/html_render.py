@@ -98,11 +98,9 @@ def host_service_graph_popup_cmk(site, host_name, service_description):
         "show_time_range_previews": False,
     }
 
-    end_time = time.time()
-    start_time = end_time - 8 * 3600
-    graph_data_range = {
-        "time_range": (start_time, end_time),
-    }
+    graph_data_range = make_graph_data_range(
+        ((end_time := int(time.time())) - 8 * 3600, end_time), graph_render_options
+    )
 
     graph_identification: tuple[Literal["template"], TemplateGraphSpec] = (
         "template",
@@ -710,7 +708,7 @@ def render_graphs_from_specification_html(
 def render_graphs_from_definitions(
     graph_recipes: Sequence[GraphRecipe],
     graph_data_range: GraphDataRange,
-    graph_render_options: GraphDataRange,
+    graph_render_options: GraphRenderOptions,
     render_async: bool = True,
 ) -> HTML:
     # Estimate step. Step is the number of seconds each fetched data point represents.
@@ -857,10 +855,12 @@ def render_time_range_selection(
         )
 
         timerange = now - duration, now
-        graph_data_range = {
-            "time_range": timerange,
-            "step": 2 * estimate_graph_step_for_html(timerange, graph_render_options),
-        }
+        graph_data_range = GraphDataRange(
+            {
+                "time_range": timerange,
+                "step": 2 * estimate_graph_step_for_html(timerange, graph_render_options),
+            }
+        )
 
         graph_artwork = artwork.compute_graph_artwork(
             graph_recipe, graph_data_range, graph_render_options
@@ -873,6 +873,17 @@ def render_time_range_selection(
         )
     return HTMLWriter.render_table(
         HTML().join(HTMLWriter.render_tr(content) for content in rows), class_="timeranges"
+    )
+
+
+def make_graph_data_range(
+    time_range: TimeRange, graph_render_options: GraphRenderOptions
+) -> GraphDataRange:
+    return GraphDataRange(
+        {
+            "time_range": time_range,
+            "step": estimate_graph_step_for_html(time_range, graph_render_options),
+        }
     )
 
 
@@ -1014,19 +1025,11 @@ def host_service_graph_dashlet_cmk(
     timerange = json.loads(request.get_str_input_mandatory("timerange"))
 
     if isinstance(timerange, list):
-        end_time = timerange[1]
-        start_time = timerange[0]
+        time_range = (timerange[0], timerange[1])
     else:
-        end_time = time.time()
-        start_time = end_time - float(timerange)
+        time_range = ((end_time := int(time.time())) - float(timerange), end_time)
 
-    graph_data_range: GraphDataRange = {
-        "time_range": (start_time, end_time),
-    }
-
-    graph_data_range["step"] = estimate_graph_step_for_html(
-        graph_data_range["time_range"], graph_render_options
-    )
+    graph_data_range = make_graph_data_range(time_range, graph_render_options)
 
     graph_recipes = resolve_graph_recipe_with_error_handling(
         graph_identification,

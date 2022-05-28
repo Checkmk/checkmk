@@ -41,7 +41,7 @@ from cmk.utils.plugin_registry import Registry
 from cmk.utils.prediction import livestatus_lql, TimeSeries, TimeSeriesValue
 from cmk.utils.type_defs import HostName
 from cmk.utils.type_defs import MetricName as _MetricName
-from cmk.utils.type_defs import ServiceName
+from cmk.utils.type_defs import Seconds, ServiceName, TimeRange
 from cmk.utils.version import parse_check_mk_version
 
 import cmk.gui.sites as sites
@@ -99,7 +99,18 @@ class Curve(_CurveMandatory, total=False):
 
 Scalar = tuple[str, str, bool]
 GraphRenderOptions = dict[str, Any]
-GraphDataRange = dict[str, Any]
+
+
+class _GraphDataRangeMandatory(TypedDict):
+    time_range: TimeRange
+    # Forecast graphs represent step as str (see forecasts.py and fetch_rrd_data)
+    # colon separated [step length]:[rrd point count]
+    step: Union[Seconds, str]
+
+
+class GraphDataRange(_GraphDataRangeMandatory, total=False):
+    vertical_range: tuple[float, float]
+
 
 GraphRangeSpec = Tuple[Union[int, str], Union[int, str]]
 GraphRange = Tuple[Optional[float], Optional[float]]

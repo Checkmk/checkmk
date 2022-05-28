@@ -420,11 +420,13 @@ def compute_pdf_graph_data_range(
 
     available_width = width - graph_offcut_width
     number_of_steps = int(available_width / mm_per_step)  # fixed: true-division
-    step = (float(end_time - start_time) / number_of_steps) / 2.0
-    return {
-        "time_range": (start_time, end_time),
-        "step": step,
-    }
+    step = int((end_time - start_time) / number_of_steps / 2)
+    return GraphDataRange(
+        {
+            "time_range": (start_time, end_time),
+            "step": step,
+        }
+    )
 
 
 def get_mm_per_ex(font_size: float) -> SizeMM:

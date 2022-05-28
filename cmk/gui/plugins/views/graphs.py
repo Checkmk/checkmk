@@ -123,19 +123,19 @@ def paint_time_graph_cmk(row, cell, override_graph_render_options=None):
     if options is not None:
         graph_render_options.update(options)
 
-    graph_data_range = {}
-
-    now = time.time()
+    now = int(time.time())
     if "set_default_time_range" in painter_params:
         duration = painter_params["set_default_time_range"]
-        graph_data_range["time_range"] = now - duration, now
+        time_range = now - duration, now
     else:
-        graph_data_range["time_range"] = now - 3600 * 4, now
+        time_range = now - 3600 * 4, now
 
     # Load timerange from painter option (overrides the defaults, if set by the user)
     painter_option_pnp_timerange = painter_options.get_without_default("pnp_timerange")
     if painter_option_pnp_timerange is not None:
-        graph_data_range["time_range"] = get_graph_timerange_from_painter_options()
+        time_range = get_graph_timerange_from_painter_options()
+
+    graph_data_range = html_render.make_graph_data_range(time_range, graph_render_options)
 
     if is_mobile(request, response):
         graph_render_options.update(

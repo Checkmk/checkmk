@@ -30,8 +30,8 @@ def build(Map args) {
                     bat 'cd agents\\wnx && call call_unit_tests.cmd -*_Long:*Integration:*Flaky'
                     ARTIFACTS = "unit_tests_results.zip"
                 } else if (args.TARGET == "test_integration") {
-                    bat 'cd agents\\wnx && call call_integration_tests.cmd'
-                    ARTIFACTS = "integration_tests_results.zip"
+                    bat 'cd agents\\wnx && call call_integration_tests.cmd && call call_integration_tests_ng.cmd '
+                    ARTIFACTS = "integration_tests_results.zip,integration_tests_results_ng.zip"
                 } else if (args.TARGET == "test_build") {
                     bat 'cd agents\\wnx && call call_test_build.cmd'
                 } else {

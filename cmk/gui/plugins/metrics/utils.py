@@ -140,7 +140,19 @@ class GraphTemplate(_GraphTemplateMandatory, total=False):
 
 
 GraphRecipe = Dict[str, Any]
-GraphMetric = Dict[str, Any]
+
+
+class _GraphMetricMandatory(TypedDict):
+    title: str
+    line_type: LineType
+    expression: StackElement
+
+
+class GraphMetric(_GraphMetricMandatory, total=False):
+    unit: str
+    color: str
+
+
 RRDDataKey = Tuple[SiteId, HostName, ServiceName, str, Optional[GraphConsoldiationFunction], float]
 RRDData = Dict[RRDDataKey, TimeSeries]
 

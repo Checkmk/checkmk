@@ -137,19 +137,27 @@ def create_graph_recipe_from_template(
     graph_template: GraphTemplate, translated_metrics: TranslatedMetrics, row: Row
 ) -> GraphRecipe:
     def _metric(metric_definition: MetricDefinition) -> GraphMetric:
+        metric = GraphMetric(
+            {
+                "title": metric_line_title(metric_definition, translated_metrics),
+                "line_type": metric_definition[1],
+                "expression": metric_expression_to_graph_recipe_expression(
+                    metric_definition[0],
+                    translated_metrics,
+                    row,
+                    graph_template.get("consolidation_function", "max"),
+                ),
+            }
+        )
+
         unit_color = metric_unit_color(metric_definition[0], translated_metrics)
-        metric = {
-            "title": metric_line_title(metric_definition, translated_metrics),
-            "line_type": metric_definition[1],
-            "expression": metric_expression_to_graph_recipe_expression(
-                metric_definition[0],
-                translated_metrics,
-                row,
-                graph_template.get("consolidation_function", "max"),
-            ),
-        }
         if unit_color:
-            metric.update(unit_color)
+            metric.update(
+                {
+                    "color": unit_color["color"],
+                    "unit": unit_color["unit"],
+                }
+            )
         return metric
 
     metrics = list(map(_metric, graph_template["metrics"]))

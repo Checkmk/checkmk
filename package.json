@@ -87,6 +87,10 @@
     "sweetalert2": "^11.2.1",
     "whatwg-fetch": "^3.6.2"
   },
+  "//": "COMMENT: This is here, so the that the build doesn't fail on a npm version missmatch.",
+  "optionalDependencies": {
+    "fsevents": "2.1.2"
+  },
   "resolutions": {
     "//": "COMMENT: Ensure we get the desired version without dependency declaration",
     "elliptic": ">=6.5.4"

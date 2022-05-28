@@ -79,7 +79,7 @@ def create_check_crash_dump(
     service_name: ServiceName,
     plugin_name: Union[CheckPluginNameStr, CheckPluginName],
     plugin_kwargs: Mapping[str, Any],
-    is_manual: bool,
+    is_enforced: bool,
 ) -> str:
     """Create a crash dump from an exception occured during check execution
 
@@ -93,7 +93,7 @@ def create_check_crash_dump(
             hostname=host_name,
             check_plugin_name=str(plugin_name),
             check_plugin_kwargs=plugin_kwargs,
-            is_manual_check=is_manual,
+            is_enforced_service=is_enforced,
             description=service_name,
             text=text,
         )
@@ -141,7 +141,7 @@ class CheckCrashReport(crash_reporting.ABCCrashReport):
         hostname: HostName,
         check_plugin_name: str,
         check_plugin_kwargs: Mapping[str, Any],
-        is_manual_check: bool,
+        is_enforced_service: bool,
         description: ServiceName,
         text: str,
     ) -> crash_reporting.ABCCrashReport:
@@ -160,7 +160,7 @@ class CheckCrashReport(crash_reporting.ABCCrashReport):
                 "check_type": check_plugin_name,
                 "inline_snmp": host_config.snmp_config(hostname).snmp_backend
                 == SNMPBackendEnum.INLINE,
-                "manual_check": is_manual_check,
+                "enforced_service": is_enforced_service,
                 **check_plugin_kwargs,
             },
             type_specific_attributes={

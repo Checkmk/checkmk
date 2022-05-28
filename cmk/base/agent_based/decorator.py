@@ -65,7 +65,7 @@ def handle_check_mk_check_result(
                     service_name=description,
                     plugin_name=check_plugin_name,
                     plugin_kwargs={},
-                    is_manual=False,
+                    is_enforced=False,
                 ).replace("Crash dump:\n", "Crash dump:\\n")
 
             if _in_keepalive_mode():

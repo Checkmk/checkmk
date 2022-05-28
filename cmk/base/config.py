@@ -3045,15 +3045,12 @@ class HostConfig:
         return self._config_cache.host_extra_conf(self.hostname, custom_checks)
 
     @property
-    def static_checks(
+    def enforced_services_table(
         self,
     ) -> Sequence[Tuple[RulesetName, CheckPluginName, Item, TimespecificParameterSet]]:
-        """Returns a table of all "manual checks" configured for this host"""
         matched = []
-        for checkgroup_name in static_checks:
-            for entry in self._config_cache.host_extra_conf(
-                self.hostname, static_checks.get(checkgroup_name, [])
-            ):
+        for checkgroup_name, ruleset in static_checks.items():
+            for entry in self._config_cache.host_extra_conf(self.hostname, ruleset):
                 if len(entry) == 2:
                     checktype, item = entry
                     params = None

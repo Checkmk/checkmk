@@ -445,7 +445,7 @@ def test_check_table__get_static_check_entries(
     host_config = config_cache.get_host_config(hostname)
     static_check_parameters = [
         service.parameters
-        for service in check_table._get_static_check_entries(config_cache, host_config)
+        for service in check_table._get_enforced_services(config_cache, host_config)
     ]
 
     entries = config._get_checkgroup_parameters(

@@ -708,19 +708,19 @@ class AutomationAnalyseServices(Automation):
 
         # We just consider types of checks that are managed via WATO.
         # We have the following possible types of services:
-        # 1. manual checks (static_checks) (currently overriding inventorized checks)
-        # 2. inventorized check
+        # 1. enforced services (currently overriding discovered services)
+        # 2. disocvered services
         # 3. classical checks
         # 4. active checks
 
-        # 1. Manual checks
+        # 1. Enforced services
         # If we used the check table here, we would end up with the
         # *effective* parameters, these are the *configured* ones.
-        for checkgroup_name, check_plugin_name, item, params in host_config.static_checks:
+        for checkgroup_name, check_plugin_name, item, params in host_config.enforced_services_table:
             descr = config.service_description(hostname, check_plugin_name, item)
             if descr == servicedesc:
                 return {
-                    "origin": "static",
+                    "origin": "static",  # TODO: (how) can we change this to "enforced"?
                     "checkgroup": checkgroup_name,
                     "checktype": str(check_plugin_name),
                     "item": item,

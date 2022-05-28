@@ -1270,7 +1270,7 @@ def test_host_config_static_checks(
         },
     )
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.get_host_config(hostname).static_checks == result
+    assert config_cache.get_host_config(hostname).enforced_services_table == result
 
 
 @pytest.mark.parametrize(

@@ -558,7 +558,9 @@ class ReportRendererCheck(ABCReportRenderer):
         _crash_row(_("Host"), details["host"], odd=False, legend=True)
         _crash_row(_("Is Cluster Host"), format_bool(details.get("is_cluster")), odd=True)
         _crash_row(_("Check Type"), details["check_type"], odd=False)
-        _crash_row(_("Manual Check"), format_bool(details.get("manual_check")), odd=True, pre=True)
+        _crash_row(
+            _("Enforced Service"), format_bool(details.get("enforced_service")), odd=True, pre=True
+        )
         _crash_row(_("Inline-SNMP"), format_bool(details.get("inline_snmp")), odd=True, pre=True)
         _crash_row(_("Check Item"), details.get("item", "This check has no item."), odd=False)
         _crash_row(_("Description"), details["description"], odd=True)

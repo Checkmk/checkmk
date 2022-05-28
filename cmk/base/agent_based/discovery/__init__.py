@@ -418,7 +418,7 @@ def _get_post_discovery_autocheck_services(
 
     Note:
 
-        Discovered checks that are shadowed by manual checks will vanish that way.
+        Discovered services that are shadowed by enforces services will vanish that way.
 
     """
     post_discovery_services = {}
@@ -1054,9 +1054,9 @@ def _get_host_services(
 
     services.update(_reclassify_disabled_items(host_config.hostname, services))
 
-    # remove the ones shadowed by manual services
-    manual_services = _manual_services(host_config)
-    return _group_by_transition({k: v for k, v in services.items() if k not in manual_services})
+    # remove the ones shadowed by enforced services
+    enforced_services = _enforced_services(host_config)
+    return _group_by_transition({k: v for k, v in services.items() if k not in enforced_services})
 
 
 # Do the actual work for a non-cluster host or node
@@ -1116,7 +1116,7 @@ def _node_service_source(
     return "clustered_new"
 
 
-def _manual_services(
+def _enforced_services(
     host_config: config.HostConfig,
 ) -> Mapping[ServiceID, ConfiguredService]:
     return check_table.get_check_table(host_config.hostname, skip_autochecks=True)
@@ -1314,12 +1314,12 @@ def get_check_preview(
                 host_config=host_config,
                 ip_address=ip_address,
                 service=service,
-                check_source="manual",
+                check_source="manual",  # "enforced" would be nicer
                 parsed_sections_broker=parsed_sections_broker,
                 found_on_nodes=[host_config.hostname],
                 value_store_manager=value_store_manager,
             )
-            for service in _manual_services(host_config).values()
+            for service in _enforced_services(host_config).values()
         ]
 
     return [

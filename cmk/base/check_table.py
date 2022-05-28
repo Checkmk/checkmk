@@ -66,7 +66,7 @@ def _aggregate_check_table_services(
             s for s in config_cache.get_autochecks_of(host_config.hostname) if sfilter.keep(s)
         )
 
-    yield from (s for s in _get_static_check_entries(config_cache, host_config) if sfilter.keep(s))
+    yield from (s for s in _get_enforced_services(config_cache, host_config) if sfilter.keep(s))
 
     # Now add checks a cluster might receive from its nodes
     if host_config.is_cluster:
@@ -127,12 +127,12 @@ class _ServiceFilter:
         return not svc_is_mine
 
 
-def _get_static_check_entries(
+def _get_enforced_services(
     config_cache: config.ConfigCache,
     host_config: config.HostConfig,
 ) -> Iterator[ConfiguredService]:
     entries = []
-    for _checkgroup_name, check_plugin_name, item, params in host_config.static_checks:
+    for _checkgroup_name, check_plugin_name, item, params in host_config.enforced_services_table:
 
         descr = config.service_description(host_config.hostname, check_plugin_name, item)
         entries.append(
@@ -152,10 +152,9 @@ def _get_static_check_entries(
             )
         )
 
-    # Note: We need to reverse the order of the static_checks. This is
-    # because users assume that earlier rules have precedence over later
-    # ones. For static checks that is important if there are two rules for
-    # a host with the same combination of check type and item.
+    # Note: We need to reverse the order of the enforced services.
+    # Users assume that earlier rules have precedence over later ones.
+    # Important if there are two rules for a host with the same combination of plugin name and item.
     return reversed(entries)
 
 
@@ -169,7 +168,7 @@ def _get_clustered_services(
         # (mo): in particular: this means that autochecks will win over static checks.
         #       for a single host the static ones win.
         node_config = config_cache.get_host_config(node)
-        node_checks = list(_get_static_check_entries(config_cache, node_config))
+        node_checks = list(_get_enforced_services(config_cache, node_config))
         if not (skip_autochecks or host_config.is_ping_host):
             node_checks += config_cache.get_autochecks_of(node)
 

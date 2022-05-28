@@ -514,7 +514,7 @@ def get_aggregated_result(
                 service_name=service.description,
                 plugin_name=service.check_plugin_name,
                 plugin_kwargs={**item_kw, **params_kw, **section_kws},
-                is_manual=service.id() in table,
+                is_enforced=service.id() in table,
             ),
         )
 

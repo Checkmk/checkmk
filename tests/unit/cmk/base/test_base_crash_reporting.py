@@ -83,7 +83,7 @@ def test_check_crash_report_from_exception(monkeypatch):
             hostname=HostName("testhost"),
             check_plugin_name="uptime",
             check_plugin_kwargs={"item": None, "params": None},
-            is_manual_check=False,
+            is_enforced_service=False,
             description="Uptime",
             text="Output",
         )
@@ -102,7 +102,7 @@ def test_check_crash_report_from_exception(monkeypatch):
         "item": (type(None), None),
         "params": (type(None), None),
         "inline_snmp": (bool, False),
-        "manual_check": (bool, False),
+        "enforced_service": (bool, False),
     }.items():
         assert key in crash.crash_info["details"]
         assert isinstance(  # pylint: disable= isinstance-second-argument-not-valid-type
@@ -127,7 +127,7 @@ def test_check_crash_report_save(monkeypatch):
             hostname=HostName("testhost"),
             check_plugin_name="uptime",
             check_plugin_kwargs={},
-            is_manual_check=False,
+            is_enforced_service=False,
             description="Uptime",
             text="Output",
         )
@@ -152,7 +152,7 @@ def test_check_crash_report_read_agent_output(monkeypatch):
             hostname=HostName("testhost"),
             check_plugin_name="uptime",
             check_plugin_kwargs={},
-            is_manual_check=False,
+            is_enforced_service=False,
             description="Uptime",
             text="Output",
         )
@@ -177,7 +177,7 @@ def test_check_crash_report_read_snmp_info(monkeypatch):
             hostname=HostName("testhost"),
             check_plugin_name="snmp_uptime",
             check_plugin_kwargs={},
-            is_manual_check=False,
+            is_enforced_service=False,
             description="Uptime",
             text="Output",
         )

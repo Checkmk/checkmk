@@ -31,7 +31,7 @@ constexpr std::string_view kCmdLineChannel{"--agent-channel"};
 constexpr std::string_view kCmdLineAllowedIp{"-A"};
 constexpr std::string_view kCmdLineVersion{"-V"};
 constexpr std::string_view kCmdLineStatus{"status --json"};
-constexpr uint16_t kWindowsInternalServicePort{50001U};
+constexpr uint16_t kWindowsInternalServicePort{28250U};
 constexpr uint16_t kWindowsInternalExePort{50002U};
 
 std::filesystem::path GetController(const std::filesystem::path &service);

@@ -1,0 +1,16 @@
+Title: Windows agent internal port set to 28250
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1653937367
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0i1
+
+The change is intended to avoid the situation when the internal 
+agent port is randomly 'stolen' breaking the monitoring. 
+The former port 500001 is located  in the range 32768-65535 
+and ports from the range  may be used(randomly) by TCP clients 
+or even blocked by Windows(depends from version and service pack).

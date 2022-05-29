@@ -52,14 +52,14 @@ class TimespecificParameters:
             {},
         )
 
-    def _is_constant(self) -> bool:
+    def is_constant(self) -> bool:
         return not any(p.timeperiod_values for p in self.entries)
 
     def preview(
         self, is_active: _IsTimeperiodActiveCallback
     ) -> Union[TimespecificParametersPreview, LegacyCheckParameters]:
         """Create a serializeable version for preview via automation call"""
-        if self._is_constant():
+        if self.is_constant():
             return self.evaluate(is_active)
         return {
             "tp_computed_params": {

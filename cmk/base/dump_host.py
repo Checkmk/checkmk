@@ -141,6 +141,8 @@ def _evaluate_params(params: Union[LegacyCheckParameters, TimespecificParameters
     if not isinstance(params, TimespecificParameters):
         return repr(params)
 
+    if params.is_constant():
+        return repr(params.evaluate(cmk.base.core.timeperiod_active))
     return "Timespecific parameters at %s: %r" % (
         cmk.utils.render.date_and_time(time.time()),
         params.evaluate(cmk.base.core.timeperiod_active),

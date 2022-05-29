@@ -13,7 +13,7 @@ pub const CMK_AGENT_USER: &str = "cmk-agent";
 #[cfg(unix)]
 pub const UNIX_AGENT_SOCKET: &str = "/run/check-mk-agent.socket";
 #[cfg(windows)]
-pub const WINDOWS_INTERNAL_PORT: &str = "50001";
+pub const WINDOWS_INTERNAL_PORT: &str = "28250";
 
 // FILES
 pub const REGISTRATION_PRESET_FILE: &str = "registration_preset.json";

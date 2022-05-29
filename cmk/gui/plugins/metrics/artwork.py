@@ -20,10 +20,10 @@ from cmk.gui.logged_in import user
 from cmk.gui.plugins.metrics import rrd_fetch, timeseries
 from cmk.gui.plugins.metrics.utils import (
     Curve,
-    GraphArtwork,
     GraphDataRange,
     GraphRecipe,
     GraphRenderOptions,
+    HorizontalRule,
     SizeEx,
     unit_info,
     UnitInfo,
@@ -53,6 +53,31 @@ class CurveValue(TypedDict):
     title: str
     color: str
     rendered_value: tuple[TimeSeriesValue, str]
+
+
+class GraphArtwork(TypedDict):
+    # Labelling, size, layout
+    title: Optional[str]
+    width: int
+    height: int
+    mirrored: bool
+    # Actual data and axes
+    curves: list[LayoutedCurve]
+    horizontal_rules: list[HorizontalRule]
+    vertical_axis: VerticalAxis
+    time_axis: TimeAxis
+    # Displayed range
+    start_time: Timestamp
+    end_time: Timestamp
+    step: Seconds
+    explicit_vertical_range: tuple[Optional[float], Optional[float]]
+    requested_vrange: Optional[tuple[float, float]]
+    requested_start_time: Timestamp
+    requested_end_time: Timestamp
+    requested_step: Union[str, Seconds]
+    pin_time: Optional[Timestamp]
+    # Definition itself, for reproducing the graph
+    definition: GraphRecipe
 
 
 #   .--Default Render Options----------------------------------------------.

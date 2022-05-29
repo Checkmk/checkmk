@@ -80,8 +80,8 @@ TransformedAtom = TypeVar("TransformedAtom")
 StackElement = Union[Atom, TransformedAtom]
 
 ScalarDefinition = Union[str, Tuple[str, Union[str, LazyString]]]
-
-GraphArtwork = dict[str, Any]
+HorizontalRule = tuple[float, str, str, Union[str, LazyString]]
+RGBColor = tuple[float, float, float]  # (1.5, 0.0, 0.5)
 
 
 class _CurveMandatory(TypedDict):
@@ -1050,7 +1050,7 @@ def metric_recipe_and_unit(
 def horizontal_rules_from_thresholds(
     thresholds: Iterable[ScalarDefinition],
     translated_metrics: TranslatedMetrics,
-):
+) -> list[HorizontalRule]:
     horizontal_rules = []
     for entry in thresholds:
         if isinstance(entry, tuple):
@@ -1254,7 +1254,7 @@ def hsv_to_hexrgb(hsv: Tuple[float, float, float]) -> str:
     return render_color(colorsys.hsv_to_rgb(*hsv))
 
 
-def render_color(color_rgb: Tuple[float, float, float]) -> str:
+def render_color(color_rgb: RGBColor) -> str:
     return rgb_color_to_hex_color(
         int(color_rgb[0] * 255),
         int(color_rgb[1] * 255),
@@ -1262,7 +1262,7 @@ def render_color(color_rgb: Tuple[float, float, float]) -> str:
     )
 
 
-def parse_color(color: str) -> Tuple[float, float, float]:
+def parse_color(color: str) -> RGBColor:
     """Convert '#ff0080' to (1.5, 0.0, 0.5)"""
     rgb = hex_color_to_rgb_color(color)
     return rgb[0] / 255.0, rgb[1] / 255.0, rgb[2] / 255.0

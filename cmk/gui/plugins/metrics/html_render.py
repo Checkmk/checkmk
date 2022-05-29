@@ -35,10 +35,9 @@ from cmk.gui.i18n import _, _u
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.plugins.metrics import artwork
+from cmk.gui.plugins.metrics.artwork import GraphArtwork, LayoutedCurve
 from cmk.gui.plugins.metrics.identification import graph_identification_types
 from cmk.gui.plugins.metrics.utils import (
-    Curve,
-    GraphArtwork,
     GraphDataRange,
     GraphRecipe,
     GraphRenderOptions,
@@ -217,7 +216,7 @@ def _render_graph_title_elements(
 
     title_format = transform_graph_render_options_title_format(graph_render_options["title_format"])
 
-    if "plain" in title_format:
+    if "plain" in title_format and graph_artwork["title"]:
         title_elements.append((graph_artwork["title"], None))
 
     # Only add host/service information for template based graphs
@@ -287,7 +286,7 @@ def _show_html_graph_title(
 def _graph_legend_enabled(
     graph_render_options: GraphRenderOptions, graph_artwork: GraphArtwork
 ) -> bool:
-    return graph_render_options["show_legend"] and graph_artwork["curves"]
+    return bool(graph_render_options["show_legend"] and graph_artwork["curves"])
 
 
 def _show_graph_html_content(
@@ -422,7 +421,7 @@ def get_scalars(
     return scalars
 
 
-def graph_curves(graph_artwork: GraphArtwork) -> list[Curve]:
+def graph_curves(graph_artwork: GraphArtwork) -> list[LayoutedCurve]:
     curves = []
     for curve in graph_artwork["curves"][::-1]:
         if not curve.get("dont_paint"):
@@ -516,11 +515,11 @@ def _show_graph_legend(
     # Render scalar values
     if graph_artwork["horizontal_rules"]:
         first = True
-        for _value, readable, color, title in graph_artwork["horizontal_rules"]:
+        for _value, readable, color, rule_title in graph_artwork["horizontal_rules"]:
             html.open_tr(class_=["scalar"] + (["first"] if first else []))
             html.open_td(style=font_size_style)
             html.write_html(render_color_icon(color))
-            html.write_text(title)
+            html.write_text(str(rule_title))
             html.close_td()
 
             # A colspan of 5 has to be used here, since the pin that is added by a click into

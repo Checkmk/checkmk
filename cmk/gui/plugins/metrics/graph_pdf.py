@@ -5,19 +5,20 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Render graphs in PDF. Is also used for PNG image rendering."""
 
-from typing import List, Optional
+from typing import Optional, Sequence
 
 from cmk.utils.type_defs import Timestamp
 
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
+from cmk.gui.plugins.metrics.artwork import GraphArtwork
 from cmk.gui.plugins.metrics.utils import (
     darken_color,
-    GraphArtwork,
     GraphDataRange,
     GraphRenderOptions,
     lighten_color,
     parse_color,
+    RGBColor,
 )
 
 SizeMM = float
@@ -161,7 +162,7 @@ def render_graph_pdf(
     # Paint curves
     pdf_document.save_state()
     pdf_document.add_clip_rect(t_orig, v_orig, t_mm, v_mm)
-    step = graph_artwork["step"] / 2.0
+    step = graph_artwork["step"] // 2
     for curve in graph_artwork["curves"]:
         if curve.get("dont_paint"):
             continue
@@ -347,7 +348,7 @@ def render_graph_pdf(
         legend_top = bottom - legend_top_margin + bottom_margin
         legend_column_width = (width - left_margin - left_border - right_margin) / 7.0
 
-        def paint_legend_line(color, texts):
+        def paint_legend_line(color: Optional[RGBColor], texts: Sequence[Optional[str]]) -> None:
             l = t_orig
             if color:
                 pdf_document.render_rect(
@@ -380,7 +381,7 @@ def render_graph_pdf(
             ("average", _("Average")),
             ("last", _("Last")),
         ]
-        scalars_legend_line: List[Optional[str]] = [None]
+        scalars_legend_line: list[Optional[str]] = [None]
 
         paint_legend_line(None, scalars_legend_line + [x[1] for x in scalars])
         pdf_document.render_line(t_orig, legend_top, t_orig + t_mm, legend_top)
@@ -397,7 +398,7 @@ def render_graph_pdf(
             for value, readable, color_from_artwork, title in graph_artwork["horizontal_rules"]:
                 legend_top -= legend_lineskip
                 paint_legend_line(
-                    parse_color(color_from_artwork), [title] + [None] * 3 + [readable]
+                    parse_color(color_from_artwork), [str(title), None, None, None, readable]
                 )
 
     if graph_artwork["definition"].get("is_forecast"):

@@ -92,7 +92,7 @@ from cmk.base.modes import keepalive_option, Mode, modes, Option
 #   |      \____|\___|_| |_|\___|_|  \__,_|_|  \___/| .__/ \__|___(_)      |
 #   |                                               |_|                    |
 #   +----------------------------------------------------------------------+
-#   | The general options that are available for all Checkmk modes. Only  |
+#   | The general options that are available for all Checkmk modes. Only   |
 #   | add new general options in case they are really affecting basic      |
 #   | things and used by the most of the modes.                            |
 #   '----------------------------------------------------------------------'
@@ -114,8 +114,6 @@ modes.register_general_option(
         handler_function=option_verbosity,
     )
 )
-
-_verbosity = 0
 
 
 def option_cache() -> None:

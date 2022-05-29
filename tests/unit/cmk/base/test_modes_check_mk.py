@@ -46,5 +46,5 @@ class TestModeDumpAgent:
     def test_success(self, hostname, raw_data, capsys):
         assert FileCacheFactory.disabled is False
 
-        check_mk.mode_dump_agent(hostname)
+        check_mk.mode_dump_agent({}, hostname)
         assert capsys.readouterr().out == raw_data.decode()

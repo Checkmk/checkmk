@@ -183,12 +183,12 @@ def test_mode_inventory_caching(hosts, cache, force, mocker):
 
     config_cache = config.get_config_cache()
 
-    if cache[0] is True:
-        cmk.base.modes.check_mk.option_cache()
-    elif cache[0] is False:
-        cmk.base.modes.check_mk.option_no_cache()  # --no-cache
-
     options: cmk.base.modes.check_mk._InventoryOptions = {}
+    if cache[0] is True:
+        options["cache"] = True  # --cache
+    elif cache[0] is False:
+        options["no-cache"] = True  # --no-cache
+
     if force[0]:
         options["force"] = True
 
@@ -222,7 +222,7 @@ def test_mode_discover_marked_hosts(mocker):
         max_age=config.max_cachefile_age(),
     )  # inventory_max_cachefile_age
     # TODO: First configure auto discovery to make this test really work
-    cmk.base.modes.check_mk.mode_discover_marked_hosts()
+    cmk.base.modes.check_mk.mode_discover_marked_hosts({})
     # assert Source.parse.call_count == 2  # type: ignore[attr-defined]
 
 
@@ -230,7 +230,7 @@ def test_mode_discover_marked_hosts(mocker):
 @pytest.mark.usefixtures("scenario")
 def test_mode_check_discovery_default(mocker):
     _patch_data_source(mocker, max_age=MaxAge(checking=0, discovery=0, inventory=120))
-    assert cmk.base.modes.check_mk.mode_check_discovery(HostName("ds-test-host1")) == 1
+    assert cmk.base.modes.check_mk.mode_check_discovery({}, HostName("ds-test-host1")) == 1
     assert Source.parse.call_count == 2  # type: ignore[attr-defined]
 
 
@@ -244,8 +244,15 @@ def test_mode_check_discovery_cached(mocker):
         maybe=True,
     )
 
-    cmk.base.modes.check_mk.option_cache()
-    assert cmk.base.modes.check_mk.mode_check_discovery(HostName("ds-test-host1")) == 1
+    assert (
+        cmk.base.modes.check_mk.mode_check_discovery(
+            {
+                "cache": True,
+            },
+            HostName("ds-test-host1"),
+        )
+        == 1
+    )
     assert Source.parse.call_count == 2  # type: ignore[attr-defined]
 
 
@@ -278,16 +285,26 @@ def test_mode_discover_explicit_hosts_cache(mocker):
         maybe=True,
         use_outdated=True,
     )
-    cmk.base.modes.check_mk.option_cache()
-    cmk.base.modes.check_mk.mode_discover({"discover": 1}, ["ds-test-host1"])
+    cmk.base.modes.check_mk.mode_discover(
+        {
+            "cache": True,  # --cache
+            "discover": 1,
+        },
+        ["ds-test-host1"],
+    )
     assert Source.parse.call_count == 2  # type: ignore[attr-defined]
 
 
 @pytest.mark.usefixtures("scenario")
 def test_mode_discover_explicit_hosts_no_cache(mocker):
     _patch_data_source(mocker, disabled=True, max_age=config.max_cachefile_age())
-    cmk.base.modes.check_mk.option_no_cache()  # --no-cache
-    cmk.base.modes.check_mk.mode_discover({"discover": 1}, ["ds-test-host1"])
+    cmk.base.modes.check_mk.mode_discover(
+        {
+            "no-cache": True,  # --no-cache
+            "discover": 1,
+        },
+        ["ds-test-host1"],
+    )
     assert Source.parse.call_count == 2  # type: ignore[attr-defined]
 
 
@@ -301,8 +318,12 @@ def test_mode_check_explicit_host():
 @pytest.mark.usefixtures("scenario")
 def test_mode_check_explicit_host_cache(mocker):
     _patch_data_source(mocker, maybe=True, use_outdated=True)
-    cmk.base.modes.check_mk.option_cache()
-    cmk.base.modes.check_mk.mode_check({}, ["ds-test-host1"])
+    cmk.base.modes.check_mk.mode_check(
+        {
+            "cache": True,  # --cache
+        },
+        ["ds-test-host1"],
+    )
     assert Source.parse.call_count == 2  # type: ignore[attr-defined]
 
 
@@ -313,15 +334,19 @@ def test_mode_check_explicit_host_no_cache(mocker):
         disabled=True,
         max_age=config.max_cachefile_age(),
     )
-    cmk.base.modes.check_mk.option_no_cache()  # --no-cache
-    cmk.base.modes.check_mk.mode_check({}, ["ds-test-host1"])
+    cmk.base.modes.check_mk.mode_check(
+        {
+            "no-cache": True,  # --no-cache
+        },
+        ["ds-test-host1"],
+    )
     assert Source.parse.call_count == 2  # type: ignore[attr-defined]
 
 
 @pytest.mark.usefixtures("scenario")
 def test_mode_dump_agent_explicit_host(mocker, capsys):
     _patch_data_source(mocker, max_age=config.max_cachefile_age())
-    cmk.base.modes.check_mk.mode_dump_agent(HostName("ds-test-host1"))
+    cmk.base.modes.check_mk.mode_dump_agent({}, HostName("ds-test-host1"))
     assert Source.parse.call_count == 2  # type: ignore[attr-defined]
     assert "<<<check_mk>>>" in capsys.readouterr().out
 
@@ -334,8 +359,12 @@ def test_mode_dump_agent_explicit_host_cache(mocker, capsys):
         maybe=True,
         use_outdated=True,
     )
-    cmk.base.modes.check_mk.option_cache()
-    cmk.base.modes.check_mk.mode_dump_agent(HostName("ds-test-host1"))
+    cmk.base.modes.check_mk.mode_dump_agent(
+        {
+            "cache": True,  # --cache
+        },
+        HostName("ds-test-host1"),
+    )
     assert Source.parse.call_count == 2  # type: ignore[attr-defined]
     assert "<<<check_mk>>>" in capsys.readouterr().out
 
@@ -343,8 +372,12 @@ def test_mode_dump_agent_explicit_host_cache(mocker, capsys):
 @pytest.mark.usefixtures("scenario")
 def test_mode_dump_agent_explicit_host_no_cache(mocker, capsys):
     _patch_data_source(mocker, disabled=True, max_age=config.max_cachefile_age())
-    cmk.base.modes.check_mk.option_no_cache()  # --no-cache
-    cmk.base.modes.check_mk.mode_dump_agent(HostName("ds-test-host1"))
+    cmk.base.modes.check_mk.mode_dump_agent(
+        {
+            "no-cache": True,  # --no-cache
+        },
+        HostName("ds-test-host1"),
+    )
     assert Source.parse.call_count == 2  # type: ignore[attr-defined]
     assert "<<<check_mk>>>" in capsys.readouterr().out
 

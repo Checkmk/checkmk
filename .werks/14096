@@ -1,0 +1,27 @@
+Title: <tt>cmk</tt>: fail on some previously ignored command line options
+Class: feature
+Compatible: incomp
+Component: checks
+Date: 1653836726
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1
+
+The command line flags <tt>--cache</tt>,  <tt>--no-cache</tt>, <tt>--no-tcp</tt>
+and  <tt>--usewalk</tt> only have an effect to commands that involve fetching
+data from a monitored host.
+They had no effect on all other commands, and now cause those commands to fail.
+
+The mentioned flags are now only allowed for the following <tt>cmk</tt> modes:
+
+<ul>
+  <li><tt>--check</tt> (the default)</li>
+  <li><tt>-d</tt> / <tt>--dump-agent</tt></li>
+  <li><tt>--discover-marked-hosts</tt></li>
+  <li><tt>--check-discovery</tt></li>
+  <li><tt>-I</tt> / <tt>--discover</tt></li>
+  <li><tt>-i</tt> / <tt>--inventory</tt></li>
+  <li><tt>--inventory-as-check</tt></li>
+</ul>
+

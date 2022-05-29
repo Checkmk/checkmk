@@ -8,11 +8,11 @@ import math
 import time
 from functools import partial
 from itertools import zip_longest
-from typing import Any, Callable, Iterable, List, Optional, Sequence, Tuple, TypedDict, Union
+from typing import Callable, Iterable, List, Literal, Optional, Sequence, Tuple, TypedDict, Union
 
 import cmk.utils.render
 from cmk.utils.prediction import TimeSeries, TimeSeriesValue
-from cmk.utils.type_defs import Seconds, Timestamp
+from cmk.utils.type_defs import Seconds, TimeRange, Timestamp
 
 from cmk.gui.http import request
 from cmk.gui.i18n import _
@@ -33,7 +33,25 @@ from cmk.gui.utils.theme import theme
 
 Label = Tuple[float, Optional[str], int]
 
-LayoutedCurve = dict[str, Any]
+
+class _LayoutedCurveMandatory(TypedDict):
+    color: str
+    title: str
+    scalars: dict[str, tuple[TimeSeriesValue, str]]
+
+
+class LayoutedCurveLine(_LayoutedCurveMandatory):
+    type: Literal["line"]
+    points: Sequence[TimeSeriesValue]
+
+
+class LayoutedCurveArea(_LayoutedCurveMandatory):
+    # Handle area and stack.
+    type: Literal["area"]
+    points: Sequence[tuple[TimeSeriesValue, TimeSeriesValue]]
+
+
+LayoutedCurve = Union[LayoutedCurveLine, LayoutedCurveArea]
 
 
 class VerticalAxis(TypedDict):
@@ -46,7 +64,10 @@ class VerticalAxis(TypedDict):
     max_label_length: int
 
 
-TimeAxis = dict[str, Any]
+class TimeAxis(TypedDict):
+    labels: Sequence[Label]
+    range: TimeRange
+    title: str
 
 
 class CurveValue(TypedDict):
@@ -254,14 +275,14 @@ def layout_graph_curves(curves: Sequence[Curve]) -> tuple[list[LayoutedCurve], b
     mirrored = False  # True if negative area shows positive values
 
     # Build positive and optional negative stack.
-    stacks: List[Optional[List]] = [None, None]
+    stacks: list[Optional[Sequence[TimeSeriesValue]]] = [None, None]
 
     # Compute the logical position (i.e. measured in the original unit)
     # of the data points, where stacking and Y-mirroring is being applied.
     # For areas we put (lower, higher) as point into the list of points.
     # For lines simply the values. For mirrored values from is >= to.
 
-    def mirror_point(p: Optional[int]) -> Optional[int]:
+    def mirror_point(p: TimeSeriesValue) -> TimeSeriesValue:
         if p is None:
             return p
         return -p
@@ -278,13 +299,6 @@ def layout_graph_curves(curves: Sequence[Curve]) -> tuple[list[LayoutedCurve], b
             stacks[1] = raw_points
             continue
 
-        layouted_curve = {
-            "color": curve["color"],
-            "title": curve["title"],
-            "scalars": curve["scalars"],
-        }
-        layouted_curves.append(layouted_curve)
-
         if line_type[0] == "-":
             raw_points = list(map(mirror_point, raw_points))
             line_type = line_type[1:]
@@ -295,33 +309,53 @@ def layout_graph_curves(curves: Sequence[Curve]) -> tuple[list[LayoutedCurve], b
 
         if line_type == "line":
             # Handles lines, they cannot stack
-            layouted_curve["type"] = "line"
-            layouted_curve["points"] = raw_points
+            layouted_curve: LayoutedCurve = LayoutedCurveLine(
+                {
+                    "type": "line",
+                    "points": raw_points,
+                    "color": curve["color"],
+                    "title": curve["title"],
+                    "scalars": curve["scalars"],
+                }
+            )
 
         else:
             # Handle area and stack.
-            layouted_curve["type"] = "area"
-            # Handle area and stack.
             this_stack = stacks[stack_nr]
             base = [] if this_stack is None or line_type == "area" else this_stack
-            layouted_curve["points"] = areastack(raw_points, base)
+
+            layouted_curve = LayoutedCurveArea(
+                {
+                    "type": "area",
+                    "points": areastack(raw_points, base),
+                    "color": curve["color"],
+                    "title": curve["title"],
+                    "scalars": curve["scalars"],
+                }
+            )
             stacks[stack_nr] = [x[stack_nr] for x in layouted_curve["points"]]
+
+        layouted_curves.append(layouted_curve)
 
     return layouted_curves, mirrored
 
 
-def areastack(raw_points, base):
-    def add_points(pair):
+def areastack(
+    raw_points: Sequence[TimeSeriesValue], base: Sequence[TimeSeriesValue]
+) -> list[tuple[TimeSeriesValue, TimeSeriesValue]]:
+    def add_points(pair: tuple[TimeSeriesValue, TimeSeriesValue]) -> TimeSeriesValue:
         a, b = pair
         if a is None and b is None:
             return None
         return denull(a) + denull(b)
 
-    def denull(value):
+    def denull(value: TimeSeriesValue) -> float:
         return value if value is not None else 0.0
 
     # Make sure that first entry in pair is not greater than second
-    def fix_swap(pp):
+    def fix_swap(
+        pp: tuple[TimeSeriesValue, TimeSeriesValue]
+    ) -> tuple[TimeSeriesValue, TimeSeriesValue]:
         lower, upper = pp
         if lower is None and upper is None:
             return pp
@@ -350,13 +384,13 @@ def compute_graph_artwork_curves(
 
 
 # Result is a list with len(rrddata)*2 + 1 vertical values
-def halfstep_interpolation(rrddata):
+def halfstep_interpolation(rrddata: TimeSeries) -> list[TimeSeriesValue]:
     if not rrddata:
         return []
 
     points = [rrddata[0]] * 3
     last_point = rrddata[0]
-    for point in rrddata[1:]:
+    for point in list(rrddata)[1:]:
         if last_point is None and point is None:
             points += [None, None]
         elif last_point is None:

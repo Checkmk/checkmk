@@ -8,6 +8,8 @@ import pytest
 
 from tests.testlib import on_time
 
+from cmk.utils.prediction import TimeSeries
+
 from cmk.gui.plugins.metrics import artwork
 
 
@@ -75,8 +77,16 @@ def test_dist_week(args, result):
         assert list(artwork.dist_week(*args)) == result
 
 
-def test_halfstep_interpolation():
-    assert artwork.halfstep_interpolation([5, 7, None]) == [5, 5, 5, 6, 7, 7, None]
+def test_halfstep_interpolation() -> None:
+    assert artwork.halfstep_interpolation(TimeSeries([5.0, 7.0, None], (123, 234, 10))) == [
+        5.0,
+        5.0,
+        5.0,
+        6.0,
+        7.0,
+        7.0,
+        None,
+    ]
 
 
 @pytest.mark.parametrize(

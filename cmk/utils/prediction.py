@@ -155,16 +155,17 @@ class TimeSeries:
     def __init__(
         self,
         data: TimeSeriesValues,
-        timewindow: Optional[Tuple[float, float, float]] = None,
+        timewindow: Optional[tuple[Timestamp, Timestamp, Seconds]] = None,
         **metadata: str,
     ) -> None:
         if timewindow is None:
             if not data or data[0] is None or data[1] is None or data[2] is None:
                 raise ValueError(data)
 
-            timewindow = data[0], data[1], data[2]
+            timewindow = int(data[0]), int(data[1]), int(data[2])
             data = data[3:]
 
+        assert timewindow is not None
         self.start = int(timewindow[0])
         self.end = int(timewindow[1])
         self.step = int(timewindow[2])

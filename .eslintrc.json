@@ -4,7 +4,7 @@
         "browser": true,
         "commonjs": true
     },
-    "extends": ["eslint:recommended", "plugin:compat/recommended", "prettier"],
+    "extends": ["eslint:recommended", "plugin:compat/recommended", "prettier", "plugin:@typescript-eslint/recommended"],
     "parserOptions": {
         "ecmaVersion": 6,
         "sourceType": "module"
@@ -30,5 +30,8 @@
             "always"
         ],
         "prettier/prettier": 2
-    }
+    },
+    "ignorePatterns": [
+        "*_min.js"
+    ]
 }

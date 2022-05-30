@@ -242,6 +242,12 @@ test-format-js:
 test-type-js:
 	cd ..; npm run check-types
 
+test-lint-js:
+	cd ..; npm run lint
+
+test-lint-js-docker:
+	../scripts/run-in-docker.sh make --quiet test-lint-js
+
 test-format-js-docker:
 	../scripts/run-in-docker.sh make --quiet test-format-js
 

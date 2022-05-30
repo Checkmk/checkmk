@@ -607,6 +607,8 @@ class NodeDisplayHint:
     title: str
     short_title: str
     _long_title_function: Callable[[], str]
+    attributes_hint: AttributesDisplayHint
+    table_hint: TableDisplayHint
 
     @property
     def long_title(self) -> str:
@@ -614,7 +616,7 @@ class NodeDisplayHint:
 
     @classmethod
     def make(cls, path: SDPath) -> NodeDisplayHint:
-        raw_path, raw_hint = cls._get_raw_path_or_hint(path)
+        raw_path, raw_hint, attributes_hint, table_hint = cls._get_raw_path_or_hint(path)
         title = _make_title_function(raw_hint)(raw_path)
         return cls(
             raw_path=raw_path,
@@ -622,26 +624,53 @@ class NodeDisplayHint:
             title=title,
             short_title=raw_hint.get("short", title),
             _long_title_function=_make_long_title_function(title, path[:-1]),
+            attributes_hint=attributes_hint,
+            table_hint=table_hint,
         )
 
     @staticmethod
-    def _get_raw_path_or_hint(path: SDPath) -> Tuple[str, InventoryHintSpec]:
+    def _get_raw_path_or_hint(
+        path: SDPath,
+    ) -> Tuple[str, InventoryHintSpec, AttributesDisplayHint, TableDisplayHint]:
         if not path:
             raw_path = "."
-            return raw_path, inventory_displayhints.get(raw_path, {})
+            return (
+                raw_path,
+                inventory_displayhints.get(raw_path, {}),
+                AttributesDisplayHint.make_from_hint({}),
+                TableDisplayHint.make_from_hint({}),
+            )
 
         # We either have attributes or a table.
-        base_path = f".{_get_raw_path(path)}"
-        for suffix in [".", ":"]:
-            raw_path = f"{base_path}{suffix}"
-            if hint := inventory_displayhints.get(raw_path, {}):
-                return raw_path, hint
+        if (raw_path := f".{_get_raw_path(path)}.") in inventory_displayhints:
+            raw_hint = inventory_displayhints[raw_path]
+            return (
+                raw_path,
+                raw_hint,
+                AttributesDisplayHint.make_from_hint(raw_hint),
+                TableDisplayHint.make_from_hint({}),
+            )
 
-        return f"{base_path}.", {}
+        if (raw_path := f".{_get_raw_path(path)}:") in inventory_displayhints:
+            raw_hint = inventory_displayhints[raw_path]
+            return (
+                raw_path,
+                raw_hint,
+                AttributesDisplayHint.make_from_hint({}),
+                TableDisplayHint.make_from_hint(raw_hint),
+            )
+
+        return (
+            f".{_get_raw_path(path)}.",
+            {},
+            AttributesDisplayHint.make_from_hint({}),
+            TableDisplayHint.make_from_hint({}),
+        )
 
     @classmethod
     def make_from_hint(cls, raw_path: SDRawPath, raw_hint: InventoryHintSpec) -> NodeDisplayHint:
         inventory_path = inventory.InventoryPath.parse(raw_path)
+        attributes_hint, table_hint = cls._get_attributes_or_table_hint(inventory_path, raw_hint)
         title = _make_title_function(raw_hint)(raw_path)
         return cls(
             raw_path=raw_path,
@@ -649,6 +678,22 @@ class NodeDisplayHint:
             title=title,
             short_title=raw_hint.get("short", title),
             _long_title_function=_make_long_title_function(title, inventory_path.path[:-1]),
+            attributes_hint=attributes_hint,
+            table_hint=table_hint,
+        )
+
+    @staticmethod
+    def _get_attributes_or_table_hint(
+        inventory_path: inventory.InventoryPath, raw_hint: InventoryHintSpec
+    ) -> Tuple[AttributesDisplayHint, TableDisplayHint]:
+        if inventory_path.source == inventory.TreeSource.table:
+            return (
+                AttributesDisplayHint.make_from_hint({}),
+                TableDisplayHint.make_from_hint(raw_hint),
+            )
+        return (
+            AttributesDisplayHint.make_from_hint(raw_hint),
+            TableDisplayHint.make_from_hint({}),
         )
 
 
@@ -663,36 +708,13 @@ class TableDisplayHint:
     key_order: Sequence[str]
     is_show_more: bool
     view_name: Optional[str]
-    short_title: str
-    _long_title_function: Callable[[], str]
-
-    @property
-    def long_title(self) -> str:
-        return self._long_title_function()
 
     @classmethod
-    def make(cls, path: SDPath) -> TableDisplayHint:
-        raw_path = f".{_get_raw_path(path)}:" if path else "."
-        raw_hint = inventory_displayhints.get(raw_path, {})
-        title = _make_title_function(raw_hint)(raw_path)
+    def make_from_hint(cls, raw_hint: InventoryHintSpec) -> TableDisplayHint:
         return cls(
             key_order=raw_hint.get("keyorder", []),
             is_show_more=raw_hint.get("is_show_more", True),
             view_name=raw_hint.get("view"),
-            short_title=raw_hint.get("short", title),
-            _long_title_function=_make_long_title_function(title, path[:-1]),
-        )
-
-    @classmethod
-    def make_from_hint(cls, raw_path: SDRawPath, raw_hint: InventoryHintSpec) -> TableDisplayHint:
-        inventory_path = inventory.InventoryPath.parse(raw_path)
-        title = _make_title_function(raw_hint)(raw_path)
-        return cls(
-            key_order=raw_hint.get("keyorder", []),
-            is_show_more=raw_hint.get("is_show_more", True),
-            view_name=raw_hint.get("view"),
-            short_title=raw_hint.get("short", title),
-            _long_title_function=_make_long_title_function(title, inventory_path.path[:-1]),
         )
 
     def make_titles(
@@ -751,9 +773,7 @@ class AttributesDisplayHint:
     key_order: Sequence[str]
 
     @classmethod
-    def make(cls, path: SDPath) -> AttributesDisplayHint:
-        raw_path = f".{_get_raw_path(path)}." if path else "."
-        raw_hint = inventory_displayhints.get(raw_path, {})
+    def make_from_hint(cls, raw_hint: InventoryHintSpec) -> AttributesDisplayHint:
         return cls(
             key_order=raw_hint.get("keyorder", []),
         )
@@ -990,13 +1010,9 @@ def _declare_inv_column(raw_path: SDRawPath, raw_hint: InventoryHintSpec) -> Non
 
 def _make_hint_from_raw(
     raw_path: SDRawPath, raw_hint: InventoryHintSpec
-) -> Union[NodeDisplayHint, TableDisplayHint, AttributeDisplayHint]:
-    if raw_path.endswith("."):
+) -> Union[NodeDisplayHint, AttributeDisplayHint]:
+    if raw_path.endswith(".") or raw_path.endswith(":"):
         return NodeDisplayHint.make_from_hint(raw_path, raw_hint)
-
-    if raw_path.endswith(":"):
-        return TableDisplayHint.make_from_hint(raw_path, raw_hint)
-
     return AttributeDisplayHint.make_from_hint(raw_path, raw_hint)
 
 
@@ -1089,7 +1105,9 @@ def _inv_find_subtable_columns(raw_path: SDRawPath) -> List[str]:
     display hint.
 
     Also use the names found in keyorder to get even more of the available columns."""
-    table_hint = TableDisplayHint.make_from_hint(raw_path, inventory_displayhints[raw_path])
+    table_hint = NodeDisplayHint.make_from_hint(
+        raw_path, inventory_displayhints[raw_path]
+    ).table_hint
 
     # Create dict from column name to its order number in the list
     with_numbers = enumerate(table_hint.key_order)
@@ -1425,9 +1443,9 @@ def _declare_views(
 ) -> None:
     is_show_more = True
     if len(raw_paths) == 1:
-        inventory_path = inventory.InventoryPath.parse(raw_paths[0] or "")
-        table_hint = TableDisplayHint.make(list(inventory_path.path))
-        is_show_more = table_hint.is_show_more
+        is_show_more = NodeDisplayHint.make(
+            list(inventory.InventoryPath.parse(raw_paths[0] or "").path)
+        ).table_hint.is_show_more
 
     # Declare two views: one for searching globally. And one
     # for the items of one host.
@@ -2156,7 +2174,7 @@ class ABCNodeRenderer(abc.ABC):
     #   ---table----------------------------------------------------------------
 
     def show_table(self, table: Table) -> None:
-        table_hint = TableDisplayHint.make(list(table.path))
+        table_hint = NodeDisplayHint.make(list(table.path)).table_hint
 
         # Link to Multisite view with exactly this table
         if table_hint.view_name:
@@ -2220,7 +2238,7 @@ class ABCNodeRenderer(abc.ABC):
     #   ---attributes-----------------------------------------------------------
 
     def show_attributes(self, attributes: Attributes) -> None:
-        attrs_hint = AttributesDisplayHint.make(list(attributes.path))
+        attrs_hint = NodeDisplayHint.make(list(attributes.path)).attributes_hint
 
         html.open_table()
         for key, value in attrs_hint.sort_pairs(attributes.pairs):

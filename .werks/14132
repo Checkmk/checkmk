@@ -1,0 +1,12 @@
+Title: Monitoring CPU utilization for Ciena 5142 & 5171
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1654094212
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1
+
+This werks adds two new check plugins which monitor the CPU utilization of Ciena 5142 & 5171
+devices.

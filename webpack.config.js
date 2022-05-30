@@ -122,19 +122,26 @@ module.exports = {
         new webpack.EnvironmentPlugin(["ENTERPRISE", "MANAGED"]),
     ],
 };
+
+const babel_loader_paths = [
+    path.resolve(__dirname, "web/htdocs/js"),
+    path.resolve(__dirname, "node_modules/d3"),
+    path.resolve(__dirname, "node_modules/d3-flextree"),
+    path.resolve(__dirname, "node_modules/d3-sankey"),
+    path.resolve(__dirname, "node_modules/crossfilter2"),
+    // Additional packages needed for D3js v6:
+    path.resolve(__dirname, "node_modules/internmap"),
+    path.resolve(__dirname, "node_modules/delaunator"),
+];
+
+if (process.env.ENTERPRISE === "yes") {
+    babel_loader_paths.push(path.resolve(__dirname, "enterprise/web/htdocs/js"));
+}
+
 let babel_loader = {
     // Do not try to execute babel on all node_modules. But some d3 stuff seems to need it's help.
     exclude: /node_modules/,
-    include: [
-        path.resolve(__dirname, "web/htdocs/js"),
-        path.resolve(__dirname, "node_modules/d3"),
-        path.resolve(__dirname, "node_modules/d3-flextree"),
-        path.resolve(__dirname, "node_modules/d3-sankey"),
-        path.resolve(__dirname, "node_modules/crossfilter2"),
-        // Additional packages needed for D3js v6:
-        path.resolve(__dirname, "node_modules/internmap"),
-        path.resolve(__dirname, "node_modules/delaunator"),
-    ],
+    include: babel_loader_paths,
     use: {
         loader: "babel-loader",
         options: {

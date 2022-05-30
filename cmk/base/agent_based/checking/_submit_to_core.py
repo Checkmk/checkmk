@@ -90,19 +90,20 @@ def check_result(
     perfdata_format: Literal["pnp", "standard"],
     submitter: Submitter,
 ) -> None:
-    perftext = _sanitize_perftext(result, perfdata_format)
-
-    _output_check_result(
-        service_name, result.state, result.output, perftext, show_perfdata=show_perfdata
+    output = "%s|%s" % (
+        # The vertical bar indicates end of service output and start of metrics.
+        # Replace the ones in the output by a Uniocode "Light vertical bar"
+        result.output.replace("|", "\u2758"),
+        _sanitize_perftext(result, perfdata_format),
     )
+
+    _output_check_result(service_name, result.state, output, show_perfdata=show_perfdata)
 
     submitter(
         host_name,
         service_name,
         result.state,
-        # The vertical bar indicates end of service output and start of metrics.
-        # Replace the ones in the output by a Uniocode "Light vertical bar"
-        "%s|%s" % (result.output.replace("|", "\u2758"), perftext),
+        output,
         cache_info,
     )
 
@@ -331,23 +332,15 @@ def _output_check_result(
     servicedesc: ServiceName,
     state: ServiceState,
     infotext: ServiceDetails,
-    perftext: str,
     *,
     show_perfdata: bool,
 ) -> None:
-    if show_perfdata:
-        infotext_fmt = "%-56s"
-        p = f" ({perftext})"
-    else:
-        p = ""
-        infotext_fmt = "%s"
-
     console.verbose(
-        "%-20s %s%s" + infotext_fmt + "%s%s\n",
+        "%-20s %s%s%s%s%s\n",
         servicedesc,
         tty.bold,
         tty.states[state],
-        infotext.split("\n", 1)[0],
+        infotext.split("|", 1)[0].split("\n", 1)[0],
         tty.normal,
-        p,
+        f" ({infotext.split('|', 1)[1]})" if show_perfdata else "",
     )

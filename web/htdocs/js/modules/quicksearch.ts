@@ -7,7 +7,6 @@ import {get_url} from "ajax";
 var iCurrent: number | null = null;
 var oCurrent: HTMLAnchorElement | null = null;
 var oldValue = "";
-var g_ajax_obj: any = null;
 
 // Register an input field to be a search field and add eventhandlers
 export function register_search_field(field) {
@@ -88,7 +87,6 @@ function mkSearchKeyDown(e, oField) {
                 // When nothing selected, navigate with the current contents of the field
                 top!.frames["main"].location.href =
                     "search_open.py?q=" + encodeURIComponent(oField.value);
-                mkTermSearch();
                 close_popup();
             }
 
@@ -204,14 +202,6 @@ function handle_search_response(oField, code) {
     }
 }
 
-function mkTermSearch() {
-    // Terminate eventually already running request
-    if (g_ajax_obj) {
-        g_ajax_obj.abort();
-        g_ajax_obj = null;
-    }
-}
-
 // Build a new result list and show it up
 function mkSearch(oField) {
     if (oField == null) return;
@@ -220,8 +210,7 @@ function mkSearch(oField) {
     if (mkSearchResultShown() && val == oldValue) return; // nothing changed, no new search
     oldValue = val;
 
-    mkTermSearch();
-    g_ajax_obj = get_url(
+    get_url(
         "ajax_search.py?q=" + encodeURIComponent(val),
         handle_search_response,
         oField

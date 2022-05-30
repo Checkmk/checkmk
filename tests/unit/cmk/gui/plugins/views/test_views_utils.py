@@ -7,7 +7,7 @@
 import pytest
 
 import cmk.gui.plugins.views.utils as utils
-from cmk.gui.globals import user
+from cmk.gui.logged_in import user
 from cmk.gui.plugins.views.utils import (
     _encode_sorter_url,
     _parse_url_sorters,

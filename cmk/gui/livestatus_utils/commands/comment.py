@@ -29,7 +29,7 @@ def add_host_comment(
             The comment which will be stored for the host
 
         persistent:
-            If set, the comment will persist across program restarts until it is delete manually.
+            If set, the comment will persist across program restarts until it is deleted manually.
             If not set, the comment will be deleted the next time the Core is restarted.
 
         user:
@@ -114,7 +114,7 @@ def add_service_comment(
             The comment which will be stored for the service
 
         persistent:
-            If set, the comment will persist across program restarts until it is delete manually.
+            If set, the comment will persist across program restarts until it is deleted manually.
             If not set, the comment will be deleted the next time the Core is restarted.
 
         user:

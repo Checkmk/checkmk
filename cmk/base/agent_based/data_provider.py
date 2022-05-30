@@ -354,10 +354,13 @@ def _collect_host_sections(
     for source in sources:
         # Store piggyback information received from all sources of this host. This
         # also implies a removal of piggyback files received during previous calls.
+        if source.source_type is SourceType.MANAGEMENT:
+            # management board (SNMP or IPMI) does not support piggybacking
+            continue
         cmk.utils.piggyback.store_piggyback_raw_data(
             source.hostname,
             collected_host_sections.setdefault(
-                HostKey(source.hostname, source.ipaddress, SourceType.HOST),
+                HostKey(source.hostname, source.ipaddress, source.source_type),
                 HostSections[AgentRawDataSection](),
             ).piggybacked_raw_data,
         )

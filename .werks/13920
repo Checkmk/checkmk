@@ -1,0 +1,12 @@
+Title: UI: Increase width of scrollbars
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 2.1.0p2
+Date: 1653899336
+
+The width of UI scrollbars was rather small, making it difficult to hit the scrollbar with the cursor.
+The scrollbar width is now increased and in the dark theme its color is made lighter for a better user experience.

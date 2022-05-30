@@ -191,7 +191,7 @@ def _execute_checkmk_checks(
             file_cache_max_age=host_config.max_cachefile_age,
         )
         with CPUTracker() as tracker:
-            num_success, plugins_missing_data = check_host_services(
+            service_results = check_host_services(
                 config_cache=config_cache,
                 host_config=host_config,
                 ipaddress=ipaddress,
@@ -216,9 +216,8 @@ def _execute_checkmk_checks(
                     errors=broker.parsing_errors(),
                 ),
                 *_check_plugins_missing_data(
-                    plugins_missing_data,
+                    service_results,
                     exit_spec,
-                    bool(num_success),
                 ),
             ]
         return ActiveCheckResult.from_subresults(
@@ -268,16 +267,20 @@ def _timing_results(
 
 
 def _check_plugins_missing_data(
-    plugins_missing_data: List[CheckPluginName],
+    service_results: Sequence[_AggregatedResult],
     exit_spec: ExitSpec,
-    some_success: bool,
 ) -> Iterable[ActiveCheckResult]:
-    if not plugins_missing_data:
+
+    if all(r.data_received for r in service_results):
         return
 
-    if not some_success:
+    if not any(r.data_received for r in service_results):
         yield ActiveCheckResult(exit_spec.get("empty_output", 2), "Got no information from host")
         return
+
+    plugins_missing_data = {
+        r.service.check_plugin_name for r in service_results if not r.data_received
+    }
 
     # key is a legacy name, kept for compatibility.
     specific_plugins_missing_data_spec = exit_spec.get("specific_missing_sections", [])
@@ -313,7 +316,7 @@ def check_host_services(
     run_plugin_names: Container[CheckPluginName],
     dry_run: bool,
     show_perfdata: bool,
-) -> Tuple[int, List[CheckPluginName]]:
+) -> Sequence[_AggregatedResult]:
     """Compute service state results for all given services on node or cluster
 
     * Loops over all services,
@@ -342,10 +345,7 @@ def check_host_services(
                 )
             ]
 
-    return (
-        sum(1 for s in submittables if s.data_received),
-        sorted({s.service.check_plugin_name for s in submittables if not s.data_received}),
-    )
+    return submittables
 
 
 def _filter_services_to_check(

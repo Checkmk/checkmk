@@ -42,7 +42,7 @@ module.exports = {
     },
     externals: {
         // canvas-5-polyfill for IE11: tell webpack that canvas is provided by the browser
-        canvas: 'canvas',
+        canvas: "canvas",
     },
     resolve: {
         modules: [
@@ -123,57 +123,50 @@ module.exports = {
     ],
 };
 let babel_loader = {
-        // Do not try to execute babel on all node_modules. But some d3 stuff seems to need it's help.
-        exclude: /node_modules/,
-        include: [
-            path.resolve(__dirname, "web/htdocs/js"),
-            path.resolve(__dirname, "node_modules/d3"),
-            path.resolve(__dirname, "node_modules/d3-flextree"),
-            path.resolve(__dirname, "node_modules/d3-sankey"),
-            path.resolve(__dirname, "node_modules/crossfilter2"),
-            // Additional packages needed for D3js v6:
-            path.resolve(__dirname, "node_modules/internmap"),
-            path.resolve(__dirname, "node_modules/delaunator"),
-        ],
-        use: {
-            loader: "babel-loader",
-            options: {
-                presets: [
-                    "@babel/typescript"
-                ],
-                plugins: ["@babel/plugin-transform-parameters",
-                          "@babel/proposal-class-properties",
-                          "@babel/proposal-object-rest-spread"
-                          ],
-            },
+    // Do not try to execute babel on all node_modules. But some d3 stuff seems to need it's help.
+    exclude: /node_modules/,
+    include: [
+        path.resolve(__dirname, "web/htdocs/js"),
+        path.resolve(__dirname, "node_modules/d3"),
+        path.resolve(__dirname, "node_modules/d3-flextree"),
+        path.resolve(__dirname, "node_modules/d3-sankey"),
+        path.resolve(__dirname, "node_modules/crossfilter2"),
+        // Additional packages needed for D3js v6:
+        path.resolve(__dirname, "node_modules/internmap"),
+        path.resolve(__dirname, "node_modules/delaunator"),
+    ],
+    use: {
+        loader: "babel-loader",
+        options: {
+            presets: ["@babel/typescript"],
+            plugins: [
+                "@babel/plugin-transform-parameters",
+                "@babel/proposal-class-properties",
+                "@babel/proposal-object-rest-spread",
+            ],
         },
-    };
-
-
+    },
+};
 
 if (process.env.WEBPACK_MODE === "quick") {
     console.log(
         "not using Babel in Webpack mode '" +
             process.env.WEBPACK_MODE +
             "', let's hope you know what your're doing..."
-
     );
-    babel_loader["test"]=  /\.ts?$/;
+    babel_loader["test"] = /\.ts?$/;
 } else {
     console.log("using Babel in Webpack mode '" + process.env.WEBPACK_MODE + "'");
-    babel_loader["test"]=  /\.(ts|js)?$/;
-    babel_loader["use"]["options"]["presets"].unshift(
-                    [
-                        "@babel/preset-env",
-                        {
-                            //debug: true,
-                            // This adds polyfills when needed. Requires core-js dependency.
-                            // See https://babeljs.io/docs/en/babel-preset-env#usebuiltins
-                            useBuiltIns: "usage",
-                            corejs: 3,
-                        },
-
-                    ]
-                )
+    babel_loader["test"] = /\.(ts|js)?$/;
+    babel_loader["use"]["options"]["presets"].unshift([
+        "@babel/preset-env",
+        {
+            //debug: true,
+            // This adds polyfills when needed. Requires core-js dependency.
+            // See https://babeljs.io/docs/en/babel-preset-env#usebuiltins
+            useBuiltIns: "usage",
+            corejs: 3,
+        },
+    ]);
 }
 module.exports.module.rules.unshift(babel_loader);

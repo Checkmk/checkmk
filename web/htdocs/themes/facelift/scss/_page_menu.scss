@@ -573,8 +573,8 @@ div#page_menu_popups {
 
       a.close_popup img {
         position: absolute;
-        top: 6px;
-        right: $spacing;
+        top: 8px;
+        right: $simplebar-track-width;
         width: 12px;
         height: auto;
       }
@@ -808,8 +808,8 @@ div#page_menu_popups div.side_popup {
 
     a.more {
       position: absolute;
-      top: 6px;
-      right: 4px;
+      top: 8px;
+      right: 6px;
     }
 
     ul {

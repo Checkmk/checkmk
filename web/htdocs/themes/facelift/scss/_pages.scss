@@ -183,7 +183,7 @@ body {
     div#main_page_content {
       flex: 1 1 auto;
       height: 100%;
-      padding-right: 11px;
+      padding-right: $simplebar-track-width;
       padding-bottom: 20px;
       overflow: auto;
 

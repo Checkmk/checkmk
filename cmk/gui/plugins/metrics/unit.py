@@ -121,6 +121,13 @@ unit_info["bytes/s"] = {
     "valuespec": Filesize,
 }
 
+unit_info["s/s"] = {
+    "title": _("seconds per second"),
+    "symbol": _("s/s"),
+    "render": lambda v: cmk.utils.render.physical_precision(v, 3, _("s/s")),
+    "js_render": "(v) => cmk.number_format.physical_precision(v, 3, 's/s')",
+}
+
 
 def physical_precision_list(values, precision, unit_symbol) -> tuple[str, list[str]]:
     if not values:

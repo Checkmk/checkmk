@@ -4,7 +4,7 @@
 // source code package.
 
 //
-// support ftomatting of user definde data types
+// support formatting of user defined data types
 // No C++ file
 #pragma once
 
@@ -12,6 +12,7 @@
 
 #include <chrono>
 #include <filesystem>
+#include <optional>
 
 template <>
 struct fmt::formatter<std::filesystem::path> {
@@ -75,5 +76,22 @@ struct fmt::formatter<std::chrono::nanoseconds> {
     template <typename FormatContext>
     auto format(const std::chrono::nanoseconds &p, FormatContext &ctx) {
         return format_to(ctx.out(), "{}ns", p.count());
+    }
+};
+
+template <typename T>
+struct fmt::formatter<std::optional<T>> {
+    constexpr auto parse(format_parse_context &ctx) {
+        // Return an iterator past the end of the parsed range:
+        return ctx.end();
+    }
+
+    template <typename FormatContext>
+    auto format(const std::optional<T> &p, FormatContext &ctx) {
+        if (p.has_value()) {
+            return format_to(ctx.out(), "{}", *p);
+        } else {
+            return format_to(ctx.out(), "None");
+        }
     }
 };

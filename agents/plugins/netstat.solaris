@@ -9,7 +9,7 @@
 
 # Disable unused variable error (needed to keep track of version)
 # shellcheck disable=SC2034
-CMK_VERSION="2.1.0p1"
+CMK_VERSION="2.1.0p2"
 
 # This is not part of the standard agent since it can take very
 # long to run if your TCP/UDP table is large. Netstat seems to

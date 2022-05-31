@@ -1,4 +1,4 @@
-$CMK_VERSION = "2.1.0p1"
+$CMK_VERSION = "2.1.0p2"
 Add-PSSnapin Citrix*
 
 ### Citrix XenApp Serverload

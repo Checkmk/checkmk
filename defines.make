@@ -41,7 +41,7 @@ EDITION            := free
 EDITION_SHORT      := cfe
 endif
 
-VERSION            := 2.1.0p1
+VERSION            := 2.1.0p2
 OMD_VERSION        := $(VERSION).$(EDITION_SHORT)
 # Do not use the the ".c?e" EDITION_SHORT suffix, the edition is part of the package name
 PKG_VERSION        := $(VERSION)

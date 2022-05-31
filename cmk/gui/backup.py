@@ -28,6 +28,7 @@ import cmk.utils.render as render
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
 from cmk.utils.schedule import next_scheduled_time
+from cmk.utils.site import omd_site
 
 import cmk.gui.forms as forms
 import cmk.gui.key_mgmt as key_mgmt
@@ -1676,7 +1677,7 @@ class PageBackupEditKey(key_mgmt.PageEditKey):
         )
 
     def _generate_key(self, alias: str, passphrase: str) -> key_mgmt.Key:
-        key = key_mgmt.generate_key(alias, passphrase)
+        key = key_mgmt.generate_key(alias, passphrase, omd_site())
         # Mark key as not downloaded yet to issue a warning to the user that the key
         # should be backed up. The warning is removed on first download.
         key.not_downloaded = True

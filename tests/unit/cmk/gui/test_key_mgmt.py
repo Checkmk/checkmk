@@ -9,6 +9,8 @@ from pathlib import Path
 
 import pytest
 
+from livestatus import SiteId
+
 import cmk.gui.key_mgmt as key_mgmt
 from cmk.gui.logged_in import UserContext
 from cmk.gui.type_defs import UserId
@@ -19,7 +21,7 @@ def test_key_mgmt_create_key(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) ->
     monkeypatch.setattr(time, "time", lambda: 123)
 
     with UserContext(UserId("dingdöng")):
-        key = key_mgmt.generate_key("älias", "passphra$e")
+        key = key_mgmt.generate_key("älias", "passphra$e", SiteId("test-site"))
     assert isinstance(key, key_mgmt.Key)
     assert key.alias == "älias"
     assert key.date == 123

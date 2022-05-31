@@ -11,6 +11,8 @@ from typing import Any, Literal, Mapping, Optional, Union
 
 from OpenSSL import crypto
 
+from livestatus import SiteId
+
 import cmk.utils.render
 import cmk.utils.store as store
 from cmk.utils.site import omd_site
@@ -246,7 +248,7 @@ class PageEditKey:
         for key_id in keys:
             new_id = max(new_id, key_id + 1)
 
-        keys[new_id] = generate_key(alias, passphrase)
+        keys[new_id] = generate_key(alias, passphrase, omd_site())
         self.key_store.save(keys)
 
     def page(self) -> None:
@@ -520,11 +522,11 @@ class PageDownloadKey:
         )
 
 
-def generate_key(alias: str, passphrase: str) -> Key:
+def generate_key(alias: str, passphrase: str, site_id: SiteId) -> Key:
     pkey = crypto.PKey()
     pkey.generate_key(crypto.TYPE_RSA, 2048)
 
-    cert = create_self_signed_cert(pkey)
+    cert = create_self_signed_cert(pkey, site_id)
     return Key(
         certificate=crypto.dump_certificate(crypto.FILETYPE_PEM, cert).decode("ascii"),
         private_key=crypto.dump_privatekey(
@@ -537,9 +539,9 @@ def generate_key(alias: str, passphrase: str) -> Key:
     )
 
 
-def create_self_signed_cert(pkey: crypto.PKey) -> crypto.X509:
+def create_self_signed_cert(pkey: crypto.PKey, site_id: SiteId) -> crypto.X509:
     cert = crypto.X509()
-    cert.get_subject().O = "Check_MK Site %s" % omd_site()
+    cert.get_subject().O = f"Check_MK Site {site_id}"
     cert.get_subject().CN = user.id or "### Check_MK ###"
     cert.set_serial_number(1)
     cert.gmtime_adj_notBefore(0)

@@ -63,8 +63,8 @@ enum LogLevel { kLogBase = 0, kLogDebug = 1, kLogAll = 2 };
 /// \brief  If true, than modules will be moved to %temp% for later usage
 constexpr bool g_quick_module_reinstall_allowed{true};
 
-constexpr int kBackupLogMaxCount = 5;
-constexpr size_t kBackupLogMaxSize = 8 * 1024 * 1024;
+constexpr int kLogFileMaxCount = 5;
+constexpr size_t kLogFileMaxSize = 8'000'000;
 
 constexpr uint32_t kMaxOhmErrorsBeforeRestart = 3;
 

@@ -709,7 +709,7 @@ TEST(AgentConfig, FactoryConfig) {
     }
     {
         auto logging = GetNode(groups::kGlobal, vars::kLogging);
-        EXPECT_EQ(logging.size(), 5);
+        EXPECT_EQ(logging.size(), 7);
 
         auto log_location =
             GetVal(logging, vars::kLogLocation, std::string(""));
@@ -727,6 +727,10 @@ TEST(AgentConfig, FactoryConfig) {
 
         auto file_log = GetVal(logging, vars::kLogFile, std::string("a.log"));
         EXPECT_TRUE(file_log.empty());
+        EXPECT_EQ(GetVal(logging, vars::kLogFileMaxFileCount, 0),
+                  cfg::kLogFileMaxCount);
+        EXPECT_EQ(GetVal(logging, vars::kLogFileMaxFileSize, 0),
+                  cfg::kLogFileMaxSize);
     }
 
     // winperf

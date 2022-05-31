@@ -181,8 +181,7 @@ std::string FindWinPerfExe() {
         for (const auto &name : names) {
             std::error_code ec;
             if (fs::exists(name, ec)) {
-                exe_name = name.u8string();
-                XLOG::d.i("Using file '{}' for winperf", exe_name);
+                XLOG::d.i("Using file '{}' for winperf", name);
                 break;
             }
         }

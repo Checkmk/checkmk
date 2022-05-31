@@ -398,10 +398,6 @@ public:
         return path_to_msi_exec_;
     }
 
-    size_t getBackupLogMaxSize() const noexcept { return backup_log_max_size_; }
-
-    int getBackupLogMaxCount() const noexcept { return backup_log_max_count_; }
-
     void setConfiguredLogFileDir(const std::wstring &Path) {
         std::lock_guard lk(lock_);
         logfile_dir_ = Path;
@@ -469,9 +465,6 @@ private:
     bool aggregated_ = false;
     bool generated_ = false;
     bool ok_ = false;
-
-    std::atomic<int> backup_log_max_count_ = kBackupLogMaxCount;
-    std::atomic<size_t> backup_log_max_size_ = kBackupLogMaxSize;
 
     static std::atomic<uint64_t> g_uniq_id;
 

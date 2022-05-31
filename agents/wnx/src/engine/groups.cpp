@@ -103,6 +103,10 @@ void Global::loadFromMainConfig() {
         event_log_ = GetVal(logging, vars::kLogEvent, true);
 
         log_file_name_ = GetVal(logging, vars::kLogFile, std::string());
+        log_file_max_count_ =
+            GetVal(logging, vars::kLogFile, cfg::kLogFileMaxCount);
+        log_file_max_size_ =
+            GetVal(logging, vars::kLogFile, cfg::kLogFileMaxCount);
         updateLogNames();
     }
     // UNLOCK HERE

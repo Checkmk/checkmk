@@ -39,16 +39,19 @@ def test_link_with_uuid_401(
     aut_user_auth_wsgi_app: WebTestAppForCMK,
 ) -> None:
     mocker.patch(
-        "cmk.gui.plugins.openapi.endpoints.host_internal._check_host_access_permissions",
+        "cmk.gui.watolib.hosts_and_folders.CREHost.need_permission",
         side_effect=MKAuthException("hands off this host"),
     )
-    aut_user_auth_wsgi_app.call_method(
-        "put",
-        _URL_LINK_UUID,
-        params=json.dumps({"uuid": "1409ac78-6548-4138-9285-12484409ddf2"}),
-        status=401,
-        headers={"Accept": "application/json"},
-        content_type="application/json; charset=utf-8",
+    assert (
+        aut_user_auth_wsgi_app.call_method(
+            "put",
+            _URL_LINK_UUID,
+            params=json.dumps({"uuid": "1409ac78-6548-4138-9285-12484409ddf2"}),
+            status=401,
+            headers={"Accept": "application/json"},
+            content_type="application/json; charset=utf-8",
+        ).json_body["title"]
+        == "You do not have write access to the host example.com"
     )
 
 
@@ -121,12 +124,15 @@ def test_openapi_show_host_401(
     aut_user_auth_wsgi_app: WebTestAppForCMK,
 ) -> None:
     mocker.patch(
-        "cmk.gui.plugins.openapi.endpoints.host_internal._check_host_access_permissions",
+        "cmk.gui.watolib.hosts_and_folders.CREHost.need_permission",
         side_effect=MKAuthException("hands off this host"),
     )
-    aut_user_auth_wsgi_app.call_method(
-        "get",
-        f"{_BASE}/objects/host_config_internal/heute",
-        headers={"Accept": "application/json"},
-        status=401,
+    assert (
+        aut_user_auth_wsgi_app.call_method(
+            "get",
+            f"{_BASE}/objects/host_config_internal/heute",
+            headers={"Accept": "application/json"},
+            status=401,
+        ).json_body["title"]
+        == "You do not have read access to the host heute"
     )

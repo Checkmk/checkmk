@@ -582,16 +582,14 @@ def _get_paint_function(raw_hint: InventoryHintSpec) -> tuple[str, PaintFunction
     return "str", inv_paint_generic
 
 
-def _make_title_function(raw_hint: InventoryHintSpec) -> Callable[[SDRawPath], str]:
+def _make_title_function(raw_hint: InventoryHintSpec) -> Callable[[str], str]:
     if "title" not in raw_hint:
-        return lambda raw_path: (
-            raw_path.rstrip(".").rstrip(":").split(".")[-1].split(":")[-1].replace("_", " ").title()
-        )
+        return lambda word: word.replace("_", " ").title()
 
     if callable(title := raw_hint["title"]):
-        return lambda raw_path: title(inventory.InventoryPath.parse(raw_path).node_name or "")
+        return title
 
-    return lambda raw_path: title
+    return lambda word: title
 
 
 def _make_long_title_function(title: str, parent_path: SDPath) -> Callable[[], str]:
@@ -617,7 +615,7 @@ class NodeDisplayHint:
     @classmethod
     def make(cls, path: SDPath) -> NodeDisplayHint:
         raw_path, raw_hint, attributes_hint, table_hint = cls._get_raw_path_or_hint(path)
-        title = _make_title_function(raw_hint)(raw_path)
+        title = _make_title_function(raw_hint)(path[-1] if path else "")
         return cls(
             raw_path=raw_path,
             icon=raw_hint.get("icon"),
@@ -671,7 +669,7 @@ class NodeDisplayHint:
     def make_from_hint(cls, raw_path: SDRawPath, raw_hint: InventoryHintSpec) -> NodeDisplayHint:
         inventory_path = inventory.InventoryPath.parse(raw_path)
         attributes_hint, table_hint = cls._get_attributes_or_table_hint(inventory_path, raw_hint)
-        title = _make_title_function(raw_hint)(raw_path)
+        title = _make_title_function(raw_hint)(inventory_path.node_name)
         return cls(
             raw_path=raw_path,
             icon=raw_hint.get("icon"),
@@ -743,10 +741,9 @@ class ColumnDisplayHint:
 
     @classmethod
     def make(cls, path: SDPath, key: str) -> ColumnDisplayHint:
-        raw_path = f".{_get_raw_path(path)}:*.{key}" if path else "."
-        raw_hint = inventory_displayhints.get(raw_path, {})
+        raw_hint = inventory_displayhints.get(f".{_get_raw_path(path)}:*.{key}", {}) if path else {}
         data_type, paint_function = _get_paint_function(raw_hint)
-        title = _make_title_function(raw_hint)(raw_path) if path else key.title()
+        title = _make_title_function(raw_hint)(key)
         return cls(
             title=title,
             short_title=raw_hint.get("short", title),
@@ -757,8 +754,11 @@ class ColumnDisplayHint:
 
     @classmethod
     def make_from_hint(cls, raw_path: SDRawPath, raw_hint: InventoryHintSpec) -> ColumnDisplayHint:
+        inventory_path = inventory.InventoryPath.parse(raw_path)
         data_type, paint_function = _get_paint_function(raw_hint)
-        title = _make_title_function(raw_hint)(raw_path)
+        title = _make_title_function(raw_hint)(
+            inventory_path.key if inventory_path.key else inventory_path.node_name
+        )
         return cls(
             title=title,
             short_title=raw_hint.get("short", title),
@@ -798,10 +798,9 @@ class AttributeDisplayHint:
 
     @classmethod
     def make(cls, path: SDPath, key: str) -> AttributeDisplayHint:
-        raw_path = f".{_get_raw_path(path)}.{key}" if path else "."
-        raw_hint = inventory_displayhints.get(raw_path, {})
+        raw_hint = inventory_displayhints.get(f".{_get_raw_path(path)}.{key}", {}) if path else {}
         data_type, paint_function = _get_paint_function(raw_hint)
-        title = _make_title_function(raw_hint)(raw_path) if path else key.title()
+        title = _make_title_function(raw_hint)(key)
         return cls(
             title=title,
             short_title=raw_hint.get("short", title),
@@ -817,7 +816,9 @@ class AttributeDisplayHint:
     ) -> AttributeDisplayHint:
         inventory_path = inventory.InventoryPath.parse(raw_path)
         data_type, paint_function = _get_paint_function(raw_hint)
-        title = _make_title_function(raw_hint)(raw_path)
+        title = _make_title_function(raw_hint)(
+            inventory_path.key if inventory_path.key else inventory_path.node_name
+        )
         return cls(
             title=title,
             short_title=raw_hint.get("short", title),

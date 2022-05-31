@@ -40,9 +40,9 @@ def check_dns_arguments(params):
 
 
 def check_dns_desc(params):
-    if "name" in params[1]:
-        return params[1]["name"]
-    return "DNS %s" % params[0]
+    if "name" in params:
+        return params["name"]
+    return "DNS %s" % params["hostname"]
 
 
 active_check_info["dns"] = {

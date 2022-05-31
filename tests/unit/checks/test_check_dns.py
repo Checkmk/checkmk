@@ -34,17 +34,11 @@ def test_check_dns_argument_parsing(params, expected_args):
     "params, result",
     [
         [
-            (
-                "google.de",
-                {},
-            ),
+            {"hostname": "google.de"},
             "DNS google.de",
         ],
         [
-            (
-                "google.de",
-                {"name": "random_string"},
-            ),
+            {"hostname": "google.de", "name": "random_string"},
             "random_string",
         ],
     ],

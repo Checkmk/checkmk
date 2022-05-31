@@ -262,8 +262,8 @@ export class FigureBase {
     figure_size;
     plot_size;
 
-    ident() {
-        return "figure_base_class";
+     ident() {
+         return "figure_base_class";
     }
 
     constructor(div_selector, fixed_size = null) {

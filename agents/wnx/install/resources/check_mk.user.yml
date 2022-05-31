@@ -169,6 +169,9 @@ global:
         # you may disable your eventlog ability
         eventlog: yes
 
+        max_file_count: 5  # log rotation files quantity,  allowed 1..1024 
+        max_file_size: 8000000 # allowed 200K..200MB
+
 ps:
     # enabled: yes
     # use_wmi: yes

@@ -9,6 +9,7 @@
 #pragma once
 #include <fmt/format.h>
 
+#include <algorithm>
 #include <mutex>
 #include <string>
 #include <string_view>
@@ -244,6 +245,10 @@ inline void sendStringToStdio(const char *String,
 #endif
 
 namespace XLOG {
+constexpr unsigned int min_file_count = 0;
+constexpr unsigned int max_file_count = 64;
+constexpr size_t min_file_size = 256 * 1024;
+constexpr size_t max_file_size = 256 * 1024 * 1024;
 
 namespace setup {
 void DuplicateOnStdio(bool on);
@@ -580,6 +585,12 @@ public:
         }
     }
 
+    void setLogRotation(unsigned int count, size_t size) {
+        backup_log_max_count_ =
+            std::clamp(count, min_file_count, max_file_count);
+        backup_log_max_size_ = std::clamp(size, min_file_size, max_file_size);
+    }
+
     void enableFileLog(bool enable) {
         if (enable)
             log_param_.directions_ |= xlog::Directions::kFilePrint;
@@ -650,8 +661,8 @@ private:
 
     mutable std::mutex lock_;
     xlog::LogParam log_param_;  // this is fixed base
-    std::atomic<int> backup_log_max_count_{cma::cfg::kBackupLogMaxCount};
-    std::atomic<size_t> backup_log_max_size_{cma::cfg::kBackupLogMaxSize};
+    std::atomic<unsigned int> backup_log_max_count_{cma::cfg::kLogFileMaxCount};
+    std::atomic<size_t> backup_log_max_size_{cma::cfg::kLogFileMaxSize};
     std::ostringstream os_;  // stream storage
     XLOG::LogType type_;
 

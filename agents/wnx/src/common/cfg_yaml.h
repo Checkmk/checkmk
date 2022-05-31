@@ -80,6 +80,8 @@ const char *const kLogDebug = "debug";        // string no, yes, all
 const char *const kLogWinDbg = "windbg";      // bool
 const char *const kLogEvent = "eventlog";     // bool
 const char *const kLogFile = "file";          // string
+const char *const kLogFileMaxFileCount = "max_file_count";  // string
+const char *const kLogFileMaxFileSize = "max_file_size";    // string
 
 // group plugins
 const char *const kPluginsFolders = "folders";            // seq

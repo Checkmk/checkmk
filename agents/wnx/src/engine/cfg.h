@@ -773,6 +773,8 @@ private:
     bool windbg_;
     bool event_log_;
     std::string log_file_name_;
+    uint32_t log_file_max_count_;
+    uint32_t log_file_max_size_;
 
     // derivative
     std::filesystem::path logfile_;

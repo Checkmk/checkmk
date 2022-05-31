@@ -3,6 +3,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import typing
 
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
@@ -11,16 +12,25 @@
 from cmk.base.check_legacy_includes.hp_proliant import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 
+class HpProRaid(typing.NamedTuple):
+    name: str
+    status: str
+    size_bytes: int
+    rebuild_percent: int
+
+
 def parse_hp_proliant_raid(info):
     parsed = {}
     for number, name, status, size_str, rebuild in info:
+        itemname = f"{name} {number}".strip()
         parsed.setdefault(
-            f"{name} {number}".strip(),
-            {
-                "status": status,
-                "size": int(size_str) * 1024 * 1024,
-                "rebuild_perc": rebuild,
-            },
+            itemname,
+            HpProRaid(
+                name=itemname,
+                status=status,
+                size_bytes=int(size_str) * 1024 * 1024,
+                rebuild_percent=int(rebuild),
+            ),
         )
 
     return parsed
@@ -51,23 +61,23 @@ def check_hp_proliant_raid(item, _no_params, parsed):
         "16": (1, "erasing"),
     }
 
-    if item in parsed:
-        data = parsed[item]
-        dev_status = data["status"]
-        state, state_readable = map_states[dev_status]
-        infotext   = "Status: %s, Logical volume size: %s" % \
-                     (state_readable, get_bytes_human_readable(data["size"]))
+    if not (raid_stats := parsed.get(item)):
+        return
 
-        # From CPQIDA-MIB:
-        # This value is the percent complete of the rebuild.
-        # This value is only valid if the Logical Drive Status is
-        # rebuilding (7) or expanding (12).
-        # If the value cannot be determined or a rebuild is not active,
-        # the value is set to 4,294,967,295.
-        if dev_status in ["7", "12"]:
-            infotext += "Rebuild: %s%%" % data["rebuild_perc"]
+    state, state_readable = map_states.get(raid_stats.status, (3, "unknown"))
+    yield state, f"Status: {state_readable}"
+    yield 0, f"Logical volume size: {get_bytes_human_readable(raid_stats.size_bytes)}"
 
-        return state, infotext
+    # From CPQIDA-MIB:
+    # This value is the percent complete of the rebuild.
+    # This value is only valid if the Logical Drive Status is
+    # rebuilding (7) or expanding (12).
+    # If the value cannot be determined or a rebuild is not active,
+    # the value is set to 4,294,967,295.
+    if raid_stats.status not in {"7", "12"}:
+        return
+
+    yield 0, f"Rebuild: {get_percent_human_readable(raid_stats.rebuild_percent)}"
 
 
 check_info["hp_proliant_raid"] = {

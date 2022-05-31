@@ -44,11 +44,11 @@ def test_discover_hp_proliant_raid(string_table,) -> None:
 @pytest.mark.usefixtures("config_load_all_checks")
 def test_check_hp_proliant_raid_item_not_found(string_table,) -> None:
     check_plugin = Check("hp_proliant_raid")
-    assert (check_plugin.run_check(
+    assert (list(check_plugin.run_check(
         "!111elf",
         {},
         check_plugin.run_parse(string_table),
-    ) is None)
+    )) == [])
 
 
 @pytest.mark.usefixtures("config_load_all_checks")
@@ -59,8 +59,8 @@ def test_check_hp_proliant_raid(string_table,) -> None:
         {},
         check_plugin.run_parse(string_table),
     )) == [
-        0,
-        "Status: OK, Logical volume size: 279.37 GB",
+        (0, "Status: OK"),
+        (0, "Logical volume size: 279.37 GB"),
     ]
 
 
@@ -74,4 +74,8 @@ def test_check_hp_proliant_raid_progress_cannot_be_determined() -> None:
             check_plugin.run_parse([
                 ["1", "banana", "7", "286070", "4294967295"],
             ]),
-        )) == [1, "Status: rebuilding, Logical volume size: 279.37 GBRebuild: 4294967295%"]
+        )) == [
+            (1, "Status: rebuilding"),
+            (0, "Logical volume size: 279.37 GB"),
+            (0, "Rebuild: 4294967295%"),
+        ]

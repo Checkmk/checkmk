@@ -1,0 +1,16 @@
+Title: Fix initial login of remote site if login to web GUI is not allowed
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1653974759
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p1
+
+If a remote site with replication enabled was succesfully logged in and the
+option "Direct login to Web GUI allowed" for this site was disabled afterwards,
+logging out of that site on page "Distributed Monitoring" and trying to login
+again lead to the error "Login is not permitted: Cannot connect to remote
+site: Permission denied: Invalid login credentials.".

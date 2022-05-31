@@ -1,1 +1,6 @@
 export CARGO_BUILD_TARGET="x86_64-unknown-linux-musl"
+RUSTFLAGS="
+$RUSTFLAGS \
+--remap-path-prefix=$(git rev-parse --show-toplevel)=/builddir \
+--remap-path-prefix=${CARGO_HOME:-$HOME/.cargo}=/cargo-home"
+export RUSTFLAGS

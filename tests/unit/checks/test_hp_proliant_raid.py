@@ -93,7 +93,8 @@ def test_check_hp_proliant_raid(
             section=section_plugin.parse_function(string_table),
         )
     ) == [
-        Result(state=State.OK, summary="Status: OK, Logical volume size: 279.37 GB"),
+        Result(state=State.OK, summary="Status: OK"),
+        Result(state=State.OK, summary="Logical volume size: 279.37 GB"),
     ]
 
 
@@ -116,6 +117,14 @@ def test_check_hp_proliant_raid_progress_cannot_be_determined(
     ) == [
         Result(
             state=State.WARN,
-            summary="Status: rebuilding, Logical volume size: 279.37 GBRebuild: 4294967295%",
-        )
+            summary="Status: rebuilding",
+        ),
+        Result(
+            state=State.OK,
+            summary="Logical volume size: 279.37 GB",
+        ),
+        Result(
+            state=State.OK,
+            summary="Rebuild: 4294967295%",
+        ),
     ]

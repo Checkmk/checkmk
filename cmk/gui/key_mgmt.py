@@ -249,6 +249,7 @@ class PageEditKey:
         for key_id in keys:
             new_id = max(new_id, key_id + 1)
 
+        assert user.id is not None
         keys[new_id] = generate_key(alias, passphrase, user.id, omd_site())
         self.key_store.save(keys)
 
@@ -523,7 +524,7 @@ class PageDownloadKey:
         )
 
 
-def generate_key(alias: str, passphrase: str, user_id: Optional[UserId], site_id: SiteId) -> Key:
+def generate_key(alias: str, passphrase: str, user_id: UserId, site_id: SiteId) -> Key:
     pkey = crypto.PKey()
     pkey.generate_key(crypto.TYPE_RSA, 2048)
 
@@ -540,12 +541,10 @@ def generate_key(alias: str, passphrase: str, user_id: Optional[UserId], site_id
     )
 
 
-def create_self_signed_cert(
-    pkey: crypto.PKey, user_id: Optional[UserId], site_id: SiteId
-) -> crypto.X509:
+def create_self_signed_cert(pkey: crypto.PKey, user_id: UserId, site_id: SiteId) -> crypto.X509:
     cert = crypto.X509()
     cert.get_subject().O = f"Check_MK Site {site_id}"
-    cert.get_subject().CN = user_id or "### Check_MK ###"
+    cert.get_subject().CN = user_id
     cert.set_serial_number(1)
     cert.gmtime_adj_notBefore(0)
     cert.gmtime_adj_notAfter(30 * 365 * 24 * 60 * 60)  # valid for 30 years.

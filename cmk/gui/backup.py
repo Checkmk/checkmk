@@ -1678,6 +1678,7 @@ class PageBackupEditKey(key_mgmt.PageEditKey):
         )
 
     def _generate_key(self, alias: str, passphrase: str) -> key_mgmt.Key:
+        assert user.id is not None
         key = key_mgmt.generate_key(alias, passphrase, user.id, omd_site())
         # Mark key as not downloaded yet to issue a warning to the user that the key
         # should be backed up. The warning is removed on first download.

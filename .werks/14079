@@ -1,0 +1,23 @@
+Title: Agent registration: Fix required user permissions
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1653990628
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p2
+
+There were some user permission issues with the agent registration (<tt>cmk-agent-ctl
+register ...</tt>). For example, the registration crashed with "500 Internal Server
+Error" for users without the permission "Write access to all hosts and folders".
+
+To register a host, users need the following permissions:
+<ul>
+<li>Agent pairing.</li>
+<li>Read access to the host, either via "Read access to all hosts and folders" or via
+via contact groups.</li>
+<li>Write access to the host, either via "Write access to all hosts and folders" or via
+"Modify existing hosts" and write access to the specific host via contact groups.</li>
+</ul>

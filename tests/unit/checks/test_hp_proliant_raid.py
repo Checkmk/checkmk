@@ -77,5 +77,5 @@ def test_check_hp_proliant_raid_progress_cannot_be_determined() -> None:
         )) == [
             (1, "Status: rebuilding"),
             (0, "Logical volume size: 279.37 GB"),
-            (0, "Rebuild: 4294967295%"),
+            (0, "Rebuild: undetermined"),
         ]

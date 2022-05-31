@@ -77,6 +77,10 @@ def check_hp_proliant_raid(item, _no_params, parsed):
     if raid_stats.status not in {"7", "12"}:
         return
 
+    if raid_stats.rebuild_percent == 4294967295:
+        yield 0, "Rebuild: undetermined"
+        return
+
     yield 0, f"Rebuild: {get_percent_human_readable(raid_stats.rebuild_percent)}"
 
 

@@ -39,6 +39,7 @@ from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
+from cmk.gui.logged_in import user
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.page_menu import (
     make_simple_form_page_menu,
@@ -1677,7 +1678,7 @@ class PageBackupEditKey(key_mgmt.PageEditKey):
         )
 
     def _generate_key(self, alias: str, passphrase: str) -> key_mgmt.Key:
-        key = key_mgmt.generate_key(alias, passphrase, omd_site())
+        key = key_mgmt.generate_key(alias, passphrase, user.id, omd_site())
         # Mark key as not downloaded yet to issue a warning to the user that the key
         # should be backed up. The warning is removed on first download.
         key.not_downloaded = True

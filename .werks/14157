@@ -1,0 +1,11 @@
+Title: liveproxyd: fixed needless heartbeat timeout
+Class: fix
+Compatible: compat
+Component: liveproxy
+Date: 1653994022
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p26
+
+The liveproxyd could run into a heartbeat timeout while dumping its state file.

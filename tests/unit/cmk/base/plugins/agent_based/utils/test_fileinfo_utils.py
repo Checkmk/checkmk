@@ -4,12 +4,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Any
 
 import pytest
 from freezegun import freeze_time
 
 from cmk.base.check_api import get_age_human_readable, get_filesize_human_readable
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 from cmk.base.plugins.agent_based.utils.fileinfo import (
     _cast_value,
     _fileinfo_check_conjunctions,
@@ -247,10 +249,28 @@ def test_fileinfo_check_timeranges(params, expected_result):
                 Result(state=State.OK, summary="Out of relevant time of day"),
             ],
         ),
+        (
+            FileinfoItem(
+                name="/home/tim/test.txt", missing=True, failed=False, size=None, time=None
+            ),
+            1653985037,
+            {"state_missing": 2},
+            [Result(state=State.CRIT, summary="File not found")],
+        ),
+        (
+            FileinfoItem(
+                name="/home/tim/test.txt", missing=True, failed=False, size=None, time=None
+            ),
+            1653985037,
+            {},
+            [Result(state=State.UNKNOWN, summary="File not found")],
+        ),
     ],
 )
 @freeze_time("2021-07-12 12:00")
-def test_check_fileinfo_data(file_stat, reftime, params, expected_result):
+def test_check_fileinfo_data(
+    file_stat: FileinfoItem, reftime: int, params: dict[str, Any], expected_result: CheckResult
+):
     result = list(check_fileinfo_data(file_stat, reftime, params))
 
     assert result == expected_result

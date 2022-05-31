@@ -21,13 +21,18 @@ def parse_docker_node_info(string_table: StringTable) -> Section:
     # Key 'Unknown' is present if there is a python exception
     # key 'Critical' is present if the python docker lib is not found
     string_table_iter = iter(string_table)
-    for local_string_table in zip_longest(string_table_iter, string_table_iter):
+    for version_info, payload in zip_longest(string_table_iter, string_table_iter, fillvalue=None):
         # local_string_table holds two consecutive elements of string_table.
-        # first loop: [string_table[0], string_table[1]]
-        # second loop: [string_table[1], string_table[2]]
+        # first loop: (string_table[0], string_table[1])
+        # second loop: (string_table[2], string_table[3])
         # etc
-        # Argument 1 to "parse" has incompatible type "Tuple[Union[List[str], Any], Union[List[str], Any]]"; expected "List[List[str]]"
-        parsed = docker.parse(local_string_table).data  # type: ignore[arg-type]
+        if version_info is None or payload is None:
+            raise Exception(
+                "docker_node_info has wrong number of string_table elements. "
+                "This is an internal error and should never happen."
+            )
+        parsed = docker.parse([version_info, payload]).data
+        # TODO: if there are two errors of the same type, only one will be shown.
         loaded.update(parsed)
     return loaded
 

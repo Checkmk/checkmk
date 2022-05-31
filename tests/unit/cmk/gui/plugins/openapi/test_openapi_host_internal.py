@@ -39,7 +39,7 @@ def test_link_with_uuid_401(
     aut_user_auth_wsgi_app: WebTestAppForCMK,
 ) -> None:
     mocker.patch(
-        "cmk.gui.plugins.openapi.endpoints.host_internal._check_host_editing_permissions",
+        "cmk.gui.plugins.openapi.endpoints.host_internal._check_host_access_permissions",
         side_effect=MKAuthException("hands off this host"),
     )
     aut_user_auth_wsgi_app.call_method(
@@ -112,4 +112,21 @@ def test_openapi_show_host_missing(aut_user_auth_wsgi_app: WebTestAppForCMK) -> 
         f"{_BASE}/objects/host_config_internal/missing",
         headers={"Accept": "application/json"},
         status=404,
+    )
+
+
+@pytest.mark.usefixtures("with_host")
+def test_openapi_show_host_401(
+    mocker: MockerFixture,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+) -> None:
+    mocker.patch(
+        "cmk.gui.plugins.openapi.endpoints.host_internal._check_host_access_permissions",
+        side_effect=MKAuthException("hands off this host"),
+    )
+    aut_user_auth_wsgi_app.call_method(
+        "get",
+        f"{_BASE}/objects/host_config_internal/heute",
+        headers={"Accept": "application/json"},
+        status=401,
     )

@@ -34,11 +34,8 @@ if [ -z "$LANG" ]; then
     done
 fi
 
-# shellcheck disable=SC1007 # FIXME?: Remove space after = if trying to assign a value (for empty string, use var='' ... ).
-EXPECTED_PIPENV_VERSION="$(MFLAGs= MAKEFLAGS= make --silent --no-print-directory --file="${REPO_PATH}"/defines.make print-PIPENV_VERSION)"
-PIPENV_VERSION="$(PIPENV_COLORBLIND=true pipenv --version | awk '{ print $3 }')"
-if [ "$EXPECTED_PIPENV_VERSION" != "$PIPENV_VERSION" ]; then
-    echo "Expected pipenv version $EXPECTED_PIPENV_VERSION, but you have $PIPENV_VERSION ($(type pipenv))."
+if ! pipenv requirements --help >/dev/null; then
+    echo "We require the requirements feature of pipenv"
     echo "Please update (e.g. using \"make setup\")"
     exit 1
 fi

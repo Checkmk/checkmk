@@ -1,0 +1,16 @@
+Title: hp_proliant_raid: new item names
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1653981251
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p5
+
+The check "hp_proliant_raid" showed an empty item name in the event that a name
+for the raid had not been set. This is problematic as all items must have an
+item name in the new Check API. The item name has been amended to include both
+the raid's name and its index. As a result, services need to be rediscovered on
+the host.

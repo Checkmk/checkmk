@@ -31,7 +31,7 @@ fi
 section_checkmk() {
 
     echo "<<<check_mk>>>"
-    echo "Version: 2.1.0p2"
+    echo "Version: 2.1.0p1"
     echo "AgentOS: hpux"
     echo "Hostname: $(hostname)"
     echo "AgentDirectory: $MK_CONFDIR"

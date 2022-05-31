@@ -13,7 +13,7 @@ from typing import Any, Dict, List, NoReturn, Optional
 import livestatus
 
 # These variable will be substituted at 'make dist' time
-__version__ = "2.1.0p2"
+__version__ = "2.1.0p1"
 
 
 def dump_templates():

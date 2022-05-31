@@ -9,7 +9,7 @@
 
 # Disable unused variable error (needed to keep track of version)
 # shellcheck disable=SC2034
-CMK_VERSION="2.1.0p2"
+CMK_VERSION="2.1.0p1"
 
 # this is for users who compiled statgrab on hp-ux.
 # note you'll need a 0.18+ version, from their github page at

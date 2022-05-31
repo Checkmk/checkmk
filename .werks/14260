@@ -1,0 +1,11 @@
+Title: Fix XSS vulnerability in dashboard elements
+Class: security
+Compatible: compat
+Component: wato
+Date: 1654071011
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p26
+
+A persistent XSS attack was possible by injecting javascript payloads in strings displayed on various dashboards (e.g., service description).

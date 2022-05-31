@@ -354,7 +354,7 @@ class PainterSitenamePlain(Painter):
         return 'site'
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return (None, row["site"])
+        return (None, escaping.escape_text(row["site"]))
 
 
 @painter_registry.register
@@ -736,7 +736,7 @@ class PainterServiceDescription(Painter):
         return 'svcdescr'
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return (None, row["service_description"])
+        return (None, escaping.escape_text(row["service_description"]))
 
 
 @painter_registry.register
@@ -760,7 +760,7 @@ class PainterServiceDisplayName(Painter):
         return 'svcdispname'
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return (None, row["service_display_name"])
+        return (None, escaping.escape_text(row["service_display_name"]))
 
 
 @painter_registry.register
@@ -1192,7 +1192,7 @@ class PainterSvcInNotifper(Painter):
 
 
 @painter_registry.register
-class PainterSvcNotifper(Painter):
+class PainterSvcNotifier(Painter):
     @property
     def ident(self) -> str:
         return "svc_notifper"
@@ -1208,7 +1208,7 @@ class PainterSvcNotifper(Painter):
         return ['service_notification_period']
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return (None, row["service_notification_period"])
+        return (None, escaping.escape_text(row["service_notification_period"]))
 
 
 @painter_registry.register
@@ -1228,7 +1228,7 @@ class PainterSvcCheckPeriod(Painter):
         return ['service_check_period']
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return (None, row["service_check_period"])
+        return (None, escaping.escape_text(row["service_check_period"]))
 
 
 @painter_registry.register
@@ -1850,7 +1850,7 @@ class PainterHostCheckCommand(Painter):
         return ['host_check_command']
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return (None, row["host_check_command"])
+        return (None, escaping.escape_text(row["host_check_command"]))
 
 
 @painter_registry.register
@@ -1870,7 +1870,7 @@ class PainterHostCheckCommandExpanded(Painter):
         return ['host_check_command_expanded']
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return (None, row["host_check_command_expanded"])
+        return (None, escaping.escape_text(row["host_check_command_expanded"]))
 
 
 @painter_registry.register
@@ -2186,7 +2186,7 @@ class PainterHostNotifper(Painter):
         return ['host_notification_period']
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return (None, row["host_notification_period"])
+        return (None, escaping.escape_text(row["host_notification_period"]))
 
 
 @painter_registry.register
@@ -2206,7 +2206,7 @@ class PainterHostNotificationNumber(Painter):
         return ['host_current_notification_number']
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return ("", str(row["host_current_notification_number"]))
+        return ("", escaping.escape_text(str(row["host_current_notification_number"])))
 
 
 @painter_registry.register
@@ -2325,7 +2325,7 @@ class PainterHostBlack(Painter):
         state = row["host_state"]
         if state != 0:
             return "nobr", "<div class=hostdown>%s</div>" % row["host_name"]
-        return "nobr", row["host_name"]
+        return "nobr", escaping.escape_text(row["host_name"])
 
 
 @painter_registry.register
@@ -2355,7 +2355,7 @@ class PainterHostWithState(Painter):
             state = "p"
         if state != 0:
             return "state hstate hstate%s" % state, html.render_span(row["host_name"])
-        return "nobr", row["host_name"]
+        return "nobr", escaping.escape_text(row["host_name"])
 
 
 @painter_registry.register
@@ -2462,7 +2462,7 @@ class PainterHostAddress(Painter):
         return ['host_address']
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return ("", row["host_address"])
+        return ("", escaping.escape_text(row["host_address"]))
 
 
 @painter_registry.register
@@ -2655,7 +2655,7 @@ class PainterNumServices(Painter):
         return ['host_num_services']
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return (None, str(row["host_num_services"]))
+        return (None, escaping.escape_text(str(row["host_num_services"])))
 
 
 @painter_registry.register
@@ -3313,7 +3313,7 @@ class PainterHgNumServices(Painter):
         return ['hostgroup_num_services']
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return (None, str(row["hostgroup_num_services"]))
+        return (None, escaping.escape_text(str(row["hostgroup_num_services"])))
 
 
 @painter_registry.register
@@ -3540,7 +3540,7 @@ class PainterHgName(Painter):
         return ['hostgroup_name']
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return (None, row["hostgroup_name"])
+        return (None, escaping.escape_text(row["hostgroup_name"]))
 
 
 @painter_registry.register
@@ -3608,7 +3608,7 @@ class PainterSgNumServices(Painter):
         return ['servicegroup_num_services']
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return (None, str(row["servicegroup_num_services"]))
+        return (None, escaping.escape_text(str(row["servicegroup_num_services"])))
 
 
 @painter_registry.register
@@ -3728,7 +3728,7 @@ class PainterSgName(Painter):
         return ['servicegroup_name']
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return (None, row["servicegroup_name"])
+        return (None, escaping.escape_text(row["servicegroup_name"]))
 
 
 @painter_registry.register
@@ -3776,7 +3776,7 @@ class PainterCommentId(Painter):
         return ['comment_id']
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return (None, str(row["comment_id"]))
+        return (None, escaping.escape_text(str(row["comment_id"])))
 
 
 @painter_registry.register
@@ -3796,7 +3796,7 @@ class PainterCommentAuthor(Painter):
         return ['comment_author']
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return (None, row["comment_author"])
+        return (None, escaping.escape_text(row["comment_author"]))
 
 
 @painter_registry.register
@@ -3976,7 +3976,7 @@ class PainterDowntimeAuthor(Painter):
         return ['downtime_author']
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return (None, row["downtime_author"])
+        return (None, escaping.escape_text(row["downtime_author"]))
 
 
 @painter_registry.register
@@ -4306,7 +4306,7 @@ class PainterLogAttempt(Painter):
         return ['log_attempt']
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return ("", str(row["log_attempt"]))
+        return ("", escaping.escape_text(str(row["log_attempt"])))
 
 
 @painter_registry.register
@@ -4326,7 +4326,7 @@ class PainterLogStateType(Painter):
         return ['log_state_type']
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return ("", row["log_state_type"])
+        return ("", escaping.escape_text(row["log_state_type"]))
 
 
 @painter_registry.register
@@ -4372,7 +4372,7 @@ class PainterLogType(Painter):
         return ['log_type']
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return ("nowrap", row["log_type"])
+        return ("nowrap", escaping.escape_text(row["log_type"]))
 
 
 @painter_registry.register
@@ -4428,7 +4428,7 @@ class PainterLogCommand(Painter):
         return ['log_command_name']
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return ("nowrap", row["log_command_name"])
+        return ("nowrap", escaping.escape_text(row["log_command_name"]))
 
 
 @painter_registry.register
@@ -4619,7 +4619,7 @@ class PainterLogLineno(Painter):
         return ['log_lineno']
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return ("number", str(row["log_lineno"]))
+        return ("number", escaping.escape_text(str(row["log_lineno"])))
 
 
 @painter_registry.register
@@ -4702,7 +4702,7 @@ class PainterAlertStatsOk(Painter):
         return ['log_alerts_ok']
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return ("", str(row["log_alerts_ok"]))
+        return ("", escaping.escape_text(str(row["log_alerts_ok"])))
 
 
 @painter_registry.register
@@ -5118,7 +5118,8 @@ class PainterHostSpecificMetric(AbstractPainterSpecificMetric):
     def render(self, row: Row, cell: Cell) -> CellSpec:
         perf_data_entries = row["host_perf_data"]
         check_command = row["host_check_command"]
-        return self._render(row, cell, perf_data_entries, check_command)
+        return self._render(row, cell, escaping.escape_text(perf_data_entries),
+                            escaping.escape_text(check_command))
 
 
 @painter_registry.register
@@ -5134,4 +5135,5 @@ class PainterServiceSpecificMetric(AbstractPainterSpecificMetric):
     def render(self, row: Row, cell: Cell) -> CellSpec:
         perf_data_entries = row["service_perf_data"]
         check_command = row["service_check_command"]
-        return self._render(row, cell, perf_data_entries, check_command)
+        return self._render(row, cell, escaping.escape_text(perf_data_entries),
+                            escaping.escape_text(check_command))

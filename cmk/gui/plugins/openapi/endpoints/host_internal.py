@@ -16,7 +16,7 @@ from cmk.utils.type_defs import HostName
 
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.http import Response
-from cmk.gui.plugins.openapi.endpoints.utils import may_fail
+from cmk.gui.plugins.openapi.endpoints.utils import ProblemException
 from cmk.gui.plugins.openapi.restful_objects import (
     constructors,
     Endpoint,
@@ -34,7 +34,13 @@ def _check_host_access_permissions(
     access_type: Literal["read", "write"],
 ) -> CREHost:
     host = Host.load_host(host_name)
-    host.need_permission(access_type)
+    try:
+        host.need_permission(access_type)
+    except MKAuthException:
+        raise ProblemException(
+            status=401,
+            title=f"You do not have {access_type} access to the host {host_name}",
+        )
     return host
 
 
@@ -76,14 +82,12 @@ def _link_with_uuid(
 )
 def link_with_uuid(params) -> Response:
     """Link a host to a UUID"""
-    with may_fail(MKAuthException):
-        host = _check_host_access_permissions(
-            host_name := params["host_name"],
-            access_type="write",
-        )
     _link_with_uuid(
-        host_name,
-        host,
+        host_name := params["host_name"],
+        _check_host_access_permissions(
+            host_name,
+            access_type="write",
+        ),
         params["body"]["uuid"],
     )
     return Response(status=204)
@@ -107,11 +111,10 @@ def link_with_uuid(params) -> Response:
 )
 def show_host(params) -> Response:
     """Show a host"""
-    with may_fail(MKAuthException):
-        host = _check_host_access_permissions(
-            params["host_name"],
-            access_type="read",
-        )
+    host = _check_host_access_permissions(
+        params["host_name"],
+        access_type="read",
+    )
     return constructors.serve_json(
         {
             "site": host.site_id(),

@@ -125,6 +125,6 @@ def test_check_hp_proliant_raid_progress_cannot_be_determined(
         ),
         Result(
             state=State.OK,
-            summary="Rebuild: 4294967295.00%",
+            summary="Rebuild: undetermined",
         ),
     ]

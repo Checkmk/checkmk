@@ -1,0 +1,14 @@
+Title: fileinfo: Fix crash for user-configured state in case of missing file
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1654004971
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p2
+
+The check plugin fileinfo reports UNKNOWN by default in case a file is missing. This behaviour is configurable via the option "State when file is missing" in the ruleset "Size and age of single files". However, if this option was used, the check plugin crashed with
+TypeError(f"'state' must be a checkmk State constant, got {state}")
+if the file was actually missing.

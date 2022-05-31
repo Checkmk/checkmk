@@ -1,6 +1,6 @@
 ' Check for citrix licenses
 ' This is an almost unmodified version of ctx_licensecheck.vbs from Stefan Senftleben.
-Const CMK_VERSION = "2.1.0p1"
+Const CMK_VERSION = "2.1.0p2"
 On Error Resume Next
 Dim objWMI : Set objWMI = GetObject("winmgmts:\\" & strComputer)
 Dim strComputer : strComputer = "."

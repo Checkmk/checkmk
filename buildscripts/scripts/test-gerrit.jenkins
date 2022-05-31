@@ -47,9 +47,6 @@ timeout(time: 12, unit: 'HOURS') {
             catch (e)
             {
                 sh("rm -rf .venv")
-                echo("""WARNING: Did you update the Pipfile? If so, you need to update the Pip Mirror by commenting
-                     'start: test-pip-mirror-update' on your gerrit change!
-                """)
                 throw e
             }
 

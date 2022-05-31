@@ -88,8 +88,17 @@ VIRTUALENV_VERSION := 20.14.1
 NODEJS_VERSION := 16
 NPM_VERSION := 8
 
-# Internal PyPi Mirror
-DEVPI_SERVER := devpi.lan.tribe29.com
+# PyPi Mirror Configuration
+# By default our internal Python mirror is used.
+# To use the official Python mirror, please export `USE_EXTERNAL_PIPENV_MIRROR=true`.
+EXTERNAL_PYPI_MIRROR := https://pypi.python.org/simple
+INTERNAL_PYPI_MIRROR :=  https://devpi.lan.tribe29.com/root/pypi
+
+ifeq (true,${USE_EXTERNAL_PIPENV_MIRROR})
+PIPENV_PYPI_MIRROR  := $(EXTERNAL_PYPI_MIRROR)
+else
+PIPENV_PYPI_MIRROR  := $(INTERNAL_PYPI_MIRROR)
+endif
 
 print-%:
 	@echo '$($*)'

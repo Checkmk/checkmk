@@ -1,5 +1,4 @@
 include $(REPO_PATH)/defines.make
-include $(REPO_PATH)/buildscripts/infrastructure/pypi_mirror/pypi_mirror.make
 
 PYTHON3_MODULES := python3-modules
 # Use some pseudo version here. Don't use OMD_VERSION (would break the package cache)

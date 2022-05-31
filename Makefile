@@ -4,7 +4,6 @@
 
 #
 include defines.make
-include buildscripts/infrastructure/pypi_mirror/pypi_mirror.make
 
 NAME               := check_mk
 PREFIX             := /usr

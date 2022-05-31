@@ -289,7 +289,7 @@ def _check_auth(request: Request) -> Optional[UserId]:
         user_id = _check_auth_http_header()
 
     if user_id is None:
-        if not config.user_login:
+        if not config.user_login and not _is_site_login():
             return None
         user_id = _check_auth_by_cookie()
 
@@ -443,7 +443,7 @@ class LoginPage(Page):
             return
 
         try:
-            if not config.user_login:
+            if not config.user_login and not _is_site_login():
                 raise MKUserError(None, _('Login is not allowed on this site.'))
 
             username_var = html.request.get_unicode_input('_username', '')
@@ -577,6 +577,22 @@ class LoginPage(Page):
         html.close_div()
 
         html.footer()
+
+
+def _is_site_login() -> bool:
+    """Determine if login is a site login for connecting central and remote
+    site. This login has to be allowed even if site login on remote site is not
+    permitted by rule "Direct login to Web GUI allowed" """
+    if html.myfile == "login":
+        if (origtarget_var := html.request.var("_origtarget")) is None:
+            return False
+        return (origtarget_var.startswith("automation_login.py") and
+                "_version=" in origtarget_var and "_edition_short=" in origtarget_var)
+
+    if html.myfile == "automation_login":
+        return bool(html.request.var("_edition_short") and html.request.var("_version"))
+
+    return False
 
 
 @page_registry.register_page("logout")

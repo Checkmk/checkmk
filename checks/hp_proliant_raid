@@ -12,13 +12,8 @@ from cmk.base.check_legacy_includes.hp_proliant import *  # pylint: disable=wild
 def parse_hp_proliant_raid(info):
     parsed = {}
     for number, name, status, size_str, rebuild in info:
-        if name in parsed:
-            itemname = "%s %s" % (name, number)
-        else:
-            itemname = name
-
         parsed.setdefault(
-            itemname.strip(),
+            f"{name} {number}".strip(),
             {
                 "status": status,
                 "size": int(size_str) * 1024 * 1024,

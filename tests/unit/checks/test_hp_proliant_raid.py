@@ -54,7 +54,8 @@ def test_discover_hp_proliant_raid_aa(
     discovery_results = list(
         check_plugin.discovery_function(section_plugin.parse_function(string_table))
     )
-    assert discovery_results[1:] == [
+    assert discovery_results == [
+        Service(item="1"),
         Service(item="2"),
         Service(item="3"),
         Service(item="4"),
@@ -87,7 +88,7 @@ def test_check_hp_proliant_raid(
 ) -> None:
     assert list(
         check_plugin.check_function(
-            item="",
+            item="1",
             params={},
             section=section_plugin.parse_function(string_table),
         )
@@ -102,7 +103,7 @@ def test_check_hp_proliant_raid_progress_cannot_be_determined(
 ) -> None:
     assert list(
         check_plugin.check_function(
-            item="banana",
+            item="banana 1",
             params={},
             section=section_plugin.parse_function(
                 [

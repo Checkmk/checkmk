@@ -1,0 +1,16 @@
+Title: hp_proliant_raid: illogical rebuild progress percentage
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1653981797
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p5
+
+The check "hp_proliant_raid" shows the progress percentage of rebuild tasks for
+raids that are currently rebuilding. In some cases, this percentage was shown
+as 4294967295%. The number "4294967295" is returned by the device in the event
+that the progress of the rebuild task cannot be determined. The check now shows
+an appropriate message instead.

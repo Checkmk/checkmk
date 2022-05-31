@@ -9,7 +9,7 @@ ARG ARTIFACT_STORAGE
 
 RUN zypper addrepo -G ${ARTIFACT_STORAGE}/repository/sles15sp1 sles15sp1 \
     && zypper in -f -y \
-    libpcre1 \
+    libpcre1-8.39-8.3.1 \
     && zypper -n --no-gpg-checks in --replacefiles \
     gawk \
     && zypper -n --no-gpg-checks in --replacefiles \

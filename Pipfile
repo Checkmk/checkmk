@@ -95,7 +95,7 @@ certifi = "==2021.10.8"  # needed by requests
 chardet = "==4.0.0"  # needed by requests
 urllib3 = "==1.26.7"  # needed by requests
 pyOpenSSL = "==19.1.0"  # needed by requests with extras = ["security"]
-pbr = "==5.4.4"  # needed by jira
+pbr = "==5.9.0"  # needed by jira
 pyghmi = "==1.5.13"  # needed by base for IPMI
 requests = {version = "==2.27.0",extras = ["security"]}  # needed by DCD, connexion
 pykerberos = "==1.2.1"  # needed by check_bi_aggr

@@ -1,0 +1,14 @@
+Title: Storeonce4x agent handles token expiration
+Class: fix
+Compatible: compat
+Component: core
+Date: 1654091408
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p3
+
+When executing the storeonce4x agent we now always request a new authentication token. This ensures we always have a valid token.
+
+No user interaction required.

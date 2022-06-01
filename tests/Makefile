@@ -276,9 +276,11 @@ test-integration-docker:
 	$(PIPENV) run scripts/run-dockerized.py "test-integration"
 
 test-code-quality:
-	if test -z "$$PYTHON_FILES"; then $(FIND_PYTHON_FILES); else echo "$$PYTHON_FILES"; fi | \
-	xargs -n 1500 $(PYTEST) -T code_quality --log-cli-level=INFO $(realpath code_quality/test_license_headers.py) \
-	--python-files;\
+	if test -z "$$PYTHON_FILES" && test -z "$$CI"; then $(FIND_PYTHON_FILES); else echo "$$PYTHON_FILES"; fi | \
+	xargs -n 1500 --no-run-if-empty $(PYTEST) -T code_quality --log-cli-level=INFO $(realpath code_quality/test_license_headers.py) \
+	--python-files;
+	if test -n "$$IS_PIPFILE_CHANGED" || test -z "$$CI"; then $(PYTEST) -T code_quality \
+	--log-cli-level=INFO $(realpath code_quality/test_pipfile.py); fi;
 	exit $${PIPESTATUS[1]}
 
 test-code-quality-docker:

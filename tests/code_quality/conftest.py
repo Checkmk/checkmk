@@ -14,7 +14,6 @@ def pytest_addoption(parser):
 
 @pytest.fixture
 def python_files(request) -> Sequence[str]:
-    files = request.config.getoption("--python-files")
-    if files is None:
+    if not (files := request.config.getoption("--python-files")):
         pytest.skip()
     return files

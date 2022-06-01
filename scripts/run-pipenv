@@ -35,22 +35,22 @@ if [ -z "$LANG" ]; then
 fi
 
 # https://stackoverflow.com/a/4024263
-version_greater_then() {
+version_greater_than() {
     [ "$1" = "$(echo -e "$1\n$2" | sort -V | head -n1)" ]
 }
 
-version_greater_then_or_equal() {
+version_greater_than_or_equal() {
     if [ "$1" = "$2" ]; then
         return 1
     else
-        version_greater_then "$1" "$2"
+        version_greater_than "$1" "$2"
     fi
 }
 
 # shellcheck disable=SC1007 # FIXME?: Remove space after = if trying to assign a value (for empty string, use var='' ... ).
 MIN_PIPENV_VERSION="$(MFLAGs= MAKEFLAGS= make --silent --no-print-directory --file="${REPO_PATH}"/defines.make print-PIPENV_VERSION)"
 PIPENV_VERSION="$(PIPENV_COLORBLIND=true pipenv --version | awk '{ print $3 }')"
-if version_greater_then_or_equal "${PIPENV_VERSION}" "${MIN_PIPENV_VERSION}"; then
+if version_greater_than_or_equal "${PIPENV_VERSION}" "${MIN_PIPENV_VERSION}"; then
     echo "Minimum expected pipenv version $MIN_PIPENV_VERSION, but you have $PIPENV_VERSION ($(type pipenv))."
     echo "Please update (e.g. using \"make setup\")"
     exit 1

@@ -10,7 +10,7 @@ ARG ARTIFACT_STORAGE
 RUN zypper addrepo -G ${ARTIFACT_STORAGE}/repository/sles15sp2 sles15sp2 \
     && zypper -n --no-gpg-checks in --replacefiles \
     gawk \
-    && zypper -n --no-gpg-checks in --replacefiles \
+    && zypper -n --no-gpg-checks in --replacefiles --force-resolution \
     curl \
     cyrus-sasl-devel \
     enchant-devel \

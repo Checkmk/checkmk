@@ -156,20 +156,23 @@ _nagios_command_pipe: Union[Literal[False], IO[bytes], None] = None
 
 def _open_command_pipe() -> None:
     global _nagios_command_pipe
-    if _nagios_command_pipe is None:
-        if not os.path.exists(cmk.utils.paths.nagios_command_pipe_path):
-            _nagios_command_pipe = False  # False means: tried but failed to open
-            raise MKGeneralException(
-                "Missing core command pipe '%s'" % cmk.utils.paths.nagios_command_pipe_path
+    if _nagios_command_pipe is not None:
+        return
+
+    if not os.path.exists(cmk.utils.paths.nagios_command_pipe_path):
+        _nagios_command_pipe = False  # False means: tried but failed to open
+        raise MKGeneralException(
+            "Missing core command pipe '%s'" % cmk.utils.paths.nagios_command_pipe_path
+        )
+
+    try:
+        with Timeout(3, message="Timeout after 3 seconds"):
+            _nagios_command_pipe = open(  # pylint:disable=consider-using-with
+                cmk.utils.paths.nagios_command_pipe_path, "wb"
             )
-        try:
-            with Timeout(3, message="Timeout after 3 seconds"):
-                _nagios_command_pipe = open(  # pylint:disable=consider-using-with
-                    cmk.utils.paths.nagios_command_pipe_path, "wb"
-                )
-        except Exception as exc:
-            _nagios_command_pipe = False
-            raise MKGeneralException(f"Error opening command pipe: {exc!r}") from exc
+    except Exception as exc:
+        _nagios_command_pipe = False
+        raise MKGeneralException(f"Error opening command pipe: {exc!r}") from exc
 
 
 def _submit_via_command_pipe(
@@ -182,19 +185,21 @@ def _submit_via_command_pipe(
     """In case of CMC this is used when running "cmk" manually"""
     output = output.replace("\n", "\\n")
     _open_command_pipe()
-    if _nagios_command_pipe is not None and not isinstance(_nagios_command_pipe, bool):
-        # [<timestamp>] PROCESS_SERVICE_CHECK_RESULT;<host_name>;<svc_description>;<return_code>;<plugin_output>
-        msg = "[%d] PROCESS_SERVICE_CHECK_RESULT;%s;%s;%d;%s\n" % (
-            time.time(),
-            host,
-            service,
-            state,
-            output,
-        )
-        _nagios_command_pipe.write(msg.encode())
-        # Important: Nagios needs the complete command in one single write() block!
-        # Python buffers and sends chunks of 4096 bytes, if we do not flush.
-        _nagios_command_pipe.flush()
+    if not _nagios_command_pipe:
+        return
+
+    # [<timestamp>] PROCESS_SERVICE_CHECK_RESULT;<host_name>;<svc_description>;<return_code>;<plugin_output>
+    msg = "[%d] PROCESS_SERVICE_CHECK_RESULT;%s;%s;%d;%s\n" % (
+        time.time(),
+        host,
+        service,
+        state,
+        output,
+    )
+    _nagios_command_pipe.write(msg.encode())
+    # Important: Nagios needs the complete command in one single write() block!
+    # Python buffers and sends chunks of 4096 bytes, if we do not flush.
+    _nagios_command_pipe.flush()
 
 
 _name_sequence: "Optional[_RandomNameSequence]" = None
@@ -281,12 +286,14 @@ def _create_nagios_check_result_file() -> Tuple[int, str]:
 # TODO: existence of this means the submit-functions ought to be ctxt-mngr.
 def finalize() -> None:
     global _checkresult_file_fd
-    if _checkresult_file_fd is not None and _checkresult_file_path is not None:
-        os.close(_checkresult_file_fd)
-        _checkresult_file_fd = None
+    if _checkresult_file_fd is None or _checkresult_file_path is None:
+        return
 
-        with open(_checkresult_file_path + ".ok", "w"):
-            pass
+    os.close(_checkresult_file_fd)
+    _checkresult_file_fd = None
+
+    with open(_checkresult_file_path + ".ok", "w"):
+        pass
 
 
 def _submit_via_check_result_file(
@@ -298,26 +305,26 @@ def _submit_via_check_result_file(
 ) -> None:
     output = output.replace("\n", "\\n")
     _open_checkresult_file()
-    if _checkresult_file_fd:
-        now = time.time()
-        os.write(
-            _checkresult_file_fd,
-            (
-                """host_name=%s
-service_description=%s
-check_type=1
-check_options=0
-reschedule_check
-latency=0.0
-start_time=%.1f
-finish_time=%.1f
-return_code=%d
-output=%s
+    if not _checkresult_file_fd:
+        return
 
-"""
-                % (host, service, now, now, state, output)
-            ).encode(),
-        )
+    now = time.time()
+    os.write(
+        _checkresult_file_fd,
+        (
+            f"host_name={host}\n"
+            f"service_description={service}\n"
+            "check_type=1\n"
+            "check_options=0\n"
+            "reschedule_check\n"
+            "latency=0.0\n"
+            f"start_time={now:.1f}\n"
+            f"finish_time={now:.1f}\n"
+            f"return_code={state}\n"
+            f"output={output}\n"
+            "\n"
+        ).encode(),
+    )
 
 
 def _output_check_result(

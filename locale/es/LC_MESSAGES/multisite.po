@@ -823,6 +823,9 @@ msgstr "(nada seleccionado)"
 msgid "(only works with the microcore)"
 msgstr "(solo funciona con el microcore)"
 
+msgid "(overrides <b>username</b>)"
+msgstr ""
+
 msgid "(please select)"
 msgstr "(por favor seleccione)"
 
@@ -2731,6 +2734,12 @@ msgstr "Aceptar cualquier clave de host SSH"
 
 msgid "Accept incoming TCP connections"
 msgstr "Aceptar conexiones TCP entrantes"
+
+msgid "Acceptable OS build version age"
+msgstr ""
+
+msgid "Acceptable patch level age"
+msgstr ""
 
 msgid "Accepted Packages/s"
 msgstr "Paquetes aceptados"
@@ -5140,6 +5149,14 @@ msgstr "Analizar el conjunto de reglas con esta notificación"
 msgid "Analyze this line"
 msgstr "Analiza esta línea"
 
+#, fuzzy
+msgid "Android version regular expression"
+msgstr "Asignar mediante expresiones regulares"
+
+msgid ""
+"Android versions matching this pattern will be reported as OK, else CRIT."
+msgstr ""
+
 msgid "Annotation"
 msgstr "Anotación"
 
@@ -5849,6 +5866,10 @@ msgstr "Autorización"
 #, python-format
 msgid "Authorization Error. Insufficent permissions for '%s'"
 msgstr "Error de autorización. Permisos insuficientes para '%s'"
+
+#, fuzzy
+msgid "Authorization Header"
+msgstr "Autorización"
 
 msgid "Authorization settings"
 msgstr "Configuración de la autorización"
@@ -8854,11 +8875,11 @@ msgstr ""
 
 msgid ""
 "Check the resolution of a hostname into an IP address by a DNS server. This "
-"check uses <tt>check_dns</tt> from the standard Nagios plugins."
+"check uses <tt>check_dns</tt> from the standard Nagios plugins. Note, that "
+"check_dns will always be executed in the monitoring site. By default, the "
+"configured host(s) that this rule applies to is used as DNS server. This "
+"behaviour can be configured by using the option <tt>DNS Server</tt>. "
 msgstr ""
-"Comprueba la resolución de un nombre de host en una dirección IP por un "
-"servidor DNS. Esta comprobación utiliza <tt>check_dns</tt> de los plugins "
-"estándar de Nagios."
 
 msgid ""
 "Check this to turn off multiprocessing. Recommended for debugging purposes "
@@ -10963,9 +10984,6 @@ msgstr "Grupos de contacto efectivos (grupos de contacto de host o de reglas)"
 
 msgid "Contact groups in rule have precedence"
 msgstr "Los grupos de contacto en regla tienen prioridad"
-
-msgid "Contact information"
-msgstr "Información de contacto"
 
 #, fuzzy
 msgid "Contact person"
@@ -14643,6 +14661,14 @@ msgstr "Porcentaje de uso del disco"
 msgid "Disk read latency"
 msgstr "Latencia de lectura del disco"
 
+#, fuzzy
+msgid "Disk read opertions"
+msgstr "Operaciones de E/S en disco"
+
+#, fuzzy
+msgid "Disk read throughput per second"
+msgstr "Rendimiento de lectura por segundo"
+
 msgid "Disk space cleanup is disabled"
 msgstr "La limpieza del espacio en disco está desactivada"
 
@@ -15032,6 +15058,10 @@ msgstr "No compruebe"
 msgid "Do not check age of never analyzed/vacuumed tables"
 msgstr "No se comprueba la antigüedad de las tablas nunca analizadas/vacuadas"
 
+#, fuzzy
+msgid "Do not check the node"
+msgstr "No compruebe"
+
 msgid "Do not configure Windows Firewall"
 msgstr "No configure el Firewall de Windows"
 
@@ -15302,9 +15332,6 @@ msgstr "No mostrar el nombre del host"
 
 msgid "Do not encrypt the backup"
 msgstr "No cifrar la copia de seguridad"
-
-msgid "Do not enforce the resource to be hold by a specific node."
-msgstr "No imponer que el recurso sea retenido por un nodo específico."
 
 msgid ""
 "Do not forget to activate the plugin in at least one of your rules. It can "
@@ -16724,6 +16751,10 @@ msgstr "Dirección de correo electrónico"
 msgid "Email address"
 msgstr "Dirección de correo electrónico"
 
+#, fuzzy
+msgid "Email address used for account identification"
+msgstr "Dirección de correo electrónico de reserva para las notificaciones"
+
 msgid "Email-Addresses to mail PDF reports to"
 msgstr "Direcciones de correo electrónico a las que enviar los informes en PDF"
 
@@ -17513,9 +17544,6 @@ msgstr "Registro de eventos"
 
 msgid "Event Simulator"
 msgstr "Simulador de eventos"
-
-msgid "Event comment"
-msgstr "Comentario del evento"
 
 msgid "Event console"
 msgstr "Consola de eventos"
@@ -19517,9 +19545,6 @@ msgstr "Previsión para el futuro"
 msgid "Forecast model parametrization"
 msgstr "Parametrización del modelo de previsión"
 
-msgid "Form (Cookie) based"
-msgstr "Basado en formularios (cookies)"
-
 msgid "Format"
 msgstr "Formato"
 
@@ -19914,6 +19939,10 @@ msgstr "Pruebas de conexión"
 
 msgid "GCP/GCE CPU"
 msgstr ""
+
+#, fuzzy
+msgid "GCP/GCE disk IO"
+msgstr "Red IP"
 
 #, fuzzy
 msgid "GCP/GCS Network"
@@ -22144,9 +22173,6 @@ msgstr "Reglas de supervisión de hosts"
 msgid "Host name"
 msgstr "Nombre del anfitrión"
 
-msgid "Host name (as sent by syslog)"
-msgstr "Nombre de host (tal y como lo envía el syslog)"
-
 msgid "Host name used for containers"
 msgstr "Nombre de host utilizado para los contenedores"
 
@@ -22792,9 +22818,6 @@ msgstr "ID de la licencia, por ejemplo <tt>Windows Server 2008 R2</tt>"
 
 msgid "ID of the license, e.g. <tt>virtualization</tt>"
 msgstr "ID de la licencia, por ejemplo <tt>virtualización</tt>"
-
-msgid "ID of the rule"
-msgstr "ID de la norma"
 
 msgid "IDLE"
 msgstr "IDLE"
@@ -25680,6 +25703,10 @@ msgid "Invalid CRCs"
 msgstr "CRCs inválidos"
 
 #, python-format
+msgid "Invalid CSRF token (%r) for Session (%r)"
+msgstr ""
+
+#, python-format
 msgid "Invalid DCD command: %r"
 msgstr "Comando DCD inválido: %r"
 
@@ -26384,6 +26411,10 @@ msgstr "Estado del trabajo"
 
 msgid "Job Title"
 msgstr "Título del puesto"
+
+#, fuzzy
+msgid "Job age"
+msgstr "Nombre del trabajo"
 
 msgid "Job already finished"
 msgstr "Trabajo ya terminado"
@@ -27147,6 +27178,10 @@ msgstr "Servicios de nivel"
 
 #, fuzzy
 msgid "Levels disk"
+msgstr "Niveles"
+
+#, fuzzy
+msgid "Levels disk IO"
 msgstr "Niveles"
 
 #, python-format
@@ -30585,6 +30620,12 @@ msgstr "Informes programados"
 msgid "Missing Prerequisite"
 msgstr "Falta el requisito previo"
 
+msgid "Missing config file for agent {}"
+msgstr ""
+
+msgid "Missing config file for agent {}/{}"
+msgstr ""
+
 #, python-format
 msgid "Missing connection parameter: %s"
 msgstr "Falta el parámetro de conexión: %s"
@@ -30701,16 +30742,20 @@ msgid "MobileIron API"
 msgstr "Interfaz gráfica de usuario móvil"
 
 #, fuzzy
-msgid "Mobileiron Device"
-msgstr "Dispositivo de refrigeración"
-
-#, fuzzy
 msgid "Mobileiron compliance parameters"
 msgstr "Falta el parámetro de la especificación"
 
 #, fuzzy
-msgid "Mobileiron miscellaneous parameters"
-msgstr "Falta el parámetro de renderización"
+msgid "Mobileiron versions parameters"
+msgstr "Falta el parámetro de la especificación"
+
+#, fuzzy
+msgid "Mobileiron/Compliance"
+msgstr "Falta el parámetro de la especificación"
+
+#, fuzzy
+msgid "Mobileiron/Versions"
+msgstr "Dispositivo de refrigeración"
 
 msgid "Mode"
 msgstr "Modo"
@@ -32069,6 +32114,10 @@ msgstr "No hay integraciones API, ni agente Checkmk"
 #, fuzzy
 msgid "No Authentication"
 msgstr "Autenticación"
+
+#, fuzzy
+msgid "No CSRF token received"
+msgstr "Datos netos recibidos"
 
 msgid "No Conditions"
 msgstr "Sin condiciones"
@@ -33430,9 +33479,6 @@ msgstr "Número de notificaciones en forma de texto"
 msgid "Number of notifications exceeds maximum allowed number"
 msgstr "El número de notificaciones supera el número máximo permitido"
 
-msgid "Number of occurrances"
-msgstr "Número de ocurrencias"
-
 msgid "Number of ongoing shard info requests"
 msgstr "Número de solicitudes de información de los fragmentos en curso"
 
@@ -33471,6 +33517,18 @@ msgstr "Número de fragmentos de reubicación"
 #, fuzzy
 msgid "Number of requests"
 msgstr "Número de conjuntos regex"
+
+msgid "Number of requests with return code class 2xx (sucess)"
+msgstr ""
+
+msgid "Number of requests with return code class 3xx (redirection)"
+msgstr ""
+
+msgid "Number of requests with return code class 4xx (client error)"
+msgstr ""
+
+msgid "Number of requests with return code class 5xx (server error)"
+msgstr ""
 
 msgid "Number of retries"
 msgstr "Número de reintentos"
@@ -34371,9 +34429,6 @@ msgstr ""
 "agruparán en un solo servicio (resumen) o si se asigna a cada unidad un "
 "servicio individual (individual)."
 
-msgid "Optional DNS server you want to use for the lookup"
-msgstr "Servidor DNS opcional que desea utilizar para la búsqueda"
-
 msgid "Optional extension packages"
 msgstr "Paquetes de ampliación opcionales"
 
@@ -34541,11 +34596,6 @@ msgstr "Dirección IP original desde la que se recibió el evento"
 
 msgid "Original Text"
 msgstr "Texto original"
-
-msgid "Original host name when host name has been rewritten, empty otherwise"
-msgstr ""
-"Nombre de host original cuando el nombre de host ha sido reescrito, vacío en "
-"caso contrario"
 
 msgid "Other"
 msgstr "Otros"
@@ -34806,9 +34856,6 @@ msgid "Owner"
 msgstr "Propietario"
 
 msgid "Owner of event"
-msgstr "Propietario del evento"
-
-msgid "Owner of the event"
 msgstr "Propietario del evento"
 
 msgid "P"
@@ -35915,10 +35962,6 @@ msgstr "Número de fase"
 
 msgid "Phase of event (open, counting, etc.)"
 msgstr "Fase del evento (abierto, recuento, etc.)"
-
-msgid "Phase of the event (open in normal situations, closed when cancelling)"
-msgstr ""
-"Fase del evento (abierta en situaciones normales, cerrada cuando se cancela)"
 
 msgid "Phases"
 msgstr "Fases"
@@ -37129,9 +37172,6 @@ msgstr "Creaciones de procesos"
 
 msgid "Process ID"
 msgstr "Identificación del proceso"
-
-msgid "Process ID of the origin process"
-msgstr "ID del proceso de origen"
 
 msgid "Process Match textual description or path of process"
 msgstr "Proceso Coincidir con la descripción textual o la ruta del proceso"
@@ -44342,11 +44382,24 @@ msgstr ""
 msgid "State in case of restricted address mismatch"
 msgstr "Estado en caso de falta de coincidencia de direcciones restringidas"
 
+msgid ""
+"State in case of the checked device is neither Android nor iOS (or cannot be "
+"read)"
+msgstr ""
+
 msgid "State in case of unhandled exception"
 msgstr "Estado en caso de excepción no controlada"
 
 msgid "State in case of unknown status from replication script"
 msgstr "Estado en caso de estado desconocido del script de replicación"
+
+#, fuzzy
+msgid "State in case of unparsable OS build"
+msgstr "Estado en caso de ausencia de actualizaciones"
+
+#, fuzzy
+msgid "State in case of unparsable patch level"
+msgstr "Estado en caso de ausencia de actualizaciones"
 
 msgid "State in case of wrong agent version"
 msgstr "Estado en caso de versión incorrecta del agente"
@@ -44428,9 +44481,6 @@ msgstr "Estado de los servicios restantes"
 #, fuzzy
 msgid "State of service"
 msgstr "Estado de un servicio"
-
-msgid "State of the event (0/1/2/3)"
-msgstr "Estado del evento (0/1/2/3)"
 
 msgid "State on hard read error"
 msgstr "Estado en el error de lectura dura"
@@ -45443,14 +45493,8 @@ msgstr "Sincrónico"
 msgid "Synology Updates"
 msgstr "Actualizaciones de Synology"
 
-msgid "Syslog Facility"
-msgstr "Instalación de Syslog"
-
 msgid "Syslog Facility to use"
 msgstr "Instalación de Syslog a utilizar"
-
-msgid "Syslog Priority"
-msgstr "Prioridad de Syslog"
 
 msgid "Syslog application to cancel event"
 msgstr "Aplicación Syslog para cancelar el evento"
@@ -45477,9 +45521,6 @@ msgstr "Reenviar directamente a la consola de eventos"
 
 msgid "Syslog priority to cancel event"
 msgstr "Prioridad del syslog para cancelar el evento"
-
-msgid "Syslog tag / Application"
-msgstr "Etiqueta Syslog / Aplicación"
 
 msgid "Syslog-Facility"
 msgstr "Syslog-Facility"
@@ -46038,25 +46079,8 @@ msgstr "Prueba"
 msgid "Text"
 msgstr "Texto"
 
-msgid "Text groups from regular expression match, separated by spaces"
-msgstr ""
-"Grupos de texto de la coincidencia de la expresión regular, separados por "
-"espacios"
-
 msgid "Text logfiles (Linux, Solaris, Windows)"
 msgstr "Archivos de registro de texto (Linux, Solaris, Windows)"
-
-msgid "Text of the first match group from expression match"
-msgstr "Texto del primer grupo de coincidencia de la expresión match"
-
-msgid "Text of the second match group from expression match"
-msgstr ""
-"Texto del segundo grupo de coincidencia de la coincidencia de expresiones"
-
-msgid "Text of the third match group from expression match (and so on...)"
-msgstr ""
-"Texto del tercer grupo de coincidencia a partir de la coincidencia de "
-"expresión (y así sucesivamente...)"
 
 msgid "Text output"
 msgstr "Salida de texto"
@@ -46423,6 +46447,10 @@ msgstr ""
 
 msgid "The Customer has been deleted."
 msgstr "El cliente ha sido eliminado."
+
+#, fuzzy
+msgid "The DNS server you want to use for the lookup"
+msgstr "Servidor DNS opcional que desea utilizar para la búsqueda"
 
 msgid ""
 "The Data-Guard statistics are available in Oracle Enterprise Edition with "
@@ -46966,7 +46994,7 @@ msgid ""
 msgstr ""
 
 msgid ""
-"The agent controller uses TCP port 50001 to communicate with the agent. You "
+"The agent controller uses TCP port 28250 to communicate with the agent. You "
 "may change this port if it is used by another application, or blocked, for "
 "security reason, by the administrator."
 msgstr ""
@@ -49667,10 +49695,6 @@ msgstr ""
 "comienza con un guión (<tt>^</tt>), la descripción del servicio no llevará "
 "el prefijo <tt>LDAP</tt>."
 
-msgid "The service description will be <b>Mail Loop</b> plus this name"
-msgstr ""
-"La descripción del servicio será <b>Bucle de correo</b> más este nombre"
-
 msgid ""
 "The service description will be <b>SMTP</b> plus this name. If the name "
 "starts with a caret (<tt>^</tt>), the service description will not be "
@@ -49735,6 +49759,11 @@ msgstr ""
 
 msgid "The service name"
 msgstr "El nombre del servicio"
+
+#, fuzzy
+msgid "The service name will be <b>Mail Loop</b> plus this name"
+msgstr ""
+"La descripción del servicio será <b>Bucle de correo</b> más este nombre"
 
 #, fuzzy
 msgid ""
@@ -49835,6 +49864,14 @@ msgstr ""
 
 msgid "The source host"
 msgstr "El host de origen"
+
+#, fuzzy
+msgid ""
+"The specified choice is no longer available. Please use another, like "
+"'header' instead."
+msgstr ""
+"El elemento seleccionado '%r' ya no está disponible. Por favor, seleccione "
+"otro elemento."
 
 msgid ""
 "The staleness value of a host / service is calculated by measuring the "
@@ -50523,15 +50560,6 @@ msgstr ""
 
 msgid "These hosts have installed the correct version of their agent."
 msgstr "Estos hosts han instalado la versión correcta de su agente."
-
-msgid ""
-"These information are also available as environment variables with the "
-"prefix <tt>CMK_</tt>. For example the text of the event is available as "
-"<tt>CMK_TEXT</tt> as environment variable."
-msgstr ""
-"Esta información también está disponible como variables de entorno con el "
-"prefijo <tt>CMK_</tt>. Por ejemplo, el texto del evento está disponible como "
-"<tt>CMK_TEXT</tt> como variable de entorno."
 
 msgid ""
 "These levels make the check go warning or critical whenever the "
@@ -51518,6 +51546,12 @@ msgstr "Este anfitrión está caducado"
 msgid "This id is already being used by another connection."
 msgstr "Este identificador ya está siendo utilizado por otra conexión."
 
+#, fuzzy
+msgid "This information is available as environment variables"
+msgstr ""
+"No hay información de detección disponible. Por favor, realice un análisis "
+"completo."
+
 msgid ""
 "This interval is applied to all new checks that go beyond the number of "
 "immediately scheduled checks. Note: the maximum delay is five times the "
@@ -52138,6 +52172,10 @@ msgstr ""
 "Esta opción sólo es relevante cuando se limita el número de mensajes o el "
 "tiempo de análisis. Establece el comportamiento en caso de que haya "
 "demasiados mensajes nuevos en un archivo de registro."
+
+#, fuzzy
+msgid "This option is set by default."
+msgstr "El estado del trabajo se ignora por defecto."
 
 msgid ""
 "This option lets Check_MK add the string \"ISL\" to the service description "
@@ -54662,12 +54700,6 @@ msgstr "Hora de la primera aparición de esta serie"
 
 msgid "Time of last occurrance"
 msgstr "Hora de la última ocurrencia"
-
-msgid "Time of the first occurrence (time stamp)"
-msgstr "Hora de la primera ocurrencia (sello de tiempo)"
-
-msgid "Time of the most recent occurrance"
-msgstr "Hora de la ocurrencia más reciente"
 
 msgid "Time offset"
 msgstr "Desplazamiento de tiempo"
@@ -57407,10 +57439,6 @@ msgstr "Utilizar las credenciales"
 msgid "Use custom connection parameters"
 msgstr "Utilizar parámetros de conexión personalizados"
 
-#, fuzzy
-msgid "Use default DNS server"
-msgstr "Utilizar el puerto por defecto"
-
 msgid "Use default layout"
 msgstr "Utilizar el diseño por defecto"
 
@@ -57628,11 +57656,20 @@ msgstr ""
 "Utilizar el nombre de host de la máquina virtual si se ha establecido, de lo "
 "contrario, volver al nombre de ESX"
 
+#, fuzzy
+msgid "Use the address of the host for which the service is generated"
+msgstr ""
+"El valor predeterminado es el host para el que se ha configurado la "
+"comprobación activa."
+
 msgid "Use the alias as DNS name / IP address"
 msgstr "Utilizar el alias como nombre DNS / dirección IP"
 
 msgid "Use the credentials of the 'automation' user"
 msgstr "Utilizar las credenciales del usuario \"automatización\"."
+
+msgid "Use the default DNS server(s) specified in /etc/resolv.conf"
+msgstr ""
 
 msgid "Use the default color of the metric."
 msgstr "Utiliza el color por defecto de la métrica."
@@ -57754,9 +57791,6 @@ msgstr ""
 "tt> o <tt>.txt</tt>, pero también puede cargar varios archivos MIB a la vez "
 "empaquetándolos en un archivo <tt>.zip</tt>. Sólo se procesarán los archivos "
 "del directorio raíz del archivo zip.<br><br>"
-
-msgid "Use this host as a DNS server for the lookup"
-msgstr "Utilizar este host como servidor DNS para la búsqueda"
 
 msgid ""
 "Use this hostname for all created events instead of the name of the "
@@ -58102,6 +58136,12 @@ msgstr "Almacenamiento usado en porcentaje"
 
 msgid "Used storage space"
 msgstr "Espacio de almacenamiento utilizado"
+
+msgid ""
+"Used to specify the account to be contacted (aka. 'PrimarySmtpAddress') in "
+"case it's different from the username. If not specified the credentials "
+"username is used."
+msgstr ""
 
 msgid "User"
 msgstr "Usuario"
@@ -63369,10 +63409,6 @@ msgstr "decadencia"
 msgid "default (%s)"
 msgstr "por defecto (%s)"
 
-#, fuzzy
-msgid "default DNS server"
-msgstr "Especificar servidor DNS"
-
 msgid "degraded"
 msgstr "degradado"
 
@@ -63799,6 +63835,13 @@ msgstr "Archivo iCalendar"
 
 msgid "iLert alert source API key"
 msgstr "Clave API de la fuente de alertas de iLert"
+
+#, fuzzy
+msgid "iOS version regular expression"
+msgstr "Asignar mediante expresiones regulares"
+
+msgid "iOS versions matching this pattern will be reported as OK, else CRIT."
+msgstr ""
 
 msgid "iSCSI"
 msgstr "iSCSI"
@@ -64732,9 +64775,6 @@ msgstr ""
 "el socket ha sido creado y se le ha asignado una dirección con bind(). La "
 "pila TCP no está activa todavía. Este estado sólo se reporta en Solaris."
 
-msgid "this host"
-msgstr "este anfitrión"
-
 msgid "threads"
 msgstr "hilos"
 
@@ -64961,6 +65001,118 @@ msgstr "z/OS"
 #, fuzzy, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "2020 tribe29 GmbH. Todos los derechos reservados."
+
+#~ msgid ""
+#~ "Check the resolution of a hostname into an IP address by a DNS server. "
+#~ "This check uses <tt>check_dns</tt> from the standard Nagios plugins."
+#~ msgstr ""
+#~ "Comprueba la resolución de un nombre de host en una dirección IP por un "
+#~ "servidor DNS. Esta comprobación utiliza <tt>check_dns</tt> de los plugins "
+#~ "estándar de Nagios."
+
+#, fuzzy
+#~| msgid "Use default port"
+#~ msgid "Use default DNS server"
+#~ msgstr "Utilizar el puerto por defecto"
+
+#~ msgid "Use this host as a DNS server for the lookup"
+#~ msgstr "Utilizar este host como servidor DNS para la búsqueda"
+
+#, fuzzy
+#~| msgid "Specify DNS Server"
+#~ msgid "default DNS server"
+#~ msgstr "Especificar servidor DNS"
+
+#~ msgid "this host"
+#~ msgstr "este anfitrión"
+
+#~ msgid "Form (Cookie) based"
+#~ msgstr "Basado en formularios (cookies)"
+
+#, fuzzy
+#~| msgid "Missing render parameter"
+#~ msgid "Mobileiron miscellaneous parameters"
+#~ msgstr "Falta el parámetro de renderización"
+
+#~ msgid "Contact information"
+#~ msgstr "Información de contacto"
+
+#~ msgid "Do not enforce the resource to be hold by a specific node."
+#~ msgstr "No imponer que el recurso sea retenido por un nodo específico."
+
+#~ msgid "Event comment"
+#~ msgstr "Comentario del evento"
+
+#~ msgid "Host name (as sent by syslog)"
+#~ msgstr "Nombre de host (tal y como lo envía el syslog)"
+
+#~ msgid "ID of the rule"
+#~ msgstr "ID de la norma"
+
+#~ msgid "Number of occurrances"
+#~ msgstr "Número de ocurrencias"
+
+#~ msgid ""
+#~ "Original host name when host name has been rewritten, empty otherwise"
+#~ msgstr ""
+#~ "Nombre de host original cuando el nombre de host ha sido reescrito, vacío "
+#~ "en caso contrario"
+
+#~ msgid "Owner of the event"
+#~ msgstr "Propietario del evento"
+
+#~ msgid ""
+#~ "Phase of the event (open in normal situations, closed when cancelling)"
+#~ msgstr ""
+#~ "Fase del evento (abierta en situaciones normales, cerrada cuando se "
+#~ "cancela)"
+
+#~ msgid "Process ID of the origin process"
+#~ msgstr "ID del proceso de origen"
+
+#~ msgid "State of the event (0/1/2/3)"
+#~ msgstr "Estado del evento (0/1/2/3)"
+
+#~ msgid "Syslog Facility"
+#~ msgstr "Instalación de Syslog"
+
+#~ msgid "Syslog Priority"
+#~ msgstr "Prioridad de Syslog"
+
+#~ msgid "Syslog tag / Application"
+#~ msgstr "Etiqueta Syslog / Aplicación"
+
+#~ msgid "Text groups from regular expression match, separated by spaces"
+#~ msgstr ""
+#~ "Grupos de texto de la coincidencia de la expresión regular, separados por "
+#~ "espacios"
+
+#~ msgid "Text of the first match group from expression match"
+#~ msgstr "Texto del primer grupo de coincidencia de la expresión match"
+
+#~ msgid "Text of the second match group from expression match"
+#~ msgstr ""
+#~ "Texto del segundo grupo de coincidencia de la coincidencia de expresiones"
+
+#~ msgid "Text of the third match group from expression match (and so on...)"
+#~ msgstr ""
+#~ "Texto del tercer grupo de coincidencia a partir de la coincidencia de "
+#~ "expresión (y así sucesivamente...)"
+
+#~ msgid ""
+#~ "These information are also available as environment variables with the "
+#~ "prefix <tt>CMK_</tt>. For example the text of the event is available as "
+#~ "<tt>CMK_TEXT</tt> as environment variable."
+#~ msgstr ""
+#~ "Esta información también está disponible como variables de entorno con el "
+#~ "prefijo <tt>CMK_</tt>. Por ejemplo, el texto del evento está disponible "
+#~ "como <tt>CMK_TEXT</tt> como variable de entorno."
+
+#~ msgid "Time of the first occurrence (time stamp)"
+#~ msgstr "Hora de la primera ocurrencia (sello de tiempo)"
+
+#~ msgid "Time of the most recent occurrance"
+#~ msgstr "Hora de la ocurrencia más reciente"
 
 #, fuzzy
 #~| msgid "Create a service for each instance"

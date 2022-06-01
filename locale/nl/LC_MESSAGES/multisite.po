@@ -825,6 +825,9 @@ msgstr "(niets geselecteerd)"
 msgid "(only works with the microcore)"
 msgstr "(werkt alleen met de microcore)"
 
+msgid "(overrides <b>username</b>)"
+msgstr ""
+
 msgid "(please select)"
 msgstr "(maak een selectie)"
 
@@ -2713,6 +2716,12 @@ msgstr "Accepteer elke SSH Host Sleutel"
 
 msgid "Accept incoming TCP connections"
 msgstr "Accepteer inkomende TCP verbindingen"
+
+msgid "Acceptable OS build version age"
+msgstr ""
+
+msgid "Acceptable patch level age"
+msgstr ""
 
 msgid "Accepted Packages/s"
 msgstr "Geaccepteerde pakketten/s"
@@ -5114,6 +5123,14 @@ msgstr "Analyseer regelset met deze melding"
 msgid "Analyze this line"
 msgstr "Analyseer deze lijn"
 
+#, fuzzy
+msgid "Android version regular expression"
+msgstr "Toewijzen via reguliere expressies"
+
+msgid ""
+"Android versions matching this pattern will be reported as OK, else CRIT."
+msgstr ""
+
 msgid "Annotation"
 msgstr "Annotatie"
 
@@ -5817,6 +5834,10 @@ msgstr "Machtiging"
 #, python-format
 msgid "Authorization Error. Insufficent permissions for '%s'"
 msgstr "Autorisatiefout. Onvoldoende machtigingen voor '%s'"
+
+#, fuzzy
+msgid "Authorization Header"
+msgstr "Machtiging"
 
 msgid "Authorization settings"
 msgstr "Autorisatie-instellingen"
@@ -8794,11 +8815,11 @@ msgstr ""
 
 msgid ""
 "Check the resolution of a hostname into an IP address by a DNS server. This "
-"check uses <tt>check_dns</tt> from the standard Nagios plugins."
+"check uses <tt>check_dns</tt> from the standard Nagios plugins. Note, that "
+"check_dns will always be executed in the monitoring site. By default, the "
+"configured host(s) that this rule applies to is used as DNS server. This "
+"behaviour can be configured by using the option <tt>DNS Server</tt>. "
 msgstr ""
-"Controleer de resolutie van een hostnaam in een IP adres door een DNS "
-"server. Deze controle gebruikt <tt>check_dns</tt> van de standaard Nagios "
-"plugins."
 
 msgid ""
 "Check this to turn off multiprocessing. Recommended for debugging purposes "
@@ -10879,9 +10900,6 @@ msgstr "Contactgroepen effectief (Host of regel contactgroepen)"
 
 msgid "Contact groups in rule have precedence"
 msgstr "Contactgroepen in regel hebben voorrang"
-
-msgid "Contact information"
-msgstr "Contact informatie"
 
 #, fuzzy
 msgid "Contact person"
@@ -14530,6 +14548,14 @@ msgstr "Schijf percentage gebruik"
 msgid "Disk read latency"
 msgstr "Schijf lees latentie"
 
+#, fuzzy
+msgid "Disk read opertions"
+msgstr "Schijf I/O operaties"
+
+#, fuzzy
+msgid "Disk read throughput per second"
+msgstr "Lees doorvoer per seconde"
+
 msgid "Disk space cleanup is disabled"
 msgstr "Schijfruimte opruimen is uitgeschakeld"
 
@@ -14910,6 +14936,10 @@ msgid "Do not check age of never analyzed/vacuumed tables"
 msgstr ""
 "Controleer de leeftijd van nooit geanalyseerde/gezuiverde tabellen niet"
 
+#, fuzzy
+msgid "Do not check the node"
+msgstr "Niet controleren"
+
 msgid "Do not configure Windows Firewall"
 msgstr "Windows Firewall niet configureren"
 
@@ -15178,11 +15208,6 @@ msgstr "Geef de hostnaam niet weer"
 
 msgid "Do not encrypt the backup"
 msgstr "De backup niet versleutelen"
-
-msgid "Do not enforce the resource to be hold by a specific node."
-msgstr ""
-"Dwing niet af dat de bron door een specifiek knooppunt moet worden "
-"vastgehouden."
 
 msgid ""
 "Do not forget to activate the plugin in at least one of your rules. It can "
@@ -16598,6 +16623,10 @@ msgstr "Email Adres"
 msgid "Email address"
 msgstr "Emailadres"
 
+#, fuzzy
+msgid "Email address used for account identification"
+msgstr "Terugval-e-mailadres voor kennisgevingen"
+
 msgid "Email-Addresses to mail PDF reports to"
 msgstr "Email-Adressen om PDF-rapporten naar te mailen"
 
@@ -17376,9 +17405,6 @@ msgstr "Gebeurtenislogboek"
 
 msgid "Event Simulator"
 msgstr "Gebeurtenissimulator"
-
-msgid "Event comment"
-msgstr "Evenement commentaar"
 
 msgid "Event console"
 msgstr "Gebeurtenis console"
@@ -19366,9 +19392,6 @@ msgstr "Voorspelling in de toekomst"
 msgid "Forecast model parametrization"
 msgstr "Voorspellingsmodel parametrisering"
 
-msgid "Form (Cookie) based"
-msgstr "Formulier (Cookie) gebaseerd"
-
 msgid "Format"
 msgstr "Formaat"
 
@@ -19760,6 +19783,10 @@ msgstr "Verbindingstests"
 
 msgid "GCP/GCE CPU"
 msgstr ""
+
+#, fuzzy
+msgid "GCP/GCE disk IO"
+msgstr "IP-netwerk"
 
 #, fuzzy
 msgid "GCP/GCS Network"
@@ -21964,9 +21991,6 @@ msgstr "Regels voor hostmonitoring"
 msgid "Host name"
 msgstr "Host naam"
 
-msgid "Host name (as sent by syslog)"
-msgstr "Hostnaam (zoals verzonden door syslog)"
-
 msgid "Host name used for containers"
 msgstr "Hostnaam gebruikt voor containers"
 
@@ -22607,9 +22631,6 @@ msgstr "ID van de licentie, bijv. <tt>Windows Server 2008 R2</tt>"
 
 msgid "ID of the license, e.g. <tt>virtualization</tt>"
 msgstr "ID van de licentie, bijv. <tt>virtualisatie</tt>"
-
-msgid "ID of the rule"
-msgstr "ID van de regel"
 
 msgid "IDLE"
 msgstr "IDLE"
@@ -25474,6 +25495,10 @@ msgid "Invalid CRCs"
 msgstr "Ongeldige CRC's"
 
 #, python-format
+msgid "Invalid CSRF token (%r) for Session (%r)"
+msgstr ""
+
+#, python-format
 msgid "Invalid DCD command: %r"
 msgstr "Ongeldig DCD commando: %r"
 
@@ -26183,6 +26208,10 @@ msgstr "Job Staat"
 
 msgid "Job Title"
 msgstr "Functie"
+
+#, fuzzy
+msgid "Job age"
+msgstr "Functie Naam"
 
 msgid "Job already finished"
 msgstr "Klus al geklaard"
@@ -26946,6 +26975,10 @@ msgstr "Niveaus Diensten"
 
 #, fuzzy
 msgid "Levels disk"
+msgstr "Niveaus"
+
+#, fuzzy
+msgid "Levels disk IO"
 msgstr "Niveaus"
 
 #, python-format
@@ -30346,6 +30379,12 @@ msgstr "Geplande rapporten"
 msgid "Missing Prerequisite"
 msgstr "Ontbrekende voorwaarde"
 
+msgid "Missing config file for agent {}"
+msgstr ""
+
+msgid "Missing config file for agent {}/{}"
+msgstr ""
+
 #, python-format
 msgid "Missing connection parameter: %s"
 msgstr "Ontbrekende verbindingsparameter: %s"
@@ -30461,16 +30500,20 @@ msgid "MobileIron API"
 msgstr "Mobiele GUI"
 
 #, fuzzy
-msgid "Mobileiron Device"
-msgstr "Koelapparaat"
-
-#, fuzzy
 msgid "Mobileiron compliance parameters"
 msgstr "Ontbrekende spec parameter"
 
 #, fuzzy
-msgid "Mobileiron miscellaneous parameters"
-msgstr "Ontbrekende render parameter"
+msgid "Mobileiron versions parameters"
+msgstr "Ontbrekende spec parameter"
+
+#, fuzzy
+msgid "Mobileiron/Compliance"
+msgstr "Ontbrekende spec parameter"
+
+#, fuzzy
+msgid "Mobileiron/Versions"
+msgstr "Koelapparaat"
 
 msgid "Mode"
 msgstr "Modus"
@@ -31815,6 +31858,10 @@ msgstr "Geen API-integraties, geen Checkmk-agent"
 #, fuzzy
 msgid "No Authentication"
 msgstr "Authenticatie"
+
+#, fuzzy
+msgid "No CSRF token received"
+msgstr "Netto ontvangen gegevens"
 
 msgid "No Conditions"
 msgstr "Geen voorwaarden"
@@ -33167,9 +33214,6 @@ msgstr "Aantal meldingen als tekst"
 msgid "Number of notifications exceeds maximum allowed number"
 msgstr "Aantal meldingen overschrijdt het maximaal toegestane aantal"
 
-msgid "Number of occurrances"
-msgstr "Aantal voorvallen"
-
 msgid "Number of ongoing shard info requests"
 msgstr "Aantal lopende shard-informatieverzoeken"
 
@@ -33208,6 +33252,18 @@ msgstr "Aantal verhuizende scherven"
 #, fuzzy
 msgid "Number of requests"
 msgstr "Aantal regex sets"
+
+msgid "Number of requests with return code class 2xx (sucess)"
+msgstr ""
+
+msgid "Number of requests with return code class 3xx (redirection)"
+msgstr ""
+
+msgid "Number of requests with return code class 4xx (client error)"
+msgstr ""
+
+msgid "Number of requests with return code class 5xx (server error)"
+msgstr ""
 
 msgid "Number of retries"
 msgstr "Aantal herhalingen"
@@ -34107,9 +34163,6 @@ msgstr ""
 "worden gegroepeerd (samenvatting) of dat elke eenheid een afzonderlijke "
 "dienst krijgt toegewezen (enkelvoudig)."
 
-msgid "Optional DNS server you want to use for the lookup"
-msgstr "Optionele DNS server die u wilt gebruiken voor de lookup"
-
 msgid "Optional extension packages"
 msgstr "Optionele uitbreidingspakketten"
 
@@ -34274,10 +34327,6 @@ msgstr "Oorspronkelijk IP-adres waarvan de gebeurtenis werd ontvangen"
 
 msgid "Original Text"
 msgstr "Originele tekst"
-
-msgid "Original host name when host name has been rewritten, empty otherwise"
-msgstr ""
-"Oorspronkelijke hostnaam wanneer de hostnaam herschreven is, anders leeg"
 
 msgid "Other"
 msgstr "Andere"
@@ -34533,9 +34582,6 @@ msgid "Owner"
 msgstr "Eigenaar"
 
 msgid "Owner of event"
-msgstr "Eigenaar van het evenement"
-
-msgid "Owner of the event"
 msgstr "Eigenaar van het evenement"
 
 msgid "P"
@@ -35635,10 +35681,6 @@ msgstr "Fase Aantal"
 
 msgid "Phase of event (open, counting, etc.)"
 msgstr "Fase van het evenement (open, tellen, enz.)"
-
-msgid "Phase of the event (open in normal situations, closed when cancelling)"
-msgstr ""
-"Fase van het evenement (open in normale situaties, gesloten bij afgelasting)"
 
 msgid "Phases"
 msgstr "Fasen"
@@ -36827,9 +36869,6 @@ msgstr "Proces Creaties"
 
 msgid "Process ID"
 msgstr "Proces-ID"
-
-msgid "Process ID of the origin process"
-msgstr "Proces-ID van het oorspronkelijke proces"
 
 msgid "Process Match textual description or path of process"
 msgstr "Proces Stemt overeen met tekstuele beschrijving of pad van proces"
@@ -43966,11 +44005,24 @@ msgstr "Staat in geval van niet spatiefout telling is groter dan 0: "
 msgid "State in case of restricted address mismatch"
 msgstr "Staat in geval van foutief beperkt adres"
 
+msgid ""
+"State in case of the checked device is neither Android nor iOS (or cannot be "
+"read)"
+msgstr ""
+
 msgid "State in case of unhandled exception"
 msgstr "Staat in geval van een onbehandelde uitzondering"
 
 msgid "State in case of unknown status from replication script"
 msgstr "Toestand in geval van onbekende status van replicatiescript"
+
+#, fuzzy
+msgid "State in case of unparsable OS build"
+msgstr "Staat in geval van ontbrekende updates"
+
+#, fuzzy
+msgid "State in case of unparsable patch level"
+msgstr "Staat in geval van ontbrekende updates"
 
 msgid "State in case of wrong agent version"
 msgstr "Staat in geval van verkeerde agent versie"
@@ -44050,9 +44102,6 @@ msgstr "Staat van resterende diensten"
 #, fuzzy
 msgid "State of service"
 msgstr "Staat van een dienst"
-
-msgid "State of the event (0/1/2/3)"
-msgstr "Toestand van de gebeurtenis (0/1/2/3)"
 
 msgid "State on hard read error"
 msgstr "Staat bij hard-lezen fout"
@@ -45059,14 +45108,8 @@ msgstr "Synchroon"
 msgid "Synology Updates"
 msgstr "Synology Updates"
 
-msgid "Syslog Facility"
-msgstr "Syslog faciliteit"
-
 msgid "Syslog Facility to use"
 msgstr "Te gebruiken Syslog-faciliteit"
-
-msgid "Syslog Priority"
-msgstr "Syslog Prioriteit"
 
 msgid "Syslog application to cancel event"
 msgstr "Syslog toepassing om gebeurtenis te annuleren"
@@ -45093,9 +45136,6 @@ msgstr "Direct doorsturen naar Event Console"
 
 msgid "Syslog priority to cancel event"
 msgstr "Syslog prioriteit om gebeurtenis te annuleren"
-
-msgid "Syslog tag / Application"
-msgstr "Syslog tag / Toepassing"
 
 msgid "Syslog-Facility"
 msgstr "Syslog-Faciliteit"
@@ -45649,21 +45689,8 @@ msgstr "Test"
 msgid "Text"
 msgstr "Tekst"
 
-msgid "Text groups from regular expression match, separated by spaces"
-msgstr "Tekstgroepen van reguliere expressie-match, gescheiden door spaties"
-
 msgid "Text logfiles (Linux, Solaris, Windows)"
 msgstr "Tekstlogbestanden (Linux, Solaris, Windows)"
-
-msgid "Text of the first match group from expression match"
-msgstr "Tekst van de eerste matchgroep van expressie match"
-
-msgid "Text of the second match group from expression match"
-msgstr "Tekst van de tweede matchgroep van expressie match"
-
-msgid "Text of the third match group from expression match (and so on...)"
-msgstr ""
-"Tekst van de derde wedstrijdgroep van expressiewedstrijd (enzovoort...)"
 
 msgid "Text output"
 msgstr "Tekstuitvoer"
@@ -46028,6 +46055,10 @@ msgstr ""
 
 msgid "The Customer has been deleted."
 msgstr "De Klant is verwijderd."
+
+#, fuzzy
+msgid "The DNS server you want to use for the lookup"
+msgstr "Optionele DNS server die u wilt gebruiken voor de lookup"
 
 msgid ""
 "The Data-Guard statistics are available in Oracle Enterprise Edition with "
@@ -46573,7 +46604,7 @@ msgid ""
 msgstr ""
 
 msgid ""
-"The agent controller uses TCP port 50001 to communicate with the agent. You "
+"The agent controller uses TCP port 28250 to communicate with the agent. You "
 "may change this port if it is used by another application, or blocked, for "
 "security reason, by the administrator."
 msgstr ""
@@ -49262,9 +49293,6 @@ msgstr ""
 "begint met een caret (<tt>^</tt>), wordt de dienstomschrijving niet "
 "voorafgegaan door <tt>LDAP</tt>."
 
-msgid "The service description will be <b>Mail Loop</b> plus this name"
-msgstr "De beschrijving van de dienst zal <b>Mail Loop</b> plus deze naam zijn"
-
 msgid ""
 "The service description will be <b>SMTP</b> plus this name. If the name "
 "starts with a caret (<tt>^</tt>), the service description will not be "
@@ -49329,6 +49357,10 @@ msgstr ""
 
 msgid "The service name"
 msgstr "De naam van de dienst"
+
+#, fuzzy
+msgid "The service name will be <b>Mail Loop</b> plus this name"
+msgstr "De beschrijving van de dienst zal <b>Mail Loop</b> plus deze naam zijn"
 
 #, fuzzy
 msgid ""
@@ -49428,6 +49460,14 @@ msgstr ""
 
 msgid "The source host"
 msgstr "De bronhost"
+
+#, fuzzy
+msgid ""
+"The specified choice is no longer available. Please use another, like "
+"'header' instead."
+msgstr ""
+"Het geselecteerde element '%r' is niet langer beschikbaar. Selecteer "
+"alstublieft iets anders."
 
 msgid ""
 "The staleness value of a host / service is calculated by measuring the "
@@ -50117,15 +50157,6 @@ msgstr ""
 
 msgid "These hosts have installed the correct version of their agent."
 msgstr "Deze hosts hebben de juiste versie van hun agent geïnstalleerd."
-
-msgid ""
-"These information are also available as environment variables with the "
-"prefix <tt>CMK_</tt>. For example the text of the event is available as "
-"<tt>CMK_TEXT</tt> as environment variable."
-msgstr ""
-"Deze informatie is ook beschikbaar als omgevingsvariabelen met het "
-"voorvoegsel <tt>CMK_</tt>. Bijvoorbeeld de tekst van de gebeurtenis is "
-"beschikbaar als <tt>CMK_TEXT</tt> als omgevingsvariabele."
 
 msgid ""
 "These levels make the check go warning or critical whenever the "
@@ -51106,6 +51137,12 @@ msgstr "Deze gastheer is oud"
 msgid "This id is already being used by another connection."
 msgstr "Deze id wordt al door een andere verbinding gebruikt."
 
+#, fuzzy
+msgid "This information is available as environment variables"
+msgstr ""
+"Geen ontdekkingsinformatie beschikbaar. Gelieve een volledige scan uit te "
+"voeren."
+
 msgid ""
 "This interval is applied to all new checks that go beyond the number of "
 "immediately scheduled checks. Note: the maximum delay is five times the "
@@ -51719,6 +51756,10 @@ msgstr ""
 "Deze optie is alleen relevant als u het aantal berichten of de parsingtijd "
 "beperkt. Het bepaalt het gedrag in geval van te veel nieuwe berichten in een "
 "logbestand."
+
+#, fuzzy
+msgid "This option is set by default."
+msgstr "De status van de job wordt standaard genegeerd."
 
 msgid ""
 "This option lets Check_MK add the string \"ISL\" to the service description "
@@ -54218,12 +54259,6 @@ msgstr "Tijdstip van eerste verschijning van deze serie"
 
 msgid "Time of last occurrance"
 msgstr "Tijd van laatste voorval"
-
-msgid "Time of the first occurrence (time stamp)"
-msgstr "Tijdstip van het eerste voorval (tijdstempel)"
-
-msgid "Time of the most recent occurrance"
-msgstr "Tijdstip van de meest recente gebeurtenis"
 
 msgid "Time offset"
 msgstr "Tijd offset"
@@ -56935,10 +56970,6 @@ msgstr "Gebruik geloofsbrieven"
 msgid "Use custom connection parameters"
 msgstr "Gebruik aangepaste verbindingsparameters"
 
-#, fuzzy
-msgid "Use default DNS server"
-msgstr "Gebruik standaard poort"
-
 msgid "Use default layout"
 msgstr "Standaard lay-out gebruiken"
 
@@ -57155,11 +57186,19 @@ msgstr ""
 "Gebruik de hostnaam van de VM indien ingesteld, anders terugvallen op ESX-"
 "naam"
 
+#, fuzzy
+msgid "Use the address of the host for which the service is generated"
+msgstr ""
+"Dit is standaard de host waarvoor de actieve controle is geconfigureerd."
+
 msgid "Use the alias as DNS name / IP address"
 msgstr "Gebruik de alias als DNS naam / IP adres"
 
 msgid "Use the credentials of the 'automation' user"
 msgstr "Gebruik de inloggegevens van de \"automation\" gebruiker"
+
+msgid "Use the default DNS server(s) specified in /etc/resolv.conf"
+msgstr ""
 
 msgid "Use the default color of the metric."
 msgstr "Gebruik de standaard kleur van de metriek."
@@ -57278,9 +57317,6 @@ msgstr ""
 "<tt>.mib</tt> of <tt>.txt</tt>, maar u kunt ook meerdere MIB bestanden in "
 "één keer uploaden door ze in te pakken in een <tt>.zip</tt> bestand. Alleen "
 "bestanden in de hoofdmap van het zip-bestand worden verwerkt.<br><br>"
-
-msgid "Use this host as a DNS server for the lookup"
-msgstr "Gebruik deze host als DNS server voor de lookup"
 
 msgid ""
 "Use this hostname for all created events instead of the name of the "
@@ -57622,6 +57658,12 @@ msgstr "Gebruikte opslag in procenten"
 
 msgid "Used storage space"
 msgstr "Gebruikte opslagruimte"
+
+msgid ""
+"Used to specify the account to be contacted (aka. 'PrimarySmtpAddress') in "
+"case it's different from the username. If not specified the credentials "
+"username is used."
+msgstr ""
 
 msgid "User"
 msgstr "Gebruiker"
@@ -62856,10 +62898,6 @@ msgstr "verval"
 msgid "default (%s)"
 msgstr "standaard (%s)"
 
-#, fuzzy
-msgid "default DNS server"
-msgstr "DNS-server specificeren"
-
 msgid "degraded"
 msgstr "gedegradeerd"
 
@@ -63282,6 +63320,13 @@ msgstr "iCalendar Bestand"
 
 msgid "iLert alert source API key"
 msgstr "iLert waarschuwings bron API sleutel"
+
+#, fuzzy
+msgid "iOS version regular expression"
+msgstr "Toewijzen via reguliere expressies"
+
+msgid "iOS versions matching this pattern will be reported as OK, else CRIT."
+msgstr ""
 
 msgid "iSCSI"
 msgstr "iSCSI"
@@ -64213,9 +64258,6 @@ msgstr ""
 "de socket is aangemaakt en er is een adres aan toegekend met bind(). De TCP-"
 "stack is nog niet actief. Deze status wordt alleen gerapporteerd op Solaris."
 
-msgid "this host"
-msgstr "deze gastheer"
-
 msgid "threads"
 msgstr "draden"
 
@@ -64442,6 +64484,115 @@ msgstr "z/OS"
 #, fuzzy, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Alle rechten voorbehouden."
+
+#~ msgid ""
+#~ "Check the resolution of a hostname into an IP address by a DNS server. "
+#~ "This check uses <tt>check_dns</tt> from the standard Nagios plugins."
+#~ msgstr ""
+#~ "Controleer de resolutie van een hostnaam in een IP adres door een DNS "
+#~ "server. Deze controle gebruikt <tt>check_dns</tt> van de standaard Nagios "
+#~ "plugins."
+
+#, fuzzy
+#~| msgid "Use default port"
+#~ msgid "Use default DNS server"
+#~ msgstr "Gebruik standaard poort"
+
+#~ msgid "Use this host as a DNS server for the lookup"
+#~ msgstr "Gebruik deze host als DNS server voor de lookup"
+
+#, fuzzy
+#~| msgid "Specify DNS Server"
+#~ msgid "default DNS server"
+#~ msgstr "DNS-server specificeren"
+
+#~ msgid "this host"
+#~ msgstr "deze gastheer"
+
+#~ msgid "Form (Cookie) based"
+#~ msgstr "Formulier (Cookie) gebaseerd"
+
+#, fuzzy
+#~| msgid "Missing render parameter"
+#~ msgid "Mobileiron miscellaneous parameters"
+#~ msgstr "Ontbrekende render parameter"
+
+#~ msgid "Contact information"
+#~ msgstr "Contact informatie"
+
+#~ msgid "Do not enforce the resource to be hold by a specific node."
+#~ msgstr ""
+#~ "Dwing niet af dat de bron door een specifiek knooppunt moet worden "
+#~ "vastgehouden."
+
+#~ msgid "Event comment"
+#~ msgstr "Evenement commentaar"
+
+#~ msgid "Host name (as sent by syslog)"
+#~ msgstr "Hostnaam (zoals verzonden door syslog)"
+
+#~ msgid "ID of the rule"
+#~ msgstr "ID van de regel"
+
+#~ msgid "Number of occurrances"
+#~ msgstr "Aantal voorvallen"
+
+#~ msgid ""
+#~ "Original host name when host name has been rewritten, empty otherwise"
+#~ msgstr ""
+#~ "Oorspronkelijke hostnaam wanneer de hostnaam herschreven is, anders leeg"
+
+#~ msgid "Owner of the event"
+#~ msgstr "Eigenaar van het evenement"
+
+#~ msgid ""
+#~ "Phase of the event (open in normal situations, closed when cancelling)"
+#~ msgstr ""
+#~ "Fase van het evenement (open in normale situaties, gesloten bij "
+#~ "afgelasting)"
+
+#~ msgid "Process ID of the origin process"
+#~ msgstr "Proces-ID van het oorspronkelijke proces"
+
+#~ msgid "State of the event (0/1/2/3)"
+#~ msgstr "Toestand van de gebeurtenis (0/1/2/3)"
+
+#~ msgid "Syslog Facility"
+#~ msgstr "Syslog faciliteit"
+
+#~ msgid "Syslog Priority"
+#~ msgstr "Syslog Prioriteit"
+
+#~ msgid "Syslog tag / Application"
+#~ msgstr "Syslog tag / Toepassing"
+
+#~ msgid "Text groups from regular expression match, separated by spaces"
+#~ msgstr "Tekstgroepen van reguliere expressie-match, gescheiden door spaties"
+
+#~ msgid "Text of the first match group from expression match"
+#~ msgstr "Tekst van de eerste matchgroep van expressie match"
+
+#~ msgid "Text of the second match group from expression match"
+#~ msgstr "Tekst van de tweede matchgroep van expressie match"
+
+#~ msgid "Text of the third match group from expression match (and so on...)"
+#~ msgstr ""
+#~ "Tekst van de derde wedstrijdgroep van expressiewedstrijd (enzovoort...)"
+
+#~ msgid ""
+#~ "These information are also available as environment variables with the "
+#~ "prefix <tt>CMK_</tt>. For example the text of the event is available as "
+#~ "<tt>CMK_TEXT</tt> as environment variable."
+#~ msgstr ""
+#~ "Deze informatie is ook beschikbaar als omgevingsvariabelen met het "
+#~ "voorvoegsel <tt>CMK_</tt>. Bijvoorbeeld de tekst van de gebeurtenis is "
+#~ "beschikbaar als <tt>CMK_TEXT</tt> als omgevingsvariabele."
+
+#~ msgid "Time of the first occurrence (time stamp)"
+#~ msgstr "Tijdstip van het eerste voorval (tijdstempel)"
+
+#~ msgid "Time of the most recent occurrance"
+#~ msgstr "Tijdstip van de meest recente gebeurtenis"
 
 #, fuzzy
 #~| msgid "Create a service for each instance"

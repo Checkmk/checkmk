@@ -819,6 +819,9 @@ msgstr ""
 msgid "(only works with the microcore)"
 msgstr ""
 
+msgid "(overrides <b>username</b>)"
+msgstr ""
+
 msgid "(please select)"
 msgstr ""
 
@@ -2396,6 +2399,12 @@ msgstr "Accept orice cheie SSH Host Key"
 #, fuzzy
 msgid "Accept incoming TCP connections"
 msgstr "Conexiuni Active"
+
+msgid "Acceptable OS build version age"
+msgstr ""
+
+msgid "Acceptable patch level age"
+msgstr ""
 
 msgid "Accepted Packages/s"
 msgstr ""
@@ -4833,6 +4842,14 @@ msgstr ""
 msgid "Analyze this line"
 msgstr ""
 
+#, fuzzy
+msgid "Android version regular expression"
+msgstr "Mesajul Text"
+
+msgid ""
+"Android versions matching this pattern will be reported as OK, else CRIT."
+msgstr ""
+
 msgid "Annotation"
 msgstr ""
 
@@ -5490,6 +5507,10 @@ msgstr ""
 #, python-format
 msgid "Authorization Error. Insufficent permissions for '%s'"
 msgstr ""
+
+#, fuzzy
+msgid "Authorization Header"
+msgstr "Dezactiveaza Notificarile"
 
 msgid "Authorization settings"
 msgstr ""
@@ -8267,7 +8288,10 @@ msgstr ""
 
 msgid ""
 "Check the resolution of a hostname into an IP address by a DNS server. This "
-"check uses <tt>check_dns</tt> from the standard Nagios plugins."
+"check uses <tt>check_dns</tt> from the standard Nagios plugins. Note, that "
+"check_dns will always be executed in the monitoring site. By default, the "
+"configured host(s) that this rule applies to is used as DNS server. This "
+"behaviour can be configured by using the option <tt>DNS Server</tt>. "
 msgstr ""
 
 msgid ""
@@ -10202,10 +10226,6 @@ msgstr "Eticheta de grup nou"
 
 msgid "Contact groups in rule have precedence"
 msgstr ""
-
-#, fuzzy
-msgid "Contact information"
-msgstr "Adaugă informații despre contact"
 
 #, fuzzy
 msgid "Contact person"
@@ -13960,6 +13980,14 @@ msgstr "trei nivele"
 msgid "Disk read latency"
 msgstr "Dezactiveaza Notificarile"
 
+#, fuzzy
+msgid "Disk read opertions"
+msgstr "Optiuni tabel"
+
+#, fuzzy
+msgid "Disk read throughput per second"
+msgstr "cereri/sec"
+
 msgid "Disk space cleanup is disabled"
 msgstr ""
 
@@ -14333,6 +14361,10 @@ msgstr ""
 msgid "Do not check age of never analyzed/vacuumed tables"
 msgstr ""
 
+#, fuzzy
+msgid "Do not check the node"
+msgstr "(Nu trimite site-ului de la distanță)"
+
 msgid "Do not configure Windows Firewall"
 msgstr ""
 
@@ -14601,9 +14633,6 @@ msgid "Do not display the host name"
 msgstr ""
 
 msgid "Do not encrypt the backup"
-msgstr ""
-
-msgid "Do not enforce the resource to be hold by a specific node."
 msgstr ""
 
 msgid ""
@@ -16010,6 +16039,10 @@ msgstr "Adresă"
 msgid "Email address"
 msgstr ""
 
+#, fuzzy
+msgid "Email address used for account identification"
+msgstr "(Nu primi notificări)"
+
 msgid "Email-Addresses to mail PDF reports to"
 msgstr ""
 
@@ -16769,10 +16802,6 @@ msgstr ""
 
 msgid "Event Simulator"
 msgstr "Simularea unui Eveniment"
-
-#, fuzzy
-msgid "Event comment"
-msgstr "cu comentariu"
 
 #, fuzzy
 msgid "Event console"
@@ -18732,9 +18761,6 @@ msgstr ""
 msgid "Forecast model parametrization"
 msgstr "Activare Configurare"
 
-msgid "Form (Cookie) based"
-msgstr ""
-
 msgid "Format"
 msgstr ""
 
@@ -19114,6 +19140,10 @@ msgstr "Conexiune Noua"
 
 msgid "GCP/GCE CPU"
 msgstr ""
+
+#, fuzzy
+msgid "GCP/GCE disk IO"
+msgstr "Adresă"
 
 #, fuzzy
 msgid "GCP/GCS Network"
@@ -21088,10 +21118,6 @@ msgstr " pe siteul de monitorizare: "
 msgid "Host name"
 msgstr "Numele Elementului"
 
-#, fuzzy
-msgid "Host name (as sent by syslog)"
-msgstr "(setat de câtre syslog)"
-
 msgid "Host name used for containers"
 msgstr ""
 
@@ -21708,10 +21734,6 @@ msgstr ""
 
 msgid "ID of the license, e.g. <tt>virtualization</tt>"
 msgstr ""
-
-#, fuzzy
-msgid "ID of the rule"
-msgstr "Numele elementului pentru eveniment"
 
 msgid "IDLE"
 msgstr ""
@@ -23912,6 +23934,10 @@ msgid "Invalid CRCs"
 msgstr ""
 
 #, python-format
+msgid "Invalid CSRF token (%r) for Session (%r)"
+msgstr ""
+
+#, python-format
 msgid "Invalid DCD command: %r"
 msgstr ""
 
@@ -24594,6 +24620,10 @@ msgstr ""
 #, fuzzy
 msgid "Job Title"
 msgstr "(fără titlu)"
+
+#, fuzzy
+msgid "Job age"
+msgstr "Numele Elementului"
 
 msgid "Job already finished"
 msgstr ""
@@ -25368,6 +25398,10 @@ msgstr "servicii"
 
 #, fuzzy
 msgid "Levels disk"
+msgstr "Nivelurile maxime pentru voltaj"
+
+#, fuzzy
+msgid "Levels disk IO"
 msgstr "Nivelurile maxime pentru voltaj"
 
 #, python-format
@@ -28942,6 +28976,12 @@ msgstr "sesiuni"
 msgid "Missing Prerequisite"
 msgstr ""
 
+msgid "Missing config file for agent {}"
+msgstr ""
+
+msgid "Missing config file for agent {}/{}"
+msgstr ""
+
 #, python-format
 msgid "Missing connection parameter: %s"
 msgstr ""
@@ -29056,15 +29096,20 @@ msgid "MobileIron API"
 msgstr ""
 
 #, fuzzy
-msgid "Mobileiron Device"
-msgstr "sesiuni"
-
-#, fuzzy
 msgid "Mobileiron compliance parameters"
 msgstr "(fără parametri)"
 
-msgid "Mobileiron miscellaneous parameters"
-msgstr ""
+#, fuzzy
+msgid "Mobileiron versions parameters"
+msgstr "(fără parametri)"
+
+#, fuzzy
+msgid "Mobileiron/Compliance"
+msgstr "(fără parametri)"
+
+#, fuzzy
+msgid "Mobileiron/Versions"
+msgstr "sesiuni"
 
 msgid "Mode"
 msgstr ""
@@ -30492,6 +30537,10 @@ msgid "No Authentication"
 msgstr "trimite notificare"
 
 #, fuzzy
+msgid "No CSRF token received"
+msgstr "Sterge Elementul"
+
+#, fuzzy
 msgid "No Conditions"
 msgstr "(fără condiții)"
 
@@ -31809,10 +31858,6 @@ msgstr "Numarul maxim de conexiuni"
 msgid "Number of notifications exceeds maximum allowed number"
 msgstr ""
 
-#, fuzzy
-msgid "Number of occurrances"
-msgstr "Numarul maxim de conexiuni"
-
 msgid "Number of ongoing shard info requests"
 msgstr ""
 
@@ -31853,6 +31898,18 @@ msgstr "Numarul maxim de conexiuni"
 #, fuzzy
 msgid "Number of requests"
 msgstr "Numarul maxim de conexiuni"
+
+msgid "Number of requests with return code class 2xx (sucess)"
+msgstr ""
+
+msgid "Number of requests with return code class 3xx (redirection)"
+msgstr ""
+
+msgid "Number of requests with return code class 4xx (client error)"
+msgstr ""
+
+msgid "Number of requests with return code class 5xx (server error)"
+msgstr ""
 
 msgid "Number of retries"
 msgstr ""
@@ -32753,9 +32810,6 @@ msgid ""
 "individual service (single)."
 msgstr ""
 
-msgid "Optional DNS server you want to use for the lookup"
-msgstr ""
-
 #, fuzzy
 msgid "Optional extension packages"
 msgstr "Dezactiveaza Notificarile"
@@ -32925,9 +32979,6 @@ msgid "Original IP address the event was received from"
 msgstr ""
 
 msgid "Original Text"
-msgstr ""
-
-msgid "Original host name when host name has been rewritten, empty otherwise"
 msgstr ""
 
 msgid "Other"
@@ -33174,10 +33225,6 @@ msgstr ""
 
 msgid "Owner of event"
 msgstr ""
-
-#, fuzzy
-msgid "Owner of the event"
-msgstr "Numele elementului pentru eveniment"
 
 msgid "P"
 msgstr ""
@@ -34255,9 +34302,6 @@ msgid "Phase Number"
 msgstr ""
 
 msgid "Phase of event (open, counting, etc.)"
-msgstr ""
-
-msgid "Phase of the event (open in normal situations, closed when cancelling)"
 msgstr ""
 
 msgid "Phases"
@@ -35357,9 +35401,6 @@ msgid "Process Creations"
 msgstr ""
 
 msgid "Process ID"
-msgstr ""
-
-msgid "Process ID of the origin process"
 msgstr ""
 
 msgid "Process Match textual description or path of process"
@@ -42330,10 +42371,21 @@ msgstr ""
 msgid "State in case of restricted address mismatch"
 msgstr ""
 
+msgid ""
+"State in case of the checked device is neither Android nor iOS (or cannot be "
+"read)"
+msgstr ""
+
 msgid "State in case of unhandled exception"
 msgstr ""
 
 msgid "State in case of unknown status from replication script"
+msgstr ""
+
+msgid "State in case of unparsable OS build"
+msgstr ""
+
+msgid "State in case of unparsable patch level"
 msgstr ""
 
 msgid "State in case of wrong agent version"
@@ -42417,9 +42469,6 @@ msgstr ""
 #, fuzzy
 msgid "State of service"
 msgstr "Numarul maxim de mesaje"
-
-msgid "State of the event (0/1/2/3)"
-msgstr ""
 
 msgid "State on hard read error"
 msgstr ""
@@ -43465,14 +43514,8 @@ msgstr ""
 msgid "Synology Updates"
 msgstr ""
 
-msgid "Syslog Facility"
-msgstr "Unitatea Syslog"
-
 msgid "Syslog Facility to use"
 msgstr ""
-
-msgid "Syslog Priority"
-msgstr "Prioritatea Syslog"
 
 msgid "Syslog application to cancel event"
 msgstr ""
@@ -43500,9 +43543,6 @@ msgid "Syslog priority of forwarded events shown in Event Console."
 msgstr "Acces la Consola de Evenimente"
 
 msgid "Syslog priority to cancel event"
-msgstr ""
-
-msgid "Syslog tag / Application"
 msgstr ""
 
 msgid "Syslog-Facility"
@@ -44074,19 +44114,7 @@ msgstr "testare"
 msgid "Text"
 msgstr ""
 
-msgid "Text groups from regular expression match, separated by spaces"
-msgstr ""
-
 msgid "Text logfiles (Linux, Solaris, Windows)"
-msgstr ""
-
-msgid "Text of the first match group from expression match"
-msgstr ""
-
-msgid "Text of the second match group from expression match"
-msgstr ""
-
-msgid "Text of the third match group from expression match (and so on...)"
 msgstr ""
 
 msgid "Text output"
@@ -44334,6 +44362,9 @@ msgid ""
 msgstr ""
 
 msgid "The Customer has been deleted."
+msgstr ""
+
+msgid "The DNS server you want to use for the lookup"
 msgstr ""
 
 msgid ""
@@ -44730,7 +44761,7 @@ msgid ""
 msgstr ""
 
 msgid ""
-"The agent controller uses TCP port 50001 to communicate with the agent. You "
+"The agent controller uses TCP port 28250 to communicate with the agent. You "
 "may change this port if it is used by another application, or blocked, for "
 "security reason, by the administrator."
 msgstr ""
@@ -46820,9 +46851,6 @@ msgid ""
 "prefixed with <tt>LDAP</tt>."
 msgstr ""
 
-msgid "The service description will be <b>Mail Loop</b> plus this name"
-msgstr ""
-
 msgid ""
 "The service description will be <b>SMTP</b> plus this name. If the name "
 "starts with a caret (<tt>^</tt>), the service description will not be "
@@ -46867,6 +46895,9 @@ msgstr ""
 #, fuzzy
 msgid "The service name"
 msgstr "Numele Elementului"
+
+msgid "The service name will be <b>Mail Loop</b> plus this name"
+msgstr ""
 
 msgid ""
 "The service will trigger a warning or critical state if the size of the "
@@ -46942,6 +46973,11 @@ msgstr ""
 #, fuzzy
 msgid "The source host"
 msgstr "Tagul Aplicatiei in syslog"
+
+msgid ""
+"The specified choice is no longer available. Please use another, like "
+"'header' instead."
+msgstr ""
 
 msgid ""
 "The staleness value of a host / service is calculated by measuring the "
@@ -47497,12 +47533,6 @@ msgid ""
 msgstr ""
 
 msgid "These hosts have installed the correct version of their agent."
-msgstr ""
-
-msgid ""
-"These information are also available as environment variables with the "
-"prefix <tt>CMK_</tt>. For example the text of the event is available as "
-"<tt>CMK_TEXT</tt> as environment variable."
 msgstr ""
 
 msgid ""
@@ -48197,6 +48227,9 @@ msgstr ""
 msgid "This id is already being used by another connection."
 msgstr ""
 
+msgid "This information is available as environment variables"
+msgstr ""
+
 msgid ""
 "This interval is applied to all new checks that go beyond the number of "
 "immediately scheduled checks. Note: the maximum delay is five times the "
@@ -48619,6 +48652,10 @@ msgid ""
 "parsing time. It sets the behaviour in case of too many new messages in a "
 "logfile."
 msgstr ""
+
+#, fuzzy
+msgid "This option is set by default."
+msgstr "Conexiune Noua"
 
 msgid ""
 "This option lets Check_MK add the string \"ISL\" to the service description "
@@ -50364,12 +50401,6 @@ msgid "Time of first occurrence of this serial"
 msgstr ""
 
 msgid "Time of last occurrance"
-msgstr ""
-
-msgid "Time of the first occurrence (time stamp)"
-msgstr ""
-
-msgid "Time of the most recent occurrance"
 msgstr ""
 
 msgid "Time offset"
@@ -53139,10 +53170,6 @@ msgid "Use custom connection parameters"
 msgstr ""
 
 #, fuzzy
-msgid "Use default DNS server"
-msgstr "Matrice"
-
-#, fuzzy
 msgid "Use default layout"
 msgstr "Matrice"
 
@@ -53361,10 +53388,17 @@ msgstr ""
 msgid "Use the VMs hostname if set, otherwise fall back to ESX name"
 msgstr ""
 
+#, fuzzy
+msgid "Use the address of the host for which the service is generated"
+msgstr " pe siteul de monitorizare: "
+
 msgid "Use the alias as DNS name / IP address"
 msgstr ""
 
 msgid "Use the credentials of the 'automation' user"
+msgstr ""
+
+msgid "Use the default DNS server(s) specified in /etc/resolv.conf"
 msgstr ""
 
 #, fuzzy
@@ -53468,9 +53502,6 @@ msgid ""
 "tt>, but you can also upload multiple MIB files at once by packing them into "
 "a <tt>.zip</tt> file. Only files in the root directory of the zip file will "
 "be processed.<br><br>"
-msgstr ""
-
-msgid "Use this host as a DNS server for the lookup"
 msgstr ""
 
 msgid ""
@@ -53741,6 +53772,12 @@ msgstr ""
 #, fuzzy
 msgid "Used storage space"
 msgstr "Spațiu liber exact"
+
+msgid ""
+"Used to specify the account to be contacted (aka. 'PrimarySmtpAddress') in "
+"case it's different from the username. If not specified the credentials "
+"username is used."
+msgstr ""
 
 msgid "User"
 msgstr "Utilizator"
@@ -57997,10 +58034,6 @@ msgstr ""
 msgid "default (%s)"
 msgstr ""
 
-#, fuzzy
-msgid "default DNS server"
-msgstr "doua nivele"
-
 msgid "degraded"
 msgstr ""
 
@@ -58452,6 +58485,13 @@ msgid "iCalendar File"
 msgstr "Curata fisierul de loguri"
 
 msgid "iLert alert source API key"
+msgstr ""
+
+#, fuzzy
+msgid "iOS version regular expression"
+msgstr "Mesajul Text"
+
+msgid "iOS versions matching this pattern will be reported as OK, else CRIT."
 msgstr ""
 
 msgid "iSCSI"
@@ -59412,9 +59452,6 @@ msgid ""
 "stack is not active yet. This state is only reported on Solaris."
 msgstr ""
 
-msgid "this host"
-msgstr ""
-
 msgid "threads"
 msgstr "fire"
 
@@ -59651,6 +59688,44 @@ msgstr "z/OS"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr ""
+
+#, fuzzy
+#~ msgid "Use default DNS server"
+#~ msgstr "Matrice"
+
+#, fuzzy
+#~ msgid "default DNS server"
+#~ msgstr "doua nivele"
+
+#, fuzzy
+#~ msgid "Contact information"
+#~ msgstr "Adaugă informații despre contact"
+
+#, fuzzy
+#~ msgid "Event comment"
+#~ msgstr "cu comentariu"
+
+#, fuzzy
+#~ msgid "Host name (as sent by syslog)"
+#~ msgstr "(setat de câtre syslog)"
+
+#, fuzzy
+#~ msgid "ID of the rule"
+#~ msgstr "Numele elementului pentru eveniment"
+
+#, fuzzy
+#~ msgid "Number of occurrances"
+#~ msgstr "Numarul maxim de conexiuni"
+
+#, fuzzy
+#~ msgid "Owner of the event"
+#~ msgstr "Numele elementului pentru eveniment"
+
+#~ msgid "Syslog Facility"
+#~ msgstr "Unitatea Syslog"
+
+#~ msgid "Syslog Priority"
+#~ msgstr "Prioritatea Syslog"
 
 #, fuzzy
 #~ msgid "Create a service for every pinged IP address"
@@ -62613,10 +62688,6 @@ msgstr ""
 #~ msgstr "Starea porturilor pentru inventariere"
 
 #, fuzzy
-#~ msgid "Proxy-Authorization"
-#~ msgstr "Dezactiveaza Notificarile"
-
-#, fuzzy
 #~ msgid "Random Hosts"
 #~ msgstr "Adaugă sau șterge elemente"
 
@@ -63453,10 +63524,6 @@ msgstr ""
 #~ msgstr "Descarca"
 
 #, fuzzy
-#~ msgid "During regular page processing"
-#~ msgstr "Mesajul Text"
-
-#, fuzzy
 #~ msgid "Dynamic URL rendering function"
 #~ msgstr "Activare Configurare"
 
@@ -63475,10 +63542,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Edit the rules for the BI aggregations."
 #~ msgstr "Sterge Elementul"
-
-#, fuzzy
-#~ msgid "Email body to use for host notifications"
-#~ msgstr "(Nu primi notificări)"
 
 #, fuzzy
 #~ msgid "Email body to use for service notifications"

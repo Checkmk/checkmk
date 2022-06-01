@@ -1039,6 +1039,9 @@ def _paint_host_inventory_tree(row: Row, raw_path: SDRawPath) -> CellSpec:
 
     inventory_path = inventory.InventoryPath.parse(raw_path)
 
+    if (node := struct_tree.get_node(inventory_path.path)) is None:
+        return "", ""
+
     painter_options = PainterOptions.get_instance()
     tree_renderer = NodeRenderer(
         row["site"],
@@ -1049,22 +1052,20 @@ def _paint_host_inventory_tree(row: Row, raw_path: SDRawPath) -> CellSpec:
     td_class = ""
     with output_funnel.plugged():
         if inventory_path.source == inventory.TreeSource.node:
-            if node := struct_tree.get_node(inventory_path.path):
-                node.show(tree_renderer)
-                td_class = "invtree"
+            node.show(tree_renderer)
+            td_class = "invtree"
 
         elif inventory_path.source == inventory.TreeSource.table:
-            if table := struct_tree.get_table(inventory_path.path):
-                table.show(tree_renderer)
+            node.table.show(tree_renderer)
 
-        elif inventory_path.source == inventory.TreeSource.attributes:
-            if (
-                attributes := struct_tree.get_attributes(inventory_path.path)
-            ) and inventory_path.key in attributes.pairs:
-                tree_renderer.show_attribute(
-                    attributes.pairs[inventory_path.key],
-                    AttributeDisplayHint.make(inventory_path.path, inventory_path.key),
-                )
+        elif (
+            inventory_path.source == inventory.TreeSource.attributes
+            and inventory_path.key in node.attributes.pairs
+        ):
+            tree_renderer.show_attribute(
+                node.attributes.pairs[inventory_path.key],
+                AttributeDisplayHint.make(inventory_path.path, inventory_path.key),
+            )
 
         code = HTML(output_funnel.drain())
 
@@ -2114,7 +2115,7 @@ class ABCNodeRenderer(abc.ABC):
         self._site_id = site_id
         self._hostname = hostname
         self._tree_id = tree_id
-        self._show_internal_tree_paths = "on" if show_internal_tree_paths else ""
+        self._show_internal_tree_paths = show_internal_tree_paths
 
     #   ---node-----------------------------------------------------------------
 
@@ -2142,9 +2143,9 @@ class ABCNodeRenderer(abc.ABC):
                 [
                     ("site", self._site_id),
                     ("host", self._hostname),
-                    ("path", node_hint.raw_path),
-                    ("show_internal_tree_paths", self._show_internal_tree_paths),
-                    ("treeid", self._tree_id),
+                    ("raw_path", node_hint.raw_path),
+                    ("show_internal_tree_paths", "on" if self._show_internal_tree_paths else ""),
+                    ("tree_id", self._tree_id),
                 ],
                 "ajax_inv_render_tree.py",
             ),
@@ -2177,18 +2178,20 @@ class ABCNodeRenderer(abc.ABC):
     def show_table(self, table: Table) -> None:
         table_hint = NodeDisplayHint.make(table.path).table_hint
 
-        # Link to Multisite view with exactly this table
         if table_hint.view_name:
-            url = makeuri_contextless(
-                request,
-                [
-                    ("view_name", table_hint.view_name),
-                    ("host", self._hostname),
-                ],
-                filename="view.py",
-            )
+            # Link to Multisite view with exactly this table
             html.div(
-                HTMLWriter.render_a(_("Open this table for filtering / sorting"), href=url),
+                HTMLWriter.render_a(
+                    _("Open this table for filtering / sorting"),
+                    href=makeuri_contextless(
+                        request,
+                        [
+                            ("view_name", table_hint.view_name),
+                            ("host", self._hostname),
+                        ],
+                        filename="view.py",
+                    ),
+                ),
                 class_="invtablelink",
             )
 
@@ -2393,8 +2396,8 @@ def ajax_inv_render_tree() -> None:
     hostname = HostName(request.get_ascii_input_mandatory("host"))
     inventory.verify_permission(hostname, site_id)
 
-    raw_path = request.get_ascii_input_mandatory("path")
-    tree_id = request.get_ascii_input("treeid", "")
+    raw_path = request.get_ascii_input_mandatory("raw_path")
+    tree_id = request.get_ascii_input("tree_id", "")
     show_internal_tree_paths = bool(request.var("show_internal_tree_paths"))
 
     if tree_id:

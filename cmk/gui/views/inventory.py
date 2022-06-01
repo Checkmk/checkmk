@@ -695,8 +695,8 @@ class NodeDisplayHint:
         )
 
 
-class TableTitle(NamedTuple):
-    title: str
+class Column(NamedTuple):
+    hint: ColumnDisplayHint
     key: str
     is_key_column: bool
 
@@ -715,20 +715,20 @@ class TableDisplayHint:
             view_name=raw_hint.get("view"),
         )
 
-    def make_titles(
+    def make_columns(
         self, rows: Sequence[SDRow], key_columns: SDKeyColumns, path: SDPath
-    ) -> Sequence[TableTitle]:
+    ) -> Sequence[Column]:
         sorting_keys = list(self.key_order) + sorted(
             set(k for r in rows for k in r) - set(self.key_order)
         )
         return [
-            TableTitle(col_hint.short_title, k, k in key_columns)
+            Column(col_hint, k, k in key_columns)
             for k in sorting_keys
             for col_hint in (ColumnDisplayHint.make(path, k),)
         ]
 
-    def sort_rows(self, rows: Sequence[SDRow], titles: Sequence[TableTitle]) -> Sequence[SDRow]:
-        return sorted(rows, key=lambda r: tuple(r.get(t.key) or "" for t in titles))
+    def sort_rows(self, rows: Sequence[SDRow], columns: Sequence[Column]) -> Sequence[SDRow]:
+        return sorted(rows, key=lambda r: tuple(r.get(c.key) or "" for c in columns))
 
 
 @dataclass(frozen=True)
@@ -2195,36 +2195,35 @@ class ABCNodeRenderer(abc.ABC):
                 class_="invtablelink",
             )
 
-        titles = table_hint.make_titles(table.rows, table.key_columns, table.path)
+        columns = table_hint.make_columns(table.rows, table.key_columns, table.path)
 
         # TODO: Use table.open_table() below.
         html.open_table(class_="data")
         html.open_tr()
-        for table_title in titles:
+        for column in columns:
             html.th(
                 self._get_header(
-                    table_title.title,
-                    table_title.key,
+                    column.hint.short_title,
+                    column.key,
                     "#DDD",
-                    is_key_column=table_title.is_key_column,
+                    is_key_column=column.is_key_column,
                 )
             )
         html.close_tr()
 
-        for entry in table_hint.sort_rows(table.rows, titles):
+        for row in table_hint.sort_rows(table.rows, columns):
             html.open_tr(class_="even0")
-            for table_title in titles:
-                value = entry.get(table_title.key)
-                col_hint = ColumnDisplayHint.make(table.path, table_title.key)
-                tdclass, _rendered_value = col_hint.paint_function(
+            for column in columns:
+                value = row.get(column.key)
+                tdclass, _rendered_value = column.hint.paint_function(
                     value[1] if isinstance(value, tuple) else value
                 )
 
                 html.open_td(class_=tdclass)
                 self._show_row_value(
                     value,
-                    col_hint,
-                    retention_intervals=table.get_retention_intervals(table_title.key, entry),
+                    column.hint,
+                    retention_intervals=table.get_retention_intervals(column.key, row),
                 )
                 html.close_td()
             html.close_tr()

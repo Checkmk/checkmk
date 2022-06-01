@@ -494,7 +494,7 @@ def test_sort_table_rows_displayhint(rows: Sequence[SDRow], expected: Sequence[S
     assert (
         table_hint.sort_rows(
             rows,
-            table_hint.make_titles(
+            table_hint.make_columns(
                 rows, ["sid"], cmk.gui.inventory.InventoryPath.parse(raw_path).path
             ),
         )

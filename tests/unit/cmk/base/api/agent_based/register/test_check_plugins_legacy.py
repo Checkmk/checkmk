@@ -14,6 +14,7 @@ from cmk.utils.type_defs import CheckPluginName, ParsedSectionName, RuleSetName
 import cmk.base.api.agent_based.checking_classes as checking_classes
 import cmk.base.api.agent_based.register.check_plugins_legacy as check_plugins_legacy
 import cmk.base.config as config
+from cmk.base.api.agent_based.checking_classes import Metric, Result
 from cmk.base.check_api import Service as OldService
 
 
@@ -75,6 +76,10 @@ def test_create_check_function():
         yield 0, "Main info", [("metric1", 23, 2, 3)]
         yield 1, "still main, but very long\nadditional1", [("metric2", 23, None, None, "0", None)]
         yield 2, "additional2\nadditional3", [("metric3", 23, "wtf is this")]
+        yield 0, "additional4"
+        yield 2, "additional5"
+        yield 0, "additional6", [("metric4", 42, r"¯\(o_o)/¯")]
+        yield 1, "additional7"
 
     new_function = check_plugins_legacy._create_check_function(
         "test_plugin",
@@ -91,17 +96,87 @@ def test_create_check_function():
     results = new_function(item="Test Item", section=["info"], params={})
     # we cannot compare the actual Result objects because of
     # the nasty bypassing of validation in the legacy conversion
-    assert [tuple(r) for r in results] == [
-        (checking_classes.State.OK, "Main info", "Main info"),  # Result
-        ("metric1", 23.0, (2.0, 3.0), (None, None)),  # Metric
-        (
-            checking_classes.State.WARN,
-            "still main, but very long",
-            "still main, but very long\nadditional1",
+    assert list(results) == [
+        Result(state=checking_classes.State.OK, summary="Main info", details="Main info"),  # Result
+        Metric("metric1", 23.0, levels=(2.0, 3.0), boundaries=(None, None)),  # Metric
+        Result(
+            state=checking_classes.State.WARN,
+            summary="still main, but very long",
+            details="still main, but very long\nadditional1\nadditional7",
         ),
-        ("metric2", 23.0, (None, None), (0.0, None)),
-        (checking_classes.State.CRIT, "", "additional2\nadditional3"),
-        ("metric3", 23.0, (None, None), (None, None)),
+        Metric("metric2", 23.0, levels=(None, None), boundaries=(0.0, None)),
+        Result(
+            state=checking_classes.State.CRIT,
+            summary="3 additional details available",
+            details="additional2\nadditional3\nadditional5",
+        ),
+        Metric("metric3", 23.0, levels=(None, None), boundaries=(None, None)),
+        Result(
+            state=checking_classes.State.OK,
+            summary="2 additional details available",
+            details="additional4\nadditional6",
+        ),
+        Metric("metric4", 42.0, levels=(None, None), boundaries=(None, None)),
+    ]
+
+
+def test_create_check_function_with_empty_summary_in_details():
+    def insane_check(item, _no_params, info):
+        assert item == "Test Item"
+        assert _no_params == {}
+        assert info == ["info"]
+        yield 0, "Main info"
+        yield 0, "\nadditional3"
+
+    new_function = check_plugins_legacy._create_check_function(
+        "test_plugin",
+        {
+            "check_function": insane_check,
+            "service_description": "Foo %s",
+        },
+    )
+
+    fixed_params = inspect.signature(new_function).parameters
+    assert list(fixed_params) == ["item", "params", "section"]
+    assert inspect.isgeneratorfunction(new_function)
+
+    results = new_function(item="Test Item", section=["info"], params={})
+    # we cannot compare the actual Result objects because of
+    # the nasty bypassing of validation in the legacy conversion
+    assert list(results) == [
+        Result(state=checking_classes.State.OK, summary="Main info", details="Main info"),  # Result
+        Result(
+            state=checking_classes.State.OK,
+            summary="1 additional detail available",
+            details="additional3",
+        ),
+    ]
+
+
+def test_create_check_function_without_details():
+    def insane_check(item, _no_params, info):
+        assert item == "Test Item"
+        assert _no_params == {}
+        assert info == ["info"]
+        yield 0, "Main info"
+
+    new_function = check_plugins_legacy._create_check_function(
+        "test_plugin",
+        {
+            "check_function": insane_check,
+            "service_description": "Foo %s",
+        },
+    )
+
+    fixed_params = inspect.signature(new_function).parameters
+    assert list(fixed_params) == ["item", "params", "section"]
+    assert inspect.isgeneratorfunction(new_function)
+
+    results = new_function(item="Test Item", section=["info"], params={})
+    # we cannot compare the actual Result objects because of
+    # the nasty bypassing of validation in the legacy conversion
+    assert list(results) == [
+        Result(state=checking_classes.State.OK, summary="Main info", details="Main info"),  # Result
     ]
 
 

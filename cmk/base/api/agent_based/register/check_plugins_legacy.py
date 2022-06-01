@@ -8,6 +8,7 @@
 import copy
 import functools
 import itertools
+from collections import defaultdict
 from contextlib import suppress
 from typing import Any, Callable, Dict, Generator, List, Optional, Tuple, Union
 
@@ -179,17 +180,56 @@ def _create_check_function(name: str, check_info_dict: Dict[str, Any]) -> Callab
 
         if isinstance(subresults, tuple):  # just one result
             subresults = [subresults]
+        else:
+            subresults = list(subresults)
 
-        # Once we have seen a newline in *any* subresult,
-        # all remaining output is sent to the details page!
-        # I'm not saying that is good, but we stay compatible.
-        is_details = False
-        for subresult in subresults:
-            is_details = yield from _create_new_result(is_details, *subresult)
+        # Do we have results with details?
+        try:
+            idx = next(i for i, val in enumerate(subresults) if "\n" in val[1])
+        except StopIteration:
+            idx = len(subresults)
+
+        for subresult in subresults[:idx]:
+            yield from _create_new_result(*subresult)
+
+        yield from _create_new_results_with_details(subresults[idx:])
 
         item_state.raise_counter_wrap()
 
     return check_result_generator
+
+
+def _create_new_results_with_details(
+    results: list,
+) -> Generator[Union[Metric, Result], None, None]:
+    state_sorted = defaultdict(list)
+    for result in results:
+        state = State(result[0])
+        state_sorted[state].append(result)
+
+    for idx, (state, subresults) in enumerate(state_sorted.items()):
+        metrics = []
+        details = []
+        first_detail = subresults[0][1] if subresults else ""
+        for result in subresults:
+            if len(result) > 2:
+                metrics.extend(list(result[2]))
+            details.extend([el for el in result[1].split("\n") if el])
+
+        # we might have an actual summary to use
+        if idx == 0 and (s := first_detail.split("\n", 1)[0]):
+            summary = s
+        else:
+            summary = (
+                f"{len(details)} additional detail{'' if len(details) == 1 else 's'} available"
+            )
+
+        yield Result(
+            state=state,
+            summary=summary,
+            details="\n".join(d.lstrip() for d in details),
+        )
+        yield from _create_new_metric(metrics)
 
 
 def _get_float(raw_value: Any) -> Optional[float]:
@@ -213,24 +253,17 @@ def _get_float(raw_value: Any) -> Optional[float]:
 
 
 def _create_new_result(
-    is_details: bool,
     legacy_state: int,
     legacy_text: str,
     legacy_metrics: Union[Tuple, List] = (),
-) -> Generator[Union[Metric, Result], None, bool]:
+) -> Generator[Union[Metric, Result], None, None]:
 
     if legacy_state or legacy_text:  # skip "Null"-Result
-        # Bypass the validation of the Result class:
-        # Legacy plugins may relie on the fact that once a newline
-        # as been in the output, *all* following ouput is sent to
-        # the details. That means we have to create Results with
-        # details only, which is prohibited by the original Result
-        # class.
-        yield Result(state=State(legacy_state), summary="Fake")._replace(
-            summary="" if is_details else legacy_text.split("\n", 1)[0],
-            details=legacy_text.strip(),
-        )
+        yield Result(state=State(legacy_state), summary=legacy_text.strip())
+    yield from _create_new_metric(legacy_metrics)
 
+
+def _create_new_metric(legacy_metrics: Union[tuple, list] = ()) -> Generator[Metric, None, None]:
     for metric in legacy_metrics:
         if len(metric) < 2:
             continue
@@ -243,8 +276,6 @@ def _create_new_result(
             _get_float(v) for v, _ in itertools.zip_longest(metric[2:], range(4))
         )
         yield Metric(name, value, levels=(warn, crit), boundaries=(min_, max_))
-
-    return ("\n" in legacy_text) or is_details
 
 
 def _create_signature_check_function(

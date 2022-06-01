@@ -21,3 +21,29 @@ def test_check_dns_argument_parsing(params, expected_args):
     """Tests if all required arguments are present."""
     active_check = ActiveCheck("check_dns")
     assert active_check.run_argument_function(params) == expected_args
+
+
+@pytest.mark.parametrize(
+    "params, result",
+    [
+        [
+            (
+                "google.de",
+                {},
+            ),
+            "DNS google.de",
+        ],
+        [
+            (
+                "google.de",
+                {
+                    "name": "random_string"
+                },
+            ),
+            "random_string",
+        ],
+    ],
+)
+def test_check_dns_desc(params, result: str) -> None:
+    active_check = ActiveCheck("check_dns")
+    assert active_check.run_service_description(params) == result

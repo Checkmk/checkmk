@@ -415,14 +415,13 @@ class FileCache(Generic[TRawData], abc.ABC):
 
         path = self.make_path(mode)
 
-        may_use_outdated = self.simulation or self.use_outdated
         try:
             cachefile_age = cmk.utils.cachefile_age(path)
         except FileNotFoundError:
             self._logger.debug("Not using cache (Does not exists)")
             return None
 
-        if not may_use_outdated and cachefile_age > self.max_age.get(mode):
+        if not self.use_outdated and cachefile_age > self.max_age.get(mode):
             self._logger.debug(
                 "Not using cache (Too old. Age is %d sec, allowed is %s sec)",
                 cachefile_age,

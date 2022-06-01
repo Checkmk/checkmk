@@ -1,0 +1,11 @@
+Title: Edit dashboard element: Keep context information filled out
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 2.1.0p3
+Date: 1654080407
+
+In the form for adding/editing a dashboard element: Whenever the filled in information resulted in an error (upon submit), any newly filled in context information was lost. This is fixed and the entered context information is preserved also in case of a form error.

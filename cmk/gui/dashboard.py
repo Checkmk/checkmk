@@ -2035,6 +2035,9 @@ class EditDashletPage(Page):
                     if option not in general_properties and option in dashlet_spec:
                         del dashlet_spec[option]
 
+                if context_specs:
+                    dashlet_spec["context"] = visuals.process_context_specs(context_specs)
+
                 if vs_type:
                     type_properties = vs_type.from_html_vars("type")
                     vs_type.validate_value(type_properties, "type")
@@ -2044,9 +2047,6 @@ class EditDashletPage(Page):
                     # The returned dashlet must be equal to the parameter! It is not replaced/re-added
                     # to the dashboard object. FIXME TODO: Clean this up!
                     dashlet_spec = handle_input_func(self._ident, dashlet_spec)
-
-                if context_specs:
-                    dashlet_spec["context"] = visuals.process_context_specs(context_specs)
 
                 if mode == "add":
                     self._dashboard["dashlets"].append(dashlet_spec)

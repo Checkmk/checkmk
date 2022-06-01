@@ -1511,11 +1511,10 @@ def create_apache_hook(site: SiteContext) -> None:
 
 def delete_apache_hook(sitename: str) -> None:
     hook_path = "/omd/apache/%s.conf" % sitename
-    if not os.path.exists(hook_path):
-        return
-
     try:
         os.remove(hook_path)
+    except FileNotFoundError:
+        return
     except Exception as e:
         sys.stderr.write("Cannot remove apache hook %s: %s\n" % (hook_path, e))
 
@@ -1956,9 +1955,29 @@ def finalize_site(version_info: VersionInfo, site: SiteContext, what: str,
         if status:
             bail_out("Error in non-priviledged sub-process.")
 
-    # Finally reload global apache - with root permissions - and
-    # create include-hook for Apache and reload apache
+    register_with_system_apache(version_info, site, apache_reload)
+
+
+def register_with_system_apache(version_info: VersionInfo, site: SiteContext,
+                                apache_reload: bool) -> None:
+    """Apply the site specific configuration to the system global apache
+
+    Basically update the apache configuration to register the mod_proxy configuration
+    and the reload or restart the system apache.
+
+    Root permissions are needed to make this work.
+    """
     create_apache_hook(site)
+    apply_apache_config(version_info, apache_reload)
+
+
+def unregister_from_system_apache(version_info: VersionInfo, site: SiteContext,
+                                  apache_reload: bool) -> None:
+    delete_apache_hook(site.name)
+    apply_apache_config(version_info, apache_reload)
+
+
+def apply_apache_config(version_info: VersionInfo, apache_reload: bool) -> None:
     if apache_reload:
         reload_apache(version_info)
     else:
@@ -2010,7 +2029,7 @@ def main_rm(version_info: VersionInfo, site: SiteContext, global_opts: 'GlobalOp
     # Needs to be cleaned up before removing the site directory. Otherwise a
     # parallel restart / reload of the apache may fail, because the apache hook
     # refers to a not existing site apache config.
-    delete_apache_hook(site.name)
+    unregister_from_system_apache(version_info, site, apache_reload="apache-reload" in options)
 
     if not reuse:
         remove_from_fstab(site)
@@ -2028,11 +2047,6 @@ def main_rm(version_info: VersionInfo, site: SiteContext, global_opts: 'GlobalOp
         create_site_dir(site)
         os.mkdir(site.tmp_dir)
         os.chown(site.tmp_dir, user_id(site.name), group_id(site.name))
-
-    if "apache-reload" in options:
-        reload_apache(version_info)
-    else:
-        restart_apache(version_info)
 
 
 def create_site_dir(site: SiteContext) -> None:
@@ -2054,9 +2068,7 @@ def main_disable(version_info: VersionInfo, site: SiteContext, global_opts: 'Glo
     stop_if_not_stopped(site)
     unmount_tmpfs(site, kill="kill" in options)
     sys.stdout.write("Disabling Apache configuration for this site...")
-    delete_apache_hook(site.name)
-    ok()
-    restart_apache(version_info)
+    unregister_from_system_apache(version_info, site, apache_reload=False)
 
 
 def main_enable(version_info: VersionInfo, site: SiteContext, global_opts: 'GlobalOptions',
@@ -2066,9 +2078,7 @@ def main_enable(version_info: VersionInfo, site: SiteContext, global_opts: 'Glob
         sys.stderr.write("This site is already enabled.\n")
         sys.exit(0)
     sys.stdout.write("Re-enabling Apache configuration for this site...")
-    create_apache_hook(site)
-    ok()
-    restart_apache(version_info)
+    register_with_system_apache(version_info, site, apache_reload=False)
 
 
 def _get_conflict_mode(options: CommandOptions) -> str:

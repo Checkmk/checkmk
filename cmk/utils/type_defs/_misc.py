@@ -294,7 +294,6 @@ class SourceType(enum.Enum):
 
 class HostKey(NamedTuple):
     hostname: HostName
-    ipaddress: Optional[HostAddress]
     source_type: SourceType
 
 

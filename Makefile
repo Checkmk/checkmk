@@ -367,7 +367,7 @@ node_modules/.bin/prettier: .ran-npm
 	    REGISTRY= ; \
 	    echo "Installing from public registry" ; \
         fi ; \
-	npm install --yes --audit=false --unsafe-perm $$REGISTRY
+	npm ci --yes --audit=false --unsafe-perm $$REGISTRY
 	sed -i 's#"resolved": "https://artifacts.lan.tribe29.com/repository/npm-proxy/#"resolved": "https://registry.npmjs.org/#g' package-lock.json
 	touch node_modules/.bin/webpack node_modules/.bin/redoc-cli node_modules/.bin/prettier
 

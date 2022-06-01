@@ -3190,11 +3190,11 @@ class HostConfig:
 
     @property
     def host_key(self) -> HostKey:
-        return HostKey(self.hostname, lookup_ip_address(self), SourceType.HOST)
+        return HostKey(self.hostname, SourceType.HOST)
 
     @property
     def host_key_mgmt(self) -> HostKey:
-        return HostKey(self.hostname, self.management_address, SourceType.MANAGEMENT)
+        return HostKey(self.hostname, SourceType.MANAGEMENT)
 
     @property
     def additional_ipaddresses(self) -> Tuple[List[HostAddress], List[HostAddress]]:
@@ -4093,10 +4093,6 @@ class ConfigCache:
         return [
             HostKey(
                 nc.hostname,
-                # I am not sure about management interfaces on clusters, but let's be consistent.
-                nc.management_address
-                if source_type is SourceType.MANAGEMENT
-                else lookup_ip_address(nc),
                 source_type,
             )
             for nodename in used_nodes

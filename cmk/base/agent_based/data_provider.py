@@ -334,7 +334,7 @@ def _collect_host_sections(
 
         source.file_cache_max_age = file_cache_max_age
 
-        host_key = HostKey(source.hostname, source.ipaddress, source.source_type)
+        host_key = HostKey(source.hostname, source.source_type)
         collected_host_sections.setdefault(
             host_key,
             source.default_host_sections,
@@ -360,7 +360,7 @@ def _collect_host_sections(
         cmk.utils.piggyback.store_piggyback_raw_data(
             source.hostname,
             collected_host_sections.setdefault(
-                HostKey(source.hostname, source.ipaddress, source.source_type),
+                HostKey(source.hostname, source.source_type),
                 HostSections[AgentRawDataSection](),
             ).piggybacked_raw_data,
         )

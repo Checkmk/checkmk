@@ -2296,8 +2296,8 @@ def test_config_cache_get_clustered_service_node_keys_cluster_no_service(
 
     # empty for cluster (we have not clustered the service)
     assert [
-        HostKey(hostname="node1.test", ipaddress="dummy.test.ip.0", source_type=SourceType.HOST),
-        HostKey(hostname="node2.test", ipaddress="dummy.test.ip.0", source_type=SourceType.HOST),
+        HostKey(hostname="node1.test", source_type=SourceType.HOST),
+        HostKey(hostname="node2.test", source_type=SourceType.HOST),
     ] == config_cache.get_clustered_service_node_keys(
         config_cache.get_host_config(cluster_test),
         SourceType.HOST,
@@ -2336,8 +2336,8 @@ def test_config_cache_get_clustered_service_node_keys_clustered(monkeypatch: Mon
         SourceType.HOST,
         "Test Service",
     ) == [
-        HostKey(node1, "dummy.test.ip.1", SourceType.HOST),
-        HostKey(node2, "dummy.test.ip.2", SourceType.HOST),
+        HostKey(node1, SourceType.HOST),
+        HostKey(node2, SourceType.HOST),
     ]
     monkeypatch.setattr(
         config,
@@ -2345,8 +2345,8 @@ def test_config_cache_get_clustered_service_node_keys_clustered(monkeypatch: Mon
         lambda host_config, *, family=None: "dummy.test.ip.0",
     )
     assert [
-        HostKey(hostname="node1.test", ipaddress="dummy.test.ip.0", source_type=SourceType.HOST),
-        HostKey(hostname="node2.test", ipaddress="dummy.test.ip.0", source_type=SourceType.HOST),
+        HostKey(hostname="node1.test", source_type=SourceType.HOST),
+        HostKey(hostname="node2.test", source_type=SourceType.HOST),
     ] == config_cache.get_clustered_service_node_keys(
         config_cache.get_host_config(cluster),
         SourceType.HOST,

@@ -1,0 +1,13 @@
+Title: management board: services are stale or not discovered
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1654084661
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p2
+
+Services for the management board could not be discovered or became stale when
+it was configured with its DNS name. This has been fixed.

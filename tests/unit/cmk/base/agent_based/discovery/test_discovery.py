@@ -679,7 +679,7 @@ def test__find_candidates() -> None:
         {
             # we just care about the keys here, content set to arbitrary values that can be parsed.
             # section names are chosen arbitrarily.
-            HostKey(HostName("test_node"), HostAddress("1.2.3.4"), SourceType.HOST): (
+            HostKey(HostName("test_node"), SourceType.HOST): (
                 ParsedSectionsResolver(
                     section_plugins=[
                         agent_based_register.get_section_plugin(SectionName("kernel")),
@@ -696,7 +696,7 @@ def test__find_candidates() -> None:
                     host_name=HostName("test_node"),
                 ),
             ),
-            HostKey(HostName("test_node"), HostAddress("1.2.3.4"), SourceType.MANAGEMENT): (
+            HostKey(HostName("test_node"), SourceType.MANAGEMENT): (
                 ParsedSectionsResolver(
                     section_plugins=[
                         agent_based_register.get_section_plugin(SectionName("uptime")),
@@ -868,16 +868,15 @@ def test_commandline_discovery(monkeypatch: MonkeyPatch) -> None:
 
 class RealHostScenario(NamedTuple):
     hostname: HostName
-    ipaddress: str
     parsed_sections_broker: ParsedSectionsBroker
 
     @property
     def host_key(self) -> HostKey:
-        return HostKey(self.hostname, self.ipaddress, SourceType.HOST)
+        return HostKey(self.hostname, SourceType.HOST)
 
     @property
     def host_key_mgmt(self) -> HostKey:
-        return HostKey(self.hostname, None, SourceType.MANAGEMENT)
+        return HostKey(self.hostname, SourceType.MANAGEMENT)
 
 
 @pytest.fixture(name="realhost_scenario")
@@ -920,7 +919,7 @@ def _realhost_scenario(monkeypatch: MonkeyPatch) -> RealHostScenario:
 
     broker = ParsedSectionsBroker(
         {
-            HostKey(hostname=hostname, ipaddress=ipaddress, source_type=SourceType.HOST,): (
+            HostKey(hostname=hostname, source_type=SourceType.HOST,): (
                 ParsedSectionsResolver(
                     section_plugins=[
                         agent_based_register.get_section_plugin(SectionName("labels")),
@@ -963,7 +962,7 @@ def _realhost_scenario(monkeypatch: MonkeyPatch) -> RealHostScenario:
         }
     )
 
-    return RealHostScenario(hostname, ipaddress, broker)
+    return RealHostScenario(hostname, broker)
 
 
 class ClusterScenario(NamedTuple):
@@ -1029,7 +1028,7 @@ def _cluster_scenario(monkeypatch) -> ClusterScenario:
 
     broker = ParsedSectionsBroker(
         {
-            HostKey(hostname=node1_hostname, ipaddress=ipaddress, source_type=SourceType.HOST,): (
+            HostKey(hostname=node1_hostname, source_type=SourceType.HOST): (
                 ParsedSectionsResolver(
                     section_plugins=[
                         agent_based_register.get_section_plugin(SectionName("labels")),
@@ -1069,7 +1068,7 @@ def _cluster_scenario(monkeypatch) -> ClusterScenario:
                     host_name=node1_hostname,
                 ),
             ),
-            HostKey(hostname=node2_hostname, ipaddress=ipaddress, source_type=SourceType.HOST,): (
+            HostKey(hostname=node2_hostname, source_type=SourceType.HOST): (
                 ParsedSectionsResolver(
                     section_plugins=[
                         agent_based_register.get_section_plugin(SectionName("labels")),
@@ -1617,8 +1616,8 @@ def test_get_node_services(monkeypatch: MonkeyPatch) -> None:
     )
 
     assert discovery._get_node_services(
-        HostKey(HostName("horst"), None, SourceType.HOST),
-        HostKey(HostName("horst"), None, SourceType.MANAGEMENT),
+        HostKey(HostName("horst"), SourceType.HOST),
+        HostKey(HostName("horst"), SourceType.MANAGEMENT),
         ParsedSectionsBroker({}),
         OnError.RAISE,
         lambda hn, _svcdescr: hn,

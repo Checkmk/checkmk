@@ -49,27 +49,6 @@ try:
 except ImportError:
     pass
 
-# sapnwrfc needs to know where the libs are located. During
-# development the import failed, since the module did not
-# find the libraries. So we preload the library to have it
-# already loaded.
-try:
-    import sapnwrfc  # type: ignore[import]
-except ImportError as e:
-    if "sapnwrfc.so" in str(e):
-        sys.stderr.write(
-            "Unable to find the library sapnwrfc.so. Maybe you need to put a file pointing to\n"
-            "the sapnwrfc library directory into the /etc/ld.so.conf.d directory. For example\n"
-            "create the file /etc/ld.so.conf.d/sapnwrfc.conf containing the path\n"
-            '"/usr/sap/nwrfcsdk/lib" and run "ldconfig" afterwards.\n'
-        )
-        sys.exit(1)
-    elif "No module named sapnwrfc" in str(e):
-        sys.stderr.write("Missing the Python module sapnwfrc.\n")
-        sys.exit(1)
-    else:
-        raise
-
 # #############################################################################
 
 # This sign is used to separate the path parts given in the config
@@ -425,7 +404,7 @@ def process_alerts(cfg_entry, logs, ms_name, mon_name, node, alerts):
     return logs
 
 
-def check(cfg_entry):  # pylint: disable=too-many-branches
+def check(sapnwrfc, cfg_entry):  # pylint: disable=too-many-branches
     global conn
     conn = sapnwrfc.base.rfc_connect(cfg_entry)
     login()
@@ -534,46 +513,74 @@ def check(cfg_entry):  # pylint: disable=too-many-branches
     conn.close()
 
 
-# It is possible to configure multiple SAP instances to monitor. Loop them all, but
-# do not terminate when one connection failed
-processed_all = True
-try:
-    for entry in cfg:
-        try:
-            check(entry)
-            sys.stdout.write("<<<sap_state:sep(9)>>>\n%s\tOK\n" % entry["ashost"])
-        except sapnwrfc.RFCCommunicationError as e:
-            sys.stderr.write("ERROR: Unable to connect (%s)\n" % e)
-            sys.stdout.write(
-                "<<<sap_state:sep(9)>>>\n%s\tUnable to connect (%s)\n" % (entry["ashost"], e)
+def main():
+    global state_file_changed
+
+    # sapnwrfc needs to know where the libs are located. During
+    # development the import failed, since the module did not
+    # find the libraries. So we preload the library to have it
+    # already loaded.
+    try:
+        import sapnwrfc  # type: ignore[import]
+    except ImportError as e:
+        if "sapnwrfc.so" in str(e):
+            sys.stderr.write(
+                "Unable to find the library sapnwrfc.so. Maybe you need to put a file pointing to\n"
+                "the sapnwrfc library directory into the /etc/ld.so.conf.d directory. For example\n"
+                "create the file /etc/ld.so.conf.d/sapnwrfc.conf containing the path\n"
+                '"/usr/sap/nwrfcsdk/lib" and run "ldconfig" afterwards.\n'
             )
-            processed_all = False
-        except Exception as e:
-            sys.stderr.write("ERROR: Unhandled exception (%s)\n" % e)
-            sys.stdout.write(
-                "<<<sap_state:sep(9)>>>\n%s\tUnhandled exception (%s)\n" % (entry["ashost"], e)
-            )
-            processed_all = False
+            sys.exit(1)
+        elif "No module named sapnwrfc" in str(e):
+            sys.stderr.write("Missing the Python module sapnwfrc.\n")
+            sys.exit(1)
+        else:
+            raise
 
-    # Now check whether or not an old logfile needs to be removed. This can only
-    # be done this way, when all hosts have been reached. Otherwise the cleanup
-    # is skipped.
-    if processed_all:
-        for key in states.keys():
-            if key not in logfiles:
-                state_file_changed = True
-                del states[key]
+    # It is possible to configure multiple SAP instances to monitor. Loop them all, but
+    # do not terminate when one connection failed
+    processed_all = True
+    try:
+        for entry in cfg:
+            try:
+                check(sapnwrfc, entry)
+                sys.stdout.write("<<<sap_state:sep(9)>>>\n%s\tOK\n" % entry["ashost"])
+            except sapnwrfc.RFCCommunicationError as e:
+                sys.stderr.write("ERROR: Unable to connect (%s)\n" % e)
+                sys.stdout.write(
+                    "<<<sap_state:sep(9)>>>\n%s\tUnable to connect (%s)\n" % (entry["ashost"], e)
+                )
+                processed_all = False
+            except Exception as e:
+                sys.stderr.write("ERROR: Unhandled exception (%s)\n" % e)
+                sys.stdout.write(
+                    "<<<sap_state:sep(9)>>>\n%s\tUnhandled exception (%s)\n" % (entry["ashost"], e)
+                )
+                processed_all = False
 
-    # Only write the state file once per run. And only when it has been changed
-    if state_file_changed:
-        new_file = STATE_FILE + ".new"
-        state_fd = os.open(new_file, os.O_WRONLY | os.O_CREAT)
-        fcntl.flock(state_fd, fcntl.LOCK_EX)
-        os.write(state_fd, repr(states).encode("utf-8"))
-        os.close(state_fd)
-        os.rename(STATE_FILE + ".new", STATE_FILE)
+        # Now check whether or not an old logfile needs to be removed. This can only
+        # be done this way, when all hosts have been reached. Otherwise the cleanup
+        # is skipped.
+        if processed_all:
+            for key in states.keys():
+                if key not in logfiles:
+                    state_file_changed = True
+                    del states[key]
 
-except Exception as e:
-    sys.stderr.write("ERROR: Unhandled exception (%s)\n" % e)
+        # Only write the state file once per run. And only when it has been changed
+        if state_file_changed:
+            new_file = STATE_FILE + ".new"
+            state_fd = os.open(new_file, os.O_WRONLY | os.O_CREAT)
+            fcntl.flock(state_fd, fcntl.LOCK_EX)
+            os.write(state_fd, repr(states).encode("utf-8"))
+            os.close(state_fd)
+            os.rename(STATE_FILE + ".new", STATE_FILE)
 
-sys.exit(0)
+    except Exception as e:
+        sys.stderr.write("ERROR: Unhandled exception (%s)\n" % e)
+
+    sys.exit(0)
+
+
+if __name__ == "__main__":
+    main()

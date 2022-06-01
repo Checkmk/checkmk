@@ -17,3 +17,12 @@ When writing a new API endpoint please make sure to adhere to these standards:
 
  * If you create a new module in `endpoints`, make sure to add a short
    doc-string on top for documentation purposes.
+
+Overview
+--------
+
+The main entities of the REST API system are `User`, `Request`, `Response`, `Endpoint`, `Decorator`, `API WSGI App`, `Request Schema`, `Response Schema`, `Path Schema`, `Header Schema`, `Permission Object` and `Endpoint registry`.
+
+A `Endpoint` needs to be decorated by `Decorator`.
+
+`Decorator` uses the `Request Schema` to determine if the `Request` sent by `User` is correct.

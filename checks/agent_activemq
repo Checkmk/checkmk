@@ -23,7 +23,7 @@ def agent_activemq_arguments(
                 "--username",
                 params["basicauth"][0],
                 "--password",
-                params["basicauth"][1],
+                passwordstore_get_cmdline("%s", params["basicauth"][1]),
             ]
             if "basicauth" in params
             else []

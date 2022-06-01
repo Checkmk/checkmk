@@ -112,7 +112,7 @@ class MobileironAPI:
     def __enter__(self) -> "MobileironAPI":
         return self
 
-    def __exit__(self, *args: Any, **kwargs: Any) -> None:
+    def __exit__(self, *exc_info) -> None:
         if self._session:
             self._session.close()
 

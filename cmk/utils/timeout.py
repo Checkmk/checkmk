@@ -35,6 +35,6 @@ class Timeout:
         signal.alarm(self.timeout)
         return self
 
-    def __exit__(self, *_args) -> None:
+    def __exit__(self, *exc_info: object) -> None:
         signal.signal(signal.SIGALRM, signal.SIG_IGN)
         signal.alarm(0)

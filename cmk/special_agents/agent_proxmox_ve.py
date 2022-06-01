@@ -707,7 +707,7 @@ class ProxmoxVeSession:
     def __enter__(self) -> Any:
         return self
 
-    def __exit__(self, *args: Any, **kwargs: Any) -> None:
+    def __exit__(self, *exc_info: object) -> None:
         self.close()
 
     def close(self) -> None:
@@ -761,8 +761,8 @@ class ProxmoxVeAPI:
         self._session.__enter__()
         return self
 
-    def __exit__(self, *args: Any, **kwargs: Any) -> None:
-        self._session.__exit__(*args, **kwargs)
+    def __exit__(self, *exc_info: object) -> None:
+        self._session.__exit__(*exc_info)
         self._session.close()
 
     def get(self, path: Union[str, Iterable[str]]) -> Any:

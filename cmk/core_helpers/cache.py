@@ -483,9 +483,9 @@ class FileCacheFactory(Generic[TRawData], abc.ABC):
     ):
         super().__init__()
         self.hostname: Final = hostname
-        self.base_path: Final[Path] = Path(base_path)
+        self.base_path: Final = Path(base_path)
         self.max_age: Final = max_age
-        self.simulation: Final[bool] = simulation
+        self.simulation: Final = simulation
         self.use_only_cache: Final = use_only_cache
 
     @abc.abstractmethod

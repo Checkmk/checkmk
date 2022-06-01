@@ -72,11 +72,11 @@ class AppContext:
         self.g = _AppCtxGlobals()
         self._stack = stack
 
-    def __enter__(self):
+    def __enter__(self) -> AppContext:
         self._stack.push(self)
         return self
 
-    def __exit__(self, exc_type, exc_value, tb):
+    def __exit__(self, *exc_info: object) -> None:
         self._stack.pop()
 
 

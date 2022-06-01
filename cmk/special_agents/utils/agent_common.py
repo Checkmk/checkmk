@@ -31,7 +31,7 @@ class SectionManager:
     def __enter__(self) -> "SectionManager":
         return self
 
-    def __exit__(self, *args: Any, **kwargs: Any) -> None:
+    def __exit__(self, *exc_info: object) -> None:
         self.flush()
 
     def append(self, data: Any) -> None:
@@ -80,10 +80,10 @@ class ConditionalPiggybackSection(SectionManager):
         if self.set_piggyback:
             self.append(f"<<<<{hostname}>>>>")
 
-    def __exit__(self, *args: Any, **kwargs: Any) -> None:
+    def __exit__(self, *exc_info: object) -> None:
         if self.set_piggyback:
             self.append("<<<<>>>>")
-        super().__exit__(*args, **kwargs)
+        super().__exit__(*exc_info)
 
 
 class SectionWriter(SectionManager):

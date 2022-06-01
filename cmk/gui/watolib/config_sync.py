@@ -19,8 +19,7 @@ import time
 import traceback
 from pathlib import Path
 from tarfile import TarFile, TarInfo
-from types import TracebackType
-from typing import Any, Dict, List, NamedTuple, Optional, Tuple, Type
+from typing import Any, Dict, List, NamedTuple, Optional, Tuple
 
 import cmk.utils.paths
 import cmk.utils.store as store
@@ -356,12 +355,7 @@ class SnapshotCreator(SnapshotCreationBase):
         self._prepare_generic_tar_files()
         return self
 
-    def __exit__(
-        self,
-        exception_type: Optional[Type[BaseException]],
-        exception_value: Optional[BaseException],
-        tb: Optional[TracebackType],
-    ) -> None:
+    def __exit__(self, *exc_info: object) -> None:
         max_workers = 10
         try:
             max_workers = max(1, multiprocessing.cpu_count() - 1)

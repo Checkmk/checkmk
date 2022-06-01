@@ -679,7 +679,7 @@ class MockSingleSiteConnection:
     def __enter__(self):
         pass
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, *exc_info: object) -> None:
         if self._expected_queries:
             remaining_queries = ""
             for query in self._expected_queries:

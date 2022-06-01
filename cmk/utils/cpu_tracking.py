@@ -68,7 +68,7 @@ class CPUTracker:
         console.vverbose("[cpu_tracking] Start [%x]\n", id(self))
         return self
 
-    def __exit__(self, *exc_info) -> None:
+    def __exit__(self, *exc_info: object) -> None:
         self._end = Snapshot.take()
         console.vverbose("[cpu_tracking] Stop [%x - %s]\n", id(self), self.duration)
 

@@ -6,7 +6,6 @@
 
 import abc
 import logging
-from types import TracebackType
 from typing import Any, final, Final, Generic, Literal, Mapping, Optional, Sequence, Type, TypeVar
 
 from cmk.utils.check_utils import ActiveCheckResult
@@ -65,12 +64,7 @@ class Fetcher(Generic[TRawData], abc.ABC):
         return self
 
     @final
-    def __exit__(
-        self,
-        exc_type: Optional[Type[BaseException]],
-        exc_value: Optional[BaseException],
-        traceback: Optional[TracebackType],
-    ) -> Literal[False]:
+    def __exit__(self, *exc_info: object) -> Literal[False]:
         """Destroy the data source. Only needed if simulation mode is
         disabled"""
         if self.file_cache.simulation:

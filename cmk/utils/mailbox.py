@@ -234,7 +234,7 @@ class Mailbox:
     def __enter__(self) -> "Mailbox":
         return self
 
-    def __exit__(self, *args: Any, **kwargs: Any) -> None:
+    def __exit__(self, *exc_info: object) -> None:
         self._close_mailbox()
 
     def connect(self) -> None:

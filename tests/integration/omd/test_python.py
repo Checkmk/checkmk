@@ -58,7 +58,7 @@ def test_02_python_interpreter_path(site: Site):
 def test_03_python_interpreter_version(site: Site):
     p = site.execute(["python3", "-V"], stdout=subprocess.PIPE)
     version = p.stdout.read() if p.stdout else "<NO STDOUT>"
-    assert version.startswith("Python 3.9.10")
+    assert version.startswith("Python 3.10.4")
 
 
 def test_03_python_path(site: Site):
@@ -96,7 +96,7 @@ def test_02_pip_path(site: Site):
 def test_03_pip_interpreter_version(site: Site):
     p = site.execute(["pip3", "-V"], stdout=subprocess.PIPE)
     version = p.stdout.read() if p.stdout else "<NO STDOUT>"
-    assert version.startswith("pip 21.2.4")
+    assert version.startswith("pip 22.0.4")
 
 
 @pytest.mark.parametrize("module_name", _get_import_names_from_pipfile())

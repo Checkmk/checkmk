@@ -32,7 +32,7 @@ py_version = "39"
 
 [tool.black]
 line-length = 100
-target-version = ['py39']
+target-version = ['py310']
 
 
 # If you add more modules, add them to mypy-raw.ini as well...

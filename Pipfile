@@ -177,4 +177,4 @@ exchangelib = "==4.7.2"  # used by active checks for mail
 lxml = "==4.8.0"  # used via beautifulsoup4 as a parser and in the agent_netapp special agent
 
 [requires]
-python_version = "3.9"
+python_version = "3.10"

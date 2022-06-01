@@ -51,7 +51,12 @@ def parse_cmk_site_statistics(string_table: StringTable) -> CMKSiteStatisticsSec
     ... ['1', '0', '0', '0'],
     ... ['32', '0', '0', '2', '0', '1']]))
     {'heute': (HostStatistics(up=1, down=0, unreachable=0, in_downtime=0),
-               ServiceStatistics(ok=32, in_downtime=0, on_down_hosts=0, warning=2, unknown=0, critical=1))}
+               ServiceStatistics(ok=32,
+                                 in_downtime=0,
+                                 on_down_hosts=0,
+                                 warning=2,
+                                 unknown=0,
+                                 critical=1))}
     """
     section: Dict[str, Tuple[HostStatistics, ServiceStatistics]] = {}
 

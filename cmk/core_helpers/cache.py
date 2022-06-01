@@ -50,6 +50,7 @@ Cache hierarchy
 
 import abc
 import copy
+import enum
 import logging
 from pathlib import Path
 from typing import (
@@ -282,6 +283,14 @@ class MaxAge(NamedTuple):
         return self._asdict().get(mode.name.lower(), default)
 
 
+@enum.unique
+class FileCacheMode(enum.IntFlag):
+    DISABLED = enum.auto()
+    READ = enum.auto()
+    WRITE = enum.auto()
+    READ_WRITE = READ | WRITE
+
+
 class FileCache(Generic[TRawData], abc.ABC):
     def __init__(
         self,
@@ -289,22 +298,22 @@ class FileCache(Generic[TRawData], abc.ABC):
         *,
         base_path: Union[str, Path],
         max_age: MaxAge,
-        disabled: bool,
         use_outdated: bool,
         simulation: bool,
         use_only_cache: bool,
+        file_cache_mode: Union[FileCacheMode, int],
     ) -> None:
         super().__init__()
         self.hostname: Final = hostname
         self.base_path: Final = Path(base_path)
         self.max_age = max_age
-        self.disabled = disabled
         self.use_outdated = use_outdated
         # TODO(ml): Make sure simulation and use_only_cache are identical
         #           and find a better, more generic name such as "force"
         #           to produce the intended behavior.
         self.simulation = simulation
         self.use_only_cache = use_only_cache
+        self.file_cache_mode = FileCacheMode(file_cache_mode)
         self._logger: Final = logging.getLogger("cmk.helper")
 
     def __repr__(self) -> str:
@@ -315,10 +324,10 @@ class FileCache(Generic[TRawData], abc.ABC):
                     f"{self.hostname}",
                     f"base_path={self.base_path}",
                     f"max_age={self.max_age}",
-                    f"disabled={self.disabled}",
                     f"use_outdated={self.use_outdated}",
                     f"simulation={self.simulation}",
                     f"use_only_cache={self.use_only_cache}",
+                    f"file_cache_mode={self.file_cache_mode.value}",
                 )
             )
             + ")"
@@ -332,10 +341,10 @@ class FileCache(Generic[TRawData], abc.ABC):
                 self.hostname == other.hostname,
                 self.base_path == other.base_path,
                 self.max_age == other.max_age,
-                self.disabled == other.disabled,
                 self.use_outdated == other.use_outdated,
                 self.simulation == other.simulation,
                 self.use_only_cache == other.use_only_cache,
+                self.file_cache_mode == other.file_cache_mode,
             )
         )
 
@@ -344,10 +353,10 @@ class FileCache(Generic[TRawData], abc.ABC):
             "hostname": str(self.hostname),
             "base_path": str(self.base_path),
             "max_age": self.max_age,
-            "disabled": self.disabled,
             "use_outdated": self.use_outdated,
             "simulation": self.simulation,
             "use_only_cache": self.use_only_cache,
+            "file_cache_mode": self.file_cache_mode,
         }
 
     @classmethod
@@ -371,10 +380,6 @@ class FileCache(Generic[TRawData], abc.ABC):
         raise NotImplementedError()
 
     def _do_cache(self, mode: Mode) -> bool:
-        if self.disabled:
-            self._logger.debug("Not using cache (Cache usage disabled)")
-            return False
-
         if self.simulation:
             self._logger.debug("Using cache (Simulation mode)")
             return True
@@ -405,7 +410,7 @@ class FileCache(Generic[TRawData], abc.ABC):
         return raw_data
 
     def _read(self, mode: Mode) -> Optional[TRawData]:
-        if not self._do_cache(mode):
+        if FileCacheMode.READ not in self.file_cache_mode or not self._do_cache(mode):
             return None
 
         path = self.make_path(mode)
@@ -436,7 +441,7 @@ class FileCache(Generic[TRawData], abc.ABC):
         return self._from_cache_file(cache_file)
 
     def write(self, raw_data: TRawData, mode: Mode) -> None:
-        if not self._do_cache(mode):
+        if FileCacheMode.WRITE not in self.file_cache_mode or not self._do_cache(mode):
             return
 
         path = self.make_path(mode)

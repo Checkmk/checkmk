@@ -20,7 +20,6 @@ import cmk.utils.paths
 from cmk.utils.log import logger
 from cmk.utils.type_defs import HostName
 
-from cmk.core_helpers.agent import NoCache
 from cmk.core_helpers.cache import MaxAge
 
 import cmk.base.automations
@@ -85,14 +84,6 @@ def _patch_data_source(mocker, **kwargs):
         assert isinstance(self, Source), repr(self)
 
         file_cache = self._make_file_cache()
-
-        assert file_cache.disabled == (
-            True
-            if isinstance(file_cache, NoCache)
-            else defaults["disabled"]
-            if isinstance(self, SNMPSource)
-            else defaults["disabled"]
-        ), repr(file_cache)
 
         assert file_cache.use_outdated == defaults["use_outdated"]
         assert file_cache.max_age == defaults["max_age"]

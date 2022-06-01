@@ -6,7 +6,6 @@
 
 import abc
 import logging
-import os
 import time
 from pathlib import Path
 from typing import (
@@ -20,7 +19,6 @@ from typing import (
     Optional,
     Sequence,
     Tuple,
-    Union,
 )
 
 import cmk.utils.agent_simulator as agent_simulator
@@ -32,7 +30,7 @@ from cmk.utils.type_defs import AgentRawData, HostName, SectionName
 
 from ._base import Parser, Summarizer
 from ._markers import PiggybackMarker, SectionMarker
-from .cache import FileCache, FileCacheFactory, MaxAge, SectionStore
+from .cache import FileCache, FileCacheFactory, FileCacheMode, MaxAge, SectionStore
 from .host_sections import HostSections
 from .type_defs import AgentRawDataSection, Mode, NO_SELECTION, SectionNameCollection
 
@@ -44,49 +42,10 @@ class AgentFileCache(FileCache[AgentRawData]):
 
     @staticmethod
     def _to_cache_file(raw_data: AgentRawData) -> bytes:
-        # TODO: This does not seem to be needed
         return raw_data
 
     def make_path(self, mode: Mode) -> Path:
         return self.base_path / self.hostname
-
-
-class NoCache(FileCache[AgentRawData]):
-    """Noop cache for fetchers that do not cache."""
-
-    def __init__(
-        self,
-        hostname: HostName,
-        *,
-        base_path: Union[str, Path],
-        max_age: MaxAge,
-        disabled: bool,
-        use_outdated: bool,
-        simulation: bool,
-        use_only_cache: bool,
-    ) -> None:
-        # Force disable
-        disabled = True
-        super().__init__(
-            hostname,
-            base_path=base_path,
-            max_age=max_age,
-            disabled=disabled,
-            use_outdated=use_outdated,
-            simulation=simulation,
-            use_only_cache=use_only_cache,
-        )
-
-    @staticmethod
-    def _from_cache_file(raw_data: bytes) -> AgentRawData:
-        return AgentRawData(raw_data)
-
-    @staticmethod
-    def _to_cache_file(raw_data: AgentRawData) -> bytes:
-        return raw_data
-
-    def make_path(self, mode: Mode):
-        return Path(os.devnull)
 
 
 class AgentFileCacheFactory(FileCacheFactory[AgentRawData]):
@@ -97,25 +56,25 @@ class AgentFileCacheFactory(FileCacheFactory[AgentRawData]):
             self.hostname,
             base_path=self.base_path,
             max_age=MaxAge.none() if force_cache_refresh else self.max_age,
-            disabled=self.disabled,
             use_outdated=False if force_cache_refresh else self.use_outdated,
             simulation=self.simulation,
             use_only_cache=self.use_only_cache,
+            file_cache_mode=FileCacheMode.DISABLED if self.disabled else FileCacheMode.READ_WRITE,
         )
 
 
 class NoCacheFactory(FileCacheFactory[AgentRawData]):
     # force_cache_refresh is currently only used by SNMP. It's probably less irritating
     # to implement it here anyway. At the time of this writing NoCache does nothing either way.
-    def make(self, *, force_cache_refresh: bool = False) -> NoCache:
-        return NoCache(
+    def make(self, *, force_cache_refresh: bool = False) -> AgentFileCache:
+        return AgentFileCache(
             self.hostname,
             base_path=self.base_path,
             max_age=MaxAge.none() if force_cache_refresh else self.max_age,
-            disabled=self.disabled,
             use_outdated=False if force_cache_refresh else self.use_outdated,
             simulation=self.simulation,
             use_only_cache=self.use_only_cache,
+            file_cache_mode=FileCacheMode.DISABLED,
         )
 
 

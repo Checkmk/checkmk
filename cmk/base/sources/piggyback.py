@@ -11,7 +11,7 @@ from cmk.utils.paths import tmp_dir
 from cmk.utils.type_defs import HostAddress, HostName, SourceType
 
 from cmk.core_helpers import FetcherType, PiggybackFetcher
-from cmk.core_helpers.agent import NoCache, NoCacheFactory
+from cmk.core_helpers.agent import AgentFileCache, NoCacheFactory
 from cmk.core_helpers.piggyback import PiggybackSummarizer
 
 import cmk.base.config as config
@@ -34,7 +34,7 @@ class PiggybackSource(AgentSource):
             piggybacked_hostname=hostname
         )
 
-    def _make_file_cache(self) -> NoCache:
+    def _make_file_cache(self) -> AgentFileCache:
         return NoCacheFactory(
             self.hostname,
             base_path=self.file_cache_base_path,

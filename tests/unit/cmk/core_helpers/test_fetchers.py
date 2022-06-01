@@ -37,8 +37,8 @@ from cmk.core_helpers import (
     PushAgentFetcher as FallbackPushAgentFetcher,  # We must test the FetcherType factory agains the fallback class, because during import we are not a CPE. Patching this during the test will make no difference...
 )
 from cmk.core_helpers import snmp
-from cmk.core_helpers.agent import AgentFileCache, NoCache
-from cmk.core_helpers.cache import FileCache, MaxAge
+from cmk.core_helpers.agent import AgentFileCache
+from cmk.core_helpers.cache import FileCache, FileCacheMode, MaxAge
 from cmk.core_helpers.ipmi import IPMIFetcher
 from cmk.core_helpers.piggyback import PiggybackFetcher
 from cmk.core_helpers.program import ProgramFetcher
@@ -75,24 +75,24 @@ def clone_file_cache(file_cache: FileCache) -> FileCache:
         HostName(file_cache.hostname),
         base_path=file_cache.base_path,
         max_age=file_cache.max_age,
-        disabled=file_cache.disabled,
         use_outdated=file_cache.use_outdated,
         simulation=file_cache.simulation,
         use_only_cache=file_cache.use_only_cache,
+        file_cache_mode=file_cache.file_cache_mode,
     )
 
 
 class TestFileCache:
-    @pytest.fixture(params=[AgentFileCache, NoCache, SNMPFileCache])
+    @pytest.fixture(params=[AgentFileCache, SNMPFileCache])
     def file_cache(self, request) -> FileCache:
         return request.param(
             HostName("hostname"),
             base_path=Path(os.devnull),
             max_age=MaxAge.none(),
-            disabled=True,
             use_outdated=False,
             simulation=True,
             use_only_cache=True,
+            file_cache_mode=FileCacheMode.DISABLED,
         )
 
     def test_repr(self, file_cache: FileCache) -> None:
@@ -102,74 +102,21 @@ class TestFileCache:
         assert file_cache == type(file_cache).from_json(json_identity(file_cache.to_json()))
 
 
-class TestNoCache:
-    @pytest.fixture
-    def path(self, tmp_path: Path) -> Path:
-        return tmp_path
-
-    @pytest.fixture
-    def file_cache(self, path: Path) -> NoCache:
-        return NoCache(
-            HostName("hostname"),
-            base_path=path,
-            max_age=MaxAge(checking=0, discovery=999, inventory=0),
-            disabled=False,
-            use_outdated=False,
-            simulation=False,
-            use_only_cache=False,
-        )
-
-    @pytest.fixture
-    def agent_raw_data(self) -> AgentRawData:
-        return AgentRawData(b"<<<check_mk>>>\nagent raw data")
-
-    def test_write_and_read_is_noop(
-        self, file_cache: NoCache, agent_raw_data: AgentRawData
-    ) -> None:
-        mode = Mode.DISCOVERY
-
-        assert file_cache.disabled is True
-        assert file_cache.make_path(mode) == Path(os.devnull)
-
-        file_cache.write(agent_raw_data, mode)
-
-        assert file_cache.make_path(mode) == Path(os.devnull)
-        assert file_cache.read(mode) is None
-
-    def test_disabled_write_and_read(
-        self, file_cache: NoCache, agent_raw_data: AgentRawData
-    ) -> None:
-        mode = Mode.DISCOVERY
-
-        file_cache.disabled = True
-        assert file_cache.disabled is True
-        assert file_cache.make_path(mode) == Path(os.devnull)
-
-        file_cache.write(agent_raw_data, mode)
-
-        assert file_cache.make_path(mode) == Path(os.devnull)
-        assert file_cache.read(mode) is None
-
-
 # This is horrible to type since the AgentFileCache needs the AgentRawData and the
 # SNMPFileCache needs SNMPRawData, this matches here (I think) but the Union types would not
 # help anybody... And mypy cannot handle the conditions so we would need to ignore the errors
 # anyways...
-class TestDefaultFileCache_and_SNMPFileCache:
-    @pytest.fixture
-    def path(self, tmp_path: Path) -> Path:
-        return tmp_path / "database"
-
+class TestAgentFileCache_and_SNMPFileCache:
     @pytest.fixture(params=[AgentFileCache, SNMPFileCache])
-    def file_cache(self, path: Path, request):
+    def file_cache(self, tmp_path: Path, request):
         return request.param(
             HostName("hostname"),
-            base_path=path,
+            base_path=tmp_path / "database",
             max_age=MaxAge(checking=0, discovery=999, inventory=0),
-            disabled=False,
             use_outdated=False,
             simulation=False,
             use_only_cache=False,
+            file_cache_mode=FileCacheMode.DISABLED,
         )
 
     @pytest.fixture
@@ -180,10 +127,12 @@ class TestDefaultFileCache_and_SNMPFileCache:
         table: Sequence[SNMPTable] = []
         return {SectionName("X"): table}
 
-    def test_write_and_read(self, file_cache, raw_data):
+    def test_read_write(self, file_cache, raw_data):
         mode = Mode.DISCOVERY
+        file_cache.file_cache_mode = FileCacheMode.READ_WRITE
 
-        assert not file_cache.disabled
+        assert FileCacheMode.READ in file_cache.file_cache_mode
+        assert FileCacheMode.WRITE in file_cache.file_cache_mode
         assert not file_cache.make_path(mode).exists()
 
         file_cache.write(raw_data, mode)
@@ -193,14 +142,14 @@ class TestDefaultFileCache_and_SNMPFileCache:
 
         # Now with another instance
         clone = clone_file_cache(file_cache)
+        assert clone.file_cache_mode is FileCacheMode.READ_WRITE
         assert clone.make_path(mode).exists()
         assert clone.read(mode) == raw_data
 
-    def test_disabled_write(self, file_cache, raw_data):
+    def test_read_only(self, file_cache, raw_data):
         mode = Mode.DISCOVERY
+        file_cache.file_cache_mode = FileCacheMode.READ
 
-        file_cache.disabled = True
-        assert file_cache.disabled is True
         assert not file_cache.make_path(mode).exists()
 
         file_cache.write(raw_data, mode)
@@ -208,14 +157,13 @@ class TestDefaultFileCache_and_SNMPFileCache:
         assert not file_cache.make_path(mode).exists()
         assert file_cache.read(mode) is None
 
-    def test_disabled_read(self, file_cache, raw_data):
+    def test_write_only(self, file_cache, raw_data):
         mode = Mode.DISCOVERY
+        file_cache.file_cache_mode = FileCacheMode.WRITE
+
+        assert not file_cache.make_path(mode).exists()
 
         file_cache.write(raw_data, mode)
-        assert file_cache.make_path(mode).exists()
-        assert file_cache.read(mode) == raw_data
-
-        file_cache.disabled = True
         assert file_cache.make_path(mode).exists()
         assert file_cache.read(mode) is None
 
@@ -241,10 +189,10 @@ class TestIPMIFetcher:
             HostName("hostname"),
             base_path=Path(os.devnull),
             max_age=MaxAge.none(),
-            disabled=True,
             use_outdated=True,
             simulation=False,
             use_only_cache=False,
+            file_cache_mode=FileCacheMode.DISABLED,
         )
 
     @pytest.fixture
@@ -333,19 +281,19 @@ class TestIPMIFetcher:
 
 class TestPiggybackFetcher:
     @pytest.fixture
-    def file_cache(self) -> NoCache:
-        return NoCache(
+    def file_cache(self) -> AgentFileCache:
+        return AgentFileCache(
             HostName("hostname"),
             base_path=Path(os.devnull),
             max_age=MaxAge.none(),
-            disabled=True,
             use_outdated=True,
             simulation=True,
             use_only_cache=True,
+            file_cache_mode=FileCacheMode.DISABLED,
         )
 
     @pytest.fixture
-    def fetcher(self, file_cache: NoCache) -> PiggybackFetcher:
+    def fetcher(self, file_cache: AgentFileCache) -> PiggybackFetcher:
         return PiggybackFetcher(
             file_cache,
             hostname=HostName("host"),
@@ -371,10 +319,10 @@ class TestProgramFetcher:
             HostName("hostname"),
             base_path=Path(os.devnull),
             max_age=MaxAge.none(),
-            disabled=True,
             use_outdated=True,
             simulation=True,
             use_only_cache=True,
+            file_cache_mode=FileCacheMode.DISABLED,
         )
 
     @pytest.fixture
@@ -573,10 +521,10 @@ class TestSNMPFetcherDeserialization(ABCTestSNMPFetcher):
             HostName("hostname"),
             base_path=Path(os.devnull),
             max_age=MaxAge.none(),
-            disabled=True,
             use_outdated=True,
             simulation=True,
             use_only_cache=True,
+            file_cache_mode=FileCacheMode.DISABLED,
         )
 
     def test_fetcher_inline_backend_deserialization(self, fetcher_inline: SNMPFetcher) -> None:
@@ -614,10 +562,10 @@ class TestSNMPFetcherFetch(ABCTestSNMPFetcher):
             HostName("hostname"),
             base_path=Path(os.devnull),
             max_age=MaxAge.none(),
-            disabled=True,
             use_outdated=True,
             simulation=False,
             use_only_cache=False,
+            file_cache_mode=FileCacheMode.DISABLED,
         )
 
     def test_fetch_from_io_non_empty(self, monkeypatch: MonkeyPatch, fetcher: SNMPFetcher) -> None:
@@ -759,10 +707,10 @@ class TestSNMPFetcherFetchCache(ABCTestSNMPFetcher):
             HostName("hostname"),
             base_path=Path(os.devnull),
             max_age=MaxAge.none(),
-            disabled=True,
             use_outdated=True,
             simulation=False,
             use_only_cache=False,
+            file_cache_mode=FileCacheMode.DISABLED,
         )
 
     @pytest.fixture(autouse=True)
@@ -816,10 +764,10 @@ class TestTCPFetcher:
             HostName("hostname"),
             base_path=Path(os.devnull),
             max_age=MaxAge.none(),
-            disabled=True,
             use_outdated=True,
             simulation=True,
             use_only_cache=False,
+            file_cache_mode=FileCacheMode.DISABLED,
         )
 
     @pytest.fixture
@@ -866,10 +814,10 @@ class TestTCPFetcher:
                 HostName("hostname"),
                 base_path=Path(os.devnull),
                 max_age=MaxAge.none(),
-                disabled=False,
                 use_outdated=True,
                 simulation=False,
                 use_only_cache=False,
+                file_cache_mode=FileCacheMode.READ_WRITE,
             ),
             family=socket.AF_INET,
             address=("127.0.0.1", 6556),
@@ -1035,10 +983,10 @@ class TestFetcherCaching:
             HostName("hostname"),
             base_path=Path(os.devnull),
             max_age=MaxAge.none(),
-            disabled=True,
             use_outdated=True,
             simulation=False,
             use_only_cache=False,
+            file_cache_mode=FileCacheMode.DISABLED,
         )
 
     @pytest.fixture

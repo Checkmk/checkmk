@@ -80,7 +80,7 @@ def parse_zpool_status(string_table: type_defs.StringTable) -> Optional[Section]
             if msg != "No known data errors":
                 pool_messages[last_pool].append(msg)
 
-        elif line[0] in ["spares", "logs", "cache"]:
+        elif line[0] in ["spares", "logs", "cache", "special"]:
             start_pool = False
             continue
 

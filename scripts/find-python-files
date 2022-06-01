@@ -17,7 +17,7 @@ HERE
 get_candidates_from_stdin() {
     while read -r line; do
         # gracefully ignore non-existing files
-        [ -e "${line}" ] && printf "%s\000" "${line}"
+        [ -e "${line}" ] && printf "%s\000" "$(realpath "${line}")"
     done
 }
 
@@ -98,7 +98,8 @@ get_candidates_fallback() {
         -name py2 -prune -o \
         -name types_pb2.py -prune -o \
         $PRUNE \
-        -type f -print0
+        -type f -print0 \
+        -exec realpath {} \;
 }
 
 filter_for_python_files() {

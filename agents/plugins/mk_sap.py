@@ -49,6 +49,9 @@ try:
 except ImportError:
     pass
 
+if sys.version_info[:2] < (3, 5):
+    RecursionError = RuntimeError  # pylint: disable=redefined-builtin
+
 # #############################################################################
 
 # This sign is used to separate the path parts given in the config
@@ -161,6 +164,10 @@ conn = None
 #
 
 
+class SapError(Exception):
+    pass
+
+
 def to_be_monitored(path, toplevel_match=False):
     for rule in monitor_paths:
         if toplevel_match and rule.count("/") > 1:
@@ -264,7 +271,16 @@ def mon_tree(cfg_entry, ms_name, mon_name):
     )
     tree = f.TREE_NODES.value
     for node in tree:
-        node["PATH"] = ms_name + SEPARATOR + node_path(tree, node)
+        try:
+            node["PATH"] = ms_name + SEPARATOR + node_path(tree, node)
+        except RecursionError:
+            raise SapError(
+                (
+                    "Could not calculate path, recursion limit reached. "
+                    "Reorganise your SAP data to get past this error. "
+                    "Element that causes this: {node}"
+                ).format(node=node)
+            )
     return tree
 
 
@@ -513,7 +529,7 @@ def check(sapnwrfc, cfg_entry):  # pylint: disable=too-many-branches
     conn.close()
 
 
-def main():
+def main():  # pylint: disable=too-many-branches
     global state_file_changed
 
     # sapnwrfc needs to know where the libs are located. During
@@ -550,6 +566,10 @@ def main():
                 sys.stdout.write(
                     "<<<sap_state:sep(9)>>>\n%s\tUnable to connect (%s)\n" % (entry["ashost"], e)
                 )
+                processed_all = False
+            except SapError as e:
+                sys.stderr.write("ERROR: %s\n" % e)
+                sys.stdout.write("<<<sap_state:sep(9)>>>\n%s\t%s\n" % (entry["ashost"], e))
                 processed_all = False
             except Exception as e:
                 sys.stderr.write("ERROR: Unhandled exception (%s)\n" % e)

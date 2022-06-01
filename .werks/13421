@@ -1,0 +1,31 @@
+Title: mk_sap: detect recursion in SAP data
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1654084750
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+mk_sap.py handles a tree of SAP objects. The objects are annotated with the
+path from the root of the tree to the object. The objects returned by SAP
+contain a link to their parent object. SAP can be configured in a way that the
+object references itself as its parent. This can lead to a cryptic recursion
+error message:
+
+<code>
+Unhandled exception (maximum recursion depth exceeded)
+</code>
+
+After this werk a better error message will be shown including the object that
+is the root cause of the recursion error:
+
+<code>
+Could not calculate path, recursion limit reached.
+Reorganise your SAP data to get past this error.
+Element that causes this:
+...
+</code>
+
+You will have to fix this problem within SAP.

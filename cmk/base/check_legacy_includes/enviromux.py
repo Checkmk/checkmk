@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
+# tyxpe: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
 from .humidity import check_humidity
 from .temperature import check_temperature
 
@@ -154,9 +154,9 @@ def parse_enviromux(info):
         sensor_type = sensor_type_names.get(line[1], "unknown")
         sensor_status = sensor_status_names.get(line[8], "unknown")
         try:
-            sensor_value = int(line[5])
-            sensor_min = int(line[9])
-            sensor_max = int(line[10])
+            sensor_value: int | float = int(line[5])
+            sensor_min: int | float = int(line[9])
+            sensor_max: int | float = int(line[10])
             # Sensors without value have "Not configured" and can't be int casted
             # skip the parse
         except ValueError:

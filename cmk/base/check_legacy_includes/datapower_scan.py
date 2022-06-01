@@ -4,7 +4,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
 #  SYSOID Mapping
 #  SYSOID                   MODEL    OS VERSION
 #  1.3.6.1.4.1.14685.1.3    XI50     3.8.2.2, 4.0.2.7

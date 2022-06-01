@@ -4,7 +4,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
 import time
 
 import cmk.base.plugins.agent_based.utils.cpu_util as cpu_util
@@ -109,7 +108,7 @@ def check_cpu_util(util, params, this_time=None, cores=None, perf_max=100):
             infoname="Total CPU",
         )
 
-    perfdata += extraperf[1:]  # reference curve for predictive levels
+    perfdata += extraperf[1:]  # type: ignore[arg-type] # reference curve for predictive levels
     yield state, infotext, perfdata
 
     if "core_util_time_total" in params:
@@ -233,6 +232,8 @@ def _util_perfdata(core, total_perc, core_index, this_time, params):
 
     config_single_avg = params.get("average_single", {})
 
+    metric_raw: str | None
+    metric_avg: str | None
     metric_raw, metric_avg = cpu_util_core_name(core, core_index)
     if not params.get("core_util_graph"):
         metric_raw = None

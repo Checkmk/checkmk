@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
+# tyxpe: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
 from .cpu_util import check_cpu_util
 
 
@@ -21,7 +21,7 @@ def check_fortigate_cpu(item, params, info):
     if num_cpus == 0:
         return None
 
-    util = float(util) / num_cpus
+    util = float(util) / num_cpus  # type: ignore[assignment]
 
     state, infotext, perfdata = next(check_cpu_util(util, params))
     infotext += " at %d CPUs" % num_cpus

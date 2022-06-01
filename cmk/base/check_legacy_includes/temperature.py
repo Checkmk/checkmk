@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
+# tyxpe: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
 import time
 from typing import AnyStr, List, Optional, Tuple, Union
 
@@ -149,14 +149,14 @@ def check_temperature_determine_levels(
 def check_temperature_trend(temp, params, output_unit, crit, crit_lower, unique_name):
     def combiner(status, infotext):
         if "status" in dir(combiner):
-            combiner.status = max(combiner.status, status)
+            combiner.status = max(combiner.status, status)  # type: ignore[attr-defined]
         else:
-            combiner.status = status
+            combiner.status = status  # type: ignore[attr-defined]
 
         if "infotext" in dir(combiner):
-            combiner.infotext += ", " + infotext
+            combiner.infotext += ", " + infotext  # type: ignore[attr-defined]
         else:
-            combiner.infotext = infotext
+            combiner.infotext = infotext  # type: ignore[attr-defined]
 
     try:
         trend_range_min = params["period"]
@@ -239,18 +239,18 @@ def check_temperature_trend(temp, params, output_unit, crit, crit_lower, unique_
                     combiner(1, "%s until temp limit reached(!)" % format_minutes(minutes_left))
     except MKCounterWrapped:
         pass
-    return combiner.status, combiner.infotext
+    return combiner.status, combiner.infotext  # type: ignore[attr-defined]
 
 
 def check_temperature(
     reading: Number,
     params: TempParamType,
     unique_name: Optional[AnyStr],
-    dev_unit: AnyStr = "c",
+    dev_unit: AnyStr = "c",  # type: ignore[assignment]
     dev_levels: Optional[TwoLevelsType] = None,
     dev_levels_lower: Optional[TwoLevelsType] = None,
     dev_status: Optional[StatusType] = None,
-    dev_status_name: AnyStr = None,
+    dev_status_name: AnyStr = None,  # type: ignore[assignment]
 ) -> CheckType:
     """Check temperature levels and trends.
 
@@ -354,7 +354,7 @@ def check_temperature(
     infotext = "%s %s" % (render_temp(temp, output_unit), temp_unitsym[output_unit])
 
     if dev_status is not None and dev_status != 0 and dev_status_name:  # omit status in OK case
-        infotext += ", %s" % dev_status_name
+        infotext += ", %s" % dev_status_name  # type: ignore[str-bytes-safe]
 
     # In case of a non-OK status output the information about the levels
     if status != 0:
@@ -435,7 +435,7 @@ def check_temperature(
         if trend_infotext:
             infotext += ", " + trend_infotext
 
-    return status, infotext, perfdata
+    return status, infotext, perfdata  # type: ignore[return-value]
 
 
 # Wraps around check_temperature to check a list of sensors.

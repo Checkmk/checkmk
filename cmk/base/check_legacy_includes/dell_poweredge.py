@@ -3,7 +3,6 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-# type: ignore[list-item,import,assignment,misc,operator,attr-defined]  # TODO: see which are needed in this file
 
 import re
 
@@ -233,7 +232,7 @@ def check_dell_poweredge_status(item, _no_params, info):
         "5": ("Critical, ", 2),
         "6": ("NonRecoverable, ", 2),
     }
-    infotext, state = state_table.get(status, "2")
+    infotext, state = state_table.get(status, "2")  # type: ignore[misc]
     for parameter, value in di.items():
         infotext += "%s: %s, " % (parameter, value)
     infotext = re.sub(", $", "", infotext)
@@ -296,14 +295,14 @@ def check_dell_poweredge_amperage(item, _no_params, info):
                 "9": ("NonRecoverableLower", 2),
                 "10": ("failed", 2),
             }
-            state_txt, state = state_table.get(Status, "2")
+            state_txt, state = state_table.get(Status, "2")  # type: ignore[misc]
 
             if UpperNonCritical and UpperCritical:
                 limittext = " (upper limits %s/%s)" % (UpperNonCritical, UpperCritical)
                 maxi = savefloat(UpperCritical) * 1.1
             else:
                 limittext = ""
-                maxi = ""
+                maxi = ""  # type: ignore[assignment]
 
             if ProbeType in ("23", "25"):  # Amps
                 current = str(int(Reading) / 10.0)
@@ -368,11 +367,17 @@ def check_dell_poweredge_temp(item, params, info):
             temp = int(Reading) / 10.0
 
             if UpperNonCritical and UpperCritical:
-                levels = (int(UpperNonCritical) / 10.0, int(UpperCritical) / 10.0)
+                levels: tuple[float | None, float | None] = (
+                    int(UpperNonCritical) / 10.0,
+                    int(UpperCritical) / 10.0,
+                )
             else:
                 levels = None, None
             if LowerNonCritical and LowerCritical:
-                lower_levels = int(LowerNonCritical) / 10.0, int(LowerCritical) / 10.0
+                lower_levels: tuple[float | None, float | None] = (
+                    int(LowerNonCritical) / 10.0,
+                    int(LowerCritical) / 10.0,
+                )
             else:
                 lower_levels = None, None
 

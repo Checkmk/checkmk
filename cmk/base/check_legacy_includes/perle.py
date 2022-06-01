@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
+# tyxpe: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
 
 
 def perle_scan_function(oid):
@@ -109,7 +109,7 @@ def check_perle_cm_modules(item, _no_params, info):
         copper_speed,
     ) in info:
         if item == index:
-            state, state_readable = mappings["power_led"][power_led]
+            state, state_readable = mappings["power_led"][power_led]  # type: ignore[index]
             yield state, "Power status: %s" % state_readable
 
             for what, lprf, link, speed, connector in [
@@ -117,12 +117,12 @@ def check_perle_cm_modules(item, _no_params, info):
                 ("Copper", cooper_lprf, copper_link, copper_speed, copper_connector),
             ]:
 
-                yield 0, "%s Speed: %s" % (what, mappings["speed"][speed])
+                yield 0, "%s Speed: %s" % (what, mappings["speed"][speed])  # type: ignore[index]
 
                 for what_state, what_key in [(lprf, "LPRF"), (link, "Link")]:
-                    state, state_readable = mappings["%s_%s" % (what.lower(), what_key.lower())][
+                    state, state_readable = mappings["%s_%s" % (what.lower(), what_key.lower())][  # type: ignore[index]
                         what_state
                     ]
                     yield state, "%s: %s" % (what_key, state_readable)
 
-                yield 0, "Connector: %s" % mappings["%s_connector" % what.lower()][connector]
+                yield 0, "Connector: %s" % mappings["%s_connector" % what.lower()][connector]  # type: ignore[index]

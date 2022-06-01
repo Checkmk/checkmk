@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
+# tyxpe: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
 
 
 def parse_physical_volumes(volume_data):
@@ -45,7 +45,7 @@ def parse_virtual_volumes(map_label, virtual_volumes, quotas):
     def quota_oid_end(phys_volume_id, virtual_volume_oid_end):
         return ".".join([phys_volume_id] + virtual_volume_oid_end.split(".")[1:] + ["0"])
 
-    parsed = {}
+    parsed: dict = {}
     map_quota_oid = {}
     for oid_end, phys_volume_id, virtual_volume_label in virtual_volumes:
         phys_volume_label = map_label[phys_volume_id]

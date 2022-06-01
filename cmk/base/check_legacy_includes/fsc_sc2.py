@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
+# tyxpe: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
 from .fan import check_fan
 from .temperature import check_temperature
 
@@ -216,7 +216,7 @@ def check_fsc_sc2_fans(item, params, info):
 
 
 def parse_fsc_sc2_power_consumption(info):
-    parsed = {}
+    parsed: dict = {}
     for designation, value in info:
         # sometimes the device does not return a value
         if not value:
@@ -435,7 +435,7 @@ def parse_fsc_sc2_voltage(info):
     # DESCRIPTION  "Voltage status"
     # ::= { sc2Voltages 4 }
 
-    parsed = {}
+    parsed: dict = {}
     for designation, dev_state, value, min_value, max_value in info:
         if dev_state == "2":
             continue
@@ -449,8 +449,8 @@ def parse_fsc_sc2_voltage(info):
         else:
             state_info = value
             if value < min_value:
-                state_info = value, (2, "too low, deceeds %.2f V" % min_value)
+                state_info = value, (2, "too low, deceeds %.2f V" % min_value)  # type: ignore[assignment]
             elif value >= max_value:
-                state_info = value, (2, "too high, exceeds %.2f V" % max_value)
+                state_info = value, (2, "too high, exceeds %.2f V" % max_value)  # type: ignore[assignment]
             parsed.setdefault(designation, {"voltage": state_info})
     return parsed

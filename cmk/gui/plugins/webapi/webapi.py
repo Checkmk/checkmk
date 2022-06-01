@@ -650,10 +650,8 @@ class APICallUsers(APICallCollection):
             user_attrs = copy.deepcopy(user)
             user_attrs.update(set_attributes)
             for entry in unset_attributes:
-                if entry not in user_attrs:
-                    continue
-                # TODO: Dynamically fiddling around with a TypedDict is a bit questionable
-                del user_attrs[entry]  # type: ignore[misc]
+                if entry in user_attrs:
+                    del user_attrs[entry]
 
             new_password = set_attributes.get("password")
             if new_password:
@@ -952,12 +950,12 @@ class APICallHosttags(APICallCollection):
                             continue
 
                         if "$or" in tag_spec:
-                            for tag_id in tag_spec["$or"]:  # type: ignore[typeddict-item,misc]
+                            for tag_id in tag_spec["$or"]:  # type: ignore[typeddict-item]
                                 used_tags.add((tag_group_id, tag_id))
                             continue
 
                         if "$nor" in tag_spec:
-                            for tag_id in tag_spec["$nor"]:  # type: ignore[typeddict-item,misc]
+                            for tag_id in tag_spec["$nor"]:  # type: ignore[typeddict-item]
                                 used_tags.add((tag_group_id, tag_id))
                             continue
 

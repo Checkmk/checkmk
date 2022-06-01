@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
+# tyxpe: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
 # pylint: disable=no-else-return
 
 
@@ -14,7 +14,7 @@ def scan_fireeye(oid):
 
 def inventory_fireeye_generic(info, has_item, has_params=False):
     if info:
-        params = None
+        params: dict | None = None
         if has_params:
             params = {}
         for line in info:
@@ -40,7 +40,7 @@ def check_fireeye_states(states):
             "2": (2, "unhealthy"),
         },
     }
-    states_evaluated = {}
+    states_evaluated: dict = {}
     for what, text in states:
         states_evaluated.setdefault(
             text, map_states[text.lower()].get(what.lower(), (2, "not %s" % what.lower()))

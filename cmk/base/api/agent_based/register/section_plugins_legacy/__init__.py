@@ -20,7 +20,7 @@ from cmk.base.api.agent_based.type_defs import (
     StringTable,
 )
 
-from .convert_scan_functions import create_detect_spec  # type: ignore[attr-defined]
+from .convert_scan_functions import create_detect_spec
 
 LayoutRecoverSuboids = List[Tuple[str]]
 

@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
+# tyxpe: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
 # pylint: disable=no-else-continue
 
 
@@ -19,7 +19,9 @@ def preparse_emcvnx_info(info):
                 pass
         return value
 
-    preparsed, errors, skip_lines = [], set(), 0
+    preparsed: list = []
+    errors = set()
+    skip_lines = 0
     for line in info:
         line = [x.strip() for x in line]
         if len(line) == 1:
@@ -35,6 +37,7 @@ def preparse_emcvnx_info(info):
             tmp = key.split()
             key, value = " ".join(tmp[:-1]), tmp[-1]
 
+        error: list[str]
         if key.startswith("Error"):
             skip_lines, error = 1, []
         elif key.startswith("Unable to validate the identity of the server"):

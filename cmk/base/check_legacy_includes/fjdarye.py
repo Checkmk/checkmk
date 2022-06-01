@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
+# tyxpe: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
 # pylint: disable=no-else-return
 
 # check_mk plugin to monitor Fujitsu storage systems supporting FJDARY-E60.MIB or FJDARY-E100.MIB
@@ -69,7 +69,7 @@ fjdarye_disks_status = {
 
 
 def parse_fjdarye_disks(info):
-    parsed = {}
+    parsed: dict = {}
     for idx, disk_state in info:
         state, state_readable = fjdarye_disks_status.get(
             disk_state,
@@ -133,7 +133,7 @@ def check_fjdarye_disks(item, params, parsed):
 
 
 def fjdarye_disks_summary(parsed):
-    states = {}
+    states: dict = {}
     for attrs in parsed.values():
         if attrs["state_disk"] != "3":
             states.setdefault(attrs["state_readable"], 0)

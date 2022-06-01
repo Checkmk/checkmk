@@ -6,11 +6,9 @@
 
 import errno
 import os
-import signal
 import time
 from functools import partial
 from random import Random
-from types import FrameType
 from typing import Callable, IO, Literal, Optional, Tuple, Union
 
 import cmk.utils.paths
@@ -18,6 +16,7 @@ import cmk.utils.tty as tty
 from cmk.utils.check_utils import ServiceCheckResult
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import console
+from cmk.utils.timeout import Timeout
 from cmk.utils.type_defs import HostName, KeepaliveAPI, ServiceDetails, ServiceName, ServiceState
 
 Submitter = Callable[
@@ -152,11 +151,7 @@ def _submit_via_keepalive(
 
 
 # Filedescriptor to open nagios command pipe.
-_nagios_command_pipe: Union[bool, IO[bytes], None] = None
-
-
-def _core_pipe_open_timeout(signum: int, stackframe: Optional[FrameType]) -> None:
-    raise IOError("Timeout while opening pipe")
+_nagios_command_pipe: Union[Literal[False], IO[bytes], None] = None
 
 
 def _open_command_pipe() -> None:
@@ -168,15 +163,13 @@ def _open_command_pipe() -> None:
                 "Missing core command pipe '%s'" % cmk.utils.paths.nagios_command_pipe_path
             )
         try:
-            signal.signal(signal.SIGALRM, _core_pipe_open_timeout)
-            signal.alarm(3)  # three seconds to open pipe
-            _nagios_command_pipe = open(  # pylint:disable=consider-using-with
-                cmk.utils.paths.nagios_command_pipe_path, "wb"
-            )
-            signal.alarm(0)  # cancel alarm
-        except Exception as e:
+            with Timeout(3, message="Timeout after 3 seconds"):
+                _nagios_command_pipe = open(  # pylint:disable=consider-using-with
+                    cmk.utils.paths.nagios_command_pipe_path, "wb"
+                )
+        except Exception as exc:
             _nagios_command_pipe = False
-            raise MKGeneralException("Error writing to command pipe: %s" % e)
+            raise MKGeneralException(f"Error opening command pipe: {exc!r}") from exc
 
 
 def _submit_via_command_pipe(

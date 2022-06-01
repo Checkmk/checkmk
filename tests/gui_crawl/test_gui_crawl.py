@@ -10,6 +10,7 @@ import io
 import json
 import logging
 import os
+import pprint
 import re
 import tarfile
 import time
@@ -137,6 +138,15 @@ class CrawlResult:
     duration: float = 0.0
     skipped: Optional[CrawlSkipInfo] = None
     errors: MutableSequence[ErrorResult] = field(default_factory=list)
+
+
+def format_js_error(error: playwright.async_api.Error) -> str:
+    data = {
+        "message": error.message,
+        "name": error.name,
+        "stack": error.stack,
+    }
+    return pprint.pformat(data)
 
 
 class Crawler:
@@ -348,7 +358,11 @@ class Crawler:
             )
             logs.append(f"{msg.type}: {msg.text} ({location})")
 
+        async def handle_page_error(error: playwright.async_api.Error) -> None:
+            logs.append(format_js_error(error))
+
         page = await browser.new_page(storage_state=storage_state)
+        page.on("pageerror", handle_page_error)
         page.on("console", handle_console_messages)
         try:
             await page.goto(url.url, timeout=60 * 1000)

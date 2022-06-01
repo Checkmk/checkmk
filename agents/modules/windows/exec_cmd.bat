@@ -13,6 +13,8 @@
 if "%3" == "" powershell Write-Host "Usage: exec_cmd cmd 3.9 7" -foreground red && exit /b 1
 set PY_VER=%2
 set PY_SUBVER=%3
+:: remove dot from the PY_VER
+set PY_VER_COMPACT=%PY_VER:.=%
 
 :: This is shortcut to fit path in Windows limit of 260 symbols.
 set temp=c:\temp
@@ -27,7 +29,7 @@ set cur_dir=%cd%
 :: Points to the doc to build, which may not be build and must be just set to empty file
 set chm_368=%cur_dir%\python\%PY_VER%\%p_full_name%\Doc\build\htmlhelp\python368.chm
 set chm_dir=%cur_dir%\python\%PY_VER%\%p_full_name%\Doc\build\htmlhelp
-set chm_file=%chm_dir%\python39%PY_SUBVER%.chm
+set chm_file=%chm_dir%\python%PY_VER_COMPACT%%PY_SUBVER%.chm
 
 :: msiexec doesn't understand relative paths, we have to normalize
 call :NORMALIZEPATH "%cur_dir%\..\..\..\omd\packages\Python\windows\python-3.4.4.msi"

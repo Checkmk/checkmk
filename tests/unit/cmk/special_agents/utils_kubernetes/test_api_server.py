@@ -260,15 +260,11 @@ def test_decompose_git_version(
     logs: Sequence[str],
     caplog,
 ):
-
-    assert result == decompose_git_version(git_version)
+    with caplog.at_level(logging.WARN):
+        assert result == decompose_git_version(git_version)
     assert [formatter.format(record) for record in caplog.records] == logs
 
 
-@pytest.mark.skip(
-    reason="This test is causes the resilience tests to fail for unknown reasons. "
-    "Further investigation required."
-)
 @pytest.mark.parametrize(
     "kubernetes_version, logs",
     [
@@ -307,8 +303,8 @@ def test__verify_version_support_continue_processing(
     logs: Sequence[str],
     caplog,
 ):
-
-    _verify_version_support(kubernetes_version)
+    with caplog.at_level(logging.WARN):
+        _verify_version_support(kubernetes_version)
     assert [formatter.format(record) for record in caplog.records] == logs
 
 

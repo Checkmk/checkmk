@@ -1,0 +1,13 @@
+Title: Clustering fixed for legacy check plugins
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1654079787
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p2
+
+Legacy plugins can be clustered using the aggregation options: best node wins, worst node wins, and failover.
+
+No user interaction required.

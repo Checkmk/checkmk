@@ -64,7 +64,8 @@ def test_discover_scaleio_devices(scaleio_devices: CheckPlugin) -> None:
                 ),
                 Result(
                     state=State.OK,
-                    notice=(
+                    summary="2 additional details available",
+                    details=(
                         "Device afab08b100000002: Error: device error, State: error (ID: afab08b100000002, Storage pool ID: 5981e28b00000001)\n"
                         "Device afab08ec00000000: Error: n/a, State: n/a (ID: afab08ec00000000, Storage pool ID: n/a)"
                     ),

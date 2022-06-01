@@ -27,7 +27,7 @@ use_parentheses = "True"
 ensure_newline_before_comments = "True"
 order_by_type = "False"
 line_length = 100
-py_version = "39"
+py_version = "310"
 
 
 [tool.black]

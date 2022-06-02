@@ -176,57 +176,54 @@ def _execute_checkmk_checks(
     config_cache = config.get_config_cache()
     host_config = config_cache.get_host_config(hostname)
     exit_spec = host_config.exit_code_spec()
-    try:
-        license_usage.try_history_update()
-        services = config.resolve_service_dependencies(
-            host_name=hostname,
-            services=sorted(
-                check_table.get_check_table(hostname).values(),
-                key=lambda service: service.description,
-            ),
-        )
-        broker, source_results = make_broker(
-            fetched=fetched,
-            selected_sections=selected_sections,
-            file_cache_max_age=host_config.max_cachefile_age,
-        )
-        with CPUTracker() as tracker:
-            service_results = check_host_services(
-                config_cache=config_cache,
-                host_config=host_config,
-                ipaddress=ipaddress,
-                parsed_sections_broker=broker,
-                services=services,
-                run_plugin_names=run_plugin_names,
-                dry_run=dry_run,
-                show_perfdata=show_perfdata,
-            )
-            if run_plugin_names is EVERYTHING:
-                inventory.do_inventory_actions_during_checking_for(
-                    config_cache,
-                    host_config,
-                    parsed_sections_broker=broker,
-                )
-            timed_results = [
-                *check_sources(
-                    source_results=source_results,
-                    include_ok_results=True,
-                ),
-                *check_parsing_errors(
-                    errors=broker.parsing_errors(),
-                ),
-                *_check_plugins_missing_data(
-                    service_results,
-                    exit_spec,
-                ),
-            ]
-        return ActiveCheckResult.from_subresults(
-            *timed_results,
-            _timing_results(tracker.duration, [fetched_entry[1] for fetched_entry in fetched]),
-        )
 
-    finally:
-        _submit_to_core.finalize()
+    license_usage.try_history_update()
+    services = config.resolve_service_dependencies(
+        host_name=hostname,
+        services=sorted(
+            check_table.get_check_table(hostname).values(),
+            key=lambda service: service.description,
+        ),
+    )
+    broker, source_results = make_broker(
+        fetched=fetched,
+        selected_sections=selected_sections,
+        file_cache_max_age=host_config.max_cachefile_age,
+    )
+    with CPUTracker() as tracker:
+        service_results = check_host_services(
+            config_cache=config_cache,
+            host_config=host_config,
+            ipaddress=ipaddress,
+            parsed_sections_broker=broker,
+            services=services,
+            run_plugin_names=run_plugin_names,
+            dry_run=dry_run,
+            show_perfdata=show_perfdata,
+        )
+        if run_plugin_names is EVERYTHING:
+            inventory.do_inventory_actions_during_checking_for(
+                config_cache,
+                host_config,
+                parsed_sections_broker=broker,
+            )
+        timed_results = [
+            *check_sources(
+                source_results=source_results,
+                include_ok_results=True,
+            ),
+            *check_parsing_errors(
+                errors=broker.parsing_errors(),
+            ),
+            *_check_plugins_missing_data(
+                service_results,
+                exit_spec,
+            ),
+        ]
+    return ActiveCheckResult.from_subresults(
+        *timed_results,
+        _timing_results(tracker.duration, [fetched_entry[1] for fetched_entry in fetched]),
+    )
 
 
 def _timing_results(
@@ -395,22 +392,25 @@ def _submit_aggregated_results(
         keepalive=get_keepalive(cmk_version.edition()),
     )
 
-    for submittable in submittables:
-        if not submittable.submit:
-            console.verbose(
-                f"{submittable.service.description:20} PEND - {submittable.result.output}\n"
-            )
-            continue
+    try:
+        for submittable in submittables:
+            if not submittable.submit:
+                console.verbose(
+                    f"{submittable.service.description:20} PEND - {submittable.result.output}\n"
+                )
+                continue
 
-        _submit_to_core.check_result(
-            host_name=host_name,
-            service_name=submittable.service.description,
-            result=submittable.result,
-            submitter=submitter,
-            cache_info=submittable.cache_info,
-            show_perfdata=show_perfdata,
-            perfdata_format="pnp" if config.perfdata_format == "pnp" else "standard",
-        )
+            _submit_to_core.check_result(
+                host_name=host_name,
+                service_name=submittable.service.description,
+                result=submittable.result,
+                submitter=submitter,
+                cache_info=submittable.cache_info,
+                show_perfdata=show_perfdata,
+                perfdata_format="pnp" if config.perfdata_format == "pnp" else "standard",
+            )
+    finally:
+        _submit_to_core.finalize()
 
 
 def get_aggregated_result(

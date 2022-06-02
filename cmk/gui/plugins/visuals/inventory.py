@@ -10,6 +10,7 @@ from typing import List, Optional, Tuple, Union
 
 import cmk.utils.defines as defines
 
+import cmk.gui.inventory as inventory
 import cmk.gui.query_filters as query_filters
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
@@ -46,13 +47,20 @@ class FilterInvtableText(InputTextFilter):
 
 
 class FilterInvText(InputTextFilter):
-    def __init__(self, *, ident: str, title: str, inv_path: str, is_show_more: bool = True) -> None:
+    def __init__(
+        self,
+        *,
+        ident: str,
+        title: str,
+        inventory_path: inventory.InventoryPath,
+        is_show_more: bool = True,
+    ) -> None:
         super().__init__(
             title=title,
             sort_index=800,
             info="host",
             query_filter=query_filters.TableTextQuery(
-                ident=ident, row_filter=query_filters.filter_by_host_inventory(inv_path)
+                ident=ident, row_filter=query_filters.filter_by_host_inventory(inventory_path)
             ),
             show_heading=False,
             is_show_more=is_show_more,
@@ -102,7 +110,7 @@ class FilterInvFloat(FilterNumberRange):
         *,
         ident: str,
         title: str,
-        inv_path: str,
+        inventory_path: inventory.InventoryPath,
         unit: Optional[str],
         scale: Optional[float],
         is_show_more: bool = True,
@@ -114,7 +122,7 @@ class FilterInvFloat(FilterNumberRange):
             query_filter=query_filters.NumberRangeQuery(
                 ident=ident,
                 filter_livestatus=False,
-                filter_row=query_filters.filter_in_host_inventory_range(inv_path),
+                filter_row=query_filters.filter_in_host_inventory_range(inventory_path),
                 request_var_suffix="",
                 bound_rescaling=scale if scale is not None else 1.0,
             ),
@@ -244,7 +252,14 @@ class FilterInvtableInterfaceType(DualListFilter):
 
 
 class FilterInvBool(FilterOption):
-    def __init__(self, *, ident: str, title: str, inv_path: str, is_show_more: bool = True) -> None:
+    def __init__(
+        self,
+        *,
+        ident: str,
+        title: str,
+        inventory_path: inventory.InventoryPath,
+        is_show_more: bool = True,
+    ) -> None:
         super().__init__(
             title=title,
             sort_index=800,
@@ -252,7 +267,7 @@ class FilterInvBool(FilterOption):
             query_filter=query_filters.TristateQuery(
                 ident=ident,
                 filter_code=lambda x: "",  # No Livestatus filtering right now
-                filter_row=query_filters.inside_inventory(inv_path),
+                filter_row=query_filters.inside_inventory(inventory_path),
             ),
             is_show_more=is_show_more,
         )

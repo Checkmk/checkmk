@@ -233,10 +233,12 @@ def test_query_row_multi_table_inventory_add_columns(monkeypatch):
     ],
 )
 def test__cmp_inventory_node(monkeypatch, val_a, val_b, result):
-    monkeypatch.setattr(cmk.gui.inventory, "get_inventory_attribute", lambda val, path: val)
+    monkeypatch.setattr(cmk.gui.inventory, "get_attribute", lambda val, path: val)
     assert (
         cmk.gui.views.inventory._cmp_inventory_node(
-            {"host_inventory": val_a}, {"host_inventory": val_b}, "any-path"
+            {"host_inventory": val_a},
+            {"host_inventory": val_b},
+            cmk.gui.inventory.InventoryPath.parse(".any.path"),
         )
         == result
     )

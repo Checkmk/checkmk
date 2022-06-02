@@ -55,7 +55,6 @@ from cmk.gui.valuespec import TextInput, ValueSpec
 #     parses visible, internal tree paths for contact groups etc.
 # => Should be unified one day.
 
-InventoryValue = Union[None, str, int, float]
 InventoryRows = List[SDRow]
 
 
@@ -67,8 +66,9 @@ def get_inventory_table(tree: StructuredDataNode, raw_path: SDRawPath) -> Option
     return None if table is None else table.rows
 
 
-def get_inventory_attribute(tree: StructuredDataNode, raw_path: SDRawPath) -> InventoryValue:
-    inventory_path = InventoryPath.parse(raw_path)
+def get_attribute(
+    tree: StructuredDataNode, inventory_path: InventoryPath
+) -> Union[None, str, int, float]:
     if inventory_path.source != TreeSource.attributes or not inventory_path.key:
         return None
     attributes = tree.get_attributes(inventory_path.path)

@@ -1126,7 +1126,11 @@ def test_filters_filter_table(request_context, test, monkeypatch):
 
     # Needed for FilterInvFloat test
     monkeypatch.setattr(cmk.gui.inventory, "get_inventory_table", get_inventory_table_patch)
-    monkeypatch.setattr(cmk.gui.inventory, "get_inventory_attribute", get_inventory_table_patch)
+    monkeypatch.setattr(
+        cmk.gui.inventory,
+        "get_attribute",
+        lambda t, p: {cmk.gui.inventory.InventoryPath.parse(k): v for k, v in t.items()}[p],
+    )
 
     # Needed for FilterAggrServiceUsed test
     def is_part_of_aggregation_patch(host, service):

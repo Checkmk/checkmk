@@ -929,6 +929,7 @@ def _declare_inv_column(raw_path: SDRawPath, raw_hint: InventoryHintSpec) -> Non
         name = "inv_" + raw_path.replace(":", "_").replace(".", "_").strip("_")
 
     hint = _make_hint_from_raw(raw_path, raw_hint)
+    inventory_path = inventory.InventoryPath.parse(raw_path)
 
     # Declare column painter
     painter_spec = {
@@ -956,7 +957,7 @@ def _declare_inv_column(raw_path: SDRawPath, raw_hint: InventoryHintSpec) -> Non
         # not look good for the HW/SW inventory tree
         "printable": isinstance(hint, AttributeDisplayHint),
         "load_inv": True,
-        "paint": lambda row: _paint_host_inventory_tree(row, raw_path),
+        "paint": lambda row: _paint_host_inventory_tree(row, inventory_path),
         "sorter": name,
     }
 
@@ -968,11 +969,11 @@ def _declare_inv_column(raw_path: SDRawPath, raw_hint: InventoryHintSpec) -> Non
         register_sorter(
             name,
             {
-                "_inv_path": raw_path,
+                "_inventory_path": inventory_path,
                 "title": _("Inventory") + ": " + hint.long_title,
                 "columns": ["host_inventory", "host_structured_status"],
                 "load_inv": True,
-                "cmp": lambda self, a, b: _cmp_inventory_node(a, b, self._spec["_inv_path"]),
+                "cmp": lambda self, a, b: _cmp_inventory_node(a, b, self._spec["_inventory_path"]),
             },
         )
 
@@ -982,7 +983,7 @@ def _declare_inv_column(raw_path: SDRawPath, raw_hint: InventoryHintSpec) -> Non
                 FilterInvText(
                     ident=name,
                     title=hint.long_title,
-                    inv_path=raw_path,
+                    inventory_path=inventory_path,
                     is_show_more=hint.is_show_more,
                 )
             )
@@ -991,7 +992,7 @@ def _declare_inv_column(raw_path: SDRawPath, raw_hint: InventoryHintSpec) -> Non
                 FilterInvBool(
                     ident=name,
                     title=hint.long_title,
-                    inv_path=raw_path,
+                    inventory_path=inventory_path,
                     is_show_more=hint.is_show_more,
                 )
             )
@@ -1001,7 +1002,7 @@ def _declare_inv_column(raw_path: SDRawPath, raw_hint: InventoryHintSpec) -> Non
                 FilterInvFloat(
                     ident=name,
                     title=hint.long_title,
-                    inv_path=raw_path,
+                    inventory_path=inventory_path,
                     unit=filter_info.get("unit"),
                     scale=filter_info.get("scale", 1.0),
                     is_show_more=hint.is_show_more,
@@ -1018,14 +1019,16 @@ def _make_hint_from_raw(
 
 
 def _cmp_inventory_node(
-    a: Dict[str, StructuredDataNode], b: Dict[str, StructuredDataNode], raw_path: SDRawPath
+    a: Dict[str, StructuredDataNode],
+    b: Dict[str, StructuredDataNode],
+    inventory_path: inventory.InventoryPath,
 ) -> int:
-    val_a = inventory.get_inventory_attribute(a["host_inventory"], raw_path)
-    val_b = inventory.get_inventory_attribute(b["host_inventory"], raw_path)
+    val_a = inventory.get_attribute(a["host_inventory"], inventory_path)
+    val_b = inventory.get_attribute(b["host_inventory"], inventory_path)
     return _decorate_sort_func(_cmp_inv_generic)(val_a, val_b)
 
 
-def _paint_host_inventory_tree(row: Row, raw_path: SDRawPath) -> CellSpec:
+def _paint_host_inventory_tree(row: Row, inventory_path: inventory.InventoryPath) -> CellSpec:
     try:
         _validate_inventory_tree_uniqueness(row)
     except MultipleInventoryTreesError:
@@ -1036,8 +1039,6 @@ def _paint_host_inventory_tree(row: Row, raw_path: SDRawPath) -> CellSpec:
         return "", ""
 
     assert isinstance(struct_tree, StructuredDataNode)
-
-    inventory_path = inventory.InventoryPath.parse(raw_path)
 
     if (node := struct_tree.get_node(inventory_path.path)) is None:
         return "", ""

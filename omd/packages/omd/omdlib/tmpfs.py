@@ -35,8 +35,9 @@ import time
 from pathlib import Path
 from typing import Optional
 
+from omdlib.console import ok
 from omdlib.contexts import SiteContext
-from omdlib.utils import delete_directory_contents, is_dockerized, ok
+from omdlib.utils import delete_directory_contents, is_dockerized
 from omdlib.version_info import VersionInfo
 
 import cmk.utils.tty as tty

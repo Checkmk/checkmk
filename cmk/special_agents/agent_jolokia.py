@@ -12,6 +12,7 @@ from typing import List
 
 # TODO: is there a better way to do this?
 import cmk.utils.paths
+from cmk.utils.password_store import replace_passwords
 
 from cmk.special_agents.utils import vcrtrace
 
@@ -54,6 +55,7 @@ def parse_arguments(argv):
 
 def main(sys_argv=None):
     if sys_argv is None:
+        replace_passwords()
         sys_argv = sys.argv[1:]
 
     args = parse_arguments(sys_argv)

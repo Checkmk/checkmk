@@ -69,6 +69,7 @@ update-pos:
 	# We are back in the Checkmk repo
 	if [[ -s $$MSGFMT_OUT ]]; then \
 		echo "ERROR: Non-empty msgfmt output"; \
+		rsync -av ./ ~/locale_with_errors; \
 		git reset --hard; \
 		exit 1; \
 	fi

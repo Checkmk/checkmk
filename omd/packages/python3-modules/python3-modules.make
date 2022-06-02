@@ -91,7 +91,7 @@ $(PYTHON3_MODULES_BUILD): $(PYTHON_CACHE_PKG_PROCESS) $(OPENSSL_CACHE_PKG_PROCES
 # Cleanup unneeded test files of numpy
 	$(RM) -r $(PYTHON3_MODULES_INSTALL_DIR)/lib/python$(PYTHON_MAJOR_DOT_MINOR)/site-packages/numpy/*/tests
 # Fix python interpreter for kept scripts
-	$(SED) -i '1s|^#!.*/python3$$|#!/usr/bin/env python3|' $(PYTHON3_MODULES_INSTALL_DIR)/bin/[!_]*
+	$(SED) -E -i '1s|^#!.*/python3?$$|#!/usr/bin/env python3|' $(PYTHON3_MODULES_INSTALL_DIR)/bin/[!_]*
 # pip is using pip._vendor.distlib.scripts.ScriptMaker._build_shebang() to
 # build the shebang of the scripts installed to bin. When executed via our CI
 # containers, the shebang exceeds the max_shebang_length of 127 bytes. For this

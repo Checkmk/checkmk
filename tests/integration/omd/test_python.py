@@ -74,7 +74,7 @@ def test_03_python_path(site: Site):
         # there may be more, but these have to occur in this order:
         site.root + "/local/lib/python3",
         site.root + "/lib/python3/plus",
-        site.root + "/lib/python3.9",
+        site.root + "/lib/python3.10",
         site.root + "/lib/python3",
     ]
     assert [s for s in sys_path if s in ordered_path_elements] == ordered_path_elements

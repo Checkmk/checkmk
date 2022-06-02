@@ -19,7 +19,6 @@
 .testmondata
 .venv.lock
 .venv/
-.docker_workspace/
 *.cookie
 *.gcno
 *.gcov

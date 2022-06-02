@@ -1,0 +1,12 @@
+Title: Accomodate large agent output
+Class: fix
+Compatible: compat
+Component: cmc
+Date: 1654164946
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.0.0p26
+
+The protocol used between the fetchers and the core could only accomodate
+payloads up to ca. 100 MB.  This limit has been increased significantly.

@@ -2,7 +2,7 @@ NET_SNMP := net-snmp
 NET_SNMP_VERS := 5.9.1
 NET_SNMP_DIR := $(NET_SNMP)-$(NET_SNMP_VERS)
 # Increase this to enforce a recreation of the build cache
-NET_SNMP_BUILD_ID := 2
+NET_SNMP_BUILD_ID := 3
 
 NET_SNMP_PATCHING := $(BUILD_HELPER_DIR)/$(NET_SNMP_DIR)-patching
 NET_SNMP_BUILD := $(BUILD_HELPER_DIR)/$(NET_SNMP_DIR)-build

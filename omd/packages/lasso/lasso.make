@@ -2,7 +2,7 @@ LASSO := lasso
 LASSO_VERS := 2.7.0
 LASSO_DIR := $(LASSO)-$(LASSO_VERS)
 # Increase this to enforce a recreation of the build cache
-LASSO_BUILD_ID := 1
+LASSO_BUILD_ID := 2
 
 LASSO_BUILD := $(BUILD_HELPER_DIR)/$(LASSO_DIR)-build
 LASSO_UNPACK := $(BUILD_HELPER_DIR)/$(LASSO_DIR)-unpack

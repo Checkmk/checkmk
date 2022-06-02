@@ -3,7 +3,7 @@ PROTOBUF := protobuf
 PROTOBUF_VERS := 3.20.1
 PROTOBUF_DIR := $(PROTOBUF)-$(PROTOBUF_VERS)
 # Increase this to enforce a recreation of the build cache
-PROTOBUF_BUILD_ID := 3
+PROTOBUF_BUILD_ID := 5
 
 PROTOBUF_PATCHING := $(BUILD_HELPER_DIR)/$(PROTOBUF_DIR)-patching
 PROTOBUF_CONFIGURE := $(BUILD_HELPER_DIR)/$(PROTOBUF_DIR)-configure

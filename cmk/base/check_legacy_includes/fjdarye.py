@@ -172,8 +172,7 @@ def check_fjdarye_disks_summary(index, params, parsed):
     use_devices_states = False
     if "use_device_states" in params:
         use_devices_states = params["use_device_states"]
-        del params["use_device_states"]
-    expected_state = params
+    expected_state = {k: v for k, v in params.items() if k != "use_device_states"}
 
     current_state = fjdarye_disks_summary(parsed)
     infotext = fjdarye_disks_printstates(current_state)
@@ -218,17 +217,17 @@ def check_fjdarye_rluns(item, _no_params, info):
     for line in info:
         if item == line[0]:
             rawdata = line[1]
-            if rawdata[3] != "\xa0":
+            if rawdata[3] != "\xa0":  # space
                 return (2, "RLUN is not present")
-            elif rawdata[2] == "\x08":
+            elif rawdata[2] == "\x08":  # backspace
                 return (1, "RLUN is rebuilding")
-            elif rawdata[2] == "\x07":
+            elif rawdata[2] == "\x07":  # ring terminal bell
                 return (1, "RLUN copyback in progress")
-            elif rawdata[2] == "\x41":
+            elif rawdata[2] == "\x41":  # A
                 return (1, "RLUN spare is in use")
-            elif rawdata[2] == "B":
+            elif rawdata[2] == "B":  # \x42
                 return (0, "RLUN is in RAID0 state")  # assumption state 42
-            elif rawdata[2] == "\x00":
+            elif rawdata[2] == "\x00":  # null byte
                 return (0, "RLUN is in normal state")  # assumption
             return (2, "RLUN in unknown state %02x" % ord(rawdata[2]))
     return None

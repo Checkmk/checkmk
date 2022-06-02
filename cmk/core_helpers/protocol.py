@@ -512,10 +512,10 @@ class CMCHeader(Serializer, Deserializer):
       LOGLEVEL - 8 bytes log level, '        ' for 'RESULT' and 'ENDREPL',
                  for 'LOG' one of 'emergenc', 'alert   ', 'critical',
                  'error   ', 'warning ', 'notice  ', 'info    ', 'debug   '
-      SIZE     - 8 bytes text 0..9
+      SIZE     - 16 bytes text 0..9  (54 bits, unsigned)
 
     Example:
-        b"base0:RESULT :        :12345678:"
+        b"base0:RESULT :        :1234567812345678:"
 
     This is first(transport) layer protocol.
     Used to
@@ -529,8 +529,8 @@ class CMCHeader(Serializer, Deserializer):
         LOG = "LOG    "
         END_OF_REPLY = "ENDREPL"
 
-    fmt = "{:<5}:{:<7}:{:<8}:{:<8}:"
-    length = 32
+    fmt = "{:<5}:{:<7}:{:<8}:{:<16}:"
+    length = 40
 
     def __init__(
         self,

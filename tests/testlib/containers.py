@@ -422,6 +422,7 @@ def _container_env(version: CMKVersion) -> Dict[str, str]:
         "EDITION": version.edition_short,
         "BRANCH": version.branch(),
         "RESULT_PATH": "/results",
+        "CI": os.environ.get("CI", ""),
         # Write to this result path by default (may be overridden e.g. by integration tests)
         "PYTEST_ADDOPTS": os.environ.get("PYTEST_ADDOPTS", "") + " --junitxml=/results/junit.xml",
     }

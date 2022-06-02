@@ -109,6 +109,7 @@ STAGES:
       ENV_VARS:
         JUNIT_XML: "--junit-xml ${RESULTS}/mypy.xml"
         MYPY_ADDOPTS: "--no-color-output"
+        CI: "true"
       COMMAND: 'make --quiet test-mypy-docker'
       TEXT_ON_SKIP: 'No Python files changed'
       RESULT_CHECK_TYPE: "MYPY"
@@ -119,6 +120,7 @@ STAGES:
       DIR: 'tests'
       ENV_VARS:
         PYTHON_FILES: "${CHANGED_PYTHON_FILES}"
+        CI: "true"
       COMMAND: "make --quiet test-format-python-docker &> ${RESULTS}/python-format.txt"
       TEXT_ON_SKIP: 'No Python files changed'
       RESULT_CHECK_TYPE: "GCC"
@@ -129,6 +131,7 @@ STAGES:
       DIR: 'tests'
       ENV_VARS:
         PYTEST_ADDOPTS: "--junitxml=${RESULTS}/python3-unit-junit.xml --color=no"
+        CI: "true"
       COMMAND: "make test-unit-docker"
       TEXT_ON_SKIP: 'No Python files changed'
       RESULT_CHECK_FILE_PATTERN: "results/python3-unit-junit.xml"
@@ -141,6 +144,7 @@ STAGES:
         # concantenated for pylint (See tests/pylint/test_pylint.py)
         WORKDIR: "${WORKSPACE}/tmp"
         PYLINT_ARGS: "--output-format=cmk_parseable"
+        CI: "true"
       COMMAND: "make test-pylint-docker &> ${RESULTS}/pylint.txt"
       TEXT_ON_SKIP: 'Neither .pylintrc nor Python files changed'
       RESULT_CHECK_TYPE: "PYLINT"
@@ -261,6 +265,8 @@ STAGES:
 
     - NAME: 'Software Documentation Generation'
       ONLY_WHEN_NOT_EMPTY: CHANGED_SW_DOC_FILES,CHANGED_MAKEFILE
+      ENV_VARS:
+        CI: "true"
       COMMAND: "make sw-documentation-docker &> ${RESULTS}/sw-documentation.txt"
       TEXT_ON_SKIP: 'No SW Documentation files changed'
       RESULT_CHECK_FILE_PATTERN: "results/sw-documentation.txt"

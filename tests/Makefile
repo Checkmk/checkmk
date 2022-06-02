@@ -161,6 +161,7 @@ $(foreach VERS,$(PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-docker):
 	    --rm \
 	    $(DOCKER_ADDOPTS) \
 	    -e "PYTEST_ADDOPTS" \
+	    -e "CI" \
 	    -u $$(id -u):$$(id -g) \
 	    -v "$$TEST_PATH:/tests" \
 	    -v "$(realpath agent-plugin-unit)/datasets:/tests/datasets" \

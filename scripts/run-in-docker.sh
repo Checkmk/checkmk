@@ -37,6 +37,7 @@ docker run -t -a stdout -a stderr \
     -e PYTHON_FILES \
     -e RESULTS \
     -e WORKDIR \
+    -e CI \
     ${DOCKER_RUN_ADDOPTS} \
     "${IMAGE_ID}" \
     "$@"

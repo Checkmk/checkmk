@@ -66,6 +66,23 @@ timeout(time: 12, unit: 'HOURS') {
                 BUILD_IMAGE.inside("--ulimit nofile=1024:1024 --group-add=${DOCKER_GROUP_ID} -v /var/run/docker.sock:/var/run/docker.sock") {
 
                     if (params.PUSH_TO_REGISTRY_ONLY) {
+                        stage("Deploy docker tar") {
+                            upload.download_docker_tar(INTERNAL_DEPLOY_DEST, INTERNAL_DEPLOY_PORT, CMK_VERS, PACKAGE_DIR + "/download/" + CMK_VERS, EDITION)
+                            withCredentials([file(credentialsId: 'Release_Key', variable: 'RELEASE_KEY')]) {
+                                sh """
+                                    cd ${PACKAGE_DIR}/${CMK_VERS}
+                                    rsync -av --relative \
+                                        --exclude '*dbgsym*.deb' \
+                                        -e "ssh -o StrictHostKeyChecking=no -i ${RELEASE_KEY} -p 52022" \
+                                        ${PACKAGE_DIR}/./${CMK_VERS}/check-mk-*-docker-*.tar.gz \
+                                        ${WEB_DEPLOY_DEST}
+                                """
+                            }
+
+                        }
+                    }
+
+                    if (params.PUSH_TO_REGISTRY_ONLY) {
                         stage('Push previously built image') {
                             def CREDENTIALS_ID = registry_credentials_id()
                             withCredentials([
@@ -99,6 +116,15 @@ timeout(time: 12, unit: 'HOURS') {
                             """
                         }
                     }
+
+                    upload.upload(
+                        NAME: "check-mk-${EDITION}-docker-${CMK_VERS}.tar.gz",
+                        FILE_PATH: "${PACKAGE_DIR}/download/${CMK_VERS}",
+                        FILE_NAME: "check-mk-${EDITION}-docker-${CMK_VERS}.tar.gz",
+                        CMK_VERS: CMK_VERS,
+                        UPLOAD_DEST: INTERNAL_DEPLOY_DEST,
+                        PORT: INTERNAL_DEPLOY_PORT,
+                    )
 
                     stage('Upload image to download mirror') {
                         if (params.PUSH_TO_REGISTRY) {

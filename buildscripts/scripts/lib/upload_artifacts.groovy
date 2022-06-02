@@ -27,6 +27,11 @@ def download_source_tar(DOWNLOAD_SOURCE, PORT, CMK_VERSION, DOWNLOAD_DEST, EDITI
     download_version_dir(DOWNLOAD_SOURCE, PORT, CMK_VERSION, DOWNLOAD_DEST, FILE_PATTERN, 'source tar')
 }
 
+def download_docker_tar(DOWNLOAD_SOURCE, PORT, CMK_VERSION, DOWNLOAD_DEST, EDITION) {
+    def FILE_PATTERN = "check-mk-${EDITION}-docker-${CMK_VERSION}.tar.gz"
+    download_version_dir(DOWNLOAD_SOURCE, PORT, CMK_VERSION, DOWNLOAD_DEST, FILE_PATTERN, 'docker tar')
+}
+
 def download_version_dir(DOWNLOAD_SOURCE, PORT, CMK_VERSION, DOWNLOAD_DEST, PATTERN = "*", INFO = 'all packages') {
     stage("Download from shared storage (${INFO})") {
         withCredentials([file(credentialsId: 'Release_Key', variable: 'RELEASE_KEY')]) {

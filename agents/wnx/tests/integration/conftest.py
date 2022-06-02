@@ -91,7 +91,6 @@ def setup_all(
     create_protocol_file(data_dir)
     create_legacy_pull_file(data_dir)
     yield
-    shutil.rmtree(main_dir, ignore_errors=True)
 
 
 @pytest.fixture(name="write_config")

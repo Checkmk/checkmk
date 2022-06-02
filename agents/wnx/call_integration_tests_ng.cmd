@@ -33,9 +33,9 @@ py -3 -m pytest tests\integration\%* || set failed=1
 echo fw rules deletion...
 powershell Remove-NetFirewallRule -DisplayName "AllowIntegrationNg1" 2>nul
 powershell Remove-NetFirewallRule -DisplayName "AllowIntegrationNg2" 2>nul
+powershell Remove-NetFirewallRule -DisplayName "AllowIntegration" >nul
 
 call :zip_results
-powershell Remove-NetFirewallRule -DisplayName "AllowIntegration" >nul
 if "%failed%" == "1" (
 powershell Write-Host "Integration Test Failed" -Foreground Red 
 exit /b 0
@@ -45,8 +45,11 @@ exit /b 0
 
 :: NOT REACHABLE
 :zip_results
+echo backing up %arte%\%results% ...
 ren %arte%\%results% %arte%\%results%.sav 2>nul
-pushd %WNX_INTEGRATION_BASE_DIR% && ( call :zip_and_remove & popd )
+echo switch to "%WNX_INTEGRATION_BASE_DIR%"
+dir "%WNX_INTEGRATION_BASE_DIR%"
+pushd "%WNX_INTEGRATION_BASE_DIR%" && ( call :zip_and_remove & popd )
 exit /b
 
 :zip_and_remove
@@ -54,4 +57,5 @@ echo zipping results...
 7z a -r -y -tzip %arte%\%results% >nul 
 echo cleaning...
 rmdir /s/q "%WNX_INTEGRATION_BASE_DIR%" 2>nul
+rmdir "%WNX_INTEGRATION_BASE_DIR%" 2>nul
 exit /b

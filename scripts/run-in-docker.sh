@@ -14,6 +14,13 @@ REPO_DIR="$(git rev-parse --show-toplevel)"
 # in case of worktrees $REPO_DIR might not contain the actual repository clone
 GIT_COMMON_DIR="$(realpath "$(git rev-parse --git-common-dir)")"
 
+# Create directories for build artifacts which we want to have separated
+# in native and containerized builds
+# Here might be coming more, you keep an open eye, too, please
+mkdir -p "${REPO_DIR}/.docker_workspace/venv"
+mkdir -p "${REPO_DIR}/.docker_workspace/omd_build"
+mkdir -p "${REPO_DIR}/.docker_workspace/home"
+
 : "${IMAGE_ALIAS:=IMAGE_TESTING}"
 : "${IMAGE_ID:="$("${REPO_DIR}"/buildscripts/docker_image_aliases/resolve.sh "${IMAGE_ALIAS}")"}"
 
@@ -26,9 +33,13 @@ docker run -t -a stdout -a stderr \
     -u "${UID}:$(id -g)" \
     -v "${REPO_DIR}:${REPO_DIR}" \
     -v "${GIT_COMMON_DIR}:${GIT_COMMON_DIR}" \
+    -v "${REPO_DIR}/.docker_workspace/venv:${REPO_DIR}/.venv" \
+    -v "${REPO_DIR}/.docker_workspace/omd_build:${REPO_DIR}/omd/build" \
+    -v "${REPO_DIR}/.docker_workspace/home:${REPO_DIR}/build_user_home/" \
     -v "/var/run/docker.sock:/var/run/docker.sock" \
     --group-add="$(getent group docker | cut -d: -f3)" \
     -w "${PWD}" \
+    -e HOME="${REPO_DIR}/build_user_home/" \
     -e JUNIT_XML \
     -e PYLINT_ARGS \
     -e PYTEST_ADDOPTS \

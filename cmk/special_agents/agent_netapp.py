@@ -63,6 +63,8 @@ from xml.dom import minidom  # type: ignore[import]
 import requests
 import urllib3
 
+from cmk.utils.password_store import replace_passwords
+
 from cmk.special_agents.utils import vcrtrace
 
 # Hackish early conditional import for legacy mode
@@ -1737,6 +1739,7 @@ section_errors: SectionType = []
 
 def main(argv=None):
     if argv is None:
+        replace_passwords()
         argv = sys.argv[1:]
 
     args = parse_arguments(argv)

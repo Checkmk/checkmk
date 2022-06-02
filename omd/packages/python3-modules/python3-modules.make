@@ -7,6 +7,7 @@ PYTHON3_MODULES_VERS := 1.1
 PYTHON3_MODULES_DIR := $(PYTHON3_MODULES)-$(PYTHON3_MODULES_VERS)
 
 PYTHON3_MODULES_DEPS := $(REPO_PATH)/Pipfile.lock \
+	$(wildcard $(REPO_PATH)/omd/packages/python3-modules/python3-modules.make) \
 	$(wildcard $(REPO_PATH)/agent-receiver/*.py) \
 	$(wildcard $(REPO_PATH)/agent-receiver/agent_receiver/*.py)
 

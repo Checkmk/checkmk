@@ -1105,7 +1105,9 @@ def test_openapi_bulk_discovery_with_default_options(
         content_type="application/json",
     )
     assert resp.json["id"] == "bulk_discovery"
-    assert resp.json["title"].endswith("is active")
+    assert resp.json["title"].endswith("is active") or resp.json["title"].endswith(
+        "is finished"
+    ), resp.json
     assert "active" in resp.json["extensions"]
     assert "state" in resp.json["extensions"]
     assert "result" in resp.json["extensions"]["logs"]

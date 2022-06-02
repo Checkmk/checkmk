@@ -119,16 +119,11 @@ class AuxTagList:
         for aux_tag in self._tags:
             aux_tag.validate()
 
-            # Tag groups were made builtin with ~1.4. Previously users could modify
-            # these groups.  These users now have the modified tag groups in their
-            # user configuration and should be able to cleanup this using the GUI
-            # for the moment.
-            # With 1.7 we use cmk-update-config to enforce the user to cleanup this.
-            # Then we can re-enable this consistency check.
-            # builtin_config = BuiltinTagConfig()
-            # if builtin_config.aux_tag_list.exists(aux_tag.id):
-            #    raise MKGeneralException(
-            #        _("You can not override the builtin auxiliary tag \"%s\".") % aux_tag.id)
+            builtin_config = BuiltinTagConfig()
+            if builtin_config.aux_tag_list.exists(aux_tag.id):
+                raise MKGeneralException(
+                    _('You can not override the builtin auxiliary tag "%s".') % aux_tag.id
+                )
 
             if aux_tag.id in seen:
                 raise MKGeneralException(_('Duplicate tag ID "%s" in auxilary tags') % aux_tag.id)
@@ -457,16 +452,11 @@ class TagConfig:
                 _('The tag group "%s" is reserved for internal use.') % tag_group.id
             )
 
-        # Tag groups were made builtin with ~1.4. Previously users could modify
-        # these groups.  These users now have the modified tag groups in their
-        # user configuration and should be able to cleanup this using the GUI
-        # for the moment.
-        # With 1.7 we use cmk-update-config to enforce the user to cleanup this.
-        # Then we can re-enable this consistency check.
-        # builtin_config = BuiltinTagConfig()
-        # if builtin_config.tag_group_exists(tag_group.id):
-        #    raise MKGeneralException(
-        #        _("You can not override the builtin tag group \"%s\".") % tag_group.id)
+        builtin_config = BuiltinTagConfig()
+        if builtin_config.tag_group_exists(tag_group.id):
+            raise MKGeneralException(
+                _('You can not override the builtin tag group "%s".') % tag_group.id
+            )
 
         if not tag_group.title:
             raise MKGeneralException(

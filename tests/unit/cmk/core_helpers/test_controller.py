@@ -33,8 +33,8 @@ class TestControllerApi:
                 "payload",
                 logging.WARNING,
             )
-            == b"fetch:LOG    :warning :7       :payload"
+            == b"fetch:LOG    :warning :7               :payload"
         )
 
     def test_controller_end_of_reply(self):
-        assert CMCMessage.end_of_reply() == b"fetch:ENDREPL:        :0       :"
+        assert CMCMessage.end_of_reply() == b"fetch:ENDREPL:        :0               :"

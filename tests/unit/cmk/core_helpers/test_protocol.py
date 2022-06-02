@@ -54,12 +54,12 @@ class TestCMCHeader:
     @pytest.mark.parametrize("state", [CMCHeader.State.RESULT, "RESULT "])
     def test_result_header(self, state):
         header = CMCHeader("name", state, "crit", 41)
-        assert header == b"name :RESULT :crit    :41      :"
+        assert header == b"name :RESULT :crit    :41              :"
 
     @pytest.mark.parametrize("state", [CMCHeader.State.LOG, "LOG    "])
     def test_log_header(self, state):
         header = CMCHeader("fetch", state, "crit", 42)
-        assert header == b"fetch:LOG    :crit    :42      :"
+        assert header == b"fetch:LOG    :crit    :42              :"
 
     def test_from_bytes(self):
         header = CMCHeader("fetch", "RESULT ", "crit", 42)
@@ -109,7 +109,7 @@ class TestCMCHeader:
 
     def test_critical_constants(self):
         """ATTENTION: Changing of those constants may require changing of C++ code"""
-        assert CMCHeader.length == 32
+        assert CMCHeader.length == 40
         assert CMCHeader.State.LOG.value == "LOG    "
         assert CMCHeader.State.RESULT.value == "RESULT "
         assert CMCHeader.State.END_OF_REPLY.value == "ENDREPL"

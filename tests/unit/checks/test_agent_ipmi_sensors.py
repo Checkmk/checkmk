@@ -14,14 +14,14 @@ pytestmark = pytest.mark.checks
 
 
 @pytest.mark.parametrize(
-    "params,expected_args",
+    ["params", "expected_args"],
     [
         pytest.param(
             (
                 "freeipmi",
                 {
                     "username": "user",
-                    "password": "password",
+                    "password": ("password", "password"),
                     "privilege_lvl": "user",
                 },
             ),
@@ -32,7 +32,25 @@ pytestmark = pytest.mark.checks
                 "freeipmi",
                 "user",
             ],
-            id="freeipmi with mandatory args only",
+            id="freeipmi with mandatory args only and explicit password",
+        ),
+        pytest.param(
+            (
+                "freeipmi",
+                {
+                    "username": "user",
+                    "password": ("store", "ipmi_sensors"),
+                    "privilege_lvl": "user",
+                },
+            ),
+            [
+                "address",
+                "user",
+                ("store", "ipmi_sensors", "%s"),
+                "freeipmi",
+                "user",
+            ],
+            id="freeipmi with mandatory args only and password from the store",
         ),
         pytest.param(
             (
@@ -40,7 +58,7 @@ pytestmark = pytest.mark.checks
                 {
                     "username": "user",
                     "ipmi_driver": "driver",
-                    "password": "password",
+                    "password": ("password", "password"),
                     "privilege_lvl": "user",
                     "sdr_cache_recreate": True,
                     "interpret_oem_data": True,
@@ -65,7 +83,7 @@ pytestmark = pytest.mark.checks
                 "ipmitool",
                 {
                     "username": "user",
-                    "password": "password",
+                    "password": ("password", "password"),
                     "privilege_lvl": "administrator",
                     "intf": "lanplus",
                 },

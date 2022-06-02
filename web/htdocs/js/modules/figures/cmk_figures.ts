@@ -264,7 +264,7 @@ export class FigureBase {
         return "figure_base_class";
     }
 
-    constructor(div_selector, fixed_size: string | ElementSize | null = null) {
+    constructor(div_selector, fixed_size: any = null) {
         this._div_selector = div_selector; // The main container
         this._div_selection = d3.select(this._div_selector); // The d3-seletion of the main container
 

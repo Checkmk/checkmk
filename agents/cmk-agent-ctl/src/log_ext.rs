@@ -6,7 +6,6 @@ use flexi_logger::writers::LogWriter;
 use flexi_logger::DeferredNow;
 use log::Record;
 
-use bincode;
 use mail_slot::{MailslotClient, MailslotName};
 use serde::{Deserialize, Serialize};
 

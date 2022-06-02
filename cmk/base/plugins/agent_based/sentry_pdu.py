@@ -4,10 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Mapping, NamedTuple, Optional
+from typing import Any, Mapping, NamedTuple, Optional
 
-from .agent_based_api.v1 import equals, register, SNMPTree
-from .agent_based_api.v1.type_defs import StringTable
+from .agent_based_api.v1 import equals, Metric, register, Result, Service, SNMPTree, State
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 
 class PDU(NamedTuple):
@@ -17,7 +17,7 @@ class PDU(NamedTuple):
 
 Section = Mapping[str, PDU]
 
-_STATES_INT_TO_READABLE = {
+_STATES_INT_TO_READABLE: Mapping[str, str] = {
     "0": "off",
     "1": "on",
     "2": "off wait",
@@ -25,6 +25,10 @@ _STATES_INT_TO_READABLE = {
     "4": "off error",
     "5": "on error",
     "6": "no comm",
+}
+
+_STATE_TO_MONSTATE: Mapping[str, State] = {
+    "unknown": State.UNKNOWN,
 }
 
 
@@ -60,4 +64,35 @@ register.snmp_section(
             "12",
         ],
     ),
+)
+
+
+def discovery_sentry_pdu(section: Section) -> DiscoveryResult:
+    yield from (Service(item=name) for name, pdu in section.items())
+
+
+def check_sentry_pdu(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
+    if not (pdu := section.get(item)):
+        return
+
+    if "required_state" in params and pdu.state != params["required_state"]:
+        yield Result(state=State.CRIT, summary=f"Status: {pdu.state}")
+    else:
+        yield Result(
+            state=_STATE_TO_MONSTATE.get(pdu.state, State.OK),
+            summary=f"Status: {pdu.state}",
+        )
+
+    if pdu.power:
+        yield Result(state=State.OK, summary=f"Power: {pdu.power} Watt")
+        yield Metric(name="power", value=pdu.power)
+
+
+register.check_plugin(
+    name="sentry_pdu",
+    service_name="Plug %s",
+    discovery_function=discovery_sentry_pdu,
+    check_function=check_sentry_pdu,
+    check_ruleset_name="plugs",
+    check_default_parameters={},
 )

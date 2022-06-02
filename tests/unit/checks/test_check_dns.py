@@ -10,26 +10,12 @@ from testlib import ActiveCheck  # type: ignore[import]
 pytestmark = pytest.mark.checks
 
 
-@pytest.mark.parametrize(
-    "params,expected_args",
-    [
-        (
-            {
-                "hostname": "foo",
-                "server": None
-            },
-            ["-H", "foo", "-s", "$HOSTADDRESS$", "-L"],
-        ),
-        (
-            {
-                "hostname": "foo",
-                "server": None,
-                "timeout": 1
-            },
-            ["-H", "foo", "-s", "$HOSTADDRESS$", "-L", "-t", 1],
-        ),
-    ],
-)
+@pytest.mark.parametrize("params,expected_args", [
+    (["foo", {}], ["-H", "foo", "-s", "$HOSTADDRESS$", "-L"]),
+    (["foo", {
+        "timeout": 1
+    }], ["-H", "foo", "-s", "$HOSTADDRESS$", "-L", "-t", 1]),
+])
 @pytest.mark.usefixtures("config_load_all_checks")
 def test_check_dns_argument_parsing(params, expected_args):
     """Tests if all required arguments are present."""

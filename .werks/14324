@@ -1,0 +1,13 @@
+Title: Fix validation of tag IDs
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1654172391
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0i1
+
+It was possible to use tag IDs already used by other tag groups or auxiliary
+tags.

@@ -707,11 +707,13 @@ class Endpoint:
                 ):
                     # Intentionally generate a crash report.
                     raise PermissionError(
+                        "Permission mismatch\n"
                         "There can be some causes for this error:\n"
                         "* a permission which was required (successfully) was not declared\n"
                         "* a permission which was declared (not optional) was not required\n"
                         "* No permission was required at all, although permission were declared\n"
                         f"Endpoint: {self}\n"
+                        f"Params: {_params!r}\n"
                         f"Required: {list(self._used_permissions)}\n"
                         f"Declared: {self.permissions_required}\n"
                     )

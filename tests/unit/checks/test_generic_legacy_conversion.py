@@ -2315,7 +2315,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy):
         "seh_ports",
         "sensatronics_temp",
         "sentry_pdu",
-        "sentry_pdu_outlets",
         "sentry_pdu_systempower",
         "siemens_plc.temp",
         "siemens_plc.flag",

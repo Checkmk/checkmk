@@ -1341,9 +1341,8 @@ class ModeBIEditRule(ABCBIMode):
                         ]
                     ),
                     title=_("Display additional messages"),
-                    help=
-                    # xgettext: no-python-format
-                    _(
+                    help=_(
+                        # xgettext: no-python-format
                         "This option allows you to display an additional, freely configurable text, to the rule outcome, "
                         "which may describe the state more in detail. For example, instead of <tt>CRIT</tt>, the rule can now "
                         "display <tt>CRIT, less than 70% of servers reachable</tt>. This message is also shown within the BI aggregation "

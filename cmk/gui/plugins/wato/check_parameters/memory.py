@@ -86,9 +86,8 @@ def _parameter_valuespec_memory():
                                     ],
                                 ),
                                 title=_("Levels for free memory"),
-                                help=
-                                # xgettext: no-python-format
-                                _(
+                                help=_(
+                                    # xgettext: no-python-format
                                     "Keep in mind that if you have 1GB RAM and 1GB Swap you need to "
                                     "specify 120% or 1200MB to get an alert if there is only 20% free RAM available. "
                                     "The free memory levels do not work with the fortigate check, because it does "

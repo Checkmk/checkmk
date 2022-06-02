@@ -36,7 +36,7 @@ VARIABLES:
 
     - NAME: CHANGED_PYTHON_FILES
       # filter list of changed files to contain only python files
-      SH: "git diff-tree --no-commit-id --name-only -r ${BASE_COMMIT_ID}..HEAD | ${WORKSPACE}/scripts/find-python-files --filter"
+      SH: "git diff-tree --no-commit-id --name-only -r ${BASE_COMMIT_ID}..HEAD | xargs realpath | ${WORKSPACE}/scripts/find-python-files --filter"
 
     - NAME: CHANGED_RUST_FILES
       # filter list of all rust files to contain only changed files. Make sure an empty list

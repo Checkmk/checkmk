@@ -53,8 +53,9 @@ update-pot:
 	fi
 
 # 1) Pull in Checkmk and Checkmk localization repo
-# 2) Remove code comments from .po files and write to Checkmk repo. Check for issues concerning Python formatters.
-# 3) Commit and push in Checkmk repo
+# 2) Check for issues concerning Python formatters.
+# 3) Remove code comments from .po files and write to Checkmk repo.
+# 4) Commit and push in Checkmk repo.
 # This is executed in a cronjob on the VM webdeploy. See https://wiki.lan.tribe29.com/link/898#bkmrk-backend.
 update-pos:
 	rm -f $$MSGFMT_OUT
@@ -62,18 +63,18 @@ update-pos:
 	cd ../../$$CHECKMK_LOCALE_DIR; \
 	git pull --rebase; \
 	for lang in $(LANGUAGES); do \
-		sed '/^#[.:|]/d' $$lang/multisite.po > ../$$CHECKMK_DIR/locale/$$lang/LC_MESSAGES/multisite.po; \
-		(msgfmt --check-format -o temp.mo ../$$CHECKMK_DIR/locale/$$lang/LC_MESSAGES/multisite.po &>> $$MSGFMT_OUT) || true; \
+		(msgfmt --check-format -o temp.mo $$lang/multisite.po &>> $$MSGFMT_OUT) || true; \
 	done; \
-	rm -f temp.mo
-	# We are back in the Checkmk repo
+	rm -f temp.mo; \
 	if [[ -s $$MSGFMT_OUT ]]; then \
 		echo "ERROR: Non-empty msgfmt output"; \
-		rsync -av ./ ~/locale_with_errors; \
-		git reset --hard; \
 		exit 1; \
-	fi
+	fi; \
+	for lang in $(LANGUAGES); do \
+		sed '/^#[.:|]/d' $$lang/multisite.po > ../$$CHECKMK_DIR/locale/$$lang/LC_MESSAGES/multisite.po; \
+	done
+	# We are back in the Checkmk repo
 	if [[ $$(git diff | wc -l) -gt 0 ]]; then \
-		git commit ./ -m "$$PO_COMMIT_MSG"; \
-		git push; \
+		git commit ./ -m "$$PO_COMMIT_MSG" \
+		git push \
 	fi

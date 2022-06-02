@@ -716,13 +716,6 @@ div.dashlet.nodata {
   }
 }
 
-@mixin default-hexagon {
-  fill: $hexagon-default-color;
-  fill-opacity: $hexagon-default-fill-opacity;
-  stroke: $hexagon-default-stroke-color;
-  stroke-opacity: $hexagon-default-stroke-opacity;
-}
-
 div.site_overview,
 div.alert_statistics,
 div.stats_dashlet {
@@ -758,7 +751,7 @@ div.stats_dashlet {
       }
 
       &.ok {
-        background-color: $hexagon-default-color;
+        background-color: $success;
       }
     }
 
@@ -807,7 +800,10 @@ div.stats_dashlet {
     }
 
     &.ok {
-      @include default-hexagon;
+      fill: $success;
+      fill-opacity: 0.06;
+      stroke: $success;
+      stroke-opacity: 0.9;
     }
   }
 
@@ -843,17 +839,11 @@ div.stats_dashlet {
 div.stats_dashlet {
   height: 100%;
 
-  path.hexagon {
-    &.ok {
-      fill: $success;
-      fill-opacity: 0.06;
-      stroke: $success;
-      stroke-opacity: 0.9;
-    }
-
-    &.empty {
-      @include default-hexagon;
-    }
+  path.hexagon.empty {
+    fill: $hexagon-empty-color;
+    fill-opacity: $hexagon-empty-fill-opacity;
+    stroke: $hexagon-empty-stroke-color;
+    stroke-opacity: $hexagon-empty-stroke-opacity;
   }
 
   div.stats_table {

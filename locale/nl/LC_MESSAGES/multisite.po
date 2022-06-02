@@ -17059,6 +17059,10 @@ msgstr "Gebruikers-ID's met kleine letters afdwingen."
 msgid "Enforce show more"
 msgstr "Handhaving toon meer"
 
+#, fuzzy
+msgid "Enforced Service"
+msgstr "Afgedwongen diensten"
+
 msgid "Enforced services"
 msgstr "Afgedwongen diensten"
 
@@ -26311,11 +26315,11 @@ msgstr ""
 "Houdt hosts terwijl piggyback bron stuurt piggyback gegevens alleen voor "
 "andere hosts voor"
 
-#, fuzzy, python-format
+#, fuzzy, no-python-format
 msgid ""
-"Keep in mind that if you have 1GB RAM and 1GB Swap you need to specify "
-"120% or 1200MB to get an alert if there is only 20% free RAM available. The "
-"free memory levels do not work with the fortigate check, because it does not "
+"Keep in mind that if you have 1GB RAM and 1GB Swap you need to specify 120% "
+"or 1200MB to get an alert if there is only 20% free RAM available. The free "
+"memory levels do not work with the fortigate check, because it does not "
 "provide total memory data."
 msgstr ""
 "Houd in gedachten dat als je 1GB RAM en 1GB Swap hebt, je 120% of 1200MB "
@@ -29027,9 +29031,6 @@ msgstr "Manager"
 
 msgid "Manual"
 msgstr "Handmatig"
-
-msgid "Manual Check"
-msgstr "Handmatige controle"
 
 msgid "Manual check"
 msgstr "Handmatige controle"
@@ -51002,7 +51003,7 @@ msgstr "Dit evenement heeft het doelaantal nog niet bereikt."
 msgid "This expression must match the value of the variable"
 msgstr "Deze expressie moet overeenkomen met de waarde van de variabele"
 
-#, fuzzy, python-format
+#, fuzzy, no-python-format
 msgid ""
 "This feature allows the distribution of the config generation workload over "
 "several CPUs. Depending on the number of available CPU cores, it can "
@@ -51575,7 +51576,7 @@ msgid ""
 "more Datadog tags. Any matching tag will be displayed in the service output."
 msgstr ""
 
-#, fuzzy, python-format
+#, fuzzy, no-python-format
 msgid ""
 "This option allows you to display an additional, freely configurable text, "
 "to the rule outcome, which may describe the state more in detail. For "
@@ -53545,7 +53546,7 @@ msgstr ""
 "niet werkt voor gegroepeerde interfaces, aangezien de bijkomende informatie "
 "van gegroepeerde interfaces verschillend is"
 
-#, fuzzy, python-format
+#, fuzzy, no-python-format
 msgid ""
 "This setting controls the distance of text lines, in relation to the font "
 "width. A setting of 1.2 thus means that the line spacing is 120% of the font "
@@ -64093,6 +64094,10 @@ msgstr ""
 msgid "s"
 msgstr "s"
 
+#, fuzzy
+msgid "s/s"
+msgstr "/s"
+
 msgid "same day of the month"
 msgstr "dezelfde dag van de maand"
 
@@ -64120,6 +64125,10 @@ msgstr "tweede week"
 
 msgid "seconds"
 msgstr "seconden"
+
+#, fuzzy
+msgid "seconds per second"
+msgstr "Verbindingen per seconde"
 
 msgid "secs"
 msgstr "secs"
@@ -64484,6 +64493,9 @@ msgstr "z/OS"
 #, fuzzy, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Alle rechten voorbehouden."
+
+#~ msgid "Manual Check"
+#~ msgstr "Handmatige controle"
 
 #~ msgid ""
 #~ "Check the resolution of a hostname into an IP address by a DNS server. "

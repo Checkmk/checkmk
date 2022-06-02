@@ -17059,6 +17059,10 @@ msgstr "Aplicar os IDs de usuário em minúsculas."
 msgid "Enforce show more"
 msgstr "Força de execução mostra mais"
 
+#, fuzzy
+msgid "Enforced Service"
+msgstr "Serviços forçados"
+
 msgid "Enforced services"
 msgstr "Serviços forçados"
 
@@ -26304,11 +26308,11 @@ msgstr ""
 "Manter hosts enquanto a fonte piggyback envia dados piggyback apenas para "
 "outros hosts para"
 
-#, fuzzy, python-format
+#, fuzzy, no-python-format
 msgid ""
-"Keep in mind that if you have 1GB RAM and 1GB Swap you need to specify "
-"120% or 1200MB to get an alert if there is only 20% free RAM available. The "
-"free memory levels do not work with the fortigate check, because it does not "
+"Keep in mind that if you have 1GB RAM and 1GB Swap you need to specify 120% "
+"or 1200MB to get an alert if there is only 20% free RAM available. The free "
+"memory levels do not work with the fortigate check, because it does not "
 "provide total memory data."
 msgstr ""
 "Tenha em mente que se você tem 1GB de RAM e 1GB Swap você precisa "
@@ -29029,9 +29033,6 @@ msgstr "Gerente"
 
 msgid "Manual"
 msgstr "Manual"
-
-msgid "Manual Check"
-msgstr "Verificação manual"
 
 msgid "Manual check"
 msgstr "Verificação manual"
@@ -50985,7 +50986,7 @@ msgstr "Este evento ainda não atingiu a contagem alvo."
 msgid "This expression must match the value of the variable"
 msgstr "Esta expressão deve corresponder ao valor da variável"
 
-#, python-format
+#, no-python-format
 msgid ""
 "This feature allows the distribution of the config generation workload over "
 "several CPUs. Depending on the number of available CPU cores, it can "
@@ -51547,7 +51548,7 @@ msgid ""
 "more Datadog tags. Any matching tag will be displayed in the service output."
 msgstr ""
 
-#, python-format
+#, no-python-format
 msgid ""
 "This option allows you to display an additional, freely configurable text, "
 "to the rule outcome, which may describe the state more in detail. For "
@@ -53511,7 +53512,7 @@ msgstr ""
 "não funciona para interfaces agrupadas, uma vez que as informações "
 "adicionais das interfaces agrupadas são diferentes"
 
-#, python-format
+#, no-python-format
 msgid ""
 "This setting controls the distance of text lines, in relation to the font "
 "width. A setting of 1.2 thus means that the line spacing is 120% of the font "
@@ -64029,6 +64030,10 @@ msgstr "Em funcionamento"
 msgid "s"
 msgstr "s"
 
+#, fuzzy
+msgid "s/s"
+msgstr "/s"
+
 msgid "same day of the month"
 msgstr "mesmo dia do mês"
 
@@ -64056,6 +64061,10 @@ msgstr "segunda semana"
 
 msgid "seconds"
 msgstr "segundos"
+
+#, fuzzy
+msgid "seconds per second"
+msgstr "Conexões por segundo"
 
 msgid "secs"
 msgstr "segs"
@@ -64420,6 +64429,9 @@ msgstr "z/OS"
 #, fuzzy, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Todos os direitos reservados."
+
+#~ msgid "Manual Check"
+#~ msgstr "Verificação manual"
 
 #~ msgid ""
 #~ "Check the resolution of a hostname into an IP address by a DNS server. "

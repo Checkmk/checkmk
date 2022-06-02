@@ -16457,6 +16457,10 @@ msgid "Enforce show more"
 msgstr "afiseaza erori"
 
 #, fuzzy
+msgid "Enforced Service"
+msgstr "Afectat de serviciu"
+
+#, fuzzy
 msgid "Enforced services"
 msgstr "Afectat de serviciu"
 
@@ -24723,11 +24727,11 @@ msgid ""
 "for"
 msgstr ""
 
-#, python-format
+#, no-python-format
 msgid ""
-"Keep in mind that if you have 1GB RAM and 1GB Swap you need to specify "
-"120% or 1200MB to get an alert if there is only 20% free RAM available. The "
-"free memory levels do not work with the fortigate check, because it does not "
+"Keep in mind that if you have 1GB RAM and 1GB Swap you need to specify 120% "
+"or 1200MB to get an alert if there is only 20% free RAM available. The free "
+"memory levels do not work with the fortigate check, because it does not "
 "provide total memory data."
 msgstr ""
 
@@ -27535,9 +27539,6 @@ msgid "Manager"
 msgstr "Statusul Serverului"
 
 msgid "Manual"
-msgstr ""
-
-msgid "Manual Check"
 msgstr ""
 
 msgid "Manual check"
@@ -48131,7 +48132,7 @@ msgstr ""
 msgid "This expression must match the value of the variable"
 msgstr ""
 
-#, python-format
+#, no-python-format
 msgid ""
 "This feature allows the distribution of the config generation workload over "
 "several CPUs. Depending on the number of available CPU cores, it can "
@@ -48532,7 +48533,7 @@ msgid ""
 "more Datadog tags. Any matching tag will be displayed in the service output."
 msgstr ""
 
-#, python-format
+#, no-python-format
 msgid ""
 "This option allows you to display an additional, freely configurable text, "
 "to the rule outcome, which may describe the state more in detail. For "
@@ -49860,7 +49861,7 @@ msgid ""
 "grouped interfaces is different"
 msgstr ""
 
-#, python-format
+#, no-python-format
 msgid ""
 "This setting controls the distance of text lines, in relation to the font "
 "width. A setting of 1.2 thus means that the line spacing is 120% of the font "
@@ -59286,6 +59287,9 @@ msgstr "pornit"
 msgid "s"
 msgstr ""
 
+msgid "s/s"
+msgstr ""
+
 #, fuzzy
 msgid "same day of the month"
 msgstr " pe siteul de monitorizare: "
@@ -59316,6 +59320,10 @@ msgstr "secunde"
 
 msgid "seconds"
 msgstr "secunde"
+
+#, fuzzy
+msgid "seconds per second"
+msgstr "cereri/sec"
 
 msgid "secs"
 msgstr ""

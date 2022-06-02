@@ -17110,6 +17110,10 @@ msgstr "Erzwinge kleinbuchstabige Benutzer IDs."
 msgid "Enforce show more"
 msgstr "\"Mehr anzeigen\" erzwingen"
 
+#, fuzzy
+msgid "Enforced Service"
+msgstr "Erzwungene Services"
+
 msgid "Enforced services"
 msgstr "Erzwungene Services"
 
@@ -26369,11 +26373,11 @@ msgstr ""
 "Hosts beibehalten, während die Piggyback-Quelle Piggyback-Daten nur für "
 "andere Hosts sendet"
 
-#, fuzzy, python-format
+#, fuzzy, no-python-format
 msgid ""
-"Keep in mind that if you have 1GB RAM and 1GB Swap you need to specify "
-"120% or 1200MB to get an alert if there is only 20% free RAM available. The "
-"free memory levels do not work with the fortigate check, because it does not "
+"Keep in mind that if you have 1GB RAM and 1GB Swap you need to specify 120% "
+"or 1200MB to get an alert if there is only 20% free RAM available. The free "
+"memory levels do not work with the fortigate check, because it does not "
 "provide total memory data."
 msgstr ""
 "Bitte beachten Sie, dass Sie - falls Sie z.B. 1GB RAM und 1GB SWAP haben, "
@@ -29082,9 +29086,6 @@ msgstr "Manager"
 
 msgid "Manual"
 msgstr "Manuell"
-
-msgid "Manual Check"
-msgstr "Manueller Check"
 
 msgid "Manual check"
 msgstr "Manueller Check"
@@ -51059,7 +51060,7 @@ msgstr "Das Ereignis hat den Ziel-Zähler noch nicht erreicht."
 msgid "This expression must match the value of the variable"
 msgstr "Dieser Ausdruck muss auf den Wert der Variable matchen."
 
-#, python-format
+#, no-python-format
 msgid ""
 "This feature allows the distribution of the config generation workload over "
 "several CPUs. Depending on the number of available CPU cores, it can "
@@ -51635,7 +51636,7 @@ msgid ""
 "more Datadog tags. Any matching tag will be displayed in the service output."
 msgstr ""
 
-#, python-format
+#, no-python-format
 msgid ""
 "This option allows you to display an additional, freely configurable text, "
 "to the rule outcome, which may describe the state more in detail. For "
@@ -53601,7 +53602,7 @@ msgstr ""
 "Sie, dass dies nicht für gruppierte Interfaces gilt, da die zusätzliche "
 "Information von gruppierten Interfaces sich hiervon unterscheiden."
 
-#, python-format
+#, no-python-format
 msgid ""
 "This setting controls the distance of text lines, in relation to the font "
 "width. A setting of 1.2 thus means that the line spacing is 120% of the font "
@@ -64156,6 +64157,10 @@ msgstr "Läuft"
 msgid "s"
 msgstr "s"
 
+#, fuzzy
+msgid "s/s"
+msgstr "/s"
+
 msgid "same day of the month"
 msgstr "Gleicher Tag im Monat"
 
@@ -64183,6 +64188,10 @@ msgstr "zweite Woche"
 
 msgid "seconds"
 msgstr "Sekunden"
+
+#, fuzzy
+msgid "seconds per second"
+msgstr "Verbindungen pro Sekunde"
 
 msgid "secs"
 msgstr "Sek."
@@ -64545,6 +64554,9 @@ msgstr "z/OS"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Alle Rechte vorbehalten."
+
+#~ msgid "Manual Check"
+#~ msgstr "Manueller Check"
 
 #~ msgid ""
 #~ "Check the resolution of a hostname into an IP address by a DNS server. "

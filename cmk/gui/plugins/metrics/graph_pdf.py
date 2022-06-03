@@ -5,13 +5,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Render graphs in PDF. Is also used for PNG image rendering."""
 
-from typing import cast, Optional, Sequence
+from typing import Optional, Sequence, TypeGuard
 
 from cmk.utils.type_defs import Timestamp
 
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.plugins.metrics.artwork import GraphArtwork, LayoutedCurveArea, LayoutedCurveLine
+from cmk.gui.plugins.metrics.artwork import GraphArtwork, LayoutedCurve, LayoutedCurveArea
 from cmk.gui.plugins.metrics.utils import (
     darken_color,
     GraphDataRange,
@@ -170,8 +170,7 @@ def render_graph_pdf(
         t = graph_artwork["start_time"]
         color = parse_color(curve["color"])
 
-        if curve["type"] == "area":
-            curve = cast(LayoutedCurveArea, curve)
+        if is_area_layouted_curve(curve):
             points = curve["points"]
             prev_lower = None
             prev_upper = None
@@ -206,7 +205,6 @@ def render_graph_pdf(
                 t += step
 
         else:  # "line"
-            curve = cast(LayoutedCurveLine, curve)
             last_value = None
             pdf_document.begin_path()
             for value in curve["points"]:
@@ -412,6 +410,10 @@ def render_graph_pdf(
         pdf_document.margin(2.5)
 
     logger.debug("  Finished rendering graph")
+
+
+def is_area_layouted_curve(curve: LayoutedCurve) -> TypeGuard[LayoutedCurveArea]:
+    return curve["type"] == "area"
 
 
 def compute_pdf_graph_data_range(

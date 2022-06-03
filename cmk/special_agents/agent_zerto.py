@@ -11,13 +11,10 @@ Special agent for monitoring Zerto application with Check_MK.
 """
 
 import argparse
-import json
 import logging
 import sys
 
 import requests
-
-from cmk.utils.exceptions import MKException
 
 LOGGER = logging.getLogger(__name__)
 
@@ -63,10 +60,13 @@ class ZertoRequest:
 
         if response.status_code != 200:
             LOGGER.debug("response status code: %s", response.status_code)
+            LOGGER.debug("response : %s", response.text)
             raise RuntimeError("Call to ZVM failed")
         try:
-            data = json.loads(response.text)
+            data = response.json()
         except ValueError:
+            LOGGER.debug("failed to parse json")
+            LOGGER.debug("response : %s", response.text)
             raise ValueError("Got invalid data from host")
         return data
 
@@ -82,22 +82,24 @@ class ZertoConnection:
         if authentication == "windows":
             response = requests.post(url, auth=self._credentials, verify=False)  # nosec
         else:
-            dataval = {"AuthenticationMethod": 1}
-            LOGGER.debug("VCenter dataval: %r", dataval)
             headers = {"content-type": "application/json"}
             response = requests.post(  # nosec
-                url, data=dataval, auth=self._credentials, headers=headers, verify=False
+                url, auth=self._credentials, headers=headers, verify=False
             )
 
-        LOGGER.debug("Response status code: %s", response.status_code)
-
         if response.status_code != 200:
+            LOGGER.info("response status code: %s", response.status_code)
+            LOGGER.debug("response text: %s", response.text)
             raise AuthError("Failed authenticating to the Zerto Virtual Manager")
 
+        if "x-zerto-session" not in response.headers:
+            LOGGER.info("session id not found in response header")
+            LOGGER.debug("response header: %s", response.headers)
+            LOGGER.debug("response text: %s", response.text)
         return response.headers.get("x-zerto-session")
 
 
-class AuthError(MKException):
+class AuthError(Exception):
     pass
 
 

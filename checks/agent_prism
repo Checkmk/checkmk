@@ -10,13 +10,15 @@ from typing import Any, Mapping, Optional, Sequence
 def agent_prism_arguments(
     params: Mapping[str, Any], hostname: str, ipaddress: Optional[str]
 ) -> Sequence[str]:
-    arglist = ["--server", ipaddress or hostname]
-
-    for param in ["port", "username", "password"]:
-        if param in params:
-            arglist += ["--%s" % param, "%s" % params[param]]
-
-    return arglist
+    return [
+        "--server",
+        ipaddress or hostname,
+        "--username",
+        "%s" % params["username"],
+        "--password",
+        passwordstore_get_cmdline("%s", params["password"]),
+        *(["--port", "%s" % params["port"]] if "port" in params else []),
+    ]
 
 
 special_agent_info["prism"] = agent_prism_arguments

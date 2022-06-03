@@ -6,8 +6,8 @@
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.special_agents.common import RulespecGroupDatasourceProgramsOS
-from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
-from cmk.gui.valuespec import Dictionary, Integer, Password, TextInput
+from cmk.gui.plugins.wato.utils import HostRulespec, IndividualOrStoredPassword, rulespec_registry
+from cmk.gui.valuespec import Dictionary, Integer, TextInput
 
 
 def _valuespec_special_agents_prism():
@@ -29,7 +29,7 @@ def _valuespec_special_agents_prism():
                     title=_("User ID for web login"),
                 ),
             ),
-            ("password", Password(title=_("Password for this user"))),
+            ("password", IndividualOrStoredPassword(title=_("Password for this user"))),
         ],
         optional_keys=["port"],
     )

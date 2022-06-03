@@ -11,6 +11,7 @@ import pytest
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
 from cmk.base.plugins.agent_based.sentry_pdu_outlets import (
     check_sentry_pdu_outlets,
+    check_sentry_pdu_outlets_v4,
     discovery_sentry_pdu_outlets,
     parse_sentry_pdu_outlets,
 )
@@ -72,4 +73,30 @@ def test_check_sentry_pdu_outlets(
     expected_result: Sequence[Result],
 ) -> None:
     result = list(check_sentry_pdu_outlets(item, parsed))
+    assert result == expected_result
+
+
+@pytest.mark.parametrize(
+    "parsed, item, expected_result",
+    [
+        pytest.param(
+            {"A1 A_1": 14, "A2 A_2": 3},
+            "A1 A_1",
+            [Result(state=State.CRIT, summary="Status: low alarm")],
+            id="known_state_v4",
+        ),
+        pytest.param(
+            {"A1 A_1": 14, "A2 A_2": 3},
+            "A3 A_3",
+            [],
+            id="missing_item",
+        ),
+    ],
+)
+def test_check_sentry_pdu_outlets_v4(
+    parsed: Mapping[str, int],
+    item: str,
+    expected_result: Sequence[Result],
+) -> None:
+    result = list(check_sentry_pdu_outlets_v4(item, parsed))
     assert result == expected_result

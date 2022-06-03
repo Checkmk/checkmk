@@ -1,0 +1,11 @@
+Title: sentry_pdu_outlets_v4: PDU outlets support for Servertech v4 devices
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1651242280
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1
+
+It is now possible to monitor PDU outlets on Servertech v4 devices.

@@ -35,8 +35,7 @@ def _reformat_line(line: List[str]) -> List[str]:
     for index, entry in enumerate(line):
         if entry == "NTFS":
             line = (
-                [" ".join(line[:index])]
-                + [line[index]]
+                [" ".join(line[:index]), entry]
                 + line[index + 1 : index + 5]
                 + [" ".join(line[index + 5 :])]
             )

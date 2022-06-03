@@ -48,11 +48,11 @@ class Client:
     account_info: dict[str, str] = field(compare=False)
     project: str
 
-    @cache
+    @cache  # pylint: disable=method-cache-max-size-none
     def monitoring(self):
         return monitoring_v3.MetricServiceClient.from_service_account_info(self.account_info)
 
-    @cache
+    @cache  # pylint: disable=method-cache-max-size-none
     def asset(self):
         return asset_v1.AssetServiceClient.from_service_account_info(self.account_info)
 

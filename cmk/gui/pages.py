@@ -8,7 +8,7 @@ import abc
 import http.client as http_client
 import inspect
 import json
-from typing import Any, Callable, Dict, Mapping, Optional, Type
+from typing import Any, Callable, Dict, Optional, Type
 
 import cmk.utils.plugin_registry
 from cmk.utils.exceptions import MKException
@@ -183,10 +183,8 @@ def get_page_handler(
 
     In case dflt is given it returns dflt instead of None when there is no
     page handler for the requested name."""
-    # NOTE: Workaround for our non-generic registries... :-/
-    pr: Mapping[str, Type[Page]] = page_registry
-    handle_class = pr.get(name)
-    if handle_class is None:
-        return dflt
-    # NOTE: We can'use functools.partial because of https://bugs.python.org/issue3445
-    return (lambda hc: lambda: hc().handle_page())(handle_class)
+
+    def page_handler(hc: Type[Page]) -> PageHandlerFunc:
+        return lambda: hc().handle_page()
+
+    return dflt if (handle_class := page_registry.get(name)) is None else page_handler(handle_class)

@@ -2878,7 +2878,7 @@ class TestAgentBasedStandardHosts(TestCase):
                 self._test.info("  Waiting for helper initialization")
             else:
                 self._test.info(
-                    "  Waiting for helper initialization (%d not ready)" % num_not_ready
+                    "  Waiting for helper initialization (%d not ready)" % int(num_not_ready)
                 )
 
             try:

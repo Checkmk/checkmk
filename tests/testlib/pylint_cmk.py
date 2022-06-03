@@ -14,6 +14,7 @@ import subprocess
 import time
 from pathlib import Path
 
+from pylint.message.message import Message  # type: ignore[import]
 from pylint.reporters.text import (  # type: ignore[import]
     ColorizedTextReporter,
     ParseableTextReporter,
@@ -126,7 +127,7 @@ def is_python_file(path, shebang_name=None):
 # TODO: This can be dropped once we have refactored checks/inventory/bakery plugins
 # to real modules
 class CMKFixFileMixin:
-    def handle_message(self, msg):
+    def handle_message(self, msg: Message) -> None:
         if msg.abspath is None:
             # NOTE: I'm too lazy to define a Protocol for this mixin which is
             # already on death row, so let's use a reflection hack...
@@ -139,9 +140,9 @@ class CMKFixFileMixin:
             new_path = self._change_path_to_repo_path(msg)
 
         if new_path is not None:
-            msg = msg._replace(path=new_path)
+            msg.path = new_path
         if new_line is not None:
-            msg = msg._replace(line=new_line)
+            msg.line = new_line
 
         # NOTE: I'm too lazy to define a Protocol for this mixin which is
         # already on death row, so let's use a reflection hack...

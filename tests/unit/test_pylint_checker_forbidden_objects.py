@@ -8,6 +8,7 @@ from typing import Iterable, Tuple
 
 import astroid  # type: ignore[import]
 import pytest
+from pylint.lint import PyLinter  # type: ignore[import]
 
 from tests.testlib.pylint_checker_forbidden_objects import (
     ABCMetaChecker,
@@ -19,12 +20,12 @@ from tests.testlib.pylint_checker_forbidden_objects import (
 
 @pytest.fixture(name="abcmeta_checker")
 def abcmeta_checker_fixture() -> ABCMetaChecker:
-    return ABCMetaChecker(None)
+    return ABCMetaChecker(PyLinter())
 
 
 @pytest.fixture(name="namedtuple_checker")
 def namedtuple_checker_fixture() -> TypingNamedTupleChecker:
-    return TypingNamedTupleChecker(None)
+    return TypingNamedTupleChecker(PyLinter())
 
 
 class _TestChecker(ForbiddenFunctionChecker):
@@ -36,12 +37,12 @@ class _TestChecker(ForbiddenFunctionChecker):
 
 @pytest.fixture(name="test_checker")
 def test_checker_fixture() -> _TestChecker:
-    return _TestChecker(None)
+    return _TestChecker(PyLinter())
 
 
 @pytest.fixture(name="six_checker")
 def six_checker_fixture() -> SixEnsureStrBinChecker:
-    return SixEnsureStrBinChecker(None)
+    return SixEnsureStrBinChecker(PyLinter())
 
 
 @pytest.mark.parametrize(

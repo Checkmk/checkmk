@@ -358,7 +358,7 @@ class ModeAuditLog(WatoMode):
             elif entry.time < start_time and last_log_index is None:
                 last_log_index = index
                 # This is the next log after this day
-                previous_log_time = int(log[index][0])
+                previous_log_time = int(entry[0])
                 # Finished!
                 break
 

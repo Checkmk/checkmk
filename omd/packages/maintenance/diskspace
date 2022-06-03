@@ -74,13 +74,13 @@ def _print_config() -> None:
     else:
         _verbose(
             "  Cleaning up abandoned host files older than %d seconds."
-            % cleanup_abandoned_host_files
+            % int(cleanup_abandoned_host_files)
         )
 
     if max_file_age is None:
         _verbose("  Not cleaning up files by age.")
     else:
-        _verbose("  Cleanup files that are older than %d seconds." % max_file_age)
+        _verbose("  Cleanup files that are older than %d seconds." % int(max_file_age))
 
     if min_free_bytes is None or min_file_age is None:
         _verbose("  Not cleaning up files by free space left.")

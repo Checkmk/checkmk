@@ -4,10 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
-
-
 import pytest
+from pylint.lint import PyLinter  # type: ignore[import]
 
 from tests.testlib.pylint_checker_cmk_module_layers import (
     _COMPONENTS,
@@ -19,7 +17,7 @@ from tests.testlib.pylint_checker_cmk_module_layers import (
     ModulePath,
 )
 
-CHECKER = CMKModuleLayerChecker()
+CHECKER = CMKModuleLayerChecker(PyLinter())
 
 COMPONENT_LIST = [c for c, _ in _COMPONENTS]
 

@@ -74,7 +74,7 @@ def read_config():
             sys.stdout.write("Not configured, %s missing\n" % config_filename)
         sys.exit(0)
 
-    cfg = configparser.SafeConfigParser(default_options)
+    cfg = configparser.SafeConfigParser(default_options)  # pylint: disable=deprecated-class
     # Let ConfigParser figure it out
     for config_file in [config_filename] + glob.glob(config_dir):
         try:

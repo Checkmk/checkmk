@@ -433,10 +433,7 @@ class ModeCheckManPage(WatoMode):
         # To be able to calculate the breadcrumb with ModeCheckPluginTopic as parent, we need to
         # ensure that the topic is available.
         with request.stashed_vars():
-            # suppression: arg is Sequence[str]. Expected is str.
-            # AFAICT it's been like this for a while; it's just we now know it.
-            # The breadcrumbs look fine to me.
-            request.set_var("topic", self._manpage.catalog)  # type: ignore[arg-type]
+            request.set_var("topic", "/".join(self._manpage.catalog))
             return super().breadcrumb()
 
     def _from_vars(self) -> None:
@@ -458,9 +455,11 @@ class ModeCheckManPage(WatoMode):
         if (check_info := checks.get(self._check_plugin_name)) is not None:
             self._check_type = "check_mk"
             self._service_description = check_info["service_description"]
-            self._ruleset: Optional[
-                str
-            ] = f"checkgroup_parameters:{check_info['check_ruleset_name']}"
+            ruleset_name = check_info.get("check_ruleset_name")
+            self._ruleset: Optional[str] = (
+                f"checkgroup_parameters:{ruleset_name}" if ruleset_name else None
+            )
+
         elif self._check_type in check_builtins:
             self._check_type = "check_mk"
             self._service_description = (

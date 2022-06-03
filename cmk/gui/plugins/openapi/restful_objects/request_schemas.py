@@ -25,6 +25,8 @@ from cmk.gui.livestatus_utils.commands.downtimes import (
 )
 from cmk.gui.plugins.openapi.utils import param_description
 from cmk.gui.userdb import load_users
+import cmk.gui.plugins.userdb.utils as userdb_utils
+
 from cmk.gui.watolib.groups import is_alias_used
 from cmk.gui.watolib.tags import load_aux_tags, tag_group_exists
 from cmk.gui.watolib.timeperiods import verify_timeperiod_name_exists
@@ -1028,6 +1030,18 @@ class Username(fields.String):
             raise self.make_error("should_not_exist", username=value)
 
 
+class ExistingUserRole(fields.String):
+    default_error_messages = {
+        "invalid_role": "The specified role does not exist: {role!r}",
+    }
+
+    def _validate(self, value):
+        super()._validate(value)
+        stored_roles: dict[str, dict] = userdb_utils.load_roles()
+        if value not in stored_roles.keys():
+            raise self.make_error("invalid_role", role=value)
+
+
 class CustomTimeRange(BaseSchema):
     # TODO: fields.Dict validation also for Timperiods
     start_time = fields.DateTime(
@@ -1263,12 +1277,7 @@ class CreateUser(BaseSchema):
         example={"option": "global"},
     )
     roles = fields.List(
-        fields.String(
-            required=True,
-            description="A role of the user",
-            enum=["user", "admin", "guest"],
-            example="user",
-        ),
+        ExistingUserRole(description="A user role", required=True, example="user"),
         required=False,
         missing=list,
         description="The list of assigned roles to the user",
@@ -1357,12 +1366,7 @@ class UpdateUser(BaseSchema):
         example={},
     )
     roles = fields.List(
-        fields.String(
-            required=False,
-            description="A role of the user",
-            enum=["user", "admin", "guest"],
-            example="user",
-        ),
+        ExistingUserRole(description="A user role", required=True, example="user"),
         required=False,
         description="The list of assigned roles to the user",
         example=["user"],

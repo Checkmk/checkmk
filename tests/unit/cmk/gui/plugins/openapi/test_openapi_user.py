@@ -15,6 +15,11 @@ from cmk.gui.plugins.openapi.endpoints.user_config import _internal_to_api_forma
 from cmk.gui.plugins.openapi.endpoints.utils import complement_customer
 from cmk.gui.watolib.users import edit_users
 from cmk.utils import version
+import cmk.gui.plugins.userdb.utils as userdb_utils
+import cmk.gui.config as config
+import cmk.utils.store as store
+from cmk.gui.watolib.utils import multisite_dir
+import cmk.gui.hooks as hooks
 
 managedtest = pytest.mark.skipif(not version.is_managed_edition(), reason="see #7213")
 
@@ -1044,3 +1049,93 @@ def _internal_attributes(user_attributes):
             "force_authuser",
         )
     }
+
+
+@managedtest
+def test_openapi_new_user_with_cloned_role(wsgi_app, with_automation_user, monkeypatch):
+    monkeypatch.setattr("cmk.gui.watolib.global_settings.rulebased_notifications_enabled",
+                        lambda: True)
+
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(('Bearer', username + " " + secret))
+
+    base = "/NO_SITE/check_mk/api/1.0"
+
+    stored_roles: dict[str, dict] = userdb_utils.load_roles()
+    newrole_name = 'adminx'
+    stored_roles[newrole_name] = {
+        'alias': 'Administrator (copy)',
+        'builtin': False,
+        'permissions': {},
+        'basedon': 'admin'
+    }
+
+    config.roles.update(stored_roles)
+    store.mkdir(multisite_dir())
+    store.save_to_mk_file(
+        multisite_dir() + "roles.mk",
+        "roles",
+        stored_roles,
+        pprint_value=config.wato_pprint_config,
+    )
+
+    hooks.call("roles-saved", stored_roles)
+
+    user_detail = {
+        "username": f"new_user_with_role_{newrole_name}",
+        "fullname": f"NewUser_{newrole_name}",
+        "customer": "provider",
+        "roles": [newrole_name],
+    }
+
+    resp1 = wsgi_app.call_method(
+        "post",
+        base + "/domain-types/user_config/collections/all",
+        params=json.dumps(user_detail),
+        headers={"Accept": "application/json"},
+        status=200,
+        content_type="application/json",
+    )
+
+    assert resp1.json["extensions"]["roles"] == [newrole_name]
+
+    resp2 = wsgi_app.call_method(
+        "put",
+        base + f"/objects/user_config/new_user_with_role_{newrole_name}",
+        params=json.dumps({"roles": ["user", "guest"]}),
+        status=200,
+        content_type="application/json",
+        headers={
+            "Accept": "application/json",
+            "If-Match": resp1.headers["Etag"]
+        },
+    )
+
+    assert resp2.json["extensions"]["roles"] == ["user", "guest"]
+
+
+@managedtest
+def test_openapi_new_user_with_non_existing_role(wsgi_app, with_automation_user, monkeypatch):
+    monkeypatch.setattr("cmk.gui.watolib.global_settings.rulebased_notifications_enabled",
+                        lambda: True)
+
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(('Bearer', username + " " + secret))
+
+    base = "/NO_SITE/check_mk/api/1.0"
+    userrole = "non-existing-userole"
+    user_detail = {
+        "username": f"new_user_with_role_{userrole}",
+        "fullname": f"NewUser_{userrole}",
+        "customer": "provider",
+        "roles": [userrole],
+    }
+
+    wsgi_app.call_method(
+        "post",
+        base + "/domain-types/user_config/collections/all",
+        params=json.dumps(user_detail),
+        headers={"Accept": "application/json"},
+        status=400,
+        content_type="application/json",
+    )

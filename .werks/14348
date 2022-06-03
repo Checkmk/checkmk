@@ -1,0 +1,13 @@
+Title: check form submit url errors are clickable
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1654260516
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p26
+
+URLs from the check form submit are now clickable in the UI.
+No user interaction required

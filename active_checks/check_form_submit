@@ -29,15 +29,15 @@
 # ./check_form_submit -I localhost -u /event -q '_origtarget=wato.py&_username=omdadmin&_password=omd' -e 'WATO'
 
 import getopt
+import html.parser
+import http.cookiejar
 import re
 import socket
 import sys
-import urllib.request
-import urllib.parse
 import urllib.error
-import http.cookiejar
-import html.parser
-from typing import Dict, cast, Tuple
+import urllib.parse
+import urllib.request
+from typing import cast, Dict, Tuple
 
 
 def usage():
@@ -129,13 +129,13 @@ def open_url(client, url, method='GET', data=None, timeout=None):
             debug('GET %s' % url)
             fd = client.open(url, timeout=timeout)  # GET
     except urllib.error.HTTPError as e:
-        new_state(2, 'Unable to open %s: [%d] %s' % (url, e.code, e))
+        new_state(2, 'Unable to open %s : [%d] %s' % (url, e.code, e))
 
     except urllib.error.URLError as e:
-        new_state(2, 'Unable to open %s: %s' % (url, e.reason))
+        new_state(2, 'Unable to open %s : %s' % (url, e.reason))
 
     except socket.timeout as e:
-        new_state(2, 'Unable to open %s: %s' % (url, e))
+        new_state(2, 'Unable to open %s : %s' % (url, e))
 
     real_url = fd.geturl()
     code = fd.getcode()

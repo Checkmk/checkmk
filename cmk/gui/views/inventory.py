@@ -1102,7 +1102,9 @@ def _inv_filter_info():
 #   '----------------------------------------------------------------------'
 
 
-def _inv_find_subtable_columns(raw_path: SDRawPath) -> List[str]:
+def _inv_find_subtable_columns(
+    raw_path: SDRawPath,
+) -> Sequence[Tuple[str, Tuple[InventoryHintSpec, ColumnDisplayHint]]]:
     """Find the name of all columns of an embedded table that have a display
     hint. Respects the order of the columns if one is specified in the
     display hint.
@@ -1117,17 +1119,28 @@ def _inv_find_subtable_columns(raw_path: SDRawPath) -> List[str]:
     swapped = [(t[1], t[0]) for t in with_numbers]
     order = dict(swapped)
 
-    columns = []
-    for path in inventory_displayhints:
-        if path.startswith(raw_path + "*."):
+    columns: Dict[str, Tuple[InventoryHintSpec, ColumnDisplayHint]] = {}
+    for this_raw_path, this_raw_hint in inventory_displayhints.items():
+        if (
+            this_raw_path.startswith(raw_path + "*.")
+            and (key := inventory.InventoryPath.parse(this_raw_path).key) is not None
+        ):
             # ".networking.interfaces:*.port_type" -> "port_type"
-            columns.append(path.split(".")[-1])
+            columns[key] = (
+                this_raw_hint,
+                ColumnDisplayHint.make_from_hint(this_raw_path, this_raw_hint),
+            )
 
     for key in table_hint.key_order:
         if key not in columns:
-            columns.append(key)
+            this_raw_path = f"{raw_path}:*.{key}"
+            this_raw_hint = inventory_displayhints.get(this_raw_path, {})
+            columns[key] = (
+                this_raw_hint,
+                ColumnDisplayHint.make_from_hint(this_raw_path, this_raw_hint),
+            )
 
-    return sorted(columns, key=lambda x: (order.get(x, 999), x))
+    return sorted(columns.items(), key=lambda t: (order.get(t[0], 999), t[0]))
 
 
 def _decorate_sort_func(f):
@@ -1144,48 +1157,48 @@ def _decorate_sort_func(f):
 
 
 def _declare_invtable_column(
-    infoname: str, raw_table_path: SDRawPath, topic: str, name: str, column: str
+    infoname: str,
+    topic: str,
+    column: str,
+    raw_hint: InventoryHintSpec,
+    hint: ColumnDisplayHint,
 ) -> None:
-    raw_col_path = raw_table_path + "*." + name
-    raw_col_hint = inventory_displayhints.get(raw_col_path, {})
-    col_hint = ColumnDisplayHint.make_from_hint(raw_col_path, raw_col_hint)
-
     # TODO
     # - Sync this with _declare_inv_column()
     # - filter -> ColumnDisplayHint
-    filter_class = raw_col_hint.get("filter")
+    filter_class = raw_hint.get("filter")
     if filter_class:
         filter_registry.register(
             filter_class(
                 inv_info=infoname,
-                ident=infoname + "_" + name,
-                title=topic + ": " + col_hint.title,
+                ident=column,
+                title=topic + ": " + hint.title,
             )
         )
     elif (ranged_table := get_ranged_table(infoname)) is not None:
         filter_registry.register(
             FilterInvtableIDRange(
                 inv_info=ranged_table,
-                ident=infoname + "_" + name,
-                title=topic + ": " + col_hint.title,
+                ident=column,
+                title=topic + ": " + hint.title,
             )
         )
     else:
         filter_registry.register(
             FilterInvtableText(
                 inv_info=infoname,
-                ident=infoname + "_" + name,
-                title=topic + ": " + col_hint.title,
+                ident=column,
+                title=topic + ": " + hint.title,
             )
         )
 
     register_painter(
         column,
         {
-            "title": topic + ": " + col_hint.title,
-            "short": col_hint.short_title,
+            "title": topic + ": " + hint.title,
+            "short": hint.short_title,
             "columns": [column],
-            "paint": lambda row: col_hint.paint_function(row.get(column)),
+            "paint": lambda row: hint.paint_function(row.get(column)),
             "sorter": column,
         },
     )
@@ -1193,9 +1206,9 @@ def _declare_invtable_column(
     register_sorter(
         column,
         {
-            "title": _("Inventory") + ": " + col_hint.title,
+            "title": _("Inventory") + ": " + hint.title,
             "columns": [column],
-            "cmp": lambda self, a, b: _decorate_sort_func(col_hint.sort_function)(
+            "cmp": lambda self, a, b: _decorate_sort_func(hint.sort_function)(
                 a.get(column), b.get(column)
             ),
         },
@@ -1291,11 +1304,17 @@ def declare_invtable_view(
 
     painters: List[Tuple[str, str, str]] = []
     filters = []
-    for name in _inv_find_subtable_columns(raw_path):
+    for name, (raw_col_hint, col_hint) in _inv_find_subtable_columns(raw_path):
         column = infoname + "_" + name
 
         # Declare a painter, sorter and filters for each path with display hint
-        _declare_invtable_column(infoname, raw_path, title_singular, name, column)
+        _declare_invtable_column(
+            infoname,
+            title_singular,
+            column,
+            raw_col_hint,
+            col_hint,
+        )
 
         painters.append((column, "", ""))
         filters.append(column)
@@ -1403,7 +1422,7 @@ def declare_joined_inventory_table_view(
     painters: List[Tuple[str, str, str]] = []
     filters = []
     for this_raw_path, this_infoname, this_title in zip(raw_paths, info_names, titles):
-        for name in _inv_find_subtable_columns(this_raw_path):
+        for name, (raw_col_hint, col_hint) in _inv_find_subtable_columns(this_raw_path):
             if name in match_by:
                 # Filter out duplicate common columns which are used to join tables
                 if name in known_common_columns:
@@ -1413,7 +1432,13 @@ def declare_joined_inventory_table_view(
             column = this_infoname + "_" + name
 
             # Declare a painter, sorter and filters for each path with display hint
-            _declare_invtable_column(this_infoname, this_raw_path, this_title, name, column)
+            _declare_invtable_column(
+                this_infoname,
+                this_title,
+                column,
+                raw_col_hint,
+                col_hint,
+            )
 
             painters.append((column, "", ""))
             filters.append(column)

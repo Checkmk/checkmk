@@ -1,0 +1,62 @@
+Title: Fix local privilege escalation from site users
+Class: security
+Compatible: compat
+Component: omd
+Date: 1654114193
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p7
+
+Each Checkmk site provides it's HTTP services (UI, APIs) using it's own site
+Apache process. Global access to this site Apache is provided via the system
+Apache which is opening the 80 and 443 ports for external requests, depending
+on your system configuration.
+
+To learn about the site Apache, the system Apache reads a reverse proxy
+configuration provided by the site user. This could be used by a site user to
+make the system Apache execute code as root user, since the System Apache is
+typically started initially with root privileges.
+
+To close this gap, we now need to separate the system Apache configuration from
+the site user access.
+
+To eliminate the privilege escalation, you will have to execute the command
+<tt>omd update-apache-config [SITE]</tt> once for each of your sites after
+the <tt>omd update</tt> command.
+
+Besides the one-time fix, this change has a consequence for the use of <tt>omd
+config</tt> and <tt>omd update</tt>. There are two situations where this is
+relevant:
+
+a) If you change the options APACHE_TCP_ADDR, APACHE_TCP_PORT or APACHE_MODE
+
+You will have to call <tt>omd update-apache-config [SITE]</tt> as root user after
+changing one of the site configuration options APACHE_TCP_ADDR, APACHE_TCP_PORT
+or APACHE_MODE. This needs to be done to update and apply the system Apache
+configuration. If you don't do this and start your site, your UI may be not
+available anymore.
+
+The <tt>omd config</tt> command will output a warning to notify you about this
+necessary step in the future.
+
+b) If you execute <tt>omd update</tt> and the proxy configuration changes
+
+The update is performed as site user. Which means that, after this werk, we can
+not update and apply the system apache configuration anymore automatically.
+
+To apply the latest apache configuration, the command <tt>omd
+update-apache-config [SITE]</tt> needs to be executed after the update.
+
+The <tt>omd update</tt> will automatically detect the need for this additional
+step and show you a confirmation dialog before starting the update to notify
+you about this necessary step and giving you the chance to interrupt the
+procedure in case you don't have the option to execute the command as root
+user.
+
+All maintained versions (>=1.6) are subject to this vulnerability. It is likely
+that also previous versions were vulnerable. Users of previous versions are
+highly recommended to update or consider other mitigations.
+
+We thank Jan-Philipp Litza (PLUTEX GmbH) for reporting this issue!

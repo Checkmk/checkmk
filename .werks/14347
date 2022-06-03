@@ -1,0 +1,13 @@
+Title: Fix Zerto API Integration for non windows authentication method
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1654254436
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p2
+
+Zerto API authentication works now for non windows authentication.
+No user interaction required.

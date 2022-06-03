@@ -8,7 +8,7 @@ import os
 import re
 from itertools import repeat
 
-import pytest  # type: ignore[import]
+import pytest
 
 from .local import local_test
 

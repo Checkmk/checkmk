@@ -8,7 +8,7 @@ import os
 import re
 from typing import Optional
 
-import pytest  # type: ignore
+import pytest
 
 from .local import get_main_yaml_name, get_user_yaml_name, local_test, root_dir, user_dir
 

@@ -4,7 +4,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# tyxpe: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
 from cmk.base.check_api import get_bytes_human_readable
 
 # disks = [
@@ -85,7 +84,7 @@ def check_filer_disks(disks, params):
             yield 0, "%s Disk Details: %s" % (disk_state, " / ".join(info_texts))
             warn, crit = params["%s_spare_ratio" % disk_state]
             ratio = (
-                float(len(state[disk_state])) / (len(state[disk_state]) + len(state["spare"])) * 100  # type: ignore[operator]
+                float(len(state[disk_state])) / (len(state[disk_state]) + len(state["spare"])) * 100
             )
             return_state: bool | int = False
             if ratio >= crit:

@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# tyxpe: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
+
 from cmk.base.check_api import get_bytes_human_readable
 
 from .df import df_check_filesystem_list

@@ -100,7 +100,7 @@ def _ensure_general_access() -> None:
         )
     )
 
-    if login.auth_type == "cookie":  # type: ignore[has-type]
+    if login.auth_type == "cookie":
         reason.append(
             _("<p>You have been logged out. Please reload the page " "to re-authenticate.</p>")
         )

@@ -741,11 +741,7 @@ class WithUniqueIdentifier(abc.ABC):
 
     def __init__(self, *args, **kw):
         self._id = None
-        # NOTE: Mixins with attributes are a bit questionable in general.
-        # Furthermore, mypy is currently too dumb to understand mixins the way
-        # we implement them, see e.g.
-        # https://github.com/python/mypy/issues/5887 and related issues.
-        super().__init__(*args, **kw)  # type: ignore[call-arg]
+        super().__init__(*args, **kw)
 
     def id(self) -> str:
         """The unique identifier of this particular instance.
@@ -856,11 +852,7 @@ class WithAttributes:
     Used in the Host and Folder classes."""
 
     def __init__(self, *args, **kw):
-        # NOTE: Mixins with attributes are a bit questionable in general.
-        # Furthermore, mypy is currently too dumb to understand mixins the way
-        # we implement them, see e.g.
-        # https://github.com/python/mypy/issues/5887 and related issues.
-        super().__init__(*args, **kw)  # type: ignore[call-arg]
+        super().__init__(*args, **kw)
         self._attributes: Dict[str, Any] = {"meta_data": {}}
         self._effective_attributes = None
 

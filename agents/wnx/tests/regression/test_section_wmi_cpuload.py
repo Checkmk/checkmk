@@ -8,7 +8,7 @@ import os
 import re
 from typing import Any, AnyStr, Dict, Final, Sequence
 
-import pytest  # type: ignore[import]
+import pytest
 
 from . import it_utils
 from .local import local_test

@@ -419,7 +419,7 @@ def registry_reset() -> Iterator[None]:
         yield
     finally:
         for registry, defaults in defaults_per_registry:
-            for entry in list(registry):  # type: ignore[call-overload]
+            for entry in list(registry):
                 if entry not in defaults:
                     registry.unregister(entry)  # type: ignore[attr-defined]
 

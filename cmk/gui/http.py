@@ -37,10 +37,7 @@ class LegacyVarsMixin:
     DELETED = object()
 
     def __init__(self, *args: Any, **kw: Any) -> None:
-        # TODO: mypy does not know about the related mixin classes. This whole class can be cleaned
-        # up with 1.7, once we have moved to python 3.
-        # [mypy:] Too many arguments for "__init__" of "object"  [call-arg]
-        super().__init__(*args, **kw)  # type: ignore[call-arg]
+        super().__init__(*args, **kw)
         self.legacy_vars = self._vars = {}  # type: Dict[str, Union[str, object]]
 
     def set_var(self, varname: str, value: str) -> None:
@@ -99,10 +96,7 @@ class LegacyVarsMixin:
 
 class LegacyUploadMixin:
     def __init__(self, *args: Any, **kw: Any) -> None:
-        # TODO: mypy does not know about the related mixin classes. This whole class can be cleaned
-        # up with 1.7, once we have moved to python 3.
-        # [mypy:] Too many arguments for "__init__" of "object"  [call-arg]
-        super().__init__(*args, **kw)  # type: ignore[call-arg]
+        super().__init__(*args, **kw)
         self.upload_cache: Dict[str, UploadedFile] = {}
 
     def uploaded_file(self, name: str) -> UploadedFile:

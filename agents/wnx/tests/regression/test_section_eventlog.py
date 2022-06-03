@@ -12,7 +12,7 @@ import re
 import winreg  # type: ignore
 from itertools import chain, repeat
 
-import pytest  # type: ignore
+import pytest
 import win32evtlog  # type: ignore
 
 from .local import assert_subprocess, host, local_test, user_dir

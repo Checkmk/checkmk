@@ -482,7 +482,7 @@ def process_capture(
             and process_info.physical is not None
         ):
 
-            process.append(("user", (process_info.user, "")))  # type: ignore[args-type]
+            process.append(("user", (process_info.user, "")))
             process.append(("virtual size", (process_info.virtual, "kB")))
             process.append(("resident size", (process_info.physical, "kB")))
 

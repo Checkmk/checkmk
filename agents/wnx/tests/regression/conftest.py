@@ -8,7 +8,7 @@ import subprocess
 import telnetlib  # nosec
 import time
 
-import pytest  # type: ignore
+import pytest
 import yaml
 
 from .local import DEFAULT_CONFIG, host, main_exe, port, run_agent, user_yaml_config

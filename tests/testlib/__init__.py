@@ -70,7 +70,7 @@ def fake_version_and_paths():
     if is_running_as_site_user():
         return
 
-    import _pytest.monkeypatch  # type: ignore # pylint: disable=import-outside-toplevel
+    import _pytest.monkeypatch  # pylint: disable=import-outside-toplevel
 
     monkeypatch = _pytest.monkeypatch.MonkeyPatch()
     tmp_dir = tempfile.mkdtemp(prefix="pytest_cmk_")
@@ -277,7 +277,9 @@ def import_module(pathname):
     # TODO: load_module() is deprecated, we should avoid using it.
     # Furthermore, due to some reflection Kung-Fu and typeshed oddities,
     # mypy is confused about its arguments.
-    return importlib.machinery.SourceFileLoader(modname, modpath).load_module()  # type: ignore[call-arg] # pylint: disable=no-value-for-parameter,deprecated-method
+    return importlib.machinery.SourceFileLoader(  # pylint: disable=no-value-for-parameter,deprecated-method
+        modname, modpath
+    ).load_module()
 
 
 def wait_until(condition, timeout=1, interval=0.1):

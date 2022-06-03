@@ -112,7 +112,7 @@ def test_process_matches(ps_line, ps_pattern, user_pattern, result):
     ],
 )
 def test_process_matches_match_groups(ps_line, ps_pattern, user_pattern, match_groups, result):
-    psi = ps.PsInfo(ps_line[0])  # type: ignore[call-arg]
+    psi = ps.PsInfo(ps_line[0])
     matches_attr = ps.process_attributes_match(psi, user_pattern, (None, False))
     matches_proc = ps.process_matches(ps_line[1:], ps_pattern, match_groups)
 

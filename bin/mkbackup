@@ -459,8 +459,7 @@ def file_checksum(path: str) -> str:
 class MKTarFile(TarFile):
     def _extract_member(self, tarinfo, targetpath, set_attrs=True, numeric_owner=False):
         verbose("Extracting %s" % targetpath)
-        # NOTE: The typeshed for TarFile is incomplete.
-        super()._extract_member(tarinfo, targetpath, set_attrs, numeric_owner)  # type: ignore[misc]
+        super()._extract_member(tarinfo, targetpath, set_attrs, numeric_owner)
 
     def makedir(self, tarinfo, targetpath):
         if os.path.lexists(targetpath):
@@ -470,8 +469,7 @@ class MKTarFile(TarFile):
             elif not os.path.isdir(targetpath):
                 os.remove(targetpath)
 
-        # NOTE: The typeshed for TarFile is incomplete.
-        super().makedir(tarinfo, targetpath)  # type: ignore[misc]
+        super().makedir(tarinfo, targetpath)
 
     def makelink(self, tarinfo, targetpath):
         if os.path.lexists(targetpath) and not os.path.islink(targetpath):
@@ -480,8 +478,7 @@ class MKTarFile(TarFile):
             else:
                 os.remove(targetpath)
 
-        # NOTE: The typeshed for TarFile is incomplete.
-        super().makelink(tarinfo, targetpath)  # type: ignore[misc]
+        super().makelink(tarinfo, targetpath)
 
     def makefile(self, tarinfo, targetpath):
         if os.path.lexists(targetpath):
@@ -493,8 +490,7 @@ class MKTarFile(TarFile):
                 shutil.rmtree(targetpath)
 
         try:
-            # NOTE: The typeshed for TarFile is incomplete.
-            super().makefile(tarinfo, targetpath)  # type: ignore[misc]
+            super().makefile(tarinfo, targetpath)
         except IOError as e:
             if e.errno == errno.EISDIR:
                 # Handle "IOError: [Errno 21] Is a directory"
@@ -503,14 +499,12 @@ class MKTarFile(TarFile):
                     os.remove(targetpath)
                 else:
                     shutil.rmtree(targetpath)
-                # NOTE: The typeshed for TarFile is incomplete.
-                super().makefile(tarinfo, targetpath)  # type: ignore[misc]
+                super().makefile(tarinfo, targetpath)
 
             elif e.errno == errno.ETXTBSY:
                 # Fix "IOError: [Errno 26] Text file busy" when replacing a file
                 os.remove(targetpath)
-                # NOTE: The typeshed for TarFile is incomplete.
-                super().makefile(tarinfo, targetpath)  # type: ignore[misc]
+                super().makefile(tarinfo, targetpath)
             else:
                 raise
 
@@ -519,8 +513,7 @@ class MKTarFile(TarFile):
             verbose("Cleaning up %s" % targetpath)
             os.remove(targetpath)
 
-        # NOTE: The typeshed for TarFile is incomplete.
-        super().makefifo(tarinfo, targetpath)  # type: ignore[misc]
+        super().makefifo(tarinfo, targetpath)
 
 
 #   List: Alle Backups auflisten

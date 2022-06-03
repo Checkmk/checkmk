@@ -4,8 +4,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# type: ignore[typeddict-item]
-
 import pytest
 
 import cmk.utils.diagnostics as diagnostics
@@ -14,7 +12,7 @@ import cmk.utils.diagnostics as diagnostics
 def test_diagnostics_serialize_wato_parameters_boolean():
     assert sorted(
         diagnostics.serialize_wato_parameters(
-            {
+            {  # type: ignore[typeddict-item]
                 "opt_info": {
                     diagnostics.OPT_LOCAL_FILES: "ANY",
                     diagnostics.OPT_OMD_CONFIG: "ANY",

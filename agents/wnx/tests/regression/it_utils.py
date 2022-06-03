@@ -9,7 +9,7 @@ import platform
 import subprocess
 from typing import Optional, Sequence
 
-import pytest  # type: ignore
+import pytest
 
 
 def check_actual_input(name: str, lines: int, alone: bool, data: Optional[Sequence[str]]) -> bool:

@@ -34,8 +34,7 @@ def test_render_help_html(request_context):
     assert compare_html(
         html.render_help(HTML("<abc>")), HTML('<div style="display:none" class="help"><abc></div>')
     )
-    # NOTE: This seems to be a mypy 0.780 bug.
-    assert html.have_help is True  # type: ignore[comparison-overlap]
+    assert html.have_help is True
 
 
 def test_render_help_text(request_context):

@@ -35,7 +35,7 @@ thermal_zone8|-|sunxi-therm|61|127|critical|127|hot|99|passive|99|active|94|acti
     ),
 ]
 
-RESULT_DISCOVERY = [  # type: ignore
+RESULT_DISCOVERY = [
     [Service(item="Zone %s" % i) for i in [0, 1, 3, 5]],
     [Service(item="Zone %s" % i) for i in [0, 3, 4, 5, 6, 8]],
 ]

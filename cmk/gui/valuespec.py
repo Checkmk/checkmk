@@ -1964,7 +1964,7 @@ class ListOf(ValueSpec[ListOfModel[T]]):
 
         # Render reference element for cloning
         # FIXME: self._valuespec.default_value() can be None!
-        self._show_reference_entry(varprefix, self._magic, self._valuespec.default_value())  # type: ignore[arg-type]
+        self._show_reference_entry(varprefix, self._magic, self._valuespec.default_value())
 
         # In the 'complain' phase, where the user already saved the
         # form but the validation failed, we must not display the

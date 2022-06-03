@@ -717,15 +717,11 @@ def test__find_candidates() -> None:
                     host_sections=HostSections[SNMPRawDataSection](
                         {
                             # host & mgmt:
-                            SectionName("uptime"): [["123"]],  # type: ignore[dict-item]
+                            SectionName("uptime"): [["123"]],
                             # mgmt only:
-                            SectionName("liebert_fans"): [  # type: ignore[dict-item]
-                                [["Fan", "67", "umin"]]
-                            ],
+                            SectionName("liebert_fans"): [[["Fan", "67", "umin"]]],
                             # is already mgmt_ prefixed:
-                            SectionName("mgmt_snmp_info"): [  # type: ignore[dict-item]
-                                [["a", "b", "c", "d"]]
-                            ],
+                            SectionName("mgmt_snmp_info"): [[["a", "b", "c", "d"]]],
                         }
                     ),
                     host_name=HostName("test_node"),

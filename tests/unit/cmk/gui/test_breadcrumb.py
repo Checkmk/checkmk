@@ -24,7 +24,7 @@ def test_breadcrumb_creation():
     assert len(b) == 2
     assert b[1].title == "Title2"
 
-    b += [  # type: ignore[misc]
+    b += [
         BreadcrumbItem("Title3", "index.py"),
         BreadcrumbItem("Title4", "index.py"),
     ]

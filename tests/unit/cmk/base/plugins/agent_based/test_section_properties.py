@@ -270,4 +270,4 @@ def test_section_parse_function_does_something(fix_register):
 def test_snmp_section_parse_function_deals_with_empty_input(fix_register):
     """We make sure that all parse functions can handle empty table data"""
     for section in fix_register.snmp_sections.values():
-        _ = section.parse_function(len(section.trees) * [[]])  # type: ignore[arg-type]
+        _ = section.parse_function(len(section.trees) * [[]])

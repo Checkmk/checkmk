@@ -10,7 +10,7 @@ import sys
 from builtins import range
 from typing import List
 
-import pytest  # type: ignore
+import pytest
 
 from .local import local_test, main_exe, run_subprocess
 

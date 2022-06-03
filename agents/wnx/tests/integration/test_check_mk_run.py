@@ -6,7 +6,7 @@
 
 from typing import List
 
-import pytest  # type: ignore
+import pytest
 from utils import YamlDict
 
 

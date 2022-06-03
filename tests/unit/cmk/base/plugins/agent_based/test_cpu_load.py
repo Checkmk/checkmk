@@ -13,7 +13,7 @@ STRING_TABLE: StringTable = [["0.88", "0.83", "0.87", "2/2148", "21050", "8"]]
 
 
 def test_basic_cpu_loads():
-    section = parse_cpu(STRING_TABLE)  # type: ignore[arg-type]
+    section = parse_cpu(STRING_TABLE)
     assert section
     result = list(
         check_cpu_load(

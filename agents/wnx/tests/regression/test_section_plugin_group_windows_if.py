@@ -13,7 +13,7 @@ import time
 from itertools import chain, repeat
 from typing import Iterator
 
-import pytest  # type: ignore[import]
+import pytest
 
 from .local import local_test, user_dir
 

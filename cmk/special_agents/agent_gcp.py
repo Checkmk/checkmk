@@ -9,7 +9,7 @@ from dataclasses import dataclass, field
 from functools import cache
 from typing import Any, Callable, Iterable, Mapping, Optional, Sequence, Union
 
-from google.cloud import asset_v1, monitoring_v3  # type: ignore
+from google.cloud import asset_v1, monitoring_v3
 from google.cloud.monitoring_v3 import Aggregation as gAggregation
 from google.cloud.monitoring_v3.types import TimeSeries
 

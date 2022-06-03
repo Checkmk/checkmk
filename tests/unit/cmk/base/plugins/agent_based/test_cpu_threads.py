@@ -104,7 +104,7 @@ def test_relative_but_no_absolute_levels(
     params,
     levels,
 ):
-    section = parse_cpu(STRING_TABLE_RELATIVE)  # type: ignore[arg-type]
+    section = parse_cpu(STRING_TABLE_RELATIVE)
     assert section
     found_levels = {}
     for element in check_cpu_threads(params=params, section=section):

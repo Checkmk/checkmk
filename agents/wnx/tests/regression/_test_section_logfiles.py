@@ -10,7 +10,7 @@ import platform
 import re
 import sys
 
-import pytest  # type: ignore
+import pytest
 
 from .local import local_test, run_subprocess, test_dir, user_dir
 

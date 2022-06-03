@@ -131,7 +131,7 @@ def test_check_kube_resource_quota_cpu_with_usage_params():
     result = tuple(
         check_resource_quota_resource(
             params=Params(
-                usage=("levels", (0.6, 0.8)),  # type: ignore
+                usage=("levels", (0.6, 0.8)),
                 request="no_levels",
                 limit="no_levels",
             ),

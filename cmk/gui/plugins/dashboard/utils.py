@@ -1260,9 +1260,7 @@ class StateFormatter:
     message_template: str
 
     def state_names(self, row: Row) -> Tuple[str, str]:
-        # TODO: remove underscore from _state_names and remove this method
-        # when https://github.com/python/mypy/pull/10548 is released
-        return self._state_names(row)  # type: ignore
+        return self._state_names(row)
 
 
 class ServiceStateFormatter(StateFormatter):
@@ -1273,8 +1271,7 @@ class ServiceStateFormatter(StateFormatter):
             message_template=message_template,
         )
         self.css = "svcstate state{}"
-        # TODO: see comment in StateFormatter.state_names
-        self._state_names = service_state_short  # type: ignore
+        self._state_names = service_state_short
         self.message_template = message_template
 
 

@@ -125,7 +125,7 @@ def test_check_kube_resource_quota_memory_with_usage_params():
     result = tuple(
         check_resource_quota_resource(
             params=Params(
-                usage=("levels", (500.0, 600.0)),  # type: ignore
+                usage=("levels", (500.0, 600.0)),
                 request="no_levels",
                 limit="no_levels",
             ),

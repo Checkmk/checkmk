@@ -58,7 +58,7 @@ def write_section_from_get_request(argv: Sequence[str]) -> None:
         logging.basicConfig(
             level={0: logging.WARN, 1: logging.INFO, 2: logging.DEBUG}.get(verbose, logging.DEBUG),
         )
-        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)  # type: ignore
+        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
         logging.getLogger("urllib3.connectionpool").setLevel(logging.INFO)
         logging.getLogger("vcr").setLevel(logging.WARN)
 

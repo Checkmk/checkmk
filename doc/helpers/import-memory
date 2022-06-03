@@ -456,7 +456,7 @@ def main(args):
         # var:  Callable[[unicode, Optional[Mapping[str, Any]], Optional[Mapping[str, Any]], Sequence[str      ], int], Any]
         __builtins__.__import__ = _importer  # type: ignore[assignment]
     except AttributeError:
-        __builtins__["__import__"] = _importer  # type: ignore[index]
+        __builtins__["__import__"] = _importer
 
     # Not sure how much this helps.
     gc.disable()

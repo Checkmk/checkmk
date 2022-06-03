@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# tyxpe: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
+
 # The OpenManage module attaches itself to the SNMP agent of the
 # operating system. We trigger on all Windows and Linux systems.
 # This is not optimal but still enough for excluding network

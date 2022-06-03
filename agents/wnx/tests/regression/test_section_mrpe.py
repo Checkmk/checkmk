@@ -9,7 +9,7 @@ import platform
 import re
 import shutil
 
-import pytest  # type: ignore
+import pytest
 
 from .local import local_test, user_dir
 

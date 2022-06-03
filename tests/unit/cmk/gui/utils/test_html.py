@@ -46,8 +46,7 @@ def test_class_HTML():
     assert len(B) == len(b)
     assert str(B) == str(b)
 
-    # TODO: Investigate
-    assert "1" + B + "2" + C == "1" + b + "2" + c  # type: ignore[type-var]
+    assert "1" + B + "2" + C == "1" + b + "2" + c
 
     assert (A + B) == (a + b)
     assert HTML().join([A, B]) == A + B
@@ -67,10 +66,10 @@ def test_class_HTML():
     assert isinstance(HTML().join([A, B]), HTML)
     assert isinstance(HTML("").join([a, b]), HTML)
     # TODO: Investigate
-    assert isinstance("TEST" + HTML(), HTML)  # type: ignore[type-var]
+    assert isinstance("TEST" + HTML(), HTML)
     assert isinstance(HTML() + "TEST", HTML)
     # TODO: Investigate
-    assert isinstance("TEST" + HTML() + "TEST", HTML)  # type: ignore[type-var]
+    assert isinstance("TEST" + HTML() + "TEST", HTML)
 
     # assert "<div>" + HTML("content") + "</div>" == "&lt;div&gt;content&lt;/div&gt;"
     # assert HTML().join(["<div>", HTML("</br>"), HTML("<input/>"), "</div>"]) ==\
@@ -115,7 +114,7 @@ def test_class_HTML():
 
     assert isinstance("TEST%s" % A, str)
 
-    assert "test" + C == "test" + c  # type: ignore[type-var]
+    assert "test" + C == "test" + c
 
     assert D == d
     assert "%s" % D == "%s" % d

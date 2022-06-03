@@ -4,8 +4,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# tyxpe: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
-
 
 def parse_physical_volumes(volume_data):
     status_map = {

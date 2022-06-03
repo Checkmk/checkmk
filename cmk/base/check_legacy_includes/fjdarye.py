@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# tyxpe: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
+
 # pylint: disable=no-else-return
 
 # check_mk plugin to monitor Fujitsu storage systems supporting FJDARY-E60.MIB or FJDARY-E100.MIB

@@ -102,7 +102,7 @@ def test_docker_container_diskstat_cgroupv2() -> None:
     with pytest.raises(IgnoreResultsError):
         # no rate metrics yet
         _ = list(
-            check_diskstat(  # type: ignore[private_usage]
+            check_diskstat(
                 "nvme0n1",
                 FILESYSTEM_DEFAULT_LEVELS,
                 parse_docker_container_diskstat_cgroupv2(_split(AGENT_OUTPUT_0_SEC)),
@@ -110,7 +110,7 @@ def test_docker_container_diskstat_cgroupv2() -> None:
             )
         )
     result = list(
-        check_diskstat(  # type: ignore[private_usage]
+        check_diskstat(
             "nvme0n1",
             FILESYSTEM_DEFAULT_LEVELS,
             parse_docker_container_diskstat_cgroupv2(_split(AGENT_OUTPUT_59_SEC)),

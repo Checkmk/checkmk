@@ -86,7 +86,7 @@ def test_create_layout_recover_function(suboids_list, input_data, expected_outpu
         (
             (".1.2.3", [OID_STRING]),
             # discouraged by typing, but will still work:
-            [SNMPTree(base=".1.2.3", oids=[SpecialColumn.STRING])],  # type: ignore[list-item]
+            [SNMPTree(base=".1.2.3", oids=[SpecialColumn.STRING])],
             None,
         ),
     ],

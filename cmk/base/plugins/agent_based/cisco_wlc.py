@@ -68,7 +68,7 @@ def parse_cisco_wlc(string_table: List[StringTable]) -> Section:
     >>> parse_cisco_wlc([[['AP19', '1'], ['AP02', '1']]])
     {'AP19': '1', 'AP02': '1'}
     """
-    return dict(string_table[0])  # type: ignore[arg-type]
+    return dict(string_table[0])
 
 
 def discovery_cisco_wlc(section: Section) -> DiscoveryResult:

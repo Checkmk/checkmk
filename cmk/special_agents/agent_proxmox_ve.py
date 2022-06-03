@@ -684,7 +684,7 @@ class ProxmoxVeSession:
         def create_session() -> requests.Session:
             session = requests.Session()
             session.auth = self.HTTPAuth(self._base_url, credentials, timeout, verify_ssl)
-            session.cookies = requests.cookies.cookiejar_from_dict(  # type: ignore
+            session.cookies = requests.cookies.cookiejar_from_dict(
                 {"PVEAuthCookie": session.auth.pve_auth_cookie}
             )
             session.headers["Connection"] = "keep-alive"

@@ -75,8 +75,7 @@ def test_transaction_valid(tm, transid, ignore_transids, result, mocker, is_exis
     assert tm._ignore_transids is False
     if ignore_transids:
         tm.ignore()
-        # NOTE: This seems to be a mypy 0.780 bug.
-        assert tm._ignore_transids is True  # type: ignore[comparison-overlap]
+        assert tm._ignore_transids is True
 
     if transid is not None:
         tm._request.set_var("_transid", transid)

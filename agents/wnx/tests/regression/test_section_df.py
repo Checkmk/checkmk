@@ -7,7 +7,7 @@
 import os
 import re
 
-import pytest  # type: ignore
+import pytest
 
 from .local import local_test
 

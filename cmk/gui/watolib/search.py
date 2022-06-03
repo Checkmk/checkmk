@@ -230,7 +230,7 @@ class IndexBuilder:
                 key=" ".join(match_item.match_texts),
                 value=idx,
             )
-            redis_pipeline.hset(  # type: ignore[call-arg]  # no idea why this is necessary...
+            redis_pipeline.hset(
                 cls.add_to_prefix(prefix, idx),
                 mapping={
                     "title": match_item.title,

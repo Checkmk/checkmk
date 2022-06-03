@@ -63,14 +63,14 @@ EXPECTED = [
             "arch": "ppc64",
             "model": "PowerPC_POWER7",
             "implementation_mode": "POWER 7",
-            "max_speed": 4284000000.0,  # type: ignore[dict-item]
-            "cpus": 8,  # type: ignore[dict-item]
+            "max_speed": 4284000000.0,
+            "cpus": 8,
         },
         status_attributes={},
     ),
     Attributes(path=["hardware", "memory"])._replace(
         inventory_attributes={
-            "total_ram_usable": 270314504192,  # type: ignore[dict-item]
+            "total_ram_usable": 270314504192,
         },
         status_attributes={},
     ),

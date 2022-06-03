@@ -95,7 +95,6 @@ class _AggregatedResult(NamedTuple):
 @cmk.base.agent_based.decorator.handle_check_mk_check_result("mk", "Check_MK")
 def active_check_checking(
     hostname: HostName,
-    ipaddress: Optional[HostAddress],
     *,
     fetched: Sequence[Tuple[Source, FetcherMessage]],
     run_plugin_names: Container[CheckPluginName] = EVERYTHING,
@@ -111,7 +110,6 @@ def active_check_checking(
     """
     return _execute_checkmk_checks(
         hostname=hostname,
-        ipaddress=ipaddress,
         fetched=fetched,
         run_plugin_names=run_plugin_names,
         selected_sections=selected_sections,
@@ -154,7 +152,6 @@ def commandline_checking(
     )
     return _execute_checkmk_checks(
         hostname=host_name,
-        ipaddress=ipaddress,
         fetched=fetched,
         run_plugin_names=run_plugin_names,
         selected_sections=selected_sections,
@@ -166,7 +163,6 @@ def commandline_checking(
 def _execute_checkmk_checks(
     *,
     hostname: HostName,
-    ipaddress: Optional[HostAddress],
     fetched: Sequence[Tuple[Source, FetcherMessage]],
     run_plugin_names: Container[CheckPluginName],
     selected_sections: SectionNameCollection,
@@ -194,7 +190,6 @@ def _execute_checkmk_checks(
         service_results = check_host_services(
             config_cache=config_cache,
             host_config=host_config,
-            ipaddress=ipaddress,
             parsed_sections_broker=broker,
             services=services,
             run_plugin_names=run_plugin_names,
@@ -307,7 +302,6 @@ def check_host_services(
     *,
     config_cache: config.ConfigCache,
     host_config: config.HostConfig,
-    ipaddress: Optional[HostAddress],
     parsed_sections_broker: ParsedSectionsBroker,
     services: Sequence[ConfiguredService],
     run_plugin_names: Container[CheckPluginName],
@@ -328,7 +322,6 @@ def check_host_services(
                 get_aggregated_result(
                     parsed_sections_broker,
                     host_config,
-                    ipaddress,
                     service,
                     agent_based_register.get_check_plugin(service.check_plugin_name),
                     value_store_manager=value_store_manager,
@@ -416,7 +409,6 @@ def _submit_aggregated_results(
 def get_aggregated_result(
     parsed_sections_broker: ParsedSectionsBroker,
     host_config: config.HostConfig,
-    ipaddress: Optional[HostAddress],
     service: ConfiguredService,
     plugin: Optional[checking_classes.CheckPlugin],
     *,
@@ -455,7 +447,6 @@ def get_aggregated_result(
         parsed_sections_broker,
         host_config,
         config_cache,
-        ipaddress,
         service,
         plugin.sections,
     )
@@ -526,7 +517,6 @@ def _get_monitoring_data_kwargs(
     parsed_sections_broker: ParsedSectionsBroker,
     host_config: config.HostConfig,
     config_cache: config.ConfigCache,
-    ipaddress: Optional[HostAddress],
     service: ConfiguredService,
     sections: Sequence[ParsedSectionName],
     source_type: Optional[SourceType] = None,

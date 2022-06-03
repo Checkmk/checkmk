@@ -20,7 +20,6 @@ from cmk.utils.type_defs import (
     CheckPluginName,
     DiscoveryResult,
     EVERYTHING,
-    HostAddress,
     HostKey,
     HostName,
     SectionName,
@@ -34,7 +33,6 @@ import cmk.base.agent_based.discovery as discovery
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.autochecks as autochecks
 import cmk.base.config as config
-import cmk.base.ip_lookup as ip_lookup
 from cmk.base.agent_based.data_provider import (
     ParsedSectionsBroker,
     ParsedSectionsResolver,
@@ -888,9 +886,8 @@ class RealHostScenario(NamedTuple):
 @pytest.fixture(name="realhost_scenario")
 def _realhost_scenario(monkeypatch: MonkeyPatch) -> RealHostScenario:
     hostname = HostName("test-realhost")
-    ipaddress = HostAddress("1.2.3.4")
     ts = Scenario()
-    ts.add_host(hostname, ipaddress=ipaddress)
+    ts.add_host(hostname, ipaddress="127.0.0.1")
     ts.set_ruleset(
         "inventory_df_rules",
         [
@@ -904,11 +901,6 @@ def _realhost_scenario(monkeypatch: MonkeyPatch) -> RealHostScenario:
         ],
     )
     ts.apply(monkeypatch)
-
-    def fake_lookup_ip_address(*_a, **_kw) -> HostAddress:
-        return ipaddress
-
-    monkeypatch.setattr(ip_lookup, "lookup_ip_address", fake_lookup_ip_address)
 
     DiscoveredHostLabelsStore(hostname).save(
         {
@@ -973,7 +965,6 @@ def _realhost_scenario(monkeypatch: MonkeyPatch) -> RealHostScenario:
 
 class ClusterScenario(NamedTuple):
     host_config: config.HostConfig
-    ipaddress: HostAddress
     parsed_sections_broker: ParsedSectionsBroker
     node1_hostname: HostName
     node2_hostname: HostName
@@ -982,14 +973,8 @@ class ClusterScenario(NamedTuple):
 @pytest.fixture(name="cluster_scenario")
 def _cluster_scenario(monkeypatch) -> ClusterScenario:
     hostname = HostName("test-clusterhost")
-    ipaddress = HostAddress("1.2.3.4")
     node1_hostname = HostName("test-node1")
     node2_hostname = HostName("test-node2")
-
-    def fake_lookup_ip_address(*_a, **_kw) -> HostAddress:
-        return ipaddress
-
-    monkeypatch.setattr(ip_lookup, "lookup_ip_address", fake_lookup_ip_address)
 
     ts = Scenario()
     ts.add_host(node1_hostname)
@@ -1119,7 +1104,6 @@ def _cluster_scenario(monkeypatch) -> ClusterScenario:
 
     return ClusterScenario(
         host_config,
-        ipaddress,
         broker,
         node1_hostname,
         node2_hostname,
@@ -1540,7 +1524,6 @@ def test__discover_services_on_cluster(
 
     discovered_services = discovery._get_cluster_services(
         scenario.host_config,
-        scenario.ipaddress,
         scenario.parsed_sections_broker,
         OnError.RAISE,
     )

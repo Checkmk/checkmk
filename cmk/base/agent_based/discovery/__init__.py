@@ -371,7 +371,6 @@ def automation_discovery(
         # Compute current state of new and existing checks
         services = _get_host_services(
             host_config,
-            ipaddress,
             parsed_sections_broker,
             on_error=on_error,
         )
@@ -531,11 +530,10 @@ def _make_diff(
 @decorator.handle_check_mk_check_result("discovery", "Check_MK Discovery")
 def active_check_discovery(
     host_name: HostName,
-    ipaddress: Optional[HostAddress],
     *,
     fetched: Sequence[Tuple[Source, FetcherMessage]],
 ) -> ActiveCheckResult:
-    return _execute_check_discovery(host_name, ipaddress, fetched=fetched)
+    return _execute_check_discovery(host_name, fetched=fetched)
 
 
 @decorator.handle_check_mk_check_result("discovery", "Check_MK Discovery")
@@ -566,12 +564,11 @@ def commandline_check_discovery(
         mode=Mode.DISCOVERY,
     )
 
-    return _execute_check_discovery(host_name, ipaddress, fetched=fetched)
+    return _execute_check_discovery(host_name, fetched=fetched)
 
 
 def _execute_check_discovery(
     host_name: HostName,
-    ipaddress: Optional[HostAddress],
     *,
     fetched: Sequence[Tuple[Source, FetcherMessage]],
 ) -> ActiveCheckResult:
@@ -586,11 +583,6 @@ def _execute_check_discovery(
     params = host_config.discovery_check_parameters()
 
     discovery_mode = DiscoveryMode(params.rediscovery.get("mode"))
-
-    # In case of keepalive discovery we always have an ipaddress. When called as non keepalive
-    # ipaddress is always None
-    if ipaddress is None and not host_config.is_cluster:
-        ipaddress = config.lookup_ip_address(host_config)
 
     parsed_sections_broker, source_results = make_broker(
         fetched=fetched,
@@ -609,7 +601,6 @@ def _execute_check_discovery(
     )
     services = _get_host_services(
         host_config,
-        ipaddress,
         parsed_sections_broker,
         on_error=OnError.RAISE,
     )
@@ -1026,7 +1017,6 @@ def _may_rediscover(
 # This function is cluster-aware
 def _get_host_services(
     host_config: config.HostConfig,
-    ipaddress: Optional[HostAddress],
     parsed_sections_broker: ParsedSectionsBroker,
     on_error: OnError,
 ) -> ServicesByTransition:
@@ -1036,7 +1026,6 @@ def _get_host_services(
         services = {
             **_get_cluster_services(
                 host_config,
-                ipaddress,
                 parsed_sections_broker,
                 on_error,
             )
@@ -1152,7 +1141,6 @@ def _group_by_transition(
 
 def _get_cluster_services(
     host_config: config.HostConfig,
-    ipaddress: Optional[str],
     parsed_sections_broker: ParsedSectionsBroker,
     on_error: OnError,
 ) -> ServicesTable[_Transition]:
@@ -1279,7 +1267,6 @@ def get_check_preview(
 
     grouped_services = _get_host_services(
         host_config,
-        ip_address,
         parsed_sections_broker,
         on_error,
     )
@@ -1288,7 +1275,6 @@ def get_check_preview(
         passive_rows = [
             _check_preview_table_row(
                 host_config=host_config,
-                ip_address=ip_address,
                 service=ConfiguredService(
                     check_plugin_name=entry.check_plugin_name,
                     item=entry.item,
@@ -1312,7 +1298,6 @@ def get_check_preview(
         ] + [
             _check_preview_table_row(
                 host_config=host_config,
-                ip_address=ip_address,
                 service=service,
                 check_source="manual",  # "enforced" would be nicer
                 parsed_sections_broker=parsed_sections_broker,
@@ -1332,7 +1317,6 @@ def get_check_preview(
 def _check_preview_table_row(
     *,
     host_config: config.HostConfig,
-    ip_address: Optional[HostAddress],
     service: ConfiguredService,
     check_source: Union[_Transition, Literal["manual"]],
     parsed_sections_broker: ParsedSectionsBroker,
@@ -1345,7 +1329,6 @@ def _check_preview_table_row(
     result = checking.get_aggregated_result(
         parsed_sections_broker,
         host_config,
-        ip_address,
         service,
         plugin,
         value_store_manager=value_store_manager,

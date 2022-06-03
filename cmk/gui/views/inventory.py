@@ -1202,12 +1202,23 @@ def _declare_invtable_column(
     )
 
 
+def _get_table_rows(
+    tree: StructuredDataNode, inventory_path: inventory.InventoryPath
+) -> Sequence[SDRow]:
+    return (
+        []
+        if inventory_path.source != inventory.TreeSource.table
+        or (table := tree.get_table(inventory_path.path)) is None
+        else table.rows
+    )
+
+
 class RowTableInventory(ABCRowTable):
     def __init__(self, info_name: str, inventory_path: SDRawPath) -> None:
         super().__init__([info_name], ["host_structured_status"])
         self._inventory_path = inventory_path
 
-    def _get_inv_data(self, hostrow: Row) -> inventory.InventoryRows:
+    def _get_inv_data(self, hostrow: Row) -> Sequence[SDRow]:
         try:
             merged_tree = inventory.load_filtered_and_merged_tree(hostrow)
         except inventory.LoadStructuredDataError:
@@ -1223,12 +1234,9 @@ class RowTableInventory(ABCRowTable):
         if merged_tree is None:
             return []
 
-        table = inventory.get_inventory_table(merged_tree, self._inventory_path)
-        if table is None:
-            return []
-        return table
+        return _get_table_rows(merged_tree, inventory.InventoryPath.parse(self._inventory_path))
 
-    def _prepare_rows(self, inv_data: inventory.InventoryRows) -> Iterable[Row]:
+    def _prepare_rows(self, inv_data: Sequence[SDRow]) -> Iterable[Row]:
         # TODO check: hopefully there's only a table as input arg
         info_name = self._info_names[0]
         entries = []
@@ -1295,9 +1303,6 @@ def declare_invtable_view(
     _declare_views(infoname, title_plural, painters, filters, [raw_path], icon)
 
 
-InventorySourceRows = Tuple[str, inventory.InventoryRows]
-
-
 class RowMultiTableInventory(ABCRowTable):
     def __init__(
         self,
@@ -1310,7 +1315,7 @@ class RowMultiTableInventory(ABCRowTable):
         self._match_by = match_by
         self._errors = errors
 
-    def _get_inv_data(self, hostrow: Row) -> List[InventorySourceRows]:
+    def _get_inv_data(self, hostrow: Row) -> Sequence[Tuple[str, Sequence[SDRow]]]:
         try:
             merged_tree = inventory.load_filtered_and_merged_tree(hostrow)
         except inventory.LoadStructuredDataError:
@@ -1326,14 +1331,12 @@ class RowMultiTableInventory(ABCRowTable):
         if merged_tree is None:
             return []
 
-        multi_table: List[InventorySourceRows] = []
-        for info_name, inventory_path in self._sources:
-            table = inventory.get_inventory_table(merged_tree, inventory_path)
-            if table is not None:
-                multi_table.append((info_name, table))
-        return multi_table
+        return [
+            (info_name, _get_table_rows(merged_tree, inventory.InventoryPath.parse(inventory_path)))
+            for info_name, inventory_path in self._sources
+        ]
 
-    def _prepare_rows(self, inv_data: List[InventorySourceRows]) -> Iterable[Row]:
+    def _prepare_rows(self, inv_data: Sequence[Tuple[str, Sequence[SDRow]]]) -> Iterable[Row]:
         joined_rows: Dict[Tuple[str, ...], Dict] = {}
         for this_info_name, this_inv_data in inv_data:
             for entry in this_inv_data:

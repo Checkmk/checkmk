@@ -30,7 +30,6 @@ from cmk.utils.structured_data import (
     SDKey,
     SDPath,
     SDRawPath,
-    SDRow,
     StructuredDataNode,
     StructuredDataStore,
 )
@@ -54,16 +53,6 @@ from cmk.gui.valuespec import TextInput, ValueSpec
 #   - cmk.utils.structured_data.py::parse_visible_raw_path
 #     parses visible, internal tree paths for contact groups etc.
 # => Should be unified one day.
-
-InventoryRows = List[SDRow]
-
-
-def get_inventory_table(tree: StructuredDataNode, raw_path: SDRawPath) -> Optional[InventoryRows]:
-    inventory_path = InventoryPath.parse(raw_path)
-    if inventory_path.source != TreeSource.table:
-        return None
-    table = tree.get_table(inventory_path.path)
-    return None if table is None else table.rows
 
 
 def get_attribute(

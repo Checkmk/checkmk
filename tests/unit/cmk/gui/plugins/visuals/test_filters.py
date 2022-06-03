@@ -614,10 +614,6 @@ class FilterTableTest(NamedTuple):
     expected_rows: Sequence[Mapping[str, Any]]
 
 
-def get_inventory_table_patch(inventory, path):
-    return inventory[path]
-
-
 filter_table_tests = [
     # Testing base class BIStatusFilter
     FilterTableTest(
@@ -1125,7 +1121,11 @@ def test_filters_filter_table(request_context, test, monkeypatch):
         monkeypatch.setattr(agent_bakery, "get_cached_deployment_status", deployment_states)
 
     # Needed for FilterInvFloat test
-    monkeypatch.setattr(cmk.gui.inventory, "get_inventory_table", get_inventory_table_patch)
+    monkeypatch.setattr(
+        cmk.gui.views.inventory,
+        "_get_table_rows",
+        lambda t, p: {cmk.gui.inventory.InventoryPath.parse(k): v for k, v in t.items()}[p],
+    )
     monkeypatch.setattr(
         cmk.gui.inventory,
         "get_attribute",

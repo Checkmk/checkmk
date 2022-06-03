@@ -1,0 +1,13 @@
+Title: Fix custom host and service notes painter
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1654250333
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0i1
+
+Since version 2.1.0 custom host and service notes were not shown in column "Custom host notes" and
+"Custom services notes".

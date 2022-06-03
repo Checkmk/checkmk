@@ -1546,23 +1546,10 @@ def _paint_custom_notes(what: str, row: Row) -> CellSpec:
     host = row["host_name"]
     svc = row.get("service_description")
     if what == "service":
-        dirs = notes_matching_pattern_entries(
-            [
-                Path(
-                    cmk.utils.paths.default_config_dir,
-                    "/notes/services",
-                )
-            ],
-            host,
-        )
+        dirs = [Path(cmk.utils.paths.default_config_dir) / "notes/services" / host]
         item = svc
     else:
-        dirs = [
-            Path(
-                cmk.utils.paths.default_config_dir,
-                "/notes/hosts",
-            )
-        ]
+        dirs = [Path(cmk.utils.paths.default_config_dir) / "notes/hosts"]
         item = host
 
     assert isinstance(item, str)

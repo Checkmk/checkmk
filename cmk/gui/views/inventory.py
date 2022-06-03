@@ -212,11 +212,11 @@ class PainterInventoryTree(Painter):
         except MultipleInventoryTreesError:
             return "", ""
 
-        struct_tree = row.get("host_inventory")
-        if struct_tree is None:
+        tree = row.get("host_inventory")
+        if tree is None:
             return "", ""
 
-        assert isinstance(struct_tree, StructuredDataNode)
+        assert isinstance(tree, StructuredDataNode)
 
         painter_options = PainterOptions.get_instance()
         tree_renderer = NodeRenderer(
@@ -226,7 +226,7 @@ class PainterInventoryTree(Painter):
         )
 
         with output_funnel.plugged():
-            struct_tree.show(tree_renderer)
+            tree_renderer.show(tree, NodeDisplayHint.make(tree.path))
             code = HTML(output_funnel.drain())
 
         return "invtree", code
@@ -1034,13 +1034,13 @@ def _paint_host_inventory_tree(row: Row, inventory_path: inventory.InventoryPath
     except MultipleInventoryTreesError:
         return "", ""
 
-    struct_tree = row.get("host_inventory")
-    if struct_tree is None:
+    tree = row.get("host_inventory")
+    if tree is None:
         return "", ""
 
-    assert isinstance(struct_tree, StructuredDataNode)
+    assert isinstance(tree, StructuredDataNode)
 
-    if (node := struct_tree.get_node(inventory_path.path)) is None:
+    if (node := tree.get_node(inventory_path.path)) is None:
         return "", ""
 
     painter_options = PainterOptions.get_instance()
@@ -1053,11 +1053,11 @@ def _paint_host_inventory_tree(row: Row, inventory_path: inventory.InventoryPath
     td_class = ""
     with output_funnel.plugged():
         if inventory_path.source == inventory.TreeSource.node:
-            node.show(tree_renderer)
+            tree_renderer.show(node, NodeDisplayHint.make(node.path))
             td_class = "invtree"
 
         elif inventory_path.source == inventory.TreeSource.table:
-            node.table.show(tree_renderer)
+            tree_renderer.show_table(node.table, NodeDisplayHint.make(node.path).table_hint)
 
         elif (
             inventory_path.source == inventory.TreeSource.attributes
@@ -1953,11 +1953,11 @@ class PainterInvhistDelta(Painter):
         except MultipleInventoryTreesError:
             return "", ""
 
-        struct_tree = row.get("invhist_delta")
-        if struct_tree is None:
+        tree = row.get("invhist_delta")
+        if tree is None:
             return "", ""
 
-        assert isinstance(struct_tree, StructuredDataNode)
+        assert isinstance(tree, StructuredDataNode)
 
         tree_renderer = DeltaNodeRenderer(
             row["site"],
@@ -1966,7 +1966,7 @@ class PainterInvhistDelta(Painter):
         )
 
         with output_funnel.plugged():
-            struct_tree.show(tree_renderer)
+            tree_renderer.show(tree, NodeDisplayHint.make(tree.path))
             code = HTML(output_funnel.drain())
 
         return "invtree", code
@@ -2121,33 +2121,43 @@ class ABCNodeRenderer(abc.ABC):
         self._tree_id = tree_id
         self._show_internal_tree_paths = show_internal_tree_paths
 
+    def show(self, node: StructuredDataNode, hint: NodeDisplayHint) -> None:
+        if not node.attributes.is_empty():
+            self._show_attributes(node.attributes, hint.attributes_hint)
+
+        if not node.table.is_empty():
+            self.show_table(node.table, hint.table_hint)
+
+        for the_node in sorted(node.nodes, key=lambda n: n.name):
+            self._show_node(the_node)
+
     #   ---node-----------------------------------------------------------------
 
-    def show_node(self, node: StructuredDataNode) -> None:
-        node_hint = NodeDisplayHint.make(node.path)
+    def _show_node(self, node: StructuredDataNode) -> None:
+        hint = NodeDisplayHint.make(node.path)
 
-        title = node_hint.title
+        title = hint.title
 
         # Replace placeholders in title with the real values for this path
         if "%d" in title or "%s" in title:
-            title = self._replace_placeholders(title, node_hint.raw_path)
+            title = self._replace_placeholders(title, hint.raw_path)
 
         with foldable_container(
             treename="inv_%s%s" % (self._hostname, self._tree_id),
-            id_=node_hint.raw_path,
+            id_=hint.raw_path,
             isopen=False,
             title=self._get_header(
                 title,
                 ".".join(map(str, node.path)),
                 "#666",
             ),
-            icon=node_hint.icon,
+            icon=hint.icon,
             fetch_url=makeuri_contextless(
                 request,
                 [
                     ("site", self._site_id),
                     ("host", self._hostname),
-                    ("raw_path", node_hint.raw_path),
+                    ("raw_path", hint.raw_path),
                     ("show_internal_tree_paths", "on" if self._show_internal_tree_paths else ""),
                     ("tree_id", self._tree_id),
                 ],
@@ -2155,7 +2165,7 @@ class ABCNodeRenderer(abc.ABC):
             ),
         ) as is_open:
             if is_open:
-                node.show(self)
+                self.show(node, hint)
 
     def _replace_placeholders(self, raw_title: str, raw_path: SDRawPath) -> str:
         hint_id = _find_display_hint_id(raw_path)
@@ -2179,10 +2189,8 @@ class ABCNodeRenderer(abc.ABC):
 
     #   ---table----------------------------------------------------------------
 
-    def show_table(self, table: Table) -> None:
-        table_hint = NodeDisplayHint.make(table.path).table_hint
-
-        if table_hint.view_name:
+    def show_table(self, table: Table, hint: TableDisplayHint) -> None:
+        if hint.view_name:
             # Link to Multisite view with exactly this table
             html.div(
                 HTMLWriter.render_a(
@@ -2190,7 +2198,7 @@ class ABCNodeRenderer(abc.ABC):
                     href=makeuri_contextless(
                         request,
                         [
-                            ("view_name", table_hint.view_name),
+                            ("view_name", hint.view_name),
                             ("host", self._hostname),
                         ],
                         filename="view.py",
@@ -2199,7 +2207,7 @@ class ABCNodeRenderer(abc.ABC):
                 class_="invtablelink",
             )
 
-        columns = table_hint.make_columns(table.rows, table.key_columns, table.path)
+        columns = hint.make_columns(table.rows, table.key_columns, table.path)
 
         # TODO: Use table.open_table() below.
         html.open_table(class_="data")
@@ -2215,7 +2223,7 @@ class ABCNodeRenderer(abc.ABC):
             )
         html.close_tr()
 
-        for row in table_hint.sort_rows(table.rows, columns):
+        for row in hint.sort_rows(table.rows, columns):
             html.open_tr(class_="even0")
             for column in columns:
                 value = row.get(column.key)
@@ -2244,11 +2252,9 @@ class ABCNodeRenderer(abc.ABC):
 
     #   ---attributes-----------------------------------------------------------
 
-    def show_attributes(self, attributes: Attributes) -> None:
-        attrs_hint = NodeDisplayHint.make(attributes.path).attributes_hint
-
+    def _show_attributes(self, attributes: Attributes, hint: AttributesDisplayHint) -> None:
         html.open_table()
-        for key, value in attrs_hint.sort_pairs(attributes.pairs):
+        for key, value in hint.sort_pairs(attributes.pairs):
             attr_hint = AttributeDisplayHint.make(attributes.path, key)
 
             html.open_tr()
@@ -2404,7 +2410,7 @@ def ajax_inv_render_tree() -> None:
     show_internal_tree_paths = bool(request.var("show_internal_tree_paths"))
 
     if tree_id:
-        struct_tree, corrupted_history_files = inventory.load_delta_tree(hostname, int(tree_id[1:]))
+        tree, corrupted_history_files = inventory.load_delta_tree(hostname, int(tree_id[1:]))
         if corrupted_history_files:
             user_errors.add(
                 MKUserError(
@@ -2425,7 +2431,7 @@ def ajax_inv_render_tree() -> None:
     else:
         row = inventory.get_status_data_via_livestatus(site_id, hostname)
         try:
-            struct_tree = inventory.load_filtered_and_merged_tree(row)
+            tree = inventory.load_filtered_and_merged_tree(row)
         except inventory.LoadStructuredDataError:
             user_errors.add(
                 MKUserError(
@@ -2441,15 +2447,15 @@ def ajax_inv_render_tree() -> None:
             show_internal_tree_paths=show_internal_tree_paths,
         )
 
-    if struct_tree is None:
+    if tree is None:
         html.show_error(_("No such inventory tree."))
         return
 
     inventory_path = inventory.InventoryPath.parse(raw_path or "")
-    if (node := struct_tree.get_node(inventory_path.path)) is None:
+    if (node := tree.get_node(inventory_path.path)) is None:
         html.show_error(
             _("Invalid path in inventory tree: '%s' >> %s") % (raw_path, repr(inventory_path.path))
         )
         return
 
-    node.show(tree_renderer)
+    tree_renderer.show(node, NodeDisplayHint.make(node.path))

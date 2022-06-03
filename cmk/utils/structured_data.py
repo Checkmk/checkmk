@@ -303,6 +303,10 @@ class StructuredDataNode:
         self.attributes.set_path(path)
         self.table.set_path(path)
 
+    @property
+    def nodes(self) -> Iterable[StructuredDataNode]:
+        return self._nodes.values()
+
     #   ---common methods-------------------------------------------------------
 
     def is_empty(self) -> bool:
@@ -627,19 +631,6 @@ class StructuredDataNode:
                     filtered_node.add_node(sub_node)
 
         return filtered
-
-    #   ---web------------------------------------------------------------------
-
-    def show(self, renderer):
-        # TODO: type hints
-        if not self.attributes.is_empty():
-            renderer.show_attributes(self.attributes)
-
-        if not self.table.is_empty():
-            renderer.show_table(self.table)
-
-        for name in sorted(self._nodes):
-            renderer.show_node(self._nodes[name])
 
 
 # .
@@ -1008,12 +999,6 @@ class Table:
             table.add_row(ident, _get_filtered_dict(row, filter_func))
         return table
 
-    #   ---web------------------------------------------------------------------
-
-    def show(self, renderer):
-        # TODO: type hints
-        renderer.show_table(self)
-
 
 # .
 #   .--Attributes----------------------------------------------------------.
@@ -1204,12 +1189,6 @@ class Attributes:
         attributes = Attributes(path=self.path, retentions=self.retentions)
         attributes.add_pairs(_get_filtered_dict(self.pairs, filter_func))
         return attributes
-
-    #   ---web------------------------------------------------------------------
-
-    def show(self, renderer):
-        # TODO: type hints
-        renderer.show_attributes(self)
 
 
 # .

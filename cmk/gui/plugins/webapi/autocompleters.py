@@ -255,7 +255,7 @@ def tag_group_opt_autocompleter(value: str, params: Dict) -> Choices:
             grouped.append(("", ""))
             for grouped_tag in tag_group.tags:
                 tag_id = "" if grouped_tag.id is None else grouped_tag.id
-                if value.lower() in grouped_tag.title:
+                if value.lower() in grouped_tag.title.lower() or value == grouped_tag.id:
                     grouped.append((tag_id, grouped_tag.title))
     return grouped
 

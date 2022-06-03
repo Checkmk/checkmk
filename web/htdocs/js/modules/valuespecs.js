@@ -878,7 +878,7 @@ function select2_vs_autocomplete(container) {
                     let pick = data.result.choices.find(el => el[0] === term);
                     if (pick) {
                         let option = new Option(pick[1], pick[0], true, true);
-                        $(elem).empty().append(option).trigger("change");
+                        $(elem).empty().append(option);
                     }
                 });
             }

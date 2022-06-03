@@ -66,6 +66,8 @@ import urllib.parse
 
 from six import ensure_str
 
+from cmk.gui.globals import session
+
 Value = TypeVar('Value')
 
 
@@ -1554,6 +1556,8 @@ class html(ABCHTMLGenerator):
             if filename_for_browser:
                 self.javascript_file(filename_for_browser)
 
+        self._set_js_csrf_token()
+
         if self.browser_reload != 0.0:
             if self.browser_redirect != '':
                 self.javascript('cmk.utils.set_reload(%s, \'%s\')' %
@@ -1562,6 +1566,13 @@ class html(ABCHTMLGenerator):
                 self.javascript('cmk.utils.set_reload(%s)' % (self.browser_reload))
 
         self.close_head()
+
+    def _set_js_csrf_token(self) -> None:
+        # session is LocalProxy, only on access it is None, so we cannot test on 'is None'
+        if not hasattr(session, "session_info"):
+            return
+        self.javascript("var global_csrf_token = %s;" %
+                        (json.dumps(session.session_info.csrf_token)))
 
     def _add_custom_style_sheet(self) -> None:
         for css in self._plugin_stylesheets():
@@ -1775,6 +1786,8 @@ class html(ABCHTMLGenerator):
                        method=method,
                        onsubmit=onsubmit,
                        enctype="multipart/form-data" if method.lower() == "post" else None)
+        if hasattr(session, "session_info"):
+            self.hidden_field("csrf_token", session.session_info.csrf_token)
         self.hidden_field("filled_in", name, add_var=True)
         if add_transid:
             self.hidden_field(

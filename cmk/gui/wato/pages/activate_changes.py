@@ -48,6 +48,7 @@ from cmk.gui.page_menu import (
     make_javascript_link,
 )
 from cmk.gui.utils.urls import makeuri_contextless
+from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.html import HTML
 
 
@@ -584,6 +585,7 @@ def _vs_activation(title: str, has_foreign_changes: bool) -> Optional[Dictionary
 @page_registry.register_page("ajax_start_activation")
 class ModeAjaxStartActivation(AjaxPage):
     def page(self):
+        check_csrf_token()
         config.user.need_permission("wato.activate")
 
         request = self.webapi_request()

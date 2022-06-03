@@ -51,6 +51,7 @@ from cmk.gui.page_menu import (make_display_options_dropdown, PageMenu, PageMenu
 from cmk.gui.pagetypes import PagetypeTopics
 from cmk.utils.bi.bi_computer import BIAggregationFilter
 from cmk.utils.bi.bi_lib import NodeResultBundle
+from cmk.gui.utils.csrf_token import check_csrf_token
 
 Mesh = Set[str]
 Meshes = List[Mesh]
@@ -420,6 +421,7 @@ class NodeVisualizationBIDataMapper:
 @page_registry.register_page("ajax_save_bi_aggregation_layout")
 class AjaxSaveBIAggregationLayout(AjaxPage):
     def page(self) -> AjaxPageResult:
+        check_csrf_token()
         layout_var = html.request.get_str_input_mandatory("layout", "{}")
         layout_config = json.loads(layout_var)
         config.bi_layouts["aggregations"].update(layout_config)
@@ -430,6 +432,7 @@ class AjaxSaveBIAggregationLayout(AjaxPage):
 @page_registry.register_page("ajax_delete_bi_aggregation_layout")
 class AjaxDeleteBIAggregationLayout(AjaxPage):
     def page(self) -> AjaxPageResult:
+        check_csrf_token()
         for_aggregation = html.request.var("aggregation_name")
         config.bi_layouts["aggregations"].pop(for_aggregation)
         BILayoutManagement.save_layouts()
@@ -447,6 +450,7 @@ class AjaxLoadBIAggregationLayout(AjaxPage):
 @page_registry.register_page("ajax_save_bi_template_layout")
 class AjaxSaveBITemplateLayout(AjaxPage):
     def page(self) -> AjaxPageResult:
+        check_csrf_token()
         layout_var = html.request.get_str_input_mandatory("layout", "{}")
         layout_config = json.loads(layout_var)
         config.bi_layouts["templates"].update(layout_config)
@@ -457,6 +461,7 @@ class AjaxSaveBITemplateLayout(AjaxPage):
 @page_registry.register_page("ajax_delete_bi_template_layout")
 class AjaxDeleteBITemplateLayout(AjaxPage):
     def page(self) -> AjaxPageResult:
+        check_csrf_token()
         layout_id = html.request.var("layout_id")
         config.bi_layouts["templates"].pop(layout_id)
         BILayoutManagement.save_layouts()

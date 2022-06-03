@@ -22,6 +22,7 @@ import cmk.gui.login as login
 from cmk.gui.breadcrumb import make_simple_page_breadcrumb
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.type_defs import MegaMenu, TopicMenuItem, TopicMenuTopic
+from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.config import SiteId, SiteConfiguration
 from cmk.gui.plugins.userdb.htpasswd import hash_password
 from cmk.gui.plugins.userdb.utils import get_user_attributes_by_topic
@@ -156,6 +157,7 @@ mega_menu_registry.register(
 class ModeAjaxCycleThemes(AjaxPage):
     """AJAX handler for quick access option 'Interface theme" in user menu"""
     def page(self) -> AjaxPageResult:
+        check_csrf_token()
         themes = [theme for theme, _title in cmk.gui.config.theme_choices()]
         current_theme = html.get_theme()
         try:
@@ -176,6 +178,7 @@ class ModeAjaxCycleThemes(AjaxPage):
 class ModeAjaxCycleSidebarPosition(AjaxPage):
     """AJAX handler for quick access option 'Sidebar position" in user menu"""
     def page(self) -> AjaxPageResult:
+        check_csrf_token()
         _set_user_attribute(
             "ui_sidebar_position",
             None if _sidebar_position_id(_get_sidebar_position()) == "left" else "left")
@@ -186,6 +189,7 @@ class ModeAjaxCycleSidebarPosition(AjaxPage):
 class ModeAjaxSetStartURL(AjaxPage):
     """AJAX handler to set the start URL of a user to a dashboard"""
     def page(self) -> AjaxPageResult:
+        check_csrf_token()
         try:
             name = html.request.get_str_input_mandatory("name")
             url = makeuri_contextless(request, [("name", name)], "dashboard.py")
@@ -598,6 +602,7 @@ def _show_custom_user_attr(user, custom_attr):
 class ModeAjaxProfileReplication(AjaxPage):
     """AJAX handler for asynchronous replication of user profiles (changed passwords)"""
     def page(self):
+        check_csrf_token()
         ajax_request = self.webapi_request()
 
         site_id_val = ajax_request.get("site")

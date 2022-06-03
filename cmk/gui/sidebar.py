@@ -46,6 +46,7 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.utils.urls import makeuri_contextless
+from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.werks import may_acknowledge
 
 if TYPE_CHECKING:
@@ -615,6 +616,7 @@ def ajax_snapin():
 
 @cmk.gui.pages.register("sidebar_fold")
 def ajax_fold():
+    check_csrf_token()
     html.set_output_format("json")
     user_config = UserSidebarConfig(config.user, config.sidebar)
     user_config.folded = html.request.var("fold") == "yes"
@@ -623,6 +625,7 @@ def ajax_fold():
 
 @cmk.gui.pages.register("sidebar_openclose")
 def ajax_openclose() -> None:
+    check_csrf_token()
     html.set_output_format("json")
     if not config.user.may("general.configure_sidebar"):
         return None

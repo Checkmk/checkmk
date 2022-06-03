@@ -54,6 +54,7 @@ from cmk.gui.watolib.rulespecs import rulespec_registry
 from cmk.gui.watolib.services import (DiscoveryState, Discovery, checkbox_id, execute_discovery_job,
                                       get_check_table, DiscoveryAction, CheckTable, CheckTableEntry,
                                       DiscoveryResult, DiscoveryOptions, StartDiscoveryRequest)
+from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.wato.pages.hosts import ModeEditHost
 from cmk.gui.watolib.activate_changes import get_pending_changes_info
 from cmk.gui.watolib.changes import make_object_audit_log_url
@@ -213,6 +214,7 @@ class AutomationServiceDiscoveryJob(AutomationCommand):
 @page_registry.register_page("ajax_service_discovery")
 class ModeAjaxServiceDiscovery(AjaxPage):
     def page(self):
+        check_csrf_token()
         config.user.need_permission("wato.hosts")
 
         request: AjaxDiscoveryRequest = self.webapi_request()
@@ -1266,6 +1268,7 @@ class ModeAjaxExecuteCheck(AjaxPage):
         self._item = html.request.get_unicode_input_mandatory("item")
 
     def page(self):
+        check_csrf_token()
         try:
             state, output = check_mk_automation(self._site,
                                                 "active-check",

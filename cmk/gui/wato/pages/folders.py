@@ -64,6 +64,7 @@ from cmk.gui.page_menu import (
     make_form_submit_link,
     make_confirmed_form_submit_link,
 )
+from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.urls import makeuri, make_confirm_link, makeuri_contextless
 
 
@@ -1269,5 +1270,6 @@ def _convert_title_to_filename(title):
 @page_registry.register_page("ajax_set_foldertree")
 class ModeAjaxSetFoldertree(AjaxPage):
     def page(self):
+        check_csrf_token()
         request = self.webapi_request()
         config.user.save_file("foldertree", (request.get('topic'), request.get('target')))

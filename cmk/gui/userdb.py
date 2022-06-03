@@ -8,6 +8,7 @@
 
 from typing import cast, Union, Any, Callable, Dict, List, Optional, Tuple, Literal
 import time
+import uuid
 import os
 import traceback
 import copy
@@ -390,6 +391,7 @@ class SessionInfo:
     session_id: str
     started_at: int
     last_activity: int
+    csrf_token: str = field(default_factory=lambda: uuid.uuid4().__str__())
     flashes: List[str] = field(default_factory=list)
 
     def to_json(self):

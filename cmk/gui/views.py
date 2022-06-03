@@ -91,6 +91,7 @@ from cmk.gui.plugins.visuals.utils import (
     VisualInfo,
     VisualType,
 )
+from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.valuespec import (
     Alternative,
     CascadingDropdown,
@@ -3403,6 +3404,8 @@ class PageRescheduleCheck(AjaxPage):
     def _do_reschedule(self, request):
         if not config.user.may("action.reschedule"):
             raise MKGeneralException("You are not allowed to reschedule checks.")
+
+        check_csrf_token()
 
         site = request.get("site")
         host = request.get("host")

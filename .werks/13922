@@ -1,0 +1,12 @@
+Title: UI dropdowns: Preserve given value on page load
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 2.1.0p3
+Date: 1654249423
+
+Upon initialization of autocompleter dropdowns, given values were sometimes unexpectedly erased and the dropdown left empty.
+E.g. when editing a single metric dashlet or creating a forecast graph, given values for service description and metric name were sometimes removed upon loading the form. This is fixed to always show the given value of autocompleter dropdowns upon loading the respective page.

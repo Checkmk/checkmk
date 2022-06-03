@@ -16,7 +16,7 @@ def agent_ruckus_spot_arguments(
     else:
         args += ["--address", params["address"], "%s" % params["port"]]
     args += ["--venueid", params["venueid"]]
-    args += ["--apikey", params["api_key"]]
+    args += ["--apikey", passwordstore_get_cmdline("%s", params["api_key"])]
     if "cmk_agent" in params:
         args += ["--agent_port", "%s" % params["cmk_agent"]["port"]]
     return args

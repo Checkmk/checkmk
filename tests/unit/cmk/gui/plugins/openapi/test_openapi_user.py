@@ -22,6 +22,8 @@ from cmk.gui.plugins.openapi.endpoints.user_config import (
     _load_user,
 )
 from cmk.gui.plugins.openapi.endpoints.utils import complement_customer
+from cmk.gui.type_defs import UserRole
+from cmk.gui.watolib.userroles import clone_role, RoleID
 from cmk.gui.watolib.users import edit_users
 
 managedtest = pytest.mark.skipif(not version.is_managed_edition(), reason="see #7213")
@@ -969,3 +971,65 @@ def _internal_attributes(user_attributes):
             "force_authuser",
         )
     }
+
+
+@managedtest
+def test_openapi_new_user_with_cloned_role(
+    base: str, aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch
+):
+    monkeypatch.setattr(
+        "cmk.gui.watolib.global_settings.rulebased_notifications_enabled", lambda: True
+    )
+
+    cloned_role: UserRole = clone_role(RoleID("admin"))
+
+    user_detail = {
+        "username": f"new_user_with_role_{cloned_role.name}",
+        "fullname": f"NewUser_{cloned_role.name}",
+        "customer": "provider",
+        "roles": [cloned_role.name],
+    }
+
+    resp1 = aut_user_auth_wsgi_app.call_method(
+        "post",
+        base + "/domain-types/user_config/collections/all",
+        params=json.dumps(user_detail),
+        headers={"Accept": "application/json"},
+        status=200,
+        content_type="application/json",
+    )
+
+    assert resp1.json["extensions"]["roles"] == [cloned_role.name]
+
+    resp2 = aut_user_auth_wsgi_app.call_method(
+        "put",
+        base + f"/objects/user_config/new_user_with_role_{cloned_role.name}",
+        params=json.dumps({"roles": ["user", "guest"]}),
+        status=200,
+        content_type="application/json",
+        headers={"Accept": "application/json", "If-Match": resp1.headers["Etag"]},
+    )
+
+    assert resp2.json["extensions"]["roles"] == ["user", "guest"]
+
+
+@managedtest
+def test_openapi_new_user_with_non_existing_role(
+    base: str, aut_user_auth_wsgi_app: WebTestAppForCMK
+):
+    userrole = "non-existing-userole"
+    user_detail = {
+        "username": f"new_user_with_role_{userrole}",
+        "fullname": f"NewUser_{userrole}",
+        "customer": "provider",
+        "roles": [userrole],
+    }
+
+    aut_user_auth_wsgi_app.call_method(
+        "post",
+        base + "/domain-types/user_config/collections/all",
+        params=json.dumps(user_detail),
+        headers={"Accept": "application/json"},
+        status=400,
+        content_type="application/json",
+    )

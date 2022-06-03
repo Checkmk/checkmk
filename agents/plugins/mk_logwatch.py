@@ -563,14 +563,14 @@ class LogLinesIter(object):  # pylint: disable=useless-object-inheritance
 
 
 def is_inode_capable(path):
-    system = platform.system()
-    if system == "Windows":
+    system = platform.system().lower()
+    if system == "windows":
         volume_name = "%s:\\\\" % path.split(":", 1)[0]
         import win32api  # type: ignore[import] # pylint: disable=import-error
         volume_info = win32api.GetVolumeInformation(volume_name)
         volume_type = volume_info[-1]
         return "ntfs" in volume_type.lower()
-    return system == "Linux"
+    return system in {"linux", "aix", "sunos"}
 
 
 def process_logfile(section, filestate, debug):

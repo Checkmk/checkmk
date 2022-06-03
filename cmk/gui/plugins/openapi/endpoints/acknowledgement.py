@@ -233,6 +233,8 @@ def set_acknowledgement_on_services(params):
                 detail="All queried services are OK.",
             )
 
+        # We need to check for this permission, even if we don't have a single service
+        user.need_permission("action.acknowledge")
         for service in services:
             if not service.state:
                 continue

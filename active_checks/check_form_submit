@@ -195,13 +195,13 @@ def open_url(
             debug("GET %s" % url, debug_enabled)
             fd = client.open(url, timeout=timeout)  # GET
     except urllib.error.HTTPError as e:
-        new_state(2, "Unable to open %s: [%d] %s" % (url, e.code, e))
+        new_state(2, "Unable to open %s : [%d] %s" % (url, e.code, e))
 
     except urllib.error.URLError as e:
-        new_state(2, "Unable to open %s: %s" % (url, e.reason))
+        new_state(2, "Unable to open %s : %s" % (url, e.reason))
 
     except socket.timeout as e:
-        new_state(2, "Unable to open %s: %s" % (url, e))
+        new_state(2, "Unable to open %s : %s" % (url, e))
 
     real_url = fd.geturl()
     code = fd.getcode()

@@ -70,7 +70,9 @@ def manage_ohm_binaries():
     if platform.system() == "Windows":
         binaries = ["OpenHardwareMonitorCLI.exe", "OpenHardwareMonitorLib.dll"]
 
-        source_dir = os.path.join(os.path.abspath(__file__), "..\\..\\test_files\\ohm\\cli")
+        source_dir = os.path.join(
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "files\\ohm\cli"
+        )
         target_dir = os.path.join(user_dir, "bin")
 
         it_utils.make_dir(target_dir)

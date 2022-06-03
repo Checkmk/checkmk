@@ -1,5 +1,5 @@
 @echo off
-:: File to run Integration Tests in the integration folder
+:: File to run Regression Tests in the tests/regression folder
 :: should be called after successful build with correct artifacts
 
 set cur_dir=%cd%
@@ -9,29 +9,30 @@ mkdir %WNX_TEST_ROOT%
 set arte=%cur_dir%\..\..\artefacts
 set results=integration_tests_results.zip
 
+powershell Write-Host "Windows agent Regression Tests are starting in %WNX_TEST_ROOT%" -Foreground Cyan
 
 :: Prepare test folder for testing
 mkdir %WNX_TEST_ROOT%\test\root\plugins
 mkdir %WNX_TEST_ROOT%\test\data
 copy %arte%\check_mk_agent.exe  %WNX_TEST_ROOT%\check_mk_agent.exe >nul
 copy %arte%\check_mk.yml %WNX_TEST_ROOT%\test\root\check_mk.yml >nul
-powershell Remove-NetFirewallRule -DisplayName "AllowIntegration" 2>nul
-powershell New-NetFirewallRule -DisplayName "AllowIntegration" -Direction Inbound -Program %WNX_TEST_ROOT%\check_mk_agent.exe -RemoteAddress LocalSubnet -Action Allow >nul
+powershell Remove-NetFirewallRule -DisplayName "AllowRegression" 2>nul
+powershell New-NetFirewallRule -DisplayName "AllowRegression" -Direction Inbound -Program %WNX_TEST_ROOT%\check_mk_agent.exe -RemoteAddress LocalSubnet -Action Allow >nul
 xcopy ..\windows\plugins\*.* %WNX_TEST_ROOT%\test\root\plugins /D /Y> nul
 :: Testing
-cd integration 
+cd tests\regression
 :: tests wait for this env variable
 set WNX_TEST_I_ROOT=%WNX_TEST_ROOT%
 py -3 -m pytest %* || set failed=1
+powershell Remove-NetFirewallRule -DisplayName "AllowRegression" >nul
 
 call :zip_results
-powershell Remove-NetFirewallRule -DisplayName "AllowIntegration" >nul
 cd %cur_dir%
 if "%failed%" == "1" (
-powershell Write-Host "Integration Test Failed" -Foreground Red 
+powershell Write-Host "Regression Test Failed" -Foreground Red 
 exit /b 81
 )
-powershell Write-Host "Integration Test Success" -Foreground Green
+powershell Write-Host "Regression Test Success" -Foreground Green
 exit /b 0
 
 

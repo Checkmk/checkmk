@@ -83,7 +83,7 @@ def manage_plugin(request):
     Globals.newline = request.param
     plugin_dir = Globals.mrpedir if Globals.newline < 0 else Globals.includedir
     source_dir = os.path.join(
-        os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "test_files\\integration"
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "files\\regression"
     )
     target_dir = os.path.join(user_dir, plugin_dir)
     if not os.path.exists(target_dir):

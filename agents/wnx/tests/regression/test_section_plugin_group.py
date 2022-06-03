@@ -173,7 +173,7 @@ def plugin_dir_engine(request):
 def manage_plugins_engine(request, plugin_dir):
     Globals.pluginname = request.param
     source_dir = os.path.join(
-        os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "test_files\\integration"
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "files\\regression"
     )
 
     if not os.path.exists(plugin_dir):

@@ -1,0 +1,12 @@
+Title: mk_logwatch: recognise AIX and Solaris as inode capable systems
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1654671013
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p3
+
+

@@ -933,13 +933,6 @@ check_metrics["check_mk-oracle_performance"] = {
     "pinssum": {"name": "oracle_pins_sum"},
     "pinhitssum": {"name": "oracle_pin_hits_sum"},
 }
-check_metrics["check_mk-db2_logsize"] = {
-    "~[_/]": {"name": "fs_used", "scale": MB, "deprecated": "2.0.0i1"},
-    "fs_used": {"scale": MB},
-    "fs_used_percent": {
-        "auto_graph": False,
-    },
-}
 check_metrics["check_mk-steelhead_connections"] = {
     "active": {"name": "fw_connections_active"},
     "established": {"name": "fw_connections_established"},

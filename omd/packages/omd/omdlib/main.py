@@ -90,6 +90,7 @@ from omdlib.init_scripts import call_init_scripts, check_status
 from omdlib.skel_permissions import Permissions, read_skel_permissions, skel_permissions_file_path
 from omdlib.system_apache import (
     delete_apache_hook,
+    is_apache_hook_up_to_date,
     register_with_system_apache,
     unregister_from_system_apache,
 )
@@ -1296,7 +1297,9 @@ def initialize_site_ca(site: SiteContext) -> None:
         ca.create_agent_receiver_certificate(site.name)
 
 
-def config_change(version_info: VersionInfo, site: SiteContext, config_hooks: ConfigHooks) -> None:
+def config_change(
+    version_info: VersionInfo, site: SiteContext, config_hooks: ConfigHooks
+) -> list[str]:
     # Check whether or not site needs to be stopped. Stop and remember to start again later
     site_was_stopped = False
     if not site.is_stopped():
@@ -1311,10 +1314,13 @@ def config_change(version_info: VersionInfo, site: SiteContext, config_hooks: Co
 
         validate_config_change_commands(config_hooks, settings)
 
+        changed: list[str] = []
         for key, value in settings:
             config_set_value(site, config_hooks, key, value, save=False)
+            changed.append(key)
 
         save_site_conf(site)
+        return changed
     finally:
         if site_was_stopped:
             start_site(version_info, site)
@@ -1361,22 +1367,22 @@ def validate_config_change_commands(
             raise NotImplementedError()
 
 
-def config_set(site: SiteContext, config_hooks: ConfigHooks, args: Arguments) -> None:
+def config_set(site: SiteContext, config_hooks: ConfigHooks, args: Arguments) -> list[str]:
     if len(args) != 2:
         sys.stderr.write("Please specify variable name and value\n")
         config_usage()
-        return
+        return []
 
     if not site.is_stopped():
         sys.stderr.write("Cannot change config variables while site is running.\n")
-        return
+        return []
 
     hook_name = args[0]
     value = args[1]
     hook = config_hooks.get(hook_name)
     if not hook:
         sys.stderr.write("No such variable '%s'\n" % hook_name)
-        return
+        return []
 
     # Check if value is valid. Choices are either a list of allowed
     # keys or a regular expression
@@ -1386,15 +1392,16 @@ def config_set(site: SiteContext, config_hooks: ConfigHooks, args: Arguments) ->
             sys.stderr.write(
                 "Invalid value for '%s'. Allowed are: %s\n" % (value, ", ".join(choices))
             )
-            return
+            return []
     elif isinstance(hook["choices"], re.Pattern):
         if not hook["choices"].match(value):
             sys.stderr.write("Invalid value for '%s'. Does not match allowed pattern.\n" % value)
-            return
+            return []
     else:
         raise NotImplementedError()
 
     config_set_value(site, config_hooks, hook_name, value)
+    return [hook_name]
 
 
 def config_set_all(site: SiteContext, ignored_hooks: Optional[list] = None) -> None:
@@ -1476,7 +1483,7 @@ def config_show(site: SiteContext, config_hooks: ConfigHooks, args: Arguments) -
 
 def config_configure(
     site: SiteContext, global_opts: "GlobalOptions", config_hooks: ConfigHooks
-) -> None:
+) -> list[str]:
     hook_names = sorted(config_hooks.keys())
     current_hook_name: Optional[str] = ""
     menu_open = False
@@ -1510,7 +1517,7 @@ def config_configure(
                 "Exit",
             )
             if not change:
-                return
+                return []
             current_hook_name = None
             menu_open = True
 
@@ -1520,7 +1527,7 @@ def config_configure(
             )
             if change:
                 try:
-                    config_configure_hook(site, global_opts, config_hooks, current_hook_name)
+                    return config_configure_hook(site, global_opts, config_hooks, current_hook_name)
                 except MKTerminate:
                     raise
                 except Exception as e:
@@ -1531,13 +1538,13 @@ def config_configure(
 
 def config_configure_hook(
     site: SiteContext, global_opts: "GlobalOptions", config_hooks: ConfigHooks, hook_name: str
-) -> None:
+) -> list[str]:
     if not site.is_stopped():
         if not dialog_yesno(
             "You cannot change configuration value while the "
             "site is running. Do you want me to stop the site now?"
         ):
-            return
+            return []
         stop_site(site)
         dialog_message("The site has been stopped.")
 
@@ -1563,6 +1570,8 @@ def config_configure_hook(
         config_set_value(site, config_hooks, cast(str, hook["name"]), new_value)
         save_site_conf(site)
         config_hooks = load_hook_dependencies(site, config_hooks)
+        return [hook_name]
+    return []
 
 
 def init_action(
@@ -2314,6 +2323,24 @@ def main_enable(
     register_with_system_apache(version_info, site, apache_reload=False)
 
 
+def main_update_apache_config(
+    version_info: VersionInfo,
+    site: SiteContext,
+    global_opts: "GlobalOptions",
+    args: Arguments,
+    options: CommandOptions,
+) -> None:
+    site.load_config()
+    if _is_apache_enabled(site):
+        register_with_system_apache(version_info, site, apache_reload=True)
+    else:
+        unregister_from_system_apache(version_info, site, apache_reload=True)
+
+
+def _is_apache_enabled(site: SiteContext) -> bool:
+    return site.conf["APACHE_MODE"] != "none"
+
+
 def _get_conflict_mode(options: CommandOptions) -> str:
     conflict_mode = cast(str, options.get("conflict", "ask"))
 
@@ -2686,6 +2713,20 @@ def main_update(  # pylint: disable=too-many-branches
         and not dialog_yesno(
             "You are updating from %s Edition to %s Edition. Is this intended?"
             % (from_edition.title(), to_edition.title())
+        )
+    ):
+        bail_out("Aborted.")
+
+    if (
+        not is_apache_hook_up_to_date(site)
+        and not global_opts.force
+        and not dialog_yesno(
+            "This update requires additional actions: The system apache configuration needs to be "
+            "updated.\n\n"
+            f"You will have to execute 'omd update-apache-config {site.name}' as root user.\n\n"
+            "Please do it right after 'omd update' to prevent inconsistencies. Have a look at "
+            "#14281 for further information.\n\n"
+            "Do you want to proceed?"
         )
     ):
         bail_out("Aborted.")
@@ -3139,19 +3180,26 @@ def main_config(  # pylint: disable=too-many-branches
         need_start = False
 
     config_hooks = load_config_hooks(site)
+    set_hooks: list[str] = []
     if len(args) == 0:
-        config_configure(site, global_opts, config_hooks)
+        set_hooks = config_configure(site, global_opts, config_hooks)
     else:
         command = args[0]
         args = args[1:]
         if command == "show":
             config_show(site, config_hooks, args)
         elif command == "set":
-            config_set(site, config_hooks, args)
+            set_hooks = config_set(site, config_hooks, args)
         elif command == "change":
-            config_change(version_info, site, config_hooks)
+            set_hooks = config_change(version_info, site, config_hooks)
         else:
             config_usage()
+
+    if set(set_hooks).intersection({"APACHE_TCP_ADDR", "APACHE_TCP_PORT", "APACHE_MODE"}):
+        sys.stdout.write(
+            f"WARNING: You have to execute 'omd update-apache-config {site.name}' as "
+            "root to update and apply the configuration of the system apache.\n"
+        )
 
     if need_start:
         start_site(version_info, site)
@@ -3935,6 +3983,19 @@ COMMANDS: Final = [
         handler=main_enable,
         options=[],
         description="Enable a site (reenable a formerly disabled site)",
+        confirm_text="",
+    ),
+    Command(
+        command="update-apache-config",
+        only_root=True,
+        no_suid=False,
+        needs_site=1,
+        site_must_exist=1,
+        confirm=False,
+        args_text="",
+        handler=main_update_apache_config,
+        options=[],
+        description="Update the system apache config of a site (and reload apache)",
         confirm_text="",
     ),
     Command(

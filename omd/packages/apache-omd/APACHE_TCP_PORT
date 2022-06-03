@@ -4,8 +4,7 @@
 # Menu: Web GUI
 # Description:
 #  Configure the TCP port used for the Apache webserver
-#  process of this site. This option is only useful if
-#  APACHE is set to "on" and WEBSERVER is set to "own".
+#  process of this site.
 #
 #  After changing this variable, the man Apache webserver
 #  must be restarted.
@@ -30,13 +29,19 @@ choices)
     ;;
 set)
     PORT=$($OMD_ROOT/lib/omd/port_is_used APACHE_TCP_PORT $2)
-    cat <<EOF >$OMD_ROOT/etc/apache/listen-port.conf
+
+    # Tell the site apache on where to listen
+    cat <<EOF >"$OMD_ROOT/etc/apache/listen-port.conf"
 # This file is created by 'omd config set APACHE_TCP_PORT'.
 # Better do not edit manually
 ServerName $CONFIG_APACHE_TCP_ADDR:$PORT
 Listen $CONFIG_APACHE_TCP_ADDR:$PORT
 EOF
-    cat <<EOF >$OMD_ROOT/etc/apache/proxy-port.conf
+    if grep ^Include "/omd/apache/$OMD_SITE.conf" >/dev/null 2>&1; then
+        # This site hasn't been updated to the new apache configuration yet.
+        # Use the old system apache configuration for compatibility reasons.
+        # See #14281 for further information.
+        cat <<EOF >"$OMD_ROOT/etc/apache/proxy-port.conf"
 # This file is created by 'omd config set APACHE_TCP_PORT'.
 # Better do not edit manually
 <IfModule mod_proxy_http.c>
@@ -55,6 +60,14 @@ EOF
   </Location>
 </IfModule>
 EOF
+    else
+        # Since werk #14281 these files are not used anymore. Better remove them to
+        # not confuse users.
+        if [ -f "$OMD_ROOT/etc/apache/proxy-port.conf" ]; then
+            rm "$OMD_ROOT/etc/apache/proxy-port.conf"
+        fi
+    fi
+
     if [ "$PORT" != "$2" ]; then
         echo "Apache port $2 is in use. I've choosen $PORT instead." >&2
         echo "$PORT"

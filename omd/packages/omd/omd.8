@@ -165,6 +165,21 @@ Enables a formerly disabled site. The site is not started. This command
 needs root permissions.
 
 .TP
+.B omd update-apache-config SITE
+The site Apache needs to be registered with the system Apache to enable access
+to the UI and REST API via HTTP. After modifying the config
+options \fBAPACHE_TCP_ADDR\fP, \fBAPACHE_TCP_PORT\fP or \fBAPACHE_MODE\fP,
+you will have to call this command to update the system apache configuration of
+your site to reflect the changes in the configuration of the system Apache.
+
+When using the modes \fBcreate\fP, \fBrm\fP, \fBcp\fP, \fBmv\fP or \fBrestore\fP
+(as root), you don't need to call this command.
+
+You need root permissions to execute this command.
+
+This command was introduced with Checkmk 2.1.0p4.
+
+.TP
 .B omd mv [OPTIONS] SITE NEWNAME
 Rename a site. The site must be stopped. the NEWNAME must be a valid
 site name as described in "omd create". Root permissions are needed.
@@ -350,6 +365,10 @@ KEY=value pairs via stdin, for example like this:
 \fBecho -e "CORE=cmc\\nAUTOSTART=on" | omd config change\fP
 
 The site is restarted automatically once in case it's currently runnig.
+
+Please note: Since 2.1.0p4 you will have to call
+\fBomd update-apache-config SITE\fP after changing one of the options
+\fBAPACHE_TCP_ADDR\fP, \fBAPACHE_TCP_PORT\fP or \fBAPACHE_MODE\fP.
 
 .TP
 .B omd [-v] diff [RELBASE] [-b, --bare]

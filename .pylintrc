@@ -1,24 +1,13 @@
 [MASTER]
-# Setup the Python paths needed for our tests. This is a bit tricky due to the
-# fact that we want to be able to run pylint with and without the --rcfile
-# option. Pylint offers pylint.config.PYLINTRC to get the path to the
-# automatically found config file, but this doesn't take --rcfile into account.
-# So we have to fall back to a slightly hacky method discussed in the post
-# https://mail.python.org/pipermail/code-quality/2016-June/000781.html,
-# accessing pylint's innards. Not nice, but there is not much we can do about
-# this until pylint offers the API requested in the post above. Furthermore,
-# note that layout/indentation doesn't work too well in the hook below.
+# Setup the Python paths needed for our tests.
 #
 # Please note:
 # - repo path is added to be able to import tests.conftest
 # - tests.conftest is again extending the sys.path to add the required paths
 init-hook=
-    import inspect
-    import os
-    import sys
-    config_file = inspect.stack()[2][0].f_locals["linter"].config_file
-    sys.path.insert(0, os.path.dirname(config_file))
-    import tests.conftest
+    import sys;
+    sys.path.insert(0, __file__[:__file__.rfind("/.venv")]);  # __file__ is somewhere deep inside the .venv
+    import tests.conftest;
 load-plugins=
     tests.testlib.pylint_cmk,
     tests.testlib.pylint_checker_localization,

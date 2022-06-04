@@ -108,7 +108,7 @@ def test_section_parse_function_does_something(fix_register):
     """We make sure that the parse function is not trivial
 
     To ease the learning curve when developing check plugins
-    we allow to omit the parse_function (defaulting to labda x: x).
+    we allow to omit the parse_function (defaulting to lambda x: x).
 
     However this is allmost always a bad idea, so we make sure it
     does not happen in mainline code.
@@ -118,7 +118,6 @@ def test_section_parse_function_does_something(fix_register):
 
     legacy_exceptions_for_easier_migration = {
         # snmp sections
-        "infoblox_osinfo",
         "infoblox_systeminfo",
         "inv_cisco_vlans",
         "juniper_info",

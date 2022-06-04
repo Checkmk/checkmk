@@ -21,41 +21,26 @@ from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wild
 # .1.3.6.1.4.1.1966.21.1.1.1.1.1.1.9.1 23 --> PERLE-MCR-MGT-MIB::chassisTemperature.1
 
 
-def inventory_perle_chassis(info):
+def inventory_perle_chassis(section):
     return [(None, None)]
 
 
-def check_perle_chassis(_no_item, _no_params, info):
+def check_perle_chassis(_no_item, _no_params, section):
     map_diag_states = {
         "0": (0, "passed"),
         "1": (1, "firmware download required"),
         "2": (2, "temperature sensor not functional"),
     }
 
-    _model, _serial, _bootloader, _fw, alarms_str, diagstate, _temp_str = info[0]
-    state, state_readable = map_diag_states[diagstate]
+    state, state_readable = map_diag_states[section.diagnosis_state]
     yield state, "Diagnostic result: %s" % state_readable
-    yield perle_check_alarms(alarms_str)
+    yield perle_check_alarms(section.alarms)
 
 
 check_info["perle_chassis"] = {
     "inventory_function": inventory_perle_chassis,
     "check_function": check_perle_chassis,
     "service_description": "Chassis status",
-    # If you change snmp info please adapt the related inventory plugin
-    "snmp_info": (
-        ".1.3.6.1.4.1.1966.21.1.1.1.1.1.1",
-        [
-            "2",  # PERLE-MCR-MGT-MIB::chassisModelName
-            "4",  # PERLE-MCR-MGT-MIB::chassisSerialNumber
-            "5",  # PERLE-MCR-MGT-MIB::chassisBootloaderVersion
-            "6",  # PERLE-MCR-MGT-MIB::chassisFirmwareVersion
-            "7",  # PERLE-MCR-MGT-MIB::chassisOutStandWarnAlarms
-            "8",  # PERLE-MCR-MGT-MIB::chassisDiagStatus
-            "9",  # PERLE-MCR-MGT-MIB::chassisTemperature
-        ],
-    ),
-    "snmp_scan_function": perle_scan_function,
 }
 
 
@@ -63,8 +48,8 @@ def inventory_perle_chassis_temp(info):
     return [("chassis", {})]
 
 
-def check_perle_chassis_temp(item, params, info):
-    return check_temperature(float(info[0][6]), params, "perle_chassis_temp")
+def check_perle_chassis_temp(item, params, section):
+    return check_temperature(section.temp, params, "perle_chassis_temp")
 
 
 check_info["perle_chassis.temp"] = {

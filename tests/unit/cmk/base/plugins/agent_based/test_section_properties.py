@@ -118,7 +118,6 @@ def test_section_parse_function_does_something(fix_register):
 
     legacy_exceptions_for_easier_migration = {
         # snmp sections
-        "infoblox_systeminfo",
         "inv_cisco_vlans",
         "juniper_info",
         # agent sections

@@ -6,7 +6,7 @@
 
 # pylint: disable=comparison-with-callable,redefined-outer-name
 
-from typing import Optional
+from typing import Optional, Sequence
 
 import pytest
 from pydantic_factories import ModelFactory
@@ -278,7 +278,7 @@ def test_collect_workload_resources_from_api_pods(pods_count: int):
     )
 
 
-@pytest.mark.parametrize("pods_count", [0, 5])
+@pytest.mark.parametrize("pods_count", [5, 10, 15])
 def test_collect_workload_resources_from_agent_pods(pods_count: int):
     requests = ResourcesRequirementsFactory.build(memory=ONE_MiB, cpu=0.5)
     limits = ResourcesRequirementsFactory.build(memory=2 * ONE_MiB, cpu=1.0)
@@ -319,3 +319,20 @@ def test_collect_workload_resources_from_agent_pods(pods_count: int):
         count_zeroed_limits=0,
         count_total=pods_count,
     )
+
+
+def test_collect_workload_resources_from_agent_pods_no_pods_in_cluster():
+    pods: Sequence[agent.Pod] = []
+    memory_resources = agent._collect_memory_resources(pods)
+    cpu_resources = agent._collect_cpu_resources(pods)
+    empty_section = section.Resources(
+        request=0.0,
+        limit=0.0,
+        count_unspecified_limits=0,
+        count_unspecified_requests=0,
+        count_zeroed_limits=0,
+        count_total=0,
+    )
+
+    assert memory_resources == empty_section
+    assert cpu_resources == empty_section

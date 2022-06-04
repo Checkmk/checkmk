@@ -11,9 +11,8 @@ def inv_snmp_os(info):
     descr_long = sys_descr.split(",")
     node = inv_tree("software.os.")
 
-    # Cisco IOS Devices:
-    # TODO: Huh??? Funny condition below...
-    if "ios" and "cisco" in sys_descr.lower():  # pylint: disable=simplifiable-condition
+    # Cisco devices:
+    if "cisco" in sys_descr.lower():
         node["type"] = descr_long[0]
         if "Version" in descr_short:
             node["version"] = (descr_short[descr_short.index("Version") + 1]).replace(",", "")

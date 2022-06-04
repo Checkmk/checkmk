@@ -12,12 +12,6 @@
 def inv_win_os(info):
     node = inv_tree("software.os.")
 
-    # Some information come eg. from esx and we delete these
-    # because basic os is windows
-    for what in ["vendor", "name", "version", "type", "arch"]:
-        if what in node:
-            del node[what]
-
     node["type"] = "Windows"
     node["vendor"] = "Microsoft"
 

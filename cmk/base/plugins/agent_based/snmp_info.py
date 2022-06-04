@@ -13,6 +13,7 @@ from .utils.device_types import get_device_type_label
 
 class SNMPInfo(NamedTuple):
     description: str
+    object_id: str
     contact: str
     name: str
     location: str
@@ -35,7 +36,7 @@ register.snmp_section(
     host_label_function=get_device_type_label,
     fetch=SNMPTree(
         base=".1.3.6.1.2.1.1",
-        oids=["1", "4", "5", "6"],
+        oids=["1", "2", "4", "5", "6"],
     ),
     detect=exists(".1.3.6.1.2.1.1.1.0"),
 )
@@ -76,6 +77,34 @@ def inventory_snmp_info(section: SNMPInfo) -> InventoryResult:
             "location": section.location,
         },
     )
+
+    descr_short = section.description.split()
+    descr_long = section.description.split(",")
+
+    # Cisco devices:
+    if "cisco" in section.description.lower():
+        yield Attributes(
+            path=["software", "os"],
+            inventory_attributes={
+                "type": descr_long[0],
+                **(
+                    {"version": (descr_short[descr_short.index("Version") + 1]).replace(",", "")}
+                    if "Version" in descr_short
+                    else {}
+                ),
+            },
+        )
+
+    # Fireeye Devices
+    if "linux" in section.description.lower() and ".1.3.6.1.4.1.25597.1" in section.object_id:
+        yield Attributes(
+            path=["software", "os"],
+            inventory_attributes={
+                "type": descr_short[0],
+                "kernel_version": descr_short[2],
+                "arch": descr_short[-1],
+            },
+        )
 
 
 register.inventory_plugin(

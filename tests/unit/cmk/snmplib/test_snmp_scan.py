@@ -255,6 +255,5 @@ def test_gather_available_raw_section_names_defaults(backend, mocker):
     ) == {
         SectionName("hr_mem"),
         SectionName("snmp_info"),
-        SectionName("snmp_os"),
         SectionName("snmp_uptime"),
     }

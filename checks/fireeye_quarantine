@@ -4,11 +4,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.check_legacy_includes.fireeye import inventory_fireeye_generic, scan_fireeye
+from cmk.base.check_legacy_includes.fireeye import scan_fireeye
 
 # .1.3.6.1.4.1.25597.13.1.40.0 1
 
 factory_settings["quarantine_levels"] = {"usage": (70, 80)}
+
+
+def discover_fireeye_quarantine(string_table):
+    if string_table:
+        yield None, {}
 
 
 def check_fireeye_quarantine(no_item, params, info):
@@ -23,7 +28,7 @@ def check_fireeye_quarantine(no_item, params, info):
 
 
 check_info["fireeye_quarantine"] = {
-    "inventory_function": lambda info: inventory_fireeye_generic(info, False, True),
+    "inventory_function": discover_fireeye_quarantine,
     "check_function": check_fireeye_quarantine,
     "service_description": "Quarantine Usage",
     "default_levels_variable": "quarantine_levels",

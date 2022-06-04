@@ -39,13 +39,9 @@ def _get_section(fix_register) -> Mapping[str, str]:
 
 
 def test_discover_somehting(discover_fireeye_mailq, section: Mapping[str, str]) -> None:
-    assert (
-        list(discover_fireeye_mailq(section))
-        == [
-            Service(),
-        ]
-        * 5  # *facepalm*
-    )
+    assert list(discover_fireeye_mailq(section)) == [
+        Service(),
+    ]
 
 
 def test_check(check_fireeye_mailq, section: Mapping[str, str]) -> None:

@@ -4,11 +4,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.check_legacy_includes.fireeye import inventory_fireeye_generic, scan_fireeye
+from cmk.base.check_legacy_includes.fireeye import scan_fireeye
 
 # .1.3.6.1.4.1.25597.11.5.1.9.0 0
 
 factory_settings["active_vm_levels"] = {"vms": (100, 120)}
+
+
+def discover_fireeye_active_vms(string_table):
+    if string_table:
+        yield None, {}
 
 
 def check_fireeye_active_vms(no_item, params, info):
@@ -23,7 +28,7 @@ def check_fireeye_active_vms(no_item, params, info):
 
 
 check_info["fireeye_active_vms"] = {
-    "inventory_function": lambda info: inventory_fireeye_generic(info, False, True),
+    "inventory_function": discover_fireeye_active_vms,
     "check_function": check_fireeye_active_vms,
     "service_description": "Active VMs",
     "default_levels_variable": "active_vm_levels",

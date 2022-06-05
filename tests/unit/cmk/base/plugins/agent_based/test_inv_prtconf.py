@@ -4,8 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.utils.type_defs import InventoryPluginName
-
+from cmk.base.plugins.agent_based import prtconf
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes
 
 from .utils_inventory import sort_inventory_result
@@ -162,6 +161,6 @@ EXPECTED = [
 ]
 
 
-def test_inv_prtconf(fix_register):
-    plugin = fix_register.inventory_plugins[InventoryPluginName("prtconf")]
-    assert sort_inventory_result(plugin.inventory_function(INFO)) == sort_inventory_result(EXPECTED)
+def test_inv_prtconf() -> None:
+    result = prtconf.inv_prtconf(prtconf.parse_prtconf(INFO))
+    assert sort_inventory_result(result) == sort_inventory_result(EXPECTED)

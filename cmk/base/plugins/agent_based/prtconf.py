@@ -66,6 +66,8 @@
 # Note: this is only the header. Much more stuff follows, but is currently
 # not being parsed.
 
+from .agent_based_api.v1 import Attributes, register
+
 
 def get_tuples_section(info):
     parsed = {}
@@ -133,11 +135,17 @@ def get_active_volume_groups(info):
     return result
 
 
-def parse_prtconf(info):
-    parsed_tuples, info_remaining = get_tuples_section(iter(info))
+def parse_prtconf(string_table):
+    parsed_tuples, info_remaining = get_tuples_section(iter(string_table))
     parsed_inactive, info_remaining = get_inactive_volume_groups(info_remaining)
     parsed_active = get_active_volume_groups(info_remaining)
     return {"tuples": parsed_tuples, "inactive": parsed_inactive, "active": parsed_active}
+
+
+register.agent_section(
+    name="prtconf",
+    parse_function=parse_prtconf,
+)
 
 
 def _split_vendor(string):
@@ -146,14 +154,13 @@ def _split_vendor(string):
     return "", string
 
 
-def inv_prtconf(info, inventory_tree):
-    parsed = parse_prtconf(info)
+def inv_prtconf(section):
 
-    for attrs, path in get_key_value_pairs(parsed):
-        inventory_tree.get_dict(path).update(attrs)
+    for attrs, path in get_key_value_pairs(section):
+        yield Attributes(path=path, inventory_attributes=attrs)
 
-    for attrs, path in get_volume_groups(parsed):
-        inventory_tree.get_dict(path).update(attrs)
+    for attrs, path in get_volume_groups(section):
+        yield Attributes(path=path, inventory_attributes=attrs)
 
 
 def get_key_value_pairs(parsed):
@@ -238,17 +245,17 @@ def get_key_value_pairs(parsed):
         net_dict["sub_netmask"] = sub_netmask
 
     return [
-        (cpu_dict, "hardware.cpu."),
-        (sys_dict, "hardware.system."),
-        (mem_dict, "hardware.memory."),
-        (fmw_dict, "software.firmware."),
-        (net_dict, "networking."),
-        (os_dict, "software.os."),
+        (cpu_dict, ["hardware", "cpu"]),
+        (sys_dict, ["hardware", "system"]),
+        (mem_dict, ["hardware", "memory"]),
+        (fmw_dict, ["software", "firmware"]),
+        (net_dict, ["networking"]),
+        (os_dict, ["software", "os"]),
     ]
 
 
 def get_volume_groups(parsed):
-    path = ".hardware.volumes.physical_volumes.%s:"
+    path = ["hardware", "volumes", "physical_volumes"]
     for item in parsed["active"]:
         vg_name, pv_name, pv_status, pv_total_partitions, pv_free_partitions, _pv_distr = item
         node = {}
@@ -257,7 +264,7 @@ def get_volume_groups(parsed):
         node["physical_volume_status"] = pv_status
         node["physical_volume_total_partitions"] = pv_total_partitions
         node["physical_volume_free_partitions"] = pv_free_partitions
-        yield node, path % pv_name
+        yield node, [*path, pv_name]
 
     for item in parsed["inactive"]:
         node = {}
@@ -266,9 +273,10 @@ def get_volume_groups(parsed):
         node["physical_volume_status"] = "Inactive"
         node["physical_volume_total_partitions"] = ""
         node["physical_volume_free_partitions"] = ""
-        yield node, path % item
+        yield node, [*path, item]
 
 
-inv_info["prtconf"] = {
-    "inv_function": inv_prtconf,
-}
+register.inventory_plugin(
+    name="prtconf",
+    inventory_function=inv_prtconf,
+)

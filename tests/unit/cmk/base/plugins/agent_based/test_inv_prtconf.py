@@ -7,8 +7,6 @@
 from cmk.base.plugins.agent_based import prtconf
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes
 
-from .utils_inventory import sort_inventory_result
-
 INFO = [
     ["System Model", " IBM,8231-E2D"],
     ["Machine Serial Number", " 06AAB2T"],
@@ -57,7 +55,8 @@ INFO = [
 ]
 
 EXPECTED = [
-    Attributes(path=["hardware", "cpu"])._replace(
+    Attributes(
+        path=["hardware", "cpu"],
         inventory_attributes={
             "arch": "ppc64",
             "model": "PowerPC_POWER7",
@@ -65,43 +64,42 @@ EXPECTED = [
             "max_speed": 4284000000.0,
             "cpus": 8,
         },
-        status_attributes={},
     ),
-    Attributes(path=["hardware", "memory"])._replace(
-        inventory_attributes={
-            "total_ram_usable": 270314504192,
-        },
-        status_attributes={},
-    ),
-    Attributes(path=["hardware", "system"])._replace(
+    Attributes(
+        path=["hardware", "system"],
         inventory_attributes={
             "serial": "06AAB2T",
             "product": "8231-E2D",
             "manufacturer": "IBM",
         },
-        status_attributes={},
     ),
     Attributes(
-        path=["hardware", "volumes", "physical_volumes", "appvg"],
+        path=["hardware", "memory"],
         inventory_attributes={
-            "volume_group_name": "appvg",
-            "physical_volume_name": "",
-            "physical_volume_status": "Inactive",
-            "physical_volume_total_partitions": "",
-            "physical_volume_free_partitions": "",
+            "total_ram_usable": 270314504192,
         },
-        status_attributes={},
     ),
     Attributes(
-        path=["hardware", "volumes", "physical_volumes", "hdisk18"],
+        path=["software", "firmware"],
         inventory_attributes={
-            "volume_group_name": "p2zgkbos4vg",
-            "physical_volume_name": "hdisk18",
-            "physical_volume_status": "active",
-            "physical_volume_total_partitions": "643",
-            "physical_volume_free_partitions": "0",
+            "version": "AL770_076",
+            "vendor": "IBM",
+            "platform_level": "AL770_076",
         },
-        status_attributes={},
+    ),
+    Attributes(
+        path=["networking"],
+        inventory_attributes={
+            "domain_name": "example1.example.com",
+            "gateway": "192.168.0.2",
+            "ip_address": "192.168.0.1",
+            "name_server": "192.168.0.3",
+            "sub_netmask": "255.255.255.128",
+        },
+    ),
+    Attributes(
+        path=["software", "os"],
+        inventory_attributes={"arch": "ppc64"},
     ),
     Attributes(
         path=["hardware", "volumes", "physical_volumes", "hdisk664"],
@@ -112,7 +110,6 @@ EXPECTED = [
             "physical_volume_total_partitions": "3218",
             "physical_volume_free_partitions": "0",
         },
-        status_attributes={},
     ),
     Attributes(
         path=["hardware", "volumes", "physical_volumes", "hdisk665"],
@@ -123,7 +120,6 @@ EXPECTED = [
             "physical_volume_total_partitions": "3218",
             "physical_volume_free_partitions": "0",
         },
-        status_attributes={},
     ),
     Attributes(
         path=["hardware", "volumes", "physical_volumes", "hdisk666"],
@@ -134,33 +130,29 @@ EXPECTED = [
             "physical_volume_total_partitions": "3218",
             "physical_volume_free_partitions": "0",
         },
-        status_attributes={},
     ),
-    Attributes(path=["networking"])._replace(
+    Attributes(
+        path=["hardware", "volumes", "physical_volumes", "hdisk18"],
         inventory_attributes={
-            "domain_name": "example1.example.com",
-            "gateway": "192.168.0.2",
-            "ip_address": "192.168.0.1",
-            "name_server": "192.168.0.3",
-            "sub_netmask": "255.255.255.128",
+            "volume_group_name": "p2zgkbos4vg",
+            "physical_volume_name": "hdisk18",
+            "physical_volume_status": "active",
+            "physical_volume_total_partitions": "643",
+            "physical_volume_free_partitions": "0",
         },
-        status_attributes={},
     ),
-    Attributes(path=["software", "firmware"])._replace(
+    Attributes(
+        path=["hardware", "volumes", "physical_volumes", "appvg"],
         inventory_attributes={
-            "version": "AL770_076",
-            "vendor": "IBM",
-            "platform_level": "AL770_076",
+            "volume_group_name": "appvg",
+            "physical_volume_name": "",
+            "physical_volume_status": "Inactive",
+            "physical_volume_total_partitions": "",
+            "physical_volume_free_partitions": "",
         },
-        status_attributes={},
-    ),
-    Attributes(path=["software", "os"])._replace(
-        inventory_attributes={"arch": "ppc64"},
-        status_attributes={},
     ),
 ]
 
 
 def test_inv_prtconf() -> None:
-    result = prtconf.inv_prtconf(prtconf.parse_prtconf(INFO))
-    assert sort_inventory_result(result) == sort_inventory_result(EXPECTED)
+    assert list(prtconf.inv_prtconf(prtconf.parse_prtconf(INFO))) == EXPECTED

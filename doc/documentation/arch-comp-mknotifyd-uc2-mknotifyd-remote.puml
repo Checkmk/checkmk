@@ -1,0 +1,74 @@
+@startuml
+scale 0.6
+
+participant "Origin: Monitoring core" as monitoring_core
+box "Origin: Notify helper\n(cmk ~--notify --keepalive)"
+participant "notify_keepalive()" as cmk_notify
+end box
+database "Origin: Spool directory\n($OMD_ROOT/var/check_mk/notify/spool)" as origin_spool_directory
+box "Origin: mknotifyd"
+participant SpoolHandler as origin_mknotifyd_spool_handler
+participant ABCConnection as origin_mknotifyd_connection
+end box
+box "Destination: mknotifyd"
+participant ABCConnection as destination_mknotifyd_connection
+participant SpoolHandler as destination_mknotifyd_spool_handler
+participant NotificationQueue as destination_mknotifyd_notification_queue
+end box
+database "Destination: Spool directory\n($OMD_ROOT/var/check_mk/notify/spool)" as destination_spool_directory
+box "Destination: cmk ~--notify --spoolfile X"
+participant "handle_spoolfile" as cmk_notify_handle_spoolfile
+participant "notify_rulebased" as notify_rule_based
+participant "Notfication plugin" as notification_plugin
+endbox
+participant "User" as user
+
+== Store spool file synchronously ==
+
+monitoring_core -> cmk_notify: Notification data via stdin
+cmk_notify -> cmk_notify: Create raw notification context\nfrom Notification data
+cmk_notify -> cmk_notify: Complete raw notification context
+cmk_notify -> origin_spool_directory: Store raw notification context
+monitoring_core <- cmk_notify: Ready for new data 
+
+== Forward to destination site ==
+
+origin_spool_directory <- origin_mknotifyd_spool_handler: Read raw notification context
+origin_mknotifyd_spool_handler -> origin_mknotifyd_connection: Forward raw notification context
+monitoring_core <- origin_mknotifyd_spool_handler: Log progress (spooled) to monitoring history
+origin_mknotifyd_connection -> destination_mknotifyd_connection: Send and receive raw notification context
+destination_mknotifyd_connection -> destination_spool_directory: Store raw notification context
+origin_mknotifyd_connection <- destination_mknotifyd_connection: Acknowledge submission
+monitoring_core <- origin_mknotifyd_connection: Log progress (forwarded) to monitoring history
+origin_spool_directory <- origin_mknotifyd_connection: Remove raw notification context spool file
+
+== Process on destination site ==
+
+destination_spool_directory <- destination_mknotifyd_spool_handler: Read raw notification context
+destination_mknotifyd_spool_handler -> destination_mknotifyd_notification_queue: Enqueue raw notification context
+destination_mknotifyd_notification_queue -> cmk_notify_handle_spoolfile: Start process to\nread raw notification context
+destination_spool_directory <- cmk_notify_handle_spoolfile: Read raw notification\ncontext from spool file
+cmk_notify_handle_spoolfile -> notify_rule_based: Hand over raw\nnotification context
+notify_rule_based -> notify_rule_based: Create final notification\ncontexts based on notification rules
+notify_rule_based -> notify_rule_based: Process final notification context
+notify_rule_based -> notification_plugin: Hand over notification context\nvia environment
+notification_plugin -> user: Send notification
+
+== Send results to origin site ==
+
+' Currently is not performed as intended. Seems to be a bug. See CMK-10779.
+' cmk_notify_handle_spoolfile <- notification_plugin: Output + exit code
+' cmk_notify_handle_spoolfile <- cmk_notify_handle_spoolfile: Create notification result\nfrom output + exit code
+
+destination_mknotifyd_notification_queue <- cmk_notify_handle_spoolfile: Output + exit code 0
+destination_spool_directory <- destination_mknotifyd_notification_queue: Remove raw notification context spool file
+destination_spool_directory <- destination_mknotifyd_notification_queue: Store NotificationResult
+destination_spool_directory <- destination_mknotifyd_spool_handler: Read NotificationResult
+destination_mknotifyd_connection <- destination_mknotifyd_spool_handler: Make MessageResult
+origin_mknotifyd_connection <- destination_mknotifyd_connection: Send MessageResult
+destination_mknotifyd_connection <- origin_mknotifyd_connection: Acknowledge submission
+destination_spool_directory <- destination_mknotifyd_connection: Remove NotificationResult spool file
+monitoring_core <- origin_mknotifyd_connection: Log result (completion) to monitoring history
+origin_spool_directory <- origin_mknotifyd_connection: Remove MessageResult spool file
+
+@enduml

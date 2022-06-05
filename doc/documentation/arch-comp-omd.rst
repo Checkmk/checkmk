@@ -96,7 +96,7 @@ on the configuration.
     [OMD]
     node "Site processes" as omd_p {
         component "[[../arch-comp-crontab.html cron jobs]]" as cronjobs
-        [mknotifyd]
+        component "[[../arch-comp-mknotifyd.html mknotifyd]]" as mknotifyd
         [mkeventd]
         component "[[../arch-comp-rrdcached.html rrdcached]]" as rrdcached
         [liveproxyd]

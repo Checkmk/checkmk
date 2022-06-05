@@ -33,3 +33,6 @@ localhost
 Kerberos
 Grafana
 init
+mknotifyd
+stunnel
+Spooler

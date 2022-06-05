@@ -1740,6 +1740,13 @@ def handle_spoolfile(spoolfile: str) -> int:
 
         store_notification_backlog(data["context"])
         locally_deliver_raw_context(data["context"])
+        # TODO: It is a bug that we don't transport result information and monitoring history
+        # entries back to the origin site. The intermediate or final results should be sent back to
+        # the origin site. Also _log_to_history calls should not log the entries to the local
+        # monitoring core of the destination site, but forward the log entries as messages to the
+        # remote site just like the mknotifyd is doing with MessageResult. We could create spool
+        # files holding NotificationResult messages which would then be forwarded to the origin site
+        # by the mknotifyd. See CMK-10779.
         return 0  # No error handling for async delivery
 
     except Exception:

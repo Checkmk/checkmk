@@ -31,6 +31,7 @@ Components
    arch-comp-checkengine.rst
    arch-comp-core.rst
    arch-comp-liveproxyd.rst
+   arch-comp-mknotifyd.rst
    arch-comp-dcd.rst
    arch-comp-livestatus.rst
    arch-comp-livestatus-client.rst

@@ -1,0 +1,21 @@
+@startuml
+scale 0.6
+
+participant "Monitoring core" as monitoring_core
+box "Notify helper\n(cmk ~--notify --keepalive)"
+participant "notify_keepalive()" as cmk_notify
+participant "notify_rulebased()" as notify_rule_based
+end box
+participant "Notfication plugin" as notification_plugin
+participant "User" as user
+
+monitoring_core -> cmk_notify: Notification data via stdin
+cmk_notify -> cmk_notify: Create raw notification context\nfrom Notification data
+cmk_notify -> cmk_notify: Complete raw notification context
+cmk_notify -> notify_rule_based: Raw notification context
+notify_rule_based -> notify_rule_based: Create final notification\ncontexts based on notification rules
+notify_rule_based -> notify_rule_based: Process final notification context
+notify_rule_based -> notification_plugin: Hand over notification context\nvia environment
+notification_plugin -> user: Send notification
+monitoring_core <- cmk_notify: Ready for new data
+@enduml

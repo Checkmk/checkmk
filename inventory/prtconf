@@ -66,8 +66,6 @@
 # Note: this is only the header. Much more stuff follows, but is currently
 # not being parsed.
 
-import re
-
 
 def get_tuples_section(info):
     parsed = {}
@@ -150,24 +148,29 @@ def _split_vendor(string):
 
 def inv_prtconf(info, inventory_tree):
     parsed = parse_prtconf(info)
-    fill_key_value_pairs(inventory_tree, parsed)
-    fill_volume_groups(inventory_tree, parsed)
+
+    for attrs, path in get_key_value_pairs(parsed):
+        inventory_tree.get_dict(path).update(attrs)
+
+    for attrs, path in get_volume_groups(parsed):
+        inventory_tree.get_dict(path).update(attrs)
 
 
-def fill_key_value_pairs(inventory_tree, parsed):
+def get_key_value_pairs(parsed):
     parsed_tuples = parsed["tuples"]
-    cpu_dict = inventory_tree.get_dict("hardware.cpu.")
-    sys_dict = inventory_tree.get_dict("hardware.system.")
-    mem_dict = inventory_tree.get_dict("hardware.memory.")
-    fmw_dict = inventory_tree.get_dict("software.firmware.")
-    net_dict = inventory_tree.get_dict("networking.")
+    cpu_dict: dict[str, float | str] = {}
+    sys_dict = {}
+    mem_dict = {}
+    fmw_dict = {}
+    net_dict = {}
+    os_dict = {}
+
     cpu_type = parsed_tuples.get("CPU Type")
     if cpu_type is not None:
         cpu_dict["arch"] = "ppc64" if cpu_type == "64-bit" else "ppc"
 
     kernel_type = parsed_tuples.get("Kernel Type")
     if kernel_type is not None:
-        os_dict = inventory_tree.get_dict("software.os.")
         os_dict["arch"] = "ppc64" if kernel_type == "64-bit" else "ppc"
 
     proc_type = parsed_tuples.get("Processor Type")
@@ -234,25 +237,36 @@ def fill_key_value_pairs(inventory_tree, parsed):
     if sub_netmask is not None:
         net_dict["sub_netmask"] = sub_netmask
 
+    return [
+        (cpu_dict, "hardware.cpu."),
+        (sys_dict, "hardware.system."),
+        (mem_dict, "hardware.memory."),
+        (fmw_dict, "software.firmware."),
+        (net_dict, "networking."),
+        (os_dict, "software.os."),
+    ]
 
-def fill_volume_groups(inventory_tree, parsed):
+
+def get_volume_groups(parsed):
     path = ".hardware.volumes.physical_volumes.%s:"
     for item in parsed["active"]:
         vg_name, pv_name, pv_status, pv_total_partitions, pv_free_partitions, _pv_distr = item
-        node = inventory_tree.get_dict(path % pv_name)
+        node = {}
         node["volume_group_name"] = vg_name
         node["physical_volume_name"] = pv_name
         node["physical_volume_status"] = pv_status
         node["physical_volume_total_partitions"] = pv_total_partitions
         node["physical_volume_free_partitions"] = pv_free_partitions
+        yield node, path % pv_name
 
     for item in parsed["inactive"]:
-        node = inventory_tree.get_dict(path % item)
+        node = {}
         node["volume_group_name"] = item
         node["physical_volume_name"] = ""
         node["physical_volume_status"] = "Inactive"
         node["physical_volume_total_partitions"] = ""
         node["physical_volume_free_partitions"] = ""
+        yield node, path % item
 
 
 inv_info["prtconf"] = {

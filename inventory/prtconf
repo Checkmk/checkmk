@@ -112,6 +112,7 @@ def get_active_volume_groups(info):
     result = []
     begin_parsing = False
     volume_group_name = ""
+    temp = ""
     for line_info in info:
         if line_info[0].startswith("INSTALLED RESOURCE LIST"):
             break
@@ -121,8 +122,8 @@ def get_active_volume_groups(info):
             volume_group_name = temp
             next(info)
             continue
-        else:
-            temp = line_info[0]
+
+        temp = line_info[0]
 
         if begin_parsing:
             if line_info[0].startswith("===="):
@@ -237,7 +238,7 @@ def fill_key_value_pairs(inventory_tree, parsed):
 def fill_volume_groups(inventory_tree, parsed):
     path = ".hardware.volumes.physical_volumes.%s:"
     for item in parsed["active"]:
-        vg_name, pv_name, pv_status, pv_total_partitions, pv_free_partitions, pv_distribution = item
+        vg_name, pv_name, pv_status, pv_total_partitions, pv_free_partitions, _pv_distr = item
         node = inventory_tree.get_dict(path % pv_name)
         node["volume_group_name"] = vg_name
         node["physical_volume_name"] = pv_name

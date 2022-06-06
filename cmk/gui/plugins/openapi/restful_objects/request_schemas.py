@@ -2001,3 +2001,48 @@ class X509ReqPEMUUID(BaseSchema):
         example="-----BEGIN CERTIFICATE REQUEST-----\n...\n-----END CERTIFICATE REQUEST-----\n",
         description="PEM-encoded X.509 CSR. The CN must a valid version-4 UUID.",
     )
+
+
+class CreateHostComment(BaseSchema):
+    host_name = gui_fields.HostField(
+        description="The host name",
+        should_exist=True,
+        example="example.com",
+        required=True,
+    )
+    comment = fields.String(
+        description="The comment which will be stored for the host.",
+        example="Windows",
+        required=True,
+    )
+    persistent = fields.Boolean(
+        description="If set, the comment will persist a restart. Defaults to False.",
+        example=False,
+        load_default=False,
+        required=False,
+    )
+
+
+class CreateServiceComment(BaseSchema):
+    host_name = gui_fields.HostField(
+        description="The host name",
+        should_exist=True,
+        example="example.com",
+        required=True,
+    )
+    service_description = fields.String(
+        description="The service description for which the comment is for. No exception is raised when the specified service description does not exist",
+        example="Memory",
+        required=True,
+    )
+    comment = fields.String(
+        description="The comment which will be stored for the service.",
+        example="Windows",
+        required=True,
+    )
+    persistent = fields.Boolean(
+        description="If set, the comment will persist a restart. Defaults to False.",
+        example=False,
+        load_default=False,
+        required=False,
+    )

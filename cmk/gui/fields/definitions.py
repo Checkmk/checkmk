@@ -734,6 +734,7 @@ ColumnTypes = typing.Union[Column, str]
 
 def column_field(
     table: typing.Type[Table],
+    example: typing.List[str],
     required: bool = False,
     mandatory: Optional[typing.List[ColumnTypes]] = None,
 ) -> '_ListOfColumns':
@@ -753,6 +754,7 @@ def column_field(
         missing=[getattr(table, col) for col in column_names],
         description=f"The desired columns of the `{table.__tablename__}` table. If left empty, a "
         "default set of columns is used.",
+        example=example,
     )
 
 

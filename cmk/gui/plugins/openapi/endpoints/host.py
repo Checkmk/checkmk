@@ -70,7 +70,7 @@ class HostParameters(BaseSchema):
         missing=[],
     )
     query = fields.query_field(Hosts, required=False)
-    columns = fields.column_field(Hosts, mandatory=[Hosts.name])
+    columns = fields.column_field(Hosts, mandatory=[Hosts.name], example=["name"])
 
 
 @Endpoint(constructors.collection_href('host'),

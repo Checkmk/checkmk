@@ -51,6 +51,7 @@ PARAMETERS = [{
             Services.host_name,
             Services.description,
         ],
+        example=["host_name", "description"],
     )
 }]
 

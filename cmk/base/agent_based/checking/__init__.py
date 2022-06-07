@@ -353,7 +353,7 @@ def _filter_services_to_check(
     run_plugin_names: Container[CheckPluginName],
     config_cache: config.ConfigCache,
     host_name: HostName,
-) -> List[ConfiguredService]:
+) -> Sequence[ConfiguredService]:
     """Filter list of services to check
 
     If check types are specified in `run_plugin_names` (e.g. via command line), drop all others

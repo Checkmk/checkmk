@@ -476,7 +476,6 @@ def perform_discovery_action(
             DiscoveryAction.FIX_ALL,
             DiscoveryAction.UPDATE_SERVICES,
         ]:
-            assert update_target is not None
             Discovery(
                 host,
                 discovery_options,

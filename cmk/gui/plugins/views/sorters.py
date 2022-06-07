@@ -59,7 +59,7 @@ def cmp_host_state_equiv(r):
 @sorter_registry.register
 class SorterSvcstate(Sorter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "svcstate"
 
     @property
@@ -79,7 +79,7 @@ class SorterSvcstate(Sorter):
 @sorter_registry.register
 class SorterHoststate(Sorter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "hoststate"
 
     @property
@@ -99,7 +99,7 @@ class SorterHoststate(Sorter):
 @sorter_registry.register
 class SorterSiteHost(Sorter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "site_host"
 
     @property
@@ -119,7 +119,7 @@ class SorterSiteHost(Sorter):
 @sorter_registry.register
 class SorterHostName(Sorter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "host_name"
 
     @property
@@ -137,7 +137,7 @@ class SorterHostName(Sorter):
 @sorter_registry.register
 class SorterSitealias(Sorter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "sitealias"
 
     @property
@@ -173,7 +173,7 @@ class SorterHost(ABCTagSorter):
         return "host"
 
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "host"
 
     @property
@@ -192,7 +192,7 @@ class SorterServiceTags(ABCTagSorter):
         return "service"
 
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "service_tags"
 
     @property
@@ -223,7 +223,7 @@ class SorterHostLabels(ABCTagSorter):
         return "host"
 
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "host_labels"
 
     @property
@@ -242,7 +242,7 @@ class SorterServiceLabels(ABCTagSorter):
         return "service"
 
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "service_labels"
 
     @property
@@ -257,7 +257,7 @@ class SorterServiceLabels(ABCTagSorter):
 @sorter_registry.register
 class SorterServicelevel(Sorter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "servicelevel"
 
     @property
@@ -333,7 +333,7 @@ class PerfValSorter(Sorter):
     _num = 0
 
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "svc_perf_val%02d" % self._num
 
     @property
@@ -492,7 +492,7 @@ class SorterCustomHostVariable(DerivedColumnsSorter):
 @sorter_registry.register
 class SorterHostIpv4Address(Sorter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "host_ipv4_address"
 
     @property
@@ -516,7 +516,7 @@ class SorterHostIpv4Address(Sorter):
 @sorter_registry.register
 class SorterNumProblems(Sorter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "num_problems"
 
     @property

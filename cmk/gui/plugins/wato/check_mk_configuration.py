@@ -128,7 +128,7 @@ class ConfigVariableUITheme(ConfigVariable):
     def domain(self):
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "ui_theme"
 
     def valuespec(self):
@@ -147,7 +147,7 @@ class ConfigVariableShowMoreMode(ConfigVariable):
     def domain(self):
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "show_mode"
 
     def valuespec(self):
@@ -173,7 +173,7 @@ class ConfigVariableBulkDiscoveryDefaultSettings(ConfigVariable):
     def domain(self):
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "bulk_discovery_default_settings"
 
     def valuespec(self):
@@ -204,7 +204,7 @@ class ConfigVariableLogLevels(ConfigVariable):
     def domain(self):
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "log_levels"
 
     def valuespec(self):
@@ -300,7 +300,7 @@ class ConfigVariableSlowViewsDurationThreshold(ConfigVariable):
     def domain(self):
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "slow_views_duration_threshold"
 
     def valuespec(self):
@@ -322,7 +322,7 @@ class ConfigVariableDebug(ConfigVariable):
     def domain(self):
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "debug"
 
     def valuespec(self):
@@ -345,7 +345,7 @@ class ConfigVariableGUIProfile(ConfigVariable):
     def domain(self):
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "profile"
 
     def valuespec(self):
@@ -377,7 +377,7 @@ class ConfigVariableDebugLivestatusQueries(ConfigVariable):
     def domain(self):
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "debug_livestatus_queries"
 
     def valuespec(self):
@@ -399,7 +399,7 @@ class ConfigVariableSelectionLivetime(ConfigVariable):
     def domain(self):
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "selection_livetime"
 
     def valuespec(self):
@@ -423,7 +423,7 @@ class ConfigVariableShowLivestatusErrors(ConfigVariable):
     def domain(self):
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "show_livestatus_errors"
 
     def valuespec(self):
@@ -446,7 +446,7 @@ class ConfigVariableEnableSounds(ConfigVariable):
     def domain(self):
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "enable_sounds"
 
     def valuespec(self):
@@ -470,7 +470,7 @@ class ConfigVariableSoftQueryLimit(ConfigVariable):
     def domain(self):
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "soft_query_limit"
 
     def valuespec(self):
@@ -493,7 +493,7 @@ class ConfigVariableHardQueryLimit(ConfigVariable):
     def domain(self):
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "hard_query_limit"
 
     def valuespec(self):
@@ -517,7 +517,7 @@ class ConfigVariableQuicksearchDropdownLimit(ConfigVariable):
     def domain(self):
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "quicksearch_dropdown_limit"
 
     def valuespec(self):
@@ -541,7 +541,7 @@ class ConfigVariableQuicksearchSearchOrder(ConfigVariable):
     def domain(self):
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "quicksearch_search_order"
 
     def valuespec(self):
@@ -590,7 +590,7 @@ class ConfigVariableTableRowLimit(ConfigVariable):
     def domain(self):
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "table_row_limit"
 
     def valuespec(self):
@@ -614,7 +614,7 @@ class ConfigVariableStartURL(ConfigVariable):
     def domain(self):
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "start_url"
 
     def valuespec(self):
@@ -639,7 +639,7 @@ class ConfigVariablePageHeading(ConfigVariable):
     def domain(self):
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "page_heading"
 
     def valuespec(self):
@@ -661,7 +661,7 @@ class ConfigVariableBIDefaultLayout(ConfigVariable):
     def domain(self):
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "default_bi_layout"
 
     def valuespec(self):
@@ -712,7 +712,7 @@ class ConfigVariablePagetitleDateFormat(ConfigVariable):
     def domain(self):
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "pagetitle_date_format"
 
     def valuespec(self):
@@ -738,7 +738,7 @@ class ConfigVariableEscapePluginOutput(ConfigVariable):
     def domain(self):
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "escape_plugin_output"
 
     def valuespec(self):
@@ -770,7 +770,7 @@ class ConfigVariableDrawRuleIcon(ConfigVariable):
     def domain(self):
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "multisite_draw_ruleicon"
 
     def valuespec(self):
@@ -812,7 +812,7 @@ class ConfigVariableVirtualHostTrees(ConfigVariable):
     def domain(self):
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "virtual_host_trees"
 
     def valuespec(self):
@@ -934,7 +934,7 @@ class ConfigVariableRescheduleTimeout(ConfigVariable):
     def domain(self):
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "reschedule_timeout"
 
     def valuespec(self):
@@ -960,7 +960,7 @@ class ConfigVariableSidebarUpdateInterval(ConfigVariable):
     def domain(self):
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "sidebar_update_interval"
 
     def valuespec(self):
@@ -986,7 +986,7 @@ class ConfigVariableSidebarNotifyInterval(ConfigVariable):
     def domain(self):
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "sidebar_notify_interval"
 
     def valuespec(self):
@@ -1013,7 +1013,7 @@ class ConfigVariableiAdHocDowntime(ConfigVariable):
     def domain(self):
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "adhoc_downtime"
 
     def valuespec(self):
@@ -1062,7 +1062,7 @@ class ConfigVariableAuthByHTTPHeader(ConfigVariable):
     def domain(self):
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "auth_by_http_header"
 
     def valuespec(self):
@@ -1111,7 +1111,7 @@ class ConfigVariableStalenessThreshold(ConfigVariable):
     def domain(self):
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "staleness_threshold"
 
     def valuespec(self):
@@ -1135,7 +1135,7 @@ class ConfigVariableLoginScreen(ConfigVariable):
     def domain(self):
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "login_screen"
 
     def valuespec(self):
@@ -1199,7 +1199,7 @@ class ConfigVariableUserLocalizations(ConfigVariable):
     def domain(self):
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "user_localizations"
 
     def valuespec(self):
@@ -1235,7 +1235,7 @@ class ConfigVariableUserIconsAndActions(ConfigVariable):
     def domain(self):
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "user_icons_and_actions"
 
     def valuespec(self):
@@ -1361,7 +1361,7 @@ class ConfigVariableCustomServiceAttributes(ConfigVariable):
     def domain(self):
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "custom_service_attributes"
 
     def valuespec(self):
@@ -1503,7 +1503,7 @@ class ConfigVariableUserDowntimeTimeranges(ConfigVariable):
     def domain(self):
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "user_downtime_timeranges"
 
     def valuespec(self):
@@ -1556,7 +1556,7 @@ class ConfigVariableBuiltinIconVisibility(ConfigVariable):
     def domain(self):
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "builtin_icon_visibility"
 
     def valuespec(self):
@@ -1629,7 +1629,7 @@ class ConfigVariableServiceViewGrouping(ConfigVariable):
     def domain(self):
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "service_view_grouping"
 
     def valuespec(self):
@@ -1687,7 +1687,7 @@ class ConfigVariableViewActionDefaults(ConfigVariable):
     def domain(self):
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "view_action_defaults"
 
     def valuespec(self):
@@ -1746,7 +1746,7 @@ class ConfigVariableTrustedCertificateAuthorities(ConfigVariable):
     def domain(self):
         return ConfigDomainCACertificates
 
-    def ident(self):
+    def ident(self) -> str:
         return "trusted_certificate_authorities"
 
     def valuespec(self):
@@ -1840,7 +1840,7 @@ class ConfigVariableWATOMaxSnapshots(ConfigVariable):
     def domain(self):
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "wato_max_snapshots"
 
     def valuespec(self):
@@ -1863,7 +1863,7 @@ class ConfigVariableActivateChangesConcurrency(ConfigVariable):
     def domain(self):
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "wato_activate_changes_concurrency"
 
     def valuespec(self):
@@ -1899,7 +1899,7 @@ class ConfigVariableWATOActivateChangesCommentMode(ConfigVariable):
     def domain(self):
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "wato_activate_changes_comment_mode"
 
     def valuespec(self):
@@ -1925,7 +1925,7 @@ class ConfigVariableWATOActivationMethod(ConfigVariable):
     def domain(self):
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "wato_activation_method"
 
     def valuespec(self):
@@ -1947,7 +1947,7 @@ class ConfigVariableWATOHideFilenames(ConfigVariable):
     def domain(self):
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "wato_hide_filenames"
 
     def valuespec(self):
@@ -1971,7 +1971,7 @@ class ConfigVariableWATOUploadInsecureSnapshots(ConfigVariable):
     def domain(self):
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "wato_upload_insecure_snapshots"
 
     def valuespec(self):
@@ -1995,7 +1995,7 @@ class ConfigVariableWATOHideHosttags(ConfigVariable):
     def domain(self):
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "wato_hide_hosttags"
 
     def valuespec(self):
@@ -2014,7 +2014,7 @@ class ConfigVariableWATOHideVarnames(ConfigVariable):
     def domain(self):
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "wato_hide_varnames"
 
     def valuespec(self):
@@ -2036,7 +2036,7 @@ class ConfigVariableHideHelpInLists(ConfigVariable):
     def domain(self):
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "wato_hide_help_in_lists"
 
     def valuespec(self):
@@ -2055,7 +2055,7 @@ class ConfigVariableWATOUseGit(ConfigVariable):
     def domain(self):
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "wato_use_git"
 
     def valuespec(self):
@@ -2081,7 +2081,7 @@ class ConfigVariableWATOPrettyPrintConfig(ConfigVariable):
     def domain(self):
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "wato_pprint_config"
 
     def valuespec(self):
@@ -2104,7 +2104,7 @@ class ConfigVariableWATOHideFoldersWithoutReadPermissions(ConfigVariable):
     def domain(self):
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "wato_hide_folders_without_read_permissions"
 
     def valuespec(self):
@@ -2127,7 +2127,7 @@ class ConfigVariableWATOIconCategories(ConfigVariable):
     def domain(self):
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "wato_icon_categories"
 
     def valuespec(self):
@@ -2182,7 +2182,7 @@ class ConfigVariableLogLogonFailures(ConfigVariable):
     def domain(self):
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "log_logon_failures"
 
     def valuespec(self):
@@ -2205,7 +2205,7 @@ class ConfigVariableLockOnLogonFailures(ConfigVariable):
     def domain(self):
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "lock_on_logon_failures"
 
     def valuespec(self):
@@ -2240,7 +2240,7 @@ class ConfigVariablePasswordPolicy(ConfigVariable):
     def domain(self):
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "password_policy"
 
     def valuespec(self):
@@ -2299,7 +2299,7 @@ class ConfigVariableUserIdleTimeout(ConfigVariable):
     def domain(self):
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "user_idle_timeout"
 
     def valuespec(self):
@@ -2332,7 +2332,7 @@ class ConfigVariableSingleUserSession(ConfigVariable):
     def domain(self):
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "single_user_session"
 
     def valuespec(self):
@@ -2365,7 +2365,7 @@ class ConfigVariableDefaultUserProfile(ConfigVariable):
     def domain(self):
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "default_user_profile"
 
     def valuespec(self):
@@ -2450,7 +2450,7 @@ class ConfigVariableUseNewDescriptionsFor(ConfigVariable):
     def domain(self):
         return ConfigDomainCore
 
-    def ident(self):
+    def ident(self) -> str:
         return "use_new_descriptions_for"
 
     def valuespec(self):
@@ -2593,7 +2593,7 @@ class ConfigVariableTCPConnectTimeout(ConfigVariable):
     def domain(self):
         return ConfigDomainCore
 
-    def ident(self):
+    def ident(self) -> str:
         return "tcp_connect_timeout"
 
     def valuespec(self):
@@ -2618,7 +2618,7 @@ class ConfigVariableSimulationMode(ConfigVariable):
     def domain(self):
         return ConfigDomainCore
 
-    def ident(self):
+    def ident(self) -> str:
         return "simulation_mode"
 
     def valuespec(self):
@@ -2642,7 +2642,7 @@ class ConfigVariableRestartLocking(ConfigVariable):
     def domain(self):
         return ConfigDomainCore
 
-    def ident(self):
+    def ident(self) -> str:
         return "restart_locking"
 
     def valuespec(self):
@@ -2670,7 +2670,7 @@ class ConfigVariableAgentSimulator(ConfigVariable):
     def domain(self):
         return ConfigDomainCore
 
-    def ident(self):
+    def ident(self) -> str:
         return "agent_simulator"
 
     def valuespec(self):
@@ -2693,7 +2693,7 @@ class ConfigVariableDelayPrecompile(ConfigVariable):
     def domain(self):
         return ConfigDomainCore
 
-    def ident(self):
+    def ident(self) -> str:
         return "delay_precompile"
 
     def valuespec(self):
@@ -2719,7 +2719,7 @@ class ConfigVariableClusterMaxCachefileAge(ConfigVariable):
     def domain(self):
         return ConfigDomainCore
 
-    def ident(self):
+    def ident(self) -> str:
         return "cluster_max_cachefile_age"
 
     def valuespec(self):
@@ -2744,7 +2744,7 @@ class ConfigVariablePiggybackMaxCachefileAge(ConfigVariable):
     def domain(self):
         return ConfigDomainCore
 
-    def ident(self):
+    def ident(self) -> str:
         return "piggyback_max_cachefile_age"
 
     def valuespec(self):
@@ -2766,7 +2766,7 @@ class ConfigVariableCheckMKPerfdataWithTimes(ConfigVariable):
     def domain(self):
         return ConfigDomainCore
 
-    def ident(self):
+    def ident(self) -> str:
         return "check_mk_perfdata_with_times"
 
     def valuespec(self):
@@ -2790,7 +2790,7 @@ class ConfigVariableUseDNSCache(ConfigVariable):
     def domain(self):
         return ConfigDomainCore
 
-    def ident(self):
+    def ident(self) -> str:
         return "use_dns_cache"
 
     def valuespec(self):
@@ -2838,7 +2838,7 @@ class ConfigVariableChooseSNMPBackend(ConfigVariable):
     def domain(self):
         return ConfigDomainCore
 
-    def ident(self):
+    def ident(self) -> str:
         return "snmp_backend_default"
 
     def valuespec(self):
@@ -2872,7 +2872,7 @@ class ConfigVariableUseInlineSNMP(ConfigVariable):
     def domain(self):
         return ConfigDomainCore
 
-    def ident(self):
+    def ident(self) -> str:
         return "use_inline_snmp"
 
     def valuespec(self):
@@ -2903,7 +2903,7 @@ class ConfigVariableHTTPProxies(ConfigVariable):
     def domain(self):
         return ConfigDomainCore
 
-    def ident(self):
+    def ident(self) -> str:
         return "http_proxies"
 
     def valuespec(self):
@@ -2985,7 +2985,7 @@ class ConfigVariableInventoryCheckInterval(ConfigVariable):
     def domain(self):
         return ConfigDomainCore
 
-    def ident(self):
+    def ident(self) -> str:
         return "inventory_check_interval"
 
     def valuespec(self):
@@ -3018,7 +3018,7 @@ class ConfigVariableInventoryCheckSeverity(ConfigVariable):
     def domain(self):
         return ConfigDomainCore
 
-    def ident(self):
+    def ident(self) -> str:
         return "inventory_check_severity"
 
     def valuespec(self):
@@ -3045,7 +3045,7 @@ class ConfigVariableInventoryCheckAutotrigger(ConfigVariable):
     def domain(self):
         return ConfigDomainCore
 
-    def ident(self):
+    def ident(self) -> str:
         return "inventory_check_autotrigger"
 
     def valuespec(self):

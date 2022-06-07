@@ -146,7 +146,7 @@ raster = 10  # Raster the dashlet coords are measured in (px)
 @visual_type_registry.register
 class VisualTypeDashboards(VisualType):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "dashboards"
 
     @property

@@ -1747,7 +1747,7 @@ def _group_membership_parameters():
 @ldap_attribute_plugin_registry.register
 class LDAPAttributePluginMail(LDAPBuiltinAttributePlugin):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "email"
 
     @property
@@ -1813,7 +1813,7 @@ class LDAPAttributePluginMail(LDAPBuiltinAttributePlugin):
 @ldap_attribute_plugin_registry.register
 class LDAPAttributePluginAlias(LDAPBuiltinAttributePlugin):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "alias"
 
     @property
@@ -1887,7 +1887,7 @@ class LDAPAttributePluginAuthExpire(LDAPBuiltinAttributePlugin):
     and then maybe increase the serial."""
 
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "auth_expire"
 
     @property
@@ -2010,7 +2010,7 @@ class LDAPAttributePluginAuthExpire(LDAPBuiltinAttributePlugin):
 @ldap_attribute_plugin_registry.register
 class LDAPAttributePluginPager(LDAPBuiltinAttributePlugin):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "pager"
 
     @property
@@ -2079,7 +2079,7 @@ class LDAPAttributePluginPager(LDAPBuiltinAttributePlugin):
 @ldap_attribute_plugin_registry.register
 class LDAPAttributePluginGroupsToContactgroups(LDAPBuiltinAttributePlugin):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "groups_to_contactgroups"
 
     @property
@@ -2146,7 +2146,7 @@ class LDAPAttributePluginGroupAttributes(LDAPBuiltinAttributePlugin):
     """Populate user attributes based on group memberships within LDAP"""
 
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "groups_to_attributes"
 
     @property
@@ -2281,7 +2281,7 @@ class LDAPAttributePluginGroupAttributes(LDAPBuiltinAttributePlugin):
 @ldap_attribute_plugin_registry.register
 class LDAPAttributePluginGroupsToRoles(LDAPBuiltinAttributePlugin):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "groups_to_roles"
 
     @property

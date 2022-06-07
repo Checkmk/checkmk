@@ -21,7 +21,7 @@ from cmk.gui.valuespec import (
 @visual_info_registry.register
 class VisualInfoHost(VisualInfo):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "host"
 
     @property
@@ -48,7 +48,7 @@ class VisualInfoHost(VisualInfo):
 @visual_info_registry.register
 class VisualInfoService(VisualInfo):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "service"
 
     @property
@@ -88,7 +88,7 @@ class VisualInfoService(VisualInfo):
 @visual_info_registry.register
 class VisualInfoHostgroup(VisualInfo):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "hostgroup"
 
     @property
@@ -122,7 +122,7 @@ class VisualInfoHostgroup(VisualInfo):
 @visual_info_registry.register
 class VisualInfoServicegroup(VisualInfo):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "servicegroup"
 
     @property
@@ -156,7 +156,7 @@ class VisualInfoServicegroup(VisualInfo):
 @visual_info_registry.register
 class VisualInfoLog(VisualInfo):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "log"
 
     @property
@@ -175,7 +175,7 @@ class VisualInfoLog(VisualInfo):
 @visual_info_registry.register
 class VisualInfoComment(VisualInfo):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "comment"
 
     @property
@@ -201,7 +201,7 @@ class VisualInfoComment(VisualInfo):
 @visual_info_registry.register
 class VisualInfoDowntime(VisualInfo):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "downtime"
 
     @property
@@ -227,7 +227,7 @@ class VisualInfoDowntime(VisualInfo):
 @visual_info_registry.register
 class VisualInfoContact(VisualInfo):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "contact"
 
     @property
@@ -253,7 +253,7 @@ class VisualInfoContact(VisualInfo):
 @visual_info_registry.register
 class VisualInfoCommand(VisualInfo):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "command"
 
     @property
@@ -279,7 +279,7 @@ class VisualInfoCommand(VisualInfo):
 @visual_info_registry.register
 class VisualInfoBIAggregation(VisualInfo):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "aggr"
 
     @property
@@ -309,7 +309,7 @@ class VisualInfoBIAggregation(VisualInfo):
 @visual_info_registry.register
 class VisualInfoBIAggregationGroup(VisualInfo):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "aggr_group"
 
     @property
@@ -339,7 +339,7 @@ class VisualInfoBIAggregationGroup(VisualInfo):
 @visual_info_registry.register
 class VisualInfoDiscovery(VisualInfo):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "discovery"
 
     @property
@@ -358,7 +358,7 @@ class VisualInfoDiscovery(VisualInfo):
 @visual_info_registry.register
 class VisualInfoEvent(VisualInfo):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "event"
 
     @property
@@ -384,7 +384,7 @@ class VisualInfoEvent(VisualInfo):
 @visual_info_registry.register
 class VisualInfoEventHistory(VisualInfo):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "history"
 
     @property
@@ -416,7 +416,7 @@ class VisualInfoEventHistory(VisualInfo):
 @visual_info_registry.register
 class VisualInfoCrash(VisualInfo):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "crash"
 
     @property

@@ -181,7 +181,7 @@ permission_registry.register(
 @data_source_registry.register
 class DataSourceECEvents(ABCDataSource):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "mkeventd_events"
 
     @property
@@ -216,7 +216,7 @@ class DataSourceECEvents(ABCDataSource):
 @data_source_registry.register
 class DataSourceECEventHistory(ABCDataSource):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "mkeventd_history"
 
     @property
@@ -262,7 +262,7 @@ class DataSourceECEventHistory(ABCDataSource):
 @painter_registry.register
 class PainterEventId(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "event_id"
 
     def title(self, cell):
@@ -282,7 +282,7 @@ class PainterEventId(Painter):
 @painter_registry.register
 class PainterEventCount(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "event_count"
 
     def title(self, cell):
@@ -302,7 +302,7 @@ class PainterEventCount(Painter):
 @painter_registry.register
 class PainterEventText(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "event_text"
 
     def title(self, cell):
@@ -322,7 +322,7 @@ class PainterEventText(Painter):
 @painter_registry.register
 class PainterEventMatchGroups(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "event_match_groups"
 
     def title(self, cell):
@@ -348,7 +348,7 @@ class PainterEventMatchGroups(Painter):
 @painter_registry.register
 class PainterEventFirst(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "event_first"
 
     def title(self, cell):
@@ -372,7 +372,7 @@ class PainterEventFirst(Painter):
 @painter_registry.register
 class PainterEventLast(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "event_last"
 
     def title(self, cell):
@@ -396,7 +396,7 @@ class PainterEventLast(Painter):
 @painter_registry.register
 class PainterEventComment(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "event_comment"
 
     def title(self, cell):
@@ -416,7 +416,7 @@ class PainterEventComment(Painter):
 @painter_registry.register
 class PainterEventSl(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "event_sl"
 
     def title(self, cell):
@@ -439,7 +439,7 @@ class PainterEventSl(Painter):
 @painter_registry.register
 class PainterEventHost(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "event_host"
 
     def title(self, cell):
@@ -461,7 +461,7 @@ class PainterEventHost(Painter):
 @painter_registry.register
 class PainterEventIpaddress(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "event_ipaddress"
 
     def title(self, cell):
@@ -481,7 +481,7 @@ class PainterEventIpaddress(Painter):
 @painter_registry.register
 class PainterEventHostInDowntime(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "event_host_in_downtime"
 
     def title(self, cell):
@@ -501,7 +501,7 @@ class PainterEventHostInDowntime(Painter):
 @painter_registry.register
 class PainterEventOwner(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "event_owner"
 
     def title(self, cell):
@@ -521,7 +521,7 @@ class PainterEventOwner(Painter):
 @painter_registry.register
 class PainterEventContact(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "event_contact"
 
     def title(self, cell):
@@ -541,7 +541,7 @@ class PainterEventContact(Painter):
 @painter_registry.register
 class PainterEventApplication(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "event_application"
 
     def title(self, cell):
@@ -561,7 +561,7 @@ class PainterEventApplication(Painter):
 @painter_registry.register
 class PainterEventPid(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "event_pid"
 
     def title(self, cell):
@@ -589,7 +589,7 @@ def _deref(x: Union[T, Callable[[], T]]) -> T:
 @painter_registry.register
 class PainterEventPriority(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "event_priority"
 
     def title(self, cell):
@@ -609,7 +609,7 @@ class PainterEventPriority(Painter):
 @painter_registry.register
 class PainterEventFacility(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "event_facility"
 
     def title(self, cell):
@@ -629,7 +629,7 @@ class PainterEventFacility(Painter):
 @painter_registry.register
 class PainterEventRuleId(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "event_rule_id"
 
     def title(self, cell):
@@ -653,7 +653,7 @@ class PainterEventRuleId(Painter):
 @painter_registry.register
 class PainterEventState(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "event_state"
 
     def title(self, cell):
@@ -677,7 +677,7 @@ class PainterEventState(Painter):
 @painter_registry.register
 class PainterEventPhase(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "event_phase"
 
     def title(self, cell):
@@ -776,7 +776,7 @@ def _is_rendered_from_view_dashlet() -> bool:
 @painter_registry.register
 class PainterEventIcons(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "event_icons"
 
     def title(self, cell):
@@ -800,7 +800,7 @@ class PainterEventIcons(Painter):
 @painter_registry.register
 class PainterEventHistoryIcons(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "event_history_icons"
 
     def title(self, cell):
@@ -824,7 +824,7 @@ class PainterEventHistoryIcons(Painter):
 @painter_registry.register
 class PainterEventContactGroups(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "event_contact_groups"
 
     def title(self, cell):
@@ -849,7 +849,7 @@ class PainterEventContactGroups(Painter):
 @painter_registry.register
 class PainterEventEffectiveContactGroups(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "event_effective_contact_groups"
 
     def title(self, cell):
@@ -885,7 +885,7 @@ class PainterEventEffectiveContactGroups(Painter):
 @painter_registry.register
 class PainterHistoryLine(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "history_line"
 
     def title(self, cell):
@@ -905,7 +905,7 @@ class PainterHistoryLine(Painter):
 @painter_registry.register
 class PainterHistoryTime(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "history_time"
 
     def title(self, cell):
@@ -929,7 +929,7 @@ class PainterHistoryTime(Painter):
 @painter_registry.register
 class PainterHistoryWhat(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "history_what"
 
     def title(self, cell):
@@ -950,7 +950,7 @@ class PainterHistoryWhat(Painter):
 @painter_registry.register
 class PainterHistoryWhatExplained(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "history_what_explained"
 
     def title(self, cell):
@@ -967,7 +967,7 @@ class PainterHistoryWhatExplained(Painter):
 @painter_registry.register
 class PainterHistoryWho(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "history_who"
 
     def title(self, cell):
@@ -987,7 +987,7 @@ class PainterHistoryWho(Painter):
 @painter_registry.register
 class PainterHistoryAddinfo(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "history_addinfo"
 
     def title(self, cell):
@@ -1062,7 +1062,7 @@ class ECCommand(Command):
 @command_registry.register
 class CommandECUpdateEvent(ECCommand):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "ec_update_event"
 
     @property
@@ -1152,7 +1152,7 @@ PermissionECChangeEventState = permission_registry.register(
 @command_registry.register
 class CommandECChangeState(ECCommand):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "ec_change_state"
 
     @property
@@ -1200,7 +1200,7 @@ PermissionECCustomActions = permission_registry.register(
 @command_registry.register
 class CommandECCustomAction(ECCommand):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "ec_custom_actions"
 
     @property
@@ -1246,7 +1246,7 @@ PermissionECArchiveEvent = permission_registry.register(
 @command_registry.register
 class CommandECArchiveEvent(ECCommand):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "ec_archive_event"
 
     @property
@@ -1290,7 +1290,7 @@ PermissionECArchiveEventsOfHost = permission_registry.register(
 @command_registry.register
 class CommandECArchiveEventsOfHost(ECCommand):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "ec_archive_events_of_host"
 
     @property

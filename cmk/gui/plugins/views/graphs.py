@@ -216,7 +216,7 @@ def _transform_old_graph_render_options(value):
 @painter_registry.register
 class PainterServiceGraphs(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "service_graphs"
 
     def title(self, cell):
@@ -251,7 +251,7 @@ class PainterServiceGraphs(Painter):
 @painter_registry.register
 class PainterHostGraphs(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "host_graphs"
 
     def title(self, cell):
@@ -280,7 +280,7 @@ class PainterHostGraphs(Painter):
 @painter_option_registry.register
 class PainterOptionGraphRenderOptions(PainterOption):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "graph_render_options"
 
     @property

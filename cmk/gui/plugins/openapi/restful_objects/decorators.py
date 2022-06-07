@@ -809,7 +809,7 @@ class Endpoint:
         return any(code in self._expected_status_codes for code in [201, 301, 302])
 
     @property
-    def ident(self):
+    def ident(self) -> str:
         """Provide an identity for the Endpoint
 
         This can be used for keys in a dictionary, e.g. the ENDPOINT_REGISTRY."""

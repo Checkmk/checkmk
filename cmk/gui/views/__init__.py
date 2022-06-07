@@ -261,7 +261,7 @@ class VisualTypeViews(VisualType):
     """Register the views as a visual type"""
 
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "views"
 
     @property

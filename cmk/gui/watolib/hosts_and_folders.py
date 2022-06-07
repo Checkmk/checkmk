@@ -1786,7 +1786,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
     def filesystem_path(self):
         return (self._root_dir + self.path()).rstrip("/")
 
-    def ident(self):
+    def ident(self) -> str:
         return self.path()
 
     def path(self):

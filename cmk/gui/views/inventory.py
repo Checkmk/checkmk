@@ -174,7 +174,7 @@ def _cmp_inv_generic(val_a: object, val_b: object) -> int:
 @painter_option_registry.register
 class PainterOptionShowInternalTreePaths(PainterOption):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "show_internal_tree_paths"
 
     @property
@@ -188,7 +188,7 @@ class PainterOptionShowInternalTreePaths(PainterOption):
 @painter_registry.register
 class PainterInventoryTree(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "inventory_tree"
 
     def title(self, cell):

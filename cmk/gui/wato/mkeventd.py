@@ -3535,7 +3535,7 @@ class ConfigVariableEventConsoleRemoteStatus(ConfigVariable):
     def domain(self):
         return ConfigDomainEventConsole
 
-    def ident(self):
+    def ident(self) -> str:
         return "remote_status"
 
     def valuespec(self):
@@ -3599,7 +3599,7 @@ class ConfigVariableEventConsoleReplication(ConfigVariable):
     def domain(self):
         return ConfigDomainEventConsole
 
-    def ident(self):
+    def ident(self) -> str:
         return "replication"
 
     def valuespec(self):
@@ -3723,7 +3723,7 @@ class ConfigVariableEventConsoleRetentionInterval(ConfigVariable):
     def domain(self):
         return ConfigDomainEventConsole
 
-    def ident(self):
+    def ident(self) -> str:
         return "retention_interval"
 
     def valuespec(self):
@@ -3745,7 +3745,7 @@ class ConfigVariableEventConsoleHousekeepingInterval(ConfigVariable):
     def domain(self):
         return ConfigDomainEventConsole
 
-    def ident(self):
+    def ident(self) -> str:
         return "housekeeping_interval"
 
     def valuespec(self):
@@ -3768,7 +3768,7 @@ class ConfigVariableEventConsoleStatisticsInterval(ConfigVariable):
     def domain(self):
         return ConfigDomainEventConsole
 
-    def ident(self):
+    def ident(self) -> str:
         return "statistics_interval"
 
     def valuespec(self):
@@ -3791,7 +3791,7 @@ class ConfigVariableEventConsoleLogMessages(ConfigVariable):
     def domain(self):
         return ConfigDomainEventConsole
 
-    def ident(self):
+    def ident(self) -> str:
         return "log_messages"
 
     def valuespec(self):
@@ -3816,7 +3816,7 @@ class ConfigVariableEventConsoleRuleOptimizer(ConfigVariable):
     def domain(self):
         return ConfigDomainEventConsole
 
-    def ident(self):
+    def ident(self) -> str:
         return "rule_optimizer"
 
     def valuespec(self):
@@ -3835,7 +3835,7 @@ class ConfigVariableEventConsoleActions(ConfigVariable):
     def domain(self):
         return ConfigDomainEventConsole
 
-    def ident(self):
+    def ident(self) -> str:
         return "actions"
 
     def valuespec(self):
@@ -3974,7 +3974,7 @@ class ConfigVariableEventConsoleArchiveOrphans(ConfigVariable):
     def domain(self):
         return ConfigDomainEventConsole
 
-    def ident(self):
+    def ident(self) -> str:
         return "archive_orphans"
 
     def valuespec(self):
@@ -3998,7 +3998,7 @@ class ConfigVariableHostnameTranslation(ConfigVariable):
     def domain(self):
         return ConfigDomainEventConsole
 
-    def ident(self):
+    def ident(self) -> str:
         return "hostname_translation"
 
     def valuespec(self):
@@ -4099,7 +4099,7 @@ class ConfigVariableEventConsoleEventLimit(ConfigVariable):
     def domain(self):
         return ConfigDomainEventConsole
 
-    def ident(self):
+    def ident(self) -> str:
         return "event_limit"
 
     def valuespec(self):
@@ -4154,7 +4154,7 @@ class ConfigVariableEventConsoleHistoryRotation(ConfigVariable):
     def domain(self):
         return ConfigDomainEventConsole
 
-    def ident(self):
+    def ident(self) -> str:
         return "history_rotation"
 
     def valuespec(self):
@@ -4175,7 +4175,7 @@ class ConfigVariableEventConsoleHistoryLifetime(ConfigVariable):
     def domain(self):
         return ConfigDomainEventConsole
 
-    def ident(self):
+    def ident(self) -> str:
         return "history_lifetime"
 
     def valuespec(self):
@@ -4195,7 +4195,7 @@ class ConfigVariableEventConsoleSocketQueueLength(ConfigVariable):
     def domain(self):
         return ConfigDomainEventConsole
 
-    def ident(self):
+    def ident(self) -> str:
         return "socket_queue_len"
 
     def valuespec(self):
@@ -4222,7 +4222,7 @@ class ConfigVariableEventConsoleEventSocketQueueLength(ConfigVariable):
     def domain(self):
         return ConfigDomainEventConsole
 
-    def ident(self):
+    def ident(self) -> str:
         return "eventsocket_queue_len"
 
     def valuespec(self):
@@ -4249,7 +4249,7 @@ class ConfigVariableEventConsoleTranslateSNMPTraps(ConfigVariable):
     def domain(self):
         return ConfigDomainEventConsole
 
-    def ident(self):
+    def ident(self) -> str:
         return "translate_snmptraps"
 
     def valuespec(self):
@@ -4294,7 +4294,7 @@ class ConfigVariableEventConsoleSNMPCredentials(ConfigVariable):
     def domain(self):
         return ConfigDomainEventConsole
 
-    def ident(self):
+    def ident(self) -> str:
         return "snmp_credentials"
 
     def valuespec(self):
@@ -4355,7 +4355,7 @@ class ConfigVariableEventConsoleDebugRules(ConfigVariable):
     def domain(self):
         return ConfigDomainEventConsole
 
-    def ident(self):
+    def ident(self) -> str:
         return "debug_rules"
 
     def valuespec(self):
@@ -4379,7 +4379,7 @@ class ConfigVariableEventConsoleLogLevel(ConfigVariable):
     def domain(self):
         return ConfigDomainEventConsole
 
-    def ident(self):
+    def ident(self) -> str:
         return "log_level"
 
     def valuespec(self):
@@ -4463,7 +4463,7 @@ class ConfigVariableEventLogRuleHits(ConfigVariable):
     def domain(self):
         return ConfigDomainEventConsole
 
-    def ident(self):
+    def ident(self) -> str:
         return "log_rulehits"
 
     def valuespec(self):
@@ -4488,7 +4488,7 @@ class ConfigVariableEventConsoleConnectTimeout(ConfigVariable):
     def domain(self):
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "mkeventd_connect_timeout"
 
     def valuespec(self):
@@ -4513,7 +4513,7 @@ class ConfigVariableEventConsolePrettyPrintRules(ConfigVariable):
     def domain(self):
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "mkeventd_pprint_rules"
 
     def valuespec(self):
@@ -4539,7 +4539,7 @@ class ConfigVariableEventConsoleNotifyContactgroup(ConfigVariable):
     def domain(self):
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "mkeventd_notify_contactgroup"
 
     def valuespec(self):
@@ -4569,7 +4569,7 @@ class ConfigVariableEventConsoleNotifyRemoteHost(ConfigVariable):
     def domain(self):
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "mkeventd_notify_remotehost"
 
     def valuespec(self):
@@ -4602,7 +4602,7 @@ class ConfigVariableEventConsoleNotifyFacility(ConfigVariable):
     def domain(self):
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "mkeventd_notify_facility"
 
     def valuespec(self):

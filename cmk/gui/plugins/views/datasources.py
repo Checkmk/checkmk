@@ -22,7 +22,7 @@ from cmk.gui.type_defs import SingleInfos
 @data_source_registry.register
 class DataSourceHosts(DataSourceLivestatus):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "hosts"
 
     @property
@@ -58,7 +58,7 @@ class DataSourceHosts(DataSourceLivestatus):
 @data_source_registry.register
 class DataSourceHostsByGroup(DataSourceLivestatus):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "hostsbygroup"
 
     @property
@@ -85,7 +85,7 @@ class DataSourceHostsByGroup(DataSourceLivestatus):
 @data_source_registry.register
 class DataSourceServices(DataSourceLivestatus):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "services"
 
     @property
@@ -122,7 +122,7 @@ class DataSourceServices(DataSourceLivestatus):
 @data_source_registry.register
 class DataSourceServicesByGroup(DataSourceLivestatus):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "servicesbygroup"
 
     @property
@@ -145,7 +145,7 @@ class DataSourceServicesByGroup(DataSourceLivestatus):
 @data_source_registry.register
 class DataSourceServicesByHostGroup(DataSourceLivestatus):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "servicesbyhostgroup"
 
     @property
@@ -168,7 +168,7 @@ class DataSourceServicesByHostGroup(DataSourceLivestatus):
 @data_source_registry.register
 class DataSourceHostGroups(DataSourceLivestatus):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "hostgroups"
 
     @property
@@ -193,7 +193,7 @@ class DataSourceMergedHostGroups(DataSourceLivestatus):
     """Merged groups across sites"""
 
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "merged_hostgroups"
 
     @property
@@ -224,7 +224,7 @@ class DataSourceMergedHostGroups(DataSourceLivestatus):
 @data_source_registry.register
 class DataSourceServiceGroups(DataSourceLivestatus):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "servicegroups"
 
     @property
@@ -249,7 +249,7 @@ class DataSourceMergedServiceGroups(ABCDataSource):
     """Merged groups across sites"""
 
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "merged_servicegroups"
 
     @property
@@ -280,7 +280,7 @@ class DataSourceMergedServiceGroups(ABCDataSource):
 @data_source_registry.register
 class DataSourceComments(DataSourceLivestatus):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "comments"
 
     @property
@@ -303,7 +303,7 @@ class DataSourceComments(DataSourceLivestatus):
 @data_source_registry.register
 class DataSourceDowntimes(DataSourceLivestatus):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "downtimes"
 
     @property
@@ -325,7 +325,7 @@ class DataSourceDowntimes(DataSourceLivestatus):
 
 class LogDataSource(DataSourceLivestatus):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "log"
 
     @property
@@ -359,7 +359,7 @@ class DataSourceLog(LogDataSource):
 @data_source_registry.register
 class DataSourceLogHostAndServiceEvents(LogDataSource):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "log_events"
 
     @property
@@ -378,7 +378,7 @@ class DataSourceLogHostAndServiceEvents(LogDataSource):
 @data_source_registry.register
 class DataSourceLogHostEvents(LogDataSource):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "log_host_events"
 
     @property
@@ -397,7 +397,7 @@ class DataSourceLogHostEvents(LogDataSource):
 @data_source_registry.register
 class DataSourceLogAlertStatistics(LogDataSource):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "alert_stats"
 
     @property
@@ -434,7 +434,7 @@ class DataSourceLogAlertStatistics(LogDataSource):
 @data_source_registry.register
 class DataSourceServiceDiscovery(ABCDataSource):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "service_discovery"
 
     @property

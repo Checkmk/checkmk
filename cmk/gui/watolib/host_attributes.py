@@ -72,7 +72,7 @@ host_attribute_topic_registry = HostAttributeTopicRegistry()
 @host_attribute_topic_registry.register
 class HostAttributeTopicBasicSettings(HostAttributeTopic):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "basic"
 
     @property
@@ -87,7 +87,7 @@ class HostAttributeTopicBasicSettings(HostAttributeTopic):
 @host_attribute_topic_registry.register
 class HostAttributeTopicAddress(HostAttributeTopic):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "address"
 
     @property
@@ -102,7 +102,7 @@ class HostAttributeTopicAddress(HostAttributeTopic):
 @host_attribute_topic_registry.register
 class HostAttributeTopicDataSources(HostAttributeTopic):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "monitoring_agents"
 
     @property
@@ -117,7 +117,7 @@ class HostAttributeTopicDataSources(HostAttributeTopic):
 @host_attribute_topic_registry.register
 class HostAttributeTopicHostTags(HostAttributeTopic):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "host_tags"
 
     @property
@@ -132,7 +132,7 @@ class HostAttributeTopicHostTags(HostAttributeTopic):
 @host_attribute_topic_registry.register
 class HostAttributeTopicNetworkScan(HostAttributeTopic):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "network_scan"
 
     @property
@@ -147,7 +147,7 @@ class HostAttributeTopicNetworkScan(HostAttributeTopic):
 @host_attribute_topic_registry.register
 class HostAttributeTopicManagementBoard(HostAttributeTopic):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "management_board"
 
     @property
@@ -162,7 +162,7 @@ class HostAttributeTopicManagementBoard(HostAttributeTopic):
 @host_attribute_topic_registry.register
 class HostAttributeTopicCustomAttributes(HostAttributeTopic):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "custom_attributes"
 
     @property
@@ -177,7 +177,7 @@ class HostAttributeTopicCustomAttributes(HostAttributeTopic):
 @host_attribute_topic_registry.register
 class HostAttributeTopicMetaData(HostAttributeTopic):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "meta_data"
 
     @property

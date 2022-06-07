@@ -40,7 +40,7 @@ class ConfigVariableEnableRBN(ConfigVariable):
     def domain(self):
         return ConfigDomainCore
 
-    def ident(self):
+    def ident(self) -> str:
         return "enable_rulebased_notifications"
 
     def valuespec(self):
@@ -67,7 +67,7 @@ class ConfigVariableNotificationFallbackEmail(ConfigVariable):
     def domain(self):
         return ConfigDomainCore
 
-    def ident(self):
+    def ident(self) -> str:
         return "notification_fallback_email"
 
     def valuespec(self):
@@ -95,7 +95,7 @@ class ConfigVariableNotificationFallbackFormat(ConfigVariable):
     def domain(self):
         return ConfigDomainCore
 
-    def ident(self):
+    def ident(self) -> str:
         return "notification_fallback_format"
 
     def valuespec(self):
@@ -124,7 +124,7 @@ class ConfigVariableNotificationBacklog(ConfigVariable):
     def domain(self):
         return ConfigDomainCore
 
-    def ident(self):
+    def ident(self) -> str:
         return "notification_backlog"
 
     def valuespec(self):
@@ -150,7 +150,7 @@ class ConfigVariableNotificationBulkInterval(ConfigVariable):
     def domain(self):
         return ConfigDomainCore
 
-    def ident(self):
+    def ident(self) -> str:
         return "notification_bulk_interval"
 
     def valuespec(self):
@@ -177,7 +177,7 @@ class ConfigVariableNotificationPluginTimeout(ConfigVariable):
     def domain(self):
         return ConfigDomainCore
 
-    def ident(self):
+    def ident(self) -> str:
         return "notification_plugin_timeout"
 
     def valuespec(self):
@@ -196,7 +196,7 @@ class ConfigVariableNotificationLogging(ConfigVariable):
     def domain(self):
         return ConfigDomainCore
 
-    def ident(self):
+    def ident(self) -> str:
         return "notification_logging"
 
     def valuespec(self):
@@ -238,7 +238,7 @@ class ConfigVariableServiceLevels(ConfigVariable):
     def domain(self):
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "mkeventd_service_levels"
 
     def valuespec(self):
@@ -284,7 +284,7 @@ class ConfigVariableFailedNotificationHorizon(ConfigVariable):
     def domain(self):
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "failed_notification_horizon"
 
     def valuespec(self):

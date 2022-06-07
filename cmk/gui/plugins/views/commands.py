@@ -44,7 +44,7 @@ from cmk.gui.watolib.downtime import determine_downtime_mode, DowntimeSchedule
 @command_group_registry.register
 class CommandGroupVarious(CommandGroup):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "various"
 
     @property
@@ -94,7 +94,7 @@ PermissionActionReschedule = permission_registry.register(
 @command_registry.register
 class CommandReschedule(Command):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "reschedule"
 
     @property
@@ -174,7 +174,7 @@ PermissionActionNotifications = permission_registry.register(
 @command_registry.register
 class CommandNotifications(Command):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "notifications"
 
     @property
@@ -239,7 +239,7 @@ PermissionActionEnableChecks = permission_registry.register(
 @command_registry.register
 class CommandToggleActiveChecks(Command):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "toggle_active_checks"
 
     @property
@@ -288,7 +288,7 @@ class CommandToggleActiveChecks(Command):
 @command_registry.register
 class CommandTogglePassiveChecks(Command):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "toggle_passive_checks"
 
     @property
@@ -356,7 +356,7 @@ PermissionActionClearModifiedAttributes = permission_registry.register(
 @command_registry.register
 class CommandClearModifiedAttributes(Command):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "clear_modified_attributes"
 
     @property
@@ -408,7 +408,7 @@ PermissionActionFakeChecks = permission_registry.register(
 @command_group_registry.register
 class CommandGroupFakeCheck(CommandGroup):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "fake_check"
 
     @property
@@ -423,7 +423,7 @@ class CommandGroupFakeCheck(CommandGroup):
 @command_registry.register
 class CommandFakeCheckResult(Command):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "fake_check_result"
 
     @property
@@ -552,7 +552,7 @@ PermissionActionCustomNotification = permission_registry.register(
 @command_registry.register
 class CommandCustomNotification(Command):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "send_custom_notification"
 
     @property
@@ -639,7 +639,7 @@ PermissionActionAcknowledge = permission_registry.register(
 @command_group_registry.register
 class CommandGroupAcknowledge(CommandGroup):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "acknowledge"
 
     @property
@@ -654,7 +654,7 @@ class CommandGroupAcknowledge(CommandGroup):
 @command_registry.register
 class CommandAcknowledge(Command):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "acknowledge"
 
     @property
@@ -828,7 +828,7 @@ PermissionActionAddComment = permission_registry.register(
 @command_registry.register
 class CommandAddComment(Command):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "add_comment"
 
     @property
@@ -915,7 +915,7 @@ permission_registry.register(
 @command_group_registry.register
 class CommandGroupDowntimes(CommandGroup):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "downtimes"
 
     @property
@@ -930,7 +930,7 @@ class CommandGroupDowntimes(CommandGroup):
 @command_registry.register
 class CommandScheduleDowntimes(Command):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "schedule_downtimes"
 
     @property
@@ -1401,7 +1401,7 @@ def time_interval_to_human_readable(next_time_interval, prefix):
 @command_registry.register
 class CommandRemoveDowntime(Command):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "remove_downtimes"
 
     @property
@@ -1438,7 +1438,7 @@ class CommandRemoveDowntime(Command):
 @command_registry.register
 class CommandRemoveComments(Command):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "remove_comments"
 
     @property
@@ -1513,7 +1513,7 @@ PermissionActionStar = permission_registry.register(
 @command_registry.register
 class CommandFavorites(Command):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "favorites"
 
     @property

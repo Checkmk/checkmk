@@ -238,7 +238,7 @@ def _get_url_prefix_specs(default_choice, default_value=DEF_VALUE):
 @notification_parameter_registry.register
 class NotificationParameterMail(NotificationParameter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "mail"
 
     @property
@@ -355,7 +355,7 @@ def _slack_add_proxy(value):
 @notification_parameter_registry.register
 class NotificationParameterSlack(NotificationParameter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "slack"
 
     @property
@@ -413,7 +413,7 @@ class NotificationParameterSlack(NotificationParameter):
 @notification_parameter_registry.register
 class NotificationParameterCiscoWebexTeams(NotificationParameter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "cisco_webex_teams"
 
     @property
@@ -462,7 +462,7 @@ class NotificationParameterCiscoWebexTeams(NotificationParameter):
 @notification_parameter_registry.register
 class NotificationParameterVictorOPS(NotificationParameter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "victorops"
 
     @property
@@ -522,7 +522,7 @@ class NotificationParameterVictorOPS(NotificationParameter):
 @notification_parameter_registry.register
 class NotificationParameterPagerDuty(NotificationParameter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "pagerduty"
 
     @property
@@ -575,7 +575,7 @@ class NotificationParameterPagerDuty(NotificationParameter):
 @notification_parameter_registry.register
 class NotificationParameterSIGNL4(NotificationParameter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "signl4"
 
     @property
@@ -613,7 +613,7 @@ class NotificationParameterSIGNL4(NotificationParameter):
 @notification_parameter_registry.register
 class NotificationParameterASCIIMail(NotificationParameter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "asciimail"
 
     @property
@@ -672,7 +672,7 @@ $LONGSERVICEOUTPUT$
 @notification_parameter_registry.register
 class NotificationILert(NotificationParameter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "ilert"
 
     @property
@@ -751,7 +751,7 @@ class NotificationILert(NotificationParameter):
 @notification_parameter_registry.register
 class NotificationParameterJIRA_ISSUES(NotificationParameter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "jira_issues"
 
     @property
@@ -941,7 +941,7 @@ class NotificationParameterJIRA_ISSUES(NotificationParameter):
 @notification_parameter_registry.register
 class NotificationParameterServiceNow(NotificationParameter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "servicenow"
 
     @property
@@ -1390,7 +1390,7 @@ $LONGSERVICEOUTPUT$
 @notification_parameter_registry.register
 class NotificationParameterOpsgenie(NotificationParameter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "opsgenie_issues"
 
     @property
@@ -1582,7 +1582,7 @@ $LONGSERVICEOUTPUT$
 @notification_parameter_registry.register
 class NotificationParameterMKEventDaemon(NotificationParameter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "mkeventd"
 
     @property
@@ -1619,7 +1619,7 @@ class NotificationParameterMKEventDaemon(NotificationParameter):
 @notification_parameter_registry.register
 class NotificationParameterSpectrum(NotificationParameter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "spectrum"
 
     @property
@@ -1657,7 +1657,7 @@ class NotificationParameterSpectrum(NotificationParameter):
 @notification_parameter_registry.register
 class NotificationParameterPushover(NotificationParameter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "pushover"
 
     @property
@@ -1823,7 +1823,7 @@ class NotificationParameterPushover(NotificationParameter):
 @notification_parameter_registry.register
 class NotificationParameterSMSviaIP(NotificationParameter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "sms_api"
 
     @property

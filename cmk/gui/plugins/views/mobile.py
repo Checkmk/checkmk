@@ -765,7 +765,7 @@ def render_mobile_table(rows, view, group_cells, cells, num_columns, show_checkb
 @layout_registry.register
 class LayoutMobileTable(Layout):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "mobiletable"
 
     @property
@@ -824,7 +824,7 @@ def render_mobile_list(rows, view, group_cells, cells, num_columns, show_checkbo
 @layout_registry.register
 class LayoutMobileList(Layout):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "mobilelist"
 
     @property
@@ -873,7 +873,7 @@ def render_mobile_dataset(rows, view, group_cells, cells, num_columns, show_chec
 @layout_registry.register
 class LayoutMobileDataset(Layout):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "mobiledataset"
 
     @property

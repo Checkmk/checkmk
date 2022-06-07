@@ -208,7 +208,7 @@ class RowTableBIHostnameByGroupAggregations(RowTable):
 @painter_registry.register
 class PainterAggrIcons(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "aggr_icons"
 
     def title(self, cell):
@@ -263,7 +263,7 @@ class PainterAggrIcons(Painter):
 @painter_registry.register
 class PainterAggrInDowntime(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "aggr_in_downtime"
 
     def title(self, cell):
@@ -280,7 +280,7 @@ class PainterAggrInDowntime(Painter):
 @painter_registry.register
 class PainterAggrAcknowledged(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "aggr_acknowledged"
 
     def title(self, cell):
@@ -307,7 +307,7 @@ def _paint_aggr_state_short(state, assumed=False):
 @painter_registry.register
 class PainterAggrState(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "aggr_state"
 
     def title(self, cell):
@@ -329,7 +329,7 @@ class PainterAggrState(Painter):
 @painter_registry.register
 class PainterAggrStateNum(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "aggr_state_num"
 
     def title(self, cell):
@@ -349,7 +349,7 @@ class PainterAggrStateNum(Painter):
 @painter_registry.register
 class PainterAggrRealState(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "aggr_real_state"
 
     def title(self, cell):
@@ -369,7 +369,7 @@ class PainterAggrRealState(Painter):
 @painter_registry.register
 class PainterAggrAssumedState(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "aggr_assumed_state"
 
     def title(self, cell):
@@ -389,7 +389,7 @@ class PainterAggrAssumedState(Painter):
 @painter_registry.register
 class PainterAggrGroup(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "aggr_group"
 
     def title(self, cell):
@@ -409,7 +409,7 @@ class PainterAggrGroup(Painter):
 @painter_registry.register
 class PainterAggrName(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "aggr_name"
 
     def title(self, cell):
@@ -429,7 +429,7 @@ class PainterAggrName(Painter):
 @painter_registry.register
 class PainterAggrOutput(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "aggr_output"
 
     def title(self, cell):
@@ -457,7 +457,7 @@ def paint_aggr_hosts(row, link_to_view):
 @painter_registry.register
 class PainterAggrHosts(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "aggr_hosts"
 
     def title(self, cell):
@@ -477,7 +477,7 @@ class PainterAggrHosts(Painter):
 @painter_registry.register
 class PainterAggrHostsServices(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "aggr_hosts_services"
 
     def title(self, cell):
@@ -497,7 +497,7 @@ class PainterAggrHostsServices(Painter):
 @painter_option_registry.register
 class PainterOptionAggrExpand(PainterOption):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "aggr_expand"
 
     @property
@@ -518,7 +518,7 @@ class PainterOptionAggrExpand(PainterOption):
 @painter_option_registry.register
 class PainterOptionAggrOnlyProblems(PainterOption):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "aggr_onlyproblems"
 
     @property
@@ -536,7 +536,7 @@ class PainterOptionAggrOnlyProblems(PainterOption):
 @painter_option_registry.register
 class PainterOptionAggrTreeType(PainterOption):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "aggr_treetype"
 
     @property
@@ -557,7 +557,7 @@ class PainterOptionAggrTreeType(PainterOption):
 @painter_option_registry.register
 class PainterOptionAggrWrap(PainterOption):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "aggr_wrap"
 
     @property
@@ -611,7 +611,7 @@ def paint_aggregated_tree_state(
 @painter_registry.register
 class PainterAggrTreestate(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "aggr_treestate"
 
     def title(self, cell):
@@ -635,7 +635,7 @@ class PainterAggrTreestate(Painter):
 @painter_registry.register
 class PainterAggrTreestateBoxed(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "aggr_treestate_boxed"
 
     def title(self, cell):

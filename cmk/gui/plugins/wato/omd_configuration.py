@@ -63,7 +63,7 @@ class ConfigVariableSiteAutostart(ConfigVariable):
     def domain(self):
         return ConfigDomainOMD
 
-    def ident(self):
+    def ident(self) -> str:
         return "site_autostart"
 
     def valuespec(self):
@@ -84,7 +84,7 @@ class ConfigVariableSiteCore(ConfigVariable):
     def domain(self):
         return ConfigDomainOMD
 
-    def ident(self):
+    def ident(self) -> str:
         return "site_core"
 
     def valuespec(self):
@@ -120,7 +120,7 @@ class ConfigVariableSiteLivestatusTCP(ConfigVariable):
     def domain(self):
         return ConfigDomainOMD
 
-    def ident(self):
+    def ident(self) -> str:
         return "site_livestatus_tcp"
 
     def valuespec(self):
@@ -145,7 +145,7 @@ class ConfigVariableSiteEventConsole(ConfigVariable):
     def domain(self):
         return ConfigDomainOMD
 
-    def ident(self):
+    def ident(self) -> str:
         return "site_mkeventd"
 
     def valuespec(self):
@@ -270,7 +270,7 @@ class ConfigVariableSiteDiskspaceCleanup(ConfigVariable):
     def domain(self):
         return ConfigDomainDiskspace
 
-    def ident(self):
+    def ident(self) -> str:
         return "diskspace_cleanup"
 
     def valuespec(self):
@@ -468,7 +468,7 @@ class ConfigVariableSiteApacheProcessTuning(ConfigVariable):
     def domain(self):
         return ConfigDomainApache
 
-    def ident(self):
+    def ident(self) -> str:
         return "apache_process_tuning"
 
     def valuespec(self):
@@ -593,7 +593,7 @@ class ConfigVariableSiteRRDCachedTuning(ConfigVariable):
     def domain(self):
         return ConfigDomainRRDCached
 
-    def ident(self):
+    def ident(self) -> str:
         return "rrdcached_tuning"
 
     def valuespec(self):

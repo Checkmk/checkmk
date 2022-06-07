@@ -18,7 +18,7 @@ from cmk.gui.watolib.hosts_and_folders import get_folder_title_path
 @painter_registry.register
 class PainterHostFilename(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "host_filename"
 
     def title(self, cell):
@@ -74,7 +74,7 @@ def paint_wato_folder(row, how):
 @painter_registry.register
 class PainterWatoFolderAbs(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "wato_folder_abs"
 
     def title(self, cell):
@@ -98,7 +98,7 @@ class PainterWatoFolderAbs(Painter):
 @painter_registry.register
 class PainterWatoFolderRel(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "wato_folder_rel"
 
     def title(self, cell):
@@ -122,7 +122,7 @@ class PainterWatoFolderRel(Painter):
 @painter_registry.register
 class PainterWatoFolderPlain(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "wato_folder_plain"
 
     def title(self, cell):
@@ -158,7 +158,7 @@ def _get_wato_folder_text(r: Row, how: str) -> str:
 @sorter_registry.register
 class SorterWatoFolderAbs(Sorter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "wato_folder_abs"
 
     @property
@@ -176,7 +176,7 @@ class SorterWatoFolderAbs(Sorter):
 @sorter_registry.register
 class SorterWatoFolderRel(Sorter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "wato_folder_rel"
 
     @property
@@ -194,7 +194,7 @@ class SorterWatoFolderRel(Sorter):
 @sorter_registry.register
 class SorterWatoFolderPlain(Sorter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "wato_folder_plain"
 
     @property

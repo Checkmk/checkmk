@@ -38,7 +38,7 @@ from cmk.gui.utils.urls import makeuri_contextless
 @data_source_registry.register
 class DataSourceCrashReports(DataSourceLivestatus):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "crash_reports"
 
     @property
@@ -153,7 +153,7 @@ class CrashReportsRowTable(RowTable):
 @painter_registry.register
 class PainterCrashIdent(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "crash_ident"
 
     def title(self, cell):
@@ -181,7 +181,7 @@ class PainterCrashIdent(Painter):
 @painter_registry.register
 class PainterCrashType(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "crash_type"
 
     def title(self, cell):
@@ -201,7 +201,7 @@ class PainterCrashType(Painter):
 @painter_registry.register
 class PainterCrashTime(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "crash_time"
 
     def title(self, cell):
@@ -225,7 +225,7 @@ class PainterCrashTime(Painter):
 @painter_registry.register
 class PainterCrashVersion(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "crash_version"
 
     def title(self, cell):
@@ -245,7 +245,7 @@ class PainterCrashVersion(Painter):
 @painter_registry.register
 class PainterCrashException(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "crash_exception"
 
     def title(self, cell):
@@ -265,7 +265,7 @@ class PainterCrashException(Painter):
 @sorter_registry.register
 class SorterCrashTime(Sorter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "crash_time"
 
     @property
@@ -294,7 +294,7 @@ PermissionActionDeleteCrashReport = permission_registry.register(
 @command_registry.register
 class CommandDeleteCrashReports(Command):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "delete_crash_reports"
 
     @property

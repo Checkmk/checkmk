@@ -207,7 +207,7 @@ class Perfometer:
 @painter_registry.register
 class PainterPerfometer(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "perfometer"
 
     def title(self, cell):
@@ -272,7 +272,7 @@ class PainterPerfometer(Painter):
 @sorter_registry.register
 class SorterPerfometer(Sorter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "perfometer"
 
     @property

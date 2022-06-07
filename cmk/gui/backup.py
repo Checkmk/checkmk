@@ -164,7 +164,7 @@ class BackupEntity:
 
         self.from_config(config)
 
-    def ident(self):
+    def ident(self) -> str:
         return self._ident
 
     def config(self):
@@ -1433,7 +1433,7 @@ class SystemBackupTargetsReadOnly(Targets):
 class ABCBackupTargetType(abc.ABC):
     @property
     @abc.abstractmethod
-    def ident(self):
+    def ident(self) -> str:
         raise NotImplementedError()
 
     @classmethod

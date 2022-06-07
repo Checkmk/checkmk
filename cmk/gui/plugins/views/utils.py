@@ -367,7 +367,7 @@ painter_option_registry = ViewPainterOptionRegistry()
 @painter_option_registry.register
 class PainterOptionRefresh(PainterOption):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "refresh"
 
     @property
@@ -384,7 +384,7 @@ class PainterOptionRefresh(PainterOption):
 @painter_option_registry.register
 class PainterOptionNumColumns(PainterOption):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "num_columns"
 
     @property

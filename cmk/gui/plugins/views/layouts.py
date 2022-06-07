@@ -60,7 +60,7 @@ class LayoutSingleDataset(Layout):
     more than on dataset however."""
 
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "dataset"
 
     @property
@@ -372,7 +372,7 @@ class LayoutBalancedBoxes(GroupedBoxesLayout):
     stacked in columns and can have different sizes."""
 
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "boxed"
 
     @property
@@ -392,7 +392,7 @@ class LayoutBalancedGraphBoxes(GroupedBoxesLayout):
     """Same as balanced boxes layout but adds a CSS class graph to the box"""
 
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "boxed_graph"
 
     @property
@@ -412,7 +412,7 @@ class LayoutTiled(Layout):
     """The tiled layout puts each dataset into one box with a fixed size"""
 
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "tiled"
 
     @property
@@ -545,7 +545,7 @@ class LayoutTable(Layout):
     width of the columns."""
 
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "table"
 
     @property
@@ -736,7 +736,7 @@ class LayoutMatrix(Layout):
     The columns are hosts and the rows are services."""
 
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "matrix"
 
     @property

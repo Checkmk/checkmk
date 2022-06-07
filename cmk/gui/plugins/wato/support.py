@@ -32,7 +32,7 @@ class ConfigVariableCrashReportURL(ConfigVariable):
     def domain(self):
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "crash_report_url"
 
     def valuespec(self):
@@ -51,7 +51,7 @@ class ConfigVariableCrashReportTarget(ConfigVariable):
     def domain(self):
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "crash_report_target"
 
     def valuespec(self):

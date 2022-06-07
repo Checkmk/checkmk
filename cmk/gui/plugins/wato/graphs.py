@@ -20,7 +20,7 @@ class ConfigVariableGraphTimeranges(ConfigVariable):
     def domain(self):
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "graph_timeranges"
 
     def valuespec(self):

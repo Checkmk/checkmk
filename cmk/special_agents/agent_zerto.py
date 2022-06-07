@@ -83,9 +83,9 @@ class ZertoConnection:
             response = requests.post(url, auth=self._credentials, verify=False)  # nosec
         else:
             headers = {"content-type": "application/json"}
-            response = requests.post(
+            response = requests.post(  # nosec
                 url, auth=self._credentials, headers=headers, verify=False
-            )  # nosec
+            )
 
         if response.status_code != 200:
             LOGGER.info("response status code: %s", response.status_code)

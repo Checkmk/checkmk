@@ -756,11 +756,11 @@ def all_components() -> List[Tuple[str, str]]:
 werk_notes = """
     .---Werk----------------------------------------------------------------------.
     |                                                                             |
-    |             Das Werk ist für den User/Admin gedacht!!                       |
+    |             The werk is intended for the user/admin!!                       |
     |                                                                             |
-    |  Anhand des Titels soll der User sofort erkennen, ob er/sie betroffen ist.  |
-    |  In den Details soll beschrieben werden, was er/sie ggfs. tun muss.         |
-    |  Es dürfen auch gerne technische Details erläutert werden.                  |
+    |    From the titel it should be obvious if the user/admin is affected.       |
+    |    Describe what needs to be done in the details. You can also note if no   |
+    |    user interaction is required. If necessary add technical details.        |
     |                                                                             |
     '-----------------------------------------------------------------------------'
 

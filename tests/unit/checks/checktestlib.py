@@ -538,8 +538,8 @@ class Immutables:
     def register(self, v, k=None):
         if k is None:
             k = id(v)
-        self.refs.__setitem__(k, v)
-        self.copies.__setitem__(k, copy.deepcopy(v))
+        self.refs[k] = v
+        self.copies[k] = copy.deepcopy(v)
 
     def test(self, descr=""):
         for k in self.refs:

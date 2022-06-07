@@ -2916,7 +2916,7 @@ class WATOFoldersOnDemand(Mapping[PathWithoutSlash, Optional[CREFolder]]):
     def _create_folder(self, folder_path: PathWithoutSlash) -> CREFolder:
         parent_folder = None
         if folder_path != "":
-            parent_folder = self.__getitem__(str(Path(folder_path).parent).lstrip("."))
+            parent_folder = self[str(Path(folder_path).parent).lstrip(".")]
 
         return Folder(os.path.basename(folder_path), folder_path, parent_folder)
 

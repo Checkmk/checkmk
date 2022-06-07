@@ -13,14 +13,16 @@ from cmk.base.plugins.agent_based.utils.wmi import parse_wmi_table, WMISection, 
 class TestWMITable:
     def test_repr(self) -> None:
         assert (
-            WMITable(
-                "name",
-                ["first header", "second HEADER"],
-                None,
-                123,
-                None,
-                None,
-            ).__repr__()
+            repr(
+                WMITable(
+                    "name",
+                    ["first header", "second HEADER"],
+                    None,
+                    123,
+                    None,
+                    None,
+                )
+            )
             == "WMITable('name', ['firstheader', 'secondheader'], None, 123, None, [])"
         )
 

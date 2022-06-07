@@ -99,7 +99,7 @@ USAGE: agent_%s --section_url [{section_name},{url}]
 def datetime_serializer(obj):
     """Custom serializer to pass to json dump functions"""
     if isinstance(obj, datetime.datetime):
-        return obj.__str__()
+        return str(obj)
     # fall back to json default behaviour:
     raise TypeError("%r is not JSON serializable" % obj)
 

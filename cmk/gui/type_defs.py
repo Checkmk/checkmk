@@ -80,7 +80,7 @@ class SessionInfo:
     session_id: SessionId
     started_at: int
     last_activity: int
-    csrf_token: str = field(default_factory=lambda: uuid.uuid4().__str__())
+    csrf_token: str = field(default_factory=lambda: str(uuid.uuid4()))
     flashes: List[str] = field(default_factory=list)
     # In case it is enabled: Was it already authenticated?
     two_factor_completed: bool = False

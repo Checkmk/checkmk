@@ -119,7 +119,7 @@ def _connect_mongodb(settings: Settings, mongodb: MongoDB) -> None:
     if Connection is None:
         raise Exception("Could not initialize MongoDB (Python-Modules are missing)")
     mongodb.connection = Connection(*_mongodb_local_connection_opts(settings))
-    mongodb.db = mongodb.connection.__getitem__(os.environ["OMD_SITE"])
+    mongodb.db = mongodb.connection[os.environ["OMD_SITE"]]
 
 
 def _mongodb_local_connection_opts(settings: Settings) -> tuple[Optional[str], Optional[int]]:

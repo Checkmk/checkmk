@@ -371,7 +371,7 @@ class PainterOptionRefresh(PainterOption):
         return "refresh"
 
     @property
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         choices = [
             (x, {0: _("off")}.get(x, str(x) + "s")) for x in active_config.view_option_refreshes
         ]
@@ -388,7 +388,7 @@ class PainterOptionNumColumns(PainterOption):
         return "num_columns"
 
     @property
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return DropdownChoice(
             title=_("Number of columns"),
             choices=[(x, str(x)) for x in active_config.view_option_columns],

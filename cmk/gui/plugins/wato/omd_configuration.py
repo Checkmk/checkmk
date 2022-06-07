@@ -38,6 +38,7 @@ from cmk.gui.valuespec import (
     ListChoice,
     Optional,
     Tuple,
+    ValueSpec,
 )
 from cmk.gui.watolib.activate_changes import add_replication_paths
 from cmk.gui.watolib.config_domains import ConfigDomainOMD
@@ -67,7 +68,7 @@ class ConfigVariableSiteAutostart(ConfigVariable):
     def ident(self) -> str:
         return "site_autostart"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Checkbox(
             title=_("Start during system boot"),
             help=_(
@@ -88,7 +89,7 @@ class ConfigVariableSiteCore(ConfigVariable):
     def ident(self) -> str:
         return "site_core"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return DropdownChoice(
             title=_("Monitoring core"),
             help=_(
@@ -124,7 +125,7 @@ class ConfigVariableSiteLivestatusTCP(ConfigVariable):
     def ident(self) -> str:
         return "site_livestatus_tcp"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Optional(
             valuespec=LivestatusViaTCP(),
             title=_("Access to Livestatus via TCP"),
@@ -149,7 +150,7 @@ class ConfigVariableSiteEventConsole(ConfigVariable):
     def ident(self) -> str:
         return "site_mkeventd"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Optional(
             valuespec=ListChoice(
                 choices=[
@@ -274,7 +275,7 @@ class ConfigVariableSiteDiskspaceCleanup(ConfigVariable):
     def ident(self) -> str:
         return "diskspace_cleanup"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Dictionary(
             title=_("Automatic disk space cleanup"),
             help=_(
@@ -472,7 +473,7 @@ class ConfigVariableSiteApacheProcessTuning(ConfigVariable):
     def ident(self) -> str:
         return "apache_process_tuning"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Dictionary(
             title=_("Apache process tuning"),
             elements=[
@@ -597,7 +598,7 @@ class ConfigVariableSiteRRDCachedTuning(ConfigVariable):
     def ident(self) -> str:
         return "rrdcached_tuning"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Dictionary(
             title=_("RRDCached tuning"),
             elements=[

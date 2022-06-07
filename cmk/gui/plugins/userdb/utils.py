@@ -24,6 +24,7 @@ from cmk.gui.logged_in import LoggedInUser, save_user_file, user
 from cmk.gui.site_config import get_site_config, is_wato_slave_site, site_is_local
 from cmk.gui.type_defs import Users, UserSpec
 from cmk.gui.utils import is_allowed_url
+from cmk.gui.valuespec import ValueSpec
 
 # count this up, if new user attributes are used or old are marked as
 # incompatible
@@ -415,7 +416,7 @@ class UserAttribute(abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         raise NotImplementedError()
 
     def from_config(self) -> bool:

@@ -2262,8 +2262,9 @@ class LDAPAttributePluginGroupAttributes(LDAPBuiltinAttributePlugin):
 
     def _get_user_attribute_choices(self) -> Sequence[CascadingDropdownChoice]:
         return [
-            (name, attr.valuespec().title(), attr.valuespec())
+            (name, title, attr.valuespec())
             for name, attr in get_user_attributes()
+            if (title := attr.valuespec().title()) is not None  # TODO: Hmmm...
         ]
 
 

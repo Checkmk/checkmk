@@ -132,7 +132,7 @@ class ConfigVariableUITheme(ConfigVariable):
     def ident(self) -> str:
         return "ui_theme"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return DropdownChoice(
             title=_("User interface theme"),
             help=_("Change the default user interface theme of your Checkmk installation"),
@@ -151,7 +151,7 @@ class ConfigVariableShowMoreMode(ConfigVariable):
     def ident(self) -> str:
         return "show_mode"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return DropdownChoice(
             title=_("Show more / Show less"),
             help=_(
@@ -177,7 +177,7 @@ class ConfigVariableBulkDiscoveryDefaultSettings(ConfigVariable):
     def ident(self) -> str:
         return "bulk_discovery_default_settings"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return vs_bulk_discovery()
 
 
@@ -208,7 +208,7 @@ class ConfigVariableLogLevels(ConfigVariable):
     def ident(self) -> str:
         return "log_levels"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Dictionary(
             title=_("Logging"),
             help=_(
@@ -304,7 +304,7 @@ class ConfigVariableSlowViewsDurationThreshold(ConfigVariable):
     def ident(self) -> str:
         return "slow_views_duration_threshold"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Integer(
             title=_("Threshold for slow views"),
             # title=_("Create a log entry for all view calls taking longer than"),
@@ -326,7 +326,7 @@ class ConfigVariableDebug(ConfigVariable):
     def ident(self) -> str:
         return "debug"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Checkbox(
             title=_("Debug mode"),
             label=_("enable debug mode"),
@@ -349,7 +349,7 @@ class ConfigVariableGUIProfile(ConfigVariable):
     def ident(self) -> str:
         return "profile"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return DropdownChoice(
             title=_("Profile requests"),
             help=_(
@@ -381,7 +381,7 @@ class ConfigVariableDebugLivestatusQueries(ConfigVariable):
     def ident(self) -> str:
         return "debug_livestatus_queries"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Checkbox(
             title=_("Debug Livestatus queries"),
             label=_("enable debug of Livestatus queries"),
@@ -403,7 +403,7 @@ class ConfigVariableSelectionLivetime(ConfigVariable):
     def ident(self) -> str:
         return "selection_livetime"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Integer(
             title=_("Checkbox Selection Livetime"),
             help=_(
@@ -427,7 +427,7 @@ class ConfigVariableShowLivestatusErrors(ConfigVariable):
     def ident(self) -> str:
         return "show_livestatus_errors"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Checkbox(
             title=_("Show MK Livestatus error messages"),
             label=_("show errors"),
@@ -450,7 +450,7 @@ class ConfigVariableEnableSounds(ConfigVariable):
     def ident(self) -> str:
         return "enable_sounds"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Checkbox(
             title=_("Enable sounds in views"),
             label=_("enable sounds"),
@@ -474,7 +474,7 @@ class ConfigVariableSoftQueryLimit(ConfigVariable):
     def ident(self) -> str:
         return "soft_query_limit"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Integer(
             title=_("Soft query limit"),
             help=_(
@@ -497,7 +497,7 @@ class ConfigVariableHardQueryLimit(ConfigVariable):
     def ident(self) -> str:
         return "hard_query_limit"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Integer(
             title=_("Hard query limit"),
             help=_(
@@ -521,7 +521,7 @@ class ConfigVariableQuicksearchDropdownLimit(ConfigVariable):
     def ident(self) -> str:
         return "quicksearch_dropdown_limit"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Integer(
             title=_("Number of elements to show in Quicksearch"),
             help=_(
@@ -545,7 +545,7 @@ class ConfigVariableQuicksearchSearchOrder(ConfigVariable):
     def ident(self) -> str:
         return "quicksearch_search_order"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return ListOf(
             valuespec=Tuple(
                 elements=[
@@ -594,7 +594,7 @@ class ConfigVariableTableRowLimit(ConfigVariable):
     def ident(self) -> str:
         return "table_row_limit"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Integer(
             title=_("Limit the number of rows shown in tables"),
             help=_(
@@ -618,7 +618,7 @@ class ConfigVariableStartURL(ConfigVariable):
     def ident(self) -> str:
         return "start_url"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return TextInput(
             title=_("Start URL to display in main frame"),
             help=_(
@@ -643,7 +643,7 @@ class ConfigVariablePageHeading(ConfigVariable):
     def ident(self) -> str:
         return "page_heading"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return TextInput(
             title=_("Page title"),
             help=_(
@@ -665,7 +665,7 @@ class ConfigVariableBIDefaultLayout(ConfigVariable):
     def ident(self) -> str:
         return "default_bi_layout"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Dictionary(
             title=_("Default BI Visualization Settings"),
             elements=[
@@ -716,7 +716,7 @@ class ConfigVariablePagetitleDateFormat(ConfigVariable):
     def ident(self) -> str:
         return "pagetitle_date_format"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return DropdownChoice(
             title=_("Date format for page titles"),
             help=_(
@@ -742,7 +742,7 @@ class ConfigVariableEscapePluginOutput(ConfigVariable):
     def ident(self) -> str:
         return "escape_plugin_output"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Checkbox(
             title=_("Escape HTML in service output " "(Dangerous to deactivate - read help)"),
             help=_(
@@ -774,7 +774,7 @@ class ConfigVariableDrawRuleIcon(ConfigVariable):
     def ident(self) -> str:
         return "multisite_draw_ruleicon"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Checkbox(
             title=_("Show icon linking to WATO parameter editor for services"),
             label=_("Show WATO icon"),
@@ -816,7 +816,7 @@ class ConfigVariableVirtualHostTrees(ConfigVariable):
     def ident(self) -> str:
         return "virtual_host_trees"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Transform(
             valuespec=ListOf(
                 valuespec=Dictionary(
@@ -938,7 +938,7 @@ class ConfigVariableRescheduleTimeout(ConfigVariable):
     def ident(self) -> str:
         return "reschedule_timeout"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Float(
             title=_("Timeout for rescheduling checks in Multisite"),
             help=_(
@@ -964,7 +964,7 @@ class ConfigVariableSidebarUpdateInterval(ConfigVariable):
     def ident(self) -> str:
         return "sidebar_update_interval"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Float(
             title=_("Interval of sidebar status updates"),
             help=_(
@@ -990,7 +990,7 @@ class ConfigVariableSidebarNotifyInterval(ConfigVariable):
     def ident(self) -> str:
         return "sidebar_notify_interval"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Optional(
             valuespec=Float(
                 minvalue=10.0,
@@ -1017,7 +1017,7 @@ class ConfigVariableiAdHocDowntime(ConfigVariable):
     def ident(self) -> str:
         return "adhoc_downtime"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Optional(
             valuespec=Dictionary(
                 optional_keys=False,
@@ -1066,7 +1066,7 @@ class ConfigVariableAuthByHTTPHeader(ConfigVariable):
     def ident(self) -> str:
         return "auth_by_http_header"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Transform(
             Optional(
                 valuespec=TextInput(
@@ -1115,7 +1115,7 @@ class ConfigVariableStalenessThreshold(ConfigVariable):
     def ident(self) -> str:
         return "staleness_threshold"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Float(
             title=_("Staleness value to mark hosts / services stale"),
             help=_(
@@ -1139,7 +1139,7 @@ class ConfigVariableLoginScreen(ConfigVariable):
     def ident(self) -> str:
         return "login_screen"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Dictionary(
             title=_("Customize login screen"),
             elements=[
@@ -1203,7 +1203,7 @@ class ConfigVariableUserLocalizations(ConfigVariable):
     def ident(self) -> str:
         return "user_localizations"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Transform(
             valuespec=ListOf(
                 valuespec=Tuple(
@@ -1239,7 +1239,7 @@ class ConfigVariableUserIconsAndActions(ConfigVariable):
     def ident(self) -> str:
         return "user_icons_and_actions"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Transform(
             valuespec=ListOf(
                 valuespec=Tuple(
@@ -1365,7 +1365,7 @@ class ConfigVariableCustomServiceAttributes(ConfigVariable):
     def ident(self) -> str:
         return "custom_service_attributes"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Transform(
             valuespec=ListOf(
                 valuespec=Dictionary(
@@ -1507,7 +1507,7 @@ class ConfigVariableUserDowntimeTimeranges(ConfigVariable):
     def ident(self) -> str:
         return "user_downtime_timeranges"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return ListOf(
             valuespec=Dictionary(
                 elements=[
@@ -1560,7 +1560,7 @@ class ConfigVariableBuiltinIconVisibility(ConfigVariable):
     def ident(self) -> str:
         return "builtin_icon_visibility"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Transform(
             valuespec=ListOf(
                 valuespec=Tuple(
@@ -1633,7 +1633,7 @@ class ConfigVariableServiceViewGrouping(ConfigVariable):
     def ident(self) -> str:
         return "service_view_grouping"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return ListOf(
             valuespec=Dictionary(
                 elements=[
@@ -1691,7 +1691,7 @@ class ConfigVariableViewActionDefaults(ConfigVariable):
     def ident(self) -> str:
         return "view_action_defaults"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Dictionary(
             title=_("View action defaults"),
             elements=[
@@ -1750,7 +1750,7 @@ class ConfigVariableTrustedCertificateAuthorities(ConfigVariable):
     def ident(self) -> str:
         return "trusted_certificate_authorities"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Dictionary(
             title=_("Trusted certificate authorities for SSL"),
             help=_(
@@ -1844,7 +1844,7 @@ class ConfigVariableWATOMaxSnapshots(ConfigVariable):
     def ident(self) -> str:
         return "wato_max_snapshots"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Integer(
             title=_("Number of configuration snapshots to keep"),
             help=_(
@@ -1867,7 +1867,7 @@ class ConfigVariableActivateChangesConcurrency(ConfigVariable):
     def ident(self) -> str:
         return "wato_activate_changes_concurrency"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return CascadingDropdown(
             title=_("Maximum parallel site activations"),
             choices=[
@@ -1903,7 +1903,7 @@ class ConfigVariableWATOActivateChangesCommentMode(ConfigVariable):
     def ident(self) -> str:
         return "wato_activate_changes_comment_mode"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return DropdownChoice(
             title=_("Comment for activation of changes"),
             help=_(
@@ -1929,7 +1929,7 @@ class ConfigVariableWATOActivationMethod(ConfigVariable):
     def ident(self) -> str:
         return "wato_activation_method"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return DropdownChoice(
             title=_("Restart mode for Nagios"),
             help=_("Restart or reload Nagios when changes are activated"),
@@ -1951,7 +1951,7 @@ class ConfigVariableWATOHideFilenames(ConfigVariable):
     def ident(self) -> str:
         return "wato_hide_filenames"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Checkbox(
             title=_("Hide internal folder names in WATO"),
             label=_("hide folder names"),
@@ -1975,7 +1975,7 @@ class ConfigVariableWATOUploadInsecureSnapshots(ConfigVariable):
     def ident(self) -> str:
         return "wato_upload_insecure_snapshots"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Checkbox(
             title=_("Allow upload of insecure WATO snapshots"),
             label=_("upload insecure snapshots"),
@@ -1999,7 +1999,7 @@ class ConfigVariableWATOHideHosttags(ConfigVariable):
     def ident(self) -> str:
         return "wato_hide_hosttags"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Checkbox(
             title=_("Hide hosttags in WATO folder view"),
             label=_("hide hosttags"),
@@ -2018,7 +2018,7 @@ class ConfigVariableWATOHideVarnames(ConfigVariable):
     def ident(self) -> str:
         return "wato_hide_varnames"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Checkbox(
             title=_("Hide names of configuration variables"),
             label=_("hide variable names"),
@@ -2040,7 +2040,7 @@ class ConfigVariableHideHelpInLists(ConfigVariable):
     def ident(self) -> str:
         return "wato_hide_help_in_lists"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Checkbox(
             title=_("Hide help text of rules in list views"),
             label=_("hide help text"),
@@ -2059,7 +2059,7 @@ class ConfigVariableWATOUseGit(ConfigVariable):
     def ident(self) -> str:
         return "wato_use_git"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Checkbox(
             title=_("Use GIT version control for WATO"),
             label=_("enable GIT version control"),
@@ -2085,7 +2085,7 @@ class ConfigVariableWATOPrettyPrintConfig(ConfigVariable):
     def ident(self) -> str:
         return "wato_pprint_config"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Checkbox(
             title=_("Pretty-Print configuration files"),
             label=_("pretty-print configuration files"),
@@ -2108,7 +2108,7 @@ class ConfigVariableWATOHideFoldersWithoutReadPermissions(ConfigVariable):
     def ident(self) -> str:
         return "wato_hide_folders_without_read_permissions"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Checkbox(
             title=_("Hide folders without read permissions"),
             label=_("hide folders without read permissions"),
@@ -2131,7 +2131,7 @@ class ConfigVariableWATOIconCategories(ConfigVariable):
     def ident(self) -> str:
         return "wato_icon_categories"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return ListOf(
             valuespec=Tuple(
                 elements=[
@@ -2186,7 +2186,7 @@ class ConfigVariableLogLogonFailures(ConfigVariable):
     def ident(self) -> str:
         return "log_logon_failures"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Checkbox(
             title=_("Logging of logon failures"),
             label=_("Enable logging of logon failures"),
@@ -2209,7 +2209,7 @@ class ConfigVariableLockOnLogonFailures(ConfigVariable):
     def ident(self) -> str:
         return "lock_on_logon_failures"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Transform(
             Optional(
                 valuespec=Integer(
@@ -2244,7 +2244,7 @@ class ConfigVariablePasswordPolicy(ConfigVariable):
     def ident(self) -> str:
         return "password_policy"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Dictionary(
             title=_("Password policy for local accounts"),
             help=_(
@@ -2303,7 +2303,7 @@ class ConfigVariableUserIdleTimeout(ConfigVariable):
     def ident(self) -> str:
         return "user_idle_timeout"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Optional(
             valuespec=Age(
                 title=None,
@@ -2336,7 +2336,7 @@ class ConfigVariableSingleUserSession(ConfigVariable):
     def ident(self) -> str:
         return "single_user_session"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Optional(
             valuespec=Age(
                 title=None,
@@ -2369,7 +2369,7 @@ class ConfigVariableDefaultUserProfile(ConfigVariable):
     def ident(self) -> str:
         return "default_user_profile"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Dictionary(
             title=_("Default user profile"),
             help=_(
@@ -2454,7 +2454,7 @@ class ConfigVariableUseNewDescriptionsFor(ConfigVariable):
     def ident(self) -> str:
         return "use_new_descriptions_for"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Transform(
             valuespec=ListChoice(
                 title=_("Use new service descriptions"),
@@ -2597,7 +2597,7 @@ class ConfigVariableTCPConnectTimeout(ConfigVariable):
     def ident(self) -> str:
         return "tcp_connect_timeout"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Float(
             title=_("Agent TCP connect timeout"),
             help=_(
@@ -2622,7 +2622,7 @@ class ConfigVariableSimulationMode(ConfigVariable):
     def ident(self) -> str:
         return "simulation_mode"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Checkbox(
             title=_("Simulation mode"),
             label=_("Run in simulation mode"),
@@ -2646,7 +2646,7 @@ class ConfigVariableRestartLocking(ConfigVariable):
     def ident(self) -> str:
         return "restart_locking"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return DropdownChoice(
             title=_("Simultanous activation of changes"),
             help=_(
@@ -2674,7 +2674,7 @@ class ConfigVariableAgentSimulator(ConfigVariable):
     def ident(self) -> str:
         return "agent_simulator"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Checkbox(
             title=_("SNMP Agent Simulator"),
             label=_("Process stored SNMP walks with agent simulator"),
@@ -2697,7 +2697,7 @@ class ConfigVariableDelayPrecompile(ConfigVariable):
     def ident(self) -> str:
         return "delay_precompile"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Checkbox(
             title=_("Delay precompiling of host checks"),
             label=_("delay precompiling"),
@@ -2723,7 +2723,7 @@ class ConfigVariableClusterMaxCachefileAge(ConfigVariable):
     def ident(self) -> str:
         return "cluster_max_cachefile_age"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Integer(
             title=_("Maximum cache file age for clusters"),
             label=_("seconds"),
@@ -2748,7 +2748,7 @@ class ConfigVariablePiggybackMaxCachefileAge(ConfigVariable):
     def ident(self) -> str:
         return "piggyback_max_cachefile_age"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Age(
             title=_("Maximum age for piggyback files"),
             help=_(
@@ -2770,7 +2770,7 @@ class ConfigVariableCheckMKPerfdataWithTimes(ConfigVariable):
     def ident(self) -> str:
         return "check_mk_perfdata_with_times"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Checkbox(
             title=_("Checkmk with times performance data"),
             label=_("Return process times within performance data"),
@@ -2794,7 +2794,7 @@ class ConfigVariableUseDNSCache(ConfigVariable):
     def ident(self) -> str:
         return "use_dns_cache"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Checkbox(
             title=_("Use DNS lookup cache"),
             label=_("Prevent DNS lookups by use of a cache file"),
@@ -2842,7 +2842,7 @@ class ConfigVariableChooseSNMPBackend(ConfigVariable):
     def ident(self) -> str:
         return "snmp_backend_default"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Transform(
             valuespec=DropdownChoice(
                 title=_("Choose SNMP Backend (Enterprise Edition only)"),
@@ -2876,7 +2876,7 @@ class ConfigVariableUseInlineSNMP(ConfigVariable):
     def ident(self) -> str:
         return "use_inline_snmp"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Checkbox(
             title=_("Use Inline SNMP (deprecated)"),
             label=_("Enable inline SNMP (directly use net-snmp libraries) (deprecated)"),
@@ -2907,7 +2907,7 @@ class ConfigVariableHTTPProxies(ConfigVariable):
     def ident(self) -> str:
         return "http_proxies"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Transform(
             valuespec=ListOf(
                 valuespec=Dictionary(
@@ -2989,7 +2989,7 @@ class ConfigVariableInventoryCheckInterval(ConfigVariable):
     def ident(self) -> str:
         return "inventory_check_interval"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Optional(
             valuespec=Integer(
                 title=_("Perform service discovery check every"),
@@ -3022,7 +3022,7 @@ class ConfigVariableInventoryCheckSeverity(ConfigVariable):
     def ident(self) -> str:
         return "inventory_check_severity"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return DropdownChoice(
             title=_("Severity of failed service discovery check"),
             help=_(
@@ -3049,7 +3049,7 @@ class ConfigVariableInventoryCheckAutotrigger(ConfigVariable):
     def ident(self) -> str:
         return "inventory_check_autotrigger"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Checkbox(
             title=_("Service discovery triggers service discovery check"),
             label=_(

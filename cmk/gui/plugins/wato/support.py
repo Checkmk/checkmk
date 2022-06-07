@@ -14,7 +14,7 @@ from cmk.gui.plugins.watolib.utils import (
     ConfigVariable,
     ConfigVariableGroup,
 )
-from cmk.gui.valuespec import HTTPUrl, TextInput
+from cmk.gui.valuespec import HTTPUrl, TextInput, ValueSpec
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
 
 
@@ -38,7 +38,7 @@ class ConfigVariableCrashReportURL(ConfigVariable):
     def ident(self) -> str:
         return "crash_report_url"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return HTTPUrl(
             title=_("Crash report HTTP URL"),
             help=_("By default crash reports will be sent to our crash reporting server."),
@@ -57,7 +57,7 @@ class ConfigVariableCrashReportTarget(ConfigVariable):
     def ident(self) -> str:
         return "crash_report_target"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return TextInput(
             title=_("Crash report fallback mail address"),
             help=_(

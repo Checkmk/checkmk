@@ -25,7 +25,7 @@ from cmk.gui.plugins.views.utils import (
 from cmk.gui.type_defs import TemplateGraphSpec
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.urls import makeuri_contextless
-from cmk.gui.valuespec import Dictionary, DropdownChoice, Transform
+from cmk.gui.valuespec import Dictionary, DropdownChoice, Transform, ValueSpec
 
 multisite_builtin_views.update(
     {
@@ -284,7 +284,7 @@ class PainterOptionGraphRenderOptions(PainterOption):
         return "graph_render_options"
 
     @property
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return vs_graph_render_options()
 
 

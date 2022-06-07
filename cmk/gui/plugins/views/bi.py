@@ -35,7 +35,7 @@ from cmk.gui.type_defs import ColumnName, Rows, SingleInfos
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.urls import makeuri, urlencode_vars
-from cmk.gui.valuespec import DropdownChoice
+from cmk.gui.valuespec import DropdownChoice, ValueSpec
 
 if TYPE_CHECKING:
     from cmk.gui.plugins.visuals.utils import Filter
@@ -501,7 +501,7 @@ class PainterOptionAggrExpand(PainterOption):
         return "aggr_expand"
 
     @property
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return DropdownChoice(
             title=_("Initial expansion of aggregations"),
             default_value="0",
@@ -522,7 +522,7 @@ class PainterOptionAggrOnlyProblems(PainterOption):
         return "aggr_onlyproblems"
 
     @property
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return DropdownChoice(
             title=_("Show only problems"),
             default_value="0",
@@ -540,7 +540,7 @@ class PainterOptionAggrTreeType(PainterOption):
         return "aggr_treetype"
 
     @property
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return DropdownChoice(
             title=_("Type of tree layout"),
             default_value="foldable",
@@ -561,7 +561,7 @@ class PainterOptionAggrWrap(PainterOption):
         return "aggr_wrap"
 
     @property
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return DropdownChoice(
             title=_("Handling of too long texts (affects only table)"),
             default_value="wrap",

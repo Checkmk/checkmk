@@ -146,6 +146,7 @@ from cmk.gui.valuespec import (
     TextInput,
     Transform,
     Tuple,
+    ValueSpec,
 )
 from cmk.gui.wato.pages.global_settings import (
     ABCEditGlobalSettingMode,
@@ -3539,7 +3540,7 @@ class ConfigVariableEventConsoleRemoteStatus(ConfigVariable):
     def ident(self) -> str:
         return "remote_status"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Optional(
             valuespec=Tuple(
                 elements=[
@@ -3603,7 +3604,7 @@ class ConfigVariableEventConsoleReplication(ConfigVariable):
     def ident(self) -> str:
         return "replication"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Optional(
             valuespec=Dictionary(
                 optional_keys=["takeover", "fallback", "disabled", "logging"],
@@ -3727,7 +3728,7 @@ class ConfigVariableEventConsoleRetentionInterval(ConfigVariable):
     def ident(self) -> str:
         return "retention_interval"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Age(
             title=_("State Retention Interval"),
             help=_(
@@ -3749,7 +3750,7 @@ class ConfigVariableEventConsoleHousekeepingInterval(ConfigVariable):
     def ident(self) -> str:
         return "housekeeping_interval"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Age(
             title=_("Housekeeping Interval"),
             help=_(
@@ -3772,7 +3773,7 @@ class ConfigVariableEventConsoleStatisticsInterval(ConfigVariable):
     def ident(self) -> str:
         return "statistics_interval"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Age(
             title=_("Statistics Interval"),
             help=_(
@@ -3795,7 +3796,7 @@ class ConfigVariableEventConsoleLogMessages(ConfigVariable):
     def ident(self) -> str:
         return "log_messages"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Checkbox(
             title=_("Syslog-like message logging"),
             label=_("Log all messages into syslog-like logfiles"),
@@ -3820,7 +3821,7 @@ class ConfigVariableEventConsoleRuleOptimizer(ConfigVariable):
     def ident(self) -> str:
         return "rule_optimizer"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Checkbox(
             title=_("Optimize rule execution"),
             label=_("enable optimized rule execution"),
@@ -3839,7 +3840,7 @@ class ConfigVariableEventConsoleActions(ConfigVariable):
     def ident(self) -> str:
         return "actions"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return ActionList(
             Foldable(
                 valuespec=Dictionary(
@@ -3978,7 +3979,7 @@ class ConfigVariableEventConsoleArchiveOrphans(ConfigVariable):
     def ident(self) -> str:
         return "archive_orphans"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Checkbox(
             title=_("Force message archiving"),
             label=_("Archive messages that do not match any rule"),
@@ -4002,7 +4003,7 @@ class ConfigVariableHostnameTranslation(ConfigVariable):
     def ident(self) -> str:
         return "hostname_translation"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return HostnameTranslation(
             title=_("Hostname translation for incoming messages"),
             help=_(
@@ -4103,7 +4104,7 @@ class ConfigVariableEventConsoleEventLimit(ConfigVariable):
     def ident(self) -> str:
         return "event_limit"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Dictionary(
             title=_("Limit amount of current events"),
             help=_(
@@ -4158,7 +4159,7 @@ class ConfigVariableEventConsoleHistoryRotation(ConfigVariable):
     def ident(self) -> str:
         return "history_rotation"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return DropdownChoice(
             title=_("Event history logfile rotation"),
             help=_(
@@ -4179,7 +4180,7 @@ class ConfigVariableEventConsoleHistoryLifetime(ConfigVariable):
     def ident(self) -> str:
         return "history_lifetime"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Integer(
             title=_("Event history lifetime"),
             help=_("After this number of days old logfile of event history " "will be deleted."),
@@ -4199,7 +4200,7 @@ class ConfigVariableEventConsoleSocketQueueLength(ConfigVariable):
     def ident(self) -> str:
         return "socket_queue_len"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Integer(
             title=_("Max. number of pending connections to the status socket"),
             help=_(
@@ -4226,7 +4227,7 @@ class ConfigVariableEventConsoleEventSocketQueueLength(ConfigVariable):
     def ident(self) -> str:
         return "eventsocket_queue_len"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Integer(
             title=_("Max. number of pending connections to the event socket"),
             help=_(
@@ -4253,7 +4254,7 @@ class ConfigVariableEventConsoleTranslateSNMPTraps(ConfigVariable):
     def ident(self) -> str:
         return "translate_snmptraps"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Transform(
             valuespec=CascadingDropdown(
                 choices=[
@@ -4298,7 +4299,7 @@ class ConfigVariableEventConsoleSNMPCredentials(ConfigVariable):
     def ident(self) -> str:
         return "snmp_credentials"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return ListOf(
             valuespec=Dictionary(
                 elements=[
@@ -4359,7 +4360,7 @@ class ConfigVariableEventConsoleDebugRules(ConfigVariable):
     def ident(self) -> str:
         return "debug_rules"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Checkbox(
             title=_("Debug rule execution"),
             label=_("enable extensive rule logging"),
@@ -4383,7 +4384,7 @@ class ConfigVariableEventConsoleLogLevel(ConfigVariable):
     def ident(self) -> str:
         return "log_level"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Transform(
             valuespec=Dictionary(
                 title=_("Log level"),
@@ -4467,7 +4468,7 @@ class ConfigVariableEventLogRuleHits(ConfigVariable):
     def ident(self) -> str:
         return "log_rulehits"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Checkbox(
             title=_("Log rule hits"),
             label=_("Log hits for rules in log of Event Console"),
@@ -4492,7 +4493,7 @@ class ConfigVariableEventConsoleConnectTimeout(ConfigVariable):
     def ident(self) -> str:
         return "mkeventd_connect_timeout"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Integer(
             title=_("Connect timeout to status socket of Event Console"),
             help=_(
@@ -4517,7 +4518,7 @@ class ConfigVariableEventConsolePrettyPrintRules(ConfigVariable):
     def ident(self) -> str:
         return "mkeventd_pprint_rules"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Checkbox(
             title=_("Pretty-Print rules in config file of Event Console"),
             label=_("enable pretty-printing of rules"),
@@ -4543,7 +4544,7 @@ class ConfigVariableEventConsoleNotifyContactgroup(ConfigVariable):
     def ident(self) -> str:
         return "mkeventd_notify_contactgroup"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return ContactGroupSelection(
             title=_("Send notifications to Event Console"),
             no_selection=_("(don't send notifications to Event Console)"),
@@ -4573,7 +4574,7 @@ class ConfigVariableEventConsoleNotifyRemoteHost(ConfigVariable):
     def ident(self) -> str:
         return "mkeventd_notify_remotehost"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Optional(
             valuespec=TextInput(
                 title=_("Host running Event Console"),
@@ -4606,7 +4607,7 @@ class ConfigVariableEventConsoleNotifyFacility(ConfigVariable):
     def ident(self) -> str:
         return "mkeventd_notify_facility"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return DropdownChoice(
             title=_("Syslog facility for Event Console notifications"),
             help=_(

@@ -16,7 +16,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _l
 from cmk.gui.plugins.visuals.utils import Filter, filter_registry
 from cmk.gui.type_defs import Choices, FilterHeader, FilterHTTPVariables
-from cmk.gui.valuespec import DualListChoice
+from cmk.gui.valuespec import DualListChoice, ValueSpec
 from cmk.gui.watolib.hosts_and_folders import Folder
 
 
@@ -137,7 +137,7 @@ class FilterMultipleWatoFolder(FilterWatoFolder):
     # Once filters are managed by a valuespec and we get more complex
     # datastuctures beyond FilterHTTPVariable there must be a back&forth
     # for data
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         # Drop Main directory represented by empty string, because it means
         # don't filter after any folder due to recursive folder filtering.
         choices = [(name, folder) for name, folder in self.choices() if name]

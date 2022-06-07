@@ -22,6 +22,7 @@ from cmk.gui.valuespec import (
     TextInput,
     Transform,
     Tuple,
+    ValueSpec,
 )
 
 
@@ -34,7 +35,7 @@ class ForceAuthUserUserAttribute(UserAttribute):
     def topic(self):
         return "personal"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Checkbox(
             title=_("Visibility of hosts/services"),
             label=_("Only show hosts and services the user is a contact for"),
@@ -58,7 +59,7 @@ class DisableNotificationsUserAttribute(UserAttribute):
     def topic(self):
         return "personal"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Transform(
             valuespec=Dictionary(
                 title=_("Disable notifications"),
@@ -109,7 +110,7 @@ class StartURLUserAttribute(UserAttribute):
     def topic(self):
         return "personal"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Transform(
             valuespec=Alternative(
                 title=_("Start URL to display in main frame"),
@@ -150,7 +151,7 @@ class UIThemeUserAttribute(UserAttribute):
     def topic(self):
         return "interface"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Alternative(
             title=_("User interface theme"),
             orientation="horizontal",
@@ -180,7 +181,7 @@ class UISidebarPosition(UserAttribute):
     def topic(self):
         return "interface"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return DropdownChoice(
             title=_("Sidebar position"),
             # FIXME: Why isn't this simply a bool instead of an Optional[Literal["left"]]?
@@ -200,7 +201,7 @@ class UIIconTitle(UserAttribute):
     def topic(self):
         return "interface"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return DropdownChoice(
             title=_("Navigation bar icons"),
             help=_(
@@ -222,7 +223,7 @@ class UIIconPlacement(UserAttribute):
     def topic(self):
         return "interface"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return DropdownChoice(
             title=_("Mega menu icons"),
             help=_(
@@ -248,7 +249,7 @@ class UIBasicAdvancedToggle(UserAttribute):
     def topic(self):
         return "interface"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Alternative(
             title=_("Show more / Show less"),
             orientation="horizontal",

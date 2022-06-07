@@ -530,7 +530,9 @@ class ModeUsers(WatoMode):
                 # the visible custom attributes
                 for name, attr in visible_custom_attrs:
                     vs = attr.valuespec()
-                    table.cell(_u(vs.title()))
+                    vs_title = vs.title()
+                    assert vs_title is not None  # TODO: Hmmm...
+                    table.cell(_u(vs_title))
                     html.write_text(vs.value_to_html(user_spec.get(name, vs.default_value())))
 
         html.hidden_fields()
@@ -1309,7 +1311,9 @@ class ModeEditUser(WatoMode):
     def _show_custom_user_attributes(self, custom_attr: List[Tuple[str, UserAttribute]]) -> None:
         for name, attr in custom_attr:
             vs = attr.valuespec()
-            forms.section(_u(vs.title()))
+            vs_title = vs.title()
+            assert vs_title is not None  # TODO: Hmmm...
+            forms.section(_u(vs_title))
             if not self._is_locked(name):
                 vs.render_input("ua_" + name, self._user.get(name, vs.default_value()))
             else:
@@ -1318,7 +1322,9 @@ class ModeEditUser(WatoMode):
                 html.open_div(style="display:none")
                 vs.render_input("ua_" + name, self._user.get(name, vs.default_value()))
                 html.close_div()
-            html.help(_u(vs.help()))
+            vs_help = vs.help()
+            assert isinstance(vs_help, str)  # TODO: Hmmm...
+            html.help(_u(vs_help))
 
 
 def select_language(user_spec: UserSpec) -> None:

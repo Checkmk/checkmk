@@ -94,7 +94,7 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.utils.user_errors import user_errors
-from cmk.gui.valuespec import Checkbox, Dictionary
+from cmk.gui.valuespec import Checkbox, Dictionary, ValueSpec
 from cmk.gui.view_utils import CellSpec, render_labels
 from cmk.gui.views.builtin_views import host_view_filters
 
@@ -178,7 +178,7 @@ class PainterOptionShowInternalTreePaths(PainterOption):
         return "show_internal_tree_paths"
 
     @property
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Checkbox(
             title=_("Show internal tree paths"),
             default_value=False,

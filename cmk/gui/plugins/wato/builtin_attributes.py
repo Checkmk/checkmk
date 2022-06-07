@@ -58,6 +58,7 @@ from cmk.gui.valuespec import (
     TimeofdayRange,
     Transform,
     Tuple,
+    ValueSpec,
     ValueSpecDefault,
     ValueSpecHelp,
     ValueSpecText,
@@ -126,7 +127,7 @@ class HostAttributeIPv4Address(ABCHostAttributeValueSpec):
     def depends_on_tags(self):
         return ["ip-v4"]
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return HostAddress(
             title=_("IPv4 address"),
             help=_(
@@ -177,7 +178,7 @@ class HostAttributeIPv6Address(ABCHostAttributeValueSpec):
     def depends_on_tags(self):
         return ["ip-v6"]
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return HostAddress(
             title=_("IPv6 Address"),
             help=_(
@@ -226,7 +227,7 @@ class HostAttributeAdditionalIPv4Addresses(ABCHostAttributeValueSpec):
     def show_in_folder(self):
         return False
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return ListOf(
             valuespec=HostAddress(
                 allow_empty=False,
@@ -274,7 +275,7 @@ class HostAttributeAdditionalIPv6Addresses(ABCHostAttributeValueSpec):
     def show_in_folder(self):
         return False
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return ListOf(
             valuespec=HostAddress(
                 allow_empty=False,
@@ -315,7 +316,7 @@ class HostAttributeSNMPCommunity(ABCHostAttributeValueSpec):
     def depends_on_tags(self):
         return ["snmp"]
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return SNMPCredentials(
             help=_(
                 "Using this option you can configure the community which should be used when "
@@ -360,7 +361,7 @@ class HostAttributeParents(ABCHostAttributeValueSpec):
     def show_in_folder(self):
         return True
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return ListOfStrings(
             valuespec=ConfigHostname(),
             title=_("Parents"),
@@ -478,7 +479,7 @@ class HostAttributeNetworkScan(ABCHostAttributeValueSpec):
     def show_inherited_value(self):
         return False
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Dictionary(
             elements=self._network_scan_elements,
             title=_("Network Scan"),
@@ -738,7 +739,7 @@ class HostAttributeNetworkScanResult(ABCHostAttributeValueSpec):
             gui_fields.NetworkScanResult, description="Read only access to the network scan result"
         )
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Dictionary(
             elements=[
                 (
@@ -828,7 +829,7 @@ class HostAttributeManagementAddress(ABCHostAttributeValueSpec):
     def show_in_folder(self):
         return False
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return HostAddress(
             title=_("Address"),
             help=_(
@@ -869,7 +870,7 @@ class HostAttributeManagementProtocol(ABCHostAttributeValueSpec):
     def show_in_folder(self):
         return True
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return DropdownChoice(
             title=_("Protocol"),
             help=_("Specify the protocol used to connect to the management board."),
@@ -903,7 +904,7 @@ class HostAttributeManagementSNMPCommunity(ABCHostAttributeValueSpec):
     def show_in_folder(self):
         return True
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return SNMPCredentials(
             default_value=None,
             allow_none=True,
@@ -968,7 +969,7 @@ class HostAttributeManagementIPMICredentials(ABCHostAttributeValueSpec):
     def show_in_folder(self):
         return True
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return IPMICredentials(
             title=_("IPMI credentials"),
             default_value=None,
@@ -1003,7 +1004,7 @@ class HostAttributeSite(ABCHostAttributeValueSpec):
     def show_in_folder(self):
         return True
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return SetupSiteChoice(
             title=_("Monitored on site"),
             help=_("Specify the site that should monitor this host."),
@@ -1065,7 +1066,7 @@ class HostAttributeLockedBy(ABCHostAttributeValueSpec):
     def editable(self):
         return False
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Transform(
             valuespec=LockedByValuespec(),
             forth=tuple,
@@ -1142,7 +1143,7 @@ class HostAttributeLockedAttributes(ABCHostAttributeValueSpec):
     def editable(self):
         return False
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return ListOf(
             valuespec=DropdownChoice(choices=host_attribute_registry.get_choices),
             title=_("Locked attributes"),
@@ -1192,7 +1193,7 @@ class HostAttributeMetaData(ABCHostAttributeValueSpec):
     def openapi_editable(self) -> bool:
         return False
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Dictionary(
             elements=[
                 (
@@ -1276,7 +1277,7 @@ class HostAttributeDiscoveryFailed(ABCHostAttributeValueSpec):
     def openapi_editable(self) -> bool:
         return True
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Checkbox(
             title=_("Discovery failed"),
             help=self._help_text(),
@@ -1330,7 +1331,7 @@ class HostAttributeLabels(ABCHostAttributeValueSpec):
     def show_in_folder(self):
         return True
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Labels(world=Labels.World.CONFIG, label_source=Labels.Source.EXPLICIT)
 
     def openapi_field(self) -> gui_fields.Field:

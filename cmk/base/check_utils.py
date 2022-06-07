@@ -4,14 +4,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Mapping, NamedTuple, Optional, Tuple
+from typing import Mapping, NamedTuple, Optional
 
 from cmk.utils.parameters import TimespecificParameters
 from cmk.utils.type_defs import CheckPluginName, Item, LegacyCheckParameters, ServiceName
 
+from cmk.base.api.agent_based.value_store._utils import ServiceID
 from cmk.base.discovered_labels import ServiceLabel
-
-ServiceID = Tuple[CheckPluginName, Item]
 
 
 class ConfiguredService(NamedTuple):
@@ -28,10 +27,10 @@ class ConfiguredService(NamedTuple):
     def id(self) -> ServiceID:
         return self.check_plugin_name, self.item
 
-    def sort_key(self) -> Tuple[CheckPluginName, str]:
+    def sort_key(self) -> ServiceID:
         """Allow to sort services
 
         Basically sort by id(). Unfortunately we have plugins with *AND* without
         items.
         """
-        return self.check_plugin_name, self.item or ""
+        return (self.check_plugin_name, self.item or "")

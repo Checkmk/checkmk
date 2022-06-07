@@ -32,6 +32,8 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import logger
 from cmk.utils.type_defs import CheckPluginName, HostName, Item
 
+ServiceID = Tuple[CheckPluginName, Item]
+
 _PluginName = str
 _UserKey = str
 _ValueStoreKey = Tuple[_PluginName, Item, _UserKey]
@@ -293,7 +295,7 @@ class ValueStoreManager:
         self.active_service_interface: Optional[_ValueStore] = None
 
     @contextmanager
-    def namespace(self, service_id: Tuple[CheckPluginName, Item]) -> Iterator[None]:
+    def namespace(self, service_id: ServiceID) -> Iterator[None]:
         """Return a context manager
 
         In the corresponding context the value store for the given service is active

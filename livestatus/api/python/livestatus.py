@@ -121,7 +121,8 @@ class MKLivestatusBadGatewayError(MKLivestatusException):
 
 
 # We need some unique value here
-NO_DEFAULT = lambda: None
+def no_default() -> None:
+    return None
 
 
 # Escape/strip unwanted chars from (user provided) strings to
@@ -205,7 +206,7 @@ class Helpers:
     ) -> "LivestatusResponse":
         raise NotImplementedError()
 
-    def query_value(self, query: "QueryTypes", deflt: Any = NO_DEFAULT) -> LivestatusColumn:
+    def query_value(self, query: "QueryTypes", deflt: Any = no_default) -> LivestatusColumn:
         """Issues a query that returns exactly one line and one columns and returns
         the response as a single value"""
         normalized_query = Query(query) if not isinstance(query, Query) else query
@@ -214,7 +215,7 @@ class Helpers:
         try:
             return result[0][0]
         except IndexError:
-            if deflt == NO_DEFAULT:
+            if deflt is no_default:
                 raise MKLivestatusNotFoundError(
                     "No matching entries found for query: %s" % normalized_query
                 )

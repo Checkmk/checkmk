@@ -14,7 +14,7 @@ from cmk.base.plugins.agent_based.kube_resource_quota_cpu import (
 )
 from cmk.base.plugins.agent_based.utils.kube import Cpu, PerformanceUsage
 from cmk.base.plugins.agent_based.utils.kube_resources import (
-    CPU_RENDER_FUNC,
+    cpu_render_func,
     HardResourceRequirement,
     performance_cpu,
 )
@@ -44,7 +44,7 @@ def test_check_kube_resource_quota_cpu_with_no_resources():
             resource_usage=resource_usage,
             hard_requirement=None,
             resource_type="cpu",
-            render_func=CPU_RENDER_FUNC,
+            render_func=cpu_render_func,
         )
     )
 
@@ -61,7 +61,7 @@ def test_check_kube_resource_quota_cpu_with_no_usage():
             resource_usage=None,
             hard_requirement=hard_requirement,
             resource_type="cpu",
-            render_func=CPU_RENDER_FUNC,
+            render_func=cpu_render_func,
         )
     )
 
@@ -85,7 +85,7 @@ def test_check_kube_resource_quota_cpu_with_usage_and_requests_and_limits():
             resource_usage=resource_usage,
             hard_requirement=hard_requirement,
             resource_type="cpu",
-            render_func=CPU_RENDER_FUNC,
+            render_func=cpu_render_func,
         )
     )
 
@@ -111,7 +111,7 @@ def test_check_kube_resource_quota_cpu_with_usage_and_no_limits():
             resource_usage=resource_usage,
             hard_requirement=hard_requirement,
             resource_type="cpu",
-            render_func=CPU_RENDER_FUNC,
+            render_func=cpu_render_func,
         )
     )
 
@@ -138,7 +138,7 @@ def test_check_kube_resource_quota_cpu_with_usage_params():
             resource_usage=resource_usage,
             hard_requirement=None,
             resource_type="cpu",
-            render_func=CPU_RENDER_FUNC,
+            render_func=cpu_render_func,
         )
     )
 
@@ -160,7 +160,7 @@ def test_check_kube_resource_quota_cpu_with_request_params():
             resource_usage=resource_usage,
             hard_requirement=hard_requirement,
             resource_type="cpu",
-            render_func=CPU_RENDER_FUNC,
+            render_func=cpu_render_func,
         )
     )
 

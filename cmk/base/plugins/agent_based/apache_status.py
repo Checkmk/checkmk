@@ -6,7 +6,7 @@
 
 import collections
 import time
-from typing import Any, Dict, Final, Mapping
+from typing import Any, Callable, Dict, Final, Mapping
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     check_levels,
@@ -207,11 +207,13 @@ def check_apache_status(item: str, params: Mapping[str, Any], section: Section) 
         levels_are_lower = key == "OpenSlots"
         notice_only = key not in {"Uptime", "IdleWorkers", "BusyWorkers", "TotalSlots"}
 
-        renderer = None
+        renderer: Callable[[float], str] | None = None
         if key == "Uptime":
             renderer = render.timespan
         elif not isinstance(value, float):
-            renderer = lambda i: "%d" % int(i)
+
+            def renderer(i: float) -> str:
+                return "%d" % int(i)
 
         yield from check_levels(
             value,

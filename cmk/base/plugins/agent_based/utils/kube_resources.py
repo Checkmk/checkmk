@@ -148,7 +148,8 @@ absolute_title: Mapping[Union[RequirementType, AllocatableKubernetesObject], str
 }
 
 
-CPU_RENDER_FUNC = lambda x: f"{x:0.3f}"
+def cpu_render_func(x: float) -> str:
+    return f"{x:0.3f}"
 
 
 def check_with_utilization(

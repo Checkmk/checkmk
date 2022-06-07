@@ -129,9 +129,7 @@ class TestOk:
         assert result.map_error(lambda v: error) == result
 
     def test_fold(self, result):
-        ok = lambda ok_: "ok"
-        error = lambda err_: "error"
-        assert result.fold(ok=ok, error=error) == "ok"
+        assert result.fold(ok=lambda ok_: "ok", error=lambda err_: "error") == "ok"
 
 
 class TestError:
@@ -255,6 +253,4 @@ class TestError:
         assert other.error == error
 
     def test_fold(self, result):
-        ok = lambda ok_: "ok"
-        error = lambda err_: "error"
-        assert result.fold(ok=ok, error=error) == "error"
+        assert result.fold(ok=lambda ok_: "ok", error=lambda err_: "error") == "error"

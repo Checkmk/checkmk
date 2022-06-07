@@ -348,20 +348,21 @@ def main():
     try:
         sys.stdout.write("<<<tinkerforge:sep(44)>>>\n")
 
-        cb = lambda uid, connected_uid, position, hardware_version, firmware_version, device_identifier, enumeration_type: enumerate_callback(
-            conn,
-            device_handlers,
-            settings,
-            uid,
-            connected_uid,
-            position,
-            hardware_version,
-            firmware_version,
-            device_identifier,
-            enumeration_type,
+        conn.register_callback(
+            IPConnection.CALLBACK_ENUMERATE,
+            lambda uid, connected_uid, position, hardware_version, firmware_version, device_identifier, enumeration_type: enumerate_callback(
+                conn,
+                device_handlers,
+                settings,
+                uid,
+                connected_uid,
+                position,
+                hardware_version,
+                firmware_version,
+                device_identifier,
+                enumeration_type,
+            ),
         )
-
-        conn.register_callback(IPConnection.CALLBACK_ENUMERATE, cb)
         conn.enumerate()
 
         # bricklets respond asynchronously in callbacks and we have no way of knowing

@@ -246,7 +246,7 @@ def mountpoints_in_group(
     return matching_mountpoints
 
 
-def _render_integer(number: float):
+def _render_integer(number: float) -> str:
     return render.filesize(number).strip(" B")
 
 
@@ -278,7 +278,7 @@ def _check_inodes(
     inodes_warn_variant, inodes_crit_variant = levels["inodes_levels"]
 
     inodes_abs: Optional[Tuple[float, float]] = None
-    human_readable_func: Callable[[Any], str] = _render_integer
+    human_readable_func: Callable[[float], str] = _render_integer
     if isinstance(inodes_warn_variant, int):
         # Levels in absolute numbers
         inodes_abs = (
@@ -291,7 +291,9 @@ def _check_inodes(
             (100 - inodes_warn_variant) / 100.0 * inodes_total,
             (100 - inodes_crit_variant) / 100.0 * inodes_total,
         )
-        human_readable_func = lambda x: render.percent(100.0 * x / inodes_total)
+
+        def human_readable_func(x: float) -> str:
+            return render.percent(100.0 * x / inodes_total)
 
     inode_result, inode_metric = check_levels(
         value=inodes_total - inodes_avail,

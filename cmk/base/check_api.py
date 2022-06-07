@@ -213,8 +213,13 @@ def get_check_api_context() -> _config.CheckContext:
 core_state_names = _defines.short_service_state_names()
 
 # backwards compatibility: allow to pass integer.
-BINARY = lambda x: _OIDBytes(str(x))
-CACHED_OID = lambda x: _OIDCached(str(x))
+def BINARY(x: str | int) -> _OIDBytes:
+    return _OIDBytes(str(x))
+
+
+def CACHED_OID(x: str | int) -> _OIDCached:
+    return _OIDCached(str(x))
+
 
 OID_BIN = _SpecialColumn.BIN
 OID_STRING = _SpecialColumn.STRING
@@ -480,8 +485,11 @@ def check_levels(
     else:
         unit_info = ""
 
+    def default_human_readable_func(x: float) -> str:
+        return "%.2f" % (x / scale)
+
     if human_readable_func is None:
-        human_readable_func = lambda x: "%.2f" % (x / scale)
+        human_readable_func = default_human_readable_func
 
     def scale_value(v: Union[None, int, float]) -> Union[None, int, float]:
         if v is None:

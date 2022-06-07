@@ -221,6 +221,7 @@ if not cmk_version.is_raw_edition():
 
 from cmk.gui.type_defs import (
     ColumnName,
+    FilterHeader,
     FilterName,
     HTTPVariables,
     InfoName,
@@ -2257,13 +2258,22 @@ def _process_availability_view(view_renderer: ABCViewRenderer) -> None:
     if "aggr" not in view.datasource.infos or request.var("timeline_aggr"):
         filterheaders = "".join(get_livestatus_filter_headers(view.context, all_active_filters))
         # all 'amount_*', 'duration_fetch_rows' and 'duration_filter_rows' will be set in:
-        show_view_func = lambda: availability.show_availability_page(view, filterheaders)
+        show_view_func = functools.partial(
+            availability.show_availability_page,
+            view=View,
+            filterheaders=filterheaders,
+        )
+
     else:
         _unfiltered_amount_of_rows, rows = _get_view_rows(
             view, all_active_filters, only_count=False
         )
         # 'amount_rows_after_limit' will be set in:
-        show_view_func = lambda: availability.show_bi_availability(view, rows)
+        show_view_func = functools.partial(
+            availability.show_bi_availability,
+            view=View,
+            aggr_rows=rows,
+        )
 
     with CPUTracker() as view_render_tracker:
         show_view_func()

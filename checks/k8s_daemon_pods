@@ -10,7 +10,8 @@
 ###########################################################################
 
 
-none2zero = lambda number: 0 if number is None else number
+def _none2zero(number: float | None) -> float:
+    return 0 if number is None else number
 
 
 def inventory_k8s_daemon_pods(parsed):
@@ -40,8 +41,8 @@ def check_k8s_daemon_pods(_no_item, _params, parsed):
     ]
     yield 0, infotext, perfdata
 
-    available = none2zero(parsed["number_available"])
-    unavailable = none2zero(parsed["number_unavailable"])
+    available = _none2zero(parsed["number_available"])
+    unavailable = _none2zero(parsed["number_unavailable"])
     total = available + unavailable
     infotext = "Available: %s/%s" % (available, total)
     perfdata = [

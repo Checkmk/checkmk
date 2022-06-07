@@ -36,7 +36,9 @@ def parse_aws_ebs_limits(info):
             amount *= 1024**3
             human_readable_func = get_bytes_human_readable
         elif resource_key == "block_store_iops_io1":
-            human_readable_func = lambda x: "%s/s" % x
+            human_readable_func = lambda x: (  # pylint: disable=unnecessary-lambda-assignment
+                "%s/s" % x
+            )
         else:
             human_readable_func = int
         limits_by_region.setdefault(region, []).append(

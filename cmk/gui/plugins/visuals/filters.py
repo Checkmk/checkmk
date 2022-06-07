@@ -1752,14 +1752,26 @@ class FilterECServiceLevelRange(Filter):
             return ""
 
         if lower_bound:
-            match_lower = lambda val, lo=int(lower_bound): lo <= val
+            lb = lower_bound
+
+            def match_lower(val: int) -> bool:
+                return int(lb) <= val
+
         else:
-            match_lower = lambda val, lo=0: True
+
+            def match_lower(val: int) -> bool:
+                return True
 
         if upper_bound:
-            match_upper = lambda val, hi=int(upper_bound): val <= hi
+            ub = upper_bound
+
+            def match_upper(val: int) -> bool:
+                return val <= int(ub)
+
         else:
-            match_upper = lambda val, hi=0: True
+
+            def match_upper(val: int) -> bool:
+                return True
 
         filterline = "Filter: %s_custom_variable_names >= EC_SL\n" % self.info
 

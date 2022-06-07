@@ -16,11 +16,15 @@ def inv_export_software_csv(hostname, params, tree):
     headers = params.get("headers", False)
 
     if quotes == "single":
-        quote = lambda s: "'" + s.replace("'", "\\'") + "'"
+        quote = lambda s: (  # pylint: disable=unnecessary-lambda-assignment
+            "'" + s.replace("'", "\\'") + "'"
+        )
     elif quotes == "double":
-        quote = lambda s: '"' + s.replace('"', '\\"') + '"'
+        quote = lambda s: (  # pylint: disable=unnecessary-lambda-assignment
+            '"' + s.replace('"', '\\"') + '"'
+        )
     else:
-        quote = lambda s: s
+        quote = lambda s: s  # pylint: disable=unnecessary-lambda-assignment
 
     try:
         packages = tree["software"]["packages"]

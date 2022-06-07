@@ -12,7 +12,7 @@ from cmk.base.plugins.agent_based.utils.kube import PerformanceUsage
 from cmk.base.plugins.agent_based.utils.kube_resources import (
     AllocatableResource,
     check_resource,
-    CPU_RENDER_FUNC,
+    cpu_render_func,
     DEFAULT_PARAMS,
     Params,
     parse_allocatable_resource,
@@ -67,7 +67,7 @@ def _check_kube_cpu(
         section_kube_cpu_resources,
         section_kube_allocatable_cpu_resource,
         "cpu",
-        CPU_RENDER_FUNC,
+        cpu_render_func,
     )
 
 

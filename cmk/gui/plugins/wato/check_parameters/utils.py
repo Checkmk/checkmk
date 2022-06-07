@@ -125,15 +125,18 @@ def get_free_used_dynamic_valuespec(
     )
 
 
+def _tuple_convert(val: tuple[float, ...]) -> tuple[float, ...]:
+    return tuple(-x for x in val)
+
+
 def transform_filesystem_free(value):
-    tuple_convert = lambda val: tuple(-x for x in val)
 
     if isinstance(value, tuple):
-        return tuple_convert(value)
+        return _tuple_convert(value)
 
     result = []
     for item in value:
-        result.append((item[0], tuple_convert(item[1])))
+        result.append((item[0], _tuple_convert(item[1])))
     return result
 
 

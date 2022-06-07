@@ -155,9 +155,14 @@ def render_graph_pdf(
     # Now transform the whole chooridate system to our real t and v choords
     # so if we paint something at (0, 0) it will correctly represent a
     # value of 0 and a time point of time_start.
-    trans_t = lambda t: (t - t_range_from) * t_mm_per_second + t_orig
-    trans_v = lambda v: v_orig + ((v - v_axis_orig) * v_mm_per_unit)
-    trans = lambda t, v: (trans_t(t), trans_v(v))
+    def trans_t(t: float) -> float:
+        return (t - t_range_from) * t_mm_per_second + t_orig
+
+    def trans_v(v: float) -> float:
+        return v_orig + ((v - v_axis_orig) * v_mm_per_unit)
+
+    def trans(t: float, v: float) -> tuple[float, float]:
+        return (trans_t(t), trans_v(v))
 
     # Paint curves
     pdf_document.save_state()
@@ -209,7 +214,7 @@ def render_graph_pdf(
             pdf_document.begin_path()
             for value in curve["points"]:
                 if value is not None:
-                    p = trans(t, value)
+                    p = trans(t, value)  # type: ignore[arg-type]  # TODO: what is going on here?
                     if last_value is not None:
                         pdf_document.line_to(p[0], p[1])
                     else:

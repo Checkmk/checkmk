@@ -8,7 +8,7 @@ from typing import Any, MutableMapping, Optional
 
 from cmk.base.plugins.agent_based.utils.kube_resources import (
     check_resource_quota_resource,
-    CPU_RENDER_FUNC,
+    cpu_render_func,
     HardResourceRequirement,
     Params,
     parse_hard_requirements,
@@ -73,7 +73,7 @@ def _check_kube_resource_quota_cpu(
         ),
         hard_requirement=section_kube_resource_quota_cpu_resources,
         resource_type="cpu",
-        render_func=CPU_RENDER_FUNC,
+        render_func=cpu_render_func,
     )
 
 

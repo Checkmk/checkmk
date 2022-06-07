@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import re
+from typing import overload
 
 from bs4 import BeautifulSoup as bs  # type: ignore[import]
 from bs4 import NavigableString
@@ -15,7 +16,17 @@ def prettify(html_text):
     return re.sub("\n{2,}", "\n", re.sub(">", ">\n", txt))
 
 
-def encode_attribute(value):
+@overload
+def encode_attribute(value: list) -> list:
+    ...
+
+
+@overload
+def encode_attribute(value: str) -> str:
+    ...
+
+
+def encode_attribute(value: list | str) -> list | str:
     if isinstance(value, list):
         return [encode_attribute(v) for v in value]
 
@@ -24,7 +35,17 @@ def encode_attribute(value):
     )
 
 
-def undo_encode_attribute(value):
+@overload
+def undo_encode_attribute(value: list) -> list:
+    ...
+
+
+@overload
+def undo_encode_attribute(value: str) -> str:
+    ...
+
+
+def undo_encode_attribute(value: list | str) -> list | str:
     if isinstance(value, list):
         return [undo_encode_attribute(v) for v in value]
 
@@ -33,7 +54,17 @@ def undo_encode_attribute(value):
     )
 
 
-def subber(value):
+@overload
+def subber(value: list) -> list:
+    ...
+
+
+@overload
+def subber(value: str) -> str:
+    ...
+
+
+def subber(value: list | str) -> list | str:
     if isinstance(value, list):
         return [subber(v) for v in value]
 
@@ -57,7 +88,8 @@ def compare_soup(html1, html2):
     children_1 = list(s1.recursiveChildGenerator())
     children_2 = list(s2.recursiveChildGenerator())
 
-    unify_attrs = lambda x: encode_attribute(undo_encode_attribute(subber(x)))
+    def unify_attrs(x: str) -> str:
+        return encode_attribute(undo_encode_attribute(subber(x)))
 
     for d1, d2 in zip(children_1, children_2):
 

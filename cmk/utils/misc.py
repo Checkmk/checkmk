@@ -79,11 +79,10 @@ def total_size(o: Any, handlers: Optional[Dict] = None) -> int:
     if handlers is None:
         handlers = {}
 
-    dict_handler = lambda d: itertools.chain.from_iterable(d.items())
     all_handlers = {
         tuple: iter,
         list: iter,
-        dict: dict_handler,
+        dict: lambda d: itertools.chain.from_iterable(d.items()),
         set: iter,
         frozenset: iter,
     }

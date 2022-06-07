@@ -347,7 +347,10 @@ def _decode_column(
         # ? ensure_str is used with potentially different encodings
         decode: Callable[[bytes], SNMPDecodedValues] = snmp_config.ensure_str
     else:
-        decode = lambda v: list(bytearray(v))
+
+        def decode(v: SNMPRawValue) -> SNMPDecodedValues:
+            return list(bytearray(v))
+
     return [decode(v) for v in column]
 
 

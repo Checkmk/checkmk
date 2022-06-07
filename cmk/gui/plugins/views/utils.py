@@ -1540,17 +1540,14 @@ def declare_1to1_sorter(
 ) -> PainterName:
     painter = painter_registry[painter_name]()
 
-    if not reverse:
-        cmp_func = lambda self, r1, r2: func(painter.columns[col_num], r1, r2)
-    else:
-        cmp_func = lambda self, r1, r2: func(painter.columns[col_num], r2, r1)
-
     register_sorter(
         painter_name,
         {
             "title": painter.title,
             "columns": painter.columns,
-            "cmp": cmp_func,
+            "cmp": (lambda self, r1, r2: func(painter.columns[col_num], r2, r1))
+            if reverse
+            else lambda self, r1, r2: func(painter.columns[col_num], r1, r2),
         },
     )
     return painter_name
@@ -1652,11 +1649,9 @@ def _merge_data(data: List[LivestatusRow], columns: List[ColumnName]) -> List[Li
     is required to be the *second* column (right after the site column)"""
     merged: Dict[ColumnName, LivestatusRow] = {}
 
-    # site column is not merged
-    site_column_merge_func = lambda a, b: ""
-
     mergefuncs: List[Callable[[LivestatusColumn, LivestatusColumn], LivestatusColumn]] = [
-        site_column_merge_func
+        # site column is not merged
+        lambda a, b: ""
     ]
 
     def worst_host_state(a, b):
@@ -1667,13 +1662,13 @@ def _merge_data(data: List[LivestatusRow], columns: List[ColumnName]) -> List[Li
     for c in columns:
         _tablename, col = c.split("_", 1)
         if col.startswith("num_") or col.startswith("members"):
-            mergefunc = lambda a, b: a + b
+            mergefunc = lambda a, b: a + b  # pylint: disable=unnecessary-lambda-assignment
         elif col.startswith("worst_service"):
             mergefunc = functools.partial(worst_service_state, default=3)
         elif col.startswith("worst_host"):
             mergefunc = worst_host_state
         else:
-            mergefunc = lambda a, b: a
+            mergefunc = lambda a, b: a  # pylint: disable=unnecessary-lambda-assignment
 
         mergefuncs.append(mergefunc)
 

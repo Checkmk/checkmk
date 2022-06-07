@@ -40,7 +40,7 @@ from urllib.parse import quote_plus
 PY2 = sys.version_info[0] == 2
 
 try:
-    from typing import Any, Callable, Dict, Iterable, List, Union
+    from typing import Any, Dict, Iterable, List, Union
 except ImportError:
     pass
 
@@ -457,14 +457,17 @@ def _get_chunk_size_information(client):
     return {"chunkSize": chunk_size}
 
 
+def _recursive_defaultdict():
+    return defaultdict(_recursive_defaultdict)
+
+
 def _get_collections_information(client):
     """
     get all documents from config collections
     :param client: mongodb client
     :return: dictionary with collections information
     """
-    collections_def_dict = lambda: defaultdict(collections_def_dict)  # type: Callable
-    collections_dict = collections_def_dict()
+    collections_dict = _recursive_defaultdict()
     for collection in client.config.collections.find(
         {}, set(["_id", "unique", "dropped", "noBalance"])
     ):
@@ -494,8 +497,7 @@ def _count_chunks_per_shard(client, databases):
     :param client: mongodb client
     :return: dictionary with shards and sum of chunks and jumbo chunks
     """
-    chunks_def_dict = lambda: defaultdict(chunks_def_dict)  # type: Callable
-    chunks_dict = chunks_def_dict()
+    chunks_dict = _recursive_defaultdict()
 
     # initialize dictionary
     # set default defaults for numberOfChunks and numberOfJumbos
@@ -656,8 +658,7 @@ def _get_indexes_information(client, databases):
     :param client: mongodb client
     :return: dictionary with shards information
     """
-    indexes_def_dict = lambda: defaultdict(indexes_def_dict)  # type: Callable
-    indexes_dict = indexes_def_dict()
+    indexes_dict = _recursive_defaultdict()
     for database_name in databases:
         database = databases.get(database_name)
         for collection_name in database.get("collections", []):

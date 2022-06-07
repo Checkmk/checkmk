@@ -301,9 +301,12 @@ def SNMPCredentials(  # pylint: disable=redefined-builtin
                 return 3  # authPriv
         raise MKGeneralException("invalid SNMP credential format %s" % x)
 
+    def allow_none_match(x) -> int:
+        return 0 if x is None else (alternative_match(x) + 1)
+
     if allow_none:
         # Wrap match() function defined above
-        match = lambda x: 0 if x is None else (alternative_match(x) + 1)
+        match = allow_none_match
         elements = [_snmp_no_credentials_element()]
     else:
         match = alternative_match

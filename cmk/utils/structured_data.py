@@ -220,8 +220,13 @@ class StructuredDataStore:
 
 # TODO filter table rows?
 
-_use_all = lambda key: True
-_use_nothing = lambda key: False
+
+def _use_all(_key: str) -> Literal[True]:
+    return True
+
+
+def _use_nothing(_key: str) -> Literal[False]:
+    return False
 
 
 def _make_choices_filter(choices: Sequence[Union[str, int]]) -> SDFilterFunc:

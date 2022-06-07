@@ -11,7 +11,7 @@ def inventory_db2_mem(info):
     return [(x[1], db2_mem_default_levels) for x in info if x[0] == "Instance"]
 
 
-def check_db2_mem(item, params, info):
+def check_db2_mem(item, params, info):  # pylint: disable=too-many-branches
     if not info:
         raise MKCounterWrapped("Login into database failed")
 

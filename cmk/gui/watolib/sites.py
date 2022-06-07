@@ -226,7 +226,12 @@ class SiteManagement:
         )
 
     @classmethod
-    def validate_configuration(cls, site_id, site_configuration, all_sites):
+    def validate_configuration(  # pylint: disable=too-many-branches
+        cls,
+        site_id,
+        site_configuration,
+        all_sites,
+    ):
         if not re.match("^[-a-z0-9A-Z_]+$", site_id):
             raise MKUserError(
                 "id", _("The site id must consist only of letters, digit and the underscore.")

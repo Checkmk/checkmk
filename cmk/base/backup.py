@@ -82,7 +82,7 @@ def do_backup(tarname: str) -> None:
     console.verbose("Successfully created backup.\n")
 
 
-def do_restore(tarname: str) -> None:
+def do_restore(tarname: str) -> None:  # pylint: disable=too-many-branches
     console.verbose("Restoring from '%s'...\n", tarname)
 
     if not os.path.exists(tarname):

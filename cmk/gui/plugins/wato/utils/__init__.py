@@ -1692,7 +1692,7 @@ def sort_sites(sites: SiteConfigurations) -> List[_Tuple[SiteId, SiteConfigurati
 # is related to these HTTP variables and so on is SearchFolder.
 #
 # TODO: Wow, this function REALLY has to be cleaned up
-def configure_attributes(
+def configure_attributes(  # pylint: disable=too-many-branches
     new,
     hosts,
     for_what,

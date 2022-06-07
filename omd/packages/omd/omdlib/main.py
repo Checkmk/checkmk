@@ -468,7 +468,7 @@ def _is_unpatchable_file(path: str) -> bool:
     return path.endswith(".png") or path.endswith(".pdf")
 
 
-def patch_template_file(
+def patch_template_file(  # pylint: disable=too-many-branches
     conflict_mode: str, src: str, dst: str, old_site: SiteContext, new_site: SiteContext
 ) -> None:
     # Create patch from old instantiated skeleton file to new one
@@ -600,7 +600,7 @@ def patch_template_file(
 
 # Try to merge changes from old->new version and
 # old->user version
-def merge_update_file(
+def merge_update_file(  # pylint: disable=too-many-branches
     site: SiteContext, conflict_mode: str, relpath: str, old_version: str, new_version: str
 ) -> None:
     fn = tty.bold + relpath + tty.normal
@@ -855,7 +855,7 @@ def _execute_update_file(
                     todo = True  # Try again
 
 
-def update_file(
+def update_file(  # pylint: disable=too-many-branches
     relpath: str,
     site: SiteContext,
     conflict_mode: str,
@@ -2322,7 +2322,7 @@ def _get_conflict_mode(options: CommandOptions) -> str:
     return conflict_mode
 
 
-def main_mv_or_cp(
+def main_mv_or_cp(  # pylint: disable=too-many-branches
     version_info: VersionInfo,
     old_site: SiteContext,
     global_opts: "GlobalOptions",
@@ -2599,7 +2599,7 @@ def print_diff(
         print_status(StateMarkers.warn, fn, "p", "Changed permissions")
 
 
-def main_update(
+def main_update(  # pylint: disable=too-many-branches
     version_info: VersionInfo,
     site: SiteContext,
     global_opts: "GlobalOptions",
@@ -2969,7 +2969,7 @@ def main_umount(
     sys.exit(exit_status)
 
 
-def main_init_action(
+def main_init_action(  # pylint: disable=too-many-branches
     version_info: VersionInfo,
     site: SiteContext,
     global_opts: "GlobalOptions",
@@ -3121,7 +3121,7 @@ def main_init_action(
     sys.exit(exit_status)
 
 
-def main_config(
+def main_config(  # pylint: disable=too-many-branches
     version_info: VersionInfo,
     site: SiteContext,
     global_opts: "GlobalOptions",
@@ -3207,7 +3207,7 @@ def main_backup(
             _try_backup_site_to_tarfile(fh, "w:", options, site, global_opts)
 
 
-def _restore_backup_from_tar(
+def _restore_backup_from_tar(  # pylint: disable=too-many-branches
     *,
     tar: tarfile.TarFile,
     site: SiteContext,
@@ -4380,7 +4380,7 @@ def _opt_arg(main_args: Arguments, opt: str) -> Tuple[str, Arguments]:
     return arg, main_args
 
 
-def _parse_command_options(
+def _parse_command_options(  # pylint: disable=too-many-branches
     args: Arguments, options: List[Option]
 ) -> Tuple[Arguments, CommandOptions]:
 
@@ -4513,7 +4513,7 @@ def ensure_mkbackup_lock_dir_rights() -> None:
 # the options before the command here only
 # TODO: Refactor these global variables
 # TODO: Refactor to argparse. Be aware of the pitfalls of the OMD command line scheme
-def main() -> None:
+def main() -> None:  # pylint: disable=too-many-branches
     ensure_mkbackup_lock_dir_rights()
 
     main_args = sys.argv[1:]

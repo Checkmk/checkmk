@@ -313,7 +313,7 @@ def event_rule_matches(rule_pack, rule, event):
     return result
 
 
-def event_rule_matches_non_inverted(rule_pack, rule, event):
+def event_rule_matches_non_inverted(rule_pack, rule, event):  # pylint: disable=too-many-branches
     if not match_ipv4_network(rule.get("match_ipaddress", "0.0.0.0/0"), event["ipaddress"]):
         return _("The source IP address does not match.")
 

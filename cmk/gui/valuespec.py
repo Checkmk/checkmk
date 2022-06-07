@@ -3290,7 +3290,11 @@ class CascadingDropdown(ValueSpec[CascadingDropdownChoiceValue]):
 
         return value, vs
 
-    def render_input(self, varprefix: str, value: CascadingDropdownChoiceValue) -> None:
+    def render_input(  # pylint: disable=too-many-branches
+        self,
+        varprefix: str,
+        value: CascadingDropdownChoiceValue,
+    ) -> None:
         def_val = "0"
         options: Choices = []
         choices = self.choices()
@@ -3798,7 +3802,11 @@ class DualListChoice(ListChoice):
             else _("%%d locked elements")
         )
 
-    def render_input(self, varprefix: str, value: ListChoiceModel) -> None:
+    def render_input(  # pylint: disable=too-many-branches
+        self,
+        varprefix: str,
+        value: ListChoiceModel,
+    ) -> None:
         self.load_elements()
         if not self._elements:
             html.write_text(_("There are no elements for selection."))
@@ -4274,7 +4282,11 @@ class AbsoluteDate(ValueSpec[_Optional[float]]):
         lt = time.localtime(value)
         return lt.tm_year, lt.tm_mon, lt.tm_mday, lt.tm_hour, lt.tm_min, lt.tm_sec
 
-    def render_input(self, varprefix: str, value: _Optional[float]) -> None:
+    def render_input(  # pylint: disable=too-many-branches
+        self,
+        varprefix: str,
+        value: _Optional[float],
+    ) -> None:
         if self._label:
             html.span(self._label, class_="vs_floating_text")
 
@@ -4849,7 +4861,9 @@ class Timerange(CascadingDropdown):
         return super().value_to_json_safe(value)
 
     @staticmethod
-    def compute_range(rangespec: TimerangeValue) -> ComputedTimerange:
+    def compute_range(  # pylint: disable=too-many-branches
+        rangespec: TimerangeValue,
+    ) -> ComputedTimerange:
         def _date_span(from_time: float, until_time: float) -> str:
             start = AbsoluteDate().value_to_html(from_time)
             end = AbsoluteDate().value_to_html(until_time - 1)
@@ -5402,7 +5416,7 @@ class Tuple(ValueSpec):
     def default_value(self) -> tuple[Any, ...]:
         return tuple(x.default_value() for x in self._elements)
 
-    def render_input(self, varprefix: str, value: Any) -> None:
+    def render_input(self, varprefix: str, value: Any) -> None:  # pylint: disable=too-many-branches
         if self._orientation != "float":
             html.open_table(class_=["valuespec_tuple", self._orientation])
             if self._orientation == "horizontal":

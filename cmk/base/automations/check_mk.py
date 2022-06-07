@@ -420,7 +420,11 @@ class AutomationRenameHosts(Automation):
         code = os.system(command)  # nosec
         return not code
 
-    def _rename_host_files(self, oldname: HistoryFile, newname: HistoryFile) -> List[str]:
+    def _rename_host_files(  # pylint: disable=too-many-branches
+        self,
+        oldname: HistoryFile,
+        newname: HistoryFile,
+    ) -> List[str]:
         actions = []
 
         if self._rename_host_file(autochecks_dir, oldname + ".mk", newname + ".mk"):
@@ -498,7 +502,11 @@ class AutomationRenameHosts(Automation):
         return 0
 
     # This functions could be moved out of Checkmk.
-    def _omd_rename_host(self, oldname: str, newname: str) -> List[str]:
+    def _omd_rename_host(  # pylint: disable=too-many-branches
+        self,
+        oldname: str,
+        newname: str,
+    ) -> List[str]:
         oldregex = self._escape_name_for_regex_matching(oldname)
         actions = []
 
@@ -1210,7 +1218,10 @@ class AutomationDiagHost(Automation):
     needs_config = True
     needs_checks = True
 
-    def execute(self, args: List[str]) -> automation_results.DiagHostResult:
+    def execute(  # pylint: disable=too-many-branches
+        self,
+        args: List[str],
+    ) -> automation_results.DiagHostResult:
         hostname = HostName(args[0])
         test, ipaddress, snmp_community = args[1:4]
         agent_port, snmp_timeout, snmp_retries = map(int, args[4:7])
@@ -1389,7 +1400,7 @@ class AutomationDiagHost(Automation):
             raise
         return completed_process.returncode, completed_process.stdout
 
-    def _execute_snmp(
+    def _execute_snmp(  # pylint: disable=too-many-branches
         self,
         test,
         host_config,

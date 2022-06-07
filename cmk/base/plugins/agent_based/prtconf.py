@@ -163,7 +163,7 @@ def inv_prtconf(section):
         yield Attributes(path=path, inventory_attributes=attrs)
 
 
-def get_key_value_pairs(parsed):
+def get_key_value_pairs(parsed):  # pylint: disable=too-many-branches
     parsed_tuples = parsed["tuples"]
     cpu_dict: dict[str, float | str] = {}
     sys_dict = {}

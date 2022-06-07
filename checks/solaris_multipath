@@ -21,7 +21,7 @@ def inventory_solaris_multipath(info):
         yield item, int(operational)
 
 
-def check_solaris_multipath(item, params, info):
+def check_solaris_multipath(item, params, info):  # pylint: disable=too-many-branches
     for device, total, operational in info:
         if item == device.split("/")[-1]:
 

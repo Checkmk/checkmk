@@ -398,7 +398,7 @@ def install_by_path(package_path: Path) -> PackageInfo:
         return install(file_object=cast(BinaryIO, f))
 
 
-def install(file_object: BinaryIO) -> PackageInfo:
+def install(file_object: BinaryIO) -> PackageInfo:  # pylint: disable=too-many-branches
     package = _get_package_info_from_package(file_object)
     file_object.seek(0)
 

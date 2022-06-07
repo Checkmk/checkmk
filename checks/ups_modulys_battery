@@ -15,7 +15,7 @@ def inventory_ups_modulys_battery(info):
     return [(None, {})]
 
 
-def check_ups_modulys_battery(item, params, info):
+def check_ups_modulys_battery(item, params, info):  # pylint: disable=too-many-branches
     warn_left, crit_left = params["battime"]
     warn_perc, crit_perc = params["capacity"]
     for condition, elapsed_sec, remaining_min, capacity, _temperature in info:

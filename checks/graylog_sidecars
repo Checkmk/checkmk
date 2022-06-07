@@ -66,7 +66,7 @@ factory_settings["graylog_sidecars_default_levels"] = {
 
 
 @get_parsed_item_data
-def check_graylog_sidecars(item, params, item_data):
+def check_graylog_sidecars(item, params, item_data):  # pylint: disable=too-many-branches
     active_msg = item_data.get("active")
     if active_msg is not None:
         active_state = 0

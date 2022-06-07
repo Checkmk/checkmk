@@ -712,7 +712,7 @@ def do_backup(opts):
     complete_backup()
 
 
-def do_site_backup(opts, site=None, try_stop=True):
+def do_site_backup(opts, site=None, try_stop=True):  # pylint: disable=too-many-branches
     cmd = ["omd", "backup"]
 
     if not compress_archives():

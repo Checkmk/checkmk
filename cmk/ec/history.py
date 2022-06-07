@@ -212,7 +212,10 @@ def _log_event(
         logger.info("Event %d: %s/%s/%s - %s" % (event["id"], what, who, addinfo, event["text"]))
 
 
-def _get_mongodb(history: History, query: QueryGET) -> Iterable[Any]:
+def _get_mongodb(  # pylint: disable=too-many-branches
+    history: History,
+    query: QueryGET,
+) -> Iterable[Any]:
     filters, limit = query.filters, query.limit
 
     history_entries = []

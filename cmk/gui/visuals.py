@@ -692,7 +692,7 @@ def get_permissioned_visual(
 # TODO: This code has been copied to a new live into htdocs/pagetypes.py
 # We need to convert all existing page types (views, dashboards, reports)
 # to pagetypes.py and then remove this function!
-def page_list(
+def page_list(  # pylint: disable=too-many-branches
     what,
     title,
     visuals,
@@ -1238,7 +1238,7 @@ def _vs_general(
     )
 
 
-def page_edit_visual(
+def page_edit_visual(  # pylint: disable=too-many-branches
     what: Literal["dashboards", "views", "reports"],
     all_visuals: Dict[Tuple[UserId, VisualName], Visual],
     custom_field_handler=None,

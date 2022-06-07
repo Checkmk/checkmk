@@ -77,7 +77,7 @@ def _normalize_level(entry):
     return entry
 
 
-def check_temperature_determine_levels(
+def check_temperature_determine_levels(  # pylint: disable=too-many-branches
     dlh,
     usr_warn,
     usr_crit,
@@ -146,7 +146,14 @@ def check_temperature_determine_levels(
 
 
 # determine temperature trends. This is a private function, not to be called by checks
-def check_temperature_trend(temp, params, output_unit, crit, crit_lower, unique_name):
+def check_temperature_trend(  # pylint: disable=too-many-branches
+    temp,
+    params,
+    output_unit,
+    crit,
+    crit_lower,
+    unique_name,
+):
     def combiner(status, infotext):
         if "status" in dir(combiner):
             combiner.status = max(combiner.status, status)  # type: ignore[attr-defined]
@@ -242,7 +249,7 @@ def check_temperature_trend(temp, params, output_unit, crit, crit_lower, unique_
     return combiner.status, combiner.infotext  # type: ignore[attr-defined]
 
 
-def check_temperature(
+def check_temperature(  # pylint: disable=too-many-branches
     reading: Number,
     params: TempParamType,
     unique_name: Optional[AnyStr],

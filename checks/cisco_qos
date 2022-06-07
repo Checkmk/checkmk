@@ -124,7 +124,7 @@ def inventory_cisco_qos(info):
     return []
 
 
-def check_cisco_qos(item, params, info):
+def check_cisco_qos(item, params, info):  # pylint: disable=too-many-branches
     unit = params.get("unit", "bit")
     average = params.get("average")
     post_warn, post_crit = params.get("post", (None, None))

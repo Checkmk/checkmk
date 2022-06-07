@@ -20,7 +20,7 @@ from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wild
 #   '----------------------------------------------------------------------'
 
 
-def parse_icom_repeater(info):
+def parse_icom_repeater(info):  # pylint: disable=too-many-branches
     parsed = {}
     for line in info:
         if line[1] == "Temperature":

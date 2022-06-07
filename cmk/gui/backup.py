@@ -439,7 +439,7 @@ class Jobs(BackupEntityCollection):
         etc_path = os.path.dirname(os.path.dirname(config_file_path))
         self._cronjob_path = "%s/cron.d/mkbackup" % etc_path
 
-    def show_list(self, editable=True):
+    def show_list(self, editable=True):  # pylint: disable=too-many-branches
         html.h3(_("Jobs"))
         with table_element(sortable=False, searchable=False) as table:
 

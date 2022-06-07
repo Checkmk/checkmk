@@ -187,7 +187,7 @@ def _create_nagios_config_host(
     _create_nagios_servicedefs(cfg, config_cache, hostname, host_attrs)
 
 
-def _create_nagios_host_spec(
+def _create_nagios_host_spec(  # pylint: disable=too-many-branches
     cfg: NagiosConfig, config_cache: ConfigCache, hostname: HostName, attrs: ObjectAttributes
 ) -> ObjectSpec:
     host_config = config_cache.get_host_config(hostname)
@@ -292,7 +292,7 @@ def _create_nagios_host_spec(
     return host_spec
 
 
-def _create_nagios_servicedefs(
+def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
     cfg: NagiosConfig, config_cache: ConfigCache, hostname: HostName, host_attrs: ObjectAttributes
 ) -> None:
     from cmk.base.check_table import get_check_table  # pylint: disable=import-outside-toplevel
@@ -1083,7 +1083,7 @@ def _precompile_hostchecks(config_path: VersionedConfigPath) -> None:
             sys.exit(5)
 
 
-def _dump_precompiled_hostcheck(
+def _dump_precompiled_hostcheck(  # pylint: disable=too-many-branches
     config_cache: ConfigCache,
     config_path: VersionedConfigPath,
     hostname: HostName,

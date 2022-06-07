@@ -283,7 +283,7 @@ def _validate_msg(msg, varprefix):
                 raise MKUserError("dest", _('A user with the id "%s" does not exist.') % user_id)
 
 
-def _process_message_message(msg):
+def _process_message_message(msg):  # pylint: disable=too-many-branches
     msg["id"] = utils.gen_id()
     msg["time"] = time.time()
 

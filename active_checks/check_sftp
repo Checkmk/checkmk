@@ -131,7 +131,7 @@ def output_check_result(s):
     sys.stdout.write("%s\n" % s)
 
 
-def parse_arguments(sys_args):
+def parse_arguments(sys_args):  # pylint: disable=too-many-branches
     if sys_args is None:
         sys_args = sys.argv[1:]
 

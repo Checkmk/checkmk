@@ -230,7 +230,7 @@ def fetch_mail_timestamps(
         raise FetchMailsError("Failed to fetch mails: %r" % exc) from exc
 
 
-def check_mails(
+def check_mails(  # pylint: disable=too-many-branches
     warning: int,
     critical: int,
     expected_mails: MailDict,

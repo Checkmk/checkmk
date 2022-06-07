@@ -430,7 +430,7 @@ class Crawler:
             if not any(accepted_log in log for accepted_log in accepted_logs):
                 self.handle_error(url, error_type="JavascriptError", message=log)
 
-    def verify_is_valid_url(self, url: str) -> None:
+    def verify_is_valid_url(self, url: str) -> None:  # pylint: disable=too-many-branches
         parsed = urlsplit(url)
         if parsed.scheme != "http":
             raise InvalidUrl(url, f"invalid scheme: {parsed.scheme}")

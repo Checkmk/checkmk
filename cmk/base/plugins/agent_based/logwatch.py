@@ -450,7 +450,7 @@ def _logmsg_file_path(item: str) -> pathlib.Path:
     return logmsg_dir / item.replace("/", "\\")
 
 
-def check_logwatch_generic(
+def check_logwatch_generic(  # pylint: disable=too-many-branches
     *,
     item: str,
     patterns,

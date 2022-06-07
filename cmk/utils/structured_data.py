@@ -792,7 +792,7 @@ class Table:
 
     #   ---retentions-----------------------------------------------------------
 
-    def update_from_previous(
+    def update_from_previous(  # pylint: disable=too-many-branches
         self,
         now: int,
         other: object,

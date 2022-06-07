@@ -193,7 +193,7 @@ class BackupTarFile(tarfile.TarFile):
             sys.stdout.write("Resuming RRD updates for ALL\n")
         self._send_rrdcached_command("RESUMEALL")
 
-    def _send_rrdcached_command(self, cmd: str) -> None:
+    def _send_rrdcached_command(self, cmd: str) -> None:  # pylint: disable=too-many-branches
         if self._sock is None:
             sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
             try:

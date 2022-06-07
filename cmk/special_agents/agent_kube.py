@@ -2504,7 +2504,7 @@ class CustomKubernetesApiException(Exception):
         return error_message_visible_in_check_mk_service_summary
 
 
-def main(args: Optional[List[str]] = None) -> int:
+def main(args: Optional[List[str]] = None) -> int:  # pylint: disable=too-many-branches
     if args is None:
         cmk.utils.password_store.replace_passwords()
         args = sys.argv[1:]

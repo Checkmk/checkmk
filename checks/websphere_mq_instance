@@ -147,7 +147,7 @@ def inventory_websphere_mq_manager(parsed):
         yield item, {}
 
 
-def check_websphere_mq_manager(item, params, parsed):
+def check_websphere_mq_manager(item, params, parsed):  # pylint: disable=too-many-branches
     if item in parsed["manager"]:
         data = parsed["manager"][item]
         status = data["STATUS"]

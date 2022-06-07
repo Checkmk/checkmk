@@ -530,7 +530,7 @@ def multipart_mail(
     return utils.set_mail_headers(target, subject, from_address, reply_to, m)
 
 
-def send_mail_smtp(
+def send_mail_smtp(  # pylint: disable=too-many-branches
     message: Message, target: str, from_address: str, context: dict[str, str]
 ) -> int:
     import smtplib  # pylint: disable=import-outside-toplevel

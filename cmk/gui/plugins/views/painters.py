@@ -4593,7 +4593,7 @@ class PainterLogIcon(Painter):
     def columns(self) -> Sequence[ColumnName]:
         return ["log_type", "log_state", "log_state_type", "log_command_name"]
 
-    def render(self, row: Row, cell: Cell) -> CellSpec:
+    def render(self, row: Row, cell: Cell) -> CellSpec:  # pylint: disable=too-many-branches
         img = None
         log_type = row["log_type"]
         log_state = row["log_state"]

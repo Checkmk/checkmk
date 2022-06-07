@@ -611,7 +611,7 @@ class LDAPUserConnector(UserConnector):
                 break
         return results
 
-    def _ldap_search(
+    def _ldap_search(  # pylint: disable=too-many-branches
         self, base, filt="(objectclass=*)", columns=None, scope="sub", implicit_connect=True
     ):
         if columns is None:
@@ -990,7 +990,11 @@ class LDAPUserConnector(UserConnector):
     # Nested querying is more complicated. We have no option to simply do a query for group objects
     # to make them resolve the memberships here. So we need to query all users with the nested
     # memberof filter to get all group memberships of that group. We need one query for each group.
-    def _get_nested_group_memberships(self, filters: List[str], filt_attr: str) -> GroupMemberships:
+    def _get_nested_group_memberships(  # pylint: disable=too-many-branches
+        self,
+        filters: List[str],
+        filt_attr: str,
+    ) -> GroupMemberships:
         groups: GroupMemberships = {}
 
         # Search group members in common ancestor of group and user base DN to be able to use a single
@@ -1201,7 +1205,7 @@ class LDAPUserConnector(UserConnector):
         suffix = self._get_suffix()
         return "%s@%s" % (username, suffix)
 
-    def do_sync(
+    def do_sync(  # pylint: disable=too-many-branches
         self,
         *,
         add_to_changelog: bool,

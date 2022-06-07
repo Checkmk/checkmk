@@ -90,7 +90,7 @@ def create_event_from_line(
     return event
 
 
-def parse_message(line: str, ipaddress: str) -> Event:
+def parse_message(line: str, ipaddress: str) -> Event:  # pylint: disable=too-many-branches
     # Variant 1: plain syslog message without priority/facility:
     # May 26 13:45:01 Klapprechner CRON[8046]:  message....
 

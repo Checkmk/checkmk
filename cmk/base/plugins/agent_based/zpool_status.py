@@ -36,7 +36,9 @@ state_mappings = {
 }
 
 
-def parse_zpool_status(string_table: type_defs.StringTable) -> Optional[Section]:
+def parse_zpool_status(  # pylint: disable=too-many-branches
+    string_table: type_defs.StringTable,
+) -> Optional[Section]:
     if not string_table:
         return None
 

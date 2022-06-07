@@ -153,7 +153,7 @@ class ModeObjectParameters(WatoMode):
         forms.header(_("Host information"), isopen=True, narrow=True, css="rulesettings")
         self._show_labels(host_info.labels, "host", host_info.label_sources)
 
-    def _show_service_info(self, all_rulesets):
+    def _show_service_info(self, all_rulesets):  # pylint: disable=too-many-branches
         assert self._service is not None
 
         serviceinfo = analyse_service(
@@ -400,7 +400,7 @@ class ModeObjectParameters(WatoMode):
         html.close_tr()
         html.close_table()
 
-    def _output_analysed_ruleset(
+    def _output_analysed_ruleset(  # pylint: disable=too-many-branches
         self, all_rulesets, rulespec, svc_desc_or_item, svc_desc, known_settings=None
     ):
         if known_settings is None:

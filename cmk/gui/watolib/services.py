@@ -398,7 +398,7 @@ class Discovery:
         )
 
 
-def _apply_state_change(
+def _apply_state_change(  # pylint: disable=too-many-branches
     table_source: str,
     table_target: str,
     key: Tuple[Any, Any],

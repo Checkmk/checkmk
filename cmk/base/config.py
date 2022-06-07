@@ -1610,7 +1610,10 @@ def get_plugin_paths(*dirs: str) -> List[str]:
 # NOTE: The given file names should better be absolute, otherwise
 # we depend on the current working directory, which is a bad idea,
 # especially in tests.
-def load_checks(get_check_api_context: GetCheckApiContext, filelist: List[str]) -> List[str]:
+def load_checks(  # pylint: disable=too-many-branches
+    get_check_api_context: GetCheckApiContext,
+    filelist: List[str],
+) -> List[str]:
     cmk_global_vars = set(get_variable_names())
 
     loaded_files: Set[str] = set()
@@ -2013,7 +2016,7 @@ def get_check_context(check_plugin_name: CheckPluginNameStr) -> CheckContext:
 
 # FIXME: Clear / unset all legacy variables to prevent confusions in other code trying to
 # use the legacy variables which are not set by newer checks.
-def convert_check_info() -> None:
+def convert_check_info() -> None:  # pylint: disable=too-many-branches
     check_info_defaults: CheckInfo = {
         "check_function": None,
         "inventory_function": None,

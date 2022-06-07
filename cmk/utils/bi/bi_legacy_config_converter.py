@@ -588,7 +588,7 @@ class BIManagement:
         return brule
 
     # Convert node-Tuple into format used by CascadingDropdown
-    def _convert_node_from_bi(self, node):
+    def _convert_node_from_bi(self, node):  # pylint: disable=too-many-branches
         if len(node) == 2:
             if isinstance(node[1], list):
                 return ("call", node)

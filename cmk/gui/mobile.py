@@ -303,7 +303,7 @@ def page_view() -> None:
 
 
 class MobileViewRenderer(views.ABCViewRenderer):
-    def render(
+    def render(  # pylint: disable=too-many-branches
         self,
         rows: Rows,
         show_checkboxes: bool,

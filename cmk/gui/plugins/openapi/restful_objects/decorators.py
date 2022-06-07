@@ -341,7 +341,7 @@ class Endpoint:
 
     """
 
-    def __init__(
+    def __init__(  # pylint: disable=too-many-branches
         self,
         path: str,
         link_relation: LinkRelation,
@@ -601,7 +601,9 @@ class Endpoint:
             raise RuntimeError("Decorating failure. function not set.")
 
         @functools.wraps(self.func)
-        def _validating_wrapper(param: typing.Mapping[str, Any]) -> cmk_http.Response:
+        def _validating_wrapper(  # pylint: disable=too-many-branches
+            param: typing.Mapping[str, Any]
+        ) -> cmk_http.Response:
             # TODO: Better error messages, pointing to the location where variables are missing
 
             _params = dict(param)
@@ -852,7 +854,7 @@ class Endpoint:
             headers=headers,
         )
 
-    def to_operation_dict(self) -> OperationSpecType:
+    def to_operation_dict(self) -> OperationSpecType:  # pylint: disable=too-many-branches
         """Generate the openapi spec part of this endpoint.
 
         The result needs to be added to the `apispec` instance manually.

@@ -55,7 +55,7 @@ def _get_item_data(item, parsed):
 #
 
 
-def check_oracle_performance(item, params, parsed):
+def check_oracle_performance(item, params, parsed):  # pylint: disable=too-many-branches
     discovery_params = host_extra_conf_merged(host_name(), oracle_performance_discovery)
     data = _get_item_data(item, parsed)
 

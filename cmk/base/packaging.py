@@ -136,7 +136,10 @@ def show_package_info(name: PackageName) -> None:
     show_package(name, True)
 
 
-def show_package(name: PackageName, show_info: bool = False) -> None:
+def show_package(  # pylint: disable=too-many-branches
+    name: PackageName,
+    show_info: bool = False,
+) -> None:
     try:
         if name.endswith(PACKAGE_EXTENSION):
             with tarfile.open(name, "r:gz") as tar:

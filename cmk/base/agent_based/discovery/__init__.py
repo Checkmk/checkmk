@@ -403,7 +403,7 @@ def automation_discovery(
     return result
 
 
-def _get_post_discovery_autocheck_services(
+def _get_post_discovery_autocheck_services(  # pylint: disable=too-many-branches
     host_name: HostName,
     services: ServicesByTransition,
     service_filters: _ServiceFilters,

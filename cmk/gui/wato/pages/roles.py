@@ -301,7 +301,7 @@ class ModeEditRole(RoleManagement, WatoMode):
         menu.inpage_search = PageMenuSearch()
         return menu
 
-    def action(self) -> ActionResult:
+    def action(self) -> ActionResult:  # pylint: disable=too-many-branches
         if html.form_submitted("search"):
             return None
 

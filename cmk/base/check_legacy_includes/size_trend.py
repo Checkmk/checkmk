@@ -60,7 +60,7 @@ def _check_shrinking(
     return state, problem
 
 
-def size_trend(
+def size_trend(  # pylint: disable=too-many-branches
     check,
     item,
     resource,

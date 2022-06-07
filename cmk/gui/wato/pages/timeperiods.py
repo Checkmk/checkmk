@@ -487,7 +487,7 @@ class ModeTimeperiodImportICal(WatoMode):
     #   http://tools.ietf.org/html/rfc5545
     # TODO: Let's use some sort of standard module in the future. Maybe we can then also handle
     # times instead of only full day events.
-    def _parse_ical(self, ical_blob: str, horizon=10):
+    def _parse_ical(self, ical_blob: str, horizon=10):  # pylint: disable=too-many-branches
         ical: Dict[str, Any] = {"raw_events": []}
 
         def get_params(key: str) -> Dict[str, str]:

@@ -742,7 +742,7 @@ class GUIViewRenderer(ABCViewRenderer):
         super().__init__(view)
         self._show_buttons = show_buttons
 
-    def render(
+    def render(  # pylint: disable=too-many-branches
         self,
         rows: Rows,
         show_checkboxes: bool,
@@ -3532,7 +3532,12 @@ def core_command(
 # Returns:
 # True -> Actions have been done
 # False -> No actions done because now rows selected
-def do_actions(view: ViewSpec, what: InfoName, action_rows: Rows, backurl: str) -> bool:
+def do_actions(  # pylint: disable=too-many-branches
+    view: ViewSpec,
+    what: InfoName,
+    action_rows: Rows,
+    backurl: str,
+) -> bool:
     if not user.may("general.act"):
         html.show_error(
             _(

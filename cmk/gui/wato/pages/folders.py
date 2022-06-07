@@ -326,7 +326,9 @@ class ModeFolder(WatoMode):
                 item=make_simple_link(self._folder.url([("mode", "random_hosts")])),
             )
 
-    def _page_menu_entries_selected_hosts(self) -> Iterator[PageMenuEntry]:
+    def _page_menu_entries_selected_hosts(  # pylint: disable=too-many-branches
+        self,
+    ) -> Iterator[PageMenuEntry]:
         if not user.may("wato.edit_hosts") and not user.may("wato.manage_hosts"):
             return
 
@@ -533,7 +535,7 @@ class ModeFolder(WatoMode):
                 ),
             )
 
-    def action(self) -> ActionResult:
+    def action(self) -> ActionResult:  # pylint: disable=too-many-branches
         if request.var("_search"):  # just commit to search form
             return None
 

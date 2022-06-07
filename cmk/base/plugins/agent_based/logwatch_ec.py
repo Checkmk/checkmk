@@ -227,7 +227,7 @@ def _filter_accumulated_lines(cluster_section: ClusterSection, item: str) -> Ite
     )
 
 
-def check_logwatch_ec_common(
+def check_logwatch_ec_common(  # pylint: disable=too-many-branches
     item: Optional[str],
     params: Mapping[str, Any],
     parsed: ClusterSection,

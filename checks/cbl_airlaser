@@ -97,7 +97,7 @@ def parse_cbl_airlaser(info):
     }
 
 
-def check_cbl_airlaser_hw(item, params, info):
+def check_cbl_airlaser_hw(item, params, info):  # pylint: disable=too-many-branches
 
     airlaser_info = parse_cbl_airlaser(info)
 

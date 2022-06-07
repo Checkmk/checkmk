@@ -1061,7 +1061,7 @@ class Overridable(Base):
         return breadcrumb
 
     @classmethod
-    def page_list(cls):
+    def page_list(cls):  # pylint: disable=too-many-branches
         cls.load()
 
         # custom_columns = []
@@ -1269,7 +1269,7 @@ class Overridable(Base):
 
     # Page for editing an existing page, or creating a new one
     @classmethod
-    def page_edit(cls):
+    def page_edit(cls):  # pylint: disable=too-many-branches
         back_url = request.get_url_input("back", cls.list_url())
 
         cls.load()

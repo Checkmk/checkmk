@@ -671,7 +671,7 @@ def _item_spec_if():
     return TextInput(title=_("Port"), allow_empty=False)
 
 
-def _transform_if_check_parameters(v):
+def _transform_if_check_parameters(v):  # pylint: disable=too-many-branches
 
     # TODO: This is a workaround which makes sure input arguments are not getting altered.
     #       A nice implementation would return a new dict based on the input

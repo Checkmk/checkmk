@@ -951,7 +951,7 @@ def transform_timerange_dashlet(dashlet_spec: DashletConfig) -> DashletConfig:
 # be compatible to old definitions, where even internal dashlets were
 # referenced by url, e.g. dashboard['url'] = 'hoststats.py'
 # FIXME: can be removed one day. Mark as incompatible change or similar.
-def _transform_builtin_dashboards() -> None:
+def _transform_builtin_dashboards() -> None:  # pylint: disable=too-many-branches
     for name, dashboard in builtin_dashboards.items():
         # Do not transform dashboards which are already in the new format
         if "context" in dashboard:

@@ -40,7 +40,7 @@ def get_conn_rate_params(params):
     )
 
 
-def check_f5_bigip_conns(item, params, info):
+def check_f5_bigip_conns(item, params, info):  # pylint: disable=too-many-branches
     # Connection rate
     now = time.time()
     total_native_compat_rate = 0

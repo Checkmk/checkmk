@@ -62,7 +62,9 @@ def render_element(
     return HTML("%s%s</%s>" % (open_tag, tag_content, tag_name))
 
 
-def _render_attributes(**attrs: HTMLTagAttributeValue) -> Iterator[str]:
+def _render_attributes(  # pylint: disable=too-many-branches
+    **attrs: HTMLTagAttributeValue,
+) -> Iterator[str]:
     css = _get_normalized_css_classes(attrs)
     if css:
         attrs["class"] = css

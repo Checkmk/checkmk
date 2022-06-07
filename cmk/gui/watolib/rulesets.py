@@ -1147,7 +1147,10 @@ class Rule:
 
         yield _("The rule does not match")
 
-    def matches_search(self, search_options: SearchOptions) -> bool:
+    def matches_search(  # pylint: disable=too-many-branches
+        self,
+        search_options: SearchOptions,
+    ) -> bool:
         if "rule_folder" in search_options and self.folder.name() not in self._get_search_folders(
             search_options
         ):

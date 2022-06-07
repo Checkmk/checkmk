@@ -149,8 +149,6 @@ disable=
     # Tons of findings, we fix this incrementally, f-strings are much more
     # performant than old-skool string splicing/formatting.
     consider-using-f-string,
-    # To be fixed in the following commits
-    too-many-branches,
 
 [IMPORTS]
 # This complies with PEP 8 and avoids code duplication in some cases.

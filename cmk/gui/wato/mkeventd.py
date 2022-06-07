@@ -1589,7 +1589,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
             ],
         )
 
-    def action(self) -> ActionResult:
+    def action(self) -> ActionResult:  # pylint: disable=too-many-branches
         if not transactions.check_transaction():
             return redirect(self.mode_url())
 
@@ -1701,7 +1701,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
         rule_packs = answer["rules"]
         save_mkeventd_rules(rule_packs)
 
-    def page(self) -> None:
+    def page(self) -> None:  # pylint: disable=too-many-branches
         self._verify_ec_enabled()
         rep_mode = cmk.gui.mkeventd.replication_mode()
         if rep_mode in ["sync", "takeover"]:
@@ -2064,7 +2064,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
             ],
         )
 
-    def action(self) -> ActionResult:
+    def action(self) -> ActionResult:  # pylint: disable=too-many-branches
         if not transactions.check_transaction():
             return redirect(self.mode_url(rule_pack=self._rule_pack_id))
 
@@ -2139,7 +2139,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
             self._add_change("move-rule", _("Changed position of rule %s") % rule["id"])
         return redirect(self.mode_url(rule_pack=self._rule_pack_id))
 
-    def page(self) -> None:
+    def page(self) -> None:  # pylint: disable=too-many-branches
         self._verify_ec_enabled()
         search_expression = self._search_expression()
         if search_expression:
@@ -2529,7 +2529,7 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
         )
         return menu
 
-    def action(self) -> ActionResult:
+    def action(self) -> ActionResult:  # pylint: disable=too-many-branches
         if not transactions.check_transaction():
             return redirect(mode_url("mkeventd_rules", rule_pack=self._rule_pack["id"]))
 

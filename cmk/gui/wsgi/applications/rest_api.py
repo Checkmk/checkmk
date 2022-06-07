@@ -67,7 +67,10 @@ EXCEPTION_STATUS: Dict[Type[Exception], int] = {
 }
 
 
-def _verify_user(environ: WSGIEnvironment, now: datetime) -> RFC7662:
+def _verify_user(  # pylint: disable=too-many-branches
+    environ: WSGIEnvironment,
+    now: datetime,
+) -> RFC7662:
     verified: List[RFC7662] = []
 
     auth_header = environ.get("HTTP_AUTHORIZATION", "")

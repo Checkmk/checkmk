@@ -530,7 +530,7 @@ def should_log_line_with_level(level, nocontext):
     return not (nocontext and level == ".")
 
 
-def process_logfile(section, filestate, debug):
+def process_logfile(section, filestate, debug):  # pylint: disable=too-many-branches
     """
     Returns tuple of (
         logfile lines,
@@ -1120,7 +1120,7 @@ def write_output(header, lines, options):
     sys.stdout.writelines(map(ensure_str, lines))
 
 
-def main(argv=None):
+def main(argv=None):  # pylint: disable=too-many-branches
     if argv is None:
         argv = sys.argv
 

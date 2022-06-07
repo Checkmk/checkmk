@@ -99,7 +99,7 @@ def page_handler() -> None:
         _wato_page_handler(current_mode, mode_permissions, mode_class)
 
 
-def _wato_page_handler(
+def _wato_page_handler(  # pylint: disable=too-many-branches
     current_mode: str,
     mode_permissions: None | Collection[PermissionName],
     mode_class: Type[WatoMode],

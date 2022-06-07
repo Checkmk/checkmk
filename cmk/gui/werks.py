@@ -711,7 +711,7 @@ def render_werk_title(werk) -> HTML:
     return escape_to_html_permissive(title)
 
 
-def render_werk_description(werk) -> HTML:
+def render_werk_description(werk) -> HTML:  # pylint: disable=too-many-branches
     with output_funnel.plugged():
         html.open_p()
         in_list = False

@@ -62,7 +62,7 @@ def inventory_ibm_mq_managers(parsed):
 
 
 @get_parsed_item_data
-def check_ibm_mq_managers(item, params, data):
+def check_ibm_mq_managers(item, params, data):  # pylint: disable=too-many-branches
     status = data["STATUS"]
     default = data["DEFAULT"]
     instname = data["INSTNAME"]

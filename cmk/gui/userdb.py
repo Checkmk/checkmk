@@ -701,7 +701,7 @@ def load_users_sanitized(lock: bool = False) -> Users:
 
 
 @request_memoize()
-def load_users(lock: bool = False) -> Users:
+def load_users(lock: bool = False) -> Users:  # pylint: disable=too-many-branches
     if lock:
         # Note: the lock will be released on next save_users() call or at
         #       end of page request automatically.
@@ -934,7 +934,10 @@ def _add_custom_macro_attributes(profiles: Users) -> Users:
 
 
 # Write user specific files
-def _save_user_profiles(updated_profiles: Users, now: datetime) -> None:
+def _save_user_profiles(  # pylint: disable=too-many-branches
+    updated_profiles: Users,
+    now: datetime,
+) -> None:
     non_contact_keys = _non_contact_keys()
     multisite_keys = _multisite_keys()
 

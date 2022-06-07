@@ -1787,7 +1787,9 @@ def transform_painter_spec(view: ViewSpec) -> ViewSpec:
 
 # Convert views that are saved in the pre 1.2.6-style
 # FIXME: Can be removed one day. Mark as incompatible change or similar.
-def _transform_old_views(all_views: AllViewSpecs) -> AllViewSpecs:
+def _transform_old_views(  # pylint: disable=too-many-branches
+    all_views: AllViewSpecs,
+) -> AllViewSpecs:
     for view in all_views.values():
         ds_name = view["datasource"]
         datasource = data_source_registry[ds_name]()

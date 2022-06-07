@@ -179,7 +179,7 @@ def check_mtr_pid(pid):
             return False  # any error
 
 
-def parse_report(host, status):
+def parse_report(host, status):  # pylint: disable=too-many-branches
     reportfile = report_filepre + host_to_filename(host)
     if not os.path.exists(reportfile):
         if not host in status.keys():
@@ -295,7 +295,7 @@ def output_report(host, status):
     sys.stdout.write("%s\n" % hoststring)
 
 
-def start_mtr(host, mtr_binary, config, status):
+def start_mtr(host, mtr_binary, config, status):  # pylint: disable=too-many-branches
     options = [mtr_binary, "--report", "--report-wide"]
     pingtype = config.get(host, "type")
     count = config.getint(host, "count")

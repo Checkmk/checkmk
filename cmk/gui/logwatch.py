@@ -514,7 +514,7 @@ def _page_menu_entry_acknowledge(
     )
 
 
-def do_log_ack(site, host_name, file_name):
+def do_log_ack(site, host_name, file_name):  # pylint: disable=too-many-branches
     sites.live().set_auth_domain("action")
 
     logs_to_ack = []
@@ -604,7 +604,7 @@ def acknowledge_logfile(site, host_name, int_filename, display_name):
 #   '----------------------------------------------------------------------'
 
 
-def parse_file(site, host_name, file_name, hidecontext=False):
+def parse_file(site, host_name, file_name, hidecontext=False):  # pylint: disable=too-many-branches
     log_chunks: List[Dict[str, Any]] = []
     try:
         chunk: Optional[Dict[str, Any]] = None

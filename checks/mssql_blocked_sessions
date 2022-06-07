@@ -68,7 +68,7 @@ def parse_mssql_blocked_sessions(info):
     return parsed
 
 
-def check_mssql_blocked_sessions(item, params, parsed):
+def check_mssql_blocked_sessions(item, params, parsed):  # pylint: disable=too-many-branches
     if item is None:
         item = ""
 

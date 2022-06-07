@@ -126,7 +126,11 @@ def inventory_esx_vsphere_hostsystem_multipath(parsed):
     return [(x, None) for x in esx_vsphere_multipath_convert(parsed)]
 
 
-def check_esx_vsphere_hostsystem_multipath(item, params, parsed):
+def check_esx_vsphere_hostsystem_multipath(  # pylint: disable=too-many-branches
+    item,
+    params,
+    parsed,
+):
     state_infos = {
         # alert_state, count, info
         "active": [0, 0, ""],

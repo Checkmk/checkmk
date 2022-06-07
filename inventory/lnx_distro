@@ -140,7 +140,7 @@ def inv_lnx_parse_lsb(node, line):
 
 
 # Do not overwrite Ubuntu information
-def inv_lnx_parse_debian(node, line):
+def inv_lnx_parse_debian(node, line):  # pylint: disable=too-many-branches
     entry = line[0]
     node["name"] = "Debian " + entry
     node["vendor"] = "Debian"

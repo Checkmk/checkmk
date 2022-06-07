@@ -712,7 +712,7 @@ class ModeEditRuleset(WatoMode):
         store = PredefinedConditionStore()
         self._predefined_conditions = store.filter_usable_entries(store.load_for_reading())
 
-    def _from_vars(self) -> None:
+    def _from_vars(self) -> None:  # pylint: disable=too-many-branches
         self._folder = Folder.current()
 
         self._name = request.get_ascii_input_mandatory("varname")
@@ -2431,7 +2431,10 @@ class RuleConditionRenderer:
         if condition_txt:
             yield condition_txt
 
-    def _render_host_condition_text(self, conditions: HostOrServiceConditions) -> HTML:
+    def _render_host_condition_text(  # pylint: disable=too-many-branches
+        self,
+        conditions: HostOrServiceConditions,
+    ) -> HTML:
         if conditions == []:
             return escape_to_html_permissive(
                 _("This rule does <b>never</b> apply due to an empty list of explicit hosts!")
@@ -2505,7 +2508,7 @@ class RuleConditionRenderer:
 
         return HTML(" ").join(condition)
 
-    def _service_conditions(
+    def _service_conditions(  # pylint: disable=too-many-branches
         self,
         item_type: Optional[str],
         item_name: Optional[str],

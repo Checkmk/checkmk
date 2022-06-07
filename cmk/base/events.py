@@ -41,7 +41,7 @@ def _send_reply_ready():
     sys.stdout.flush()
 
 
-def event_keepalive(
+def event_keepalive(  # pylint: disable=too-many-branches
     event_function: Callable,
     call_every_loop: Optional[Callable] = None,
     loop_interval: Optional[int] = None,
@@ -269,7 +269,10 @@ def add_rulebased_macros(raw_context: EventContext) -> None:
     raw_context["CONTACTNAME"] = "check-mk-notify"
 
 
-def complete_raw_context(raw_context: EventContext, with_dump: bool) -> None:
+def complete_raw_context(  # pylint: disable=too-many-branches
+    raw_context: EventContext,
+    with_dump: bool,
+) -> None:
     """Extend the raw notification context
 
     This ensures that all raw contexts processed in the notification code has specific variables
@@ -545,7 +548,7 @@ def event_match_servicegroups_regex(rule: EventRule, context: EventContext) -> O
     return _event_match_servicegroups(rule, context, is_regex=True)
 
 
-def _event_match_servicegroups(
+def _event_match_servicegroups(  # pylint: disable=too-many-branches
     rule: EventRule, context: EventContext, is_regex: bool
 ) -> Optional[str]:
     if is_regex:

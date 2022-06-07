@@ -122,7 +122,7 @@ def inventory_fc_port(info):
         yield item, "fc_port_default_levels"
 
 
-def check_fc_port(item, params, info):
+def check_fc_port(item, params, info):  # pylint: disable=too-many-branches
     # Accept item, even if port name has changed
     item_index = int(item.split()[0])
     portinfo = [line for line in info if int(line[0]) == item_index + 1]

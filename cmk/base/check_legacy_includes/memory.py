@@ -60,7 +60,7 @@ def check_memory_simple(used, total, params):
 
 
 # DEPRECATED: Please use check_memory_element from mem.inlude!
-def check_memory_multiitem(params, data, base=1024):
+def check_memory_multiitem(params, data, base=1024):  # pylint: disable=too-many-branches
     if "mem_total" not in data:
         return 3, "Invalid data: missing mem_total"
     mem_total = data["mem_total"]

@@ -65,7 +65,7 @@ diskstat_diskless_pattern = re.compile("x?[shv]d[a-z]*[0-9]+")
 # IT. INSTEAD, MODIFY THE MIGRATED VERSION.
 # ==================================================================================================
 # ==================================================================================================
-def inventory_diskstat_generic(
+def inventory_diskstat_generic(  # pylint: disable=too-many-branches
     parsed: Sequence[Sequence[Any]],
 ) -> Optional[Sequence[Tuple[str, Optional[str]]]]:
     # Skip over on empty data
@@ -113,7 +113,7 @@ def inventory_diskstat_generic(
     return inventory
 
 
-def check_diskstat_line(
+def check_diskstat_line(  # pylint: disable=too-many-branches
     this_time: float,
     item: str,
     params: Mapping[str, Any],
@@ -358,7 +358,7 @@ def _check_diskstat_old(
 # IT. INSTEAD, MODIFY THE MIGRATED VERSION.
 # ==================================================================================================
 # ==================================================================================================
-def diskstat_select_disk(
+def diskstat_select_disk(  # pylint: disable=too-many-branches
     disks: Mapping[str, MutableMapping[str, Any]], item: str
 ) -> Optional[MutableMapping[str, Any]]:
 
@@ -451,7 +451,7 @@ def diskstat_select_disk(
 # IT. INSTEAD, MODIFY THE MIGRATED VERSION.
 # ==================================================================================================
 # ==================================================================================================
-def check_diskstat_dict(
+def check_diskstat_dict(  # pylint: disable=too-many-branches
     item: str, params: Mapping[str, Any], disks: Mapping[str, MutableMapping[str, Any]]
 ) -> Iterable[Any]:
     # Take care of previously discovered services

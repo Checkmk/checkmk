@@ -43,7 +43,9 @@ _FIXED_STATES = {
 }
 
 
-def parse_megaraid_pdisks(string_table: StringTable) -> megaraid.SectionPDisks:
+def parse_megaraid_pdisks(  # pylint: disable=too-many-branches
+    string_table: StringTable,
+) -> megaraid.SectionPDisks:
     parsed = {}
     adapters: dict[int, dict[int, int]] = {0: {}}
     current_adapter = adapters[0]

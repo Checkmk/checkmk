@@ -429,7 +429,7 @@ def graph_curves(graph_artwork: GraphArtwork) -> list[LayoutedCurve]:
     return curves
 
 
-def _show_graph_legend(
+def _show_graph_legend(  # pylint: disable=too-many-branches
     graph_artwork: GraphArtwork, graph_render_options: GraphRenderOptions
 ) -> None:
     """Render legend that describe the metrics"""

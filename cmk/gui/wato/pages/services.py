@@ -866,7 +866,11 @@ class DiscoveryPageRenderer:
             enable_page_menu_entry(html, "show_discovered_labels")
             enable_page_menu_entry(html, "show_plugin_names")
 
-    def _toggle_bulk_action_page_menu_entries(self, discovery_result, table_source):
+    def _toggle_bulk_action_page_menu_entries(  # pylint: disable=too-many-branches
+        self,
+        discovery_result,
+        table_source,
+    ):
         if not user.may("wato.services"):
             return
 
@@ -1053,7 +1057,12 @@ class DiscoveryPageRenderer:
         )
         html.checkbox(varname=name, deflt=checked, class_=css_classes)
 
-    def _show_actions(self, table, discovery_result, entry: CheckPreviewEntry):
+    def _show_actions(  # pylint: disable=too-many-branches
+        self,
+        table,
+        discovery_result,
+        entry: CheckPreviewEntry,
+    ):
         table.cell(css="buttons")
         if not user.may("wato.services"):
             html.empty_icon()

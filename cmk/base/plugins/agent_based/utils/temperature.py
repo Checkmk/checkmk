@@ -247,7 +247,7 @@ def _check_trend(
     )
 
 
-def check_temperature(
+def check_temperature(  # pylint: disable=too-many-branches
     reading: float,
     params: TempParamType,
     *,

@@ -322,7 +322,7 @@ class Table:
         """
         self.next_header = title
 
-    def _end(self) -> None:
+    def _end(self) -> None:  # pylint: disable=too-many-branches
         if not self.rows and self.options["omit_if_empty"]:
             return
 
@@ -456,7 +456,7 @@ class Table:
     def _get_sort_column(self, table_opts: Dict[str, Any]) -> Optional[str]:
         return request.get_ascii_input("_%s_sort" % self.id, table_opts.get("sort"))
 
-    def _write_table(
+    def _write_table(  # pylint: disable=too-many-branches
         self,
         rows: TableRows,
         num_rows_unlimited: int,
@@ -594,7 +594,7 @@ class Table:
 
         response.set_data("".join(resp))
 
-    def _render_headers(
+    def _render_headers(  # pylint: disable=too-many-branches
         self, actions_enabled: bool, actions_visible: bool, empty_columns: List[bool]
     ) -> None:
         if self.options["omit_headers"]:

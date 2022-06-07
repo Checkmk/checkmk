@@ -149,7 +149,7 @@ class GroupedBoxesLayout(Layout):
         html.close_tr()
         html.close_table()
 
-    def _render_group(
+    def _render_group(  # pylint: disable=too-many-branches
         self, rows_with_ids, header, view, group_cells, cells, num_columns, show_checkboxes
     ):
         repeat_heading_every = 20  # in case column_headers is "repeat"
@@ -423,7 +423,15 @@ class LayoutTiled(Layout):
     def can_display_checkboxes(self):
         return True
 
-    def render(self, rows, view, group_cells, cells, num_columns, show_checkboxes):
+    def render(  # pylint: disable=too-many-branches
+        self,
+        rows,
+        view,
+        group_cells,
+        cells,
+        num_columns,
+        show_checkboxes,
+    ):
         html.open_table(class_="data tiled")
 
         last_group = None
@@ -556,7 +564,15 @@ class LayoutTable(Layout):
     def can_display_checkboxes(self):
         return True
 
-    def render(self, rows, view, group_cells, cells, num_columns, show_checkboxes):
+    def render(  # pylint: disable=too-many-branches
+        self,
+        rows,
+        view,
+        group_cells,
+        cells,
+        num_columns,
+        show_checkboxes,
+    ):
         repeat_heading_every = 20  # in case column_headers is "repeat"
 
         html.open_table(class_="data table")
@@ -793,7 +809,15 @@ class LayoutMatrix(Layout):
                                 html.write_text(",")
                             html.write_text(content)
 
-    def render(self, rows, view, group_cells, cells, num_columns, show_checkboxes):
+    def render(  # pylint: disable=too-many-branches
+        self,
+        rows,
+        view,
+        group_cells,
+        cells,
+        num_columns,
+        show_checkboxes,
+    ):
         header_majorities = self._matrix_find_majorities_for_header(rows, group_cells)
         value_counts, row_majorities = self._matrix_find_majorities(rows, cells)
 

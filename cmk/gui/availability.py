@@ -1124,7 +1124,11 @@ def spans_by_object(spans: List[AVSpan]) -> AVRawData:
 
 
 # Compute an availability table. what is one of "bi", "host", "service".
-def compute_availability(what: AVObjectType, av_rawdata: AVRawData, avoptions: AVOptions) -> AVData:
+def compute_availability(  # pylint: disable=too-many-branches
+    what: AVObjectType,
+    av_rawdata: AVRawData,
+    avoptions: AVOptions,
+) -> AVData:
     reclassified_rawdata = reclassify_by_annotations(what, av_rawdata)
 
     # Now compute availability table. We have the following possible states:
@@ -1706,7 +1710,7 @@ def _annotation_affects_time_range(annotation_from, annotation_until, from_time,
 #    "urls" : { "timeline": "view.py..." },
 #    "object" : ( "Host123", "Foobar" ),
 # }
-def layout_availability_table(
+def layout_availability_table(  # pylint: disable=too-many-branches
     what: AVObjectType,
     group_title: _Optional[str],
     availability_table: AVData,
@@ -2022,7 +2026,7 @@ def get_object_cells(what: AVObjectType, av_entry: AVEntry, labelling: List[str]
 #    "spans" : [ spans... ],
 #    "legend" : [ legendentries... ],
 # }
-def layout_timeline(
+def layout_timeline(  # pylint: disable=too-many-branches
     what: AVObjectType,
     timeline_rows: AVTimelineRows,
     considered_duration: int,

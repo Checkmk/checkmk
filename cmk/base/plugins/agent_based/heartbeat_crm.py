@@ -112,7 +112,9 @@ def heartbeat_crm_parse_general(string_table: StringTable) -> _Cluster:
     )
 
 
-def heartbeat_crm_parse_resources(string_table: StringTable) -> _Resources:
+def heartbeat_crm_parse_resources(  # pylint: disable=too-many-branches
+    string_table: StringTable,
+) -> _Resources:
     """
 
     :param info:

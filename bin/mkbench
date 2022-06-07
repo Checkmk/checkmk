@@ -519,7 +519,7 @@ class TestRunner(threading.Thread):
         if p.returncode != 0:
             raise MKGeneralException("Failed to restart rrdcached: %s" % p.stdout)
 
-    def _run_test(self):
+    def _run_test(self):  # pylint: disable=too-many-branches
         for test_case in self._generate_test_cases():
             if self._stop.is_set():
                 break
@@ -845,7 +845,7 @@ class SystemInfo:
                 return l.strip().split("=", 1)[1].strip("'")
         return None
 
-    def _get_cpu_info(self):
+    def _get_cpu_info(self):  # pylint: disable=too-many-branches
         node: Dict[str, Any] = {}
         num_threads_total = 0
         sockets = set([])
@@ -3222,7 +3222,7 @@ class ConsoleRenderer(npyscreen.NPSApp):
 opt_debug = False
 
 
-def main():
+def main():  # pylint: disable=too-many-branches
     global opt_debug
     register_signal_handlers()
 

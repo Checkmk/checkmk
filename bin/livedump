@@ -93,7 +93,7 @@ def run_query(query: livestatus.QueryTypes) -> List[Dict[str, Any]]:
     return g_connection.query_table_assoc(query)
 
 
-def livedump_config():
+def livedump_config():  # pylint: disable=too-many-branches
     if opt_dump_templates:
         dump_templates()
 

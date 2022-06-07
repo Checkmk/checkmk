@@ -95,7 +95,11 @@ factory_settings["graylog_cluster_stats_elastic_defaultlevels"] = {
 }
 
 
-def check_graylog_cluster_stats_elastic(no_item, params, parsed):
+def check_graylog_cluster_stats_elastic(  # pylint: disable=too-many-branches
+    no_item,
+    params,
+    parsed,
+):
     elastic_data = parsed.get("elasticsearch")
     if elastic_data is None:
         return

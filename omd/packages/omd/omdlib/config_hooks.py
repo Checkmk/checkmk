@@ -96,7 +96,10 @@ def load_config_hooks(site: "SiteContext") -> ConfigHooks:
     return config_hooks
 
 
-def _config_load_hook(site: "SiteContext", hook_name: str) -> ConfigHook:
+def _config_load_hook(  # pylint: disable=too-many-branches
+    site: "SiteContext",
+    hook_name: str,
+) -> ConfigHook:
     hook: ConfigHook = {
         "name": hook_name,
         "deprecated": False,

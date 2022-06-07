@@ -154,7 +154,7 @@ class BackupTask:
         )
 
     @staticmethod
-    def _extract_logs(
+    def _extract_logs(  # pylint: disable=too-many-branches
         logs: Iterable[str],
         strict: bool,
     ) -> Tuple[Mapping[str, BackupInfo], Iterable[Tuple[int, str]]]:

@@ -12,7 +12,7 @@ def inventory_plesk_backups(info):
     return inventory
 
 
-def check_plesk_backups(item, params, info):
+def check_plesk_backups(item, params, info):  # pylint: disable=too-many-branches
     for line in info:
         if item != line[0]:
             continue

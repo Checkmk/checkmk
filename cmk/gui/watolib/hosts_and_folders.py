@@ -1529,7 +1529,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
 
         call_hook_hosts_changed(self)
 
-    def _save_hosts_file(self):
+    def _save_hosts_file(self):  # pylint: disable=too-many-branches
         store.makedirs(self.filesystem_path())
         if not self.has_hosts():
             for storage in get_all_storage_readers():

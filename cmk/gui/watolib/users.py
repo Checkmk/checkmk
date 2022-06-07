@@ -139,7 +139,12 @@ def make_user_object_ref(user_id: UserId) -> ObjectRef:
     return ObjectRef(ObjectRefType.User, str(user_id))
 
 
-def _validate_user_attributes(all_users, user_id, user_attrs, is_new_user=True) -> None:
+def _validate_user_attributes(  # pylint: disable=too-many-branches
+    all_users,
+    user_id,
+    user_attrs,
+    is_new_user=True,
+) -> None:
     # Check user_id
     if is_new_user:
         if user_id in all_users:

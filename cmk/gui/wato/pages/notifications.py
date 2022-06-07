@@ -268,7 +268,7 @@ class ABCNotificationsMode(ABCEventsMode):
             ),
         ]
 
-    def _render_notification_rules(
+    def _render_notification_rules(  # pylint: disable=too-many-branches
         self,
         rules,
         userid="",
@@ -740,7 +740,7 @@ class ModeNotifications(ABCNotificationsMode):
                     )
         return True
 
-    def _show_notification_backlog(self):
+    def _show_notification_backlog(self):  # pylint: disable=too-many-branches
         """Show recent notifications. We can use them for rule analysis"""
         if not self._show_backlog:
             return

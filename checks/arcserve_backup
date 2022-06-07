@@ -94,7 +94,7 @@ def inventory_arcserve_backup(info):
     return inventory
 
 
-def check_arcserve_backup(item, _no_params, info):
+def check_arcserve_backup(item, _no_params, info):  # pylint: disable=too-many-branches
     parsed = parse_arcserve_backup(info)
     if item not in parsed:
         return 3, "Backup %s not found in agent output" % item

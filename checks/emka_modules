@@ -17,7 +17,7 @@ from cmk.base.check_legacy_includes.humidity import *  # pylint: disable=wildcar
 from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 
-def parse_emka_modules(info):
+def parse_emka_modules(info):  # pylint: disable=too-many-branches
     # basModuleCoIx == 0
     map_module_types = {
         "0": "vacant",

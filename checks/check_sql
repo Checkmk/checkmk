@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-def check_sql_arguments(params):
+def check_sql_arguments(params):  # pylint: disable=too-many-branches
     args = []
 
     if "host" in params:

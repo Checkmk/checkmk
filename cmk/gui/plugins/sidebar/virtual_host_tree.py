@@ -312,7 +312,14 @@ function virtual_host_tree_enter(path)
             self._add_host_to_tree(tree_spec, tree, host_row, tag_groups, topics)
         return tree
 
-    def _add_host_to_tree(self, tree_spec, tree, host_row, tag_groups, topics):
+    def _add_host_to_tree(  # pylint: disable=too-many-branches
+        self,
+        tree_spec,
+        tree,
+        host_row,
+        tag_groups,
+        topics,
+    ):
         (
             _site,
             _host_name,

@@ -4949,7 +4949,13 @@ def _create_route53_sections(
 
 
 class AWSSectionsGeneric(AWSSections):
-    def init_sections(self, services, region, config, s3_limits_distributor=None):
+    def init_sections(  # pylint: disable=too-many-branches
+        self,
+        services,
+        region,
+        config,
+        s3_limits_distributor=None,
+    ):
         assert (
             s3_limits_distributor is not None
         ), "AWSSectionsGeneric.init_sections: Must provide s3_limits_distributor"
@@ -5606,7 +5612,7 @@ def _configure_aws(args: argparse.Namespace, sys_argv: list) -> AWSConfig:
     return aws_config
 
 
-def main(sys_argv=None):
+def main(sys_argv=None):  # pylint: disable=too-many-branches
     if sys_argv is None:
         cmk.utils.password_store.replace_passwords()
         sys_argv = sys.argv[1:]

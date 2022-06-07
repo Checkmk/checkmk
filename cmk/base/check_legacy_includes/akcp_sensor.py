@@ -104,7 +104,7 @@ def inventory_akcp_sensor_temp(info):
             yield line[0], {}
 
 
-def check_akcp_sensor_temp(item, params, info):
+def check_akcp_sensor_temp(item, params, info):  # pylint: disable=too-many-branches
     for (
         description,
         degree,

@@ -25,7 +25,7 @@ import cmk.base.config as config
 import cmk.base.obsolete_output as out
 
 
-def do_scan_parents(hosts: List[HostName]) -> None:
+def do_scan_parents(hosts: List[HostName]) -> None:  # pylint: disable=too-many-branches
     config_cache = config.get_config_cache()
 
     if not hosts:
@@ -122,7 +122,7 @@ def traceroute_available() -> Optional[str]:
     return None
 
 
-def scan_parents_of(
+def scan_parents_of(  # pylint: disable=too-many-branches
     config_cache: config.ConfigCache,
     hosts: List[HostName],
     silent: bool = False,

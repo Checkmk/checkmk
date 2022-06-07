@@ -199,7 +199,7 @@ def _rename_hosts_in_check_mk(
     return action_counts
 
 
-def _rename_host_in_event_rules(oldname, newname):
+def _rename_host_in_event_rules(oldname, newname):  # pylint: disable=too-many-branches
     actions = []
 
     def rename_in_event_rules(rules):

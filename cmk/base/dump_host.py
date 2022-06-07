@@ -21,7 +21,7 @@ import cmk.base.sources as sources
 from cmk.base.check_utils import LegacyCheckParameters
 
 
-def dump_host(hostname: HostName) -> None:
+def dump_host(hostname: HostName) -> None:  # pylint: disable=too-many-branches
     config_cache = config.get_config_cache()
     host_config = config_cache.get_host_config(hostname)
 

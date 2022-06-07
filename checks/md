@@ -100,7 +100,7 @@
 # ---------------------------------------------------------
 
 
-def parse_md(info):
+def parse_md(info):  # pylint: disable=too-many-branches
     parsed = {}
     instance = {}
     for line in (l for l in info if l):
@@ -161,7 +161,7 @@ def inventory_md(parsed):
             yield device, None
 
 
-def check_md(item, _no_params, parsed):
+def check_md(item, _no_params, parsed):  # pylint: disable=too-many-branches
     data = parsed.get(item)
     if data is None:
         return

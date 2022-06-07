@@ -845,7 +845,7 @@ class HTMLGenerator(HTMLWriter):
 
     # Choices is a list pairs of (key, title). They keys of the choices
     # and the default value must be of type None, str or unicode.
-    def dropdown(
+    def dropdown(  # pylint: disable=too-many-branches
         self,
         varname: str,
         choices: Union[Iterable[Choice], Iterable[ChoiceGroup]],

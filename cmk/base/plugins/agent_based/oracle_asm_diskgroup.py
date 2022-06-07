@@ -87,7 +87,9 @@ def _try_parse_int(value: Any) -> Optional[int]:
         return None
 
 
-def parse_oracle_asm_diskgroup(string_table: StringTable) -> Section:
+def parse_oracle_asm_diskgroup(  # pylint: disable=too-many-branches
+    string_table: StringTable,
+) -> Section:
     tmp_section: Dict[str, Diskgroup] = {}
     found_deprecated_agent_output = False
 
@@ -252,7 +254,7 @@ def discovery_oracle_asm_diskgroup(section: Section) -> DiscoveryResult:
             yield Service(item=asm_diskgroup_name)
 
 
-def check_oracle_asm_diskgroup(
+def check_oracle_asm_diskgroup(  # pylint: disable=too-many-branches
     item: str,
     params: Mapping[str, Any],
     section: Section,

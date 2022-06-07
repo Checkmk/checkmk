@@ -244,7 +244,7 @@ def _get_total_usage(ramused, swapused, pagetables):
     return totalused, "Total (%s)" % " + ".join(details)
 
 
-def check_memory(params, meminfo):
+def check_memory(params, meminfo):  # pylint: disable=too-many-branches
     if isinstance(params, tuple):
         params = {"levels": params}
 

@@ -422,7 +422,7 @@ def _build_perfdata(
     return perfdata
 
 
-def check_levels(
+def check_levels(  # pylint: disable=too-many-branches
     value: Union[int, float],
     dsname: Union[None, MetricName],
     params: Any,

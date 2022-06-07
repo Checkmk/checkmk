@@ -878,7 +878,7 @@ class TableRenderer:
         super().__init__()
         self.pdf = pdf
 
-    def add_table(
+    def add_table(  # pylint: disable=too-many-branches
         self,
         header_texts: Any,
         raw_rows: Any,

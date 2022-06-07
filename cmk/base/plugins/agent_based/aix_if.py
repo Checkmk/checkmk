@@ -8,7 +8,9 @@ from .agent_based_api.v1 import register, type_defs
 from .utils import interfaces
 
 
-def parse_aix_if(string_table: type_defs.StringTable) -> interfaces.Section:
+def parse_aix_if(  # pylint: disable=too-many-branches
+    string_table: type_defs.StringTable,
+) -> interfaces.Section:
     ifaces = {}
     flags = {}
     index = 0

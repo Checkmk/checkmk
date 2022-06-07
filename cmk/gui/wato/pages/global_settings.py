@@ -143,7 +143,7 @@ class ABCGlobalSettingsMode(WatoMode):
             for group in sorted(self._groups(), key=lambda g: g.sort_index())
         )
 
-    def _show_configuration_variables(self) -> None:
+    def _show_configuration_variables(self) -> None:  # pylint: disable=too-many-branches
         search = self._search
 
         at_least_one_painted = False

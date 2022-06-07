@@ -98,7 +98,7 @@ def get_allnet_ip_sensoric_info(host_address, opt_debug):
     return attrs
 
 
-def main(sys_argv=None):
+def main(sys_argv=None):  # pylint: disable=too-many-branches
     if sys_argv is None:
         sys_argv = sys.argv[1:]
 

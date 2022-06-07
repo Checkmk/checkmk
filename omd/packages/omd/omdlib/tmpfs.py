@@ -122,7 +122,11 @@ def mark_tmpfs_initialized(site: SiteContext) -> None:
         f.write("")
 
 
-def unmount_tmpfs(site: SiteContext, output: bool = True, kill: bool = False) -> bool:
+def unmount_tmpfs(  # pylint: disable=too-many-branches
+    site: SiteContext,
+    output: bool = True,
+    kill: bool = False,
+) -> bool:
     # During omd update TMPFS hook might not be set so assume
     # that the hook is enabled by default.
     # If kill is True, then we do an fuser -k on the tmp

@@ -425,7 +425,7 @@ def process_alerts(cfg_entry, logs, ms_name, mon_name, node, alerts):
     return logs
 
 
-def check(cfg_entry):
+def check(cfg_entry):  # pylint: disable=too-many-branches
     global conn
     conn = sapnwrfc.base.rfc_connect(cfg_entry)
     login()

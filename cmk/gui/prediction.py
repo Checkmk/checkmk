@@ -157,7 +157,7 @@ vranges = [
 ]
 
 
-def compute_vertical_scala(low, high):
+def compute_vertical_scala(low, high):  # pylint: disable=too-many-branches
     m = max(abs(low), abs(high))
     for letter, factor in vranges:
         if m <= 99 * factor:

@@ -282,7 +282,7 @@ def update_watched_folders():
                     attributes["watch_descriptor"] = new_wd
 
 
-def main():
+def main():  # pylint: disable=too-many-branches
     # Read config
 
     for section in config.sections():

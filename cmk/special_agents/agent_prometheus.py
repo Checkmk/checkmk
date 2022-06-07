@@ -1958,7 +1958,7 @@ class ApiData:
                 group.join(kube_state_service_info["service_name"], element)
         yield "\n".join(group.output(piggyback_prefix=piggyback_prefix))
 
-    def node_exporter_section(
+    def node_exporter_section(  # pylint: disable=too-many-branches
         self, node_options: Dict[str, Union[List[str], str]]
     ) -> Iterator[str]:
         node_entities = node_options["entities"]

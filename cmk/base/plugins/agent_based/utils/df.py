@@ -82,7 +82,10 @@ def _ungrouped_mountpoints_and_groups(
     return ungrouped_mountpoints, groups
 
 
-def get_filesystem_levels(size_gb: float, params: Mapping[str, Any]) -> Dict[str, Any]:
+def get_filesystem_levels(  # pylint: disable=too-many-branches
+    size_gb: float,
+    params: Mapping[str, Any],
+) -> Dict[str, Any]:
     """
     >>> from pprint import pprint as pp
     >>> pp(get_filesystem_levels(1234, FILESYSTEM_DEFAULT_LEVELS))

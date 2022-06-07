@@ -61,7 +61,7 @@ def inventory_qlogic_fcport(info):
     return inventory
 
 
-def check_qlogic_fcport(item, _no_params, info):
+def check_qlogic_fcport(item, _no_params, info):  # pylint: disable=too-many-branches
     for (
         port_id,
         oper_mode,

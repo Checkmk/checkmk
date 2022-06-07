@@ -25,7 +25,9 @@ from .agent_based_api.v1.type_defs import InventoryResult, StringTable
 Section = Sequence[Mapping]
 
 
-def parse_win_networkadapter(string_table: StringTable) -> Section:
+def parse_win_networkadapter(  # pylint: disable=too-many-branches
+    string_table: StringTable,
+) -> Section:
     adapters: List[Mapping] = []
     first_varname = None
     array: Dict = {}

@@ -212,7 +212,10 @@ Available commands:
 # Main function called by cmk --notify. It either starts the
 # keepalive mode (used by CMC), sends out one notifications from
 # several possible sources or sends out all ripe bulk notifications.
-def do_notify(options: Dict[str, bool], args: List[str]) -> Optional[int]:
+def do_notify(  # pylint: disable=too-many-branches
+    options: Dict[str, bool],
+    args: List[str],
+) -> Optional[int]:
     global _log_to_stdout, notify_mode
     _log_to_stdout = options.get("log-to-stdout", _log_to_stdout)
 
@@ -575,7 +578,7 @@ def _create_notifications(
     return notifications, rule_info
 
 
-def _process_notifications(
+def _process_notifications(  # pylint: disable=too-many-branches
     raw_context: EventContext, notifications: Notifications, num_rule_matches: int, analyse: bool
 ) -> List[NotifyPluginInfo]:
     plugin_info: List[NotifyPluginInfo] = []
@@ -981,7 +984,10 @@ def rbn_match_event(
     )
 
 
-def rbn_rule_contacts(rule: EventRule, context: EventContext) -> ContactNames:
+def rbn_rule_contacts(  # pylint: disable=too-many-branches
+    rule: EventRule,
+    context: EventContext,
+) -> ContactNames:
     the_contacts = set()
     if rule.get("contact_object"):
         the_contacts.update(rbn_object_contact_names(context))
@@ -1275,7 +1281,10 @@ def notify_flexible(raw_context: EventContext, notification_table: NotificationT
 # 0  : everything fine   -> proceed
 # 1  : currently not OK  -> try to process later on
 # >=2: invalid           -> discard
-def should_notify(context: EventContext, entry: NotificationTableEntry) -> bool:
+def should_notify(  # pylint: disable=too-many-branches
+    context: EventContext,
+    entry: NotificationTableEntry,
+) -> bool:
     # Check disabling
     if entry.get("disabled"):
         logger.info(" - Skipping: it is disabled for this user")
@@ -1752,7 +1761,7 @@ def handle_spoolfile(spoolfile: str) -> int:
 #   '----------------------------------------------------------------------'
 
 
-def do_bulk_notify(
+def do_bulk_notify(  # pylint: disable=too-many-branches
     plugin_name: NotificationPluginNameStr,
     params: NotifyPluginParams,
     plugin_context: PluginContext,
@@ -1943,7 +1952,7 @@ def remove_if_orphaned(bulk_dir: str, max_age: float, ref_time: Optional[float] 
             logger.info("    -> Error removing it: %s", e)
 
 
-def find_bulks(only_ripe: bool) -> NotifyBulks:
+def find_bulks(only_ripe: bool) -> NotifyBulks:  # pylint: disable=too-many-branches
     if not os.path.exists(notification_bulkdir):
         return []
 
@@ -2044,7 +2053,7 @@ def send_ripe_bulks() -> None:
                 logger.exception("Error sending bulk %s:", bulk[0])
 
 
-def notify_bulk(dirname: str, uuids: UUIDs) -> None:
+def notify_bulk(dirname: str, uuids: UUIDs) -> None:  # pylint: disable=too-many-branches
     parts = dirname.split("/")
     contact = parts[-3]
     plugin_name = parts[-2]

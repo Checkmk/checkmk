@@ -442,7 +442,7 @@ class TagConfig:
 
     # TODO: cleanup this mess
     # This validation is quite gui specific, I do not want to introduce this into the base classes
-    def _validate_group(self, tag_group: TagGroup) -> None:
+    def _validate_group(self, tag_group: TagGroup) -> None:  # pylint: disable=too-many-branches
         if not tag_group.id:
             raise MKGeneralException(_("Please specify an ID for your tag group."))
         _validate_tag_id(tag_group.id)

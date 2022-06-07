@@ -285,7 +285,7 @@ def _process_icons(
     return icons
 
 
-def _process_icon(
+def _process_icon(  # pylint: disable=too-many-branches
     what: IconObjectType,
     row: Row,
     tags: List[TagID],

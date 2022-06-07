@@ -889,7 +889,7 @@ def remove_useless_zeroes(label: str) -> str:
 #   '----------------------------------------------------------------------'
 
 
-def compute_graph_t_axis(
+def compute_graph_t_axis(  # pylint: disable=too-many-branches
     start_time: Timestamp, end_time: Timestamp, width: int, step: Seconds
 ) -> TimeAxis:
     # Depending on which time range is being shown we have different

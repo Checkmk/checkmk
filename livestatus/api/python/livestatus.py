@@ -851,7 +851,7 @@ ConnectedSites = List[ConnectedSite]
 
 
 class MultiSiteConnection(Helpers):
-    def __init__(
+    def __init__(  # pylint: disable=too-many-branches
         self, sites: SiteConfigurations, disabled_sites: Optional[SiteConfigurations] = None
     ) -> None:
         if disabled_sites is None:
@@ -1116,7 +1116,11 @@ class MultiSiteConnection(Helpers):
     # New parallelized version of query(). The semantics differs in the handling
     # of Limit: since all sites are queried in parallel, the Limit: is simply
     # applied to all sites - resulting in possibly more results then Limit requests.
-    def query_parallel(self, query: Query, add_headers: str = "") -> LivestatusResponse:
+    def query_parallel(  # pylint: disable=too-many-branches
+        self,
+        query: Query,
+        add_headers: str = "",
+    ) -> LivestatusResponse:
         stillalive = []
         if self.only_sites is not None:
             connect_to_sites = [c for c in self.connections if c[0] in self.only_sites]

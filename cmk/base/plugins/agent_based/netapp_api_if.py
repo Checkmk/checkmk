@@ -26,7 +26,9 @@ ExtraInfo = Mapping[str, NICExtraInfo]
 Section = Tuple[interfaces.Section, ExtraInfo]
 
 
-def parse_netapp_api_if(string_table: type_defs.StringTable) -> Section:
+def parse_netapp_api_if(  # pylint: disable=too-many-branches
+    string_table: type_defs.StringTable,
+) -> Section:
     ifaces = netapp_api.parse_netapp_api_single_instance(string_table)
 
     # Dictionary with lists of common mac addresses
@@ -193,7 +195,7 @@ def check_netapp_api_if(
     yield from _check_netapp_api_if(item, params, section, get_value_store())
 
 
-def _check_netapp_api_if(
+def _check_netapp_api_if(  # pylint: disable=too-many-branches
     item: str,
     params: Mapping[str, Any],
     section: Section,

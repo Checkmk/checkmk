@@ -66,7 +66,11 @@ def _get_optional_value(
     return None
 
 
-def check_jenkins_nodes(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
+def check_jenkins_nodes(  # pylint: disable=too-many-branches
+    item: str,
+    params: Mapping[str, Any],
+    section: Section,
+) -> CheckResult:
     item_data = section.get(item)
     if item_data is None:
         return

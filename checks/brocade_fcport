@@ -276,7 +276,7 @@ def _get_speed_msg_and_value(is_isl, isl_speed, brocade_speed, porttype, if_spee
     return "Assumed speed: %g Gbit/s", params["assumed_speed"]
 
 
-def check_brocade_fcport(item, params, parsed):
+def check_brocade_fcport(item, params, parsed):  # pylint: disable=too-many-branches
     found_entry = None
     for if_entry in parsed:
         if int(item.split()[0]) + 1 == if_entry["index"]:

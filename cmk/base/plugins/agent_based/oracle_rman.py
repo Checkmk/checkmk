@@ -44,7 +44,9 @@ SectionSidOracleRman = TypedDict(
 SectionOracleRman = Dict[str, SectionSidOracleRman]
 
 
-def parse_oracle_rman(string_table: StringTable) -> SectionOracleRman:
+def parse_oracle_rman(  # pylint: disable=too-many-branches
+    string_table: StringTable,
+) -> SectionOracleRman:
     section: SectionOracleRman = {}
     error_sids = {}
 

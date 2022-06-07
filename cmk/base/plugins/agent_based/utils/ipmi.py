@@ -193,7 +193,7 @@ def check_ipmi_detailed(
         yield Result(state=State.WARN, summary="Sensor is non-critical")
 
 
-def check_ipmi_summarized(
+def check_ipmi_summarized(  # pylint: disable=too-many-branches
     params: Mapping[str, Any],
     section: Section,
     status_txt_mapping: StatusTxtMapping,

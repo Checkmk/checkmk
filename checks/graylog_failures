@@ -20,7 +20,7 @@ def inventory_graylog_failures(parsed):
     return []
 
 
-def check_graylog_failures(_no_item, params, parsed):
+def check_graylog_failures(_no_item, params, parsed):  # pylint: disable=too-many-branches
     failure_details = parsed.get("failures")
     if failure_details is None:
         return

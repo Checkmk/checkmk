@@ -183,7 +183,13 @@ class ModeAnalyzeConfig(WatoMode):
                 ):
                     self._show_test_row(table, test_id, test_results_by_site, site_ids)
 
-    def _show_test_row(self, table, test_id, test_results_by_site, site_ids):
+    def _show_test_row(  # pylint: disable=too-many-branches
+        self,
+        table,
+        test_id,
+        test_results_by_site,
+        site_ids,
+    ):
         table.row()
 
         table.cell(_("Actions"), css="buttons", sortable=False)

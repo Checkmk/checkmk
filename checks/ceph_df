@@ -26,7 +26,7 @@ def _sanitize_line(line):
     return sanitized_line
 
 
-def parse_ceph_df(info) -> FSBlocks:
+def parse_ceph_df(info) -> FSBlocks:  # pylint: disable=too-many-branches
     parsed = {}
     section = None
     global_headers = None

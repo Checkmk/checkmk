@@ -64,7 +64,7 @@ from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wild
 # also only one sensor group is supported with this plugin!
 
 
-def parse_security_master(info):
+def parse_security_master(info):  # pylint: disable=too-many-branches
     supported_sensors = {
         50: "temp",
         60: "humidity",

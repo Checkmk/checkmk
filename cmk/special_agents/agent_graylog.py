@@ -59,7 +59,7 @@ def main(argv=None):
     return 0
 
 
-def handle_request(args, sections):
+def handle_request(args, sections):  # pylint: disable=too-many-branches
     url_base = "%s://%s:%s/api" % (args.proto, args.hostname, args.port)
 
     for section in sections:

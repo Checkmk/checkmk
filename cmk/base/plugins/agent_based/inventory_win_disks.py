@@ -45,7 +45,7 @@ from .agent_based_api.v1.type_defs import InventoryResult, StringTable
 Section = Sequence[Mapping[str, Any]]
 
 
-def parse_win_disks(string_table: StringTable) -> Section:
+def parse_win_disks(string_table: StringTable) -> Section:  # pylint: disable=too-many-branches
     disks: List[Mapping[str, Any]] = []
     array: Dict[str, Any] = {}
     first_varname = None

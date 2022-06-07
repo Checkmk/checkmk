@@ -511,7 +511,7 @@ def _groups_from_params(
     return groups
 
 
-def discover_interfaces(
+def discover_interfaces(  # pylint: disable=too-many-branches
     params: Sequence[Mapping[str, Any]],
     section: Section,
 ) -> type_defs.DiscoveryResult:
@@ -729,7 +729,7 @@ def _check_ungrouped_ifs(
         raise ignore_res_error
 
 
-def _check_grouped_ifs(
+def _check_grouped_ifs(  # pylint: disable=too-many-branches
     item: str,
     params: Mapping[str, Any],
     section: Section,
@@ -1170,7 +1170,7 @@ def check_single_interface(
     )
 
 
-def _interface_name(
+def _interface_name(  # pylint: disable=too-many-branches
     *,
     group_name: Optional[str],
     item: str,
@@ -1412,7 +1412,7 @@ def _group_members(
     )
 
 
-def _output_bandwidth_rates(
+def _output_bandwidth_rates(  # pylint: disable=too-many-branches
     rates: Rates,
     speed_b_in: float,
     speed_b_out: float,

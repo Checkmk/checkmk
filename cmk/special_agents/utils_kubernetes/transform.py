@@ -38,7 +38,7 @@ def parse_frac_prefix(value: str) -> float:
     return float(value)
 
 
-def parse_memory(value: str) -> float:
+def parse_memory(value: str) -> float:  # pylint: disable=too-many-branches
     if value.endswith("Ki"):
         return 1024**1 * float(value[:-2])
     if value.endswith("Mi"):

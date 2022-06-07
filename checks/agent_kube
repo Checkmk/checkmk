@@ -18,7 +18,7 @@ def _timeouts(timeouts: Mapping[str, int], arg_prefix: str) -> Sequence[str]:
     return args
 
 
-def agent_kube_arguments(
+def agent_kube_arguments(  # pylint: disable=too-many-branches
     params: Mapping[str, Any], hostname: str, ipaddress: Optional[str]
 ) -> Sequence[Union[str, tuple[str, str, str]]]:
     args = ["--cluster", params["cluster-name"]]

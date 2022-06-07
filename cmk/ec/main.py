@@ -789,7 +789,7 @@ class EventServer(ECServerThread):
     def handle_snmptrap(self, trap: Iterable[tuple[str, str]], ipaddress: str) -> None:
         self.process_event(create_event_from_trap(trap, ipaddress))
 
-    def serve(self) -> None:
+    def serve(self) -> None:  # pylint: disable=too-many-branches
         pipe_fragment = b""
         pipe = self.open_pipe()
         listen_list: list[FileDescriptorLike] = [pipe]
@@ -1021,7 +1021,7 @@ class EventServer(ECServerThread):
             )
             self._event_status.remove_event(event)
 
-    def hk_handle_event_timeouts(self) -> None:
+    def hk_handle_event_timeouts(self) -> None:  # pylint: disable=too-many-branches
         # 1. Automatically delete all events that are in state "counting"
         #    and have not reached the required number of hits and whose
         #    time is elapsed.
@@ -1322,7 +1322,9 @@ class EventServer(ECServerThread):
         self.host_config = HostConfig(self._logger)
 
     # Precompile regular expressions and similar stuff.
-    def compile_rules(self, rule_packs: Iterable[dict[str, Any]]) -> None:
+    def compile_rules(  # pylint: disable=too-many-branches
+        self, rule_packs: Iterable[dict[str, Any]]
+    ) -> None:
         self._rules = []
         self._rule_by_id = {}
         # Speedup-Hash for rule execution
@@ -1491,7 +1493,7 @@ class EventServer(ECServerThread):
             create_event_from_line(line, address, self._logger, verbose=self._config["debug_rules"])
         )
 
-    def process_event(self, event: Event) -> None:
+    def process_event(self, event: Event) -> None:  # pylint: disable=too-many-branches
         self.do_translate_hostname(event)
 
         # Log all incoming messages into a syslog-like text file if that is enabled
@@ -1707,7 +1709,7 @@ class EventServer(ECServerThread):
             return result
 
     # Rewrite texts and compute other fields in the event
-    def rewrite_event(
+    def rewrite_event(  # pylint: disable=too-many-branches
         self, rule: Rule, event: Event, groups: MatchGroups, set_first: bool = True
     ) -> None:
         if rule["state"] == -1:
@@ -2104,7 +2106,7 @@ class RuleMatcher:
 
         return self._check_match_outcome(rule, match_groups, match_priority)
 
-    def _check_match_outcome(
+    def _check_match_outcome(  # pylint: disable=too-many-branches
         self, rule: Rule, match_groups: MatchGroups, match_priority: MatchPriority
     ) -> MatchResult:
         """Decide or not a event is created, canceled or nothing is done"""
@@ -2673,7 +2675,7 @@ class StatusServer(ECServerThread):
         self._config = config
         self._reopen_sockets = True
 
-    def serve(self) -> None:
+    def serve(self) -> None:  # pylint: disable=too-many-branches
         while not self._terminate_event.is_set():
             try:
                 client_socket = None
@@ -2794,7 +2796,9 @@ class StatusServer(ECServerThread):
         client_socket.sendall((repr(response) + "\n").encode("utf-8"))
 
     # All commands are already locked with self._event_status.lock
-    def handle_command_request(self, commandline: str, allow_commands: bool) -> None:
+    def handle_command_request(  # pylint: disable=too-many-branches
+        self, commandline: str, allow_commands: bool
+    ) -> None:
         if not allow_commands:
             raise MKClientError("Sorry. Commands are disallowed via TCP")
         self._logger.info("Executing command: %s" % commandline)
@@ -2996,7 +3000,7 @@ class StatusServer(ECServerThread):
 #   '----------------------------------------------------------------------'
 
 
-def run_eventd(
+def run_eventd(  # pylint: disable=too-many-branches
     terminate_main_event: Any,
     settings: Settings,
     config: Config,
@@ -3410,7 +3414,7 @@ class EventStatus:
             for nr in to_delete[::-1]:
                 self._remove_event_by_nr(nr)
 
-    def cancelling_match(
+    def cancelling_match(  # pylint: disable=too-many-branches
         self, match_groups: dict, new_event: Event, event: Event, rule: Rule
     ) -> bool:
         debug = self._config["debug_rules"]
@@ -3642,7 +3646,7 @@ def replication_send(
         return response
 
 
-def replication_pull(
+def replication_pull(  # pylint: disable=too-many-branches
     settings: Settings,
     config: Config,
     lock_configuration: ECLock,
@@ -3936,7 +3940,7 @@ def reload_configuration(
 #   '----------------------------------------------------------------------'
 
 
-def main() -> None:
+def main() -> None:  # pylint: disable=too-many-branches
     os.unsetenv("LANG")
     logger = getLogger("cmk.mkeventd")
     settings = create_settings(

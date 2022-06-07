@@ -318,7 +318,7 @@ class ModeUsers(WatoMode):
         job_manager.show_job_details_from_snapshot(job_snapshot=self._job_snapshot)
         html.br()
 
-    def _show_user_list(self) -> None:
+    def _show_user_list(self) -> None:  # pylint: disable=too-many-branches``
         visible_custom_attrs = [
             (name, attr) for name, attr in userdb.get_user_attributes() if attr.show_in_table()
         ]
@@ -692,7 +692,7 @@ class ModeEditUser(WatoMode):
                 is_enabled=_is_two_factor_enabled(self._user),
             )
 
-    def action(self) -> ActionResult:
+    def action(self) -> ActionResult:  # pylint: disable=too-many-branches
         if not transactions.check_transaction():
             return redirect(mode_url("users"))
 
@@ -863,7 +863,7 @@ class ModeEditUser(WatoMode):
         edit_users(user_object)
         return redirect(mode_url("users"))
 
-    def page(self) -> None:
+    def page(self) -> None:  # pylint: disable=too-many-branches
         # Let exceptions from loading notification scripts happen now
         load_notification_scripts()
 

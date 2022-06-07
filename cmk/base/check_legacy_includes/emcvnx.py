@@ -8,7 +8,7 @@
 # pylint: disable=no-else-continue
 
 
-def preparse_emcvnx_info(info):
+def preparse_emcvnx_info(info):  # pylint: disable=too-many-branches
     def convert(value):
         try:
             return int(value)

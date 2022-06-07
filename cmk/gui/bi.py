@@ -607,7 +607,13 @@ class FoldableTreeRendererTree(ABCFoldableTreeRenderer):
         html.close_span()
 
     @contextmanager
-    def _show_node(self, tree, show_host, mousecode=None, img_class=None):
+    def _show_node(  # pylint: disable=too-many-branches
+        self,
+        tree,
+        show_host,
+        mousecode=None,
+        img_class=None,
+    ):
         # Check if we have an assumed state: comparing assumed state (tree[1]) with state (tree[0])
         if tree[1] and tree[0] != tree[1]:
             addclass = ["assumed"]

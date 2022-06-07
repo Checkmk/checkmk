@@ -497,7 +497,7 @@ def create_dict(instances, custom_key=None, is_counter=True):
 
 
 # Format config as one liner. Might add extra info identified by config_key
-def format_config(
+def format_config(  # pylint: disable=too-many-branches
     instances,
     prefix,
     config_key,
@@ -656,7 +656,7 @@ def query_nodes(args, server, nodes, what, node_attribute="node-name"):
     return results
 
 
-def query(args, server, what, return_toplevel_node=False):
+def query(args, server, what, return_toplevel_node=False):  # pylint: disable=too-many-branches
     if args.legacy:
         # HACK: if "what" endswith "iter", add max_records = 5000
         # This approach is way easier than reading the tag, invoke another command and merge all answers together
@@ -707,7 +707,7 @@ def query(args, server, what, return_toplevel_node=False):
     return None
 
 
-def query_counters(args, server, netapp_mode, what):
+def query_counters(args, server, netapp_mode, what):  # pylint: disable=too-many-branches
     instance_uuids = []
     if args.legacy:
         counter_query = NaElement("perf-object-get-instances")  # pylint: disable=undefined-variable
@@ -934,7 +934,7 @@ def fetch_nodes(args, server):
     return nodes
 
 
-def process_clustermode(args, server, netapp_mode, licenses):
+def process_clustermode(args, server, netapp_mode, licenses):  # pylint: disable=too-many-branches
     nodes = fetch_nodes(args, server)
 
     process_vserver_status(args, server)
@@ -1378,7 +1378,7 @@ def process_cpu(args, server):
         )
 
 
-def process_7mode(args, server, netapp_mode, licenses):
+def process_7mode(args, server, netapp_mode, licenses):  # pylint: disable=too-many-branches
     # Interfaces
     interfaces = query(args, server, "net-ifconfig-get")
     if_counters = query_counters(args, server, netapp_mode, "ifnet")

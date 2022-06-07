@@ -727,7 +727,7 @@ class CommandAcknowledge(Command):
         html.button("_remove_ack", _("Remove acknowledgement"), formnovalidate=True)
         html.close_div()
 
-    def _action(
+    def _action(  # pylint: disable=too-many-branches
         self, cmdtag: str, spec: str, row: Row, row_index: int, num_rows: int
     ) -> CommandActionResult:
         if "aggr_tree" in row:  # BI mode

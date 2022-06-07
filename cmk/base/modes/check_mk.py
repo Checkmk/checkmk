@@ -1089,7 +1089,7 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_flush(hosts: List[HostName]) -> None:
+def mode_flush(hosts: List[HostName]) -> None:  # pylint: disable=too-many-branches
     config_cache = config.get_config_cache()
 
     if not hosts:

@@ -28,7 +28,7 @@ cisco_temperature_admin_state_map = {
 }
 
 
-def parse_cisco_temperature(info):
+def parse_cisco_temperature(info):  # pylint: disable=too-many-branches
     # CISCO-ENTITY-SENSOR-MIB entSensorType
     cisco_sensor_types = {
         "1": "other",

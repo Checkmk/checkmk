@@ -1,0 +1,13 @@
+Title: Don't show cluster checks for standalone FortiGate
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1654607531
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+The services "Cluster Info", "CPU utilization Cluster", "Memory Cluster" and
+"Sessions Cluster" where discovered even if the FortiGate device was in
+standalone mode. Those services will no longer be discovered.

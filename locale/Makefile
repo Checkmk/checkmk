@@ -75,6 +75,6 @@ update-pos:
 	done
 	# We are back in the Checkmk repo
 	if [[ $$(git diff | wc -l) -gt 0 ]]; then \
-		git commit ./ -m "$$PO_COMMIT_MSG" \
+		git commit ./ -m "$$PO_COMMIT_MSG"; \
 		git push \
 	fi

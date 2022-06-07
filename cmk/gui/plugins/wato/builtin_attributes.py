@@ -574,7 +574,7 @@ class HostAttributeNetworkScan(ABCHostAttributeValueSpec):
                 Integer(
                     title=_("Parallel pings to send"),
                     help=_(
-                        "Set the maximum number of concurrent pings sent to target IP " "addresses."
+                        "Set the maximum number of concurrent pings sent to target IP addresses."
                     ),
                     minvalue=1,
                     maxvalue=200,

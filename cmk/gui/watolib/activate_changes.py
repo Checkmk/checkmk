@@ -686,7 +686,7 @@ class ActivateChangesManager(ActivateChanges):
         if defective_hosts:
             raise MKUserError(
                 None,
-                _("You cannot activate changes while some hosts have " "an invalid configuration: ")
+                _("You cannot activate changes while some hosts have an invalid configuration: ")
                 + ", ".join(
                     [
                         '<a href="%s">%s</a>'

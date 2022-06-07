@@ -1615,7 +1615,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
             self._copy_rules_from_master()
             self._add_change(
                 "copy-rules-from-master",
-                _("Copied the event rules from the master " "into the local configuration"),
+                _("Copied the event rules from the master into the local configuration"),
             )
             flash(_("Copied rules from master"))
             return redirect(self.mode_url())
@@ -2363,9 +2363,7 @@ class ModeEventConsoleEditRulePack(ABCEventConsoleMode):
             try:
                 self._rule_pack = self._rule_packs[self._edit_nr]
             except IndexError:
-                raise MKUserError(
-                    "edit", _("The rule pack you are trying to " "edit does not exist.")
-                )
+                raise MKUserError("edit", _("The rule pack you are trying to edit does not exist."))
 
         id_to_mkp = self._get_rule_pack_to_mkp_map()
         self._type = ec.RulePackType.type_of(self._rule_pack, id_to_mkp)
@@ -2570,7 +2568,7 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
         if "count" in self._rule and "expect" in self._rule:
             raise MKUserError(
                 "rule_p_expect_USE",
-                _("You cannot use counting and expecting " "at the same time in the same rule."),
+                _("You cannot use counting and expecting at the same time in the same rule."),
             )
 
         if "expect" in self._rule and "delay" in self._rule:
@@ -3430,7 +3428,7 @@ permission_registry.register(
         name="config",
         title=_l("Configuration of Event Console"),
         description=_l(
-            "This permission allows to configure the global settings " "of the event console."
+            "This permission allows to configure the global settings of the event console."
         ),
         defaults=["admin"],
     )
@@ -4021,7 +4019,7 @@ class ConfigVariableHostnameTranslation(ConfigVariable):
 def vs_ec_event_limit_actions(notify_txt):
     return DropdownChoice(
         title=_("Action"),
-        help=_("Choose the action the Event Console should trigger once " "the limit is reached."),
+        help=_("Choose the action the Event Console should trigger once the limit is reached."),
         choices=[
             ("stop", _("Stop creating new events")),
             ("stop_overflow", _("Stop creating new events, create overflow event")),
@@ -4185,7 +4183,7 @@ class ConfigVariableEventConsoleHistoryLifetime(ConfigVariable):
     def valuespec(self) -> ValueSpec:
         return Integer(
             title=_("Event history lifetime"),
-            help=_("After this number of days old logfile of event history " "will be deleted."),
+            help=_("After this number of days old logfile of event history will be deleted."),
             unit=_("days"),
             minvalue=1,
         )

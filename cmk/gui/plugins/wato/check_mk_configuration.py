@@ -744,7 +744,7 @@ class ConfigVariableEscapePluginOutput(ConfigVariable):
 
     def valuespec(self) -> ValueSpec:
         return Checkbox(
-            title=_("Escape HTML in service output " "(Dangerous to deactivate - read help)"),
+            title=_("Escape HTML in service output (Dangerous to deactivate - read help)"),
             help=_(
                 "By default, for security reasons, the GUI does not interpret any HTML "
                 "code received from external sources, like service output or log messages. "
@@ -3316,7 +3316,7 @@ rulespec_registry.register(
 def _valuespec_extra_service_conf_active_checks_enabled():
     return DropdownChoice(
         title=_("Enable/disable active checks for services"),
-        help=_("This setting allows you to disable or enable " "active checks for a service."),
+        help=_("This setting allows you to disable or enable active checks for a service."),
         choices=[("1", _("Enable active checks")), ("0", _("Disable active checks"))],
     )
 
@@ -3791,9 +3791,7 @@ rulespec_registry.register(
 def _valuespec_extra_host_conf_flap_detection_enabled():
     return DropdownChoice(
         title=_("Enable/disable flapping detection for hosts"),
-        help=_(
-            "This setting allows you to disable the flapping detection for a " "host completely."
-        ),
+        help=_("This setting allows you to disable the flapping detection for a host completely."),
         choices=[
             ("1", _("Enable flap detection")),
             ("0", _("Disable flap detection")),
@@ -3814,7 +3812,7 @@ def _valuespec_extra_service_conf_flap_detection_enabled():
     return DropdownChoice(
         title=_("Enable/disable flapping detection for services"),
         help=_(
-            "This setting allows you to disable the flapping detection for a " "service completely."
+            "This setting allows you to disable the flapping detection for a service completely."
         ),
         choices=[
             ("1", _("Enable flap detection")),
@@ -4518,7 +4516,7 @@ def _valuespec_extra_host_conf_notes_url():
     return TextInput(
         label=_("URL:"),
         title=_("Notes URL for Hosts"),
-        help=_("With this setting you can set links to documentations " "for Hosts"),
+        help=_("With this setting you can set links to documentations for Hosts"),
         size=80,
     )
 
@@ -4573,7 +4571,7 @@ def _valuespec_extra_service_conf_notes_url():
     return TextInput(
         label=_("URL:"),
         title=_("Notes URL for Services"),
-        help=_("With this setting you can set links to documentations " "for each service"),
+        help=_("With this setting you can set links to documentations for each service"),
         size=80,
     )
 
@@ -4686,7 +4684,7 @@ rulespec_registry.register(
 
 def _valuespec_extra_host_conf__ESCAPE_PLUGIN_OUTPUT():
     return DropdownChoice(
-        title=_("Escape HTML in host output" "(Dangerous to deactivate - read help)"),
+        title=_("Escape HTML in host output (Dangerous to deactivate - read help)"),
         help=_(
             "By default, for security reasons, the GUI does not interpret any HTML "
             "code received from external sources, like plugin output or log messages. "
@@ -4717,7 +4715,7 @@ rulespec_registry.register(
 
 def _valuespec_extra_service_conf__ESCAPE_PLUGIN_OUTPUT():
     return DropdownChoice(
-        title=_("Escape HTML in service output " "(Dangerous to deactivate - read help)"),
+        title=_("Escape HTML in service output (Dangerous to deactivate - read help)"),
         help=_(
             "By default, for security reasons, the GUI does not interpret any HTML "
             "code received from external sources, like service output or log messages. "

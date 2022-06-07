@@ -1270,7 +1270,7 @@ def check_credentials(
         user_id: UserId = result
         if not isinstance(user_id, str):
             raise MKInternalError(
-                _("The username returned by the %s " "connector is not of type string (%r).")
+                _("The username returned by the %s connector is not of type string (%r).")
                 % (connection_id, user_id)
             )
 

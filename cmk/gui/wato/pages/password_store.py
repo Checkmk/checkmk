@@ -109,7 +109,7 @@ class ModePasswords(SimpleListMode):
         table.cell(_("Editable by"))
         if entry["owned_by"] is None:
             html.write_text(
-                _("Administrators (having the permission " '"Write access to all passwords")')
+                _('Administrators (having the permission "Write access to all passwords")')
             )
         else:
             html.write_text(self._contact_group_alias(entry["owned_by"]))
@@ -150,7 +150,7 @@ class ModeEditPassword(SimpleEditMode):
                     value=None,
                     title=_("Administrators"),
                     totext=_(
-                        "Administrators (having the permission " '"Write access to all passwords")'
+                        'Administrators (having the permission "Write access to all passwords")'
                     ),
                 )
             ]

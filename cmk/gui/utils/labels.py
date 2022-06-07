@@ -185,10 +185,8 @@ class LabelsCache:
     ) -> _LivestatusLabelResponse:
 
         with sites.prepend_site(), sites.only_sites(only_sites):
-            service_rows = sites.live().query(
-                "GET services\n" "Cache: reload\n" "Columns: labels\n"
-            )
-            host_rows = sites.live().query("GET hosts\n" "Cache: reload\n" "Columns: labels\n")
+            service_rows = sites.live().query("GET services\nCache: reload\nColumns: labels\n")
+            host_rows = sites.live().query("GET hosts\nCache: reload\nColumns: labels\n")
 
         return _LivestatusLabelResponse(host_rows, service_rows)
 

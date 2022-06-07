@@ -3311,7 +3311,7 @@ def main_restore(
 ) -> None:
     if len(args) == 0:
         bail_out(
-            "You need to provide either a path to the source " 'file or "-" for restore from stdin.'
+            'You need to provide either a path to the source file or "-" for restore from stdin.'
         )
 
     source = args[-1]

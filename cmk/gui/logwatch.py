@@ -832,7 +832,7 @@ def get_logfile_lines(site, host_name, file_name):
 
 def all_logs():
     sites.live().set_prepend_site(True)
-    rows = sites.live().query("GET hosts\n" "Columns: name mk_logwatch_files\n")
+    rows = sites.live().query("GET hosts\nColumns: name mk_logwatch_files\n")
     sites.live().set_prepend_site(False)
     return rows
 

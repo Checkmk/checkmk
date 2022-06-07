@@ -954,7 +954,7 @@ class ModeEditRuleset(WatoMode):
             rule = ruleset.get_rule_by_id(rule_id)
         except (IndexError, TypeError, ValueError, KeyError):
             raise MKUserError(
-                "_rule_id", _("You are trying to edit a rule which does not exist " "anymore.")
+                "_rule_id", _("You are trying to edit a rule which does not exist anymore.")
             )
 
         action = request.get_ascii_input_mandatory("_action")
@@ -1615,7 +1615,7 @@ class ABCEditRuleMode(WatoMode):
                 self._folder = ruleset.get_rule_by_id(rule_id).folder
             except KeyError:
                 raise MKUserError(
-                    "rule_id", _("You are trying to edit a rule which does " "not exist anymore.")
+                    "rule_id", _("You are trying to edit a rule which does not exist anymore.")
                 )
 
     def _set_rule(self) -> None:
@@ -1739,7 +1739,7 @@ class ABCEditRuleMode(WatoMode):
             affected_sites = list(set(self._folder.all_site_ids() + new_rule_folder.all_site_ids()))
             _changes.add_change(
                 "edit-rule",
-                _('Changed properties of rule "%s", moved rule from ' 'folder "%s" to "%s"')
+                _('Changed properties of rule "%s", moved rule from folder "%s" to "%s"')
                 % (self._ruleset.title(), self._folder.alias_path(), new_rule_folder.alias_path()),
                 sites=affected_sites,
                 diff_text=make_diff_text(self._orig_rule.to_log(), self._rule.to_log()),

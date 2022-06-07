@@ -54,7 +54,7 @@ def execute_network_scan_job() -> None:
     run_as = folder.attribute("network_scan")["run_as"]
     if not userdb.user_exists(run_as):
         raise MKGeneralException(
-            _("The user %s used by the network " "scan of the folder %s does not exist.")
+            _("The user %s used by the network scan of the folder %s does not exist.")
             % (run_as, folder.title())
         )
 

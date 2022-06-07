@@ -23,9 +23,7 @@ def _item_spec_skype_proxy():
 
 def _parameter_valuespec_skype_proxy():
     return Dictionary(
-        help=_(
-            "Warn/Crit levels for various Skype for Business " "(formerly known as Lync) metrics"
-        ),
+        help=_("Warn/Crit levels for various Skype for Business (formerly known as Lync) metrics"),
         elements=[
             (
                 "throttled_connections",

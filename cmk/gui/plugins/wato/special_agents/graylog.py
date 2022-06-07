@@ -19,7 +19,7 @@ def _factory_default_special_agents_graylog():
 def _valuespec_special_agents_graylog():
     return Dictionary(
         title=_("Graylog"),
-        help=_("Requests node, cluster and indice data from a Graylog " "instance."),
+        help=_("Requests node, cluster and indice data from a Graylog instance."),
         optional_keys=["port"],
         elements=[
             (

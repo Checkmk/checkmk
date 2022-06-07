@@ -506,7 +506,7 @@ class TestRunner(threading.Thread):
 
     def _prepare_rrdcached(self):
         with open("%s/etc/rrdcached.conf" % omd_root(), "w") as f:
-            f.write("TIMEOUT=300\n" "RANDOM_DELAY=10\n" "FLUSH_TIMEOUT=7200\n" "WRITE_THREADS=4\n")
+            f.write("TIMEOUT=300\nRANDOM_DELAY=10\nFLUSH_TIMEOUT=7200\nWRITE_THREADS=4\n")
 
         p = subprocess.run(
             ["omd", "restart", "rrdcached"],
@@ -2588,7 +2588,7 @@ class TestAgentBasedStandardHosts(TestCase):
             )
 
         with open("%s/rules.mk" % config_dir, "w") as f:
-            f.write("agent_ports = [\n" "    ( 6559, [], ALL_HOSTS, {} ),\n" "] + agent_ports\n")
+            f.write("agent_ports = [\n    ( 6559, [], ALL_HOSTS, {} ),\n] + agent_ports\n")
 
             f.write(
                 "tcp_connect_timeouts = [\n"
@@ -2659,7 +2659,7 @@ class TestAgentBasedStandardHosts(TestCase):
             )
 
         with open("%s/rules.mk" % config_dir, "w") as f:
-            f.write("agent_ports = [\n" "    ( 6559, [], ALL_HOSTS, {} ),\n" "] + agent_ports\n")
+            f.write("agent_ports = [\n    ( 6559, [], ALL_HOSTS, {} ),\n] + agent_ports\n")
 
             f.write(
                 "tcp_connect_timeouts = [\n"

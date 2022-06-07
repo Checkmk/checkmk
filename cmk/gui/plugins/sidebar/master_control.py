@@ -41,9 +41,7 @@ class MasterControlSnapin(SidebarSnapin):
 
     @classmethod
     def description(cls) -> str:
-        return _(
-            "Buttons for switching globally states such as enabling " "checks and notifications"
-        )
+        return _("Buttons for switching globally states such as enabling checks and notifications")
 
     def show(self) -> None:
         items = self._core_toggles()

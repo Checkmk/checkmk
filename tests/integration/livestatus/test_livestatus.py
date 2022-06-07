@@ -111,7 +111,7 @@ def test_host_table_host_equal_filter(site: Site) -> None:
 @pytest.mark.usefixtures("default_cfg")
 def test_service_table(site: Site) -> None:
     rows = site.live.query(
-        "GET services\nFilter: host_name = livestatus-test-host\n" "Columns: description\n"
+        "GET services\nFilter: host_name = livestatus-test-host\nColumns: description\n"
     )
     assert isinstance(rows, list)
     assert len(rows) >= 20  # header + min 1 service

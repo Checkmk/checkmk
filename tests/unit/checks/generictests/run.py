@@ -54,7 +54,7 @@ def get_info_argument(dataset, subcheck, fallback_parsed=None):
         try:
             arg = [dataset.info]
         except AttributeError:
-            raise AttributeError("dataset has neither of the attributes " "'info' or 'parsed'")
+            raise AttributeError("dataset has neither of the attributes 'info' or 'parsed'")
 
     es_dict = getattr(dataset, "extra_sections", {})
     for es in es_dict.get(subcheck, []):

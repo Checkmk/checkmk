@@ -151,7 +151,7 @@ def _get_or_load_image(client: docker.DockerClient, image_name_with_tag: str) ->
 
     except docker.errors.ImageNotFound:
         logger.info(
-            "  Not available locally, try to pull " "(May take some time. Grab a coffee or two...)"
+            "  Not available locally, try to pull (May take some time. Grab a coffee or two...)"
         )
 
     try:

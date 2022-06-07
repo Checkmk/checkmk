@@ -292,7 +292,7 @@ class ACTestLDAPSecured(ACTest):
 
             else:
                 yield ACResultWARN(
-                    _("%s: Not using SSL. Consider enabling it in the " "connection settings.")
+                    _("%s: Not using SSL. Consider enabling it in the connection settings.")
                     % connection_id
                 )
 

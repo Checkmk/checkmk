@@ -943,7 +943,7 @@ class ModeBIRules(ABCBIMode):
                                 ],
                             ),
                             message=_(
-                                "Do you really want to delete the rule with " "the ID <b>%s</b>?"
+                                "Do you really want to delete the rule with the ID <b>%s</b>?"
                             )
                             % rule_id,
                         )

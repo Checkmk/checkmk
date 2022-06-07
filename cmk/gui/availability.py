@@ -734,7 +734,7 @@ def get_av_computation_options() -> AVOptionValueSpecs:
             Age(
                 title=_("Query Time Limit"),
                 help=_(
-                    "Limit the execution time of the query, in order to " "avoid a hanging system."
+                    "Limit the execution time of the query, in order to avoid a hanging system."
                 ),
                 default_value=30,
             ),

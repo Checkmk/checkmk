@@ -30,7 +30,7 @@ def _parameter_valuespec_graylog_sidecars():
             (
                 "running_lower",
                 Tuple(
-                    title=_("Total number of collectors in state running lower " "level"),
+                    title=_("Total number of collectors in state running lower level"),
                     elements=[
                         Integer(
                             title=_("Warning if less then"), unit="collectors", default_value=1
@@ -44,7 +44,7 @@ def _parameter_valuespec_graylog_sidecars():
             (
                 "running_upper",
                 Tuple(
-                    title=_("Total number of collectors in state running upper " "level"),
+                    title=_("Total number of collectors in state running upper level"),
                     elements=[
                         Integer(title=_("Warning at"), unit="collectors"),
                         Integer(title=_("Critical at"), unit="collectors"),
@@ -54,7 +54,7 @@ def _parameter_valuespec_graylog_sidecars():
             (
                 "stopped_lower",
                 Tuple(
-                    title=_("Total number of collectors in state stopped lower " "level"),
+                    title=_("Total number of collectors in state stopped lower level"),
                     elements=[
                         Integer(title=_("Warning if less then"), unit="collectors"),
                         Integer(title=_("Critical if less then"), unit="collectors"),
@@ -64,7 +64,7 @@ def _parameter_valuespec_graylog_sidecars():
             (
                 "stopped_upper",
                 Tuple(
-                    title=_("Total number of collectors in state stopped upper " "level"),
+                    title=_("Total number of collectors in state stopped upper level"),
                     elements=[
                         Integer(title=_("Warning at"), unit="collectors", default_value=1),
                         Integer(title=_("Critical at"), unit="collectors", default_value=1),
@@ -74,7 +74,7 @@ def _parameter_valuespec_graylog_sidecars():
             (
                 "failing_lower",
                 Tuple(
-                    title=_("Total number of collectors in state failing lower " "level"),
+                    title=_("Total number of collectors in state failing lower level"),
                     elements=[
                         Integer(title=_("Warning if less then"), unit="collectors"),
                         Integer(title=_("Critical if less then"), unit="collectors"),
@@ -84,7 +84,7 @@ def _parameter_valuespec_graylog_sidecars():
             (
                 "failing_upper",
                 Tuple(
-                    title=_("Total number of collectors in state failing upper " "level"),
+                    title=_("Total number of collectors in state failing upper level"),
                     elements=[
                         Integer(title=_("Warning at"), unit="collectors", default_value=1),
                         Integer(title=_("Critical at"), unit="collectors", default_value=1),

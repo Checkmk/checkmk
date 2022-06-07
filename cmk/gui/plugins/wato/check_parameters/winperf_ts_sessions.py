@@ -15,7 +15,7 @@ from cmk.gui.valuespec import Dictionary, Integer, Tuple
 
 def _parameter_valuespec_winperf_ts_sessions():
     return Dictionary(
-        help=_("This check monitors number of active and inactive terminal " "server sessions."),
+        help=_("This check monitors number of active and inactive terminal server sessions."),
         elements=[
             (
                 "active",

@@ -81,9 +81,7 @@ def page_handler() -> None:
     if cmk_version.is_managed_edition() and not managed.is_provider(
         active_config.current_customer
     ):  # type: ignore[attr-defined]
-        raise MKGeneralException(
-            _("Check_MK can only be configured on " "the managers central site.")
-        )
+        raise MKGeneralException(_("Check_MK can only be configured on the managers central site."))
 
     current_mode = request.var("mode") or "main"
     mode_permissions, mode_class = _get_mode_permission_and_class(current_mode)

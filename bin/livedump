@@ -115,7 +115,7 @@ def livedump_config():
     for row in run_query(query):
         prepare_row(row)
         row["groupstring"] = ",".join(row["groups"])
-        sys.stdout.write("define host {\n" "  use                livedump-host\n")
+        sys.stdout.write("define host {\n  use                livedump-host\n")
 
         if opt_prefix:
             sys.stdout.write("  host_name          %s%s\n" % (opt_prefix, row["name"]))
@@ -154,7 +154,7 @@ def livedump_config():
         else:
             row["groupstring"] = ""
         row["contactsstring"] = (",".join(row["contacts"])).encode("utf-8")
-        sys.stdout.write("define service {\n" "  use                livedump-service\n")
+        sys.stdout.write("define service {\n  use                livedump-service\n")
 
         if opt_prefix:
             sys.stdout.write("  host_name          %s%s\n" % (opt_prefix, row["host_name"]))

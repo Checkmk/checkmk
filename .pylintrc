@@ -150,7 +150,6 @@ disable=
     # performant than old-skool string splicing/formatting.
     consider-using-f-string,
     # To be fixed in the following commits
-    implicit-str-concat,
     consider-using-generator,
     unnecessary-lambda-assignment,
     too-many-branches,

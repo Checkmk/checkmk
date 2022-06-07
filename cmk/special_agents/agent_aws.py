@@ -2410,7 +2410,7 @@ class ELBSummaryGeneric(AWSSection):
             self._describe_load_balancers_key = "LoadBalancers"
         else:
             raise AssertionError(
-                "ELBSummaryGeneric: resource argument must be either 'elb' or " "'elbv2'"
+                "ELBSummaryGeneric: resource argument must be either 'elb' or 'elbv2'"
             )
 
         super().__init__(client, region, config, distributor=distributor)

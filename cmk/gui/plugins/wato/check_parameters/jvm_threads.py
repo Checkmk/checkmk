@@ -24,7 +24,7 @@ def _item_spec_jvm_threads():
 def _parameter_valuespec_jvm_threads():
     return Tuple(
         help=_(
-            "This rule sets the warn and crit levels for the number of threads " "running in a JVM."
+            "This rule sets the warn and crit levels for the number of threads running in a JVM."
         ),
         elements=[
             Integer(

@@ -34,7 +34,7 @@ multisite_builtin_views.update(
             "column_headers": "off",
             "datasource": "services",
             "description": _(
-                "Shows all graphs including timerange selections " "of a collection of services."
+                "Shows all graphs including timerange selections of a collection of services."
             ),
             "group_painters": [
                 ("sitealias", "sitehosts"),
@@ -65,7 +65,7 @@ multisite_builtin_views.update(
             "column_headers": "off",
             "datasource": "hosts",
             "description": _(
-                "Shows host graphs including timerange selections " "of a collection of hosts."
+                "Shows host graphs including timerange selections of a collection of hosts."
             ),
             "group_painters": [
                 ("sitealias", "sitehosts"),

@@ -318,7 +318,7 @@ class ModeBulkImport(WatoMode):
                     if not value.isascii():
                         raise MKUserError(
                             None,
-                            _("Non-ASCII characters are not allowed in the " 'attribute "%s".')
+                            _('Non-ASCII characters are not allowed in the attribute "%s".')
                             % attribute,
                         )
 

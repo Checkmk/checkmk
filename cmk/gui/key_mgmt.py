@@ -363,7 +363,7 @@ class PageUploadKey:
             if other_digest == this_digest:
                 raise MKUserError(
                     None,
-                    _("The key / certificate already exists (Key: %d, " "Description: %s)")
+                    _("The key / certificate already exists (Key: %d, Description: %s)")
                     % (key_id, key.alias),
                 )
 

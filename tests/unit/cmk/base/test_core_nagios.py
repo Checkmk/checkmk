@@ -710,7 +710,7 @@ def test_create_nagios_servicedefs_active_check(
                 "_ADDRESS_FAMILY": "4",
                 "display_name": "my_host",
             },
-            "\n" "\n" "# Active checks\n",
+            "\n\n# Active checks\n",
             "\n"
             "WARNING: Skipping invalid service with empty description (active check: my_active_check) on host my_host\n",
             id="empty_description",
@@ -764,7 +764,7 @@ def test_create_nagios_servicedefs_with_warnings(
                 "_ADDRESS_FAMILY": "4",
                 "display_name": "my_host",
             },
-            "\n" "\n" "# Active checks\n",
+            "\n\n# Active checks\n",
             id="omitted_service",
         ),
     ],

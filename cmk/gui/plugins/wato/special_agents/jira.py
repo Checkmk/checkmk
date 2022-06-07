@@ -70,7 +70,7 @@ def _vs_jira_projects(title):
 def _valuespec_special_agents_jira():
     return Dictionary(
         title=_("Jira statistics"),
-        help=_("Use Jira Query Language (JQL) to get statistics out of your " "Jira instance."),
+        help=_("Use Jira Query Language (JQL) to get statistics out of your Jira instance."),
         elements=[
             (
                 "instance",
@@ -90,7 +90,7 @@ def _valuespec_special_agents_jira():
                 "user",
                 TextInput(
                     title=_("Username"),
-                    help=_("The username that should be used for accessing the " "Jira API."),
+                    help=_("The username that should be used for accessing the Jira API."),
                     size=32,
                     allow_empty=False,
                 ),
@@ -162,7 +162,7 @@ def _valuespec_special_agents_jira():
                                         "of a given numeric field."
                                     ),
                                     choices=[
-                                        ("count", _("Number of " "search results")),
+                                        ("count", _("Number of search results")),
                                         (
                                             "sum",
                                             _(
@@ -192,7 +192,7 @@ def _valuespec_special_agents_jira():
                                         ),
                                         (
                                             "average",
-                                            _("Average value " "of the following numeric field: "),
+                                            _("Average value of the following numeric field: "),
                                             Tuple(
                                                 elements=[
                                                     TextInput(

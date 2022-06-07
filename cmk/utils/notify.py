@@ -143,7 +143,7 @@ def ensure_utf8(logger: Optional[Logger] = None) -> None:
     exit_code: int = proc.returncode
     error_msg: str = _("Command 'locale -a' could not be executed. Exit code of command was")
     not_found_msg: str = _(
-        "No UTF-8 encoding found in your locale -a! " "Please install appropriate locales."
+        "No UTF-8 encoding found in your locale -a! Please install appropriate locales."
     )
     if exit_code != 0:
         if not logger:

@@ -1710,7 +1710,7 @@ class ABCEditUserNotificationRuleMode(ABCEditNotificationRuleMode):
         self._users = userdb.load_users(lock=transactions.is_transaction())
         if self._user_id() not in self._users:
             raise MKUserError(
-                None, _("The user you are trying to edit " "notification rules for does not exist.")
+                None, _("The user you are trying to edit notification rules for does not exist.")
             )
         user_spec = self._users[self._user_id()]
         return user_spec.setdefault("notification_rules", [])

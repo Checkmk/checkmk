@@ -1268,7 +1268,7 @@ class PageBackupTargets:
         if job_titles:
             raise MKUserError(
                 "target",
-                _("You can not delete this target because it is used " "by these backup jobs: %s")
+                _("You can not delete this target because it is used by these backup jobs: %s")
                 % ", ".join(job_titles),
             )
 

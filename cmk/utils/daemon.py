@@ -81,7 +81,7 @@ def lock_with_pid_file(path: Path) -> None:
     """
     if not store.try_aquire_lock(str(path)):
         raise MKGeneralException(
-            "Failed to aquire PID file lock: " "Another process is already running"
+            "Failed to aquire PID file lock: Another process is already running"
         )
 
     # Now that we have the lock we are allowed to write our pid to the file.

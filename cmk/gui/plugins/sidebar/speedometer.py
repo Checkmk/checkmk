@@ -64,7 +64,7 @@ class Speedometer(SidebarSnapin):
             # Get the current rates and the program start time. If there
             # are more than one site, we simply add the start times.
             data = sites.live().query_summed_stats(
-                "GET status\n" "Columns: service_checks_rate program_start"
+                "GET status\nColumns: service_checks_rate program_start"
             )
             current_rate = data[0]
             program_start = data[1]
@@ -82,9 +82,9 @@ class Speedometer(SidebarSnapin):
                 # Manually added services without check_interval could be a problem, but
                 # we have no control there.
                 scheduled_rate = (
-                    sites.live().query_summed_stats(
-                        "GET services\n" "Stats: suminv check_interval\n"
-                    )[0]
+                    sites.live().query_summed_stats("GET services\nStats: suminv check_interval\n")[
+                        0
+                    ]
                     / 60.0
                 )
 

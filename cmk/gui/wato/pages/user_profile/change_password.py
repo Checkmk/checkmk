@@ -115,7 +115,7 @@ class UserChangePasswordPage(ABCUserProfilePage):
         if "password" in locked_attributes:
             raise MKUserError(
                 "cur_password",
-                _("You can not change your password, because it is " "managed by another system."),
+                _("You can not change your password, because it is managed by another system."),
             )
 
         html.begin_form("profile", method="POST")

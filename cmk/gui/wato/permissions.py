@@ -187,7 +187,7 @@ permission_registry.register(
         name="rename_hosts",
         title=_l("Rename existing hosts"),
         description=_l(
-            "Rename existing hosts. Please also add the permission " "<i>Modify existing hosts</i>."
+            "Rename existing hosts. Please also add the permission <i>Modify existing hosts</i>."
         ),
         defaults=["admin", "user"],
     )

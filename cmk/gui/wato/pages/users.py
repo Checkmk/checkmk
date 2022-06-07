@@ -1159,9 +1159,7 @@ class ModeEditUser(WatoMode):
                 bool(self._user.get("notifications_enabled")),
                 label=_("enable notifications"),
             )
-            html.help(
-                _("Notifications are sent out " "when the status of a host or service changes.")
-            )
+            html.help(_("Notifications are sent out when the status of a host or service changes."))
 
             # Notification period
             forms.section(_("Notification time period"))

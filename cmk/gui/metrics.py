@@ -267,7 +267,7 @@ def _perfometer_expressions(perfometer: PerfometerSpec) -> List[PerfometerExpres
     elif perfometer["type"] in ("stacked", "dual"):
         if "perfometers" not in perfometer:
             raise MKGeneralException(
-                _("Perfometers of type 'stacked' and 'dual' need " "the element 'perfometers' (%r)")
+                _("Perfometers of type 'stacked' and 'dual' need the element 'perfometers' (%r)")
                 % perfometer
             )
 
@@ -662,7 +662,7 @@ class MetricometerRendererDual(MetricometerRenderer):
 
         if len(perfometer["perfometers"]) != 2:
             raise MKInternalError(
-                _("Perf-O-Meter of type 'dual' must contain exactly " "two definitions, not %d")
+                _("Perf-O-Meter of type 'dual' must contain exactly two definitions, not %d")
                 % len(perfometer["perfometers"])
             )
 

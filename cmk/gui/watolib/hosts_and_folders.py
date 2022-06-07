@@ -2864,7 +2864,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         # Locked folder attributes
         if self._locked is True:
             lock_messages.append(
-                _("Folder attributes are locked " "(You cannot edit the attributes of this folder)")
+                _("Folder attributes are locked (You cannot edit the attributes of this folder)")
             )
         elif isinstance(self._locked, str) and self._locked:
             lock_messages.append(self._locked)
@@ -2872,7 +2872,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         # Also subfolders are locked
         if self._locked_subfolders:
             lock_messages.append(
-                _("Subfolders are locked " "(You cannot create or remove folders in this folder)")
+                _("Subfolders are locked (You cannot create or remove folders in this folder)")
             )
         elif isinstance(self._locked_subfolders, str) and self._locked_subfolders:
             lock_messages.append(self._locked_subfolders)

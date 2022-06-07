@@ -103,7 +103,7 @@ class AgentOutputPage(Page, abc.ABC):
         host = Folder.current().host(host_name)
         if not host:
             raise MKGeneralException(
-                _("Host is not managed by WATO. " 'Click <a href="%s">here</a> to go back.')
+                _('Host is not managed by WATO. Click <a href="%s">here</a> to go back.')
                 % escape_attribute(self._back_url)
             )
         host.need_permission("read")

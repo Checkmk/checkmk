@@ -431,13 +431,13 @@ def message_mail(user_id, msg):
         )
     except OSError as e:
         raise MKInternalError(
-            _("Mail could not be delivered. " 'Failed to execute command "%s": %s')
+            _('Mail could not be delivered. Failed to execute command "%s": %s')
             % (" ".join(command), e)
         )
 
     if completed_process.returncode:
         raise MKInternalError(
-            _("Mail could not be delivered. Exit code of command is %r. " "Output is: %s")
+            _("Mail could not be delivered. Exit code of command is %r. Output is: %s")
             % (completed_process.returncode, completed_process.stdout)
         )
     return True

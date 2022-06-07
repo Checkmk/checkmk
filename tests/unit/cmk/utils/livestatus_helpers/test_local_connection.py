@@ -41,7 +41,7 @@ def test_local_table_assoc(mock_livestatus):
     )
     with live(expect_status_query=False):
         livestatus.LocalConnection().query_table_assoc(
-            "GET hosts\n" "Columns: name alias address custom_variables contacts contact_groups"
+            "GET hosts\nColumns: name alias address custom_variables contacts contact_groups"
         )
 
 

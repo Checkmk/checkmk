@@ -15,7 +15,7 @@ from cmk.gui.valuespec import Integer, Tuple
 
 def _parameter_valuespec_hw_single_temperature():
     return Tuple(
-        help=_("Temperature levels for hardware devices with " "a single temperature sensor."),
+        help=_("Temperature levels for hardware devices with a single temperature sensor."),
         elements=[
             Integer(title=_("warning at"), unit="°C", default_value=35),
             Integer(title=_("critical at"), unit="°C", default_value=40),

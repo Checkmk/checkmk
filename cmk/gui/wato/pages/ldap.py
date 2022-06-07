@@ -225,7 +225,7 @@ class LDAPConnectionValuespec(Transform):
                         IndividualOrStoredPassword(
                             title=_("Bind password"),
                             help=_(
-                                "Specify the password to be used to bind to " "the LDAP directory."
+                                "Specify the password to be used to bind to the LDAP directory."
                             ),
                         ),
                     ],
@@ -686,7 +686,7 @@ class LDAPConnectionValuespec(Transform):
             if connection_id != self._connection_id and value == suffix:
                 raise MKUserError(
                     varprefix,
-                    _("This suffix is already used by connection %s." "Please choose another one.")
+                    _("This suffix is already used by connection %s. Please choose another one.")
                     % connection_id,
                 )
 

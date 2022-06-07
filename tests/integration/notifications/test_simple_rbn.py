@@ -17,7 +17,7 @@ from tests.testlib.site import Site
 @pytest.fixture(name="fake_sendmail")
 def fake_sendmail_fixture(site: Site) -> Iterator[None]:
     site.write_text_file(
-        "local/bin/sendmail", "#!/bin/bash\n" "set -e\n" 'echo "sendmail called with: $@"\n'
+        "local/bin/sendmail", '#!/bin/bash\nset -e\necho "sendmail called with: $@"\n'
     )
     os.chmod(site.path("local/bin/sendmail"), 0o775)
     yield

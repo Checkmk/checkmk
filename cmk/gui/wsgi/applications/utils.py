@@ -102,7 +102,7 @@ def _ensure_general_access() -> None:
 
     if login.auth_type == "cookie":
         reason.append(
-            _("<p>You have been logged out. Please reload the page " "to re-authenticate.</p>")
+            _("<p>You have been logged out. Please reload the page to re-authenticate.</p>")
         )
         login.del_auth_cookie()
 

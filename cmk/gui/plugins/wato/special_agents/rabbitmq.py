@@ -39,7 +39,7 @@ def _valuespec_special_agents_rabbitmq():
                 "user",
                 TextInput(
                     title=_("Username"),
-                    help=_("The username that should be used for accessing the " "RabbitMQ API."),
+                    help=_("The username that should be used for accessing the RabbitMQ API."),
                     size=32,
                     allow_empty=False,
                 ),

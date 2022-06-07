@@ -863,7 +863,7 @@ class LDAPUserConnector(UserConnector):
         ):
             if user_id_attr not in ldap_user:
                 raise MKLDAPException(
-                    _('The configured User-ID attribute "%s" does not ' 'exist for the user "%s"')
+                    _('The configured User-ID attribute "%s" does not exist for the user "%s"')
                     % (user_id_attr, dn)
                 )
             user_id = self._sanitize_user_id(ldap_user[user_id_attr][0])

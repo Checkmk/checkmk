@@ -164,16 +164,16 @@ def send_mail(args: Args) -> Tuple[str, MailID]:
     except smtplib.SMTPAuthenticationError as exc:
         if exc.smtp_code == 530:
             raise SendMailError(
-                "Could not login to SMTP server. " "Looks like you have to use the --smtp-tls flag."
+                "Could not login to SMTP server. Looks like you have to use the --smtp-tls flag."
             ) from exc
         if exc.smtp_code == 535:
             raise SendMailError(
-                "Could not login to SMTP server. " "Looks like you provided the wrong credentials."
+                "Could not login to SMTP server. Looks like you provided the wrong credentials."
             ) from exc
         raise SendMailError("Could not login to SMTP server. (%r)" % exc) from exc
     except smtplib.SMTPRecipientsRefused as exc:
         raise SendMailError(
-            "Could not send email. " "Maybe you've sent too much mails? (%r)." % exc
+            "Could not send email. Maybe you've sent too many mails? (%r)." % exc
         ) from exc
     except Exception as exc:
         raise SendMailError("Failed to send mail: %r" % exc) from exc

@@ -443,7 +443,7 @@ class GeneralDiagnosticsElement(ABCDiagnosticsElementJSONDump):
     @property
     def description(self) -> str:
         return _(
-            "OS, Checkmk version and edition, Time, Core, " "Python version and paths, Architecture"
+            "OS, Checkmk version and edition, Time, Core, Python version and paths, Architecture"
         )
 
     def _collect_infos(self, collectors: Collectors) -> DiagnosticsElementJSONResult:

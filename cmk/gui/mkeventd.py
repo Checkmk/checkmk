@@ -207,7 +207,7 @@ def query_ec_directly(query):
         return ast.literal_eval(response_text.decode())
     except SyntaxError:
         raise MKGeneralException(
-            _("Invalid response from event daemon: " "<pre>%s</pre>") % response_text
+            _("Invalid response from event daemon: <pre>%s</pre>") % response_text
         )
 
     except Exception as e:

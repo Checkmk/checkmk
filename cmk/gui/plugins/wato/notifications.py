@@ -1258,7 +1258,7 @@ class NotificationParameterServiceNow(NotificationParameter):
                     DropdownChoice(
                         title=_("Priority"),
                         help=_(
-                            "Here you can define with which priority the case " "should be created."
+                            "Here you can define with which priority the case should be created."
                         ),
                         choices=[
                             ("low", _("Low")),

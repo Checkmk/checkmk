@@ -340,19 +340,19 @@ def _man_page_catalog_topics():
             "hw",
             True,
             _("Appliances, other dedicated hardware"),
-            _("Switches, load balancers, storage, UPSes, " "environmental sensors, etc. "),
+            _("Switches, load balancers, storage, UPSes, environmental sensors, etc. "),
         ),
         (
             "os",
             True,
             _("Operating systems"),
-            _("Plugins for operating systems, things " "like memory, CPU, filesystems, etc."),
+            _("Plugins for operating systems, things like memory, CPU, filesystems, etc."),
         ),
         (
             "app",
             False,
             _("Applications"),
-            _("Monitoring of applications such as " "processes, services or databases"),
+            _("Monitoring of applications such as processes, services or databases"),
         ),
         (
             "cloud",

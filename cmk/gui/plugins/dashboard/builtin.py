@@ -19,7 +19,7 @@ builtin_dashboards["problems"] = {
     "sort_index": 5,
     "icon": "dashboard_problems",
     "description": _(
-        "This dashboard gives you a general overview on the state of your " "monitored devices."
+        "This dashboard gives you a general overview on the state of your monitored devices."
     ),
     "dashlets": [
         {

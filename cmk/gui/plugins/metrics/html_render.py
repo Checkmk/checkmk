@@ -482,7 +482,7 @@ def _show_graph_legend(
 
             descr += (
                 "\n\n"
-                + _("Click here to change the graphs " 'consolidation function to "%s".') % scalar
+                + _('Click here to change the graphs consolidation function to "%s".') % scalar
             )
 
             classes.append("inactive")

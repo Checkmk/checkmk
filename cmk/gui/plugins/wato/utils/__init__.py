@@ -2337,14 +2337,13 @@ class HostTagCondition(ValueSpec[Sequence[str]]):
     def validate_datatype(self, value: Sequence[str], varprefix: str) -> None:
         if not isinstance(value, list):
             raise MKUserError(
-                varprefix, _("The list of host tags must be a list, but " "is %r") % type(value)
+                varprefix, _("The list of host tags must be a list, but is %r") % type(value)
             )
         for x in value:
             if not isinstance(x, str):
                 raise MKUserError(
                     varprefix,
-                    _("The list of host tags must only contain strings " "but also contains %r")
-                    % x,
+                    _("The list of host tags must only contain strings but also contains %r") % x,
                 )
 
     def _render_condition_editor(self, varprefix: str, tag_specs: Sequence[str]) -> None:
@@ -2557,7 +2556,7 @@ def _site_rule_match_condition():
         "match_site",
         DualListChoice(
             title=_("Match sites"),
-            help=_("This condition makes the rule match only hosts of " "the selected sites."),
+            help=_("This condition makes the rule match only hosts of the selected sites."),
             choices=get_activation_site_choices,
         ),
     )

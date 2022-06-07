@@ -92,7 +92,7 @@ def _prefetch_description_object(*, backend: SNMPBackend) -> None:
 def _fake_description_object() -> None:
     """Fake OID values to prevent issues with a lot of scan functions"""
     console.vverbose(
-        "       Skipping system description OID " '(Set %s and %s to "")\n',
+        '       Skipping system description OID (Set %s and %s to "")\n',
         OID_SYS_DESCR,
         OID_SYS_OBJ,
     )

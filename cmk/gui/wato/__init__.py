@@ -284,7 +284,7 @@ def load_plugins() -> None:
 
     if modes:
         raise _MKGeneralException(
-            _("Deprecated WATO modes found: %r. " "They need to be refactored to new API.")
+            _("Deprecated WATO modes found: %r. They need to be refactored to new API.")
             % list(modes.keys())
         )
 

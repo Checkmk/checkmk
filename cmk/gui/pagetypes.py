@@ -1126,7 +1126,7 @@ class Overridable(Base):
             except KeyError:
                 raise MKUserError(
                     "_delete",
-                    _("The %s you are trying to delete " "does not exist.") % pagetype_title,
+                    _("The %s you are trying to delete does not exist.") % pagetype_title,
                 )
 
             if not instance.may_delete():
@@ -1457,9 +1457,7 @@ def vs_no_permission_to_publish(type_title: str, title: str) -> FixedValue:
     return FixedValue(
         value=False,
         title=title,
-        totext=_(
-            "The %s is only visible to you because you don't have the " "permission to share it."
-        )
+        totext=_("The %s is only visible to you because you don't have the permission to share it.")
         % type_title.lower(),
     )
 

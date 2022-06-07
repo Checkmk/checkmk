@@ -164,7 +164,7 @@ def create_graph_recipe_from_template(
     units = {m["unit"] for m in metrics}
     if len(units) > 1:
         raise MKGeneralException(
-            _("Cannot create graph with metrics of " "different units '%s'") % ", ".join(units)
+            _("Cannot create graph with metrics of different units '%s'") % ", ".join(units)
         )
 
     title = replace_expressions(str(graph_template.get("title", "")), translated_metrics)

@@ -703,7 +703,7 @@ def verify_permission(host_name: HostName, site: Optional[livestatus.SiteId]) ->
         result = sites.live().query_summed_stats(query, "ColumnHeaders: off\n")
     except livestatus.MKLivestatusNotFoundError:
         raise MKAuthException(
-            _("No such inventory tree of host %s." " You may also have no access to this host.")
+            _("No such inventory tree of host %s. You may also have no access to this host.")
             % host_name
         )
     finally:

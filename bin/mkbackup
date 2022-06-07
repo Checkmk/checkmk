@@ -789,9 +789,7 @@ def do_site_backup(opts, site=None, try_stop=True):
                     start_site(site)
 
             else:
-                raise MKGeneralException(
-                    "Failed to backup site that only supports " "offline backup."
-                )
+                raise MKGeneralException("Failed to backup site that only supports offline backup.")
 
         raise MKGeneralException("Site backup failed: %s" % err)
     return None
@@ -1220,7 +1218,7 @@ def verify_target_is_ready(target_ident):
 
     if cfg["remote"][1]["is_mountpoint"] and not os.path.ismount(cfg["remote"][1]["path"]):
         raise MKGeneralException(
-            "The backup target path is configured to be a mountpoint, " "but nothing is mounted."
+            "The backup target path is configured to be a mountpoint, but nothing is mounted."
         )
 
 

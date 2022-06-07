@@ -9,9 +9,7 @@ from cmk.gui.valuespec import Age, DropdownChoice, MonitoringState, Tuple
 
 run_duration = Tuple(
     title=_("Maximum run duration for last execution"),
-    help=_(
-        "Here you can define an upper limit for the run duration of " "last execution of the job."
-    ),
+    help=_("Here you can define an upper limit for the run duration of last execution of the job."),
     elements=[
         Age(title=_("warning at")),
         Age(title=_("critical at")),

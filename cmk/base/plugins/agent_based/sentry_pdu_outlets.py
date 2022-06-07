@@ -8,6 +8,7 @@ from typing import Mapping, Tuple
 
 from .agent_based_api.v1 import equals, register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from .utils.sentry import DEVICE_STATES_V4
 
 Section = Mapping[str, int]
 
@@ -22,32 +23,6 @@ OUTLET_STATES: Mapping[int, Tuple[State, str]] = {
     7: (State.CRIT, "reading"),
     8: (State.CRIT, "off fuse"),
     9: (State.CRIT, "on fuse"),
-}
-
-
-OUTLET_STATES_V4: Mapping[int, Tuple[State, str]] = {
-    0: (State.OK, "normal"),
-    1: (State.CRIT, "disabled"),
-    2: (State.CRIT, "purged"),
-    5: (State.WARN, "reading"),
-    6: (State.WARN, "settle"),
-    7: (State.CRIT, "not found"),
-    8: (State.CRIT, "lost"),
-    9: (State.CRIT, "read error"),
-    10: (State.CRIT, "no comm"),
-    11: (State.CRIT, "pwr error"),
-    12: (State.CRIT, "breaker tripped"),
-    13: (State.CRIT, "fuse blown"),
-    14: (State.CRIT, "low alarm"),
-    15: (State.WARN, "low warning"),
-    16: (State.WARN, "high warning"),
-    17: (State.CRIT, "high alarm"),
-    18: (State.CRIT, "alarm"),
-    19: (State.CRIT, "under limit"),
-    20: (State.CRIT, "over limit"),
-    21: (State.CRIT, "nvm fail"),
-    22: (State.CRIT, "profile error"),
-    23: (State.CRIT, "conflict"),
 }
 
 
@@ -121,7 +96,7 @@ register.check_plugin(
 
 
 def check_sentry_pdu_outlets_v4(item: str, section: Section) -> CheckResult:
-    yield from check_outlets(item, section, OUTLET_STATES_V4)
+    yield from check_outlets(item, section, DEVICE_STATES_V4)
 
 
 register.check_plugin(

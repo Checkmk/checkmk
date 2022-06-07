@@ -1,0 +1,16 @@
+title: Sentry PDU Devices v4: Plugs
+agents: snmp
+catalog: hw/power/servertech
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the state of the plugs of Sentry PDUs.
+ If the plug status is normal, then the check displays OK.
+ If the plug status is reading/settle/lowWarning/highWarning,
+ then check displays WARN. Otherwise the check displays CRIT.
+
+item:
+ The ID of the plug as given by the device
+
+discovery:
+ One service is created for each plug.

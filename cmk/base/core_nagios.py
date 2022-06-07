@@ -12,7 +12,7 @@ import socket
 import sys
 from io import StringIO
 from pathlib import Path
-from typing import Any, cast, Dict, IO, Iterable, List, Optional, Set, Tuple, Union
+from typing import Any, cast, Dict, IO, Iterable, List, Optional, Set, Tuple
 
 import cmk.utils.config_path
 import cmk.utils.paths
@@ -32,7 +32,6 @@ from cmk.utils.type_defs import (
     HostName,
     HostsToUpdate,
     InventoryPluginName,
-    Item,
     ServicegroupName,
     ServiceName,
     TimeperiodName,
@@ -46,15 +45,10 @@ import cmk.base.obsolete_output as out
 import cmk.base.plugin_contexts as plugin_contexts
 import cmk.base.sources as sources
 import cmk.base.utils
-from cmk.base.check_utils import ServiceID
 from cmk.base.config import ConfigCache, HostConfig, ObjectAttributes
-from cmk.base.core_config import CoreCommand, CoreCommandName
+from cmk.base.core_config import AbstractServiceID, CoreCommand, CoreCommandName
 
 ObjectSpec = Dict[str, Any]
-
-ActiveServiceID = Tuple[str, Item]  # TODO: I hope the str someday (tm) becomes "CheckPluginName",
-CustomServiceID = Tuple[str, Item]  # #     at which point these will be the same as "ServiceID"
-AbstractServiceID = Union[ActiveServiceID, CustomServiceID, ServiceID]
 
 CHECK_INFO_BY_MIGRATED_NAME = {
     k: config.check_info[v] for k, v in config.legacy_check_plugin_names.items()
@@ -439,7 +433,7 @@ def _create_nagios_servicedefs(
                     escaped_args = args.replace("\\", "\\\\").replace("!", "\\!")
 
                     if description in used_descriptions:
-                        cn, it = used_descriptions[description]
+                        cn, _ = used_descriptions[description]
                         # If we have the same active check again with the same description,
                         # then we do not regard this as an error, but simply ignore the
                         # second one. That way one can override a check with other settings.
@@ -450,7 +444,7 @@ def _create_nagios_servicedefs(
                             checktype="active",
                             description=description,
                             host_name=hostname,
-                            first_occurrence=(cn, it),
+                            first_occurrence=used_descriptions[description],
                             second_occurrence=("active(%s)" % acttype, None),
                         )
                         continue
@@ -535,7 +529,7 @@ def _create_nagios_servicedefs(
             cfg.custom_commands_to_define.add(command_name)
 
             if description in used_descriptions:
-                cn, it = used_descriptions[description]
+                cn, _ = used_descriptions[description]
                 # If we have the same active check again with the same description,
                 # then we do not regard this as an error, but simply ignore the
                 # second one.
@@ -546,7 +540,7 @@ def _create_nagios_servicedefs(
                     checktype="custom",
                     description=description,
                     host_name=hostname,
-                    first_occurrence=(cn, it),
+                    first_occurrence=used_descriptions[description],
                     second_occurrence=("custom(%s)" % command_name, description),
                 )
                 continue

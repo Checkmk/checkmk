@@ -44,6 +44,7 @@ from cmk.utils.type_defs import (
     HostAddress,
     HostName,
     HostsToUpdate,
+    Item,
     Labels,
     LabelSources,
     ServiceName,
@@ -53,7 +54,7 @@ import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.obsolete_output as out
-from cmk.base.check_utils import ConfiguredService
+from cmk.base.check_utils import ConfiguredService, ServiceID
 from cmk.base.config import (
     ConfigCache,
     HostCheckCommand,
@@ -67,6 +68,9 @@ ObjectMacros = Dict[str, AnyStr]
 CoreCommandName = str
 CoreCommand = str
 CheckCommandArguments = Iterable[Union[int, float, str, Tuple[str, str, str]]]
+
+ActiveServiceID = Tuple[str, Item]  # TODO: I hope the str someday (tm) becomes "CheckPluginName",
+AbstractServiceID = Union[ActiveServiceID, ServiceID]
 
 
 class MonitoringCore(abc.ABC):
@@ -131,8 +135,8 @@ def duplicate_service_warning(
     checktype: str,
     description: str,
     host_name: HostName,
-    first_occurrence: Tuple[Union[str, CheckPluginName], Optional[str]],
-    second_occurrence: Tuple[Union[str, CheckPluginName], Optional[str]],
+    first_occurrence: AbstractServiceID,
+    second_occurrence: AbstractServiceID,
 ) -> None:
     return warning(
         "ERROR: Duplicate service description (%s check) '%s' for host '%s'!\n"

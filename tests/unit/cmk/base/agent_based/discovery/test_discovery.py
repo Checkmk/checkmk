@@ -41,6 +41,7 @@ from cmk.base.agent_based.data_provider import (
     SectionsParser,
 )
 from cmk.base.agent_based.discovery import _discovered_services
+from cmk.base.check_utils import ServiceID
 from cmk.base.discovered_labels import HostLabel
 from cmk.base.sources.agent import AgentRawDataSection
 from cmk.base.sources.snmp import SNMPRawDataSection
@@ -49,7 +50,7 @@ from cmk.base.sources.snmp import SNMPRawDataSection
 @pytest.fixture
 def service_table() -> discovery.ServicesTable:
     return {
-        (CheckPluginName("check_plugin_name"), "New Item 1"): (
+        ServiceID(CheckPluginName("check_plugin_name"), "New Item 1"): (
             "new",
             autochecks.AutocheckEntry(
                 CheckPluginName("check_plugin_name"),
@@ -59,7 +60,7 @@ def service_table() -> discovery.ServicesTable:
             ),
             [],
         ),
-        (CheckPluginName("check_plugin_name"), "New Item 2"): (
+        ServiceID(CheckPluginName("check_plugin_name"), "New Item 2"): (
             "new",
             autochecks.AutocheckEntry(
                 CheckPluginName("check_plugin_name"),
@@ -69,7 +70,7 @@ def service_table() -> discovery.ServicesTable:
             ),
             [],
         ),
-        (CheckPluginName("check_plugin_name"), "Vanished Item 1"): (
+        ServiceID(CheckPluginName("check_plugin_name"), "Vanished Item 1"): (
             "vanished",
             autochecks.AutocheckEntry(
                 CheckPluginName("check_plugin_name"),
@@ -79,7 +80,7 @@ def service_table() -> discovery.ServicesTable:
             ),
             [],
         ),
-        (CheckPluginName("check_plugin_name"), "Vanished Item 2"): (
+        ServiceID(CheckPluginName("check_plugin_name"), "Vanished Item 2"): (
             "vanished",
             autochecks.AutocheckEntry(
                 CheckPluginName("check_plugin_name"),

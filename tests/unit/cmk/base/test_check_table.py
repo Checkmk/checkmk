@@ -35,7 +35,7 @@ def test_cluster_ignores_nodes_parameters(monkeypatch: MonkeyPatch) -> None:
     node = HostName("node")
     cluster = HostName("cluster")
 
-    service_id = CheckPluginName("smart_temp"), "auto-clustered"
+    service_id = ServiceID(CheckPluginName("smart_temp"), "auto-clustered")
 
     ts = Scenario()
     ts.add_host("node")
@@ -387,7 +387,7 @@ def test_get_check_table__static_checks_win(monkeypatch: MonkeyPatch) -> None:
     # assert check table is populated as expected
     assert len(chk_table) == 1
     # assert static checks won
-    effective_params = chk_table[(plugin_name, item)].parameters.evaluate(lambda _: True)
+    effective_params = chk_table[ServiceID(plugin_name, item)].parameters.evaluate(lambda _: True)
     assert effective_params["source"] == "static"  # type: ignore[index,call-overload]
 
 

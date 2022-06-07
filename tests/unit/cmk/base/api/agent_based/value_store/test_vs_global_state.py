@@ -13,13 +13,14 @@ from cmk.base.api.agent_based.value_store._global_state import (
     get_value_store,
     load_host_value_store,
 )
+from cmk.base.api.agent_based.value_store._utils import ServiceID
 
 _TEST_KEY = ("check", "item", "user-key")
 
 
 def test_load_host_value_store_loads_file(monkeypatch):
 
-    service_id = (CheckPluginName("test_service"), None)
+    service_id = ServiceID(CheckPluginName("test_service"), None)
 
     monkeypatch.setattr(
         store,

@@ -18,6 +18,7 @@ from typing import (
     Iterator,
     Mapping,
     MutableMapping,
+    NamedTuple,
     Optional,
     Set,
     Tuple,
@@ -32,7 +33,11 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import logger
 from cmk.utils.type_defs import CheckPluginName, HostName, Item
 
-ServiceID = Tuple[CheckPluginName, Item]
+
+class ServiceID(NamedTuple):
+    name: CheckPluginName
+    item: Item
+
 
 _PluginName = str
 _UserKey = str

@@ -19,6 +19,7 @@ from cmk.base.api.agent_based.value_store._utils import (
     _DynamicDiskSyncedMapping,
     _StaticDiskSyncedMapping,
     _ValueStore,
+    ServiceID,
     ValueStoreManager,
 )
 
@@ -240,8 +241,8 @@ class TestValueStoreManager:
     @staticmethod
     def test_namespace_context():
         vsm = ValueStoreManager("test-host")
-        service_inner = (CheckPluginName("unit_test_inner"), None)
-        service_outer = (CheckPluginName("unit_test_outer"), None)
+        service_inner = ServiceID(CheckPluginName("unit_test_inner"), None)
+        service_outer = ServiceID(CheckPluginName("unit_test_outer"), None)
 
         assert vsm.active_service_interface is None
 

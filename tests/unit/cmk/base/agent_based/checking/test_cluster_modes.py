@@ -24,8 +24,9 @@ from cmk.base.api.agent_based.checking_classes import (
     Result,
     State,
 )
+from cmk.base.api.agent_based.value_store._utils import ServiceID
 
-TEST_SERVICE_ID = (CheckPluginName("unit_test_plugin"), "unit_test_item")
+TEST_SERVICE_ID = ServiceID(CheckPluginName("unit_test_plugin"), "unit_test_item")
 
 
 def _get_test_check_plugin(**kwargs) -> CheckPlugin:

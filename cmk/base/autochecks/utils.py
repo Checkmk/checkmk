@@ -43,7 +43,7 @@ class AutocheckEntry(NamedTuple):
         )
 
     def id(self) -> ServiceID:
-        return self.check_plugin_name, self.item
+        return ServiceID(self.check_plugin_name, self.item)
 
     def dump(self) -> Mapping[str, Any]:
         return {

@@ -25,7 +25,7 @@ class ConfiguredService(NamedTuple):
     service_labels: Mapping[str, ServiceLabel]
 
     def id(self) -> ServiceID:
-        return self.check_plugin_name, self.item
+        return ServiceID(self.check_plugin_name, self.item)
 
     def sort_key(self) -> ServiceID:
         """Allow to sort services
@@ -33,4 +33,4 @@ class ConfiguredService(NamedTuple):
         Basically sort by id(). Unfortunately we have plugins with *AND* without
         items.
         """
-        return (self.check_plugin_name, self.item or "")
+        return ServiceID(self.check_plugin_name, self.item or "")

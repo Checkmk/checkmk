@@ -5,6 +5,7 @@
 #define _SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING
 #include <experimental/filesystem>
 #include <filesystem>
+#include <ranges>
 
 #include "cfg.h"
 #include "common/wtools.h"
@@ -18,6 +19,7 @@
 #include "tools/_process.h"
 
 namespace fs = std::filesystem;
+namespace rs = std::ranges;
 
 namespace cma::provider {
 namespace {
@@ -427,37 +429,45 @@ TEST(FileInfoTest, Unc) {
     }
 }
 
-TEST(FileInfoTest, GlobRecursive) {
-    fs::path public_folder_path =
-        tools::win::GetSomeSystemFolder(FOLDERID_Public);
-    auto files =
-        details::FindFilesByMask((public_folder_path / "**").wstring());
-    EXPECT_TRUE(files.size() > 12);
+class FileInfoTestFixture : public ::testing::Test {
+public:
+    void SetUp() override {
+        work_dir_ = tst::GetTempDir() / "file_info_test";
+        fs::create_directories(work_dir_ / "1\\2\\3");
+        fs::create_directories(work_dir_ / "3");
+        fs::create_directories(work_dir_ / "4");
+        fs::create_directories(work_dir_ / "5");
+        // create 6 files to be found by "**"
+        v_.emplace_back(work_dir_ / "1" / "2" / "x.txt");  // **/x.txt
+        v_.emplace_back(work_dir_ / "3" / "x.txt");        // */x.txt **/x.txt
+        v_.emplace_back(work_dir_ / "4" / "x.txt");        // */x.txt **/x.txt
+        v_.emplace_back(work_dir_ / "a.txt");
+        v_.emplace_back(work_dir_ / "b.txt");
+        v_.emplace_back(work_dir_ / "x.txt");
+        rs::for_each(v_, [&](const auto &x) { tst::CreateTextFile(x, "x"); });
+    }
+    void TearDown() override {
+        std::error_code ec;
+        fs::remove_all(work_dir_, ec);
+    }
+
+    fs::path work_dir_;
+    std::vector<fs::path> v_;
+};
+
+TEST_F(FileInfoTestFixture, Glob) {
+    auto files = details::FindFilesByMask((work_dir_ / "**").wstring());
+    EXPECT_EQ(files.size(), 6);
 
     auto sorted = files;
-    std::ranges::sort(sorted);
-    EXPECT_TRUE(files == sorted) << "output should be sorted";
-    for (auto &f : files) {
-        EXPECT_TRUE(fs::is_regular_file(f));
-    }
-}
+    rs::sort(sorted);
+    EXPECT_EQ(files, sorted);
+    EXPECT_EQ(files, v_);
+    files = details::FindFilesByMask((work_dir_ / "*" / "x.txt").wstring());
+    EXPECT_EQ(files.size(), 2);
 
-TEST(FileInfoTest, FindDesktopIni) {
-    fs::path public_folder_path =
-        tools::win::GetSomeSystemFolder(FOLDERID_Public);
-    auto files = details::FindFilesByMask(
-        (public_folder_path / "*" / "desktop.ini").wstring());
-    EXPECT_TRUE(files.size() == 8)
-        << "Normal OS HAVE TO HAVE only 8 ini files in Public";
-}
-
-TEST(FileInfoTest, FindDesktopIniRecursive) {
-    fs::path public_folder_path =
-        tools::win::GetSomeSystemFolder(FOLDERID_Public);
-    auto files = details::FindFilesByMask(
-        (public_folder_path / "**" / "desktop.ini").wstring());
-    EXPECT_TRUE(files.size() == 8)
-        << "Normal OS HAVE TO HAVE only 8 ini files in Public";
+    files = details::FindFilesByMask((work_dir_ / "**" / "x.txt").wstring());
+    EXPECT_EQ(files.size(), 3);
 }
 
 TEST(FileInfoTest, WindowsResources) {

@@ -4,8 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Type
+
 from cmk.gui.i18n import _
 from cmk.gui.plugins.watolib.utils import (
+    ABCConfigDomain,
     config_variable_group_registry,
     config_variable_registry,
     ConfigVariable,
@@ -29,7 +32,7 @@ class ConfigVariableCrashReportURL(ConfigVariable):
     def group(self):
         return ConfigVariableGroupSupport
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainGUI
 
     def ident(self) -> str:
@@ -48,7 +51,7 @@ class ConfigVariableCrashReportTarget(ConfigVariable):
     def group(self):
         return ConfigVariableGroupSupport
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainGUI
 
     def ident(self) -> str:

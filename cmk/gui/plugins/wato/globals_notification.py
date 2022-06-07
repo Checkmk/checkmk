@@ -8,6 +8,8 @@
 # TODO: Remove all configuration for legacy-Email to deprecated, or completely
 # remove from WATO.
 
+from typing import Type
+
 import cmk.utils.paths
 
 from cmk.gui.i18n import _
@@ -15,7 +17,7 @@ from cmk.gui.plugins.wato.utils import (
     ConfigVariableGroupNotifications,
     notification_parameter_registry,
 )
-from cmk.gui.plugins.watolib.utils import config_variable_registry, ConfigVariable
+from cmk.gui.plugins.watolib.utils import ABCConfigDomain, config_variable_registry, ConfigVariable
 from cmk.gui.valuespec import (
     Age,
     CascadingDropdown,
@@ -37,7 +39,7 @@ class ConfigVariableEnableRBN(ConfigVariable):
     def group(self):
         return ConfigVariableGroupNotifications
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainCore
 
     def ident(self) -> str:
@@ -64,7 +66,7 @@ class ConfigVariableNotificationFallbackEmail(ConfigVariable):
     def group(self):
         return ConfigVariableGroupNotifications
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainCore
 
     def ident(self) -> str:
@@ -92,7 +94,7 @@ class ConfigVariableNotificationFallbackFormat(ConfigVariable):
     def group(self):
         return ConfigVariableGroupNotifications
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainCore
 
     def ident(self) -> str:
@@ -121,7 +123,7 @@ class ConfigVariableNotificationBacklog(ConfigVariable):
     def group(self):
         return ConfigVariableGroupNotifications
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainCore
 
     def ident(self) -> str:
@@ -147,7 +149,7 @@ class ConfigVariableNotificationBulkInterval(ConfigVariable):
     def group(self):
         return ConfigVariableGroupNotifications
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainCore
 
     def ident(self) -> str:
@@ -174,7 +176,7 @@ class ConfigVariableNotificationPluginTimeout(ConfigVariable):
     def group(self):
         return ConfigVariableGroupNotifications
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainCore
 
     def ident(self) -> str:
@@ -193,7 +195,7 @@ class ConfigVariableNotificationLogging(ConfigVariable):
     def group(self):
         return ConfigVariableGroupNotifications
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainCore
 
     def ident(self) -> str:
@@ -235,7 +237,7 @@ class ConfigVariableServiceLevels(ConfigVariable):
     def group(self):
         return ConfigVariableGroupNotifications
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainGUI
 
     def ident(self) -> str:
@@ -281,7 +283,7 @@ class ConfigVariableFailedNotificationHorizon(ConfigVariable):
     def group(self):
         return ConfigVariableGroupNotifications
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainGUI
 
     def ident(self) -> str:

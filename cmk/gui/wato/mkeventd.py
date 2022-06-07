@@ -38,6 +38,7 @@ from cmk.utils.site import omd_site
 # It's OK to import centralized config load logic
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
+from cmk.gui.plugins.watolib.utils import ABCConfigDomain
 from cmk.gui.wato.mkeventdstore import (
     export_mkp_rule_pack,
     load_mkeventd_rules,
@@ -3532,7 +3533,7 @@ class ConfigVariableEventConsoleRemoteStatus(ConfigVariable):
     def group(self):
         return ConfigVariableGroupEventConsoleGeneric
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainEventConsole
 
     def ident(self) -> str:
@@ -3596,7 +3597,7 @@ class ConfigVariableEventConsoleReplication(ConfigVariable):
     def group(self):
         return ConfigVariableGroupEventConsoleGeneric
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainEventConsole
 
     def ident(self) -> str:
@@ -3720,7 +3721,7 @@ class ConfigVariableEventConsoleRetentionInterval(ConfigVariable):
     def group(self):
         return ConfigVariableGroupEventConsoleGeneric
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainEventConsole
 
     def ident(self) -> str:
@@ -3742,7 +3743,7 @@ class ConfigVariableEventConsoleHousekeepingInterval(ConfigVariable):
     def group(self):
         return ConfigVariableGroupEventConsoleGeneric
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainEventConsole
 
     def ident(self) -> str:
@@ -3765,7 +3766,7 @@ class ConfigVariableEventConsoleStatisticsInterval(ConfigVariable):
     def group(self):
         return ConfigVariableGroupEventConsoleGeneric
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainEventConsole
 
     def ident(self) -> str:
@@ -3788,7 +3789,7 @@ class ConfigVariableEventConsoleLogMessages(ConfigVariable):
     def group(self):
         return ConfigVariableGroupEventConsoleGeneric
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainEventConsole
 
     def ident(self) -> str:
@@ -3813,7 +3814,7 @@ class ConfigVariableEventConsoleRuleOptimizer(ConfigVariable):
     def group(self):
         return ConfigVariableGroupEventConsoleGeneric
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainEventConsole
 
     def ident(self) -> str:
@@ -3832,7 +3833,7 @@ class ConfigVariableEventConsoleActions(ConfigVariable):
     def group(self):
         return ConfigVariableGroupEventConsoleGeneric
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainEventConsole
 
     def ident(self) -> str:
@@ -3971,7 +3972,7 @@ class ConfigVariableEventConsoleArchiveOrphans(ConfigVariable):
     def group(self):
         return ConfigVariableGroupEventConsoleGeneric
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainEventConsole
 
     def ident(self) -> str:
@@ -3995,7 +3996,7 @@ class ConfigVariableHostnameTranslation(ConfigVariable):
     def group(self):
         return ConfigVariableGroupEventConsoleGeneric
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainEventConsole
 
     def ident(self) -> str:
@@ -4096,7 +4097,7 @@ class ConfigVariableEventConsoleEventLimit(ConfigVariable):
     def group(self):
         return ConfigVariableGroupEventConsoleGeneric
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainEventConsole
 
     def ident(self) -> str:
@@ -4151,7 +4152,7 @@ class ConfigVariableEventConsoleHistoryRotation(ConfigVariable):
     def group(self):
         return ConfigVariableGroupEventConsoleGeneric
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainEventConsole
 
     def ident(self) -> str:
@@ -4172,7 +4173,7 @@ class ConfigVariableEventConsoleHistoryLifetime(ConfigVariable):
     def group(self):
         return ConfigVariableGroupEventConsoleGeneric
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainEventConsole
 
     def ident(self) -> str:
@@ -4192,7 +4193,7 @@ class ConfigVariableEventConsoleSocketQueueLength(ConfigVariable):
     def group(self):
         return ConfigVariableGroupEventConsoleGeneric
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainEventConsole
 
     def ident(self) -> str:
@@ -4219,7 +4220,7 @@ class ConfigVariableEventConsoleEventSocketQueueLength(ConfigVariable):
     def group(self):
         return ConfigVariableGroupEventConsoleGeneric
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainEventConsole
 
     def ident(self) -> str:
@@ -4246,7 +4247,7 @@ class ConfigVariableEventConsoleTranslateSNMPTraps(ConfigVariable):
     def group(self):
         return ConfigVariableGroupEventConsoleSNMP
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainEventConsole
 
     def ident(self) -> str:
@@ -4291,7 +4292,7 @@ class ConfigVariableEventConsoleSNMPCredentials(ConfigVariable):
     def group(self):
         return ConfigVariableGroupEventConsoleSNMP
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainEventConsole
 
     def ident(self) -> str:
@@ -4352,7 +4353,7 @@ class ConfigVariableEventConsoleDebugRules(ConfigVariable):
     def group(self):
         return ConfigVariableGroupEventConsoleLogging
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainEventConsole
 
     def ident(self) -> str:
@@ -4376,7 +4377,7 @@ class ConfigVariableEventConsoleLogLevel(ConfigVariable):
     def group(self):
         return ConfigVariableGroupEventConsoleLogging
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainEventConsole
 
     def ident(self) -> str:
@@ -4460,7 +4461,7 @@ class ConfigVariableEventLogRuleHits(ConfigVariable):
     def group(self):
         return ConfigVariableGroupEventConsoleLogging
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainEventConsole
 
     def ident(self) -> str:
@@ -4485,7 +4486,7 @@ class ConfigVariableEventConsoleConnectTimeout(ConfigVariable):
     def group(self):
         return ConfigVariableGroupUserInterface
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainGUI
 
     def ident(self) -> str:
@@ -4510,7 +4511,7 @@ class ConfigVariableEventConsolePrettyPrintRules(ConfigVariable):
     def group(self):
         return ConfigVariableGroupWATO
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainGUI
 
     def ident(self) -> str:
@@ -4536,7 +4537,7 @@ class ConfigVariableEventConsoleNotifyContactgroup(ConfigVariable):
     def group(self):
         return ConfigVariableGroupNotifications
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainGUI
 
     def ident(self) -> str:
@@ -4566,7 +4567,7 @@ class ConfigVariableEventConsoleNotifyRemoteHost(ConfigVariable):
     def group(self):
         return ConfigVariableGroupNotifications
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainGUI
 
     def ident(self) -> str:
@@ -4599,7 +4600,7 @@ class ConfigVariableEventConsoleNotifyFacility(ConfigVariable):
     def group(self):
         return ConfigVariableGroupNotifications
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainGUI
 
     def ident(self) -> str:

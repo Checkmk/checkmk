@@ -4,10 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Type
+
 from cmk.gui.config import active_config
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import ConfigVariableGroupUserInterface
-from cmk.gui.plugins.watolib.utils import config_variable_registry, ConfigVariable
+from cmk.gui.plugins.watolib.utils import ABCConfigDomain, config_variable_registry, ConfigVariable
 from cmk.gui.valuespec import Age, Dictionary, ListOf, TextInput
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
 
@@ -17,7 +19,7 @@ class ConfigVariableGraphTimeranges(ConfigVariable):
     def group(self):
         return ConfigVariableGroupUserInterface
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainGUI
 
     def ident(self) -> str:

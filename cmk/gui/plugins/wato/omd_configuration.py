@@ -9,6 +9,7 @@ import subprocess
 import traceback
 from typing import Any, Dict
 from typing import Optional as _Optional
+from typing import Type
 
 import cmk.utils.paths
 import cmk.utils.store as store
@@ -60,7 +61,7 @@ class ConfigVariableSiteAutostart(ConfigVariable):
     def group(self):
         return ConfigVariableGroupSiteManagement
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainOMD
 
     def ident(self) -> str:
@@ -81,7 +82,7 @@ class ConfigVariableSiteCore(ConfigVariable):
     def group(self):
         return ConfigVariableGroupSiteManagement
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainOMD
 
     def ident(self) -> str:
@@ -117,7 +118,7 @@ class ConfigVariableSiteLivestatusTCP(ConfigVariable):
     def group(self):
         return ConfigVariableGroupSiteManagement
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainOMD
 
     def ident(self) -> str:
@@ -142,7 +143,7 @@ class ConfigVariableSiteEventConsole(ConfigVariable):
     def group(self):
         return ConfigVariableGroupSiteManagement
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainOMD
 
     def ident(self) -> str:
@@ -267,7 +268,7 @@ class ConfigVariableSiteDiskspaceCleanup(ConfigVariable):
     def group(self):
         return ConfigVariableGroupSiteManagement
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainDiskspace
 
     def ident(self) -> str:
@@ -465,7 +466,7 @@ class ConfigVariableSiteApacheProcessTuning(ConfigVariable):
     def group(self):
         return ConfigVariableGroupSiteManagement
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainApache
 
     def ident(self) -> str:
@@ -590,7 +591,7 @@ class ConfigVariableSiteRRDCachedTuning(ConfigVariable):
     def group(self):
         return ConfigVariableGroupSiteManagement
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainRRDCached
 
     def ident(self) -> str:

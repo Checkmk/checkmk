@@ -96,7 +96,7 @@ class DisableNotificationsUserAttribute(UserAttribute):
     def permission(self):
         return "general.disable_notifications"
 
-    def domain(self):
+    def domain(self) -> str:
         return "check_mk"
 
 
@@ -137,7 +137,7 @@ class StartURLUserAttribute(UserAttribute):
             forth=lambda v: None if v == "" else v,
         )
 
-    def domain(self):
+    def domain(self) -> str:
         return "multisite"
 
 
@@ -167,7 +167,7 @@ class UIThemeUserAttribute(UserAttribute):
             ],
         )
 
-    def domain(self):
+    def domain(self) -> str:
         return "multisite"
 
 
@@ -187,7 +187,7 @@ class UISidebarPosition(UserAttribute):
             choices=[(None, _("Right")), ("left", _("Left"))],
         )
 
-    def domain(self):
+    def domain(self) -> str:
         return "multisite"
 
 
@@ -235,7 +235,7 @@ class UIIconPlacement(UserAttribute):
             choices=[(None, _("Per topic")), ("entry", _("Per entry"))],
         )
 
-    def domain(self):
+    def domain(self) -> str:
         return "multisite"
 
 
@@ -273,5 +273,5 @@ class UIBasicAdvancedToggle(UserAttribute):
             ],
         )
 
-    def domain(self):
+    def domain(self) -> str:
         return "multisite"

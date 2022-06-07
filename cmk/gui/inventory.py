@@ -98,9 +98,18 @@ class InventoryPath:
             )
 
         path = raw_path.strip(".").split(".")
+        sanitized_path = cls._sanitize_path(path[:-1])
+        if ":" in path[-2]:
+            source = TreeSource.table
+            # Forget the last '*' or an index like '17'
+            # because it's related to columns (not nodes)
+            sanitized_path = sanitized_path[:-1]
+        else:
+            source = TreeSource.attributes
+
         return InventoryPath(
-            path=cls._sanitize_path(path[:-1]),
-            source=TreeSource.table if ":" in path[-2] else TreeSource.attributes,
+            path=sanitized_path,
+            source=source,
             key=path[-1],
         )
 

@@ -80,29 +80,29 @@ from cmk.gui.inventory import InventoryPath, TreeSource
         (
             ".software.packages:17.name",
             InventoryPath(
-                path=("software", "packages", "17"),
+                path=("software", "packages"),
                 source=TreeSource.table,
                 key="name",
             ),
-            "17",
+            "packages",
         ),
         (
             ".software.packages:*.name",
             InventoryPath(
-                path=("software", "packages", "*"),
+                path=("software", "packages"),
                 source=TreeSource.table,
                 key="name",
             ),
-            "*",
+            "packages",
         ),
         (
             ".hardware.memory.arrays:*.devices:*.speed",
             InventoryPath(
-                path=("hardware", "memory", "arrays", "*", "devices", "*"),
+                path=("hardware", "memory", "arrays", "*", "devices"),
                 source=TreeSource.table,
                 key="speed",
             ),
-            "*",
+            "devices",
         ),
         (
             ".path:*.to.node.key",

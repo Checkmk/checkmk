@@ -19,8 +19,6 @@ ignored_files = [
     "omd/packages/maintenance/merge-crontabs",
 ]
 
-gpl_files = ["enterprise/cmk/cee/dcd/plugins/connectors/example_connector.py"]
-
 enterprise_paths = [
     "enterprise/",
     "managed/",
@@ -36,9 +34,6 @@ enterprise_files = [
 
 
 def needs_enterprise_license(path: str) -> bool:
-    if path in gpl_files:
-        return False
-
     if any(p for p in enterprise_paths if path.startswith(p)):
         return True
 

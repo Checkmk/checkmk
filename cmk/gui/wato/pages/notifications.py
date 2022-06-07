@@ -508,7 +508,7 @@ class ModeNotifications(ABCNotificationsMode):
         self._show_backlog = options.get("show_backlog", False)
         self._show_bulks = options.get("show_bulks", False)
 
-    def title(self):
+    def title(self) -> str:
         return _("Notification configuration")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
@@ -925,7 +925,7 @@ class ABCUserNotificationsMode(ABCNotificationsMode):
     def _user_id(self):
         raise NotImplementedError()
 
-    def title(self):
+    def title(self) -> str:
         return _("Custom notification table for user %s") % self._user_id()
 
     def action(self) -> ActionResult:
@@ -1122,7 +1122,7 @@ class ModePersonalUserNotifications(ABCUserNotificationsMode):
         else:
             super()._add_change(log_what, log_text)
 
-    def title(self):
+    def title(self) -> str:
         return _("Your personal notification rules")
 
 
@@ -1793,7 +1793,7 @@ class ModeEditPersonalNotificationRule(ABCEditUserNotificationRuleMode):
             return None
         return redirect(mode_url("user_notifications_p"))
 
-    def title(self):
+    def title(self) -> str:
         if self._new:
             return _("Create new notification rule")
         return _("Edit notification rule %d") % self._edit_nr

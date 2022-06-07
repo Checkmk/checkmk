@@ -66,7 +66,7 @@ class ModeObjectParameters(WatoMode):
         # TODO: Validate?
         self._service = request.get_str_input("service")
 
-    def title(self):
+    def title(self) -> str:
         title = _("Effective parameters of") + " " + self._hostname
         if self._service:
             title += " / " + self._service

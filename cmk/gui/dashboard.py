@@ -150,7 +150,7 @@ class VisualTypeDashboards(VisualType):
         return "dashboards"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("dashboard")
 
     @property
@@ -288,7 +288,7 @@ class PermissionSectionDashboard(PermissionSection):
         return "dashboard"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Dashboards")
 
     @property

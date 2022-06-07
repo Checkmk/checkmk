@@ -888,7 +888,7 @@ def test_permission_sorting(do_sort, result):
             return "sec1"
 
         @property
-        def title(self):
+        def title(self) -> str:
             return "SEC1"
 
         @property

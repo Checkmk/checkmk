@@ -38,7 +38,7 @@ class RulespecGroupInventory(RulespecGroup):
         return "inventory"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Hardware / Software Inventory")
 
     @property

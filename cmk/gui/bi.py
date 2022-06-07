@@ -56,7 +56,7 @@ class PermissionSectionBI(PermissionSection):
         return "bi"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("BI - Checkmk Business Intelligence")
 
 

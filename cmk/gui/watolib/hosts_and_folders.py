@@ -1780,7 +1780,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
     def name(self):
         return self._name
 
-    def title(self):
+    def title(self) -> str:
         return self._title
 
     def filesystem_path(self):
@@ -2993,7 +2993,7 @@ class SearchFolder(WithPermissions, WithAttributes, BaseFolder):
     def _user_needs_permission(self, how: str) -> None:
         pass
 
-    def title(self):
+    def title(self) -> str:
         return _("Search results for folder %s") % self._base_folder.title()
 
     def hosts(self):

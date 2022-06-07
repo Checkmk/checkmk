@@ -95,7 +95,7 @@ class HostAttributeAlias(ABCHostAttributeNagiosText):
     def is_explicit(self) -> bool:
         return True
 
-    def title(self):
+    def title(self) -> str:
         return _("Alias")
 
     def help(self):
@@ -1305,7 +1305,7 @@ class HostAttributeLabels(ABCHostAttributeValueSpec):
     def name(self):
         return "labels"
 
-    def title(self):
+    def title(self) -> str:
         return _("Labels")
 
     def topic(self):

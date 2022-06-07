@@ -34,7 +34,7 @@ class ModeRandomHosts(WatoMode):
     def permissions(cls):
         return ["hosts", "random_hosts"]
 
-    def title(self):
+    def title(self) -> str:
         return _("Add random hosts")
 
     @classmethod

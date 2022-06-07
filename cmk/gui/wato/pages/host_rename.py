@@ -110,7 +110,7 @@ class ModeBulkRenameHost(WatoMode):
         if not user.may("wato.rename_hosts"):
             raise MKGeneralException(_("You don't have the right to rename hosts"))
 
-    def title(self):
+    def title(self) -> str:
         return _("Bulk renaming of hosts")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
@@ -429,7 +429,7 @@ class ModeRenameHost(WatoMode):
         self._host = Folder.current().load_host(host_name)
         self._host.need_permission("write")
 
-    def title(self):
+    def title(self) -> str:
         return _("Rename %s %s") % (
             _("Cluster") if self._host.is_cluster() else _("Host"),
             self._host.name(),

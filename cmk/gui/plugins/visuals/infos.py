@@ -25,7 +25,7 @@ class VisualInfoHost(VisualInfo):
         return "host"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Host")
 
     @property
@@ -52,7 +52,7 @@ class VisualInfoService(VisualInfo):
         return "service"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Service")
 
     @property
@@ -92,7 +92,7 @@ class VisualInfoHostgroup(VisualInfo):
         return "hostgroup"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Host group")
 
     @property
@@ -126,7 +126,7 @@ class VisualInfoServicegroup(VisualInfo):
         return "servicegroup"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Service group")
 
     @property
@@ -160,7 +160,7 @@ class VisualInfoLog(VisualInfo):
         return "log"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Log Entry")
 
     @property
@@ -179,7 +179,7 @@ class VisualInfoComment(VisualInfo):
         return "comment"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Comment")
 
     @property
@@ -205,7 +205,7 @@ class VisualInfoDowntime(VisualInfo):
         return "downtime"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Downtime")
 
     @property
@@ -231,7 +231,7 @@ class VisualInfoContact(VisualInfo):
         return "contact"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Contact")
 
     @property
@@ -257,7 +257,7 @@ class VisualInfoCommand(VisualInfo):
         return "command"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Command")
 
     @property
@@ -283,7 +283,7 @@ class VisualInfoBIAggregation(VisualInfo):
         return "aggr"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("BI Aggregation")
 
     @property
@@ -313,7 +313,7 @@ class VisualInfoBIAggregationGroup(VisualInfo):
         return "aggr_group"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("BI Aggregation Group")
 
     @property
@@ -343,7 +343,7 @@ class VisualInfoDiscovery(VisualInfo):
         return "discovery"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Discovery Output")
 
     @property
@@ -362,7 +362,7 @@ class VisualInfoEvent(VisualInfo):
         return "event"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Event Console Event")
 
     @property
@@ -388,7 +388,7 @@ class VisualInfoEventHistory(VisualInfo):
         return "history"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Historic Event Console Event")
 
     @property
@@ -420,7 +420,7 @@ class VisualInfoCrash(VisualInfo):
         return "crash"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Crash report")
 
     @property

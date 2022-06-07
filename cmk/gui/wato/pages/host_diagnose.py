@@ -83,7 +83,7 @@ class ModeDiagHost(WatoMode):
         if self._host.is_cluster():
             raise MKGeneralException(_("This page does not support cluster hosts."))
 
-    def title(self):
+    def title(self) -> str:
         return _("Test connection to host") + " " + self._hostname
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:

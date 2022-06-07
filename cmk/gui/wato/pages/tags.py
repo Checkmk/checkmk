@@ -120,7 +120,7 @@ class ModeTags(ABCTagMode):
     def permissions(cls):
         return ["hosttags"]
 
-    def title(self):
+    def title(self) -> str:
         return _("Tag groups")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
@@ -660,7 +660,7 @@ class ModeEditAuxtag(ABCEditTagMode):
 
         return request.get_item_input("edit", dict(self._tag_config.aux_tag_list.get_choices()))[1]
 
-    def title(self):
+    def title(self) -> str:
         if self._new:
             return _("Add auxiliary tag")
         return _("Edit auxiliary tag")
@@ -748,7 +748,7 @@ class ModeEditTagGroup(ABCEditTagMode):
     def _get_id(self):
         return request.var("edit", request.var("tag_id"))
 
-    def title(self):
+    def title(self) -> str:
         if self._new:
             return _("Add tag group")
         return _("Edit tag group")

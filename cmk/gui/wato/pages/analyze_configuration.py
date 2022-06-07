@@ -93,7 +93,7 @@ class ModeAnalyzeConfig(WatoMode):
         self._show_failed = not request.has_var("hide_failed")
         self._show_ack = request.has_var("show_ack")
 
-    def title(self):
+    def title(self) -> str:
         return _("Analyze configuration")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:

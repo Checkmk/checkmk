@@ -12,7 +12,7 @@ from cmk.gui.plugins.watolib.utils import config_variable_group_registry, Config
 
 @config_variable_group_registry.register
 class ConfigVariableGroupNotifications(ConfigVariableGroup):
-    def title(self):
+    def title(self) -> str:
         return _("Notifications")
 
     def sort_index(self):
@@ -21,7 +21,7 @@ class ConfigVariableGroupNotifications(ConfigVariableGroup):
 
 @config_variable_group_registry.register
 class ConfigVariableGroupUserInterface(ConfigVariableGroup):
-    def title(self):
+    def title(self) -> str:
         return _("User interface")
 
     def sort_index(self):
@@ -30,7 +30,7 @@ class ConfigVariableGroupUserInterface(ConfigVariableGroup):
 
 @config_variable_group_registry.register
 class ConfigVariableGroupWATO(ConfigVariableGroup):
-    def title(self):
+    def title(self) -> str:
         return _("Setup")
 
     def sort_index(self):
@@ -39,7 +39,7 @@ class ConfigVariableGroupWATO(ConfigVariableGroup):
 
 @config_variable_group_registry.register
 class ConfigVariableGroupSiteManagement(ConfigVariableGroup):
-    def title(self):
+    def title(self) -> str:
         return _("Site management")
 
     def sort_index(self):

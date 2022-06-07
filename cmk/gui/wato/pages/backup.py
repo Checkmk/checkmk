@@ -64,7 +64,7 @@ class ModeBackupTargets(backup.PageBackupTargets, WatoMode):
     def parent_mode(cls) -> Optional[Type[WatoMode]]:
         return ModeBackup
 
-    def title(self):
+    def title(self) -> str:
         return _("Site backup targets")
 
     def targets(self):

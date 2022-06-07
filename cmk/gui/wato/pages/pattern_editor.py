@@ -92,7 +92,7 @@ class ModePatternEditor(WatoMode):
     def title_pattern_analyzer():
         return _("Logfile pattern analyzer")
 
-    def title(self):
+    def title(self) -> str:
         if not self._hostname and not self._item:
             return self.title_pattern_analyzer()
         if not self._hostname:

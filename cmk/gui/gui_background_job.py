@@ -42,7 +42,7 @@ class PermissionSectionBackgroundJobs(PermissionSection):
         return "background_jobs"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Background jobs")
 
 

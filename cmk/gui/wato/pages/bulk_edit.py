@@ -46,7 +46,7 @@ class ModeBulkEdit(WatoMode):
     def parent_mode(cls) -> Optional[Type[WatoMode]]:
         return ModeFolder
 
-    def title(self):
+    def title(self) -> str:
         return _("Bulk edit hosts")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
@@ -132,7 +132,7 @@ class ModeBulkCleanup(WatoMode):
     def _from_vars(self):
         self._folder = Folder.current()
 
-    def title(self):
+    def title(self) -> str:
         return _("Bulk removal of explicit attributes")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:

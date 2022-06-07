@@ -42,7 +42,7 @@ class DataSourceCrashReports(DataSourceLivestatus):
         return "crash_reports"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Crash reports")
 
     @property
@@ -269,7 +269,7 @@ class SorterCrashTime(Sorter):
         return "crash_time"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Crash time")
 
     @property
@@ -298,7 +298,7 @@ class CommandDeleteCrashReports(Command):
         return "delete_crash_reports"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Delete crash reports")
 
     @property

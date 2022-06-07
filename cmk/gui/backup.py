@@ -170,7 +170,7 @@ class BackupEntity:
     def config(self):
         return self._config
 
-    def title(self):
+    def title(self) -> str:
         return self._config["title"]
 
     def to_config(self):
@@ -740,7 +740,7 @@ class PageEditBackupJob:
     def targets(self):
         raise NotImplementedError()
 
-    def title(self):
+    def title(self) -> str:
         return self._title
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
@@ -945,7 +945,7 @@ class PageAbstractBackupJobState:
     def jobs(self):
         raise NotImplementedError()
 
-    def title(self):
+    def title(self) -> str:
         # Our class hierarchy is totally screwed up here...
         if not isinstance(self._job, BackupEntity):
             raise Exception("incorrect job state: no backup entity")
@@ -1204,7 +1204,7 @@ class Targets(BackupEntityCollection):
 
 
 class PageBackupTargets:
-    def title(self):
+    def title(self) -> str:
         raise NotImplementedError()
 
     def targets(self):
@@ -1304,7 +1304,7 @@ class PageEditBackupTarget:
     def targets(self):
         raise NotImplementedError()
 
-    def title(self):
+    def title(self) -> str:
         return self._title
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
@@ -1752,7 +1752,7 @@ class RestoreJob(MKBackupJob):
         self._backup_ident = backup_ident
         self._passphrase = passphrase
 
-    def title(self):
+    def title(self) -> str:
         return _("Restore")
 
     def state_file_path(self) -> Path:
@@ -1798,7 +1798,7 @@ class PageBackupRestore:
     def _get_target(self, target_ident):
         return self.targets().get(target_ident)
 
-    def title(self):
+    def title(self) -> str:
         raise NotImplementedError()
 
     def targets(self):

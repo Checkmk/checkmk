@@ -14,7 +14,7 @@ class RulespecGroupIntegrateOtherServices(RulespecGroup):
         return "custom_checks"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Other services")
 
     @property
@@ -32,7 +32,7 @@ class RulespecGroupActiveChecks(RulespecGroup):
         return "activechecks"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("HTTP, TCP, Email, ...")
 
     @property

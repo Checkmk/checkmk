@@ -706,7 +706,7 @@ class ModeLDAPConfig(LDAPMode):
     def permissions(cls):
         return ["global"]
 
-    def title(self):
+    def title(self) -> str:
         return _("LDAP connections")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
@@ -879,7 +879,7 @@ class ModeEditLDAPConnection(LDAPMode):
             raise MKUserError(None, _("The requested connection does not exist."))
         return None
 
-    def title(self):
+    def title(self) -> str:
         if self._new:
             return _("Add LDAP connection")
         assert self._connection_id is not None

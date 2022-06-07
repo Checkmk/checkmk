@@ -121,7 +121,7 @@ class PermissionSectionEventConsole(PermissionSection):
         return "mkeventd"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Event Console")
 
 

@@ -114,7 +114,7 @@ class ModeRoles(RoleManagement, WatoMode):
     def permissions(cls):
         return ["users"]
 
-    def title(self):
+    def title(self) -> str:
         return _("Roles & permissions")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
@@ -291,7 +291,7 @@ class ModeEditRole(RoleManagement, WatoMode):
         except KeyError:
             raise MKUserError("edit", _("This role does not exist."))
 
-    def title(self):
+    def title(self) -> str:
         return _("Edit role %s") % self._role_id
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
@@ -469,7 +469,7 @@ class ModeRoleMatrix(WatoMode):
     def parent_mode(cls) -> Optional[Type[WatoMode]]:
         return ModeRoles
 
-    def title(self):
+    def title(self) -> str:
         return _("Permission matrix")
 
     def page(self):

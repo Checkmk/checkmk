@@ -20,7 +20,7 @@ class ModeNotImplemented(WatoMode):
     def permissions(cls):
         return []
 
-    def title(self):
+    def title(self) -> str:
         return _("Error")
 
     def page(self):

@@ -95,7 +95,7 @@ class ModeUsers(WatoMode):
         self._job = userdb.UserSyncBackgroundJob()
         self._job_snapshot = userdb.UserSyncBackgroundJob().get_status_snapshot()
 
-    def title(self):
+    def title(self) -> str:
         return _("Users")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
@@ -627,7 +627,7 @@ class ModeEditUser(WatoMode):
             self._user = new_user
         self._locked_attributes = userdb.locked_attributes(self._user.get("connector"))
 
-    def title(self):
+    def title(self) -> str:
         if self._is_new_user:
             return _("Add user")
         return _("Edit user %s") % self._user_id

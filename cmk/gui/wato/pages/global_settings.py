@@ -425,7 +425,7 @@ class ModeEditGlobals(ABCGlobalSettingsMode):
         super().__init__()
         self._current_settings = load_configuration_settings()
 
-    def title(self):
+    def title(self) -> str:
         if self._search:
             return _("Global settings matching '%s'") % escape_to_html(self._search)
         return _("Global settings")
@@ -544,7 +544,7 @@ class ModeEditGlobalSetting(ABCEditGlobalSettingMode):
     def parent_mode(cls) -> Optional[Type[WatoMode]]:
         return ModeEditGlobals
 
-    def title(self):
+    def title(self) -> str:
         return _("Edit global setting")
 
     def _affected_sites(self):

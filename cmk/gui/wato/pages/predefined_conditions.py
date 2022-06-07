@@ -44,7 +44,7 @@ class DummyRulespecGroup(RulespecGroup):
         return "dummy"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return "Dummy"
 
     @property
@@ -102,7 +102,7 @@ class ModePredefinedConditions(SimpleListMode):
         )
         self._contact_groups = load_contact_group_information()
 
-    def title(self):
+    def title(self) -> str:
         return _("Predefined conditions")
 
     def _table_title(self):

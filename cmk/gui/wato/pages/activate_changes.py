@@ -78,7 +78,7 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
         super().__init__()
         super().load()
 
-    def title(self):
+    def title(self) -> str:
         return _("Activate pending changes")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:

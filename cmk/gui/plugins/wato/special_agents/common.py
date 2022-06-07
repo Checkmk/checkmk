@@ -36,7 +36,7 @@ class RulespecGroupVMCloudContainer(RulespecGroup):
         return "vm_cloud_container"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("VM, Cloud, Container")
 
     @property
@@ -51,7 +51,7 @@ class RulespecGroupDatasourcePrograms(RulespecGroup):
         return "datasource_programs"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Other integrations")
 
     @property
@@ -70,7 +70,7 @@ class RulespecGroupDatasourceProgramsOS(RulespecSubGroup):
         return "os"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Operating systems")
 
 
@@ -85,7 +85,7 @@ class RulespecGroupDatasourceProgramsApps(RulespecSubGroup):
         return "apps"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Applications")
 
 
@@ -100,7 +100,7 @@ class RulespecGroupDatasourceProgramsCloud(RulespecSubGroup):
         return "cloud"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Cloud based environments")
 
 
@@ -114,7 +114,7 @@ class RulespecGroupDatasourceProgramsContainer(RulespecSubGroup):
         return "container"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Containerization")
 
 
@@ -129,7 +129,7 @@ class RulespecGroupDatasourceProgramsCustom(RulespecSubGroup):
         return "custom"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Custom integrations")
 
 
@@ -144,7 +144,7 @@ class RulespecGroupDatasourceProgramsHardware(RulespecSubGroup):
         return "hw"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Hardware")
 
 
@@ -159,7 +159,7 @@ class RulespecGroupDatasourceProgramsTesting(RulespecSubGroup):
         return "testing"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Testing")
 
 

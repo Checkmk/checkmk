@@ -334,7 +334,7 @@ class ModeEditHost(ABCHostMode):
         host.need_permission("read")
         return host
 
-    def title(self):
+    def title(self) -> str:
         return _("Properties of host") + " " + self._host.name()
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
@@ -668,7 +668,7 @@ class ModeCreateHost(CreateHostMode):
     def permissions(cls):
         return ["hosts", "manage_hosts"]
 
-    def title(self):
+    def title(self) -> str:
         if self._mode == "clone":
             return _("Create clone of %s") % self._host.name()
         return _("Add host")
@@ -705,7 +705,7 @@ class ModeCreateCluster(CreateHostMode):
     def _is_cluster(self):
         return True
 
-    def title(self):
+    def title(self) -> str:
         if self._mode == "clone":
             return _("Create clone of %s") % self._host.name()
         return _("Create cluster")

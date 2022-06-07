@@ -48,7 +48,7 @@ class CommandGroupVarious(CommandGroup):
         return "various"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Various Commands")
 
     @property
@@ -63,7 +63,7 @@ class PermissionSectionAction(PermissionSection):
         return "action"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Commands on host and services")
 
     @property
@@ -98,7 +98,7 @@ class CommandReschedule(Command):
         return "reschedule"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Reschedule active checks")
 
     @property
@@ -178,7 +178,7 @@ class CommandNotifications(Command):
         return "notifications"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Notifications")
 
     @property
@@ -243,7 +243,7 @@ class CommandToggleActiveChecks(Command):
         return "toggle_active_checks"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Active checks")
 
     @property
@@ -292,7 +292,7 @@ class CommandTogglePassiveChecks(Command):
         return "toggle_passive_checks"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Passive checks")
 
     @property
@@ -360,7 +360,7 @@ class CommandClearModifiedAttributes(Command):
         return "clear_modified_attributes"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Modified attributes")
 
     @property
@@ -412,7 +412,7 @@ class CommandGroupFakeCheck(CommandGroup):
         return "fake_check"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Fake check results")
 
     @property
@@ -427,7 +427,7 @@ class CommandFakeCheckResult(Command):
         return "fake_check_result"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Fake check results")
 
     @property
@@ -556,7 +556,7 @@ class CommandCustomNotification(Command):
         return "send_custom_notification"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Custom notification")
 
     @property
@@ -643,7 +643,7 @@ class CommandGroupAcknowledge(CommandGroup):
         return "acknowledge"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Acknowledge")
 
     @property
@@ -658,7 +658,7 @@ class CommandAcknowledge(Command):
         return "acknowledge"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Acknowledge problems")
 
     @property
@@ -832,7 +832,7 @@ class CommandAddComment(Command):
         return "add_comment"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Add comment")
 
     @property
@@ -919,7 +919,7 @@ class CommandGroupDowntimes(CommandGroup):
         return "downtimes"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Schedule downtimes")
 
     @property
@@ -934,7 +934,7 @@ class CommandScheduleDowntimes(Command):
         return "schedule_downtimes"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Schedule downtimes")
 
     @property
@@ -1405,7 +1405,7 @@ class CommandRemoveDowntime(Command):
         return "remove_downtimes"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Remove downtimes")
 
     @property
@@ -1442,7 +1442,7 @@ class CommandRemoveComments(Command):
         return "remove_comments"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Remove comments")
 
     @property
@@ -1517,7 +1517,7 @@ class CommandFavorites(Command):
         return "favorites"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Favorites")
 
     @property

@@ -148,7 +148,7 @@ class ModeDiscovery(WatoMode):
             ignore_errors=True,
         )
 
-    def title(self):
+    def title(self) -> str:
         return _("Services of host %s") % self._host.name()
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:

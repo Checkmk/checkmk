@@ -39,7 +39,7 @@ class SomeMainModule(ABCMainModule):
         return MainModuleTopicHosts
 
     @property
-    def title(self):
+    def title(self) -> str:
         return "Main Module"
 
     @property

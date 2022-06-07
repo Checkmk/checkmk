@@ -38,7 +38,7 @@ class ModeIcons(WatoMode):
     def permissions(cls):
         return ["icons"]
 
-    def title(self):
+    def title(self) -> str:
         return _("Custom icons")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:

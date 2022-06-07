@@ -2167,7 +2167,7 @@ class ConfigVariableWATOIconCategories(ConfigVariable):
 
 @config_variable_group_registry.register
 class ConfigVariableGroupUserManagement(ConfigVariableGroup):
-    def title(self):
+    def title(self) -> str:
         return _("User management")
 
     def sort_index(self):
@@ -2435,7 +2435,7 @@ class ConfigVariableDefaultUserProfile(ConfigVariable):
 
 @config_variable_group_registry.register
 class ConfigVariableGroupCheckExecution(ConfigVariableGroup):
-    def title(self):
+    def title(self) -> str:
         return _("Execution of checks")
 
     def sort_index(self):
@@ -2970,7 +2970,7 @@ class ConfigVariableHTTPProxies(ConfigVariable):
 
 @config_variable_group_registry.register
 class ConfigVariableGroupServiceDiscovery(ConfigVariableGroup):
-    def title(self):
+    def title(self) -> str:
         return _("Service discovery")
 
     def sort_index(self):
@@ -3843,7 +3843,7 @@ class RulespecGroupMonitoringConfigurationInventoryAndCMK(RulespecSubGroup):
         return "inventory_and_check_mk_settings"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Discovery and Checkmk settings")
 
 
@@ -4753,7 +4753,7 @@ class RulespecGroupAgent(RulespecGroup):
         return "agent"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Access to agents")
 
     @property
@@ -4772,7 +4772,7 @@ class RulespecGroupAgentGeneralSettings(RulespecSubGroup):
         return "general_settings"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("General Settings")
 
 
@@ -5167,7 +5167,7 @@ class RulespecGroupAgentCMKAgent(RulespecSubGroup):
         return "check_mk_agent"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Checkmk agent")
 
 

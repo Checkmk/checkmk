@@ -1503,7 +1503,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
     def permissions(cls):
         return ["mkeventd.edit"]
 
-    def title(self):
+    def title(self) -> str:
         return _("Event Console rule packs")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
@@ -1994,7 +1994,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
         self._rule_pack_nr, self._rule_pack = self._rule_pack_with_id(self._rule_pack_id)
         self._rules = self._rule_pack["rules"]
 
-    def title(self):
+    def title(self) -> str:
         return _("Rule pack %s") % self._rule_pack["title"]
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
@@ -2366,7 +2366,7 @@ class ModeEventConsoleEditRulePack(ABCEventConsoleMode):
         id_to_mkp = self._get_rule_pack_to_mkp_map()
         self._type = ec.RulePackType.type_of(self._rule_pack, id_to_mkp)
 
-    def title(self):
+    def title(self) -> str:
         if self._new:
             return _("Add rule pack")
         return _("Edit rule pack %s") % self._rule_packs[self._edit_nr]["id"]
@@ -2503,7 +2503,7 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
             except IndexError:
                 raise MKUserError("edit", _("The rule you are trying to edit does not exist."))
 
-    def title(self):
+    def title(self) -> str:
         if self._new:
             return _("Add rule")
         return _("Edit rule %s") % self._rules[self._edit_nr]["id"]
@@ -2658,7 +2658,7 @@ class ModeEventConsoleStatus(ABCEventConsoleMode):
     def parent_mode(cls) -> _Optional[Type[WatoMode]]:
         return ModeEventConsoleRulePacks
 
-    def title(self):
+    def title(self) -> str:
         return _("Local server status")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
@@ -2783,7 +2783,7 @@ class ModeEventConsoleSettings(ABCEventConsoleMode, ABCGlobalSettingsMode):
             if isinstance(g, ConfigVariableGroupEventConsole)
         ]
 
-    def title(self):
+    def title(self) -> str:
         if self._search:
             return escape_to_html(_("Event Console configuration matching '%s'") % self._search)
         return _("Event Console configuration")
@@ -2857,7 +2857,7 @@ class ConfigVariableGroupEventConsole(ConfigVariableGroup):
 
 @config_variable_group_registry.register
 class ConfigVariableGroupEventConsoleGeneric(ConfigVariableGroupEventConsole):
-    def title(self):
+    def title(self) -> str:
         return _("Event Console: Generic")
 
     def sort_index(self):
@@ -2866,7 +2866,7 @@ class ConfigVariableGroupEventConsoleGeneric(ConfigVariableGroupEventConsole):
 
 @config_variable_group_registry.register
 class ConfigVariableGroupEventConsoleLogging(ConfigVariableGroupEventConsole):
-    def title(self):
+    def title(self) -> str:
         return _("Event Console: Logging & diagnose")
 
     def sort_index(self):
@@ -2875,7 +2875,7 @@ class ConfigVariableGroupEventConsoleLogging(ConfigVariableGroupEventConsole):
 
 @config_variable_group_registry.register
 class ConfigVariableGroupEventConsoleSNMP(ConfigVariableGroupEventConsole):
-    def title(self):
+    def title(self) -> str:
         return _("Event Console: SNMP traps")
 
     def sort_index(self):
@@ -2900,7 +2900,7 @@ class ModeEventConsoleEditGlobalSetting(ABCEditGlobalSettingMode):
         super().__init__()
         self._need_restart = None
 
-    def title(self):
+    def title(self) -> str:
         return _("Event Console configuration")
 
     def _affected_sites(self):
@@ -2929,7 +2929,7 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
     def parent_mode(cls) -> _Optional[Type[WatoMode]]:
         return ModeEventConsoleRulePacks
 
-    def title(self):
+    def title(self) -> str:
         return _("SNMP MIBs for trap translation")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
@@ -3135,7 +3135,7 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
     def parent_mode(cls) -> _Optional[Type[WatoMode]]:
         return ModeEventConsoleMIBs
 
-    def title(self):
+    def title(self) -> str:
         return _("Upload SNMP MIBs")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
@@ -3485,7 +3485,7 @@ class MainModuleEventConsole(ABCMainModule):
         return MainModuleTopicEvents
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Event Console")
 
     @property
@@ -4635,7 +4635,7 @@ class MainModuleEventConsoleRules(ABCMainModule):
         return MainModuleTopicEvents
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Event Console rules")
 
     @property
@@ -4677,7 +4677,7 @@ class RulespecGroupEventConsole(RulespecGroup):
         return "eventconsole"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Event Console rules")
 
     @property

@@ -265,7 +265,7 @@ class VisualTypeViews(VisualType):
         return "views"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("view")
 
     @property
@@ -394,7 +394,7 @@ class PermissionSectionViews(PermissionSection):
         return "view"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Views")
 
     @property

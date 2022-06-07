@@ -63,7 +63,7 @@ class SorterSvcstate(Sorter):
         return "svcstate"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Service state")
 
     @property
@@ -83,7 +83,7 @@ class SorterHoststate(Sorter):
         return "hoststate"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Host state")
 
     @property
@@ -103,7 +103,7 @@ class SorterSiteHost(Sorter):
         return "site_host"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Host site and name")
 
     @property
@@ -123,7 +123,7 @@ class SorterHostName(Sorter):
         return "host_name"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Host name")
 
     @property
@@ -141,7 +141,7 @@ class SorterSitealias(Sorter):
         return "sitealias"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Site Alias")
 
     @property
@@ -177,7 +177,7 @@ class SorterHost(ABCTagSorter):
         return "host"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Host Tags")
 
     @property
@@ -196,7 +196,7 @@ class SorterServiceTags(ABCTagSorter):
         return "service_tags"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Tags")
 
     @property
@@ -227,7 +227,7 @@ class SorterHostLabels(ABCTagSorter):
         return "host_labels"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Host labels")
 
     @property
@@ -246,7 +246,7 @@ class SorterServiceLabels(ABCTagSorter):
         return "service_labels"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Service labels")
 
     @property
@@ -261,7 +261,7 @@ class SorterServicelevel(Sorter):
         return "servicelevel"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Servicelevel")
 
     @property
@@ -337,7 +337,7 @@ class PerfValSorter(Sorter):
         return "svc_perf_val%02d" % self._num
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Service performance data - value number %02d") % self._num
 
     @property
@@ -496,7 +496,7 @@ class SorterHostIpv4Address(Sorter):
         return "host_ipv4_address"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Host IPv4 address")
 
     @property
@@ -520,7 +520,7 @@ class SorterNumProblems(Sorter):
         return "num_problems"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Number of problems")
 
     @property

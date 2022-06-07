@@ -31,7 +31,7 @@ class MenuItem:
         return self._mode_or_url
 
     @property
-    def title(self):
+    def title(self) -> str:
         return self._title
 
     @property

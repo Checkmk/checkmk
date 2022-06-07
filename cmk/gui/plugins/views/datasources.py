@@ -26,7 +26,7 @@ class DataSourceHosts(DataSourceLivestatus):
         return "hosts"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("All hosts")
 
     @property
@@ -62,7 +62,7 @@ class DataSourceHostsByGroup(DataSourceLivestatus):
         return "hostsbygroup"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Hosts grouped by host groups")
 
     @property
@@ -89,7 +89,7 @@ class DataSourceServices(DataSourceLivestatus):
         return "services"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("All services")
 
     @property
@@ -126,7 +126,7 @@ class DataSourceServicesByGroup(DataSourceLivestatus):
         return "servicesbygroup"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Services grouped by service groups")
 
     @property
@@ -149,7 +149,7 @@ class DataSourceServicesByHostGroup(DataSourceLivestatus):
         return "servicesbyhostgroup"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Services grouped by host groups")
 
     @property
@@ -172,7 +172,7 @@ class DataSourceHostGroups(DataSourceLivestatus):
         return "hostgroups"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Host groups")
 
     @property
@@ -197,7 +197,7 @@ class DataSourceMergedHostGroups(DataSourceLivestatus):
         return "merged_hostgroups"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Host groups, merged")
 
     @property
@@ -228,7 +228,7 @@ class DataSourceServiceGroups(DataSourceLivestatus):
         return "servicegroups"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Service groups")
 
     @property
@@ -253,7 +253,7 @@ class DataSourceMergedServiceGroups(ABCDataSource):
         return "merged_servicegroups"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Service groups, merged")
 
     @property
@@ -284,7 +284,7 @@ class DataSourceComments(DataSourceLivestatus):
         return "comments"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Host- and Servicecomments")
 
     @property
@@ -307,7 +307,7 @@ class DataSourceDowntimes(DataSourceLivestatus):
         return "downtimes"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Scheduled Downtimes")
 
     @property
@@ -352,7 +352,7 @@ class LogDataSource(DataSourceLivestatus):
 @data_source_registry.register
 class DataSourceLog(LogDataSource):
     @property
-    def title(self):
+    def title(self) -> str:
         return _("The Logfile")
 
 
@@ -363,7 +363,7 @@ class DataSourceLogHostAndServiceEvents(LogDataSource):
         return "log_events"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Host and Service Events")
 
     @property
@@ -382,7 +382,7 @@ class DataSourceLogHostEvents(LogDataSource):
         return "log_host_events"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Host Events")
 
     @property
@@ -401,7 +401,7 @@ class DataSourceLogAlertStatistics(LogDataSource):
         return "alert_stats"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Alert Statistics")
 
     @property
@@ -438,7 +438,7 @@ class DataSourceServiceDiscovery(ABCDataSource):
         return "service_discovery"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Service discovery")
 
     @property

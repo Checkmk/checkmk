@@ -769,7 +769,7 @@ class LayoutMobileTable(Layout):
         return "mobiletable"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Mobile: Table")
 
     @property
@@ -828,7 +828,7 @@ class LayoutMobileList(Layout):
         return "mobilelist"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Mobile: List")
 
     @property
@@ -877,7 +877,7 @@ class LayoutMobileDataset(Layout):
         return "mobiledataset"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Mobile: Dataset")
 
     @property

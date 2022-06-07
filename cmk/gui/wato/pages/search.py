@@ -51,7 +51,7 @@ class ModeSearch(WatoMode):
             save_is_enabled=True,
         )
 
-    def title(self):
+    def title(self) -> str:
         return _("Search for hosts below %s") % self._folder.title()
 
     def action(self) -> ActionResult:

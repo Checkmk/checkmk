@@ -129,7 +129,7 @@ class MainModuleBI(ABCMainModule):
         return MainModuleTopicBI
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Business Intelligence")
 
     @property
@@ -193,7 +193,7 @@ class ABCBIMode(WatoMode):
                 _("You have no permission for changes in this BI pack %s.") % bi_pack.title
             )
 
-    def title(self):
+    def title(self) -> str:
         return _("Business Intelligence")
 
     def title_for_pack(self, bi_pack):
@@ -288,7 +288,7 @@ class ModeBIEditPack(ABCBIMode):
     def permissions(cls):
         return ["bi_rules", "bi_admin"]
 
-    def title(self):
+    def title(self) -> str:
         if self._bi_pack:
             return super().title() + " - " + _("Edit BI Pack %s") % self.bi_pack.title
         return super().title() + " - " + _("Add BI Pack")
@@ -613,7 +613,7 @@ class ModeBIRules(ABCBIMode):
     def _breadcrumb_url(self) -> str:
         return self.mode_url(pack=self.bi_pack.id)
 
-    def title(self):
+    def title(self) -> str:
         if self._view_type == "list":
             return self.title_for_pack(self.bi_pack) + " - " + _("Rules")
         return self.title_for_pack(self.bi_pack) + " - " + _("Unused Rules")
@@ -1073,7 +1073,7 @@ class ModeBIEditRule(ABCBIMode):
     def parent_mode(cls) -> _Optional[Type[WatoMode]]:
         return ModeBIRules
 
-    def title(self):
+    def title(self) -> str:
         if self._new:
             return _("Add BI Rule")
         return _("Edit Rule") + " " + escaping.escape_attribute(self._rule_id)
@@ -1614,7 +1614,7 @@ class BIModeEditAggregation(ABCBIMode):
     def parent_mode(cls) -> _Optional[Type[WatoMode]]:
         return ModeBIPacks
 
-    def title(self):
+    def title(self) -> str:
         if self._clone:
             return _("Clone Aggregation %s") % request.get_str_input_mandatory("clone")
         if self._new:
@@ -1913,7 +1913,7 @@ class BIModeAggregations(ABCBIMode):
     def _breadcrumb_url(self) -> str:
         return self.mode_url(pack=self.bi_pack.id)
 
-    def title(self):
+    def title(self) -> str:
         return self.title_for_pack(self.bi_pack) + " - " + _("Aggregations")
 
     def have_rules(self):
@@ -2230,7 +2230,7 @@ class ModeBIRuleTree(ABCBIMode):
         if not self._rule_tree_bi_pack:
             raise MKUserError("id", _("This BI rule does not exist"))
 
-    def title(self):
+    def title(self) -> str:
         return (
             self.title_for_pack(self._rule_tree_bi_pack) + _("Rule tree of") + " " + self._rule_id
         )

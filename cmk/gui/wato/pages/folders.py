@@ -115,7 +115,7 @@ class ModeFolder(WatoMode):
         if request.has_var("_show_explicit_labels"):
             user.wato_folders_show_labels = request.get_ascii_input("_show_explicit_labels") == "1"
 
-    def title(self):
+    def title(self) -> str:
         return self._folder.title()
 
     def breadcrumb(self):
@@ -1327,7 +1327,7 @@ class ModeEditFolder(ABCFolderMode):
     def _init_folder(self):
         return Folder.current()
 
-    def title(self):
+    def title(self) -> str:
         return _("Folder properties")
 
     def _save(self, title, attributes):
@@ -1347,7 +1347,7 @@ class ModeCreateFolder(ABCFolderMode):
     def _init_folder(self):
         return Folder(name=None)
 
-    def title(self):
+    def title(self) -> str:
         return _("Add folder")
 
     def _save(self, title, attributes):

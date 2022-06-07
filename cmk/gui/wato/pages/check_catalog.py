@@ -58,7 +58,7 @@ class ModeCheckPlugins(WatoMode):
         self._manpages = _get_check_catalog(only_path=())
         self._titles = man_pages.CATALOG_TITLES
 
-    def title(self):
+    def title(self) -> str:
         return _("Catalog of check plugins")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
@@ -113,7 +113,7 @@ class ModeCheckPluginSearch(WatoMode):
         self._manpages = _get_check_catalog(only_path=())
         self._titles = man_pages.CATALOG_TITLES
 
-    def title(self):
+    def title(self) -> str:
         return "%s: %s" % (_("Check plugins matching"), self._search)
 
     def page(self):
@@ -235,7 +235,7 @@ class ModeCheckPluginTopic(WatoMode):
         if len(self._path) == 2:
             self._topic_title = self._titles.get(self._path[1], self._path[1])
 
-    def title(self):
+    def title(self) -> str:
         if self._topic == "unsorted":
             return "unsorted"
         return self._topic_title

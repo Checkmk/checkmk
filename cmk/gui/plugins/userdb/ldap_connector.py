@@ -1751,7 +1751,7 @@ class LDAPAttributePluginMail(LDAPBuiltinAttributePlugin):
         return "email"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Email address")
 
     @property
@@ -1817,7 +1817,7 @@ class LDAPAttributePluginAlias(LDAPBuiltinAttributePlugin):
         return "alias"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Alias")
 
     @property
@@ -1891,7 +1891,7 @@ class LDAPAttributePluginAuthExpire(LDAPBuiltinAttributePlugin):
         return "auth_expire"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Authentication Expiration")
 
     @property
@@ -2014,7 +2014,7 @@ class LDAPAttributePluginPager(LDAPBuiltinAttributePlugin):
         return "pager"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Pager")
 
     @property
@@ -2083,7 +2083,7 @@ class LDAPAttributePluginGroupsToContactgroups(LDAPBuiltinAttributePlugin):
         return "groups_to_contactgroups"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Contactgroup Membership")
 
     @property
@@ -2150,7 +2150,7 @@ class LDAPAttributePluginGroupAttributes(LDAPBuiltinAttributePlugin):
         return "groups_to_attributes"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Groups to custom user attributes")
 
     @property
@@ -2285,7 +2285,7 @@ class LDAPAttributePluginGroupsToRoles(LDAPBuiltinAttributePlugin):
         return "groups_to_roles"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Roles")
 
     @property

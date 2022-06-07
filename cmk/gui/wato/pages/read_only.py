@@ -44,7 +44,7 @@ class ModeManageReadOnly(WatoMode):
         super().__init__()
         self._settings = active_config.wato_read_only
 
-    def title(self):
+    def title(self) -> str:
         return _("Manage configuration read only mode")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:

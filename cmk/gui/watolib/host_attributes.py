@@ -76,7 +76,7 @@ class HostAttributeTopicBasicSettings(HostAttributeTopic):
         return "basic"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Basic settings")
 
     @property
@@ -91,7 +91,7 @@ class HostAttributeTopicAddress(HostAttributeTopic):
         return "address"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Network address")
 
     @property
@@ -106,7 +106,7 @@ class HostAttributeTopicDataSources(HostAttributeTopic):
         return "monitoring_agents"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Monitoring agents")
 
     @property
@@ -121,7 +121,7 @@ class HostAttributeTopicHostTags(HostAttributeTopic):
         return "host_tags"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Host tags")
 
     @property
@@ -136,7 +136,7 @@ class HostAttributeTopicNetworkScan(HostAttributeTopic):
         return "network_scan"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Network Scan")
 
     @property
@@ -151,7 +151,7 @@ class HostAttributeTopicManagementBoard(HostAttributeTopic):
         return "management_board"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Management board")
 
     @property
@@ -166,7 +166,7 @@ class HostAttributeTopicCustomAttributes(HostAttributeTopic):
         return "custom_attributes"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Custom attributes")
 
     @property
@@ -181,7 +181,7 @@ class HostAttributeTopicMetaData(HostAttributeTopic):
         return "meta_data"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Creation / Locking")
 
     @property

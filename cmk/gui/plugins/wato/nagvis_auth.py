@@ -21,7 +21,7 @@ class PermissionSectionNagVis(PermissionSection):
         return "nagvis"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("NagVis")
 
 

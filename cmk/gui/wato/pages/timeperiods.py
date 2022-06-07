@@ -90,7 +90,7 @@ class ModeTimeperiods(WatoMode):
         super().__init__()
         self._timeperiods = watolib.timeperiods.load_timeperiods()
 
-    def title(self):
+    def title(self) -> str:
         return _("Time periods")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
@@ -386,7 +386,7 @@ class ModeTimeperiodImportICal(WatoMode):
     def parent_mode(cls) -> _Optional[Type[WatoMode]]:
         return ModeTimeperiods
 
-    def title(self):
+    def title(self) -> str:
         if html.request.var("upload"):
             return _("Add time period")
         return _("Import iCalendar File to create a time period")
@@ -726,7 +726,7 @@ class ModeEditTimeperiod(WatoMode):
         except KeyError:
             raise MKUserError(None, _("This timeperiod does not exist."))
 
-    def title(self):
+    def title(self) -> str:
         if self._new:
             return _("Add time period")
         return _("Edit time period")

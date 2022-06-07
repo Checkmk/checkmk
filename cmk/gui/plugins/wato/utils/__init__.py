@@ -200,7 +200,7 @@ class PermissionSectionWATO(PermissionSection):
         return "wato"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Setup")
 
 
@@ -872,7 +872,7 @@ class RulespecGroupDiscoveryCheckParameters(RulespecGroup):
         return "checkparams"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Service discovery rules")
 
     @property
@@ -898,7 +898,7 @@ class RulespecGroupCheckParametersNetworking(RulespecSubGroup):
         return "networking"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Networking")
 
 
@@ -913,7 +913,7 @@ class RulespecGroupCheckParametersStorage(RulespecSubGroup):
         return "storage"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Storage, Filesystems and Files")
 
 
@@ -928,7 +928,7 @@ class RulespecGroupCheckParametersOperatingSystem(RulespecSubGroup):
         return "os"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Operating System Resources")
 
 
@@ -943,7 +943,7 @@ class RulespecGroupCheckParametersPrinters(RulespecSubGroup):
         return "printers"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Printers")
 
 
@@ -958,7 +958,7 @@ class RulespecGroupCheckParametersEnvironment(RulespecSubGroup):
         return "environment"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Temperature, Humidity, Electrical Parameters, etc.")
 
 
@@ -973,7 +973,7 @@ class RulespecGroupCheckParametersApplications(RulespecSubGroup):
         return "applications"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Applications, Processes & Services")
 
 
@@ -988,7 +988,7 @@ class RulespecGroupCheckParametersVirtualization(RulespecSubGroup):
         return "virtualization"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Virtualization")
 
 
@@ -1003,7 +1003,7 @@ class RulespecGroupCheckParametersHardware(RulespecSubGroup):
         return "hardware"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Hardware, BIOS")
 
 
@@ -1018,7 +1018,7 @@ class RulespecGroupCheckParametersDiscovery(RulespecSubGroup):
         return "discovery"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Discovery of individual services")
 
 

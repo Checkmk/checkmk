@@ -41,7 +41,7 @@ class MainModuleFolder(ABCMainModule):
         return MainModuleTopicHosts
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Hosts")
 
     @property
@@ -76,7 +76,7 @@ class MainModuleTags(ABCMainModule):
         return MainModuleTopicHosts
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Tags")
 
     @property
@@ -113,7 +113,7 @@ class MainModuleGlobalSettings(ABCMainModule):
         return MainModuleTopicGeneral
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Global settings")
 
     @property
@@ -148,7 +148,7 @@ class MainModuleReadOnly(ABCMainModule):
         return MainModuleTopicGeneral
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Read only mode")
 
     @property
@@ -183,7 +183,7 @@ class MainModuleRuleSearch(ABCMainModule):
         return MainModuleTopicGeneral
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Rule search")
 
     @property
@@ -218,7 +218,7 @@ class MainModulePredefinedConditions(ABCMainModule):
         return MainModuleTopicGeneral
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Predefined conditions")
 
     @property
@@ -253,7 +253,7 @@ class MainModuleHostAndServiceParameters(ABCMainModule):
         return MainModuleTopicHosts
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Host monitoring rules")
 
     @property
@@ -288,7 +288,7 @@ class MainModuleHWSWInventory(ABCMainModule):
         return MainModuleTopicHosts
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("HW/SW inventory rules")
 
     @property
@@ -323,7 +323,7 @@ class MainModuleNetworkingServices(ABCMainModule):
         return MainModuleTopicServices
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("HTTP, TCP, Email, ...")
 
     @property
@@ -361,7 +361,7 @@ class MainModuleOtherServices(ABCMainModule):
         return MainModuleTopicServices
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Other Services")
 
     @property
@@ -399,7 +399,7 @@ class MainModuleCheckPlugins(ABCMainModule):
         return MainModuleTopicServices
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Catalog of check plugins")
 
     @property
@@ -434,7 +434,7 @@ class MainModuleHostGroups(ABCMainModule):
         return MainModuleTopicHosts
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Host groups")
 
     @property
@@ -469,7 +469,7 @@ class MainModuleHostCustomAttributes(ABCMainModule):
         return MainModuleTopicHosts
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Custom host attributes")
 
     @property
@@ -504,7 +504,7 @@ class MainModuleServiceGroups(ABCMainModule):
         return MainModuleTopicServices
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Service groups")
 
     @property
@@ -539,7 +539,7 @@ class MainModuleUsers(ABCMainModule):
         return MainModuleTopicUsers
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Users")
 
     @property
@@ -574,7 +574,7 @@ class MainModuleRoles(ABCMainModule):
         return MainModuleTopicUsers
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Roles & permissions")
 
     @property
@@ -609,7 +609,7 @@ class MainModuleLDAP(ABCMainModule):
         return MainModuleTopicUsers
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("LDAP & Active Directory")
 
     @property
@@ -644,7 +644,7 @@ class MainModuleUserCustomAttributes(ABCMainModule):
         return MainModuleTopicUsers
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Custom user attributes")
 
     @property
@@ -679,7 +679,7 @@ class MainModuleContactGroups(ABCMainModule):
         return MainModuleTopicUsers
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Contact groups")
 
     @property
@@ -714,7 +714,7 @@ class MainModuleNotifications(ABCMainModule):
         return MainModuleTopicEvents
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Notifications")
 
     @property
@@ -749,7 +749,7 @@ class MainModuleTimeperiods(ABCMainModule):
         return MainModuleTopicGeneral
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Time periods")
 
     @property
@@ -786,7 +786,7 @@ class MainModuleSites(ABCMainModule):
         return MainModuleTopicGeneral
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Distributed monitoring")
 
     @property
@@ -821,7 +821,7 @@ class MainModuleBackup(ABCMainModule):
         return MainModuleTopicMaintenance
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Backups")
 
     @property
@@ -856,7 +856,7 @@ class MainModulePasswords(ABCMainModule):
         return MainModuleTopicGeneral
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Passwords")
 
     @property
@@ -891,7 +891,7 @@ class MainModuleAuditLog(ABCMainModule):
         return MainModuleTopicGeneral
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Audit log")
 
     @property
@@ -926,7 +926,7 @@ class MainModuleIcons(ABCMainModule):
         return MainModuleTopicGeneral
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Custom icons")
 
     @property
@@ -961,7 +961,7 @@ class MainModuleAnalyzeConfig(ABCMainModule):
         return MainModuleTopicMaintenance
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Analyze configuration")
 
     @property
@@ -996,7 +996,7 @@ class MainModuleDiagnostics(ABCMainModule):
         return MainModuleTopicMaintenance
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Support diagnostics")
 
     @property
@@ -1034,7 +1034,7 @@ class MainModuleMonitoringRules(ABCMainModule):
         return MainModuleTopicServices
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Service monitoring rules")
 
     @property
@@ -1069,7 +1069,7 @@ class MainModuleDiscoveryRules(ABCMainModule):
         return MainModuleTopicServices
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Discovery rules")
 
     @property
@@ -1104,7 +1104,7 @@ class MainModuleEnforcedServices(ABCMainModule):
         return MainModuleTopicServices
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Enforced services")
 
     @property
@@ -1138,7 +1138,7 @@ class MainModuleAgentsWindows(ABCMainModule):
         return MainModuleTopicAgents
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Windows")
 
     @property
@@ -1172,7 +1172,7 @@ class MainModuleAgentsLinux(ABCMainModule):
         return MainModuleTopicAgents
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Linux")
 
     @property
@@ -1218,7 +1218,7 @@ class MainModuleAgentRules(ABCMainModule):
         return MainModuleTopicAgents
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Agent rules")
 
     @property
@@ -1264,7 +1264,7 @@ class MainModuleOtherAgents(ABCMainModule):
         return MainModuleTopicAgents
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Other operating systems")
 
     @property
@@ -1299,7 +1299,7 @@ class MainModuleAgentAccessRules(ABCMainModule):
         return MainModuleTopicAgents
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Agent access rules")
 
     @property
@@ -1334,7 +1334,7 @@ class MainModuleSNMPRules(ABCMainModule):
         return MainModuleTopicAgents
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("SNMP rules")
 
     @property
@@ -1369,7 +1369,7 @@ class MainModuleVMCloudContainer(ABCMainModule):
         return MainModuleTopicAgents
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("VM, Cloud, Container")
 
     @property
@@ -1404,7 +1404,7 @@ class MainModuleOtherIntegrations(ABCMainModule):
         return MainModuleTopicAgents
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Other integrations")
 
     @property

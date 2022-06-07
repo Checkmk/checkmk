@@ -322,7 +322,7 @@ class ModeEditCustomUserAttr(ModeEditCustomAttr):
             label=_("Users can change this attribute in their personal settings"),
         )
 
-    def title(self):
+    def title(self) -> str:
         if self._new:
             return _("Add user attribute")
         return _("Edit user attribute")
@@ -383,7 +383,7 @@ class ModeEditCustomHostAttr(ModeEditCustomAttr):
             ),
         )
 
-    def title(self):
+    def title(self) -> str:
         if self._new:
             return _("Add host attribute")
         return _("Edit host attribute")
@@ -407,7 +407,7 @@ class ModeCustomAttrs(WatoMode, abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def title(self):
+    def title(self) -> str:
         raise NotImplementedError()
 
     @abc.abstractmethod
@@ -517,7 +517,7 @@ class ModeCustomUserAttrs(ModeCustomAttrs):
     def _update_config(self):
         update_user_custom_attrs(datetime.now())
 
-    def title(self):
+    def title(self) -> str:
         return _("Custom user attributes")
 
     def _page_menu_entries_related(self) -> Iterable[PageMenuEntry]:
@@ -551,7 +551,7 @@ class ModeCustomHostAttrs(ModeCustomAttrs):
     def _update_config(self):
         update_host_custom_attrs()
 
-    def title(self):
+    def title(self) -> str:
         return _("Custom host attributes")
 
     def get_attributes(self):

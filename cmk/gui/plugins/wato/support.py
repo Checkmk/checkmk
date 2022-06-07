@@ -17,7 +17,7 @@ from cmk.gui.watolib.config_domains import ConfigDomainGUI
 
 @config_variable_group_registry.register
 class ConfigVariableGroupSupport(ConfigVariableGroup):
-    def title(self):
+    def title(self) -> str:
         return _("Support")
 
     def sort_index(self):

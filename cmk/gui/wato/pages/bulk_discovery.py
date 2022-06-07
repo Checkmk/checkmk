@@ -91,7 +91,7 @@ class ModeBulkDiscovery(WatoMode):
         assert isinstance(bulk_size, int)
         return DoFullScan(do_scan), BulkSize(bulk_size)
 
-    def title(self):
+    def title(self) -> str:
         return _("Bulk discovery")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:

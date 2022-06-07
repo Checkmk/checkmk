@@ -48,7 +48,7 @@ class MainModuleBackgroundJobs(ABCMainModule):
         return MainModuleTopicMaintenance
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Background jobs")
 
     @property
@@ -82,7 +82,7 @@ class ModeBackgroundJobsOverview(WatoMode):
     def permissions(cls):
         return ["background_jobs.manage_jobs"]
 
-    def title(self):
+    def title(self) -> str:
         return _("Background jobs overview")
 
     def page(self):
@@ -119,7 +119,7 @@ class ModeBackgroundJobDetails(WatoMode):
     def parent_mode(cls) -> Optional[Type[WatoMode]]:
         return ModeBackgroundJobsOverview
 
-    def title(self):
+    def title(self) -> str:
         return _("Background job details")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:

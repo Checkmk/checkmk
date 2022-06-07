@@ -190,7 +190,7 @@ class ModeEditSite(WatoMode):
             except KeyError:
                 raise MKUserError(None, _("The requested site does not exist"))
 
-    def title(self):
+    def title(self) -> str:
         if self._new:
             return _("Add site connection")
         return _("Edit site connection %s") % self._site_id
@@ -552,7 +552,7 @@ class ModeDistributedMonitoring(WatoMode):
         super().__init__()
         self._site_mgmt = SiteManagementFactory().factory()
 
-    def title(self):
+    def title(self) -> str:
         return _("Distributed monitoring")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
@@ -1088,7 +1088,7 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
         else:
             self._current_settings = self._site.get("globals", {})
 
-    def title(self):
+    def title(self) -> str:
         return _("Edit site specific global settings of %s") % self._site_id
 
     def _breadcrumb_url(self) -> str:
@@ -1206,7 +1206,7 @@ class ModeEditSiteGlobalSetting(ABCEditGlobalSettingMode):
         self._current_settings = site.setdefault("globals", {})
         self._global_settings = load_configuration_settings()
 
-    def title(self):
+    def title(self) -> str:
         return _("Site-specific global configuration for %s") % self._site_id
 
     def _affected_sites(self):
@@ -1249,7 +1249,7 @@ class ModeSiteLivestatusEncryption(WatoMode):
         except KeyError:
             raise MKUserError("site", _("This site does not exist."))
 
-    def title(self):
+    def title(self) -> str:
         return _("Livestatus encryption of %s") % self._site_id
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:

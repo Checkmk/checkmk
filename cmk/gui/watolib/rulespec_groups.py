@@ -18,7 +18,7 @@ class RulespecGroupMonitoringConfiguration(RulespecGroup):
         return "monconf"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Service monitoring rules")
 
     @property
@@ -42,7 +42,7 @@ class RulespecGroupMonitoringConfigurationVarious(RulespecSubGroup):
         return "various"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Various")
 
 
@@ -53,7 +53,7 @@ class RulespecGroupHostsMonitoringRules(RulespecGroup):
         return "host_monconf"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Host monitoring rules")
 
     @property
@@ -72,7 +72,7 @@ class RulespecGroupMonitoringConfigurationServiceChecks(RulespecSubGroup):
         return "service_checks"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Service Checks")
 
 
@@ -87,7 +87,7 @@ class RulespecGroupHostsMonitoringRulesVarious(RulespecSubGroup):
         return "host_various"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Various")
 
 
@@ -102,7 +102,7 @@ class RulespecGroupMonitoringConfigurationNotifications(RulespecSubGroup):
         return "notifications"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Notifications")
 
 
@@ -117,7 +117,7 @@ class RulespecGroupHostsMonitoringRulesNotifications(RulespecSubGroup):
         return "host_notifications"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Notifications")
 
 
@@ -132,7 +132,7 @@ class RulespecGroupHostsMonitoringRulesHostChecks(RulespecSubGroup):
         return "host_checks"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Host checks")
 
 
@@ -143,7 +143,7 @@ class RulespecGroupAgentSNMP(RulespecGroup):
         return "snmp"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("SNMP rules")
 
     @property
@@ -158,7 +158,7 @@ class RulespecGroupMonitoringAgents(RulespecGroup):
         return "agents"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Agent rules")
 
     @property
@@ -177,7 +177,7 @@ class RulespecGroupMonitoringAgentsGenericOptions(RulespecSubGroup):
         return "generic_options"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Generic Options")
 
 
@@ -188,7 +188,7 @@ class RulespecGroupEnforcedServices(RulespecGroup):
         return "static"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Enforced services")
 
     @property
@@ -212,7 +212,7 @@ class RulespecGroupEnforcedServicesNetworking(RulespecSubGroup):
         return "networking"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Networking")
 
 
@@ -227,7 +227,7 @@ class RulespecGroupEnforcedServicesApplications(RulespecSubGroup):
         return "applications"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Applications, Processes & Services")
 
 
@@ -242,7 +242,7 @@ class RulespecGroupEnforcedServicesEnvironment(RulespecSubGroup):
         return "environment"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Temperature, Humidity, Electrical Parameters, etc.")
 
 
@@ -257,7 +257,7 @@ class RulespecGroupEnforcedServicesOperatingSystem(RulespecSubGroup):
         return "os"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Operating System Resources")
 
 
@@ -272,7 +272,7 @@ class RulespecGroupEnforcedServicesHardware(RulespecSubGroup):
         return "hardware"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Hardware, BIOS")
 
 
@@ -287,7 +287,7 @@ class RulespecGroupEnforcedServicesStorage(RulespecSubGroup):
         return "storage"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Storage, Filesystems and Files")
 
 
@@ -302,5 +302,5 @@ class RulespecGroupEnforcedServicesVirtualization(RulespecSubGroup):
         return "virtualization"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Virtualization")

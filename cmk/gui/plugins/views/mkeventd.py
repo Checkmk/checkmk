@@ -185,7 +185,7 @@ class DataSourceECEvents(ABCDataSource):
         return "mkeventd_events"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Event Console: Current events")
 
     @property
@@ -220,7 +220,7 @@ class DataSourceECEventHistory(ABCDataSource):
         return "mkeventd_history"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Event Console: Event history")
 
     @property
@@ -1066,7 +1066,7 @@ class CommandECUpdateEvent(ECCommand):
         return "ec_update_event"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Update & acknowledge")
 
     @property
@@ -1156,7 +1156,7 @@ class CommandECChangeState(ECCommand):
         return "ec_change_state"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Change state")
 
     @property
@@ -1204,7 +1204,7 @@ class CommandECCustomAction(ECCommand):
         return "ec_custom_actions"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Custom action")
 
     @property
@@ -1250,7 +1250,7 @@ class CommandECArchiveEvent(ECCommand):
         return "ec_archive_event"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Archive event")
 
     @property
@@ -1294,7 +1294,7 @@ class CommandECArchiveEventsOfHost(ECCommand):
         return "ec_archive_events_of_host"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Archive events of hosts")
 
     @property

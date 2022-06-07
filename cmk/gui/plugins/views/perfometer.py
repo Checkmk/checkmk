@@ -276,7 +276,7 @@ class SorterPerfometer(Sorter):
         return "perfometer"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Perf-O-Meter")
 
     @property

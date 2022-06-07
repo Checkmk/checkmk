@@ -32,7 +32,7 @@ class PermissionSectionGeneral(PermissionSection):
         return "general"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("General Permissions")
 
     @property

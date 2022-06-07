@@ -64,7 +64,7 @@ class LayoutSingleDataset(Layout):
         return "dataset"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Single dataset")
 
     @property
@@ -376,7 +376,7 @@ class LayoutBalancedBoxes(GroupedBoxesLayout):
         return "boxed"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Balanced boxes")
 
     @property
@@ -396,7 +396,7 @@ class LayoutBalancedGraphBoxes(GroupedBoxesLayout):
         return "boxed_graph"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Balanced graph boxes")
 
     @property
@@ -416,7 +416,7 @@ class LayoutTiled(Layout):
         return "tiled"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Tiles")
 
     @property
@@ -549,7 +549,7 @@ class LayoutTable(Layout):
         return "table"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Table")
 
     @property
@@ -740,7 +740,7 @@ class LayoutMatrix(Layout):
         return "matrix"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Matrix")
 
     @property

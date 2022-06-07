@@ -34,7 +34,7 @@ class PermissionSectionIconsAndActions(PermissionSection):
         return "icons_and_actions"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Icons")
 
     @property

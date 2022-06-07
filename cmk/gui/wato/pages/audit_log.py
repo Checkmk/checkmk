@@ -67,7 +67,7 @@ class ModeAuditLog(WatoMode):
         self._store = AuditLogStore(AuditLogStore.make_path())
         self._show_details = request.get_integer_input_mandatory("show_details", 1) == 1
 
-    def title(self):
+    def title(self) -> str:
         return _("Audit log")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:

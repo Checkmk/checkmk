@@ -43,7 +43,7 @@ def test_rulespec_sub_group():
             return "main_group"
 
         @property
-        def title(self):
+        def title(self) -> str:
             return "Title"
 
         @property
@@ -60,7 +60,7 @@ def test_rulespec_sub_group():
             return "sub_group"
 
         @property
-        def title(self):
+        def title(self) -> str:
             return "Sub"
 
     test_sub_group = TestSubGroup()
@@ -1740,7 +1740,7 @@ class DummyGroup(RulespecGroup):
         return "group"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return "Group title"
 
     @property
@@ -1774,7 +1774,7 @@ def test_match_item_generator_rules():
             return "rulespec_group"
 
         @property
-        def title(self):
+        def title(self) -> str:
             return "Rulespec Group"
 
         @property

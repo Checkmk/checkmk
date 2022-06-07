@@ -162,7 +162,7 @@ class SorterWatoFolderAbs(Sorter):
         return "wato_folder_abs"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Folder - complete path")
 
     @property
@@ -180,7 +180,7 @@ class SorterWatoFolderRel(Sorter):
         return "wato_folder_rel"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Folder - relative path")
 
     @property
@@ -198,7 +198,7 @@ class SorterWatoFolderPlain(Sorter):
         return "wato_folder_plain"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Folder - just folder name")
 
     @property

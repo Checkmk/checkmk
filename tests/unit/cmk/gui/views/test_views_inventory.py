@@ -250,7 +250,6 @@ def test__cmp_inventory_node(monkeypatch, val_a, val_b, result):
         (
             tuple(),
             NodeDisplayHint(
-                raw_path=".",
                 icon=None,
                 title="Inventory",
                 short_title="Inventory",
@@ -268,7 +267,6 @@ def test__cmp_inventory_node(monkeypatch, val_a, val_b, result):
         (
             ("hardware",),
             NodeDisplayHint(
-                raw_path=".hardware.",
                 icon="hardware",
                 title="Hardware",
                 short_title="Hardware",
@@ -286,7 +284,6 @@ def test__cmp_inventory_node(monkeypatch, val_a, val_b, result):
         (
             ("hardware", "cpu"),
             NodeDisplayHint(
-                raw_path=".hardware.cpu.",
                 icon=None,
                 title="Processor",
                 short_title="Processor",
@@ -316,7 +313,6 @@ def test__cmp_inventory_node(monkeypatch, val_a, val_b, result):
         (
             ("software", "applications", "docker", "images"),
             NodeDisplayHint(
-                raw_path=".software.applications.docker.images:",
                 icon=None,
                 title="Images",
                 short_title="Images",
@@ -342,7 +338,6 @@ def test__cmp_inventory_node(monkeypatch, val_a, val_b, result):
         (
             ("path", "to", "node"),
             NodeDisplayHint(
-                raw_path=".path.to.node.",
                 icon=None,
                 title="Node",
                 short_title="Node",
@@ -362,7 +357,6 @@ def test__cmp_inventory_node(monkeypatch, val_a, val_b, result):
 def test_make_node_displayhint(path: SDPath, expected: NodeDisplayHint) -> None:
     hint = NodeDisplayHint.make_from_path(path)
 
-    assert hint.raw_path == expected.raw_path
     assert hint.icon == expected.icon
     assert hint.title == expected.title
     assert hint.short_title == expected.short_title
@@ -381,7 +375,6 @@ def test_make_node_displayhint(path: SDPath, expected: NodeDisplayHint) -> None:
         (
             ".foo.bar.",
             NodeDisplayHint(
-                raw_path=".foo.bar.",
                 icon=None,
                 title="Bar",
                 short_title="Bar",
@@ -399,7 +392,6 @@ def test_make_node_displayhint(path: SDPath, expected: NodeDisplayHint) -> None:
         (
             ".foo.bar:",
             NodeDisplayHint(
-                raw_path=".foo.bar:",
                 icon=None,
                 title="Bar",
                 short_title="Bar",
@@ -417,7 +409,6 @@ def test_make_node_displayhint(path: SDPath, expected: NodeDisplayHint) -> None:
         (
             ".software.",
             NodeDisplayHint(
-                raw_path=".software.",
                 icon="software",
                 title="Software",
                 short_title="Software",
@@ -435,7 +426,6 @@ def test_make_node_displayhint(path: SDPath, expected: NodeDisplayHint) -> None:
         (
             ".software.applications.docker.containers:",
             NodeDisplayHint(
-                raw_path=".software.applications.docker.containers:",
                 icon=None,
                 title="Containers",
                 short_title="Containers",
@@ -458,7 +448,6 @@ def test_make_node_displayhint_from_hint(raw_path: SDRawPath, expected: NodeDisp
         inventory_displayhints.get(raw_path, {}),
     )
 
-    assert hint.raw_path == expected.raw_path
     assert hint.icon == expected.icon
     assert hint.title == expected.title
     assert hint.short_title == expected.short_title

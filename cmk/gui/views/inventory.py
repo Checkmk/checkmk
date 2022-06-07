@@ -600,7 +600,6 @@ def _make_long_title_function(title: str, parent_path: SDPath) -> Callable[[], s
 
 @dataclass(frozen=True)
 class NodeDisplayHint:
-    raw_path: str
     icon: Optional[str]
     title: str
     short_title: str
@@ -614,10 +613,9 @@ class NodeDisplayHint:
 
     @classmethod
     def make_from_path(cls, path: SDPath) -> NodeDisplayHint:
-        raw_path, raw_hint, attributes_hint, table_hint = cls._get_raw_path_or_hint(path)
+        raw_hint, attributes_hint, table_hint = cls._get_raw_path_or_hint(path)
         title = _make_title_function(raw_hint)(path[-1] if path else "")
         return cls(
-            raw_path=raw_path,
             icon=raw_hint.get("icon"),
             title=title,
             short_title=raw_hint.get("short", title),
@@ -629,12 +627,10 @@ class NodeDisplayHint:
     @staticmethod
     def _get_raw_path_or_hint(
         path: SDPath,
-    ) -> Tuple[str, InventoryHintSpec, AttributesDisplayHint, TableDisplayHint]:
+    ) -> Tuple[InventoryHintSpec, AttributesDisplayHint, TableDisplayHint]:
         if not path:
-            raw_path = "."
             return (
-                raw_path,
-                inventory_displayhints.get(raw_path, {}),
+                inventory_displayhints.get(".", {}),
                 AttributesDisplayHint.make_from_hint({}),
                 TableDisplayHint.make_from_hint({}),
             )
@@ -643,7 +639,6 @@ class NodeDisplayHint:
         if (raw_path := f".{_get_raw_path(path)}.") in inventory_displayhints:
             raw_hint = inventory_displayhints[raw_path]
             return (
-                raw_path,
                 raw_hint,
                 AttributesDisplayHint.make_from_hint(raw_hint),
                 TableDisplayHint.make_from_hint({}),
@@ -652,14 +647,12 @@ class NodeDisplayHint:
         if (raw_path := f".{_get_raw_path(path)}:") in inventory_displayhints:
             raw_hint = inventory_displayhints[raw_path]
             return (
-                raw_path,
                 raw_hint,
                 AttributesDisplayHint.make_from_hint({}),
                 TableDisplayHint.make_from_hint(raw_hint),
             )
 
         return (
-            f".{_get_raw_path(path)}.",
             {},
             AttributesDisplayHint.make_from_hint({}),
             TableDisplayHint.make_from_hint({}),
@@ -671,7 +664,6 @@ class NodeDisplayHint:
         attributes_hint, table_hint = cls._get_attributes_or_table_hint(inventory_path, raw_hint)
         title = _make_title_function(raw_hint)(inventory_path.node_name)
         return cls(
-            raw_path=raw_path,
             icon=raw_hint.get("icon"),
             title=title,
             short_title=raw_hint.get("short", title),
@@ -2163,17 +2155,18 @@ class ABCNodeRenderer(abc.ABC):
     #   ---node-----------------------------------------------------------------
 
     def _show_node(self, node: StructuredDataNode) -> None:
+        raw_path = ".{_get_raw_path(node.path)}." if node.path else "."
         hint = NodeDisplayHint.make_from_path(node.path)
 
         title = hint.title
 
         # Replace placeholders in title with the real values for this path
         if "%d" in title or "%s" in title:
-            title = self._replace_placeholders(title, hint.raw_path)
+            title = self._replace_placeholders(title, raw_path)
 
         with foldable_container(
             treename="inv_%s%s" % (self._hostname, self._tree_id),
-            id_=hint.raw_path,
+            id_=raw_path,
             isopen=False,
             title=self._get_header(
                 title,
@@ -2186,7 +2179,7 @@ class ABCNodeRenderer(abc.ABC):
                 [
                     ("site", self._site_id),
                     ("host", self._hostname),
-                    ("raw_path", hint.raw_path),
+                    ("raw_path", raw_path),
                     ("show_internal_tree_paths", "on" if self._show_internal_tree_paths else ""),
                     ("tree_id", self._tree_id),
                 ],

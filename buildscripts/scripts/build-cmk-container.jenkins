@@ -68,16 +68,8 @@ timeout(time: 12, unit: 'HOURS') {
                     if (params.PUSH_TO_REGISTRY_ONLY) {
                         stage("Deploy docker tar") {
                             upload.download_docker_tar(INTERNAL_DEPLOY_DEST, INTERNAL_DEPLOY_PORT, CMK_VERS, PACKAGE_DIR + "/download/" + CMK_VERS, EDITION)
-                            withCredentials([file(credentialsId: 'Release_Key', variable: 'RELEASE_KEY')]) {
-                                sh """
-                                    cd ${PACKAGE_DIR}/${CMK_VERS}
-                                    rsync -av --relative \
-                                        --exclude '*dbgsym*.deb' \
-                                        -e "ssh -o StrictHostKeyChecking=no -i ${RELEASE_KEY} -p 52022" \
-                                        ${PACKAGE_DIR}/./${CMK_VERS}/check-mk-*-docker-*.tar.gz \
-                                        ${WEB_DEPLOY_DEST}
-                                """
-                            }
+                            sh "cd ${PACKAGE_DIR}/${CMK_VERS}"
+                            upload.upload_version_dir("${PACKAGE_DIR}/./${CMK_VERS}/check-mk-*-docker-*.tar.gz", WEB_DEPLOY_DEST, "52022")
 
                         }
                     }
@@ -128,16 +120,8 @@ timeout(time: 12, unit: 'HOURS') {
 
                     stage('Upload image to download mirror') {
                         if (params.PUSH_TO_REGISTRY) {
-                            withCredentials([file(credentialsId: 'Release_Key', variable: 'RELEASE_KEY')]) {
-                                sh """
-                                    cd ${PACKAGE_DIR}/${CMK_VERS}
-                                    rsync -av --relative \
-                                        --exclude '*dbgsym*.deb' \
-                                        -e "ssh -o StrictHostKeyChecking=no -i ${RELEASE_KEY} -p 52022" \
-                                        ${PACKAGE_DIR}/./${CMK_VERS}/check-mk-*-docker-*.tar.gz \
-                                        ${WEB_DEPLOY_DEST}
-                                """
-                            }
+                            sh "cd ${PACKAGE_DIR}/${CMK_VERS}"
+                            upload.upload_version_dir("${PACKAGE_DIR}/./${CMK_VERS}/check-mk-*-docker-*.tar.gz", WEB_DEPLOY_DEST, "52022")
                         }
                     }
 

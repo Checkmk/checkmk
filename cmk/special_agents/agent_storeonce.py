@@ -12,6 +12,8 @@ import xml.etree.ElementTree as ET
 import requests
 import urllib3
 
+from cmk.utils.password_store import replace_passwords
+
 
 def usage():
     sys.stderr.write(
@@ -4625,6 +4627,7 @@ def query_stores_info(serviceset_id, args_dict, opt_demo, opt_cert):
 
 def main(sys_argv=None):
     if sys_argv is None:
+        replace_passwords()
         sys_argv = sys.argv[1:]
 
     short_options = "h"

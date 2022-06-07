@@ -245,7 +245,7 @@ def test__cmp_inventory_node(monkeypatch, val_a, val_b, result):
 
 
 @pytest.mark.parametrize(
-    "node_path, expected",
+    "path, expected",
     [
         (
             tuple(),
@@ -359,8 +359,8 @@ def test__cmp_inventory_node(monkeypatch, val_a, val_b, result):
         ),
     ],
 )
-def test_make_node_displayhint(node_path: SDPath, expected: NodeDisplayHint) -> None:
-    hint = NodeDisplayHint.make(node_path)
+def test_make_node_displayhint(path: SDPath, expected: NodeDisplayHint) -> None:
+    hint = NodeDisplayHint.make_from_path(path)
 
     assert hint.raw_path == expected.raw_path
     assert hint.icon == expected.icon
@@ -376,7 +376,7 @@ def test_make_node_displayhint(node_path: SDPath, expected: NodeDisplayHint) -> 
 
 
 @pytest.mark.parametrize(
-    "raw_node_path, expected",
+    "raw_path, expected",
     [
         (
             ".foo.bar.",
@@ -452,12 +452,10 @@ def test_make_node_displayhint(node_path: SDPath, expected: NodeDisplayHint) -> 
         ),
     ],
 )
-def test_make_node_displayhint_from_hint(
-    raw_node_path: SDRawPath, expected: NodeDisplayHint
-) -> None:
+def test_make_node_displayhint_from_hint(raw_path: SDRawPath, expected: NodeDisplayHint) -> None:
     hint = NodeDisplayHint.make_from_hint(
-        raw_node_path,
-        inventory_displayhints.get(raw_node_path, {}),
+        raw_path,
+        inventory_displayhints.get(raw_path, {}),
     )
 
     assert hint.raw_path == expected.raw_path
@@ -505,7 +503,7 @@ def test_sort_table_rows_displayhint(rows: Sequence[SDRow], expected: Sequence[S
 
 
 @pytest.mark.parametrize(
-    "col_path, key, expected",
+    "path, key, expected",
     [
         (
             tuple(),
@@ -542,8 +540,8 @@ def test_sort_table_rows_displayhint(rows: Sequence[SDRow], expected: Sequence[S
         ),
     ],
 )
-def test_make_column_displayhint(col_path: SDPath, key: str, expected: ColumnDisplayHint) -> None:
-    hint = ColumnDisplayHint.make(col_path, key)
+def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplayHint) -> None:
+    hint = ColumnDisplayHint.make_from_path(path, key)
 
     assert hint.title == expected.title
     assert hint.short_title == expected.short_title
@@ -553,7 +551,7 @@ def test_make_column_displayhint(col_path: SDPath, key: str, expected: ColumnDis
 
 
 @pytest.mark.parametrize(
-    "raw_col_path, expected",
+    "raw_path, expected",
     [
         (
             ".foo:*.bar",
@@ -598,11 +596,11 @@ def test_make_column_displayhint(col_path: SDPath, key: str, expected: ColumnDis
     ],
 )
 def test_make_column_displayhint_from_hint(
-    raw_col_path: SDRawPath, expected: ColumnDisplayHint
+    raw_path: SDRawPath, expected: ColumnDisplayHint
 ) -> None:
     hint = ColumnDisplayHint.make_from_hint(
-        raw_col_path,
-        inventory_displayhints.get(raw_col_path, {}),
+        raw_path,
+        inventory_displayhints.get(raw_path, {}),
     )
 
     assert hint.title == expected.title
@@ -636,7 +634,7 @@ def test_sort_attributes_pairs_displayhint(
 
 
 @pytest.mark.parametrize(
-    "attr_path, key, expected",
+    "path, key, expected",
     [
         (
             tuple(),
@@ -676,10 +674,8 @@ def test_sort_attributes_pairs_displayhint(
         ),
     ],
 )
-def test_make_attribute_displayhint(
-    attr_path: SDPath, key: str, expected: AttributeDisplayHint
-) -> None:
-    hint = AttributeDisplayHint.make(attr_path, key)
+def test_make_attribute_displayhint(path: SDPath, key: str, expected: AttributeDisplayHint) -> None:
+    hint = AttributeDisplayHint.make_from_path(path, key)
 
     assert hint.data_type == expected.data_type
     assert hint.paint_function == expected.paint_function
@@ -690,7 +686,7 @@ def test_make_attribute_displayhint(
 
 
 @pytest.mark.parametrize(
-    "raw_attr_path, expected",
+    "raw_path, expected",
     [
         (
             ".foo.bar",
@@ -728,11 +724,11 @@ def test_make_attribute_displayhint(
     ],
 )
 def test_make_attribute_displayhint_from_hint(
-    raw_attr_path: SDRawPath, expected: AttributeDisplayHint
+    raw_path: SDRawPath, expected: AttributeDisplayHint
 ) -> None:
     hint = AttributeDisplayHint.make_from_hint(
-        raw_attr_path,
-        inventory_displayhints.get(raw_attr_path, {}),
+        raw_path,
+        inventory_displayhints.get(raw_path, {}),
     )
 
     assert hint.data_type == expected.data_type

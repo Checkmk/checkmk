@@ -226,7 +226,7 @@ class PainterInventoryTree(Painter):
         )
 
         with output_funnel.plugged():
-            tree_renderer.show(tree, NodeDisplayHint.make(tree.path))
+            tree_renderer.show(tree, NodeDisplayHint.make_from_path(tree.path))
             code = HTML(output_funnel.drain())
 
         return "invtree", code
@@ -594,7 +594,7 @@ def _make_title_function(raw_hint: InventoryHintSpec) -> Callable[[str], str]:
 
 def _make_long_title_function(title: str, parent_path: SDPath) -> Callable[[], str]:
     return lambda: (
-        NodeDisplayHint.make(parent_path).title + " ➤ " + title if parent_path else title
+        NodeDisplayHint.make_from_path(parent_path).title + " ➤ " + title if parent_path else title
     )
 
 
@@ -613,7 +613,7 @@ class NodeDisplayHint:
         return self._long_title_function()
 
     @classmethod
-    def make(cls, path: SDPath) -> NodeDisplayHint:
+    def make_from_path(cls, path: SDPath) -> NodeDisplayHint:
         raw_path, raw_hint, attributes_hint, table_hint = cls._get_raw_path_or_hint(path)
         title = _make_title_function(raw_hint)(path[-1] if path else "")
         return cls(
@@ -724,7 +724,7 @@ class TableDisplayHint:
         return [
             Column(col_hint, k, k in key_columns)
             for k in sorting_keys
-            for col_hint in (ColumnDisplayHint.make(path, k),)
+            for col_hint in (ColumnDisplayHint.make_from_path(path, k),)
         ]
 
     def sort_rows(self, rows: Sequence[SDRow], columns: Sequence[Column]) -> Sequence[SDRow]:
@@ -740,7 +740,7 @@ class ColumnDisplayHint:
     sort_function: Callable[[Any, Any], int]  # TODO improve type hints for args
 
     @classmethod
-    def make(cls, path: SDPath, key: str) -> ColumnDisplayHint:
+    def make_from_path(cls, path: SDPath, key: str) -> ColumnDisplayHint:
         raw_hint = inventory_displayhints.get(f".{_get_raw_path(path)}:*.{key}", {}) if path else {}
         data_type, paint_function = _get_paint_function(raw_hint)
         title = _make_title_function(raw_hint)(key)
@@ -797,7 +797,7 @@ class AttributeDisplayHint:
         return self._long_title_function()
 
     @classmethod
-    def make(cls, path: SDPath, key: str) -> AttributeDisplayHint:
+    def make_from_path(cls, path: SDPath, key: str) -> AttributeDisplayHint:
         raw_hint = inventory_displayhints.get(f".{_get_raw_path(path)}.{key}", {}) if path else {}
         data_type, paint_function = _get_paint_function(raw_hint)
         title = _make_title_function(raw_hint)(key)
@@ -889,9 +889,11 @@ def inv_titleinfo_long(raw_path: SDRawPath) -> str:
     inventory_path = inventory.InventoryPath.parse(raw_path)
 
     if inventory_path.key:
-        return AttributeDisplayHint.make(inventory_path.path, inventory_path.key).long_title
+        return AttributeDisplayHint.make_from_path(
+            inventory_path.path, inventory_path.key
+        ).long_title
 
-    return NodeDisplayHint.make(inventory_path.path).long_title
+    return NodeDisplayHint.make_from_path(inventory_path.path).long_title
 
 
 # .
@@ -1053,11 +1055,13 @@ def _paint_host_inventory_tree(row: Row, inventory_path: inventory.InventoryPath
     td_class = ""
     with output_funnel.plugged():
         if inventory_path.source == inventory.TreeSource.node:
-            tree_renderer.show(node, NodeDisplayHint.make(node.path))
+            tree_renderer.show(node, NodeDisplayHint.make_from_path(node.path))
             td_class = "invtree"
 
         elif inventory_path.source == inventory.TreeSource.table:
-            tree_renderer.show_table(node.table, NodeDisplayHint.make(node.path).table_hint)
+            tree_renderer.show_table(
+                node.table, NodeDisplayHint.make_from_path(node.path).table_hint
+            )
 
         elif (
             inventory_path.source == inventory.TreeSource.attributes
@@ -1065,7 +1069,7 @@ def _paint_host_inventory_tree(row: Row, inventory_path: inventory.InventoryPath
         ):
             tree_renderer.show_attribute(
                 node.attributes.pairs[inventory_path.key],
-                AttributeDisplayHint.make(inventory_path.path, inventory_path.key),
+                AttributeDisplayHint.make_from_path(inventory_path.path, inventory_path.key),
             )
 
         code = HTML(output_funnel.drain())
@@ -1474,7 +1478,7 @@ def _declare_views(
 ) -> None:
     is_show_more = True
     if len(raw_paths) == 1:
-        is_show_more = NodeDisplayHint.make(
+        is_show_more = NodeDisplayHint.make_from_path(
             inventory.InventoryPath.parse(raw_paths[0] or "").path
         ).table_hint.is_show_more
 
@@ -1991,7 +1995,7 @@ class PainterInvhistDelta(Painter):
         )
 
         with output_funnel.plugged():
-            tree_renderer.show(tree, NodeDisplayHint.make(tree.path))
+            tree_renderer.show(tree, NodeDisplayHint.make_from_path(tree.path))
             code = HTML(output_funnel.drain())
 
         return "invtree", code
@@ -2159,7 +2163,7 @@ class ABCNodeRenderer(abc.ABC):
     #   ---node-----------------------------------------------------------------
 
     def _show_node(self, node: StructuredDataNode) -> None:
-        hint = NodeDisplayHint.make(node.path)
+        hint = NodeDisplayHint.make_from_path(node.path)
 
         title = hint.title
 
@@ -2280,7 +2284,7 @@ class ABCNodeRenderer(abc.ABC):
     def _show_attributes(self, attributes: Attributes, hint: AttributesDisplayHint) -> None:
         html.open_table()
         for key, value in hint.sort_pairs(attributes.pairs):
-            attr_hint = AttributeDisplayHint.make(attributes.path, key)
+            attr_hint = AttributeDisplayHint.make_from_path(attributes.path, key)
 
             html.open_tr()
             html.th(
@@ -2483,4 +2487,4 @@ def ajax_inv_render_tree() -> None:
         )
         return
 
-    tree_renderer.show(node, NodeDisplayHint.make(node.path))
+    tree_renderer.show(node, NodeDisplayHint.make_from_path(node.path))

@@ -56663,6 +56663,14 @@ msgid ""
 "You can not delete this target because it is used by these backup jobs: %s"
 msgstr ""
 
+#, python-format
+msgid "You can not override the builtin auxiliary tag \"%s\"."
+msgstr ""
+
+#, python-format
+msgid "You can not override the builtin tag group \"%s\"."
+msgstr ""
+
 msgid "You can not use \"public\" as first level of a custom path"
 msgstr ""
 

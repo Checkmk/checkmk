@@ -61266,6 +61266,14 @@ msgstr ""
 "Sie können dieses Sicherungszuel nicht löschen, das es von diesen Sicherungs-"
 "Jobs verwendet wird: %s"
 
+#, fuzzy, python-format
+msgid "You can not override the builtin auxiliary tag \"%s\"."
+msgstr "Sie haben bisher noch keine Hilfs-Merkmale angelegt."
+
+#, fuzzy, python-format
+msgid "You can not override the builtin tag group \"%s\"."
+msgstr "Die eingebauten Rollen können nicht gelöscht werden!"
+
 msgid "You can not use \"public\" as first level of a custom path"
 msgstr "Sie können \"public\" nicht als erste Pfad-Ebene nutzen."
 

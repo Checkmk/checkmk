@@ -61159,6 +61159,14 @@ msgstr ""
 "Você não pode apagar este alvo porque ele é usado por estes trabalhos de "
 "backup: %s"
 
+#, fuzzy, python-format
+msgid "You can not override the builtin auxiliary tag \"%s\"."
+msgstr "Você não definiu nenhuma etiqueta auxiliar."
+
+#, fuzzy, python-format
+msgid "You can not override the builtin tag group \"%s\"."
+msgstr "Você não pode apagar os papéis de construção!"
+
 msgid "You can not use \"public\" as first level of a custom path"
 msgstr ""
 "Você não pode usar \"público\" como primeiro nível de um caminho "

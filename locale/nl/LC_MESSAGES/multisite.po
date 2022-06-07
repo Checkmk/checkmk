@@ -61222,6 +61222,14 @@ msgstr ""
 "U kunt dit doel niet verwijderen omdat het door deze back-uptaken wordt "
 "gebruikt: %s"
 
+#, fuzzy, python-format
+msgid "You can not override the builtin auxiliary tag \"%s\"."
+msgstr "Je hebt geen hulptags gedefinieerd."
+
+#, fuzzy, python-format
+msgid "You can not override the builtin tag group \"%s\"."
+msgstr "Je kunt de ingebouwde rollen niet verwijderen!"
+
 msgid "You can not use \"public\" as first level of a custom path"
 msgstr ""
 "U kunt \"public\" niet gebruiken als eerste niveau van een aangepast pad"

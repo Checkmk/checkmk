@@ -61339,6 +61339,14 @@ msgstr ""
 "Non puoi eliminare questa destinazione perché è usata da questi processi di "
 "backup: %s"
 
+#, fuzzy, python-format
+msgid "You can not override the builtin auxiliary tag \"%s\"."
+msgstr "Non hai definito nessun tag ausiliario."
+
+#, fuzzy, python-format
+msgid "You can not override the builtin tag group \"%s\"."
+msgstr "Non si possono cancellare i ruoli incorporati!"
+
 msgid "You can not use \"public\" as first level of a custom path"
 msgstr ""
 "Non si può usare \"public\" come primo livello di un percorso personalizzato"

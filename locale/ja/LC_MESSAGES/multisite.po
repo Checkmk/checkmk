@@ -57645,6 +57645,14 @@ msgid ""
 "You can not delete this target because it is used by these backup jobs: %s"
 msgstr ""
 
+#, fuzzy, python-format
+msgid "You can not override the builtin auxiliary tag \"%s\"."
+msgstr "補助タグを定義していません。"
+
+#, fuzzy, python-format
+msgid "You can not override the builtin tag group \"%s\"."
+msgstr "組み込みの役割は削除できません！"
+
 msgid "You can not use \"public\" as first level of a custom path"
 msgstr "カスタムパスの最初のレベルとして\"public\"を使用することはできません"
 

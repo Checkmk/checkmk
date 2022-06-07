@@ -61706,6 +61706,14 @@ msgstr ""
 "No puede eliminar este objetivo porque es utilizado por estos trabajos de "
 "copia de seguridad: %s"
 
+#, fuzzy, python-format
+msgid "You can not override the builtin auxiliary tag \"%s\"."
+msgstr "No has definido ninguna etiqueta auxiliar."
+
+#, fuzzy, python-format
+msgid "You can not override the builtin tag group \"%s\"."
+msgstr "No se pueden eliminar los roles incorporados."
+
 msgid "You can not use \"public\" as first level of a custom path"
 msgstr ""
 "No se puede utilizar \"public\" como primer nivel de una ruta personalizada"

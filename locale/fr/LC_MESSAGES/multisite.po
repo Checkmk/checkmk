@@ -62020,6 +62020,14 @@ msgstr ""
 "Vous ne pouvez pas supprimer cette cible car elle est utilisée par ces "
 "travaux de sauvegarde : %s"
 
+#, fuzzy, python-format
+msgid "You can not override the builtin auxiliary tag \"%s\"."
+msgstr "Vous ne pouvez pas passez outre un tag auxiliaire natif."
+
+#, fuzzy, python-format
+msgid "You can not override the builtin tag group \"%s\"."
+msgstr "Vous ne pouvez pas écraser un group de tag natif."
+
 msgid "You can not use \"public\" as first level of a custom path"
 msgstr ""
 "Vous ne pouvez pas utiliser \"public\" comme premier niveau d'un chemin "
@@ -69827,13 +69835,6 @@ msgstr "© 2020 tribe29 GmbH. Tous droits réservés."
 #~ msgstr ""
 #~ "Vous n'êtes pas autorisés à utiliser la GUI web de configuration de "
 #~ "Check_MK."
-
-#, fuzzy
-#~ msgid "You can not override a builtin auxiliary tag."
-#~ msgstr "Vous ne pouvez pas passez outre un tag auxiliaire natif."
-
-#~ msgid "You can not override a builtin tag group."
-#~ msgstr "Vous ne pouvez pas écraser un group de tag natif."
 
 #, fuzzy
 #~ msgid ""

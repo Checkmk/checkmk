@@ -121,7 +121,7 @@ def check_supermicro_sensors(item, _no_params, info):
 
     def expect_order(*args):
         return max(
-            [abs(x[0] - x[1][0]) for x in enumerate(sorted(enumerate(args), key=lambda x: x[1]))]
+            abs(x[0] - x[1][0]) for x in enumerate(sorted(enumerate(args), key=lambda x: x[1]))
         )
 
     for name, sensor_type, reading, high, low, unit, dev_status in info[0]:

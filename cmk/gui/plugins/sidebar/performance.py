@@ -75,8 +75,8 @@ class Performance(SidebarSnapin):
                 )
             finally:
                 sites.live().set_only_sites(None)
-            size = sum([row[0] for row in data])
-            maxx = sum([row[1] for row in data])
+            size = sum(row[0] for row in data)
+            maxx = sum(row[1] for row in data)
             write_line(_("Com. buf. max/total"), "%d / %d" % (maxx, size), show_more=True)
 
         html.close_table()

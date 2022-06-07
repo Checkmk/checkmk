@@ -725,7 +725,7 @@ def read_package_info(pacname: PackageName) -> Optional[PackageInfo]:
 
 
 def package_num_files(package: PackageInfo) -> int:
-    return sum([len(fl) for fl in package["files"].values()])
+    return sum(len(fl) for fl in package["files"].values())
 
 
 def _files_in_dir(part: str, directory: str, prefix: str = "") -> List[str]:

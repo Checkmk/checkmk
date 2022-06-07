@@ -119,7 +119,7 @@ def check_graylog_streams(_no_item, params, parsed):
         long_output.append((stream_state, long_output_str))
 
     if long_output:
-        max_state = max([state for state, _infotext in long_output])
+        max_state = max(state for state, _infotext in long_output)
 
         yield max_state, "see long output for more details"
 

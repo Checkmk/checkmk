@@ -1198,7 +1198,7 @@ def get_next_random_palette_color():
 def get_n_different_colors(n: int) -> List[str]:
     """Return a list of colors that are as different as possible (visually)
     by distributing them on the HSV color wheel."""
-    total_weight = sum([x[1] for x in _hsv_color_distribution])
+    total_weight = sum(x[1] for x in _hsv_color_distribution)
 
     colors: List[str] = []
     while len(colors) < n:

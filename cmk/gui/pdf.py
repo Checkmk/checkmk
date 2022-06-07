@@ -981,7 +981,7 @@ class TableRenderer:
                     stats[col][5] = False
 
         # Compute required total width
-        sum_min = sum([s[2] for s in stats if s[2] is not None])
+        sum_min = sum(s[2] for s in stats if s[2] is not None)
 
         # Now compute the available width, i.e. take the usable page width
         # and substract spacing and padding.
@@ -1132,7 +1132,7 @@ class TableRenderer:
         # Now - after the text-wrapping - we know the maximum height of all cells
         # a in row and can decide whether it fits on the current page.
         if row:
-            row_height = max([render_object.height(self.pdf) * mm for render_object in row])
+            row_height = max(render_object.height(self.pdf) * mm for render_object in row)
         else:
             row_height = self.pdf.lineskip()
 

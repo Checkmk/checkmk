@@ -1822,11 +1822,9 @@ def layout_availability_table(
         # verification since the percentage value takes the considered duration as reference duration
         if show_summary and av_levels:
             summary["ok_level"] = sum(
-                [
-                    float(entry["states"].get("ok", 0)) / entry["considered_duration"]
-                    for entry in availability_table
-                    if entry["considered_duration"] > 0
-                ]
+                float(entry["states"].get("ok", 0)) / entry["considered_duration"]
+                for entry in availability_table
+                if entry["considered_duration"] > 0
             )
 
     # Summary line. It has the same format as each entry in cells

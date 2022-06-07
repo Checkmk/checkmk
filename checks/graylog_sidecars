@@ -132,7 +132,7 @@ def check_graylog_sidecars(item, params, item_data):
             long_output.append((collector_state, long_output_str))
 
     if long_output:
-        max_state = max([state for state, _infotext in long_output])
+        max_state = max(state for state, _infotext in long_output)
 
         yield max_state, "see long output for more details"
 

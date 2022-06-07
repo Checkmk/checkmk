@@ -1367,10 +1367,8 @@ class PromQLMultiResponse(PromQLResponse):
                 if metric_label != "total_count"
             ]
             information_gains[promql_label] = sum(
-                [
-                    PromQLMultiResponse._determine_single_entropy(metric_label_probability)
-                    for metric_label_probability in metric_label_probabilities
-                ]
+                PromQLMultiResponse._determine_single_entropy(metric_label_probability)
+                for metric_label_probability in metric_label_probabilities
             )
         return information_gains
 

@@ -397,7 +397,7 @@ def create_backup_info() -> Dict[str, Any]:
         "hostname": hostname(),
         "files": get_files_for_backup_info(),
         "finished": time.time(),
-        "size": sum([f[1] for f in files]),
+        "size": sum(f[1] for f in files),
     }
 
     if not is_root():

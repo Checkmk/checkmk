@@ -503,7 +503,7 @@ def logwatch_forward_tcp(
     if logwatch_shall_spool_messages(method):
         logwatch_spool_messages(message_chunks, result, spool_path)
     else:
-        result.num_dropped = sum([len(c[2]) for c in message_chunks])
+        result.num_dropped = sum(len(c[2]) for c in message_chunks)
 
     return result
 

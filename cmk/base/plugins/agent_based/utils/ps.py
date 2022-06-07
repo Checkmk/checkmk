@@ -304,7 +304,7 @@ def parse_ps_time(text: str) -> int:
         days = 0
 
     day_secs = sum(
-        [factor * int(v or 0) for factor, v in zip([1, 60, 3600], reversed(text.split(":")))]
+        factor * int(v or 0) for factor, v in zip([1, 60, 3600], reversed(text.split(":")))
     )
 
     return 86400 * days + day_secs

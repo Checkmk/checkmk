@@ -1888,7 +1888,7 @@ def _aggregate_metric(
 ) -> float:
     """Aggregate a metric across all containers"""
     return 0.0 + sum(
-        [container.metrics[metric].value for container in containers if metric in container.metrics]
+        container.metrics[metric].value for container in containers if metric in container.metrics
     )
 
 
@@ -1898,11 +1898,9 @@ def _aggregate_rate_metric(
 ) -> float:
     """Aggregate a rate metric across all containers"""
     return 0.0 + sum(
-        [
-            container.rate_metrics[rate_metric].rate
-            for container in containers
-            if container.rate_metrics is not None and rate_metric in container.rate_metrics
-        ]
+        container.rate_metrics[rate_metric].rate
+        for container in containers
+        if container.rate_metrics is not None and rate_metric in container.rate_metrics
     )
 
 

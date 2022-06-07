@@ -54,7 +54,7 @@ def check_aironet_clients(item, params, info):
         unit = "dB"
         neg = -1
 
-    avg = sum([saveint(line[index]) for line in info]) / float(len(info))
+    avg = sum(saveint(line[index]) for line in info) / float(len(info))
     warn, crit = params
     perfdata = [(item, avg, warn, crit, mmin, mmax)]
     infotxt = "signal %s at %.1f%s (warn/crit at %s%s/%s%s)" % (

@@ -440,7 +440,7 @@ class BIHostRenamer:
 
         for bi_pack in bi_packs.get_packs().values():
             for bi_rule in bi_pack.get_rules().values():
-                renamed += sum([self.rename_node(x, oldname, newname) for x in bi_rule.nodes])
+                renamed += sum(self.rename_node(x, oldname, newname) for x in bi_rule.nodes)
 
             for bi_aggregation in bi_pack.get_aggregations().values():
                 renamed += self.rename_node(bi_aggregation.node, oldname, newname)

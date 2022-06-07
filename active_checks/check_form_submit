@@ -371,7 +371,7 @@ def check_host_states(
     num_failed = len(failed)
 
     if states:
-        max_state = max([state for state, _output in states.values()])
+        max_state = max(state for state, _output in states.values())
     else:
         max_state = 0
 

@@ -133,7 +133,7 @@ def physical_precision_list(values, precision, unit_symbol) -> tuple[str, list[s
     if not values:
         reference = 0
     else:
-        reference = min([abs(v) for v in values])
+        reference = min(abs(v) for v in values)
 
     scale_symbol, places_after_comma, scale_factor = cmk.utils.render.calculate_physical_precision(
         reference, precision
@@ -157,7 +157,7 @@ def bytes_human_readable_list(values: Iterable[float], *_args, **kwargs) -> tupl
     if not values:
         reference = 0.0
     else:
-        reference = min([abs(v) for v in values])
+        reference = min(abs(v) for v in values)
 
     scale_factor, scale_prefix = cmk.utils.render.scale_factor_prefix(reference, 1024.0)
     precision = kwargs.get("precision", 2)

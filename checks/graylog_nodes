@@ -142,7 +142,7 @@ def check_graylog_nodes(item, params, parsed):
         if long_output:
 
             long_output_info = ""
-            max_state = max([state for state, _infotext in long_output])
+            max_state = max(state for state, _infotext in long_output)
             if max_state:
                 long_output_info += "One or more inputs not in state running, "
 

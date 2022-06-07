@@ -107,9 +107,9 @@ def _synchronize_profiles_to_sites(logger, profiles_to_synchronize):
     pool.terminate()
     pool.join()
 
-    num_failed = sum([1 for result in results if result.failed])
-    num_disabled = sum([1 for result in results if result.disabled])
-    num_succeeded = sum([1 for result in results if result.succeeded])
+    num_failed = sum(1 for result in results if result.failed)
+    num_disabled = sum(1 for result in results if result.disabled)
+    num_succeeded = sum(1 for result in results if result.succeeded)
     logger.info(
         "  Disabled: %d, Succeeded: %d, Failed: %d" % (num_disabled, num_succeeded, num_failed)
     )

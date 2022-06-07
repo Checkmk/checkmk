@@ -266,7 +266,7 @@ class GroupedBoxesLayout(Layout):
 
     def _height_of(self, groups):
         # compute total space needed. I count the group header like two rows.
-        return sum([len(rows) for _header, rows in groups]) + 2 * len(groups)
+        return sum(len(rows) for _header, rows in groups) + 2 * len(groups)
 
 
 def grouped_row_title(index, group_spec, num_rows, trclass, num_cells):

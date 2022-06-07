@@ -119,7 +119,7 @@ def check_mssql_blocked_sessions(item, params, parsed):
             ", ".join(["%s blocked by %s ID(s)" % (k, v) for k, v in sorted(summary.items())])
         )
 
-        max_state = max([state for state, _infotext in details])
+        max_state = max(state for state, _infotext in details)
         if max_state:
             yield max_state, "At least one session above thresholds (warn/crit at %s/%s)" % (
                 get_age_human_readable(warn),

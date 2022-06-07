@@ -433,7 +433,7 @@ class ModeBulkImport(WatoMode):
         rows = list(csv_reader)
 
         # Determine how many columns should be rendered by using the longest column
-        num_columns = max([len(r) for r in [headers] + rows])
+        num_columns = max(len(r) for r in [headers] + rows)
 
         with table_element(
             sortable=False, searchable=False, omit_headers=not self._has_title_line

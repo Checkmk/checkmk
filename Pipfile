@@ -150,7 +150,7 @@ marshmallow = "==3.14.1"  # direct dependency
 marshmallow-oneofschema = "==2.1.0"  # direct dependency
 apispec-oneofschema = "==3.0.0"  # direct dependency
 typing_extensions = "==3.10"   # required by pydantic
-pydantic = "==1.8.2"  # needed by special agents
+pydantic = "==1.9.1"
 paho-mqtt = "==1.6.1"  # needed for MQTT special agent
 python-active-directory = "==1.0.5"
 rrdtool = "==0.1.15"  # Actually we ship the binding which comes with rrdtool itself...

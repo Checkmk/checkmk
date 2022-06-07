@@ -17,7 +17,12 @@ from cmk.gui.plugins.wato.utils import (
     ConfigVariableGroupNotifications,
     notification_parameter_registry,
 )
-from cmk.gui.plugins.watolib.utils import ABCConfigDomain, config_variable_registry, ConfigVariable
+from cmk.gui.plugins.watolib.utils import (
+    ABCConfigDomain,
+    config_variable_registry,
+    ConfigVariable,
+    ConfigVariableGroup,
+)
 from cmk.gui.valuespec import (
     Age,
     CascadingDropdown,
@@ -37,7 +42,7 @@ from cmk.gui.watolib.utils import site_neutral_path
 
 @config_variable_registry.register
 class ConfigVariableEnableRBN(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupNotifications
 
     def domain(self) -> Type[ABCConfigDomain]:
@@ -64,7 +69,7 @@ class ConfigVariableEnableRBN(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableNotificationFallbackEmail(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupNotifications
 
     def domain(self) -> Type[ABCConfigDomain]:
@@ -92,7 +97,7 @@ class ConfigVariableNotificationFallbackEmail(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableNotificationFallbackFormat(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupNotifications
 
     def domain(self) -> Type[ABCConfigDomain]:
@@ -121,7 +126,7 @@ class ConfigVariableNotificationFallbackFormat(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableNotificationBacklog(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupNotifications
 
     def domain(self) -> Type[ABCConfigDomain]:
@@ -147,7 +152,7 @@ class ConfigVariableNotificationBacklog(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableNotificationBulkInterval(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupNotifications
 
     def domain(self) -> Type[ABCConfigDomain]:
@@ -174,7 +179,7 @@ class ConfigVariableNotificationBulkInterval(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableNotificationPluginTimeout(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupNotifications
 
     def domain(self) -> Type[ABCConfigDomain]:
@@ -193,7 +198,7 @@ class ConfigVariableNotificationPluginTimeout(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableNotificationLogging(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupNotifications
 
     def domain(self) -> Type[ABCConfigDomain]:
@@ -235,7 +240,7 @@ class ConfigVariableNotificationLogging(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableServiceLevels(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupNotifications
 
     def domain(self) -> Type[ABCConfigDomain]:
@@ -281,7 +286,7 @@ class ConfigVariableServiceLevels(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableFailedNotificationHorizon(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupNotifications
 
     def domain(self) -> Type[ABCConfigDomain]:

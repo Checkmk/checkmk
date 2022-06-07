@@ -3531,7 +3531,7 @@ class MainModuleEventConsole(ABCMainModule):
 
 @config_variable_registry.register
 class ConfigVariableEventConsoleRemoteStatus(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleGeneric
 
     def domain(self) -> Type[ABCConfigDomain]:
@@ -3595,7 +3595,7 @@ class ConfigVariableEventConsoleRemoteStatus(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableEventConsoleReplication(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleGeneric
 
     def domain(self) -> Type[ABCConfigDomain]:
@@ -3719,7 +3719,7 @@ class ConfigVariableEventConsoleReplication(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableEventConsoleRetentionInterval(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleGeneric
 
     def domain(self) -> Type[ABCConfigDomain]:
@@ -3741,7 +3741,7 @@ class ConfigVariableEventConsoleRetentionInterval(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableEventConsoleHousekeepingInterval(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleGeneric
 
     def domain(self) -> Type[ABCConfigDomain]:
@@ -3764,7 +3764,7 @@ class ConfigVariableEventConsoleHousekeepingInterval(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableEventConsoleStatisticsInterval(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleGeneric
 
     def domain(self) -> Type[ABCConfigDomain]:
@@ -3787,7 +3787,7 @@ class ConfigVariableEventConsoleStatisticsInterval(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableEventConsoleLogMessages(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleGeneric
 
     def domain(self) -> Type[ABCConfigDomain]:
@@ -3812,7 +3812,7 @@ class ConfigVariableEventConsoleLogMessages(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableEventConsoleRuleOptimizer(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleGeneric
 
     def domain(self) -> Type[ABCConfigDomain]:
@@ -3831,7 +3831,7 @@ class ConfigVariableEventConsoleRuleOptimizer(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableEventConsoleActions(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleGeneric
 
     def domain(self) -> Type[ABCConfigDomain]:
@@ -3970,7 +3970,7 @@ class ConfigVariableEventConsoleActions(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableEventConsoleArchiveOrphans(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleGeneric
 
     def domain(self) -> Type[ABCConfigDomain]:
@@ -3994,7 +3994,7 @@ class ConfigVariableEventConsoleArchiveOrphans(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableHostnameTranslation(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleGeneric
 
     def domain(self) -> Type[ABCConfigDomain]:
@@ -4095,7 +4095,7 @@ def vs_ec_host_limit(title):
 
 @config_variable_registry.register
 class ConfigVariableEventConsoleEventLimit(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleGeneric
 
     def domain(self) -> Type[ABCConfigDomain]:
@@ -4150,7 +4150,7 @@ class ConfigVariableEventConsoleEventLimit(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableEventConsoleHistoryRotation(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleGeneric
 
     def domain(self) -> Type[ABCConfigDomain]:
@@ -4171,7 +4171,7 @@ class ConfigVariableEventConsoleHistoryRotation(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableEventConsoleHistoryLifetime(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleGeneric
 
     def domain(self) -> Type[ABCConfigDomain]:
@@ -4191,7 +4191,7 @@ class ConfigVariableEventConsoleHistoryLifetime(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableEventConsoleSocketQueueLength(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleGeneric
 
     def domain(self) -> Type[ABCConfigDomain]:
@@ -4218,7 +4218,7 @@ class ConfigVariableEventConsoleSocketQueueLength(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableEventConsoleEventSocketQueueLength(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleGeneric
 
     def domain(self) -> Type[ABCConfigDomain]:
@@ -4245,7 +4245,7 @@ class ConfigVariableEventConsoleEventSocketQueueLength(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableEventConsoleTranslateSNMPTraps(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleSNMP
 
     def domain(self) -> Type[ABCConfigDomain]:
@@ -4290,7 +4290,7 @@ class ConfigVariableEventConsoleTranslateSNMPTraps(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableEventConsoleSNMPCredentials(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleSNMP
 
     def domain(self) -> Type[ABCConfigDomain]:
@@ -4351,7 +4351,7 @@ class ConfigVariableEventConsoleSNMPCredentials(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableEventConsoleDebugRules(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleLogging
 
     def domain(self) -> Type[ABCConfigDomain]:
@@ -4375,7 +4375,7 @@ class ConfigVariableEventConsoleDebugRules(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableEventConsoleLogLevel(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleLogging
 
     def domain(self) -> Type[ABCConfigDomain]:
@@ -4459,7 +4459,7 @@ class ConfigVariableEventConsoleLogLevel(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableEventLogRuleHits(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleLogging
 
     def domain(self) -> Type[ABCConfigDomain]:
@@ -4484,7 +4484,7 @@ class ConfigVariableEventLogRuleHits(ConfigVariable):
 # TODO: Isn't this variable deprecated since 1.5? Investigate and drop/mark as deprecated
 @config_variable_registry.register
 class ConfigVariableEventConsoleConnectTimeout(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupUserInterface
 
     def domain(self) -> Type[ABCConfigDomain]:
@@ -4509,7 +4509,7 @@ class ConfigVariableEventConsoleConnectTimeout(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableEventConsolePrettyPrintRules(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupWATO
 
     def domain(self) -> Type[ABCConfigDomain]:
@@ -4535,7 +4535,7 @@ class ConfigVariableEventConsolePrettyPrintRules(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableEventConsoleNotifyContactgroup(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupNotifications
 
     def domain(self) -> Type[ABCConfigDomain]:
@@ -4565,7 +4565,7 @@ class ConfigVariableEventConsoleNotifyContactgroup(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableEventConsoleNotifyRemoteHost(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupNotifications
 
     def domain(self) -> Type[ABCConfigDomain]:
@@ -4598,7 +4598,7 @@ class ConfigVariableEventConsoleNotifyRemoteHost(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableEventConsoleNotifyFacility(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupNotifications
 
     def domain(self) -> Type[ABCConfigDomain]:

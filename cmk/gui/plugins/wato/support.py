@@ -29,7 +29,7 @@ class ConfigVariableGroupSupport(ConfigVariableGroup):
 
 @config_variable_registry.register
 class ConfigVariableCrashReportURL(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupSupport
 
     def domain(self) -> Type[ABCConfigDomain]:
@@ -48,7 +48,7 @@ class ConfigVariableCrashReportURL(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableCrashReportTarget(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupSupport
 
     def domain(self) -> Type[ABCConfigDomain]:

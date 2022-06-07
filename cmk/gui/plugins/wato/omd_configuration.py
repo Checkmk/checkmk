@@ -24,6 +24,7 @@ from cmk.gui.plugins.watolib.utils import (
     config_domain_registry,
     config_variable_registry,
     ConfigVariable,
+    ConfigVariableGroup,
     SerializedSettings,
     wato_fileheader,
 )
@@ -59,7 +60,7 @@ from cmk.gui.watolib.sites import LivestatusViaTCP
 
 @config_variable_registry.register
 class ConfigVariableSiteAutostart(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupSiteManagement
 
     def domain(self) -> Type[ABCConfigDomain]:
@@ -80,7 +81,7 @@ class ConfigVariableSiteAutostart(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableSiteCore(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupSiteManagement
 
     def domain(self) -> Type[ABCConfigDomain]:
@@ -116,7 +117,7 @@ class ConfigVariableSiteCore(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableSiteLivestatusTCP(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupSiteManagement
 
     def domain(self) -> Type[ABCConfigDomain]:
@@ -141,7 +142,7 @@ class ConfigVariableSiteLivestatusTCP(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableSiteEventConsole(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupSiteManagement
 
     def domain(self) -> Type[ABCConfigDomain]:
@@ -266,7 +267,7 @@ class ConfigDomainDiskspace(ABCConfigDomain):
 
 @config_variable_registry.register
 class ConfigVariableSiteDiskspaceCleanup(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupSiteManagement
 
     def domain(self) -> Type[ABCConfigDomain]:
@@ -464,7 +465,7 @@ class ConfigDomainApache(ABCConfigDomain):
 
 @config_variable_registry.register
 class ConfigVariableSiteApacheProcessTuning(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupSiteManagement
 
     def domain(self) -> Type[ABCConfigDomain]:
@@ -589,7 +590,7 @@ class ConfigDomainRRDCached(ABCConfigDomain):
 
 @config_variable_registry.register
 class ConfigVariableSiteRRDCachedTuning(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupSiteManagement
 
     def domain(self) -> Type[ABCConfigDomain]:

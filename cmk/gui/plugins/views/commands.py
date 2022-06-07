@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import Any, Literal, Optional, Sequence
+from typing import Any, Literal, Optional, Sequence, Type
 
 import livestatus
 from livestatus import SiteId
@@ -443,7 +443,7 @@ class CommandFakeCheckResult(Command):
         return ["host", "service"]
 
     @property
-    def group(self):
+    def group(self) -> Type[CommandGroup]:
         return CommandGroupFakeCheck
 
     @property
@@ -678,7 +678,7 @@ class CommandAcknowledge(Command):
         return PermissionActionAcknowledge
 
     @property
-    def group(self):
+    def group(self) -> Type[CommandGroup]:
         return CommandGroupAcknowledge
 
     @property
@@ -954,7 +954,7 @@ class CommandScheduleDowntimes(Command):
         return PermissionActionDowntimes
 
     @property
-    def group(self):
+    def group(self) -> Type[CommandGroup]:
         return CommandGroupDowntimes
 
     @property

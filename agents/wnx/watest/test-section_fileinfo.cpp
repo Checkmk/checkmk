@@ -70,53 +70,34 @@ fs::path BuildTestUNC() {
         return {};
     }
 
-    fs::path p{"\\\\" + comp};
-    return p / "shared_public";
+    return fs::path{"\\\\" + comp} / "shared_public";
 }
 
-TEST(FileInfoTest, Split) {
-    {
-        const wchar_t *head = L"\\\\DEV\\";
-        const wchar_t *body = L"path\\to*";
+TEST(FileInfoTest, SplitOK) {
+    std::pair<std::wstring, std::wstring> data[] = {
+        {LR"(\\DEV\)", LR"(path\to*)"},
+        {LR"(c:\)", LR"(path\to*)"},
+    };
 
-        std::wstring fname = head;
-        fname += body;
-        auto [head_out, body_out] = details::SplitFileInfoPathSmart(fname);
-        EXPECT_EQ(head_out.wstring(), head);
-        EXPECT_EQ(body_out.wstring(), body);
+    for (const auto &[h, b] : data) {
+        auto [head, body] =
+            details::SplitFileInfoPathSmart(std::wstring{h} + b);
+        EXPECT_EQ(head.wstring(), h);
+        EXPECT_EQ(body.wstring(), b);
     }
+}
 
-    {
-        const wchar_t *head = L"c:\\";
-        const wchar_t *body = L"path\\to*";
+TEST(FileInfoTest, SplitBad) {
+    std::pair<std::wstring, std::wstring> data[] = {
+        {L"", LR"(path\to*)"},
+        {L"c:", LR"(path\to*)"},
+    };
 
-        std::wstring fname = head;
-        fname += body;
-        auto [head_out, body_out] = details::SplitFileInfoPathSmart(fname);
-        EXPECT_EQ(head_out.wstring(), head);
-        EXPECT_EQ(body_out.wstring(), body);
-    }
-
-    {
-        const wchar_t *head = L"c:";
-        const wchar_t *body = L"path\\to*";
-
-        std::wstring fname = head;
-        fname += body;
-        auto [head_out, body_out] = details::SplitFileInfoPathSmart(fname);
-        EXPECT_TRUE(head_out.empty());
-        EXPECT_TRUE(body_out.empty());
-    }
-
-    {
-        const wchar_t *head = L"";
-        const wchar_t *body = L"path\\to*";
-
-        std::wstring fname = head;
-        fname += body;
-        auto [head_out, body_out] = details::SplitFileInfoPathSmart(fname);
-        EXPECT_TRUE(head_out.empty());
-        EXPECT_TRUE(body_out.empty());
+    for (const auto &[h, b] : data) {
+        auto [head, body] =
+            details::SplitFileInfoPathSmart(std::wstring{h} + b);
+        EXPECT_TRUE(head.empty());
+        EXPECT_TRUE(body.empty());
     }
 }
 
@@ -258,7 +239,9 @@ TEST(FileInfoTest, CheckDriveLetter) {
     std::tuple<fs::path, std::string_view> data[] = {{a / "a1.txt", "a1"},
                                                      {a / "a2.txt", "a2"}};
 
-    for (const auto &[path, content] : data) tst::CreateTextFile(path, content);
+    for (const auto &[path, content] : data) {
+        tst::CreateTextFile(path, content);
+    }
 
     auto cfg = cfg::GetLoadedConfig();
     auto fileinfo_node = cfg[cfg::groups::kFileInfo];
@@ -498,22 +481,23 @@ TEST(FileInfoTest, Unicode) {
             XLOG::l("Error {} ", e.what());
         }
     } else {
-        XLOG::l(XLOG::kStdio)("File '{}' doesn't exist. SKIPPING TEST/2",
-                              p.u8string());
+        XLOG::l(XLOG::kStdio)("File '{}' doesn't exist. SKIPPING TEST/2", p);
     }
 }
 
-TEST(FileInfoTest, MakeFileInfoMissing) {
-    static constexpr std::string_view names[] = {"aaa.aaa",
-                                                 "c:\\Windows\\notepad.EXEs"};
-    static constexpr FileInfo::Mode modes[] = {FileInfo::Mode::legacy,
-                                               FileInfo::Mode::modern};
+constexpr FileInfo::Mode modes[] = {FileInfo::Mode::legacy,
+                                    FileInfo::Mode::modern};
 
-    for (auto &n : names) {
+TEST(FileInfoTest, MakeFileInfoMissing) {
+    for (auto &n : {
+             "aaa",
+             "C:\\Windows\\notepad.EXEs",
+             "C:\\Windows\\*.EXEs",
+         }) {
         for (auto m : modes) {
             SCOPED_TRACE(
                 fmt::format("'{}' mode is {}", n, static_cast<int>(m)));
-            auto x = details::MakeFileInfoStringMissing(n.data(), m);
+            auto x = details::MakeFileInfoStringMissing(n, m);
             CheckString(x);
 
             auto table = tools::SplitString(x, "|");
@@ -538,7 +522,7 @@ int64_t SecondsSinceEpoch(const std::string &name) {
 }
 }  // namespace
 
-TEST(FileInfoTest, MakeFileInfoNotepad) {
+TEST(FileInfoTest, MakeFileInfoExisting) {
     // EXPECTED strings
     // "fname|ok|500|153334455\n"
     // "fname|500|153334455\n"
@@ -546,7 +530,7 @@ TEST(FileInfoTest, MakeFileInfoNotepad) {
     const std::string fname{"c:\\Windows\\noTepad.exE"};
     auto expected_time = SecondsSinceEpoch(fname);
 
-    for (auto mode : {FileInfo::Mode::legacy, FileInfo::Mode::modern}) {
+    for (auto mode : modes) {
         SCOPED_TRACE(fmt::format("Mode is {}", static_cast<int>(mode)));
         static const std::string name = "c:\\Windows\\notepad.EXE";
         auto x = details::MakeFileInfoString(name, mode);
@@ -563,7 +547,7 @@ TEST(FileInfoTest, MakeFileInfoNotepad) {
 }
 
 TEST(FileInfoTest, MakeFileInfoPagefile) {
-    for (auto mode : {FileInfo::Mode::legacy, FileInfo::Mode::modern}) {
+    for (auto mode : modes) {
         static const std::string name{"c:\\pagefile.sys"};
         auto x = details::MakeFileInfoString(name, mode);
         x.pop_back();
@@ -577,47 +561,12 @@ TEST(FileInfoTest, MakeFileInfoPagefile) {
     }
 }
 
-TEST(FileInfoTest, MakeFileInfo) {
-    // check that file is present
-    {
-        auto ret1 = details::GetOsPathWithCase(L"c:\\Windows\\notepad.EXE");
-        EXPECT_EQ(ret1.wstring(), L"C:\\Windows\\notepad.exe");
+TEST(FileInfoTest, GetOsPathWithCase) {
+    auto good = details::GetOsPathWithCase(L"c:\\Windows\\notepad.EXE");
+    EXPECT_EQ(good.wstring(), L"C:\\Windows\\notepad.exe");
 
-        auto ret2 = details::GetOsPathWithCase(L"c:\\WIndows\\ZZ\\notepad.EXE");
-        EXPECT_EQ(ret2.wstring(), L"C:\\Windows\\ZZ\\notepad.EXE");
-    }
-
-    static constexpr std::string_view names[] = {
-        "aaa", "C:\\Windows\\notepad.EXEs", "C:\\Windows\\*.EXEs"};
-    static constexpr FileInfo::Mode modes[] = {FileInfo::Mode::legacy,
-                                               FileInfo::Mode::modern};
-
-    for (auto &n : names) {
-        for (auto m : modes) {
-            SCOPED_TRACE(
-                fmt::format("'{}' mode is {}", n, static_cast<int>(m)));
-
-            auto x = details::MakeFileInfoString(n.data(), m);
-            CheckString(x);
-
-            auto table = tools::SplitString(x, "|");
-            CheckTableMissing(table, n, m);
-        }
-    }
-
-    static constexpr std::string_view names_2[] = {"C:\\Windows\\notEpAd.exe"};
-    for (auto &n : names_2) {
-        for (auto m : modes) {
-            SCOPED_TRACE(
-                fmt::format("'{}' mode is {}", n, static_cast<int>(m)));
-
-            auto x = details::MakeFileInfoString(n.data(), m);
-            CheckString(x);
-
-            auto table = tools::SplitString(x, "|");
-            CheckTablePresent(table, n, m);
-        }
-    }
+    auto bad = details::GetOsPathWithCase(L"c:\\WIndows\\ZZ\\notepad.EXE");
+    EXPECT_EQ(bad.wstring(), L"C:\\Windows\\ZZ\\notepad.EXE");
 }
 
 }  // namespace cma::provider

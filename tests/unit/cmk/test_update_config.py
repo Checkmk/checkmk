@@ -23,8 +23,7 @@ from tests.unit.cmk.gui.conftest import load_plugins  # noqa: F401 # pylint: dis
 import cmk.utils.log
 import cmk.utils.paths
 from cmk.utils import password_store, store, version
-from cmk.utils.type_defs import ContactgroupName, RulesetName, RuleSpec, RuleValue
-from cmk.utils.type_defs.pluginname import CheckPluginName
+from cmk.utils.type_defs import CheckPluginName, ContactgroupName, RulesetName, RuleSpec, RuleValue
 from cmk.utils.version import is_raw_edition
 
 import cmk.gui.config

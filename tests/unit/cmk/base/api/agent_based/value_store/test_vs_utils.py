@@ -220,10 +220,11 @@ class Test_ValueStore:
     def _get_store() -> _ValueStore:
         return _ValueStore(
             data={
-                ("check1", "item", "key1"): 42,
-                ("check2", "item", "key2"): 23,
+                ("moritz", "check1", "item", "key1"): 42,
+                ("moritz", "check2", "item", "key2"): 23,
             },
             service_id=(CheckPluginName("check1"), "item"),
+            host_name="moritz",
         )
 
     def test_separation(self) -> None:

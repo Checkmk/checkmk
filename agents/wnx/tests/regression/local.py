@@ -68,9 +68,9 @@ def _get_path_from_env(env: str) -> Path:
     return Path(env_value)
 
 
-port = 59999
+port = 29998
 host = "localhost"
-EXE_ENV_VAR = "WNX_TEST_I_ROOT"
+EXE_ENV_VAR = "WNX_REGRESSION_BASE_DIR"
 ARTE_ENV_VAR = "arte"
 
 artifacts_dir = _get_path_from_env(ARTE_ENV_VAR)

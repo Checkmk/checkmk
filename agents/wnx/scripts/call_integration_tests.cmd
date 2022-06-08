@@ -10,6 +10,7 @@
 ::pytest -v -s tests/integration/test_check_mk_run.py
 
 set cur_dir=%cd%
+set WNX_REGRESSION_BASE_DIR=
 set WNX_INTEGRATION_BASE_DIR=%temp%\test_wnx_%random%
 set DEBUG_HOME_DIR=%WNX_INTEGRATION_BASE_DIR%\test\data
 set WNX_TEST_ROOT=%WNX_INTEGRATION_BASE_DIR%\test\root

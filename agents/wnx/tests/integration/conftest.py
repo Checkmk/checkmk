@@ -32,7 +32,7 @@ global:
   port: {}
 """
 
-_INTEGRATION_PORT: Final = 25999
+_INTEGRATION_PORT: Final = 25998
 _HOST: Final = "localhost"
 _TEST_ENV_VAR: Final = "WNX_INTEGRATION_BASE_DIR"  # supplied by script
 _ARTIFACTS_ENV_VAR: Final = "arte"  # supplied by script

@@ -22,7 +22,8 @@ xcopy ..\windows\plugins\*.* %WNX_TEST_ROOT%\test\root\plugins /D /Y> nul
 :: Testing
 cd tests\regression
 :: tests wait for this env variable
-set WNX_TEST_I_ROOT=%WNX_TEST_ROOT%
+set WNX_REGRESSION_BASE_DIR=%WNX_TEST_ROOT%
+set WNX_INTEGRATION_BASE_DIR=
 py -3 -m pytest %* || set failed=1
 powershell Remove-NetFirewallRule -DisplayName "AllowRegression" >nul
 

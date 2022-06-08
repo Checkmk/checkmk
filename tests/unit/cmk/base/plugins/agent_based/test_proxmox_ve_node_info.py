@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+import json
 
 import pytest
 
@@ -15,20 +16,27 @@ from cmk.base.plugins.agent_based.proxmox_ve_node_info import (
 NODE_DATA = parse_proxmox_ve_node_info(
     [
         [
-            "{"
-            ' "lxc": ["103", "101", "108", "105", "104"],'
-            ' "proxmox_ve_version": {"release": "6.2", "repoid": "48bd51b6", "version": "6.2-15"},'
-            ' "qemu": ["102", "9000", "106", "109"],'
-            ' "status": "online",'
-            ' "subscription": {'
-            '     "checktime": "1607143921",'
-            '     "key": "pve2c-be9cadf297",'
-            '     "level": "c",'
-            '     "nextduedate": "2021-07-03",'
-            '     "productname": "Proxmox VE Community Subscription 2 CPUs/year",'
-            '     "regdate": "2020-07-03 00:00:00",'
-            '     "status": "Active"'
-            "}}"
+            json.dumps(
+                {
+                    "lxc": ["103", "101", "108", "105", "104"],
+                    "proxmox_ve_version": {
+                        "release": "6.2",
+                        "repoid": "48bd51b6",
+                        "version": "6.2-15",
+                    },
+                    "qemu": ["102", "9000", "106", "109"],
+                    "status": "online",
+                    "subscription": {
+                        "checktime": "1607143921",
+                        "key": "pve2c-be9cadf297",
+                        "level": "c",
+                        "nextduedate": "2021-07-03",
+                        "productname": "Proxmox VE Community Subscription 2 CPUs/year",
+                        "regdate": "2020-07-03 00:00:00",
+                        "status": "Active",
+                    },
+                }
+            )
         ]
     ]
 )

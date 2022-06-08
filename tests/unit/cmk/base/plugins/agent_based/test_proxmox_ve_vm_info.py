@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+import json
 
 import pytest
 
@@ -15,11 +16,15 @@ from cmk.base.plugins.agent_based.proxmox_ve_vm_info import (
 VM_DATA = parse_proxmox_ve_vm_info(
     [
         [
-            '{"name": "aq-test.lan.mathias-kettner.de",'
-            ' "node": "pve-dc4-001",'
-            ' "status": "running",'
-            ' "type": "qemu",'
-            ' "vmid": "133"}'
+            json.dumps(
+                {
+                    "name": "aq-test.lan.mathias-kettner.de",
+                    "node": "pve-dc4-001",
+                    "status": "running",
+                    "type": "qemu",
+                    "vmid": "133",
+                }
+            )
         ]
     ]
 )

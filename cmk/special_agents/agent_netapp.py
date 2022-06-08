@@ -87,9 +87,9 @@ except ImportError:
     # 2.0 backwards compatibility
     import xml.etree.ElementTree as ET  # type: ignore[no-redef]
 
-COUNTERS_CLUSTERMODE_MAX_RECORDS = 3000
-QUERY_MAX_RECORDS = 2000
-COUNTERS_CLUSTERMODE_MAX_INSTANCES_PER_REQUEST = 1000
+COUNTERS_CLUSTERMODE_MAX_RECORDS = 500
+QUERY_MAX_RECORDS = 500
+COUNTERS_CLUSTERMODE_MAX_INSTANCES_PER_REQUEST = 500
 
 Section = Iterable[str]
 Query = Tuple[str, Any]

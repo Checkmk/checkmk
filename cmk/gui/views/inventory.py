@@ -30,7 +30,6 @@ from livestatus import LivestatusResponse, OnlySites, SiteId
 
 import cmk.utils.defines as defines
 import cmk.utils.render
-from cmk.utils.regex import regex
 from cmk.utils.structured_data import (
     Attributes,
     RetentionIntervals,
@@ -806,61 +805,6 @@ def _inv_filter_info():
     }
 
 
-def _find_display_hint_id(raw_path: SDRawPath) -> Optional[str]:
-    """Looks up the display hint for the given inventory path.
-
-    It returns either the ID of the display hint matching the given raw_path
-    or None in case no entry was found.
-
-    In case no exact match is possible try to match display hints that use
-    some kind of *-syntax. There are two types of cases here:
-
-      :* -> Entries in lists (* resolves to list index numbers)
-      .* -> Path entries (* resolves to a path element)
-
-    The current logic has some limitations related to the ways stars can
-    be used.
-    """
-    raw_path = raw_path.rstrip(".:")
-
-    # Convert index of lists to *-syntax
-    # e.g. ".foo.bar:18.test" to ".foo.bar:*.test"
-    r = regex(r"([^\.]):[0-9]+")
-    raw_path = r.sub("\\1:*", raw_path)
-
-    candidates = [
-        raw_path,
-    ]
-
-    # Produce a list of raw_path candidates with a "*" going from back to front.
-    #
-    # This algorithm only allows one ".*" in a raw_path. It finds the match with
-    # the longest path prefix before the ".*".
-    #
-    # TODO: Implement a generic mechanism that allows as many stars as possible
-    raw_path_parts = raw_path.split(".")
-    star_index = len(raw_path_parts) - 1
-    while star_index >= 0:
-        parts = raw_path_parts[:star_index] + ["*"] + raw_path_parts[star_index + 1 :]
-        raw_path_with_star = "%s" % ".".join(parts)
-        candidates.append(raw_path_with_star)
-        star_index -= 1
-
-    for candidate in candidates:
-        # TODO: Better cleanup trailing ":" and "." from display hints at all. They are useless
-        # for finding the right entry.
-        if candidate in inventory_displayhints:
-            return candidate
-
-        if candidate + "." in inventory_displayhints:
-            return candidate + "."
-
-        if candidate + ":" in inventory_displayhints:
-            return candidate + ":"
-
-    return None
-
-
 def inv_titleinfo_long(raw_path: SDRawPath) -> str:
     """Return the titles of the last two path components of the node, e.g. "BIOS / Vendor"."""
     inventory_path = inventory.InventoryPath.parse(raw_path)
@@ -1023,12 +967,24 @@ class DisplayHints:
         return node
 
     def get_column_hint(self, key: str) -> ColumnDisplayHint:
-        return self.column_hints.get(key, ColumnDisplayHint.make_from_hint(self.abc_path, key, {}))
+        if key in self.column_hints:
+            return self.column_hints[key]
+        return ColumnDisplayHint.make_from_hint(self.abc_path, key, {})
 
     def get_attribute_hint(self, key: str) -> AttributeDisplayHint:
-        return self.attribute_hints.get(
-            key, AttributeDisplayHint.make_from_hint(self.abc_path, key, {})
+        if key in self.attribute_hints:
+            return self.attribute_hints[key]
+        return AttributeDisplayHint.make_from_hint(self.abc_path, key, {})
+
+    def replace_placeholders(self, path: SDPath) -> str:
+        if "%d" not in self.node_hint.title and "%s" not in self.node_hint.title:
+            return self.node_hint.title
+
+        title = self.node_hint.title.replace("%d", "%s")
+        node_names = tuple(
+            path[idx] for idx, node_name in enumerate(self.abc_path) if node_name == "*"
         )
+        return title % node_names[-title.count("%s") :]
 
 
 DISPLAY_HINTS = DisplayHints.root()
@@ -2232,17 +2188,12 @@ class ABCNodeRenderer(abc.ABC):
 
         hints = DISPLAY_HINTS.get_hints(node.path)
 
-        title = hints.node_hint.title
-        # Replace placeholders in title with the real values for this path
-        if "%d" in title or "%s" in title:
-            title = self._replace_placeholders(title, raw_path)
-
         with foldable_container(
             treename="inv_%s%s" % (self._hostname, self._tree_id),
             id_=raw_path,
             isopen=False,
             title=self._get_header(
-                title,
+                hints.replace_placeholders(node.path),
                 ".".join(map(str, node.path)),
                 "#666",
             ),
@@ -2261,26 +2212,6 @@ class ABCNodeRenderer(abc.ABC):
         ) as is_open:
             if is_open:
                 self.show(node, hints)
-
-    def _replace_placeholders(self, raw_title: str, raw_path: SDRawPath) -> str:
-        hint_id = _find_display_hint_id(raw_path)
-        if hint_id is None:
-            return raw_title
-
-        raw_path_parts = raw_path.strip(".").split(".")
-
-        # Use the position of the stars in the path to build a list of texts
-        # that should be used for replacing the tile placeholders
-        replace_vars = []
-        hint_parts = hint_id.strip(".").split(".")
-        for index, hint_part in enumerate(hint_parts):
-            if hint_part == "*":
-                replace_vars.append(raw_path_parts[index])
-
-        # Now replace the variables in the title. Handle the case where we have
-        # more stars than macros in the title.
-        num_macros = raw_title.count("%d") + raw_title.count("%s")
-        return raw_title % tuple(replace_vars[:num_macros])
 
     #   ---table----------------------------------------------------------------
 

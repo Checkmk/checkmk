@@ -748,3 +748,22 @@ def test_make_attribute_displayhint_from_hint(
     assert hint.short_title == expected.short_title
     assert hint.long_title == expected.long_title
     assert hint.is_show_more == expected.is_show_more
+
+
+@pytest.mark.parametrize(
+    "abc_path, path, expected_title",
+    [
+        (
+            ("software", "applications", "vmwareesx", "*"),
+            ("software", "applications", "vmwareesx", "1"),
+            "Datacenter 1",
+        ),
+        (
+            ("software", "applications", "vmwareesx", "*", "clusters", "*"),
+            ("software", "applications", "vmwareesx", "1", "clusters", "2"),
+            "Cluster 2",
+        ),
+    ],
+)
+def test_replace_placeholder(abc_path: SDPath, path: SDPath, expected_title: str) -> None:
+    assert DISPLAY_HINTS.get_hints(abc_path).replace_placeholders(path) == expected_title

@@ -266,7 +266,11 @@ def has_inventory(on: bool, row: Row) -> bool:
 def time_filter_options() -> Options:
     ranges = [(86400, _("days")), (3600, _("hours")), (60, _("min")), (1, _("sec"))]
     choices = [(str(sec), title + " " + _("ago")) for sec, title in ranges]
-    choices += [("abs", _("Date (YYYY-MM-DD)")), ("unix", _("UNIX timestamp"))]
+    choices += [
+        ("abs", _("Date (YYYY-MM-DD)")),
+        ("ts", _("Timestamp (YYYY-MM-DD HH:mm:ss)")),
+        ("unix", _("UNIX timestamp")),
+    ]
     return choices
 
 
@@ -384,10 +388,18 @@ class TimeQuery(NumberRangeQuery):
 
     def get_bound(self, var: str, value: FilterHTTPVariables) -> Optional[int]:
         rangename = value.get(var + "_range")
+        if rangename == "ts":
+            try:
+                return int(time.mktime(time.strptime(value[var], "%Y-%m-%d %H:%M:%S")))
+            except ValueError:
+                user_errors.add(
+                    MKUserError(var, _("Please enter the date in the format YYYY-MM-DD HH:mm:ss."))
+                )
+                return None
         if rangename == "abs":
             try:
                 return int(time.mktime(time.strptime(value[var], "%Y-%m-%d")))
-            except Exception:
+            except ValueError:
                 user_errors.add(
                     MKUserError(var, _("Please enter the date in the format YYYY-MM-DD."))
                 )
@@ -402,7 +414,7 @@ class TimeQuery(NumberRangeQuery):
             count = int(value[var])
             secs = count * int(rangename)
             return int(time.time()) - secs
-        except Exception:
+        except ValueError:
             return None
 
 

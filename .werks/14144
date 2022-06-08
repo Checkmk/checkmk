@@ -1,0 +1,11 @@
+Title: Add timestamp to time filter options
+Class: feature
+Compatible: compat
+Component: multisite
+Date: 1654670517
+Edition: cee
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1
+
+You can now filter time by timestamps with format <b>YYYY-MM-DD HH:mm:ss</b>

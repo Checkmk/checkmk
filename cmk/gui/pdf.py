@@ -22,7 +22,7 @@ import os
 import subprocess
 import tempfile
 from textwrap import wrap
-from typing import Any, List, Literal, Optional, Sequence, Tuple, TypedDict, Union
+from typing import Any, List, Literal, Optional, Protocol, Sequence, Tuple, TypedDict, Union
 
 from PIL import Image, PngImagePlugin  # type: ignore[import]
 from reportlab.lib.units import mm  # type: ignore[import]
@@ -946,6 +946,36 @@ class Document:
         return width, height
 
 
+class CellRenderer(Protocol):
+    def render(
+        self,
+        pdfdoc: Document,
+        left: SizeMM,
+        top: SizeMM,
+        width: SizeMM,
+        height: SizeMM,
+        x_padding: SizeMM,
+        y_padding: SizeMM,
+        row_oddeven: Optional[OddEven],
+    ) -> None:
+        ...
+
+    def maximal_width(self, pdfdoc: Document) -> SizeMM:
+        ...
+
+    def minimal_width(self, pdfdoc: Document) -> SizeMM:
+        ...
+
+    def can_add_dynamic_width(self) -> bool:
+        ...
+
+    def set_width(self, pdfdoc: Document, width: SizeMM) -> None:
+        ...
+
+    def height(self, pdfdoc: Document) -> SizeMM:
+        ...
+
+
 class TableRenderer:
     """Intelligent table rendering with word wrapping and pagination"""
 
@@ -999,14 +1029,13 @@ class TableRenderer:
         # css and the thing, e.g.
         # ( "number", "0.75" ), or ("", ("icon", "/bar/foo.png") )
         # The headers come *without* the css field and are always texts.
-        headers: List[Union[TextCell, IconCell]] = [
+        headers: list[CellRenderer] = [
             TitleCell("heading", header_text) for header_text in header_texts  #
         ]
 
-        rows: List[List[Union[TextCell, IconCell]]] = []
+        rows: list[list[CellRenderer]] = []
         for raw_row in raw_rows:
-            # TODO: This needs to contain PainterPrinter. A Protocol should help here
-            row: List[Union[TextCell, IconCell]] = []
+            row: list[CellRenderer] = []
             rows.append(row)
             for css, entry in raw_row:
                 if isinstance(entry, tuple):
@@ -1035,7 +1064,7 @@ class TableRenderer:
                 raise ValueError("something went wrong in add_table...")
             return c
 
-        hurz: List[List[Union[TextCell, IconCell]]] = [headers] if headers else []
+        hurz: list[list[CellRenderer]] = [headers] if headers else []
         for row in hurz + rows:
             for col, render_object in enumerate(row):
                 max_width = render_object.maximal_width(self.pdf) * mm
@@ -1153,7 +1182,7 @@ class TableRenderer:
 
     def _paint_headers(
         self,
-        headers: Sequence[Union[TextCell, IconCell]],
+        headers: Sequence[CellRenderer],
         column_widths: Sequence[SizeMM],
         y_padding: SizeMM,
         x_padding: SizeMM,
@@ -1185,13 +1214,13 @@ class TableRenderer:
 
     def _paint_row(
         self,
-        row: Sequence[Union[TextCell, IconCell]],
+        row: Sequence[CellRenderer],
         column_widths: Sequence[SizeMM],
         y_padding: SizeMM,
         x_padding: SizeMM,
         y_spacing: SizeMM,
         x_spacing: SizeMM,
-        headers: Sequence[Union[TextCell, IconCell]],
+        headers: Sequence[CellRenderer],
         hrules: bool,
         vrules: bool,
         rule_width: SizeMM,
@@ -1290,13 +1319,13 @@ class TableRenderer:
 
     def _paint_graph_row(
         self,
-        row: Sequence[Union[TextCell, IconCell]],
+        row: Sequence[CellRenderer],
         column_widths: Sequence[SizeMM],
         y_padding: SizeMM,
         x_padding: SizeMM,
         y_spacing: SizeMM,
         x_spacing: SizeMM,
-        headers: Sequence[Union[TextCell, IconCell]],
+        headers: Sequence[CellRenderer],
         hrules: bool,
         vrules: bool,
         rule_width: SizeMM,
@@ -1350,8 +1379,7 @@ class TableRenderer:
                 step_row = [step]
 
             self._paint_row(
-                # TODO: Ignore this issue for this commit. Will be cleaned up next
-                step_row,  # type: ignore[arg-type]
+                step_row,
                 column_widths,
                 y_padding,
                 x_padding,
@@ -1371,7 +1399,7 @@ class TableRenderer:
 
 # Note: all dimensions this objects handles with are in mm! This is due
 # to the fact that this API is also available externally
-class TextCell:
+class TextCell(CellRenderer):
     def __init__(self, csses: Optional[str], text: str) -> None:
         self._text = text
         self._bold = False
@@ -1463,8 +1491,9 @@ class TitleCell(TextCell):
     pass
 
 
-# Rendering *one* Multisite-Icon
-class IconCell:
+class IconCell(CellRenderer):
+    """Rendering *one* UI icon"""
+
     def __init__(self, path: str) -> None:
         self._image_path = path
 

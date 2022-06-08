@@ -7,7 +7,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Callable, Dict
+from typing import Any, Callable, Dict, Optional
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
@@ -16,15 +16,22 @@ from cmk.gui.i18n import _
 def validate_id(
     mode: str,
     existing_entries: Dict[str, Any],
+    reserved_unique_ids: Optional[list[str]] = None,
 ) -> Callable[[Dict[str, Any], str], None]:
     """Validate ID of newly created or cloned pagetype or visual"""
 
     def _validate(properties: Dict[str, Any], varprefix: str) -> None:
         name = properties["name"]
-        if existing_entries.get(name) and mode in ["create", "clone"]:
-            raise MKUserError(
-                varprefix + "_p_name",
-                _("You already have an element with the ID <b>%s</b>") % name,
-            )
+        if mode in ["create", "clone"]:
+            if existing_entries.get(name):
+                raise MKUserError(
+                    varprefix + "_p_name",
+                    _("You already have an element with the ID <b>%s</b>") % name,
+                )
+            if reserved_unique_ids is not None and name in reserved_unique_ids:
+                raise MKUserError(
+                    varprefix + "_p_name",
+                    _("ID <b>%s</b> is reserved for internal use.") % name,
+                )
 
     return _validate

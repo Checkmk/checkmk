@@ -1332,7 +1332,9 @@ class Overridable(Base):
             elements=parameters,
             headers=keys_by_topic,
             validate=validate_id(
-                mode, {p.name(): p for p in cls.permitted_instances_sorted() if p.is_mine()}
+                mode,
+                {p.name(): p for p in cls.permitted_instances_sorted() if p.is_mine()},
+                cls.reserved_unique_ids(),
             ),
         )
 
@@ -1388,6 +1390,12 @@ class Overridable(Base):
         html.hidden_fields()
         html.end_form()
         html.footer()
+
+    @classmethod
+    def reserved_unique_ids(cls) -> List:
+        """Used to exclude names from choosing as unique ID, e.g. builtin names
+        in sidebar snapins"""
+        return []
 
 
 def customize_page_menu(

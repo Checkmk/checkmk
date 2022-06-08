@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Sequence
 
 import livestatus
 from livestatus import SiteId
@@ -31,7 +31,7 @@ from cmk.gui.plugins.views.utils import (
     Sorter,
     sorter_registry,
 )
-from cmk.gui.type_defs import SingleInfos
+from cmk.gui.type_defs import ColumnName, SingleInfos
 from cmk.gui.utils.urls import makeuri_contextless
 
 
@@ -163,7 +163,7 @@ class PainterCrashIdent(Painter):
         return _("ID")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["crash_id"]
 
     def render(self, row, cell):
@@ -191,7 +191,7 @@ class PainterCrashType(Painter):
         return _("Type")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["crash_type"]
 
     def render(self, row, cell):
@@ -211,7 +211,7 @@ class PainterCrashTime(Painter):
         return _("Time")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["crash_time"]
 
     @property
@@ -235,7 +235,7 @@ class PainterCrashVersion(Painter):
         return _("Version")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["crash_version"]
 
     def render(self, row, cell):
@@ -255,7 +255,7 @@ class PainterCrashException(Painter):
         return _("Exc.")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["crash_exc_type", "crash_exc_value"]
 
     def render(self, row, cell):
@@ -273,7 +273,7 @@ class SorterCrashTime(Sorter):
         return _("Crash time")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["crash_time"]
 
     def cmp(self, r1, r2):

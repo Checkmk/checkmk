@@ -39,7 +39,7 @@
 
 import json
 import re
-from typing import Dict, List, Set, Tuple, Union
+from typing import Dict, List, Sequence, Set, Tuple, Union
 
 import cmk.utils
 import cmk.utils.render
@@ -62,7 +62,7 @@ from cmk.gui.plugins.views.utils import (
     render_cache_info,
     url_to_visual,
 )
-from cmk.gui.type_defs import Row, VisualLinkSpec
+from cmk.gui.type_defs import ColumnName, Row, VisualLinkSpec
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.popups import MethodAjax
@@ -143,7 +143,7 @@ class IconImageIcon(Icon):
     def title(cls) -> str:
         return _("Icon image")
 
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["icon_image"]
 
     def default_toplevel(self):
@@ -184,7 +184,7 @@ class RescheduleIcon(Icon):
     def title(cls) -> str:
         return _("Reschedule")
 
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["check_type", "active_checks_enabled", "check_command"]
 
     def service_columns(self):
@@ -255,7 +255,7 @@ class RuleEditorIcon(Icon):
     def title(cls) -> str:
         return _("Rule editor")
 
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["check_type"]
 
     def host_columns(self):
@@ -365,7 +365,7 @@ class AcknowledgeIcon(Icon):
     def title(cls) -> str:
         return _("Status acknowledged")
 
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["acknowledged"]
 
     def default_toplevel(self):
@@ -400,7 +400,7 @@ class PerfgraphIcon(Icon):
     def title(cls) -> str:
         return _("Performance graph")
 
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["pnpgraph_present"]
 
     def default_toplevel(self):
@@ -465,7 +465,7 @@ class PredictionIcon(Icon):
     def title(cls) -> str:
         return _("Prediction")
 
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["perf_data"]
 
     def default_toplevel(self):
@@ -518,7 +518,7 @@ class CustomActionIcon(Icon):
     def title(cls) -> str:
         return _("Custom action")
 
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["action_url_expanded", "pnpgraph_present"]
 
     def render(self, what, row, tags, custom_vars):
@@ -596,7 +596,7 @@ class NotesIcon(Icon):
     def title(cls) -> str:
         return _("Notes")
 
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["notes_url_expanded", "check_command"]
 
     def render(self, what, row, tags, custom_vars):
@@ -636,7 +636,7 @@ class DowntimesIcon(Icon):
     def default_toplevel(self):
         return True
 
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["scheduled_downtime_depth", "downtimes_with_extra_info"]
 
     def host_columns(self):
@@ -725,7 +725,7 @@ class CommentsIcon(Icon):
     def title(cls) -> str:
         return _("Status comments")
 
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["comments_with_extra_info"]
 
     def default_toplevel(self):
@@ -774,7 +774,7 @@ class NotificationsIcon(Icon):
     def title(cls) -> str:
         return _("Status notifications enabled")
 
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["modified_attributes_list", "notifications_enabled"]
 
     def default_toplevel(self):
@@ -814,7 +814,7 @@ class FlappingIcon(Icon):
     def title(cls) -> str:
         return _("Status flapping")
 
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["is_flapping"]
 
     def default_toplevel(self):
@@ -851,7 +851,7 @@ class StalenessIcon(Icon):
     def title(cls) -> str:
         return _("Status stale")
 
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["staleness"]
 
     def default_toplevel(self):
@@ -894,7 +894,7 @@ class ActiveChecksIcon(Icon):
     def title(cls) -> str:
         return _("Status active checks")
 
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["modified_attributes_list", "active_checks_enabled"]
 
     def default_toplevel(self):
@@ -935,7 +935,7 @@ class PassiveChecksIcon(Icon):
     def title(cls) -> str:
         return _("Status passive checks")
 
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["modified_attributes_list", "accept_passive_checks"]
 
     def default_toplevel(self):
@@ -973,7 +973,7 @@ class NotificationPeriodIcon(Icon):
     def title(cls) -> str:
         return _("Status notification period")
 
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["in_notification_period"]
 
     def default_toplevel(self):
@@ -1006,7 +1006,7 @@ class ServicePeriodIcon(Icon):
     def title(cls) -> str:
         return _("Status service period")
 
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["in_service_period"]
 
     def default_toplevel(self):
@@ -1253,7 +1253,7 @@ class CheckPeriodIcon(Icon):
     def title(cls) -> str:
         return _("Check period")
 
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["in_check_period"]
 
     def default_toplevel(self):

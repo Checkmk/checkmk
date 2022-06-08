@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import urllib.parse
-from typing import Callable, Optional, TypeVar, Union
+from typing import Callable, Optional, Sequence, TypeVar, Union
 
 from livestatus import SiteId
 
@@ -42,7 +42,7 @@ from cmk.gui.plugins.views.utils import (
     row_id,
     RowTableLivestatus,
 )
-from cmk.gui.type_defs import HTTPVariables, Row, SingleInfos, ViewSpec
+from cmk.gui.type_defs import ColumnName, HTTPVariables, Row, SingleInfos, ViewSpec
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeactionuri, urlencode_vars
@@ -272,7 +272,7 @@ class PainterEventId(Painter):
         return _("ID")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["event_id"]
 
     def render(self, row, cell):
@@ -292,7 +292,7 @@ class PainterEventCount(Painter):
         return _("Cnt.")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["event_count"]
 
     def render(self, row, cell):
@@ -312,7 +312,7 @@ class PainterEventText(Painter):
         return _("Message")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["event_text"]
 
     def render(self, row, cell):
@@ -332,7 +332,7 @@ class PainterEventMatchGroups(Painter):
         return _("Match")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["event_match_groups"]
 
     def render(self, row, cell):
@@ -358,7 +358,7 @@ class PainterEventFirst(Painter):
         return _("First")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["event_first"]
 
     @property
@@ -382,7 +382,7 @@ class PainterEventLast(Painter):
         return _("Last")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["event_last"]
 
     @property
@@ -406,7 +406,7 @@ class PainterEventComment(Painter):
         return _("Comment")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["event_comment"]
 
     def render(self, row, cell):
@@ -426,7 +426,7 @@ class PainterEventSl(Painter):
         return _("Level")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["event_sl"]
 
     def render(self, row, cell):
@@ -449,7 +449,7 @@ class PainterEventHost(Painter):
         return _("Host")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["event_host", "host_name"]
 
     def render(self, row, cell):
@@ -471,7 +471,7 @@ class PainterEventIpaddress(Painter):
         return _("Orig. IP")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["event_ipaddress"]
 
     def render(self, row, cell):
@@ -491,7 +491,7 @@ class PainterEventHostInDowntime(Painter):
         return _("Dt.")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["event_host_in_downtime"]
 
     def render(self, row, cell):
@@ -511,7 +511,7 @@ class PainterEventOwner(Painter):
         return _("Owner")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["event_owner"]
 
     def render(self, row, cell):
@@ -531,7 +531,7 @@ class PainterEventContact(Painter):
         return _("Contact")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["event_contact"]
 
     def render(self, row, cell):
@@ -551,7 +551,7 @@ class PainterEventApplication(Painter):
         return _("Application")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["event_application"]
 
     def render(self, row, cell):
@@ -571,7 +571,7 @@ class PainterEventPid(Painter):
         return _("PID")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["event_pid"]
 
     def render(self, row, cell):
@@ -599,7 +599,7 @@ class PainterEventPriority(Painter):
         return _("Prio")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["event_priority"]
 
     def render(self, row, cell):
@@ -619,7 +619,7 @@ class PainterEventFacility(Painter):
         return _("Facility")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["event_facility"]
 
     def render(self, row, cell):
@@ -639,7 +639,7 @@ class PainterEventRuleId(Painter):
         return _("Rule")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["event_rule_id"]
 
     def render(self, row, cell):
@@ -663,7 +663,7 @@ class PainterEventState(Painter):
         return _("State")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["event_state"]
 
     def render(self, row, cell):
@@ -687,7 +687,7 @@ class PainterEventPhase(Painter):
         return _("Phase")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["event_phase"]
 
     def render(self, row, cell):
@@ -786,7 +786,7 @@ class PainterEventIcons(Painter):
         return _("Icons")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["event_phase", "event_host_in_downtime"]
 
     @property
@@ -810,7 +810,7 @@ class PainterEventHistoryIcons(Painter):
         return _("Icons")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["event_phase", "event_host_in_downtime"]
 
     @property
@@ -834,7 +834,7 @@ class PainterEventContactGroups(Painter):
         return _("Rule contact groups")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["event_contact_groups"]
 
     def render(self, row, cell):
@@ -859,7 +859,7 @@ class PainterEventEffectiveContactGroups(Painter):
         return _("Contact groups")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return [
             "event_contact_groups",
             "event_contact_groups_precedence",
@@ -895,7 +895,7 @@ class PainterHistoryLine(Painter):
         return _("Line")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["history_line"]
 
     def render(self, row, cell):
@@ -915,7 +915,7 @@ class PainterHistoryTime(Painter):
         return _("Time")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["history_time"]
 
     @property
@@ -939,7 +939,7 @@ class PainterHistoryWhat(Painter):
         return _("Action")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["history_what"]
 
     def render(self, row, cell):
@@ -957,7 +957,7 @@ class PainterHistoryWhatExplained(Painter):
         return _("Explanation for event action")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["history_what"]
 
     def render(self, row, cell):
@@ -977,7 +977,7 @@ class PainterHistoryWho(Painter):
         return _("Who")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["history_who"]
 
     def render(self, row, cell):
@@ -997,7 +997,7 @@ class PainterHistoryAddinfo(Painter):
         return _("Info")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["history_addinfo"]
 
     def render(self, row, cell):

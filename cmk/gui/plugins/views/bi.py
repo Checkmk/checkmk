@@ -6,7 +6,7 @@
 
 from __future__ import annotations
 
-from typing import List, Optional, Tuple, Type, TYPE_CHECKING, Union
+from typing import List, Optional, Sequence, Tuple, Type, TYPE_CHECKING, Union
 
 from livestatus import OnlySites
 
@@ -215,7 +215,7 @@ class PainterAggrIcons(Painter):
         return _("Links")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["aggr_group", "aggr_name", "aggr_effective_state"]
 
     @property
@@ -270,7 +270,7 @@ class PainterAggrInDowntime(Painter):
         return _("In Downtime")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["aggr_effective_state"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -287,7 +287,7 @@ class PainterAggrAcknowledged(Painter):
         return _("Acknowledged")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["aggr_effective_state"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -317,7 +317,7 @@ class PainterAggrState(Painter):
         return _("State")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["aggr_effective_state"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -339,7 +339,7 @@ class PainterAggrStateNum(Painter):
         return _("State")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["aggr_effective_state"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -359,7 +359,7 @@ class PainterAggrRealState(Painter):
         return _("R.State")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["aggr_state"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -379,7 +379,7 @@ class PainterAggrAssumedState(Painter):
         return _("Assumed")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["aggr_assumed_state"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -399,7 +399,7 @@ class PainterAggrGroup(Painter):
         return _("Group")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["aggr_group"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -419,7 +419,7 @@ class PainterAggrName(Painter):
         return _("Aggregation")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["aggr_name"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -439,7 +439,7 @@ class PainterAggrOutput(Painter):
         return _("Output")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["aggr_output"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -467,7 +467,7 @@ class PainterAggrHosts(Painter):
         return _("Hosts")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["aggr_hosts"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -487,7 +487,7 @@ class PainterAggrHostsServices(Painter):
         return _("Hosts")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["aggr_hosts"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -621,7 +621,7 @@ class PainterAggrTreestate(Painter):
         return _("Tree")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["aggr_treestate", "aggr_hosts"]
 
     @property
@@ -645,7 +645,7 @@ class PainterAggrTreestateBoxed(Painter):
         return _("Tree")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["aggr_treestate", "aggr_hosts"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:

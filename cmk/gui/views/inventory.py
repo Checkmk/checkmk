@@ -195,7 +195,7 @@ class PainterInventoryTree(Painter):
         return _("Hardware & Software Tree")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["host_inventory", "host_structured_status"]
 
     @property
@@ -1944,7 +1944,7 @@ class PainterInvhistTime(Painter):
         return _("Date/Time")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["invhist_time"]
 
     @property
@@ -1965,7 +1965,7 @@ class PainterInvhistDelta(Painter):
         return _("Inventory changes")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["invhist_delta", "invhist_time"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -2013,7 +2013,7 @@ class PainterInvhistRemoved(Painter):
         return _("Removed")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["invhist_removed"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -2033,7 +2033,7 @@ class PainterInvhistNew(Painter):
         return _("New")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["invhist_new"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -2053,7 +2053,7 @@ class PainterInvhistChanged(Painter):
         return _("Changed")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["invhist_changed"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:

@@ -9,7 +9,7 @@ from __future__ import annotations
 import abc
 import traceback
 from dataclasses import dataclass
-from typing import Any, Dict, Iterator, List, Literal, Optional, Tuple, Type, Union
+from typing import Any, Dict, Iterator, List, Literal, Optional, Sequence, Tuple, Type, Union
 
 import cmk.utils.plugin_registry
 import cmk.utils.regex
@@ -78,7 +78,7 @@ class Icon(abc.ABC):
     ) -> Union[None, str, HTML, Tuple[str, str], Tuple[str, str, str]]:
         raise NotImplementedError()
 
-    def columns(self) -> List[str]:
+    def columns(self) -> Sequence[ColumnName]:
         """List of livestatus columns needed by this icon idependent of
         the queried table. The table prefix will be added to each column
         (e.g. name -> host_name)"""

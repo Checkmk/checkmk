@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Optional, Tuple
+from typing import Optional, Sequence, Tuple
 
 import cmk.gui.metrics as metrics
 import cmk.gui.utils.escaping as escaping
@@ -25,7 +25,7 @@ from cmk.gui.plugins.views.utils import (
     Sorter,
     sorter_registry,
 )
-from cmk.gui.type_defs import Perfdata, PerfometerSpec, TranslatedMetrics
+from cmk.gui.type_defs import ColumnName, Perfdata, PerfometerSpec, TranslatedMetrics
 from cmk.gui.utils.html import HTML
 
 
@@ -217,7 +217,7 @@ class PainterPerfometer(Painter):
         return _("Perf-O-Meter")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return [
             "service_staleness",
             "service_perf_data",
@@ -280,7 +280,7 @@ class SorterPerfometer(Sorter):
         return _("Perf-O-Meter")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return [
             "service_perf_data",
             "service_state",

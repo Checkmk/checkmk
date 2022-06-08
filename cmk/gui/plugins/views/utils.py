@@ -959,7 +959,7 @@ class Painter(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         """Livestatus columns needed for this painter"""
         raise NotImplementedError()
 
@@ -1112,7 +1112,7 @@ class Sorter(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def columns(self) -> List[str]:
+    def columns(self) -> Sequence[ColumnName]:
         """Livestatus columns needed for this sorter"""
         raise NotImplementedError()
 

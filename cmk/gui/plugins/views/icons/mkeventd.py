@@ -6,12 +6,14 @@
 
 import re
 import shlex
+from typing import Sequence
 
 from cmk.gui.config import active_config
 from cmk.gui.i18n import _
 from cmk.gui.plugins.views.icons.utils import Icon, icon_and_action_registry
 from cmk.gui.site_config import get_site_config
 from cmk.gui.sites import get_alias_of_host
+from cmk.gui.type_defs import ColumnName
 from cmk.gui.utils.urls import urlencode_vars
 
 
@@ -31,7 +33,7 @@ class MkeventdIcon(Icon):
     def default_sort_index(self):
         return 30
 
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["check_command"]
 
     def host_columns(self):

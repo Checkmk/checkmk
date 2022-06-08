@@ -6,7 +6,7 @@
 
 import abc
 import time
-from typing import List, Optional, Tuple, TYPE_CHECKING
+from typing import List, Optional, Sequence, Tuple, TYPE_CHECKING
 
 import cmk.gui.utils as utils
 from cmk.gui.config import active_config
@@ -30,7 +30,7 @@ from cmk.gui.plugins.views.utils import (
     sorter_registry,
 )
 from cmk.gui.site_config import get_site_config
-from cmk.gui.type_defs import Row
+from cmk.gui.type_defs import ColumnName, Row
 from cmk.gui.valuespec import Dictionary, DropdownChoice, ValueSpec
 from cmk.gui.view_utils import get_labels
 
@@ -67,7 +67,7 @@ class SorterSvcstate(Sorter):
         return _("Service state")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["service_state", "service_has_been_checked"]
 
     def cmp(self, r1, r2):
@@ -87,7 +87,7 @@ class SorterHoststate(Sorter):
         return _("Host state")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["host_state", "host_has_been_checked"]
 
     def cmp(self, r1, r2):
@@ -107,7 +107,7 @@ class SorterSiteHost(Sorter):
         return _("Host site and name")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["site", "host_name"]
 
     def cmp(self, r1, r2):
@@ -127,7 +127,7 @@ class SorterHostName(Sorter):
         return _("Host name")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["host_name"]
 
     def cmp(self, r1, r2):
@@ -145,7 +145,7 @@ class SorterSitealias(Sorter):
         return _("Site Alias")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["site"]
 
     def cmp(self, r1, r2):
@@ -181,7 +181,7 @@ class SorterHost(ABCTagSorter):
         return _("Host Tags")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["host_tags"]
 
 
@@ -200,7 +200,7 @@ class SorterServiceTags(ABCTagSorter):
         return _("Tags")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["service_tags"]
 
 
@@ -231,7 +231,7 @@ class SorterHostLabels(ABCTagSorter):
         return _("Host labels")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["host_labels"]
 
 
@@ -250,7 +250,7 @@ class SorterServiceLabels(ABCTagSorter):
         return _("Service labels")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["service_labels"]
 
 
@@ -265,7 +265,7 @@ class SorterServicelevel(Sorter):
         return _("Servicelevel")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["custom_variables"]
 
     def cmp(self, r1, r2):
@@ -341,7 +341,7 @@ class PerfValSorter(Sorter):
         return _("Service performance data - value number %02d") % self._num
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["service_perf_data"]
 
     def cmp(self, r1, r2):
@@ -500,7 +500,7 @@ class SorterHostIpv4Address(Sorter):
         return _("Host IPv4 address")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["host_custom_variable_names", "host_custom_variable_values"]
 
     def cmp(self, r1, r2):
@@ -524,7 +524,7 @@ class SorterNumProblems(Sorter):
         return _("Number of problems")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["host_num_services", "host_num_services_ok", "host_num_services_pending"]
 
     def cmp(self, r1, r2):

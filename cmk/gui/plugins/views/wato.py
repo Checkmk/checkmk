@@ -4,13 +4,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, Union
+from typing import Dict, Sequence, Union
 
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.plugins.views.utils import Painter, painter_registry, Sorter, sorter_registry
-from cmk.gui.type_defs import Row
+from cmk.gui.type_defs import ColumnName, Row
 from cmk.gui.utils.html import HTML
 from cmk.gui.watolib.hosts_and_folders import get_folder_title_path
 
@@ -28,7 +28,7 @@ class PainterHostFilename(Painter):
         return _("Filename")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["host_filename"]
 
     def render(self, row, cell):
@@ -84,7 +84,7 @@ class PainterWatoFolderAbs(Painter):
         return _("Folder")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["host_filename"]
 
     @property
@@ -108,7 +108,7 @@ class PainterWatoFolderRel(Painter):
         return _("Folder")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["host_filename"]
 
     @property
@@ -132,7 +132,7 @@ class PainterWatoFolderPlain(Painter):
         return _("Folder")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["host_filename"]
 
     @property
@@ -166,7 +166,7 @@ class SorterWatoFolderAbs(Sorter):
         return _("Folder - complete path")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["host_filename"]
 
     def cmp(self, r1, r2):
@@ -184,7 +184,7 @@ class SorterWatoFolderRel(Sorter):
         return _("Folder - relative path")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["host_filename"]
 
     def cmp(self, r1, r2):
@@ -202,7 +202,7 @@ class SorterWatoFolderPlain(Sorter):
         return _("Folder - just folder name")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["host_filename"]
 
     def cmp(self, r1, r2):

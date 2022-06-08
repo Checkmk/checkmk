@@ -6,7 +6,7 @@
 
 import copy
 import time
-from typing import Literal
+from typing import Literal, Sequence
 
 from cmk.gui.config import active_config
 from cmk.gui.http import request, response
@@ -22,7 +22,7 @@ from cmk.gui.plugins.views.utils import (
     PainterOption,
     PainterOptions,
 )
-from cmk.gui.type_defs import TemplateGraphSpec
+from cmk.gui.type_defs import ColumnName, TemplateGraphSpec
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import Dictionary, DropdownChoice, Transform, ValueSpec
@@ -223,7 +223,7 @@ class PainterServiceGraphs(Painter):
         return _("Service Graphs with Timerange Previews")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return [
             "host_name",
             "service_description",
@@ -258,7 +258,7 @@ class PainterHostGraphs(Painter):
         return _("Host Graphs with Timerange Previews")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["host_name", "host_perf_data", "host_metrics", "host_check_command"]
 
     @property

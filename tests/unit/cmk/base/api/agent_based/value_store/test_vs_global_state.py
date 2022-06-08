@@ -24,7 +24,8 @@ def test_load_host_value_store_loads_file(monkeypatch):
     monkeypatch.setattr(
         store,
         "load_text_from_file",
-        lambda *_a, **_kw: "{('%s', %r, 'loaded_file'): True}" % service_id,
+        lambda *_a, **_kw: "{('test_load_host_value_store_loads_file', '%s', %r, 'loaded_file'): True}"
+        % service_id,
     )
 
     with load_host_value_store(

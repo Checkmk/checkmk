@@ -1,0 +1,13 @@
+Title: performance bug when using a cluster
+Class: fix
+Compatible: compat
+Component: core
+Date: 1654769756
+Edition: cre
+Knowledge: doc
+Level: 2
+State: unknown
+Version: 2.1.0p3
+
+Running all checks on a cluster with more than 100 services took several minutes. This has been fixed and runtime is now a few seconds.
+No user interaction required.

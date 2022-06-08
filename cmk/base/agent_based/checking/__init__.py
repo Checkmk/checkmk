@@ -434,6 +434,7 @@ def get_aggregated_result(
             plugin=plugin,
             service_id=service.id(),
             persist_value_store_changes=persist_value_store_changes,
+            value_store_manager=value_store_manager,
         )
         if host_config.is_cluster
         else plugin.check_function

@@ -335,17 +335,12 @@ class APIServer:
 
     @classmethod
     def from_kubernetes(cls, api_client, timeout):
-        raw_api = RawAPI(api_client, timeout)
 
-        raw_version = raw_api.query_raw_version()
-        version = version_from_json(raw_version)
-        _verify_version_support(version)
         return cls(
             BatchAPI(api_client, timeout),
             CoreAPI(api_client, timeout),
-            raw_api,
+            RawAPI(api_client, timeout),
             AppsAPI(api_client, timeout),
-            version.git_version,
         )
 
     def __init__(
@@ -354,9 +349,10 @@ class APIServer:
         core_api: CoreAPI,
         raw_api: RawAPI,
         external_api: AppsAPI,
-        version: api.GitVersion,
     ) -> None:
-        self.version = version
+        raw_version = raw_api.query_raw_version()
+        self.version = version_from_json(raw_version)
+        _verify_version_support(self.version)
 
         self.raw_jobs = batch_api.query_raw_jobs()
         self.raw_cron_jobs = batch_api.query_raw_cron_jobs()
@@ -439,4 +435,4 @@ class APIServer:
         ]
 
     def cluster_details(self) -> api.ClusterDetails:
-        return api.ClusterDetails(api_health=self.api_health, version=self.version)
+        return api.ClusterDetails(api_health=self.api_health, version=self.version.git_version)

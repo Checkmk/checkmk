@@ -15,7 +15,7 @@ set WNX_INTEGRATION_BASE_DIR=%temp%\test_wnx_%random%
 set DEBUG_HOME_DIR=%WNX_INTEGRATION_BASE_DIR%\test\data
 set WNX_TEST_ROOT=%WNX_INTEGRATION_BASE_DIR%\test\root
 set arte=%cur_dir%\..\..\artefacts
-set results=integration_tests_ng_results.zip
+set results=integration_tests_results.zip
 
 powershell Write-Host "Windows agent Integration Tests are starting in %WNX_INTEGRATION_BASE_DIR%" -Foreground Cyan
 
@@ -38,7 +38,7 @@ powershell Remove-NetFirewallRule -DisplayName "AllowIntegration2" 2>nul
 call :zip_results
 if "%failed%" == "1" (
 powershell Write-Host "Integration Test Failed" -Foreground Red 
-exit /b 0
+exit /b 1
 )
 powershell Write-Host "Integration Test Success" -Foreground Green
 exit /b 0

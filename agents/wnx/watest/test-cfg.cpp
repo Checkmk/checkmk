@@ -378,11 +378,11 @@ public:
         expected_ = tst::MakeTempFolderInTempPath(L"special_dir");
         fs::create_directories(expected_ / "test" / "root");
         fs::create_directories(expected_ / "test" / "data");
-        tools::win::SetEnv(std::wstring{env::test_integration_root},
+        tools::win::SetEnv(std::wstring{env::regression_base_dir},
                            expected_.wstring());
     }
     void TearDown() override {
-        tools::win::SetEnv(std::wstring{env::test_integration_root}, {});
+        tools::win::SetEnv(std::wstring{env::regression_base_dir}, {});
         fs::remove_all(expected_);
     }
     fs::path expected_;

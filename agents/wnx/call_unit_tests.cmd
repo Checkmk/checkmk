@@ -41,6 +41,7 @@ if "%1" == "SIMULATE_FAIL" powershell Write-Host "Unit test FAIL" -Foreground Re
 if NOT "%1" == "" set param=--gtest_filter=%1
 set sec_param=%2
 if "%param%" == "" powershell Write-Host "Full and Looooooong test was requested." -Foreground Cyan && set sec_param=both
+if "%param%" == "*Integration" powershell Write-Host "Mid tests" -Foreground Cyan && set results=mid_tests_results.zip
 
 %Print%{255;255;255}32-bit test\n
 ::call build_watest.cmd %sec_param%

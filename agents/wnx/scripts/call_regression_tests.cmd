@@ -7,7 +7,7 @@ set WNX_TEST_ROOT=%temp%\test_i_%random%
 mkdir %WNX_TEST_ROOT%
 ::net stop checkmkservice
 set arte=%cur_dir%\..\..\artefacts
-set results=integration_tests_results.zip
+set results=regression_tests_results.zip
 
 powershell Write-Host "Windows agent Regression Tests are starting in %WNX_TEST_ROOT%" -Foreground Cyan
 

@@ -38,7 +38,7 @@ std::pair<fs::path, fs::path> FindAlternateDirs(AppType app_type) {
     switch (app_type) {
         case AppType::exe:
             for (const auto &env_var :
-                 {env::test_integration_root, env::integration_base_dir}) {
+                 {env::regression_base_dir, env::integration_base_dir}) {
                 auto dir = tools::win::GetEnv(env_var);
                 if (!dir.empty()) {
                     XLOG::l.i(

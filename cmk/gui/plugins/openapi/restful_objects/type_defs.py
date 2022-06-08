@@ -46,6 +46,7 @@ DomainType = Literal[
     "ruleset",
     "service",
     "service_discovery",
+    "service_discovery_run",
     "servicegroup",
     "service_group_config",
     "sign_key",

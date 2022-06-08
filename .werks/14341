@@ -1,0 +1,19 @@
+Title: service_discovery: reimplementation of execute discovery mode endpoint
+Class: fix
+Compatible: incomp
+Component: rest-api
+Date: 1654674693
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p7
+
+Previously, only the update detection mode provided the desired result, while all other modes either had no
+effect or behaved differently than described. This werk reimplements the discover_services action endpoint.
+In addition, the descriptions of certain modes are changed to better reflect the intended action. All modes
+return the same response schema as before expect the refresh option.
+
+The refresh option starts a background job. The response is therefore different from the other mode responses and
+contains a redirect link to the current status of the running job. The job status can also be directly queried
+directly via the new endpoint /objects/service_discovery_run/{host_name} endpoint.

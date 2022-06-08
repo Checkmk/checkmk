@@ -4750,7 +4750,7 @@ rulespec_registry.register(
 @rulespec_group_registry.register
 class RulespecGroupAgent(RulespecGroup):
     @property
-    def name(self):
+    def name(self) -> str:
         return "agent"
 
     @property

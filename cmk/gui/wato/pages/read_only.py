@@ -33,7 +33,7 @@ from cmk.gui.watolib.utils import multisite_dir
 @mode_registry.register
 class ModeManageReadOnly(WatoMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "read_only"
 
     @classmethod

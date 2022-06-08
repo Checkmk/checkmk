@@ -29,7 +29,7 @@ from cmk.gui.valuespec import (
 @user_attribute_registry.register
 class ForceAuthUserUserAttribute(UserAttribute):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "force_authuser"
 
     def topic(self):
@@ -53,7 +53,7 @@ class ForceAuthUserUserAttribute(UserAttribute):
 @user_attribute_registry.register
 class DisableNotificationsUserAttribute(UserAttribute):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "disable_notifications"
 
     def topic(self):
@@ -104,7 +104,7 @@ class DisableNotificationsUserAttribute(UserAttribute):
 @user_attribute_registry.register
 class StartURLUserAttribute(UserAttribute):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "start_url"
 
     def topic(self):
@@ -145,7 +145,7 @@ class StartURLUserAttribute(UserAttribute):
 @user_attribute_registry.register
 class UIThemeUserAttribute(UserAttribute):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "ui_theme"
 
     def topic(self):
@@ -175,7 +175,7 @@ class UIThemeUserAttribute(UserAttribute):
 @user_attribute_registry.register
 class UISidebarPosition(UserAttribute):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "ui_sidebar_position"
 
     def topic(self):
@@ -195,7 +195,7 @@ class UISidebarPosition(UserAttribute):
 @user_attribute_registry.register
 class UIIconTitle(UserAttribute):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "nav_hide_icons_title"
 
     def topic(self):
@@ -217,7 +217,7 @@ class UIIconTitle(UserAttribute):
 @user_attribute_registry.register
 class UIIconPlacement(UserAttribute):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "icons_per_item"
 
     def topic(self):
@@ -243,7 +243,7 @@ class UIIconPlacement(UserAttribute):
 @user_attribute_registry.register
 class UIBasicAdvancedToggle(UserAttribute):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "show_mode"
 
     def topic(self):

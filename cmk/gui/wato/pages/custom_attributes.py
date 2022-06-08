@@ -258,7 +258,7 @@ class ModeEditCustomAttr(WatoMode, abc.ABC):
 @mode_registry.register
 class ModeEditCustomUserAttr(ModeEditCustomAttr):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "edit_user_attr"
 
     @classmethod
@@ -331,7 +331,7 @@ class ModeEditCustomUserAttr(ModeEditCustomAttr):
 @mode_registry.register
 class ModeEditCustomHostAttr(ModeEditCustomAttr):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "edit_host_attr"
 
     @classmethod
@@ -503,7 +503,7 @@ class ModeCustomAttrs(WatoMode, abc.ABC):
 @mode_registry.register
 class ModeCustomUserAttrs(ModeCustomAttrs):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "user_attrs"
 
     @classmethod
@@ -537,7 +537,7 @@ class ModeCustomUserAttrs(ModeCustomAttrs):
 @mode_registry.register
 class ModeCustomHostAttrs(ModeCustomAttrs):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "host_attrs"
 
     @classmethod

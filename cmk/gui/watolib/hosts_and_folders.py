@@ -983,7 +983,7 @@ class BaseFolder:
             folder = folder.parent()
         return folders[::-1]
 
-    def name(self):
+    def name(self) -> str:
         raise NotImplementedError()
 
     def title(self) -> str:
@@ -1777,7 +1777,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
     # | ELEMENT ACCESS                                                        |
     # '-----------------------------------------------------------------------'
 
-    def name(self):
+    def name(self) -> str:
         return self._name
 
     def title(self) -> str:
@@ -3178,7 +3178,7 @@ class CREHost(WithPermissions, WithAttributes):
     def ident(self) -> str:
         return self.name()
 
-    def name(self):
+    def name(self) -> str:
         return self._name
 
     def alias(self):

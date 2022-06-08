@@ -28,7 +28,7 @@ from cmk.gui.permissions import (
 @permission_section_registry.register
 class PermissionSectionGeneral(PermissionSection):
     @property
-    def name(self):
+    def name(self) -> str:
         return "general"
 
     @property

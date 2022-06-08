@@ -390,7 +390,7 @@ def _get_struct_tree(is_history, hostname, site_id):
 @permission_section_registry.register
 class PermissionSectionViews(PermissionSection):
     @property
-    def name(self):
+    def name(self) -> str:
         return "view"
 
     @property

@@ -106,7 +106,7 @@ class ModeDiscovery(WatoMode):
     """
 
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "inventory"
 
     @classmethod

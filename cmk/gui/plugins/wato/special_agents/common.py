@@ -32,7 +32,7 @@ from cmk.gui.valuespec import (
 @rulespec_group_registry.register
 class RulespecGroupVMCloudContainer(RulespecGroup):
     @property
-    def name(self):
+    def name(self) -> str:
         return "vm_cloud_container"
 
     @property
@@ -47,7 +47,7 @@ class RulespecGroupVMCloudContainer(RulespecGroup):
 @rulespec_group_registry.register
 class RulespecGroupDatasourcePrograms(RulespecGroup):
     @property
-    def name(self):
+    def name(self) -> str:
         return "datasource_programs"
 
     @property

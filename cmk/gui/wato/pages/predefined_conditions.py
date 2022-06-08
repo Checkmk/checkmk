@@ -40,7 +40,7 @@ from cmk.gui.watolib.rulespecs import RulespecGroup, ServiceRulespec
 
 class DummyRulespecGroup(RulespecGroup):
     @property
-    def name(self):
+    def name(self) -> str:
         return "dummy"
 
     @property
@@ -88,7 +88,7 @@ class PredefinedConditionModeType(SimpleModeType):
 @mode_registry.register
 class ModePredefinedConditions(SimpleListMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "predefined_conditions"
 
     @classmethod
@@ -190,7 +190,7 @@ class ModePredefinedConditions(SimpleListMode):
 @mode_registry.register
 class ModeEditPredefinedCondition(SimpleEditMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "edit_predefined_condition"
 
     @classmethod

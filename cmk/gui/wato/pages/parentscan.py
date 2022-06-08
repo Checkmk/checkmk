@@ -283,7 +283,7 @@ class ParentScanBackgroundJob(WatoBackgroundJob):
 @mode_registry.register
 class ModeParentScan(WatoMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "parentscan"
 
     @classmethod

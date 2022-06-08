@@ -30,7 +30,7 @@ from cmk.gui.utils.html import HTML
 @permission_section_registry.register
 class PermissionSectionIconsAndActions(PermissionSection):
     @property
-    def name(self):
+    def name(self) -> str:
         return "icons_and_actions"
 
     @property

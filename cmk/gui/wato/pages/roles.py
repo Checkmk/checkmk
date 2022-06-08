@@ -107,7 +107,7 @@ class RoleManagement:
 @mode_registry.register
 class ModeRoles(RoleManagement, WatoMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "roles"
 
     @classmethod
@@ -265,7 +265,7 @@ class ModeRoles(RoleManagement, WatoMode):
 @mode_registry.register
 class ModeEditRole(RoleManagement, WatoMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "edit_role"
 
     @classmethod
@@ -458,7 +458,7 @@ class ModeEditRole(RoleManagement, WatoMode):
 @mode_registry.register
 class ModeRoleMatrix(WatoMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "role_matrix"
 
     @classmethod

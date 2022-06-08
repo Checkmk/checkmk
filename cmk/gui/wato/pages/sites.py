@@ -104,7 +104,7 @@ from cmk.gui.watolib.sites import (
 @mode_registry.register
 class ModeEditSite(WatoMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "edit_site"
 
     @classmethod
@@ -541,7 +541,7 @@ class ModeEditSite(WatoMode):
 @mode_registry.register
 class ModeDistributedMonitoring(WatoMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "sites"
 
     @classmethod
@@ -1043,7 +1043,7 @@ class ReplicationStatusFetcher:
 @mode_registry.register
 class ModeEditSiteGlobals(ABCGlobalSettingsMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "edit_site_globals"
 
     @classmethod
@@ -1183,7 +1183,7 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
 @mode_registry.register
 class ModeEditSiteGlobalSetting(ABCEditGlobalSettingMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "edit_site_configvar"
 
     @classmethod
@@ -1229,7 +1229,7 @@ class ModeEditSiteGlobalSetting(ABCEditGlobalSettingMode):
 @mode_registry.register
 class ModeSiteLivestatusEncryption(WatoMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "site_livestatus_encryption"
 
     @classmethod

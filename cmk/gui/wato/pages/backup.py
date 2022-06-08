@@ -53,7 +53,7 @@ class ModeBackup(backup.PageBackup, WatoMode):
 @mode_registry.register
 class ModeBackupTargets(backup.PageBackupTargets, WatoMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "backup_targets"
 
     @classmethod
@@ -83,7 +83,7 @@ class ModeBackupTargets(backup.PageBackupTargets, WatoMode):
 @mode_registry.register
 class ModeEditBackupTarget(backup.PageEditBackupTarget, WatoMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "edit_backup_target"
 
     @classmethod
@@ -101,7 +101,7 @@ class ModeEditBackupTarget(backup.PageEditBackupTarget, WatoMode):
 @mode_registry.register
 class ModeEditBackupJob(backup.PageEditBackupJob, WatoMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "edit_backup_job"
 
     @classmethod

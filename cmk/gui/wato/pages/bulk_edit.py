@@ -35,7 +35,7 @@ from cmk.gui.watolib.hosts_and_folders import Folder
 @mode_registry.register
 class ModeBulkEdit(WatoMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "bulkedit"
 
     @classmethod
@@ -118,7 +118,7 @@ class ModeBulkEdit(WatoMode):
 @mode_registry.register
 class ModeBulkCleanup(WatoMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "bulkcleanup"
 
     @classmethod

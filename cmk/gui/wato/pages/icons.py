@@ -31,7 +31,7 @@ from cmk.gui.watolib.hosts_and_folders import make_action_link
 @mode_registry.register
 class ModeIcons(WatoMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "icons"
 
     @classmethod

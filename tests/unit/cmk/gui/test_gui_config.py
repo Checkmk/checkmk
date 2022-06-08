@@ -884,7 +884,7 @@ def test_permission_sorting(do_sort, result):
     @sections.register
     class Sec1(permissions.PermissionSection):
         @property
-        def name(self):
+        def name(self) -> str:
             return "sec1"
 
         @property

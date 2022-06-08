@@ -47,7 +47,7 @@ from cmk.gui.watolib.rulespecs import rulespec_registry
 @mode_registry.register
 class ModeCheckPlugins(WatoMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "check_plugins"
 
     @classmethod
@@ -97,7 +97,7 @@ class ModeCheckPlugins(WatoMode):
 @mode_registry.register
 class ModeCheckPluginSearch(WatoMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "check_plugin_search"
 
     @classmethod
@@ -172,7 +172,7 @@ class ModeCheckPluginSearch(WatoMode):
 @mode_registry.register
 class ModeCheckPluginTopic(WatoMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "check_plugin_topic"
 
     @classmethod
@@ -418,7 +418,7 @@ def _get_check_catalog(only_path: tuple[str, ...]) -> Mapping[str, Any]:
 @mode_registry.register
 class ModeCheckManPage(WatoMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "check_manpage"
 
     @classmethod

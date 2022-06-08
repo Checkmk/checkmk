@@ -196,7 +196,7 @@ from cmk.gui.watolib.users import notification_script_title
 @permission_section_registry.register
 class PermissionSectionWATO(PermissionSection):
     @property
-    def name(self):
+    def name(self) -> str:
         return "wato"
 
     @property
@@ -868,7 +868,7 @@ def register_check_parameters(
 @rulespec_group_registry.register
 class RulespecGroupDiscoveryCheckParameters(RulespecGroup):
     @property
-    def name(self):
+    def name(self) -> str:
         return "checkparams"
 
     @property

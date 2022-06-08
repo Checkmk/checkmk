@@ -29,7 +29,7 @@ class MockShare:
         self._name = name
 
     @property
-    def name(self):
+    def name(self) -> str:
         return self._name
 
 

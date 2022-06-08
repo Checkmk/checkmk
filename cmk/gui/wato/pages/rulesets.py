@@ -674,7 +674,7 @@ def _is_used_rulesets_page(search_options) -> bool:
 @mode_registry.register
 class ModeEditRuleset(WatoMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "edit_ruleset"
 
     @classmethod

@@ -281,7 +281,7 @@ class ModeBIEditPack(ABCBIMode):
         return ModeBIPacks
 
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "bi_edit_pack"
 
     @classmethod
@@ -417,7 +417,7 @@ class ModeBIPacks(ABCBIMode):
         self._contact_group_names = load_contact_group_information()
 
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "bi_packs"
 
     @classmethod
@@ -580,7 +580,7 @@ class ModeBIPacks(ABCBIMode):
 @mode_registry.register
 class ModeBIRules(ABCBIMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "bi_rules"
 
     @classmethod
@@ -1049,7 +1049,7 @@ class ModeBIRules(ABCBIMode):
 @mode_registry.register
 class ModeBIEditRule(ABCBIMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "bi_edit_rule"
 
     @classmethod
@@ -1579,7 +1579,7 @@ class NodeVisualizationLayoutStyle(ValueSpec[dict[str, Any]]):
 @mode_registry.register
 class BIModeEditAggregation(ABCBIMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "bi_edit_aggregation"
 
     @classmethod
@@ -1884,7 +1884,7 @@ class BIModeEditAggregation(ABCBIMode):
 @mode_registry.register
 class BIModeAggregations(ABCBIMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "bi_aggregations"
 
     @classmethod
@@ -2212,7 +2212,7 @@ class BIModeAggregations(ABCBIMode):
 @mode_registry.register
 class ModeBIRuleTree(ABCBIMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "bi_rule_tree"
 
     @classmethod

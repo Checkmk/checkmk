@@ -13,7 +13,7 @@ from cmk.gui.plugins.wato.utils.base_modes import WatoMode
 @mode_registry.register
 class ModeNotImplemented(WatoMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return ""
 
     @classmethod

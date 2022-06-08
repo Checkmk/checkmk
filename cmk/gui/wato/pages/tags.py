@@ -113,7 +113,7 @@ class ABCTagMode(WatoMode, abc.ABC):
 @mode_registry.register
 class ModeTags(ABCTagMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "tags"
 
     @classmethod
@@ -639,7 +639,7 @@ class ModeTagUsage(ABCTagMode):
 @mode_registry.register
 class ModeEditAuxtag(ABCEditTagMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "edit_auxtag"
 
     @classmethod
@@ -721,7 +721,7 @@ class ModeEditAuxtag(ABCEditTagMode):
 @mode_registry.register
 class ModeEditTagGroup(ABCEditTagMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "edit_tag"
 
     @classmethod

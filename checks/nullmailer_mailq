@@ -31,7 +31,7 @@ class Queue(typing.NamedTuple):
 
 
 def parse_nullmailer_mailq(info):
-    def name(line):
+    def name(line: str) -> str:
         return line[2] if len(line) == 3 else "deferred"
 
     return [Queue(size=int(line[0]), length=int(line[1]), name=name(line)) for line in info]

@@ -300,7 +300,7 @@ class ABCHostMode(WatoMode, abc.ABC):
 @mode_registry.register
 class ModeEditHost(ABCHostMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "edit_host"
 
     @classmethod
@@ -661,7 +661,7 @@ class CreateHostMode(ABCHostMode):
 @mode_registry.register
 class ModeCreateHost(CreateHostMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "newhost"
 
     @classmethod
@@ -695,7 +695,7 @@ class ModeCreateHost(CreateHostMode):
 @mode_registry.register
 class ModeCreateCluster(CreateHostMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "newcluster"
 
     @classmethod

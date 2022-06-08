@@ -75,7 +75,7 @@ class MainModuleBackgroundJobs(ABCMainModule):
 @mode_registry.register
 class ModeBackgroundJobsOverview(WatoMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "background_jobs_overview"
 
     @classmethod
@@ -108,7 +108,7 @@ class ModeBackgroundJobsOverview(WatoMode):
 @mode_registry.register
 class ModeBackgroundJobDetails(WatoMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "background_job_details"
 
     @classmethod

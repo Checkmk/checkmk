@@ -76,7 +76,7 @@ class ModeAnalyzeConfig(WatoMode):
     _ack_path = cmk.utils.paths.var_dir + "/acknowledged_bp_tests.mk"
 
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "analyze_config"
 
     @classmethod

@@ -52,7 +52,7 @@ from cmk.gui.watolib.hosts_and_folders import Folder, folder_preserving_link, Ho
 @mode_registry.register
 class ModeDiagHost(WatoMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "diag_host"
 
     @classmethod

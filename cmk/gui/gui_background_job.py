@@ -38,7 +38,7 @@ import cmk
 @permission_section_registry.register
 class PermissionSectionBackgroundJobs(PermissionSection):
     @property
-    def name(self):
+    def name(self) -> str:
         return "background_jobs"
 
     @property

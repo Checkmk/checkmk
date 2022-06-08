@@ -79,7 +79,7 @@ except ImportError:
 @mode_registry.register
 class ModeTimeperiods(WatoMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "timeperiods"
 
     @classmethod
@@ -375,7 +375,7 @@ class ModeTimeperiods(WatoMode):
 @mode_registry.register
 class ModeTimeperiodImportICal(WatoMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "import_ical"
 
     @classmethod
@@ -687,7 +687,7 @@ class ModeTimeperiodImportICal(WatoMode):
 @mode_registry.register
 class ModeEditTimeperiod(WatoMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "edit_timeperiod"
 
     @classmethod

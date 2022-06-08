@@ -49,7 +49,7 @@ from cmk.gui.watolib.utils import mk_repr
 @mode_registry.register
 class ModePatternEditor(WatoMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "pattern_editor"
 
     @classmethod

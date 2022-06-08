@@ -699,7 +699,7 @@ class LDAPMode(WatoMode):
 @mode_registry.register
 class ModeLDAPConfig(LDAPMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "ldap_config"
 
     @classmethod
@@ -841,7 +841,7 @@ class ModeLDAPConfig(LDAPMode):
 @mode_registry.register
 class ModeEditLDAPConnection(LDAPMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "edit_ldap_connection"
 
     @classmethod

@@ -34,7 +34,7 @@ from cmk.gui.valuespec import (
 @rulespec_group_registry.register
 class RulespecGroupInventory(RulespecGroup):
     @property
-    def name(self):
+    def name(self) -> str:
         return "inventory"
 
     @property

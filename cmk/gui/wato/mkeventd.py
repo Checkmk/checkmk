@@ -1498,7 +1498,7 @@ class ABCEventConsoleMode(WatoMode, abc.ABC):
 @mode_registry.register
 class ModeEventConsoleRulePacks(ABCEventConsoleMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "mkeventd_rule_packs"
 
     @classmethod
@@ -1962,7 +1962,7 @@ def _deref(x: Union[T, Callable[[], T]]) -> T:
 @mode_registry.register
 class ModeEventConsoleRules(ABCEventConsoleMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "mkeventd_rules"
 
     @classmethod
@@ -2340,7 +2340,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
 @mode_registry.register
 class ModeEventConsoleEditRulePack(ABCEventConsoleMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "mkeventd_edit_rule_pack"
 
     @classmethod
@@ -2455,7 +2455,7 @@ class ModeEventConsoleEditRulePack(ABCEventConsoleMode):
 @mode_registry.register
 class ModeEventConsoleEditRule(ABCEventConsoleMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "mkeventd_edit_rule"
 
     @classmethod
@@ -2649,7 +2649,7 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
 @mode_registry.register
 class ModeEventConsoleStatus(ABCEventConsoleMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "mkeventd_status"
 
     @classmethod
@@ -2757,7 +2757,7 @@ class ModeEventConsoleStatus(ABCEventConsoleMode):
 @mode_registry.register
 class ModeEventConsoleSettings(ABCEventConsoleMode, ABCGlobalSettingsMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "mkeventd_config"
 
     @classmethod
@@ -2887,7 +2887,7 @@ class ConfigVariableGroupEventConsoleSNMP(ConfigVariableGroupEventConsole):
 @mode_registry.register
 class ModeEventConsoleEditGlobalSetting(ABCEditGlobalSettingMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "mkeventd_edit_configvar"
 
     @classmethod
@@ -2920,7 +2920,7 @@ def _get_event_console_sync_sites():
 @mode_registry.register
 class ModeEventConsoleMIBs(ABCEventConsoleMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "mkeventd_mibs"
 
     @classmethod
@@ -3126,7 +3126,7 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
 @mode_registry.register
 class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "mkeventd_upload_mibs"
 
     @classmethod
@@ -4675,7 +4675,7 @@ class MainModuleEventConsoleRules(ABCMainModule):
 @rulespec_group_registry.register
 class RulespecGroupEventConsole(RulespecGroup):
     @property
-    def name(self):
+    def name(self) -> str:
         return "eventconsole"
 
     @property

@@ -494,7 +494,7 @@ class NotificationRuleLinks(NamedTuple):
 @mode_registry.register
 class ModeNotifications(ABCNotificationsMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "notifications"
 
     @classmethod
@@ -982,7 +982,7 @@ def _get_notification_sync_sites():
 @mode_registry.register
 class ModeUserNotifications(ABCUserNotificationsMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "user_notifications"
 
     @classmethod
@@ -1069,7 +1069,7 @@ class ModeUserNotifications(ABCUserNotificationsMode):
 @mode_registry.register
 class ModePersonalUserNotifications(ABCUserNotificationsMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "user_notifications_p"
 
     @classmethod
@@ -1671,7 +1671,7 @@ class ModeEditNotificationRule(ABCEditNotificationRuleMode):
     """Edit a global notification rule"""
 
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "notification_rule"
 
     @classmethod
@@ -1737,7 +1737,7 @@ class ModeEditUserNotificationRule(ABCEditUserNotificationRuleMode):
     """Edit notification rule of a given user"""
 
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "user_notification_rule"
 
     @classmethod
@@ -1763,7 +1763,7 @@ class ModeEditUserNotificationRule(ABCEditUserNotificationRuleMode):
 @mode_registry.register
 class ModeEditPersonalNotificationRule(ABCEditUserNotificationRuleMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "notification_rule_p"
 
     @classmethod

@@ -216,7 +216,7 @@ class Metadata:
         self.use_namespace = use_namespace
 
     @property
-    def name(self):
+    def name(self) -> str:
         if self.use_namespace:
             return "_".join([self.namespace, self.prefix, self._name]).lstrip("_")
         return "_".join([self.prefix, self._name]).lstrip("_")

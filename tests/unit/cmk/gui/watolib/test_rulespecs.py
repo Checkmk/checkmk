@@ -39,7 +39,7 @@ from cmk.gui.watolib.search import MatchItem
 def test_rulespec_sub_group():
     class TestGroup(RulespecGroup):
         @property
-        def name(self):
+        def name(self) -> str:
             return "main_group"
 
         @property
@@ -1736,7 +1736,7 @@ def test_register_without_static(patch_rulespec_registries):
 
 class DummyGroup(RulespecGroup):
     @property
-    def name(self):
+    def name(self) -> str:
         return "group"
 
     @property
@@ -1770,7 +1770,7 @@ def test_rulespecs_get_by_group():
 def test_match_item_generator_rules():
     class SomeRulespecGroup(RulespecGroup):
         @property
-        def name(self):
+        def name(self) -> str:
             return "rulespec_group"
 
         @property

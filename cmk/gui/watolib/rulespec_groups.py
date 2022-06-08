@@ -14,7 +14,7 @@ from .rulespecs import rulespec_group_registry, RulespecGroup, RulespecSubGroup
 @rulespec_group_registry.register
 class RulespecGroupMonitoringConfiguration(RulespecGroup):
     @property
-    def name(self):
+    def name(self) -> str:
         return "monconf"
 
     @property
@@ -49,7 +49,7 @@ class RulespecGroupMonitoringConfigurationVarious(RulespecSubGroup):
 @rulespec_group_registry.register
 class RulespecGroupHostsMonitoringRules(RulespecGroup):
     @property
-    def name(self):
+    def name(self) -> str:
         return "host_monconf"
 
     @property
@@ -139,7 +139,7 @@ class RulespecGroupHostsMonitoringRulesHostChecks(RulespecSubGroup):
 @rulespec_group_registry.register
 class RulespecGroupAgentSNMP(RulespecGroup):
     @property
-    def name(self):
+    def name(self) -> str:
         return "snmp"
 
     @property
@@ -154,7 +154,7 @@ class RulespecGroupAgentSNMP(RulespecGroup):
 @rulespec_group_registry.register
 class RulespecGroupMonitoringAgents(RulespecGroup):
     @property
-    def name(self):
+    def name(self) -> str:
         return "agents"
 
     @property
@@ -184,7 +184,7 @@ class RulespecGroupMonitoringAgentsGenericOptions(RulespecSubGroup):
 @rulespec_group_registry.register
 class RulespecGroupEnforcedServices(RulespecGroup):
     @property
-    def name(self):
+    def name(self) -> str:
         return "static"
 
     @property

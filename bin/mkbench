@@ -2460,7 +2460,7 @@ class TestCase:
         self.result_msg = None
 
     # Return a meaningful name to identify this test case
-    def name(self):
+    def name(self) -> str:
         return "%s()" % self.__class__.__name__
 
     # The run() method can be implemented as generator and yield several intermediate steps
@@ -2523,7 +2523,7 @@ class TestAgentBasedStandardHosts(TestCase):
         self._listeners = []
         self._hosts_per_listener = 100
 
-    def name(self):
+    def name(self) -> str:
         return "%s(hosts=%d, duration=%d)" % (
             self.__class__.__name__,
             self.num_hosts,

@@ -44,7 +44,7 @@ class ModeObjectParameters(WatoMode):
     _PARAMETERS_OMIT: List = []
 
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "object_parameters"
 
     @classmethod

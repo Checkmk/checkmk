@@ -59,7 +59,7 @@ class CommandGroupVarious(CommandGroup):
 @permission_section_registry.register
 class PermissionSectionAction(PermissionSection):
     @property
-    def name(self):
+    def name(self) -> str:
         return "action"
 
     @property

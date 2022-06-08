@@ -66,7 +66,7 @@ from cmk.gui.watolib.search import build_index_background
 @mode_registry.register
 class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "changelog"
 
     @classmethod

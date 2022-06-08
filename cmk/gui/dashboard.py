@@ -284,7 +284,7 @@ class VisualTypeDashboards(VisualType):
 @permission_section_registry.register
 class PermissionSectionDashboard(PermissionSection):
     @property
-    def name(self):
+    def name(self) -> str:
         return "dashboard"
 
     @property

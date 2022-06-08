@@ -414,7 +414,7 @@ class ABCEditGlobalSettingMode(WatoMode):
 @mode_registry.register
 class ModeEditGlobals(ABCGlobalSettingsMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "globalvars"
 
     @classmethod
@@ -533,7 +533,7 @@ class ModeEditGlobals(ABCGlobalSettingsMode):
 @mode_registry.register
 class ModeEditGlobalSetting(ABCEditGlobalSettingMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "edit_configvar"
 
     @classmethod

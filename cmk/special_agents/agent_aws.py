@@ -502,7 +502,7 @@ class AWSSection(DataCache):
 
     @property
     @abc.abstractmethod
-    def name(self):
+    def name(self) -> str:
         pass
 
     @property
@@ -833,7 +833,7 @@ class AWSSectionCloudwatch(AWSSection):
 
 class CostsAndUsage(AWSSection):
     @property
-    def name(self):
+    def name(self) -> str:
         return "costs_and_usage"
 
     @property
@@ -890,7 +890,7 @@ class CostsAndUsage(AWSSection):
 
 class EC2Limits(AWSSectionLimits):
     @property
-    def name(self):
+    def name(self) -> str:
         return "ec2_limits"
 
     @property
@@ -1204,7 +1204,7 @@ class EC2Summary(AWSSection):
         self._tags = self._config.service_config["ec2_tags"]
 
     @property
-    def name(self):
+    def name(self) -> str:
         return "ec2_summary"
 
     @property
@@ -1298,7 +1298,7 @@ class EC2Summary(AWSSection):
 
 class EC2Labels(AWSSectionLabels):
     @property
-    def name(self):
+    def name(self) -> str:
         return "ec2_labels"
 
     @property
@@ -1356,7 +1356,7 @@ class EC2SecurityGroups(AWSSection):
         self._tags = self._config.service_config["ec2_tags"]
 
     @property
-    def name(self):
+    def name(self) -> str:
         return "ec2_security_groups"
 
     @property
@@ -1413,7 +1413,7 @@ class EC2SecurityGroups(AWSSection):
 
 class EC2(AWSSectionCloudwatch):
     @property
-    def name(self):
+    def name(self) -> str:
         return "ec2"
 
     @property
@@ -1499,7 +1499,7 @@ class EC2(AWSSectionCloudwatch):
 
 class EBSLimits(AWSSectionLimits):
     @property
-    def name(self):
+    def name(self) -> str:
         return "ebs_limits"
 
     @property
@@ -1622,7 +1622,7 @@ class EBSSummary(AWSSection):
         self._tags = self._config.service_config["ebs_tags"]
 
     @property
-    def name(self):
+    def name(self) -> str:
         return "ebs_summary"
 
     @property
@@ -1723,7 +1723,7 @@ class EBSSummary(AWSSection):
 
 class EBS(AWSSectionCloudwatch):
     @property
-    def name(self):
+    def name(self) -> str:
         return "ebs"
 
     @property
@@ -1849,7 +1849,7 @@ class S3BucketHelper:
 
 class S3Limits(AWSSectionLimits):
     @property
-    def name(self):
+    def name(self) -> str:
         return "s3_limits"
 
     @property
@@ -1892,7 +1892,7 @@ class S3Summary(AWSSection):
         self._tags = self._prepare_tags_for_api_response(self._config.service_config["s3_tags"])
 
     @property
-    def name(self):
+    def name(self) -> str:
         return "s3_summary"
 
     @property
@@ -1976,7 +1976,7 @@ class S3Summary(AWSSection):
 
 class S3(AWSSectionCloudwatch):
     @property
-    def name(self):
+    def name(self) -> str:
         return "s3"
 
     @property
@@ -2059,7 +2059,7 @@ class S3(AWSSectionCloudwatch):
 
 class S3Requests(AWSSectionCloudwatch):
     @property
-    def name(self):
+    def name(self) -> str:
         return "s3_requests"
 
     @property
@@ -2144,7 +2144,7 @@ class S3Requests(AWSSectionCloudwatch):
 
 class GlacierLimits(AWSSectionLimits):
     @property
-    def name(self):
+    def name(self) -> str:
         return "glacier_limits"
 
     @property
@@ -2194,7 +2194,7 @@ class GlacierSummary(AWSSection):
         )
 
     @property
-    def name(self):
+    def name(self) -> str:
         return "glacier_summary"
 
     @property
@@ -2283,7 +2283,7 @@ class GlacierSummary(AWSSection):
 
 class Glacier(AWSSection):
     @property
-    def name(self):
+    def name(self) -> str:
         return "glacier"
 
     @property
@@ -2329,7 +2329,7 @@ class Glacier(AWSSection):
 
 class ELBLimits(AWSSectionLimits):
     @property
-    def name(self):
+    def name(self) -> str:
         return "elb_limits"
 
     @property
@@ -2420,7 +2420,7 @@ class ELBSummaryGeneric(AWSSection):
         )
 
     @property
-    def name(self):
+    def name(self) -> str:
         return "%s_summary" % self._resource
 
     @property
@@ -2506,7 +2506,7 @@ class ELBLabelsGeneric(AWSSectionLabels):
         super().__init__(client, region, config, distributor=distributor)
 
     @property
-    def name(self):
+    def name(self) -> str:
         return "%s_generic_labels" % self._resource
 
     @property
@@ -2537,7 +2537,7 @@ class ELBLabelsGeneric(AWSSectionLabels):
 
 class ELBHealth(AWSSection):
     @property
-    def name(self):
+    def name(self) -> str:
         return "elb_health"
 
     @property
@@ -2577,7 +2577,7 @@ class ELBHealth(AWSSection):
 
 class ELB(AWSSectionCloudwatch):
     @property
-    def name(self):
+    def name(self) -> str:
         return "elb"
 
     @property
@@ -2663,7 +2663,7 @@ class ELB(AWSSectionCloudwatch):
 
 class ELBv2Limits(AWSSectionLimits):
     @property
-    def name(self):
+    def name(self) -> str:
         return "elbv2_limits"
 
     @property
@@ -2821,7 +2821,7 @@ class ELBv2Limits(AWSSectionLimits):
 
 class ELBv2TargetGroups(AWSSection):
     @property
-    def name(self):
+    def name(self) -> str:
         return "elbv2_target_groups"
 
     @property
@@ -2897,7 +2897,7 @@ class ELBv2TargetGroups(AWSSection):
 
 class ELBv2Application(AWSSectionCloudwatch):
     @property
-    def name(self):
+    def name(self) -> str:
         return "elbv2_application"
 
     @property
@@ -3074,7 +3074,7 @@ class ELBv2ApplicationTargetGroupsResponses(AWSSectionCloudwatch):
 
 class ELBv2ApplicationTargetGroupsHTTP(ELBv2ApplicationTargetGroupsResponses):
     @property
-    def name(self):
+    def name(self) -> str:
         return "elbv2_application_target_groups_http"
 
     def _get_metrics(self, colleague_contents):
@@ -3093,7 +3093,7 @@ class ELBv2ApplicationTargetGroupsHTTP(ELBv2ApplicationTargetGroupsResponses):
 
 class ELBv2ApplicationTargetGroupsLambda(ELBv2ApplicationTargetGroupsResponses):
     @property
-    def name(self):
+    def name(self) -> str:
         return "elbv2_application_target_groups_lambda"
 
     def _get_metrics(self, colleague_contents):
@@ -3115,7 +3115,7 @@ class ELBv2ApplicationTargetGroupsLambda(ELBv2ApplicationTargetGroupsResponses):
 
 class ELBv2Network(AWSSectionCloudwatch):
     @property
-    def name(self):
+    def name(self) -> str:
         return "elbv2_network"
 
     @property
@@ -3228,7 +3228,7 @@ AWSRDSLimitNameMap = {
 
 class RDSLimits(AWSSectionLimits):
     @property
-    def name(self):
+    def name(self) -> str:
         return "rds_limits"
 
     @property
@@ -3276,7 +3276,7 @@ class RDSSummary(AWSSection):
         self._tags = self._prepare_tags_for_api_response(self._config.service_config["rds_tags"])
 
     @property
-    def name(self):
+    def name(self) -> str:
         return "rds_summary"
 
     @property
@@ -3353,7 +3353,7 @@ class RDS(AWSSectionCloudwatch):
         self._separator = " "
 
     @property
-    def name(self):
+    def name(self) -> str:
         return "rds"
 
     @property
@@ -3450,7 +3450,7 @@ class RDS(AWSSectionCloudwatch):
 
 class CloudwatchAlarmsLimits(AWSSectionLimits):
     @property
-    def name(self):
+    def name(self) -> str:
         return "cloudwatch_alarms_limits"
 
     @property
@@ -3487,7 +3487,7 @@ class CloudwatchAlarms(AWSSection):
         self._names = self._config.service_config["cloudwatch_alarms"]
 
     @property
-    def name(self):
+    def name(self) -> str:
         return "cloudwatch_alarms"
 
     @property
@@ -3541,7 +3541,7 @@ class CloudwatchAlarms(AWSSection):
 
 class DynamoDBLimits(AWSSectionLimits):
     @property
-    def name(self):
+    def name(self) -> str:
         return "dynamodb_limits"
 
     @property
@@ -3651,7 +3651,7 @@ class DynamoDBSummary(AWSSection):
         )
 
     @property
-    def name(self):
+    def name(self) -> str:
         return "dynamodb_summary"
 
     @property
@@ -3729,7 +3729,7 @@ class DynamoDBSummary(AWSSection):
 
 class DynamoDBTable(AWSSectionCloudwatch):
     @property
-    def name(self):
+    def name(self) -> str:
         return "dynamodb_table"
 
     @property
@@ -3842,7 +3842,7 @@ class WAFV2Limits(AWSSectionLimits):
         self._scope = scope
 
     @property
-    def name(self):
+    def name(self) -> str:
         return "wafv2_limits"
 
     @property
@@ -3936,7 +3936,7 @@ class WAFV2Summary(AWSSection):
         self._tags = self._prepare_tags_for_api_response(self._config.service_config["wafv2_tags"])
 
     @property
-    def name(self):
+    def name(self) -> str:
         return "wafv2_summary"
 
     @property
@@ -4028,7 +4028,7 @@ class WAFV2WebACL(AWSSectionCloudwatch):
             self._metric_dimensions.append({"Name": "Region", "Value": self._region})
 
     @property
-    def name(self):
+    def name(self) -> str:
         return "wafv2_web_acl"
 
     @property
@@ -4099,7 +4099,7 @@ ProvisionedConcurrencyConfigs = Mapping[str, Sequence[Mapping[str, str]]]
 
 class LambdaRegionLimits(AWSSectionLimits):
     @property
-    def name(self):
+    def name(self) -> str:
         return "lambda_region_limits"
 
     @property
@@ -4158,7 +4158,7 @@ class LambdaSummary(AWSSection):
         self._tags = self._prepare_tags_for_api_response(self._config.service_config["lambda_tags"])
 
     @property
-    def name(self):
+    def name(self) -> str:
         return "lambda_summary"
 
     @property
@@ -4224,7 +4224,7 @@ def _function_arn_to_function_name_dim(function_arn: str) -> str:
 
 class LambdaCloudwatch(AWSSectionCloudwatch):
     @property
-    def name(self):
+    def name(self) -> str:
         return "lambda"
 
     @property
@@ -4324,7 +4324,7 @@ class LambdaCloudwatch(AWSSectionCloudwatch):
 
 class LambdaProvisionedConcurrency(AWSSection):
     @property
-    def name(self):
+    def name(self) -> str:
         return "lambda_provisioned_concurrency"
 
     @property

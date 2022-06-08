@@ -40,7 +40,7 @@ from cmk.gui.watolib.hosts_and_folders import Folder
 @mode_registry.register
 class ModeBulkDiscovery(WatoMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "bulkinventory"
 
     @classmethod

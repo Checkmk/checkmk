@@ -10,7 +10,7 @@ from cmk.gui.valuespec import DropdownChoice
 @rulespec_group_registry.register
 class RulespecGroupIntegrateOtherServices(RulespecGroup):
     @property
-    def name(self):
+    def name(self) -> str:
         return "custom_checks"
 
     @property
@@ -28,7 +28,7 @@ class RulespecGroupIntegrateOtherServices(RulespecGroup):
 @rulespec_group_registry.register
 class RulespecGroupActiveChecks(RulespecGroup):
     @property
-    def name(self):
+    def name(self) -> str:
         return "activechecks"
 
     @property

@@ -54,7 +54,7 @@ from cmk.gui.watolib.objref import ObjectRefType
 @mode_registry.register
 class ModeAuditLog(WatoMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "auditlog"
 
     @classmethod

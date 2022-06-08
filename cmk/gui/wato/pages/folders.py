@@ -98,7 +98,7 @@ def make_folder_breadcrumb(folder: CREFolder) -> Breadcrumb:
 @mode_registry.register
 class ModeFolder(WatoMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "folder"
 
     @classmethod
@@ -1318,7 +1318,7 @@ class ABCFolderMode(WatoMode, abc.ABC):
 @mode_registry.register
 class ModeEditFolder(ABCFolderMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "editfolder"
 
     @classmethod
@@ -1338,7 +1338,7 @@ class ModeEditFolder(ABCFolderMode):
 @mode_registry.register
 class ModeCreateFolder(ABCFolderMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "newfolder"
 
     @classmethod

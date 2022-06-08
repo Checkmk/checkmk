@@ -83,7 +83,7 @@ else:
 @mode_registry.register
 class ModeUsers(WatoMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "users"
 
     @classmethod
@@ -563,7 +563,7 @@ class ModeUsers(WatoMode):
 @mode_registry.register
 class ModeEditUser(WatoMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "edit_user"
 
     @classmethod

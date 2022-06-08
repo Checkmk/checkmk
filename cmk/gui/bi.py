@@ -52,7 +52,7 @@ from cmk.gui.valuespec import DropdownChoiceEntries
 @permission_section_registry.register
 class PermissionSectionBI(PermissionSection):
     @property
-    def name(self):
+    def name(self) -> str:
         return "bi"
 
     @property

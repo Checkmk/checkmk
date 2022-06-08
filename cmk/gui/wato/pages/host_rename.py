@@ -93,7 +93,7 @@ class RenameHostBackgroundJob(RenameHostsBackgroundJob):
 @mode_registry.register
 class ModeBulkRenameHost(WatoMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "bulk_rename_host"
 
     @classmethod
@@ -406,7 +406,7 @@ def rename_hosts_background_job(renamings, job_interface=None):
 @mode_registry.register
 class ModeRenameHost(WatoMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "rename_host"
 
     @classmethod

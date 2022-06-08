@@ -117,7 +117,7 @@ action_whats = {
 
 class PermissionSectionEventConsole(PermissionSection):
     @property
-    def name(self):
+    def name(self) -> str:
         return "mkeventd"
 
     @property

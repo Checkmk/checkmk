@@ -434,6 +434,7 @@ def perform_discovery_action(
         and user.may("wato.service_discovery_to_removed")
     ):
         discovery_options = discovery_options._replace(action=DiscoveryAction.NONE)
+
     if _use_previous_discovery_result(discovery_options.action, previous_discovery_result):
         assert previous_discovery_result is not None
         discovery_result = previous_discovery_result
@@ -441,58 +442,16 @@ def perform_discovery_action(
         discovery_result = get_check_table(
             StartDiscoveryRequest(host, host.folder(), discovery_options)
         )
-    job_actions = [
-        DiscoveryAction.NONE,
-        DiscoveryAction.REFRESH,
-        DiscoveryAction.TABULA_RASA,
-        DiscoveryAction.STOP,
-    ]
-    if discovery_options.action not in job_actions and transactions.check_transaction():
-        user.need_permission("wato.services")
-        if discovery_options.action in [
-            DiscoveryAction.UPDATE_HOST_LABELS,
-            DiscoveryAction.FIX_ALL,
-        ]:
-            message = _("Updated discovered host labels of '%s' with %d labels") % (
-                host.name(),
-                len(discovery_result.host_labels),
-            )
-            watolib.add_service_change(
-                host,
-                "update-host-labels",
-                message,
-            )
-            update_host_labels(
-                host.site_id(),
-                host.name(),
-                discovery_result.host_labels,
-            )
-        if discovery_options.action in [
-            DiscoveryAction.SINGLE_UPDATE,
-            DiscoveryAction.BULK_UPDATE,
-            DiscoveryAction.FIX_ALL,
-            DiscoveryAction.UPDATE_SERVICES,
-        ]:
-            Discovery(
-                host,
-                discovery_options,
-                update_target=update_target,
-                update_services=update_services,
-                update_source=update_source,
-            ).do_discovery(discovery_result)
-        if discovery_options.action in [
-            DiscoveryAction.SINGLE_UPDATE,
-            DiscoveryAction.BULK_UPDATE,
-            DiscoveryAction.FIX_ALL,
-            DiscoveryAction.UPDATE_SERVICES,
-            DiscoveryAction.UPDATE_HOST_LABELS,
-        ]:
-            # did discovery! update the check table
-            discovery_result = get_check_table(
-                StartDiscoveryRequest(host, host.folder(), discovery_options)
-            )
-        if not host.locked():
-            host.clear_discovery_failed()
+
+    discovery_result = perform_discovery_steps(
+        discovery_options,
+        discovery_result,
+        host,
+        update_services,
+        update_source,
+        update_target,
+    )
+
     if not discovery_result.check_table_created and previous_discovery_result:
         discovery_result = DiscoveryResult(
             job_status=discovery_result.job_status,
@@ -504,6 +463,97 @@ def perform_discovery_action(
             changed_labels=previous_discovery_result.changed_labels,
         )
     return discovery_options, discovery_result
+
+
+def perform_discovery_steps(
+    discovery_options: DiscoveryOptions,
+    discovery_result: DiscoveryResult,
+    host: CREHost,
+    update_services: List[str],
+    update_source: Optional[str],
+    update_target: Optional[str],
+):
+
+    if (action := discovery_options.action) in [
+        DiscoveryAction.NONE,
+        DiscoveryAction.REFRESH,
+        DiscoveryAction.TABULA_RASA,
+        DiscoveryAction.STOP,
+    ] or not transactions.check_transaction():
+        return discovery_result
+
+    user.need_permission("wato.services")
+    if action == DiscoveryAction.FIX_ALL:
+        _perform_update_host_labels(host, discovery_result.host_labels)
+        discovery_result = _perform_discovery_and_retrieve_new_table(
+            discovery_options,
+            discovery_result,
+            host,
+            update_services,
+            update_source,
+            update_target,
+        )
+    elif action == DiscoveryAction.UPDATE_HOST_LABELS:
+        _perform_update_host_labels(host, discovery_result.host_labels)
+        discovery_result = get_check_table(
+            StartDiscoveryRequest(host, host.folder(), discovery_options)
+        )
+    elif action in (
+        DiscoveryAction.SINGLE_UPDATE,
+        DiscoveryAction.BULK_UPDATE,
+        DiscoveryAction.UPDATE_SERVICES,
+    ):
+        discovery_result = _perform_discovery_and_retrieve_new_table(
+            discovery_options,
+            discovery_result,
+            host,
+            update_services,
+            update_source,
+            update_target,
+        )
+
+    if not host.locked():
+        host.clear_discovery_failed()
+
+    return discovery_result
+
+
+def _perform_discovery_and_retrieve_new_table(
+    discovery_options: DiscoveryOptions,
+    discovery_result: DiscoveryResult,
+    host: CREHost,
+    update_services: List[str],
+    update_source: Optional[str],
+    update_target: Optional[str],
+):
+    Discovery(
+        host,
+        discovery_options,
+        update_target=update_target,
+        update_services=update_services,
+        update_source=update_source,
+    ).do_discovery(discovery_result)
+    discovery_result = get_check_table(
+        StartDiscoveryRequest(host, host.folder(), discovery_options)
+    )
+    return discovery_result
+
+
+def _perform_update_host_labels(host, host_labels):
+    message = _("Updated discovered host labels of '%s' with %d labels") % (
+        host.name(),
+        len(host_labels),
+    )
+    watolib.add_service_change(
+        host,
+        "update-host-labels",
+        message,
+    )
+    update_host_labels(
+        host.site_id(),
+        host.name(),
+        host_labels,
+    )
 
 
 def _use_previous_discovery_result(discovery_action: str, previous_discovery_result) -> bool:

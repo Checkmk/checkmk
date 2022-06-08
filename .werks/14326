@@ -1,0 +1,14 @@
+Title: Fix PDF export of views with context / search filters
+Class: fix
+Compatible: compat
+Component: reporting
+Date: 1654688604
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0i1
+
+If views with context / search filter defined were exported via "Export this
+view as PDF", the filter were ignored.
+Only filter used with the "Filter" option of the view were taken into account.

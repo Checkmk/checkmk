@@ -849,197 +849,199 @@ def test_openapi_discovery_refresh_services(
         params='{"mode": "refresh"}',
         content_type="application/json",
         headers={"Accept": "application/json"},
-        status=200,
+        status=302,
     )
-    assert len(resp.json["members"]) == len(mock_discovery_result.check_table)
+    assert (
+        resp.location
+        == "http://localhost/NO_SITE/check_mk/api/1.0/objects/service_discovery_run/example.com"
+    )
     assert mock_try_discovery.mock_calls == [
         call("NO_SITE", ["@noscan"], "example.com"),
         call("NO_SITE", ["@scan"], "example.com"),
         call("NO_SITE", ["@noscan"], "example.com"),
     ]
-    # TODO: This is a bug
     mock_set_autochecks.assert_not_called()
 
 
-@pytest.mark.usefixtures("with_host", "inline_background_jobs")
-def test_openapi_discovery_disable_and_re_enable_one_service(
-    base: str,
-    aut_user_auth_wsgi_app: WebTestAppForCMK,
-    mock_try_discovery: MagicMock,
-    mock_set_autochecks: MagicMock,
-) -> None:
-    resp = aut_user_auth_wsgi_app.call_method(
-        "post",
-        f"{base}/objects/host/example.com/actions/discover_services/invoke",
-        params='{"mode": "refresh"}',
-        content_type="application/json",
-        headers={"Accept": "application/json"},
-        status=200,
-    )
-    assert len(resp.json["members"]) == len(mock_discovery_result.check_table)
-    mock_try_discovery.reset_mock()
-
-    df_boot_ignore = aut_user_auth_wsgi_app.follow_link(
-        resp,
-        "cmk/service.move-ignored",
-        json_data=resp.json["members"]["df-/boot"],
-        headers={"Accept": "application/json"},
-        status=204,
-    )
-    assert df_boot_ignore.text == ""
-    mock_try_discovery.assert_called_once()
-    mock_try_discovery.reset_mock()
-    mock_set_autochecks.assert_called_once_with(
-        "NO_SITE",
-        "example.com",
-        {
-            ("cpu.loads", None): ("CPU load", "cpuload_default_levels", {}, ["heute"]),
-            ("cpu.threads", None): ("Number of threads", "{}", {}, ["heute"]),
-            ("df", "/boot/efi"): (
-                "Filesystem /boot/efi",
-                "{'include_volume_name': False}",
-                {},
-                ["heute"],
-            ),
-            ("kernel.performance", None): ("Kernel Performance", "{}", {}, ["heute"]),
-            ("kernel.util", None): ("CPU utilization", "{}", {}, ["heute"]),
-            ("lnx_thermal", "Zone 0"): ("Temperature Zone 0", "{}", {}, ["heute"]),
-            ("lnx_thermal", "Zone 1"): ("Temperature Zone 1", "{}", {}, ["heute"]),
-            ("lnx_thermal", "Zone 2"): ("Temperature Zone 2", "{}", {}, ["heute"]),
-            ("lnx_thermal", "Zone 3"): ("Temperature Zone 3", "{}", {}, ["heute"]),
-            ("lnx_thermal", "Zone 4"): ("Temperature Zone 4", "{}", {}, ["heute"]),
-            ("lnx_thermal", "Zone 5"): ("Temperature Zone 5", "{}", {}, ["heute"]),
-            ("lnx_thermal", "Zone 6"): ("Temperature Zone 6", "{}", {}, ["heute"]),
-            ("lnx_thermal", "Zone 7"): ("Temperature Zone 7", "{}", {}, ["heute"]),
-            ("lnx_thermal", "Zone 8"): ("Temperature Zone 8", "{}", {}, ["heute"]),
-            ("mkeventd_status", "heute"): ("OMD heute Event Console", "{}", {}, ["heute"]),
-            ("mkeventd_status", "stable"): ("OMD stable Event Console", "{}", {}, ["heute"]),
-            ("mknotifyd", "heute"): ("OMD heute Notification Spooler", "{}", {}, ["heute"]),
-            ("mknotifyd", "stable"): ("OMD stable Notification Spooler", "{}", {}, ["heute"]),
-            ("mounts", "/"): (
-                "Mount options of /",
-                "['errors=remount-ro', 'relatime', 'rw']",
-                {},
-                ["heute"],
-            ),
-            ("mounts", "/boot"): (
-                "Mount options of /boot",
-                "['relatime', 'rw']",
-                {},
-                ["heute"],
-            ),
-            ("mounts", "/boot/efi"): (
-                "Mount options of /boot/efi",
-                "['codepage=437', 'dmask=0077', 'errors=remount-ro', 'fmask=0077', 'iocharset=iso8859-1', 'relatime', 'rw', 'shortname=mixed']",
-                {},
-                ["heute"],
-            ),
-            ("omd_apache", "heute"): ("OMD heute apache", "None", {}, ["heute"]),
-            ("omd_apache", "stable"): ("OMD stable apache", "None", {}, ["heute"]),
-            ("systemd_units.services_summary", "Summary"): (
-                "Systemd Service Summary",
-                "{}",
-                {},
-                ["heute"],
-            ),
-            ("tcp_conn_stats", None): (
-                "TCP Connections",
-                "tcp_conn_stats_default_levels",
-                {},
-                ["heute"],
-            ),
-            ("uptime", None): ("Uptime", "{}", {}, ["heute"]),
-        },
-    )
-    mock_set_autochecks.reset_mock()
-
-    df_boot_monitor = aut_user_auth_wsgi_app.follow_link(
-        resp,
-        "cmk/service.move-monitored",
-        json_data=resp.json["members"]["df-/boot"],
-        headers={"Accept": "application/json"},
-        status=204,
-    )
-    assert df_boot_monitor.text == ""
-    mock_try_discovery.assert_called_once()
-    mock_set_autochecks.assert_called_once_with(
-        "NO_SITE",
-        "example.com",
-        {
-            ("cpu.loads", None): ("CPU load", "cpuload_default_levels", {}, ["heute"]),
-            ("cpu.threads", None): ("Number of threads", "{}", {}, ["heute"]),
-            ("df", "/boot/efi"): (
-                "Filesystem /boot/efi",
-                "{'include_volume_name': False}",
-                {},
-                ["heute"],
-            ),
-            ("df", "/boot"): (
-                "Filesystem /boot",
-                {"include_volume_name": False},
-                {},
-                ["heute"],
-            ),
-            ("kernel.performance", None): ("Kernel Performance", "{}", {}, ["heute"]),
-            ("kernel.util", None): ("CPU utilization", "{}", {}, ["heute"]),
-            ("lnx_thermal", "Zone 0"): ("Temperature Zone 0", "{}", {}, ["heute"]),
-            ("lnx_thermal", "Zone 1"): ("Temperature Zone 1", "{}", {}, ["heute"]),
-            ("lnx_thermal", "Zone 2"): ("Temperature Zone 2", "{}", {}, ["heute"]),
-            ("lnx_thermal", "Zone 3"): ("Temperature Zone 3", "{}", {}, ["heute"]),
-            ("lnx_thermal", "Zone 4"): ("Temperature Zone 4", "{}", {}, ["heute"]),
-            ("lnx_thermal", "Zone 5"): ("Temperature Zone 5", "{}", {}, ["heute"]),
-            ("lnx_thermal", "Zone 6"): ("Temperature Zone 6", "{}", {}, ["heute"]),
-            ("lnx_thermal", "Zone 7"): ("Temperature Zone 7", "{}", {}, ["heute"]),
-            ("lnx_thermal", "Zone 8"): ("Temperature Zone 8", "{}", {}, ["heute"]),
-            ("mkeventd_status", "heute"): ("OMD heute Event Console", "{}", {}, ["heute"]),
-            ("mkeventd_status", "stable"): (
-                "OMD stable Event Console",
-                "{}",
-                {},
-                ["heute"],
-            ),
-            ("mknotifyd", "heute"): ("OMD heute Notification Spooler", "{}", {}, ["heute"]),
-            ("mknotifyd", "stable"): (
-                "OMD stable Notification Spooler",
-                "{}",
-                {},
-                ["heute"],
-            ),
-            ("mounts", "/"): (
-                "Mount options of /",
-                "['errors=remount-ro', 'relatime', 'rw']",
-                {},
-                ["heute"],
-            ),
-            ("mounts", "/boot"): (
-                "Mount options of /boot",
-                "['relatime', 'rw']",
-                {},
-                ["heute"],
-            ),
-            ("mounts", "/boot/efi"): (
-                "Mount options of /boot/efi",
-                "['codepage=437', 'dmask=0077', 'errors=remount-ro', 'fmask=0077', 'iocharset=iso8859-1', 'relatime', 'rw', 'shortname=mixed']",
-                {},
-                ["heute"],
-            ),
-            ("omd_apache", "heute"): ("OMD heute apache", "None", {}, ["heute"]),
-            ("omd_apache", "stable"): ("OMD stable apache", "None", {}, ["heute"]),
-            ("systemd_units.services_summary", "Summary"): (
-                "Systemd Service Summary",
-                "{}",
-                {},
-                ["heute"],
-            ),
-            ("tcp_conn_stats", None): (
-                "TCP Connections",
-                "tcp_conn_stats_default_levels",
-                {},
-                ["heute"],
-            ),
-            ("uptime", None): ("Uptime", "{}", {}, ["heute"]),
-        },
-    )
+# TODO: this test should be enabled & edited once the /objects/service_discovery endpoint has been implemented
+# @pytest.mark.usefixtures("with_host", "inline_background_jobs")
+# def test_openapi_discovery_disable_and_re_enable_one_service(
+#     base: str,
+#     aut_user_auth_wsgi_app: WebTestAppForCMK,
+#     mock_try_discovery: MagicMock,
+#     mock_set_autochecks: MagicMock,
+# ) -> None:
+#     resp = aut_user_auth_wsgi_app.call_method(
+#         "post",
+#         f"{base}/objects/host/example.com/actions/discover_services/invoke",
+#         params='{"mode": "refresh"}',
+#         content_type="application/json",
+#         headers={"Accept": "application/json"},
+#         status=200,
+#     )
+#     mock_try_discovery.reset_mock()
+#
+#     df_boot_ignore = aut_user_auth_wsgi_app.follow_link(
+#         resp,
+#         "cmk/service.move-ignored",
+#         json_data=resp.json["members"]["df-/boot"],
+#         headers={"Accept": "application/json"},
+#         status=204,
+#     )
+#     assert df_boot_ignore.text == ""
+#     mock_try_discovery.assert_called_once()
+#     mock_try_discovery.reset_mock()
+#     mock_set_autochecks.assert_called_once_with(
+#         "NO_SITE",
+#         "example.com",
+#         {
+#             ("cpu.loads", None): ("CPU load", "cpuload_default_levels", {}, ["heute"]),
+#             ("cpu.threads", None): ("Number of threads", "{}", {}, ["heute"]),
+#             ("df", "/boot/efi"): (
+#                 "Filesystem /boot/efi",
+#                 "{'include_volume_name': False}",
+#                 {},
+#                 ["heute"],
+#             ),
+#             ("kernel.performance", None): ("Kernel Performance", "{}", {}, ["heute"]),
+#             ("kernel.util", None): ("CPU utilization", "{}", {}, ["heute"]),
+#             ("lnx_thermal", "Zone 0"): ("Temperature Zone 0", "{}", {}, ["heute"]),
+#             ("lnx_thermal", "Zone 1"): ("Temperature Zone 1", "{}", {}, ["heute"]),
+#             ("lnx_thermal", "Zone 2"): ("Temperature Zone 2", "{}", {}, ["heute"]),
+#             ("lnx_thermal", "Zone 3"): ("Temperature Zone 3", "{}", {}, ["heute"]),
+#             ("lnx_thermal", "Zone 4"): ("Temperature Zone 4", "{}", {}, ["heute"]),
+#             ("lnx_thermal", "Zone 5"): ("Temperature Zone 5", "{}", {}, ["heute"]),
+#             ("lnx_thermal", "Zone 6"): ("Temperature Zone 6", "{}", {}, ["heute"]),
+#             ("lnx_thermal", "Zone 7"): ("Temperature Zone 7", "{}", {}, ["heute"]),
+#             ("lnx_thermal", "Zone 8"): ("Temperature Zone 8", "{}", {}, ["heute"]),
+#             ("mkeventd_status", "heute"): ("OMD heute Event Console", "{}", {}, ["heute"]),
+#             ("mkeventd_status", "stable"): ("OMD stable Event Console", "{}", {}, ["heute"]),
+#             ("mknotifyd", "heute"): ("OMD heute Notification Spooler", "{}", {}, ["heute"]),
+#             ("mknotifyd", "stable"): ("OMD stable Notification Spooler", "{}", {}, ["heute"]),
+#             ("mounts", "/"): (
+#                 "Mount options of /",
+#                 "['errors=remount-ro', 'relatime', 'rw']",
+#                 {},
+#                 ["heute"],
+#             ),
+#             ("mounts", "/boot"): (
+#                 "Mount options of /boot",
+#                 "['relatime', 'rw']",
+#                 {},
+#                 ["heute"],
+#             ),
+#             ("mounts", "/boot/efi"): (
+#                 "Mount options of /boot/efi",
+#                 "['codepage=437', 'dmask=0077', 'errors=remount-ro', 'fmask=0077', 'iocharset=iso8859-1', 'relatime', 'rw', 'shortname=mixed']",
+#                 {},
+#                 ["heute"],
+#             ),
+#             ("omd_apache", "heute"): ("OMD heute apache", "None", {}, ["heute"]),
+#             ("omd_apache", "stable"): ("OMD stable apache", "None", {}, ["heute"]),
+#             ("systemd_units.services_summary", "Summary"): (
+#                 "Systemd Service Summary",
+#                 "{}",
+#                 {},
+#                 ["heute"],
+#             ),
+#             ("tcp_conn_stats", None): (
+#                 "TCP Connections",
+#                 "tcp_conn_stats_default_levels",
+#                 {},
+#                 ["heute"],
+#             ),
+#             ("uptime", None): ("Uptime", "{}", {}, ["heute"]),
+#         },
+#     )
+#     mock_set_autochecks.reset_mock()
+#
+#     df_boot_monitor = aut_user_auth_wsgi_app.follow_link(
+#         resp,
+#         "cmk/service.move-monitored",
+#         json_data=resp.json["members"]["df-/boot"],
+#         headers={"Accept": "application/json"},
+#         status=204,
+#     )
+#     assert df_boot_monitor.text == ""
+#     mock_try_discovery.assert_called_once()
+#     mock_set_autochecks.assert_called_once_with(
+#         "NO_SITE",
+#         "example.com",
+#         {
+#             ("cpu.loads", None): ("CPU load", "cpuload_default_levels", {}, ["heute"]),
+#             ("cpu.threads", None): ("Number of threads", "{}", {}, ["heute"]),
+#             ("df", "/boot/efi"): (
+#                 "Filesystem /boot/efi",
+#                 "{'include_volume_name': False}",
+#                 {},
+#                 ["heute"],
+#             ),
+#             ("df", "/boot"): (
+#                 "Filesystem /boot",
+#                 {"include_volume_name": False},
+#                 {},
+#                 ["heute"],
+#             ),
+#             ("kernel.performance", None): ("Kernel Performance", "{}", {}, ["heute"]),
+#             ("kernel.util", None): ("CPU utilization", "{}", {}, ["heute"]),
+#             ("lnx_thermal", "Zone 0"): ("Temperature Zone 0", "{}", {}, ["heute"]),
+#             ("lnx_thermal", "Zone 1"): ("Temperature Zone 1", "{}", {}, ["heute"]),
+#             ("lnx_thermal", "Zone 2"): ("Temperature Zone 2", "{}", {}, ["heute"]),
+#             ("lnx_thermal", "Zone 3"): ("Temperature Zone 3", "{}", {}, ["heute"]),
+#             ("lnx_thermal", "Zone 4"): ("Temperature Zone 4", "{}", {}, ["heute"]),
+#             ("lnx_thermal", "Zone 5"): ("Temperature Zone 5", "{}", {}, ["heute"]),
+#             ("lnx_thermal", "Zone 6"): ("Temperature Zone 6", "{}", {}, ["heute"]),
+#             ("lnx_thermal", "Zone 7"): ("Temperature Zone 7", "{}", {}, ["heute"]),
+#             ("lnx_thermal", "Zone 8"): ("Temperature Zone 8", "{}", {}, ["heute"]),
+#             ("mkeventd_status", "heute"): ("OMD heute Event Console", "{}", {}, ["heute"]),
+#             ("mkeventd_status", "stable"): (
+#                 "OMD stable Event Console",
+#                 "{}",
+#                 {},
+#                 ["heute"],
+#             ),
+#             ("mknotifyd", "heute"): ("OMD heute Notification Spooler", "{}", {}, ["heute"]),
+#             ("mknotifyd", "stable"): (
+#                 "OMD stable Notification Spooler",
+#                 "{}",
+#                 {},
+#                 ["heute"],
+#             ),
+#             ("mounts", "/"): (
+#                 "Mount options of /",
+#                 "['errors=remount-ro', 'relatime', 'rw']",
+#                 {},
+#                 ["heute"],
+#             ),
+#             ("mounts", "/boot"): (
+#                 "Mount options of /boot",
+#                 "['relatime', 'rw']",
+#                 {},
+#                 ["heute"],
+#             ),
+#             ("mounts", "/boot/efi"): (
+#                 "Mount options of /boot/efi",
+#                 "['codepage=437', 'dmask=0077', 'errors=remount-ro', 'fmask=0077', 'iocharset=iso8859-1', 'relatime', 'rw', 'shortname=mixed']",
+#                 {},
+#                 ["heute"],
+#             ),
+#             ("omd_apache", "heute"): ("OMD heute apache", "None", {}, ["heute"]),
+#             ("omd_apache", "stable"): ("OMD stable apache", "None", {}, ["heute"]),
+#             ("systemd_units.services_summary", "Summary"): (
+#                 "Systemd Service Summary",
+#                 "{}",
+#                 {},
+#                 ["heute"],
+#             ),
+#             ("tcp_conn_stats", None): (
+#                 "TCP Connections",
+#                 "tcp_conn_stats_default_levels",
+#                 {},
+#                 ["heute"],
+#             ),
+#             ("uptime", None): ("Uptime", "{}", {}, ["heute"]),
+#         },
+#     )
 
 
 @pytest.mark.usefixtures("with_host", "inline_background_jobs")
@@ -1137,3 +1139,32 @@ def test_openapi_bulk_discovery_with_invalid_hostname(
         headers={"Accept": "application/json"},
         content_type="application/json",
     )
+
+
+@pytest.mark.usefixtures("with_host", "inline_background_jobs")
+def test_openapi_refresh_job_status(
+    base: str,
+    aut_user_auth_wsgi_app,
+    mock_try_discovery: MagicMock,
+) -> None:
+    host_name = "example.com"
+    aut_user_auth_wsgi_app.call_method(
+        "post",
+        f"{base}/objects/host/{host_name}/actions/discover_services/invoke",
+        params='{"mode": "refresh"}',
+        content_type="application/json",
+        headers={"Accept": "application/json"},
+        status=302,
+    )
+
+    resp = aut_user_auth_wsgi_app.call_method(
+        "get",
+        base + f"/objects/service_discovery_run/{host_name}",
+        status=200,
+        headers={"Accept": "application/json"},
+    )
+    assert resp.json["id"] == resp.json["id"]
+    assert "active" in resp.json["extensions"]
+    assert "state" in resp.json["extensions"]
+    assert "result" in resp.json["extensions"]["logs"]
+    assert "progress" in resp.json["extensions"]["logs"]

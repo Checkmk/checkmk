@@ -11,13 +11,15 @@ a host.
 You can find an introduction to services including service discovery in the
 [Checkmk guide](https://docs.checkmk.com/latest/en/wato_services.html).
 """
-from typing import Any, List, Mapping, Optional, Sequence
+import enum
+from typing import Any, List, Mapping, NoReturn, Optional, Sequence
 
 from cmk.automations.results import CheckPreviewEntry
 
 from cmk.gui import fields as gui_fields
 from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.http import Response
+from cmk.gui.logged_in import user
 from cmk.gui.plugins.openapi.restful_objects import (
     constructors,
     Endpoint,
@@ -32,7 +34,8 @@ from cmk.gui.plugins.openapi.restful_objects.constructors import (
 )
 from cmk.gui.plugins.openapi.restful_objects.parameters import HOST_NAME
 from cmk.gui.plugins.openapi.restful_objects.request_schemas import EXISTING_HOST_NAME
-from cmk.gui.plugins.openapi.utils import ProblemException, serve_json
+from cmk.gui.plugins.openapi.restful_objects.type_defs import LinkType
+from cmk.gui.plugins.openapi.utils import problem, ProblemException, serve_json
 from cmk.gui.watolib.bulk_discovery import (
     bulk_discovery_job_status,
     BulkDiscoveryBackgroundJob,
@@ -46,6 +49,11 @@ from cmk.gui.watolib.services import (
     DiscoveryAction,
     DiscoveryOptions,
     get_check_table,
+    has_discovery_action_specific_permissions,
+    perform_fix_all,
+    perform_host_label_discovery,
+    perform_service_discovery,
+    ServiceDiscoveryBackgroundJob,
     StartDiscoveryRequest,
 )
 
@@ -70,13 +78,37 @@ SERVICE_DISCOVERY_PHASES = {
     "legacy_ignored": "legacy_ignored",
 }
 
-# param mode: can be one of "new", "remove", "fixall", "refresh", "only-host-labels"
+
+class APIDiscoveryAction(enum.Enum):
+    new = "new"
+    remove = "remove"
+    fix_all = "fix_all"
+    refresh = "refresh"
+    only_host_labels = "only_host_labels"
+
+
+def _discovery_mode(default_mode: str):
+    return fields.String(
+        description="""The mode of the discovery action. Can be one of:
+
+     * `new` - Add undecided services to monitoring
+     * `remove` - Remove vanished services
+     * `fix_all` - Add undecided services and new host labels, remove vanished services
+     * `refresh` - Update inforomation from host, then remove all existing and add all just found services and host labels
+     * `only_host_labels` - Update host labels
+    """,
+        enum=[a.value for a in APIDiscoveryAction],
+        example="refresh",
+        load_default=default_mode,
+    )
+
+
 DISCOVERY_ACTION = {
-    "new": "new",
-    "remove": "remove",
-    "fix_all": "fixall",
-    "refresh": "refresh",
-    "only_host_labels": "only-host-labels",
+    "new": DiscoveryAction.BULK_UPDATE,
+    "remove": DiscoveryAction.BULK_UPDATE,
+    "fix_all": DiscoveryAction.FIX_ALL,
+    "refresh": DiscoveryAction.REFRESH,
+    "only_host_labels": DiscoveryAction.UPDATE_HOST_LABELS,
 }
 
 
@@ -163,6 +195,7 @@ class UpdateDiscoveryPhase(BaseSchema):
         404: "Host could not be found",
     },
     request_schema=UpdateDiscoveryPhase,
+    # TODO: CMK-10911 (permissions)
     permissions_required=permissions.AnyPerm(
         [
             permissions.Optional(
@@ -216,20 +249,45 @@ def _update_single_service_phase(
     discovery.execute_discovery()
 
 
-class DiscoverServices(BaseSchema):
-    mode = fields.String(
-        description="""The mode of the discovery action. Can be one of:
-
- * `new` - Add unmonitored services and new host labels
- * `remove` - Remove vanished services
- * `fix_all` - Add unmonitored services and new host labels, remove vanished services
- * `refresh` - Refresh all services (tabula rasa), add new host labels
- * `only_host_labels` - Only discover new host labels
-""",
-        enum=list(DISCOVERY_ACTION.keys()),
-        example="refresh",
-        load_default="fix_all",
+@Endpoint(
+    constructors.object_href("service_discovery_run", "{host_name}"),
+    "cmk/show",
+    method="get",
+    tag_group="Setup",
+    path_params=[HOST_NAME],
+    response_schema=response_schemas.DomainObject,
+)
+def show_service_discovery_run(params: Mapping[str, Any]) -> Response:
+    """Show the last service discovery background job on a host"""
+    host = Host.load_host(params["host_name"])
+    job = ServiceDiscoveryBackgroundJob(host.name())
+    job_id = job.get_job_id()
+    job_status = job.get_status()
+    return serve_json(
+        constructors.domain_object(
+            domain_type="service_discovery_run",
+            identifier=job_id,
+            title=f"Service discovery background job {job_id} is {job_status['state']}",
+            extensions={
+                "active": job_status["is_active"],
+                "state": job_status["state"],
+                "logs": {
+                    "result": job_status["loginfo"]["JobResult"],
+                    "progress": job_status["loginfo"]["JobProgressUpdate"],
+                },
+            },
+            deletable=False,
+            editable=False,
+        )
     )
+
+
+class DiscoverServices(BaseSchema):
+    mode = _discovery_mode(default_mode="fix_all")
+
+
+def assert_never(value: NoReturn) -> NoReturn:
+    assert False, f"Unhandled discovery action: {value} ({type(value).__name__})"
 
 
 @Endpoint(
@@ -238,33 +296,111 @@ class DiscoverServices(BaseSchema):
     method="post",
     tag_group="Setup",
     status_descriptions={
+        302: "The service discovery background job has been initialized. Redirecting to the "
+        "'Show discovery service background job' endpoint.",
         404: "Host could not be found",
+        409: "A service discovery run background job is currently running",
     },
+    additional_status_codes=[302, 409],
     path_params=[HOST_NAME],
     request_schema=DiscoverServices,
     response_schema=response_schemas.DomainObject,
+    permissions_required=permissions.AllPerm(
+        [
+            permissions.Perm("wato.edit"),
+            permissions.Optional(permissions.Perm("wato.service_discovery_to_undecided")),
+            permissions.Optional(permissions.Perm("wato.service_discovery_to_monitored")),
+            permissions.Optional(permissions.Perm("wato.service_discovery_to_ignored")),
+            permissions.Optional(permissions.Perm("wato.service_discovery_to_removed")),
+            permissions.Optional(permissions.Perm("wato.services")),
+        ]
+    ),
 )
 def execute(params: Mapping[str, Any]) -> Response:
     """Execute a service discovery on a host"""
+    user.need_permission("wato.edit")
     host = Host.load_host(params["host_name"])
     body = params["body"]
-    discovery_request = StartDiscoveryRequest(
-        host=host,
-        folder=host.folder(),
-        options=DiscoveryOptions(
-            action=DISCOVERY_ACTION[body["mode"]],
+    discovery_action = APIDiscoveryAction(body["mode"])
+
+    service_discovery_job = ServiceDiscoveryBackgroundJob(host.name())
+    if service_discovery_job.is_active():
+        return Response(status=409)
+
+    def _discovery_options(action_mode: str):
+        return DiscoveryOptions(
+            action=action_mode,
             show_checkboxes=False,
             show_parameters=False,
             show_discovered_labels=False,
             show_plugin_names=False,
             ignore_errors=True,
-        ),
+        )
+
+    discovery_options = _discovery_options(DISCOVERY_ACTION[discovery_action.value])
+    if not has_discovery_action_specific_permissions(discovery_options.action):
+        return problem(
+            403,
+            "You do not have the necessary permissions to execute this action",
+        )
+
+    discovery_result = get_check_table(
+        StartDiscoveryRequest(
+            host,
+            host.folder(),
+            options=discovery_options,
+        )
     )
-    discovery_result = get_check_table(discovery_request)
+
+    match discovery_action:
+        case APIDiscoveryAction.new:
+            discovery_result = perform_service_discovery(
+                discovery_options=discovery_options,
+                discovery_result=discovery_result,
+                update_services=[],
+                update_source="new",
+                update_target="old",
+                host=host,
+            )
+        case APIDiscoveryAction.remove:
+            discovery_result = perform_service_discovery(
+                discovery_options=discovery_options,
+                discovery_result=discovery_result,
+                update_services=[],
+                update_source="vanished",
+                update_target="removed",
+                host=host,
+            )
+        case APIDiscoveryAction.fix_all:
+            discovery_result = perform_fix_all(
+                discovery_options=discovery_options,
+                host=host,
+                discovery_result=discovery_result,
+            )
+        case APIDiscoveryAction.refresh:
+            discovery_run = _discovery_run_link(host.name())
+            response = Response(status=302)
+            response.location = discovery_run["href"]
+            return response
+        case APIDiscoveryAction.only_host_labels:
+            discovery_result = perform_host_label_discovery(
+                discovery_options=discovery_options, host=host, discovery_result=discovery_result
+            )
+        case _:
+            assert_never(discovery_action)
+
     return _serve_services(
         host,
         discovery_result.check_table,
         list(SERVICE_DISCOVERY_PHASES.keys()),
+    )
+
+
+def _discovery_run_link(host_name: str) -> LinkType:
+    return constructors.link_endpoint(
+        "cmk.gui.plugins.openapi.endpoints.service_discovery",
+        "cmk/show",
+        parameters={"host_name": host_name},
     )
 
 
@@ -295,7 +431,6 @@ def serialize_service_discovery(
     discovered_services: Sequence[CheckPreviewEntry],
     discovery_phases: List[str],
 ):
-
     members = {}
     host_name = host.name()
     for entry in discovered_services:
@@ -381,20 +516,7 @@ class BulkDiscovery(BaseSchema):
         example=["example", "sample"],
         description="A list of host names",
     )
-    mode = fields.String(
-        required=False,
-        description="""The mode of the discovery action. Can be one of:
-
- * `new` - Add unmonitored services and new host labels
- * `remove` - Remove vanished services
- * `fix_all` - Add unmonitored services and new host labels, remove vanished services
- * `refresh` - Refresh all services (tabula rasa), add new host labels
- * `only_host_labels` - Only discover new host labels
-""",
-        enum=list(DISCOVERY_ACTION.keys()),
-        example="refresh",
-        load_default="new",
-    )
+    mode = _discovery_mode(default_mode="new")
     do_full_scan = fields.Boolean(
         required=False,
         description="The option whether to perform a full scan or not.",

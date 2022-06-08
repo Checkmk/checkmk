@@ -194,6 +194,7 @@ def render_graph_image(
     )
 
     pdf_graph = doc.end(do_send=False)
+    assert pdf_graph is not None
     # open("/tmp/x.pdf", "w").write(pdf_graph)
     return pdf.pdf2png(pdf_graph)
 

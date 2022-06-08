@@ -36,13 +36,11 @@ class BatchAPI:
     def __init__(self, api_client: client.ApiClient, timeout) -> None:
         self.connection = client.BatchV1Api(api_client)
         self.timeout = timeout
-        self.raw_jobs = self._query_raw_jobs()
-        self.raw_cron_jobs = self._query_raw_cron_jobs()
 
-    def _query_raw_cron_jobs(self) -> Sequence[client.V1CronJob]:
+    def query_raw_cron_jobs(self) -> Sequence[client.V1CronJob]:
         return self.connection.list_cron_job_for_all_namespaces(_request_timeout=self.timeout).items
 
-    def _query_raw_jobs(self) -> Sequence[client.V1Job]:
+    def query_raw_jobs(self) -> Sequence[client.V1Job]:
         return self.connection.list_job_for_all_namespaces(_request_timeout=self.timeout).items
 
 
@@ -54,23 +52,19 @@ class CoreAPI:
     def __init__(self, api_client: client.ApiClient, timeout) -> None:
         self.connection = client.CoreV1Api(api_client)
         self.timeout = timeout
-        self.raw_pods = self._query_raw_pods()
-        self.raw_nodes = self._query_raw_nodes()
-        self.raw_namespaces = self._query_raw_namespaces()
-        self.raw_resource_quotas = self._query_raw_resource_quotas()
 
-    def _query_raw_nodes(self) -> Sequence[client.V1Node]:
+    def query_raw_nodes(self) -> Sequence[client.V1Node]:
         return self.connection.list_node(_request_timeout=self.timeout).items
 
-    def _query_raw_pods(self) -> Sequence[client.V1Pod]:
+    def query_raw_pods(self) -> Sequence[client.V1Pod]:
         return self.connection.list_pod_for_all_namespaces(_request_timeout=self.timeout).items
 
-    def _query_raw_resource_quotas(self) -> Sequence[client.V1ResourceQuota]:
+    def query_raw_resource_quotas(self) -> Sequence[client.V1ResourceQuota]:
         return self.connection.list_resource_quota_for_all_namespaces(
             _request_timeout=self.timeout
         ).items
 
-    def _query_raw_namespaces(self):
+    def query_raw_namespaces(self):
         return self.connection.list_namespace(_request_timeout=self.timeout).items
 
 
@@ -82,27 +76,23 @@ class AppsAPI:
     def __init__(self, api_client: client.ApiClient, timeout) -> None:
         self.connection = client.AppsV1Api(api_client)
         self.timeout = timeout
-        self.raw_deployments = self._query_raw_deployments()
-        self.raw_daemon_sets = self._query_raw_daemon_sets()
-        self.raw_statefulsets = self._query_raw_statefulsets()
-        self.raw_replica_sets = self._query_raw_replica_sets()
 
-    def _query_raw_deployments(self) -> Sequence[client.V1Deployment]:
+    def query_raw_deployments(self) -> Sequence[client.V1Deployment]:
         return self.connection.list_deployment_for_all_namespaces(
             _request_timeout=self.timeout
         ).items
 
-    def _query_raw_daemon_sets(self) -> Sequence[client.V1DaemonSet]:
+    def query_raw_daemon_sets(self) -> Sequence[client.V1DaemonSet]:
         return self.connection.list_daemon_set_for_all_namespaces(
             _request_timeout=self.timeout
         ).items
 
-    def _query_raw_statefulsets(self) -> Sequence[client.V1StatefulSet]:
+    def query_raw_statefulsets(self) -> Sequence[client.V1StatefulSet]:
         return self.connection.list_stateful_set_for_all_namespaces(
             _request_timeout=self.timeout
         ).items
 
-    def _query_raw_replica_sets(self) -> Sequence[client.V1ReplicaSet]:
+    def query_raw_replica_sets(self) -> Sequence[client.V1ReplicaSet]:
         return self.connection.list_replica_set_for_all_namespaces(
             _request_timeout=self.timeout
         ).items
@@ -366,36 +356,43 @@ class APIServer:
         external_api: AppsAPI,
         version: api.GitVersion,
     ) -> None:
-        self._batch_api = batch_api
-        self._core_api = core_api
-        self._raw_api = raw_api
-        self._external_api = external_api
         self.version = version
+
+        self.raw_jobs = batch_api.query_raw_jobs()
+        self.raw_cron_jobs = batch_api.query_raw_cron_jobs()
+        self.raw_pods = core_api.query_raw_pods()
+        self.raw_nodes = core_api.query_raw_nodes()
+        self.raw_namespaces = core_api.query_raw_namespaces()
+        self.raw_resource_quotas = core_api.query_raw_resource_quotas()
+        self.raw_deployments = external_api.query_raw_deployments()
+        self.raw_daemon_sets = external_api.query_raw_daemon_sets()
+        self.raw_statefulsets = external_api.query_raw_statefulsets()
+        self.raw_replica_sets = external_api.query_raw_replica_sets()
 
         # It's best if queries to the api happen in a small time window, since then there will fewer
         # mismatches between the objects (which might change inbetween api calls).
         self.node_to_kubelet_health = {
             raw_node.metadata.name: raw_api.query_kubelet_health(raw_node.metadata.name)
-            for raw_node in self._core_api.raw_nodes
+            for raw_node in self.raw_nodes
         }
         self.api_health = raw_api.query_api_health()
 
         self._controller_to_pods = _match_controllers(
-            pods=self._core_api.raw_pods,
+            pods=self.raw_pods,
             workload_resources=itertools.chain(
-                self._external_api.raw_deployments,
-                self._external_api.raw_daemon_sets,
-                self._external_api.raw_statefulsets,
-                self._external_api.raw_replica_sets,
-                self._batch_api.raw_cron_jobs,
-                self._batch_api.raw_jobs,
+                self.raw_deployments,
+                self.raw_daemon_sets,
+                self.raw_statefulsets,
+                self.raw_replica_sets,
+                self.raw_cron_jobs,
+                self.raw_jobs,
             ),
         )
 
     def cron_jobs(self) -> Sequence[api.CronJob]:
         return [
             cron_job_from_client(raw_cron_job, self._controller_to_pods[raw_cron_job.metadata.uid])
-            for raw_cron_job in self._batch_api.raw_cron_jobs
+            for raw_cron_job in self.raw_cron_jobs
         ]
 
     def deployments(self) -> Sequence[api.Deployment]:
@@ -403,7 +400,7 @@ class APIServer:
             deployment_from_client(
                 raw_deployment, self._controller_to_pods[raw_deployment.metadata.uid]
             )
-            for raw_deployment in self._external_api.raw_deployments
+            for raw_deployment in self.raw_deployments
         ]
 
     def daemon_sets(self) -> Sequence[api.DaemonSet]:
@@ -411,7 +408,7 @@ class APIServer:
             daemonset_from_client(
                 raw_daemon_set, self._controller_to_pods[raw_daemon_set.metadata.uid]
             )
-            for raw_daemon_set in self._external_api.raw_daemon_sets
+            for raw_daemon_set in self.raw_daemon_sets
         ]
 
     def statefulsets(self) -> Sequence[api.StatefulSet]:
@@ -419,27 +416,25 @@ class APIServer:
             statefulset_from_client(
                 raw_statefulset, self._controller_to_pods[raw_statefulset.metadata.uid]
             )
-            for raw_statefulset in self._external_api.raw_statefulsets
+            for raw_statefulset in self.raw_statefulsets
         ]
 
     def namespaces(self) -> Sequence[api.Namespace]:
-        return [
-            namespace_from_client(raw_namespace) for raw_namespace in self._core_api.raw_namespaces
-        ]
+        return [namespace_from_client(raw_namespace) for raw_namespace in self.raw_namespaces]
 
     def nodes(self) -> Sequence[api.Node]:
         return [
             node_from_client(raw_node, self.node_to_kubelet_health[raw_node.metadata.name])
-            for raw_node in self._core_api.raw_nodes
+            for raw_node in self.raw_nodes
         ]
 
     def pods(self) -> Sequence[api.Pod]:
-        return [pod_from_client(pod) for pod in self._core_api.raw_pods]
+        return [pod_from_client(pod) for pod in self.raw_pods]
 
     def resource_quotas(self) -> Sequence[api.ResourceQuota]:
         return [
             api_resource_quota
-            for resource_quota in self._core_api.raw_resource_quotas
+            for resource_quota in self.raw_resource_quotas
             if (api_resource_quota := resource_quota_from_client(resource_quota)) is not None
         ]
 

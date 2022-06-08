@@ -2503,7 +2503,7 @@ def test_view_want_checkboxes(view):
 
 
 def test_registered_display_hints():
-    expected = ['.',
+    expected = [
     '.hardware.',
     '.hardware.chassis.',
     '.hardware.components.',

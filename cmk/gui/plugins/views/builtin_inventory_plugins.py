@@ -26,7 +26,6 @@ from cmk.gui.plugins.visuals.inventory import (
 # yapf: disable
 
 inventory_displayhints.update({
-    ".": {"title": _l("Inventory")},
     ".hardware.": {"title": _l("Hardware"), "icon": "hardware"},
     ".hardware.chassis.": {"title": _l("Chassis")},
     ".hardware.cpu.": {

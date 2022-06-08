@@ -22,7 +22,6 @@ from cmk.utils.structured_data import (
 import cmk.gui.inventory
 import cmk.gui.utils
 from cmk.gui.num_split import cmp_version
-from cmk.gui.plugins.views.utils import inventory_displayhints
 from cmk.gui.plugins.visuals.inventory import FilterInvtableVersion
 from cmk.gui.views import View
 from cmk.gui.views.inventory import (
@@ -30,6 +29,7 @@ from cmk.gui.views.inventory import (
     AttributeDisplayHint,
     AttributesDisplayHint,
     ColumnDisplayHint,
+    DISPLAY_HINTS,
     inv_paint_generic,
     inv_paint_if_oper_status,
     inv_paint_number,
@@ -246,7 +246,7 @@ def test__cmp_inventory_node(monkeypatch, val_a, val_b, result):
 
 
 @pytest.mark.parametrize(
-    "path, expected",
+    "path, expected_node_hint, expected_attributes_hint, expected_table_hint",
     [
         (
             tuple(),
@@ -255,14 +255,14 @@ def test__cmp_inventory_node(monkeypatch, val_a, val_b, result):
                 title="Inventory",
                 short_title="Inventory",
                 _long_title_function=lambda: "Inventory",
-                attributes_hint=AttributesDisplayHint(
-                    key_order=[],
-                ),
-                table_hint=TableDisplayHint(
-                    key_order=[],
-                    is_show_more=True,
-                    view_name=None,
-                ),
+            ),
+            AttributesDisplayHint(
+                key_order=[],
+            ),
+            TableDisplayHint(
+                key_order=[],
+                is_show_more=True,
+                view_name=None,
             ),
         ),
         (
@@ -272,14 +272,14 @@ def test__cmp_inventory_node(monkeypatch, val_a, val_b, result):
                 title="Hardware",
                 short_title="Hardware",
                 _long_title_function=lambda: "Hardware",
-                attributes_hint=AttributesDisplayHint(
-                    key_order=[],
-                ),
-                table_hint=TableDisplayHint(
-                    key_order=[],
-                    is_show_more=True,
-                    view_name=None,
-                ),
+            ),
+            AttributesDisplayHint(
+                key_order=[],
+            ),
+            TableDisplayHint(
+                key_order=[],
+                is_show_more=True,
+                view_name=None,
             ),
         ),
         (
@@ -289,26 +289,26 @@ def test__cmp_inventory_node(monkeypatch, val_a, val_b, result):
                 title="Processor",
                 short_title="Processor",
                 _long_title_function=lambda: "Hardware ➤ Processor",
-                attributes_hint=AttributesDisplayHint(
-                    key_order=[
-                        "arch",
-                        "max_speed",
-                        "model",
-                        "type",
-                        "threads",
-                        "smt_threads",
-                        "sharing_mode",
-                        "implementation_mode",
-                        "entitlement",
-                        "cpu_max_capa",
-                        "logical_cpus",
-                    ],
-                ),
-                table_hint=TableDisplayHint(
-                    key_order=[],
-                    is_show_more=True,
-                    view_name=None,
-                ),
+            ),
+            AttributesDisplayHint(
+                key_order=[
+                    "arch",
+                    "max_speed",
+                    "model",
+                    "type",
+                    "threads",
+                    "smt_threads",
+                    "sharing_mode",
+                    "implementation_mode",
+                    "entitlement",
+                    "cpu_max_capa",
+                    "logical_cpus",
+                ],
+            ),
+            TableDisplayHint(
+                key_order=[],
+                is_show_more=True,
+                view_name=None,
             ),
         ),
         (
@@ -318,22 +318,22 @@ def test__cmp_inventory_node(monkeypatch, val_a, val_b, result):
                 title="Images",
                 short_title="Images",
                 _long_title_function=lambda: "Docker ➤ Images",
-                attributes_hint=AttributesDisplayHint(
-                    key_order=[],
-                ),
-                table_hint=TableDisplayHint(
-                    key_order=[
-                        "id",
-                        "creation",
-                        "size",
-                        "labels",
-                        "amount_containers",
-                        "repotags",
-                        "repodigests",
-                    ],
-                    is_show_more=False,
-                    view_name="invdockerimages_of_host",
-                ),
+            ),
+            AttributesDisplayHint(
+                key_order=[],
+            ),
+            TableDisplayHint(
+                key_order=[
+                    "id",
+                    "creation",
+                    "size",
+                    "labels",
+                    "amount_containers",
+                    "repotags",
+                    "repodigests",
+                ],
+                is_show_more=False,
+                view_name="invdockerimages_of_host",
             ),
         ),
         (
@@ -343,35 +343,40 @@ def test__cmp_inventory_node(monkeypatch, val_a, val_b, result):
                 title="Node",
                 short_title="Node",
                 _long_title_function=lambda: "To ➤ Node",
-                attributes_hint=AttributesDisplayHint(
-                    key_order=[],
-                ),
-                table_hint=TableDisplayHint(
-                    key_order=[],
-                    is_show_more=True,
-                    view_name=None,
-                ),
+            ),
+            AttributesDisplayHint(
+                key_order=[],
+            ),
+            TableDisplayHint(
+                key_order=[],
+                is_show_more=True,
+                view_name=None,
             ),
         ),
     ],
 )
-def test_make_node_displayhint(path: SDPath, expected: NodeDisplayHint) -> None:
-    hint = NodeDisplayHint.make_from_path(path)
+def test_make_node_displayhint(
+    path: SDPath,
+    expected_node_hint: NodeDisplayHint,
+    expected_attributes_hint: AttributesDisplayHint,
+    expected_table_hint: TableDisplayHint,
+) -> None:
+    hints = DISPLAY_HINTS.get_hints(path)
 
-    assert hint.icon == expected.icon
-    assert hint.title == expected.title
-    assert hint.short_title == expected.short_title
-    assert hint.long_title == expected.long_title
+    assert hints.node_hint.icon == expected_node_hint.icon
+    assert hints.node_hint.title == expected_node_hint.title
+    assert hints.node_hint.short_title == expected_node_hint.short_title
+    assert hints.node_hint.long_title == expected_node_hint.long_title
 
-    assert hint.attributes_hint.key_order == expected.attributes_hint.key_order
+    assert hints.attributes_hint.key_order == expected_attributes_hint.key_order
 
-    assert hint.table_hint.key_order == expected.table_hint.key_order
-    assert hint.table_hint.is_show_more == expected.table_hint.is_show_more
-    assert hint.table_hint.view_name == expected.table_hint.view_name
+    assert hints.table_hint.key_order == expected_table_hint.key_order
+    assert hints.table_hint.is_show_more == expected_table_hint.is_show_more
+    assert hints.table_hint.view_name == expected_table_hint.view_name
 
 
 @pytest.mark.parametrize(
-    "raw_path, expected",
+    "raw_path, expected_node_hint, expected_attributes_hint, expected_table_hint",
     [
         (
             ".foo.bar.",
@@ -380,14 +385,14 @@ def test_make_node_displayhint(path: SDPath, expected: NodeDisplayHint) -> None:
                 title="Bar",
                 short_title="Bar",
                 _long_title_function=lambda: "Foo ➤ Bar",
-                attributes_hint=AttributesDisplayHint(
-                    key_order=[],
-                ),
-                table_hint=TableDisplayHint(
-                    key_order=[],
-                    is_show_more=True,
-                    view_name=None,
-                ),
+            ),
+            AttributesDisplayHint(
+                key_order=[],
+            ),
+            TableDisplayHint(
+                key_order=[],
+                is_show_more=True,
+                view_name=None,
             ),
         ),
         (
@@ -397,14 +402,14 @@ def test_make_node_displayhint(path: SDPath, expected: NodeDisplayHint) -> None:
                 title="Bar",
                 short_title="Bar",
                 _long_title_function=lambda: "Foo ➤ Bar",
-                attributes_hint=AttributesDisplayHint(
-                    key_order=[],
-                ),
-                table_hint=TableDisplayHint(
-                    key_order=[],
-                    is_show_more=True,
-                    view_name=None,
-                ),
+            ),
+            AttributesDisplayHint(
+                key_order=[],
+            ),
+            TableDisplayHint(
+                key_order=[],
+                is_show_more=True,
+                view_name=None,
             ),
         ),
         (
@@ -414,14 +419,14 @@ def test_make_node_displayhint(path: SDPath, expected: NodeDisplayHint) -> None:
                 title="Software",
                 short_title="Software",
                 _long_title_function=lambda: "Software",
-                attributes_hint=AttributesDisplayHint(
-                    key_order=[],
-                ),
-                table_hint=TableDisplayHint(
-                    key_order=[],
-                    is_show_more=True,
-                    view_name=None,
-                ),
+            ),
+            AttributesDisplayHint(
+                key_order=[],
+            ),
+            TableDisplayHint(
+                key_order=[],
+                is_show_more=True,
+                view_name=None,
             ),
         ),
         (
@@ -431,34 +436,36 @@ def test_make_node_displayhint(path: SDPath, expected: NodeDisplayHint) -> None:
                 title="Containers",
                 short_title="Containers",
                 _long_title_function=lambda: "Docker ➤ Containers",
-                attributes_hint=AttributesDisplayHint(
-                    key_order=[],
-                ),
-                table_hint=TableDisplayHint(
-                    key_order=["id", "creation", "name", "labels", "status", "image"],
-                    is_show_more=False,
-                    view_name="invdockercontainers_of_host",
-                ),
+            ),
+            AttributesDisplayHint(
+                key_order=[],
+            ),
+            TableDisplayHint(
+                key_order=["id", "creation", "name", "labels", "status", "image"],
+                is_show_more=False,
+                view_name="invdockercontainers_of_host",
             ),
         ),
     ],
 )
-def test_make_node_displayhint_from_hint(raw_path: SDRawPath, expected: NodeDisplayHint) -> None:
-    hint = NodeDisplayHint.make_from_hint(
-        raw_path,
-        inventory_displayhints.get(raw_path, {}),
-    )
+def test_make_node_displayhint_from_hint(
+    raw_path: SDRawPath,
+    expected_node_hint: NodeDisplayHint,
+    expected_attributes_hint: AttributesDisplayHint,
+    expected_table_hint: TableDisplayHint,
+) -> None:
+    hints = DISPLAY_HINTS.get_hints(cmk.gui.inventory.InventoryPath.parse(raw_path).path)
 
-    assert hint.icon == expected.icon
-    assert hint.title == expected.title
-    assert hint.short_title == expected.short_title
-    assert hint.long_title == expected.long_title
+    assert hints.node_hint.icon == expected_node_hint.icon
+    assert hints.node_hint.title == expected_node_hint.title
+    assert hints.node_hint.short_title == expected_node_hint.short_title
+    assert hints.node_hint.long_title == expected_node_hint.long_title
 
-    assert hint.attributes_hint.key_order == expected.attributes_hint.key_order
+    assert hints.attributes_hint.key_order == expected_attributes_hint.key_order
 
-    assert hint.table_hint.key_order == expected.table_hint.key_order
-    assert hint.table_hint.is_show_more == expected.table_hint.is_show_more
-    assert hint.table_hint.view_name == expected.table_hint.view_name
+    assert hints.table_hint.key_order == expected_table_hint.key_order
+    assert hints.table_hint.is_show_more == expected_table_hint.is_show_more
+    assert hints.table_hint.view_name == expected_table_hint.view_name
 
 
 @pytest.mark.parametrize(
@@ -480,13 +487,12 @@ def test_make_node_displayhint_from_hint(raw_path: SDRawPath, expected: NodeDisp
 )
 def test_sort_table_rows_displayhint(rows: Sequence[SDRow], expected: Sequence[SDRow]) -> None:
     raw_path = ".software.applications.oracle.dataguard_stats:"
-    table_hint = TableDisplayHint.make_from_hint(inventory_displayhints[raw_path])
+    path = cmk.gui.inventory.InventoryPath.parse(raw_path).path
+    table_hint = DISPLAY_HINTS.get_hints(path).table_hint
     assert (
         table_hint.sort_rows(
             rows,
-            table_hint.make_columns(
-                rows, ["sid"], cmk.gui.inventory.InventoryPath.parse(raw_path).path
-            ),
+            table_hint.make_columns(rows, ["sid"], path),
         )
         == expected
     )
@@ -534,7 +540,7 @@ def test_sort_table_rows_displayhint(rows: Sequence[SDRow], expected: Sequence[S
     ],
 )
 def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplayHint) -> None:
-    hint = ColumnDisplayHint.make_from_path(path, key)
+    hint = DISPLAY_HINTS.get_hints(path).get_column_hint(key)
 
     assert hint.title == expected.title
     assert hint.short_title == expected.short_title
@@ -606,10 +612,8 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
 def test_make_column_displayhint_from_hint(
     raw_path: SDRawPath, expected: ColumnDisplayHint
 ) -> None:
-    hint = ColumnDisplayHint.make_from_hint(
-        raw_path,
-        inventory_displayhints.get(raw_path, {}),
-    )
+    inventory_path = cmk.gui.inventory.InventoryPath.parse(raw_path)
+    hint = DISPLAY_HINTS.get_hints(inventory_path.path).get_column_hint(inventory_path.key or "")
 
     assert hint.title == expected.title
     assert hint.short_title == expected.short_title
@@ -637,7 +641,8 @@ def test_sort_attributes_pairs_displayhint(
     pairs: SDPairs, expected: Sequence[Tuple[SDKey, SDValue]]
 ) -> None:
     raw_path = ".software.applications.kube.metadata."
-    attrs_hint = AttributesDisplayHint.make_from_hint(inventory_displayhints[raw_path])
+    path = cmk.gui.inventory.InventoryPath.parse(raw_path).path
+    attrs_hint = DISPLAY_HINTS.get_hints(path).attributes_hint
     assert attrs_hint.sort_pairs(pairs) == expected
 
 
@@ -683,7 +688,7 @@ def test_sort_attributes_pairs_displayhint(
     ],
 )
 def test_make_attribute_displayhint(path: SDPath, key: str, expected: AttributeDisplayHint) -> None:
-    hint = AttributeDisplayHint.make_from_path(path, key)
+    hint = DISPLAY_HINTS.get_hints(path).get_attribute_hint(key)
 
     assert hint.data_type == expected.data_type
     assert hint.paint_function == expected.paint_function
@@ -734,10 +739,8 @@ def test_make_attribute_displayhint(path: SDPath, key: str, expected: AttributeD
 def test_make_attribute_displayhint_from_hint(
     raw_path: SDRawPath, expected: AttributeDisplayHint
 ) -> None:
-    hint = AttributeDisplayHint.make_from_hint(
-        raw_path,
-        inventory_displayhints.get(raw_path, {}),
-    )
+    inventory_path = cmk.gui.inventory.InventoryPath.parse(raw_path)
+    hint = DISPLAY_HINTS.get_hints(inventory_path.path).get_attribute_hint(inventory_path.key or "")
 
     assert hint.data_type == expected.data_type
     assert hint.paint_function == expected.paint_function

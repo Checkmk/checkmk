@@ -654,7 +654,7 @@ def _show_output_box(title: str, content: bytes) -> None:
 
 @cmk.gui.pages.page_registry.register_page("download_crash_report")
 class PageDownloadCrashReport(ABCCrashReportPage):
-    def page(self):
+    def page(self) -> None:
         user.need_permission("general.see_crash_reports")
 
         filename = "Checkmk_Crash_%s_%s_%s.tar.gz" % (

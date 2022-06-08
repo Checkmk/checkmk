@@ -15,7 +15,7 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.key_mgmt import Key
 from cmk.gui.logged_in import user
-from cmk.gui.pages import AjaxPage, page_registry
+from cmk.gui.pages import AjaxPage, AjaxPageResult, page_registry
 from cmk.gui.plugins.wato.utils import mode_registry, SiteBackupJobs, WatoMode
 from cmk.gui.type_defs import PermissionName
 from cmk.gui.valuespec import Checkbox
@@ -73,7 +73,7 @@ class ModeBackupTargets(backup.PageBackupTargets, WatoMode):
     def jobs(self):
         return SiteBackupJobs()
 
-    def page(self):
+    def page(self) -> None:
         self.targets().show_list()
         backup.SystemBackupTargetsReadOnly().show_list(
             editable=False, title=_("System global targets")
@@ -185,13 +185,14 @@ class ModeAjaxBackupJobState(AjaxPage):
     def handle_page(self):
         self._handle_exc(self.page)
 
-    def page(self):
+    def page(self) -> AjaxPageResult:  # pylint: disable=useless-return
         user.need_permission("wato.backups")
         if request.var("job") == "restore":
             page: backup.PageAbstractBackupJobState = backup.PageBackupRestoreState()
         else:
             page = ModeBackupJobState()
         page.show_job_details()
+        return None
 
 
 def make_site_backup_keypair_store() -> backup.BackupKeypairStore:

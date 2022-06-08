@@ -45,7 +45,7 @@ def test_request_memoize_request_integration(logged_in_wsgi_app, mocker):
 
     @page_registry.register_page("my_page")
     class PageClass(Page):  # pylint: disable=unused-variable
-        def page(self):
+        def page(self) -> None:
             mock.return_value = 1
             assert memoized() == 1
 

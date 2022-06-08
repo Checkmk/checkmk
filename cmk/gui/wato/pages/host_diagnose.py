@@ -22,7 +22,7 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
-from cmk.gui.pages import AjaxPage, page_registry
+from cmk.gui.pages import AjaxPage, AjaxPageResult, page_registry
 from cmk.gui.plugins.wato.utils import (
     flash,
     mode_registry,
@@ -188,7 +188,7 @@ class ModeDiagHost(WatoMode):
         rule_vars = vs_rules.from_html_vars("vs_rules")
         vs_rules.validate_value(rule_vars, "vs_rules")
 
-    def page(self):
+    def page(self) -> None:
         html.open_div(class_="diag_host")
         html.open_table()
         html.open_tr()
@@ -403,7 +403,7 @@ class ModeDiagHost(WatoMode):
 
 @page_registry.register_page("wato_ajax_diag_host")
 class ModeAjaxDiagHost(AjaxPage):
-    def page(self):
+    def page(self) -> AjaxPageResult:
         check_csrf_token()
         if not user.may("wato.diag_host"):
             raise MKAuthException(_("You are not permitted to perform this action."))

@@ -8,7 +8,7 @@ import abc
 import http.client as http_client
 import inspect
 import json
-from typing import Any, Callable, Dict, Mapping, Optional, Type
+from typing import Any, Callable, Dict, Iterable, Mapping, Optional, Type, Union
 
 import cmk.utils.plugin_registry
 from cmk.utils.exceptions import MKException
@@ -23,7 +23,7 @@ from cmk.gui.log import logger
 
 PageHandlerFunc = Callable[[], None]
 PageResult = Any
-AjaxPageResult = Dict[str, Any]
+AjaxPageResult = Union[None, str, dict[str, Any], Iterable[Mapping[str, str]]]
 
 
 # At the moment pages are simply callables that somehow render content for the HTTP response

@@ -324,7 +324,7 @@ class ModeTimeperiods(WatoMode):
                     used_in.append((_("Time specific check parameter #%d") % (index + 1), edit_url))
         return used_in
 
-    def page(self):
+    def page(self) -> None:
         with table_element(
             "timeperiods", empty_text=_("There are no timeperiods defined yet.")
         ) as table:
@@ -921,7 +921,7 @@ class ModeEditTimeperiod(WatoMode):
         watolib.timeperiods.save_timeperiods(self._timeperiods)
         return redirect(mode_url("timeperiods"))
 
-    def page(self):
+    def page(self) -> None:
         html.begin_form("timeperiod", method="POST")
         self._valuespec().render_input("timeperiod", self._to_valuespec(self._timeperiod))
         forms.end()

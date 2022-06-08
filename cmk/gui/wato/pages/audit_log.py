@@ -223,7 +223,7 @@ class ModeAuditLog(WatoMode):
 
         return None
 
-    def page(self):
+    def page(self) -> None:
         self._options.update(self._get_audit_log_options_from_request())
 
         audit = self._parse_audit_log()

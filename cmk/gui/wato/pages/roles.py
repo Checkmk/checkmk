@@ -204,7 +204,7 @@ class ModeRoles(RoleManagement, WatoMode):
 
         return redirect(self.mode_url())
 
-    def page(self):
+    def page(self) -> None:
         with table_element("roles") as table:
 
             users = userdb.load_users()
@@ -363,7 +363,7 @@ class ModeEditRole(RoleManagement, WatoMode):
         )
         return redirect(mode_url("roles"))
 
-    def page(self):
+    def page(self) -> None:
         search = get_search_expression()
 
         html.begin_form("role", method="POST")
@@ -472,7 +472,7 @@ class ModeRoleMatrix(WatoMode):
     def title(self) -> str:
         return _("Permission matrix")
 
-    def page(self):
+    def page(self) -> None:
         role_list = sorted(userdb_utils.load_roles().items(), key=lambda a: (a[1]["alias"], a[0]))
 
         for section in permission_section_registry.get_sorted_sections():

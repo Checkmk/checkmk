@@ -85,7 +85,7 @@ class ModeBackgroundJobsOverview(WatoMode):
     def title(self) -> str:
         return _("Background jobs overview")
 
-    def page(self):
+    def page(self) -> None:
         job_manager = gui_background_job.GUIBackgroundJobManager()
 
         back_url = makeuri_contextless(request, [("mode", "background_jobs_overview")])
@@ -154,7 +154,7 @@ class ModeBackgroundJobDetails(WatoMode):
     def back_url(self):
         return request.get_url_input("back_url", deflt="")
 
-    def page(self):
+    def page(self) -> None:
         html.div(html.render_message(_("Loading...")), id_="async_progress_msg")
         html.div("", id_="status_container")
         html.javascript(

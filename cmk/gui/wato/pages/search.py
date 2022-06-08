@@ -92,7 +92,7 @@ class ModeSearch(WatoMode):
 
         return list(search_vars.items())
 
-    def page(self):
+    def page(self) -> None:
         # Show search form
         html.begin_form("edit_host", method="POST")
         html.prevent_password_auto_completion()

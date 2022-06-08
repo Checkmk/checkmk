@@ -44,7 +44,7 @@ from cmk.gui.page_menu import (
     PageMenuSearch,
     PageMenuTopic,
 )
-from cmk.gui.pages import AjaxPage, page_registry
+from cmk.gui.pages import AjaxPage, AjaxPageResult, page_registry
 from cmk.gui.plugins.wato.utils import mode_registry, sort_sites
 from cmk.gui.plugins.wato.utils.base_modes import mode_url, redirect, WatoMode
 from cmk.gui.plugins.wato.utils.html_elements import wato_html_head
@@ -260,7 +260,7 @@ class ModeEditSite(WatoMode):
         flash(msg)
         return redirect(mode_url("sites"))
 
-    def page(self):
+    def page(self) -> None:
         html.begin_form("site")
 
         self._valuespec().render_input("site", self._site)
@@ -746,7 +746,7 @@ class ModeDistributedMonitoring(WatoMode):
         html.footer()
         return FinalizeRequest(code=200)
 
-    def page(self):
+    def page(self) -> None:
         sites = sort_sites(self._site_mgmt.load_sites())
 
         if cmk_version.is_expired_trial():
@@ -882,7 +882,7 @@ class ModeDistributedMonitoring(WatoMode):
 class ModeAjaxFetchSiteStatus(AjaxPage):
     """AJAX handler for asynchronous fetching of the site status"""
 
-    def page(self):
+    def page(self) -> AjaxPageResult:
         user.need_permission("wato.sites")
 
         site_states = {}
@@ -892,7 +892,8 @@ class ModeAjaxFetchSiteStatus(AjaxPage):
         replication_status = ReplicationStatusFetcher().fetch(replication_sites)
 
         for site_id, site in sites:
-            site_states[site_id] = {
+            site_id_str: str = site_id
+            site_states[site_id_str] = {
                 "livestatus": self._render_status_connection_status(site_id, site),
                 "replication": self._render_configuration_connection_status(
                     site_id, site, replication_status
@@ -1148,7 +1149,7 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
     def edit_mode_name(self) -> str:
         return "edit_site_configvar"
 
-    def page(self):
+    def page(self) -> None:
         html.help(
             _(
                 "Here you can configure global settings, that should just be applied "
@@ -1315,7 +1316,7 @@ class ModeSiteLivestatusEncryption(WatoMode):
         flash(_("Added CA with fingerprint %s to trusted certificate authorities") % digest_sha256)
         return None
 
-    def page(self):
+    def page(self) -> None:
         if not is_livestatus_encrypted(self._site):
             html.show_message(
                 _("The livestatus connection to this site configured not to be encrypted.")

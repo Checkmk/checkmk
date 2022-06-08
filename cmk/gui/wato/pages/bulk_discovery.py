@@ -127,7 +127,7 @@ class ModeBulkDiscovery(WatoMode):
 
         raise HTTPRedirect(self._job.detail_url())
 
-    def page(self):
+    def page(self) -> None:
         user.need_permission("wato.services")
 
         job_status_snapshot = self._job.get_status_snapshot()

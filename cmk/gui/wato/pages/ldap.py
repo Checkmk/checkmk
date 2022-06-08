@@ -790,7 +790,7 @@ class ModeLDAPConfig(LDAPMode):
 
         return redirect(self.mode_url())
 
-    def page(self):
+    def page(self) -> None:
         with table_element() as table:
             for index, connection in enumerate(load_connection_config()):
                 table.row()
@@ -942,7 +942,7 @@ class ModeEditLDAPConnection(LDAPMode):
         # Handle the case where a user hit "Save & Test" during creation
         return redirect(self.mode_url(_test="1", id=self._connection_id))
 
-    def page(self):
+    def page(self) -> None:
         html.open_div(id_="ldap")
         html.open_table()
         html.open_tr()

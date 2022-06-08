@@ -18,7 +18,7 @@ from cmk.utils.site import omd_site
 
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.htmllib.generator import HTMLWriter
-from cmk.gui.pages import AjaxPage, page_registry
+from cmk.gui.pages import AjaxPage, AjaxPageResult, page_registry
 from cmk.gui.utils.urls import DocReference
 
 try:
@@ -323,7 +323,7 @@ class ModeBIEditPack(ABCBIMode):
             save_title=_("Save") if self._bi_pack else _("Create"),
         )
 
-    def page(self):
+    def page(self) -> None:
         html.begin_form("bi_pack", method="POST")
 
         if self._bi_pack is None:
@@ -522,7 +522,7 @@ class ModeBIPacks(ABCBIMode):
         self._bi_packs.save_config()
         return redirect(self.mode_url())
 
-    def page(self):
+    def page(self) -> None:
         with table_element("bi_packs", title=_("BI Configuration Packs")) as table:
             for pack in sorted(self._bi_packs.packs.values(), key=lambda x: x.id):
                 if not bi_valuespecs.may_use_rules_in_pack(pack):
@@ -808,7 +808,7 @@ class ModeBIRules(ABCBIMode):
             )
         self._bi_packs.save_config()
 
-    def page(self):
+    def page(self) -> None:
         self.verify_pack_permission(self.bi_pack)
         if self.bi_pack.num_aggregations() == 0 and self.bi_pack.num_rules() == 0:
             menu = MainMenu()
@@ -1154,7 +1154,7 @@ class ModeBIEditRule(ABCBIMode):
                 forbidden_packs.add(pack_id)
         return forbidden_packs
 
-    def page(self):
+    def page(self) -> None:
         self.verify_pack_permission(self.bi_pack)
 
         if self._new:
@@ -1432,7 +1432,7 @@ class BIAggregationForm(Dictionary):
 
 @page_registry.register_page("ajax_bi_rule_preview")
 class AjaxBIRulePreview(AjaxPage):
-    def page(self):
+    def page(self) -> AjaxPageResult:
         sites_callback = SitesCallback(cmk.gui.sites.states, bi_livestatus_query)
         compiler = BICompiler(BIManager.bi_configuration_file(), sites_callback)
         compiler.prepare_for_compilation(compiler.compute_current_configstatus()["online_sites"])
@@ -1474,7 +1474,7 @@ class AjaxBIRulePreview(AjaxPage):
 
 @page_registry.register_page("ajax_bi_aggregation_preview")
 class AjaxBIAggregationPreview(AjaxPage):
-    def page(self):
+    def page(self) -> AjaxPageResult:
         # Prepare compiler
         sites_callback = SitesCallback(cmk.gui.sites.states, bi_livestatus_query)
         compiler = BICompiler(BIManager.bi_configuration_file(), sites_callback)
@@ -1678,7 +1678,7 @@ class BIModeEditAggregation(ABCBIMode):
             )
         return redirect(mode_url("bi_aggregations", pack=self.bi_pack.id))
 
-    def page(self):
+    def page(self) -> None:
         html.begin_form("biaggr", method="POST")
 
         aggr_vs_config = BIAggregationSchema().dump(self._bi_aggregation)
@@ -2064,7 +2064,7 @@ class BIModeAggregations(ABCBIMode):
             inpage_search=PageMenuSearch(),
         )
 
-    def page(self):
+    def page(self) -> None:
         html.begin_form("bulk_action_form", method="POST")
         self._render_aggregations()
         html.hidden_field("selection_id", weblib.selection_id())
@@ -2238,7 +2238,7 @@ class ModeBIRuleTree(ABCBIMode):
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(_("Rule tree"), breadcrumb)
 
-    def page(self):
+    def page(self) -> None:
         _aggr_refs, rule_refs, _level = self._bi_packs.count_rule_references(self._rule_id)
         if rule_refs == 0:
             with table_element(sortable=False, searchable=False) as table:

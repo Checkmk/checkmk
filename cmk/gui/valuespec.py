@@ -6802,7 +6802,7 @@ def SingleLabel(  # pylint: disable=redefined-builtin
 class PageAutocompleteLabels(AjaxPage):
     """Return all known labels to support tagify label input dropdown completion"""
 
-    def page(self):
+    def page(self) -> AjaxPageResult:
         api_request = request.get_request()
         return encode_labels_for_tagify(
             self._get_labels(Labels.World(api_request["world"]), api_request["search_label"])

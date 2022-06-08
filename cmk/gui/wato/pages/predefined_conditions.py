@@ -122,7 +122,7 @@ class ModePredefinedConditions(SimpleListMode):
                 % (self._mode_type.name_singular(), self._search_url(ident)),
             )
 
-    def page(self):
+    def page(self) -> None:
         html.p(
             _(
                 "This module can be used to define conditions for Check_MK rules in a central place. "

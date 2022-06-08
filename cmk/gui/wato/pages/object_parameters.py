@@ -103,7 +103,7 @@ class ModeObjectParameters(WatoMode):
         if self._service:
             yield make_service_status_link(self._host.name(), self._service)
 
-    def page(self):
+    def page(self) -> None:
         all_rulesets = AllRulesets()
         all_rulesets.load()
         for_host: bool = not self._service

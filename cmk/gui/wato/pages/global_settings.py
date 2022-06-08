@@ -526,7 +526,7 @@ class ModeEditGlobals(ABCGlobalSettingsMode):
             flash(msg)
         return redirect(mode_url("globalvars"))
 
-    def page(self):
+    def page(self) -> None:
         self._show_configuration_variables()
 
 

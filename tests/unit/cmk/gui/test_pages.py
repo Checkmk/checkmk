@@ -270,7 +270,7 @@ def test_page_registry_register_page(monkeypatch, capsys):
 
     @page_registry.register_page("234handler")
     class PageClass(cmk.gui.pages.Page):
-        def page(self):
+        def page(self) -> None:
             sys.stdout.write("234")
 
     handler = page_registry.get("234handler")

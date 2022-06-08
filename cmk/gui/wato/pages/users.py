@@ -263,7 +263,7 @@ class ModeUsers(WatoMode):
         if selected_users:
             delete_users(selected_users)
 
-    def page(self):
+    def page(self) -> None:
         if not self._job_snapshot.exists():
             # Skip if snapshot doesnt exists
             pass

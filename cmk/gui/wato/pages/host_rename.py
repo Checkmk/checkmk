@@ -271,7 +271,7 @@ class ModeBulkRenameHost(WatoMode):
             return hostname
         return None
 
-    def page(self):
+    def page(self) -> None:
         html.begin_form("bulk_rename_host", method="POST")
         self._vs_renaming_config().render_input("", {})
         html.hidden_fields()
@@ -517,7 +517,7 @@ class ModeRenameHost(WatoMode):
         validate_host_uniqueness(varname, host_name)
         Hostname().validate_value(host_name, varname)
 
-    def page(self):
+    def page(self) -> None:
         html.help(
             _(
                 "The renaming of hosts is a complex operation since a host's name is being "

@@ -57,7 +57,7 @@ class ModeRandomHosts(WatoMode):
         flash(_("Added %d random hosts.") % created)
         return redirect(mode_url("folder", folder=Folder.current().path()))
 
-    def page(self):
+    def page(self) -> None:
         html.begin_form("random")
         forms.header(_("Add random hosts"))
         forms.section(_("Number to create"))

@@ -199,7 +199,7 @@ class ABCHostMode(WatoMode, abc.ABC):
         )
 
     # TODO: Extract cluster specific parts from this method
-    def page(self):
+    def page(self) -> None:
         # Show outcome of host validation. Do not validate new hosts
         errors = None
         if self._mode == "edit":

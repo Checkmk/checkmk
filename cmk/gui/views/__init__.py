@@ -1898,7 +1898,7 @@ def view_editor_sorter_specs(view: ViewSpec) -> _Tuple[str, Dictionary]:
 
 @page_registry.register_page("ajax_cascading_render_painer_parameters")
 class PageAjaxCascadingRenderPainterParameters(AjaxPage):
-    def page(self):
+    def page(self) -> AjaxPageResult:
         api_request = request.get_request()
 
         if api_request["painter_type"] == "painter":

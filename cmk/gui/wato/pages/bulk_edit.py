@@ -174,7 +174,7 @@ class ModeBulkCleanup(WatoMode):
                 to_clean.append(attrname)
         return to_clean
 
-    def page(self):
+    def page(self) -> None:
         hosts = get_hosts_from_checkboxes()
 
         html.p(

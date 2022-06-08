@@ -651,7 +651,7 @@ class ModeNotifications(ABCNotificationsMode):
             },
         )
 
-    def page(self):
+    def page(self) -> None:
         self._show_not_enabled_warning()
         self._show_no_fallback_contact_warning()
         self._show_bulk_notifications()
@@ -958,7 +958,7 @@ class ABCUserNotificationsMode(ABCNotificationsMode):
 
         return redirect(self.mode_url(user=self._user_id()))
 
-    def page(self):
+    def page(self) -> None:
         if self._start_async_repl:
             user_profile_async_replication_dialog(
                 sites=_get_notification_sync_sites(),
@@ -1649,7 +1649,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
 
         return self._back_mode()
 
-    def page(self):
+    def page(self) -> None:
         if self._start_async_repl:
             user_profile_async_replication_dialog(
                 sites=_get_notification_sync_sites(),

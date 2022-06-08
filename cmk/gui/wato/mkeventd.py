@@ -1699,7 +1699,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
         rule_packs = answer["rules"]
         save_mkeventd_rules(rule_packs)
 
-    def page(self):
+    def page(self) -> None:
         self._verify_ec_enabled()
         rep_mode = cmk.gui.mkeventd.replication_mode()
         if rep_mode in ["sync", "takeover"]:
@@ -2137,7 +2137,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
             self._add_change("move-rule", _("Changed position of rule %s") % rule["id"])
         return redirect(self.mode_url(rule_pack=self._rule_pack_id))
 
-    def page(self):
+    def page(self) -> None:
         self._verify_ec_enabled()
         search_expression = self._search_expression()
         if search_expression:
@@ -2435,7 +2435,7 @@ class ModeEventConsoleEditRulePack(ABCEventConsoleMode):
             self._add_change("edit-rule-pack", _("Modified rule pack %s") % self._rule_pack["id"])
         return redirect(mode_url("mkeventd_rule_packs"))
 
-    def page(self):
+    def page(self) -> None:
         self._verify_ec_enabled()
         html.begin_form("rule_pack")
         vs = self._valuespec()
@@ -2633,7 +2633,7 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
             cmk.gui.mkeventd.execute_command("RESETCOUNTERS", [self._rule["id"]], omd_site())
         return redirect(mode_url("mkeventd_rules", rule_pack=self._rule_pack["id"]))
 
-    def page(self):
+    def page(self) -> None:
         self._verify_ec_enabled()
         html.begin_form("rule")
         vs = self._valuespec()
@@ -2693,7 +2693,7 @@ class ModeEventConsoleStatus(ABCEventConsoleMode):
         flash(_("Switched to %s mode") % new_mode)
         return None
 
-    def page(self):
+    def page(self) -> None:
         self._verify_ec_enabled()
 
         warning = _("The Event Console Daemon is currently not running. ")
@@ -2848,7 +2848,7 @@ class ModeEventConsoleSettings(ABCEventConsoleMode, ABCGlobalSettingsMode):
     def edit_mode_name(self) -> str:
         return "mkeventd_edit_configvar"
 
-    def page(self):
+    def page(self) -> None:
         self._verify_ec_enabled()
         self._show_configuration_variables()
 
@@ -3035,7 +3035,7 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
         ]:
             f.unlink(missing_ok=True)
 
-    def page(self):
+    def page(self) -> None:
         self._verify_ec_enabled()
         for path, title in cmk.gui.mkeventd.mib_dirs():
             self._show_mib_table(path, title)
@@ -3312,7 +3312,7 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
                 raise e
             raise Exception(_("Failed to process your MIB file (%s): %s") % (mibname, e))
 
-    def page(self):
+    def page(self) -> None:
         self._verify_ec_enabled()
         html.h3(_("Upload MIB file"))
         html.write_text(

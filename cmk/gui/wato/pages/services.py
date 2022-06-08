@@ -55,7 +55,7 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.page_menu_entry import disable_page_menu_entry, enable_page_menu_entry
-from cmk.gui.pages import AjaxPage, page_registry
+from cmk.gui.pages import AjaxPage, AjaxPageResult, page_registry
 from cmk.gui.plugins.wato.utils import mode_registry, WatoMode
 from cmk.gui.plugins.wato.utils.context_buttons import make_host_status_link
 from cmk.gui.site_config import sitenames
@@ -154,7 +154,7 @@ class ModeDiscovery(WatoMode):
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         return service_page_menu(breadcrumb, self._host, self._options)
 
-    def page(self):
+    def page(self) -> None:
         # This is needed to make the discovery page show the help toggle
         # button. The help texts on this page are only added dynamically via
         # AJAX.
@@ -246,7 +246,7 @@ class AutomationServiceDiscoveryJob(AutomationCommand):
 
 @page_registry.register_page("ajax_service_discovery")
 class ModeAjaxServiceDiscovery(AjaxPage):
-    def page(self):
+    def page(self) -> AjaxPageResult:
         check_csrf_token()
         user.need_permission("wato.hosts")
 
@@ -1473,7 +1473,7 @@ class ModeAjaxExecuteCheck(AjaxPage):
         # TODO: Validate
         self._item = request.get_str_input_mandatory("item")
 
-    def page(self):
+    def page(self) -> AjaxPageResult:
         check_csrf_token()
         try:
             active_check_result = active_check(

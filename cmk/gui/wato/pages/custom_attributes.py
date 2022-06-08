@@ -203,7 +203,7 @@ class ModeEditCustomAttr(WatoMode, abc.ABC):
 
         return redirect(mode_url(self._type + "_attrs"))
 
-    def page(self):
+    def page(self) -> None:
         # TODO: remove subclass specific things specifict things (everything with _type == 'user')
         html.begin_form("attr")
         forms.header(_("Properties"))
@@ -474,7 +474,7 @@ class ModeCustomAttrs(WatoMode, abc.ABC):
         _changes.add_change("edit-%sattrs" % self._type, _("Deleted attribute %s") % (delname))
         return redirect(self.mode_url())
 
-    def page(self):
+    def page(self) -> None:
         if not self._attrs:
             html.div(_("No custom attributes are defined yet."), class_="info")
             return

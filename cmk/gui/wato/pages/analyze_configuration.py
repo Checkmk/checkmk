@@ -154,7 +154,7 @@ class ModeAnalyzeConfig(WatoMode):
 
         return None
 
-    def page(self):
+    def page(self) -> None:
         if not self._analyze_sites():
             html.show_message(
                 _(

@@ -144,7 +144,7 @@ class ModePatternEditor(WatoMode):
                 ),
             )
 
-    def page(self):
+    def page(self) -> None:
         html.help(
             _(
                 "On this page you can test the defined logfile patterns against a custom text, "

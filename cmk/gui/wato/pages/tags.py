@@ -295,7 +295,7 @@ class ModeTags(ABCTagMode):
         _changes.add_change("edit-tags", _("Changed order of tag groups"))
         return None
 
-    def page(self):
+    def page(self) -> None:
         if not self._tag_config.tag_groups and not self._tag_config.get_aux_tags():
             MainMenu(
                 [
@@ -698,7 +698,7 @@ class ModeEditAuxtag(ABCEditTagMode):
 
         return redirect(mode_url("tags"))
 
-    def page(self):
+    def page(self) -> None:
         html.begin_form("aux_tag")
 
         self._valuespec().render_input("aux_tag", self._aux_tag.get_dict_format())
@@ -816,7 +816,7 @@ class ModeEditTagGroup(ABCEditTagMode):
 
         return redirect(mode_url("tags"))
 
-    def page(self):
+    def page(self) -> None:
         html.begin_form("tag_group", method="POST")
 
         self._valuespec().render_input("tag_group", self._tag_group.get_dict_format())

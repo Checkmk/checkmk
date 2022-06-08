@@ -66,7 +66,7 @@ class ModeCheckPlugins(WatoMode):
         menu.inpage_search = PageMenuSearch(target_mode="check_plugin_search")
         return menu
 
-    def page(self):
+    def page(self) -> None:
         html.help(
             _(
                 "This catalog of check plugins gives you a complete listing of all plugins "
@@ -116,7 +116,7 @@ class ModeCheckPluginSearch(WatoMode):
     def title(self) -> str:
         return "%s: %s" % (_("Check plugins matching"), self._search)
 
-    def page(self):
+    def page(self) -> None:
         search_form(title="%s: " % _("Search for check plugins"), mode="check_plugin_search")
 
         for path, manpages in self._get_manpages_after_search():
@@ -240,7 +240,7 @@ class ModeCheckPluginTopic(WatoMode):
             return "unsorted"
         return self._topic_title
 
-    def page(self):
+    def page(self) -> None:
         if isinstance(self._manpages, list):
             _render_manpage_list(self._titles, self._manpages, self._path[-1], self._topic_title)
             return
@@ -518,7 +518,7 @@ class ModeCheckManPage(WatoMode):
             breadcrumb=breadcrumb,
         )
 
-    def page(self):
+    def page(self) -> None:
 
         html.open_table(class_=["data", "headerleft"])
 

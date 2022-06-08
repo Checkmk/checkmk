@@ -40,7 +40,7 @@ from cmk.gui.page_menu import (
     PageMenuSearch,
     PageMenuTopic,
 )
-from cmk.gui.pages import AjaxPage, page_registry
+from cmk.gui.pages import AjaxPage, AjaxPageResult, page_registry
 from cmk.gui.plugins.wato.utils import (
     configure_attributes,
     get_hostnames_from_checkboxes,
@@ -632,7 +632,7 @@ class ModeFolder(WatoMode):
 
         return None
 
-    def page(self):
+    def page(self) -> None:
         if not self._folder.may("read"):
             reason = self._folder.reason_why_may_not("read")
             if reason:
@@ -1159,13 +1159,13 @@ class ModeAjaxPopupMoveToFolder(AjaxPage):
     def handle_page(self):
         self._handle_exc(self.page)
 
-    def page(self):
+    def page(self) -> AjaxPageResult:
         html.span(self._move_title())
 
         choices = self._get_choices()
         if not choices:
             html.write_text(_("No valid target folder."))
-            return
+            return None
 
         html.dropdown(
             "_host_move_%s" % self._ident,
@@ -1175,6 +1175,7 @@ class ModeAjaxPopupMoveToFolder(AjaxPage):
             onchange="location.href='%s&_ident=%s&_move_%s_to=' + this.value;"
             % (self._back_url, self._ident, self._what),
         )
+        return None
 
     def _move_title(self):
         if self._what == "host":
@@ -1259,7 +1260,7 @@ class ABCFolderMode(WatoMode, abc.ABC):
         return redirect(mode_url("folder", folder=folder.path()))
 
     # TODO: Clean this method up! Split new/edit handling to sub classes
-    def page(self):
+    def page(self) -> None:
         new = self._folder.name() is None
 
         Folder.current().need_permission("read")
@@ -1406,7 +1407,8 @@ def _convert_title_to_filename(title: str) -> str:
 
 @page_registry.register_page("ajax_set_foldertree")
 class ModeAjaxSetFoldertree(AjaxPage):
-    def page(self):
+    def page(self) -> AjaxPageResult:  # pylint: disable=useless-return
         check_csrf_token()
         api_request = self.webapi_request()
         user.save_file("foldertree", (api_request.get("topic"), api_request.get("target")))
+        return None

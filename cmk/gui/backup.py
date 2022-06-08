@@ -704,7 +704,7 @@ class PageBackup:
         job.stop()
         flash(_("The backup has been stopped."))
 
-    def page(self):
+    def page(self) -> None:
         show_key_download_warning(self.key_store.load())
         self.jobs().show_list(editable=self._may_edit_config())
 
@@ -922,7 +922,7 @@ class PageEditBackupJob:
         jobs.save()
         return HTTPRedirect(makeuri_contextless(request, [("mode", "backup")]))
 
-    def page(self):
+    def page(self) -> None:
         html.begin_form("edit_job", method="POST")
         html.prevent_password_auto_completion()
 
@@ -954,7 +954,7 @@ class PageAbstractBackupJobState:
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         return PageMenu(dropdowns=[], breadcrumb=breadcrumb)
 
-    def page(self):
+    def page(self) -> None:
         html.open_div(id_="job_details")
         self.show_job_details()
         html.close_div()
@@ -1272,7 +1272,7 @@ class PageBackupTargets:
                 % ", ".join(job_titles),
             )
 
-    def page(self):
+    def page(self) -> None:
         self.targets().show_list()
         SystemBackupTargetsReadOnly().show_list(editable=False, title=_("System global targets"))
 
@@ -1392,7 +1392,7 @@ class PageEditBackupTarget:
         targets.save()
         return HTTPRedirect(makeuri_contextless(request, [("mode", "backup_targets")]))
 
-    def page(self):
+    def page(self) -> None:
         html.begin_form("edit_target", method="POST")
         html.prevent_password_auto_completion()
 
@@ -1995,7 +1995,7 @@ class PageBackupRestore:
         RestoreJob(self._target_ident, backup_ident).stop()
         flash(_("The restore has been stopped."))
 
-    def page(self):
+    def page(self) -> None:
         if self._restore_was_started():
             self._show_restore_progress()
 

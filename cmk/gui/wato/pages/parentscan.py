@@ -379,7 +379,7 @@ class ModeParentScan(WatoMode):
                 entries += self._recurse_hosts(subfolder, recurse, select)
         return entries
 
-    def page(self):
+    def page(self) -> None:
         job_status_snapshot = self._job.get_status_snapshot()
         if job_status_snapshot.is_active():
             html.show_message(

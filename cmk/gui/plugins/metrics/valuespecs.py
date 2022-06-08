@@ -9,7 +9,7 @@ from typing import Any, List, Optional, TypedDict
 
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
-from cmk.gui.pages import AjaxPage, page_registry
+from cmk.gui.pages import AjaxPage, AjaxPageResult, page_registry
 from cmk.gui.plugins.metrics import artwork
 from cmk.gui.plugins.metrics.utils import metric_info, unit_info
 from cmk.gui.valuespec import (
@@ -253,7 +253,7 @@ class ValuesWithUnits(CascadingDropdown):
         ]
 
     @staticmethod
-    def resolve_units(request):
+    def resolve_units(request) -> AjaxPageResult:
         # This relies on python3.8 dictionaries being always ordered
         # Otherwise it is not possible to mach the unit name to value
         # CascadingDropdowns enumerate the options instead of using keys
@@ -280,5 +280,5 @@ class ValuesWithUnits(CascadingDropdown):
 
 @page_registry.register_page("ajax_vs_unit_resolver")
 class PageVsAutocomplete(AjaxPage):
-    def page(self):
+    def page(self) -> AjaxPageResult:
         return ValuesWithUnits.resolve_units(self.webapi_request())

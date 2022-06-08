@@ -33,6 +33,7 @@ from cmk.gui.log import logger
 from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.page_menu import PageMenu, PageMenuDropdown, PageMenuTopic
+from cmk.gui.pages import AjaxPage, AjaxPageResult
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.theme import theme
@@ -661,18 +662,19 @@ def ajax_snapin():
 
 
 @cmk.gui.pages.page_registry.register_page("sidebar_fold")
-class AjaxFoldSnapin(cmk.gui.pages.AjaxPage):
-    def page(self):
+class AjaxFoldSnapin(AjaxPage):
+    def page(self) -> AjaxPageResult:  # pylint: disable=useless-return
         check_csrf_token()
         response.set_content_type("application/json")
         user_config = UserSidebarConfig(user, active_config.sidebar)
         user_config.folded = request.var("fold") == "yes"
         user_config.save()
+        return None
 
 
 @cmk.gui.pages.page_registry.register_page("sidebar_openclose")
-class AjaxOpenCloseSnapin(cmk.gui.pages.AjaxPage):
-    def page(self):
+class AjaxOpenCloseSnapin(AjaxPage):
+    def page(self) -> AjaxPageResult:
         check_csrf_token()
         response.set_content_type("application/json")
         if not user.may("general.configure_sidebar"):
@@ -891,8 +893,8 @@ def _used_snapins() -> List[Any]:
 
 
 @cmk.gui.pages.page_registry.register_page("sidebar_ajax_add_snapin")
-class AjaxAddSnapin(cmk.gui.pages.AjaxPage):
-    def page(self):
+class AjaxAddSnapin(AjaxPage):
+    def page(self) -> AjaxPageResult:
         check_csrf_token()
         if not user.may("general.configure_sidebar"):
             raise MKGeneralException(_("You are not allowed to change the sidebar."))

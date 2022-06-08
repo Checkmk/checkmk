@@ -69,7 +69,7 @@ class ModeManageReadOnly(WatoMode):
             pprint_value=active_config.wato_pprint_config,
         )
 
-    def page(self):
+    def page(self) -> None:
         html.p(
             _(
                 "The WATO configuration can be set to read only mode for all users that are not "

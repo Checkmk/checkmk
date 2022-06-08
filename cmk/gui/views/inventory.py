@@ -820,6 +820,45 @@ class AttributeDisplayHint:
             is_show_more=raw_hint.get("is_show_more", True),
         )
 
+    def make_filter(
+        self, ident: str, inventory_path: inventory.InventoryPath
+    ) -> FilterInvText | FilterInvBool | FilterInvFloat:
+        if self.data_type == "str":
+            return FilterInvText(
+                ident=ident,
+                title=self.long_title,
+                inventory_path=inventory_path,
+                is_show_more=self.is_show_more,
+            )
+
+        if self.data_type == "bool":
+            return FilterInvBool(
+                ident=ident,
+                title=self.long_title,
+                inventory_path=inventory_path,
+                is_show_more=self.is_show_more,
+            )
+
+        filter_info = _inv_filter_info().get(self.data_type, {})
+        return FilterInvFloat(
+            ident=ident,
+            title=self.long_title,
+            inventory_path=inventory_path,
+            unit=filter_info.get("unit"),
+            scale=filter_info.get("scale", 1.0),
+            is_show_more=self.is_show_more,
+        )
+
+
+def _inv_filter_info():
+    return {
+        "bytes": {"unit": _("MB"), "scale": 1024 * 1024},
+        "bytes_rounded": {"unit": _("MB"), "scale": 1024 * 1024},
+        "hz": {"unit": _("MHz"), "scale": 1000000},
+        "volt": {"unit": _("Volt")},
+        "timestamp": {"unit": _("secs")},
+    }
+
 
 def _find_display_hint_id(raw_path: SDRawPath) -> Optional[str]:
     """Looks up the display hint for the given inventory path.
@@ -972,36 +1011,7 @@ def _declare_inv_column(raw_path: SDRawPath, raw_hint: InventoryHintSpec) -> Non
         )
 
         # Declare filter. Sync this with _declare_invtable_column()
-        if hint.data_type == "str":
-            filter_registry.register(
-                FilterInvText(
-                    ident=name,
-                    title=hint.long_title,
-                    inventory_path=inventory_path,
-                    is_show_more=hint.is_show_more,
-                )
-            )
-        elif hint.data_type == "bool":
-            filter_registry.register(
-                FilterInvBool(
-                    ident=name,
-                    title=hint.long_title,
-                    inventory_path=inventory_path,
-                    is_show_more=hint.is_show_more,
-                )
-            )
-        else:
-            filter_info = _inv_filter_info().get(hint.data_type, {})
-            filter_registry.register(
-                FilterInvFloat(
-                    ident=name,
-                    title=hint.long_title,
-                    inventory_path=inventory_path,
-                    unit=filter_info.get("unit"),
-                    scale=filter_info.get("scale", 1.0),
-                    is_show_more=hint.is_show_more,
-                )
-            )
+        filter_registry.register(hint.make_filter(name, inventory_path))
 
 
 def _make_hint_from_raw(
@@ -1067,16 +1077,6 @@ def _paint_host_inventory_tree(row: Row, inventory_path: inventory.InventoryPath
         code = HTML(output_funnel.drain())
 
     return td_class, code
-
-
-def _inv_filter_info():
-    return {
-        "bytes": {"unit": _("MB"), "scale": 1024 * 1024},
-        "bytes_rounded": {"unit": _("MB"), "scale": 1024 * 1024},
-        "hz": {"unit": _("MHz"), "scale": 1000000},
-        "volt": {"unit": _("Volt")},
-        "timestamp": {"unit": _("secs")},
-    }
 
 
 # .

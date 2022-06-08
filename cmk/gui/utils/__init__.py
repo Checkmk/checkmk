@@ -217,16 +217,23 @@ def unique_default_name_suggestion(template: str, used_names: Iterable[str]) -> 
 def validate_id(
     mode: str,
     existing_entries: Dict[str, Any],
+    reserved_unique_ids: Optional[List[str]] = None,
 ) -> Callable[[Dict[str, Any], str], None,]:
     """Validate ID of newly created or cloned pagetype or visual"""
     from cmk.gui.i18n import _
 
     def _validate(properties: Dict[str, Any], varprefix: str) -> None:
         name = properties["name"]
-        if existing_entries.get(name) and mode in ["create", "clone"]:
-            raise MKUserError(
-                varprefix + "_p_name",
-                _("You already have an element with the ID <b>%s</b>") % name,
-            )
+        if mode in ["create", "clone"]:
+            if existing_entries.get(name):
+                raise MKUserError(
+                    varprefix + "_p_name",
+                    _("You already have an element with the ID <b>%s</b>") % name,
+                )
+            if reserved_unique_ids is not None and name in reserved_unique_ids:
+                raise MKUserError(
+                    varprefix + "_p_name",
+                    _("ID <b>%s</b> is reserved for internal use.") % name,
+                )
 
     return _validate

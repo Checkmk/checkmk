@@ -791,6 +791,10 @@ class CustomSnapins(pagetypes.Overridable):
             )
         return choices
 
+    @classmethod
+    def reserved_unique_ids(cls) -> List[str]:
+        return [k for k, v in snapin_registry.items() if not v.is_custom_snapin()]
+
 
 pagetypes.declare(CustomSnapins)
 

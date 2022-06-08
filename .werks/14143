@@ -1,0 +1,14 @@
+Title: Add option to use narrow rendering for informational columns
+Class: feature
+Compatible: compat
+Component: reporting
+Date: 1654670043
+Edition: cee
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1
+
+You can now select to use narrow rendering for columns in reports.
+
+This enables the option to render informational columns with the same width
+as columns with visualization levels.

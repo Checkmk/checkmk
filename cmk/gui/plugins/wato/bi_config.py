@@ -1532,6 +1532,9 @@ class NodeVisualizationLayoutStyle(ValueSpec[dict[str, Any]]):
             "example.create_example(%s)" % (json.dumps(varprefix), json.dumps(value))
         )
 
+    def mask(self, value: dict[str, Any]) -> dict[str, Any]:
+        return value
+
     def canonical_value(self) -> dict[str, Any]:
         return {}
 

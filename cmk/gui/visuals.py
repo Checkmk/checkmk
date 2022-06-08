@@ -2010,6 +2010,9 @@ class VisualFilter(ValueSpec[FilterHTTPVariables]):
     def validate_value(self, value: FilterHTTPVariables, varprefix: str) -> None:
         self._filter.validate_value(value)
 
+    def mask(self, value: FilterHTTPVariables) -> FilterHTTPVariables:
+        return value
+
     def value_to_html(self, value: FilterHTTPVariables) -> ValueSpecText:
         raise NotImplementedError()  # FIXME! Violates LSP!
 

@@ -2460,6 +2460,9 @@ class HostTagCondition(ValueSpec[Sequence[str]]):
             style="display: none;" if not div_is_open else None,
         )
 
+    def mask(self, value: Sequence[str]) -> Sequence[str]:
+        return value
+
     def value_to_json(self, value: Sequence[str]) -> JSONValue:
         raise NotImplementedError()  # FIXME! Violates LSP!
 

@@ -23,6 +23,7 @@ import cmk.gui.inventory
 import cmk.gui.utils
 from cmk.gui.num_split import cmp_version
 from cmk.gui.plugins.views.utils import inventory_displayhints
+from cmk.gui.plugins.visuals.inventory import FilterInvtableVersion
 from cmk.gui.views import View
 from cmk.gui.views.inventory import (
     _cmp_inv_generic,
@@ -503,6 +504,7 @@ def test_sort_table_rows_displayhint(rows: Sequence[SDRow], expected: Sequence[S
                 paint_function=inv_paint_generic,
                 title="Key",
                 sort_function=_cmp_inv_generic,
+                filter_class=None,
             ),
         ),
         (
@@ -514,6 +516,7 @@ def test_sort_table_rows_displayhint(rows: Sequence[SDRow], expected: Sequence[S
                 paint_function=inv_paint_if_oper_status,
                 title="Operational Status",
                 sort_function=_cmp_inv_generic,
+                filter_class=None,
             ),
         ),
         (
@@ -525,6 +528,7 @@ def test_sort_table_rows_displayhint(rows: Sequence[SDRow], expected: Sequence[S
                 paint_function=inv_paint_generic,
                 title="Key",
                 sort_function=_cmp_inv_generic,
+                filter_class=None,
             ),
         ),
     ],
@@ -550,6 +554,7 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
                 paint_function=inv_paint_generic,
                 title="Bar",
                 sort_function=_cmp_inv_generic,
+                filter_class=None,
             ),
         ),
         (
@@ -560,6 +565,18 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
                 paint_function=inv_paint_generic,
                 title="Package Version",
                 sort_function=cmp_version,
+                filter_class=None,
+            ),
+        ),
+        (
+            ".software.packages:*.version",
+            ColumnDisplayHint(
+                short_title="Version",
+                data_type="str",
+                paint_function=inv_paint_generic,
+                title="Version",
+                sort_function=cmp_version,
+                filter_class=FilterInvtableVersion,
             ),
         ),
         (
@@ -570,6 +587,7 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
                 paint_function=inv_paint_number,
                 title="Index",
                 sort_function=_cmp_inv_generic,
+                filter_class=None,
             ),
         ),
         (
@@ -580,6 +598,7 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
                 paint_function=inv_paint_if_oper_status,
                 title="Operational Status",
                 sort_function=_cmp_inv_generic,
+                filter_class=None,
             ),
         ),
     ],

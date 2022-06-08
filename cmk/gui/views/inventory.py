@@ -20,6 +20,7 @@ from typing import (
     Optional,
     Sequence,
     Tuple,
+    Type,
     TYPE_CHECKING,
     Union,
 )
@@ -77,8 +78,13 @@ from cmk.gui.plugins.views.utils import (
 from cmk.gui.plugins.visuals.inventory import (
     FilterInvBool,
     FilterInvFloat,
+    FilterInvtableAdminStatus,
+    FilterInvtableAvailable,
     FilterInvtableIDRange,
+    FilterInvtableInterfaceType,
+    FilterInvtableOperStatus,
     FilterInvtableText,
+    FilterInvtableVersion,
     FilterInvText,
 )
 from cmk.gui.plugins.visuals.utils import (
@@ -730,6 +736,15 @@ class ColumnDisplayHint:
     data_type: str
     paint_function: PaintFunction
     sort_function: Callable[[Any, Any], int]  # TODO improve type hints for args
+    filter_class: (
+        None
+        | Type[FilterInvtableText]
+        | Type[FilterInvtableVersion]
+        | Type[FilterInvtableOperStatus]
+        | Type[FilterInvtableAdminStatus]
+        | Type[FilterInvtableAvailable]
+        | Type[FilterInvtableInterfaceType]
+    )
 
     @classmethod
     def make_from_path(cls, path: SDPath, key: str) -> ColumnDisplayHint:
@@ -742,6 +757,7 @@ class ColumnDisplayHint:
             data_type=data_type,
             paint_function=paint_function,
             sort_function=raw_hint.get("sort", _cmp_inv_generic),
+            filter_class=raw_hint.get("filter"),
         )
 
     @classmethod
@@ -757,6 +773,38 @@ class ColumnDisplayHint:
             data_type=data_type,
             paint_function=paint_function,
             sort_function=raw_hint.get("sort", _cmp_inv_generic),
+            filter_class=raw_hint.get("filter"),
+        )
+
+    def make_filter(
+        self, inv_info: str, ident: str, topic: str
+    ) -> (
+        FilterInvtableText
+        | FilterInvtableVersion
+        | FilterInvtableOperStatus
+        | FilterInvtableAdminStatus
+        | FilterInvtableAvailable
+        | FilterInvtableInterfaceType
+        | FilterInvtableIDRange
+    ):
+        if self.filter_class:
+            return self.filter_class(
+                inv_info=inv_info,
+                ident=ident,
+                title=topic + ": " + self.title,
+            )
+
+        if (ranged_table := get_ranged_table(inv_info)) is not None:
+            return FilterInvtableIDRange(
+                inv_info=ranged_table,
+                ident=ident,
+                title=topic + ": " + self.title,
+            )
+
+        return FilterInvtableText(
+            inv_info=inv_info,
+            ident=ident,
+            title=topic + ": " + self.title,
         )
 
 
@@ -1100,7 +1148,7 @@ def _paint_host_inventory_tree(row: Row, inventory_path: inventory.InventoryPath
 
 def _inv_find_subtable_columns(
     raw_path: SDRawPath,
-) -> Sequence[Tuple[str, Tuple[InventoryHintSpec, ColumnDisplayHint]]]:
+) -> Sequence[Tuple[str, ColumnDisplayHint]]:
     """Find the name of all columns of an embedded table that have a display
     hint. Respects the order of the columns if one is specified in the
     display hint.
@@ -1115,26 +1163,20 @@ def _inv_find_subtable_columns(
     swapped = [(t[1], t[0]) for t in with_numbers]
     order = dict(swapped)
 
-    columns: Dict[str, Tuple[InventoryHintSpec, ColumnDisplayHint]] = {}
+    columns: Dict[str, ColumnDisplayHint] = {}
     for this_raw_path, this_raw_hint in inventory_displayhints.items():
         if (
             this_raw_path.startswith(raw_path + "*.")
             and (key := inventory.InventoryPath.parse(this_raw_path).key) is not None
         ):
             # ".networking.interfaces:*.port_type" -> "port_type"
-            columns[key] = (
-                this_raw_hint,
-                ColumnDisplayHint.make_from_hint(this_raw_path, this_raw_hint),
-            )
+            columns[key] = ColumnDisplayHint.make_from_hint(this_raw_path, this_raw_hint)
 
     for key in table_hint.key_order:
         if key not in columns:
             this_raw_path = f"{raw_path}:*.{key}"
             this_raw_hint = inventory_displayhints.get(this_raw_path, {})
-            columns[key] = (
-                this_raw_hint,
-                ColumnDisplayHint.make_from_hint(this_raw_path, this_raw_hint),
-            )
+            columns[key] = ColumnDisplayHint.make_from_hint(this_raw_path, this_raw_hint)
 
     return sorted(columns.items(), key=lambda t: (order.get(t[0], 999), t[0]))
 
@@ -1156,37 +1198,11 @@ def _declare_invtable_column(
     infoname: str,
     topic: str,
     column: str,
-    raw_hint: InventoryHintSpec,
     hint: ColumnDisplayHint,
 ) -> None:
     # TODO
     # - Sync this with _declare_inv_column()
-    # - filter -> ColumnDisplayHint
-    filter_class = raw_hint.get("filter")
-    if filter_class:
-        filter_registry.register(
-            filter_class(
-                inv_info=infoname,
-                ident=column,
-                title=topic + ": " + hint.title,
-            )
-        )
-    elif (ranged_table := get_ranged_table(infoname)) is not None:
-        filter_registry.register(
-            FilterInvtableIDRange(
-                inv_info=ranged_table,
-                ident=column,
-                title=topic + ": " + hint.title,
-            )
-        )
-    else:
-        filter_registry.register(
-            FilterInvtableText(
-                inv_info=infoname,
-                ident=column,
-                title=topic + ": " + hint.title,
-            )
-        )
+    filter_registry.register(hint.make_filter(infoname, column, topic))
 
     register_painter(
         column,
@@ -1300,7 +1316,7 @@ def declare_invtable_view(
 
     painters: List[Tuple[str, str, str]] = []
     filters = []
-    for name, (raw_col_hint, col_hint) in _inv_find_subtable_columns(raw_path):
+    for name, col_hint in _inv_find_subtable_columns(raw_path):
         column = infoname + "_" + name
 
         # Declare a painter, sorter and filters for each path with display hint
@@ -1308,7 +1324,6 @@ def declare_invtable_view(
             infoname,
             title_singular,
             column,
-            raw_col_hint,
             col_hint,
         )
 
@@ -1418,7 +1433,7 @@ def declare_joined_inventory_table_view(
     painters: List[Tuple[str, str, str]] = []
     filters = []
     for this_raw_path, this_infoname, this_title in zip(raw_paths, info_names, titles):
-        for name, (raw_col_hint, col_hint) in _inv_find_subtable_columns(this_raw_path):
+        for name, col_hint in _inv_find_subtable_columns(this_raw_path):
             if name in match_by:
                 # Filter out duplicate common columns which are used to join tables
                 if name in known_common_columns:
@@ -1432,7 +1447,6 @@ def declare_joined_inventory_table_view(
                 this_infoname,
                 this_title,
                 column,
-                raw_col_hint,
                 col_hint,
             )
 

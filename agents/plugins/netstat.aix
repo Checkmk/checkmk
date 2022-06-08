@@ -9,7 +9,7 @@
 
 # Disable unused variable error (needed to keep track of version)
 # shellcheck disable=SC2034
-CMK_VERSION="2.1.0p2"
+CMK_VERSION="2.1.0p3"
 
 # This is not part of the standard agent since it can produce much
 # output data of the table is large. This plugin is just needed for

@@ -1509,6 +1509,9 @@ class NodeVisualizationLayoutStyle(ValueSpec):
             "example.create_example(%s)" % (json.dumps(varprefix), json.dumps(value))
         )
 
+    def mask(self, value: dict[str, Any]) -> dict[str, Any]:
+        return value
+
     def value_to_html(self, value) -> str:
         return ""
 

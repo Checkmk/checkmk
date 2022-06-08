@@ -2496,6 +2496,9 @@ class HostTagCondition(ValueSpec):
             style="display: none;" if not div_is_open else None,
         )
 
+    def mask(self, value: list[str]) -> list[str]:
+        return value
+
     def value_to_json(self, value):
         raise NotImplementedError()
 

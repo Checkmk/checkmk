@@ -1275,6 +1275,9 @@ class TimeperiodValuespec(ValueSpec):
             self._get_timeperiod_valuespec() if self.is_active(value) else self._enclosed_valuespec
         )
 
+    def mask(self, value: dict[str, Any]) -> dict[str, Any]:
+        return self._get_used_valuespec(value).mask(value)
+
     def transform_value(self, value: Any) -> Any:
         return self._get_used_valuespec(value).transform_value(value)
 

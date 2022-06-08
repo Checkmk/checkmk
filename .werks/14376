@@ -1,0 +1,12 @@
+Title: Mask passwords in rule export
+Class: security
+Compatible: compat
+Component: wato
+Date: 1654702879
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p3
+
+Mask sensitive information in the GUI view which displays the Rule representation for the REST API.

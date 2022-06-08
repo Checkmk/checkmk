@@ -2704,7 +2704,7 @@ class ModeExportRule(ABCEditRuleMode):
         pass
 
     def page(self) -> None:
-        pretty_rule_config = pprint.pformat(self._rule.value)
+        pretty_rule_config = pprint.pformat(self._rule.ruleset.valuespec().mask(self._rule.value))
         content_id = "rule_representation"
         success_msg_id = "copy_success"
 

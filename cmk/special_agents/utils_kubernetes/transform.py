@@ -100,7 +100,7 @@ def _is_valid_label_value(value: Any) -> TypeGuard[LabelValue]:
     return isinstance(value, str) and bool(__validation_value.fullmatch(value)) and len(value) < 64
 
 
-def parse_annotations(annotations: Optional[Mapping[LabelName, str]]) -> api.Annotations:
+def parse_annotations(annotations: Optional[Mapping[str, str]]) -> api.Annotations:
     """Select annotations, if they are valid.
 
     Kubernetes allows the annotations to be arbitrary byte strings with a
@@ -128,7 +128,7 @@ def parse_annotations(annotations: Optional[Mapping[LabelName, str]]) -> api.Ann
     """
     if annotations is None:
         return {}
-    return {k: v for k, v in annotations.items() if _is_valid_label_value(v)}
+    return {LabelName(k): v for k, v in annotations.items() if _is_valid_label_value(v)}
 
 
 def parse_labels(labels: Optional[Mapping[str, str]]) -> Mapping[LabelName, Label]:

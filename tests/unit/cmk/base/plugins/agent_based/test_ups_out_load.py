@@ -59,6 +59,15 @@ def test_ups_out_load_discovery(info, expected_result):
             [[["1", "99", "1"]]],
             [Result(state=State.UNKNOWN, summary="Phase 3 not found in SNMP output")],
         ),
+        (
+            "5",
+            {"levels": (85, 90)},
+            [[["400", "", "5"]]],
+            [
+                Result(state=State.OK, summary="load: 0%"),
+                Metric("out_load", 0.0, levels=(85.0, 90.0)),
+            ],
+        ),
     ],
 )
 def test_ups_out_load_check(item, params, info, expected_result):

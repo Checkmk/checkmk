@@ -23,7 +23,7 @@ import subprocess
 import tempfile
 from dataclasses import dataclass
 from textwrap import wrap
-from typing import Any, List, Literal, Optional, Protocol, Sequence, Tuple, TypedDict, Union
+from typing import Literal, Optional, Protocol, Sequence, TypedDict, Union
 
 from PIL import Image, PngImagePlugin  # type: ignore[import]
 from reportlab.lib.units import mm  # type: ignore[import]
@@ -40,11 +40,11 @@ from cmk.gui.exceptions import MKInternalError
 from cmk.gui.http import response
 from cmk.gui.i18n import _
 
-RawIconColumn = Tuple[str, Optional[str]]
-# TODO: ("object", ...) missing
-RawTableColumn = Tuple[str, Union[str, RawIconColumn]]
-RawTableRow = List[RawTableColumn]
-RawTableRows = List[RawTableRow]
+RawIconColumn = tuple[Literal["icon"], str]
+RawRendererColumn = tuple[Literal["object"], "CellRenderer"]
+RawTableColumn = tuple[str, Union[str, RawIconColumn, RawRendererColumn]]
+RawTableRow = list[RawTableColumn]
+RawTableRows = list[RawTableRow]
 RGBColor = tuple[float, float, float]  # (1.5, 0.0, 0.5)
 Position = Literal["c", "n", "ne", "e", "se", "s", "sw", "w", "nw"]
 SizePT = float
@@ -441,7 +441,7 @@ class Document:
         for line in lines:
             self.add_text_line(line)
 
-    def debug(self, *args: Any) -> None:
+    def debug(self, *args: object) -> None:
         for arg in args:
             self.add_paragraph(repr(arg))
 
@@ -603,7 +603,7 @@ class Document:
             aligned_string(abs_x, abs_y, part, alignment)
             self.restore_state()
 
-    def set_tabstops(self, tabstops: List[Union[SizeMM, float, str]]) -> None:
+    def set_tabstops(self, tabstops: list[Union[SizeMM, float, str]]) -> None:
         # t is a list of tab stops. Each entry is either an int
         # or float -> tabstop in mm. Or it is a string that has
         # prefix of characters followed by a number (mm). The
@@ -637,8 +637,8 @@ class Document:
 
     def add_table(
         self,
-        header_texts: Any,
-        raw_rows: Any,
+        header_texts: Sequence[str],
+        raw_rows: RawTableRows,
         font_size: SizePT,
         show_headings: bool,
         padding: tuple[SizeMM, SizeMM],
@@ -996,8 +996,8 @@ class TableRenderer:
 
     def add_table(  # pylint: disable=too-many-branches
         self,
-        header_texts: Any,
-        raw_rows: Any,
+        header_texts: Sequence[str],
+        raw_rows: RawTableRows,
         font_size: SizeMM,
         show_headings: bool,
         padding: tuple[SizeMM, SizeMM],

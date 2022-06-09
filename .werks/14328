@@ -1,0 +1,15 @@
+Title: Fix host search with option "Locked by"
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1654775801
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p3
+
+The host search returned no search results if option "Locked by" was used, even
+if host would match.
+
+For example, this search is used in the dynamic host management action "Hosts
+assigned with this connection".

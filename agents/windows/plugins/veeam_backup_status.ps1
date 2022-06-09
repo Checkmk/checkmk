@@ -1,3 +1,4 @@
+param ([switch] $Debug)
 $CMK_VERSION = "2.0.0p26"
 ## VEEAM Backups
 ## This powershell script needs to be run with the 64bit powershell
@@ -28,7 +29,7 @@ catch {
         Add-PSSnapin VeeamPSSnapIn -ErrorAction Stop
     }
     catch {
-        Write-Host "No Veeam powershell modules could be loaded"
+        if ($Debug) {Write-Host "No Veeam powershell modules could be loaded"}
         Exit 1
     }
 }

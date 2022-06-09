@@ -1,0 +1,26 @@
+Title: Solaris agent update removes services symlink
+Class: fix
+Compatible: incomp
+Component: agents
+Date: 1654766725
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+When updating agents using the agent updater on Solaris, the postremove script
+will try to remove the corresponding service line from <tt>/etc/services</tt>.
+However, the script recently missed the fact that this usually is a symbolic
+link to the actual services file, and overrode it with a new (hardlinked) file.
+
+Moreover, this situation could lead to a missing Checkmk agent service, as the
+situation got cleaned up on calls to <tt>pkg verify</tt> and <tt>pkg fix</tt>
+by replacing the <tt>/etc/services</tt> file with the proper symbolic link
+again, locking out the Checkmk agent.
+
+This Werk is marked as incompatible, because some additional action might be
+required to finally fix the state on your Solaris hosts. The uninstallation
+script now preserves an existing symlink, but can't clean up an overridden
+link. When setting the symlink back to its proper target manually while the
+Checkmk agent is installed, be sure to paste the line containing
+<tt>check-mk-agent</tt> to the target file in advance.

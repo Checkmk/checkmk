@@ -369,12 +369,12 @@ def calculate_physical_precision(v: float, precision: int) -> tuple[str, int, in
     return scale_symbols[scale], places_after_comma, 1000**scale
 
 
-def fmt_nic_speed(speed: str) -> str:
+def fmt_nic_speed(speed: str | int) -> str:
     """Format network speed (bit/s) for humans."""
     try:
         speedi = int(speed)
     except ValueError:
-        return speed
+        return str(speed)
 
     return fmt_number_with_precision(
         speedi, base=1000.0, precision=2, unit="bit/s", drop_zeroes=True

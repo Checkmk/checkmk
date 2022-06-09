@@ -1,4 +1,9 @@
+<<<<<<< HEAD
 $CMK_VERSION = "2.1.0p3"
+=======
+param ([switch] $Debug)
+$CMK_VERSION = "2.0.0p26"
+>>>>>>> 1f71c3bc81 (14350 FIX Fix veeam agent plugin poluting output when veeam software not found)
 ## VEEAM Backups
 ## This powershell script needs to be run with the 64bit powershell
 ## and thus from a 64bit check_mk agent
@@ -28,7 +33,7 @@ catch {
         Add-PSSnapin VeeamPSSnapIn -ErrorAction Stop
     }
     catch {
-        Write-Host "No Veeam powershell modules could be loaded"
+        if ($Debug) {Write-Host "No Veeam powershell modules could be loaded"}
         Exit 1
     }
 }

@@ -28,7 +28,7 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import mega_menu_registry
-from cmk.gui.pages import AjaxPage, AjaxPageResult, page_registry
+from cmk.gui.pages import AjaxPage, page_registry, PageResult
 from cmk.gui.plugins.sidebar.utils import PageHandlers, SidebarSnapin, snapin_registry
 from cmk.gui.plugins.wato.utils import main_module_registry
 from cmk.gui.type_defs import (
@@ -1562,7 +1562,7 @@ class MonitoringSearch(ABCMegaMenuSearch):
 
 @page_registry.register_page("ajax_search_monitoring")
 class PageSearchMonitoring(AjaxPage):
-    def page(self) -> AjaxPageResult:
+    def page(self) -> PageResult:
         query = request.get_str_input_mandatory("q")
         return MenuSearchResultsRenderer("monitoring").render(query)
 
@@ -1598,7 +1598,7 @@ class SetupSearch(ABCMegaMenuSearch):
 
 @page_registry.register_page("ajax_search_setup")
 class PageSearchSetup(AjaxPage):
-    def page(self) -> AjaxPageResult:
+    def page(self) -> PageResult:
         query = request.get_str_input_mandatory("q")
         try:
             return MenuSearchResultsRenderer("setup").render(query)

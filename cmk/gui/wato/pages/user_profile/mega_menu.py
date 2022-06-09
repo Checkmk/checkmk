@@ -14,7 +14,7 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import mega_menu_registry
-from cmk.gui.pages import AjaxPage, AjaxPageResult, page_registry
+from cmk.gui.pages import AjaxPage, page_registry, PageResult
 from cmk.gui.plugins.userdb.utils import validate_start_url
 from cmk.gui.type_defs import MegaMenu, TopicMenuItem, TopicMenuTopic
 from cmk.gui.utils.csrf_token import check_csrf_token
@@ -141,7 +141,7 @@ mega_menu_registry.register(
 class ModeAjaxCycleThemes(AjaxPage):
     """AJAX handler for quick access option 'Interface theme" in user menu"""
 
-    def page(self) -> AjaxPageResult:
+    def page(self) -> PageResult:
         check_csrf_token()
         themes = [theme for theme, _title in theme_choices()]
         current_theme = theme.get()
@@ -163,7 +163,7 @@ class ModeAjaxCycleThemes(AjaxPage):
 class ModeAjaxCycleSidebarPosition(AjaxPage):
     """AJAX handler for quick access option 'Sidebar position" in user menu"""
 
-    def page(self) -> AjaxPageResult:
+    def page(self) -> PageResult:
         check_csrf_token()
         _set_user_attribute(
             "ui_sidebar_position",
@@ -176,7 +176,7 @@ class ModeAjaxCycleSidebarPosition(AjaxPage):
 class ModeAjaxSetStartURL(AjaxPage):
     """AJAX handler to set the start URL of a user to a dashboard"""
 
-    def page(self) -> AjaxPageResult:
+    def page(self) -> PageResult:
         try:
             check_csrf_token()
             name = request.get_str_input_mandatory("name")

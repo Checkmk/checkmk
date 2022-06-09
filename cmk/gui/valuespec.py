@@ -81,7 +81,7 @@ from cmk.gui.htmllib.tag_rendering import HTMLTagAttributes
 from cmk.gui.http import request, UploadedFile
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.pages import AjaxPage, AjaxPageResult, page_registry
+from cmk.gui.pages import AjaxPage, page_registry, PageResult
 from cmk.gui.type_defs import (
     _Icon,
     ChoiceGroup,
@@ -6802,7 +6802,7 @@ def SingleLabel(  # pylint: disable=redefined-builtin
 class PageAutocompleteLabels(AjaxPage):
     """Return all known labels to support tagify label input dropdown completion"""
 
-    def page(self) -> AjaxPageResult:
+    def page(self) -> PageResult:
         api_request = request.get_request()
         return encode_labels_for_tagify(
             self._get_labels(Labels.World(api_request["world"]), api_request["search_label"])
@@ -7503,7 +7503,7 @@ class _CAInput(ValueSpec[_CAInputModel]):
 
 @page_registry.register_page("ajax_fetch_ca")
 class AjaxFetchCA(AjaxPage):
-    def page(self) -> AjaxPageResult:
+    def page(self) -> PageResult:
         check_csrf_token()
         user.need_permission("general.server_side_requests")
 

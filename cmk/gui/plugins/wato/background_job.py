@@ -22,7 +22,7 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
-from cmk.gui.pages import AjaxPage, AjaxPageResult, page_registry
+from cmk.gui.pages import AjaxPage, page_registry, PageResult
 from cmk.gui.plugins.wato.utils import (
     ABCMainModule,
     main_module_registry,
@@ -171,7 +171,7 @@ class ModeAjaxCycleThemes(AjaxPage):
         self.action()
         super().handle_page()
 
-    def page(self) -> AjaxPageResult:
+    def page(self) -> PageResult:
         with output_funnel.plugged():
             api_request = request.get_request()
             job_snapshot = self._show_details_page(api_request["job_id"])

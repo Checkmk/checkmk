@@ -1937,7 +1937,7 @@ class EditDashletPage(Page):
         except KeyError:
             raise MKUserError("name", _("The requested dashboard does not exist."))
 
-    def page(self) -> PageResult:
+    def page(self) -> PageResult:  # pylint: disable=useless-return
         if self._ident is None:
             type_name = request.get_str_input_mandatory("type")
             mode = "add"
@@ -2088,6 +2088,7 @@ class EditDashletPage(Page):
         html.end_form()
 
         html.footer()
+        return None
 
 
 def _dashlet_editor_page_menu(breadcrumb: Breadcrumb) -> PageMenu:

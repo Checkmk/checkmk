@@ -8,7 +8,7 @@ import abc
 import http.client as http_client
 import inspect
 import json
-from typing import Any, Callable, Dict, Iterable, Mapping, Optional, Type, Union
+from typing import Any, Callable, Dict, Mapping, Optional, Type
 
 import cmk.utils.plugin_registry
 from cmk.utils.exceptions import MKException
@@ -22,8 +22,7 @@ from cmk.gui.http import request, response
 from cmk.gui.log import logger
 
 PageHandlerFunc = Callable[[], None]
-PageResult = Any
-AjaxPageResult = Union[None, str, dict[str, Any], Iterable[Mapping[str, str]]]
+PageResult = object
 
 
 # At the moment pages are simply callables that somehow render content for the HTTP response
@@ -73,7 +72,7 @@ class AjaxPage(Page, abc.ABC):
         return request.get_request()
 
     @abc.abstractmethod
-    def page(self) -> AjaxPageResult:
+    def page(self) -> PageResult:
         """Override this to implement the page functionality"""
         raise NotImplementedError()
 

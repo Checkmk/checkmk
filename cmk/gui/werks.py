@@ -65,7 +65,7 @@ class ModeAboutCheckmkPage(cmk.gui.pages.Page):
     def _title(self) -> str:
         return _("About Checkmk")
 
-    def page(self) -> cmk.gui.pages.PageResult:
+    def page(self) -> cmk.gui.pages.PageResult:  # pylint: disable=useless-return
         breadcrumb = make_simple_page_breadcrumb(mega_menu_registry["help_links"], _("Info"))
         make_header(
             html,
@@ -124,6 +124,7 @@ class ModeAboutCheckmkPage(cmk.gui.pages.Page):
         html.span(_("© %s tribe29 GmbH. All Rights Reserved.") % time.strftime("%Y"))
         html.a(_("License agreement"), href="https://checkmk.com/legal.html", target="_blank")
         html.close_div()
+        return None
 
 
 @cmk.gui.pages.page_registry.register_page("change_log")
@@ -131,7 +132,7 @@ class ModeChangeLogPage(cmk.gui.pages.Page):
     def _title(self) -> str:
         return _("Change log (Werks)")
 
-    def page(self) -> cmk.gui.pages.PageResult:
+    def page(self) -> cmk.gui.pages.PageResult:  # pylint: disable=useless-return
         breadcrumb = make_simple_page_breadcrumb(mega_menu_registry["help_links"], self._title())
 
         load_werks()
@@ -154,6 +155,7 @@ class ModeChangeLogPage(cmk.gui.pages.Page):
         html.close_div()
 
         html.footer()
+        return None
 
     def _page_menu(self, breadcrumb: Breadcrumb, werk_table_options: Dict[str, Any]) -> PageMenu:
         menu = PageMenu(

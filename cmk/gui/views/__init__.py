@@ -83,7 +83,7 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.page_menu_entry import toggle_page_menu_entries
-from cmk.gui.pages import AjaxPage, AjaxPageResult, page_registry
+from cmk.gui.pages import AjaxPage, page_registry, PageResult
 from cmk.gui.permissions import (
     declare_dynamic_permissions,
     declare_permission,
@@ -1898,7 +1898,7 @@ def view_editor_sorter_specs(view: ViewSpec) -> _Tuple[str, Dictionary]:
 
 @page_registry.register_page("ajax_cascading_render_painer_parameters")
 class PageAjaxCascadingRenderPainterParameters(AjaxPage):
-    def page(self) -> AjaxPageResult:
+    def page(self) -> PageResult:
         api_request = request.get_request()
 
         if api_request["painter_type"] == "painter":
@@ -3734,7 +3734,7 @@ def ajax_popup_action_menu() -> None:
 class PageRescheduleCheck(AjaxPage):
     """Is called to trigger a host / service check"""
 
-    def page(self) -> AjaxPageResult:
+    def page(self) -> PageResult:
         api_request = request.get_request()
         return self._do_reschedule(api_request)
 
@@ -3769,7 +3769,7 @@ class PageRescheduleCheck(AjaxPage):
                 )
             )
 
-    def _do_reschedule(self, api_request: Dict[str, Any]) -> AjaxPageResult:
+    def _do_reschedule(self, api_request: Dict[str, Any]) -> PageResult:
         if not user.may("action.reschedule"):
             raise MKGeneralException("You are not allowed to reschedule checks.")
 

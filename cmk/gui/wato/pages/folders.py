@@ -40,7 +40,7 @@ from cmk.gui.page_menu import (
     PageMenuSearch,
     PageMenuTopic,
 )
-from cmk.gui.pages import AjaxPage, AjaxPageResult, page_registry
+from cmk.gui.pages import AjaxPage, page_registry, PageResult
 from cmk.gui.plugins.wato.utils import (
     configure_attributes,
     get_hostnames_from_checkboxes,
@@ -1159,7 +1159,7 @@ class ModeAjaxPopupMoveToFolder(AjaxPage):
     def handle_page(self):
         self._handle_exc(self.page)
 
-    def page(self) -> AjaxPageResult:
+    def page(self) -> PageResult:
         html.span(self._move_title())
 
         choices = self._get_choices()
@@ -1407,7 +1407,7 @@ def _convert_title_to_filename(title: str) -> str:
 
 @page_registry.register_page("ajax_set_foldertree")
 class ModeAjaxSetFoldertree(AjaxPage):
-    def page(self) -> AjaxPageResult:  # pylint: disable=useless-return
+    def page(self) -> PageResult:  # pylint: disable=useless-return
         check_csrf_token()
         api_request = self.webapi_request()
         user.save_file("foldertree", (api_request.get("topic"), api_request.get("target")))

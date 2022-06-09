@@ -28,7 +28,7 @@ from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import SuperUserContext, user
-from cmk.gui.pages import AjaxPage, AjaxPageResult, page_registry
+from cmk.gui.pages import AjaxPage, page_registry, PageResult
 from cmk.gui.watolib.automation_commands import automation_command_registry
 from cmk.gui.watolib.automations import (
     check_mk_local_automation_serialized,
@@ -52,7 +52,7 @@ class ModeAutomationLogin(AjaxPage):
     def handle_page(self):
         self._handle_exc(self.page)
 
-    def page(self) -> AjaxPageResult:  # pylint: disable=useless-return
+    def page(self) -> PageResult:  # pylint: disable=useless-return
         if not user.may("wato.automation"):
             raise MKAuthException(_("This account has no permission for automation."))
 
@@ -163,7 +163,7 @@ class ModeAutomation(AjaxPage):
         with SuperUserContext():
             self._handle_exc(self.page)
 
-    def page(self) -> AjaxPageResult:  # pylint: disable=useless-return
+    def page(self) -> PageResult:  # pylint: disable=useless-return
         # To prevent mixups in written files we use the same lock here as for
         # the normal WATO page processing. This might not be needed for some
         # special automation requests, like inventory e.g., but to keep it simple,

@@ -44,7 +44,7 @@ from cmk.gui.page_menu import (
     PageMenuSidePopup,
     PageMenuTopic,
 )
-from cmk.gui.pages import AjaxPage, AjaxPageResult, Page, page_registry, PageResult
+from cmk.gui.pages import AjaxPage, Page, page_registry, PageResult
 from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.plugins.views.utils import get_permitted_views
 from cmk.gui.plugins.visuals.node_vis import FilterTopologyMaxNodes, FilterTopologyMeshDepth
@@ -111,7 +111,7 @@ class ParentChildTopologyPage(Page):
             "add_context_to_title": True,
         }
 
-    def page(self) -> PageResult:
+    def page(self) -> PageResult:  # pylint: disable=useless-return
         """Determines the hosts to be shown"""
         user.need_permission("general.parent_child_topology")
 
@@ -140,6 +140,7 @@ class ParentChildTopologyPage(Page):
                 raise MKGeneralException(_("Invalid topology_settings %r") % topology_settings)
 
         self.show_topology(topology_settings)
+        return None
 
     def _get_default_view_hostnames(self, max_nodes: int) -> Set[HostName]:
         """Returns all hosts without any parents"""
@@ -283,7 +284,7 @@ def _bi_map() -> None:
 
 @page_registry.register_page("ajax_fetch_aggregation_data")
 class AjaxFetchAggregationData(AjaxPage):
-    def page(self) -> AjaxPageResult:
+    def page(self) -> PageResult:
         aggregations_var = request.get_str_input_mandatory("aggregations", "[]")
         filter_names = json.loads(aggregations_var)
 
@@ -462,7 +463,7 @@ class NodeVisualizationBIDataMapper:
 # Explicit Aggregations
 @page_registry.register_page("ajax_save_bi_aggregation_layout")
 class AjaxSaveBIAggregationLayout(AjaxPage):
-    def page(self) -> AjaxPageResult:
+    def page(self) -> PageResult:
         check_csrf_token()
         layout_var = request.get_str_input_mandatory("layout", "{}")
         layout_config = json.loads(layout_var)
@@ -473,7 +474,7 @@ class AjaxSaveBIAggregationLayout(AjaxPage):
 
 @page_registry.register_page("ajax_delete_bi_aggregation_layout")
 class AjaxDeleteBIAggregationLayout(AjaxPage):
-    def page(self) -> AjaxPageResult:
+    def page(self) -> PageResult:
         check_csrf_token()
         for_aggregation = request.var("aggregation_name")
         active_config.bi_layouts["aggregations"].pop(for_aggregation)
@@ -483,7 +484,7 @@ class AjaxDeleteBIAggregationLayout(AjaxPage):
 
 @page_registry.register_page("ajax_load_bi_aggregation_layout")
 class AjaxLoadBIAggregationLayout(AjaxPage):
-    def page(self) -> AjaxPageResult:
+    def page(self) -> PageResult:
         aggregation_name = request.var("aggregation_name")
         return BILayoutManagement.load_bi_aggregation_layout(aggregation_name)
 
@@ -491,7 +492,7 @@ class AjaxLoadBIAggregationLayout(AjaxPage):
 # Templates
 @page_registry.register_page("ajax_save_bi_template_layout")
 class AjaxSaveBITemplateLayout(AjaxPage):
-    def page(self) -> AjaxPageResult:
+    def page(self) -> PageResult:
         check_csrf_token()
         layout_var = request.get_str_input_mandatory("layout", "{}")
         layout_config = json.loads(layout_var)
@@ -502,7 +503,7 @@ class AjaxSaveBITemplateLayout(AjaxPage):
 
 @page_registry.register_page("ajax_delete_bi_template_layout")
 class AjaxDeleteBITemplateLayout(AjaxPage):
-    def page(self) -> AjaxPageResult:
+    def page(self) -> PageResult:
         check_csrf_token()
         layout_id = request.var("layout_id")
         active_config.bi_layouts["templates"].pop(layout_id)
@@ -512,20 +513,20 @@ class AjaxDeleteBITemplateLayout(AjaxPage):
 
 @page_registry.register_page("ajax_load_bi_template_layout")
 class AjaxLoadBITemplateLayout(AjaxPage):
-    def page(self) -> AjaxPageResult:
+    def page(self) -> PageResult:
         layout_id = request.var("layout_id")
         return BILayoutManagement.load_bi_template_layout(layout_id)
 
 
 @page_registry.register_page("ajax_get_all_bi_template_layouts")
 class AjaxGetAllBITemplateLayouts(AjaxPage):
-    def page(self) -> AjaxPageResult:
+    def page(self) -> PageResult:
         return BILayoutManagement.get_all_bi_template_layouts()
 
 
 @page_registry.register_page("ajax_fetch_topology")
 class AjaxFetchTopology(AjaxPage):
-    def page(self) -> AjaxPageResult:
+    def page(self) -> PageResult:
         # growth_root_nodes: a list of mandatory hostnames
         # mesh_depth: number of hops from growth root
         # growth_forbidden: block further traversal at the given nodes

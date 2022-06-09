@@ -18,7 +18,7 @@ from cmk.utils.site import omd_site
 
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.htmllib.generator import HTMLWriter
-from cmk.gui.pages import AjaxPage, AjaxPageResult, page_registry
+from cmk.gui.pages import AjaxPage, page_registry, PageResult
 from cmk.gui.utils.urls import DocReference
 
 try:
@@ -1432,7 +1432,7 @@ class BIAggregationForm(Dictionary):
 
 @page_registry.register_page("ajax_bi_rule_preview")
 class AjaxBIRulePreview(AjaxPage):
-    def page(self) -> AjaxPageResult:
+    def page(self) -> PageResult:
         sites_callback = SitesCallback(cmk.gui.sites.states, bi_livestatus_query)
         compiler = BICompiler(BIManager.bi_configuration_file(), sites_callback)
         compiler.prepare_for_compilation(compiler.compute_current_configstatus()["online_sites"])
@@ -1474,7 +1474,7 @@ class AjaxBIRulePreview(AjaxPage):
 
 @page_registry.register_page("ajax_bi_aggregation_preview")
 class AjaxBIAggregationPreview(AjaxPage):
-    def page(self) -> AjaxPageResult:
+    def page(self) -> PageResult:
         # Prepare compiler
         sites_callback = SitesCallback(cmk.gui.sites.states, bi_livestatus_query)
         compiler = BICompiler(BIManager.bi_configuration_file(), sites_callback)

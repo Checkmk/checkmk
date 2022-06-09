@@ -17,7 +17,7 @@ import cmk.gui.sites as sites
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
-from cmk.gui.pages import AjaxPage, AjaxPageResult, page_registry
+from cmk.gui.pages import AjaxPage, page_registry, PageResult
 from cmk.gui.plugins.metrics.utils import (
     get_graph_templates,
     graph_info,
@@ -329,7 +329,7 @@ def validate_autocompleter_data(api_request):
 
 @page_registry.register_page("ajax_vs_autocomplete")
 class PageVsAutocomplete(AjaxPage):
-    def page(self) -> AjaxPageResult:
+    def page(self) -> PageResult:
         api_request = self.webapi_request()
         validate_autocompleter_data(api_request)
         ident = api_request["ident"]

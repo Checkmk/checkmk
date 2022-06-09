@@ -43,7 +43,7 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
-from cmk.gui.pages import AjaxPage, AjaxPageResult, page_registry
+from cmk.gui.pages import AjaxPage, page_registry, PageResult
 from cmk.gui.plugins.wato.utils import mode_registry, sort_sites
 from cmk.gui.plugins.wato.utils.base_modes import WatoMode
 from cmk.gui.plugins.watolib.utils import ABCConfigDomain, DomainRequest, DomainRequests
@@ -639,7 +639,7 @@ def _vs_activation(title: str, has_foreign_changes: bool) -> Optional[Dictionary
 
 @page_registry.register_page("ajax_start_activation")
 class ModeAjaxStartActivation(AjaxPage):
-    def page(self) -> AjaxPageResult:
+    def page(self) -> PageResult:
         check_csrf_token()
         user.need_permission("wato.activate")
 
@@ -691,7 +691,7 @@ class ModeAjaxStartActivation(AjaxPage):
 
 @page_registry.register_page("ajax_activation_state")
 class ModeAjaxActivationState(AjaxPage):
-    def page(self) -> AjaxPageResult:
+    def page(self) -> PageResult:
         user.need_permission("wato.activate")
 
         api_request = self.webapi_request()

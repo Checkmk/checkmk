@@ -49,7 +49,7 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _, _u
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.metrics import translate_perf_data
-from cmk.gui.pages import AjaxPage, AjaxPageResult, page_registry
+from cmk.gui.pages import AjaxPage, page_registry, PageResult
 from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.plugins.metrics.rrd_fetch import merge_multicol
 from cmk.gui.plugins.metrics.valuespecs import transform_graph_render_options
@@ -654,7 +654,7 @@ dashlet_registry = DashletRegistry()
 
 @page_registry.register_page("ajax_figure_dashlet_data")
 class FigureDashletPage(AjaxPage):
-    def page(self) -> AjaxPageResult:
+    def page(self) -> PageResult:
         settings = json.loads(request.get_str_input_mandatory("settings"))
 
         try:

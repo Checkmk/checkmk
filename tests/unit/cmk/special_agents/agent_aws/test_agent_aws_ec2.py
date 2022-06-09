@@ -43,7 +43,9 @@ class FakeEC2Client:
                     "Groups": [
                         {"GroupName": "string", "GroupId": "string"},
                     ],
-                    "Instances": EC2DescribeInstancesIB.create_instances(amount=3),
+                    "Instances": EC2DescribeInstancesIB.create_instances(
+                        amount=3, skip_entities=self._skip_entities.get("Instances")
+                    ),
                     "OwnerId": "string",
                     "RequesterId": "string",
                     "ReservationId": "string",
@@ -322,17 +324,20 @@ def test_agent_aws_ec2_without_limits(get_ec2_sections):
         assert len(result.content) == 11
 
 
+@pytest.mark.parametrize("names,tags,found_ec2,found_ec2_with_labels", ec2_params)
 @pytest.mark.parametrize(
-    "names,tags,found_ec2,found_ec2_with_labels",
+    "skip_entities",
     [
-        (["InstanceId-0", "InstanceId-1", "Foo", "Bar"], (None, None), 2, 1),
+        {"ReservedInstances": ["AvailabilityZone"]},
+        {"Instances": ["Tags"]},  # Fix for FEED-6986
     ],
 )
-def test_agent_aws_ec2_no_crash_when_availability_zone_missing(
-    get_ec2_sections, names, tags, found_ec2, found_ec2_with_labels
+def test_agent_aws_ec2_no_crash_when_keys_missing(
+    get_ec2_sections, names, tags, found_ec2, found_ec2_with_labels, skip_entities
 ):
-    ec2_limits, _ec2_summary, _ec2_labels, _ec2_security_groups, _ec2 = get_ec2_sections(
-        names, tags, skip_entities={"ReservedInstances": ("AvailabilityZone",)}
+    ec2_limits, ec2_summary, _ec2_labels, _ec2_security_groups, _ec2 = get_ec2_sections(
+        names, tags, skip_entities=skip_entities
     )
     ec2_limits_results = ec2_limits.run().results
+    ec2_summary.run()
     assert len(ec2_limits_results) == 1

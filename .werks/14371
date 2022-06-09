@@ -1,0 +1,12 @@
+Title: Fix AWS special agent crash for EC2 missing tags
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1654795051
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+This werk fixes a crash in the AWS special agent that was happening
+when filtering EC2 instances by AWS tag with EC2 limits enabled.

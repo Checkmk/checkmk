@@ -1253,7 +1253,7 @@ class EC2Summary(AWSSection):
                 inst
                 for res in col_reservations
                 for inst in res["Instances"]
-                for tag in inst["Tags"]
+                for tag in inst.get("Tags", [])
                 if tag in tags
             ]
 

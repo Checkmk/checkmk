@@ -49,7 +49,7 @@ class ModeAutomationLogin(AjaxPage):
 
     # TODO: Better use AjaxPage.handle_page() for standard AJAX call error handling. This
     # would need larger refactoring of the generic html.popup_trigger() mechanism.
-    def handle_page(self):
+    def handle_page(self) -> None:
         self._handle_exc(self.page)
 
     def page(self) -> PageResult:  # pylint: disable=useless-return
@@ -155,7 +155,7 @@ class ModeAutomation(AjaxPage):
 
     # TODO: Better use AjaxPage.handle_page() for standard AJAX call error handling. This
     # would need larger refactoring of the generic html.popup_trigger() mechanism.
-    def handle_page(self):
+    def handle_page(self) -> None:
         # The automation page is accessed unauthenticated. After leaving the index.py area
         # into the page handler we always want to have a user context initialized to keep
         # the code free from special cases (if no user logged in, then...). So fake the

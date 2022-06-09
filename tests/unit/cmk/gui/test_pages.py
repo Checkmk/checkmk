@@ -253,7 +253,7 @@ def test_pages_register_handler(monkeypatch, capsys):
     monkeypatch.setattr(cmk.gui.pages, "page_registry", cmk.gui.pages.PageRegistry())
 
     class PageClass:
-        def handle_page(self):
+        def handle_page(self) -> None:
             sys.stdout.write("234")
 
     cmk.gui.pages.register_page_handler("234handler", lambda: PageClass().handle_page())

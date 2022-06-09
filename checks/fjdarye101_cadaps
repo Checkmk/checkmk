@@ -9,8 +9,9 @@
 from cmk.base.check_legacy_includes.fjdarye import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 check_info["fjdarye101_cadaps"] = {
+    "parse_function": parse_fjdarye_item,
     "check_function": check_fjdarye_item,
-    "inventory_function": inventory_fjdarye_item,
+    "inventory_function": discover_fjdarye_item,
     "service_description": "Channel Adapter %s",
     # 1: fjdaryCaIndex, 3: fjdaryCaStatus
     "snmp_info": (".1.3.6.1.4.1.211.1.21.1.101.2.3.2.1", [1, 3]),

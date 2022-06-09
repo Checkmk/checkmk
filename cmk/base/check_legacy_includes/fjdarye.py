@@ -16,6 +16,9 @@
 # <oid>.1: Index
 # <oid>.3: Status
 # the latter can be one of the following:
+
+from typing import Mapping, MutableMapping, NamedTuple
+
 fjdarye_item_status = {
     "1": (0, "Normal"),
     "2": (2, "Alarm"),
@@ -26,17 +29,32 @@ fjdarye_item_status = {
 }
 
 
+class FjdaryeItem(NamedTuple):
+    item_index: str
+    status: str
+
+
+SectionFjdaryeItem = Mapping[str, FjdaryeItem]
+
+
+def parse_fjdarye_item(info) -> SectionFjdaryeItem:
+    fjdarye_items: MutableMapping[str, FjdaryeItem] = {}
+    for item_index, status in info:
+        fjdarye_items.setdefault(item_index, FjdaryeItem(item_index=item_index, status=status))
+    return fjdarye_items
+
+
 # generic inventory item - status other than 'invalid' is ok for inventory
-def inventory_fjdarye_item(info):
-    return [(index, {}) for index, status in info if status != "4"]
+def discover_fjdarye_item(section: SectionFjdaryeItem):
+    for item in section.values():
+        if item.status != "4":
+            yield item.item_index, {}
 
 
 # generic check_function returning the nagios-code and the status text
-def check_fjdarye_item(item, _no_param, info):
-    for line in info:
-        if line[0] == str(item):  # watch out! older versions discovered `int`s!
-            return fjdarye_item_status[line[1]]
-    return None
+def check_fjdarye_item(item: str, _no_param, section: SectionFjdaryeItem):
+    if fjdarye_item := section.get(item):
+        yield fjdarye_item_status[fjdarye_item.status]
 
 
 # .

@@ -11,8 +11,9 @@ from cmk.base.check_legacy_includes.fjdarye import *  # pylint: disable=wildcard
 # 1: fjdaryInletthmlIndex, 3: fjdaryInletthmlStatus
 
 check_info["fjdarye60_thmls"] = {
+    "parse_function": parse_fjdarye_item,
     "check_function": check_fjdarye_item,
-    "inventory_function": inventory_fjdarye_item,
+    "inventory_function": discover_fjdarye_item,
     "service_description": "Thermal %s",
     # 1: fjdaryInletthmlIndex, 3: fjdaryInletthmlStatus
     "snmp_info": (".1.3.6.1.4.1.211.1.21.1.60.2.11.2.1", [1, 3]),

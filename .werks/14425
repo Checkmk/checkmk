@@ -1,0 +1,48 @@
+Title: Fujitsu storage systems: some services turn to UNKNOWN
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1655299969
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1
+
+In the legacy check API some items were discovered as integers, which is no longer allowed by the new check API.
+As a result some services may turn to UNKNOWN.
+Users must rediscover services on the affected hosts to fix this.
+Affected checks:<br>
+<li>fjdarye100_cadaps</li>
+<li>fjdarye100_cmods</li>
+<li>fjdarye100_cmods_mem</li>
+<li>fjdarye100_conencs</li>
+<li>fjdarye100_cpsus</li>
+<li>fjdarye100_devencs</li>
+<li>fjdarye100_syscaps</li>
+<li>fjdarye101_cadaps</li>
+<li>fjdarye101_cmods</li>
+<li>fjdarye101_cmods_mem</li>
+<li>fjdarye101_conencs</li>
+<li>fjdarye101_syscaps</li>
+<li>fjdarye500_cadaps</li>
+<li>fjdarye500_cmods</li>
+<li>fjdarye500_cmods_flash</li>
+<li>fjdarye500_cmods_mem</li>
+<li>fjdarye500_conencs</li>
+<li>fjdarye500_cpsus</li>
+<li>fjdarye500_devencs</li>
+<li>fjdarye500_expanders</li>
+<li>fjdarye500_inletthmls</li>
+<li>fjdarye500_syscaps</li>
+<li>fjdarye500_thmls</li>
+<li>fjdarye60_cadaps</li>
+<li>fjdarye60_cmods</li>
+<li>fjdarye60_cmods_flash</li>
+<li>fjdarye60_cmods_mem</li>
+<li>fjdarye60_conencs</li>
+<li>fjdarye60_devencs</li>
+<li>fjdarye60_expanders</li>
+<li>fjdarye60_psus</li>
+<li>fjdarye60_inletthmls</li>
+<li>fjdarye60_syscaps</li>
+<li>fjdarye60_thmls</li>

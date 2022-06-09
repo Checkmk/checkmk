@@ -1,0 +1,17 @@
+Title: KUBE agent_kube: change ContainerTerminatedState's start and end time to be optional
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1654768212
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p3
+
+Previously, the Kubernetes special agent raised the error "[special_kube] TypeError: Can not convert
+to timestamp: 'None' of type <class 'NoneType’>" when a terminated container had no information
+about either its start or finish time. With this werk, the assumption that the start and finish
+times are always set is removed, and is thus consistent with the Kubernetes specification.
+The check plug-in is also modified to display the time-related information depending on what
+fields are returned.

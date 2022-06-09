@@ -1050,7 +1050,9 @@ def filter_groups_of_entries(
     # They need to be able to filter the list of all groups.
     # TODO: Negated filters are not handled here. :(
     if group_by == "service_groups":
-        if "servicegroups" not in context and "optservicegroup" not in context:
+        servicegroups = context.get("servicegroups", {})
+        optservicegroup = context.get("optservicegroup", {})
+        if not any(iter(servicegroups.values())) and not any(iter(optservicegroup.values())):
             return
 
         # Extract from context:

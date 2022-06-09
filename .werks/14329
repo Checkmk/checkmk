@@ -1,0 +1,17 @@
+Title: Fix grouping in availability if called from service search result
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1654799299
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p3
+
+If e.g. a single service was searched in the monitoring search and the availability
+of that service was called after (display option "Grouping" - "By service
+group" enabled), the availability showed "Not contained in any group", even if
+the service was in a service group.
+
+The same problem existed for single host search results.

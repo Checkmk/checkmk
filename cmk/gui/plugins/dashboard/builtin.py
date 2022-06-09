@@ -568,6 +568,7 @@ else:
             "show_title": True,
             "single_infos": ["host", "service"],
             "size": (26, 14),
+            "title": "$METRIC_NAME$, $SERVICE_DESCRIPTION$",
         },
         {
             "context": {"service": "CPU load"},

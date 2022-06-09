@@ -6,11 +6,14 @@
 
 # yapf: disable
 # type: ignore
+
+from cmk.base.plugins.agent_based import suseconnect
+
 checkname = 'suseconnect'
 
 freeze_time = '2020-07-15T00:00:00'
 
-info = [
+parsed = suseconnect.parse_suseconnect([
     ['Installed Products', ''], ['Advanced Systems Management Module'],
     ['(sle-module-adv-systems-management/12/x86_64)'], ['Registered'],
     ['SUSE Linux Enterprise Server for SAP Applications 12 SP5'],
@@ -19,7 +22,8 @@ info = [
     ['Expires at', ' 2021-06-30 00', '00', '00 UTC'], ['Status', ' ACTIVE'],
     ['Type', ' full'], ['SUSE Package Hub 12'], ['(PackageHub/12.5/x86_64)'],
     ['Registered']
-]
+])
+
 
 discovery = {'': [(None, {})]}
 

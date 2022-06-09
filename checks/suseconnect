@@ -55,77 +55,6 @@ factory_settings["sles_license_default_levels"] = {
 }
 
 
-def _join_line(line):
-    return ":".join(line).strip()
-
-
-def _parse_header(header):
-
-    return dict(zip(["identifier", "version", "architecture"], header[1:-1].split("/")))
-
-
-def _parse_suseconnect_v15(info):
-    map_keys = {
-        "Regcode": "registration_code",
-        "Starts at": "starts_at",
-        "Expires at": "expires_at",
-        "Status": "subscription_status",
-        "Type": "subscription_type",
-    }
-    parsed = {}
-    specs = {}
-    iter_info = iter(info)
-
-    for line in iter_info:
-        if line[0].startswith("(") and line[0].endswith(")"):
-            parsed_header = _parse_header(line[0])
-            specs = parsed.setdefault(parsed_header["identifier"], parsed_header)
-            specs["registration_status"] = next(iter_info)[0]
-            continue
-        if len(line) > 1:
-            key, value = line[0], _join_line(line[1:])
-            if key in map_keys:
-                specs[map_keys[key]] = value
-
-    return parsed
-
-
-def _parse_suseconnect_pre_v15(info):
-    map_keys = {
-        "identifier": "identifier",
-        "version": "version",
-        "arch": "architecture",
-        "status": "registration_status",
-        "type": "subscription_type",
-        "starts_at": "starts_at",
-        "expires_at": "expires_at",
-        "subscription_status": "subscription_status",
-        "regcode": "registration_code",
-    }
-
-    parsed = {
-        map_keys[line[0]]: _join_line(line[1:])
-        for line in info
-        if line[0] in map_keys and len(line) > 1
-    }
-
-    # Normalise to get data in the format  {identifier: {specs}}
-    return {parsed["identifier"]: parsed}
-
-
-def parse_suseconnect(info):
-
-    try:
-        first = info[0][0]
-    except IndexError:
-        return {}
-
-    if first == "identifier":
-        return _parse_suseconnect_pre_v15(info)
-
-    return _parse_suseconnect_v15(info)
-
-
 def inventory_suseconnect(parsed):
     if any("SLES" in identifier for identifier in parsed):
         return [(None, {})]
@@ -188,7 +117,7 @@ def check_suseconnect(_no_item, params, parsed):
 
 check_info["suseconnect"] = {
     "service_description": "SLES license",
-    "parse_function": parse_suseconnect,
+    # section is migrated already!
     "inventory_function": inventory_suseconnect,
     "check_function": check_suseconnect,
     "group": "sles_license",

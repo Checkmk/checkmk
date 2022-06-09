@@ -6,17 +6,20 @@
 
 # yapf: disable
 # type: ignore
+
+from cmk.base.plugins.agent_based import suseconnect
+
 checkname = 'suseconnect'
 
 freeze_time = '2020-07-15T00:00:00'
 
-info = [
+parsed = suseconnect.parse_suseconnect([
     ['identifier', ' SLES'], ['version', ' 12.1'], ['arch', ' x86_64'],
     ['status', ' Registered'], ['regcode', ' banana001'],
     ['starts_at', ' 2015-12-01 00', '00', '00 UTC'],
     ['expires_at', ' 2019-12-31 00', '00', '00 UTC'],
     ['subscription_status', ' ACTIVE'], ['type', ' full']
-]
+])
 
 discovery = {'': [(None, {})]}
 

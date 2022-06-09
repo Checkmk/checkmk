@@ -32,6 +32,7 @@ from cmk.gui.plugins.wato.utils import (
     redirect,
     WatoMode,
 )
+from cmk.gui.plugins.wato.utils.main_menu import MainModuleTopic
 from cmk.gui.type_defs import ActionResult
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.urls import makeuri_contextless
@@ -44,7 +45,7 @@ class MainModuleBackgroundJobs(ABCMainModule):
         return "background_jobs_overview"
 
     @property
-    def topic(self):
+    def topic(self) -> MainModuleTopic:
         return MainModuleTopicMaintenance
 
     @property

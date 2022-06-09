@@ -32,7 +32,7 @@ class ForceAuthUserUserAttribute(UserAttribute):
     def name(cls) -> str:
         return "force_authuser"
 
-    def topic(self):
+    def topic(self) -> str:
         return "personal"
 
     def valuespec(self) -> ValueSpec:
@@ -56,7 +56,7 @@ class DisableNotificationsUserAttribute(UserAttribute):
     def name(cls) -> str:
         return "disable_notifications"
 
-    def topic(self):
+    def topic(self) -> str:
         return "personal"
 
     def valuespec(self) -> ValueSpec:
@@ -107,7 +107,7 @@ class StartURLUserAttribute(UserAttribute):
     def name(cls) -> str:
         return "start_url"
 
-    def topic(self):
+    def topic(self) -> str:
         return "personal"
 
     def valuespec(self) -> ValueSpec:
@@ -148,7 +148,7 @@ class UIThemeUserAttribute(UserAttribute):
     def name(cls) -> str:
         return "ui_theme"
 
-    def topic(self):
+    def topic(self) -> str:
         return "interface"
 
     def valuespec(self) -> ValueSpec:
@@ -178,7 +178,7 @@ class UISidebarPosition(UserAttribute):
     def name(cls) -> str:
         return "ui_sidebar_position"
 
-    def topic(self):
+    def topic(self) -> str:
         return "interface"
 
     def valuespec(self) -> ValueSpec:
@@ -198,7 +198,7 @@ class UIIconTitle(UserAttribute):
     def name(cls) -> str:
         return "nav_hide_icons_title"
 
-    def topic(self):
+    def topic(self) -> str:
         return "interface"
 
     def valuespec(self) -> ValueSpec:
@@ -220,7 +220,7 @@ class UIIconPlacement(UserAttribute):
     def name(cls) -> str:
         return "icons_per_item"
 
-    def topic(self):
+    def topic(self) -> str:
         return "interface"
 
     def valuespec(self) -> ValueSpec:
@@ -246,7 +246,7 @@ class UIBasicAdvancedToggle(UserAttribute):
     def name(cls) -> str:
         return "show_mode"
 
-    def topic(self):
+    def topic(self) -> str:
         return "interface"
 
     def valuespec(self) -> ValueSpec:

@@ -38,6 +38,7 @@ from cmk.utils.site import omd_site
 # It's OK to import centralized config load logic
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
+from cmk.gui.plugins.wato.utils.main_menu import MainModuleTopic
 from cmk.gui.plugins.watolib.utils import ABCConfigDomain
 from cmk.gui.wato.mkeventdstore import (
     export_mkp_rule_pack,
@@ -3483,7 +3484,7 @@ class MainModuleEventConsole(ABCMainModule):
         return "mkeventd_rule_packs"
 
     @property
-    def topic(self):
+    def topic(self) -> MainModuleTopic:
         return MainModuleTopicEvents
 
     @property
@@ -4633,7 +4634,7 @@ class MainModuleEventConsoleRules(ABCMainModule):
         return makeuri_contextless_rulespec_group(request, "eventconsole")
 
     @property
-    def topic(self):
+    def topic(self) -> MainModuleTopic:
         return MainModuleTopicEvents
 
     @property

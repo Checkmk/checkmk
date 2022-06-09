@@ -27,6 +27,7 @@ from cmk.gui.plugins.wato.utils import (
     MainModuleTopicServices,
     MainModuleTopicUsers,
 )
+from cmk.gui.plugins.wato.utils.main_menu import MainModuleTopic
 from cmk.gui.utils.urls import makeuri_contextless, makeuri_contextless_rulespec_group
 
 
@@ -37,7 +38,7 @@ class MainModuleFolder(ABCMainModule):
         return "folder"
 
     @property
-    def topic(self):
+    def topic(self) -> MainModuleTopic:
         return MainModuleTopicHosts
 
     @property
@@ -72,7 +73,7 @@ class MainModuleTags(ABCMainModule):
         return "tags"
 
     @property
-    def topic(self):
+    def topic(self) -> MainModuleTopic:
         return MainModuleTopicHosts
 
     @property
@@ -109,7 +110,7 @@ class MainModuleGlobalSettings(ABCMainModule):
         return "globalvars"
 
     @property
-    def topic(self):
+    def topic(self) -> MainModuleTopic:
         return MainModuleTopicGeneral
 
     @property
@@ -144,7 +145,7 @@ class MainModuleReadOnly(ABCMainModule):
         return "read_only"
 
     @property
-    def topic(self):
+    def topic(self) -> MainModuleTopic:
         return MainModuleTopicGeneral
 
     @property
@@ -179,7 +180,7 @@ class MainModuleRuleSearch(ABCMainModule):
         return "rule_search"
 
     @property
-    def topic(self):
+    def topic(self) -> MainModuleTopic:
         return MainModuleTopicGeneral
 
     @property
@@ -214,7 +215,7 @@ class MainModulePredefinedConditions(ABCMainModule):
         return "predefined_conditions"
 
     @property
-    def topic(self):
+    def topic(self) -> MainModuleTopic:
         return MainModuleTopicGeneral
 
     @property
@@ -249,7 +250,7 @@ class MainModuleHostAndServiceParameters(ABCMainModule):
         return makeuri_contextless_rulespec_group(request, "host_monconf")
 
     @property
-    def topic(self):
+    def topic(self) -> MainModuleTopic:
         return MainModuleTopicHosts
 
     @property
@@ -284,7 +285,7 @@ class MainModuleHWSWInventory(ABCMainModule):
         return makeuri_contextless_rulespec_group(request, "inventory")
 
     @property
-    def topic(self):
+    def topic(self) -> MainModuleTopic:
         return MainModuleTopicHosts
 
     @property
@@ -319,7 +320,7 @@ class MainModuleNetworkingServices(ABCMainModule):
         return makeuri_contextless_rulespec_group(request, "activechecks")
 
     @property
-    def topic(self):
+    def topic(self) -> MainModuleTopic:
         return MainModuleTopicServices
 
     @property
@@ -357,7 +358,7 @@ class MainModuleOtherServices(ABCMainModule):
         return makeuri_contextless_rulespec_group(request, "custom_checks")
 
     @property
-    def topic(self):
+    def topic(self) -> MainModuleTopic:
         return MainModuleTopicServices
 
     @property
@@ -395,7 +396,7 @@ class MainModuleCheckPlugins(ABCMainModule):
         return "check_plugins"
 
     @property
-    def topic(self):
+    def topic(self) -> MainModuleTopic:
         return MainModuleTopicServices
 
     @property
@@ -430,7 +431,7 @@ class MainModuleHostGroups(ABCMainModule):
         return "host_groups"
 
     @property
-    def topic(self):
+    def topic(self) -> MainModuleTopic:
         return MainModuleTopicHosts
 
     @property
@@ -465,7 +466,7 @@ class MainModuleHostCustomAttributes(ABCMainModule):
         return "host_attrs"
 
     @property
-    def topic(self):
+    def topic(self) -> MainModuleTopic:
         return MainModuleTopicHosts
 
     @property
@@ -500,7 +501,7 @@ class MainModuleServiceGroups(ABCMainModule):
         return "service_groups"
 
     @property
-    def topic(self):
+    def topic(self) -> MainModuleTopic:
         return MainModuleTopicServices
 
     @property
@@ -535,7 +536,7 @@ class MainModuleUsers(ABCMainModule):
         return "users"
 
     @property
-    def topic(self):
+    def topic(self) -> MainModuleTopic:
         return MainModuleTopicUsers
 
     @property
@@ -570,7 +571,7 @@ class MainModuleRoles(ABCMainModule):
         return "roles"
 
     @property
-    def topic(self):
+    def topic(self) -> MainModuleTopic:
         return MainModuleTopicUsers
 
     @property
@@ -605,7 +606,7 @@ class MainModuleLDAP(ABCMainModule):
         return "ldap_config"
 
     @property
-    def topic(self):
+    def topic(self) -> MainModuleTopic:
         return MainModuleTopicUsers
 
     @property
@@ -640,7 +641,7 @@ class MainModuleUserCustomAttributes(ABCMainModule):
         return "user_attrs"
 
     @property
-    def topic(self):
+    def topic(self) -> MainModuleTopic:
         return MainModuleTopicUsers
 
     @property
@@ -675,7 +676,7 @@ class MainModuleContactGroups(ABCMainModule):
         return "contact_groups"
 
     @property
-    def topic(self):
+    def topic(self) -> MainModuleTopic:
         return MainModuleTopicUsers
 
     @property
@@ -710,7 +711,7 @@ class MainModuleNotifications(ABCMainModule):
         return "notifications"
 
     @property
-    def topic(self):
+    def topic(self) -> MainModuleTopic:
         return MainModuleTopicEvents
 
     @property
@@ -745,7 +746,7 @@ class MainModuleTimeperiods(ABCMainModule):
         return "timeperiods"
 
     @property
-    def topic(self):
+    def topic(self) -> MainModuleTopic:
         return MainModuleTopicGeneral
 
     @property
@@ -782,7 +783,7 @@ class MainModuleSites(ABCMainModule):
         return "sites"
 
     @property
-    def topic(self):
+    def topic(self) -> MainModuleTopic:
         return MainModuleTopicGeneral
 
     @property
@@ -817,7 +818,7 @@ class MainModuleBackup(ABCMainModule):
         return "backup"
 
     @property
-    def topic(self):
+    def topic(self) -> MainModuleTopic:
         return MainModuleTopicMaintenance
 
     @property
@@ -852,7 +853,7 @@ class MainModulePasswords(ABCMainModule):
         return "passwords"
 
     @property
-    def topic(self):
+    def topic(self) -> MainModuleTopic:
         return MainModuleTopicGeneral
 
     @property
@@ -887,7 +888,7 @@ class MainModuleAuditLog(ABCMainModule):
         return "auditlog"
 
     @property
-    def topic(self):
+    def topic(self) -> MainModuleTopic:
         return MainModuleTopicGeneral
 
     @property
@@ -922,7 +923,7 @@ class MainModuleIcons(ABCMainModule):
         return "icons"
 
     @property
-    def topic(self):
+    def topic(self) -> MainModuleTopic:
         return MainModuleTopicGeneral
 
     @property
@@ -957,7 +958,7 @@ class MainModuleAnalyzeConfig(ABCMainModule):
         return "analyze_config"
 
     @property
-    def topic(self):
+    def topic(self) -> MainModuleTopic:
         return MainModuleTopicMaintenance
 
     @property
@@ -992,7 +993,7 @@ class MainModuleDiagnostics(ABCMainModule):
         return "diagnostics"
 
     @property
-    def topic(self):
+    def topic(self) -> MainModuleTopic:
         return MainModuleTopicMaintenance
 
     @property
@@ -1030,7 +1031,7 @@ class MainModuleMonitoringRules(ABCMainModule):
         return makeuri_contextless_rulespec_group(request, "monconf")
 
     @property
-    def topic(self):
+    def topic(self) -> MainModuleTopic:
         return MainModuleTopicServices
 
     @property
@@ -1065,7 +1066,7 @@ class MainModuleDiscoveryRules(ABCMainModule):
         return makeuri_contextless_rulespec_group(request, "checkparams")
 
     @property
-    def topic(self):
+    def topic(self) -> MainModuleTopic:
         return MainModuleTopicServices
 
     @property
@@ -1100,7 +1101,7 @@ class MainModuleEnforcedServices(ABCMainModule):
         return makeuri_contextless_rulespec_group(request, "static")
 
     @property
-    def topic(self):
+    def topic(self) -> MainModuleTopic:
         return MainModuleTopicServices
 
     @property
@@ -1134,7 +1135,7 @@ class MainModuleAgentsWindows(ABCMainModule):
         return "download_agents_windows"
 
     @property
-    def topic(self):
+    def topic(self) -> MainModuleTopic:
         return MainModuleTopicAgents
 
     @property
@@ -1168,7 +1169,7 @@ class MainModuleAgentsLinux(ABCMainModule):
         return "download_agents_linux"
 
     @property
-    def topic(self):
+    def topic(self) -> MainModuleTopic:
         return MainModuleTopicAgents
 
     @property
@@ -1214,7 +1215,7 @@ class MainModuleAgentRules(ABCMainModule):
         return makeuri_contextless_rulespec_group(request, "agents")
 
     @property
-    def topic(self):
+    def topic(self) -> MainModuleTopic:
         return MainModuleTopicAgents
 
     @property
@@ -1260,7 +1261,7 @@ class MainModuleOtherAgents(ABCMainModule):
         return "download_agents"
 
     @property
-    def topic(self):
+    def topic(self) -> MainModuleTopic:
         return MainModuleTopicAgents
 
     @property
@@ -1295,7 +1296,7 @@ class MainModuleAgentAccessRules(ABCMainModule):
         return makeuri_contextless_rulespec_group(request, "agent")
 
     @property
-    def topic(self):
+    def topic(self) -> MainModuleTopic:
         return MainModuleTopicAgents
 
     @property
@@ -1330,7 +1331,7 @@ class MainModuleSNMPRules(ABCMainModule):
         return makeuri_contextless_rulespec_group(request, "snmp")
 
     @property
-    def topic(self):
+    def topic(self) -> MainModuleTopic:
         return MainModuleTopicAgents
 
     @property
@@ -1365,7 +1366,7 @@ class MainModuleVMCloudContainer(ABCMainModule):
         return makeuri_contextless_rulespec_group(request, "vm_cloud_container")
 
     @property
-    def topic(self):
+    def topic(self) -> MainModuleTopic:
         return MainModuleTopicAgents
 
     @property
@@ -1400,7 +1401,7 @@ class MainModuleOtherIntegrations(ABCMainModule):
         return makeuri_contextless_rulespec_group(request, "datasource_programs")
 
     @property
-    def topic(self):
+    def topic(self) -> MainModuleTopic:
         return MainModuleTopicAgents
 
     @property

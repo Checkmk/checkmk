@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import time
-from typing import Any, Callable, Literal, Optional
+from typing import Any, Callable, Literal, Optional, Type
 
 import cmk.utils.tags
 from cmk.utils.type_defs import HostName, List
@@ -64,7 +64,7 @@ from cmk.gui.valuespec import (
     ValueSpecText,
     ValueSpecValidateFunc,
 )
-from cmk.gui.watolib.host_attributes import host_attribute_registry
+from cmk.gui.watolib.host_attributes import host_attribute_registry, HostAttributeTopic
 from cmk.gui.watolib.hosts_and_folders import Host
 from cmk.gui.watolib.tags import TagConfigFile
 
@@ -77,7 +77,7 @@ class HostAttributeAlias(ABCHostAttributeNagiosText):
     def _size(self):
         return 64
 
-    def topic(self):
+    def topic(self) -> Type[HostAttributeTopic]:
         return HostAttributeTopicBasicSettings
 
     def is_show_more(self) -> bool:
@@ -111,7 +111,7 @@ class HostAttributeAlias(ABCHostAttributeNagiosText):
 
 @host_attribute_registry.register
 class HostAttributeIPv4Address(ABCHostAttributeValueSpec):
-    def topic(self):
+    def topic(self) -> Type[HostAttributeTopic]:
         return HostAttributeTopicAddress
 
     @classmethod
@@ -162,7 +162,7 @@ class HostAttributeIPv4Address(ABCHostAttributeValueSpec):
 
 @host_attribute_registry.register
 class HostAttributeIPv6Address(ABCHostAttributeValueSpec):
-    def topic(self):
+    def topic(self) -> Type[HostAttributeTopic]:
         return HostAttributeTopicAddress
 
     @classmethod
@@ -208,7 +208,7 @@ class HostAttributeIPv6Address(ABCHostAttributeValueSpec):
 
 @host_attribute_registry.register
 class HostAttributeAdditionalIPv4Addresses(ABCHostAttributeValueSpec):
-    def topic(self):
+    def topic(self) -> Type[HostAttributeTopic]:
         return HostAttributeTopicAddress
 
     @classmethod
@@ -256,7 +256,7 @@ class HostAttributeAdditionalIPv4Addresses(ABCHostAttributeValueSpec):
 
 @host_attribute_registry.register
 class HostAttributeAdditionalIPv6Addresses(ABCHostAttributeValueSpec):
-    def topic(self):
+    def topic(self) -> Type[HostAttributeTopic]:
         return HostAttributeTopicAddress
 
     @classmethod
@@ -297,7 +297,7 @@ class HostAttributeAdditionalIPv6Addresses(ABCHostAttributeValueSpec):
 
 @host_attribute_registry.register
 class HostAttributeSNMPCommunity(ABCHostAttributeValueSpec):
-    def topic(self):
+    def topic(self) -> Type[HostAttributeTopic]:
         return HostAttributeTopicDataSources
 
     @classmethod
@@ -345,7 +345,7 @@ class HostAttributeParents(ABCHostAttributeValueSpec):
     def name(self) -> str:
         return "parents"
 
-    def topic(self):
+    def topic(self) -> Type[HostAttributeTopic]:
         return HostAttributeTopicBasicSettings
 
     @classmethod
@@ -457,7 +457,7 @@ class HostAttributeNetworkScan(ABCHostAttributeValueSpec):
     def may_edit(self):
         return user.may("wato.manage_hosts")
 
-    def topic(self):
+    def topic(self) -> Type[HostAttributeTopic]:
         return HostAttributeTopicNetworkScan
 
     @classmethod
@@ -706,7 +706,7 @@ class HostAttributeNetworkScanResult(ABCHostAttributeValueSpec):
     def name(self) -> str:
         return "network_scan_result"
 
-    def topic(self):
+    def topic(self) -> Type[HostAttributeTopic]:
         return HostAttributeTopicNetworkScan
 
     @classmethod
@@ -816,7 +816,7 @@ class HostAttributeManagementAddress(ABCHostAttributeValueSpec):
     def name(self) -> str:
         return "management_address"
 
-    def topic(self):
+    def topic(self) -> Type[HostAttributeTopic]:
         return HostAttributeTopicManagementBoard
 
     @classmethod
@@ -857,7 +857,7 @@ class HostAttributeManagementProtocol(ABCHostAttributeValueSpec):
     def name(self) -> str:
         return "management_protocol"
 
-    def topic(self):
+    def topic(self) -> Type[HostAttributeTopic]:
         return HostAttributeTopicManagementBoard
 
     @classmethod
@@ -891,7 +891,7 @@ class HostAttributeManagementSNMPCommunity(ABCHostAttributeValueSpec):
     def name(self) -> str:
         return "management_snmp_community"
 
-    def topic(self):
+    def topic(self) -> Type[HostAttributeTopic]:
         return HostAttributeTopicManagementBoard
 
     @classmethod
@@ -956,7 +956,7 @@ class HostAttributeManagementIPMICredentials(ABCHostAttributeValueSpec):
     def name(self) -> str:
         return "management_ipmi_credentials"
 
-    def topic(self):
+    def topic(self) -> Type[HostAttributeTopic]:
         return HostAttributeTopicManagementBoard
 
     @classmethod
@@ -991,7 +991,7 @@ class HostAttributeSite(ABCHostAttributeValueSpec):
     def is_show_more(self) -> bool:
         return not (has_wato_slave_sites() or is_wato_slave_site())
 
-    def topic(self):
+    def topic(self) -> Type[HostAttributeTopic]:
         return HostAttributeTopicBasicSettings
 
     @classmethod
@@ -1038,7 +1038,7 @@ class HostAttributeLockedBy(ABCHostAttributeValueSpec):
     def name(self) -> str:
         return "locked_by"
 
-    def topic(self):
+    def topic(self) -> Type[HostAttributeTopic]:
         return HostAttributeTopicMetaData
 
     @classmethod
@@ -1115,7 +1115,7 @@ class HostAttributeLockedAttributes(ABCHostAttributeValueSpec):
     def name(self) -> str:
         return "locked_attributes"
 
-    def topic(self):
+    def topic(self) -> Type[HostAttributeTopic]:
         return HostAttributeTopicMetaData
 
     @classmethod
@@ -1162,7 +1162,7 @@ class HostAttributeMetaData(ABCHostAttributeValueSpec):
     def name(self) -> str:
         return "meta_data"
 
-    def topic(self):
+    def topic(self) -> Type[HostAttributeTopic]:
         return HostAttributeTopicMetaData
 
     @classmethod
@@ -1246,7 +1246,7 @@ class HostAttributeDiscoveryFailed(ABCHostAttributeValueSpec):
     def name(self) -> str:
         return "inventory_failed"
 
-    def topic(self):
+    def topic(self) -> Type[HostAttributeTopic]:
         return HostAttributeTopicMetaData
 
     @classmethod
@@ -1309,7 +1309,7 @@ class HostAttributeLabels(ABCHostAttributeValueSpec):
     def title(self) -> str:
         return _("Labels")
 
-    def topic(self):
+    def topic(self) -> Type[HostAttributeTopic]:
         return HostAttributeTopicCustomAttributes
 
     @classmethod

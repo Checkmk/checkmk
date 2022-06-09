@@ -145,15 +145,15 @@ def approx_age(secs: float) -> str:
     return "%s" % Age(secs)
 
 
-# .
-#   .--Bits/Bytes----------------------------------------------------------.
-#   |            ____  _ _          ______        _                        |
-#   |           | __ )(_) |_ ___   / / __ ) _   _| |_ ___  ___             |
-#   |           |  _ \| | __/ __| / /|  _ \| | | | __/ _ \/ __|            |
-#   |           | |_) | | |_\__ \/ / | |_) | |_| | ||  __/\__ \            |
-#   |           |____/|_|\__|___/_/  |____/ \__, |\__\___||___/            |
-#   |                                       |___/                          |
+#   .--Prefix & Scale------------------------------------------------------.
+#   |     ____            __ _         ___     ____            _           |
+#   |    |  _ \ _ __ ___ / _(_)_  __  ( _ )   / ___|  ___ __ _| | ___      |
+#   |    | |_) | '__/ _ \ |_| \ \/ /  / _ \/\ \___ \ / __/ _` | |/ _ \     |
+#   |    |  __/| | |  __/  _| |>  <  | (_>  <  ___) | (_| (_| | |  __/     |
+#   |    |_|   |_|  \___|_| |_/_/\_\  \___/\/ |____/ \___\__,_|_|\___|     |
+#   |                                                                      |
 #   '----------------------------------------------------------------------'
+# .
 
 
 def scale_factor_prefix(
@@ -213,6 +213,17 @@ def fmt_number_with_precision(
     return "%s %s" % (number, prefix + unit)
 
 
+# .
+#   .--Bits/Bytes----------------------------------------------------------.
+#   |            ____  _ _          ______        _                        |
+#   |           | __ )(_) |_ ___   / / __ ) _   _| |_ ___  ___             |
+#   |           |  _ \| | __/ __| / /|  _ \| | | | __/ _ \/ __|            |
+#   |           | |_) | | |_\__ \/ / | |_) | |_| | ||  __/\__ \            |
+#   |           |____/|_|\__|___/_/  |____/ \__, |\__\___||___/            |
+#   |                                       |___/                          |
+#   '----------------------------------------------------------------------'
+
+
 def fmt_bytes(b: int, base: float = 1024.0, precision: int = 2, unit: str = "B") -> str:
     """Formats byte values to be used in texts for humans.
 
@@ -242,6 +253,18 @@ def filesize(size: float) -> str:
         + str(size)[-6:-3]
         + dec_sep
         + str(size)[-3:]
+    )
+
+
+def fmt_nic_speed(speed: str | int) -> str:
+    """Format network speed (bit/s) for humans."""
+    try:
+        speedi = int(speed)
+    except ValueError:
+        return str(speed)
+
+    return fmt_number_with_precision(
+        speedi, base=1000.0, precision=2, unit="bit/s", drop_zeroes=True
     )
 
 
@@ -367,18 +390,6 @@ def calculate_physical_precision(v: float, precision: int) -> tuple[str, int, in
         places_after_comma = precision - places_before_comma
 
     return scale_symbols[scale], places_after_comma, 1000**scale
-
-
-def fmt_nic_speed(speed: str | int) -> str:
-    """Format network speed (bit/s) for humans."""
-    try:
-        speedi = int(speed)
-    except ValueError:
-        return str(speed)
-
-    return fmt_number_with_precision(
-        speedi, base=1000.0, precision=2, unit="bit/s", drop_zeroes=True
-    )
 
 
 # .

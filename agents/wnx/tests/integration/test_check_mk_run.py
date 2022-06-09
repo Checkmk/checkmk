@@ -40,7 +40,7 @@ _NOT_WMI_SECTIONS: Final = {
 
 _WMI_SECTIONS: Final = {
     "<<<dotnet_clrmemory:sep(124)>>>",
-    "<<<wmi_webservices:sep(124)>>>",
+    # "<<<wmi_webservices:sep(124)>>>", <--- not presented in CI VM
 }
 
 
@@ -59,6 +59,7 @@ def test_check_mk_base(
     default_yaml_config: YamlDict,
     data_dir: Path,
     only_from: List[str],
+    description: str,
 ) -> None:
     output = obtain_agent_data(
         _make_config(default_yaml_config, only_from),

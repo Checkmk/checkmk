@@ -30,6 +30,7 @@ check_os()
 _DEFAULT_CONFIG: Final = """
 global:
   enabled: true
+  disabled_sections: wmi_webservices
   logging:
     debug: true
   wmi_timeout: 10

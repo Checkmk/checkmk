@@ -21,7 +21,7 @@ INTEGRATION_PORT: Final = 25998
 AGENT_EXE_NAME: Final = "check_mk_agent.exe"
 _HOST: Final = "localhost"
 USER_YAML_CONFIG: Final = "check_mk.user.yml"
-SECTION_COUNT: Final = 19
+SECTION_COUNT: Final = 18
 ONLY_FROM_LINE: Final = 17
 CTL_STATUS_LINE: Final = 19
 

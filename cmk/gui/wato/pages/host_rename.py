@@ -6,7 +6,7 @@
 """Modes for renaming one or multiple existing hosts"""
 
 import socket
-from typing import Optional, Type
+from typing import Collection, Optional, Type
 
 from cmk.utils.regex import regex
 from cmk.utils.site import omd_site
@@ -97,7 +97,7 @@ class ModeBulkRenameHost(WatoMode):
         return "bulk_rename_host"
 
     @classmethod
-    def permissions(cls) -> list[PermissionName]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["hosts", "manage_hosts"]
 
     @classmethod
@@ -410,7 +410,7 @@ class ModeRenameHost(WatoMode):
         return "rename_host"
 
     @classmethod
-    def permissions(cls) -> list[PermissionName]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["hosts", "manage_hosts"]
 
     @classmethod

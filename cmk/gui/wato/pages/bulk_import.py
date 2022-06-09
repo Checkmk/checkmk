@@ -12,7 +12,7 @@ import time
 import uuid
 from difflib import SequenceMatcher
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Type
+from typing import Any, Collection, Dict, Optional, Type
 
 import cmk.utils.store as store
 
@@ -63,7 +63,7 @@ class ModeBulkImport(WatoMode):
         return "bulk_import"
 
     @classmethod
-    def permissions(cls) -> list[PermissionName]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["hosts", "manage_hosts"]
 
     @classmethod

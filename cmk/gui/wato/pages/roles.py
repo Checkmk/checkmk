@@ -21,7 +21,7 @@ configuration of all roles.
 
 import re
 from datetime import datetime
-from typing import Optional, Type
+from typing import Collection, Optional, Type
 
 import cmk.utils.store as store
 
@@ -111,7 +111,7 @@ class ModeRoles(RoleManagement, WatoMode):
         return "roles"
 
     @classmethod
-    def permissions(cls) -> list[PermissionName]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["users"]
 
     def title(self) -> str:
@@ -269,7 +269,7 @@ class ModeEditRole(RoleManagement, WatoMode):
         return "edit_role"
 
     @classmethod
-    def permissions(cls) -> list[PermissionName]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["users"]
 
     @classmethod
@@ -462,7 +462,7 @@ class ModeRoleMatrix(WatoMode):
         return "role_matrix"
 
     @classmethod
-    def permissions(cls) -> list[PermissionName]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["users"]
 
     @classmethod

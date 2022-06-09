@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import List, Optional, Type
+from typing import Collection, List, Optional, Type
 
 from cmk.utils.password_store import Password
 
@@ -60,7 +60,7 @@ class ModePasswords(SimpleListMode):
         return "passwords"
 
     @classmethod
-    def permissions(cls) -> list[PermissionName]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["passwords"]
 
     def __init__(self) -> None:
@@ -130,7 +130,7 @@ class ModeEditPassword(SimpleEditMode):
         return "edit_password"
 
     @classmethod
-    def permissions(cls) -> list[PermissionName]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["passwords"]
 
     @classmethod

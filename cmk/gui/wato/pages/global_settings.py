@@ -7,7 +7,7 @@
 settings"""
 
 import abc
-from typing import Any, Final, Iterable, Iterator, Optional, Type
+from typing import Any, Collection, Final, Iterable, Iterator, Optional, Type
 
 import cmk.utils.version as cmk_version
 
@@ -418,7 +418,7 @@ class ModeEditGlobals(ABCGlobalSettingsMode):
         return "globalvars"
 
     @classmethod
-    def permissions(cls) -> list[PermissionName]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["global"]
 
     def __init__(self) -> None:
@@ -537,7 +537,7 @@ class ModeEditGlobalSetting(ABCEditGlobalSettingMode):
         return "edit_configvar"
 
     @classmethod
-    def permissions(cls) -> list[PermissionName]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["global"]
 
     @classmethod

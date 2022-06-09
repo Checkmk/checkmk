@@ -147,7 +147,9 @@ def _check_permissions(api_call: APICallDefinitionDict) -> None:
     if not active_config.wato_enabled:
         raise MKUserError(None, _("Setup is disabled on this site."))
 
-    for permission in ["wato.use", "wato.api_allowed"] + api_call.get("required_permissions", []):
+    for permission in ["wato.use", "wato.api_allowed"] + list(
+        api_call.get("required_permissions", [])
+    ):
         user.need_permission(permission)
 
 

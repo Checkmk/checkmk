@@ -6,7 +6,7 @@
 """Mode for trying out the logwatch patterns"""
 
 import re
-from typing import Iterable, Optional, Type
+from typing import Collection, Iterable, Optional, Type
 
 from cmk.utils.type_defs import CheckPluginNameStr, HostName, Item, ServiceName
 
@@ -54,7 +54,7 @@ class ModePatternEditor(WatoMode):
         return "pattern_editor"
 
     @classmethod
-    def permissions(cls) -> list[PermissionName]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["pattern_editor"]
 
     @classmethod

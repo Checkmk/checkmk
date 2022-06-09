@@ -10,7 +10,7 @@
 import abc
 import json
 from hashlib import md5
-from typing import Any, Callable, Mapping, Type, TypedDict
+from typing import Any, Callable, Collection, Mapping, Type, TypedDict
 
 import cmk.utils.plugin_registry
 from cmk.utils.type_defs import HostName
@@ -26,7 +26,7 @@ from cmk.gui.watolib.hosts_and_folders import Host
 class APICallDefinitionDict(TypedDict, total=False):
     handler: Callable[..., Any]
     required_keys: list[str]
-    required_permissions: list[PermissionName]
+    required_permissions: Collection[PermissionName]
     optional_keys: list[str]
     required_input_format: str
     required_output_format: str

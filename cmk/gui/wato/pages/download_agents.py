@@ -8,7 +8,7 @@
 import abc
 import fnmatch
 import os
-from typing import Iterator, List, Optional
+from typing import Collection, Iterator, List
 
 import cmk.utils.paths
 import cmk.utils.render
@@ -33,7 +33,7 @@ from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
 
 class ABCModeDownloadAgents(WatoMode):
     @classmethod
-    def permissions(cls) -> list[PermissionName]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["download_agents"]
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:

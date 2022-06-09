@@ -6,6 +6,7 @@
 """WATO can be set into read only mode manually using this mode"""
 
 import time
+from typing import Collection
 
 import cmk.utils.store as store
 
@@ -37,7 +38,7 @@ class ModeManageReadOnly(WatoMode):
         return "read_only"
 
     @classmethod
-    def permissions(cls) -> list[PermissionName]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["set_read_only"]
 
     def __init__(self) -> None:

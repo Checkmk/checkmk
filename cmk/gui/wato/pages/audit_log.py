@@ -6,7 +6,7 @@
 
 import re
 import time
-from typing import Iterator, List
+from typing import Collection, Iterator
 
 import cmk.utils.render as render
 
@@ -58,7 +58,7 @@ class ModeAuditLog(WatoMode):
         return "auditlog"
 
     @classmethod
-    def permissions(cls) -> list[PermissionName]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["auditlog"]
 
     def __init__(self) -> None:
@@ -534,7 +534,7 @@ class ModeAuditLog(WatoMode):
     def _clear_audit_log(self):
         self._store.clear()
 
-    def _export_audit_log(self, audit: List[AuditLogStore.Entry]) -> ActionResult:
+    def _export_audit_log(self, audit: list[AuditLogStore.Entry]) -> ActionResult:
         response.set_content_type("text/csv")
 
         if self._options["display"] == "daily":
@@ -586,7 +586,7 @@ class ModeAuditLog(WatoMode):
 
         return FinalizeRequest(code=200)
 
-    def _parse_audit_log(self) -> List[AuditLogStore.Entry]:
+    def _parse_audit_log(self) -> list[AuditLogStore.Entry]:
         return list(reversed([e for e in self._store.read() if self._filter_entry(e)]))
 
     def _filter_entry(self, entry: AuditLogStore.Entry) -> bool:

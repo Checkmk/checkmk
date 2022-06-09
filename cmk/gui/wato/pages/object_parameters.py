@@ -7,7 +7,7 @@
 parameters. This is a host/service overview page over all things that can be
 modified via rules."""
 
-from typing import Iterator, List, Optional
+from typing import Collection, Iterator, List, Optional
 from typing import Tuple as _Tuple
 from typing import Type, Union
 
@@ -49,7 +49,7 @@ class ModeObjectParameters(WatoMode):
         return "object_parameters"
 
     @classmethod
-    def permissions(cls) -> list[PermissionName]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["hosts", "rulesets"]
 
     @classmethod

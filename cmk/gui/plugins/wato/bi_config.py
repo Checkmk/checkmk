@@ -7,7 +7,7 @@
 
 import copy
 import json
-from typing import Any, Dict, List
+from typing import Any, Collection, Dict, List
 from typing import Optional as _Optional
 from typing import overload
 from typing import Tuple as _Tuple
@@ -287,7 +287,7 @@ class ModeBIEditPack(ABCBIMode):
         return "bi_edit_pack"
 
     @classmethod
-    def permissions(cls) -> list[PermissionName]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["bi_rules", "bi_admin"]
 
     def title(self) -> str:
@@ -423,7 +423,7 @@ class ModeBIPacks(ABCBIMode):
         return "bi_packs"
 
     @classmethod
-    def permissions(cls) -> list[PermissionName]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["bi_rules"]
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
@@ -586,7 +586,7 @@ class ModeBIRules(ABCBIMode):
         return "bi_rules"
 
     @classmethod
-    def permissions(cls) -> list[PermissionName]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["bi_rules"]
 
     # pylint does not understand this overloading
@@ -1055,7 +1055,7 @@ class ModeBIEditRule(ABCBIMode):
         return "bi_edit_rule"
 
     @classmethod
-    def permissions(cls) -> list[PermissionName]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["bi_rules"]
 
     def __init__(self) -> None:
@@ -1585,7 +1585,7 @@ class BIModeEditAggregation(ABCBIMode):
         return "bi_edit_aggregation"
 
     @classmethod
-    def permissions(cls) -> list[PermissionName]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["bi_rules"]
 
     def __init__(self) -> None:
@@ -1890,7 +1890,7 @@ class BIModeAggregations(ABCBIMode):
         return "bi_aggregations"
 
     @classmethod
-    def permissions(cls) -> list[PermissionName]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["bi_rules"]
 
     @classmethod
@@ -2218,7 +2218,7 @@ class ModeBIRuleTree(ABCBIMode):
         return "bi_rule_tree"
 
     @classmethod
-    def permissions(cls) -> list[PermissionName]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["bi_rules"]
 
     @classmethod

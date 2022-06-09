@@ -6,7 +6,7 @@
 """LDAP configuration and diagnose page"""
 
 import re
-from typing import Iterable, List, Optional, Type
+from typing import Collection, Iterable, List, Optional, Type
 
 import cmk.utils.version as cmk_version
 
@@ -703,7 +703,7 @@ class ModeLDAPConfig(LDAPMode):
         return "ldap_config"
 
     @classmethod
-    def permissions(cls) -> list[PermissionName]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["global"]
 
     def title(self) -> str:
@@ -845,7 +845,7 @@ class ModeEditLDAPConnection(LDAPMode):
         return "edit_ldap_connection"
 
     @classmethod
-    def permissions(cls) -> list[PermissionName]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["global"]
 
     @classmethod

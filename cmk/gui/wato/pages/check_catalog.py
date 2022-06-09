@@ -11,7 +11,7 @@ the global settings.
 """
 
 import re
-from typing import Any, Dict, List, Mapping, Optional, overload, Set, Tuple, Type
+from typing import Any, Collection, Dict, List, Mapping, Optional, overload, Set, Tuple, Type
 
 from six import ensure_str
 
@@ -51,7 +51,7 @@ class ModeCheckPlugins(WatoMode):
         return "check_plugins"
 
     @classmethod
-    def permissions(cls) -> list[PermissionName]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["check_plugins"]
 
     def _from_vars(self):
@@ -101,7 +101,7 @@ class ModeCheckPluginSearch(WatoMode):
         return "check_plugin_search"
 
     @classmethod
-    def permissions(cls) -> list[PermissionName]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["check_plugins"]
 
     @classmethod
@@ -176,7 +176,7 @@ class ModeCheckPluginTopic(WatoMode):
         return "check_plugin_topic"
 
     @classmethod
-    def permissions(cls) -> list[PermissionName]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["check_plugins"]
 
     @classmethod
@@ -422,7 +422,7 @@ class ModeCheckManPage(WatoMode):
         return "check_manpage"
 
     @classmethod
-    def permissions(cls) -> list[PermissionName]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["check_plugins"]
 
     @classmethod

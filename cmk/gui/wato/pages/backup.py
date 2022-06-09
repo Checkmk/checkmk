@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Pages for managing backup and restore of WATO"""
 
-from typing import Optional, Type
+from typing import Collection, Optional, Type
 
 import cmk.utils.paths
 from cmk.utils.site import omd_site
@@ -34,7 +34,7 @@ class ModeBackup(backup.PageBackup, WatoMode):
         return "backup"
 
     @classmethod
-    def permissions(cls) -> list[PermissionName]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["backups"]
 
     def __init__(self) -> None:
@@ -57,7 +57,7 @@ class ModeBackupTargets(backup.PageBackupTargets, WatoMode):
         return "backup_targets"
 
     @classmethod
-    def permissions(cls) -> list[PermissionName]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["backups"]
 
     @classmethod
@@ -87,7 +87,7 @@ class ModeEditBackupTarget(backup.PageEditBackupTarget, WatoMode):
         return "edit_backup_target"
 
     @classmethod
-    def permissions(cls) -> list[PermissionName]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["backups"]
 
     @classmethod
@@ -105,7 +105,7 @@ class ModeEditBackupJob(backup.PageEditBackupJob, WatoMode):
         return "edit_backup_job"
 
     @classmethod
-    def permissions(cls) -> list[PermissionName]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["backups"]
 
     @classmethod
@@ -171,7 +171,7 @@ class ModeBackupJobState(backup.PageBackupJobState, WatoMode):
         return ModeBackup
 
     @classmethod
-    def permissions(cls) -> list[PermissionName]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["backups"]
 
     def jobs(self):
@@ -206,7 +206,7 @@ class ModeBackupKeyManagement(backup.PageBackupKeyManagement, WatoMode):
         return "backup_keys"
 
     @classmethod
-    def permissions(cls) -> list[PermissionName]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["backups"]
 
     @classmethod
@@ -227,7 +227,7 @@ class ModeBackupEditKey(backup.PageBackupEditKey, WatoMode):
         return "backup_edit_key"
 
     @classmethod
-    def permissions(cls) -> list[PermissionName]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["backups"]
 
     @classmethod
@@ -245,7 +245,7 @@ class ModeBackupUploadKey(backup.PageBackupUploadKey, WatoMode):
         return "backup_upload_key"
 
     @classmethod
-    def permissions(cls) -> list[PermissionName]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["backups"]
 
     @classmethod
@@ -267,7 +267,7 @@ class ModeBackupDownloadKey(backup.PageBackupDownloadKey, WatoMode):
         return "backup_download_key"
 
     @classmethod
-    def permissions(cls) -> list[PermissionName]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["backups"]
 
     @classmethod
@@ -288,7 +288,7 @@ class ModeBackupRestore(backup.PageBackupRestore, WatoMode):
         return "backup_restore"
 
     @classmethod
-    def permissions(cls) -> list[PermissionName]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["backups"]
 
     @classmethod

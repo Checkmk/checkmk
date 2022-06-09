@@ -6,7 +6,7 @@
 
 import abc
 import http.client
-from typing import Iterable, Type
+from typing import Collection, Iterable, Type
 
 from cmk.utils.plugin_registry import Registry
 
@@ -29,7 +29,7 @@ class WatoMode(abc.ABC):
 
     @classmethod
     @abc.abstractmethod
-    def permissions(cls) -> None | list[PermissionName]:
+    def permissions(cls) -> None | Collection[PermissionName]:
         """permissions = None -> every user can use this mode, permissions
         are checked by the mode itself. Otherwise the user needs at
         least wato.use and - if he makes actions - wato.edit. Plus wato.*

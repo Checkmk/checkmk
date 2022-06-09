@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Mode for automatic scan of parents (similar to cmk --scan-parents)"""
 
-from typing import Any, List, NamedTuple, Optional, Type
+from typing import Any, Collection, List, NamedTuple, Optional, Type
 
 from livestatus import SiteId
 
@@ -287,7 +287,7 @@ class ModeParentScan(WatoMode):
         return "parentscan"
 
     @classmethod
-    def permissions(cls) -> list[PermissionName]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["hosts", "parentscan"]
 
     def title(self) -> str:

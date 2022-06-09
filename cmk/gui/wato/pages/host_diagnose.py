@@ -6,7 +6,7 @@
 """Verify or find out a hosts agent related configuration"""
 
 import json
-from typing import List, Optional, Type
+from typing import Collection, List, Optional, Type
 
 import cmk.gui.forms as forms
 from cmk.gui.breadcrumb import Breadcrumb
@@ -56,7 +56,7 @@ class ModeDiagHost(WatoMode):
         return "diag_host"
 
     @classmethod
-    def permissions(cls) -> list[PermissionName]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["hosts", "diag_host"]
 
     @classmethod

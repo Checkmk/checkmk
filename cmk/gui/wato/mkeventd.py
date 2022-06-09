@@ -12,7 +12,7 @@ import re
 import time
 import zipfile
 from pathlib import Path
-from typing import Callable, Dict, Iterable, Iterator, List
+from typing import Callable, Collection, Dict, Iterable, Iterator, List
 from typing import Optional as _Optional
 from typing import overload, Type, TypeVar, Union
 
@@ -1504,7 +1504,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
         return "mkeventd_rule_packs"
 
     @classmethod
-    def permissions(cls) -> list[PermissionName]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["mkeventd.edit"]
 
     def title(self) -> str:
@@ -1968,7 +1968,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
         return "mkeventd_rules"
 
     @classmethod
-    def permissions(cls) -> list[PermissionName]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["mkeventd.edit"]
 
     @classmethod
@@ -2346,7 +2346,7 @@ class ModeEventConsoleEditRulePack(ABCEventConsoleMode):
         return "mkeventd_edit_rule_pack"
 
     @classmethod
-    def permissions(cls) -> list[PermissionName]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["mkeventd.edit"]
 
     @classmethod
@@ -2461,7 +2461,7 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
         return "mkeventd_edit_rule"
 
     @classmethod
-    def permissions(cls) -> list[PermissionName]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["mkeventd.edit"]
 
     @classmethod
@@ -2655,7 +2655,7 @@ class ModeEventConsoleStatus(ABCEventConsoleMode):
         return "mkeventd_status"
 
     @classmethod
-    def permissions(cls) -> list[PermissionName]:
+    def permissions(cls) -> Collection[PermissionName]:
         return []
 
     @classmethod
@@ -2763,7 +2763,7 @@ class ModeEventConsoleSettings(ABCEventConsoleMode, ABCGlobalSettingsMode):
         return "mkeventd_config"
 
     @classmethod
-    def permissions(cls) -> list[PermissionName]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["mkeventd.config"]
 
     @classmethod
@@ -2893,7 +2893,7 @@ class ModeEventConsoleEditGlobalSetting(ABCEditGlobalSettingMode):
         return "mkeventd_edit_configvar"
 
     @classmethod
-    def permissions(cls) -> list[PermissionName]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["mkeventd.config"]
 
     @classmethod
@@ -2926,7 +2926,7 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
         return "mkeventd_mibs"
 
     @classmethod
-    def permissions(cls) -> list[PermissionName]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["mkeventd.config"]
 
     @classmethod
@@ -3132,7 +3132,7 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
         return "mkeventd_upload_mibs"
 
     @classmethod
-    def permissions(cls) -> list[PermissionName]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["mkeventd.config"]
 
     @classmethod

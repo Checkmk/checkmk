@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Collection
+
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import mode_registry
@@ -18,7 +20,7 @@ class ModeNotImplemented(WatoMode):
         return ""
 
     @classmethod
-    def permissions(cls) -> list[PermissionName]:
+    def permissions(cls) -> Collection[PermissionName]:
         return []
 
     def title(self) -> str:

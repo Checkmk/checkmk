@@ -11,7 +11,7 @@ import json
 import os
 import tarfile
 from dataclasses import asdict
-from typing import Dict, Iterator, List, NamedTuple, Optional, Tuple, Union
+from typing import Collection, Dict, Iterator, List, NamedTuple, Optional, Tuple, Union
 
 from six import ensure_str
 
@@ -70,7 +70,7 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
         return "changelog"
 
     @classmethod
-    def permissions(cls) -> list[PermissionName]:
+    def permissions(cls) -> Collection[PermissionName]:
         return []
 
     def __init__(self) -> None:

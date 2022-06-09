@@ -8,7 +8,7 @@
 import abc
 import re
 from datetime import datetime
-from typing import Any, Dict, Iterable, Optional, Type
+from typing import Any, Collection, Dict, Iterable, Optional, Type
 
 import cmk.gui.forms as forms
 import cmk.gui.watolib.changes as _changes
@@ -262,7 +262,7 @@ class ModeEditCustomUserAttr(ModeEditCustomAttr):
         return "edit_user_attr"
 
     @classmethod
-    def permissions(cls) -> list[PermissionName]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["users", "custom_attributes"]
 
     @classmethod
@@ -335,7 +335,7 @@ class ModeEditCustomHostAttr(ModeEditCustomAttr):
         return "edit_host_attr"
 
     @classmethod
-    def permissions(cls) -> list[PermissionName]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["hosts", "manage_hosts", "custom_attributes"]
 
     @classmethod
@@ -507,7 +507,7 @@ class ModeCustomUserAttrs(ModeCustomAttrs):
         return "user_attrs"
 
     @classmethod
-    def permissions(cls) -> list[PermissionName]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["users", "custom_attributes"]
 
     @property
@@ -541,7 +541,7 @@ class ModeCustomHostAttrs(ModeCustomAttrs):
         return "host_attrs"
 
     @classmethod
-    def permissions(cls) -> list[PermissionName]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["hosts", "manage_hosts", "custom_attributes"]
 
     @property

@@ -6,6 +6,7 @@
 
 import io
 import os
+from typing import Collection
 
 from PIL import Image, PngImagePlugin  # type: ignore[import]
 
@@ -35,7 +36,7 @@ class ModeIcons(WatoMode):
         return "icons"
 
     @classmethod
-    def permissions(cls) -> list[PermissionName]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["icons"]
 
     def title(self) -> str:

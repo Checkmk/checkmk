@@ -7,7 +7,7 @@
 to hosts and that is the basis of the rules."""
 
 import abc
-from typing import List, Optional, Set, Type, Union
+from typing import Collection, List, Optional, Set, Type, Union
 
 import cmk.utils.tags
 
@@ -117,7 +117,7 @@ class ModeTags(ABCTagMode):
         return "tags"
 
     @classmethod
-    def permissions(cls) -> list[PermissionName]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["hosttags"]
 
     def title(self) -> str:
@@ -455,7 +455,7 @@ class ModeTags(ABCTagMode):
 
 class ABCEditTagMode(ABCTagMode, abc.ABC):
     @classmethod
-    def permissions(cls) -> list[PermissionName]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["hosttags"]
 
     def __init__(self) -> None:
@@ -525,7 +525,7 @@ class ModeTagUsage(ABCTagMode):
         return "tag_usage"
 
     @classmethod
-    def permissions(cls) -> list[PermissionName]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["hosttags"]
 
     @classmethod

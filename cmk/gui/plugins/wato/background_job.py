@@ -6,7 +6,7 @@
 
 import json
 import traceback
-from typing import Iterator, Optional, Type
+from typing import Collection, Iterator, Optional, Type
 
 import cmk.gui.gui_background_job as gui_background_job
 from cmk.gui.breadcrumb import Breadcrumb
@@ -80,7 +80,7 @@ class ModeBackgroundJobsOverview(WatoMode):
         return "background_jobs_overview"
 
     @classmethod
-    def permissions(cls) -> list[PermissionName]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["background_jobs.manage_jobs"]
 
     def title(self) -> str:
@@ -113,7 +113,7 @@ class ModeBackgroundJobDetails(WatoMode):
         return "background_job_details"
 
     @classmethod
-    def permissions(cls) -> list[PermissionName]:
+    def permissions(cls) -> Collection[PermissionName]:
         return []
 
     @classmethod

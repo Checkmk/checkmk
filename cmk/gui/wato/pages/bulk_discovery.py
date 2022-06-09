@@ -7,7 +7,7 @@
 this mode is used."""
 
 import copy
-from typing import cast, List, Optional, Tuple, Type
+from typing import cast, Collection, List, Optional, Tuple, Type
 
 import cmk.gui.forms as forms
 import cmk.gui.sites as sites
@@ -44,7 +44,7 @@ class ModeBulkDiscovery(WatoMode):
         return "bulkinventory"
 
     @classmethod
-    def permissions(cls) -> list[PermissionName]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["hosts", "services"]
 
     @classmethod

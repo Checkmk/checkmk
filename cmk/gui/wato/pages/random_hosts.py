@@ -7,7 +7,7 @@
 for test and development."""
 
 import random
-from typing import Dict, List, Optional, Tuple, Type
+from typing import Collection, Dict, List, Optional, Tuple, Type
 
 from cmk.utils.type_defs import HostName
 
@@ -31,7 +31,7 @@ class ModeRandomHosts(WatoMode):
         return "random_hosts"
 
     @classmethod
-    def permissions(cls) -> list[PermissionName]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["hosts", "random_hosts"]
 
     def title(self) -> str:

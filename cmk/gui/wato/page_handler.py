@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import inspect
-from typing import Type
+from typing import Collection, Type
 
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
@@ -102,7 +102,9 @@ def page_handler() -> None:
 
 
 def _wato_page_handler(
-    current_mode: str, mode_permissions: None | list[PermissionName], mode_class: Type[WatoMode]
+    current_mode: str,
+    mode_permissions: None | Collection[PermissionName],
+    mode_class: Type[WatoMode],
 ) -> None:
     # Check general permission for this mode
     if mode_permissions is not None and not user.may("wato.seeall"):
@@ -185,7 +187,7 @@ def _wato_page_handler(
 
 def _get_mode_permission_and_class(
     mode_name: str,
-) -> tuple[None | list[PermissionName], Type[WatoMode]]:
+) -> tuple[None | Collection[PermissionName], Type[WatoMode]]:
     mode_class = mode_registry.get(mode_name, ModeNotImplemented)
     mode_permissions = mode_class.permissions()
 
@@ -206,7 +208,7 @@ def _get_mode_permission_and_class(
     return mode_permissions, mode_class
 
 
-def _ensure_mode_permissions(mode_permissions: list[PermissionName]) -> None:
+def _ensure_mode_permissions(mode_permissions: Collection[PermissionName]) -> None:
     for pname in mode_permissions:
         if "." not in pname:
             pname = "wato." + pname

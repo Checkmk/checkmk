@@ -8,7 +8,7 @@
 import abc
 import time
 from datetime import datetime
-from typing import Iterator, List, NamedTuple, Optional, overload
+from typing import Collection, Iterator, List, NamedTuple, Optional, overload
 from typing import Tuple as _Tuple
 from typing import Type, Union
 
@@ -498,7 +498,7 @@ class ModeNotifications(ABCNotificationsMode):
         return "notifications"
 
     @classmethod
-    def permissions(cls) -> list[PermissionName]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["notifications"]
 
     def __init__(self) -> None:
@@ -986,7 +986,7 @@ class ModeUserNotifications(ABCUserNotificationsMode):
         return "user_notifications"
 
     @classmethod
-    def permissions(cls) -> list[PermissionName]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["users"]
 
     @classmethod
@@ -1073,7 +1073,7 @@ class ModePersonalUserNotifications(ABCUserNotificationsMode):
         return "user_notifications_p"
 
     @classmethod
-    def permissions(cls) -> None | list[PermissionName]:
+    def permissions(cls) -> None | Collection[PermissionName]:
         return None
 
     def __init__(self) -> None:
@@ -1675,7 +1675,7 @@ class ModeEditNotificationRule(ABCEditNotificationRuleMode):
         return "notification_rule"
 
     @classmethod
-    def permissions(cls) -> list[PermissionName]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["notifications"]
 
     @classmethod
@@ -1741,7 +1741,7 @@ class ModeEditUserNotificationRule(ABCEditUserNotificationRuleMode):
         return "user_notification_rule"
 
     @classmethod
-    def permissions(cls) -> list[PermissionName]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["notifications"]
 
     @classmethod
@@ -1771,7 +1771,7 @@ class ModeEditPersonalNotificationRule(ABCEditUserNotificationRuleMode):
         return ModePersonalUserNotifications
 
     @classmethod
-    def permissions(cls) -> None | list[PermissionName]:
+    def permissions(cls) -> None | Collection[PermissionName]:
         return None
 
     def __init__(self) -> None:

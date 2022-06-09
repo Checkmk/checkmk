@@ -6,7 +6,7 @@
 """Modes for creating and editing hosts"""
 
 import abc
-from typing import Iterator, Optional, overload, Type
+from typing import Collection, Iterator, Optional, overload, Type
 
 import cmk.utils.tags
 
@@ -304,7 +304,7 @@ class ModeEditHost(ABCHostMode):
         return "edit_host"
 
     @classmethod
-    def permissions(cls) -> list[PermissionName]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["hosts"]
 
     # pylint does not understand this overloading
@@ -665,7 +665,7 @@ class ModeCreateHost(CreateHostMode):
         return "newhost"
 
     @classmethod
-    def permissions(cls) -> list[PermissionName]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["hosts", "manage_hosts"]
 
     def title(self) -> str:
@@ -699,7 +699,7 @@ class ModeCreateCluster(CreateHostMode):
         return "newcluster"
 
     @classmethod
-    def permissions(cls) -> list[PermissionName]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["hosts", "manage_hosts"]
 
     def _is_cluster(self):

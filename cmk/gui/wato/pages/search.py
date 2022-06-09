@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Mode for searching hosts"""
 
-from typing import Optional, Type
+from typing import Collection, Optional, Type
 
 import cmk.gui.forms as forms
 from cmk.gui.breadcrumb import Breadcrumb
@@ -29,7 +29,7 @@ class ModeSearch(WatoMode):
         return "search"
 
     @classmethod
-    def permissions(cls) -> list[PermissionName]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["hosts"]
 
     @classmethod

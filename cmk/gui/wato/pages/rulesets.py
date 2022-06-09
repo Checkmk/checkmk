@@ -14,7 +14,7 @@ import pprint
 import re
 from dataclasses import asdict
 from enum import auto, Enum
-from typing import Any, cast, Dict, Iterable, List, Optional, overload
+from typing import Any, cast, Collection, Dict, Iterable, List, Optional, overload
 from typing import Tuple as _Tuple
 from typing import Type, Union
 
@@ -141,7 +141,7 @@ class ABCRulesetMode(WatoMode):
     """
 
     @classmethod
-    def permissions(cls) -> list[PermissionName]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["rulesets"]
 
     def __init__(self) -> None:
@@ -678,7 +678,7 @@ class ModeEditRuleset(WatoMode):
         return "edit_ruleset"
 
     @classmethod
-    def permissions(cls) -> list[PermissionName]:
+    def permissions(cls) -> Collection[PermissionName]:
         return []
 
     @classmethod
@@ -1303,7 +1303,7 @@ class ModeRuleSearchForm(WatoMode):
         return "rule_search_form"
 
     @classmethod
-    def permissions(cls) -> list[PermissionName]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["rulesets"]
 
     @classmethod
@@ -2581,7 +2581,7 @@ class ModeEditRule(ABCEditRuleMode):
         return "edit_rule"
 
     @classmethod
-    def permissions(cls) -> list[PermissionName]:
+    def permissions(cls) -> Collection[PermissionName]:
         return []
 
     def _save_rule(self) -> None:
@@ -2597,7 +2597,7 @@ class ModeCloneRule(ABCEditRuleMode):
         return "clone_rule"
 
     @classmethod
-    def permissions(cls) -> list[PermissionName]:
+    def permissions(cls) -> Collection[PermissionName]:
         return []
 
     def title(self) -> str:
@@ -2622,7 +2622,7 @@ class ModeNewRule(ABCEditRuleMode):
         return "new_rule"
 
     @classmethod
-    def permissions(cls) -> list[PermissionName]:
+    def permissions(cls) -> Collection[PermissionName]:
         return []
 
     def title(self) -> str:
@@ -2708,7 +2708,7 @@ class ModeExportRule(ABCEditRuleMode):
         return "export_rule"
 
     @classmethod
-    def permissions(cls) -> list[PermissionName]:
+    def permissions(cls) -> Collection[PermissionName]:
         return []
 
     def title(self) -> str:

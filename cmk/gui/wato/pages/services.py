@@ -11,6 +11,7 @@ import traceback
 from dataclasses import astuple
 from typing import (
     Any,
+    Collection,
     Dict,
     Iterable,
     Iterator,
@@ -111,7 +112,7 @@ class ModeDiscovery(WatoMode):
         return "inventory"
 
     @classmethod
-    def permissions(cls) -> list[PermissionName]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["hosts"]
 
     @classmethod

@@ -7,7 +7,7 @@
 import tarfile
 import uuid
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import Collection, List, Optional, Tuple
 
 from livestatus import SiteId
 
@@ -87,7 +87,7 @@ class ModeDiagnostics(WatoMode):
         return "diagnostics"
 
     @classmethod
-    def permissions(cls) -> list[PermissionName]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["diagnostics"]
 
     def _from_vars(self) -> None:

@@ -13,7 +13,7 @@ import multiprocessing
 import queue
 import time
 import traceback
-from typing import Any, Dict, Tuple
+from typing import Any, Collection, Dict, Tuple
 
 from livestatus import SiteId
 
@@ -80,7 +80,7 @@ class ModeAnalyzeConfig(WatoMode):
         return "analyze_config"
 
     @classmethod
-    def permissions(cls) -> list[PermissionName]:
+    def permissions(cls) -> Collection[PermissionName]:
         return []
 
     def __init__(self) -> None:

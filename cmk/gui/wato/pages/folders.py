@@ -8,7 +8,7 @@
 import abc
 import json
 import operator
-from typing import Any, Dict, Iterator, List, Optional, Tuple, Type
+from typing import Any, Collection, Dict, Iterator, List, Optional, Tuple, Type
 
 from cmk.utils.type_defs import HostName
 
@@ -102,7 +102,7 @@ class ModeFolder(WatoMode):
         return "folder"
 
     @classmethod
-    def permissions(cls) -> list[PermissionName]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["hosts"]
 
     def __init__(self) -> None:
@@ -1322,7 +1322,7 @@ class ModeEditFolder(ABCFolderMode):
         return "editfolder"
 
     @classmethod
-    def permissions(cls) -> list[PermissionName]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["hosts"]
 
     def _init_folder(self):
@@ -1342,7 +1342,7 @@ class ModeCreateFolder(ABCFolderMode):
         return "newfolder"
 
     @classmethod
-    def permissions(cls) -> list[PermissionName]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["hosts", "manage_folders"]
 
     def _init_folder(self):

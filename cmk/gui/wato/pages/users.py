@@ -8,7 +8,7 @@
 import base64
 import time
 import traceback
-from typing import cast, Iterator, List, Optional, overload, Tuple, Type, Union
+from typing import cast, Collection, Iterator, List, Optional, overload, Tuple, Type, Union
 
 import cmk.utils.render as render
 import cmk.utils.version as cmk_version
@@ -87,7 +87,7 @@ class ModeUsers(WatoMode):
         return "users"
 
     @classmethod
-    def permissions(cls) -> list[PermissionName]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["users"]
 
     def __init__(self) -> None:
@@ -567,7 +567,7 @@ class ModeEditUser(WatoMode):
         return "edit_user"
 
     @classmethod
-    def permissions(cls) -> list[PermissionName]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["users"]
 
     @classmethod

@@ -6,7 +6,7 @@
 """Modes for managing timeperiod definitions for the core"""
 
 import time
-from typing import Any, Dict, List
+from typing import Any, Collection, Dict, List
 from typing import Optional as _Optional
 from typing import Tuple as _Tuple
 from typing import Type
@@ -83,7 +83,7 @@ class ModeTimeperiods(WatoMode):
         return "timeperiods"
 
     @classmethod
-    def permissions(cls) -> list[PermissionName]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["timeperiods"]
 
     def __init__(self) -> None:
@@ -379,7 +379,7 @@ class ModeTimeperiodImportICal(WatoMode):
         return "import_ical"
 
     @classmethod
-    def permissions(cls) -> list[PermissionName]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["timeperiods"]
 
     @classmethod
@@ -691,7 +691,7 @@ class ModeEditTimeperiod(WatoMode):
         return "edit_timeperiod"
 
     @classmethod
-    def permissions(cls) -> list[PermissionName]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["timeperiods"]
 
     @classmethod

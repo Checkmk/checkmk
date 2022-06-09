@@ -17,7 +17,7 @@
 # <oid>.3: Status
 # the latter can be one of the following:
 
-from typing import Mapping, MutableMapping, NamedTuple
+from typing import Any, Mapping, MutableMapping, NamedTuple
 
 fjdarye_item_status = {
     "1": (0, "Normal"),
@@ -69,6 +69,16 @@ def check_fjdarye_item(item: str, _no_param, section: SectionFjdaryeItem):
 #   |                          disks main check                            |
 #   '----------------------------------------------------------------------'
 
+
+class FjdaryeDisk(NamedTuple):
+    disk_index: str
+    state: int
+    state_description: str
+    state_disk: str
+
+
+SectionFjdaryeDisk = Mapping[str, FjdaryeDisk]
+
 fjdarye_disks_status = {
     "1": (0, "available"),
     "2": (2, "broken"),
@@ -86,51 +96,53 @@ fjdarye_disks_status = {
 }
 
 
-def parse_fjdarye_disks(info):
-    parsed: dict = {}
-    for idx, disk_state in info:
-        state, state_readable = fjdarye_disks_status.get(
+def parse_fjdarye_disks(info) -> SectionFjdaryeDisk:
+    fjdarye_disks: MutableMapping[str, FjdaryeDisk] = {}
+
+    for disk_index, disk_state in info:
+        state, state_description = fjdarye_disks_status.get(
             disk_state,
             (3, "unknown[%s]" % disk_state),
         )
-        parsed.setdefault(
-            str(idx),
-            {
-                "state": state,
-                "state_readable": state_readable,
-                "state_disk": disk_state,
-            },
+        fjdarye_disks.setdefault(
+            disk_index,
+            FjdaryeDisk(
+                disk_index=disk_index,
+                state=state,
+                state_description=state_description,
+                state_disk=disk_state,
+            ),
         )
-    return parsed
+    return fjdarye_disks
 
 
-def inventory_fjdarye_disks(parsed):
-    return [
-        (idx, repr(attrs["state_readable"]))
-        for idx, attrs in parsed.items()
-        if attrs["state_disk"] != "3"
-    ]
+def discover_fjdarye_disks(section: SectionFjdaryeDisk):
+    for disk in section.values():
+        if disk.state_disk != "3":
+            yield disk.disk_index, disk.state_description
 
 
-def check_fjdarye_disks(item, params, parsed):
+def check_fjdarye_disks(item: str, params: Mapping[str, Any] | str, section: SectionFjdaryeDisk):
+
+    if (fjdarye_disk := section.get(item)) is None:
+        return
+
     if isinstance(params, str):
         params = {"expected_state": params}
+        # Determined at the time of discovery
+        # "expected_state" can also be set as a parameter by the user
 
-    if item in parsed:
-        attrs = parsed[item]
-        state_readable = attrs["state_readable"]
-        expected_state = params.get("expected_state")
-        check_state = 0
-        infotext = "Status: %s" % state_readable
-        if params.get("use_device_states"):
-            check_state = attrs["state"]
-            if check_state > 0:
-                infotext += " (use device states)"
-        elif expected_state and state_readable != expected_state:
-            check_state = 2
-            infotext += " (expected: %s)" % expected_state
-        return check_state, infotext
-    return None
+    if params.get("use_device_states") and fjdarye_disk.state > 0:
+        yield fjdarye_disk.state, f"Status: {fjdarye_disk.state_description} (using device states)"
+        return
+
+    if (expected_state := params.get("expected_state")) and (
+        expected_state != fjdarye_disk.state_description
+    ):
+        yield 2, f"Status: {fjdarye_disk.state_description} (expected: {expected_state})"
+        return
+
+    yield 0, f"Status: {fjdarye_disk.state_description}"
 
 
 # .

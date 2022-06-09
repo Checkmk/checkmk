@@ -3,7 +3,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Mapping, Optional, Sequence, Union
+from typing import Any, Mapping, Optional, Sequence, Union
 
 import pytest
 
@@ -13,16 +13,18 @@ from cmk.base.check_legacy_includes.fjdarye import (
     check_fjdarye_item,
     check_fjdarye_rluns,
     check_fjdarye_sum,
+    discover_fjdarye_disks,
     discover_fjdarye_item,
     fjdarye_disks_printstates,
     fjdarye_disks_summary,
+    FjdaryeDisk,
     FjdaryeItem,
-    inventory_fjdarye_disks,
     inventory_fjdarye_disks_summary,
     inventory_fjdarye_rluns,
     inventory_fjdarye_sum,
     parse_fjdarye_disks,
     parse_fjdarye_item,
+    SectionFjdaryeDisk,
     SectionFjdaryeItem,
 )
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringByteTable, StringTable
@@ -161,13 +163,23 @@ def test_check_fjdarye_item(
                 ["4", "4"],
             ],
             {
-                "0": {"state": 0, "state_readable": "available", "state_disk": "1"},
-                "1": {"state": 0, "state_readable": "available", "state_disk": "1"},
-                "2": {"state": 0, "state_readable": "available", "state_disk": "1"},
-                "3": {"state": 0, "state_readable": "available", "state_disk": "1"},
-                "4": {"state": 1, "state_readable": "notsupported", "state_disk": "4"},
+                "0": FjdaryeDisk(
+                    disk_index="0", state=0, state_description="available", state_disk="1"
+                ),
+                "1": FjdaryeDisk(
+                    disk_index="1", state=0, state_description="available", state_disk="1"
+                ),
+                "2": FjdaryeDisk(
+                    disk_index="2", state=0, state_description="available", state_disk="1"
+                ),
+                "3": FjdaryeDisk(
+                    disk_index="3", state=0, state_description="available", state_disk="1"
+                ),
+                "4": FjdaryeDisk(
+                    disk_index="4", state=1, state_description="notsupported", state_disk="4"
+                ),
             },
-            id="If disk_state is in the mapping, then the function should assign the state, state_readable and state_disk accordingly",
+            id="Returns disk information based on the disk_state attribute",
         ),
         pytest.param(
             [
@@ -176,11 +188,17 @@ def test_check_fjdarye_item(
                 ["14", "14"],
             ],
             {
-                "0": {"state": 0, "state_readable": "available", "state_disk": "1"},
-                "4": {"state": 1, "state_readable": "notsupported", "state_disk": "4"},
-                "14": {"state": 3, "state_readable": "unknown[14]", "state_disk": "14"},
+                "0": FjdaryeDisk(
+                    disk_index="0", state=0, state_description="available", state_disk="1"
+                ),
+                "4": FjdaryeDisk(
+                    disk_index="4", state=1, state_description="notsupported", state_disk="4"
+                ),
+                "14": FjdaryeDisk(
+                    disk_index="14", state=3, state_description="unknown[14]", state_disk="14"
+                ),
             },
-            id="If disk_state is not in the mapping, then the function should assign 3(UNKNOWN) to the state and unknown[disk_state] to state_readable and disk_state to state_disk",
+            id="If disk_state is not in the mapping, then the function should assign 3(UNKNOWN) to the state and unknown[disk_state] to state_description and disk_state to state_disk",
         ),
         pytest.param(
             [],
@@ -195,9 +213,15 @@ def test_check_fjdarye_item(
                 ["14", "1"],
             ],
             {
-                "0": {"state": 0, "state_readable": "available", "state_disk": "1"},
-                "4": {"state": 1, "state_readable": "notsupported", "state_disk": "4"},
-                "14": {"state": 3, "state_readable": "unknown[14]", "state_disk": "14"},
+                "0": FjdaryeDisk(
+                    disk_index="0", state=0, state_description="available", state_disk="1"
+                ),
+                "4": FjdaryeDisk(
+                    disk_index="4", state=1, state_description="notsupported", state_disk="4"
+                ),
+                "14": FjdaryeDisk(
+                    disk_index="14", state=3, state_description="unknown[14]", state_disk="14"
+                ),
             },
             id="If the parse function is trying to alter already existing elements in the parsed section it should not allow it and should keep the existing state",
         ),
@@ -205,7 +229,7 @@ def test_check_fjdarye_item(
 )
 def test_parse_fjdarye_disks(
     section: StringTable,
-    parse_result: FjdaryeSection,
+    parse_result: SectionFjdaryeDisk,
 ) -> None:
     assert parse_fjdarye_disks(section) == parse_result
 
@@ -250,19 +274,29 @@ def test_parse_fjdarye_disks_with_error_input(
     [
         pytest.param(
             {
-                "0": {"state": 0, "state_readable": "available", "state_disk": "1"},
-                "1": {"state": 0, "state_readable": "available", "state_disk": "1"},
-                "2": {"state": 0, "state_readable": "available", "state_disk": "1"},
-                "3": {"state": 0, "state_readable": "available", "state_disk": "1"},
-                "4": {"state": 1, "state_readable": "notavailable", "state_disk": "3"},
+                "0": FjdaryeDisk(
+                    disk_index="0", state=0, state_description="available", state_disk="1"
+                ),
+                "1": FjdaryeDisk(
+                    disk_index="1", state=0, state_description="available", state_disk="1"
+                ),
+                "2": FjdaryeDisk(
+                    disk_index="2", state=0, state_description="available", state_disk="1"
+                ),
+                "3": FjdaryeDisk(
+                    disk_index="3", state=0, state_description="available", state_disk="1"
+                ),
+                "4": FjdaryeDisk(
+                    disk_index="4", state=1, state_description="notsupported", state_disk="3"
+                ),
             },
             [
-                ("0", "'available'"),
-                ("1", "'available'"),
-                ("2", "'available'"),
-                ("3", "'available'"),
+                ("0", "available"),
+                ("1", "available"),
+                ("2", "available"),
+                ("3", "available"),
             ],
-            id="Should return (idx,state_description) of all disks that don't have a state_disk of 3",
+            id="Should return (disk_index,state_description) of all disks that don't have a state_disk of 3",
         ),
         pytest.param(
             {},
@@ -271,82 +305,232 @@ def test_parse_fjdarye_disks_with_error_input(
         ),
     ],
 )
-def test_inventory_fjdarye_disks(
-    parsed: FjdaryeSection,
+def test_discover_fjdarye_disks(
+    parsed: SectionFjdaryeDisk,
     discovery_result: Sequence[tuple[str, str]],
 ) -> None:
-    assert inventory_fjdarye_disks(parsed) == discovery_result
+    assert list(discover_fjdarye_disks(parsed)) == discovery_result
 
 
 @pytest.mark.parametrize(
-    "parsed, item, params, check_result",
+    "section, item, params, check_result",
     [
         pytest.param(
             {
-                "0": {"state": 0, "state_readable": "available", "state_disk": "1"},
-                "1": {"state": 0, "state_readable": "available", "state_disk": "1"},
-                "2": {"state": 0, "state_readable": "available", "state_disk": "1"},
-                "3": {"state": 0, "state_readable": "available", "state_disk": "1"},
-                "4": {"state": 1, "state_readable": "notavailable", "state_disk": "3"},
+                "0": FjdaryeDisk(
+                    disk_index="0", state=0, state_description="available", state_disk="1"
+                ),
+                "1": FjdaryeDisk(
+                    disk_index="1", state=0, state_description="available", state_disk="1"
+                ),
+                "2": FjdaryeDisk(
+                    disk_index="2", state=0, state_description="available", state_disk="1"
+                ),
+                "3": FjdaryeDisk(
+                    disk_index="3", state=0, state_description="available", state_disk="1"
+                ),
+                "4": FjdaryeDisk(
+                    disk_index="4", state=1, state_description="notavailable", state_disk="3"
+                ),
             },
             "5",
             {},
-            None,
-            id="If the given item can not be found in the provided section, check result is None",
+            [],
+            id="If the given item can not be found in the provided section, check result is an empty list.",
         ),
         pytest.param(
             {
-                "0": {"state": 0, "state_readable": "available", "state_disk": "1"},
-                "3": {"state": 0, "state_readable": "available", "state_disk": "1"},
-                "4": {"state": 1, "state_readable": "notavailable", "state_disk": "3"},
+                "0": FjdaryeDisk(
+                    disk_index="0", state=0, state_description="available", state_disk="1"
+                ),
+                "1": FjdaryeDisk(
+                    disk_index="1", state=0, state_description="available", state_disk="1"
+                ),
+                "2": FjdaryeDisk(
+                    disk_index="2", state=0, state_description="available", state_disk="1"
+                ),
+                "3": FjdaryeDisk(
+                    disk_index="3", state=0, state_description="available", state_disk="1"
+                ),
+                "4": FjdaryeDisk(
+                    disk_index="4", state=1, state_description="notavailable", state_disk="3"
+                ),
+            },
+            "3",
+            "available",
+            [(0, "Status: available")],
+            id="If no rules are configured, the expected_state of the disk is its state_description at the time it was discovered.",
+        ),
+        pytest.param(
+            {
+                "0": FjdaryeDisk(
+                    disk_index="0", state=0, state_description="available", state_disk="1"
+                ),
+                "1": FjdaryeDisk(
+                    disk_index="1", state=0, state_description="available", state_disk="1"
+                ),
+                "2": FjdaryeDisk(
+                    disk_index="2", state=0, state_description="available", state_disk="1"
+                ),
+                "3": FjdaryeDisk(
+                    disk_index="3", state=0, state_description="available", state_disk="1"
+                ),
+                "4": FjdaryeDisk(
+                    disk_index="4", state=1, state_description="notavailable", state_disk="3"
+                ),
             },
             "4",
             {},
-            (0, "Status: notavailable"),
-            id="If expected_state and use_device_states are not configured, the check result state is OK and the summary is the readable state of the disk",
+            [(0, "Status: notavailable")],
+            id="If a rule with no parameters is created, the state is OK and the summary is the device's status description.",
         ),
         pytest.param(
             {
-                "0": {"state": 0, "state_readable": "available", "state_disk": "1"},
-                "3": {"state": 0, "state_readable": "available", "state_disk": "1"},
-                "4": {"state": 1, "state_readable": "notavailable", "state_disk": "3"},
+                "0": FjdaryeDisk(
+                    disk_index="0", state=0, state_description="available", state_disk="1"
+                ),
+                "1": FjdaryeDisk(
+                    disk_index="1", state=0, state_description="available", state_disk="1"
+                ),
+                "2": FjdaryeDisk(
+                    disk_index="2", state=0, state_description="available", state_disk="1"
+                ),
+                "3": FjdaryeDisk(
+                    disk_index="3", state=0, state_description="available", state_disk="1"
+                ),
+                "4": FjdaryeDisk(
+                    disk_index="4", state=1, state_description="notavailable", state_disk="3"
+                ),
             },
             "4",
             {"expected_state": "available"},
-            (2, "Status: notavailable (expected: available)"),
-            id="If only the expected_state parameter is configured and it doesn't match the current state of the disk, the result is a state of CRIT with a description indicating the difference between states",
+            [(2, "Status: notavailable (expected: available)")],
+            id="If only the expected_state parameter is configured in the ruleset and it doesn't match the current state of the disk, the result is a state of CRIT with a description indicating the difference between states.",
         ),
         pytest.param(
             {
-                "0": {"state": 0, "state_readable": "available", "state_disk": "1"},
-                "3": {"state": 0, "state_readable": "available", "state_disk": "1"},
-                "4": {"state": 1, "state_readable": "notavailable", "state_disk": "3"},
+                "0": FjdaryeDisk(
+                    disk_index="0", state=0, state_description="available", state_disk="1"
+                ),
+                "1": FjdaryeDisk(
+                    disk_index="1", state=0, state_description="available", state_disk="1"
+                ),
+                "2": FjdaryeDisk(
+                    disk_index="2", state=0, state_description="available", state_disk="1"
+                ),
+                "3": FjdaryeDisk(
+                    disk_index="3", state=0, state_description="available", state_disk="1"
+                ),
+                "4": FjdaryeDisk(
+                    disk_index="4", state=1, state_description="notavailable", state_disk="3"
+                ),
+            },
+            "3",
+            {"expected_state": "available"},
+            [(0, "Status: available")],
+            id="If only the expected_state parameter is configured in the ruleset and it matches the current state of the disk, the result is a state of OK with a summary indicating the state of the disk.",
+        ),
+        pytest.param(
+            {
+                "0": FjdaryeDisk(
+                    disk_index="0", state=0, state_description="available", state_disk="1"
+                ),
+                "1": FjdaryeDisk(
+                    disk_index="1", state=0, state_description="available", state_disk="1"
+                ),
+                "2": FjdaryeDisk(
+                    disk_index="2", state=0, state_description="available", state_disk="1"
+                ),
+                "3": FjdaryeDisk(
+                    disk_index="3", state=0, state_description="available", state_disk="1"
+                ),
+                "4": FjdaryeDisk(
+                    disk_index="4", state=1, state_description="notavailable", state_disk="3"
+                ),
             },
             "4",
             {"use_device_states": True},
-            (1, "Status: notavailable (use device states)"),
-            id="If the use_device_states parameter is set to True, the function uses the current device state as the result. It also provides a note in the result that it's using it.",
+            [(1, "Status: notavailable (using device states)")],
+            id="If the use_device_states parameter is configures to True in the ruleset, the function uses the current device state as the result. It also provides a note in the result that it's using it.",
         ),
         pytest.param(
             {
-                "0": {"state": 0, "state_readable": "available", "state_disk": "1"},
-                "3": {"state": 0, "state_readable": "available", "state_disk": "1"},
-                "4": {"state": 1, "state_readable": "notavailable", "state_disk": "3"},
+                "0": FjdaryeDisk(
+                    disk_index="0", state=0, state_description="available", state_disk="1"
+                ),
+                "1": FjdaryeDisk(
+                    disk_index="1", state=0, state_description="available", state_disk="1"
+                ),
+                "2": FjdaryeDisk(
+                    disk_index="2", state=0, state_description="available", state_disk="1"
+                ),
+                "3": FjdaryeDisk(
+                    disk_index="3", state=0, state_description="available", state_disk="1"
+                ),
+                "4": FjdaryeDisk(
+                    disk_index="4", state=1, state_description="notavailable", state_disk="3"
+                ),
+            },
+            "4",
+            {"use_device_states": False},
+            [(0, "Status: notavailable")],
+            id="If the use_device_states parameter is configures to False in the ruleset, the expected_state of the disk is its state_description at the time it was discovered. Basically, the behaviour is the same as if the parameter use_device_state wasn't even configured.",
+        ),
+        pytest.param(
+            {
+                "0": FjdaryeDisk(
+                    disk_index="0", state=0, state_description="available", state_disk="1"
+                ),
+                "1": FjdaryeDisk(
+                    disk_index="1", state=0, state_description="available", state_disk="1"
+                ),
+                "2": FjdaryeDisk(
+                    disk_index="2", state=0, state_description="available", state_disk="1"
+                ),
+                "3": FjdaryeDisk(
+                    disk_index="3", state=0, state_description="available", state_disk="1"
+                ),
+                "4": FjdaryeDisk(
+                    disk_index="4", state=1, state_description="notavailable", state_disk="3"
+                ),
             },
             "4",
             {"expected_state": "available", "use_device_states": True},
-            (1, "Status: notavailable (use device states)"),
-            id="If both the use_device_states and expected_state are provided, the function uses the current device state as the result. Same behaviour as if the expected_state parameter was not provided.",
+            [(1, "Status: notavailable (using device states)")],
+            id="If both the use_device_states and expected_state are configured in the ruleset, the function uses the current device state as the result. Same behaviour as if the expected_state parameter was not configured.",
+        ),
+        pytest.param(
+            {
+                "0": FjdaryeDisk(
+                    disk_index="0", state=0, state_description="available", state_disk="1"
+                ),
+                "1": FjdaryeDisk(
+                    disk_index="1", state=0, state_description="available", state_disk="1"
+                ),
+                "2": FjdaryeDisk(
+                    disk_index="2", state=0, state_description="available", state_disk="1"
+                ),
+                "3": FjdaryeDisk(
+                    disk_index="3", state=0, state_description="available", state_disk="1"
+                ),
+                "4": FjdaryeDisk(
+                    disk_index="4", state=1, state_description="notavailable", state_disk="3"
+                ),
+            },
+            "4",
+            {"expected_state": "available", "use_device_states": False},
+            [(2, "Status: notavailable (expected: available)")],
+            id="If use_device_states is configured to False and expected_state is configured in the ruleset, the behaviour is as if only the expected_state was configured.",
         ),
     ],
 )
 def test_check_fjdarye_disks(
-    parsed: FjdaryeSection,
+    section: SectionFjdaryeDisk,
     item: str,
-    params: Mapping,
-    check_result: Optional[tuple[int, str]],
+    params: Mapping[str, Any] | str,
+    check_result: FjdaryeCheckResult,
 ) -> None:
-    assert check_fjdarye_disks(item, params, parsed) == check_result
+    assert list(check_fjdarye_disks(item, params, section)) == check_result
 
 
 @pytest.mark.parametrize(

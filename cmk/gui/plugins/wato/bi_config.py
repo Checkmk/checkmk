@@ -20,6 +20,7 @@ import cmk.gui.utils.escaping as escaping
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.pages import AjaxPage, page_registry, PageResult
 from cmk.gui.plugins.wato.utils.main_menu import MainModuleTopic
+from cmk.gui.type_defs import PermissionName
 from cmk.gui.utils.urls import DocReference
 
 try:
@@ -286,7 +287,7 @@ class ModeBIEditPack(ABCBIMode):
         return "bi_edit_pack"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> list[PermissionName]:
         return ["bi_rules", "bi_admin"]
 
     def title(self) -> str:
@@ -422,7 +423,7 @@ class ModeBIPacks(ABCBIMode):
         return "bi_packs"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> list[PermissionName]:
         return ["bi_rules"]
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
@@ -585,7 +586,7 @@ class ModeBIRules(ABCBIMode):
         return "bi_rules"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> list[PermissionName]:
         return ["bi_rules"]
 
     # pylint does not understand this overloading
@@ -1054,7 +1055,7 @@ class ModeBIEditRule(ABCBIMode):
         return "bi_edit_rule"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> list[PermissionName]:
         return ["bi_rules"]
 
     def __init__(self) -> None:
@@ -1584,7 +1585,7 @@ class BIModeEditAggregation(ABCBIMode):
         return "bi_edit_aggregation"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> list[PermissionName]:
         return ["bi_rules"]
 
     def __init__(self) -> None:
@@ -1889,7 +1890,7 @@ class BIModeAggregations(ABCBIMode):
         return "bi_aggregations"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> list[PermissionName]:
         return ["bi_rules"]
 
     @classmethod
@@ -2217,7 +2218,7 @@ class ModeBIRuleTree(ABCBIMode):
         return "bi_rule_tree"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> list[PermissionName]:
         return ["bi_rules"]
 
     @classmethod

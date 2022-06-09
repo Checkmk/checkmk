@@ -56,7 +56,7 @@ from cmk.gui.plugins.watolib.utils import (
 from cmk.gui.site_config import has_wato_slave_sites, is_wato_slave_site, site_is_local
 from cmk.gui.sites import SiteStatus
 from cmk.gui.table import table_element
-from cmk.gui.type_defs import ActionResult, UserId
+from cmk.gui.type_defs import ActionResult, PermissionName, UserId
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import (
@@ -108,7 +108,7 @@ class ModeEditSite(WatoMode):
         return "edit_site"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> list[PermissionName]:
         return ["sites"]
 
     @classmethod
@@ -545,7 +545,7 @@ class ModeDistributedMonitoring(WatoMode):
         return "sites"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> list[PermissionName]:
         return ["sites"]
 
     def __init__(self) -> None:
@@ -1047,7 +1047,7 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
         return "edit_site_globals"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> list[PermissionName]:
         return ["sites"]
 
     @classmethod
@@ -1187,7 +1187,7 @@ class ModeEditSiteGlobalSetting(ABCEditGlobalSettingMode):
         return "edit_site_configvar"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> list[PermissionName]:
         return ["global"]
 
     @classmethod
@@ -1233,7 +1233,7 @@ class ModeSiteLivestatusEncryption(WatoMode):
         return "site_livestatus_encryption"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> list[PermissionName]:
         return ["sites"]
 
     @classmethod

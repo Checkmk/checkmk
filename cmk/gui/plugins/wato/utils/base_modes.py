@@ -6,7 +6,7 @@
 
 import abc
 import http.client
-from typing import Iterable, List, Optional, Type
+from typing import Iterable, Type
 
 from cmk.utils.plugin_registry import Registry
 
@@ -29,7 +29,7 @@ class WatoMode(abc.ABC):
 
     @classmethod
     @abc.abstractmethod
-    def permissions(cls) -> Optional[List[PermissionName]]:
+    def permissions(cls) -> None | list[PermissionName]:
         """permissions = None -> every user can use this mode, permissions
         are checked by the mode itself. Otherwise the user needs at
         least wato.use and - if he makes actions - wato.edit. Plus wato.*
@@ -50,7 +50,7 @@ class WatoMode(abc.ABC):
         return makeuri_contextless(request, get_vars, filename="wato.py")
 
     @classmethod
-    def parent_mode(cls) -> Optional[Type["WatoMode"]]:
+    def parent_mode(cls) -> None | Type["WatoMode"]:
         """Reference from a mode to it's parent mode to make the breadcrumb be able to render the
         hierarchy of modes"""
         return None

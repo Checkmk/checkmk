@@ -24,7 +24,7 @@ from cmk.gui.plugins.wato.utils import (
     mode_registry,
 )
 from cmk.gui.plugins.wato.utils.base_modes import redirect, WatoMode
-from cmk.gui.type_defs import ActionResult
+from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.wato.pages.folders import ModeFolder
@@ -39,7 +39,7 @@ class ModeBulkEdit(WatoMode):
         return "bulkedit"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> list[PermissionName]:
         return ["hosts", "edit_hosts"]
 
     @classmethod
@@ -122,7 +122,7 @@ class ModeBulkCleanup(WatoMode):
         return "bulkcleanup"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> list[PermissionName]:
         return ["hosts", "edit_hosts"]
 
     @classmethod

@@ -53,7 +53,7 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.plugins.wato.utils.base_modes import mode_url, redirect, WatoMode
 from cmk.gui.site_config import has_wato_slave_sites, site_is_local, wato_slave_sites
 from cmk.gui.table import table_element
-from cmk.gui.type_defs import ActionResult
+from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeactionuri, makeuri
 from cmk.gui.valuespec import (
@@ -498,7 +498,7 @@ class ModeNotifications(ABCNotificationsMode):
         return "notifications"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> list[PermissionName]:
         return ["notifications"]
 
     def __init__(self) -> None:
@@ -986,7 +986,7 @@ class ModeUserNotifications(ABCUserNotificationsMode):
         return "user_notifications"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> list[PermissionName]:
         return ["users"]
 
     @classmethod
@@ -1073,7 +1073,7 @@ class ModePersonalUserNotifications(ABCUserNotificationsMode):
         return "user_notifications_p"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> None | list[PermissionName]:
         return None
 
     def __init__(self) -> None:
@@ -1675,7 +1675,7 @@ class ModeEditNotificationRule(ABCEditNotificationRuleMode):
         return "notification_rule"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> list[PermissionName]:
         return ["notifications"]
 
     @classmethod
@@ -1741,7 +1741,7 @@ class ModeEditUserNotificationRule(ABCEditUserNotificationRuleMode):
         return "user_notification_rule"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> list[PermissionName]:
         return ["notifications"]
 
     @classmethod
@@ -1771,7 +1771,7 @@ class ModeEditPersonalNotificationRule(ABCEditUserNotificationRuleMode):
         return ModePersonalUserNotifications
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> None | list[PermissionName]:
         return None
 
     def __init__(self) -> None:

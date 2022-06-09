@@ -34,7 +34,7 @@ from cmk.gui.plugins.wato.utils import (
     WatoMode,
 )
 from cmk.gui.table import table_element
-from cmk.gui.type_defs import ActionResult, Choices
+from cmk.gui.type_defs import ActionResult, Choices, PermissionName
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeactionuri, makeuri_contextless
 from cmk.gui.watolib.custom_attributes import (
@@ -262,7 +262,7 @@ class ModeEditCustomUserAttr(ModeEditCustomAttr):
         return "edit_user_attr"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> list[PermissionName]:
         return ["users", "custom_attributes"]
 
     @classmethod
@@ -335,7 +335,7 @@ class ModeEditCustomHostAttr(ModeEditCustomAttr):
         return "edit_host_attr"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> list[PermissionName]:
         return ["hosts", "manage_hosts", "custom_attributes"]
 
     @classmethod
@@ -507,7 +507,7 @@ class ModeCustomUserAttrs(ModeCustomAttrs):
         return "user_attrs"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> list[PermissionName]:
         return ["users", "custom_attributes"]
 
     @property
@@ -541,7 +541,7 @@ class ModeCustomHostAttrs(ModeCustomAttrs):
         return "host_attrs"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> list[PermissionName]:
         return ["hosts", "manage_hosts", "custom_attributes"]
 
     @property

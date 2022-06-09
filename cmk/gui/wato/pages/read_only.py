@@ -17,7 +17,7 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import make_simple_form_page_menu, PageMenu
 from cmk.gui.plugins.wato.utils import flash, mode_registry, mode_url, redirect, WatoMode
-from cmk.gui.type_defs import ActionResult
+from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.valuespec import (
     AbsoluteDate,
     Alternative,
@@ -37,7 +37,7 @@ class ModeManageReadOnly(WatoMode):
         return "read_only"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> list[PermissionName]:
         return ["set_read_only"]
 
     def __init__(self) -> None:

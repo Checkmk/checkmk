@@ -60,7 +60,7 @@ class ModePasswords(SimpleListMode):
         return "passwords"
 
     @classmethod
-    def permissions(cls) -> Optional[List[PermissionName]]:
+    def permissions(cls) -> list[PermissionName]:
         return ["passwords"]
 
     def __init__(self) -> None:
@@ -130,7 +130,7 @@ class ModeEditPassword(SimpleEditMode):
         return "edit_password"
 
     @classmethod
-    def permissions(cls) -> Optional[List[PermissionName]]:
+    def permissions(cls) -> list[PermissionName]:
         return ["passwords"]
 
     @classmethod

@@ -43,7 +43,7 @@ from cmk.gui.plugins.watolib.utils import (
     ConfigVariable,
     ConfigVariableGroup,
 )
-from cmk.gui.type_defs import ActionResult
+from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.utils.escaping import escape_to_html
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.html import HTML
@@ -418,7 +418,7 @@ class ModeEditGlobals(ABCGlobalSettingsMode):
         return "globalvars"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> list[PermissionName]:
         return ["global"]
 
     def __init__(self) -> None:
@@ -537,7 +537,7 @@ class ModeEditGlobalSetting(ABCEditGlobalSettingMode):
         return "edit_configvar"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> list[PermissionName]:
         return ["global"]
 
     @classmethod

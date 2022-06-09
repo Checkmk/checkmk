@@ -87,7 +87,7 @@ class ModeEditBackupTarget(backup.PageEditBackupTarget, WatoMode):
         return "edit_backup_target"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> list[PermissionName]:
         return ["backups"]
 
     @classmethod
@@ -105,7 +105,7 @@ class ModeEditBackupJob(backup.PageEditBackupJob, WatoMode):
         return "edit_backup_job"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> list[PermissionName]:
         return ["backups"]
 
     @classmethod

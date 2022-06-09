@@ -38,7 +38,7 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.plugins.wato.utils.html_elements import wato_html_head
 from cmk.gui.plugins.wato.utils.main_menu import MainMenu, MenuItem
 from cmk.gui.table import Table, table_element
-from cmk.gui.type_defs import ActionResult
+from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.transaction_manager import transactions
@@ -117,7 +117,7 @@ class ModeTags(ABCTagMode):
         return "tags"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> list[PermissionName]:
         return ["hosttags"]
 
     def title(self) -> str:
@@ -455,7 +455,7 @@ class ModeTags(ABCTagMode):
 
 class ABCEditTagMode(ABCTagMode, abc.ABC):
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> list[PermissionName]:
         return ["hosttags"]
 
     def __init__(self) -> None:
@@ -525,7 +525,7 @@ class ModeTagUsage(ABCTagMode):
         return "tag_usage"
 
     @classmethod
-    def permissions(cls) -> List[str]:
+    def permissions(cls) -> list[PermissionName]:
         return ["hosttags"]
 
     @classmethod

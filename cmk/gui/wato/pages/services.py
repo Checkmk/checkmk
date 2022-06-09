@@ -60,6 +60,7 @@ from cmk.gui.plugins.wato.utils import mode_registry, WatoMode
 from cmk.gui.plugins.wato.utils.context_buttons import make_host_status_link
 from cmk.gui.site_config import sitenames
 from cmk.gui.table import Foldable, table_element
+from cmk.gui.type_defs import PermissionName
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
@@ -110,7 +111,7 @@ class ModeDiscovery(WatoMode):
         return "inventory"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> list[PermissionName]:
         return ["hosts"]
 
     @classmethod

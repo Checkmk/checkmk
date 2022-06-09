@@ -21,6 +21,7 @@ from cmk.gui.plugins.wato.utils import (
     SimpleModeType,
     WatoMode,
 )
+from cmk.gui.type_defs import PermissionName
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import (
     Alternative,
@@ -92,7 +93,7 @@ class ModePredefinedConditions(SimpleListMode):
         return "predefined_conditions"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> list[PermissionName]:
         return ["rulesets"]
 
     def __init__(self) -> None:
@@ -194,7 +195,7 @@ class ModeEditPredefinedCondition(SimpleEditMode):
         return "edit_predefined_condition"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> list[PermissionName]:
         return ["rulesets"]
 
     @classmethod

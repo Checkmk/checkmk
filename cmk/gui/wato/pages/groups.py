@@ -304,7 +304,7 @@ class ModeHostgroups(ModeGroups):
         return "host_groups"
 
     @classmethod
-    def permissions(cls) -> Optional[List[PermissionName]]:
+    def permissions(cls) -> list[PermissionName]:
         return ["groups"]
 
     def _load_groups(self) -> Dict[GroupName, GroupSpec]:
@@ -335,7 +335,7 @@ class ModeServicegroups(ModeGroups):
         return "service_groups"
 
     @classmethod
-    def permissions(cls) -> Optional[List[PermissionName]]:
+    def permissions(cls) -> list[PermissionName]:
         return ["groups"]
 
     def _load_groups(self) -> Dict[GroupName, GroupSpec]:
@@ -366,7 +366,7 @@ class ModeContactgroups(ModeGroups):
         return "contact_groups"
 
     @classmethod
-    def permissions(cls) -> Optional[List[PermissionName]]:
+    def permissions(cls) -> list[PermissionName]:
         return ["users"]
 
     def _load_groups(self) -> Dict[GroupName, GroupSpec]:
@@ -428,7 +428,7 @@ class ModeEditServicegroup(ABCModeEditGroup):
         return ModeServicegroups
 
     @classmethod
-    def permissions(cls) -> Optional[List[PermissionName]]:
+    def permissions(cls) -> list[PermissionName]:
         return ["groups"]
 
     def _load_groups(self) -> Dict[GroupName, GroupSpec]:
@@ -455,7 +455,7 @@ class ModeEditHostgroup(ABCModeEditGroup):
         return ModeHostgroups
 
     @classmethod
-    def permissions(cls) -> Optional[List[PermissionName]]:
+    def permissions(cls) -> list[PermissionName]:
         return ["groups"]
 
     def _load_groups(self) -> Dict[GroupName, GroupSpec]:
@@ -482,7 +482,7 @@ class ModeEditContactgroup(ABCModeEditGroup):
         return ModeContactgroups
 
     @classmethod
-    def permissions(cls) -> Optional[List[PermissionName]]:
+    def permissions(cls) -> list[PermissionName]:
         return ["users"]
 
     def _load_groups(self) -> Dict[GroupName, GroupSpec]:

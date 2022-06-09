@@ -50,7 +50,7 @@ from cmk.gui.plugins.wato.utils.base_modes import mode_url, redirect, WatoMode
 from cmk.gui.plugins.wato.utils.context_buttons import make_folder_status_link
 from cmk.gui.plugins.wato.utils.main_menu import MainMenu, MenuItem
 from cmk.gui.table import init_rowselect, Table, table_element
-from cmk.gui.type_defs import ActionResult, Choices
+from cmk.gui.type_defs import ActionResult, Choices, PermissionName
 from cmk.gui.utils.agent_registration import remove_tls_registration_help
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.escaping import escape_to_html_permissive
@@ -102,7 +102,7 @@ class ModeFolder(WatoMode):
         return "folder"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> list[PermissionName]:
         return ["hosts"]
 
     def __init__(self) -> None:
@@ -1322,7 +1322,7 @@ class ModeEditFolder(ABCFolderMode):
         return "editfolder"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> list[PermissionName]:
         return ["hosts"]
 
     def _init_folder(self):
@@ -1342,7 +1342,7 @@ class ModeCreateFolder(ABCFolderMode):
         return "newfolder"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> list[PermissionName]:
         return ["hosts", "manage_folders"]
 
     def _init_folder(self):

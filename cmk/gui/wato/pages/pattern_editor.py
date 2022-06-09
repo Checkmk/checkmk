@@ -31,6 +31,7 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.plugins.wato.utils import ConfigHostname, mode_registry, WatoMode
 from cmk.gui.table import table_element
+from cmk.gui.type_defs import PermissionName
 from cmk.gui.utils.escaping import escape_to_html
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.urls import makeuri_contextless
@@ -53,7 +54,7 @@ class ModePatternEditor(WatoMode):
         return "pattern_editor"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> list[PermissionName]:
         return ["pattern_editor"]
 
     @classmethod

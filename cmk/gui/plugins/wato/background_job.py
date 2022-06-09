@@ -33,7 +33,7 @@ from cmk.gui.plugins.wato.utils import (
     WatoMode,
 )
 from cmk.gui.plugins.wato.utils.main_menu import MainModuleTopic
-from cmk.gui.type_defs import ActionResult
+from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.urls import makeuri_contextless
 
@@ -80,7 +80,7 @@ class ModeBackgroundJobsOverview(WatoMode):
         return "background_jobs_overview"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> list[PermissionName]:
         return ["background_jobs.manage_jobs"]
 
     def title(self) -> str:
@@ -113,7 +113,7 @@ class ModeBackgroundJobDetails(WatoMode):
         return "background_job_details"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> list[PermissionName]:
         return []
 
     @classmethod

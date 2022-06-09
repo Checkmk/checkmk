@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-from typing import Iterable, NamedTuple, Optional, Type, Union
+from typing import Iterable, NamedTuple, Type
 
 import cmk.utils.plugin_registry
 
@@ -92,7 +92,7 @@ class MenuItem:
 
 class MainModuleTopic(NamedTuple):
     name: str
-    title: Union[str, LazyString]
+    title: str | LazyString
     icon_name: str
     sort_index: int
 

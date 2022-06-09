@@ -48,7 +48,7 @@ from cmk.gui.plugins.wato.utils import mode_registry, sort_sites
 from cmk.gui.plugins.wato.utils.base_modes import WatoMode
 from cmk.gui.plugins.watolib.utils import ABCConfigDomain, DomainRequest, DomainRequests
 from cmk.gui.table import Foldable, init_rowselect, table_element
-from cmk.gui.type_defs import ActionResult
+from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.html import HTML
@@ -70,7 +70,7 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
         return "changelog"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> list[PermissionName]:
         return []
 
     def __init__(self) -> None:

@@ -38,7 +38,7 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.plugins.wato.utils.base_modes import mode_url, redirect, WatoMode
 from cmk.gui.plugins.wato.utils.context_buttons import make_host_status_link
 from cmk.gui.site_config import is_wato_slave_site
-from cmk.gui.type_defs import ActionResult
+from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.utils.agent_registration import remove_tls_registration_help
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.transaction_manager import transactions
@@ -304,7 +304,7 @@ class ModeEditHost(ABCHostMode):
         return "edit_host"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> list[PermissionName]:
         return ["hosts"]
 
     # pylint does not understand this overloading
@@ -665,7 +665,7 @@ class ModeCreateHost(CreateHostMode):
         return "newhost"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> list[PermissionName]:
         return ["hosts", "manage_hosts"]
 
     def title(self) -> str:
@@ -699,7 +699,7 @@ class ModeCreateCluster(CreateHostMode):
         return "newcluster"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> list[PermissionName]:
         return ["hosts", "manage_hosts"]
 
     def _is_cluster(self):

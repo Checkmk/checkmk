@@ -31,7 +31,7 @@ from cmk.gui.plugins.wato.utils import (
     SNMPCredentials,
     WatoMode,
 )
-from cmk.gui.type_defs import ActionResult
+from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.user_errors import user_errors
@@ -56,7 +56,7 @@ class ModeDiagHost(WatoMode):
         return "diag_host"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> list[PermissionName]:
         return ["hosts", "diag_host"]
 
     @classmethod

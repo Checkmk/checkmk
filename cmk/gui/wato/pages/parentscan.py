@@ -22,7 +22,7 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.plugins.wato.utils import get_hosts_from_checkboxes, mode_registry, WatoMode
-from cmk.gui.type_defs import ActionResult
+from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.watolib.check_mk_automations import scan_parents
@@ -287,7 +287,7 @@ class ModeParentScan(WatoMode):
         return "parentscan"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> list[PermissionName]:
         return ["hosts", "parentscan"]
 
     def title(self) -> str:

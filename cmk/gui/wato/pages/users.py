@@ -53,7 +53,7 @@ from cmk.gui.plugins.wato.utils import (
     WatoMode,
 )
 from cmk.gui.table import table_element
-from cmk.gui.type_defs import ActionResult, Choices, UserSpec
+from cmk.gui.type_defs import ActionResult, Choices, PermissionName, UserSpec
 from cmk.gui.user_sites import get_configured_site_choices
 from cmk.gui.utils.escaping import escape_to_html
 from cmk.gui.utils.html import HTML
@@ -87,7 +87,7 @@ class ModeUsers(WatoMode):
         return "users"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> list[PermissionName]:
         return ["users"]
 
     def __init__(self) -> None:
@@ -567,7 +567,7 @@ class ModeEditUser(WatoMode):
         return "edit_user"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> list[PermissionName]:
         return ["users"]
 
     @classmethod

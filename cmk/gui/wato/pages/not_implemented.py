@@ -8,6 +8,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import mode_registry
 from cmk.gui.plugins.wato.utils.base_modes import WatoMode
+from cmk.gui.type_defs import PermissionName
 
 
 @mode_registry.register
@@ -17,7 +18,7 @@ class ModeNotImplemented(WatoMode):
         return ""
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> list[PermissionName]:
         return []
 
     def title(self) -> str:

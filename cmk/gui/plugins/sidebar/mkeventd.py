@@ -14,7 +14,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.htmllib.tag_rendering import HTMLContent
 from cmk.gui.i18n import _
 from cmk.gui.plugins.sidebar.utils import SidebarSnapin, snapin_registry, snapin_site_choice
-from cmk.gui.type_defs import PermissionName
+from cmk.gui.type_defs import RoleName
 from cmk.gui.user_sites import get_event_console_site_choices
 
 
@@ -33,7 +33,7 @@ class SidebarSnapinCustomers(SidebarSnapin):
         return _("Monitor the performance of the Event Console")
 
     @classmethod
-    def allowed_roles(cls) -> List[PermissionName]:
+    def allowed_roles(cls) -> list[RoleName]:
         return ["admin"]
 
     @classmethod

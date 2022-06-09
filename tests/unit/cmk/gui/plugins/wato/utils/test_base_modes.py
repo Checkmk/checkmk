@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Iterable, List
+from typing import Iterable
 
 import pytest
 
@@ -24,7 +24,7 @@ module_registry = ModuleRegistry()
 
 class SomeWatoMode(WatoMode):
     @classmethod
-    def permissions(cls) -> List[PermissionName]:
+    def permissions(cls) -> list[PermissionName]:
         return []
 
     @classmethod

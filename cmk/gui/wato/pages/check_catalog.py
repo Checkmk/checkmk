@@ -51,7 +51,7 @@ class ModeCheckPlugins(WatoMode):
         return "check_plugins"
 
     @classmethod
-    def permissions(cls) -> Optional[List[PermissionName]]:
+    def permissions(cls) -> list[PermissionName]:
         return ["check_plugins"]
 
     def _from_vars(self):
@@ -101,7 +101,7 @@ class ModeCheckPluginSearch(WatoMode):
         return "check_plugin_search"
 
     @classmethod
-    def permissions(cls) -> Optional[List[PermissionName]]:
+    def permissions(cls) -> list[PermissionName]:
         return ["check_plugins"]
 
     @classmethod
@@ -176,7 +176,7 @@ class ModeCheckPluginTopic(WatoMode):
         return "check_plugin_topic"
 
     @classmethod
-    def permissions(cls) -> Optional[List[PermissionName]]:
+    def permissions(cls) -> list[PermissionName]:
         return ["check_plugins"]
 
     @classmethod
@@ -422,7 +422,7 @@ class ModeCheckManPage(WatoMode):
         return "check_manpage"
 
     @classmethod
-    def permissions(cls) -> Optional[List[PermissionName]]:
+    def permissions(cls) -> list[PermissionName]:
         return ["check_plugins"]
 
     @classmethod

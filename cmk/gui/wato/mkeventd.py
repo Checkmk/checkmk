@@ -40,6 +40,7 @@ import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
 from cmk.gui.plugins.wato.utils.main_menu import MainModuleTopic
 from cmk.gui.plugins.watolib.utils import ABCConfigDomain
+from cmk.gui.type_defs import PermissionName
 from cmk.gui.wato.mkeventdstore import (
     export_mkp_rule_pack,
     load_mkeventd_rules,
@@ -1503,7 +1504,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
         return "mkeventd_rule_packs"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> list[PermissionName]:
         return ["mkeventd.edit"]
 
     def title(self) -> str:
@@ -1967,7 +1968,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
         return "mkeventd_rules"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> list[PermissionName]:
         return ["mkeventd.edit"]
 
     @classmethod
@@ -2345,7 +2346,7 @@ class ModeEventConsoleEditRulePack(ABCEventConsoleMode):
         return "mkeventd_edit_rule_pack"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> list[PermissionName]:
         return ["mkeventd.edit"]
 
     @classmethod
@@ -2460,7 +2461,7 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
         return "mkeventd_edit_rule"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> list[PermissionName]:
         return ["mkeventd.edit"]
 
     @classmethod
@@ -2654,7 +2655,7 @@ class ModeEventConsoleStatus(ABCEventConsoleMode):
         return "mkeventd_status"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> list[PermissionName]:
         return []
 
     @classmethod
@@ -2762,7 +2763,7 @@ class ModeEventConsoleSettings(ABCEventConsoleMode, ABCGlobalSettingsMode):
         return "mkeventd_config"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> list[PermissionName]:
         return ["mkeventd.config"]
 
     @classmethod
@@ -2892,7 +2893,7 @@ class ModeEventConsoleEditGlobalSetting(ABCEditGlobalSettingMode):
         return "mkeventd_edit_configvar"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> list[PermissionName]:
         return ["mkeventd.config"]
 
     @classmethod
@@ -2925,7 +2926,7 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
         return "mkeventd_mibs"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> list[PermissionName]:
         return ["mkeventd.config"]
 
     @classmethod
@@ -3131,7 +3132,7 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
         return "mkeventd_upload_mibs"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> list[PermissionName]:
         return ["mkeventd.config"]
 
     @classmethod

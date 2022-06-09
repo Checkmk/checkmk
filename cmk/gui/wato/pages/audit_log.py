@@ -29,7 +29,7 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.plugins.wato.utils import flash, make_confirm_link, mode_registry, redirect, WatoMode
 from cmk.gui.table import table_element
-from cmk.gui.type_defs import ActionResult, Choices
+from cmk.gui.type_defs import ActionResult, Choices, PermissionName
 from cmk.gui.userdb import UserSelection
 from cmk.gui.utils import escaping
 from cmk.gui.utils.html import HTML
@@ -58,7 +58,7 @@ class ModeAuditLog(WatoMode):
         return "auditlog"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> list[PermissionName]:
         return ["auditlog"]
 
     def __init__(self) -> None:

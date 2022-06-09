@@ -21,7 +21,7 @@ from cmk.gui.i18n import _
 from cmk.gui.page_menu import make_simple_form_page_menu, PageMenu
 from cmk.gui.plugins.wato.utils import make_confirm_link, mode_registry, redirect, WatoMode
 from cmk.gui.table import table_element
-from cmk.gui.type_defs import ActionResult
+from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.utils.theme import theme
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import Dictionary, DropdownChoice, IconSelector, ImageUpload
@@ -35,7 +35,7 @@ class ModeIcons(WatoMode):
         return "icons"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> list[PermissionName]:
         return ["icons"]
 
     def title(self) -> str:

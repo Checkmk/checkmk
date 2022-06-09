@@ -62,7 +62,7 @@ from cmk.gui.plugins.wato.utils import (
 )
 from cmk.gui.site_config import get_login_sites
 from cmk.gui.table import Foldable, table_element
-from cmk.gui.type_defs import ActionResult, Choices
+from cmk.gui.type_defs import ActionResult, Choices, PermissionName
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, make_action_link
@@ -111,7 +111,7 @@ class ModeRoles(RoleManagement, WatoMode):
         return "roles"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> list[PermissionName]:
         return ["users"]
 
     def title(self) -> str:
@@ -269,7 +269,7 @@ class ModeEditRole(RoleManagement, WatoMode):
         return "edit_role"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> list[PermissionName]:
         return ["users"]
 
     @classmethod
@@ -462,7 +462,7 @@ class ModeRoleMatrix(WatoMode):
         return "role_matrix"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> list[PermissionName]:
         return ["users"]
 
     @classmethod

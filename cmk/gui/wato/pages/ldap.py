@@ -51,7 +51,7 @@ from cmk.gui.plugins.wato.utils import (
 )
 from cmk.gui.site_config import get_login_sites
 from cmk.gui.table import table_element
-from cmk.gui.type_defs import ActionResult
+from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import DocReference, makeuri_contextless
@@ -703,7 +703,7 @@ class ModeLDAPConfig(LDAPMode):
         return "ldap_config"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> list[PermissionName]:
         return ["global"]
 
     def title(self) -> str:
@@ -845,7 +845,7 @@ class ModeEditLDAPConnection(LDAPMode):
         return "edit_ldap_connection"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> list[PermissionName]:
         return ["global"]
 
     @classmethod

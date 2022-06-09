@@ -15,7 +15,7 @@ from cmk.gui.i18n import _
 from cmk.gui.page_menu import make_simple_form_page_menu, PageMenu
 from cmk.gui.plugins.wato.utils import configure_attributes, mode_registry
 from cmk.gui.plugins.wato.utils.base_modes import redirect, WatoMode
-from cmk.gui.type_defs import ActionResult, HTTPVariables
+from cmk.gui.type_defs import ActionResult, HTTPVariables, PermissionName
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import TextInput
 from cmk.gui.wato.pages.folders import ModeFolder
@@ -29,7 +29,7 @@ class ModeSearch(WatoMode):
         return "search"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> list[PermissionName]:
         return ["hosts"]
 
     @classmethod

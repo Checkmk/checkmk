@@ -63,7 +63,7 @@ class ModeBulkImport(WatoMode):
         return "bulk_import"
 
     @classmethod
-    def permissions(cls) -> List[PermissionName]:
+    def permissions(cls) -> list[PermissionName]:
         return ["hosts", "manage_hosts"]
 
     @classmethod

@@ -46,7 +46,7 @@ from cmk.gui.plugins.wato.utils import (
     WatoMode,
 )
 from cmk.gui.table import table_element
-from cmk.gui.type_defs import ActionResult
+from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import (
     CascadingDropdown,
@@ -83,7 +83,7 @@ class ModeTimeperiods(WatoMode):
         return "timeperiods"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> list[PermissionName]:
         return ["timeperiods"]
 
     def __init__(self) -> None:
@@ -379,7 +379,7 @@ class ModeTimeperiodImportICal(WatoMode):
         return "import_ical"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> list[PermissionName]:
         return ["timeperiods"]
 
     @classmethod
@@ -691,7 +691,7 @@ class ModeEditTimeperiod(WatoMode):
         return "edit_timeperiod"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> list[PermissionName]:
         return ["timeperiods"]
 
     @classmethod

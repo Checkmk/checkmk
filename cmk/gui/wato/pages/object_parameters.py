@@ -23,6 +23,7 @@ from cmk.gui.i18n import _
 from cmk.gui.page_menu import PageMenu, PageMenuDropdown, PageMenuEntry, PageMenuTopic
 from cmk.gui.plugins.wato.utils import mode_registry, WatoMode
 from cmk.gui.plugins.wato.utils.context_buttons import make_service_status_link
+from cmk.gui.type_defs import PermissionName
 from cmk.gui.utils.html import HTML
 from cmk.gui.valuespec import Tuple
 from cmk.gui.wato.pages.hosts import ModeEditHost, page_menu_host_entries
@@ -48,7 +49,7 @@ class ModeObjectParameters(WatoMode):
         return "object_parameters"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> list[PermissionName]:
         return ["hosts", "rulesets"]
 
     @classmethod

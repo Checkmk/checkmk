@@ -114,6 +114,23 @@ def _get_cluster_check_function(
     )
 
 
+def _simple_check_notice(section: Any) -> CheckResult:
+    """just a simple way to create test check results"""
+    yield Result(state=State.OK, notice="notice text moved to details")
+    yield Result(
+        state=State.OK, notice="This should be deleted from the output", details="yeah details"
+    )
+
+
+def test_notice_propagation_if_OK() -> None:
+    check_worst = _get_cluster_check_function(_simple_check_notice, mode="worst")
+    assert list(check_worst(section={"Nodett": [],})) == [
+        Result(state=State.OK, summary="Worst: [Nodett]"),
+        Result(state=State.OK, notice="[Nodett]: notice text moved to details"),
+        Result(state=State.OK, notice="[Nodett]: yeah details"),
+    ]
+
+
 def test_cluster_check_worst_item_not_found() -> None:
     check_worst = _get_cluster_check_function(_simple_check, mode="worst")
     assert not list(

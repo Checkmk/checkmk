@@ -364,7 +364,7 @@ function unfold_sidebar() {
     const button = document.getElementById("side_fold");
     utils.remove_class(button, "folded");
 
-    ajax.call_ajax("sidebar_fold.py?fold=yes", {method: "POST"});
+    ajax.call_ajax("sidebar_fold.py?fold=no", {method: "POST"});
 }
 
 //

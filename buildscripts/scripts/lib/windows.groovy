@@ -27,7 +27,7 @@ def build(Map args) {
                 } else if (args.TARGET == "cmk_agent_ctl_no_sign") {
                     bat 'cd agents\\cmk-agent-ctl && call cargo_build.cmd'
                 } else if (args.TARGET == "test_unit") {
-                    bat 'cd agents\\wnx && call call_unit_tests.cmd -*_Long:*Integration:*Flaky'
+                    bat 'cd agents\\wnx && call call_unit_tests.cmd -*_Long:*Integration:*IntegrationExt:*Flaky'
                     ARTIFACTS = "unit_tests_results.zip"
                 } else if (args.TARGET == "test_integration") {
                     bat 'cd agents\\wnx && call run_integration_tests.cmd all'

@@ -17,18 +17,20 @@ from cmk.base.check_legacy_includes.fjdarye import (
     discover_fjdarye_disks,
     discover_fjdarye_disks_summary,
     discover_fjdarye_item,
+    discover_fjdarye_rluns,
     discover_fjdarye_sum,
     FjdaryeDeviceStatus,
     FjdaryeDisk,
     FjdaryeItem,
-    inventory_fjdarye_rluns,
+    FjdaryeRlun,
     parse_fjdarye_disks,
     parse_fjdarye_item,
+    parse_fjdarye_rluns,
     parse_fjdarye_sum,
     SectionFjdaryeDisk,
     SectionFjdaryeItem,
 )
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringByteTable, StringTable
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 
 FjdaryeSection = Mapping[str, Mapping[str, int | str]]
 FjdaryeCheckResult = Sequence[tuple[int, str]]
@@ -776,8 +778,13 @@ def test_check_fjdarye_disks_summary(
 
 
 @pytest.mark.parametrize(
-    "section, inventory_result",
+    "section, parse_result",
     [
+        pytest.param(
+            [],
+            {},
+            id="The raw section is empty, so nothing is parsed",
+        ),
         pytest.param(
             [
                 [
@@ -786,136 +793,154 @@ def test_check_fjdarye_disks_summary(
                     # The value above corresponds to: '0.0.0.160.16.16.0.0.3.0.0.0.0.255.255.255.0.0.64.205.4.0.0.0.0.6.0.0.0.6.0.0.0.0.0.0.1.32.64.64.15.1.1.2.50.0.0.0.2.0.0.1'
                 ],
             ],
-            [("0", "", None)],
-            id="Because the value of the fourth byte is '\xa0'(160) RLUN is present and a service is discovered. The item name is the first element of the raw section (index).",
-        ),
-        pytest.param(
-            [
-                [
-                    "1",
-                    "\x01\x00\x03\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00ÿÿÿ\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00",
-                    # The value above correspond to: '1.0.3.0.0.0.0.0.0.0.0.0.0.255.255.255.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.1.0.1.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0'
-                ],
-            ],
-            [],
-            id="RLUN is not present and no service is discovered, because the value of the fourth byte is not '\xa0'(160) ",
+            {
+                "0": FjdaryeRlun(
+                    rlun_index="0",
+                    raw_string="\x00\x00\x00\xa0\x10\x10\x00\x00\x03\x00\x00\x00\x00ÿÿÿ\x00\x00@Í\x04\x00\x00\x00\x00\x06\x00\x00\x00\x06\x00\x00\x00\x00\x00\x00\x01 @@\x0f\x01\x01\x022\x00\x00\x00\x02\x00\x00\x01",
+                )
+            },
+            id="Transforms the raw input into a mapping containing the index of the rlun and raw ip",
         ),
     ],
 )
-def test_inventory_fjdarye_rluns(
-    section: StringByteTable,
-    inventory_result: Sequence[tuple[str, str, None]],
+def test_parse_fjdarye_rluns(
+    section: StringTable,
+    parse_result: Mapping[str, FjdaryeRlun],
 ) -> None:
-    assert list(inventory_fjdarye_rluns(section)) == inventory_result
+    assert parse_fjdarye_rluns(section) == parse_result
+
+
+@pytest.mark.parametrize(
+    "section, discovery_result",
+    [
+        pytest.param(
+            {
+                "0": FjdaryeRlun(
+                    rlun_index="0",
+                    raw_string="\x00\x00\x00\xa0\x10\x10\x00\x00\x03\x00\x00\x00\x00ÿÿÿ\x00\x00@Í\x04\x00\x00\x00\x00\x06\x00\x00\x00\x06\x00\x00\x00\x00\x00\x00\x01 @@\x0f\x01\x01\x022\x00\x00\x00\x02\x00\x00\x01",
+                )
+            },
+            [("0", {})],
+            id="Because the value of the fourth byte is '\xa0'(160) RLUN is present and a service is discovered. The item name is the index of the RLUN.",
+        ),
+        pytest.param(
+            {
+                "0": FjdaryeRlun(
+                    rlun_index="0",
+                    raw_string="\x00\x00\x00\x33\x10\x10\x00\x00\x03\x00\x00\x00\x00ÿÿÿ\x00\x00@Í\x04\x00\x00\x00\x00\x06\x00\x00\x00\x06\x00\x00\x00\x00\x00\x00\x01 @@\x0f\x01\x01\x022\x00\x00\x00\x02\x00\x00\x01",
+                )
+            },
+            [],
+            id="RLUN is not present and no service is discovered, because the value of the fourth byte is not '\xa0'(160)",
+        ),
+    ],
+)
+def test_discover_fjdarye_rluns(
+    section: Mapping[str, FjdaryeRlun],
+    discovery_result: Sequence[tuple[str, str, None]],
+) -> None:
+    assert list(discover_fjdarye_rluns(section)) == discovery_result
 
 
 @pytest.mark.parametrize(
     "section, item, rluns_check_result",
     [
         pytest.param(
-            [
-                [
-                    "0",
-                    "\x00\x00\x00\xa0\x10\x10\x00\x00\x03\x00\x00\x00\x00ÿÿÿ\x00\x00@Í\x04\x00\x00\x00\x00\x06\x00\x00\x00\x06\x00\x00\x00\x00\x00\x00\x01 @@\x0f\x01\x01\x022\x00\x00\x00\x02\x00\x00\x01",
-                    # The value above corresponds to: '0.0.0.160.16.16.0.0.3.0.0.0.0.255.255.255.0.0.64.205.4.0.0.0.0.6.0.0.0.6.0.0.0.0.0.0.1.32.64.64.15.1.1.2.50.0.0.0.2.0.0.1'
-                ],
-            ],
+            {
+                "0": FjdaryeRlun(
+                    rlun_index="0",
+                    raw_string="\x00\x00\x00\xa0\x10\x10\x00\x00\x03\x00\x00\x00\x00ÿÿÿ\x00\x00@Í\x04\x00\x00\x00\x00\x06\x00\x00\x00\x06\x00\x00\x00\x00\x00\x00\x01 @@\x0f\x01\x01\x022\x00\x00\x00\x02\x00\x00\x01",
+                )
+            },
             "2",
-            None,
+            [],
             id="If the item is not in the section, the check result is None",
         ),
         pytest.param(
-            [
-                [
-                    "0",
-                    "\x00\x00\x00\x00\x10\x10\x00\x00\x03\x00\x00\x00\x00ÿÿÿ\x00\x00@Í\x04\x00\x00\x00\x00\x06\x00\x00\x00\x06\x00\x00\x00\x00\x00\x00\x01 @@\x0f\x01\x01\x022\x00\x00\x00\x02\x00\x00\x01",
-                    # The value above correspond to: '0.0.0.0.16.16.0.0.3.0.0.0.0.255.255.255.0.0.64.205.4.0.0.0.0.6.0.0.0.6.0.0.0.0.0.0.1.32.64.64.15.1.1.2.50.0.0.0.2.0.0.1'
-                ],
-            ],
+            {
+                "0": FjdaryeRlun(
+                    rlun_index="0",
+                    raw_string="\x00\x00\x00\x43\x10\x10\x00\x00\x03\x00\x00\x00\x00ÿÿÿ\x00\x00@Í\x04\x00\x00\x00\x00\x06\x00\x00\x00\x06\x00\x00\x00\x00\x00\x00\x01 @@\x0f\x01\x01\x022\x00\x00\x00\x02\x00\x00\x01",
+                )
+            },
             "0",
-            (2, "RLUN is not present"),
+            [(2, "RLUN is not present")],
             id="If the fourth byte is not equal to '\xa0'(160), RLUN is not present and check result state is CRIT",
         ),
         pytest.param(
-            [
-                [
-                    "0",
-                    "\x00\x00\x08\xa0\x10\x10\x00\x00\x03\x00\x00\x00\x00ÿÿÿ\x00\x00@Í\x04\x00\x00\x00\x00\x06\x00\x00\x00\x06\x00\x00\x00\x00\x00\x00\x01 @@\x0f\x01\x01\x022\x00\x00\x00\x02\x00\x00\x01",
-                    # The value above correspond to: '0.0.8.160.16.16.0.0.3.0.0.0.0.255.255.255.0.0.64.205.4.0.0.0.0.6.0.0.0.6.0.0.0.0.0.0.1.32.64.64.15.1.1.2.50.0.0.0.2.0.0.1'
-                ],
-            ],
+            {
+                "0": FjdaryeRlun(
+                    rlun_index="0",
+                    raw_string="\x00\x00\x08\xa0\x10\x10\x00\x00\x03\x00\x00\x00\x00ÿÿÿ\x00\x00@Í\x04\x00\x00\x00\x00\x06\x00\x00\x00\x06\x00\x00\x00\x00\x00\x00\x01 @@\x0f\x01\x01\x022\x00\x00\x00\x02\x00\x00\x01",
+                )
+            },
             "0",
-            (1, "RLUN is rebuilding"),
+            [(1, "RLUN is rebuilding")],
             id="If the third byte is equal to '\x08'(8), RLUN is rebuilding and result state is WARN",
         ),
         pytest.param(
-            [
-                [
-                    "0",
-                    "\x00\x00\x07\xa0\x10\x10\x00\x00\x03\x00\x00\x00\x00ÿÿÿ\x00\x00@Í\x04\x00\x00\x00\x00\x06\x00\x00\x00\x06\x00\x00\x00\x00\x00\x00\x01 @@\x0f\x01\x01\x022\x00\x00\x00\x02\x00\x00\x01",
-                    # The value above correspond to: '0.0.7.160.16.16.0.0.3.0.0.0.0.255.255.255.0.0.64.205.4.0.0.0.0.6.0.0.0.6.0.0.0.0.0.0.1.32.64.64.15.1.1.2.50.0.0.0.2.0.0.1'
-                ],
-            ],
+            {
+                "0": FjdaryeRlun(
+                    rlun_index="0",
+                    raw_string="\x00\x00\x07\xa0\x10\x10\x00\x00\x03\x00\x00\x00\x00ÿÿÿ\x00\x00@Í\x04\x00\x00\x00\x00\x06\x00\x00\x00\x06\x00\x00\x00\x00\x00\x00\x01 @@\x0f\x01\x01\x022\x00\x00\x00\x02\x00\x00\x01",
+                )
+            },
             "0",
-            (1, "RLUN copyback in progress"),
+            [(1, "RLUN copyback in progress")],
             id="If the third byte is equal to '\x07'(7), RLUN copyback is in progress and result state is WARN",
         ),
         pytest.param(
-            [
-                [
-                    "0",
-                    "\x00\x00\x41\xa0\x10\x10\x00\x00\x03\x00\x00\x00\x00ÿÿÿ\x00\x00@Í\x04\x00\x00\x00\x00\x06\x00\x00\x00\x06\x00\x00\x00\x00\x00\x00\x01 @@\x0f\x01\x01\x022\x00\x00\x00\x02\x00\x00\x01",
-                    # The value above correspond to: '0.0.65.160.16.16.0.0.3.0.0.0.0.255.255.255.0.0.64.205.4.0.0.0.0.6.0.0.0.6.0.0.0.0.0.0.1.32.64.64.15.1.1.2.50.0.0.0.2.0.0.1'
-                ],
-            ],
+            {
+                "0": FjdaryeRlun(
+                    rlun_index="0",
+                    raw_string="\x00\x00\x41\xa0\x10\x10\x00\x00\x03\x00\x00\x00\x00ÿÿÿ\x00\x00@Í\x04\x00\x00\x00\x00\x06\x00\x00\x00\x06\x00\x00\x00\x00\x00\x00\x01 @@\x0f\x01\x01\x022\x00\x00\x00\x02\x00\x00\x01",
+                )
+            },
             "0",
-            (1, "RLUN spare is in use"),
+            [(1, "RLUN spare is in use")],
             id="If the third byte is equal to '\x41'(65), RLUN spare is in use and result state is WARN",
         ),
         pytest.param(
-            [
-                [
-                    "0",
-                    "\x00\x00\x42\xa0\x10\x10\x00\x00\x03\x00\x00\x00\x00ÿÿÿ\x00\x00@Í\x04\x00\x00\x00\x00\x06\x00\x00\x00\x06\x00\x00\x00\x00\x00\x00\x01 @@\x0f\x01\x01\x022\x00\x00\x00\x02\x00\x00\x01",
-                    # The value above correspond to: '0.0.66.160.16.16.0.0.3.0.0.0.0.255.255.255.0.0.64.205.4.0.0.0.0.6.0.0.0.6.0.0.0.0.0.0.1.32.64.64.15.1.1.2.50.0.0.0.2.0.0.1'
-                ],
-            ],
+            {
+                "0": FjdaryeRlun(
+                    rlun_index="0",
+                    raw_string="\x00\x00\x42\xa0\x10\x10\x00\x00\x03\x00\x00\x00\x00ÿÿÿ\x00\x00@Í\x04\x00\x00\x00\x00\x06\x00\x00\x00\x06\x00\x00\x00\x00\x00\x00\x01 @@\x0f\x01\x01\x022\x00\x00\x00\x02\x00\x00\x01",
+                )
+            },
             "0",
-            (0, "RLUN is in RAID0 state"),
+            [(0, "RLUN is in RAID0 state")],
             id="If the third byte is equal to '\x42'(66), RLUN is in RAID0 state and result state is OK",
         ),
         pytest.param(
-            [
-                [
-                    "0",
-                    "\x00\x00\x00\xa0\x10\x10\x00\x00\x03\x00\x00\x00\x00ÿÿÿ\x00\x00@Í\x04\x00\x00\x00\x00\x06\x00\x00\x00\x06\x00\x00\x00\x00\x00\x00\x01 @@\x0f\x01\x01\x022\x00\x00\x00\x02\x00\x00\x01",
-                    # The value above correspond to: '0.0.0.160.16.16.0.0.3.0.0.0.0.255.255.255.0.0.64.205.4.0.0.0.0.6.0.0.0.6.0.0.0.0.0.0.1.32.64.64.15.1.1.2.50.0.0.0.2.0.0.1'
-                ],
-            ],
+            {
+                "0": FjdaryeRlun(
+                    rlun_index="0",
+                    raw_string="\x00\x00\x00\xa0\x10\x10\x00\x00\x03\x00\x00\x00\x00ÿÿÿ\x00\x00@Í\x04\x00\x00\x00\x00\x06\x00\x00\x00\x06\x00\x00\x00\x00\x00\x00\x01 @@\x0f\x01\x01\x022\x00\x00\x00\x02\x00\x00\x01",
+                )
+            },
             "0",
-            (0, "RLUN is in normal state"),
+            [(0, "RLUN is in normal state")],
             id="If the third byte is equal to '\x00'(0), RLUN is in normal state and result state is OK",
         ),
         pytest.param(
-            [
-                [
-                    "0",
-                    "\x00\x00\x44\xa0\x10\x10\x00\x00\x03\x00\x00\x00\x00ÿÿÿ\x00\x00@Í\x04\x00\x00\x00\x00\x06\x00\x00\x00\x06\x00\x00\x00\x00\x00\x00\x01 @@\x0f\x01\x01\x022\x00\x00\x00\x02\x00\x00\x01",
-                    # The value above correspond to: '0.0.68.160.16.16.0.0.3.0.0.0.0.255.255.255.0.0.64.205.4.0.0.0.0.6.0.0.0.6.0.0.0.0.0.0.1.32.64.64.15.1.1.2.50.0.0.0.2.0.0.1'
-                ],
-            ],
+            {
+                "0": FjdaryeRlun(
+                    rlun_index="0",
+                    raw_string="\x00\x00\x44\xa0\x10\x10\x00\x00\x03\x00\x00\x00\x00ÿÿÿ\x00\x00@Í\x04\x00\x00\x00\x00\x06\x00\x00\x00\x06\x00\x00\x00\x00\x00\x00\x01 @@\x0f\x01\x01\x022\x00\x00\x00\x02\x00\x00\x01",
+                )
+            },
             "0",
-            (2, "RLUN in unknown state 44"),
+            [(2, "RLUN in unknown state")],
             id="If RLUN is present and none of the above criteria are met, the RLUN state is uknown and the result state is CRIT",
         ),
     ],
 )
 def test_check_fjdarye_rluns(
-    section: StringByteTable,
+    section: Mapping[str, FjdaryeRlun],
     item: str,
-    rluns_check_result: Optional[tuple[int, str]],
+    rluns_check_result: FjdaryeCheckResult,
 ) -> None:
-    assert check_fjdarye_rluns(item, {}, section) == rluns_check_result
+    assert list(check_fjdarye_rluns(item, {}, section)) == rluns_check_result
 
 
 @pytest.mark.parametrize(

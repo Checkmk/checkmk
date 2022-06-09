@@ -226,31 +226,55 @@ def check_fjdarye_disks_summary(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_fjdarye_rluns(info):
-    for line in info:
-        rawdata = line[1]
-        if rawdata[3] == "\xa0":  # RLUN is present
-            yield line[0], "", None
+class FjdaryeRlun(NamedTuple):
+    rlun_index: str
+    raw_string: str
 
 
-def check_fjdarye_rluns(item, _no_params, info):
-    for line in info:
-        if item == line[0]:
-            rawdata = line[1]
-            if rawdata[3] != "\xa0":  # space
-                return (2, "RLUN is not present")
-            elif rawdata[2] == "\x08":  # backspace
-                return (1, "RLUN is rebuilding")
-            elif rawdata[2] == "\x07":  # ring terminal bell
-                return (1, "RLUN copyback in progress")
-            elif rawdata[2] == "\x41":  # A
-                return (1, "RLUN spare is in use")
-            elif rawdata[2] == "B":  # \x42
-                return (0, "RLUN is in RAID0 state")  # assumption state 42
-            elif rawdata[2] == "\x00":  # null byte
-                return (0, "RLUN is in normal state")  # assumption
-            return (2, "RLUN in unknown state %02x" % ord(rawdata[2]))
-    return None
+def parse_fjdarye_rluns(info: StringTable) -> Mapping[str, FjdaryeRlun]:
+    readable_rluns: MutableMapping[str, FjdaryeRlun] = {}
+
+    for rlun_index, raw_string in info:
+        readable_rluns[rlun_index] = FjdaryeRlun(rlun_index=rlun_index, raw_string=raw_string)
+
+    return readable_rluns
+
+
+def discover_fjdarye_rluns(section: Mapping[str, FjdaryeRlun]):
+    for rlun in section.values():
+        if rlun.raw_string[3] == "\xa0":  # non-breaking space (decimal 160)
+            # The fourth byte needs to be "\xa0" for a RLUN to be present
+            yield rlun.rlun_index, {}
+
+
+FJDARYE_RLUNS_STATUS_MAPPING = {
+    "\x08": (1, "RLUN is rebuilding"),  # Back Space (decimal 8)
+    "\x07": (1, "RLUN copyback in progress"),  # Bell (decimal 7)
+    "A": (1, "RLUN spare is in use"),  # (decimal 65)
+    "B": (
+        0,
+        "RLUN is in RAID0 state",
+    ),  # (decimal 66) - assumption that B is RAID0 state
+    "\x00": (
+        0,
+        "RLUN is in normal state",
+    ),  # Null char (decimal 0) - assumption that \x00 is normal state
+}
+
+
+def check_fjdarye_rluns(item: str, _no_param: Mapping, section: Mapping[str, FjdaryeRlun]):
+
+    if (rlun := section.get(item)) is None:
+        return
+
+    if rlun.raw_string[3] != "\xa0":
+        yield (2, "RLUN is not present")
+        return
+
+    yield FJDARYE_RLUNS_STATUS_MAPPING.get(
+        rlun.raw_string[2],  # The result state and summary are dependent on the third byte
+        (2, "RLUN in unknown state"),
+    )
 
 
 # .

@@ -321,6 +321,6 @@ class NodeCheckExecutor:
     def _add_node_name(result: Result, node_name: str) -> Result:
         return Result(
             state=result.state,
-            summary=result.summary,
+            summary="FAKE",
             details="\n".join(f"[{node_name}]: {line}" for line in result.details.splitlines()),
-        )
+        )._replace(summary=result.summary)

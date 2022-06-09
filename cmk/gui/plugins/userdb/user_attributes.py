@@ -46,7 +46,7 @@ class ForceAuthUserUserAttribute(UserAttribute):
             ),
         )
 
-    def permission(self):
+    def permission(self) -> None | str:
         return "general.see_all"
 
 
@@ -94,7 +94,7 @@ class DisableNotificationsUserAttribute(UserAttribute):
             forth=lambda x: {} if x is None else x,
         )
 
-    def permission(self):
+    def permission(self) -> None | str:
         return "general.disable_notifications"
 
     def domain(self) -> str:

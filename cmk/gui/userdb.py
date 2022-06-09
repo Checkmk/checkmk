@@ -667,7 +667,7 @@ class GenericUserAttribute(UserAttribute):
     def user_editable(self) -> bool:
         return self._user_editable
 
-    def permission(self) -> Optional[str]:
+    def permission(self) -> None | str:
         return self._permission
 
     def show_in_table(self) -> bool:

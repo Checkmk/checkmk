@@ -1070,7 +1070,7 @@ class CommandECUpdateEvent(ECCommand):
         return _("Update & acknowledge")
 
     @property
-    def permission(self):
+    def permission(self) -> Permission:
         return PermissionECUpdateEvent
 
     def user_dialog_suffix(self, title: str, len_action_rows: int, cmdtag: str) -> str:
@@ -1160,7 +1160,7 @@ class CommandECChangeState(ECCommand):
         return _("Change state")
 
     @property
-    def permission(self):
+    def permission(self) -> Permission:
         return PermissionECChangeEventState
 
     def user_dialog_suffix(self, title: str, len_action_rows: int, cmdtag: str) -> str:
@@ -1208,7 +1208,7 @@ class CommandECCustomAction(ECCommand):
         return _("Custom action")
 
     @property
-    def permission(self):
+    def permission(self) -> Permission:
         return PermissionECCustomActions
 
     def user_dialog_suffix(self, title: str, len_action_rows: int, cmdtag: str) -> str:
@@ -1254,7 +1254,7 @@ class CommandECArchiveEvent(ECCommand):
         return _("Archive event")
 
     @property
-    def permission(self):
+    def permission(self) -> Permission:
         return PermissionECArchiveEvent
 
     def user_dialog_suffix(self, title: str, len_action_rows: int, cmdtag: str) -> str:
@@ -1298,7 +1298,7 @@ class CommandECArchiveEventsOfHost(ECCommand):
         return _("Archive events of hosts")
 
     @property
-    def permission(self):
+    def permission(self) -> Permission:
         return PermissionECArchiveEventsOfHost
 
     @property

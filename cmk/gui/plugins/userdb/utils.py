@@ -425,7 +425,7 @@ class UserAttribute(abc.ABC):
     def user_editable(self) -> bool:
         return True
 
-    def permission(self) -> Optional[str]:
+    def permission(self) -> None | str:
         return None
 
     def show_in_table(self) -> bool:

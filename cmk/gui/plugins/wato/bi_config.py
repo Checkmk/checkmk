@@ -138,7 +138,7 @@ class MainModuleBI(ABCMainModule):
         return "aggr"
 
     @property
-    def permission(self):
+    def permission(self) -> None | str:
         return "bi_rules"
 
     @property

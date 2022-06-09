@@ -51,7 +51,7 @@ class SomeMainModule(ABCMainModule):
         return "icon"
 
     @property
-    def permission(self):
+    def permission(self) -> None | str:
         return "some_permission"
 
     @property

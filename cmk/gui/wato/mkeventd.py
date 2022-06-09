@@ -3496,7 +3496,7 @@ class MainModuleEventConsole(ABCMainModule):
         return "event_console"
 
     @property
-    def permission(self):
+    def permission(self) -> None | str:
         return "mkeventd.edit"
 
     @property
@@ -4646,7 +4646,7 @@ class MainModuleEventConsoleRules(ABCMainModule):
         return {"icon": "event_console", "emblem": "settings"}
 
     @property
-    def permission(self):
+    def permission(self) -> None | str:
         return "rulesets"
 
     @property

@@ -50,7 +50,7 @@ class MainModuleFolder(ABCMainModule):
         return "folder"
 
     @property
-    def permission(self):
+    def permission(self) -> None | str:
         return "hosts"
 
     @property
@@ -85,7 +85,7 @@ class MainModuleTags(ABCMainModule):
         return "tag"
 
     @property
-    def permission(self):
+    def permission(self) -> None | str:
         # The module was renamed from hosttags to tags during 1.6 development. The permission can not
         # be changed easily for compatibility reasons. Leave old internal name for simplicity.
         return "hosttags"
@@ -122,7 +122,7 @@ class MainModuleGlobalSettings(ABCMainModule):
         return "configuration"
 
     @property
-    def permission(self):
+    def permission(self) -> None | str:
         return "global"
 
     @property
@@ -157,7 +157,7 @@ class MainModuleReadOnly(ABCMainModule):
         return "read_only"
 
     @property
-    def permission(self):
+    def permission(self) -> None | str:
         return "read_only"
 
     @property
@@ -192,7 +192,7 @@ class MainModuleRuleSearch(ABCMainModule):
         return "search"
 
     @property
-    def permission(self):
+    def permission(self) -> None | str:
         return "rulesets"
 
     @property
@@ -227,7 +227,7 @@ class MainModulePredefinedConditions(ABCMainModule):
         return "predefined_conditions"
 
     @property
-    def permission(self):
+    def permission(self) -> None | str:
         return "rulesets"
 
     @property
@@ -262,7 +262,7 @@ class MainModuleHostAndServiceParameters(ABCMainModule):
         return {"icon": "folder", "emblem": "rulesets"}
 
     @property
-    def permission(self):
+    def permission(self) -> None | str:
         return "rulesets"
 
     @property
@@ -297,7 +297,7 @@ class MainModuleHWSWInventory(ABCMainModule):
         return "inventory"
 
     @property
-    def permission(self):
+    def permission(self) -> None | str:
         return "rulesets"
 
     @property
@@ -332,7 +332,7 @@ class MainModuleNetworkingServices(ABCMainModule):
         return "network_services"
 
     @property
-    def permission(self):
+    def permission(self) -> None | str:
         return "rulesets"
 
     @property
@@ -370,7 +370,7 @@ class MainModuleOtherServices(ABCMainModule):
         return "nagios"
 
     @property
-    def permission(self):
+    def permission(self) -> None | str:
         return "rulesets"
 
     @property
@@ -408,7 +408,7 @@ class MainModuleCheckPlugins(ABCMainModule):
         return "check_plugins"
 
     @property
-    def permission(self):
+    def permission(self) -> None | str:
         return "check_plugins"
 
     @property
@@ -443,7 +443,7 @@ class MainModuleHostGroups(ABCMainModule):
         return "hostgroups"
 
     @property
-    def permission(self):
+    def permission(self) -> None | str:
         return "groups"
 
     @property
@@ -478,7 +478,7 @@ class MainModuleHostCustomAttributes(ABCMainModule):
         return "custom_attr"
 
     @property
-    def permission(self):
+    def permission(self) -> None | str:
         return "custom_attributes"
 
     @property
@@ -513,7 +513,7 @@ class MainModuleServiceGroups(ABCMainModule):
         return "servicegroups"
 
     @property
-    def permission(self):
+    def permission(self) -> None | str:
         return "groups"
 
     @property
@@ -548,7 +548,7 @@ class MainModuleUsers(ABCMainModule):
         return "users"
 
     @property
-    def permission(self):
+    def permission(self) -> None | str:
         return "users"
 
     @property
@@ -583,7 +583,7 @@ class MainModuleRoles(ABCMainModule):
         return "roles"
 
     @property
-    def permission(self):
+    def permission(self) -> None | str:
         return "users"
 
     @property
@@ -618,7 +618,7 @@ class MainModuleLDAP(ABCMainModule):
         return "ldap"
 
     @property
-    def permission(self):
+    def permission(self) -> None | str:
         return "users"
 
     @property
@@ -653,7 +653,7 @@ class MainModuleUserCustomAttributes(ABCMainModule):
         return "custom_attr"
 
     @property
-    def permission(self):
+    def permission(self) -> None | str:
         return "custom_attributes"
 
     @property
@@ -688,7 +688,7 @@ class MainModuleContactGroups(ABCMainModule):
         return "contactgroups"
 
     @property
-    def permission(self):
+    def permission(self) -> None | str:
         return "users"
 
     @property
@@ -723,7 +723,7 @@ class MainModuleNotifications(ABCMainModule):
         return "notifications"
 
     @property
-    def permission(self):
+    def permission(self) -> None | str:
         return "notifications"
 
     @property
@@ -758,7 +758,7 @@ class MainModuleTimeperiods(ABCMainModule):
         return "timeperiods"
 
     @property
-    def permission(self):
+    def permission(self) -> None | str:
         return "timeperiods"
 
     @property
@@ -795,7 +795,7 @@ class MainModuleSites(ABCMainModule):
         return "sites"
 
     @property
-    def permission(self):
+    def permission(self) -> None | str:
         return "sites"
 
     @property
@@ -830,7 +830,7 @@ class MainModuleBackup(ABCMainModule):
         return "backup"
 
     @property
-    def permission(self):
+    def permission(self) -> None | str:
         return "backups"
 
     @property
@@ -865,7 +865,7 @@ class MainModulePasswords(ABCMainModule):
         return "passwords"
 
     @property
-    def permission(self):
+    def permission(self) -> None | str:
         return "passwords"
 
     @property
@@ -900,7 +900,7 @@ class MainModuleAuditLog(ABCMainModule):
         return "auditlog"
 
     @property
-    def permission(self):
+    def permission(self) -> None | str:
         return "auditlog"
 
     @property
@@ -935,7 +935,7 @@ class MainModuleIcons(ABCMainModule):
         return "icons"
 
     @property
-    def permission(self):
+    def permission(self) -> None | str:
         return "icons"
 
     @property
@@ -970,7 +970,7 @@ class MainModuleAnalyzeConfig(ABCMainModule):
         return "analyze_config"
 
     @property
-    def permission(self):
+    def permission(self) -> None | str:
         return "analyze_config"
 
     @property
@@ -1008,7 +1008,7 @@ class MainModuleDiagnostics(ABCMainModule):
         return "diagnostics"
 
     @property
-    def permission(self):
+    def permission(self) -> None | str:
         return "diagnostics"
 
     @property
@@ -1043,7 +1043,7 @@ class MainModuleMonitoringRules(ABCMainModule):
         return {"icon": "services", "emblem": "rulesets"}
 
     @property
-    def permission(self):
+    def permission(self) -> None | str:
         return "rulesets"
 
     @property
@@ -1078,7 +1078,7 @@ class MainModuleDiscoveryRules(ABCMainModule):
         return "service_discovery"
 
     @property
-    def permission(self):
+    def permission(self) -> None | str:
         return "rulesets"
 
     @property
@@ -1113,7 +1113,7 @@ class MainModuleEnforcedServices(ABCMainModule):
         return "static_checks"
 
     @property
-    def permission(self):
+    def permission(self) -> None | str:
         return "rulesets"
 
     @property
@@ -1147,7 +1147,7 @@ class MainModuleAgentsWindows(ABCMainModule):
         return "download_agents"
 
     @property
-    def permission(self):
+    def permission(self) -> None | str:
         return "download_agents"
 
     @property
@@ -1181,7 +1181,7 @@ class MainModuleAgentsLinux(ABCMainModule):
         return "download_agents"
 
     @property
-    def permission(self):
+    def permission(self) -> None | str:
         return "download_agents"
 
     @property
@@ -1227,7 +1227,7 @@ class MainModuleAgentRules(ABCMainModule):
         return {"icon": "agents", "emblem": "rulesets"}
 
     @property
-    def permission(self):
+    def permission(self) -> None | str:
         return "rulesets"
 
     @property
@@ -1273,7 +1273,7 @@ class MainModuleOtherAgents(ABCMainModule):
         return "os_other"
 
     @property
-    def permission(self):
+    def permission(self) -> None | str:
         return "download_agents"
 
     @property
@@ -1308,7 +1308,7 @@ class MainModuleAgentAccessRules(ABCMainModule):
         return {"icon": "agents", "emblem": "rulesets"}
 
     @property
-    def permission(self):
+    def permission(self) -> None | str:
         return "rulesets"
 
     @property
@@ -1343,7 +1343,7 @@ class MainModuleSNMPRules(ABCMainModule):
         return "snmp"
 
     @property
-    def permission(self):
+    def permission(self) -> None | str:
         return "rulesets"
 
     @property
@@ -1378,7 +1378,7 @@ class MainModuleVMCloudContainer(ABCMainModule):
         return "cloud"
 
     @property
-    def permission(self):
+    def permission(self) -> None | str:
         return "rulesets"
 
     @property
@@ -1413,7 +1413,7 @@ class MainModuleOtherIntegrations(ABCMainModule):
         return "integrations_other"
 
     @property
-    def permission(self):
+    def permission(self) -> None | str:
         return "rulesets"
 
     @property

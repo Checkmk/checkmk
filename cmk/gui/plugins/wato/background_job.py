@@ -57,7 +57,7 @@ class MainModuleBackgroundJobs(ABCMainModule):
         return "background_jobs"
 
     @property
-    def permission(self):
+    def permission(self) -> None | str:
         return "background_jobs.manage_jobs"
 
     @property

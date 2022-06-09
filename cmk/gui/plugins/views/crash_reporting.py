@@ -302,7 +302,7 @@ class CommandDeleteCrashReports(Command):
         return _("Delete crash reports")
 
     @property
-    def permission(self):
+    def permission(self) -> Permission:
         return PermissionActionDeleteCrashReport
 
     @property

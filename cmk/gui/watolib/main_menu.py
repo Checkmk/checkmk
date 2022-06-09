@@ -39,7 +39,7 @@ class MenuItem:
         return self._icon
 
     @property
-    def permission(self):
+    def permission(self) -> None | str:
         return self._permission
 
     @property
@@ -139,7 +139,7 @@ class ABCMainModule(MenuItem, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def permission(self) -> Optional[str]:
+    def permission(self) -> None | str:
         raise NotImplementedError()
 
     @property

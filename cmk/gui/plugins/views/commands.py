@@ -106,7 +106,7 @@ class CommandReschedule(Command):
         return "service_duration"
 
     @property
-    def permission(self):
+    def permission(self) -> Permission:
         return PermissionActionReschedule
 
     @property
@@ -182,7 +182,7 @@ class CommandNotifications(Command):
         return _("Notifications")
 
     @property
-    def permission(self):
+    def permission(self) -> Permission:
         return PermissionActionNotifications
 
     @property
@@ -247,7 +247,7 @@ class CommandToggleActiveChecks(Command):
         return _("Active checks")
 
     @property
-    def permission(self):
+    def permission(self) -> Permission:
         return PermissionActionEnableChecks
 
     @property
@@ -296,7 +296,7 @@ class CommandTogglePassiveChecks(Command):
         return _("Passive checks")
 
     @property
-    def permission(self):
+    def permission(self) -> Permission:
         return PermissionActionEnableChecks
 
     @property
@@ -364,7 +364,7 @@ class CommandClearModifiedAttributes(Command):
         return _("Modified attributes")
 
     @property
-    def permission(self):
+    def permission(self) -> Permission:
         return PermissionActionClearModifiedAttributes
 
     @property
@@ -435,7 +435,7 @@ class CommandFakeCheckResult(Command):
         return "fake_check_result"
 
     @property
-    def permission(self):
+    def permission(self) -> Permission:
         return PermissionActionFakeChecks
 
     @property
@@ -564,7 +564,7 @@ class CommandCustomNotification(Command):
         return "notifications"
 
     @property
-    def permission(self):
+    def permission(self) -> Permission:
         return PermissionActionCustomNotification
 
     @property
@@ -674,7 +674,7 @@ class CommandAcknowledge(Command):
         return True
 
     @property
-    def permission(self):
+    def permission(self) -> Permission:
         return PermissionActionAcknowledge
 
     @property
@@ -840,7 +840,7 @@ class CommandAddComment(Command):
         return "comment"
 
     @property
-    def permission(self):
+    def permission(self) -> Permission:
         return PermissionActionAddComment
 
     @property
@@ -950,7 +950,7 @@ class CommandScheduleDowntimes(Command):
         return True
 
     @property
-    def permission(self):
+    def permission(self) -> Permission:
         return PermissionActionDowntimes
 
     @property
@@ -1409,7 +1409,7 @@ class CommandRemoveDowntime(Command):
         return _("Remove downtimes")
 
     @property
-    def permission(self):
+    def permission(self) -> Permission:
         return PermissionActionDowntimes
 
     @property
@@ -1454,7 +1454,7 @@ class CommandRemoveComments(Command):
         return True
 
     @property
-    def permission(self):
+    def permission(self) -> Permission:
         return PermissionActionAddComment
 
     @property
@@ -1525,7 +1525,7 @@ class CommandFavorites(Command):
         return "favorite"
 
     @property
-    def permission(self):
+    def permission(self) -> Permission:
         return PermissionActionStar
 
     @property

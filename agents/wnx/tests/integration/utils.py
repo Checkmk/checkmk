@@ -23,6 +23,7 @@ _HOST: Final = "localhost"
 USER_YAML_CONFIG: Final = "check_mk.user.yml"
 SECTION_COUNT: Final = 19
 ONLY_FROM_LINE: Final = 17
+CTL_STATUS_LINE: Final = 19
 
 
 def create_protocol_file(directory: Path) -> None:

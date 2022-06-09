@@ -12,7 +12,7 @@ import abc
 import math
 import time
 from datetime import timedelta
-from typing import Optional, Union
+from typing import final, Optional, Sequence, Type, Union
 
 from cmk.utils.i18n import _
 from cmk.utils.type_defs import Seconds
@@ -156,26 +156,53 @@ def approx_age(secs: float) -> str:
 # .
 
 
-def scale_factor_prefix(
-    value: float, base: float, prefixes: tuple[str, ...] = ("", "k", "M", "G", "T", "P")
-) -> tuple[float, str]:
-    """calculate the right scale factor and prefix
+class _ABCUnitPrefixes(abc.ABC):
+    _BASE: int
+    _PREFIXES: Sequence[str]
 
-    >>> scale_factor_prefix(1, 1024)
+    @final
+    @classmethod
+    def scale_factor_and_prefix(cls, v: float) -> tuple[float, str]:
+        prefix = cls._PREFIXES[-1]
+        factor = cls._BASE
+        for unit_prefix in cls._PREFIXES[:-1]:
+            if abs(v) < factor:
+                prefix = unit_prefix
+                break
+            factor *= cls._BASE
+        return factor / cls._BASE, prefix
+
+
+class SIUnitPrefixes(_ABCUnitPrefixes):
+    """
+    SI unit prefixes
+
+    >>> SIUnitPrefixes.scale_factor_and_prefix(1)
     (1.0, '')
-    >>> scale_factor_prefix(1025, 1024)
-    (1024.0, 'k')
-    >>> scale_factor_prefix(5_000_000_000, 1000)
+    >>> SIUnitPrefixes.scale_factor_and_prefix(1001.123)
+    (1000.0, 'k')
+    >>> SIUnitPrefixes.scale_factor_and_prefix(5_000_000_000)
     (1000000000.0, 'G')
     """
-    prefix = prefixes[-1]
-    factor = base
-    for unit_prefix in prefixes[:-1]:
-        if abs(value) < factor:
-            prefix = unit_prefix
-            break
-        factor *= base
-    return factor / base, prefix  # fixed: true-division
+
+    _BASE = 1000
+    _PREFIXES = ("", "k", "M", "G", "T", "P", "E", "Z", "Y")
+
+
+class IECUnitPrefixes(_ABCUnitPrefixes):
+    """
+    IEC unit prefixes
+
+    >>> IECUnitPrefixes.scale_factor_and_prefix(1)
+    (1.0, '')
+    >>> IECUnitPrefixes.scale_factor_and_prefix(1025)
+    (1024.0, 'Ki')
+    >>> IECUnitPrefixes.scale_factor_and_prefix(5_000_000_000)
+    (1073741824.0, 'Gi')
+    """
+
+    _BASE = 1024
+    _PREFIXES = ("", "Ki", "Mi", "Gi", "Ti", "Pi", "Ei", "Zi", "Yi")
 
 
 def drop_dotzero(v: float, digits: int = 2) -> str:
@@ -199,13 +226,14 @@ def drop_dotzero(v: float, digits: int = 2) -> str:
 
 def fmt_number_with_precision(
     v: float,
-    base: float = 1000.0,
+    *,
     precision: int = 2,
     drop_zeroes: bool = False,
+    unit_prefix_type: Type[_ABCUnitPrefixes] = SIUnitPrefixes,
     unit: str = "",
     zero_non_decimal: bool = False,
 ) -> str:
-    factor, prefix = scale_factor_prefix(v, base)
+    factor, prefix = unit_prefix_type.scale_factor_and_prefix(v)
     value = float(v) / factor
     if zero_non_decimal and value == 0:
         return "0 %s" % prefix + unit
@@ -224,13 +252,24 @@ def fmt_number_with_precision(
 #   '----------------------------------------------------------------------'
 
 
-def fmt_bytes(b: int, base: float = 1024.0, precision: int = 2, unit: str = "B") -> str:
+def fmt_bytes(
+    b: int,
+    *,
+    unit_prefix_type: Type[_ABCUnitPrefixes] = IECUnitPrefixes,
+    precision: int = 2,
+    unit="B",
+) -> str:
     """Formats byte values to be used in texts for humans.
 
     Takes bytes as integer and returns a string which represents the bytes in a
     more human readable form scaled to TB/GB/MB/KB. The unit parameter simply
     changes the returned string, but does not interfere with any calculations."""
-    return fmt_number_with_precision(b, base=base, precision=precision, unit=unit)
+    return fmt_number_with_precision(
+        b,
+        unit_prefix_type=unit_prefix_type,
+        precision=precision,
+        unit=unit,
+    )
 
 
 # Precise size of a file - separated decimal separator
@@ -264,7 +303,7 @@ def fmt_nic_speed(speed: str | int) -> str:
         return str(speed)
 
     return fmt_number_with_precision(
-        speedi, base=1000.0, precision=2, unit="bit/s", drop_zeroes=True
+        speedi, unit_prefix_type=SIUnitPrefixes, precision=2, unit="bit/s", drop_zeroes=True
     )
 
 

@@ -21,43 +21,43 @@ from cmk.utils import render
         ),
         (
             5,
-            {"base": 1000, "precision": 0},
+            {"unit_prefix_type": render.SIUnitPrefixes, "precision": 0},
             "5 B",
         ),
         (
             2300,
             {},
-            "2.25 kB",
+            "2.25 KiB",
         ),
         (
             -2300,
             {},
-            "-2.25 kB",
+            "-2.25 KiB",
         ),
         (
             int(3e6),
             {},
-            "2.86 MB",
+            "2.86 MiB",
         ),
         (
             int(3e6),
-            {"base": 1000, "precision": 2, "unit": "B"},
-            "3.00 MB",
+            {"unit_prefix_type": render.SIUnitPrefixes, "precision": 2, "unit": "B/s"},
+            "3.00 MB/s",
         ),
         (
             int(4e9),
             {},
-            "3.73 GB",
+            "3.73 GiB",
         ),
         (
             int(-5e12),
             {},
-            "-4.55 TB",
+            "-4.55 TiB",
         ),
         (
             int(6e15),
             {},
-            "5.33 PB",
+            "5.33 PiB",
         ),
     ],
 )

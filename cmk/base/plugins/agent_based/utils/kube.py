@@ -559,8 +559,8 @@ class ContainerWaitingState(BaseModel):
 class ContainerTerminatedState(BaseModel):
     type: Literal[ContainerStateType.terminated] = Field(ContainerStateType.terminated, const=True)
     exit_code: int
-    start_time: int
-    end_time: int
+    start_time: Optional[int]
+    end_time: Optional[int]
     reason: Optional[str]
     detail: Optional[str]
 

@@ -238,8 +238,12 @@ def pod_containers(
         if (details := status.state.terminated) is not None:
             state = api.ContainerTerminatedState(
                 exit_code=details.exit_code,
-                start_time=int(convert_to_timestamp(details.started_at)),
-                end_time=int(convert_to_timestamp(details.finished_at)),
+                start_time=int(convert_to_timestamp(details.started_at))
+                if details.started_at is not None
+                else None,
+                end_time=int(convert_to_timestamp(details.finished_at))
+                if details.finished_at is not None
+                else None,
                 reason=details.reason,
                 detail=details.message,
             )

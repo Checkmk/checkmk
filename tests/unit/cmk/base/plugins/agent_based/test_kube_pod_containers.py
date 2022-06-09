@@ -9,9 +9,11 @@
 import json
 
 import pytest
+from pydantic_factories import ModelFactory
 
 from cmk.base.plugins.agent_based import kube_pod_containers
-from cmk.base.plugins.agent_based.agent_based_api.v1 import render, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import render, Result, State
+from cmk.base.plugins.agent_based.utils.kube import ContainerTerminatedState
 
 TIMESTAMP = 359
 MINUTE = 60
@@ -225,3 +227,44 @@ def test_check_result_terminated_non_zero_exit_code_no_params_raises(check_resul
 def test_check_result_terminated_non_zero_exit_code_invalid_state_raises(check_result):
     with pytest.raises(ValueError):
         list(check_result)
+
+
+class ContainerTerminatedStateFactory(ModelFactory):
+    __model__ = ContainerTerminatedState
+
+
+def test_container_terminated_state_with_no_start_and_end_times():
+    terminated_container_state = ContainerTerminatedStateFactory.build(
+        exit_code=0,
+        start_time=None,
+        end_time=None,
+    )
+    result = list(
+        kube_pod_containers.check_terminated(
+            {"failed_state": int(State.CRIT)}, terminated_container_state
+        )
+    )
+
+    assert [r.state for r in result if isinstance(r, Result)] == [State.OK]
+
+
+def test_container_terminated_state_with_only_start_time():
+    terminated_container_state = ContainerTerminatedStateFactory.build(
+        exit_code=0,
+        start_time=TIMESTAMP,
+        end_time=None,
+        reason="reason",
+        detail="detail",
+    )
+
+    result = list(
+        kube_pod_containers.check_terminated(
+            {"failed_state": int(State.CRIT)}, terminated_container_state
+        )
+    )
+
+    assert [r.state for r in result if isinstance(r, Result)] == [State.OK, State.OK]
+    assert [r.summary for r in result if isinstance(r, Result)] == [
+        "Status: Succeeded (reason: detail)",
+        f"Start time: {render.datetime(TIMESTAMP)}",
+    ]

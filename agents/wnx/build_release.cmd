@@ -112,7 +112,7 @@ if not %errorlevel% == 0 powershell Write-Host "Failed version set" -Foreground 
 copy %build_dir%\watest\Win32\Release\watest32.exe %arte% /y	
 copy %build_dir%\watest\x64\Release\watest64.exe %arte% /Y	
 powershell Write-Host "starting unit tests" -Foreground Cyan 
-call call_unit_tests.cmd -*_Long:*Integration
+call call_unit_tests.cmd -*_Long:*Integration:*IntegrationExt
 if not %errorlevel% == 0 goto error
 powershell Write-Host "Unit test SUCCESS" -Foreground Green
 goto end

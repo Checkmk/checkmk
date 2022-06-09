@@ -277,7 +277,7 @@ TEST(WmiProviderTest, SubSectionSimulateExchange_Integration) {
     }
 }
 
-TEST(WmiProviderTest, SimulationIntegration) {  //
+TEST(WmiProviderTest, SimulationIntegration) {
     std::wstring sep(wmi::kSepString);
     std::string sep_ascii = wtools::ToUtf8(sep);
     {
@@ -345,19 +345,6 @@ TEST(WmiProviderTest, SimulationIntegration) {  //
 
         auto line1 = cma::tools::SplitString(table[1], sep_ascii);
         EXPECT_EQ(line1.size(), header.size());
-    }
-
-    {
-        Wmi wmi_web(kWmiWebservices, wmi::kSepChar);
-        EXPECT_EQ(wmi_web.subsection_mode_, SubSection::Mode::standard);
-        EXPECT_EQ(wmi_web.delay_on_fail_, cma::cfg::G_DefaultDelayOnFail);
-
-        EXPECT_EQ(wmi_web.object(), L"Win32_PerfRawData_W3SVC_WebService");
-        EXPECT_EQ(wmi_web.nameSpace(), L"Root\\Cimv2");
-        auto body = wmi_web.makeBody();
-        EXPECT_TRUE(wmi_web.isAllowedByCurrentConfig());
-        EXPECT_TRUE(wmi_web.isAllowedByTime());
-        EXPECT_EQ(wmi_web.delay_on_fail_, 3600s);
     }
 
     {
@@ -429,6 +416,20 @@ TEST(WmiProviderTest, SimulationIntegration) {  //
 
         EXPECT_EQ(msexch.delay_on_fail_, 3600s);
     }
+}
+
+// IntegrationExt because may be not available in CI
+TEST(WmiProviderTest, WmiWebServicesSimulationIntegrationExt) {
+    Wmi wmi_web(kWmiWebservices, wmi::kSepChar);
+
+    EXPECT_EQ(wmi_web.object(), L"Win32_PerfRawData_W3SVC_WebService");
+    EXPECT_EQ(wmi_web.nameSpace(), L"Root\\Cimv2");
+    EXPECT_TRUE(wmi_web.isAllowedByCurrentConfig());
+    EXPECT_TRUE(wmi_web.isAllowedByTime());
+    auto body = wmi_web.generateContent();
+    auto table = tools::SplitString(body, "\n");
+    table.erase(table.begin());
+    EXPECT_GE(table.size(), 3U);
 }
 
 static const std::string section_name{cma::section::kUseEmbeddedName};
@@ -581,8 +582,8 @@ TEST_F(WmiProviderTestFixture, WmiMsExch) {
               cma::section::MakeHeader(kMsExch, wmi::kSepChar));
 }
 
-// Test is integration because wmi web services may be not available
-TEST_F(WmiProviderTestFixture, WmiWebIntegration) {
+// Test is IntegrationExt because wmi web services may be not available
+TEST_F(WmiProviderTestFixture, WmiWebIntegrationExt) {
     auto table = execWmiProvider(
         kWmiWebservices,
         ::testing::UnitTest::GetInstance()->current_test_info()->name());

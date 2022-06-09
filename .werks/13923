@@ -1,0 +1,10 @@
+Title: Dashboard elements: Fix title macros
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 2.2.0i1
+Date: 1654768140
+Class: fix
+
+The macros $HOST_NAME$ and $SERVICE_DESCRIPTION$ which can be used in the custom title of dashboard elements were without function. This is fixed: Whenever context information about host name or service description is available, the respective macro is replaced by this context information.

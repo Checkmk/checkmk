@@ -7,7 +7,7 @@ import time
 from typing import Any, Callable, Literal, Optional, Type
 
 import cmk.utils.tags
-from cmk.utils.type_defs import HostName, List
+from cmk.utils.type_defs import HostName, List, Union
 
 import cmk.gui.hooks as hooks
 import cmk.gui.userdb as userdb
@@ -1081,6 +1081,11 @@ class HostAttributeLockedBy(ABCHostAttributeValueSpec):
                 "The identity is built out of the Site ID, the program name and the connection ID."
             ),
         )
+
+    def filter_matches(
+        self, crit: list[str], value: Union[list[str], tuple[str, str, str]], hostname
+    ) -> bool:
+        return crit == list(value)
 
 
 class LockedByValuespec(Tuple):

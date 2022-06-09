@@ -84,7 +84,7 @@ class HostAttributeAlias(ABCHostAttributeNagiosText):
         return True
 
     @classmethod
-    def sort_index(cls):
+    def sort_index(cls) -> int:
         return 10
 
     def name(self) -> str:
@@ -115,7 +115,7 @@ class HostAttributeIPv4Address(ABCHostAttributeValueSpec):
         return HostAttributeTopicAddress
 
     @classmethod
-    def sort_index(cls):
+    def sort_index(cls) -> int:
         return 30
 
     def name(self) -> str:
@@ -166,7 +166,7 @@ class HostAttributeIPv6Address(ABCHostAttributeValueSpec):
         return HostAttributeTopicAddress
 
     @classmethod
-    def sort_index(cls):
+    def sort_index(cls) -> int:
         return 40
 
     def name(self) -> str:
@@ -212,7 +212,7 @@ class HostAttributeAdditionalIPv4Addresses(ABCHostAttributeValueSpec):
         return HostAttributeTopicAddress
 
     @classmethod
-    def sort_index(cls):
+    def sort_index(cls) -> int:
         return 50
 
     def is_show_more(self) -> bool:
@@ -260,7 +260,7 @@ class HostAttributeAdditionalIPv6Addresses(ABCHostAttributeValueSpec):
         return HostAttributeTopicAddress
 
     @classmethod
-    def sort_index(cls):
+    def sort_index(cls) -> int:
         return 60
 
     def is_show_more(self) -> bool:
@@ -301,7 +301,7 @@ class HostAttributeSNMPCommunity(ABCHostAttributeValueSpec):
         return HostAttributeTopicDataSources
 
     @classmethod
-    def sort_index(cls):
+    def sort_index(cls) -> int:
         return 70
 
     def name(self) -> str:
@@ -349,7 +349,7 @@ class HostAttributeParents(ABCHostAttributeValueSpec):
         return HostAttributeTopicBasicSettings
 
     @classmethod
-    def sort_index(cls):
+    def sort_index(cls) -> int:
         return 80
 
     def is_show_more(self) -> bool:
@@ -461,7 +461,7 @@ class HostAttributeNetworkScan(ABCHostAttributeValueSpec):
         return HostAttributeTopicNetworkScan
 
     @classmethod
-    def sort_index(cls):
+    def sort_index(cls) -> int:
         return 90
 
     def show_in_table(self):
@@ -710,7 +710,7 @@ class HostAttributeNetworkScanResult(ABCHostAttributeValueSpec):
         return HostAttributeTopicNetworkScan
 
     @classmethod
-    def sort_index(cls):
+    def sort_index(cls) -> int:
         return 100
 
     def show_in_table(self):
@@ -820,7 +820,7 @@ class HostAttributeManagementAddress(ABCHostAttributeValueSpec):
         return HostAttributeTopicManagementBoard
 
     @classmethod
-    def sort_index(cls):
+    def sort_index(cls) -> int:
         return 120
 
     def show_in_table(self):
@@ -861,7 +861,7 @@ class HostAttributeManagementProtocol(ABCHostAttributeValueSpec):
         return HostAttributeTopicManagementBoard
 
     @classmethod
-    def sort_index(cls):
+    def sort_index(cls) -> int:
         return 110
 
     def show_in_table(self):
@@ -895,7 +895,7 @@ class HostAttributeManagementSNMPCommunity(ABCHostAttributeValueSpec):
         return HostAttributeTopicManagementBoard
 
     @classmethod
-    def sort_index(cls):
+    def sort_index(cls) -> int:
         return 130
 
     def show_in_table(self):
@@ -960,7 +960,7 @@ class HostAttributeManagementIPMICredentials(ABCHostAttributeValueSpec):
         return HostAttributeTopicManagementBoard
 
     @classmethod
-    def sort_index(cls):
+    def sort_index(cls) -> int:
         return 140
 
     def show_in_table(self):
@@ -995,7 +995,7 @@ class HostAttributeSite(ABCHostAttributeValueSpec):
         return HostAttributeTopicBasicSettings
 
     @classmethod
-    def sort_index(cls):
+    def sort_index(cls) -> int:
         return 20
 
     def show_in_table(self):
@@ -1042,7 +1042,7 @@ class HostAttributeLockedBy(ABCHostAttributeValueSpec):
         return HostAttributeTopicMetaData
 
     @classmethod
-    def sort_index(cls):
+    def sort_index(cls) -> int:
         return 160
 
     def show_in_table(self):
@@ -1119,7 +1119,7 @@ class HostAttributeLockedAttributes(ABCHostAttributeValueSpec):
         return HostAttributeTopicMetaData
 
     @classmethod
-    def sort_index(cls):
+    def sort_index(cls) -> int:
         return 170
 
     def show_in_table(self):
@@ -1166,7 +1166,7 @@ class HostAttributeMetaData(ABCHostAttributeValueSpec):
         return HostAttributeTopicMetaData
 
     @classmethod
-    def sort_index(cls):
+    def sort_index(cls) -> int:
         return 155
 
     def show_in_table(self):
@@ -1250,7 +1250,7 @@ class HostAttributeDiscoveryFailed(ABCHostAttributeValueSpec):
         return HostAttributeTopicMetaData
 
     @classmethod
-    def sort_index(cls):
+    def sort_index(cls) -> int:
         return 200
 
     def show_in_table(self):
@@ -1313,7 +1313,7 @@ class HostAttributeLabels(ABCHostAttributeValueSpec):
         return HostAttributeTopicCustomAttributes
 
     @classmethod
-    def sort_index(cls):
+    def sort_index(cls) -> int:
         return 190
 
     def help(self):

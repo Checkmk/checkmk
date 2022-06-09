@@ -47,7 +47,7 @@ class MenuItem:
         return self._description
 
     @property
-    def sort_index(self):
+    def sort_index(self) -> int:
         return self._sort_index
 
     @property

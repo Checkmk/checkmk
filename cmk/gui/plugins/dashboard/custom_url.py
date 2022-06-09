@@ -27,7 +27,7 @@ class URLDashlet(IFrameDashlet):
         return _("Displays the content of a custom website.")
 
     @classmethod
-    def sort_index(cls):
+    def sort_index(cls) -> int:
         return 80
 
     @classmethod

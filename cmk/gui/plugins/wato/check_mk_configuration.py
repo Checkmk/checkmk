@@ -2171,7 +2171,7 @@ class ConfigVariableGroupUserManagement(ConfigVariableGroup):
     def title(self) -> str:
         return _("User management")
 
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 40
 
 
@@ -2439,7 +2439,7 @@ class ConfigVariableGroupCheckExecution(ConfigVariableGroup):
     def title(self) -> str:
         return _("Execution of checks")
 
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 10
 
 
@@ -2974,7 +2974,7 @@ class ConfigVariableGroupServiceDiscovery(ConfigVariableGroup):
     def title(self) -> str:
         return _("Service discovery")
 
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 4
 
 

@@ -57,7 +57,7 @@ class MainModuleFolder(ABCMainModule):
         return _("Manage monitored hosts and services and the hosts' folder structure.")
 
     @property
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 10
 
     @property
@@ -94,7 +94,7 @@ class MainModuleTags(ABCMainModule):
         return _("Tags can be used to classify hosts and services in a flexible way.")
 
     @property
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 30
 
     @property
@@ -129,7 +129,7 @@ class MainModuleGlobalSettings(ABCMainModule):
         return _("Global settings for Checkmk, Multisite and the monitoring core.")
 
     @property
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 10
 
     @property
@@ -164,7 +164,7 @@ class MainModuleReadOnly(ABCMainModule):
         return _("Set the Checkmk configuration interface to read only mode for maintenance.")
 
     @property
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 20
 
     @property
@@ -199,7 +199,7 @@ class MainModuleRuleSearch(ABCMainModule):
         return _("Search all rules and rulesets")
 
     @property
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 5
 
     @property
@@ -234,7 +234,7 @@ class MainModulePredefinedConditions(ABCMainModule):
         return _("Use predefined conditions to centralize the coniditions of your rulesets.")
 
     @property
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 30
 
     @property
@@ -269,7 +269,7 @@ class MainModuleHostAndServiceParameters(ABCMainModule):
         return _("Check parameters and other configuration variables for hosts")
 
     @property
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 20
 
     @property
@@ -304,7 +304,7 @@ class MainModuleHWSWInventory(ABCMainModule):
         return _("Manage Hard- and software inventory related rulesets")
 
     @property
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 60
 
     @property
@@ -342,7 +342,7 @@ class MainModuleNetworkingServices(ABCMainModule):
         )
 
     @property
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 30
 
     @property
@@ -380,7 +380,7 @@ class MainModuleOtherServices(ABCMainModule):
         )
 
     @property
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 40
 
     @property
@@ -415,7 +415,7 @@ class MainModuleCheckPlugins(ABCMainModule):
         return _("Browse the catalog of all check plugins, create static checks")
 
     @property
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 70
 
     @property
@@ -450,7 +450,7 @@ class MainModuleHostGroups(ABCMainModule):
         return _("Organize your hosts in groups independent of the tree structure.")
 
     @property
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 50
 
     @property
@@ -485,7 +485,7 @@ class MainModuleHostCustomAttributes(ABCMainModule):
         return _("Create your own host related attributes")
 
     @property
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 55
 
     @property
@@ -520,7 +520,7 @@ class MainModuleServiceGroups(ABCMainModule):
         return _("Organize your services in groups")
 
     @property
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 60
 
     @property
@@ -555,7 +555,7 @@ class MainModuleUsers(ABCMainModule):
         return _("Manage users of the monitoring system.")
 
     @property
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 20
 
     @property
@@ -590,7 +590,7 @@ class MainModuleRoles(ABCMainModule):
         return _("User roles are configurable sets of permissions.")
 
     @property
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 40
 
     @property
@@ -625,7 +625,7 @@ class MainModuleLDAP(ABCMainModule):
         return _("Connect Checkmk with your LDAP or Active Directory to create users in Checkmk.")
 
     @property
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 50
 
     @property
@@ -660,7 +660,7 @@ class MainModuleUserCustomAttributes(ABCMainModule):
         return _("Create your own user related attributes")
 
     @property
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 55
 
     @property
@@ -695,7 +695,7 @@ class MainModuleContactGroups(ABCMainModule):
         return _("Contact groups are used to assign users to hosts and services")
 
     @property
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 30
 
     @property
@@ -730,7 +730,7 @@ class MainModuleNotifications(ABCMainModule):
         return _("Rules for the notification of contacts about host and service problems")
 
     @property
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 10
 
     @property
@@ -767,7 +767,7 @@ class MainModuleTimeperiods(ABCMainModule):
         )
 
     @property
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 40
 
     @property
@@ -802,7 +802,7 @@ class MainModuleSites(ABCMainModule):
         return _("Distributed monitoring using multiple Checkmk sites")
 
     @property
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 70
 
     @property
@@ -837,7 +837,7 @@ class MainModuleBackup(ABCMainModule):
         return _("Make backups of your whole site and restore previous backups.")
 
     @property
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 10
 
     @property
@@ -872,7 +872,7 @@ class MainModulePasswords(ABCMainModule):
         return _("Store and share passwords for later use in checks.")
 
     @property
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 50
 
     @property
@@ -907,7 +907,7 @@ class MainModuleAuditLog(ABCMainModule):
         return _("Examine the change history of the configuration")
 
     @property
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 80
 
     @property
@@ -942,7 +942,7 @@ class MainModuleIcons(ABCMainModule):
         return _("Extend the Checkmk GUI with your custom icons")
 
     @property
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 85
 
     @property
@@ -977,7 +977,7 @@ class MainModuleAnalyzeConfig(ABCMainModule):
         return _("See hints how to improve your Checkmk installation")
 
     @property
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 40
 
     @property
@@ -1015,7 +1015,7 @@ class MainModuleDiagnostics(ABCMainModule):
         return _("Collect information of Checkmk sites for diagnostic analysis.")
 
     @property
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 30
 
     @property
@@ -1050,7 +1050,7 @@ class MainModuleMonitoringRules(ABCMainModule):
         return _("Service monitoring rules")
 
     @property
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 10
 
     @property
@@ -1085,7 +1085,7 @@ class MainModuleDiscoveryRules(ABCMainModule):
         return _("Discovery settings")
 
     @property
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 20
 
     @property
@@ -1120,7 +1120,7 @@ class MainModuleEnforcedServices(ABCMainModule):
         return _("Configure enforced checks without using service discovery")
 
     @property
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 25
 
     @property
@@ -1154,7 +1154,7 @@ class MainModuleAgentsWindows(ABCMainModule):
         return _("Downloads Checkmk agent and plugins for Windows")
 
     @property
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 15
 
     @property
@@ -1188,7 +1188,7 @@ class MainModuleAgentsLinux(ABCMainModule):
         return _("Downloads Checkmk agent and plugins for Linux")
 
     @property
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 10
 
     @property
@@ -1234,7 +1234,7 @@ class MainModuleAgentRules(ABCMainModule):
         return _("Configuration of monitoring agents for Linux, Windows and Unix")
 
     @property
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 80
 
     @property
@@ -1280,7 +1280,7 @@ class MainModuleOtherAgents(ABCMainModule):
         return _("Downloads Checkmk agents for other operating systems")
 
     @property
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 20
 
     @property
@@ -1315,7 +1315,7 @@ class MainModuleAgentAccessRules(ABCMainModule):
         return _("Configure agent access related settings using rulesets")
 
     @property
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 60
 
     @property
@@ -1350,7 +1350,7 @@ class MainModuleSNMPRules(ABCMainModule):
         return _("Configure SNMP related settings using rulesets")
 
     @property
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 70
 
     @property
@@ -1385,7 +1385,7 @@ class MainModuleVMCloudContainer(ABCMainModule):
         return _("Integrate with VM, cloud or container platforms")
 
     @property
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 30
 
     @property
@@ -1420,7 +1420,7 @@ class MainModuleOtherIntegrations(ABCMainModule):
         return _("Monitoring of applications such as processes, services or databases")
 
     @property
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 40
 
     @property

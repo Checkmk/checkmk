@@ -35,7 +35,7 @@ class TestDashlet(Dashlet):
         return "test"
 
     @classmethod
-    def sort_index(cls):
+    def sort_index(cls) -> int:
         return 0
 
     @classmethod
@@ -97,7 +97,7 @@ class TestDashlet(Dashlet):
         return "test"
 
     @classmethod
-    def sort_index(cls):
+    def sort_index(cls) -> int:
         return 0
 
     @classmethod

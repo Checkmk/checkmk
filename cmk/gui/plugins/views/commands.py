@@ -52,7 +52,7 @@ class CommandGroupVarious(CommandGroup):
         return _("Various Commands")
 
     @property
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 20
 
 
@@ -416,7 +416,7 @@ class CommandGroupFakeCheck(CommandGroup):
         return _("Fake check results")
 
     @property
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 15
 
 
@@ -647,7 +647,7 @@ class CommandGroupAcknowledge(CommandGroup):
         return _("Acknowledge")
 
     @property
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 5
 
 
@@ -923,7 +923,7 @@ class CommandGroupDowntimes(CommandGroup):
         return _("Schedule downtimes")
 
     @property
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 10
 
 

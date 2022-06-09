@@ -15,7 +15,7 @@ class ConfigVariableGroupNotifications(ConfigVariableGroup):
     def title(self) -> str:
         return _("Notifications")
 
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 15
 
 
@@ -24,7 +24,7 @@ class ConfigVariableGroupUserInterface(ConfigVariableGroup):
     def title(self) -> str:
         return _("User interface")
 
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 20
 
 
@@ -33,7 +33,7 @@ class ConfigVariableGroupWATO(ConfigVariableGroup):
     def title(self) -> str:
         return _("Setup")
 
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 25
 
 
@@ -42,5 +42,5 @@ class ConfigVariableGroupSiteManagement(ConfigVariableGroup):
     def title(self) -> str:
         return _("Site management")
 
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 30

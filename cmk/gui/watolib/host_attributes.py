@@ -80,7 +80,7 @@ class HostAttributeTopicBasicSettings(HostAttributeTopic):
         return _("Basic settings")
 
     @property
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 0
 
 
@@ -95,7 +95,7 @@ class HostAttributeTopicAddress(HostAttributeTopic):
         return _("Network address")
 
     @property
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 10
 
 
@@ -110,7 +110,7 @@ class HostAttributeTopicDataSources(HostAttributeTopic):
         return _("Monitoring agents")
 
     @property
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 20
 
 
@@ -125,7 +125,7 @@ class HostAttributeTopicHostTags(HostAttributeTopic):
         return _("Host tags")
 
     @property
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 30
 
 
@@ -140,7 +140,7 @@ class HostAttributeTopicNetworkScan(HostAttributeTopic):
         return _("Network Scan")
 
     @property
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 40
 
 
@@ -155,7 +155,7 @@ class HostAttributeTopicManagementBoard(HostAttributeTopic):
         return _("Management board")
 
     @property
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 50
 
 
@@ -170,7 +170,7 @@ class HostAttributeTopicCustomAttributes(HostAttributeTopic):
         return _("Custom attributes")
 
     @property
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 35
 
 
@@ -185,7 +185,7 @@ class HostAttributeTopicMetaData(HostAttributeTopic):
         return _("Creation / Locking")
 
     @property
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 60
 
 

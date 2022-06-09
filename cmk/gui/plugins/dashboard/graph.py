@@ -143,7 +143,7 @@ class GraphDashlet(Dashlet):
         return _("Displays a performance graph of a host or service.")
 
     @classmethod
-    def sort_index(cls):
+    def sort_index(cls) -> int:
         return 20
 
     @classmethod

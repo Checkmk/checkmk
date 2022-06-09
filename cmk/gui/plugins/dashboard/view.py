@@ -20,7 +20,7 @@ from cmk.gui.valuespec import DropdownChoice
 
 class ABCViewDashlet(IFrameDashlet):
     @classmethod
-    def sort_index(cls):
+    def sort_index(cls) -> int:
         return 10
 
     @classmethod

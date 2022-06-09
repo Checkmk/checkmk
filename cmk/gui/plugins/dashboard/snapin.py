@@ -29,7 +29,7 @@ class SnapinDashlet(IFrameDashlet):
         return _("Allows you to use a sidebar element in the dashboard.")
 
     @classmethod
-    def sort_index(cls):
+    def sort_index(cls) -> int:
         return 55
 
     @classmethod

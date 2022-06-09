@@ -64,7 +64,7 @@ class MainModuleBackgroundJobs(ABCMainModule):
         return _("Manage longer running tasks in the Checkmk GUI")
 
     @property
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 60
 
     @property

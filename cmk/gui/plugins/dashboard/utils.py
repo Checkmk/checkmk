@@ -690,7 +690,7 @@ class ABCFigureDashlet(Dashlet, abc.ABC):
         return "figure_dashlet"
 
     @classmethod
-    def sort_index(cls):
+    def sort_index(cls) -> int:
         return 95
 
     @classmethod

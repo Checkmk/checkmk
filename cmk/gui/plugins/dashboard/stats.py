@@ -447,7 +447,7 @@ class HostStatsDashlet(ABCFigureDashlet):
         return _("Displays statistics about host states as a hexagon and a table.")
 
     @classmethod
-    def sort_index(cls):
+    def sort_index(cls) -> int:
         return 45
 
     @classmethod
@@ -483,7 +483,7 @@ class ServiceStatsDashlet(ABCFigureDashlet):
         return _("Displays statistics about service states as a hexagon and a table.")
 
     @classmethod
-    def sort_index(cls):
+    def sort_index(cls) -> int:
         return 50
 
     @classmethod
@@ -517,7 +517,7 @@ class EventStatsDashlet(ABCFigureDashlet):
         return _("Displays statistics about events as a hexagon and a table.")
 
     @classmethod
-    def sort_index(cls):
+    def sort_index(cls) -> int:
         return 55
 
     @classmethod

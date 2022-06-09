@@ -27,7 +27,7 @@ class MKLogoDashlet(Dashlet):
         return _("Shows the Checkmk logo.")
 
     @classmethod
-    def sort_index(cls):
+    def sort_index(cls) -> int:
         return 0
 
     @classmethod

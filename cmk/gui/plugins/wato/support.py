@@ -23,7 +23,7 @@ class ConfigVariableGroupSupport(ConfigVariableGroup):
     def title(self) -> str:
         return _("Support")
 
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 80
 
 

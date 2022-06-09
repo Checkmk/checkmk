@@ -27,7 +27,7 @@ class DummyDashlet(dashboard.Dashlet):
         return "duMMy"
 
     @classmethod
-    def sort_index(cls):
+    def sort_index(cls) -> int:
         return 123
 
     def show(self):

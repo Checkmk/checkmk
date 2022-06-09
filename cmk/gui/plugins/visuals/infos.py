@@ -41,7 +41,7 @@ class VisualInfoHost(VisualInfo):
         return ["hostgroup"]
 
     @property
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 10
 
 
@@ -81,7 +81,7 @@ class VisualInfoService(VisualInfo):
         return ["servicegroup"]
 
     @property
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 10
 
 
@@ -115,7 +115,7 @@ class VisualInfoHostgroup(VisualInfo):
         return False
 
     @property
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 10
 
 
@@ -149,7 +149,7 @@ class VisualInfoServicegroup(VisualInfo):
         return False
 
     @property
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 10
 
 
@@ -302,7 +302,7 @@ class VisualInfoBIAggregation(VisualInfo):
         ]
 
     @property
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 20
 
 
@@ -332,7 +332,7 @@ class VisualInfoBIAggregationGroup(VisualInfo):
         ]
 
     @property
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 20
 
 

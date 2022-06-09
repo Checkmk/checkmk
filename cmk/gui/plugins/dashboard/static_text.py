@@ -27,7 +27,7 @@ class StaticTextDashlet(Dashlet):
         return _("Displays a static text to the user.")
 
     @classmethod
-    def sort_index(cls):
+    def sort_index(cls) -> int:
         return 100
 
     @classmethod

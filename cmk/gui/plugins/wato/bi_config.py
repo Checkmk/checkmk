@@ -145,7 +145,7 @@ class MainModuleBI(ABCMainModule):
         return _("Configuration of Checkmk's Business Intelligence component")
 
     @property
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 70
 
     @property

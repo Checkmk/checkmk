@@ -26,7 +26,7 @@ class MessageUsersDashlet(Dashlet):
         return _("Display GUI messages sent to users.")
 
     @classmethod
-    def sort_index(cls):
+    def sort_index(cls) -> int:
         return 75
 
     def show(self):

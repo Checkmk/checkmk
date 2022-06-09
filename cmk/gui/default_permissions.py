@@ -36,7 +36,7 @@ class PermissionSectionGeneral(PermissionSection):
         return _("General Permissions")
 
     @property
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 10
 
 

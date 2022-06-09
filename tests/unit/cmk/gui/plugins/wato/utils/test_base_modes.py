@@ -55,7 +55,7 @@ class SomeMainModule(ABCMainModule):
         return "Description"
 
     @property
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 30
 
     @property

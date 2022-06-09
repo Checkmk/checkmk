@@ -27,7 +27,7 @@ class OverviewDashlet(Dashlet):
         return _("Displays an introduction and Checkmk logo.")
 
     @classmethod
-    def sort_index(cls):
+    def sort_index(cls) -> int:
         return 0
 
     @classmethod

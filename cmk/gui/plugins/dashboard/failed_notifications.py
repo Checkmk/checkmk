@@ -29,7 +29,7 @@ class FailedNotificationsDashlet(Dashlet):
         return _("Display GUI notifications in case notification mechanism fails")
 
     @classmethod
-    def sort_index(cls):
+    def sort_index(cls) -> int:
         return 0
 
     @classmethod

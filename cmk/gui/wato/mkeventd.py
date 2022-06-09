@@ -1324,7 +1324,7 @@ class SampleConfigGeneratorECSampleRulepack(SampleConfigGenerator):
         return "ec_sample_rule_pack"
 
     @classmethod
-    def sort_index(cls):
+    def sort_index(cls) -> int:
         return 50
 
     def generate(self):
@@ -2862,7 +2862,7 @@ class ConfigVariableGroupEventConsoleGeneric(ConfigVariableGroupEventConsole):
     def title(self) -> str:
         return _("Event Console: Generic")
 
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 18
 
 
@@ -2871,7 +2871,7 @@ class ConfigVariableGroupEventConsoleLogging(ConfigVariableGroupEventConsole):
     def title(self) -> str:
         return _("Event Console: Logging & diagnose")
 
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 19
 
 
@@ -2880,7 +2880,7 @@ class ConfigVariableGroupEventConsoleSNMP(ConfigVariableGroupEventConsole):
     def title(self) -> str:
         return _("Event Console: SNMP traps")
 
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 20
 
 
@@ -3503,7 +3503,7 @@ class MainModuleEventConsole(ABCMainModule):
         return _("Manage event classification and correlation rules for the Event Console")
 
     @property
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 20
 
     @property
@@ -4653,7 +4653,7 @@ class MainModuleEventConsoleRules(ABCMainModule):
         return _("Host and service rules related to the Event Console")
 
     @property
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 40
 
     @property

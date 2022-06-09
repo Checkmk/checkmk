@@ -6,21 +6,24 @@
 
 import os
 import shutil
-import subprocess
 from pathlib import Path
-from typing import Final, List
+from typing import Final, Generator, TypeVar
 
 import pytest
 import yaml
 from utils import (
+    AGENT_EXE_NAME,
     check_os,
     create_legacy_pull_file,
     create_protocol_file,
-    get_data_from_agent,
     get_path_from_env,
+    INTEGRATION_PORT,
     YamlDict,
-    YieldFixture,
 )
+
+T = TypeVar("T")
+YieldFixture = Generator[T, None, None]
+
 
 check_os()
 
@@ -29,16 +32,13 @@ global:
   enabled: true
   logging:
     debug: true
+  wmi_timeout: 10
   port: {}
 """
 
-_INTEGRATION_PORT: Final = 25998
-_HOST: Final = "localhost"
 _TEST_ENV_VAR: Final = "WNX_INTEGRATION_BASE_DIR"  # supplied by script
 _ARTIFACTS_ENV_VAR: Final = "arte"  # supplied by script
-_USER_YAML_CONFIG: Final = "check_mk.user.yml"
 _FACTORY_YAML_CONFIG: Final = "check_mk.yml"
-_AGENT_EXE_NAME: Final = "check_mk_agent.exe"
 _CTL_EXE_NAME: Final = "cmk-agent-ctl.exe"
 
 
@@ -66,12 +66,12 @@ def root_dir_fixture(main_dir: Path) -> Path:
 
 @pytest.fixture(name="main_exe", scope="session")
 def main_exe_fixture(root_dir: Path) -> Path:
-    return root_dir / _AGENT_EXE_NAME
+    return root_dir / AGENT_EXE_NAME
 
 
 @pytest.fixture(name="default_yaml_config", scope="session")
 def default_yaml_config_fixture() -> YamlDict:
-    return yaml.safe_load(_DEFAULT_CONFIG.format(_INTEGRATION_PORT))
+    return yaml.safe_load(_DEFAULT_CONFIG.format(INTEGRATION_PORT))
 
 
 @pytest.fixture(autouse=True, scope="session")
@@ -86,36 +86,8 @@ def setup_all(
     os.makedirs(data_dir, exist_ok=True)
     os.makedirs(data_dir / "bin", exist_ok=True)
     os.makedirs(data_dir / "log", exist_ok=True)
-    for f in [_FACTORY_YAML_CONFIG, _AGENT_EXE_NAME, _CTL_EXE_NAME]:
+    for f in [_FACTORY_YAML_CONFIG, AGENT_EXE_NAME, _CTL_EXE_NAME]:
         shutil.copy(artifacts_dir / f, root_dir)
     create_protocol_file(data_dir)
     create_legacy_pull_file(data_dir)
     yield
-
-
-@pytest.fixture(name="write_config")
-def write_config_fixture(work_config: YamlDict, data_dir: Path) -> YieldFixture[None]:
-    yaml_file = data_dir / _USER_YAML_CONFIG
-    with open(yaml_file, "wt") as f:
-        ret = yaml.dump(work_config)
-        f.write(ret)
-    yield
-    yaml_file.unlink()
-
-
-@pytest.fixture(name="obtain_output")
-def obtain_output_fixture(
-    main_exe: Path,
-    write_config: YieldFixture[None],
-    data_dir: Path,
-) -> YieldFixture[List[str]]:
-    with subprocess.Popen(
-        [main_exe, "exec", "-integration"],
-        stdout=subprocess.PIPE,
-        stdin=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-    ) as p:
-        yield get_data_from_agent(_HOST, _INTEGRATION_PORT)
-        # we kill both process as a tree, we do not need it more
-        # any graceful killing may require a lot of time and gives nothing to testing
-        subprocess.call(f'taskkill /F /T /FI "pid eq {p.pid}" /FI "IMAGENAME eq {_AGENT_EXE_NAME}"')

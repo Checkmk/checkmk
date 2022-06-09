@@ -6,16 +6,23 @@
 
 import os
 import platform
+import subprocess
 import sys
 import telnetlib  # nosec
 import time
+from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, Dict, Generator, List, TypeVar
+from typing import Any, Dict, Final, Iterator, List
 
-T = TypeVar("T")
-YieldFixture = Generator[T, None, None]
+import yaml
 
 YamlDict = Dict[str, Dict[str, Any]]
+INTEGRATION_PORT: Final = 25998
+AGENT_EXE_NAME: Final = "check_mk_agent.exe"
+_HOST: Final = "localhost"
+USER_YAML_CONFIG: Final = "check_mk.user.yml"
+SECTION_COUNT: Final = 19
+ONLY_FROM_LINE: Final = 17
 
 
 def create_protocol_file(directory: Path) -> None:
@@ -36,15 +43,15 @@ def create_protocol_file(directory: Path) -> None:
 
 
 def create_legacy_pull_file(directory: Path) -> None:
-    # allow legacy communication
+    # we allow legacy communication: TLS testing is not for this test
     allow_legacy_pull_file = directory / "allow-legacy-pull"
     with open(allow_legacy_pull_file, "w") as f:
         f.write("Created by integration tests")
 
 
-def get_data_from_agent(host: str, port: int) -> List[str]:
-    # overloaded node may delay start of agent process
-    # we have to retry connection
+def _get_data_using_telnet(host: str, port: int) -> List[str]:
+    # overloaded CI Node may delay start/init of the agent process
+    # we must retry connection few times to avoid complaints
     for _ in range(5):
         try:
             with telnetlib.Telnet(host, port, timeout=10) as telnet:  # nosec
@@ -67,3 +74,42 @@ def get_path_from_env(env: str) -> Path:
 
 def check_os() -> None:
     assert platform.system() == "Windows"
+
+
+@contextmanager
+def _write_config(work_config: YamlDict, data_dir: Path) -> Iterator[None]:
+    yaml_file = data_dir / USER_YAML_CONFIG
+    try:
+        with open(yaml_file, "wt") as f:
+            ret = yaml.dump(work_config)
+            f.write(ret)
+        yield
+    finally:
+        yaml_file.unlink()
+
+
+def obtain_agent_data(
+    work_config: YamlDict,
+    *,
+    main_exe: Path,
+    data_dir: Path,
+) -> List[str]:
+    with (
+        _write_config(work_config, data_dir),
+        subprocess.Popen(
+            [main_exe, "exec", "-integration"],
+            stdout=subprocess.PIPE,
+            stdin=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        ) as p,
+    ):
+        try:
+            result = _get_data_using_telnet(_HOST, INTEGRATION_PORT)
+        finally:
+            # NOTE. we MUST kill both processes (as a _tree_!): we do not need it.
+            # Any graceful killing may require a lot of time and gives nothing to testing.
+            subprocess.call(
+                f'taskkill /F /T /FI "pid eq {p.pid}" /FI "IMAGENAME eq {AGENT_EXE_NAME}"'
+            )
+
+    return result

@@ -17,12 +17,14 @@ from cmk.base.check_legacy_includes.fjdarye import (
     discover_fjdarye_disks,
     discover_fjdarye_disks_summary,
     discover_fjdarye_item,
+    discover_fjdarye_sum,
+    FjdaryeDeviceStatus,
     FjdaryeDisk,
     FjdaryeItem,
     inventory_fjdarye_rluns,
-    inventory_fjdarye_sum,
     parse_fjdarye_disks,
     parse_fjdarye_item,
+    parse_fjdarye_sum,
     SectionFjdaryeDisk,
     SectionFjdaryeItem,
 )
@@ -917,72 +919,87 @@ def test_check_fjdarye_rluns(
 
 
 @pytest.mark.parametrize(
-    "section, inventory_sum_result",
+    "section, parse_sum_result",
     [
         pytest.param(
             [["3"]],
-            [("0", {})],
-            id="If the length of the input section is 1, a service with name '0' is discovered.",
+            FjdaryeDeviceStatus("3"),
+            id="If the length of the input section is 1, a Mapping containing the status is parsed.",
         ),
         pytest.param(
             [["3", "4"]],
+            None,
+            id="If the length of the input section is more than 1, nothing in parsed",
+        ),
+        pytest.param(
+            [],
+            None,
+            id="If the length of the input section is 0, nothing is parsed",
+        ),
+    ],
+)
+def test_parse_fjdarye_sum(
+    section: StringTable,
+    parse_sum_result: Optional[FjdaryeDeviceStatus],
+) -> None:
+    assert parse_fjdarye_sum(section) == parse_sum_result
+
+
+@pytest.mark.parametrize(
+    "section, discovery_result",
+    [
+        # Assumption: The input will always be a FjdaryeDeviceStatus, because it's the output of the parse_fjdarye_sum function,
+        pytest.param(
+            FjdaryeDeviceStatus("3"),
+            [("0", {})],
+            id="If the length of the input section is 1, a service with name '0' is discovered",
+        ),
+        pytest.param(
+            None,
             [],
             id="If the length of the input section is not 1, no services are discovered",
         ),
     ],
 )
-def test_inventory_fjdarye_sum(
-    section: StringTable,
-    inventory_sum_result: Sequence[tuple[str, Mapping]],
+def test_discover_fjdarye_sum(
+    section: Optional[FjdaryeDeviceStatus],
+    discovery_result: Sequence[tuple[str, Mapping]],
 ) -> None:
-    assert list(inventory_fjdarye_sum(section)) == inventory_sum_result
-
-
-@pytest.mark.parametrize(
-    "section, inventory_sum_result",
-    [
-        pytest.param(
-            [],
-            [],
-            id="If the length of the input section is 0, an IndexError is raised",
-        ),
-    ],
-)
-def test_inventory_fjdarye_sum_with_error(
-    section: StringTable,
-    inventory_sum_result: Sequence[tuple[str, Mapping]],
-) -> None:
-    with pytest.raises(IndexError):
-        assert list(inventory_fjdarye_sum(section)) == inventory_sum_result
+    assert list(discover_fjdarye_sum(section)) == discovery_result
 
 
 @pytest.mark.parametrize(
     "section, check_sum_result",
     [
         pytest.param(
-            [["3", "4"]],
-            (3, "No status summary present"),
-            id="If the length of the input is not 1, the check result state is UNKNOWN",
+            None,
+            [],
+            id="If the input is None, the check result is an empty list, which leads to the state going to UNKNOWN",
         ),
         pytest.param(
-            [["3"]],
-            (0, "Status is ok"),
+            FjdaryeDeviceStatus("3"),
+            [(0, "Status: ok")],
             id="If the summary status is equal to 3, the check result state is OK",
         ),
         pytest.param(
-            [["4"]],
-            (1, "Status is warning"),
+            FjdaryeDeviceStatus("4"),
+            [(1, "Status: warning")],
             id="If the summary status is equal 4, the check result state is WARN",
         ),
         pytest.param(
-            [["5"]],
-            (2, "Status is failed"),
+            FjdaryeDeviceStatus("5"),
+            [(2, "Status: failed")],
             id="If the summary status is 1 or 2 or 5, the check result state is WARN and the description is the corresponding value from the fjdarye_sum_status mapping",
+        ),
+        pytest.param(
+            FjdaryeDeviceStatus("6"),
+            [(3, "Status: unknown")],
+            id="If the summary status not known, the check result is UNKNOWN.",
         ),
     ],
 )
 def test_check_fjdarye_sum(
-    section: StringTable,
-    check_sum_result: tuple[int, str],
+    section: Optional[FjdaryeDeviceStatus],
+    check_sum_result: Sequence[tuple[int, str]],
 ) -> None:
-    assert check_fjdarye_sum(None, {}, section) == check_sum_result
+    assert list(check_fjdarye_sum(_item="", _no_param={}, section=section)) == check_sum_result

@@ -9,7 +9,8 @@
 from cmk.base.check_legacy_includes.fjdarye import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 check_info["fjdarye500_sum"] = {
-    "inventory_function": inventory_fjdarye_sum,
+    "parse_function": parse_fjdarye_sum,
+    "inventory_function": discover_fjdarye_sum,
     "check_function": check_fjdarye_sum,
     "service_description": "Summary Status %s",
     "snmp_info": (".1.3.6.1.4.1.211.1.21.1.150.6", ["0"]),

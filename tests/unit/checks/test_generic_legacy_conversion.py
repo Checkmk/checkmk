@@ -434,7 +434,7 @@ def test_all_check_variables_present(fix_plugin_legacy) -> None:
         "fjdarye60_sum_status",
         "fjdarye_disks_status",
         "fjdarye_item_status",
-        "fjdarye_sum_status",
+        "FJDARYE_SUM_STATUS",
         "forced_mapping",
         "fortigate_cpu_base_default_levels",
         "fortigate_cpu_default_levels",

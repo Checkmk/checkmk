@@ -18,7 +18,9 @@
 # the latter can be one of the following:
 
 from collections import Counter
-from typing import Any, Mapping, MutableMapping, NamedTuple
+from typing import Any, Mapping, MutableMapping, NamedTuple, NewType, Optional
+
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 
 fjdarye_item_status = {
     "1": (0, "Normal"),
@@ -252,25 +254,32 @@ def check_fjdarye_rluns(item, _no_params, info):
 
 
 # .
+FjdaryeDeviceStatus = NewType("FjdaryeDeviceStatus", str)
 
-fjdarye_sum_status = {1: "unknown", 2: "unused", 3: "ok", 4: "warning", 5: "failed"}
+
+def parse_fjdarye_sum(info: StringTable) -> Optional[FjdaryeDeviceStatus]:
+
+    for status in info:
+        if len(status) == 1:
+            return FjdaryeDeviceStatus(status[0])
+    return None
 
 
-def inventory_fjdarye_sum(info):
-    if len(info[0]) == 1:
+def discover_fjdarye_sum(section: Optional[FjdaryeDeviceStatus]):
+    if section:
         yield "0", {}
 
 
-def check_fjdarye_sum(index, _no_param, info):
-    for line in info:
-        if len(info[0]) == 1:
-            status = int(line[0])
-            text = "Status is %s" % fjdarye_sum_status[status]
+FJDARYE_SUM_STATUS = {
+    "1": (2, "unknown"),
+    "2": (2, "unused"),
+    "3": (0, "ok"),
+    "4": (1, "warning"),
+    "5": (2, "failed"),
+}
 
-            if status == 3:
-                return (0, "%s" % text)
-            elif status == 4:
-                return (1, "%s" % text)
-            return (2, "%s" % text)
 
-    return (3, "No status summary present")
+def check_fjdarye_sum(_item: str, _no_param, section: Optional[FjdaryeDeviceStatus]):
+    if section is not None:
+        state, state_desc = FJDARYE_SUM_STATUS.get(section, (3, "unknown"))
+        yield state, f"Status: {state_desc}"

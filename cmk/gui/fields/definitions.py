@@ -7,12 +7,14 @@
 import ast
 import json
 import typing
+import uuid
 import warnings
 from datetime import datetime
 from typing import Any, Optional
 
 import pytz
-from cryptography.x509 import load_pem_x509_csr
+from cryptography.x509 import CertificateSigningRequest, load_pem_x509_csr
+from cryptography.x509.oid import NameOID
 from marshmallow import fields as _fields
 from marshmallow import post_load, pre_dump, utils, ValidationError
 from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
@@ -1090,17 +1092,30 @@ class Timestamp(DateTime):
         return datetime.timestamp(val)
 
 
-class X509ReqPEMField(base.String):
+class X509ReqPEMFieldUUID(base.String):
     default_error_messages = {
         "malformed": "Malformed CSR",
         "invalid": "Invalid CSR (signature and public key do not match)",
+        "no_cn": "CN is missing",
+        "cn_no_uuid": "CN {cn} is no valid version-4 UUID",
     }
 
-    def _validate(self, value):
+    def _validate(self, value: CertificateSigningRequest) -> None:
         if not value.is_signature_valid:
             raise self.make_error("invalid")
+        try:
+            cn = value.subject.get_attributes_for_oid(NameOID.COMMON_NAME)[0].value
+        except IndexError:
+            raise self.make_error("no_cn")
+        try:
+            uuid.UUID(
+                cn,
+                version=4,
+            )
+        except ValueError:
+            raise self.make_error("cn_no_uuid", cn=cn)
 
-    def _deserialize(self, value, attr, data, **kwargs):
+    def _deserialize(self, value, attr, data, **kwargs) -> CertificateSigningRequest:
         try:
             return load_pem_x509_csr(
                 super()
@@ -1134,5 +1149,5 @@ __all__ = [
     "query_field",
     "SiteField",
     "Timestamp",
-    "X509ReqPEMField",
+    "X509ReqPEMFieldUUID",
 ]

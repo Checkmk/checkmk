@@ -625,12 +625,6 @@ class NodeDisplayHint:
         )
 
 
-class Column(NamedTuple):
-    hint: ColumnDisplayHint
-    key: str
-    is_key_column: bool
-
-
 @dataclass(frozen=True)
 class TableDisplayHint:
     key_order: Sequence[str]
@@ -644,18 +638,6 @@ class TableDisplayHint:
             is_show_more=raw_hint.get("is_show_more", True),
             view_name=raw_hint.get("view"),
         )
-
-    def make_columns(
-        self, rows: Sequence[SDRow], key_columns: SDKeyColumns, path: SDPath
-    ) -> Sequence[Column]:
-        hints = DISPLAY_HINTS.get_hints(path)
-        sorting_keys = list(self.key_order) + sorted(
-            set(k for r in rows for k in r) - set(self.key_order)
-        )
-        return [Column(hints.get_column_hint(k), k, k in key_columns) for k in sorting_keys]
-
-    def sort_rows(self, rows: Sequence[SDRow], columns: Sequence[Column]) -> Sequence[SDRow]:
-        return sorted(rows, key=lambda r: tuple(r.get(c.key) or "" for c in columns))
 
 
 @dataclass(frozen=True)
@@ -731,10 +713,6 @@ class AttributesDisplayHint:
         return cls(
             key_order=raw_hint.get("keyorder", []),
         )
-
-    def sort_pairs(self, pairs: Mapping[SDKey, SDValue]) -> Sequence[Tuple[SDKey, SDValue]]:
-        sorting_keys = list(self.key_order) + sorted(set(pairs) - set(self.key_order))
-        return [(k, pairs[k]) for k in sorting_keys if k in pairs]
 
 
 @dataclass(frozen=True)
@@ -822,6 +800,12 @@ class _RelatedRawHints:
     for_table: InventoryHintSpec = field(default_factory=dict)
     by_columns: Dict[str, InventoryHintSpec] = field(default_factory=dict)
     by_attributes: Dict[str, InventoryHintSpec] = field(default_factory=dict)
+
+
+class _Column(NamedTuple):
+    hint: ColumnDisplayHint
+    key: str
+    is_key_column: bool
 
 
 class DisplayHints:
@@ -975,6 +959,23 @@ class DisplayHints:
         if key in self.attribute_hints:
             return self.attribute_hints[key]
         return AttributeDisplayHint.make_from_hint(self.abc_path, key, {})
+
+    def make_columns(
+        self, rows: Sequence[SDRow], key_columns: SDKeyColumns, path: SDPath
+    ) -> Sequence[_Column]:
+        sorting_keys = list(self.table_hint.key_order) + sorted(
+            set(k for r in rows for k in r) - set(self.table_hint.key_order)
+        )
+        return [_Column(self.get_column_hint(k), k, k in key_columns) for k in sorting_keys]
+
+    def sort_rows(self, rows: Sequence[SDRow], columns: Sequence[_Column]) -> Sequence[SDRow]:
+        return sorted(rows, key=lambda r: tuple(r.get(c.key) or "" for c in columns))
+
+    def sort_pairs(self, pairs: Mapping[SDKey, SDValue]) -> Sequence[Tuple[SDKey, SDValue]]:
+        sorting_keys = list(self.attributes_hint.key_order) + sorted(
+            set(pairs) - set(self.attributes_hint.key_order)
+        )
+        return [(k, pairs[k]) for k in sorting_keys if k in pairs]
 
     def replace_placeholders(self, path: SDPath) -> str:
         if "%d" not in self.node_hint.title and "%s" not in self.node_hint.title:
@@ -2231,7 +2232,7 @@ class ABCNodeRenderer(abc.ABC):
                 class_="invtablelink",
             )
 
-        columns = hints.table_hint.make_columns(table.rows, table.key_columns, table.path)
+        columns = hints.make_columns(table.rows, table.key_columns, table.path)
 
         # TODO: Use table.open_table() below.
         html.open_table(class_="data")
@@ -2247,7 +2248,7 @@ class ABCNodeRenderer(abc.ABC):
             )
         html.close_tr()
 
-        for row in hints.table_hint.sort_rows(table.rows, columns):
+        for row in hints.sort_rows(table.rows, columns):
             html.open_tr(class_="even0")
             for column in columns:
                 value = row.get(column.key)
@@ -2278,7 +2279,7 @@ class ABCNodeRenderer(abc.ABC):
 
     def _show_attributes(self, attributes: Attributes, hints: DisplayHints) -> None:
         html.open_table()
-        for key, value in hints.attributes_hint.sort_pairs(attributes.pairs):
+        for key, value in hints.sort_pairs(attributes.pairs):
             attr_hint = hints.get_attribute_hint(key)
 
             html.open_tr()

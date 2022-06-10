@@ -518,11 +518,11 @@ def test_make_node_displayhint_from_hint(
 def test_sort_table_rows_displayhint(rows: Sequence[SDRow], expected: Sequence[SDRow]) -> None:
     raw_path = ".software.applications.oracle.dataguard_stats:"
     path = cmk.gui.inventory.InventoryPath.parse(raw_path).path
-    table_hint = DISPLAY_HINTS.get_hints(path).table_hint
+    hints = DISPLAY_HINTS.get_hints(path)
     assert (
-        table_hint.sort_rows(
+        hints.sort_rows(
             rows,
-            table_hint.make_columns(rows, ["sid"], path),
+            hints.make_columns(rows, ["sid"], path),
         )
         == expected
     )
@@ -672,8 +672,7 @@ def test_sort_attributes_pairs_displayhint(
 ) -> None:
     raw_path = ".software.applications.kube.metadata."
     path = cmk.gui.inventory.InventoryPath.parse(raw_path).path
-    attrs_hint = DISPLAY_HINTS.get_hints(path).attributes_hint
-    assert attrs_hint.sort_pairs(pairs) == expected
+    assert DISPLAY_HINTS.get_hints(path).sort_pairs(pairs) == expected
 
 
 @pytest.mark.parametrize(

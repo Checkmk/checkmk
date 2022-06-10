@@ -62,7 +62,7 @@ class MainModuleFolder(ABCMainModule):
         return 10
 
     @property
-    def is_show_more(self):
+    def is_show_more(self) -> bool:
         return False
 
 
@@ -99,7 +99,7 @@ class MainModuleTags(ABCMainModule):
         return 30
 
     @property
-    def is_show_more(self):
+    def is_show_more(self) -> bool:
         return False
 
 
@@ -134,7 +134,7 @@ class MainModuleGlobalSettings(ABCMainModule):
         return 10
 
     @property
-    def is_show_more(self):
+    def is_show_more(self) -> bool:
         return False
 
 
@@ -169,7 +169,7 @@ class MainModuleReadOnly(ABCMainModule):
         return 20
 
     @property
-    def is_show_more(self):
+    def is_show_more(self) -> bool:
         return True
 
 
@@ -204,7 +204,7 @@ class MainModuleRuleSearch(ABCMainModule):
         return 5
 
     @property
-    def is_show_more(self):
+    def is_show_more(self) -> bool:
         return False
 
 
@@ -239,7 +239,7 @@ class MainModulePredefinedConditions(ABCMainModule):
         return 30
 
     @property
-    def is_show_more(self):
+    def is_show_more(self) -> bool:
         return True
 
 
@@ -274,7 +274,7 @@ class MainModuleHostAndServiceParameters(ABCMainModule):
         return 20
 
     @property
-    def is_show_more(self):
+    def is_show_more(self) -> bool:
         return False
 
 
@@ -309,7 +309,7 @@ class MainModuleHWSWInventory(ABCMainModule):
         return 60
 
     @property
-    def is_show_more(self):
+    def is_show_more(self) -> bool:
         return True
 
 
@@ -347,7 +347,7 @@ class MainModuleNetworkingServices(ABCMainModule):
         return 30
 
     @property
-    def is_show_more(self):
+    def is_show_more(self) -> bool:
         return False
 
 
@@ -385,7 +385,7 @@ class MainModuleOtherServices(ABCMainModule):
         return 40
 
     @property
-    def is_show_more(self):
+    def is_show_more(self) -> bool:
         return True
 
 
@@ -420,7 +420,7 @@ class MainModuleCheckPlugins(ABCMainModule):
         return 70
 
     @property
-    def is_show_more(self):
+    def is_show_more(self) -> bool:
         return True
 
 
@@ -455,7 +455,7 @@ class MainModuleHostGroups(ABCMainModule):
         return 50
 
     @property
-    def is_show_more(self):
+    def is_show_more(self) -> bool:
         return False
 
 
@@ -490,7 +490,7 @@ class MainModuleHostCustomAttributes(ABCMainModule):
         return 55
 
     @property
-    def is_show_more(self):
+    def is_show_more(self) -> bool:
         return True
 
 
@@ -525,7 +525,7 @@ class MainModuleServiceGroups(ABCMainModule):
         return 60
 
     @property
-    def is_show_more(self):
+    def is_show_more(self) -> bool:
         return False
 
 
@@ -560,7 +560,7 @@ class MainModuleUsers(ABCMainModule):
         return 20
 
     @property
-    def is_show_more(self):
+    def is_show_more(self) -> bool:
         return False
 
 
@@ -595,7 +595,7 @@ class MainModuleRoles(ABCMainModule):
         return 40
 
     @property
-    def is_show_more(self):
+    def is_show_more(self) -> bool:
         return False
 
 
@@ -630,7 +630,7 @@ class MainModuleLDAP(ABCMainModule):
         return 50
 
     @property
-    def is_show_more(self):
+    def is_show_more(self) -> bool:
         return True
 
 
@@ -665,7 +665,7 @@ class MainModuleUserCustomAttributes(ABCMainModule):
         return 55
 
     @property
-    def is_show_more(self):
+    def is_show_more(self) -> bool:
         return True
 
 
@@ -700,7 +700,7 @@ class MainModuleContactGroups(ABCMainModule):
         return 30
 
     @property
-    def is_show_more(self):
+    def is_show_more(self) -> bool:
         return False
 
 
@@ -735,7 +735,7 @@ class MainModuleNotifications(ABCMainModule):
         return 10
 
     @property
-    def is_show_more(self):
+    def is_show_more(self) -> bool:
         return False
 
 
@@ -772,7 +772,7 @@ class MainModuleTimeperiods(ABCMainModule):
         return 40
 
     @property
-    def is_show_more(self):
+    def is_show_more(self) -> bool:
         return False
 
 
@@ -807,7 +807,7 @@ class MainModuleSites(ABCMainModule):
         return 70
 
     @property
-    def is_show_more(self):
+    def is_show_more(self) -> bool:
         return False
 
 
@@ -842,7 +842,7 @@ class MainModuleBackup(ABCMainModule):
         return 10
 
     @property
-    def is_show_more(self):
+    def is_show_more(self) -> bool:
         return False
 
 
@@ -877,7 +877,7 @@ class MainModulePasswords(ABCMainModule):
         return 50
 
     @property
-    def is_show_more(self):
+    def is_show_more(self) -> bool:
         return False
 
 
@@ -912,7 +912,7 @@ class MainModuleAuditLog(ABCMainModule):
         return 80
 
     @property
-    def is_show_more(self):
+    def is_show_more(self) -> bool:
         return True
 
 
@@ -947,7 +947,7 @@ class MainModuleIcons(ABCMainModule):
         return 85
 
     @property
-    def is_show_more(self):
+    def is_show_more(self) -> bool:
         return True
 
 
@@ -982,7 +982,7 @@ class MainModuleAnalyzeConfig(ABCMainModule):
         return 40
 
     @property
-    def is_show_more(self):
+    def is_show_more(self) -> bool:
         return False
 
 
@@ -1020,7 +1020,7 @@ class MainModuleDiagnostics(ABCMainModule):
         return 30
 
     @property
-    def is_show_more(self):
+    def is_show_more(self) -> bool:
         return False
 
 
@@ -1055,7 +1055,7 @@ class MainModuleMonitoringRules(ABCMainModule):
         return 10
 
     @property
-    def is_show_more(self):
+    def is_show_more(self) -> bool:
         return False
 
 
@@ -1090,7 +1090,7 @@ class MainModuleDiscoveryRules(ABCMainModule):
         return 20
 
     @property
-    def is_show_more(self):
+    def is_show_more(self) -> bool:
         return False
 
 
@@ -1125,7 +1125,7 @@ class MainModuleEnforcedServices(ABCMainModule):
         return 25
 
     @property
-    def is_show_more(self):
+    def is_show_more(self) -> bool:
         return True
 
 
@@ -1159,7 +1159,7 @@ class MainModuleAgentsWindows(ABCMainModule):
         return 15
 
     @property
-    def is_show_more(self):
+    def is_show_more(self) -> bool:
         return False
 
 
@@ -1193,7 +1193,7 @@ class MainModuleAgentsLinux(ABCMainModule):
         return 10
 
     @property
-    def is_show_more(self):
+    def is_show_more(self) -> bool:
         return False
 
 
@@ -1239,7 +1239,7 @@ class MainModuleAgentRules(ABCMainModule):
         return 80
 
     @property
-    def is_show_more(self):
+    def is_show_more(self) -> bool:
         return True
 
     @classmethod
@@ -1285,7 +1285,7 @@ class MainModuleOtherAgents(ABCMainModule):
         return 20
 
     @property
-    def is_show_more(self):
+    def is_show_more(self) -> bool:
         return False
 
 
@@ -1320,7 +1320,7 @@ class MainModuleAgentAccessRules(ABCMainModule):
         return 60
 
     @property
-    def is_show_more(self):
+    def is_show_more(self) -> bool:
         return False
 
 
@@ -1355,7 +1355,7 @@ class MainModuleSNMPRules(ABCMainModule):
         return 70
 
     @property
-    def is_show_more(self):
+    def is_show_more(self) -> bool:
         return False
 
 
@@ -1390,7 +1390,7 @@ class MainModuleVMCloudContainer(ABCMainModule):
         return 30
 
     @property
-    def is_show_more(self):
+    def is_show_more(self) -> bool:
         return False
 
 
@@ -1425,5 +1425,5 @@ class MainModuleOtherIntegrations(ABCMainModule):
         return 40
 
     @property
-    def is_show_more(self):
+    def is_show_more(self) -> bool:
         return False

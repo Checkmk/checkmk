@@ -63,7 +63,7 @@ class SomeMainModule(ABCMainModule):
         return 30
 
     @property
-    def is_show_more(self):
+    def is_show_more(self) -> bool:
         return False
 
 

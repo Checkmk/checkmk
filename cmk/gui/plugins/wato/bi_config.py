@@ -151,7 +151,7 @@ class MainModuleBI(ABCMainModule):
         return 70
 
     @property
-    def is_show_more(self):
+    def is_show_more(self) -> bool:
         return True
 
 

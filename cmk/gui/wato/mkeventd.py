@@ -3511,7 +3511,7 @@ class MainModuleEventConsole(ABCMainModule):
         return active_config.mkeventd_enabled
 
     @property
-    def is_show_more(self):
+    def is_show_more(self) -> bool:
         return True
 
 
@@ -4657,7 +4657,7 @@ class MainModuleEventConsoleRules(ABCMainModule):
         return 40
 
     @property
-    def is_show_more(self):
+    def is_show_more(self) -> bool:
         return True
 
     @classmethod

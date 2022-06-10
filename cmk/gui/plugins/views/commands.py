@@ -447,7 +447,7 @@ class CommandFakeCheckResult(Command):
         return CommandGroupFakeCheck
 
     @property
-    def is_show_more(self):
+    def is_show_more(self) -> bool:
         return True
 
     def render(self, what):
@@ -572,7 +572,7 @@ class CommandCustomNotification(Command):
         return ["host", "service"]
 
     @property
-    def is_show_more(self):
+    def is_show_more(self) -> bool:
         return True
 
     def render(self, what):

@@ -69,7 +69,7 @@ class MainModuleBackgroundJobs(ABCMainModule):
         return 60
 
     @property
-    def is_show_more(self):
+    def is_show_more(self) -> bool:
         return True
 
 

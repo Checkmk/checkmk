@@ -257,7 +257,6 @@ class UpdateConfig:
         return [
             (self._rewrite_password_store, "Rewriting password store"),
             (self._rewrite_visuals, "Migrate Visuals context"),
-            (self._migrate_dashlets, "Migrate dashlets"),
             (self._update_global_settings, "Update global settings"),
             (self._rewrite_wato_tag_config, "Rewriting tags"),
             (self._rewrite_wato_host_and_folder_config, "Rewriting hosts and folders"),
@@ -267,6 +266,8 @@ class UpdateConfig:
             # CAUTION: update_fs_used_name must be called *after* rewrite_autochecks!
             (self._update_fs_used_name, "Migrating fs_used name"),
             (self._migrate_pagetype_topics_to_ids, "Migrate pagetype topics"),
+            # NEXT CAUTION: self._migrate_dashlets, must be called *after* migrate_pagetype_topics_to_ids!
+            (self._migrate_dashlets, "Migrate dashlets"),
             (self._migrate_ldap_connections, "Migrate LDAP connections"),
             (self._rewrite_bi_configuration, "Rewrite BI Configuration"),
             (self._adjust_user_attributes, "Set version specific user attributes"),

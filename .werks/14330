@@ -1,0 +1,17 @@
+Title: Fix possible ValueError on dashboards after update to 2.1
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1654862212
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p3
+
+If dashboards were created with a custom topic in version 2.0, the error
+"ValueError (invalid literal for int() with base 10: '')" could occur after
+updating to 2.1.
+
+Possible workaround was to change the topic of the affected dashboard to a
+builtin topic and run "cmk-update-config" as site user again. The dashboard
+should be ok after that and you can change back to the custom topic.

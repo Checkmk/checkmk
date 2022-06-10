@@ -55,7 +55,7 @@ class SomeMainModule(ABCMainModule):
         return "some_permission"
 
     @property
-    def description(self):
+    def description(self) -> str:
         return "Description"
 
     @property

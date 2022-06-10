@@ -143,7 +143,7 @@ class MainModuleBI(ABCMainModule):
         return "bi_rules"
 
     @property
-    def description(self):
+    def description(self) -> str:
         return _("Configuration of Checkmk's Business Intelligence component")
 
     @property

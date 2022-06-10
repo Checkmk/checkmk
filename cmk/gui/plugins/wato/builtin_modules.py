@@ -55,7 +55,7 @@ class MainModuleFolder(ABCMainModule):
         return "hosts"
 
     @property
-    def description(self):
+    def description(self) -> str:
         return _("Manage monitored hosts and services and the hosts' folder structure.")
 
     @property
@@ -92,7 +92,7 @@ class MainModuleTags(ABCMainModule):
         return "hosttags"
 
     @property
-    def description(self):
+    def description(self) -> str:
         return _("Tags can be used to classify hosts and services in a flexible way.")
 
     @property
@@ -127,7 +127,7 @@ class MainModuleGlobalSettings(ABCMainModule):
         return "global"
 
     @property
-    def description(self):
+    def description(self) -> str:
         return _("Global settings for Checkmk, Multisite and the monitoring core.")
 
     @property
@@ -162,7 +162,7 @@ class MainModuleReadOnly(ABCMainModule):
         return "read_only"
 
     @property
-    def description(self):
+    def description(self) -> str:
         return _("Set the Checkmk configuration interface to read only mode for maintenance.")
 
     @property
@@ -197,7 +197,7 @@ class MainModuleRuleSearch(ABCMainModule):
         return "rulesets"
 
     @property
-    def description(self):
+    def description(self) -> str:
         return _("Search all rules and rulesets")
 
     @property
@@ -232,7 +232,7 @@ class MainModulePredefinedConditions(ABCMainModule):
         return "rulesets"
 
     @property
-    def description(self):
+    def description(self) -> str:
         return _("Use predefined conditions to centralize the coniditions of your rulesets.")
 
     @property
@@ -267,7 +267,7 @@ class MainModuleHostAndServiceParameters(ABCMainModule):
         return "rulesets"
 
     @property
-    def description(self):
+    def description(self) -> str:
         return _("Check parameters and other configuration variables for hosts")
 
     @property
@@ -302,7 +302,7 @@ class MainModuleHWSWInventory(ABCMainModule):
         return "rulesets"
 
     @property
-    def description(self):
+    def description(self) -> str:
         return _("Manage Hard- and software inventory related rulesets")
 
     @property
@@ -337,7 +337,7 @@ class MainModuleNetworkingServices(ABCMainModule):
         return "rulesets"
 
     @property
-    def description(self):
+    def description(self) -> str:
         return _(
             "Configure monitoring of networking services using classical nagios plugins"
             " (so called active checks)"
@@ -375,7 +375,7 @@ class MainModuleOtherServices(ABCMainModule):
         return "rulesets"
 
     @property
-    def description(self):
+    def description(self) -> str:
         return _(
             "Integrate [active_checks#mrpe|custom nagios plugins] into the "
             "monitoring as active checks."
@@ -413,7 +413,7 @@ class MainModuleCheckPlugins(ABCMainModule):
         return "check_plugins"
 
     @property
-    def description(self):
+    def description(self) -> str:
         return _("Browse the catalog of all check plugins, create static checks")
 
     @property
@@ -448,7 +448,7 @@ class MainModuleHostGroups(ABCMainModule):
         return "groups"
 
     @property
-    def description(self):
+    def description(self) -> str:
         return _("Organize your hosts in groups independent of the tree structure.")
 
     @property
@@ -483,7 +483,7 @@ class MainModuleHostCustomAttributes(ABCMainModule):
         return "custom_attributes"
 
     @property
-    def description(self):
+    def description(self) -> str:
         return _("Create your own host related attributes")
 
     @property
@@ -518,7 +518,7 @@ class MainModuleServiceGroups(ABCMainModule):
         return "groups"
 
     @property
-    def description(self):
+    def description(self) -> str:
         return _("Organize your services in groups")
 
     @property
@@ -553,7 +553,7 @@ class MainModuleUsers(ABCMainModule):
         return "users"
 
     @property
-    def description(self):
+    def description(self) -> str:
         return _("Manage users of the monitoring system.")
 
     @property
@@ -588,7 +588,7 @@ class MainModuleRoles(ABCMainModule):
         return "users"
 
     @property
-    def description(self):
+    def description(self) -> str:
         return _("User roles are configurable sets of permissions.")
 
     @property
@@ -623,7 +623,7 @@ class MainModuleLDAP(ABCMainModule):
         return "users"
 
     @property
-    def description(self):
+    def description(self) -> str:
         return _("Connect Checkmk with your LDAP or Active Directory to create users in Checkmk.")
 
     @property
@@ -658,7 +658,7 @@ class MainModuleUserCustomAttributes(ABCMainModule):
         return "custom_attributes"
 
     @property
-    def description(self):
+    def description(self) -> str:
         return _("Create your own user related attributes")
 
     @property
@@ -693,7 +693,7 @@ class MainModuleContactGroups(ABCMainModule):
         return "users"
 
     @property
-    def description(self):
+    def description(self) -> str:
         return _("Contact groups are used to assign users to hosts and services")
 
     @property
@@ -728,7 +728,7 @@ class MainModuleNotifications(ABCMainModule):
         return "notifications"
 
     @property
-    def description(self):
+    def description(self) -> str:
         return _("Rules for the notification of contacts about host and service problems")
 
     @property
@@ -763,7 +763,7 @@ class MainModuleTimeperiods(ABCMainModule):
         return "timeperiods"
 
     @property
-    def description(self):
+    def description(self) -> str:
         return _(
             "Timeperiods restrict notifications and other things to certain periods of the day."
         )
@@ -800,7 +800,7 @@ class MainModuleSites(ABCMainModule):
         return "sites"
 
     @property
-    def description(self):
+    def description(self) -> str:
         return _("Distributed monitoring using multiple Checkmk sites")
 
     @property
@@ -835,7 +835,7 @@ class MainModuleBackup(ABCMainModule):
         return "backups"
 
     @property
-    def description(self):
+    def description(self) -> str:
         return _("Make backups of your whole site and restore previous backups.")
 
     @property
@@ -870,7 +870,7 @@ class MainModulePasswords(ABCMainModule):
         return "passwords"
 
     @property
-    def description(self):
+    def description(self) -> str:
         return _("Store and share passwords for later use in checks.")
 
     @property
@@ -905,7 +905,7 @@ class MainModuleAuditLog(ABCMainModule):
         return "auditlog"
 
     @property
-    def description(self):
+    def description(self) -> str:
         return _("Examine the change history of the configuration")
 
     @property
@@ -940,7 +940,7 @@ class MainModuleIcons(ABCMainModule):
         return "icons"
 
     @property
-    def description(self):
+    def description(self) -> str:
         return _("Extend the Checkmk GUI with your custom icons")
 
     @property
@@ -975,7 +975,7 @@ class MainModuleAnalyzeConfig(ABCMainModule):
         return "analyze_config"
 
     @property
-    def description(self):
+    def description(self) -> str:
         return _("See hints how to improve your Checkmk installation")
 
     @property
@@ -1013,7 +1013,7 @@ class MainModuleDiagnostics(ABCMainModule):
         return "diagnostics"
 
     @property
-    def description(self):
+    def description(self) -> str:
         return _("Collect information of Checkmk sites for diagnostic analysis.")
 
     @property
@@ -1048,7 +1048,7 @@ class MainModuleMonitoringRules(ABCMainModule):
         return "rulesets"
 
     @property
-    def description(self):
+    def description(self) -> str:
         return _("Service monitoring rules")
 
     @property
@@ -1083,7 +1083,7 @@ class MainModuleDiscoveryRules(ABCMainModule):
         return "rulesets"
 
     @property
-    def description(self):
+    def description(self) -> str:
         return _("Discovery settings")
 
     @property
@@ -1118,7 +1118,7 @@ class MainModuleEnforcedServices(ABCMainModule):
         return "rulesets"
 
     @property
-    def description(self):
+    def description(self) -> str:
         return _("Configure enforced checks without using service discovery")
 
     @property
@@ -1152,7 +1152,7 @@ class MainModuleAgentsWindows(ABCMainModule):
         return "download_agents"
 
     @property
-    def description(self):
+    def description(self) -> str:
         return _("Downloads Checkmk agent and plugins for Windows")
 
     @property
@@ -1186,7 +1186,7 @@ class MainModuleAgentsLinux(ABCMainModule):
         return "download_agents"
 
     @property
-    def description(self):
+    def description(self) -> str:
         return _("Downloads Checkmk agent and plugins for Linux")
 
     @property
@@ -1232,7 +1232,7 @@ class MainModuleAgentRules(ABCMainModule):
         return "rulesets"
 
     @property
-    def description(self):
+    def description(self) -> str:
         return _("Configuration of monitoring agents for Linux, Windows and Unix")
 
     @property
@@ -1278,7 +1278,7 @@ class MainModuleOtherAgents(ABCMainModule):
         return "download_agents"
 
     @property
-    def description(self):
+    def description(self) -> str:
         return _("Downloads Checkmk agents for other operating systems")
 
     @property
@@ -1313,7 +1313,7 @@ class MainModuleAgentAccessRules(ABCMainModule):
         return "rulesets"
 
     @property
-    def description(self):
+    def description(self) -> str:
         return _("Configure agent access related settings using rulesets")
 
     @property
@@ -1348,7 +1348,7 @@ class MainModuleSNMPRules(ABCMainModule):
         return "rulesets"
 
     @property
-    def description(self):
+    def description(self) -> str:
         return _("Configure SNMP related settings using rulesets")
 
     @property
@@ -1383,7 +1383,7 @@ class MainModuleVMCloudContainer(ABCMainModule):
         return "rulesets"
 
     @property
-    def description(self):
+    def description(self) -> str:
         return _("Integrate with VM, cloud or container platforms")
 
     @property
@@ -1418,7 +1418,7 @@ class MainModuleOtherIntegrations(ABCMainModule):
         return "rulesets"
 
     @property
-    def description(self):
+    def description(self) -> str:
         return _("Monitoring of applications such as processes, services or databases")
 
     @property

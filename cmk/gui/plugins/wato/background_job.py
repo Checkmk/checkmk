@@ -61,7 +61,7 @@ class MainModuleBackgroundJobs(ABCMainModule):
         return "background_jobs.manage_jobs"
 
     @property
-    def description(self):
+    def description(self) -> str:
         return _("Manage longer running tasks in the Checkmk GUI")
 
     @property

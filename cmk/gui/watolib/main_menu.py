@@ -43,7 +43,7 @@ class MenuItem:
         return self._permission
 
     @property
-    def description(self):
+    def description(self) -> str:
         return self._description
 
     @property

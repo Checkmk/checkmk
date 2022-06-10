@@ -3499,7 +3499,7 @@ class MainModuleEventConsole(ABCMainModule):
         return "mkeventd.edit"
 
     @property
-    def description(self):
+    def description(self) -> str:
         return _("Manage event classification and correlation rules for the Event Console")
 
     @property
@@ -4649,7 +4649,7 @@ class MainModuleEventConsoleRules(ABCMainModule):
         return "rulesets"
 
     @property
-    def description(self):
+    def description(self) -> str:
         return _("Host and service rules related to the Event Console")
 
     @property

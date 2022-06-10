@@ -837,12 +837,12 @@ class CostsAndUsage(AWSSection):
         return "costs_and_usage"
 
     @property
-    def cache_interval(self):
+    def cache_interval(self) -> int:
         """Return the upper limit for allowed cache age.
 
         Data is updated at midnight, so the cache should not be older than the day.
         """
-        cache_interval = get_seconds_since_midnight(NOW)
+        cache_interval = int(get_seconds_since_midnight(NOW))
         logging.debug("Maximal allowed age of usage data cache: %s sec", cache_interval)
         return cache_interval
 
@@ -894,7 +894,7 @@ class EC2Limits(AWSSectionLimits):
         return "ec2_limits"
 
     @property
-    def cache_interval(self):
+    def cache_interval(self) -> int:
         return 300
 
     @property
@@ -1208,7 +1208,7 @@ class EC2Summary(AWSSection):
         return "ec2_summary"
 
     @property
-    def cache_interval(self):
+    def cache_interval(self) -> int:
         return 300
 
     @property
@@ -1302,7 +1302,7 @@ class EC2Labels(AWSSectionLabels):
         return "ec2_labels"
 
     @property
-    def cache_interval(self):
+    def cache_interval(self) -> int:
         return 300
 
     @property
@@ -1360,7 +1360,7 @@ class EC2SecurityGroups(AWSSection):
         return "ec2_security_groups"
 
     @property
-    def cache_interval(self):
+    def cache_interval(self) -> int:
         return 300
 
     @property
@@ -1417,7 +1417,7 @@ class EC2(AWSSectionCloudwatch):
         return "ec2"
 
     @property
-    def cache_interval(self):
+    def cache_interval(self) -> int:
         return 300
 
     @property
@@ -1503,7 +1503,7 @@ class EBSLimits(AWSSectionLimits):
         return "ebs_limits"
 
     @property
-    def cache_interval(self):
+    def cache_interval(self) -> int:
         return 300
 
     @property
@@ -1626,7 +1626,7 @@ class EBSSummary(AWSSection):
         return "ebs_summary"
 
     @property
-    def cache_interval(self):
+    def cache_interval(self) -> int:
         return 300
 
     @property
@@ -1727,7 +1727,7 @@ class EBS(AWSSectionCloudwatch):
         return "ebs"
 
     @property
-    def cache_interval(self):
+    def cache_interval(self) -> int:
         return 300
 
     @property
@@ -1853,12 +1853,12 @@ class S3Limits(AWSSectionLimits):
         return "s3_limits"
 
     @property
-    def cache_interval(self):
+    def cache_interval(self) -> int:
         """Return the upper limit for allowed cache age.
 
         Data is updated at midnight, so the cache should not be older than the day.
         """
-        cache_interval = get_seconds_since_midnight(NOW)
+        cache_interval = int(get_seconds_since_midnight(NOW))
         logging.debug("Maximal allowed age of usage data cache: %s sec", cache_interval)
 
         return cache_interval
@@ -1896,12 +1896,12 @@ class S3Summary(AWSSection):
         return "s3_summary"
 
     @property
-    def cache_interval(self):
+    def cache_interval(self) -> int:
         """Return the upper limit for allowed cache age.
 
         Data is updated at midnight, so the cache should not be older than the day.
         """
-        cache_interval = get_seconds_since_midnight(NOW)
+        cache_interval = int(get_seconds_since_midnight(NOW))
         logging.debug("Maximal allowed age of usage data cache: %s sec", cache_interval)
         return cache_interval
 
@@ -1980,14 +1980,14 @@ class S3(AWSSectionCloudwatch):
         return "s3"
 
     @property
-    def cache_interval(self):
+    def cache_interval(self) -> int:
         # BucketSizeBytes and NumberOfObjects are available per day
         # and must include 00:00h
         """Return the upper limit for allowed cache age.
 
         Data is updated at midnight, so the cache should not be older than the day.
         """
-        cache_interval = get_seconds_since_midnight(NOW)
+        cache_interval = int(get_seconds_since_midnight(NOW))
         logging.debug("Maximal allowed age of usage data cache: %s sec", cache_interval)
         return cache_interval
 
@@ -2063,7 +2063,7 @@ class S3Requests(AWSSectionCloudwatch):
         return "s3_requests"
 
     @property
-    def cache_interval(self):
+    def cache_interval(self) -> int:
         return 300
 
     @property
@@ -2148,12 +2148,12 @@ class GlacierLimits(AWSSectionLimits):
         return "glacier_limits"
 
     @property
-    def cache_interval(self):
+    def cache_interval(self) -> int:
         """Return the upper limit for allowed cache age.
 
         Data is updated at midnight, so the cache should not be older than the day.
         """
-        cache_interval = get_seconds_since_midnight(NOW)
+        cache_interval = int(get_seconds_since_midnight(NOW))
         logging.debug("Maximal allowed age of usage data cache: %s sec", cache_interval)
         return cache_interval
 
@@ -2198,12 +2198,12 @@ class GlacierSummary(AWSSection):
         return "glacier_summary"
 
     @property
-    def cache_interval(self):
+    def cache_interval(self) -> int:
         """Return the upper limit for allowed cache age.
 
         Data is updated at midnight, so the cache should not be older than the day.
         """
-        cache_interval = get_seconds_since_midnight(NOW)
+        cache_interval = int(get_seconds_since_midnight(NOW))
         logging.debug("Maximal allowed age of usage data cache: %s sec", cache_interval)
         return cache_interval
 
@@ -2287,12 +2287,12 @@ class Glacier(AWSSection):
         return "glacier"
 
     @property
-    def cache_interval(self):
+    def cache_interval(self) -> int:
         """Return the upper limit for allowed cache age.
 
         Data is updated at midnight, so the cache should not be older than the day.
         """
-        cache_interval = get_seconds_since_midnight(NOW)
+        cache_interval = int(get_seconds_since_midnight(NOW))
         logging.debug("Maximal allowed age of usage data cache: %s sec", cache_interval)
         return cache_interval
 
@@ -2333,7 +2333,7 @@ class ELBLimits(AWSSectionLimits):
         return "elb_limits"
 
     @property
-    def cache_interval(self):
+    def cache_interval(self) -> int:
         # If you change this, you might have to adjust factory_settings['levels_spillover'] in
         # checks/aws_elb
         return 300
@@ -2424,7 +2424,7 @@ class ELBSummaryGeneric(AWSSection):
         return "%s_summary" % self._resource
 
     @property
-    def cache_interval(self):
+    def cache_interval(self) -> int:
         return 300
 
     @property
@@ -2510,7 +2510,7 @@ class ELBLabelsGeneric(AWSSectionLabels):
         return "%s_generic_labels" % self._resource
 
     @property
-    def cache_interval(self):
+    def cache_interval(self) -> int:
         return 300
 
     @property
@@ -2541,7 +2541,7 @@ class ELBHealth(AWSSection):
         return "elb_health"
 
     @property
-    def cache_interval(self):
+    def cache_interval(self) -> int:
         return 300
 
     @property
@@ -2581,7 +2581,7 @@ class ELB(AWSSectionCloudwatch):
         return "elb"
 
     @property
-    def cache_interval(self):
+    def cache_interval(self) -> int:
         return 300
 
     @property
@@ -2667,7 +2667,7 @@ class ELBv2Limits(AWSSectionLimits):
         return "elbv2_limits"
 
     @property
-    def cache_interval(self):
+    def cache_interval(self) -> int:
         return 300
 
     @property
@@ -2825,7 +2825,7 @@ class ELBv2TargetGroups(AWSSection):
         return "elbv2_target_groups"
 
     @property
-    def cache_interval(self):
+    def cache_interval(self) -> int:
         return 300
 
     @property
@@ -2901,7 +2901,7 @@ class ELBv2Application(AWSSectionCloudwatch):
         return "elbv2_application"
 
     @property
-    def cache_interval(self):
+    def cache_interval(self) -> int:
         return 300
 
     @property
@@ -2987,7 +2987,7 @@ class ELBv2ApplicationTargetGroupsResponses(AWSSectionCloudwatch):
         self._separator = " "
 
     @property
-    def cache_interval(self):
+    def cache_interval(self) -> int:
         return 300
 
     @property
@@ -3119,7 +3119,7 @@ class ELBv2Network(AWSSectionCloudwatch):
         return "elbv2_network"
 
     @property
-    def cache_interval(self):
+    def cache_interval(self) -> int:
         return 300
 
     @property
@@ -3232,7 +3232,7 @@ class RDSLimits(AWSSectionLimits):
         return "rds_limits"
 
     @property
-    def cache_interval(self):
+    def cache_interval(self) -> int:
         return 300
 
     @property
@@ -3280,7 +3280,7 @@ class RDSSummary(AWSSection):
         return "rds_summary"
 
     @property
-    def cache_interval(self):
+    def cache_interval(self) -> int:
         return 300
 
     @property
@@ -3357,7 +3357,7 @@ class RDS(AWSSectionCloudwatch):
         return "rds"
 
     @property
-    def cache_interval(self):
+    def cache_interval(self) -> int:
         return 300
 
     @property
@@ -3454,7 +3454,7 @@ class CloudwatchAlarmsLimits(AWSSectionLimits):
         return "cloudwatch_alarms_limits"
 
     @property
-    def cache_interval(self):
+    def cache_interval(self) -> int:
         return 300
 
     @property
@@ -3491,7 +3491,7 @@ class CloudwatchAlarms(AWSSection):
         return "cloudwatch_alarms"
 
     @property
-    def cache_interval(self):
+    def cache_interval(self) -> int:
         return 300
 
     @property
@@ -3545,7 +3545,7 @@ class DynamoDBLimits(AWSSectionLimits):
         return "dynamodb_limits"
 
     @property
-    def cache_interval(self):
+    def cache_interval(self) -> int:
         return 300
 
     @property
@@ -3655,7 +3655,7 @@ class DynamoDBSummary(AWSSection):
         return "dynamodb_summary"
 
     @property
-    def cache_interval(self):
+    def cache_interval(self) -> int:
         return 300
 
     @property
@@ -3733,7 +3733,7 @@ class DynamoDBTable(AWSSectionCloudwatch):
         return "dynamodb_table"
 
     @property
-    def cache_interval(self):
+    def cache_interval(self) -> int:
         return 300
 
     @property
@@ -3846,7 +3846,7 @@ class WAFV2Limits(AWSSectionLimits):
         return "wafv2_limits"
 
     @property
-    def cache_interval(self):
+    def cache_interval(self) -> int:
         return 300
 
     @property
@@ -3940,7 +3940,7 @@ class WAFV2Summary(AWSSection):
         return "wafv2_summary"
 
     @property
-    def cache_interval(self):
+    def cache_interval(self) -> int:
         return 300
 
     @property
@@ -4032,7 +4032,7 @@ class WAFV2WebACL(AWSSectionCloudwatch):
         return "wafv2_web_acl"
 
     @property
-    def cache_interval(self):
+    def cache_interval(self) -> int:
         return 300
 
     @property
@@ -4103,7 +4103,7 @@ class LambdaRegionLimits(AWSSectionLimits):
         return "lambda_region_limits"
 
     @property
-    def cache_interval(self):
+    def cache_interval(self) -> int:
         return 300
 
     @property
@@ -4162,7 +4162,7 @@ class LambdaSummary(AWSSection):
         return "lambda_summary"
 
     @property
-    def cache_interval(self):
+    def cache_interval(self) -> int:
         return 300
 
     @property
@@ -4228,7 +4228,7 @@ class LambdaCloudwatch(AWSSectionCloudwatch):
         return "lambda"
 
     @property
-    def cache_interval(self):
+    def cache_interval(self) -> int:
         return 300
 
     @property
@@ -4328,7 +4328,7 @@ class LambdaProvisionedConcurrency(AWSSection):
         return "lambda_provisioned_concurrency"
 
     @property
-    def cache_interval(self):
+    def cache_interval(self) -> int:
         return 300
 
     @property

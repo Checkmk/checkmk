@@ -12,6 +12,7 @@
 
 #include <atomic>
 #include <filesystem>
+#include <ranges>
 #include <string>
 
 #include "cap.h"
@@ -31,6 +32,7 @@
 #include "upgrade.h"
 #include "windows_service_api.h"
 namespace fs = std::filesystem;
+namespace rs = std::ranges;
 using namespace std::string_literals;
 using namespace std::string_view_literals;
 
@@ -91,7 +93,7 @@ std::wstring WinPerf::buildCmdLine() const {
 
         // adding to command line
         auto name = wtools::ConvertToUTF16(counter.id());
-        std::replace(name.begin(), name.end(), L' ', L'*');
+        rs::replace(name, L' ', L'*');
         cmd_line += name;
         cmd_line += L":";
         cmd_line += wtools::ConvertToUTF16(counter.name());

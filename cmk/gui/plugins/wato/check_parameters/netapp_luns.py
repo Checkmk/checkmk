@@ -5,23 +5,22 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.check_parameters.filesystem_utils import (
-    get_free_used_dynamic_valuespec,
-    match_dual_level_type,
-    size_trend_elements,
-)
+from cmk.gui.plugins.wato.check_parameters.filesystem_utils import FilesystemElements, vs_filesystem
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersStorage,
 )
-from cmk.gui.valuespec import Alternative, Checkbox, Dictionary, FixedValue, TextInput
+from cmk.gui.valuespec import Checkbox, FixedValue, TextInput
 
 
 def _parameter_valuespec_netapp_luns():
-    return Dictionary(
-        title=_("Configure levels for used space"),
+    return vs_filesystem(
         elements=[
+            FilesystemElements.levels,
+            FilesystemElements.size_trend,
+        ],
+        extra_elements=[
             (
                 "ignore_levels",
                 FixedValue(
@@ -33,22 +32,6 @@ def _parameter_valuespec_netapp_luns():
                     value=True,
                 ),
             ),
-            (
-                "levels",
-                Alternative(
-                    title=_("Levels for used/free space"),
-                    show_alternative_title=True,
-                    default_value=(80.0, 90.0),
-                    match=match_dual_level_type,
-                    elements=[
-                        get_free_used_dynamic_valuespec("used"),
-                        get_free_used_dynamic_valuespec("free", default_value=(20.0, 10.0)),
-                    ],
-                ),
-            ),
-        ]
-        + size_trend_elements()
-        + [
             (
                 "read_only",
                 Checkbox(

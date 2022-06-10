@@ -16,7 +16,7 @@ from cmk.gui.valuespec import Percentage, TextInput, Tuple
 
 def _parameter_valuespec_threepar_capacity():
     return vs_filesystem(
-        [
+        extra_elements=[
             (
                 "failed_capacity_levels",
                 Tuple(

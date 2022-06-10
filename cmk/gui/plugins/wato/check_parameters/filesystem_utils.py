@@ -5,7 +5,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Module to hold shared code for filesystem check parameter module internals"""
 
-from typing import Any, Dict, List, Literal, Mapping, Union
+from enum import Enum
+from typing import Any, Callable, List, Literal, Mapping, MutableMapping, Optional, Sequence, Union
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
@@ -26,6 +27,21 @@ from cmk.gui.valuespec import (
     ValueSpec,
 )
 
+ParamType = Mapping[str, Any]
+MutableParamType = MutableMapping[str, Any]
+
+
+class FilesystemElements(Enum):
+    levels = "levels"
+    levels_unbound = "levels_unbound"  # These are percentage levels with no maximum value.
+    # I assume this is due to overprovisioning of virtual filesystems, see netapp_volumes
+    show_levels = "show_levels"  # TODO: deprecate
+    magic_factor = "magic_factor"
+    reserved = "reserved"
+    inodes = "inodes"
+    size_trend = "size_trend"
+    volume_name = "volume_name"
+
 
 # Match and transform functions for level configurations like
 # -- used absolute,        positive int   (2, 4)
@@ -44,11 +60,11 @@ def match_dual_level_type(value):
     return 0
 
 
-def get_free_used_dynamic_valuespec(
+def _get_free_used_dynamic_valuespec(
     level_perspective: Literal["used", "free"],
     default_value=(80.0, 90.0),
     *,
-    maxvalue: Union[None, int, float] = 101.0,
+    maxvalue: Union[None, float],
 ) -> ValueSpec:
     if level_perspective == "used":
         title = _("used space")
@@ -60,7 +76,7 @@ def get_free_used_dynamic_valuespec(
 
     vs_subgroup: List[ValueSpec] = [
         Tuple(
-            title=_("Percentage %s") % title,
+            title=_("Percentage"),
             elements=[
                 Percentage(
                     title=_("Warning if %s") % course,
@@ -77,7 +93,7 @@ def get_free_used_dynamic_valuespec(
             ],
         ),
         Tuple(
-            title=_("Absolute %s") % title,
+            title=_("Absolute"),
             elements=[
                 Integer(
                     title=_("Warning if %s") % course,
@@ -123,7 +139,7 @@ def _tuple_convert(val: tuple[float, ...]) -> tuple[float, ...]:
     return tuple(-x for x in val)
 
 
-def transform_filesystem_free(value):
+def _transform_filesystem_free(value):
 
     if isinstance(value, tuple):
         return _tuple_convert(value)
@@ -134,7 +150,7 @@ def transform_filesystem_free(value):
     return result
 
 
-def filesystem_levels_elements() -> List[DictionaryEntry]:
+def _filesystem_levels_elements(maxvalue: Optional[float] = 101.0) -> List[DictionaryEntry]:
     return [
         (
             "levels",
@@ -144,18 +160,33 @@ def filesystem_levels_elements() -> List[DictionaryEntry]:
                 default_value=(80.0, 90.0),
                 match=match_dual_level_type,
                 elements=[
-                    get_free_used_dynamic_valuespec("used"),
+                    _get_free_used_dynamic_valuespec("used", maxvalue=maxvalue),
                     Transform(
-                        valuespec=get_free_used_dynamic_valuespec(
-                            "free", default_value=(20.0, 10.0)
+                        valuespec=_get_free_used_dynamic_valuespec(
+                            "free",
+                            default_value=(20.0, 10.0),
+                            maxvalue=maxvalue,
                         ),
                         title=_("Levels for free space"),
-                        forth=transform_filesystem_free,
-                        back=transform_filesystem_free,
+                        forth=_transform_filesystem_free,
+                        back=_transform_filesystem_free,
                     ),
                 ],
             ),
         ),
+    ]
+
+
+def _filesystem_levels_elements_bound() -> List[DictionaryEntry]:
+    return _filesystem_levels_elements()
+
+
+def _filesystem_levels_elements_unbound() -> List[DictionaryEntry]:
+    return _filesystem_levels_elements(maxvalue=None)
+
+
+def _filesystem_show_levels_elements() -> List[DictionaryEntry]:
+    return [
         (
             "show_levels",
             DropdownChoice(
@@ -240,7 +271,7 @@ def _filesystem_volume_name() -> List[DictionaryEntry]:
     ]
 
 
-def filesystem_inodes_elements() -> List[DictionaryEntry]:
+def _filesystem_inodes_elements() -> List[DictionaryEntry]:
     return [
         (
             "inodes_levels",
@@ -301,7 +332,7 @@ def filesystem_inodes_elements() -> List[DictionaryEntry]:
     ]
 
 
-def filesystem_magic_elements() -> List[DictionaryEntry]:
+def _filesystem_magic_elements() -> List[DictionaryEntry]:
     return [
         (
             "magic",
@@ -457,40 +488,61 @@ def size_trend_elements() -> List[DictionaryEntry]:
     ]
 
 
-def _filesystem_elements() -> List[DictionaryEntry]:
-    # NOTE: If you are considering writing your own valuespec that uses all
-    # these elements plus some extra, use vs_filesystem!
-    return (
-        filesystem_levels_elements()
-        + _filesystem_levels_elements_hack()
-        + _filesystem_reserved_elements()
-        + _filesystem_volume_name()
-        + filesystem_inodes_elements()
-        + filesystem_magic_elements()
-        + size_trend_elements()
-    )
+FILESYSTEM_ELEMENTS_SELECTOR: Mapping[FilesystemElements, Callable[[], List[DictionaryEntry]]] = {
+    FilesystemElements.levels: _filesystem_levels_elements_bound,
+    FilesystemElements.levels_unbound: _filesystem_levels_elements_unbound,
+    FilesystemElements.show_levels: _filesystem_show_levels_elements,
+    FilesystemElements.reserved: _filesystem_reserved_elements,
+    FilesystemElements.volume_name: _filesystem_volume_name,
+    FilesystemElements.inodes: _filesystem_inodes_elements,
+    FilesystemElements.magic_factor: _filesystem_magic_elements,
+    FilesystemElements.size_trend: size_trend_elements,
+}
 
 
-def _transform_filesystem_valuespec(params: Dict[str, Any]) -> Mapping[str, Any]:
-    """wrapper for all the transforms on vs_filesystem"""
-    return params
+def vs_filesystem(
+    *,
+    elements: Optional[Sequence[FilesystemElements]] = None,
+    extra_elements: Optional[List[DictionaryEntry]] = None,
+    ignored_keys: Optional[Sequence[str]] = None,
+) -> Dictionary:
 
-
-def vs_filesystem(extra_elements=None) -> ValueSpec:
     if extra_elements is None:
         extra_elements = []
-    return Transform(
-        valuespec=Dictionary(
-            help=_("This ruleset allows to set parameters for space and inodes usage"),
-            elements=_filesystem_elements() + extra_elements,
-            hidden_keys=["flex_levels"],
-            ignored_keys=[
-                "patterns",
-                "include_volume_name",
-                "item_appearance",
-                "grouping_behaviour",
-                "mountpoint_for_block_devices",
-            ],
-        ),
-        forth=_transform_filesystem_valuespec,
+
+    if elements is None:
+        elements = [
+            FilesystemElements.levels,
+            FilesystemElements.show_levels,
+            FilesystemElements.magic_factor,
+            FilesystemElements.reserved,
+            FilesystemElements.inodes,
+            FilesystemElements.size_trend,
+            FilesystemElements.volume_name,
+        ]
+        # some hack, see corresponding valuespec element definition
+        extra_elements += _filesystem_levels_elements_hack()
+
+    dictionary_valuespec_elements = [
+        elem  #
+        for elems in [FILESYSTEM_ELEMENTS_SELECTOR[e]() for e in elements]  #
+        for elem in elems
+    ] + extra_elements
+
+    if ignored_keys is None:
+        ignored_keys = [
+            "patterns",
+            "include_volume_name",
+            "item_appearance",
+            "grouping_behaviour",
+            "mountpoint_for_block_devices",
+        ]
+
+    return Dictionary(
+        elements=dictionary_valuespec_elements,
+        hidden_keys=[
+            # some hack, see corresponding valuespec element definition
+            "flex_levels"
+        ],
+        ignored_keys=ignored_keys,
     )

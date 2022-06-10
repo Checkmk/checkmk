@@ -5,16 +5,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.check_parameters.filesystem_utils import (
-    get_free_used_dynamic_valuespec,
-    transform_filesystem_free,
-)
+from cmk.gui.plugins.wato.check_parameters.filesystem_utils import FilesystemElements, vs_filesystem
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-from cmk.gui.valuespec import Dictionary, TextInput, Transform
+from cmk.gui.valuespec import TextInput
 
 
 def _item_spec_db2_logsize():
@@ -24,19 +21,7 @@ def _item_spec_db2_logsize():
 
 
 def _parameter_valuespec_db2_logsize():
-    return Dictionary(
-        elements=[
-            (
-                "levels",
-                Transform(
-                    valuespec=get_free_used_dynamic_valuespec("free", default_value=(20.0, 10.0)),
-                    title=_("Levels for used/free space"),
-                    forth=transform_filesystem_free,
-                    back=transform_filesystem_free,
-                ),
-            ),
-        ],
-    )
+    return vs_filesystem(elements=[FilesystemElements.levels])
 
 
 rulespec_registry.register(

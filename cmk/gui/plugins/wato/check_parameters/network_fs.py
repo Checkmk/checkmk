@@ -5,17 +5,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.check_parameters.filesystem_utils import (
-    filesystem_levels_elements,
-    filesystem_magic_elements,
-    size_trend_elements,
-)
+from cmk.gui.plugins.wato.check_parameters.filesystem_utils import FilesystemElements, vs_filesystem
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersStorage,
 )
-from cmk.gui.valuespec import Dictionary, DropdownChoice, TextInput
+from cmk.gui.valuespec import DropdownChoice, TextInput
 
 
 def _item_spec_network_fs():
@@ -25,11 +21,14 @@ def _item_spec_network_fs():
 
 
 def _parameter_valuespec_network_fs():
-    return Dictionary(
-        elements=filesystem_levels_elements()
-        + filesystem_magic_elements()
-        + size_trend_elements()
-        + [
+    return vs_filesystem(
+        elements=[
+            FilesystemElements.levels,
+            FilesystemElements.show_levels,
+            FilesystemElements.magic_factor,
+            FilesystemElements.size_trend,
+        ],
+        extra_elements=[
             (
                 "has_perfdata",
                 DropdownChoice(

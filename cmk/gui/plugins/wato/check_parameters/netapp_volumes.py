@@ -5,38 +5,24 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.check_parameters.filesystem_utils import (
-    filesystem_inodes_elements,
-    filesystem_magic_elements,
-    get_free_used_dynamic_valuespec,
-    match_dual_level_type,
-    size_trend_elements,
-)
+from cmk.gui.plugins.wato.check_parameters.filesystem_utils import FilesystemElements, vs_filesystem
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersStorage,
 )
-from cmk.gui.valuespec import Alternative, Dictionary, ListChoice, TextInput
+from cmk.gui.valuespec import ListChoice, TextInput
 
 
 def _parameter_valuespec_netapp_volumes():
-    return Dictionary(
-        ignored_keys=["patterns"],
+    return vs_filesystem(
         elements=[
-            (
-                "levels",
-                Alternative(
-                    title=_("Levels for used/free space"),
-                    show_alternative_title=True,
-                    default_value=(80.0, 90.0),
-                    match=match_dual_level_type,
-                    elements=[
-                        get_free_used_dynamic_valuespec("used", maxvalue=None),
-                        get_free_used_dynamic_valuespec("free", default_value=(20.0, 10.0)),
-                    ],
-                ),
-            ),
+            FilesystemElements.levels_unbound,
+            FilesystemElements.magic_factor,
+            FilesystemElements.inodes,
+            FilesystemElements.size_trend,
+        ],
+        extra_elements=[
             (
                 "perfdata",
                 ListChoice(
@@ -52,10 +38,8 @@ def _parameter_valuespec_netapp_volumes():
                     ],
                 ),
             ),
-        ]
-        + filesystem_magic_elements()
-        + filesystem_inodes_elements()
-        + size_trend_elements(),
+        ],
+        ignored_keys=["patterns"],
     )
 
 

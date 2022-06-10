@@ -110,6 +110,7 @@ from cmk.gui.watolib.rulesets import (
     SearchOptions,
     SingleRulesetRecursively,
     StaticChecksRulesets,
+    UseHostFolder,
 )
 from cmk.gui.watolib.rulespecs import (
     get_rulegroup,
@@ -1953,7 +1954,7 @@ class ABCEditRuleMode(WatoMode):
                     "Such an issue may be caused by an inconsistent configuration, e.g. when "
                     "rules refer to tag groups or tags that do not exist anymore."
                 )
-                % (e, value.to_config_with_folder())
+                % (e, value.to_config(UseHostFolder.HOST))
             )
 
             # In case of validation problems render the input with default values

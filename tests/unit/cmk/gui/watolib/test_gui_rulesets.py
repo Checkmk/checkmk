@@ -211,7 +211,7 @@ def test_rule_from_config_tuple(
 
     for key, val in expected_attributes.items():
         if key == "conditions":
-            assert rule.conditions._to_config() == val
+            assert rule.conditions.to_config(rulesets.UseHostFolder.NONE) == val
         else:
             assert getattr(rule, key) == val
 
@@ -470,7 +470,7 @@ def test_rule_from_config_dict(
 
     for key, val in expected_attributes.items():
         if key == "conditions":
-            assert rule.conditions._to_config() == val
+            assert rule.conditions.to_config(rulesets.UseHostFolder.NONE) == val
         else:
             assert getattr(rule, key) == val
 

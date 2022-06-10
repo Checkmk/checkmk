@@ -10,6 +10,7 @@ import dataclasses
 import os
 import pprint
 import re
+from enum import auto, Enum
 from typing import Any, cast, Container, Dict, List, Mapping, Optional, Tuple, Union
 
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
@@ -64,10 +65,15 @@ FolderPath = str
 SearchOptions = Dict[str, Any]
 
 
-# This macro is needed to make the to_config() methods be able to use native
-# pprint/repr for the ruleset data structures. Have a look at
-# to_config_with_folder_macro() for further information.
+# This macro is needed to make the to_config() methods be able to use native pprint/repr for the
+# ruleset data structures. Have a look at to_config() for further information.
 _FOLDER_PATH_MACRO = "%#%FOLDER_PATH%#%"
+
+
+class UseHostFolder(Enum):
+    NONE = auto()
+    MACRO = auto()
+    HOST = auto()
 
 
 class RuleConditions:
@@ -96,7 +102,7 @@ class RuleConditions:
         self.service_labels = conditions.get("service_labels", {})
         return self
 
-    def to_config_with_folder_macro(self) -> RuleConditionsSpec:
+    def to_config(self, use_host_folder: UseHostFolder) -> RuleConditionsSpec:
         """Create serializable data structure for the conditions
 
         In the WATO folder hierarchy each folder may have a rules.mk which
@@ -114,19 +120,6 @@ class RuleConditions:
         Checkmk can then resolve the FOLDER_PATH while loading the configuration file.
         Have a look at _load_folder_rulesets() for an example.
         """
-        cfg = self._to_config()
-        cfg["host_folder"] = _FOLDER_PATH_MACRO
-        return cfg
-
-    def to_config_with_folder(self) -> RuleConditionsSpec:
-        cfg = self._to_config()
-        cfg["host_folder"] = self.host_folder
-        return cfg
-
-    def to_config_without_folder(self) -> RuleConditionsSpec:
-        return self._to_config()
-
-    def _to_config(self) -> RuleConditionsSpec:
         cfg: RuleConditionsSpec = {}
 
         if self.host_tags:
@@ -143,6 +136,14 @@ class RuleConditions:
 
         if self.service_labels:
             cfg["service_labels"] = self.service_labels
+
+        match use_host_folder:
+            case UseHostFolder.NONE:
+                pass
+            case UseHostFolder.MACRO:
+                cfg["host_folder"] = _FOLDER_PATH_MACRO
+            case UseHostFolder.HOST:
+                cfg["host_folder"] = self.host_folder
 
         return cfg
 
@@ -1000,16 +1001,19 @@ class Rule:
     def to_config(self) -> RuleSpec:
         # Special case: The main folder must not have a host_folder condition, because
         # these rules should also affect non WATO hosts.
-        return self._to_config(with_folder_macro=not self.folder.is_root(), hide_secrets=False)
+        return self._to_config(
+            use_host_folder=UseHostFolder.NONE if self.folder.is_root() else UseHostFolder.MACRO,
+            hide_secrets=False,
+        )
 
     def to_web_api(self) -> RuleSpec:
-        return self._to_config(with_folder_macro=False, hide_secrets=False)
+        return self._to_config(use_host_folder=UseHostFolder.NONE, hide_secrets=False)
 
     def to_log(self) -> RuleSpec:
         """Returns a JSON compatible format suitable for logging, where passwords are replaced"""
-        return self._to_config(with_folder_macro=False, hide_secrets=True)
+        return self._to_config(use_host_folder=UseHostFolder.NONE, hide_secrets=True)
 
-    def _to_config(self, *, with_folder_macro: bool, hide_secrets: bool) -> RuleSpec:
+    def _to_config(self, *, use_host_folder: UseHostFolder, hide_secrets: bool) -> RuleSpec:
         rule_spec = RuleSpec(
             id=self.id,
             value=(
@@ -1017,11 +1021,7 @@ class Rule:
                 if hide_secrets
                 else self.value
             ),
-            condition=(
-                self.conditions.to_config_with_folder_macro()
-                if with_folder_macro
-                else self.conditions.to_config_without_folder()
-            ),
+            condition=self.conditions.to_config(use_host_folder),
         )
         if options := self.rule_options.to_config():
             rule_spec["options"] = options

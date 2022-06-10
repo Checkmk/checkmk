@@ -35,7 +35,7 @@ from cmk.gui.wato.pages.rulesets import RuleConditions, VSExplicitConditions
 from cmk.gui.watolib.config_domains import ConfigDomainCore
 from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.watolib.predefined_conditions import PredefinedConditionStore
-from cmk.gui.watolib.rulesets import AllRulesets, FolderRulesets, SearchedRulesets
+from cmk.gui.watolib.rulesets import AllRulesets, FolderRulesets, SearchedRulesets, UseHostFolder
 from cmk.gui.watolib.rulespecs import RulespecGroup, ServiceRulespec
 
 
@@ -61,11 +61,11 @@ def dummy_rulespec() -> ServiceRulespec:
     )
 
 
-def vs_conditions():
+def vs_conditions() -> Transform:
     return Transform(
         valuespec=VSExplicitConditions(rulespec=dummy_rulespec(), render="form_part"),
         forth=lambda c: RuleConditions("").from_config(c),
-        back=lambda c: c.to_config_with_folder(),
+        back=lambda c: c.to_config(UseHostFolder.HOST),
     )
 
 

@@ -235,64 +235,67 @@ fs_volume_name: List[DictionaryEntry] = [
     ),
 ]
 
-fs_inodes_elements: List[DictionaryEntry] = [
-    (
-        "inodes_levels",
-        Alternative(
-            title=_("Levels for Inodes"),
-            help=_(
-                "The number of remaining inodes on the filesystem. "
-                "Please note that this setting has no effect on some filesystem checks."
+
+def filesystem_inodes_elements() -> List[DictionaryEntry]:
+    return [
+        (
+            "inodes_levels",
+            Alternative(
+                title=_("Levels for Inodes"),
+                help=_(
+                    "The number of remaining inodes on the filesystem. "
+                    "Please note that this setting has no effect on some filesystem checks."
+                ),
+                elements=[
+                    Tuple(
+                        title=_("Percentage free"),
+                        elements=[
+                            Percentage(title=_("Warning if less than")),
+                            Percentage(title=_("Critical if less than")),
+                        ],
+                    ),
+                    Tuple(
+                        title=_("Absolute free"),
+                        elements=[
+                            Integer(
+                                title=_("Warning if less than"),
+                                size=10,
+                                unit=_("inodes"),
+                                minvalue=0,
+                                default_value=10000,
+                            ),
+                            Integer(
+                                title=_("Critical if less than"),
+                                size=10,
+                                unit=_("inodes"),
+                                minvalue=0,
+                                default_value=5000,
+                            ),
+                        ],
+                    ),
+                    FixedValue(
+                        value=None,
+                        totext="",
+                        title=_("Ignore levels"),
+                    ),
+                ],
+                default_value=(10.0, 5.0),
             ),
-            elements=[
-                Tuple(
-                    title=_("Percentage free"),
-                    elements=[
-                        Percentage(title=_("Warning if less than")),
-                        Percentage(title=_("Critical if less than")),
-                    ],
-                ),
-                Tuple(
-                    title=_("Absolute free"),
-                    elements=[
-                        Integer(
-                            title=_("Warning if less than"),
-                            size=10,
-                            unit=_("inodes"),
-                            minvalue=0,
-                            default_value=10000,
-                        ),
-                        Integer(
-                            title=_("Critical if less than"),
-                            size=10,
-                            unit=_("inodes"),
-                            minvalue=0,
-                            default_value=5000,
-                        ),
-                    ],
-                ),
-                FixedValue(
-                    value=None,
-                    totext="",
-                    title=_("Ignore levels"),
-                ),
-            ],
-            default_value=(10.0, 5.0),
         ),
-    ),
-    (
-        "show_inodes",
-        DropdownChoice(
-            title=_("Display inode usage in check output..."),
-            choices=[
-                ("onproblem", _("Only in case of a problem")),
-                ("onlow", _("Only in case of a problem or if inodes are below 50%")),
-                ("always", _("Always")),
-            ],
-            default_value="onlow",
+        (
+            "show_inodes",
+            DropdownChoice(
+                title=_("Display inode usage in check output..."),
+                choices=[
+                    ("onproblem", _("Only in case of a problem")),
+                    ("onlow", _("Only in case of a problem or if inodes are below 50%")),
+                    ("always", _("Always")),
+                ],
+                default_value="onlow",
+            ),
         ),
-    ),
-]
+    ]
+
 
 fs_magic_elements: List[DictionaryEntry] = [
     (
@@ -449,7 +452,7 @@ filesystem_elements: List[DictionaryEntry] = (
     + fs_levels_elements_hack
     + fs_reserved_elements
     + fs_volume_name
-    + fs_inodes_elements
+    + filesystem_inodes_elements()
     + fs_magic_elements
     + size_trend_elements
 )

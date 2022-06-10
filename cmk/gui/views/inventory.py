@@ -2169,7 +2169,7 @@ class ABCNodeRenderer(abc.ABC):
     #   ---node-----------------------------------------------------------------
 
     def _show_node(self, node: StructuredDataNode) -> None:
-        raw_path = ".{_get_raw_path(node.path)}." if node.path else "."
+        raw_path = f".{_get_raw_path(node.path)}." if node.path else "."
         hint = NodeDisplayHint.make_from_path(node.path)
 
         title = hint.title

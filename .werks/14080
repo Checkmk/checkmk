@@ -1,0 +1,14 @@
+Title: Fix synchronisation of password store to customer sites
+Class: fix
+Compatible: incomp
+Component: multisite
+Date: 1654862237
+Edition: cme
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+Any password synchronised from a central to a remote customer site was empty.
+For this fix to come into effect, users have to open a stored password in the
+central site, save the password (no modification needed) and activate the
+resulting changes.

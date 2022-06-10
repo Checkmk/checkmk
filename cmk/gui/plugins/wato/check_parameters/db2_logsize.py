@@ -29,10 +29,8 @@ def _parameter_valuespec_db2_logsize():
             (
                 "levels",
                 Transform(
-                    valuespec=get_free_used_dynamic_valuespec(
-                        "free", "logfile", default_value=(20.0, 10.0)
-                    ),
-                    title=_("Logfile levels"),
+                    valuespec=get_free_used_dynamic_valuespec("free", default_value=(20.0, 10.0)),
+                    title=_("Levels for used/free space"),
                     forth=transform_filesystem_free,
                     back=transform_filesystem_free,
                 ),

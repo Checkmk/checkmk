@@ -36,13 +36,13 @@ def _parameter_valuespec_netapp_luns():
             (
                 "levels",
                 Alternative(
-                    title=_("Levels for LUN"),
+                    title=_("Levels for used/free space"),
                     show_alternative_title=True,
                     default_value=(80.0, 90.0),
                     match=match_dual_level_type,
                     elements=[
-                        get_free_used_dynamic_valuespec("used", "LUN"),
-                        get_free_used_dynamic_valuespec("free", "LUN", default_value=(20.0, 10.0)),
+                        get_free_used_dynamic_valuespec("used"),
+                        get_free_used_dynamic_valuespec("free", default_value=(20.0, 10.0)),
                     ],
                 ),
             ),

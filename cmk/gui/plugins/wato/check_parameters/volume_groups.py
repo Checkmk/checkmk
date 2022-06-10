@@ -29,10 +29,10 @@ def _parameter_valuespec_volume_groups():
                     default_value=(80.0, 90.0),
                     match=match_dual_level_type,
                     elements=[
-                        get_free_used_dynamic_valuespec("used", "volume group"),
+                        get_free_used_dynamic_valuespec("used"),
                         Transform(
                             valuespec=get_free_used_dynamic_valuespec(
-                                "free", "volume group", default_value=(20.0, 10.0)
+                                "free", default_value=(20.0, 10.0)
                             ),
                             title=_("Levels for volume group free space"),
                             forth=transform_filesystem_free,

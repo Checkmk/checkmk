@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Module to hold shared code for filesystem check parameter module internals"""
 
-from typing import Any, Dict, List, Mapping, Union
+from typing import Any, Dict, List, Literal, Mapping, Union
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
@@ -45,13 +45,12 @@ def match_dual_level_type(value):
 
 
 def get_free_used_dynamic_valuespec(
-    what,
-    name,
+    level_perspective: Literal["used", "free"],
     default_value=(80.0, 90.0),
     *,
     maxvalue: Union[None, int, float] = 101.0,
 ) -> ValueSpec:
-    if what == "used":
+    if level_perspective == "used":
         title = _("used space")
         course = _("above")
 
@@ -66,13 +65,13 @@ def get_free_used_dynamic_valuespec(
                 Percentage(
                     title=_("Warning if %s") % course,
                     unit="%",
-                    minvalue=0.0 if what == "used" else 0.0001,
+                    minvalue=0.0 if level_perspective == "used" else 0.0001,
                     maxvalue=maxvalue,
                 ),
                 Percentage(
                     title=_("Critical if %s") % course,
                     unit="%",
-                    minvalue=0.0 if what == "used" else 0.0001,
+                    minvalue=0.0 if level_perspective == "used" else 0.0001,
                     maxvalue=maxvalue,
                 ),
             ],
@@ -83,12 +82,12 @@ def get_free_used_dynamic_valuespec(
                 Integer(
                     title=_("Warning if %s") % course,
                     unit=_("MB"),
-                    minvalue=0 if what == "used" else 1,
+                    minvalue=0 if level_perspective == "used" else 1,
                 ),
                 Integer(
                     title=_("Critical if %s") % course,
                     unit=_("MB"),
-                    minvalue=0 if what == "used" else 1,
+                    minvalue=0 if level_perspective == "used" else 1,
                 ),
             ],
         ),
@@ -99,7 +98,7 @@ def get_free_used_dynamic_valuespec(
             raise MKUserError(varprefix, _("You need to specify levels of at least 0 bytes."))
 
     return Alternative(
-        title=_("Levels for %s %s") % (name, title),
+        title=_("Levels for %s") % title,
         show_alternative_title=True,
         default_value=default_value,
         elements=vs_subgroup
@@ -108,7 +107,7 @@ def get_free_used_dynamic_valuespec(
                 valuespec=Tuple(
                     orientation="horizontal",
                     elements=[
-                        Filesize(title=_("%s larger than") % name.title()),
+                        Filesize(title=_("Systems larger than")),
                         Alternative(elements=vs_subgroup),
                     ],
                 ),
@@ -140,17 +139,17 @@ def filesystem_levels_elements() -> List[DictionaryEntry]:
         (
             "levels",
             Alternative(
-                title=_("Levels for filesystem"),
+                title=_("Levels for used/free space"),
                 show_alternative_title=True,
                 default_value=(80.0, 90.0),
                 match=match_dual_level_type,
                 elements=[
-                    get_free_used_dynamic_valuespec("used", "filesystem"),
+                    get_free_used_dynamic_valuespec("used"),
                     Transform(
                         valuespec=get_free_used_dynamic_valuespec(
-                            "free", "filesystem", default_value=(20.0, 10.0)
+                            "free", default_value=(20.0, 10.0)
                         ),
-                        title=_("Levels for filesystem free space"),
+                        title=_("Levels for free space"),
                         forth=transform_filesystem_free,
                         back=transform_filesystem_free,
                     ),

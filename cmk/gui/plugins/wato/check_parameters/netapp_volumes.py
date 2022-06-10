@@ -27,15 +27,13 @@ def _parameter_valuespec_netapp_volumes():
             (
                 "levels",
                 Alternative(
-                    title=_("Levels for volume"),
+                    title=_("Levels for used/free space"),
                     show_alternative_title=True,
                     default_value=(80.0, 90.0),
                     match=match_dual_level_type,
                     elements=[
-                        get_free_used_dynamic_valuespec("used", "volume", maxvalue=None),
-                        get_free_used_dynamic_valuespec(
-                            "free", "volume", default_value=(20.0, 10.0)
-                        ),
+                        get_free_used_dynamic_valuespec("used", maxvalue=None),
+                        get_free_used_dynamic_valuespec("free", default_value=(20.0, 10.0)),
                     ],
                 ),
             ),

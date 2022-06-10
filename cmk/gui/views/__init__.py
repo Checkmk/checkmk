@@ -37,7 +37,7 @@ import cmk.utils.version as cmk_version
 from cmk.utils.cpu_tracking import CPUTracker, Snapshot
 from cmk.utils.prediction import livestatus_lql
 from cmk.utils.site import omd_site
-from cmk.utils.structured_data import SDRawPath, StructuredDataNode
+from cmk.utils.structured_data import StructuredDataNode
 from cmk.utils.type_defs import HostName, ServiceName
 
 import cmk.gui.i18n
@@ -313,15 +313,12 @@ class VisualTypeViews(VisualType):
 
         inventory_tree_condition = link_from.get("has_inventory_tree")
         if inventory_tree_condition and not _has_inventory_tree(
-            linking_view, linking_view_rows, visual, context_vars, inventory_tree_condition
+            context_vars, inventory_tree_condition
         ):
             return False
 
         inventory_tree_history_condition = link_from.get("has_inventory_tree_history")
         if inventory_tree_history_condition and not _has_inventory_tree(
-            linking_view,
-            linking_view_rows,
-            visual,
             context_vars,
             inventory_tree_history_condition,
             is_history=True,
@@ -331,7 +328,9 @@ class VisualTypeViews(VisualType):
         return True
 
 
-def _has_inventory_tree(linking_view, rows, view, context_vars, raw_path, is_history=False):
+def _has_inventory_tree(
+    context_vars: HTTPVariables, inventory_paths: Sequence[InventoryPath], is_history: bool = False
+) -> bool:
     context = dict(context_vars)
     hostname = context.get("host")
     if hostname is None:
@@ -359,18 +358,10 @@ def _has_inventory_tree(linking_view, rows, view, context_vars, raw_path, is_his
     if struct_tree.is_empty():
         return False
 
-    if isinstance(raw_path, list):
-        # For plugins/views/inventory.py:RowMultiTableInventory we've to check
-        # if a given host has inventory data below several inventory paths
-        return any(_has_children(struct_tree, ipath) for ipath in raw_path)
-    return _has_children(struct_tree, raw_path)
-
-
-def _has_children(struct_tree: StructuredDataNode, raw_path: SDRawPath) -> bool:
-    inventory_path = InventoryPath.parse(raw_path)
-    if (node := struct_tree.get_node(inventory_path.path)) is None or node.is_empty():
-        return False
-    return True
+    return any(
+        (node := struct_tree.get_node(inventory_path.path)) is not None and not node.is_empty()
+        for inventory_path in inventory_paths
+    )
 
 
 def _get_struct_tree(is_history, hostname, site_id):

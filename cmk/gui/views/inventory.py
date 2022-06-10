@@ -1171,25 +1171,23 @@ def _paint_host_inventory_tree(row: Row, inventory_path: inventory.InventoryPath
 
 
 def _inv_find_subtable_columns(
-    raw_path: SDRawPath,
+    inventory_path: inventory.InventoryPath,
 ) -> Sequence[Tuple[str, ColumnDisplayHint]]:
     """Find the name of all columns of an embedded table that have a display
     hint. Respects the order of the columns if one is specified in the
     display hint.
 
     Also use the names found in keyorder to get even more of the available columns."""
-    hints = DISPLAY_HINTS.get_hints(inventory.InventoryPath.parse(raw_path).path)
-
-    table_hint = hints.table_hint
+    hints = DISPLAY_HINTS.get_hints(inventory_path.path)
 
     # Create dict from column name to its order number in the list
-    with_numbers = enumerate(table_hint.key_order)
+    with_numbers = enumerate(hints.table_hint.key_order)
     swapped = [(t[1], t[0]) for t in with_numbers]
     order = dict(swapped)
 
     columns = dict(hints.column_hints)
 
-    for key in table_hint.key_order:
+    for key in hints.table_hint.key_order:
         if key not in columns:
             columns[key] = hints.get_column_hint(key)
 
@@ -1254,7 +1252,7 @@ def _get_table_rows(
 
 
 class RowTableInventory(ABCRowTable):
-    def __init__(self, info_name: str, inventory_path: SDRawPath) -> None:
+    def __init__(self, info_name: str, inventory_path: inventory.InventoryPath) -> None:
         super().__init__([info_name], ["host_structured_status"])
         self._inventory_path = inventory_path
 
@@ -1274,7 +1272,7 @@ class RowTableInventory(ABCRowTable):
         if merged_tree is None:
             return []
 
-        return _get_table_rows(merged_tree, inventory.InventoryPath.parse(self._inventory_path))
+        return _get_table_rows(merged_tree, self._inventory_path)
 
     def _prepare_rows(self, inv_data: Sequence[SDRow]) -> Iterable[Row]:
         # TODO check: hopefully there's only a table as input arg
@@ -1295,7 +1293,7 @@ class ABCDataSourceInventory(ABCDataSource):
 
     @property
     @abc.abstractmethod
-    def inventory_path(self) -> str:
+    def inventory_path(self) -> inventory.InventoryPath:
         raise NotImplementedError()
 
 
@@ -1307,6 +1305,8 @@ def declare_invtable_view(
     title_plural: str,
     icon: Optional[Icon] = None,
 ) -> None:
+    inventory_path = inventory.InventoryPath.parse(raw_path)
+
     _register_info_class(infoname, title_singular, title_plural)
 
     # Create the datasource (like a database view)
@@ -1315,7 +1315,7 @@ def declare_invtable_view(
         (ABCDataSourceInventory,),
         {
             "_ident": infoname,
-            "_inventory_path": raw_path,
+            "_inventory_path": inventory_path,
             "_title": "%s: %s" % (_("Inventory"), title_plural),
             "_infos": ["host", infoname],
             "ident": property(lambda s: s._ident),
@@ -1331,7 +1331,7 @@ def declare_invtable_view(
 
     painters: List[Tuple[str, str, str]] = []
     filters = []
-    for name, col_hint in _inv_find_subtable_columns(raw_path):
+    for name, col_hint in _inv_find_subtable_columns(inventory_path):
         column = infoname + "_" + name
 
         # Declare a painter, sorter and filters for each path with display hint
@@ -1345,13 +1345,13 @@ def declare_invtable_view(
         painters.append((column, "", ""))
         filters.append(column)
 
-    _declare_views(infoname, title_plural, painters, filters, [raw_path], icon)
+    _declare_views(infoname, title_plural, painters, filters, [inventory_path], icon)
 
 
 class RowMultiTableInventory(ABCRowTable):
     def __init__(
         self,
-        sources: List[Tuple[str, SDRawPath]],
+        sources: List[Tuple[str, inventory.InventoryPath]],
         match_by: List[str],
         errors: List[str],
     ) -> None:
@@ -1377,7 +1377,7 @@ class RowMultiTableInventory(ABCRowTable):
             return []
 
         return [
-            (info_name, _get_table_rows(merged_tree, inventory.InventoryPath.parse(inventory_path)))
+            (info_name, _get_table_rows(merged_tree, inventory_path))
             for info_name, inventory_path in self._sources
         ]
 
@@ -1405,7 +1405,7 @@ def declare_joined_inventory_table_view(
     _register_info_class(tablename, title_singular, title_plural)
 
     info_names: List[str] = []
-    raw_paths: List[str] = []
+    inventory_paths: List[inventory.InventoryPath] = []
     titles: List[str] = []
     errors = []
     for this_tablename in tables:
@@ -1420,7 +1420,7 @@ def declare_joined_inventory_table_view(
         assert issubclass(data_source_class, ABCDataSourceInventory)
         ds = data_source_class()
         info_names.append(ds.ident)
-        raw_paths.append(ds.inventory_path)
+        inventory_paths.append(ds.inventory_path)
         titles.append(visual_info_class().title)
 
     # Create the datasource (like a database view)
@@ -1429,7 +1429,7 @@ def declare_joined_inventory_table_view(
         (ABCDataSource,),
         {
             "_ident": tablename,
-            "_sources": list(zip(info_names, raw_paths)),
+            "_sources": list(zip(info_names, inventory_paths)),
             "_match_by": match_by,
             "_errors": errors,
             "_title": "%s: %s" % (_("Inventory"), title_plural),
@@ -1447,8 +1447,8 @@ def declare_joined_inventory_table_view(
     known_common_columns = set()
     painters: List[Tuple[str, str, str]] = []
     filters = []
-    for this_raw_path, this_infoname, this_title in zip(raw_paths, info_names, titles):
-        for name, col_hint in _inv_find_subtable_columns(this_raw_path):
+    for this_inventory_path, this_infoname, this_title in zip(inventory_paths, info_names, titles):
+        for name, col_hint in _inv_find_subtable_columns(this_inventory_path):
             if name in match_by:
                 # Filter out duplicate common columns which are used to join tables
                 if name in known_common_columns:
@@ -1468,7 +1468,7 @@ def declare_joined_inventory_table_view(
             painters.append((column, "", ""))
             filters.append(column)
 
-    _declare_views(tablename, title_plural, painters, filters, raw_paths)
+    _declare_views(tablename, title_plural, painters, filters, inventory_paths)
 
 
 def _register_info_class(infoname: str, title_singular: str, title_plural: str) -> None:
@@ -1494,14 +1494,12 @@ def _declare_views(
     title_plural: str,
     painters: List[Tuple[str, str, str]],
     filters: List[FilterName],
-    raw_paths: List[SDRawPath],
+    inventory_paths: Sequence[inventory.InventoryPath],
     icon: Optional[Icon] = None,
 ) -> None:
     is_show_more = True
-    if len(raw_paths) == 1:
-        is_show_more = DISPLAY_HINTS.get_hints(
-            inventory.InventoryPath.parse(raw_paths[0] or "").path
-        ).table_hint.is_show_more
+    if len(inventory_paths) == 1:
+        is_show_more = DISPLAY_HINTS.get_hints(inventory_paths[0].path).table_hint.is_show_more
 
     # Declare two views: one for searching globally. And one
     # for the items of one host.
@@ -1560,7 +1558,7 @@ def _declare_views(
         "mustsearch": False,
         "link_from": {
             "single_infos": ["host"],
-            "has_inventory_tree": raw_paths,
+            "has_inventory_tree": inventory_paths,
         },
         # Columns
         "painters": painters,
@@ -1774,7 +1772,7 @@ multisite_builtin_views["inv_host"] = {
     "hidden": True,
     "link_from": {
         "single_infos": ["host"],
-        "has_inventory_tree": ".",
+        "has_inventory_tree": [inventory.InventoryPath.parse(".")],
     },
     # Layout options
     "layout": "dataset",
@@ -2113,7 +2111,7 @@ multisite_builtin_views["inv_host_history"] = {
     "is_show_more": True,
     "link_from": {
         "single_infos": ["host"],
-        "has_inventory_tree_history": ".",
+        "has_inventory_tree_history": [inventory.InventoryPath.parse(".")],
     },
     # Layout options
     "layout": "table",

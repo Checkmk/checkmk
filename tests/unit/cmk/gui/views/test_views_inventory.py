@@ -122,7 +122,9 @@ EXPECTED_INV_MULTI_KEYS = [
 
 @pytest.mark.usefixtures("request_context")
 def test_query_row_table_inventory(monkeypatch):
-    row_table = RowTableInventory("invtesttable", ".foo.bar:")
+    row_table = RowTableInventory(
+        "invtesttable", cmk.gui.inventory.InventoryPath.parse(".foo.bar:")
+    )
     view = View("", {}, {})
     monkeypatch.setattr(row_table, "_get_raw_data", lambda only_sites, query: RAW_ROWS)
     monkeypatch.setattr(row_table, "_get_inv_data", lambda hostrow: INV_ROWS)
@@ -133,7 +135,9 @@ def test_query_row_table_inventory(monkeypatch):
 
 @pytest.mark.usefixtures("request_context")
 def test_query_row_table_inventory_unknown_columns(monkeypatch):
-    row_table = RowTableInventory("invtesttable", ".foo.bar:")
+    row_table = RowTableInventory(
+        "invtesttable", cmk.gui.inventory.InventoryPath.parse(".foo.bar:")
+    )
     view = View("", {}, {})
     monkeypatch.setattr(row_table, "_get_raw_data", lambda only_sites, query: RAW_ROWS)
     monkeypatch.setattr(row_table, "_get_inv_data", lambda hostrow: INV_ROWS)
@@ -144,7 +148,9 @@ def test_query_row_table_inventory_unknown_columns(monkeypatch):
 
 @pytest.mark.usefixtures("request_context")
 def test_query_row_table_inventory_add_columns(monkeypatch):
-    row_table = RowTableInventory("invtesttable", ".foo.bar:")
+    row_table = RowTableInventory(
+        "invtesttable", cmk.gui.inventory.InventoryPath.parse(".foo.bar:")
+    )
     view = View("", {}, {})
     monkeypatch.setattr(row_table, "_get_raw_data", lambda only_sites, query: RAW_ROWS2)
     monkeypatch.setattr(row_table, "_get_inv_data", lambda hostrow: INV_ROWS)
@@ -188,7 +194,15 @@ def test_query_row_table_inventory_history_add_columns(monkeypatch):
 
 @pytest.mark.usefixtures("request_context")
 def test_query_row_multi_table_inventory(monkeypatch):
-    sources = list(zip(["invtesttable1", "invtesttable2"], [".foo.bar:", "foo.baz:"]))
+    sources = list(
+        zip(
+            ["invtesttable1", "invtesttable2"],
+            [
+                cmk.gui.inventory.InventoryPath.parse(".foo.bar:"),
+                cmk.gui.inventory.InventoryPath.parse("foo.baz:"),
+            ],
+        )
+    )
     row_table = cmk.gui.views.inventory.RowMultiTableInventory(sources, ["sid"], [])
     view = View("", {}, {})
     monkeypatch.setattr(row_table, "_get_raw_data", lambda only_sites, query: RAW_ROWS)
@@ -200,7 +214,15 @@ def test_query_row_multi_table_inventory(monkeypatch):
 
 @pytest.mark.usefixtures("request_context")
 def test_query_row_multi_table_inventory_unknown_columns(monkeypatch):
-    sources = list(zip(["invtesttable1", "invtesttable2"], [".foo.bar:", "foo.baz:"]))
+    sources = list(
+        zip(
+            ["invtesttable1", "invtesttable2"],
+            [
+                cmk.gui.inventory.InventoryPath.parse(".foo.bar:"),
+                cmk.gui.inventory.InventoryPath.parse("foo.baz:"),
+            ],
+        )
+    )
     row_table = cmk.gui.views.inventory.RowMultiTableInventory(sources, ["sid"], [])
     view = View("", {}, {})
     monkeypatch.setattr(row_table, "_get_raw_data", lambda only_sites, query: RAW_ROWS)
@@ -212,7 +234,15 @@ def test_query_row_multi_table_inventory_unknown_columns(monkeypatch):
 
 @pytest.mark.usefixtures("request_context")
 def test_query_row_multi_table_inventory_add_columns(monkeypatch):
-    sources = list(zip(["invtesttable1", "invtesttable2"], [".foo.bar:", "foo.baz:"]))
+    sources = list(
+        zip(
+            ["invtesttable1", "invtesttable2"],
+            [
+                cmk.gui.inventory.InventoryPath.parse(".foo.bar:"),
+                cmk.gui.inventory.InventoryPath.parse("foo.baz:"),
+            ],
+        )
+    )
     row_table = cmk.gui.views.inventory.RowMultiTableInventory(sources, ["sid"], [])
     view = View("", {}, {})
     monkeypatch.setattr(row_table, "_get_raw_data", lambda only_sites, query: RAW_ROWS2)

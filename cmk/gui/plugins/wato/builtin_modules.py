@@ -28,6 +28,7 @@ from cmk.gui.plugins.wato.utils import (
     MainModuleTopicUsers,
 )
 from cmk.gui.plugins.wato.utils.main_menu import MainModuleTopic
+from cmk.gui.type_defs import Icon
 from cmk.gui.utils.urls import makeuri_contextless, makeuri_contextless_rulespec_group
 
 
@@ -46,7 +47,7 @@ class MainModuleFolder(ABCMainModule):
         return _("Hosts")
 
     @property
-    def icon(self):
+    def icon(self) -> Icon:
         return "folder"
 
     @property
@@ -81,7 +82,7 @@ class MainModuleTags(ABCMainModule):
         return _("Tags")
 
     @property
-    def icon(self):
+    def icon(self) -> Icon:
         return "tag"
 
     @property
@@ -118,7 +119,7 @@ class MainModuleGlobalSettings(ABCMainModule):
         return _("Global settings")
 
     @property
-    def icon(self):
+    def icon(self) -> Icon:
         return "configuration"
 
     @property
@@ -153,7 +154,7 @@ class MainModuleReadOnly(ABCMainModule):
         return _("Read only mode")
 
     @property
-    def icon(self):
+    def icon(self) -> Icon:
         return "read_only"
 
     @property
@@ -188,7 +189,7 @@ class MainModuleRuleSearch(ABCMainModule):
         return _("Rule search")
 
     @property
-    def icon(self):
+    def icon(self) -> Icon:
         return "search"
 
     @property
@@ -223,7 +224,7 @@ class MainModulePredefinedConditions(ABCMainModule):
         return _("Predefined conditions")
 
     @property
-    def icon(self):
+    def icon(self) -> Icon:
         return "predefined_conditions"
 
     @property
@@ -258,7 +259,7 @@ class MainModuleHostAndServiceParameters(ABCMainModule):
         return _("Host monitoring rules")
 
     @property
-    def icon(self):
+    def icon(self) -> Icon:
         return {"icon": "folder", "emblem": "rulesets"}
 
     @property
@@ -293,7 +294,7 @@ class MainModuleHWSWInventory(ABCMainModule):
         return _("HW/SW inventory rules")
 
     @property
-    def icon(self):
+    def icon(self) -> Icon:
         return "inventory"
 
     @property
@@ -328,7 +329,7 @@ class MainModuleNetworkingServices(ABCMainModule):
         return _("HTTP, TCP, Email, ...")
 
     @property
-    def icon(self):
+    def icon(self) -> Icon:
         return "network_services"
 
     @property
@@ -366,7 +367,7 @@ class MainModuleOtherServices(ABCMainModule):
         return _("Other Services")
 
     @property
-    def icon(self):
+    def icon(self) -> Icon:
         return "nagios"
 
     @property
@@ -404,7 +405,7 @@ class MainModuleCheckPlugins(ABCMainModule):
         return _("Catalog of check plugins")
 
     @property
-    def icon(self):
+    def icon(self) -> Icon:
         return "check_plugins"
 
     @property
@@ -439,7 +440,7 @@ class MainModuleHostGroups(ABCMainModule):
         return _("Host groups")
 
     @property
-    def icon(self):
+    def icon(self) -> Icon:
         return "hostgroups"
 
     @property
@@ -474,7 +475,7 @@ class MainModuleHostCustomAttributes(ABCMainModule):
         return _("Custom host attributes")
 
     @property
-    def icon(self):
+    def icon(self) -> Icon:
         return "custom_attr"
 
     @property
@@ -509,7 +510,7 @@ class MainModuleServiceGroups(ABCMainModule):
         return _("Service groups")
 
     @property
-    def icon(self):
+    def icon(self) -> Icon:
         return "servicegroups"
 
     @property
@@ -544,7 +545,7 @@ class MainModuleUsers(ABCMainModule):
         return _("Users")
 
     @property
-    def icon(self):
+    def icon(self) -> Icon:
         return "users"
 
     @property
@@ -579,7 +580,7 @@ class MainModuleRoles(ABCMainModule):
         return _("Roles & permissions")
 
     @property
-    def icon(self):
+    def icon(self) -> Icon:
         return "roles"
 
     @property
@@ -614,7 +615,7 @@ class MainModuleLDAP(ABCMainModule):
         return _("LDAP & Active Directory")
 
     @property
-    def icon(self):
+    def icon(self) -> Icon:
         return "ldap"
 
     @property
@@ -649,7 +650,7 @@ class MainModuleUserCustomAttributes(ABCMainModule):
         return _("Custom user attributes")
 
     @property
-    def icon(self):
+    def icon(self) -> Icon:
         return "custom_attr"
 
     @property
@@ -684,7 +685,7 @@ class MainModuleContactGroups(ABCMainModule):
         return _("Contact groups")
 
     @property
-    def icon(self):
+    def icon(self) -> Icon:
         return "contactgroups"
 
     @property
@@ -719,7 +720,7 @@ class MainModuleNotifications(ABCMainModule):
         return _("Notifications")
 
     @property
-    def icon(self):
+    def icon(self) -> Icon:
         return "notifications"
 
     @property
@@ -754,7 +755,7 @@ class MainModuleTimeperiods(ABCMainModule):
         return _("Time periods")
 
     @property
-    def icon(self):
+    def icon(self) -> Icon:
         return "timeperiods"
 
     @property
@@ -791,7 +792,7 @@ class MainModuleSites(ABCMainModule):
         return _("Distributed monitoring")
 
     @property
-    def icon(self):
+    def icon(self) -> Icon:
         return "sites"
 
     @property
@@ -826,7 +827,7 @@ class MainModuleBackup(ABCMainModule):
         return _("Backups")
 
     @property
-    def icon(self):
+    def icon(self) -> Icon:
         return "backup"
 
     @property
@@ -861,7 +862,7 @@ class MainModulePasswords(ABCMainModule):
         return _("Passwords")
 
     @property
-    def icon(self):
+    def icon(self) -> Icon:
         return "passwords"
 
     @property
@@ -896,7 +897,7 @@ class MainModuleAuditLog(ABCMainModule):
         return _("Audit log")
 
     @property
-    def icon(self):
+    def icon(self) -> Icon:
         return "auditlog"
 
     @property
@@ -931,7 +932,7 @@ class MainModuleIcons(ABCMainModule):
         return _("Custom icons")
 
     @property
-    def icon(self):
+    def icon(self) -> Icon:
         return "icons"
 
     @property
@@ -966,7 +967,7 @@ class MainModuleAnalyzeConfig(ABCMainModule):
         return _("Analyze configuration")
 
     @property
-    def icon(self):
+    def icon(self) -> Icon:
         return "analyze_config"
 
     @property
@@ -1001,7 +1002,7 @@ class MainModuleDiagnostics(ABCMainModule):
         return _("Support diagnostics")
 
     @property
-    def icon(self):
+    def icon(self) -> Icon:
         loc_time = time.localtime()
         if loc_time.tm_hour == 13 and loc_time.tm_min == 37:
             return "d146n0571c5"
@@ -1039,7 +1040,7 @@ class MainModuleMonitoringRules(ABCMainModule):
         return _("Service monitoring rules")
 
     @property
-    def icon(self):
+    def icon(self) -> Icon:
         return {"icon": "services", "emblem": "rulesets"}
 
     @property
@@ -1074,7 +1075,7 @@ class MainModuleDiscoveryRules(ABCMainModule):
         return _("Discovery rules")
 
     @property
-    def icon(self):
+    def icon(self) -> Icon:
         return "service_discovery"
 
     @property
@@ -1109,7 +1110,7 @@ class MainModuleEnforcedServices(ABCMainModule):
         return _("Enforced services")
 
     @property
-    def icon(self):
+    def icon(self) -> Icon:
         return "static_checks"
 
     @property
@@ -1143,7 +1144,7 @@ class MainModuleAgentsWindows(ABCMainModule):
         return _("Windows")
 
     @property
-    def icon(self):
+    def icon(self) -> Icon:
         return "download_agents"
 
     @property
@@ -1177,7 +1178,7 @@ class MainModuleAgentsLinux(ABCMainModule):
         return _("Linux")
 
     @property
-    def icon(self):
+    def icon(self) -> Icon:
         return "download_agents"
 
     @property
@@ -1223,7 +1224,7 @@ class MainModuleAgentRules(ABCMainModule):
         return _("Agent rules")
 
     @property
-    def icon(self):
+    def icon(self) -> Icon:
         return {"icon": "agents", "emblem": "rulesets"}
 
     @property
@@ -1269,7 +1270,7 @@ class MainModuleOtherAgents(ABCMainModule):
         return _("Other operating systems")
 
     @property
-    def icon(self):
+    def icon(self) -> Icon:
         return "os_other"
 
     @property
@@ -1304,7 +1305,7 @@ class MainModuleAgentAccessRules(ABCMainModule):
         return _("Agent access rules")
 
     @property
-    def icon(self):
+    def icon(self) -> Icon:
         return {"icon": "agents", "emblem": "rulesets"}
 
     @property
@@ -1339,7 +1340,7 @@ class MainModuleSNMPRules(ABCMainModule):
         return _("SNMP rules")
 
     @property
-    def icon(self):
+    def icon(self) -> Icon:
         return "snmp"
 
     @property
@@ -1374,7 +1375,7 @@ class MainModuleVMCloudContainer(ABCMainModule):
         return _("VM, Cloud, Container")
 
     @property
-    def icon(self):
+    def icon(self) -> Icon:
         return "cloud"
 
     @property
@@ -1409,7 +1410,7 @@ class MainModuleOtherIntegrations(ABCMainModule):
         return _("Other integrations")
 
     @property
-    def icon(self):
+    def icon(self) -> Icon:
         return "integrations_other"
 
     @property

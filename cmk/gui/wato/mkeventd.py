@@ -40,7 +40,7 @@ import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
 from cmk.gui.plugins.wato.utils.main_menu import MainModuleTopic
 from cmk.gui.plugins.watolib.utils import ABCConfigDomain
-from cmk.gui.type_defs import PermissionName
+from cmk.gui.type_defs import Icon, PermissionName
 from cmk.gui.wato.mkeventdstore import (
     export_mkp_rule_pack,
     load_mkeventd_rules,
@@ -3491,7 +3491,7 @@ class MainModuleEventConsole(ABCMainModule):
         return _("Event Console")
 
     @property
-    def icon(self):
+    def icon(self) -> Icon:
         return "event_console"
 
     @property
@@ -4641,7 +4641,7 @@ class MainModuleEventConsoleRules(ABCMainModule):
         return _("Event Console rules")
 
     @property
-    def icon(self):
+    def icon(self) -> Icon:
         return {"icon": "event_console", "emblem": "settings"}
 
     @property

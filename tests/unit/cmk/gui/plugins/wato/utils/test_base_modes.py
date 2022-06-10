@@ -16,7 +16,7 @@ from cmk.gui.plugins.wato.utils.main_menu import (
     MainModuleTopic,
     MainModuleTopicHosts,
 )
-from cmk.gui.type_defs import PermissionName
+from cmk.gui.type_defs import Icon, PermissionName
 from cmk.gui.watolib.main_menu import ModuleRegistry
 
 module_registry = ModuleRegistry()
@@ -47,7 +47,7 @@ class SomeMainModule(ABCMainModule):
         return "Main Module"
 
     @property
-    def icon(self):
+    def icon(self) -> Icon:
         return "icon"
 
     @property

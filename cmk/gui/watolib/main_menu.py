@@ -35,7 +35,7 @@ class MenuItem:
         return self._title
 
     @property
-    def icon(self):
+    def icon(self) -> Icon:
         return self._icon
 
     @property

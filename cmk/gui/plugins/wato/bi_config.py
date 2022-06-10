@@ -20,7 +20,7 @@ import cmk.gui.utils.escaping as escaping
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.pages import AjaxPage, page_registry, PageResult
 from cmk.gui.plugins.wato.utils.main_menu import MainModuleTopic
-from cmk.gui.type_defs import PermissionName
+from cmk.gui.type_defs import Icon, PermissionName
 from cmk.gui.utils.urls import DocReference
 
 try:
@@ -135,7 +135,7 @@ class MainModuleBI(ABCMainModule):
         return _("Business Intelligence")
 
     @property
-    def icon(self):
+    def icon(self) -> Icon:
         return "aggr"
 
     @property

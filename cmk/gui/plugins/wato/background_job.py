@@ -33,7 +33,7 @@ from cmk.gui.plugins.wato.utils import (
     WatoMode,
 )
 from cmk.gui.plugins.wato.utils.main_menu import MainModuleTopic
-from cmk.gui.type_defs import ActionResult, PermissionName
+from cmk.gui.type_defs import ActionResult, Icon, PermissionName
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.urls import makeuri_contextless
 
@@ -53,7 +53,7 @@ class MainModuleBackgroundJobs(ABCMainModule):
         return _("Background jobs")
 
     @property
-    def icon(self):
+    def icon(self) -> Icon:
         return "background_jobs"
 
     @property

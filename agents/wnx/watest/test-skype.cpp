@@ -48,9 +48,7 @@ TEST(SectionProviderSkype, SimulatedIntegration) {
 
     // store old values
     const std::vector<std::wstring> save = *skype_counters;
-    ON_OUT_OF_SCOPE(*skype_counters = save;
-                    EXPECT_TRUE(internal::GetSkypeCountersVector()->size() ==
-                                30));  // recover
+    ON_OUT_OF_SCOPE(*skype_counters = save);
 
     // prepare testing keys array
     skype_counters->clear();

@@ -2210,7 +2210,7 @@ TEST(PluginTest, EmptyPlugins) {
         bool send_empty_end = config::g_local_send_empty_at_end;
         ON_OUT_OF_SCOPE(config::g_local_no_send_if_empty_body =
                             no_send_if_empty_body;
-                        config::g_local_send_empty_at_end = send_empty_end;)
+                        config::g_local_send_empty_at_end = send_empty_end;);
 
         config::g_local_no_send_if_empty_body = false;
         config::g_local_send_empty_at_end = true;

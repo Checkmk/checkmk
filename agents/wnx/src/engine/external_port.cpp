@@ -341,10 +341,6 @@ void ExternalPort::ioThreadProc(const ReplyFunc &reply_func, uint16_t port,
     XLOG::t(XLOG_FUNC + " started");
     // all threads must control exceptions
     try {
-        if (nullptr != owner_) {
-            owner_->preContextCall();
-        }
-
         asio::io_context context;
         auto ipv6 = cfg::groups::global.ipv6();
 

@@ -19,8 +19,6 @@
 #pragma comment(lib, "Userenv.lib")
 namespace wtools::runas {
 
-static bool g_in_service = false;
-
 namespace krnl {
 using Wow64DisableWow64FsRedirectionProc = BOOL(WINAPI *)(PVOID *OldValue);
 using Wow64RevertWow64FsRedirectionProc = BOOL(WINAPI *)(PVOID OldValue);
@@ -144,8 +142,8 @@ STARTUPINFO MakeStartupInfo(const AppSettings &settings) {
 }
 
 [[nodiscard]] bool DupeHandle(HANDLE &h) noexcept {
-    HANDLE dupe = nullptr;
-    if (::DuplicateTokenEx(h, MAXIMUM_ALLOWED, nullptr, SecurityImpersonation,
+    if (HANDLE dupe = nullptr;
+        ::DuplicateTokenEx(h, MAXIMUM_ALLOWED, nullptr, SecurityImpersonation,
                            TokenPrimary, &dupe) == TRUE) {
         ::CloseHandle(h);
         h = dupe;
@@ -161,15 +159,15 @@ static void LogDupeError(std::string_view text) {
 }
 
 HANDLE OpenCurrentProcessToken(DWORD desired_access) {
-    HANDLE token = nullptr;
-    if (::OpenProcessToken(::GetCurrentProcess(), desired_access, &token) ==
+    if (HANDLE token = nullptr;
+        ::OpenProcessToken(::GetCurrentProcess(), desired_access, &token) !=
         FALSE) {
-        XLOG::l("Failed to open process to enable privilege  error is[{}]",
-                ::GetLastError());
-        return nullptr;
+        return token;
     }
 
-    return token;
+    XLOG::l("Failed to open process to enable privilege  error is[{}]",
+            ::GetLastError());
+    return nullptr;
 }
 
 std::optional<LUID> GetLookupPrivilegeValue(const wchar_t *privilegs) {
@@ -228,10 +226,10 @@ using WTSGetActiveConsoleSessionIdProc = DWORD(WINAPI *)(void);
 DWORD GetInteractiveSessionID() {
     // Get the active session ID.
     PWTS_SESSION_INFO session_info;  // NOLINT
-    DWORD count = 0;
-    if (::WTSEnumerateSessions(WTS_CURRENT_SERVER_HANDLE, 0, 1, &session_info,
+    if (DWORD count = 0;
+        ::WTSEnumerateSessions(WTS_CURRENT_SERVER_HANDLE, 0, 1, &session_info,
                                &count) == TRUE) {
-        ON_OUT_OF_SCOPE(::WTSFreeMemory(session_info))
+        ON_OUT_OF_SCOPE(::WTSFreeMemory(session_info));
 
         for (DWORD i = 0; i < count; i++) {
             if (session_info[i].State == WTSActive)  // Here is
@@ -287,11 +285,6 @@ BOOL PrepForInteractiveProcess(AppSettings &settings,
     } else
         XLOG::d.i("Using SessionID {} from params", target_session_id);
 
-    // if(FALSE == WTSQueryUserToken(targetSessionID, &settings.hUser))
-    //	Log(L"Failed to get user from session ", ::GetLastError());
-
-    // Duplicate(settings.hUser, __FILE__, __LINE__);
-
     DWORD len = 0;
     ::GetTokenInformation(settings.hUser, TokenSessionId,
                           &cleanup_interactive->origSessionID,
@@ -299,9 +292,9 @@ BOOL PrepForInteractiveProcess(AppSettings &settings,
 
     EnablePrivilege(SE_TCB_NAME, settings.hUser);
 
-    if (FALSE == ::SetTokenInformation(settings.hUser, TokenSessionId,
-                                       &target_session_id,
-                                       sizeof(target_session_id)))
+    if (::SetTokenInformation(settings.hUser, TokenSessionId,
+                              &target_session_id,
+                              sizeof(target_session_id)) == FALSE)
         XLOG::l("Failed to set interactive token [{}]", ::GetLastError());
 
     return TRUE;
@@ -311,17 +304,18 @@ CleanupInteractive MakeCleanupInteractive(AppSettings &settings,
                                           STARTUPINFO &si) {
     CleanupInteractive ci;
     if (settings.interactive || settings.show_ui_on_logon) {
-        auto b = PrepForInteractiveProcess(settings, &ci,
-                                           settings.session_to_interact_with);
-        if (b == FALSE)
+        if (PrepForInteractiveProcess(
+                settings, &ci, settings.session_to_interact_with) == FALSE)
             XLOG::l("Failed to PrepForInteractiveProcess [{}]",
                     ::GetLastError());
 
-        if (nullptr == si.lpDesktop)
+        if (nullptr == si.lpDesktop) {
             si.lpDesktop = const_cast<wchar_t *>(L"WinSta0\\Default");
+        }
 
-        if (settings.show_ui_on_logon)
+        if (settings.show_ui_on_logon) {
             si.lpDesktop = const_cast<wchar_t *>(L"winsta0\\Winlogon");
+        }
 
         // http://blogs.msdn.com/b/winsdk/archive/2009/07/14/launching-an-interactive-process-from-windows-service-in-windows-vista-and-later.aspx
         // indicates desktop names are case sensitive
@@ -340,9 +334,9 @@ PROFILEINFOW MakeProfile(std::wstring_view user_name) {
 
 void *MakeEnvironment(HANDLE h) {
     void *environment = nullptr;
-    auto ret = ::CreateEnvironmentBlock(&environment, h, TRUE);
-    if (ret == FALSE)
+    if (::CreateEnvironmentBlock(&environment, h, TRUE) == FALSE) {
         XLOG::l.bp(XLOG_FLINE + "create env block [{}]", ::GetLastError());
+    }
 
     return environment;
 }
@@ -390,25 +384,21 @@ HANDLE GetLocalSystemProcessToken() {
     process_count = byte_count / sizeof(DWORD);
     for (DWORD i = 0; i < process_count; ++i) {
         DWORD pid = pids[i];
-        HANDLE proc_handle = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, pid);
+        HANDLE proc_handle =
+            ::OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, pid);
         if (proc_handle == nullptr) {
             continue;
         }
 
-        HANDLE token_handle = nullptr;
-        if (::OpenProcessToken(proc_handle,
+        if (HANDLE token_handle = nullptr;
+            ::OpenProcessToken(proc_handle,
                                TOKEN_QUERY | TOKEN_READ | TOKEN_IMPERSONATE |
                                    TOKEN_QUERY_SOURCE | TOKEN_DUPLICATE |
                                    TOKEN_ASSIGN_PRIMARY | TOKEN_EXECUTE,
                                &token_handle) == TRUE) {
             try {
-                auto name = GetTokenUserSID(token_handle);
-
-                // const wchar_t arg[] = L"NT AUTHORITY\\";
-                // if(0 == _wcsnicmp(name, arg,
-                // sizeof(arg)/sizeof(arg[0])-1))
-
-                if (name == L"S-1-5-18")  // Well known SID for Local System
+                if (GetTokenUserSID(token_handle) ==
+                    L"S-1-5-18")  // LocalSystem
                 {
                     CloseHandle(proc_handle);
                     return token_handle;
@@ -437,9 +427,9 @@ std::pair<std::wstring, std::wstring> GetDomainUser(
 
 void CleanUpInteractiveProcess(
     CleanupInteractive *cleanup_interactive) noexcept {
-    SetTokenInformation(cleanup_interactive->hUser, TokenSessionId,
-                        &cleanup_interactive->origSessionID,
-                        sizeof(cleanup_interactive->origSessionID));
+    ::SetTokenInformation(cleanup_interactive->hUser, TokenSessionId,
+                          &cleanup_interactive->origSessionID,
+                          sizeof(cleanup_interactive->origSessionID));
 }
 
 // GTEST [-]
@@ -456,17 +446,20 @@ bool GetUserHandleSystemAccount(HANDLE &user_handle) {
     }
     XLOG::d.t("Got Local System handle");
 
-    if (!DupeHandle(user_handle)) LogDupeError(XLOG_FLINE + " !!!");
+    if (!DupeHandle(user_handle)) {
+        LogDupeError(XLOG_FLINE + " !!!");
+    }
 
     return true;  // ?????
 }
 
 bool GetUserHandleCurrentUser(HANDLE &user_handle, HANDLE pipe_handle) {
     if (pipe_handle != nullptr) {
-        if (::ImpersonateNamedPipeClient(pipe_handle) == TRUE)
+        if (::ImpersonateNamedPipeClient(pipe_handle) == TRUE) {
             XLOG::l("Impersonated caller");
-        else
+        } else {
             XLOG::l("Failed to impersonate client user [{}]", ::GetLastError());
+        }
     }
 
     auto *cur_thread_handle = ::GetCurrentThread();
@@ -476,19 +469,20 @@ bool GetUserHandleCurrentUser(HANDLE &user_handle, HANDLE pipe_handle) {
     auto opened = ::OpenThreadToken(
         cur_thread_handle, TOKEN_DUPLICATE | TOKEN_QUERY, TRUE, &user_handle);
     auto gle = ::GetLastError();
-    if (1008 == gle)  // no thread token
-    {
+    if (gle == 1008) {  // no thread token
         opened = ::OpenProcessToken(
-            GetCurrentProcess(), TOKEN_DUPLICATE | TOKEN_QUERY, &user_handle);
+            ::GetCurrentProcess(), TOKEN_DUPLICATE | TOKEN_QUERY, &user_handle);
         gle = ::GetLastError();
     }
 
-    if (opened == FALSE)
+    if (opened == FALSE) {
         XLOG::l("Failed to open current user token [{}] dup {}", gle,
                 duplicated);
+    }
 
-    if (!DupeHandle(user_handle))
-        LogDupeError(XLOG_FLINE + " !!!");  // gives max rights
+    if (!DupeHandle(user_handle)) {
+        LogDupeError(XLOG_FLINE + " !!!");
+    }
     ::RevertToSelf();
 
     return !wtools::IsBadHandle(user_handle);
@@ -518,8 +512,7 @@ bool GetUserHandlePredefinedUser(HANDLE &user_handle,
 bool LoadProfile(HANDLE user_handle, PROFILEINFO &profile) {
     EnablePrivilege(SE_RESTORE_NAME);
     EnablePrivilege(SE_BACKUP_NAME);
-    auto profile_loaded = ::LoadUserProfile(user_handle, &profile);
-    if (profile_loaded != TRUE) {
+    if (::LoadUserProfile(user_handle, &profile) != TRUE) {
         XLOG::t("LoadUserProfile failed with error [{}]", ::GetLastError());
         return false;
     }
@@ -536,9 +529,11 @@ bool GetUserHandle(AppSettings &settings, BOOL &profile_loaded,
     if (!settings.user.empty()) {
         GetUserHandlePredefinedUser(settings.hUser, settings.user,
                                     settings.password);
-        if (!wtools::IsBadHandle(settings.hUser) && !settings.dont_load_profile)
+        if (!wtools::IsBadHandle(settings.hUser) &&
+            !settings.dont_load_profile) {
             profile_loaded =
                 LoadProfile(settings.hUser, profile) ? TRUE : FALSE;
+        }
         return true;
     }
 
@@ -597,25 +592,30 @@ bool LimitRights(HANDLE &hUser) {
         }
 
         if (safer != nullptr) {
-            if (FALSE == s_safer_compute_token_from_level(
-                             safer, hUser, &new_handle, 0, nullptr)) {
+            if (s_safer_compute_token_from_level(safer, hUser, &new_handle, 0,
+                                                 nullptr) == FALSE) {
                 XLOG::l(
                     "Failed to limit rights (SaferComputeTokenFromLevel) {}.",
                     ::GetLastError());
-                auto ret = s_safer_close_level(safer);
-                if (ret == FALSE) XLOG::l.bp(XLOG_FLINE + " trash!");
+                if (s_safer_close_level(safer) == FALSE) {
+                    XLOG::l(XLOG_FLINE + " trash!");
+                }
                 return false;
             }
-            auto ret = s_safer_close_level(safer);
-            if (ret == FALSE) XLOG::l.bp(XLOG_FLINE + " trash!");
+            if (s_safer_close_level(safer) == FALSE) {
+                XLOG::l(XLOG_FLINE + " trash!");
+            }
         }
 
         if (!wtools::IsBadHandle(new_handle)) {
-            auto ret = ::CloseHandle(hUser);
-            if (ret == FALSE) XLOG::l.bp(XLOG_FLINE + " trash!");
+            if (::CloseHandle(hUser) == FALSE) {
+                XLOG::l(XLOG_FLINE + " trash!");
+            }
 
             hUser = new_handle;
-            if (!DupeHandle(hUser)) LogDupeError(XLOG_FLINE + " !!!");
+            if (!DupeHandle(hUser)) {
+                LogDupeError(XLOG_FLINE + " !!!");
+            }
 
             return true;
         }
@@ -626,20 +626,22 @@ bool LimitRights(HANDLE &hUser) {
 }
 
 bool ElevateUserToken(HANDLE &hEnvUser) {
-    TOKEN_ELEVATION_TYPE tet;  // NOLINT
-    DWORD needed = 0;
-
-    if (::GetTokenInformation(hEnvUser, TokenElevationType,
-                              static_cast<void *>(&tet), sizeof(tet),
-                              &needed) == TRUE) {
-        if (tet != TokenElevationTypeLimited) return true;
+    TOKEN_ELEVATION_TYPE tet;
+    if (DWORD needed = 0; ::GetTokenInformation(hEnvUser, TokenElevationType,
+                                                static_cast<void *>(&tet),
+                                                sizeof(tet), &needed) == TRUE) {
+        if (tet != TokenElevationTypeLimited) {
+            return true;
+        }
 
         // get the associated token, which is the full-admin token
-        TOKEN_LINKED_TOKEN tlt = {nullptr};
-        if (::GetTokenInformation(hEnvUser, TokenLinkedToken,
+        if (TOKEN_LINKED_TOKEN tlt = {nullptr};
+            ::GetTokenInformation(hEnvUser, TokenLinkedToken,
                                   static_cast<void *>(&tlt), sizeof(tlt),
                                   &needed) == TRUE) {
-            if (!DupeHandle(tlt.LinkedToken)) LogDupeError(XLOG_FLINE + " !!!");
+            if (!DupeHandle(tlt.LinkedToken)) {
+                LogDupeError(XLOG_FLINE + " !!!");
+            }
             hEnvUser = tlt.LinkedToken;
             return true;
         }
@@ -687,10 +689,8 @@ static void SetAffinityMask(HANDLE process,
 namespace {
 std::wstring GetUserHomeDir(HANDLE token) {
     constexpr size_t len{512};
-    wchar_t buf[len];
     DWORD sz = len - 1;
-
-    if (::GetUserProfileDirectoryW(token, buf, &sz) == TRUE) {
+    if (wchar_t buf[len]; ::GetUserProfileDirectoryW(token, buf, &sz) == TRUE) {
         return buf;
     }
     XLOG::d("Fail to get user profile [{}]", ::GetLastError());
@@ -761,8 +761,7 @@ bool StartProcess(AppSettings &settings, HANDLE command_pipe) {
             XLOG::l("Have bad user handle");
 
         EnablePrivilege(SE_IMPERSONATE_NAME);
-        auto impersonated = ::ImpersonateLoggedOnUser(settings.hUser);
-        if (impersonated == FALSE) {
+        if (::ImpersonateLoggedOnUser(settings.hUser) == FALSE) {
             XLOG::l.bp("Failed to impersonate {}", ::GetLastError());
         }
 
@@ -832,9 +831,9 @@ bool StartProcess(AppSettings &settings, HANDLE command_pipe) {
                 EnablePrivilege(SE_ASSIGNPRIMARYTOKEN_NAME);
                 EnablePrivilege(SE_INCREASE_QUOTA_NAME);
                 EnablePrivilege(SE_IMPERSONATE_NAME);
-                auto impersonated = ::ImpersonateLoggedOnUser(settings.hUser);
-                if (impersonated == FALSE)
+                if (::ImpersonateLoggedOnUser(settings.hUser) == FALSE) {
                     XLOG::d("Failed to impersonate [{}]", ::GetLastError());
+                }
 
                 launched = ::CreateProcessAsUserW(
                     settings.hUser, nullptr, path.data(), nullptr, nullptr,
@@ -842,10 +841,11 @@ bool StartProcess(AppSettings &settings, HANDLE command_pipe) {
                     CREATE_SUSPENDED | CREATE_UNICODE_ENVIRONMENT |
                         CREATE_NEW_CONSOLE,
                     environment, starting_dir.c_str(), &si, &pi);
-                if (0 == ::GetLastError())
+                if (0 == ::GetLastError()) {
                     launch_gle = 0;  // mark as successful, otherwise return our
                                      // original error
-                if (0 != launch_gle)
+                }
+                if (0 != launch_gle) {
                     XLOG::t(
                         "Launch (launchGLE={}) params: user=[{}] path=[{}] pEnv=[{}], dir=[{}], stdin=[{}], stdout=[{}], stderr=[{}]",
                         launch_gle, settings.hUser, wtools::ToUtf8(path),
@@ -853,6 +853,7 @@ bool StartProcess(AppSettings &settings, HANDLE command_pipe) {
                         starting_dir.empty() ? "{null}"
                                              : wtools::ToUtf8(starting_dir),
                         si.hStdInput, si.hStdOutput, si.hStdError);
+                }
                 ::RevertToSelf();
             }
         } else {
@@ -863,20 +864,23 @@ bool StartProcess(AppSettings &settings, HANDLE command_pipe) {
             EnablePrivilege(SE_INCREASE_QUOTA_NAME);
             EnablePrivilege(SE_IMPERSONATE_NAME);
 
-            if (settings.hUser != nullptr)
+            if (settings.hUser != nullptr) {
                 launched = ::CreateProcessAsUser(
                     settings.hUser, nullptr, path.data(), nullptr, nullptr,
                     TRUE, start_flags, environment, starting_dir.c_str(), &si,
                     &pi);
-            if (launched == FALSE)
-                launched = CreateProcess(nullptr, path.data(), nullptr, nullptr,
-                                         TRUE, start_flags, environment,
-                                         starting_dir.c_str(), &si, &pi);
+            }
+            if (launched == FALSE) {
+                launched = ::CreateProcess(
+                    nullptr, path.data(), nullptr, nullptr, TRUE, start_flags,
+                    environment, starting_dir.c_str(), &si, &pi);
+            }
 
-            if (launched == FALSE)
+            if (launched == FALSE) {
                 launch_gle = ::GetLastError();
-            else
+            } else {
                 launch_gle = 0;
+            }
 
             XLOG::d.i(
                 "Launch (launchGLE={}) params: path=[{}] user=[{}], pEnv=[{}], dir=[{}], stdin=[{}], stdout=[{}], stderr=[{}]",
@@ -889,8 +893,6 @@ bool StartProcess(AppSettings &settings, HANDLE command_pipe) {
     }
 
     if (launched == TRUE) {
-        if (g_in_service) XLOG::d.i("Successfully launched");
-
         settings.hProcess = pi.hProcess;
         settings.pid = pi.dwProcessId;
 
@@ -904,16 +906,22 @@ bool StartProcess(AppSettings &settings, HANDLE command_pipe) {
 
     } else {
         XLOG::l("Failed to start {} [{}]", wtools::ToUtf8(path), launch_gle);
-        if ((ERROR_ELEVATION_REQUIRED == launch_gle) && (!g_in_service))
+        if (launch_gle == ERROR_ELEVATION_REQUIRED) {
             XLOG::l("HINT: Exec probably needs to be 'Run As Administrator'");
+        }
     }
 
-    if (ci.bPreped) CleanUpInteractiveProcess(&ci);
+    if (ci.bPreped) {
+        CleanUpInteractiveProcess(&ci);
+    }
 
-    if (settings.disable_file_redirection) krnl::RevertFileRedirection();
+    if (settings.disable_file_redirection) {
+        krnl::RevertFileRedirection();
+    }
 
-    if (profile_loaded == TRUE)
+    if (profile_loaded == TRUE) {
         UnloadUserProfile(settings.hUser, profile.hProfile);
+    }
 
     if (!wtools::IsBadHandle(settings.hUser)) {
         CloseHandle(settings.hUser);
@@ -934,9 +942,11 @@ std::tuple<DWORD, HANDLE, HANDLE> RunAsJob(
     HANDLE stderr_handle,         // same
     DWORD /*creation_flags*/,     // never checked this
     DWORD /*start_flags*/) {
-    auto *job_handle = CreateJobObjectA(nullptr, nullptr);
+    auto *job_handle = ::CreateJobObjectA(nullptr, nullptr);
 
-    if (job_handle == nullptr) return {0, nullptr, nullptr};
+    if (job_handle == nullptr) {
+        return {0, nullptr, nullptr};
+    }
 
     AppSettings settings;
     settings.user = user_name;
@@ -948,7 +958,7 @@ std::tuple<DWORD, HANDLE, HANDLE> RunAsJob(
     settings.hStdErr = stderr_handle;
 
     if (!StartProcess(settings, nullptr)) {
-        CloseHandle(job_handle);
+        ::CloseHandle(job_handle);
 
         return {0, nullptr, nullptr};
     }

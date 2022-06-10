@@ -13,29 +13,27 @@
 
 using namespace std::chrono_literals;
 
-namespace wtools {  // to become friendly for wtools classes
+namespace wtools {
 class TestProcessor : public wtools::BaseServiceProcessor {
 public:
     TestProcessor() { s_counter++; }
-    virtual ~TestProcessor() { s_counter--; }
+    virtual ~TestProcessor() override { s_counter--; }
 
     // Standard Windows API to Service hit here
-    void stopService() { stopped_ = true; }
-    void startService() { started_ = true; }
-    void pauseService() { paused_ = true; }
-    void continueService() { continued_ = true; }
-    void shutdownService() { shutdowned_ = true; }
-    const wchar_t *getMainLogName() const { return L"log.log"; }
-    void preContextCall() { pre_context_call_ = true; }
+    void stopService() override { stopped_ = true; }
+    void startService() override { started_ = true; }
+    void pauseService() override { paused_ = true; }
+    void continueService() override { continued_ = true; }
+    void shutdownService() override { shutdowned_ = true; }
+    const wchar_t *getMainLogName() const override { return L"log.log"; }
 
     bool stopped_ = false;
     bool started_ = false;
     bool paused_ = false;
     bool shutdowned_ = false;
     bool continued_ = false;
-    bool pre_context_call_ = false;
     static int s_counter;
-};  // namespace wtoolsclassTestProcessor:publiccma::srv::BaseServiceProcessor
+};
 int TestProcessor::s_counter = 0;
 
 TEST(ServiceControllerTest, CreateDelete) {

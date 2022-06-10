@@ -114,15 +114,15 @@ public:
         section_expected_timeout_ = engine_.timeout();
         return std::async(
             mode,
-            [this](const std::string command_line,  //
-                   const AnswerId answer_id,        //
+            [this](const std::string &command_line,  //
+                   AnswerId answer,                  //
                    const ServiceProcessor *Proc) {
                 engine_.updateSectionStatus();  // actual data gathering is
                                                 // here for plugins and local
 
                 engine_.registerCommandLine(command_line);
                 auto port_name = Proc->getInternalPort();
-                auto id = AnswerIdToNumber(answer_id);
+                auto id = AnswerIdToNumber(answer);
                 XLOG::d.t(
                     "Provider '{}' is about to be started, id '{}' port [{}]",
                     provider_uniq_name_, id, port_name);
@@ -163,10 +163,6 @@ public:
     int expectedTimeout() const { return section_expected_timeout_; }
 
 protected:
-    std::string provider_uniq_name_;
-    T engine_;
-    int section_expected_timeout_ = 0;
-
     void goGoGo(const std::string &section_name,  //
                 const std::string &command_line,  //
                 const std::string &port,          //
@@ -180,6 +176,11 @@ protected:
         XLOG::d.i("perf: Section '{}' took [{}] milliseconds",
                   provider_uniq_name_, us_count / 1000);
     }
+
+private:
+    std::string provider_uniq_name_;
+    T engine_;
+    int section_expected_timeout_ = 0;
 };
 
 // Implements main logic related to interaction: "Agent <-> Plugins"
@@ -194,13 +195,14 @@ public:
 
     using thread_callback = std::function<bool()>;
     using AnswerDataBlock = cma::srv::AsyncAnswer::DataBlock;
-    ServiceProcessor(std::chrono::milliseconds delay, thread_callback callback)
+    ServiceProcessor(std::chrono::milliseconds delay,
+                     const thread_callback &callback)
         : delay_(delay), callback_(callback), external_port_(this) {}
     ServiceProcessor() : external_port_(this) {
         using namespace std::chrono_literals;
         delay_ = 1000ms;
     }
-    ~ServiceProcessor() { ohm_process_.stop(); }
+    ~ServiceProcessor() override { ohm_process_.stop(); }
 
     // boiler plate
     ServiceProcessor(const ServiceProcessor &Rhs) = delete;
@@ -209,22 +211,20 @@ public:
     ServiceProcessor &operator=(ServiceProcessor &&Rhs) = delete;
 
     // Standard Windows API to Service
-    void stopService();
-    void startService();
-    void pauseService();
-    void shutdownService();
-    void continueService();
+    void stopService() override;
+    void startService() override;
+    void pauseService() override;
+    void shutdownService() override;
+    void continueService() override;
 
     // \brief - serves test in command line
     void startServiceAsLegacyTest();
 
     void cleanupOnStop() override;
 
-    const wchar_t *getMainLogName() const { return kMainLogName; }
+    const wchar_t *getMainLogName() const override { return kMainLogName; }
 
-    const std::string getInternalPort() const noexcept {
-        return internal_port_;
-    }
+    std::string getInternalPort() const noexcept { return internal_port_; }
 
     // functions for testing/verifying
     void startTestingMainThread();
@@ -257,7 +257,7 @@ public:
     bool stopRunningOhmProcess() noexcept;
 
 private:
-    std::vector<uint8_t> makeTestString(const char *text) {
+    std::vector<uint8_t> makeTestString(const char *text) const {
         const std::string answer_test{text == nullptr ? "" : text};
         std::vector<uint8_t> answer_vector{answer_test.begin(),
                                            answer_test.end()};
@@ -268,10 +268,6 @@ private:
     std::string internal_port_;
 
     cma::cfg::modules::ModuleCommander mc_;
-
-    // called by external port BEFORE starting context run
-    // on this phase we are starting our async plugins
-    void preContextCall() {}
 
     void informDevice(cma::rt::Device &Device,
                       std::string_view Ip) const noexcept;
@@ -298,7 +294,6 @@ private:
     cma::world::ExternalPort external_port_;
     AsyncAnswer &getAsyncAnswer() { return answer_; }
 
-private:
     bool ohm_started_ = false;
     // support of mainThread
     void prepareAnswer(const std::string &ip_from, cma::rt::Device &rt_device);
@@ -306,7 +301,7 @@ private:
     void sendDebugData();
 
     bool timedWaitForStop() {
-        std::unique_lock<std::mutex> l(lock_stopper_);
+        std::unique_lock l(lock_stopper_);
         auto stop_requested = stop_thread_.wait_until(
             l, std::chrono::steady_clock::now() + delay_,
             [this]() { return stop_requested_; });
@@ -318,7 +313,7 @@ private:
     // type of breaks in mainWaitLoop
     enum class Signal { restart, quit };
 
-    // returns break type(what todo)
+    // returns break type
     Signal mainWaitLoop(std::optional<ControllerParam> &controller_param);
 
     AsyncAnswer answer_;  // queue in the future, now only one answer for all
@@ -347,7 +342,6 @@ private:
     void preStartBinaries();
     void detachedPluginsStart();
 
-private:
     TheMiniProcess ohm_process_;
     void updateMaxWaitTime(int timeout_seconds) noexcept;
     void checkMaxWaitTime() noexcept;
@@ -356,16 +350,12 @@ private:
 
     template <typename T>
     bool isAllowed(const T &engine) {
-        // check time
-        auto allowed_by_time = engine.isAllowedByTime();
-        if (!allowed_by_time) {
+        if (!engine.isAllowedByTime()) {
             XLOG::d.t("Skipping '{}' by time", engine.getUniqName());
             return false;
         }
 
-        // check config
-        auto allowed = engine.isAllowedByCurrentConfig();
-        if (!allowed) {
+        if (!engine.isAllowedByCurrentConfig()) {
             XLOG::d.t("Skipping '{}' by config", engine.getUniqName());
             return false;
         }
@@ -376,9 +366,8 @@ private:
     template <typename T>
     bool tryToKick(T &section_provider, AnswerId stamp,
                    const std::string &cmdline) {
-        const auto &engine = section_provider.getEngine();
-
-        if (!isAllowed(engine)) {
+        if (const auto &engine = section_provider.getEngine();
+            !isAllowed(engine)) {
             return false;
         }
 
@@ -393,9 +382,8 @@ private:
     template <typename T>
     bool tryToDirectCall(T &section_provider, AnswerId stamp,
                          const std::string &cmdline) {
-        const auto &engine = section_provider.getEngine();
-
-        if (!isAllowed(engine)) {
+        if (const auto &engine = section_provider.getEngine();
+            !isAllowed(engine)) {
             return false;
         }
 
@@ -407,9 +395,8 @@ private:
     void kickWinPerf(AnswerId answer_id, const std::string &ip_addr);
 
     template <typename T>
-    std::string generate() {
-        static_assert(std::is_base_of<cma::provider::Synchronous, T>::value,
-                      "Must be Synchronous based");
+    requires std::derived_from<T, provider::Synchronous> std::string generate()
+    const {
         T section;
         section.updateSectionStatus();
         return section.generateContent();
@@ -421,7 +408,8 @@ private:
     /// pre sections[s] - usually Check_MK
     /// body from answer
     /// post sections[s]- usually SystemTime
-    AnswerDataBlock wrapResultWithStaticSections(const AnswerDataBlock &block) {
+    AnswerDataBlock wrapResultWithStaticSections(
+        const AnswerDataBlock &block) const {
         // pre sections generation
         auto pre = generate<provider::CheckMk>();
         auto post = generate<provider::SystemTime>();
@@ -434,15 +422,15 @@ private:
             result.insert(result.end(), pre.begin(), pre.end());
             result.insert(result.end(), block.begin(), block.end());
             result.insert(result.end(), post.begin(), post.end());
-        } catch (std::exception &e) {
+        } catch (const std::exception &e) {
             XLOG::l.crit(XLOG_FUNC + "Weird exception '{}'", e.what());
         }
 
         return result;
     }
 
-    void logAnswerProcessing(bool success) {
-        auto get_segments_text = [this]() -> std::string {
+    void logAnswerProcessing(bool success) const {
+        auto get_segments_text = [this]() {
             auto list = answer_.segmentNameList();
             std::string s;
             for (auto const &l : list) {
@@ -477,16 +465,14 @@ private:
 
         // NOTE: here we are starting futures, i.e. just fire all
         // futures in C++ kind of black magic, do not care too much
-        for_each(vf_.begin(), vf_.end(),  // scan future array
-                 [&future_count](std::future<bool> &x) {
-                     // kill future
-                     x.get();
-                     ++future_count;
-                 });
+        std::ranges::for_each(vf_, [&future_count](auto &x) {
+            x.get();
+            ++future_count;
+        });
 
         auto end_point = std::chrono::steady_clock::now();
         XLOG::t.i(
-            "futures ready in {} milliseconds",
+            "futures [{}] ready in {} milliseconds", future_count,
             duration_cast<std::chrono::milliseconds>(end_point - start_point)
                 .count());
 
@@ -495,8 +481,7 @@ private:
         answer_.exeKickedCount(count);
         auto success = answer_.waitAnswer(std::chrono::seconds{max_wait_time_});
         logAnswerProcessing(success);
-        auto result = std::move(answer_.getDataAndClear());
-        return wrapResultWithStaticSections(result);
+        return wrapResultWithStaticSections(answer_.getDataAndClear());
     }
 
     class SectionProviderText {
@@ -507,14 +492,14 @@ private:
         std::future<bool> kick(AnswerId stamp, ServiceProcessor *proc) {
             return std::async(
                 std::launch::async,
-                [this](const AnswerId stamp, ServiceProcessor *proc) {
+                [this](const AnswerId answer, ServiceProcessor *p) {
                     auto block = gatherData();
                     if (block) {
                         XLOG::d("Provider '{}' added answer", name_);
-                        return proc->addSectionToAnswer(name_, stamp, *block);
+                        return p->addSectionToAnswer(name_, answer, *block);
                     } else {
                         XLOG::l("Provider '{}' FAILED answer", name_);
-                        proc->addSectionToAnswer(name_, stamp);
+                        p->addSectionToAnswer(name_, answer);
                         return false;
                     }
                 },
@@ -534,24 +519,22 @@ private:
 
     class SectionProviderFile {
     public:
-        SectionProviderFile(const std::string name, const std::wstring filename)
+        SectionProviderFile(const std::string &name,
+                            const std::wstring &filename)
             : name_(name), file_name_(filename) {}
 
         std::future<bool> kick(const AnswerId answer_id,
                                ServiceProcessor *service_processor) {
             return std::async(
                 std::launch::async,
-                [this](const AnswerId answer_id,
-                       ServiceProcessor *service_processor) {
+                [this](const AnswerId answer, ServiceProcessor *sp) {
                     auto block = gatherData();
                     if (!block) {
                         return false;
                     }
-
                     XLOG::l.i("Provider '{}' added answer to file '{}'", name_,
                               wtools::ToUtf8(file_name_));
-                    return service_processor->addSectionToAnswer(
-                        name_, answer_id, *block);
+                    return sp->addSectionToAnswer(name_, answer, *block);
                 },
                 answer_id,         // param 1
                 service_processor  // param 2
@@ -562,13 +545,12 @@ private:
     private:
         std::string name_;
         std::wstring file_name_;
-        std::optional<std::vector<uint8_t>> gatherData() {
-            auto f = cfg::FindExeFileOnPath(file_name_);
+        std::optional<std::vector<uint8_t>> gatherData() const {
             return tools::ReadFileInVector(file_name_.c_str());
         }
     };
 
-    void logExeNotFound(std::wstring_view exe_name) {
+    void logExeNotFound(std::wstring_view exe_name) const {
         std::string path_string;
         auto paths = cfg::GetExePaths();
         for (const auto &dir : paths) {
@@ -583,7 +565,7 @@ private:
     // API to start exe
     std::future<bool> kickExe(
         bool async_mode,                      // controlled from the config
-        const std::wstring exe_name,          //
+        const std::wstring &exe_name,         //
         AnswerId answer_id,                   //
         ServiceProcessor *service_processor,  // host
         const std::wstring &segment_name,     // identifies exe
@@ -592,41 +574,31 @@ private:
         const std::wstring &log_file) {       // this is optional
         return std::async(
             async_mode ? std::launch::async : std::launch::deferred,
-            [this, exe_name, log_file](
-                AnswerId answer_id, ServiceProcessor *service_processor,
-                const std::wstring &segment_name, int timeout,
-                const std::wstring &command_line) {
-                // finding and checking
+            [this, exe_name, log_file](AnswerId answer,
+                                       const ServiceProcessor *sp,
+                                       const std::wstring &segment, int tout,
+                                       const std::wstring &command) {
                 XLOG::d.i("Exec '{}' for '{}' to be started",
-                          wtools::ToUtf8(exe_name),
-                          wtools::ToUtf8(segment_name));
+                          wtools::ToUtf8(exe_name), wtools::ToUtf8(segment));
 
                 auto full_path = cfg::FindExeFileOnPath(exe_name);
                 if (full_path.empty()) {
                     logExeNotFound(exe_name);
                     return false;
                 }
-
-                // make command line
-                auto port = wtools::ConvertToUTF16(
-                    service_processor->getInternalPort());
-                auto cmd_line =
-                    fmt::format(L"\"{}\" -runonce {}{} {} id:{} timeout:{} {}",
-                                full_path,  // exe
-                                log_file.empty() ? L"" : L"@" + log_file + L" ",
-                                segment_name,                 //
-                                port,                         //
-                                AnswerIdToNumber(answer_id),  // answer id
-                                timeout, command_line);
-
-                // execution
+                auto cmd_line = fmt::format(
+                    L"\"{}\" -runonce {}{} {} id:{} timeout:{} {}",
+                    full_path,  // exe
+                    log_file.empty() ? L"" : L"@" + log_file + L" ",
+                    segment,                                        //
+                    wtools::ConvertToUTF16(sp->getInternalPort()),  //
+                    AnswerIdToNumber(answer),                       // answer id
+                    tout, command);
                 XLOG::d.i("async RunStdCmd: {}", wtools::ToUtf8(cmd_line));
-                auto ret = tools::RunStdCommand(cmd_line, false);
-                if (ret == 0) {
+                if (tools::RunStdCommand(cmd_line, false) == 0) {
                     XLOG::l("Exec is failed with error [{}]", ::GetLastError());
                     return false;
                 }
-
                 return true;
             },
             answer_id,          // param 1
@@ -640,7 +612,7 @@ private:
 
     std::future<bool> kickExe(
         bool async,                           // controlled from the config
-        const std::wstring exe_name,          //
+        const std::wstring &exe_name,         //
         const AnswerId answer_id,             //
         ServiceProcessor *service_processor,  // host
         const std::wstring &segment_name,     // identifies exe
@@ -701,26 +673,25 @@ private:
 // gtest is required
 template <typename T, typename B>
 void WaitForAsyncPluginThreads(std::chrono::duration<T, B> allowed_wait) {
-    using namespace std::chrono;
+    using namespace std::chrono_literals;
 
-    cma::tools::sleep(500ms);  // giving a bit time to start threads
-    auto count = cma::PluginEntry::threadCount();
-    XLOG::d.i("Waiting for async threads [{}]", count);
+    tools::sleep(500ms);  // giving a bit time to start threads
+    XLOG::d.i("Waiting for async threads [{}]", PluginEntry::threadCount());
     constexpr auto grane = 500ms;
     auto wait_time = allowed_wait;
 
     // waiting is like a polling
     // we do not want to loose time on test method
     while (wait_time >= 0ms) {
-        int count = cma::PluginEntry::threadCount();
-        if (count == 0) break;
+        if (PluginEntry::threadCount() == 0) {
+            break;
+        }
 
-        cma::tools::sleep(grane);
+        tools::sleep(grane);
         wait_time -= grane;
     }
-    count = cma::PluginEntry::threadCount();
-    XLOG::d.i("Left async threads [{}] after waiting {}ms", count,
-              (allowed_wait - wait_time).count());
+    XLOG::d.i("Left async threads [{}] after waiting {}ms",
+              PluginEntry::threadCount(), (allowed_wait - wait_time).count());
 }
 
 }  // namespace cma::srv

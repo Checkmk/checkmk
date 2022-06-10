@@ -27,14 +27,12 @@ public:
     void continueService() { continued_ = true; }
     void shutdownService() { shutdowned_ = true; }
     const wchar_t *getMainLogName() const { return L"log.log"; }
-    void preContextCall() { pre_context_call_ = true; }
 
     bool stopped_ = false;
     bool started_ = false;
     bool paused_ = false;
     bool shutdowned_ = false;
     bool continued_ = false;
-    bool pre_context_call_ = false;
     static int s_counter;
 };  // namespace wtoolsclassTestProcessor:publiccma::srv::BaseServiceProcessor
 int TestProcessor2::s_counter = 0;
@@ -61,7 +59,6 @@ TEST(ExternalPortTest, StartStop) {
     cma::tools::sleep(50);
     test_port.shutdownIo();  // this is long operation
     EXPECT_TRUE(!test_port.io_thread_.joinable());
-    EXPECT_TRUE(tp.pre_context_call_);
 }
 
 TEST(ExternalPortTest, Read) {

@@ -83,7 +83,7 @@ void KillProcessesInUserFolder() {
     }
 }
 
-void TryCleanOnExit(cfg::modules::ModuleCommander &mc) {
+void TryCleanOnExit() {
     namespace details = cfg::details;
 
     KillProcessesInUserFolder();
@@ -130,7 +130,7 @@ void ServiceProcessor::cleanupOnStop() {
     }
     KillAllInternalUsers();
 
-    TryCleanOnExit(mc_);
+    TryCleanOnExit();
 }
 
 // #TODO - implement

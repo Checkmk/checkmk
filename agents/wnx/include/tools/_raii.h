@@ -30,7 +30,7 @@ struct InternalScopeGuard {
 #define ON_OUT_OF_SCOPE_2(lambda_body, line)                                \
     auto UNI_NAME(deleter_lambda_, line) = [&]() { lambda_body; };          \
     InternalScopeGuard<decltype(UNI_NAME(deleter_lambda_, line))> UNI_NAME( \
-        scope_guard_, line)(UNI_NAME(deleter_lambda_, line));
+        scope_guard_, line)(UNI_NAME(deleter_lambda_, line))
 
 #define ON_OUT_OF_SCOPE(lambda_body) ON_OUT_OF_SCOPE_2(lambda_body, __LINE__)
 

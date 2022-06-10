@@ -41,7 +41,8 @@ public:
 
     void TearDown() override { killArtifacts(); }
 
-    std::vector<std::string> loadConfigAndGetResult(const std::string &cfg) {
+    std::vector<std::string> loadConfigAndGetResult(
+        const std::string &cfg) const {
         if (!temp_fs_->loadContent(cfg)) {
             return {};
         }
@@ -49,7 +50,7 @@ public:
         return tst::ReadFileAsTable(tomlFile());
     }
 
-    void killArtifacts() {
+    void killArtifacts() const {
         std::error_code ec;
         fs::remove(tomlFile(), ec);
     }
@@ -102,9 +103,7 @@ TEST_F(AgentControllerCreateToml, PortAndAllowed) {
 
     auto all = std::accumulate(
         table.begin() + 5, table.end(), std::string{},
-        [](const std::string &a, const std::string &b) -> std::string {
-            return a + b;
-        });
+        [](const std::string &a, const std::string &b) { return a + b; });
     auto actual_ips = convertTomlToIps(all);
     auto expected_ips = tools::SplitString(std::string{allowed}, " ");
     EXPECT_TRUE(rs::is_permutation(actual_ips, expected_ips));
@@ -112,14 +111,15 @@ TEST_F(AgentControllerCreateToml, PortAndAllowed) {
 }
 
 TEST(AgentController, BuildCommandLineAgentChannelOk) {
-    std::tuple<std::string, uint16_t, std::string_view> mapping[] = {
-        {"ll:12345", 12345, "ll:12345"},
-        {"ll:999", kWindowsInternalServicePort,
-         cfg::defaults::kControllerAgentChannelDefault},
-        {"ll:-1", kWindowsInternalServicePort,
-         cfg::defaults::kControllerAgentChannelDefault},
-    };
-    for (const auto &e : mapping) {
+    for (std::vector<std::tuple<std::string, uint16_t, std::string_view>>
+             mapping{
+                 {"ll:12345", 12345, "ll:12345"},
+                 {"ll:999", kWindowsInternalServicePort,
+                  cfg::defaults::kControllerAgentChannelDefault},
+                 {"ll:-1", kWindowsInternalServicePort,
+                  cfg::defaults::kControllerAgentChannelDefault},
+             };
+         const auto &[ch_in, p, ch_out] : mapping) {
         auto temp_fs = tst::TempCfgFs::CreateNoIo();
         ASSERT_TRUE(
             temp_fs->loadContent(fmt::format("global:\n"
@@ -128,11 +128,10 @@ TEST(AgentController, BuildCommandLineAgentChannelOk) {
                                              "  controller:\n"
                                              "    run: yes\n"
                                              "    agent_channel: {}\n",
-                                             std::get<0>(e))));
-        EXPECT_EQ(
-            wtools::ToUtf8(ac::BuildCommandLine(fs::path("x"))),
-            fmt::format("x daemon --agent-channel {} -vv", std::get<2>(e)));
-        EXPECT_EQ(GetConfiguredAgentChannelPort(GetModus()), std::get<1>(e));
+                                             ch_in)));
+        EXPECT_EQ(wtools::ToUtf8(ac::BuildCommandLine(fs::path{"x"})),
+                  fmt::format("x daemon --agent-channel {} -vv", ch_out));
+        EXPECT_EQ(GetConfiguredAgentChannelPort(GetModus()), p);
     }
     EXPECT_EQ(GetConfiguredAgentChannelPort(Modus::integration),
               kWindowsInternalExePort);
@@ -226,7 +225,7 @@ TEST(AgentController, CreateLegacyPullFile) {
         bool exists;
     };
     // NOTE(sk): better to have std::array, but init is a mess
-    Param params[] = {
+    std::vector<Param> params{
         {.run = "no",
          .force_legacy = "no",
          .marker = marker_old,
@@ -285,11 +284,11 @@ public:
 
     void TearDown() override { killArtifacts(); }
 
-    bool markerExists() { return fs::exists(markerFile()); }
-    bool legacyExists() { return fs::exists(legacyFile()); }
-    bool flagExists() { return fs::exists(flagFile()); }
+    bool markerExists() const { return fs::exists(markerFile()); }
+    bool legacyExists() const { return fs::exists(legacyFile()); }
+    bool flagExists() const { return fs::exists(flagFile()); }
 
-    void killArtifacts() {
+    void killArtifacts() const {
         std::error_code ec;
         fs::remove(markerFile(), ec);
         fs::remove(legacyFile(), ec);

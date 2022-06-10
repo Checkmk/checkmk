@@ -196,7 +196,7 @@ private:
 
 TEST_F(CarrierTestInformFixture, InformByMailSlot) {
     using namespace std::string_literals;
-    for (const auto cmd : {"xxx"s, "zzz"s}) {
+    for (const auto &cmd : {"xxx"s, "zzz"s}) {
         InformByMailSlot(mailbox_client.GetName(), cmd);
         EXPECT_TRUE(tst::WaitForSuccessSilent(
             100ms, [cmd]() { return GetRunCommand() == cmd; }))

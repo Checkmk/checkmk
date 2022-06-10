@@ -68,17 +68,14 @@ public:
         return process_id_ != 0;
     }
 
+    uint32_t processId() const noexcept { return process_id_; };
+
 private:
     mutable std::mutex lock_;
     HANDLE process_handle_{wtools::InvalidHandle()};
     HANDLE thread_handle_{wtools::InvalidHandle()};
     uint32_t process_id_{0};
     std::string process_name_;  // for debug purposes
-
-#if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
-    friend class SectionProviderOhm;
-    FRIEND_TEST(SectionProviderOhm, StartStopIntegration);
-#endif
 };
 
 // ASSORTED
@@ -255,6 +252,10 @@ public:
         return mc_;
     }
 
+    // used to start OpenHardwareMonitor if conditions are ok
+    [[nodiscard]] bool conditionallyStartOhm() noexcept;
+    bool stopRunningOhmProcess() noexcept;
+
 private:
     std::vector<uint8_t> makeTestString(const char *text) {
         const std::string answer_test{text == nullptr ? "" : text};
@@ -275,9 +276,6 @@ private:
     void informDevice(cma::rt::Device &Device,
                       std::string_view Ip) const noexcept;
 
-    // used to start OpenHardwareMonitor if conditions are ok
-    bool stopRunningOhmProcess() noexcept;
-    [[nodiscard]] bool conditionallyStartOhm() noexcept;
     void mainThread(world::ExternalPort *ex_port, bool cap_installed) noexcept;
     void mainThreadAsTest() noexcept { mainThread(nullptr, false); }
 
@@ -689,9 +687,6 @@ private:
     friend class ServiceProcessorTest;
     FRIEND_TEST(ServiceProcessorTest, StartStopExe);
     FRIEND_TEST(ServiceProcessorTest, Generate);
-
-    friend class SectionProviderOhm;
-    FRIEND_TEST(SectionProviderOhm, ConditionallyStartOhmIntegration);
 
     friend class CmaCfg;
     FRIEND_TEST(CmaCfg, RestartBinaries);

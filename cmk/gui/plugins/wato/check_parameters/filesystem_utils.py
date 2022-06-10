@@ -173,67 +173,72 @@ def filesystem_levels_elements() -> List[DictionaryEntry]:
 
 
 # Note: This hack is only required on very old filesystem checks (prior August 2013)
-fs_levels_elements_hack: List[DictionaryEntry] = [
-    # Beware: this is a nasty hack that helps us to detect new-style parameters.
-    # Something hat has todo with float/int conversion and has not been documented
-    # by the one who implemented this.
-    (
-        "flex_levels",
-        FixedValue(
-            value=None,
-            totext="",
-            title="",
+def _filesystem_levels_elements_hack() -> List[DictionaryEntry]:
+    return [
+        # Beware: this is a nasty hack that helps us to detect new-style parameters.
+        # Something hat has todo with float/int conversion and has not been documented
+        # by the one who implemented this.
+        (
+            "flex_levels",
+            FixedValue(
+                value=None,
+                totext="",
+                title="",
+            ),
         ),
-    ),
-]
+    ]
 
-fs_reserved_elements: List[DictionaryEntry] = [
-    (
-        "show_reserved",
-        DropdownChoice(
-            title=_("Show space reserved for the <tt>root</tt> user"),
-            help=_(
-                "Check_MK treats space that is reserved for the <tt>root</tt> user on Linux and Unix as "
-                "used space. Usually, 5% are being reserved for root when a new filesystem is being created. "
-                "With this option you can have Check_MK display the current amount of reserved but yet unused "
-                "space."
-            ),
-            choices=[
-                (True, _("Show reserved space")),
-                (False, _("Do now show reserved space")),
-            ],
-        ),
-    ),
-    (
-        "subtract_reserved",
-        DropdownChoice(
-            title=_(
-                "Exclude space reserved for the <tt>root</tt> user from calculation of used space"
-            ),
-            help=_(
-                "By default Check_MK treats space that is reserved for the <tt>root</tt> user on Linux and Unix as "
-                "used space. Usually, 5% are being reserved for root when a new filesystem is being created. "
-                "With this option you can have Check_MK exclude the current amount of reserved but yet unused "
-                "space from the calculations regarding the used space percentage."
-            ),
-            choices=[
-                (False, _("Include reserved space")),
-                (True, _("Exclude reserved space")),
-            ],
-        ),
-    ),
-]
 
-fs_volume_name: List[DictionaryEntry] = [
-    (
-        "show_volume_name",
-        Checkbox(
-            title=_("Show volume name in service output"),
-            label="Enable",
-            default_value=False,
+def _filesystem_reserved_elements() -> List[DictionaryEntry]:
+    return [
+        (
+            "show_reserved",
+            DropdownChoice(
+                title=_("Show space reserved for the <tt>root</tt> user"),
+                help=_(
+                    "Check_MK treats space that is reserved for the <tt>root</tt> user on Linux and Unix as "
+                    "used space. Usually, 5% are being reserved for root when a new filesystem is being created. "
+                    "With this option you can have Check_MK display the current amount of reserved but yet unused "
+                    "space."
+                ),
+                choices=[
+                    (True, _("Show reserved space")),
+                    (False, _("Do now show reserved space")),
+                ],
+            ),
         ),
-    ),
-]
+        (
+            "subtract_reserved",
+            DropdownChoice(
+                title=_(
+                    "Exclude space reserved for the <tt>root</tt> user from calculation of used space"
+                ),
+                help=_(
+                    "By default Check_MK treats space that is reserved for the <tt>root</tt> user on Linux and Unix as "
+                    "used space. Usually, 5% are being reserved for root when a new filesystem is being created. "
+                    "With this option you can have Check_MK exclude the current amount of reserved but yet unused "
+                    "space from the calculations regarding the used space percentage."
+                ),
+                choices=[
+                    (False, _("Include reserved space")),
+                    (True, _("Exclude reserved space")),
+                ],
+            ),
+        ),
+    ]
+
+
+def _filesystem_volume_name() -> List[DictionaryEntry]:
+    return [
+        (
+            "show_volume_name",
+            Checkbox(
+                title=_("Show volume name in service output"),
+                label="Enable",
+                default_value=False,
+            ),
+        ),
+    ]
 
 
 def filesystem_inodes_elements() -> List[DictionaryEntry]:
@@ -455,9 +460,9 @@ def size_trend_elements() -> List[DictionaryEntry]:
 
 filesystem_elements: List[DictionaryEntry] = (
     filesystem_levels_elements()
-    + fs_levels_elements_hack
-    + fs_reserved_elements
-    + fs_volume_name
+    + _filesystem_levels_elements_hack()
+    + _filesystem_reserved_elements()
+    + _filesystem_volume_name()
     + filesystem_inodes_elements()
     + filesystem_magic_elements()
     + size_trend_elements()

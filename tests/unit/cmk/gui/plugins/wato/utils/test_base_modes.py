@@ -35,7 +35,7 @@ class SomeWatoMode(WatoMode):
 @module_registry.register
 class SomeMainModule(ABCMainModule):
     @property
-    def mode_or_url(self):
+    def mode_or_url(self) -> str:
         return "some_wato_mode"
 
     @property

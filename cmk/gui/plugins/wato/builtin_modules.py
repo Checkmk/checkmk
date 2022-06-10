@@ -34,7 +34,7 @@ from cmk.gui.utils.urls import makeuri_contextless, makeuri_contextless_rulespec
 @main_module_registry.register
 class MainModuleFolder(ABCMainModule):
     @property
-    def mode_or_url(self):
+    def mode_or_url(self) -> str:
         return "folder"
 
     @property
@@ -69,7 +69,7 @@ class MainModuleFolder(ABCMainModule):
 @main_module_registry.register
 class MainModuleTags(ABCMainModule):
     @property
-    def mode_or_url(self):
+    def mode_or_url(self) -> str:
         return "tags"
 
     @property
@@ -106,7 +106,7 @@ class MainModuleTags(ABCMainModule):
 @main_module_registry.register
 class MainModuleGlobalSettings(ABCMainModule):
     @property
-    def mode_or_url(self):
+    def mode_or_url(self) -> str:
         return "globalvars"
 
     @property
@@ -141,7 +141,7 @@ class MainModuleGlobalSettings(ABCMainModule):
 @main_module_registry.register
 class MainModuleReadOnly(ABCMainModule):
     @property
-    def mode_or_url(self):
+    def mode_or_url(self) -> str:
         return "read_only"
 
     @property
@@ -176,7 +176,7 @@ class MainModuleReadOnly(ABCMainModule):
 @main_module_registry.register
 class MainModuleRuleSearch(ABCMainModule):
     @property
-    def mode_or_url(self):
+    def mode_or_url(self) -> str:
         return "rule_search"
 
     @property
@@ -211,7 +211,7 @@ class MainModuleRuleSearch(ABCMainModule):
 @main_module_registry.register
 class MainModulePredefinedConditions(ABCMainModule):
     @property
-    def mode_or_url(self):
+    def mode_or_url(self) -> str:
         return "predefined_conditions"
 
     @property
@@ -246,7 +246,7 @@ class MainModulePredefinedConditions(ABCMainModule):
 @main_module_registry.register
 class MainModuleHostAndServiceParameters(ABCMainModule):
     @property
-    def mode_or_url(self):
+    def mode_or_url(self) -> str:
         return makeuri_contextless_rulespec_group(request, "host_monconf")
 
     @property
@@ -281,7 +281,7 @@ class MainModuleHostAndServiceParameters(ABCMainModule):
 @main_module_registry.register
 class MainModuleHWSWInventory(ABCMainModule):
     @property
-    def mode_or_url(self):
+    def mode_or_url(self) -> str:
         return makeuri_contextless_rulespec_group(request, "inventory")
 
     @property
@@ -316,7 +316,7 @@ class MainModuleHWSWInventory(ABCMainModule):
 @main_module_registry.register
 class MainModuleNetworkingServices(ABCMainModule):
     @property
-    def mode_or_url(self):
+    def mode_or_url(self) -> str:
         return makeuri_contextless_rulespec_group(request, "activechecks")
 
     @property
@@ -354,7 +354,7 @@ class MainModuleNetworkingServices(ABCMainModule):
 @main_module_registry.register
 class MainModuleOtherServices(ABCMainModule):
     @property
-    def mode_or_url(self):
+    def mode_or_url(self) -> str:
         return makeuri_contextless_rulespec_group(request, "custom_checks")
 
     @property
@@ -392,7 +392,7 @@ class MainModuleOtherServices(ABCMainModule):
 @main_module_registry.register
 class MainModuleCheckPlugins(ABCMainModule):
     @property
-    def mode_or_url(self):
+    def mode_or_url(self) -> str:
         return "check_plugins"
 
     @property
@@ -427,7 +427,7 @@ class MainModuleCheckPlugins(ABCMainModule):
 @main_module_registry.register
 class MainModuleHostGroups(ABCMainModule):
     @property
-    def mode_or_url(self):
+    def mode_or_url(self) -> str:
         return "host_groups"
 
     @property
@@ -462,7 +462,7 @@ class MainModuleHostGroups(ABCMainModule):
 @main_module_registry.register
 class MainModuleHostCustomAttributes(ABCMainModule):
     @property
-    def mode_or_url(self):
+    def mode_or_url(self) -> str:
         return "host_attrs"
 
     @property
@@ -497,7 +497,7 @@ class MainModuleHostCustomAttributes(ABCMainModule):
 @main_module_registry.register
 class MainModuleServiceGroups(ABCMainModule):
     @property
-    def mode_or_url(self):
+    def mode_or_url(self) -> str:
         return "service_groups"
 
     @property
@@ -532,7 +532,7 @@ class MainModuleServiceGroups(ABCMainModule):
 @main_module_registry.register
 class MainModuleUsers(ABCMainModule):
     @property
-    def mode_or_url(self):
+    def mode_or_url(self) -> str:
         return "users"
 
     @property
@@ -567,7 +567,7 @@ class MainModuleUsers(ABCMainModule):
 @main_module_registry.register
 class MainModuleRoles(ABCMainModule):
     @property
-    def mode_or_url(self):
+    def mode_or_url(self) -> str:
         return "roles"
 
     @property
@@ -602,7 +602,7 @@ class MainModuleRoles(ABCMainModule):
 @main_module_registry.register
 class MainModuleLDAP(ABCMainModule):
     @property
-    def mode_or_url(self):
+    def mode_or_url(self) -> str:
         return "ldap_config"
 
     @property
@@ -637,7 +637,7 @@ class MainModuleLDAP(ABCMainModule):
 @main_module_registry.register
 class MainModuleUserCustomAttributes(ABCMainModule):
     @property
-    def mode_or_url(self):
+    def mode_or_url(self) -> str:
         return "user_attrs"
 
     @property
@@ -672,7 +672,7 @@ class MainModuleUserCustomAttributes(ABCMainModule):
 @main_module_registry.register
 class MainModuleContactGroups(ABCMainModule):
     @property
-    def mode_or_url(self):
+    def mode_or_url(self) -> str:
         return "contact_groups"
 
     @property
@@ -707,7 +707,7 @@ class MainModuleContactGroups(ABCMainModule):
 @main_module_registry.register
 class MainModuleNotifications(ABCMainModule):
     @property
-    def mode_or_url(self):
+    def mode_or_url(self) -> str:
         return "notifications"
 
     @property
@@ -742,7 +742,7 @@ class MainModuleNotifications(ABCMainModule):
 @main_module_registry.register
 class MainModuleTimeperiods(ABCMainModule):
     @property
-    def mode_or_url(self):
+    def mode_or_url(self) -> str:
         return "timeperiods"
 
     @property
@@ -779,7 +779,7 @@ class MainModuleTimeperiods(ABCMainModule):
 @main_module_registry.register
 class MainModuleSites(ABCMainModule):
     @property
-    def mode_or_url(self):
+    def mode_or_url(self) -> str:
         return "sites"
 
     @property
@@ -814,7 +814,7 @@ class MainModuleSites(ABCMainModule):
 @main_module_registry.register
 class MainModuleBackup(ABCMainModule):
     @property
-    def mode_or_url(self):
+    def mode_or_url(self) -> str:
         return "backup"
 
     @property
@@ -849,7 +849,7 @@ class MainModuleBackup(ABCMainModule):
 @main_module_registry.register
 class MainModulePasswords(ABCMainModule):
     @property
-    def mode_or_url(self):
+    def mode_or_url(self) -> str:
         return "passwords"
 
     @property
@@ -884,7 +884,7 @@ class MainModulePasswords(ABCMainModule):
 @main_module_registry.register
 class MainModuleAuditLog(ABCMainModule):
     @property
-    def mode_or_url(self):
+    def mode_or_url(self) -> str:
         return "auditlog"
 
     @property
@@ -919,7 +919,7 @@ class MainModuleAuditLog(ABCMainModule):
 @main_module_registry.register
 class MainModuleIcons(ABCMainModule):
     @property
-    def mode_or_url(self):
+    def mode_or_url(self) -> str:
         return "icons"
 
     @property
@@ -954,7 +954,7 @@ class MainModuleIcons(ABCMainModule):
 @main_module_registry.register
 class MainModuleAnalyzeConfig(ABCMainModule):
     @property
-    def mode_or_url(self):
+    def mode_or_url(self) -> str:
         return "analyze_config"
 
     @property
@@ -989,7 +989,7 @@ class MainModuleAnalyzeConfig(ABCMainModule):
 @main_module_registry.register
 class MainModuleDiagnostics(ABCMainModule):
     @property
-    def mode_or_url(self):
+    def mode_or_url(self) -> str:
         return "diagnostics"
 
     @property
@@ -1027,7 +1027,7 @@ class MainModuleDiagnostics(ABCMainModule):
 @main_module_registry.register
 class MainModuleMonitoringRules(ABCMainModule):
     @property
-    def mode_or_url(self):
+    def mode_or_url(self) -> str:
         return makeuri_contextless_rulespec_group(request, "monconf")
 
     @property
@@ -1062,7 +1062,7 @@ class MainModuleMonitoringRules(ABCMainModule):
 @main_module_registry.register
 class MainModuleDiscoveryRules(ABCMainModule):
     @property
-    def mode_or_url(self):
+    def mode_or_url(self) -> str:
         return makeuri_contextless_rulespec_group(request, "checkparams")
 
     @property
@@ -1097,7 +1097,7 @@ class MainModuleDiscoveryRules(ABCMainModule):
 @main_module_registry.register
 class MainModuleEnforcedServices(ABCMainModule):
     @property
-    def mode_or_url(self):
+    def mode_or_url(self) -> str:
         return makeuri_contextless_rulespec_group(request, "static")
 
     @property
@@ -1131,7 +1131,7 @@ class MainModuleEnforcedServices(ABCMainModule):
 
 class MainModuleAgentsWindows(ABCMainModule):
     @property
-    def mode_or_url(self):
+    def mode_or_url(self) -> str:
         return "download_agents_windows"
 
     @property
@@ -1165,7 +1165,7 @@ class MainModuleAgentsWindows(ABCMainModule):
 
 class MainModuleAgentsLinux(ABCMainModule):
     @property
-    def mode_or_url(self):
+    def mode_or_url(self) -> str:
         return "download_agents_linux"
 
     @property
@@ -1211,7 +1211,7 @@ class MainModuleAgentRules(ABCMainModule):
         return False
 
     @property
-    def mode_or_url(self):
+    def mode_or_url(self) -> str:
         return makeuri_contextless_rulespec_group(request, "agents")
 
     @property
@@ -1257,7 +1257,7 @@ class MainModuleAgentRules(ABCMainModule):
 @main_module_registry.register
 class MainModuleOtherAgents(ABCMainModule):
     @property
-    def mode_or_url(self):
+    def mode_or_url(self) -> str:
         return "download_agents"
 
     @property
@@ -1292,7 +1292,7 @@ class MainModuleOtherAgents(ABCMainModule):
 @main_module_registry.register
 class MainModuleAgentAccessRules(ABCMainModule):
     @property
-    def mode_or_url(self):
+    def mode_or_url(self) -> str:
         return makeuri_contextless_rulespec_group(request, "agent")
 
     @property
@@ -1327,7 +1327,7 @@ class MainModuleAgentAccessRules(ABCMainModule):
 @main_module_registry.register
 class MainModuleSNMPRules(ABCMainModule):
     @property
-    def mode_or_url(self):
+    def mode_or_url(self) -> str:
         return makeuri_contextless_rulespec_group(request, "snmp")
 
     @property
@@ -1362,7 +1362,7 @@ class MainModuleSNMPRules(ABCMainModule):
 @main_module_registry.register
 class MainModuleVMCloudContainer(ABCMainModule):
     @property
-    def mode_or_url(self):
+    def mode_or_url(self) -> str:
         return makeuri_contextless_rulespec_group(request, "vm_cloud_container")
 
     @property
@@ -1397,7 +1397,7 @@ class MainModuleVMCloudContainer(ABCMainModule):
 @main_module_registry.register
 class MainModuleOtherIntegrations(ABCMainModule):
     @property
-    def mode_or_url(self):
+    def mode_or_url(self) -> str:
         return makeuri_contextless_rulespec_group(request, "datasource_programs")
 
     @property

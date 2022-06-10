@@ -3479,7 +3479,7 @@ permission_registry.register(
 @main_module_registry.register
 class MainModuleEventConsole(ABCMainModule):
     @property
-    def mode_or_url(self):
+    def mode_or_url(self) -> str:
         return "mkeventd_rule_packs"
 
     @property
@@ -4629,7 +4629,7 @@ class MainModuleEventConsoleRules(ABCMainModule):
         return False
 
     @property
-    def mode_or_url(self):
+    def mode_or_url(self) -> str:
         return makeuri_contextless_rulespec_group(request, "eventconsole")
 
     @property

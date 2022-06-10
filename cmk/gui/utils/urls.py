@@ -43,7 +43,7 @@ def quote_plus(string: str) -> str:
     return quote(string).replace(" ", "+")
 
 
-def _quote_pair(varname: str, value: Union[None, int, str]):
+def _quote_pair(varname: str, value: Union[None, int, str]) -> str:
     assert isinstance(varname, str)
     if isinstance(value, int):
         return "%s=%s" % (quote_plus(varname), quote_plus(str(value)))
@@ -153,7 +153,7 @@ def makeactionuri_contextless(
 def makeuri_contextless_rulespec_group(
     request: Request,
     group_name: str,
-):
+) -> str:
     return makeuri_contextless(
         request,
         [("group", group_name), ("mode", "rulesets")],

@@ -27,7 +27,7 @@ class MenuItem:
         self._sort_index = sort_index
 
     @property
-    def mode_or_url(self):
+    def mode_or_url(self) -> str:
         return self._mode_or_url
 
     @property

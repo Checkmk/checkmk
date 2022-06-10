@@ -41,7 +41,7 @@ from cmk.gui.utils.urls import makeuri_contextless
 @main_module_registry.register
 class MainModuleBackgroundJobs(ABCMainModule):
     @property
-    def mode_or_url(self):
+    def mode_or_url(self) -> str:
         return "background_jobs_overview"
 
     @property

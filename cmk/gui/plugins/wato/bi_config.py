@@ -123,7 +123,7 @@ from cmk.gui.watolib.config_domains import ConfigDomainGUI
 @main_module_registry.register
 class MainModuleBI(ABCMainModule):
     @property
-    def mode_or_url(self):
+    def mode_or_url(self) -> str:
         return "bi_packs"
 
     @property

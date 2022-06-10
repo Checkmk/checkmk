@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Type
+
 import pytest
 
 import cmk.utils.version as cmk_version
@@ -52,7 +54,7 @@ def test_rulespec_sub_group():
 
     class TestSubGroup(RulespecSubGroup):
         @property
-        def main_group(self):
+        def main_group(self) -> Type[RulespecGroup]:
             return TestGroup
 
         @property

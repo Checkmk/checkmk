@@ -893,7 +893,7 @@ class RulespecGroupDiscoveryCheckParameters(RulespecGroup):
 @rulespec_group_registry.register
 class RulespecGroupCheckParametersNetworking(RulespecSubGroup):
     @property
-    def main_group(self):
+    def main_group(self) -> Type[RulespecGroup]:
         return RulespecGroupMonitoringConfiguration
 
     @property
@@ -908,7 +908,7 @@ class RulespecGroupCheckParametersNetworking(RulespecSubGroup):
 @rulespec_group_registry.register
 class RulespecGroupCheckParametersStorage(RulespecSubGroup):
     @property
-    def main_group(self):
+    def main_group(self) -> Type[RulespecGroup]:
         return RulespecGroupMonitoringConfiguration
 
     @property
@@ -923,7 +923,7 @@ class RulespecGroupCheckParametersStorage(RulespecSubGroup):
 @rulespec_group_registry.register
 class RulespecGroupCheckParametersOperatingSystem(RulespecSubGroup):
     @property
-    def main_group(self):
+    def main_group(self) -> Type[RulespecGroup]:
         return RulespecGroupMonitoringConfiguration
 
     @property
@@ -938,7 +938,7 @@ class RulespecGroupCheckParametersOperatingSystem(RulespecSubGroup):
 @rulespec_group_registry.register
 class RulespecGroupCheckParametersPrinters(RulespecSubGroup):
     @property
-    def main_group(self):
+    def main_group(self) -> Type[RulespecGroup]:
         return RulespecGroupMonitoringConfiguration
 
     @property
@@ -953,7 +953,7 @@ class RulespecGroupCheckParametersPrinters(RulespecSubGroup):
 @rulespec_group_registry.register
 class RulespecGroupCheckParametersEnvironment(RulespecSubGroup):
     @property
-    def main_group(self):
+    def main_group(self) -> Type[RulespecGroup]:
         return RulespecGroupMonitoringConfiguration
 
     @property
@@ -968,7 +968,7 @@ class RulespecGroupCheckParametersEnvironment(RulespecSubGroup):
 @rulespec_group_registry.register
 class RulespecGroupCheckParametersApplications(RulespecSubGroup):
     @property
-    def main_group(self):
+    def main_group(self) -> Type[RulespecGroup]:
         return RulespecGroupMonitoringConfiguration
 
     @property
@@ -983,7 +983,7 @@ class RulespecGroupCheckParametersApplications(RulespecSubGroup):
 @rulespec_group_registry.register
 class RulespecGroupCheckParametersVirtualization(RulespecSubGroup):
     @property
-    def main_group(self):
+    def main_group(self) -> Type[RulespecGroup]:
         return RulespecGroupMonitoringConfiguration
 
     @property
@@ -998,7 +998,7 @@ class RulespecGroupCheckParametersVirtualization(RulespecSubGroup):
 @rulespec_group_registry.register
 class RulespecGroupCheckParametersHardware(RulespecSubGroup):
     @property
-    def main_group(self):
+    def main_group(self) -> Type[RulespecGroup]:
         return RulespecGroupMonitoringConfiguration
 
     @property
@@ -1013,7 +1013,7 @@ class RulespecGroupCheckParametersHardware(RulespecSubGroup):
 @rulespec_group_registry.register
 class RulespecGroupCheckParametersDiscovery(RulespecSubGroup):
     @property
-    def main_group(self):
+    def main_group(self) -> Type[RulespecGroup]:
         return RulespecGroupDiscoveryCheckParameters
 
     @property

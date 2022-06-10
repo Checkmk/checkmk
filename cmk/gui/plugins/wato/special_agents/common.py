@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from typing import Any, List, Optional
+from typing import Any, List, Optional, Type
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
@@ -62,7 +62,7 @@ class RulespecGroupDatasourcePrograms(RulespecGroup):
 @rulespec_group_registry.register
 class RulespecGroupDatasourceProgramsOS(RulespecSubGroup):
     @property
-    def main_group(self):
+    def main_group(self) -> Type[RulespecGroup]:
         return RulespecGroupDatasourcePrograms
 
     @property
@@ -77,7 +77,7 @@ class RulespecGroupDatasourceProgramsOS(RulespecSubGroup):
 @rulespec_group_registry.register
 class RulespecGroupDatasourceProgramsApps(RulespecSubGroup):
     @property
-    def main_group(self):
+    def main_group(self) -> Type[RulespecGroup]:
         return RulespecGroupDatasourcePrograms
 
     @property
@@ -92,7 +92,7 @@ class RulespecGroupDatasourceProgramsApps(RulespecSubGroup):
 @rulespec_group_registry.register
 class RulespecGroupDatasourceProgramsCloud(RulespecSubGroup):
     @property
-    def main_group(self):
+    def main_group(self) -> Type[RulespecGroup]:
         return RulespecGroupDatasourcePrograms
 
     @property
@@ -106,7 +106,7 @@ class RulespecGroupDatasourceProgramsCloud(RulespecSubGroup):
 
 class RulespecGroupDatasourceProgramsContainer(RulespecSubGroup):
     @property
-    def main_group(self):
+    def main_group(self) -> Type[RulespecGroup]:
         return RulespecGroupDatasourcePrograms
 
     @property
@@ -121,7 +121,7 @@ class RulespecGroupDatasourceProgramsContainer(RulespecSubGroup):
 @rulespec_group_registry.register
 class RulespecGroupDatasourceProgramsCustom(RulespecSubGroup):
     @property
-    def main_group(self):
+    def main_group(self) -> Type[RulespecGroup]:
         return RulespecGroupDatasourcePrograms
 
     @property
@@ -136,7 +136,7 @@ class RulespecGroupDatasourceProgramsCustom(RulespecSubGroup):
 @rulespec_group_registry.register
 class RulespecGroupDatasourceProgramsHardware(RulespecSubGroup):
     @property
-    def main_group(self):
+    def main_group(self) -> Type[RulespecGroup]:
         return RulespecGroupDatasourcePrograms
 
     @property
@@ -151,7 +151,7 @@ class RulespecGroupDatasourceProgramsHardware(RulespecSubGroup):
 @rulespec_group_registry.register
 class RulespecGroupDatasourceProgramsTesting(RulespecSubGroup):
     @property
-    def main_group(self):
+    def main_group(self) -> Type[RulespecGroup]:
         return RulespecGroupDatasourcePrograms
 
     @property

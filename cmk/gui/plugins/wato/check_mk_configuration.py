@@ -3834,7 +3834,7 @@ rulespec_registry.register(
 @rulespec_group_registry.register
 class RulespecGroupMonitoringConfigurationInventoryAndCMK(RulespecSubGroup):
     @property
-    def main_group(self):
+    def main_group(self) -> Type[RulespecGroup]:
         return RulespecGroupDiscoveryCheckParameters
 
     @property
@@ -4763,7 +4763,7 @@ class RulespecGroupAgent(RulespecGroup):
 @rulespec_group_registry.register
 class RulespecGroupAgentGeneralSettings(RulespecSubGroup):
     @property
-    def main_group(self):
+    def main_group(self) -> Type[RulespecGroup]:
         return RulespecGroupAgent
 
     @property
@@ -5158,7 +5158,7 @@ rulespec_registry.register(
 @rulespec_group_registry.register
 class RulespecGroupAgentCMKAgent(RulespecSubGroup):
     @property
-    def main_group(self):
+    def main_group(self) -> Type[RulespecGroup]:
         return RulespecGroupAgent
 
     @property

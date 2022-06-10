@@ -7,7 +7,7 @@
 from typing import Any, List, MutableMapping
 
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.check_parameters.utils import (
+from cmk.gui.plugins.wato.check_parameters.filesystem_utils import (
     size_trend_elements,
     transform_trend_mb_to_trend_bytes,
 )

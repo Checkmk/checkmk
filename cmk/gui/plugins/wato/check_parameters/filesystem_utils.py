@@ -3,7 +3,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Module to hold shared code for check parameter module internals"""
+"""Module to hold shared code for filesystem check parameter module internals"""
 
 import copy
 from typing import Any, Dict, List, Mapping
@@ -12,10 +12,8 @@ from typing import Union
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.utils import PredictiveLevels
 from cmk.gui.valuespec import (
     Alternative,
-    CascadingDropdown,
     Checkbox,
     Dictionary,
     DropdownChoice,
@@ -25,7 +23,6 @@ from cmk.gui.valuespec import (
     Integer,
     ListOf,
     Percentage,
-    TextInput,
     Transform,
     Tuple,
     ValueSpec,
@@ -522,62 +519,4 @@ def vs_filesystem(extra_elements=None):
             ],
         ),
         forth=_forth_transform_vs_filesystem,
-    )
-
-
-def vs_interface_traffic():
-    def vs_abs_perc():
-        return CascadingDropdown(
-            orientation="horizontal",
-            choices=[
-                (
-                    "perc",
-                    _("Percentual levels (in relation to port speed)"),
-                    Tuple(
-                        orientation="float",
-                        show_titles=False,
-                        elements=[
-                            Percentage(label=_("Warning at")),
-                            Percentage(label=_("Critical at")),
-                        ],
-                    ),
-                ),
-                (
-                    "abs",
-                    _("Absolute levels in bits or bytes per second"),
-                    Tuple(
-                        orientation="float",
-                        show_titles=False,
-                        elements=[
-                            Integer(label=_("Warning at")),
-                            Integer(label=_("Critical at")),
-                        ],
-                    ),
-                ),
-                ("predictive", _("Predictive Levels (only on CMC)"), PredictiveLevels()),
-            ],
-        )
-
-    return CascadingDropdown(
-        orientation="horizontal",
-        choices=[
-            ("upper", _("Upper"), vs_abs_perc()),
-            ("lower", _("Lower"), vs_abs_perc()),
-        ],
-    )
-
-
-def mssql_item_spec_instance_tablespace() -> TextInput:
-    return TextInput(
-        title=_("Instance & tablespace name"),
-        help=_("The MSSQL instance name and the tablespace name separated by a space."),
-        allow_empty=False,
-    )
-
-
-def mssql_item_spec_instance_database_file() -> TextInput:
-    return TextInput(
-        title=_("Instance, database & file name"),
-        help=_("A combination of the instance, database and (logical) file name."),
-        allow_empty=False,
     )

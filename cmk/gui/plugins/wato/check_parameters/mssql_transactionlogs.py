@@ -6,7 +6,7 @@
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.check_parameters.mssql_datafiles import levels_absolute_or_dynamic
-from cmk.gui.plugins.wato.check_parameters.utils import mssql_item_spec_instance_database_file
+from cmk.gui.plugins.wato.check_parameters.mssql_utils import mssql_item_spec_instance_database_file
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
     HostRulespec,

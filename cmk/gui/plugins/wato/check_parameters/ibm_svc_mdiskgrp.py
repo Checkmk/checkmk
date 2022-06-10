@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.check_parameters.utils import (
+from cmk.gui.plugins.wato.check_parameters.filesystem_utils import (
     filesystem_elements,
     transform_trend_mb_to_trend_bytes,
 )

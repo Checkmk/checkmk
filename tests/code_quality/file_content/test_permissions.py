@@ -11,6 +11,8 @@ from typing import Callable, List, Tuple
 
 from tests.testlib import cmk_path
 
+from ..conftest import ChangedFiles
+
 
 def is_executable(path: Path) -> bool:
     return path.is_file() and os.access(path, os.X_OK)
@@ -71,11 +73,11 @@ _PERMISSIONS: List[Tuple[str, Callable[[Path], bool], List[str], List[str]]] = [
 ]
 
 
-def test_permissions() -> None:
+def test_permissions(changed_files: ChangedFiles) -> None:
     for pattern, check_func, explicit_excludes, exclude_patterns in _PERMISSIONS:
         git_dir = Path(cmk_path())
         for f in git_dir.glob(pattern):
-            if not f.is_file():
+            if not f.is_file() or not changed_files.is_changed(f):
                 continue
             if f.name in explicit_excludes or f.name in _GLOBAL_EXCLUDES:
                 continue

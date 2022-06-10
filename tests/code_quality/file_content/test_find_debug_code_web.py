@@ -8,10 +8,11 @@ from pathlib import Path
 
 from tests.testlib import cmk_path
 
+from ..conftest import ChangedFiles
 
-def test_find_debug_code():
-    to_scan = _files_to_scan()
-    assert len(to_scan) > 20
+
+def test_find_debug_code(changed_files: ChangedFiles):
+    to_scan = _files_to_scan(changed_files)
 
     for path in to_scan:
         with path.open(encoding="utf-8") as f:
@@ -20,9 +21,9 @@ def test_find_debug_code():
                 assert not l.startswith("html.debug("), 'Found "html.debug(...)" call'
 
 
-def _files_to_scan():
+def _files_to_scan(changed_files: ChangedFiles):
     to_scan = [Path(cmk_path(), "web", "app", "index.wsgi")]
     for matched_file in Path(cmk_path(), "cmk", "gui").glob("**/*.py"):
-        if matched_file.is_file():
+        if matched_file.is_file() and changed_files.is_changed(matched_file):
             to_scan.append(matched_file)
     return to_scan

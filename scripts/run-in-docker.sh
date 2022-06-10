@@ -69,6 +69,7 @@ docker run -t -a stdout -a stderr \
     -e MYPY_ADDOPTS \
     -e PYTHON_FILES \
     -e IS_PIPFILE_CHANGED \
+    -e CHANGED_FILES \
     -e RESULTS \
     -e WORKDIR \
     -e CI \

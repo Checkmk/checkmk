@@ -12,6 +12,8 @@ import pytest
 
 from tests.testlib import cmc_path, cme_path, cmk_path
 
+from ..conftest import ChangedFiles
+
 LOGGER = logging.getLogger()
 
 check_paths = [
@@ -42,12 +44,12 @@ def find_debugs(line):
 @pytest.mark.parametrize(
     "line", ['  print "hello Word"', 'print("variable")', "  pprint(dict)", "  pprint.pprint(list)"]
 )
-def test_find_debugs(line):
+def test_find_debugs(changed_files: ChangedFiles, line):
     assert find_debugs(line)
 
 
 @pytest.mark.parametrize("line", ['sys.stdout.write("message")', "# print(variable)"])
-def test_find_debugs_false(line):
+def test_find_debugs_false(changed_files: ChangedFiles, line):
     assert find_debugs(line) is None
 
 
@@ -61,13 +63,17 @@ def test_find_debugs_false(line):
         if os.path.exists(p)
     ],
 )
-def test_find_debug_code(path):
+def test_find_debug_code(changed_files: ChangedFiles, path):
     scanned = 0
 
     for dirpath, _, filenames in os.walk(path):
         scanned += 1
         for filename in filenames:
             file_path = "%s/%s" % (dirpath, filename)
+
+            if not changed_files.is_changed(file_path):
+                continue
+
             if [folder for folder in exclude_folders if folder in file_path]:
                 continue
 

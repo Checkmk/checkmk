@@ -144,12 +144,13 @@ STAGES:
       RESULT_CHECK_FILE_PATTERN: "results/python3-unit-junit.xml"
 
     - NAME: 'Python Code Quality Test'
-      ONLY_WHEN_NOT_EMPTY: CHANGED_PYTHON_FILES,CHANGED_PIPFILE
+      ONLY_WHEN_NOT_EMPTY: CHANGED_PYTHON_FILES,CHANGED_PIPFILE,CHANGED_FILES_ABS
       DIR: 'tests'
       ENV_VARS:
         PYTEST_ADDOPTS: "--junitxml=${RESULTS}/python3-code-quality-junit.xml --color=no"
         PYTHON_FILES: "${CHANGED_PYTHON_FILES}"
         IS_PIPFILE_CHANGED: "${CHANGED_PIPFILE}"
+        CHANGED_FILES: "${CHANGED_FILES_ABS}"
         CI: "true"
       COMMAND: "make test-code-quality-docker"
       TEXT_ON_SKIP: 'No Python files changed'

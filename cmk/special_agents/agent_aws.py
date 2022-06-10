@@ -639,7 +639,7 @@ class AWSSection(DataCache):
         return True
 
     @abc.abstractmethod
-    def _get_colleague_contents(self: Any) -> AWSColleagueContents:
+    def _get_colleague_contents(self) -> AWSColleagueContents:
         """
         Receive section contents from colleagues. The results are stored in
         self._receive_results: {<KEY>: AWSComputedContent}.
@@ -850,7 +850,7 @@ class CostsAndUsage(AWSSection):
     def granularity(self) -> int:
         return 86400
 
-    def _get_colleague_contents(self):
+    def _get_colleague_contents(self) -> AWSColleagueContents:
         return AWSColleagueContents(None, 0.0)
 
     def get_live_data(self, *args):
@@ -901,7 +901,7 @@ class EC2Limits(AWSSectionLimits):
     def granularity(self) -> int:
         return 300
 
-    def _get_colleague_contents(self):
+    def _get_colleague_contents(self) -> AWSColleagueContents:
         return AWSColleagueContents(None, 0.0)
 
     def get_live_data(self, *args):
@@ -1215,7 +1215,7 @@ class EC2Summary(AWSSection):
     def granularity(self) -> int:
         return 300
 
-    def _get_colleague_contents(self):
+    def _get_colleague_contents(self) -> AWSColleagueContents:
         colleague = self._received_results.get("ec2_limits")
         if colleague and colleague.content:
             return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
@@ -1309,7 +1309,7 @@ class EC2Labels(AWSSectionLabels):
     def granularity(self) -> int:
         return 300
 
-    def _get_colleague_contents(self):
+    def _get_colleague_contents(self) -> AWSColleagueContents:
         colleague = self._received_results.get("ec2_summary")
         if colleague and colleague.content:
             return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
@@ -1367,7 +1367,7 @@ class EC2SecurityGroups(AWSSection):
     def granularity(self) -> int:
         return 300
 
-    def _get_colleague_contents(self):
+    def _get_colleague_contents(self) -> AWSColleagueContents:
         colleague = self._received_results.get("ec2_summary")
         if colleague and colleague.content:
             return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
@@ -1424,7 +1424,7 @@ class EC2(AWSSectionCloudwatch):
     def granularity(self) -> int:
         return 300
 
-    def _get_colleague_contents(self):
+    def _get_colleague_contents(self) -> AWSColleagueContents:
         colleague = self._received_results.get("ec2_summary")
         if colleague and colleague.content:
             return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
@@ -1510,7 +1510,7 @@ class EBSLimits(AWSSectionLimits):
     def granularity(self) -> int:
         return 300
 
-    def _get_colleague_contents(self):
+    def _get_colleague_contents(self) -> AWSColleagueContents:
         return AWSColleagueContents(None, 0.0)
 
     def get_live_data(self, *args):
@@ -1633,7 +1633,7 @@ class EBSSummary(AWSSection):
     def granularity(self) -> int:
         return 300
 
-    def _get_colleague_contents(self):
+    def _get_colleague_contents(self) -> AWSColleagueContents:
         colleague = self._received_results.get("ebs_limits")
         volumes = []
         max_cache_timestamp = 0.0
@@ -1734,7 +1734,7 @@ class EBS(AWSSectionCloudwatch):
     def granularity(self) -> int:
         return 300
 
-    def _get_colleague_contents(self):
+    def _get_colleague_contents(self) -> AWSColleagueContents:
         colleague = self._received_results.get("ebs_summary")
         if colleague and colleague.content:
             return AWSColleagueContents(
@@ -1867,7 +1867,7 @@ class S3Limits(AWSSectionLimits):
     def granularity(self) -> int:
         return 86400
 
-    def _get_colleague_contents(self):
+    def _get_colleague_contents(self) -> AWSColleagueContents:
         return AWSColleagueContents(None, 0.0)
 
     def get_live_data(self, *args):
@@ -1909,7 +1909,7 @@ class S3Summary(AWSSection):
     def granularity(self) -> int:
         return 86400
 
-    def _get_colleague_contents(self):
+    def _get_colleague_contents(self) -> AWSColleagueContents:
         colleague = self._received_results.get("s3_limits")
         if colleague and colleague.content:
             return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
@@ -1995,7 +1995,7 @@ class S3(AWSSectionCloudwatch):
     def granularity(self) -> int:
         return 86400
 
-    def _get_colleague_contents(self):
+    def _get_colleague_contents(self) -> AWSColleagueContents:
         colleague = self._received_results.get("s3_summary")
         if colleague and colleague.content:
             return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
@@ -2070,7 +2070,7 @@ class S3Requests(AWSSectionCloudwatch):
     def granularity(self) -> int:
         return 300
 
-    def _get_colleague_contents(self):
+    def _get_colleague_contents(self) -> AWSColleagueContents:
         colleague = self._received_results.get("s3_summary")
         if colleague and colleague.content:
             return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
@@ -2161,7 +2161,7 @@ class GlacierLimits(AWSSectionLimits):
     def granularity(self) -> int:
         return 86400
 
-    def _get_colleague_contents(self):
+    def _get_colleague_contents(self) -> AWSColleagueContents:
         return AWSColleagueContents(None, 0.0)
 
     def get_live_data(self, *args):
@@ -2211,7 +2211,7 @@ class GlacierSummary(AWSSection):
     def granularity(self) -> int:
         return 86400
 
-    def _get_colleague_contents(self):
+    def _get_colleague_contents(self) -> AWSColleagueContents:
         colleague = self._received_results.get("glacier_limits")
         if colleague and colleague.content:
             return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
@@ -2300,7 +2300,7 @@ class Glacier(AWSSection):
     def granularity(self) -> int:
         return 86400
 
-    def _get_colleague_contents(self):
+    def _get_colleague_contents(self) -> AWSColleagueContents:
         colleague = self._received_results.get("glacier_summary")
         if colleague and colleague.content:
             return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
@@ -2342,7 +2342,7 @@ class ELBLimits(AWSSectionLimits):
     def granularity(self) -> int:
         return 300
 
-    def _get_colleague_contents(self):
+    def _get_colleague_contents(self) -> AWSColleagueContents:
         return AWSColleagueContents(None, 0.0)
 
     def get_live_data(self, *args):
@@ -2431,7 +2431,7 @@ class ELBSummaryGeneric(AWSSection):
     def granularity(self) -> int:
         return 300
 
-    def _get_colleague_contents(self):
+    def _get_colleague_contents(self) -> AWSColleagueContents:
         colleague = self._received_results.get("%s_limits" % self._resource)
         if colleague and colleague.content:
             return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
@@ -2517,7 +2517,7 @@ class ELBLabelsGeneric(AWSSectionLabels):
     def granularity(self) -> int:
         return 300
 
-    def _get_colleague_contents(self):
+    def _get_colleague_contents(self) -> AWSColleagueContents:
         colleague = self._received_results.get("%s_summary" % self._resource)
         if colleague and colleague.content:
             return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
@@ -2548,7 +2548,7 @@ class ELBHealth(AWSSection):
     def granularity(self) -> int:
         return 300
 
-    def _get_colleague_contents(self):
+    def _get_colleague_contents(self) -> AWSColleagueContents:
         colleague = self._received_results.get("elb_summary")
         if colleague and colleague.content:
             return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
@@ -2588,7 +2588,7 @@ class ELB(AWSSectionCloudwatch):
     def granularity(self) -> int:
         return 300
 
-    def _get_colleague_contents(self):
+    def _get_colleague_contents(self) -> AWSColleagueContents:
         colleague = self._received_results.get("elb_summary")
         if colleague and colleague.content:
             return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
@@ -2674,7 +2674,7 @@ class ELBv2Limits(AWSSectionLimits):
     def granularity(self) -> int:
         return 300
 
-    def _get_colleague_contents(self):
+    def _get_colleague_contents(self) -> AWSColleagueContents:
         return AWSColleagueContents(None, 0.0)
 
     def get_live_data(self, *args):
@@ -2832,7 +2832,7 @@ class ELBv2TargetGroups(AWSSection):
     def granularity(self) -> int:
         return 300
 
-    def _get_colleague_contents(self):
+    def _get_colleague_contents(self) -> AWSColleagueContents:
         colleague = self._received_results.get("elbv2_summary")
         if colleague and colleague.content:
             return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
@@ -2908,7 +2908,7 @@ class ELBv2Application(AWSSectionCloudwatch):
     def granularity(self) -> int:
         return 300
 
-    def _get_colleague_contents(self):
+    def _get_colleague_contents(self) -> AWSColleagueContents:
         colleague = self._received_results.get("elbv2_summary")
         if colleague and colleague.content:
             return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
@@ -2994,7 +2994,7 @@ class ELBv2ApplicationTargetGroupsResponses(AWSSectionCloudwatch):
     def granularity(self) -> int:
         return 300
 
-    def _get_colleague_contents(self):
+    def _get_colleague_contents(self) -> AWSColleagueContents:
         colleague = self._received_results.get("elbv2_summary")
         if colleague and colleague.content:
             return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
@@ -3126,7 +3126,7 @@ class ELBv2Network(AWSSectionCloudwatch):
     def granularity(self) -> int:
         return 300
 
-    def _get_colleague_contents(self):
+    def _get_colleague_contents(self) -> AWSColleagueContents:
         colleague = self._received_results.get("elbv2_summary")
         if colleague and colleague.content:
             return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
@@ -3239,7 +3239,7 @@ class RDSLimits(AWSSectionLimits):
     def granularity(self) -> int:
         return 300
 
-    def _get_colleague_contents(self):
+    def _get_colleague_contents(self) -> AWSColleagueContents:
         return AWSColleagueContents(None, 0.0)
 
     def get_live_data(self, *args):
@@ -3287,7 +3287,7 @@ class RDSSummary(AWSSection):
     def granularity(self) -> int:
         return 300
 
-    def _get_colleague_contents(self):
+    def _get_colleague_contents(self) -> AWSColleagueContents:
         return AWSColleagueContents(None, 0.0)
 
     def get_live_data(self, *args):
@@ -3364,7 +3364,7 @@ class RDS(AWSSectionCloudwatch):
     def granularity(self) -> int:
         return 300
 
-    def _get_colleague_contents(self):
+    def _get_colleague_contents(self) -> AWSColleagueContents:
         colleague = self._received_results.get("rds_summary")
         if colleague and colleague.content:
             return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
@@ -3461,7 +3461,7 @@ class CloudwatchAlarmsLimits(AWSSectionLimits):
     def granularity(self) -> int:
         return 300
 
-    def _get_colleague_contents(self):
+    def _get_colleague_contents(self) -> AWSColleagueContents:
         return AWSColleagueContents(None, 0.0)
 
     def get_live_data(self, *args):
@@ -3498,7 +3498,7 @@ class CloudwatchAlarms(AWSSection):
     def granularity(self) -> int:
         return 300
 
-    def _get_colleague_contents(self):
+    def _get_colleague_contents(self) -> AWSColleagueContents:
         colleague = self._received_results.get("cloudwatch_alarms_limits")
         if colleague and colleague.content:
             return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
@@ -3552,7 +3552,7 @@ class DynamoDBLimits(AWSSectionLimits):
     def granularity(self) -> int:
         return 300
 
-    def _get_colleague_contents(self):
+    def _get_colleague_contents(self) -> AWSColleagueContents:
         return AWSColleagueContents(None, 0.0)
 
     def get_live_data(self, *args):
@@ -3662,7 +3662,7 @@ class DynamoDBSummary(AWSSection):
     def granularity(self) -> int:
         return 300
 
-    def _get_colleague_contents(self):
+    def _get_colleague_contents(self) -> AWSColleagueContents:
         colleague = self._received_results.get("dynamodb_limits")
         if colleague and colleague.content:
             return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
@@ -3740,7 +3740,7 @@ class DynamoDBTable(AWSSectionCloudwatch):
     def granularity(self) -> int:
         return 300
 
-    def _get_colleague_contents(self):
+    def _get_colleague_contents(self) -> AWSColleagueContents:
         colleague = self._received_results.get("dynamodb_summary")
         if colleague and colleague.content:
             return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
@@ -3853,7 +3853,7 @@ class WAFV2Limits(AWSSectionLimits):
     def granularity(self) -> int:
         return 300
 
-    def _get_colleague_contents(self):
+    def _get_colleague_contents(self) -> AWSColleagueContents:
         return AWSColleagueContents(None, 0.0)
 
     def get_live_data(self, *args):
@@ -3947,7 +3947,7 @@ class WAFV2Summary(AWSSection):
     def granularity(self) -> int:
         return 300
 
-    def _get_colleague_contents(self):
+    def _get_colleague_contents(self) -> AWSColleagueContents:
         colleague = self._received_results.get("wafv2_limits")
         if colleague and colleague.content:
             return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
@@ -4039,7 +4039,7 @@ class WAFV2WebACL(AWSSectionCloudwatch):
     def granularity(self) -> int:
         return 300
 
-    def _get_colleague_contents(self):
+    def _get_colleague_contents(self) -> AWSColleagueContents:
         colleague = self._received_results.get("wafv2_summary")
         if colleague and colleague.content:
             return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
@@ -4110,7 +4110,7 @@ class LambdaRegionLimits(AWSSectionLimits):
     def granularity(self) -> int:
         return 300
 
-    def _get_colleague_contents(self):
+    def _get_colleague_contents(self) -> AWSColleagueContents:
         return AWSColleagueContents(None, 0.0)
 
     def get_live_data(self, *args):
@@ -4169,7 +4169,7 @@ class LambdaSummary(AWSSection):
     def granularity(self) -> int:
         return 300
 
-    def _get_colleague_contents(self):
+    def _get_colleague_contents(self) -> AWSColleagueContents:
         return AWSColleagueContents([], 0.0)
 
     def get_live_data(self, *args):
@@ -4235,7 +4235,7 @@ class LambdaCloudwatch(AWSSectionCloudwatch):
     def granularity(self) -> int:
         return 300
 
-    def _get_colleague_contents(self):
+    def _get_colleague_contents(self) -> AWSColleagueContents:
         # lambda_provisioned_concurrency has to be used, because some metrics for provisioned concurrency will only
         # be reported if the ARN for the provisioned concurrency configuration is used.
         # lambda_provisioned_concurrency contains also the ARNs for lambda functions without provisioned conurrency.
@@ -4335,7 +4335,7 @@ class LambdaProvisionedConcurrency(AWSSection):
     def granularity(self) -> int:
         return 300
 
-    def _get_colleague_contents(self):
+    def _get_colleague_contents(self) -> AWSColleagueContents:
         colleague = self._received_results.get("lambda_summary")
         if colleague and colleague.content:
             return AWSColleagueContents(colleague.content, colleague.cache_timestamp)

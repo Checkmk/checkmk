@@ -108,6 +108,10 @@ def test_inventory(section_1) -> None:
     assert list(inventory_suseconnect(section_1)) == [
         Attributes(
             path=["software", "os"],
-            inventory_attributes={},
+            inventory_attributes={
+                "License Begin": "2015-12-01 00:00:00 UTC",
+                "License Expiration": "2019-12-31 00:00:00 UTC",
+                "Subscription Status": "ACTIVE",
+            },
         ),
     ]

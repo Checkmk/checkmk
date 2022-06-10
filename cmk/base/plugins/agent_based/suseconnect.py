@@ -48,7 +48,7 @@
 #   Registered
 ##.
 
-from typing import Final
+from typing import Final, Mapping, TypeVar
 
 from .agent_based_api.v1 import Attributes, register
 from .agent_based_api.v1.type_defs import InventoryResult
@@ -141,13 +141,20 @@ _MAP: Final = (
 )
 
 
+_TVal = TypeVar("_TVal")
+
+
+def get_data(section: Mapping[str, _TVal]) -> _TVal | None:
+    return next((value for key, value in section.items() if "SLES" in key), None)
+
+
 def inventory_suseconnect(section) -> InventoryResult:
+    if (data := get_data(section)) is None:
+        return
     yield Attributes(
         path=["software", "os"],
         inventory_attributes={
-            description: value
-            for key, description in _MAP
-            if (value := section.get(key)) is not None
+            description: value for key, description in _MAP if (value := data.get(key)) is not None
         },
     )
 

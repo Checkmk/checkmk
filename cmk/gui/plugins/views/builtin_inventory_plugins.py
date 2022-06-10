@@ -94,7 +94,6 @@ inventory_displayhints.update({
     ".hardware.memory.arrays:*.maximum_capacity": {
         "title": _l("Maximum Capacity"), "paint": "bytes"
     },
-    ".hardware.memory.arrays:*.devices:*.": {"title": lambda v: v["locator"]},
     ".hardware.memory.arrays:*.devices:*.size": {"title": _l("Size"), "paint": "bytes"},
     ".hardware.memory.arrays:*.devices:*.speed": {"title": _l("Speed"), "paint": "hz"},
     ".hardware.system.": {

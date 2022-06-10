@@ -593,6 +593,7 @@ def _make_title_function(raw_hint: InventoryHintSpec) -> Callable[[str], str]:
         return lambda word: word.replace("_", " ").title()
 
     if callable(title := raw_hint["title"]):
+        # TODO Do we still need this?
         return title
 
     return lambda word: title

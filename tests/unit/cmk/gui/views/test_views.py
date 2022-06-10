@@ -2622,7 +2622,6 @@ def test_registered_display_hints():
     '.hardware.memory.arrays:',
     '.hardware.memory.arrays:*.',
     '.hardware.memory.arrays:*.devices:',
-    '.hardware.memory.arrays:*.devices:*.',
     '.hardware.memory.arrays:*.devices:*.size',
     '.hardware.memory.arrays:*.devices:*.speed',
     '.hardware.memory.arrays:*.maximum_capacity',

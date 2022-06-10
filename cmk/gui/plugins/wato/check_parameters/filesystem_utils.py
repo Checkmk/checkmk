@@ -297,49 +297,53 @@ def filesystem_inodes_elements() -> List[DictionaryEntry]:
     ]
 
 
-fs_magic_elements: List[DictionaryEntry] = [
-    (
-        "magic",
-        Float(
-            title=_("Magic factor (automatic level adaptation for large filesystems)"),
-            default_value=0.8,
-            minvalue=0.1,
-            maxvalue=1.0,
-        ),
-    ),
-    (
-        "magic_normsize",
-        Integer(
-            title=_("Reference size for magic factor"), default_value=20, minvalue=1, unit=_("GB")
-        ),
-    ),
-    (
-        "levels_low",
-        Tuple(
-            title=_("Minimum levels if using magic factor"),
-            help=_(
-                "The filesystem levels will never fall below these values, when using "
-                "the magic factor and the filesystem is very small."
+def filesystem_magic_elements() -> List[DictionaryEntry]:
+    return [
+        (
+            "magic",
+            Float(
+                title=_("Magic factor (automatic level adaptation for large filesystems)"),
+                default_value=0.8,
+                minvalue=0.1,
+                maxvalue=1.0,
             ),
-            elements=[
-                Percentage(
-                    title=_("Warning at"),
-                    # xgettext: no-python-format
-                    unit=_("% usage"),
-                    allow_int=True,
-                    default_value=50,
-                ),
-                Percentage(
-                    title=_("Critical at"),
-                    # xgettext: no-python-format
-                    unit=_("% usage"),
-                    allow_int=True,
-                    default_value=60,
-                ),
-            ],
         ),
-    ),
-]
+        (
+            "magic_normsize",
+            Integer(
+                title=_("Reference size for magic factor"),
+                default_value=20,
+                minvalue=1,
+                unit=_("GB"),
+            ),
+        ),
+        (
+            "levels_low",
+            Tuple(
+                title=_("Minimum levels if using magic factor"),
+                help=_(
+                    "The filesystem levels will never fall below these values, when using "
+                    "the magic factor and the filesystem is very small."
+                ),
+                elements=[
+                    Percentage(
+                        title=_("Warning at"),
+                        # xgettext: no-python-format
+                        unit=_("% usage"),
+                        allow_int=True,
+                        default_value=50,
+                    ),
+                    Percentage(
+                        title=_("Critical at"),
+                        # xgettext: no-python-format
+                        unit=_("% usage"),
+                        allow_int=True,
+                        default_value=60,
+                    ),
+                ],
+            ),
+        ),
+    ]
 
 
 size_trend_elements: List[DictionaryEntry] = [
@@ -453,7 +457,7 @@ filesystem_elements: List[DictionaryEntry] = (
     + fs_reserved_elements
     + fs_volume_name
     + filesystem_inodes_elements()
-    + fs_magic_elements
+    + filesystem_magic_elements()
     + size_trend_elements
 )
 

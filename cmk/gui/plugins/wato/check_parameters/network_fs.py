@@ -7,7 +7,7 @@
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.check_parameters.filesystem_utils import (
     filesystem_levels_elements,
-    fs_magic_elements,
+    filesystem_magic_elements,
     size_trend_elements,
 )
 from cmk.gui.plugins.wato.utils import (
@@ -27,7 +27,7 @@ def _item_spec_network_fs():
 def _parameter_valuespec_network_fs():
     return Dictionary(
         elements=filesystem_levels_elements()
-        + fs_magic_elements
+        + filesystem_magic_elements()
         + size_trend_elements
         + [
             (

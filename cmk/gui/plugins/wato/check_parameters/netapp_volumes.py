@@ -7,7 +7,7 @@
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.check_parameters.filesystem_utils import (
     filesystem_inodes_elements,
-    fs_magic_elements,
+    filesystem_magic_elements,
     get_free_used_dynamic_valuespec,
     match_dual_level_type,
     size_trend_elements,
@@ -55,7 +55,7 @@ def _parameter_valuespec_netapp_volumes():
                 ),
             ),
         ]
-        + fs_magic_elements
+        + filesystem_magic_elements()
         + filesystem_inodes_elements()
         + size_trend_elements,
     )

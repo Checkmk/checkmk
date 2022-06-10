@@ -864,8 +864,11 @@ class PasswordIdent(base.String):
             **kwargs,
         )
 
-    def _validate(self, value):
+    def _validate(self, value: str):
         super()._validate(value)
+
+        if ":" in value:
+            raise self.make_error("contains_colon", name=value)
 
         exists = password_exists(value)
         if self._should_exist and not exists:

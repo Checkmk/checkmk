@@ -10,7 +10,8 @@ import pytest
 
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
-from cmk.utils import version
+from cmk.utils import password_store, version
+from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
 managedtest = pytest.mark.skipif(not version.is_managed_edition(), reason="see #7213")
 
@@ -203,3 +204,111 @@ def test_openapi_password_delete(aut_user_auth_wsgi_app: WebTestAppForCMK):
         status=200,
     )
     assert len(resp.json_body["value"]) == 0
+
+
+def test_password_with_newlines(
+    aut_user_auth_wsgi_app: WebTestAppForCMK, mock_livestatus: MockLiveStatusConnection
+):
+    base = "/NO_SITE/check_mk/api/1.0"
+
+    credentials_with_newlines = """{
+        "type": "service_account",
+        "project_id": "myCoolProject",
+        "private_key_id": "foobar",
+        "private_key": "I\\nhave\\nnewlines\\n",
+        "client_email": "me@example.com",
+        "client_id": "123456789",
+        "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+        "token_uri": "https://oauth2.googleapis.com/token",
+        "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+        "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/me@example.com"
+    }"""
+
+    def create_host(hostname: str):
+        aut_user_auth_wsgi_app.post(
+            base + "/domain-types/host_config/collections/all?bake_agent=False",
+            content_type="application/json",
+            headers={"Accept": "application/json"},
+            params=json.dumps(
+                {
+                    "folder": "/",
+                    "host_name": hostname,
+                    "attributes": {
+                        "tag_address_family": "no-ip",
+                        "tag_agent": "special-agents",
+                    },
+                }
+            ),
+            status=200,
+        )
+
+    def create_gcp_rule():
+        aut_user_auth_wsgi_app.post(
+            base + "/domain-types/rule/collections/all",
+            content_type="application/json",
+            headers={"Accept": "application/json"},
+            params=json.dumps(
+                {
+                    "ruleset": "special_agents:gcp",
+                    "folder": "/",
+                    "properties": {"disabled": False},
+                    "value_raw": repr(
+                        {
+                            "credentials": ("password", credentials_with_newlines),
+                            "project": "tribe29-check-development",
+                            "services": [
+                                #                    "gcs",
+                                #                    "gce",
+                                "cloud_run",
+                                #                    "cloud_functions",
+                                #                    "cloud_sql",
+                                #                    "filestore",
+                                #                    "redis",
+                            ],
+                        }
+                    ),
+                    "conditions": {"host_name": {"match_on": ["gcp"], "operator": "one_of"}},
+                }
+            ),
+            status=200,
+        )
+
+    def activate_changes():
+        aut_user_auth_wsgi_app.post(
+            base + "/domain-types/activation_run/actions/activate-changes/invoke",
+            headers={"Accept": "application/json"},
+            content_type="application/json",
+            params=json.dumps(
+                {"redirect": False, "sites": ["NO_SITE"], "force_foreign_changes": True}
+            ),
+            status=200,
+        )
+
+    def create_password():
+        aut_user_auth_wsgi_app.post(
+            base + "/domain-types/password/collections/all",
+            content_type="application/json",
+            headers={"Accept": "application/json"},
+            params=json.dumps(
+                {
+                    "customer": "provider",
+                    "ident": "gcp",
+                    "title": "gcp",
+                    "comment": "Kommentar",
+                    "documentation_url": "localhost",
+                    "password": credentials_with_newlines,
+                    "owner": "admin",
+                    "shared": ["all"],
+                }
+            ),
+            status=200,
+        )
+
+    with mock_livestatus():
+        create_host("gcp")
+
+        create_password()
+        create_gcp_rule()
+        activate_changes()
+
+    password_store.load()  # see if it loads correctly

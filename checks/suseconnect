@@ -48,7 +48,9 @@
 #   Registered
 ##.
 
-from cmk.base.plugins.agent_based.suseconnect import get_data
+import time
+
+from cmk.base.plugins.agent_based.suseconnect import get_data, Section
 
 factory_settings["sles_license_default_levels"] = {
     "status": "Registered",
@@ -57,12 +59,12 @@ factory_settings["sles_license_default_levels"] = {
 }
 
 
-def inventory_suseconnect(section):
+def inventory_suseconnect(section: Section):
     if get_data(section) is not None:
         yield None, {}
 
 
-def check_suseconnect(_no_item, params, section):
+def check_suseconnect(_no_item, params, section: Section):
     # we assume here that the parsed data contains all required keys
 
     if (specs := get_data(section)) is None:

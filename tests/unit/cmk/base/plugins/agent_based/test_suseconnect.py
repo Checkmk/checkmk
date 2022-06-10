@@ -13,7 +13,11 @@ from tests.testlib import on_time
 from cmk.utils.type_defs import CheckPluginName
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes, Result, Service, State
-from cmk.base.plugins.agent_based.suseconnect import inventory_suseconnect, parse_suseconnect
+from cmk.base.plugins.agent_based.suseconnect import (
+    inventory_suseconnect,
+    parse_suseconnect,
+    Section,
+)
 
 
 @pytest.fixture(name="plugin", scope="module")
@@ -45,15 +49,15 @@ STRING_TABLE_1: Final = [
 
 
 @pytest.fixture(name="section_1", scope="module")
-def _get_section_1():
+def _get_section_1() -> Section:
     return parse_suseconnect(STRING_TABLE_1)
 
 
-def test_discovery(discover_suseconnect, section_1) -> None:
+def test_discovery(discover_suseconnect, section_1: Section) -> None:
     assert list(discover_suseconnect(section_1)) == [Service()]
 
 
-def test_check(check_suseconnect, section_1) -> None:
+def test_check(check_suseconnect, section_1: Section) -> None:
     with on_time("2020-07-15 00:00:00", "UTC"):
         assert list(
             check_suseconnect(
@@ -104,7 +108,7 @@ def test_agent_output_parsable(check_suseconnect) -> None:
         )
 
 
-def test_inventory(section_1) -> None:
+def test_inventory(section_1: Section) -> None:
     assert list(inventory_suseconnect(section_1)) == [
         Attributes(
             path=["software", "os"],

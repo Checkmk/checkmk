@@ -48,22 +48,23 @@
 #   Registered
 ##.
 
-from typing import Final, Mapping, TypeVar
+from typing import Final, Mapping, Sequence, TypeVar
 
 from .agent_based_api.v1 import Attributes, register
-from .agent_based_api.v1.type_defs import InventoryResult
+from .agent_based_api.v1.type_defs import InventoryResult, StringTable
+
+Section = Mapping[str, Mapping[str, str]]
 
 
-def _join_line(line):
+def _join_line(line: Sequence[str]) -> str:
     return ":".join(line).strip()
 
 
-def _parse_header(header):
-
+def _parse_header(header: str) -> Mapping[str, str]:
     return dict(zip(["identifier", "version", "architecture"], header[1:-1].split("/")))
 
 
-def _parse_suseconnect_v15(info):
+def _parse_suseconnect_v15(info: StringTable) -> Section:
     map_keys = {
         "Regcode": "registration_code",
         "Starts at": "starts_at",
@@ -89,7 +90,7 @@ def _parse_suseconnect_v15(info):
     return parsed
 
 
-def _parse_suseconnect_pre_v15(info):
+def _parse_suseconnect_pre_v15(info: StringTable) -> Section:
     map_keys = {
         "identifier": "identifier",
         "version": "version",
@@ -112,7 +113,7 @@ def _parse_suseconnect_pre_v15(info):
     return {parsed["identifier"]: parsed}
 
 
-def parse_suseconnect(string_table):
+def parse_suseconnect(string_table: StringTable) -> Section:
 
     try:
         first = string_table[0][0]
@@ -148,7 +149,7 @@ def get_data(section: Mapping[str, _TVal]) -> _TVal | None:
     return next((value for key, value in section.items() if "SLES" in key), None)
 
 
-def inventory_suseconnect(section) -> InventoryResult:
+def inventory_suseconnect(section: Section) -> InventoryResult:
     if (data := get_data(section)) is None:
         return
     yield Attributes(

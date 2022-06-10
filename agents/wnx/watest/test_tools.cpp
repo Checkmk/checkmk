@@ -9,6 +9,7 @@
 
 #include <filesystem>
 #include <random>
+#include <ranges>
 #include <string>
 #include <string_view>
 
@@ -27,17 +28,18 @@
 #include "yaml-cpp/node/node.h"  // for Node
 
 namespace fs = std::filesystem;
+namespace rs = std::ranges;
 using namespace std::string_literals;
 
 namespace tst {
 
 void AllowReadWriteAccess(const fs::path &path,
                           std::vector<std::wstring> &commands) {
-    constexpr std::wstring_view command_templates[] = {
+    const std::vector<std::wstring_view> command_templates = {
         L"icacls \"{}\" /inheritance:d /c",  // disable inheritance
         L"icacls \"{}\" /grant:r *S-1-5-32-545:(OI)(CI)(RX) /c"};  // read/exec
 
-    for (auto const t : command_templates) {
+    for (const auto &t : command_templates) {
         auto cmd = fmt::format(t.data(), path.wstring());
         commands.emplace_back(cmd);
     }
@@ -46,14 +48,8 @@ void AllowReadWriteAccess(const fs::path &path,
 
 std::string GetFabricYmlContent() {
     static std::string fabric_yaml_content;
-    static bool one_run{false};
-    if (!one_run) {
-        one_run = true;
-        try {
-            fabric_yaml_content = wtools::ReadWholeFile(GetFabricYml());
-        } catch (const std::exception &e) {
-            XLOG::l("Exception '{}' loading fabric yaml", e.what());
-        }
+    if (fabric_yaml_content.empty()) {
+        fabric_yaml_content = wtools::ReadWholeFile(GetFabricYml());
     }
 
     return fabric_yaml_content;
@@ -62,12 +58,12 @@ std::string GetFabricYmlContent() {
 class TestEnvironment : public ::testing::Environment {
 public:
     static constexpr std::string_view temp_test_prefix_{"tmp_watest"};
-    virtual ~TestEnvironment() = default;
+    ~TestEnvironment() override = default;
 
     void SetUp() override {
-        auto base_dir = cma::tools::win::GetEnv(cma::env::unit_base_dir);
+        fs::path base_dir = cma::tools::win::GetEnv(cma::env::unit_base_dir);
         if (!base_dir.empty() && fs::exists(base_dir)) {
-            temp_dir_ = fs::path(base_dir) / temp_test_prefix_;
+            temp_dir_ = base_dir / temp_test_prefix_;
         } else {
             auto folder_name = fmt::format("{}_{}", temp_test_prefix_,
                                            ::GetCurrentProcessId());
@@ -124,10 +120,18 @@ fs::path GetUnitTestFilesRoot() {
 //    \--- test_files
 //            \--- unit_tests <--- MakePathToUnitTestFiles(SolutionRoot)
 //            \--- config     <--- MakePathToConfigTestFiles(SolutionRoot)
+constexpr std::wstring_view kSolutionTestsFolderName(L"tests");
+constexpr std::wstring_view kSolutionFilesFolderName(L"files");
 constexpr std::wstring_view kSolutionTestFilesFolderName(L"test_files");
 constexpr std::wstring_view kSolutionUnitTestsFolderName(L"unit_test");
 constexpr std::wstring_view kSolutionConfigTestFilesFolderName(L"config");
 constexpr std::wstring_view kSolutionCapTestFilesFolderName(L"cap");
+
+fs::path MakePathToTestsFiles(const std::wstring &root) {
+    fs::path r{root};
+    r = r / kSolutionTestsFolderName / kSolutionFilesFolderName;
+    return r.lexically_normal();
+}
 
 fs::path MakePathToUnitTestFiles(const std::wstring &root) {
     fs::path r{root};
@@ -148,16 +152,15 @@ fs::path MakePathToCapTestFiles(const std::wstring &root) {
 }
 
 void SafeCleanTempDir() {
-    auto temp_dir = cma::cfg::GetTempDir();
-    auto really_temp_dir = temp_dir.find(L"\\tmp", 0) != std::wstring::npos;
+    fs::path temp_dir = cma::cfg::GetTempDir();
+    auto really_temp_dir =
+        temp_dir.wstring().find(L"\\tmp", 0) != std::wstring::npos;
     if (!really_temp_dir) return;
 
     // clean
     std::error_code ec;
     fs::remove_all(temp_dir, ec);
-    if (ec)
-        XLOG::l("error removing '{}' with {} ", wtools::ToUtf8(temp_dir),
-                ec.message());
+    if (ec) XLOG::l("error removing '{}' with {} ", temp_dir, ec.message());
     fs::create_directory(temp_dir);
 }
 
@@ -199,20 +202,17 @@ void SafeCleanTempDir(std::string_view sub_dir) {
 
 namespace {
 template <typename T, typename V>
-void RemoveElement(T &Container, const V &Str) {
-    Container.erase(std::remove_if(Container.begin(), Container.end(),
-                                   [Str](const std::string &Candidate) {
-                                       return cma::tools::IsEqual(Str,
-                                                                  Candidate);
-                                   }),
-                    Container.end());
+void RemoveElement(T &container, const V &str) {
+    auto [a, b] = rs::remove_if(container, [str](const auto &candidate) {
+        return cma::tools::IsEqual(str, candidate);
+    });
+    container.erase(a, b);
 }
 
 template <typename T, typename V>
 bool AddElement(T &container, const V &value) {
     // add section name to internal array if not found
-    if (std::end(container) ==
-        std::find(container.begin(), container.end(), value)) {
+    if (std::end(container) == rs::find(container, value)) {
         container.emplace_back(value);
         return true;
     }
@@ -269,8 +269,8 @@ std::vector<std::string> ReadFileAsTable(const std::string &Name) {
 fs::path MakeTempFolderInTempPath(std::wstring_view folder_name) {
     // Find Temporary Folder
     fs::path temp_folder{GetTempDir()};
-    std::error_code ec;
-    if (!fs::exists(temp_folder, ec)) {
+
+    if (std::error_code ec; !fs::exists(temp_folder, ec)) {
         XLOG::l("Updating is NOT possible, temporary folder not found [{}]",
                 ec.value());
         return {};
@@ -333,7 +333,8 @@ TempCfgFs::TempCfgFs(Mode mode) : mode_{mode} {
 TempCfgFs ::~TempCfgFs() {
     cma::cfg::GetCfg().popFolders();
     if (mode_ == Mode::standard) {
-        fs::remove_all(base_);
+        std::error_code ec;
+        fs::remove_all(base_, ec);
     }
 
     if (content_loaded_) {
@@ -363,7 +364,7 @@ bool TempCfgFs::loadConfig(const fs::path &yml) {
     return ret;
 }
 
-bool TempCfgFs::reloadConfig() {
+bool TempCfgFs::reloadConfig() const {
     std::vector<std::wstring> cfg_files;
     if (mode_ == Mode::standard) {
         cfg_files.emplace_back(cma::cfg::files::kDefaultMainConfig);
@@ -394,7 +395,7 @@ bool TempCfgFs::loadContent(std::string_view content) {
     return ret;
 }
 
-void TempCfgFs::allowUserAccess() {
+void TempCfgFs::allowUserAccess() const {
     std::vector<std::wstring> commands;
     tst::AllowReadWriteAccess(base_, commands);
     wtools::ExecuteCommandsSync(L"all", commands);
@@ -424,18 +425,18 @@ void TempCfgFs::allowUserAccess() {
     return TempCfgFs::createFile(filepath, data_, content);
 }
 
-[[nodiscard]] void TempCfgFs::removeFile(const fs::path &filepath,
-                                         const fs::path &filepath_base) {
+void TempCfgFs::removeFile(const fs::path &filepath,
+                           const fs::path &filepath_base) {
     std::error_code ec;
     auto p = filepath_base / filepath;
     fs::remove(p, ec);
 }
 
-[[nodiscard]] void TempCfgFs::removeRootFile(const fs::path &filepath) const {
+void TempCfgFs::removeRootFile(const fs::path &filepath) const {
     TempCfgFs::removeFile(filepath, root_);
 }
 
-[[nodiscard]] void TempCfgFs::removeDataFile(const fs::path &filepath) const {
+void TempCfgFs::removeDataFile(const fs::path &filepath) const {
     TempCfgFs::removeFile(filepath, data_);
 }
 
@@ -448,17 +449,15 @@ namespace {
 enum class WaitForSuccessMode { silent, indicate };
 
 bool WaitForSuccess(std::chrono::milliseconds ms, WaitForSuccessMode mode,
-                    std::function<bool()> predicat) {
+                    const std::function<bool()> &predicat) {
     using namespace std::chrono_literals;
     auto count = ms / 20ms;
 
     auto success = false;
 
     for (int i = 0; i < count; i++) {
-        if (mode == WaitForSuccessMode::indicate) {
-            if (i % 10 == 9) {
-                xlog::sendStringToStdio(".", xlog::internal::Colors::yellow);
-            }
+        if ((mode == WaitForSuccessMode::indicate) && (i % 10 == 9)) {
+            xlog::sendStringToStdio(".", xlog::internal::Colors::yellow);
         }
         if (predicat()) {
             success = true;
@@ -475,12 +474,12 @@ bool WaitForSuccess(std::chrono::milliseconds ms, WaitForSuccessMode mode,
 }  // namespace
 
 bool WaitForSuccessIndicate(std::chrono::milliseconds ms,
-                            std::function<bool()> predicat) {
+                            const std::function<bool()> &predicat) {
     return WaitForSuccess(ms, WaitForSuccessMode::indicate, predicat);
 }
 
 bool WaitForSuccessSilent(std::chrono::milliseconds ms,
-                          std::function<bool()> predicat) {
+                          const std::function<bool()> &predicat) {
     return WaitForSuccess(ms, WaitForSuccessMode::silent, predicat);
 }
 

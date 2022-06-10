@@ -35,6 +35,7 @@ std::filesystem::path GetSolutionRoot();
 std::filesystem::path GetProjectRoot();
 std::filesystem::path GetUnitTestFilesRoot();
 
+std::filesystem::path MakePathToTestsFiles(const std::wstring &root);
 std::filesystem::path MakePathToUnitTestFiles(const std::wstring &root);
 inline std::filesystem::path MakePathToUnitTestFiles() {
     return MakePathToUnitTestFiles(GetSolutionRoot());
@@ -54,16 +55,17 @@ inline std::filesystem::path MakePathToCapTestFiles() {
 class YamlLoader {
 public:
     YamlLoader() {
-        using namespace cma::cfg;
         std::error_code ec;
         std::filesystem::remove(cma::cfg::GetBakeryFile(), ec);
         cma::OnStart(cma::AppType::test);
 
-        auto yaml = GetLoadedConfig();
-        ProcessKnownConfigGroups();
-        SetupEnvironmentFromGroups();
+        auto yaml = cma::cfg::GetLoadedConfig();
+        cma::cfg::ProcessKnownConfigGroups();
+        cma::cfg::SetupEnvironmentFromGroups();
     }
-    ~YamlLoader() { OnStart(cma::AppType::test); }
+    YamlLoader(const YamlLoader &) = delete;
+    YamlLoader &operator=(const YamlLoader &) = delete;
+    ~YamlLoader() { cma::OnStart(cma::AppType::test); }
 };
 
 void SafeCleanTempDir();
@@ -84,8 +86,8 @@ inline void CreateBinaryFile(const std::filesystem::path &path,
 }
 
 inline std::filesystem::path CreateIniFile(
-    const std::filesystem::path &lwa_path, const std::string content,
-    const std::string yaml_name) {
+    const std::filesystem::path &lwa_path, const std::string &content,
+    const std::string &yaml_name) {
     auto ini_file = lwa_path / (yaml_name + ".ini");
     CreateTextFile(lwa_path / ini_file, content);
     return ini_file;
@@ -100,7 +102,7 @@ inline std::filesystem::path CreateWorkFile(const std::filesystem::path &path,
 // Storage for temporary in out dir
 class TempDirPair {
 public:
-    TempDirPair(const std::string &case_name);
+    explicit TempDirPair(const std::string &case_name);
     TempDirPair(const TempDirPair &) = delete;
     TempDirPair(TempDirPair &&) = delete;
     TempDirPair &operator=(const TempDirPair &) = delete;
@@ -117,30 +119,24 @@ private:
 };
 
 inline std::tuple<std::filesystem::path, std::filesystem::path> CreateInOut() {
-    namespace fs = std::filesystem;
-    fs::path temp_dir = cma::cfg::GetTempDir();
-    auto normal_dir =
-        temp_dir.wstring().find(L"\\tmp", 0) != std::wstring::npos;
-    if (normal_dir) {
+    if (std::filesystem::path temp_dir = cma::cfg::GetTempDir();
+        temp_dir.wstring().find(L"\\tmp", 0) != std::wstring::npos) {
         std::error_code ec;
         auto lwa_dir = temp_dir / "in";
         auto pd_dir = temp_dir / "out";
-        fs::create_directories(lwa_dir, ec);
-        fs::create_directories(pd_dir, ec);
+        std::filesystem::create_directories(lwa_dir, ec);
+        std::filesystem::create_directories(pd_dir, ec);
         return {lwa_dir, pd_dir};
     }
     return {};
 }
 
 inline std::filesystem::path CreateDirInTemp(std::wstring_view Dir) {
-    namespace fs = std::filesystem;
-    fs::path temp_dir = cma::cfg::GetTempDir();
-    auto normal_dir =
-        temp_dir.wstring().find(L"\\tmp", 0) != std::wstring::npos;
-    if (normal_dir) {
+    if (std::filesystem::path temp_dir = cma::cfg::GetTempDir();
+        temp_dir.wstring().find(L"\\tmp", 0) != std::wstring::npos) {
         std::error_code ec;
         auto lwa_dir = temp_dir / Dir;
-        fs::create_directories(lwa_dir, ec);
+        std::filesystem::create_directories(lwa_dir, ec);
         return lwa_dir;
     }
     return {};
@@ -153,15 +149,13 @@ void DisableSectionsNode(std::string_view value, bool update_global);
 
 inline void SafeCleanBakeryDir() {
     namespace fs = std::filesystem;
-    auto bakery_dir = cma::cfg::GetBakeryDir();
-    auto normal_dir = bakery_dir.find(L"\\bakery", 0) != std::wstring::npos;
-    if (normal_dir) {
+    fs::path bakery_dir = cma::cfg::GetBakeryDir();
+    if (bakery_dir.wstring().find(L"\\bakery", 0) != std::wstring::npos) {
         // clean
         fs::remove_all(bakery_dir);
         fs::create_directory(bakery_dir);
     } else {
-        XLOG::l("attempt to delete suspicious dir {}",
-                wtools::ToUtf8(bakery_dir));
+        XLOG::l("attempt to delete suspicious dir {}", bakery_dir);
     }
 }
 
@@ -177,7 +171,7 @@ inline std::vector<std::string> ReadFileAsTable(
 
 using CheckYamlVector =
     std::vector<std::pair<std::string_view, YAML::NodeType::value>>;
-inline void CheckYaml(YAML::Node table, const CheckYamlVector &vec) {
+inline void CheckYaml(const YAML::Node &table, const CheckYamlVector &vec) {
     int pos = 0;
     for (auto t : table) {
         EXPECT_EQ(t.first.as<std::string>(), vec[pos].first);
@@ -216,12 +210,12 @@ private:
 public:
     using ptr = std::unique_ptr<TempCfgFs>;
 
-    static std::unique_ptr<TempCfgFs> CreateNoIo() {
-        return std::unique_ptr<TempCfgFs>(new TempCfgFs(Mode::no_io));
+    static TempCfgFs::ptr CreateNoIo() {
+        return TempCfgFs::ptr(new TempCfgFs(Mode::no_io));
     }
 
-    static std::unique_ptr<TempCfgFs> Create() {
-        return std::unique_ptr<TempCfgFs>(new TempCfgFs(Mode::standard));
+    static TempCfgFs::ptr Create() {
+        return TempCfgFs::ptr(new TempCfgFs(Mode::standard));
     }
     ~TempCfgFs();
 
@@ -231,7 +225,7 @@ public:
     TempCfgFs &operator=(TempCfgFs &&) = delete;
 
     [[nodiscard]] bool loadConfig(const std::filesystem::path &yml);
-    [[nodiscard]] bool reloadConfig();
+    [[nodiscard]] bool reloadConfig() const;
     [[nodiscard]] bool loadFactoryConfig();
     [[nodiscard]] bool loadContent(std::string_view config);
 
@@ -243,13 +237,13 @@ public:
     void removeRootFile(const std::filesystem::path &relative_p) const;
     void removeDataFile(const std::filesystem::path &relative_p) const;
 
-    const std::filesystem::path root() const { return root_; }
-    const std::filesystem::path data() const { return data_; }
+    std::filesystem::path root() const { return root_; }
+    std::filesystem::path data() const { return data_; }
 
-    void allowUserAccess();
+    void allowUserAccess() const;
 
 private:
-    TempCfgFs(Mode mode);
+    explicit TempCfgFs(Mode mode);
     [[nodiscard]] static bool createFile(
         const std::filesystem::path &filepath,
         const std::filesystem::path &filepath_base, const std::string &content);
@@ -267,12 +261,13 @@ std::filesystem::path GetFabricYml();
 std::string GetFabricYmlContent();
 
 bool WaitForSuccessSilent(std::chrono::milliseconds ms,
-                          std::function<bool()> predicat);
+                          const std::function<bool()> &predicat);
 
 bool WaitForSuccessIndicate(std::chrono::milliseconds ms,
-                            std::function<bool()> predicat);
+                            const std::function<bool()> &predicat);
 
-// Usage FirewallOpener fwo;
+/// Usage:
+///     FirewallOpener fwo;
 class FirewallOpener {
 public:
     FirewallOpener();
@@ -288,7 +283,7 @@ private:
     std::wstring argv0_;
 };
 
-constexpr inline int TestPort() { return 64531; }
+constexpr int TestPort() { return 34531; }
 
 namespace misc {
 void CopyFailedPythonLogFileToLog(const std::filesystem::path &data);
@@ -319,7 +314,7 @@ public:
         , message_(data.message)
         , event_level_{data.event_level} {}
 
-    virtual uint64_t recordId() const override { return record_id_; }
+    uint64_t recordId() const override { return record_id_; }
 
     uint16_t eventId() const override { return event_id_; }
 
@@ -345,9 +340,9 @@ private:
 
 class EventLogDebug : public EventLogBase {
 public:
-    EventLogDebug(const std::vector<tst::EventRecordData> &data)
+    explicit EventLogDebug(const std::vector<tst::EventRecordData> &data)
         : data_(data) {}
-    ~EventLogDebug() {}
+    ~EventLogDebug() override = default;
 
     std::wstring getName() const override { return L"debug"; }
     void seek(uint64_t record_id) override { pos_ = record_id; }
@@ -364,7 +359,6 @@ public:
 private:
     uint64_t pos_{0U};
     std::vector<tst::EventRecordData> data_;
-    bool seek_possible_{true};
 };
 
 }  // namespace cma::evl

@@ -2260,7 +2260,7 @@ def _process_availability_view(view_renderer: ABCViewRenderer) -> None:
         # all 'amount_*', 'duration_fetch_rows' and 'duration_filter_rows' will be set in:
         show_view_func = functools.partial(
             availability.show_availability_page,
-            view=View,
+            view=view,
             filterheaders=filterheaders,
         )
 
@@ -2271,7 +2271,7 @@ def _process_availability_view(view_renderer: ABCViewRenderer) -> None:
         # 'amount_rows_after_limit' will be set in:
         show_view_func = functools.partial(
             availability.show_bi_availability,
-            view=View,
+            view=view,
             aggr_rows=rows,
         )
 

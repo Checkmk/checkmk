@@ -356,7 +356,6 @@ class ErrorReporter:
         ("discovery", "logwatch", "logwatch_groups"),
         ("inventory", "inv_if", "inv_if"),
         ("inventory", "lnx_sysctl", "lnx_sysctl"),
-        ("inventory", "suseconnect", "suseconnect"),
     }
     KNOWN_ERROR_LOADING_DEFAULTS = {
         # type # plugin # wato

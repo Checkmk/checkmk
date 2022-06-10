@@ -48,7 +48,10 @@
 #   Registered
 ##.
 
-from .agent_based_api.v1 import register
+from typing import Final
+
+from .agent_based_api.v1 import Attributes, register
+from .agent_based_api.v1.type_defs import InventoryResult
 
 
 def _join_line(line):
@@ -125,4 +128,31 @@ def parse_suseconnect(string_table):
 register.agent_section(
     name="suseconnect",
     parse_function=parse_suseconnect,
+)
+
+
+_MAP: Final = (
+    ("starts_at", "License Begin"),
+    ("expires_at", "License Expiration"),
+    ("regcode", "Registration Code"),
+    ("status", "Registration Status"),
+    ("subscription_status", "Subscription Status"),
+    ("type", "Subscription Type"),
+)
+
+
+def inventory_suseconnect(section) -> InventoryResult:
+    yield Attributes(
+        path=["software", "os"],
+        inventory_attributes={
+            description: value
+            for key, description in _MAP
+            if (value := section.get(key)) is not None
+        },
+    )
+
+
+register.inventory_plugin(
+    name="suseconnect",
+    inventory_function=inventory_suseconnect,
 )

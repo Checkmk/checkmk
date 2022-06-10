@@ -458,15 +458,16 @@ def size_trend_elements() -> List[DictionaryEntry]:
     ]
 
 
-filesystem_elements: List[DictionaryEntry] = (
-    filesystem_levels_elements()
-    + _filesystem_levels_elements_hack()
-    + _filesystem_reserved_elements()
-    + _filesystem_volume_name()
-    + filesystem_inodes_elements()
-    + filesystem_magic_elements()
-    + size_trend_elements()
-)
+def filesystem_elements() -> List[DictionaryEntry]:
+    return (
+        filesystem_levels_elements()
+        + _filesystem_levels_elements_hack()
+        + _filesystem_reserved_elements()
+        + _filesystem_volume_name()
+        + filesystem_inodes_elements()
+        + filesystem_magic_elements()
+        + size_trend_elements()
+    )
 
 
 def _transform_filesystem_valuespec(params: Dict[str, Any]) -> Mapping[str, Any]:
@@ -480,7 +481,7 @@ def vs_filesystem(extra_elements=None) -> ValueSpec:
     return Transform(
         valuespec=Dictionary(
             help=_("This ruleset allows to set parameters for space and inodes usage"),
-            elements=filesystem_elements + extra_elements,
+            elements=filesystem_elements() + extra_elements,
             hidden_keys=["flex_levels"],
             ignored_keys=[
                 "patterns",

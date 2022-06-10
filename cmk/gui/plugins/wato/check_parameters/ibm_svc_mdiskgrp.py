@@ -16,7 +16,7 @@ from cmk.gui.valuespec import Dictionary, Percentage, TextInput, Tuple
 
 def _parameter_valuespec_ibm_svc_mdiskgrp():
     return Dictionary(
-        elements=filesystem_elements
+        elements=filesystem_elements()
         + [
             (
                 "provisioning_levels",

@@ -24,7 +24,7 @@ def _item_spec_asm_diskgroup():
 
 def _parameter_valuespec_asm_diskgroup():
     return Dictionary(
-        elements=filesystem_elements
+        elements=filesystem_elements()
         + [
             (
                 "req_mir_free",

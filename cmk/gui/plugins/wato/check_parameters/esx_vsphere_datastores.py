@@ -22,7 +22,7 @@ def _item_spec_esx_vsphere_datastores():
 
 def _parameter_valuespec_esx_vsphere_datastores():
     return Dictionary(
-        elements=filesystem_elements
+        elements=filesystem_elements()
         + [
             (
                 "provisioning_levels",

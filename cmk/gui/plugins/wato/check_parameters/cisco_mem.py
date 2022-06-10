@@ -4,13 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, List, MutableMapping
+from typing import List
 
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.check_parameters.filesystem_utils import (
-    size_trend_elements,
-    transform_trend_mb_to_trend_bytes,
-)
+from cmk.gui.plugins.wato.check_parameters.filesystem_utils import size_trend_elements
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
@@ -23,15 +20,8 @@ from cmk.gui.valuespec import (
     Integer,
     Percentage,
     TextInput,
-    Transform,
     Tuple,
 )
-
-
-def _transform_wrapper(params: MutableMapping[str, Any]) -> MutableMapping[str, Any]:
-    params = params if isinstance(params, dict) else {"levels": params}
-    params = transform_trend_mb_to_trend_bytes(params)
-    return params
 
 
 def _parameter_valuespec_cisco_mem():
@@ -69,10 +59,7 @@ def _parameter_valuespec_cisco_mem():
             ),
         ),
     ]
-    return Transform(
-        valuespec=Dictionary(elements=elements + size_trend_elements),
-        forth=_transform_wrapper,
-    )
+    return Dictionary(elements=elements + size_trend_elements)
 
 
 rulespec_registry.register(

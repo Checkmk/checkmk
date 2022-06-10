@@ -5,7 +5,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Module to hold shared code for filesystem check parameter module internals"""
 
-import copy
 from typing import Any, Dict, List, Mapping
 from typing import Tuple as _Tuple
 from typing import Union
@@ -338,45 +337,15 @@ fs_magic_elements: List[_Tuple[str, ValueSpec]] = [
     ),
 ]
 
-TREND_RANGE_DEFAULT = 24
-
-
-def _transform_trend_range_not_none(params):
-    return TREND_RANGE_DEFAULT if params is None else params
-
-
-def transform_trend_mb_to_trend_bytes(params: Mapping[str, Any]) -> Dict[str, Any]:
-    """forth transform for trend_bytes and the former trend_mb
-    when changing the trend_mb field to a Filesize field the name was also changed.
-    Therefore the transform needs to be applied on several locations
-    In Version 2.1.0 trend_mb was substituted by trend_bytes. Therefore this transform was created.
-
-    >>> transform_trend_mb_to_trend_bytes({"trend_mb": (100, 200), "foo": "bar"})
-    {'foo': 'bar', 'trend_bytes': (104857600, 209715200)}
-    >>> transform_trend_mb_to_trend_bytes({"foo": "bar"})
-    {'foo': 'bar'}
-    """
-    transformed_params: Dict[str, Any] = dict(copy.deepcopy(params))
-    if "trend_mb" in params and "trend_bytes" not in params:
-        transformed_params["trend_bytes"] = (
-            transformed_params["trend_mb"][0] * 1024**2,
-            transformed_params["trend_mb"][1] * 1024**2,
-        )
-        del transformed_params["trend_mb"]
-    return transformed_params
-
 
 size_trend_elements = [
     (
         "trend_range",
-        Transform(
-            valuespec=Integer(
-                title=_("Time Range for trend computation"),
-                default_value=TREND_RANGE_DEFAULT,
-                minvalue=1,
-                unit=_("hours"),
-            ),
-            forth=_transform_trend_range_not_none,
+        Integer(
+            title=_("Time Range for trend computation"),
+            default_value=24,
+            minvalue=1,
+            unit=_("hours"),
         ),
     ),
     (
@@ -485,20 +454,8 @@ filesystem_elements: List[_Tuple[str, ValueSpec]] = (
 )
 
 
-def _transform_discovered_filesystem_params(p: Mapping[str, Any]) -> Dict[str, Any]:
-    params: Dict[str, Any] = dict(copy.deepcopy(p))
-    include_volume_name = params.pop("include_volume_name", None)
-    if include_volume_name is True:
-        params["item_appearance"] = "volume_name_and_mountpoint"
-    elif include_volume_name is False:
-        params["item_appearance"] = "mountpoint"
-    return params
-
-
-def _forth_transform_vs_filesystem(params: Mapping[str, Any]) -> Dict[str, Any]:
+def _transform_filesystem_valuespec(params: Dict[str, Any]) -> Mapping[str, Any]:
     """wrapper for all the transforms on vs_filesystem"""
-    params = _transform_discovered_filesystem_params(params)
-    params = transform_trend_mb_to_trend_bytes(params)
     return params
 
 
@@ -518,5 +475,5 @@ def vs_filesystem(extra_elements=None):
                 "mountpoint_for_block_devices",
             ],
         ),
-        forth=_forth_transform_vs_filesystem,
+        forth=_transform_filesystem_valuespec,
     )

@@ -11,62 +11,53 @@ from cmk.gui.plugins.wato.check_parameters.filesystem_utils import (
     get_free_used_dynamic_valuespec,
     match_dual_level_type,
     size_trend_elements,
-    transform_filesystem_free,
-    transform_trend_mb_to_trend_bytes,
 )
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersStorage,
 )
-from cmk.gui.valuespec import Alternative, Dictionary, ListChoice, TextInput, Transform
+from cmk.gui.valuespec import Alternative, Dictionary, ListChoice, TextInput
 
 
 def _parameter_valuespec_netapp_volumes():
-    return Transform(
-        valuespec=Dictionary(
-            ignored_keys=["patterns"],
-            elements=[
-                (
-                    "levels",
-                    Alternative(
-                        title=_("Levels for volume"),
-                        show_alternative_title=True,
-                        default_value=(80.0, 90.0),
-                        match=match_dual_level_type,
-                        elements=[
-                            get_free_used_dynamic_valuespec("used", "volume", maxvalue=None),
-                            Transform(
-                                valuespec=get_free_used_dynamic_valuespec(
-                                    "free", "volume", default_value=(20.0, 10.0)
-                                ),
-                                forth=transform_filesystem_free,
-                                back=transform_filesystem_free,
-                            ),
-                        ],
-                    ),
+    return Dictionary(
+        ignored_keys=["patterns"],
+        elements=[
+            (
+                "levels",
+                Alternative(
+                    title=_("Levels for volume"),
+                    show_alternative_title=True,
+                    default_value=(80.0, 90.0),
+                    match=match_dual_level_type,
+                    elements=[
+                        get_free_used_dynamic_valuespec("used", "volume", maxvalue=None),
+                        get_free_used_dynamic_valuespec(
+                            "free", "volume", default_value=(20.0, 10.0)
+                        ),
+                    ],
                 ),
-                (
-                    "perfdata",
-                    ListChoice(
-                        title=_("Performance data for protocols"),
-                        help=_("Specify for which protocol performance data should get recorded."),
-                        choices=[
-                            ("", _("Summarized data of all protocols")),
-                            ("nfs", _("NFS")),
-                            ("cifs", _("CIFS")),
-                            ("san", _("SAN")),
-                            ("fcp", _("FCP")),
-                            ("iscsi", _("iSCSI")),
-                        ],
-                    ),
+            ),
+            (
+                "perfdata",
+                ListChoice(
+                    title=_("Performance data for protocols"),
+                    help=_("Specify for which protocol performance data should get recorded."),
+                    choices=[
+                        ("", _("Summarized data of all protocols")),
+                        ("nfs", _("NFS")),
+                        ("cifs", _("CIFS")),
+                        ("san", _("SAN")),
+                        ("fcp", _("FCP")),
+                        ("iscsi", _("iSCSI")),
+                    ],
                 ),
-            ]
-            + fs_magic_elements
-            + fs_inodes_elements
-            + size_trend_elements,
-        ),
-        forth=transform_trend_mb_to_trend_bytes,
+            ),
+        ]
+        + fs_magic_elements
+        + fs_inodes_elements
+        + size_trend_elements,
     )
 
 

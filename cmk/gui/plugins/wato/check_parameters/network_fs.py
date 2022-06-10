@@ -9,14 +9,13 @@ from cmk.gui.plugins.wato.check_parameters.filesystem_utils import (
     fs_levels_elements,
     fs_magic_elements,
     size_trend_elements,
-    transform_trend_mb_to_trend_bytes,
 )
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersStorage,
 )
-from cmk.gui.valuespec import Dictionary, DropdownChoice, TextInput, Transform
+from cmk.gui.valuespec import Dictionary, DropdownChoice, TextInput
 
 
 def _item_spec_network_fs():
@@ -26,26 +25,23 @@ def _item_spec_network_fs():
 
 
 def _parameter_valuespec_network_fs():
-    return Transform(
-        valuespec=Dictionary(
-            elements=fs_levels_elements
-            + fs_magic_elements
-            + size_trend_elements
-            + [
-                (
-                    "has_perfdata",
-                    DropdownChoice(
-                        title=_("Performance data settings"),
-                        choices=[
-                            (True, _("Enable performance data")),
-                            (False, _("Disable performance data")),
-                        ],
-                        default_value=False,
-                    ),
+    return Dictionary(
+        elements=fs_levels_elements
+        + fs_magic_elements
+        + size_trend_elements
+        + [
+            (
+                "has_perfdata",
+                DropdownChoice(
+                    title=_("Performance data settings"),
+                    choices=[
+                        (True, _("Enable performance data")),
+                        (False, _("Disable performance data")),
+                    ],
+                    default_value=False,
                 ),
-            ],
-        ),
-        forth=transform_trend_mb_to_trend_bytes,
+            ),
+        ],
     )
 
 

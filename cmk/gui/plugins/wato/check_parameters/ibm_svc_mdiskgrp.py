@@ -5,46 +5,40 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.check_parameters.filesystem_utils import (
-    filesystem_elements,
-    transform_trend_mb_to_trend_bytes,
-)
+from cmk.gui.plugins.wato.check_parameters.filesystem_utils import filesystem_elements
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersStorage,
 )
-from cmk.gui.valuespec import Dictionary, Percentage, TextInput, Transform, Tuple
+from cmk.gui.valuespec import Dictionary, Percentage, TextInput, Tuple
 
 
 def _parameter_valuespec_ibm_svc_mdiskgrp():
-    return Transform(
-        valuespec=Dictionary(
-            elements=filesystem_elements
-            + [
-                (
-                    "provisioning_levels",
-                    Tuple(
-                        title=_("Provisioning Levels"),
-                        help=_("A provisioning of over 100% means over provisioning."),
-                        elements=[
-                            Percentage(
-                                title=_("Warning at a provisioning of"),
-                                default_value=110.0,
-                                maxvalue=None,
-                            ),
-                            Percentage(
-                                title=_("Critical at a provisioning of"),
-                                default_value=120.0,
-                                maxvalue=None,
-                            ),
-                        ],
-                    ),
+    return Dictionary(
+        elements=filesystem_elements
+        + [
+            (
+                "provisioning_levels",
+                Tuple(
+                    title=_("Provisioning Levels"),
+                    help=_("A provisioning of over 100% means over provisioning."),
+                    elements=[
+                        Percentage(
+                            title=_("Warning at a provisioning of"),
+                            default_value=110.0,
+                            maxvalue=None,
+                        ),
+                        Percentage(
+                            title=_("Critical at a provisioning of"),
+                            default_value=120.0,
+                            maxvalue=None,
+                        ),
+                    ],
                 ),
-            ],
-            hidden_keys=["flex_levels"],
-        ),
-        forth=transform_trend_mb_to_trend_bytes,
+            ),
+        ],
+        hidden_keys=["flex_levels"],
     )
 
 

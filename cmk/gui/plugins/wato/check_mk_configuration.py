@@ -3838,7 +3838,7 @@ class RulespecGroupMonitoringConfigurationInventoryAndCMK(RulespecSubGroup):
         return RulespecGroupDiscoveryCheckParameters
 
     @property
-    def sub_group_name(self):
+    def sub_group_name(self) -> str:
         return "inventory_and_check_mk_settings"
 
     @property
@@ -4767,7 +4767,7 @@ class RulespecGroupAgentGeneralSettings(RulespecSubGroup):
         return RulespecGroupAgent
 
     @property
-    def sub_group_name(self):
+    def sub_group_name(self) -> str:
         return "general_settings"
 
     @property
@@ -5162,7 +5162,7 @@ class RulespecGroupAgentCMKAgent(RulespecSubGroup):
         return RulespecGroupAgent
 
     @property
-    def sub_group_name(self):
+    def sub_group_name(self) -> str:
         return "check_mk_agent"
 
     @property

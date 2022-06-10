@@ -56,7 +56,7 @@ def test_rulespec_sub_group():
             return TestGroup
 
         @property
-        def sub_group_name(self):
+        def sub_group_name(self) -> str:
             return "sub_group"
 
         @property

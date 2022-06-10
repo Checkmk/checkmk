@@ -38,7 +38,7 @@ class RulespecGroupMonitoringConfigurationVarious(RulespecSubGroup):
         return RulespecGroupMonitoringConfiguration
 
     @property
-    def sub_group_name(self):
+    def sub_group_name(self) -> str:
         return "various"
 
     @property
@@ -68,7 +68,7 @@ class RulespecGroupMonitoringConfigurationServiceChecks(RulespecSubGroup):
         return RulespecGroupMonitoringConfiguration
 
     @property
-    def sub_group_name(self):
+    def sub_group_name(self) -> str:
         return "service_checks"
 
     @property
@@ -83,7 +83,7 @@ class RulespecGroupHostsMonitoringRulesVarious(RulespecSubGroup):
         return RulespecGroupHostsMonitoringRules
 
     @property
-    def sub_group_name(self):
+    def sub_group_name(self) -> str:
         return "host_various"
 
     @property
@@ -98,7 +98,7 @@ class RulespecGroupMonitoringConfigurationNotifications(RulespecSubGroup):
         return RulespecGroupMonitoringConfiguration
 
     @property
-    def sub_group_name(self):
+    def sub_group_name(self) -> str:
         return "notifications"
 
     @property
@@ -113,7 +113,7 @@ class RulespecGroupHostsMonitoringRulesNotifications(RulespecSubGroup):
         return RulespecGroupHostsMonitoringRules
 
     @property
-    def sub_group_name(self):
+    def sub_group_name(self) -> str:
         return "host_notifications"
 
     @property
@@ -128,7 +128,7 @@ class RulespecGroupHostsMonitoringRulesHostChecks(RulespecSubGroup):
         return RulespecGroupHostsMonitoringRules
 
     @property
-    def sub_group_name(self):
+    def sub_group_name(self) -> str:
         return "host_checks"
 
     @property
@@ -173,7 +173,7 @@ class RulespecGroupMonitoringAgentsGenericOptions(RulespecSubGroup):
         return RulespecGroupMonitoringAgents
 
     @property
-    def sub_group_name(self):
+    def sub_group_name(self) -> str:
         return "generic_options"
 
     @property
@@ -208,7 +208,7 @@ class RulespecGroupEnforcedServicesNetworking(RulespecSubGroup):
         return RulespecGroupEnforcedServices
 
     @property
-    def sub_group_name(self):
+    def sub_group_name(self) -> str:
         return "networking"
 
     @property
@@ -223,7 +223,7 @@ class RulespecGroupEnforcedServicesApplications(RulespecSubGroup):
         return RulespecGroupEnforcedServices
 
     @property
-    def sub_group_name(self):
+    def sub_group_name(self) -> str:
         return "applications"
 
     @property
@@ -238,7 +238,7 @@ class RulespecGroupEnforcedServicesEnvironment(RulespecSubGroup):
         return RulespecGroupEnforcedServices
 
     @property
-    def sub_group_name(self):
+    def sub_group_name(self) -> str:
         return "environment"
 
     @property
@@ -253,7 +253,7 @@ class RulespecGroupEnforcedServicesOperatingSystem(RulespecSubGroup):
         return RulespecGroupEnforcedServices
 
     @property
-    def sub_group_name(self):
+    def sub_group_name(self) -> str:
         return "os"
 
     @property
@@ -268,7 +268,7 @@ class RulespecGroupEnforcedServicesHardware(RulespecSubGroup):
         return RulespecGroupEnforcedServices
 
     @property
-    def sub_group_name(self):
+    def sub_group_name(self) -> str:
         return "hardware"
 
     @property
@@ -283,7 +283,7 @@ class RulespecGroupEnforcedServicesStorage(RulespecSubGroup):
         return RulespecGroupEnforcedServices
 
     @property
-    def sub_group_name(self):
+    def sub_group_name(self) -> str:
         return "storage"
 
     @property
@@ -298,7 +298,7 @@ class RulespecGroupEnforcedServicesVirtualization(RulespecSubGroup):
         return RulespecGroupEnforcedServices
 
     @property
-    def sub_group_name(self):
+    def sub_group_name(self) -> str:
         return "virtualization"
 
     @property

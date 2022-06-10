@@ -897,7 +897,7 @@ class RulespecGroupCheckParametersNetworking(RulespecSubGroup):
         return RulespecGroupMonitoringConfiguration
 
     @property
-    def sub_group_name(self):
+    def sub_group_name(self) -> str:
         return "networking"
 
     @property
@@ -912,7 +912,7 @@ class RulespecGroupCheckParametersStorage(RulespecSubGroup):
         return RulespecGroupMonitoringConfiguration
 
     @property
-    def sub_group_name(self):
+    def sub_group_name(self) -> str:
         return "storage"
 
     @property
@@ -927,7 +927,7 @@ class RulespecGroupCheckParametersOperatingSystem(RulespecSubGroup):
         return RulespecGroupMonitoringConfiguration
 
     @property
-    def sub_group_name(self):
+    def sub_group_name(self) -> str:
         return "os"
 
     @property
@@ -942,7 +942,7 @@ class RulespecGroupCheckParametersPrinters(RulespecSubGroup):
         return RulespecGroupMonitoringConfiguration
 
     @property
-    def sub_group_name(self):
+    def sub_group_name(self) -> str:
         return "printers"
 
     @property
@@ -957,7 +957,7 @@ class RulespecGroupCheckParametersEnvironment(RulespecSubGroup):
         return RulespecGroupMonitoringConfiguration
 
     @property
-    def sub_group_name(self):
+    def sub_group_name(self) -> str:
         return "environment"
 
     @property
@@ -972,7 +972,7 @@ class RulespecGroupCheckParametersApplications(RulespecSubGroup):
         return RulespecGroupMonitoringConfiguration
 
     @property
-    def sub_group_name(self):
+    def sub_group_name(self) -> str:
         return "applications"
 
     @property
@@ -987,7 +987,7 @@ class RulespecGroupCheckParametersVirtualization(RulespecSubGroup):
         return RulespecGroupMonitoringConfiguration
 
     @property
-    def sub_group_name(self):
+    def sub_group_name(self) -> str:
         return "virtualization"
 
     @property
@@ -1002,7 +1002,7 @@ class RulespecGroupCheckParametersHardware(RulespecSubGroup):
         return RulespecGroupMonitoringConfiguration
 
     @property
-    def sub_group_name(self):
+    def sub_group_name(self) -> str:
         return "hardware"
 
     @property
@@ -1017,7 +1017,7 @@ class RulespecGroupCheckParametersDiscovery(RulespecSubGroup):
         return RulespecGroupDiscoveryCheckParameters
 
     @property
-    def sub_group_name(self):
+    def sub_group_name(self) -> str:
         return "discovery"
 
     @property

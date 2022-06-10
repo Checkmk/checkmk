@@ -66,7 +66,7 @@ class RulespecGroupDatasourceProgramsOS(RulespecSubGroup):
         return RulespecGroupDatasourcePrograms
 
     @property
-    def sub_group_name(self):
+    def sub_group_name(self) -> str:
         return "os"
 
     @property
@@ -81,7 +81,7 @@ class RulespecGroupDatasourceProgramsApps(RulespecSubGroup):
         return RulespecGroupDatasourcePrograms
 
     @property
-    def sub_group_name(self):
+    def sub_group_name(self) -> str:
         return "apps"
 
     @property
@@ -96,7 +96,7 @@ class RulespecGroupDatasourceProgramsCloud(RulespecSubGroup):
         return RulespecGroupDatasourcePrograms
 
     @property
-    def sub_group_name(self):
+    def sub_group_name(self) -> str:
         return "cloud"
 
     @property
@@ -110,7 +110,7 @@ class RulespecGroupDatasourceProgramsContainer(RulespecSubGroup):
         return RulespecGroupDatasourcePrograms
 
     @property
-    def sub_group_name(self):
+    def sub_group_name(self) -> str:
         return "container"
 
     @property
@@ -125,7 +125,7 @@ class RulespecGroupDatasourceProgramsCustom(RulespecSubGroup):
         return RulespecGroupDatasourcePrograms
 
     @property
-    def sub_group_name(self):
+    def sub_group_name(self) -> str:
         return "custom"
 
     @property
@@ -140,7 +140,7 @@ class RulespecGroupDatasourceProgramsHardware(RulespecSubGroup):
         return RulespecGroupDatasourcePrograms
 
     @property
-    def sub_group_name(self):
+    def sub_group_name(self) -> str:
         return "hw"
 
     @property
@@ -155,7 +155,7 @@ class RulespecGroupDatasourceProgramsTesting(RulespecSubGroup):
         return RulespecGroupDatasourcePrograms
 
     @property
-    def sub_group_name(self):
+    def sub_group_name(self) -> str:
         return "testing"
 
     @property

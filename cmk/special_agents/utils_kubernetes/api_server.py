@@ -143,12 +143,11 @@ class RawAPI:
                 return e.status, e.body
             return response.status_code, response.response
 
-        status_code, http_body = get_health()
-        response = http_body
-        verbose_response = None
+        status_code, response = get_health()
         if status_code != 200:
-            _status_code, http_body = get_health({"verbose": "1"})
-            verbose_response = http_body
+            _status_code, verbose_response = get_health({"verbose": "1"})
+        else:
+            verbose_response = None
 
         return api.HealthZ(
             response=response,

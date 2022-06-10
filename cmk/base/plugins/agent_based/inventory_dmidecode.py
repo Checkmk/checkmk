@@ -220,7 +220,7 @@ def _make_inventory_processor(lines: List[List[str]]) -> Generator[Attributes, N
 def _make_inventory_physical_mem_array(lines: List[List[str]], array_number: int) -> Attributes:
     # We expect several possible arrays
     return Attributes(
-        path=["hardware", "memory", f"array_{array_number}"],
+        path=["hardware", "memory", "arrays", str(array_number)],
         inventory_attributes=_make_dict(
             lines,
             {
@@ -264,7 +264,7 @@ def _make_inventory_mem_device(
 
     key_keys = ["set"]  # match hp_proliant_mem!
     yield TableRow(
-        path=["hardware", "memory", f"array_{array_number}", "devices"],
+        path=["hardware", "memory", "arrays", str(array_number), "devices"],
         key_columns={k: device.pop(k) for k in key_keys},
         inventory_columns=device,
     )

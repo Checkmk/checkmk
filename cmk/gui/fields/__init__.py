@@ -43,7 +43,7 @@ from cmk.gui.fields.definitions import (
     query_field,
     SiteField,
     Timestamp,
-    X509ReqPEMField,
+    X509ReqPEMFieldUUID,
 )
 from cmk.gui.fields.validators import ValidateHostName
 
@@ -75,6 +75,6 @@ __all__ = [
     "SiteField",
     "SNMPCredentials",
     "Timestamp",
-    "X509ReqPEMField",
+    "X509ReqPEMFieldUUID",
     "ValidateHostName",
 ]

@@ -369,12 +369,16 @@ def _local_make_metrics(local_result: LocalResult) -> LocalCheckResult:
 
 def _labelify(word: str) -> str:
     """
+    >>> _labelify("INCIDENTS_CT_PHISING")
+    'Incidents ct phising'
     >>> _labelify("weekIncidence")
     'Week incidence'
     >>> _labelify("casesPer100k")
     'Cases per 100 k'
     >>> _labelify("WHOrecommendation4")
     'WHO recommendation 4'
+    >>> _labelify("recommendation4WHO")
+    'Recommendation 4 WHO'
     >>> _labelify("zombie_apocalypse")
     'Zombie apocalypse'
 
@@ -382,7 +386,7 @@ def _labelify(word: str) -> str:
     label = "".join(
         "%s%s"
         % (
-            this if prev.isupper() else this.lower(),
+            this if not prev.isalnum() or prev.isupper() or nxt.isupper() else this.lower(),
             " "
             if (
                 prev.isupper()
@@ -396,6 +400,8 @@ def _labelify(word: str) -> str:
         )
         for prev, this, nxt in zip(" " + word, word, word[1:] + " ")
     )
+    if label.isupper():
+        label = label.lower()
     return (label[0].upper() + label[1:].replace("_", " ")).strip()
 
 

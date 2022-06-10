@@ -354,6 +354,7 @@ inventory_displayhints.update({
     ".hardware.storage.disks:*.type": {"title": _l("Type")},
     # this displayhint is for Attributes and NOT for above Table
     ".hardware.storage.disks.size": {"title": _l("Size"), "paint": "size"},
+    ".hardware.volumes.": {"title": _l("Volumes")},
     ".hardware.volumes.physical_volumes:": {
         "title": ("Physical Volumes"),
         "keyorder": [
@@ -465,6 +466,7 @@ inventory_displayhints.update({
     ".software.applications.check_mk.host_labels:*.plugin_name": {
         "title": _l("Discovered by plugin"),
     },
+    ".software.applications.checkmk-agent.": {"title": _l("Checkmk Agent")},
     ".software.applications.checkmk-agent.plugins:": {
         "title": _l("Agent plugins"),
         "keyorder": ["name", "version", "cache_interval"],
@@ -527,6 +529,7 @@ inventory_displayhints.update({
     },
     ".software.applications.docker.containers:*.id": {"title": _l("ID")},
     ".software.applications.docker.containers:*.labels": {"title": _l("Labels"), "paint": "csv_labels"},
+    ".software.applications.docker.networks.": {"title": "Networks"},
     ".software.applications.docker.networks.*.": {"title": "Network %s"},
     ".software.applications.docker.networks.*.network_id": {"title": "Network ID"},
     ".software.applications.docker.networks.*.name": {"title": "Name"},
@@ -560,6 +563,7 @@ inventory_displayhints.update({
     ".software.applications.docker.networks.*.containers:*.mac_address": {
         "title": _l("MAC address"),
     },
+    ".software.applications.fortinet.": {"title": _l("Fortinet")},
     ".software.applications.fortinet.fortisandbox:": {
         "title": _l("FortiSandbox Software"),
         "keyorder": ["name", "version"],
@@ -874,7 +878,9 @@ inventory_displayhints.update({
     ".software.applications.oracle.tablespaces:*.free_space": {
         "title": _l("Free space"), "paint": "size"
     },
+    ".software.applications.vmwareesx.": {"title": _l("VMWare ESX")},
     ".software.applications.vmwareesx:*.": {"title": _l("Datacenter %d")},
+    ".software.applications.vmwareesx:*.clusters.": {"title": _l("Clusters")},
     ".software.applications.vmwareesx:*.clusters:*.": {"title": _l("Cluster %d")},
     ".software.applications.mssql.": {"title": _l("MSSQL")},
     ".software.applications.mssql.instances:": {

@@ -12,6 +12,7 @@ from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
 from cmk.utils.defines import weekday_ids
 
 from cmk.gui import fields as gui_fields
+from cmk.gui.config import builtin_role_ids
 from cmk.gui.fields.utils import BaseSchema
 
 from cmk import fields
@@ -743,6 +744,42 @@ class UserCollection(DomainObjectCollection):
     value = fields.List(
         fields.Nested(UserObject),
         description="A list of user objects.",
+    )
+
+
+class UserRoleAttributes(BaseSchema):
+    alias = fields.String(required=True, description="The alias of the user role.")
+    permissions = fields.Dict(
+        required=True,
+        description="A dictionary of permissions for the user role. ",
+    )
+    builtin = fields.Boolean(
+        required=True,
+        description="True if it's a builtin user role, otherwise False.",
+    )
+    basedon = fields.String(
+        enum=builtin_role_ids,
+        required=False,
+        description="The builtin user role id that the user role is based on.",
+    )
+
+
+class UserRoleObject(DomainObject):
+    domainType = fields.Constant(
+        "user_role",
+        description="The domain type of the object.",
+    )
+    extensions = fields.Nested(UserRoleAttributes, description="All the attributes of a user role.")
+
+
+class UserRoleCollection(DomainObjectCollection):
+    domainType = fields.Constant(
+        "user_role",
+        description="The domain type of the objects in the collection.",
+    )
+    value = fields.List(
+        fields.Nested(UserRoleObject),
+        description="A list of user role objects.",
     )
 
 

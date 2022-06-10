@@ -53,6 +53,7 @@ DomainType = Literal[
     "time_period",
     "user",
     "user_config",
+    "user_role",
 ]  # yapf: disable
 
 DomainObject = Dict[str, Any]

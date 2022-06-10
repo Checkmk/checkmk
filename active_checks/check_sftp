@@ -23,7 +23,6 @@ OPTIONS:
   --host HOST                SFTP server address
   --user USER                Username for sftp login
   --secret SECRET            Secret/Password for sftp login
-  --private-key-file PATH    Path to private key / certificate file for SFTP login
   --port PORT                Alternative port number (default is 22 for the connection)
   --get-remote FILE          Path to the file which to pull from SFTP server (e.g.
                              /tmp/testfile.txt)
@@ -33,39 +32,24 @@ OPTIONS:
   --get-timestamp PATH       Path to the file for getting the timestamp of this file
   --timeout SECONDS          Set timeout for connection (default is 10 seconds)
   --verbose                  Output some more detailed information
+  --look-for-keys            Search for discoverable keys in the user's "~/.ssh" directory
   -h, --help                 Show this help message and exit
     """
     )
     sys.exit(1)
 
 
-def connection(
-    opt_key_file,
-    opt_host,
-    opt_user,
-    opt_pass,
-    opt_port,
-    opt_timeout,
-):
+def connection(opt_host, opt_user, opt_pass, opt_port, opt_timeout, opt_look_for_keys):
     client = paramiko.SSHClient()
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    if opt_key_file is None:
-        client.connect(
-            opt_host,
-            username=opt_user,
-            password=opt_pass,
-            port=opt_port,
-            timeout=opt_timeout,
-            look_for_keys=False,
-        )
-    else:
-        client.connect(
-            opt_host,
-            username=opt_user,
-            key_filename=opt_key_file,
-            port=opt_port,
-            timeout=opt_timeout,
-        )
+    client.connect(
+        opt_host,
+        username=opt_user,
+        password=opt_pass,
+        port=opt_port,
+        timeout=opt_timeout,
+        look_for_keys=opt_look_for_keys,
+    )
     return client
 
 
@@ -139,7 +123,6 @@ def parse_arguments(sys_args):  # pylint: disable=too-many-branches
     opt_host = None
     opt_user = None
     opt_pass = None
-    opt_key_file = None
     opt_port = 22
     opt_get_remote = None
     opt_get_local = None
@@ -148,13 +131,13 @@ def parse_arguments(sys_args):  # pylint: disable=too-many-branches
     opt_timestamp = None
     opt_timeout = 10.0
     opt_verbose = False
+    opt_look_for_keys = False
 
     short_options = "hv"
     long_options = [
         "host=",
         "user=",
         "secret=",
-        "private-key-file=",
         "port=",
         "get-remote=",
         "get-local=",
@@ -164,6 +147,7 @@ def parse_arguments(sys_args):  # pylint: disable=too-many-branches
         "verbose",
         "help",
         "timeout=",
+        "look-for-keys",
     ]
 
     try:
@@ -181,8 +165,6 @@ def parse_arguments(sys_args):  # pylint: disable=too-many-branches
             opt_user = arg
         elif opt in ["--secret"]:
             opt_pass = arg
-        elif opt in ["--private-key-file"]:
-            opt_key_file = arg
         elif opt in ["--port"]:
             opt_port = int(arg)
         elif opt in ["--timeout"]:
@@ -197,6 +179,8 @@ def parse_arguments(sys_args):  # pylint: disable=too-many-branches
             opt_get_remote = arg
         elif opt in ["--get-timestamp"]:
             opt_timestamp = arg
+        elif opt in ["--look-for-keys"]:
+            opt_look_for_keys = True
         elif opt in ["-v", "--verbose"]:
             opt_verbose = True
 
@@ -204,7 +188,6 @@ def parse_arguments(sys_args):  # pylint: disable=too-many-branches
         opt_host,
         opt_user,
         opt_pass,
-        opt_key_file,
         opt_port,
         opt_get_remote,
         opt_get_local,
@@ -213,6 +196,7 @@ def parse_arguments(sys_args):  # pylint: disable=too-many-branches
         opt_timestamp,
         opt_timeout,
         opt_verbose,
+        opt_look_for_keys,
     )
 
 
@@ -221,7 +205,6 @@ def main(sys_args=None):
         opt_host,
         opt_user,
         opt_pass,
-        opt_key_file,
         opt_port,
         opt_get_remote,
         opt_get_local,
@@ -230,12 +213,13 @@ def main(sys_args=None):
         opt_timestamp,
         opt_timeout,
         opt_verbose,
+        opt_look_for_keys,
     ) = parse_arguments(sys_args)
 
     messages = []
     states = []
     try:  # Establish connection
-        client = connection(opt_key_file, opt_host, opt_user, opt_pass, opt_port, opt_timeout)
+        client = connection(opt_host, opt_user, opt_pass, opt_port, opt_timeout, opt_look_for_keys)
         sftp = client.open_sftp()
         messages.append("Login successful")
         states.append(0)

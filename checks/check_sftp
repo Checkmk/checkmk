@@ -32,6 +32,9 @@ def check_sftp_arguments(params):
         args.append("--get-remote=%s" % remote)
         args.append("--get-local=%s" % local)
 
+    if settings.get("look_for_keys", False):
+        args.append("--look-for-keys")
+
     return args
 
 

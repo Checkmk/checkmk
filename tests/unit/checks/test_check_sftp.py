@@ -16,18 +16,34 @@ pytestmark = pytest.mark.checks
 @pytest.mark.parametrize(
     "params,expected_args",
     [
-        (
+        pytest.param(
             (
                 "foo",
                 "bar",
                 ("password", "baz"),
-                {},
+                {"look_for_keys": True},
+            ),
+            [
+                "--host=foo",
+                "--user=bar",
+                "--secret=baz",
+                "--look-for-keys",
+            ],
+            id="look for keys",
+        ),
+        pytest.param(
+            (
+                "foo",
+                "bar",
+                ("password", "baz"),
+                {"look_for_keys": False},
             ),
             [
                 "--host=foo",
                 "--user=bar",
                 "--secret=baz",
             ],
+            id="do not look for keys",
         ),
     ],
 )

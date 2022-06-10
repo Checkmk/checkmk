@@ -7,7 +7,7 @@
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.active_checks.common import RulespecGroupActiveChecks
 from cmk.gui.plugins.wato.utils import HostRulespec, IndividualOrStoredPassword, rulespec_registry
-from cmk.gui.valuespec import Dictionary, Integer, TextInput, Tuple
+from cmk.gui.valuespec import Checkbox, Dictionary, Integer, TextInput, Tuple
 
 
 def _valuespec_active_checks_sftp():
@@ -23,12 +23,20 @@ def _valuespec_active_checks_sftp():
             TextInput(title=_("Username"), allow_empty=False),
             IndividualOrStoredPassword(title=_("Password"), allow_empty=False),
             Dictionary(
+                default_keys=["look_for_keys"],
                 elements=[
                     (
                         "description",
                         TextInput(title=_("Service Description"), default_value="SFTP", size=30),
                     ),
                     ("port", Integer(title=_("Port"), default_value=22)),
+                    (
+                        "look_for_keys",
+                        Checkbox(
+                            title=_("Look for keys"),
+                            label=_("Search for discoverable keys in the '~/.ssh' directory"),
+                        ),
+                    ),
                     ("timeout", Integer(title=_("Timeout"), default_value=10)),
                     (
                         "timestamp",
@@ -97,7 +105,7 @@ def _valuespec_active_checks_sftp():
                             ],
                         ),
                     ),
-                ]
+                ],
             ),
         ],
     )

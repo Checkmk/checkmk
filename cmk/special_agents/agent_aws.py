@@ -847,7 +847,7 @@ class CostsAndUsage(AWSSection):
         return cache_interval
 
     @property
-    def granularity(self):
+    def granularity(self) -> int:
         return 86400
 
     def _get_colleague_contents(self):
@@ -898,7 +898,7 @@ class EC2Limits(AWSSectionLimits):
         return 300
 
     @property
-    def granularity(self):
+    def granularity(self) -> int:
         return 300
 
     def _get_colleague_contents(self):
@@ -1212,7 +1212,7 @@ class EC2Summary(AWSSection):
         return 300
 
     @property
-    def granularity(self):
+    def granularity(self) -> int:
         return 300
 
     def _get_colleague_contents(self):
@@ -1306,7 +1306,7 @@ class EC2Labels(AWSSectionLabels):
         return 300
 
     @property
-    def granularity(self):
+    def granularity(self) -> int:
         return 300
 
     def _get_colleague_contents(self):
@@ -1364,7 +1364,7 @@ class EC2SecurityGroups(AWSSection):
         return 300
 
     @property
-    def granularity(self):
+    def granularity(self) -> int:
         return 300
 
     def _get_colleague_contents(self):
@@ -1421,7 +1421,7 @@ class EC2(AWSSectionCloudwatch):
         return 300
 
     @property
-    def granularity(self):
+    def granularity(self) -> int:
         return 300
 
     def _get_colleague_contents(self):
@@ -1507,7 +1507,7 @@ class EBSLimits(AWSSectionLimits):
         return 300
 
     @property
-    def granularity(self):
+    def granularity(self) -> int:
         return 300
 
     def _get_colleague_contents(self):
@@ -1630,7 +1630,7 @@ class EBSSummary(AWSSection):
         return 300
 
     @property
-    def granularity(self):
+    def granularity(self) -> int:
         return 300
 
     def _get_colleague_contents(self):
@@ -1731,7 +1731,7 @@ class EBS(AWSSectionCloudwatch):
         return 300
 
     @property
-    def granularity(self):
+    def granularity(self) -> int:
         return 300
 
     def _get_colleague_contents(self):
@@ -1864,7 +1864,7 @@ class S3Limits(AWSSectionLimits):
         return cache_interval
 
     @property
-    def granularity(self):
+    def granularity(self) -> int:
         return 86400
 
     def _get_colleague_contents(self):
@@ -1906,7 +1906,7 @@ class S3Summary(AWSSection):
         return cache_interval
 
     @property
-    def granularity(self):
+    def granularity(self) -> int:
         return 86400
 
     def _get_colleague_contents(self):
@@ -1992,7 +1992,7 @@ class S3(AWSSectionCloudwatch):
         return cache_interval
 
     @property
-    def granularity(self):
+    def granularity(self) -> int:
         return 86400
 
     def _get_colleague_contents(self):
@@ -2067,7 +2067,7 @@ class S3Requests(AWSSectionCloudwatch):
         return 300
 
     @property
-    def granularity(self):
+    def granularity(self) -> int:
         return 300
 
     def _get_colleague_contents(self):
@@ -2158,7 +2158,7 @@ class GlacierLimits(AWSSectionLimits):
         return cache_interval
 
     @property
-    def granularity(self):
+    def granularity(self) -> int:
         return 86400
 
     def _get_colleague_contents(self):
@@ -2208,7 +2208,7 @@ class GlacierSummary(AWSSection):
         return cache_interval
 
     @property
-    def granularity(self):
+    def granularity(self) -> int:
         return 86400
 
     def _get_colleague_contents(self):
@@ -2297,7 +2297,7 @@ class Glacier(AWSSection):
         return cache_interval
 
     @property
-    def granularity(self):
+    def granularity(self) -> int:
         return 86400
 
     def _get_colleague_contents(self):
@@ -2339,7 +2339,7 @@ class ELBLimits(AWSSectionLimits):
         return 300
 
     @property
-    def granularity(self):
+    def granularity(self) -> int:
         return 300
 
     def _get_colleague_contents(self):
@@ -2428,7 +2428,7 @@ class ELBSummaryGeneric(AWSSection):
         return 300
 
     @property
-    def granularity(self):
+    def granularity(self) -> int:
         return 300
 
     def _get_colleague_contents(self):
@@ -2514,7 +2514,7 @@ class ELBLabelsGeneric(AWSSectionLabels):
         return 300
 
     @property
-    def granularity(self):
+    def granularity(self) -> int:
         return 300
 
     def _get_colleague_contents(self):
@@ -2545,7 +2545,7 @@ class ELBHealth(AWSSection):
         return 300
 
     @property
-    def granularity(self):
+    def granularity(self) -> int:
         return 300
 
     def _get_colleague_contents(self):
@@ -2585,7 +2585,7 @@ class ELB(AWSSectionCloudwatch):
         return 300
 
     @property
-    def granularity(self):
+    def granularity(self) -> int:
         return 300
 
     def _get_colleague_contents(self):
@@ -2671,7 +2671,7 @@ class ELBv2Limits(AWSSectionLimits):
         return 300
 
     @property
-    def granularity(self):
+    def granularity(self) -> int:
         return 300
 
     def _get_colleague_contents(self):
@@ -2829,7 +2829,7 @@ class ELBv2TargetGroups(AWSSection):
         return 300
 
     @property
-    def granularity(self):
+    def granularity(self) -> int:
         return 300
 
     def _get_colleague_contents(self):
@@ -2905,7 +2905,7 @@ class ELBv2Application(AWSSectionCloudwatch):
         return 300
 
     @property
-    def granularity(self):
+    def granularity(self) -> int:
         return 300
 
     def _get_colleague_contents(self):
@@ -2991,7 +2991,7 @@ class ELBv2ApplicationTargetGroupsResponses(AWSSectionCloudwatch):
         return 300
 
     @property
-    def granularity(self):
+    def granularity(self) -> int:
         return 300
 
     def _get_colleague_contents(self):
@@ -3123,7 +3123,7 @@ class ELBv2Network(AWSSectionCloudwatch):
         return 300
 
     @property
-    def granularity(self):
+    def granularity(self) -> int:
         return 300
 
     def _get_colleague_contents(self):
@@ -3236,7 +3236,7 @@ class RDSLimits(AWSSectionLimits):
         return 300
 
     @property
-    def granularity(self):
+    def granularity(self) -> int:
         return 300
 
     def _get_colleague_contents(self):
@@ -3284,7 +3284,7 @@ class RDSSummary(AWSSection):
         return 300
 
     @property
-    def granularity(self):
+    def granularity(self) -> int:
         return 300
 
     def _get_colleague_contents(self):
@@ -3361,7 +3361,7 @@ class RDS(AWSSectionCloudwatch):
         return 300
 
     @property
-    def granularity(self):
+    def granularity(self) -> int:
         return 300
 
     def _get_colleague_contents(self):
@@ -3458,7 +3458,7 @@ class CloudwatchAlarmsLimits(AWSSectionLimits):
         return 300
 
     @property
-    def granularity(self):
+    def granularity(self) -> int:
         return 300
 
     def _get_colleague_contents(self):
@@ -3495,7 +3495,7 @@ class CloudwatchAlarms(AWSSection):
         return 300
 
     @property
-    def granularity(self):
+    def granularity(self) -> int:
         return 300
 
     def _get_colleague_contents(self):
@@ -3549,7 +3549,7 @@ class DynamoDBLimits(AWSSectionLimits):
         return 300
 
     @property
-    def granularity(self):
+    def granularity(self) -> int:
         return 300
 
     def _get_colleague_contents(self):
@@ -3659,7 +3659,7 @@ class DynamoDBSummary(AWSSection):
         return 300
 
     @property
-    def granularity(self):
+    def granularity(self) -> int:
         return 300
 
     def _get_colleague_contents(self):
@@ -3737,7 +3737,7 @@ class DynamoDBTable(AWSSectionCloudwatch):
         return 300
 
     @property
-    def granularity(self):
+    def granularity(self) -> int:
         return 300
 
     def _get_colleague_contents(self):
@@ -3850,7 +3850,7 @@ class WAFV2Limits(AWSSectionLimits):
         return 300
 
     @property
-    def granularity(self):
+    def granularity(self) -> int:
         return 300
 
     def _get_colleague_contents(self):
@@ -3944,7 +3944,7 @@ class WAFV2Summary(AWSSection):
         return 300
 
     @property
-    def granularity(self):
+    def granularity(self) -> int:
         return 300
 
     def _get_colleague_contents(self):
@@ -4036,7 +4036,7 @@ class WAFV2WebACL(AWSSectionCloudwatch):
         return 300
 
     @property
-    def granularity(self):
+    def granularity(self) -> int:
         return 300
 
     def _get_colleague_contents(self):
@@ -4107,7 +4107,7 @@ class LambdaRegionLimits(AWSSectionLimits):
         return 300
 
     @property
-    def granularity(self):
+    def granularity(self) -> int:
         return 300
 
     def _get_colleague_contents(self):
@@ -4166,7 +4166,7 @@ class LambdaSummary(AWSSection):
         return 300
 
     @property
-    def granularity(self):
+    def granularity(self) -> int:
         return 300
 
     def _get_colleague_contents(self):
@@ -4232,7 +4232,7 @@ class LambdaCloudwatch(AWSSectionCloudwatch):
         return 300
 
     @property
-    def granularity(self):
+    def granularity(self) -> int:
         return 300
 
     def _get_colleague_contents(self):
@@ -4332,7 +4332,7 @@ class LambdaProvisionedConcurrency(AWSSection):
         return 300
 
     @property
-    def granularity(self):
+    def granularity(self) -> int:
         return 300
 
     def _get_colleague_contents(self):

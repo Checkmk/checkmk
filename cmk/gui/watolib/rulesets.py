@@ -10,7 +10,7 @@ import dataclasses
 import os
 import pprint
 import re
-from typing import Any, Callable, cast, Container, Dict, List, Mapping, Optional, Tuple, Union
+from typing import Any, cast, Container, Dict, List, Mapping, Optional, Tuple, Union
 
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 import cmk.utils.store as store
@@ -1000,30 +1000,29 @@ class Rule:
     def to_config(self) -> RuleSpec:
         # Special case: The main folder must not have a host_folder condition, because
         # these rules should also affect non WATO hosts.
-        for_config = (
-            self.conditions.to_config_with_folder_macro()
-            if not self.folder.is_root()
-            else self.conditions.to_config_without_folder()
-        )
-        return self._to_config(for_config)
+        return self._to_config(with_folder_macro=not self.folder.is_root(), hide_secrets=False)
 
     def to_web_api(self) -> RuleSpec:
-        return self._to_config(self.conditions.to_config_without_folder())
+        return self._to_config(with_folder_macro=False, hide_secrets=False)
 
     def to_log(self) -> RuleSpec:
         """Returns a JSON compatible format suitable for logging, where passwords are replaced"""
-        return self._to_config(
-            self.conditions.to_config_without_folder(), self.ruleset.valuespec().value_to_json_safe
-        )
+        return self._to_config(with_folder_macro=False, hide_secrets=True)
 
-    def _to_config(
-        self, conditions: RuleConditionsSpec, value_func: Callable[[Any], Any] = lambda x: x
-    ) -> RuleSpec:
-        rule_spec: RuleSpec = {
-            "id": self.id,
-            "value": value_func(self.value),
-            "condition": conditions,
-        }
+    def _to_config(self, *, with_folder_macro: bool, hide_secrets: bool) -> RuleSpec:
+        rule_spec = RuleSpec(
+            id=self.id,
+            value=(
+                self.ruleset.valuespec().value_to_json_safe(self.value)
+                if hide_secrets
+                else self.value
+            ),
+            condition=(
+                self.conditions.to_config_with_folder_macro()
+                if with_folder_macro
+                else self.conditions.to_config_without_folder()
+            ),
+        )
         if options := self.rule_options.to_config():
             rule_spec["options"] = options
         return rule_spec

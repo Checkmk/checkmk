@@ -52,7 +52,7 @@ class Event(TypedDict, total=False):
     state: int
 
 
-def _make_event(text: str, ipaddress: str, time: float = _time()) -> Event:
+def _make_event(text: str, ipaddress: str) -> Event:
     return Event(
         facility=1,
         priority=0,
@@ -61,7 +61,7 @@ def _make_event(text: str, ipaddress: str, time: float = _time()) -> Event:
         ipaddress=ipaddress,
         application="",
         pid=0,
-        time=time,
+        time=_time(),
         core_host=None,
         host_in_downtime=False,
     )

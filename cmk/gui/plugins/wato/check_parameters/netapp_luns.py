@@ -47,7 +47,7 @@ def _parameter_valuespec_netapp_luns():
                 ),
             ),
         ]
-        + size_trend_elements
+        + size_trend_elements()
         + [
             (
                 "read_only",

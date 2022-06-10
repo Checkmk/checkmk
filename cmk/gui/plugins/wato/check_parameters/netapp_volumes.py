@@ -57,7 +57,7 @@ def _parameter_valuespec_netapp_volumes():
         ]
         + filesystem_magic_elements()
         + filesystem_inodes_elements()
-        + size_trend_elements,
+        + size_trend_elements(),
     )
 
 

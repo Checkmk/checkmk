@@ -59,7 +59,7 @@ def _parameter_valuespec_cisco_mem():
             ),
         ),
     ]
-    return Dictionary(elements=elements + size_trend_elements)
+    return Dictionary(elements=elements + size_trend_elements())
 
 
 rulespec_registry.register(

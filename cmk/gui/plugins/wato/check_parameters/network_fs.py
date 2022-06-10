@@ -28,7 +28,7 @@ def _parameter_valuespec_network_fs():
     return Dictionary(
         elements=filesystem_levels_elements()
         + filesystem_magic_elements()
-        + size_trend_elements
+        + size_trend_elements()
         + [
             (
                 "has_perfdata",

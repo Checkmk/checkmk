@@ -346,110 +346,112 @@ def filesystem_magic_elements() -> List[DictionaryEntry]:
     ]
 
 
-size_trend_elements: List[DictionaryEntry] = [
-    (
-        "trend_range",
-        Integer(
-            title=_("Time Range for trend computation"),
-            default_value=24,
-            minvalue=1,
-            unit=_("hours"),
-        ),
-    ),
-    (
-        "trend_bytes",
-        Tuple(
-            title=_("Levels on trends per time range"),
-            elements=[
-                Filesize(title=_("Warning at"), default_value=100 * 1024**2),
-                Filesize(title=_("Critical at"), default_value=200 * 1024**2),
-            ],
-        ),
-    ),
-    (
-        "trend_perc",
-        Tuple(
-            title=_("Levels for the percentual growth per time range"),
-            elements=[
-                Percentage(
-                    title=_("Warning at"),
-                    unit=_("% / range"),
-                    default_value=5,
-                ),
-                Percentage(
-                    title=_("Critical at"),
-                    unit=_("% / range"),
-                    default_value=10,
-                ),
-            ],
-        ),
-    ),
-    (
-        "trend_shrinking_bytes",
-        Tuple(
-            title=_("Levels on decreasing trends in MB per time range"),
-            elements=[
-                Filesize(title=_("Warning at"), default_value=1 * 1024**3),
-                Filesize(title=_("Critical at"), default_value=4 * 1024**3),
-            ],
-        ),
-    ),
-    (
-        "trend_shrinking_perc",
-        Tuple(
-            title=_("Levels for the percentual shrinking per time range"),
-            elements=[
-                Percentage(
-                    title=_("Warning at"),
-                    unit=_("% / range"),
-                    default_value=5,
-                ),
-                Percentage(
-                    title=_("Critical at"),
-                    unit=_("% / range"),
-                    default_value=10,
-                ),
-            ],
-        ),
-    ),
-    (
-        "trend_timeleft",
-        Tuple(
-            title=_("Levels on the time left until full"),
-            elements=[
-                Integer(
-                    title=_("Warning if below"),
-                    unit=_("hours"),
-                    default_value=12,
-                ),
-                Integer(
-                    title=_("Critical if below"),
-                    unit=_("hours"),
-                    default_value=6,
-                ),
-            ],
-        ),
-    ),
-    (
-        "trend_showtimeleft",
-        Checkbox(
-            title=_("Display time left in check output"),
-            label=_("Enable"),
-            help=_(
-                "Normally, the time left until the disk is full is only displayed when "
-                "the configured levels have been breached. If you set this option "
-                "the check always reports this information"
+def size_trend_elements() -> List[DictionaryEntry]:
+    return [
+        (
+            "trend_range",
+            Integer(
+                title=_("Time Range for trend computation"),
+                default_value=24,
+                minvalue=1,
+                unit=_("hours"),
             ),
         ),
-    ),
-    (
-        "trend_perfdata",
-        Checkbox(
-            title=_("Trend performance data"),
-            label=_("Enable generation of performance data from trends"),
+        (
+            "trend_bytes",
+            Tuple(
+                title=_("Levels on trends per time range"),
+                elements=[
+                    Filesize(title=_("Warning at"), default_value=100 * 1024**2),
+                    Filesize(title=_("Critical at"), default_value=200 * 1024**2),
+                ],
+            ),
         ),
-    ),
-]
+        (
+            "trend_perc",
+            Tuple(
+                title=_("Levels for the percentual growth per time range"),
+                elements=[
+                    Percentage(
+                        title=_("Warning at"),
+                        unit=_("% / range"),
+                        default_value=5,
+                    ),
+                    Percentage(
+                        title=_("Critical at"),
+                        unit=_("% / range"),
+                        default_value=10,
+                    ),
+                ],
+            ),
+        ),
+        (
+            "trend_shrinking_bytes",
+            Tuple(
+                title=_("Levels on decreasing trends in MB per time range"),
+                elements=[
+                    Filesize(title=_("Warning at"), default_value=1 * 1024**3),
+                    Filesize(title=_("Critical at"), default_value=4 * 1024**3),
+                ],
+            ),
+        ),
+        (
+            "trend_shrinking_perc",
+            Tuple(
+                title=_("Levels for the percentual shrinking per time range"),
+                elements=[
+                    Percentage(
+                        title=_("Warning at"),
+                        unit=_("% / range"),
+                        default_value=5,
+                    ),
+                    Percentage(
+                        title=_("Critical at"),
+                        unit=_("% / range"),
+                        default_value=10,
+                    ),
+                ],
+            ),
+        ),
+        (
+            "trend_timeleft",
+            Tuple(
+                title=_("Levels on the time left until full"),
+                elements=[
+                    Integer(
+                        title=_("Warning if below"),
+                        unit=_("hours"),
+                        default_value=12,
+                    ),
+                    Integer(
+                        title=_("Critical if below"),
+                        unit=_("hours"),
+                        default_value=6,
+                    ),
+                ],
+            ),
+        ),
+        (
+            "trend_showtimeleft",
+            Checkbox(
+                title=_("Display time left in check output"),
+                label=_("Enable"),
+                help=_(
+                    "Normally, the time left until the disk is full is only displayed when "
+                    "the configured levels have been breached. If you set this option "
+                    "the check always reports this information"
+                ),
+            ),
+        ),
+        (
+            "trend_perfdata",
+            Checkbox(
+                title=_("Trend performance data"),
+                label=_("Enable generation of performance data from trends"),
+            ),
+        ),
+    ]
+
 
 filesystem_elements: List[DictionaryEntry] = (
     filesystem_levels_elements()
@@ -458,7 +460,7 @@ filesystem_elements: List[DictionaryEntry] = (
     + fs_volume_name
     + filesystem_inodes_elements()
     + filesystem_magic_elements()
-    + size_trend_elements
+    + size_trend_elements()
 )
 
 

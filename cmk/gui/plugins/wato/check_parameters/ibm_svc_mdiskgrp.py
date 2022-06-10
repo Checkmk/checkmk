@@ -5,19 +5,18 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.check_parameters.filesystem_utils import filesystem_elements
+from cmk.gui.plugins.wato.check_parameters.filesystem_utils import vs_filesystem
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersStorage,
 )
-from cmk.gui.valuespec import Dictionary, Percentage, TextInput, Tuple
+from cmk.gui.valuespec import Percentage, TextInput, Tuple
 
 
 def _parameter_valuespec_ibm_svc_mdiskgrp():
-    return Dictionary(
-        elements=filesystem_elements()
-        + [
+    return vs_filesystem(
+        extra_elements=[
             (
                 "provisioning_levels",
                 Tuple(
@@ -37,8 +36,7 @@ def _parameter_valuespec_ibm_svc_mdiskgrp():
                     ],
                 ),
             ),
-        ],
-        hidden_keys=["flex_levels"],
+        ]
     )
 
 

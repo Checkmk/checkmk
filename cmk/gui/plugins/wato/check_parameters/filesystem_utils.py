@@ -458,7 +458,9 @@ def size_trend_elements() -> List[DictionaryEntry]:
     ]
 
 
-def filesystem_elements() -> List[DictionaryEntry]:
+def _filesystem_elements() -> List[DictionaryEntry]:
+    # NOTE: If you are considering writing your own valuespec that uses all
+    # these elements plus some extra, use vs_filesystem!
     return (
         filesystem_levels_elements()
         + _filesystem_levels_elements_hack()
@@ -481,7 +483,7 @@ def vs_filesystem(extra_elements=None) -> ValueSpec:
     return Transform(
         valuespec=Dictionary(
             help=_("This ruleset allows to set parameters for space and inodes usage"),
-            elements=filesystem_elements() + extra_elements,
+            elements=_filesystem_elements() + extra_elements,
             hidden_keys=["flex_levels"],
             ignored_keys=[
                 "patterns",

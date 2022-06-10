@@ -5,13 +5,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.check_parameters.filesystem_utils import filesystem_elements
+from cmk.gui.plugins.wato.check_parameters.filesystem_utils import vs_filesystem
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-from cmk.gui.valuespec import Dictionary, DropdownChoice, TextInput
+from cmk.gui.valuespec import DropdownChoice, TextInput
 
 
 def _item_spec_asm_diskgroup():
@@ -23,9 +23,8 @@ def _item_spec_asm_diskgroup():
 
 
 def _parameter_valuespec_asm_diskgroup():
-    return Dictionary(
-        elements=filesystem_elements()
-        + [
+    return vs_filesystem(
+        extra_elements=[
             (
                 "req_mir_free",
                 DropdownChoice(
@@ -41,8 +40,7 @@ def _parameter_valuespec_asm_diskgroup():
                     ),
                 ),
             ),
-        ],
-        hidden_keys=["flex_levels"],
+        ]
     )
 
 

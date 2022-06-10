@@ -135,40 +135,42 @@ def transform_filesystem_free(value):
     return result
 
 
-fs_levels_elements: List[DictionaryEntry] = [
-    (
-        "levels",
-        Alternative(
-            title=_("Levels for filesystem"),
-            show_alternative_title=True,
-            default_value=(80.0, 90.0),
-            match=match_dual_level_type,
-            elements=[
-                get_free_used_dynamic_valuespec("used", "filesystem"),
-                Transform(
-                    valuespec=get_free_used_dynamic_valuespec(
-                        "free", "filesystem", default_value=(20.0, 10.0)
+def filesystem_levels_elements() -> List[DictionaryEntry]:
+    return [
+        (
+            "levels",
+            Alternative(
+                title=_("Levels for filesystem"),
+                show_alternative_title=True,
+                default_value=(80.0, 90.0),
+                match=match_dual_level_type,
+                elements=[
+                    get_free_used_dynamic_valuespec("used", "filesystem"),
+                    Transform(
+                        valuespec=get_free_used_dynamic_valuespec(
+                            "free", "filesystem", default_value=(20.0, 10.0)
+                        ),
+                        title=_("Levels for filesystem free space"),
+                        forth=transform_filesystem_free,
+                        back=transform_filesystem_free,
                     ),
-                    title=_("Levels for filesystem free space"),
-                    forth=transform_filesystem_free,
-                    back=transform_filesystem_free,
-                ),
-            ],
+                ],
+            ),
         ),
-    ),
-    (
-        "show_levels",
-        DropdownChoice(
-            title=_("Display warn/crit levels in check output..."),
-            choices=[
-                ("onproblem", _("Only if the status is non-OK")),
-                ("onmagic", _("If the status is non-OK or a magic factor is set")),
-                ("always", _("Always")),
-            ],
-            default_value="onmagic",
+        (
+            "show_levels",
+            DropdownChoice(
+                title=_("Display warn/crit levels in check output..."),
+                choices=[
+                    ("onproblem", _("Only if the status is non-OK")),
+                    ("onmagic", _("If the status is non-OK or a magic factor is set")),
+                    ("always", _("Always")),
+                ],
+                default_value="onmagic",
+            ),
         ),
-    ),
-]
+    ]
+
 
 # Note: This hack is only required on very old filesystem checks (prior August 2013)
 fs_levels_elements_hack: List[DictionaryEntry] = [
@@ -443,7 +445,7 @@ size_trend_elements: List[DictionaryEntry] = [
 ]
 
 filesystem_elements: List[DictionaryEntry] = (
-    fs_levels_elements
+    filesystem_levels_elements()
     + fs_levels_elements_hack
     + fs_reserved_elements
     + fs_volume_name

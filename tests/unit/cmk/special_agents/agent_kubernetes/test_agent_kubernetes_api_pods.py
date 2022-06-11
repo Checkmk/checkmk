@@ -437,3 +437,49 @@ def test_pod_status_evicted_pod() -> None:
         pod_ip=None,
         qos_class=None,
     )
+
+
+def test_terminated_container_in_undermined_state() -> None:
+    """
+
+    The status.state below is set for all containers internally, while a Pod is
+    terminating. We have not determined whether the state is persisted all the
+    way through to the API server endpoint. We can see the state in the source
+    code:
+    https://github.com/kubernetes/kubernetes/blob/release-1.24/pkg/kubelet/status/status_manager.go#L355
+    """
+    container_statuses = [
+        client.V1ContainerStatus(
+            name="unknown",
+            ready=False,
+            image="unknown",
+            image_id="unknown",
+            container_id="unknown",
+            restart_count=0,
+            state=client.V1ContainerState(
+                terminated=client.V1ContainerStateTerminated(
+                    message="The container could not be located when the pod was terminated",
+                    reason="ContainerStatusUnknown",
+                    exit_code=137,
+                ),
+            ),
+        )
+    ]
+    assert pod_containers(container_statuses) == {
+        "unknown": api.ContainerStatus(
+            container_id="unknown",
+            image_id="unknown",
+            name="unknown",
+            image="unknown",
+            ready=False,
+            state=api.ContainerTerminatedState(
+                type=api.ContainerStateType.terminated,
+                exit_code=137,
+                start_time=None,
+                end_time=None,
+                reason="ContainerStatusUnknown",
+                detail="The container could not be located when the pod was terminated",
+            ),
+            restart_count=0,
+        )
+    }

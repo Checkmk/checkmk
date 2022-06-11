@@ -4,24 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Callable, Final
-
-import pytest
-
-from cmk.utils.type_defs import InventoryPluginName
+from typing import Final
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes
-
-
-@pytest.fixture(name="inventory_lnx_distro", scope="module")
-def _get_inventory_lnx_distro(fix_register) -> Callable:
-    plugin = fix_register.inventory_plugins[InventoryPluginName("lnx_distro")]
-    return lambda s: plugin.inventory_function(section=s)
-
-
-def parse_lnx_distro(string_table):
-    return string_table
-
+from cmk.base.plugins.agent_based.lnx_distro import inventory_lnx_distro, parse_lnx_distro
 
 STRING_TABLE_RH_OLD: Final = [
     [
@@ -78,7 +64,7 @@ STRING_TABLE_NEW: Final = [
 ]
 
 
-def test_inventory_lnx_distro_rh_old(inventory_lnx_distro) -> None:
+def test_inventory_lnx_distro_rh_old() -> None:
     assert list(inventory_lnx_distro(parse_lnx_distro(STRING_TABLE_RH_OLD))) == [
         Attributes(
             path=["software", "os"],
@@ -93,7 +79,7 @@ def test_inventory_lnx_distro_rh_old(inventory_lnx_distro) -> None:
     ]
 
 
-def test_inventory_lnx_distro_oracle(inventory_lnx_distro) -> None:
+def test_inventory_lnx_distro_oracle() -> None:
     assert list(inventory_lnx_distro(parse_lnx_distro(STRING_TABLE_ORACLE_OLD))) == [
         Attributes(
             path=["software", "os"],
@@ -107,7 +93,7 @@ def test_inventory_lnx_distro_oracle(inventory_lnx_distro) -> None:
     ]
 
 
-def test_inventory_lnx_distro_suse(inventory_lnx_distro) -> None:
+def test_inventory_lnx_distro_suse() -> None:
     assert list(inventory_lnx_distro(parse_lnx_distro(STRING_TABLE_SUSE))) == [
         Attributes(
             path=["software", "os"],
@@ -122,7 +108,7 @@ def test_inventory_lnx_distro_suse(inventory_lnx_distro) -> None:
     ]
 
 
-def test_inventory_lnx_distro_new(inventory_lnx_distro) -> None:
+def test_inventory_lnx_distro_new() -> None:
     assert list(inventory_lnx_distro(parse_lnx_distro(STRING_TABLE_NEW))) == [
         Attributes(
             path=["software", "os"],

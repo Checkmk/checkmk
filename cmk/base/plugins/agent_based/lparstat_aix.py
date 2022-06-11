@@ -6,8 +6,8 @@
 
 from typing import Mapping, TypedDict
 
-from .agent_based_api.v1 import register
-from .agent_based_api.v1.type_defs import StringTable
+from .agent_based_api.v1 import Attributes, register
+from .agent_based_api.v1.type_defs import InventoryResult, StringTable
 
 
 class Section(TypedDict, total=False):
@@ -56,4 +56,35 @@ def parse_lparstat_aix(string_table: StringTable) -> Section | None:
 register.agent_section(
     name="lparstat_aix",
     parse_function=parse_lparstat_aix,
+)
+
+
+def inventory_lparstat_aix(section: Section) -> InventoryResult:
+    data = section.get("system_config", {})
+    attr = {}
+
+    sharing_mode = "-".join(v for k in ("type", "mode") if (v := data.get(k)))
+    if sharing_mode:
+        attr["sharing_mode"] = sharing_mode
+
+    for nkey, dkey in [
+        ("smt_threads", "smt"),
+        ("entitlement", "ent"),
+        ("cpus", "psize"),
+        ("logical_cpus", "lcpu"),
+    ]:
+        try:
+            attr[nkey] = data[dkey]
+        except KeyError:
+            pass
+
+    yield Attributes(
+        path=["hardware", "cpu"],
+        inventory_attributes=attr,
+    )
+
+
+register.inventory_plugin(
+    name="lparstat_aix",
+    inventory_function=inventory_lparstat_aix,
 )

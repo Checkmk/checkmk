@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Iterable, Mapping
+from typing import Final, Iterable, Mapping
 
 from .agent_based_api.v1 import Attributes, register
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
@@ -35,29 +35,6 @@ register.agent_section(
 )
 
 
-def inventory_lnx_distro(section: Section) -> InventoryResult:
-
-    for file_name, handler in [
-        ("/usr/share/cma/version", inv_lnx_parse_cma),
-        ("/etc/os-release", inv_lnx_parse_os),
-        ("/etc/gentoo-release", inv_lnx_parse_gentoo),
-        ("/etc/SuSE-release", inv_lnx_parse_suse),
-        ("/etc/oracle-release", inv_lnx_parse_oracle_vm_server),
-        ("/etc/redhat-release", inv_lnx_parse_redhat),
-        ("/etc/lsb-release", inv_lnx_parse_lsb),
-        ("/etc/debian_version", inv_lnx_parse_debian),
-    ]:
-        if file_name in section:
-            yield Attributes(
-                path=["software", "os"],
-                inventory_attributes={
-                    "type": "Linux",
-                    **dict(handler(section[file_name])),
-                },
-            )
-            break
-
-
 def inv_lnx_parse_os(line: _Line) -> _KVPairs:
     for entry in line:
         if entry.count("=") == 0:
@@ -73,6 +50,17 @@ def inv_lnx_parse_os(line: _Line) -> _KVPairs:
             yield "vendor", v.title()
 
 
+_SUSE_CODE_NAMES: Final = {
+    "11.2": "Emerald",
+    "11.3": "Teal",
+    "11.4": "Celadon",
+    "12.1": "Asparagus",
+    "12.2": "Mantis",
+    "12.3": "Darthmouth",
+    "13.1": "Bottle",
+}
+
+
 def inv_lnx_parse_suse(line: _Line) -> _KVPairs:
     major = line[1].split()[-1]
     if len(line) >= 3:
@@ -86,20 +74,8 @@ def inv_lnx_parse_suse(line: _Line) -> _KVPairs:
     yield "version", version
     yield "name", "%s.%s" % (line[0].split("(")[0].strip(), patchlevel)
 
-    if version == "11.2":
-        yield "code_name", "Emerald"
-    elif version == "11.3":
-        yield "code_name", "Teal"
-    elif version == "11.4":
-        yield "code_name", "Celadon"
-    elif version == "12.1":
-        yield "code_name", "Asparagus"
-    elif version == "12.2":
-        yield "code_name", "Mantis"
-    elif version == "12.3":
-        yield "code_name", "Darthmouth"
-    elif version == "13.1":
-        yield "code_name", "Bottle"
+    if (code_name := _SUSE_CODE_NAMES.get(version)) is not None:
+        yield "code_name", code_name
 
 
 def inv_lnx_parse_redhat(line: _Line) -> _KVPairs:
@@ -141,38 +117,34 @@ def inv_lnx_parse_lsb(line: _Line) -> _KVPairs:
             yield "name", value
 
 
+_DEBIAN_CODE_NAMES: Final = (
+    ("2.0.", "Hamm"),
+    ("2.1.", "Slink"),
+    ("2.2.", "Potato"),
+    ("3.0.", "Woody"),
+    ("3.1.", "Sarge"),
+    ("4.", "Etch"),
+    ("5.", "Lenny"),
+    ("6.", "Squeeze"),
+    ("7.", "Wheezy"),
+    ("8.", "Jessie"),
+    ("9.", "Stretch"),
+    ("10.", "Buster"),
+    ("11.", "Bullseye"),
+)
+
+
 # Do not overwrite Ubuntu information
-def inv_lnx_parse_debian(line: _Line) -> _KVPairs:  # pylint: disable=too-many-branches
+def inv_lnx_parse_debian(line: _Line) -> _KVPairs:
     entry = line[0]
     yield "name", "Debian " + entry
     yield "vendor", "Debian"
     yield "version", entry
-    if entry.startswith("2.0."):
-        yield "code_name", "Hamm"
-    elif entry.startswith("2.1."):
-        yield "code_name", "Slink"
-    elif entry.startswith("2.2."):
-        yield "code_name", "Potato"
-    elif entry.startswith("3.0."):
-        yield "code_name", "Woody"
-    elif entry.startswith("3.1."):
-        yield "code_name", "Sarge"
-    elif entry.startswith("4."):
-        yield "code_name", "Etch"
-    elif entry.startswith("5."):
-        yield "code_name", "Lenny"
-    elif entry.startswith("6."):
-        yield "code_name", "Squeeze"
-    elif entry.startswith("7."):
-        yield "code_name", "Wheezy"
-    elif entry.startswith("8."):
-        yield "code_name", "Jessie"
-    elif entry.startswith("9."):
-        yield "code_name", "Stretch"
-    elif entry.startswith("10."):
-        yield "code_name", "Buster"
-    elif entry.startswith("11."):
-        yield "code_name", "Bullseye"
+
+    for prefix, code_name in _DEBIAN_CODE_NAMES:
+        if entry.startswith(prefix):
+            yield "code_name", code_name
+            return
 
 
 def inv_lnx_parse_cma(line: _Line) -> _KVPairs:
@@ -189,6 +161,32 @@ def inv_lnx_parse_gentoo(line: _Line) -> _KVPairs:
     parts = entry.split(" ")
     yield "version", parts.pop(-1)
     yield "code_name", None
+
+
+_HANDLERS: Final = (
+    ("/usr/share/cma/version", inv_lnx_parse_cma),
+    ("/etc/os-release", inv_lnx_parse_os),
+    ("/etc/gentoo-release", inv_lnx_parse_gentoo),
+    ("/etc/SuSE-release", inv_lnx_parse_suse),
+    ("/etc/oracle-release", inv_lnx_parse_oracle_vm_server),
+    ("/etc/redhat-release", inv_lnx_parse_redhat),
+    ("/etc/lsb-release", inv_lnx_parse_lsb),
+    ("/etc/debian_version", inv_lnx_parse_debian),
+)
+
+
+def inventory_lnx_distro(section: Section) -> InventoryResult:
+
+    for file_name, handler in _HANDLERS:
+        if file_name in section:
+            yield Attributes(
+                path=["software", "os"],
+                inventory_attributes={
+                    "type": "Linux",
+                    **dict(handler(section[file_name])),
+                },
+            )
+            break
 
 
 register.inventory_plugin(

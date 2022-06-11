@@ -7,9 +7,11 @@
 # yapf: disable
 # type: ignore
 
+from cmk.base.plugins.agent_based.lparstat_aix import parse_lparstat_aix
+
 checkname = 'lparstat_aix'
 
-info = [
+parsed = parse_lparstat_aix([
     ['System', 'Config', 'type=Dedicated', 'ent=7.0', 'what=ever'],
     [
         u'%user', u'%sys', u'%wait', u'%idle', u'physc', u'%entc', u'lbusy', u'vcsw', u'phint',
@@ -20,7 +22,7 @@ info = [
         u'-----', u'-----', u'------'
     ],
     [u'0.2', u'0.4', u'0.0', u'99.3', u'0.02', u'1.7', u'0.0', u'215', u'3', u'101', u'0.64'],
-]
+])
 
 discovery = {'': [(None, {})], 'cpu_util': [(None, {})]}
 

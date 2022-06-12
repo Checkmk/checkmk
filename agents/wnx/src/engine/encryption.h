@@ -48,7 +48,7 @@ public:
                                     size_t buffer_size,
                                     bool last_block = true) const;
     std::tuple<bool, size_t> decode(void *in_out, size_t size,
-                                    bool last_block = true);
+                                    bool last_block = true) const;
 
     std::optional<cma::ByteVector> getKey() const;
 
@@ -62,7 +62,7 @@ public:
 
 private:
     void cleanup();
-    HCRYPTPROV obtainContext();
+    HCRYPTPROV obtainContext() const;
     void releaseContext();
 
     void checkAndConfigure();
@@ -73,7 +73,7 @@ private:
     HCRYPTKEY importKey(const BYTE *key, DWORD key_size) const;
     // derive key and iv from the password in the same manner as openssl does
     HCRYPTKEY deriveOpenSSLKey(const std::string &password, Length key_length,
-                               int iterations);
+                               int iterations) const;
     void releaseKey();
 
     HCRYPTPROV crypt_provider_;

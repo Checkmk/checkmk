@@ -3,7 +3,7 @@
 
 #include "agent_controller.h"
 
-#include <versionhelpers.h>
+#include <VersionHelpers.h>
 
 #include <filesystem>
 #include <iosfwd>
@@ -24,13 +24,15 @@ using namespace std::string_literals;
 namespace cma::ac {
 
 namespace {
-std::vector<Modus> start_controller_moduses{Modus::service, Modus::integration};
+const std::vector<Modus> start_controller_moduses{Modus::service,
+                                                  Modus::integration};
 
 bool AllowUseController(Modus modus) {
     return rs::find(start_controller_moduses, modus) !=
            start_controller_moduses.end();
 }
-std::vector<Modus> use_special_port_moduses{Modus::app, Modus::integration};
+const std::vector<Modus> use_special_port_moduses{Modus::app,
+                                                  Modus::integration};
 
 bool UseSpecialPort(Modus modus) {
     return rs::find(use_special_port_moduses, modus) !=
@@ -66,7 +68,7 @@ fs::path CopyControllerToBin() {
     XLOG::l("error copying controller from '{}' to '{}' [{}]", src, tgt,
             ec.value());
 
-    auto tgt_sav = tgt;
+    fs::path tgt_sav{tgt};
     try {
         tgt_sav.replace_extension(".sav");
     } catch (const std::exception &e) {
@@ -105,7 +107,7 @@ uint16_t GetPortFromString(const std::string &str) {
     }
 
     auto port = ToInt(table[1]);
-    return port < 1000 ? 0 : port;
+    return port > 1'000 && port < 60'000 ? static_cast<uint16_t>(port) : 0U;
 }
 
 std::string GetConfiguredAgentChannel(Modus modus) {
@@ -116,8 +118,7 @@ std::string GetConfiguredAgentChannel(Modus modus) {
     auto result =
         cfg::GetVal(controller_config, cfg::vars::kControllerAgentChannel,
                     std::string{cfg::defaults::kControllerAgentChannelDefault});
-    auto port = GetPortFromString(result);
-    if (port == 0) {
+    if (GetPortFromString(result) == 0) {
         XLOG::l("Invalid configured agent channel '{}' use default", result);
         return std::string{cfg::defaults::kControllerAgentChannelDefault};
     }
@@ -179,7 +180,7 @@ bool IsInLegacyMode() {
 }
 
 fs::path GetController(const fs::path &service) {
-    auto controller = service;
+    fs::path controller{service};
     controller.replace_filename(cfg::files::kAgentCtl);
     return controller;
 }
@@ -274,8 +275,8 @@ std::optional<uint32_t> StartAgentController() {
         }
     }
     const auto cmdline = BuildCommandLine(controller_name);
-    auto proc_id = ar.goExecAsDetached(cmdline);
-    if (proc_id != 0) {
+
+    if (auto proc_id = ar.goExecAsDetached(cmdline); proc_id != 0) {
         XLOG::l.i("Agent controller '{}' started pid [{}]",
                   wtools::ToUtf8(cmdline), proc_id);
         return proc_id;
@@ -295,8 +296,7 @@ void TrimRight(std::string &s, std::string_view chars) {
 namespace {
 std::string RunAgentControllerWithParam(std::string_view param) {
     auto work_controller = GetWorkController();
-    std::error_code ec;
-    if (!fs::exists(work_controller, ec)) {
+    if (std::error_code ec; !fs::exists(work_controller, ec)) {
         XLOG::l("There is no controller '{}' ec=[{}]", work_controller,
                 ec.value());
         return {};
@@ -321,7 +321,9 @@ bool KillAgentController() {
         return false;
     }
 
-    auto _ = wtools::KillProcessesByDir(cfg::GetUserBinDir());
+    if (auto killed = wtools::KillProcessesByDir(cfg::GetUserBinDir())) {
+        XLOG::t.i("killed [{}] controllers", killed);
+    }
 
     // Idiotic loop below mirrors idiotic Windows architecture.
     // MS: Even if process killed, the executable may be for some time busy.
@@ -379,10 +381,10 @@ bool CreateLegacyModeFile(const fs::path &marker) {
                                              "is strange, assuming bad file");
     }
 
-    const auto age = std::chrono::duration_cast<std::chrono::seconds>(
-        fs::_File_time_clock::now().time_since_epoch() -
-        timestamp.time_since_epoch());
-    if (age > uninstall_allowed_delay) {
+    if (const auto age = std::chrono::duration_cast<std::chrono::seconds>(
+            fs::_File_time_clock::now().time_since_epoch() -
+            timestamp.time_since_epoch());
+        age > uninstall_allowed_delay) {
         return ConditionallyCreateLegacyFile(
             marker, "is too old, assuming fresh install");
     }
@@ -393,9 +395,10 @@ bool CreateLegacyModeFile(const fs::path &marker) {
                                              "is bad, assuming fresh install");
     }
 
-    bool reinstall_new = (*data).starts_with(kCmkAgentMarkerNewDeprecated) ||
-                         (*data).starts_with(kCmkAgentMarkerLatest);
-    if (reinstall_new) {
+    if (bool reinstall_new =
+            (*data).starts_with(kCmkAgentMarkerNewDeprecated) ||
+            (*data).starts_with(kCmkAgentMarkerLatest);
+        reinstall_new) {
         XLOG::l.i("File '{}' is from 2.1+ legacy pull mode  N/A", marker);
         return false;
     }

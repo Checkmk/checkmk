@@ -72,7 +72,7 @@ std::tuple<bool, size_t> Commander::encode(void *in_out, size_t size,
 }
 
 std::tuple<bool, size_t> Commander::decode(void *in_out, size_t size,
-                                           bool last_block) {
+                                           bool last_block) const {
     if (!available()) {
         return {false, 0};
     }
@@ -105,7 +105,7 @@ static bool IsAesAlgorithm(Algorithm algorithm) {
 }
 
 // called from ctor
-HCRYPTPROV Commander::obtainContext() {
+HCRYPTPROV Commander::obtainContext() const {
     HCRYPTPROV handle = 0;
 
     const auto *provider =
@@ -114,9 +114,8 @@ HCRYPTPROV Commander::obtainContext() {
     auto provider_type =
         IsAesAlgorithm(algorithm_) ? PROV_RSA_AES : PROV_RSA_FULL;
 
-    auto res = ::CryptAcquireContext(&handle, nullptr, provider, provider_type,
-                                     CRYPT_VERIFYCONTEXT);
-    if (FALSE == res) {
+    if (::CryptAcquireContext(&handle, nullptr, provider, provider_type,
+                              CRYPT_VERIFYCONTEXT) == FALSE) {
         XLOG::l.crit("Cannot obtain crypto context error is [{}]",
                      GetLastError());
         return 0;
@@ -215,7 +214,6 @@ size_t Commander::keySize(ALG_ID algorithm) {
             return 128;  // NOLINT
         case CALG_AES_192:
             return 192;  // NOLINT
-        case CALG_AES_256:
         default:
             return 256;  // NOLINT
     }
@@ -224,17 +222,17 @@ size_t Commander::keySize(ALG_ID algorithm) {
 std::tuple<HCRYPTHASH, size_t> GetHash(HCRYPTPROV crypt_provider) {
     HCRYPTHASH hash = 0;
 
-    if (FALSE ==
-        ::CryptCreateHash(crypt_provider, Algorithm::kHash, 0, 0, &hash)) {
+    if (::CryptCreateHash(crypt_provider, Algorithm::kHash, 0, 0, &hash) ==
+        FALSE) {
         XLOG::l("Can't create hash [{}]", GetLastError());
         return {};
     }
     DWORD hash_size = 0;
-    DWORD sizeof_hashsize = sizeof(DWORD);
 
-    if (FALSE == ::CryptGetHashParam(hash, HP_HASHSIZE,
-                                     reinterpret_cast<BYTE *>(&hash_size),
-                                     &sizeof_hashsize, 0)) {
+    if (DWORD sizeof_hashsize = sizeof(DWORD);
+        ::CryptGetHashParam(hash, HP_HASHSIZE,
+                            reinterpret_cast<BYTE *>(&hash_size),
+                            &sizeof_hashsize, 0) == FALSE) {
         XLOG::l("Can't get hash size [{}]", GetLastError());
         return {hash, 0};
     }
@@ -256,17 +254,19 @@ auto GetHashData(HCRYPTHASH Hash, T &Value) {
 
 HCRYPTHASH DuplicateHash(HCRYPTHASH hash) {
     HCRYPTHASH hash_out = 0;
-    auto result = ::CryptDuplicateHash(hash, nullptr, 0, &hash_out);
-    if (0 == result) return 0;
+    if (::CryptDuplicateHash(hash, nullptr, 0, &hash_out) == 0) {
+        return 0;
+    }
     return hash_out;
 }
 
 std::optional<uint32_t> BlockSize(HCRYPTKEY key) {
     DWORD block_length = 0;
-    DWORD param_length = sizeof(block_length);
-    if (FALSE == ::CryptGetKeyParam(key, KP_BLOCKLEN,
-                                    reinterpret_cast<BYTE *>(&block_length),
-                                    &param_length, 0)) {
+
+    if (DWORD param_length = sizeof(block_length);
+        ::CryptGetKeyParam(key, KP_BLOCKLEN,
+                           reinterpret_cast<BYTE *>(&block_length),
+                           &param_length, 0) == FALSE) {
         XLOG::l("Failure getting block len [{}]", GetLastError());
         return {};
     }
@@ -281,7 +281,7 @@ std::optional<uint32_t> Commander::blockSize() const {
 
 // Stupid function from the LWA
 HCRYPTKEY Commander::deriveOpenSSLKey(const std::string &password,
-                                      Length key_length, int iterations) {
+                                      Length key_length, int iterations) const {
     constexpr uint32_t kBlockALign = 8;
     if (crypt_provider_ == 0) return 0;
 
@@ -424,8 +424,7 @@ std::unique_ptr<Commander> MakeCrypt() {
         return {};
     }
 
-    auto p = pass.value();
-    return std::make_unique<Commander>(p);
+    return std::make_unique<Commander>(pass.value());
 }
 
 // calculate additional size of buffer in bytes to compress DataSize

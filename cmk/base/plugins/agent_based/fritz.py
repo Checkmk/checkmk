@@ -38,6 +38,9 @@ _LINK_STATUS_MAP = {
 def _section_to_interface(section: Section) -> interfaces.Section:
     if not _WAN_IF_KEYS & set(section):
         return []
+    link_status = section.get("NewLinkStatus")
+    if not link_status:
+        link_status = section.get('NewPhysicalLinkStatus')
     return [
         interfaces.Interface(
             index="0",
@@ -46,7 +49,7 @@ def _section_to_interface(section: Section) -> interfaces.Section:
             type="6",
             speed=int(section.get("NewLayer1DownstreamMaxBitRate", 0)),
             oper_status=_LINK_STATUS_MAP.get(
-                section.get("NewLinkStatus"),
+                link_status,
                 "2",
             ),
             in_octets=int(section.get("NewTotalBytesReceived", 0)),

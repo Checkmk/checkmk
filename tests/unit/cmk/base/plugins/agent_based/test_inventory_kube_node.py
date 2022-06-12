@@ -63,13 +63,13 @@ from .utils_inventory import sort_inventory_result
                     status_attributes={},
                 ),
                 TableRow(
-                    path=["software", "applications", "kube", "network"],
+                    path=["networking", "kube"],
                     key_columns={"ip": "k8-21"},
                     inventory_columns={"address_type": "Hostname"},
                     status_columns={},
                 ),
                 TableRow(
-                    path=["software", "applications", "kube", "network"],
+                    path=["networking", "kube"],
                     key_columns={"ip": "10.200.3.21"},
                     inventory_columns={"address_type": "ExternalIP"},
                     status_columns={},

@@ -61,8 +61,9 @@ public:
     ~TestEnvironment() override = default;
 
     void SetUp() override {
-        fs::path base_dir = cma::tools::win::GetEnv(cma::env::unit_base_dir);
-        if (!base_dir.empty() && fs::exists(base_dir)) {
+        if (fs::path base_dir =
+                cma::tools::win::GetEnv(cma::env::unit_base_dir);
+            !base_dir.empty() && fs::exists(base_dir)) {
             temp_dir_ = base_dir / temp_test_prefix_;
         } else {
             auto folder_name = fmt::format("{}_{}", temp_test_prefix_,
@@ -74,8 +75,13 @@ public:
 
     void TearDown() override {
         if (temp_dir_.u8string().find(temp_test_prefix_)) {
-            fs::remove_all(temp_dir_);
-            fs::remove(temp_dir_);
+            std::error_code ec;
+            fs::remove_all(temp_dir_, ec);
+            if (ec) {
+                XLOG::l("error removing '{}' with {} ", temp_dir_,
+                        ec.message());
+            }
+            fs::remove(temp_dir_, ec);
         }
     }
 
@@ -153,14 +159,15 @@ fs::path MakePathToCapTestFiles(const std::wstring &root) {
 
 void SafeCleanTempDir() {
     fs::path temp_dir = cma::cfg::GetTempDir();
-    auto really_temp_dir =
-        temp_dir.wstring().find(L"\\tmp", 0) != std::wstring::npos;
-    if (!really_temp_dir) return;
+    if (temp_dir.wstring().find(L"\\tmp", 0) == std::wstring::npos) {
+        return;
+    }
 
-    // clean
     std::error_code ec;
     fs::remove_all(temp_dir, ec);
-    if (ec) XLOG::l("error removing '{}' with {} ", temp_dir, ec.message());
+    if (ec) {
+        XLOG::l("error removing '{}' with {} ", temp_dir, ec.message());
+    }
     fs::create_directory(temp_dir);
 }
 

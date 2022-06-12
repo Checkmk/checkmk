@@ -2128,9 +2128,9 @@ TEST(PluginTest, SyncLocal_Integration) {
     }
 }
 
-PluginDescVector plugins_file_group = {{1, "local0_s.cmd", "local0_s"}};
+const PluginDescVector plugins_file_group = {{1, "local0_s.cmd", "local0_s"}};
 
-std::vector<cma::cfg::Plugins::ExeUnit> plugins_file_group_param = {
+const std::vector<cma::cfg::Plugins::ExeUnit> plugins_file_group_param = {
     //       Async  Timeout CacheAge              Retry  Run
     {"*.cmd",
      fmt::format(
@@ -2155,17 +2155,15 @@ TEST(PluginTest, SyncPluginsGroupIntegration) {
     auto group_name =
         wtools::ToUtf8(wtools::SidToName(L"S-1-5-32-545", SidTypeGroup));
 
-    // async part should provide nothing
     for (const auto &f : files) {
+        SCOPED_TRACE(fmt::format("Group '{}' file is '{}': ", group_name, f));
         auto ready = GetEntrySafe(pm, f.u8string());
         ASSERT_NE(nullptr, ready);
 
         auto accu = ready->getResultsSync(L"");
 
         ASSERT_TRUE(!accu.empty());
-        // something in result and running
         std::string a = TestConvertToString(accu);
-        ASSERT_TRUE(!a.empty());
 
         auto base_table = cma::tools::SplitString(a, G_EndOfString);
         ASSERT_TRUE(base_table.size() == 2);

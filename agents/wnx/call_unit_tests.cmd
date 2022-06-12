@@ -51,6 +51,7 @@ set WNX_TEST_ROOT=%temp%\test_%random%
 mkdir %WNX_TEST_ROOT%
 call prepare_to_tests.cmd %WNX_TEST_ROOT%\test
 mklink %WNX_TEST_ROOT%\watest32.exe %arte%\watest32.exe 
+net stop WinRing0_1_2_0
 %WNX_TEST_ROOT%\watest32.exe %param%
 if not %errorlevel% == 0 powershell Write-Host "This is ERROR %errorlevel% in testing 32" -Foreground Red && goto error
 if NOT "%sec_param%" == "both" powershell Write-Host "This is end of testing. QUICK test was requested." -Foreground Cyan && goto success

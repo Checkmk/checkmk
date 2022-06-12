@@ -109,6 +109,7 @@ cscript.exe //nologo scripts\WiRunSQL.vbs %build_dir%\install\Release\check_mk_s
 if not %errorlevel% == 0 powershell Write-Host "Failed version set" -Foreground Red && exit /b 34
 
 :: Unit Tests Phase: post processing/build special modules using make
+net stop WinRing0_1_2_0
 copy %build_dir%\watest\Win32\Release\watest32.exe %arte% /y	
 copy %build_dir%\watest\x64\Release\watest64.exe %arte% /Y	
 powershell Write-Host "starting unit tests" -Foreground Cyan 

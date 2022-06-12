@@ -147,7 +147,6 @@ function mkSearchMoveElement(step) {
 
     oResults = Array.from(oResults.childNodes) as HTMLElement[];
 
-
     var a = 0;
     for (var i = 0; i < oResults.length; i++) {
         if (oResults[i].tagName == "A") {

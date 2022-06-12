@@ -40,7 +40,7 @@ def _section_to_interface(section: Section) -> interfaces.Section:
         return []
     link_status = section.get("NewLinkStatus")
     if not link_status:
-        link_status = section.get('NewPhysicalLinkStatus')
+        link_status = section.get("NewPhysicalLinkStatus")
     return [
         interfaces.Interface(
             index="0",

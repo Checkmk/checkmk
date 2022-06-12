@@ -23,6 +23,7 @@
 namespace fs = std::filesystem;
 namespace rs = std::ranges;
 using namespace std::chrono_literals;
+using namespace std::string_literals;
 
 namespace cma {
 
@@ -177,70 +178,61 @@ void GatherMatchingFilesAndDirs(
     }
 }
 
+namespace {
+std::wstring RemoveDot(const std::wstring_view ext) {
+    if (ext.empty()) {
+        return std::wstring{ext};
+    }
+    if (ext[0] == L'.') {
+        return std::wstring{ext.data() + 1};
+    }
+    return std::wstring{ext};
+}
+}  // namespace
+
 void FilterPathByExtension(PathVector &paths,
                            const std::vector<std::string> &exts) {
-    namespace fs = std::filesystem;
-    using namespace std::string_literals;
-
-    auto end = std::remove_if(paths.begin(),  // from
-                              paths.end(),    // to
-                              [exts](const fs::path &path) {
-                                  for (const auto &ext : exts) {
-                                      auto cur_ext =
-                                          path.extension().u8string();
-                                      if (cur_ext == "."s + ext)
-                                          return false;  // do not remove
-                                  }
-
-                                  // extension is bad, remove
-                                  return true;
-                              }  //
-    );
-
-    // actual remove
-    paths.erase(end, paths.end());
+    std::erase_if(paths, [exts](const auto &path) {
+        auto ext = RemoveDot(path.extension().wstring());
+        return rs::none_of(exts, [&](const auto &e) {
+            return ext == wtools::ConvertToUTF16(e);
+        });
+    });
 }
 
 // remove all duplicated names
 void RemoveDuplicatedNames(PathVector &paths) {
-    namespace fs = std::filesystem;
-    std::unordered_set<std::string> filename_set;  // mk_inventory.vbs, smth.bat
-    auto end = std::remove_if(paths.begin(), paths.end(),
-                              [&filename_set](fs::path const &p) {
-                                  auto fname = p.filename().u8string();
-                                  return !filename_set.insert(fname).second;
-                              });
-
-    paths.erase(end, paths.end());
+    std::unordered_set<std::wstring> filenames;  // mk_smth.vbs, smth.bat
+    std::erase_if(paths, [&filenames](const fs::path &p) {
+        auto fname = p.filename().wstring();
+        return !filenames.insert(fname).second;
+    });
 }
 
 // remove so-called forbidden files, we do not want to execute
 void RemoveForbiddenNames(PathVector &paths) {
-    const auto end = rs::remove_if(paths, [](fs::path const &p) {
-        return tools::IsEqual(p.filename().string(), "cmk-update-agent.exe");
+    std::erase_if(paths, [](const auto &p) {
+        return tools::IsEqual(p.filename().wstring(), L"cmk-update-agent.exe");
     });
-
-    paths.erase(end.begin(), end.end());
 }
 
 // make a list of files to be run(check exists normally is true)
-PathVector FilterPathVector(
-    const PathVector &found_files,
-    const std::vector<cma::cfg::Plugins::ExeUnit> &units, bool check_exists) {
-    namespace fs = std::filesystem;
+PathVector FilterPathVector(const PathVector &found_files,
+                            const std::vector<cfg::Plugins::ExeUnit> &units,
+                            bool check_exists) {
     PathVector really_found;
     for (const auto &ff : found_files) {
+        if (std::error_code ec; check_exists && !fs::exists(ff, ec)) {
+            continue;
+        }
         for (const auto &unit : units) {
-            if (check_exists) {
-                std::error_code ec;
-                if (!fs::exists(ff, ec)) continue;
+            if (!MatchNameOrAbsolutePath(unit.pattern(), ff)) {
+                continue;
             }
-            if (MatchNameOrAbsolutePath(unit.pattern(), ff)) {
-                if (unit.run()) {
-                    really_found.emplace_back(ff);
-                }
-                break;
+            if (unit.run()) {
+                really_found.emplace_back(ff);
             }
+            break;
         }
     }
     return really_found;
@@ -278,10 +270,7 @@ PluginEntry *GetEntrySafe(PluginMap &plugin_map, const std::string &key) {
 
 void InsertInPluginMap(PluginMap &plugin_map, const PathVector &found_files) {
     for (const auto &ff : found_files) {
-        const auto *ptr = GetEntrySafe(plugin_map, ff.u8string());
-        if (ptr == nullptr) {
-            plugin_map.emplace(std::make_pair(ff.u8string(), ff));
-        }
+        plugin_map.try_emplace(ff.u8string(), ff);
     }
 }
 

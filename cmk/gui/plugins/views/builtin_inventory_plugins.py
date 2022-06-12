@@ -663,14 +663,14 @@ inventory_displayhints.update({
         "title": _l("Value"),
     },
 
-    ".software.applications.kube.network:": {
-        "title": _l("Network"),
+    ".networking.kube:": {
+        "title": _l("Kubernetes"),
         "keyorder": ["ip", "address_type"],
     },
-    ".software.applications.kube.network:*.ip": {
+    ".networking.kube:*.ip": {
         "title": _l("IP address"),
     },
-    ".software.applications.kube.network:*.address_type": {
+    ".networking.kube:*.address_type": {
         "title": _l("Type"),
     },
     ".software.applications.kube.containers:": {

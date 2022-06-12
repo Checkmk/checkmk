@@ -1,0 +1,15 @@
+Title: KUBE: Inventory: Move IP addresses from Software to Networking
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1655025090
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p3
+
+Previously, the networking information of a Kubernetes Node was found under Software > Applications
+> Kubernetes > Network. With this werk, the information is in the path Networking > Kubernetes.
+The old entries remain in the inventory history. This more consistent in how the information is
+generally organized. Users which have included the path in their automation tools (including Checkmk
+rules) need to change the path accordingly.

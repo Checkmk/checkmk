@@ -172,11 +172,12 @@ class SyslogMessage:
         application: str = _NILVALUE,
         proc_id: str = _NILVALUE,
         msg_id: str = _NILVALUE,
-        structured_data: StructuredData = StructuredData({}),
+        structured_data: Optional[StructuredData] = None,
         text: Optional[str] = None,
         ip_address: Optional[str] = None,
         service_level: Optional[int] = None,
     ):
+        structured_data = structured_data or StructuredData({})
         if not 0 <= facility <= 23:
             raise ValueError("Facility must be in the range 0..23 (inclusive).")
         if not 0 <= severity <= 7:

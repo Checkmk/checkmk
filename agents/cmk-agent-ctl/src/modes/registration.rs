@@ -19,8 +19,14 @@ impl InteractiveTrust {
         let validity = x509.validity();
 
         eprintln!("PEM-encoded certificate:\n{}", pem_str);
-        eprintln!("Issued by:\n\t{}", certs::join_common_names(x509.issuer()));
-        eprintln!("Issued to:\n\t{}", certs::join_common_names(x509.subject()));
+        eprintln!(
+            "Issued by:\n\t{}",
+            certs::common_names(x509.issuer())?.join(", ")
+        );
+        eprintln!(
+            "Issued to:\n\t{}",
+            certs::common_names(x509.subject())?.join(", ")
+        );
         eprintln!(
             "Validity:\n\tFrom {}\n\tTo   {}",
             validity.not_before.to_rfc2822(),

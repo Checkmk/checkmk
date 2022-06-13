@@ -2,7 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use anyhow::{anyhow, Context, Result as AnyhowResult};
+use anyhow::{anyhow, bail, Context, Result as AnyhowResult};
 use openssl::hash::MessageDigest;
 use openssl::nid::Nid;
 use openssl::pkey::PKey;
@@ -89,12 +89,17 @@ pub fn parse_pem(cert: &str) -> AnyhowResult<x509_parser::pem::Pem> {
         .context("PEM data invalid")
 }
 
-pub fn join_common_names(x509_name: &x509_parser::x509::X509Name) -> String {
-    x509_name
-        .iter_common_name()
-        .map(|cn| cn.as_str().unwrap_or("[unknown]"))
-        .collect::<Vec<&str>>()
-        .join(", ")
+pub fn common_names<'a>(x509_name: &'a x509_parser::x509::X509Name) -> AnyhowResult<Vec<&'a str>> {
+    let mut cns = Vec::new();
+
+    for name in x509_name.iter_common_name() {
+        match name.as_str() {
+            Ok(cn) => cns.push(cn),
+            Err(err) => bail!("Failed to parse CN to string: {}", err),
+        }
+    }
+
+    Ok(cns)
 }
 
 pub fn rustls_private_key(key_pem: &str) -> AnyhowResult<RustlsPrivateKey> {

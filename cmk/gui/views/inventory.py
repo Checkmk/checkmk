@@ -1559,7 +1559,7 @@ def _declare_views(
         "mustsearch": False,
         "link_from": {
             "single_infos": ["host"],
-            "has_inventory_tree": inventory_paths,
+            "has_inventory_tree": [ip.path for ip in inventory_paths],
         },
         # Columns
         "painters": painters,
@@ -1773,7 +1773,7 @@ multisite_builtin_views["inv_host"] = {
     "hidden": True,
     "link_from": {
         "single_infos": ["host"],
-        "has_inventory_tree": [inventory.InventoryPath.parse(".")],
+        "has_inventory_tree": [inventory.InventoryPath.parse(".").path],
     },
     # Layout options
     "layout": "dataset",
@@ -2112,7 +2112,7 @@ multisite_builtin_views["inv_host_history"] = {
     "is_show_more": True,
     "link_from": {
         "single_infos": ["host"],
-        "has_inventory_tree_history": [inventory.InventoryPath.parse(".")],
+        "has_inventory_tree_history": [inventory.InventoryPath.parse(".").path],
     },
     # Layout options
     "layout": "table",

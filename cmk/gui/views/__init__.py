@@ -37,7 +37,7 @@ import cmk.utils.version as cmk_version
 from cmk.utils.cpu_tracking import CPUTracker, Snapshot
 from cmk.utils.prediction import livestatus_lql
 from cmk.utils.site import omd_site
-from cmk.utils.structured_data import StructuredDataNode
+from cmk.utils.structured_data import SDPath, StructuredDataNode
 from cmk.utils.type_defs import HostName, ServiceName
 
 import cmk.gui.i18n
@@ -63,7 +63,6 @@ from cmk.gui.i18n import _, _u
 from cmk.gui.inventory import (
     get_short_inventory_filepath,
     get_status_data_via_livestatus,
-    InventoryPath,
     load_filtered_and_merged_tree,
     load_latest_delta_tree,
     LoadStructuredDataError,
@@ -299,7 +298,9 @@ class VisualTypeViews(VisualType):
     def permitted_visuals(self):
         return get_permitted_views()
 
-    def link_from(self, linking_view, linking_view_rows, visual, context_vars):
+    def link_from(
+        self, linking_view, linking_view_rows, visual, context_vars: HTTPVariables
+    ) -> bool:
         """This has been implemented for HW/SW inventory views which are often useless when a host
         has no such information available. For example the "Oracle Tablespaces" inventory view is
         useless on hosts that don't host Oracle databases."""
@@ -311,44 +312,49 @@ class VisualTypeViews(VisualType):
         if not link_from:
             return True  # No link from filtering: Always display this.
 
-        inventory_tree_condition = link_from.get("has_inventory_tree")
-        if inventory_tree_condition and not _has_inventory_tree(
-            context_vars, inventory_tree_condition
-        ):
+        context = dict(context_vars)
+        if (hostname := context.get("host")) is None:
+            # No host data? Keep old behaviour
+            return True
+
+        if hostname == "":
             return False
 
-        inventory_tree_history_condition = link_from.get("has_inventory_tree_history")
-        if inventory_tree_history_condition and not _has_inventory_tree(
-            context_vars,
-            inventory_tree_history_condition,
+        # TODO: host is not correctly validated by visuals. Do it here for the moment.
+        try:
+            Hostname().validate_value(hostname, None)
+        except MKUserError:
+            return False
+
+        if not (site_id := context.get("site")):
+            return False
+
+        return _has_inventory_tree(
+            Hostname(hostname),
+            SiteId(str(site_id)),
+            link_from.get("has_inventory_tree", []),
+            is_history=False,
+        ) or _has_inventory_tree(
+            Hostname(hostname),
+            SiteId(str(site_id)),
+            link_from.get("has_inventory_tree_history", []),
             is_history=True,
-        ):
-            return False
-
-        return True
+        )
 
 
 def _has_inventory_tree(
-    context_vars: HTTPVariables, inventory_paths: Sequence[InventoryPath], is_history: bool = False
+    hostname: HostName,
+    site_id: SiteId,
+    paths: Sequence[SDPath],
+    is_history: bool,
 ) -> bool:
-    context = dict(context_vars)
-    hostname = context.get("host")
-    if hostname is None:
-        return True  # No host data? Keep old behaviour
-
-    if hostname == "":
-        return False
-
-    # TODO: host is not correctly validated by visuals. Do it here for the moment.
-    try:
-        Hostname().validate_value(hostname, None)
-    except MKUserError:
+    if not paths:
         return False
 
     # FIXME In order to decide whether this view is enabled
     # do we really need to load the whole tree?
     try:
-        struct_tree = _get_struct_tree(is_history, hostname, context.get("site"))
+        struct_tree = _get_struct_tree(is_history, hostname, site_id)
     except LoadStructuredDataError:
         return False
 
@@ -359,8 +365,7 @@ def _has_inventory_tree(
         return False
 
     return any(
-        (node := struct_tree.get_node(inventory_path.path)) is not None and not node.is_empty()
-        for inventory_path in inventory_paths
+        (node := struct_tree.get_node(path)) is not None and not node.is_empty() for path in paths
     )
 
 

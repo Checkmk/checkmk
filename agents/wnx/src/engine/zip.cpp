@@ -67,7 +67,7 @@ static HRESULT UnzipExec(Folder *to, FolderItems *fi) {
 static ReleasedResource<Folder> CreateFolder(IShellDispatch *dispatch,
                                              wtools::Bstr &bstr) {
     VARIANT variantDir;
-    InitVariant(variantDir, bstr);
+    InitVariant(variantDir, bstr.bstr());
     Folder *folder = nullptr;
     auto hResult = dispatch->NameSpace(variantDir, &folder);
 

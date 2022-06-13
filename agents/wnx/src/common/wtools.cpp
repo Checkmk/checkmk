@@ -3,22 +3,14 @@
 
 #include "wtools.h"
 
-// WINDOWS STUFF
-#if defined(_WIN32)
 #include <WinSock2.h>
 
-#include <Sddl.h>
+#include <Psapi.h>
+#include <WS2tcpip.h>
 #include <comdef.h>
 #include <iphlpapi.h>
+#include <sddl.h>
 #include <shellapi.h>
-#include <ws2tcpip.h>
-
-#include "psapi.h"
-#pragma comment(lib, "wbemuuid.lib")
-#pragma comment(lib, "psapi.lib")
-#pragma comment(lib, "Sensapi.lib")
-#pragma comment(lib, "iphlpapi.lib")
-#endif
 
 #include <cstdint>
 #include <numeric>
@@ -31,6 +23,11 @@
 #include "common/wtools_user_control.h"
 #include "logger.h"
 #include "tools/_raii.h"
+#pragma comment(lib, "wbemuuid.lib")
+#pragma comment(lib, "psapi.lib")
+#pragma comment(lib, "Sensapi.lib")
+#pragma comment(lib, "iphlpapi.lib")
+
 namespace fs = std::filesystem;
 using namespace std::chrono_literals;
 
@@ -57,7 +54,7 @@ bool ChangeAccessRights(
         XLOG::l("GetNamedSecurityInfo Error {}", result);
         return false;
     }
-    ON_OUT_OF_SCOPE(if (sd != nullptr) LocalFree((HLOCAL)sd));
+    ON_OUT_OF_SCOPE(if (sd != nullptr)::LocalFree((HLOCAL)sd));
 
     // Initialize an EXPLICIT_ACCESS structure for the new ACE.
     EXPLICIT_ACCESS ea;
@@ -94,14 +91,14 @@ bool ChangeAccessRights(
 std::pair<uint32_t, uint32_t> GetProcessExitCode(uint32_t pid) {
     HANDLE h = ::OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, pid);
     if (nullptr == h) {
-        return {0, GetLastError()};
+        return {0, ::GetLastError()};
     }
 
     ON_OUT_OF_SCOPE(::CloseHandle(h));
     DWORD exit_code = 0;
     auto success = ::GetExitCodeProcess(h, &exit_code);
     if (FALSE == success) {
-        return {-1, GetLastError()};
+        return {-1, ::GetLastError()};
     }
 
     return {exit_code, 0};
@@ -110,11 +107,15 @@ std::pair<uint32_t, uint32_t> GetProcessExitCode(uint32_t pid) {
 std::wstring GetProcessPath(uint32_t pid) noexcept {
     HANDLE h =
         ::OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, pid);
-    if (h == nullptr) return {};
+    if (h == nullptr) {
+        return {};
+    }
     ON_OUT_OF_SCOPE(::CloseHandle(h));
 
-    wchar_t buffer[MAX_PATH];
-    if (::GetModuleFileNameEx(h, nullptr, buffer, MAX_PATH) != 0) return buffer;
+    if (wchar_t buffer[MAX_PATH];
+        ::GetModuleFileNameEx(h, nullptr, buffer, MAX_PATH) != 0) {
+        return buffer;
+    }
 
     return {};
 }
@@ -130,7 +131,7 @@ int KillProcessesByDir(const fs::path &dir) noexcept {
 
     int killed_count = 0;
 
-    ScanProcessList([dir, &killed_count](const PROCESSENTRY32W &entry) -> bool {
+    ScanProcessList([dir, &killed_count](const PROCESSENTRY32W &entry) {
         auto pid = entry.th32ProcessID;
         auto exe = wtools::GetProcessPath(pid);
         if (exe.length() < minimum_path_len) {
@@ -188,7 +189,9 @@ uint32_t AppRunner::goExecAsJob(std::wstring_view command_line) noexcept {
         process_handle_ = ph;
 
         // check and return on success
-        if (process_id_ != 0) return process_id_;
+        if (process_id_ != 0) {
+            return process_id_;
+        }
 
         // failure s here
         XLOG::l(XLOG_FLINE + " Failed RunStd: [{}]*", GetLastError());
@@ -318,14 +321,14 @@ ServiceController::StopType ServiceController::registerAndRun(
     // returns when the service has stopped. The process should simply
     // terminate when the call returns. Two words: Blocks Here
     try {
-        auto ret = ::StartServiceCtrlDispatcher(service_table);
-        if (ret == FALSE) {
-            auto error = GetLastError();
+        if (::StartServiceCtrlDispatcher(service_table) == FALSE) {
+            auto error = ::GetLastError();
 
             // this normal situation when we are starting service from
             // command line without parameters
-            if (error == ERROR_FAILED_SERVICE_CONTROLLER_CONNECT)
+            if (error == ERROR_FAILED_SERVICE_CONTROLLER_CONNECT) {
                 return StopType::no_connect;
+            }
 
             XLOG::l(XLOG::kStdio)
                 .crit("Cannot Start Service '{}' error = [{}]",
@@ -333,13 +336,14 @@ ServiceController::StopType ServiceController::registerAndRun(
             return StopType::fail;
         }
         return StopType::normal;
-    } catch (std::exception &e) {
+    } catch (const std::exception &e) {
         XLOG::l(XLOG::kStdio)
             .crit("Exception '{}' in Service start with error [{}]", e.what(),
-                  GetLastError());
+                  ::GetLastError());
     } catch (...) {
         XLOG::l(XLOG::kStdio)
-            .crit("Exception in Service start with error [{}]", GetLastError());
+            .crit("Exception in Service start with error [{}]",
+                  ::GetLastError());
     }
     return StopType::fail;
 }
@@ -371,9 +375,8 @@ bool InstallService(const wchar_t *service_name, const wchar_t *display_name,
     wchar_t service_path[MAX_PATH];
     XLOG::setup::ColoredOutputOnStdio(true);
 
-    auto ret =
-        ::GetModuleFileName(nullptr, service_path, ARRAYSIZE(service_path));
-    if (ret == 0) {
+    if (::GetModuleFileName(nullptr, service_path, ARRAYSIZE(service_path)) ==
+        0) {
         XLOG::l(XLOG::kStdio)
             .crit("GetModuleFileName failed w/err {:#X}", GetLastError());
         return false;
@@ -424,6 +427,45 @@ bool InstallService(const wchar_t *service_name, const wchar_t *display_name,
     return true;
 }
 
+namespace {
+void TryStopService(SC_HANDLE service, std::string_view name) {
+    SERVICE_STATUS service_status = {};
+    if (::ControlService(service, SERVICE_CONTROL_STOP, &service_status) !=
+        TRUE) {
+        XLOG::l(XLOG::kStdio)
+            .i("\n{} is failed to stop [{}]", name, ::GetLastError());
+    }
+
+    XLOG::l(XLOG::kStdio).i("Stopping '{}'.", name);
+    Sleep(1000);
+
+    while (::QueryServiceStatus(service, &service_status) == TRUE) {
+        if (service_status.dwCurrentState == SERVICE_STOP_PENDING) {
+            xlog::sendStringToStdio(".");
+            Sleep(1000);
+        } else
+            break;
+    }
+
+    if (service_status.dwCurrentState == SERVICE_STOPPED) {
+        XLOG::l(XLOG::kStdio).i("\n{} is stopped.", name);
+    } else {
+        XLOG::l(XLOG::kStdio).i("\n{} failed to stop.", name);
+    }
+}
+
+void LogLastError(std::string_view name) {
+    auto e = ::GetLastError();
+    if (e == ERROR_SERVICE_DOES_NOT_EXIST) {
+        XLOG::l(XLOG::kStdio).crit("The Service '{}' doesn't exist", name);
+        return;
+    }
+
+    XLOG::l(XLOG::kStdio).crit("OpenService '{}' failed, [{}]", name, e);
+    return;
+}
+}  // namespace
+
 //
 //   FUNCTION: UninstallService
 //
@@ -460,45 +502,19 @@ bool UninstallService(const wchar_t *service_name,
         ::OpenService(service_manager, service_name,
                       SERVICE_STOP | SERVICE_QUERY_STATUS | DELETE);
     if (service == nullptr) {
-        auto error = GetLastError();
-        if (error == ERROR_SERVICE_DOES_NOT_EXIST) {
-            XLOG::l(XLOG::kStdio).crit("The Service '{}' doesn't exist", name);
-            return false;
-        }
-
-        XLOG::l(XLOG::kStdio).crit("OpenService '{}' failed, [{}]", name);
+        LogLastError(name);
         return false;
     }
     ON_OUT_OF_SCOPE(::CloseServiceHandle(service););
 
     if (uninstall_mode == UninstallServiceMode::normal) {
-        // Try to stop the service
-        SERVICE_STATUS service_status = {};
-        if (::ControlService(service, SERVICE_CONTROL_STOP, &service_status) ==
-            TRUE) {
-            XLOG::l(XLOG::kStdio).i("Stopping '{}'.", name);
-            Sleep(1000);
-
-            while (::QueryServiceStatus(service, &service_status) == TRUE) {
-                if (service_status.dwCurrentState == SERVICE_STOP_PENDING) {
-                    xlog::sendStringToStdio(".");
-                    Sleep(1000);
-                } else
-                    break;
-            }
-
-            if (service_status.dwCurrentState == SERVICE_STOPPED) {
-                XLOG::l(XLOG::kStdio).i("\n{} is stopped.", name);
-            } else {
-                XLOG::l(XLOG::kStdio).i("\n{} failed to stop.", name);
-            }
-        }
+        TryStopService(service, name);
     }
 
     // Now remove the service by calling DeleteService.
     if (::DeleteService(service) == FALSE) {
         XLOG::l(XLOG::kStdio)
-            .i("DeleteService for '{}' failed [{}]\n", name, GetLastError());
+            .i("DeleteService for '{}' failed [{}]\n", name, ::GetLastError());
         return false;
     }
 
@@ -509,13 +525,8 @@ bool UninstallService(const wchar_t *service_name,
 
 void ServiceController::initStatus(bool can_stop, bool can_shutdown,
                                    bool can_pause_continue) {
-    // The service runs in its own process.
     status_.dwServiceType = SERVICE_WIN32_OWN_PROCESS;
-
-    // The service is starting.
     status_.dwCurrentState = SERVICE_START_PENDING;
-
-    // The accepted commands of the service.
     DWORD controls_accepted = 0;
     if (can_stop) {
         controls_accepted |= SERVICE_ACCEPT_STOP;
@@ -543,34 +554,25 @@ void ServiceController::initStatus(bool can_stop, bool can_shutdown,
 //   original state.
 //
 void ServiceController::Stop() {
-    if (!processor_) return;  // #TODO: trace
+    if (processor_ == nullptr) {
+        return;
+    }
 
     auto original_state = status_.dwCurrentState;
     const auto *log_name = processor_->getMainLogName();
     try {
-        // Tell SCM that the service is stopping.
         XLOG::l.i("Initiating stop routine...");
         setServiceStatus(SERVICE_STOP_PENDING);
-
-        // Perform service-specific stop operations.
         processor_->stopService();
         processor_->cleanupOnStop();
-
-        // Tell SCM that the service is stopped.
         setServiceStatus(SERVICE_STOPPED);
     } catch (const DWORD &error_exception) {
-        // Log the error.
         xlog::SysLogEvent(log_name, xlog::LogEvents::kError, error_exception,
                           L"Stop Service");
-
-        // Set the original service status.
         setServiceStatus(original_state);
     } catch (...) {
-        // Log the error.
         xlog::SysLogEvent(log_name, xlog::LogEvents::kError, 0,
                           L"Service failed to stop.");
-
-        // Set the original service status.
         setServiceStatus(original_state);
     }
 }
@@ -589,7 +591,7 @@ void ServiceController::Stop() {
 //   * argv - array of command line arguments
 //
 void ServiceController::Start(DWORD /*agc*/, wchar_t ** /*argv*/) {
-    if (!processor_) {
+    if (processor_ == nullptr) {
         XLOG::l.crit("Unbelievable, but process_ is nullptr");
         return;
     }
@@ -614,28 +616,17 @@ void ServiceController::Start(DWORD /*agc*/, wchar_t ** /*argv*/) {
     XLOG::l.i("Service handlers registered");
 
     try {
-        // Tell SCM that the service is starting.
         setServiceStatus(SERVICE_START_PENDING);
-
-        // Perform service-specific initialization.
         processor_->startService();
-
-        // Tell SCM that the service is started.
         setServiceStatus(SERVICE_RUNNING);
 
     } catch (const DWORD &error_exception) {
-        // Log the error.
         xlog::SysLogEvent(processor_->getMainLogName(), xlog::LogEvents::kError,
                           error_exception, L"Service Start");
-
-        // Set the service status to be stopped.
         setServiceStatus(SERVICE_STOPPED, error_exception);
     } catch (...) {
-        // Log the error.
         xlog::SysLogEvent(processor_->getMainLogName(), xlog::LogEvents::kError,
                           0, L"Service failed to start.");
-
-        // Set the service status to be stopped.
         setServiceStatus(SERVICE_STOPPED);
     }
 }
@@ -650,7 +641,9 @@ void ServiceController::Start(DWORD /*agc*/, wchar_t ** /*argv*/) {
 //   log, and the service will become running.
 //
 void ServiceController::Pause() {
-    if (!processor_) return;  // #TODO: trace, this is bad
+    if (processor_ == nullptr) {
+        return;
+    }
     try {
         // Tell SCM that the service is pausing.
         setServiceStatus(SERVICE_PAUSE_PENDING);
@@ -722,17 +715,12 @@ void ServiceController::Continue() {
 //
 void ServiceController::Shutdown() {
     try {
-        // Perform service-specific shutdown operations.
         processor_->shutdownService();
-
-        // Tell SCM that the service is stopped.
         setServiceStatus(SERVICE_STOPPED);
     } catch (const DWORD &error_exception) {
-        // Log the error.
         xlog::SysLogEvent(processor_->getMainLogName(), xlog::LogEvents::kError,
                           error_exception, L"Service Shutdown");
     } catch (...) {
-        // Log the error.
         xlog::SysLogEvent(processor_->getMainLogName(), xlog::LogEvents::kError,
                           0, L"Service failed to shutdown.");
     }
@@ -846,24 +834,27 @@ std::vector<wchar_t> ReadPerfCounterKeyFromRegistry(PerfCounterReg type) {
     return result;
 }
 
-std::optional<uint32_t> FindPerfIndexInRegistry(std::wstring_view Key) {
-    if (Key.empty()) return {};
+std::optional<uint32_t> FindPerfIndexInRegistry(std::wstring_view key) {
+    if (key.empty()) {
+        return {};
+    }
 
     for (auto reg_type : {PerfCounterReg::national, PerfCounterReg::english}) {
         auto counter_str = ReadPerfCounterKeyFromRegistry(reg_type);
         auto *data = counter_str.data();
         const auto *end = counter_str.data() + counter_str.size();
-        for (;;) {
-            // get id
+        while (true) {
             auto *potential_id = GetMultiSzEntry(data, end);
-            if (potential_id == nullptr) break;
-
-            // get name
+            if (potential_id == nullptr) {
+                break;
+            }
             auto *potential_name = GetMultiSzEntry(data, end);
-            if (potential_name == nullptr) break;
+            if (potential_name == nullptr) {
+                break;
+            }
 
             // check name
-            if (Key == potential_name) {
+            if (key == potential_name) {
                 return cma::tools::ConvertToUint32(potential_id);
             }
         }
@@ -1032,15 +1023,16 @@ std::vector<const PERF_INSTANCE_DEFINITION *> GenerateInstances(
 }
 
 std::vector<std::wstring> GenerateInstanceNames(
-    const PERF_OBJECT_TYPE *Object) noexcept {
-    // check for nothing
-    if (Object->NumInstances <= 0L) return {};
+    const PERF_OBJECT_TYPE *object) noexcept {
+    if (object->NumInstances <= 0L) {
+        return {};
+    }
 
     std::vector<std::wstring> result;
     try {
-        result.reserve(Object->NumInstances);  // optimization
-        const auto *instance = FirstInstance(Object);
-        for (auto i = 0L; i < Object->NumInstances; ++i) {
+        result.reserve(object->NumInstances);  // optimization
+        const auto *instance = FirstInstance(object);
+        for (auto i = 0L; i < object->NumInstances; ++i) {
             auto offset =
                 reinterpret_cast<const BYTE *>(instance) + instance->NameOffset;
             result.emplace_back(reinterpret_cast<LPCWSTR>(offset));
@@ -1056,23 +1048,24 @@ std::vector<std::wstring> GenerateInstanceNames(
 // Instance less support
 // DataBlock is filled when NumInstances below or equal 0
 std::vector<const PERF_COUNTER_DEFINITION *> GenerateCounters(
-    const PERF_OBJECT_TYPE *Object,
-    const PERF_COUNTER_BLOCK *&DataBlock) noexcept {
+    const PERF_OBJECT_TYPE *object,
+    const PERF_COUNTER_BLOCK *&data_block) noexcept {
     std::vector<const PERF_COUNTER_DEFINITION *> result;
-    DataBlock = nullptr;
+    data_block = nullptr;
     try {
-        result.reserve(Object->NumCounters);  // optimization
+        result.reserve(object->NumCounters);  // optimization
 
-        const auto *counter = FirstCounter(Object);
-        for (DWORD i = 0UL; i < Object->NumCounters; ++i) {
+        const auto *counter = FirstCounter(object);
+        for (DWORD i = 0UL; i < object->NumCounters; ++i) {
             result.push_back(counter);
             counter = NextCounter(counter);
         }
 
         // when object has no instances immediately after the counters
         // we have data block, ergo a code a bit strange
-        if (Object->NumInstances <= 0)
-            DataBlock = reinterpret_cast<const PERF_COUNTER_BLOCK *>(counter);
+        if (object->NumInstances <= 0) {
+            data_block = reinterpret_cast<const PERF_COUNTER_BLOCK *>(counter);
+        }
     } catch (const std::exception &e) {
         XLOG::l(XLOG_FLINE + " disaster in instance less counters: '{}'",
                 e.what());
@@ -1114,29 +1107,30 @@ std::vector<std::wstring> GenerateCounterNames(const PERF_OBJECT_TYPE *object,
 // Based on OWA => INVALID
 // #TODO http://msdn.microsoft.com/en-us/library/aa373178%28v=vs.85%29.aspx
 static uint64_t GetCounterValueFromBlock(
-    const PERF_COUNTER_DEFINITION &Counter,
-    const PERF_COUNTER_BLOCK *Block) noexcept {
-    unsigned offset = Counter.CounterOffset;
-    const auto *data = cma::tools::GetOffsetInBytes(Block, offset);
+    const PERF_COUNTER_DEFINITION &counter,
+    const PERF_COUNTER_BLOCK *block) noexcept {
+    unsigned offset = counter.CounterOffset;
+    const auto *data = cma::tools::GetOffsetInBytes(block, offset);
 
     constexpr DWORD perf_size_mask = 0x00000300;
 
     auto *dwords = static_cast<const uint32_t *>(data);
-    switch (Counter.CounterType & perf_size_mask) {
+    switch (counter.CounterType & perf_size_mask) {
         case PERF_SIZE_DWORD:
             return static_cast<uint64_t>(dwords[0]);
         case PERF_SIZE_LARGE:
             return *(UNALIGNED uint64_t *)data;  // NOLINT
         case PERF_SIZE_ZERO:
             return 0;
-        case PERF_SIZE_VARIABLE_LEN:
         default: {
             // handle other data generically. This is wrong in some
             // situation. Once upon a time in future we might implement a
             // conversion as described in
             // http://msdn.microsoft.com/en-us/library/aa373178%28v=vs.85%29.aspx
-            int size = Counter.CounterSize;
-            if (size == 4) return static_cast<uint64_t>(dwords[0]);
+            int size = counter.CounterSize;
+            if (size == 4) {
+                return static_cast<uint64_t>(dwords[0]);
+            }
 
             if (size == 8) {
                 // i am not sure that this must be should so complicated
@@ -1151,16 +1145,16 @@ static uint64_t GetCounterValueFromBlock(
 }
 
 std::vector<uint64_t> GenerateValues(
-    const PERF_COUNTER_DEFINITION &Counter,
-    std::vector<const PERF_INSTANCE_DEFINITION *> &Instances) noexcept {
+    const PERF_COUNTER_DEFINITION &counter,
+    const std::vector<const PERF_INSTANCE_DEFINITION *> &instances) noexcept {
     std::vector<uint64_t> result;
     try {
-        if (!Instances.empty()) {
-            result.reserve(Instances.size());
-            for (const auto *instance : Instances) {
+        if (!instances.empty()) {
+            result.reserve(instances.size());
+            for (const auto *instance : instances) {
                 auto *counter_block = GetCounterBlock(instance);
                 result.emplace_back(
-                    GetCounterValueFromBlock(Counter, counter_block));
+                    GetCounterValueFromBlock(counter, counter_block));
             }
         }
     } catch (const std::exception &e) {
@@ -1171,20 +1165,18 @@ std::vector<uint64_t> GenerateValues(
     return result;
 }
 
-uint64_t GetValueFromBlock(const PERF_COUNTER_DEFINITION &Counter,
-                           const PERF_COUNTER_BLOCK *Block) noexcept {
-    if (Block) {
-        return GetCounterValueFromBlock(Counter, Block);
+uint64_t GetValueFromBlock(const PERF_COUNTER_DEFINITION &counter,
+                           const PERF_COUNTER_BLOCK *block) noexcept {
+    if (block) {
+        return GetCounterValueFromBlock(counter, block);
     }
     return 0;
 }
 
-// from OWA
-// #TODO gtest is required
-std::string GetName(uint32_t CounterType) noexcept {
+std::string GetName(uint32_t counter_type) noexcept {
     // probably we need a map here
     // looks terrible
-    switch (CounterType) {
+    switch (counter_type) {
         case PERF_COUNTER_COUNTER:
             return "counter";
         case PERF_COUNTER_TIMER:
@@ -1239,11 +1231,8 @@ std::string GetName(uint32_t CounterType) noexcept {
             return "raw_base";
         case PERF_ELAPSED_TIME:
             return "elapsed_time";
-        default: {
-            char out[32];
-            sprintf(out, "type(%X)", CounterType);
-            return out;
-        } break;
+        default:
+            return fmt::format("type({})", counter_type);
     }
 }
 
@@ -1326,7 +1315,6 @@ bool IsWindowsComInitialized() {
     return g_windows_com_initialized;
 }
 
-// # TODO gtest[-]
 bool WmiObjectContains(IWbemClassObject *object, const std::wstring &name) {
     if (object == nullptr) {
         XLOG::l.crit(XLOG_FUNC + "Bad Parameter");
@@ -1335,7 +1323,9 @@ bool WmiObjectContains(IWbemClassObject *object, const std::wstring &name) {
 
     VARIANT value;
     HRESULT res = object->Get(name.c_str(), 0, &value, nullptr, nullptr);
-    if (FAILED(res)) return false;
+    if (FAILED(res)) {
+        return false;
+    }
 
     ON_OUT_OF_SCOPE(VariantClear(&value));
     return value.vt != VT_NULL;
@@ -1420,42 +1410,46 @@ std::wstring WmiStringFromObject(IWbemClassObject *object,
 }
 
 // optimized versions
-std::wstring WmiStringFromObject(IWbemClassObject *Object,
-                                 const std::wstring &Name) {
-    // data
+std::wstring WmiStringFromObject(IWbemClassObject *object,
+                                 const std::wstring &name) {
     VARIANT value;
-    // Get the value of the Name property
-    auto hres = Object->Get(Name.c_str(), 0, &value, nullptr, nullptr);
-    if (FAILED(hres)) return {};
+    auto hres = object->Get(name.c_str(), 0, &value, nullptr, nullptr);
+    if (FAILED(hres)) {
+        return {};
+    }
 
     ON_OUT_OF_SCOPE(VariantClear(&value));
     return wtools::WmiGetWstring(value);
 }
 
 // optimized version
-std::optional<std::wstring> WmiTryGetString(IWbemClassObject *Object,
-                                            const std::wstring &Name) {
-    // data
+std::optional<std::wstring> WmiTryGetString(IWbemClassObject *object,
+                                            const std::wstring &name) {
     VARIANT value;
-    // Get the value of the Name property
-    auto hres = Object->Get(Name.c_str(), 0, &value, nullptr, nullptr);
-    if (FAILED(hres)) return {};
+    auto hres = object->Get(name.c_str(), 0, &value, nullptr, nullptr);
+    if (FAILED(hres)) {
+        return {};
+    }
 
     ON_OUT_OF_SCOPE(VariantClear(&value));
-    if (value.vt == VT_NULL) return {};
+    if (value.vt == VT_NULL) {
+        return {};
+    }
     return wtools::WmiGetWstring(value);
 }
 
-uint64_t WmiUint64FromObject(IWbemClassObject *Object,
-                             const std::wstring &Name) {
-    // data
+uint64_t WmiUint64FromObject(IWbemClassObject *object,
+                             const std::wstring &name) {
     VARIANT value;
-    // Get the value of the Name property
-    auto hres = Object->Get(Name.c_str(), 0, &value, nullptr, nullptr);
-    if (FAILED(hres)) return 0;
+    auto hres = object->Get(name.c_str(), 0, &value, nullptr, nullptr);
+    if (FAILED(hres)) {
+        return 0;
+    }
 
     ON_OUT_OF_SCOPE(VariantClear(&value));
-    if (value.vt == VT_NULL) return {};
+    if (value.vt == VT_NULL) {
+        return {};
+    }
     return wtools::WmiGetUint64(value);
 }
 
@@ -1502,7 +1496,7 @@ std::vector<std::wstring> WmiGetNamesFromObject(IWbemClassObject *WmiObject) {
         }
         ON_OUT_OF_SCOPE(::SysFreeString(property_name));
 
-        result.emplace_back(std::wstring(property_name));
+        result.emplace_back(property_name);
     }
 
     return result;
@@ -1594,7 +1588,9 @@ bool WmiWrapper::connect(std::wstring_view name_space) noexcept {
                                 &services_  // IWbemServices proxy
         );
 
-    if (SUCCEEDED(hres)) return true;
+    if (SUCCEEDED(hres)) {
+        return true;
+    }
 
     XLOG::l.e("Can't connect to the namespace {} {:#X}", ToUtf8(name_space),
               static_cast<unsigned long>(hres));
@@ -1944,10 +1940,10 @@ std::wstring GetRegistryValue(std::wstring_view path,
 
     if (ret == ERROR_MORE_DATA) {
         // realloc required
-        DWORD type = REG_SZ;
+        type = REG_SZ;
         auto *buffer_big = new wchar_t[count / sizeof(wchar_t) + 2];
         ON_OUT_OF_SCOPE(delete[] buffer_big);
-        DWORD count = sizeof(count);
+        count = sizeof(count);
         ret = ::RegQueryValueExW(hkey, value_name.data(), nullptr, &type,
                                  reinterpret_cast<LPBYTE>(buffer_big), &count);
 
@@ -2116,7 +2112,7 @@ bool ScanProcessList(const std::function<bool(const PROCESSENTRY32 &)> &op) {
 bool KillProcessFully(const std::wstring &process_name,
                       int exit_code) noexcept {
     std::vector<DWORD> processes_to_kill;
-    auto name = process_name;
+    std::wstring name{process_name};
     cma::tools::WideLower(name);
     ScanProcessList(
         [&processes_to_kill, name](const PROCESSENTRY32 &entry) -> bool {
@@ -2384,9 +2380,8 @@ std::string PrintPermissions(bool allowed, ACCESS_MASK permissions) {
     return os;
 }
 
-std::string MakeReadableString(bool allowed, const std::string &domain,
-                               const std::string &name,
-                               ACCESS_MASK permissions) {
+std::string MakeReadableString(bool allowed, std::string_view domain,
+                               std::string_view name, ACCESS_MASK permissions) {
     std::string os;
     // Output Account info (in NT4 style: domain\user)
     os += allowed ? "Allowed to: " : "Denied from: ";
@@ -2716,10 +2711,10 @@ std::wstring ExpandStringWithEnvironment(std::wstring_view str) {
         return {};
     }
 
-    auto log_error_and_return_default = [](std::wstring_view str) {
-        XLOG::l("Can't expand the string #1 '{}' [{}]", ToUtf8(str),
+    auto log_error_and_return_default = [](std::wstring_view s) {
+        XLOG::l("Can't expand the string #1 '{}' [{}]", ToUtf8(s),
                 GetLastError());
-        return std::wstring{str};
+        return std::wstring{s};
     };
 
     std::wstring result;

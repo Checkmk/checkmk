@@ -20,17 +20,14 @@
 #pragma comment(lib, "oleaut32.lib")
 namespace cma::fw {
 
-#define NET_FW_IP_PROTOCOL_TCP_NAME L"TCP"
-#define NET_FW_IP_PROTOCOL_UDP_NAME L"UDP"
-
-#define NET_FW_RULE_DIR_IN_NAME L"In"
-#define NET_FW_RULE_DIR_OUT_NAME L"Out"
-
-#define NET_FW_RULE_ACTION_BLOCK_NAME L"Block"
-#define NET_FW_RULE_ACTION_ALLOW_NAME L"Allow"
-
-#define NET_FW_RULE_ENABLE_IN_NAME L"TRUE"
-#define NET_FW_RULE_DISABLE_IN_NAME L"FALSE"
+constexpr std::wstring_view NET_FW_IP_PROTOCOL_TCP_NAME = L"TCP";
+constexpr std::wstring_view NET_FW_IP_PROTOCOL_UDP_NAME = L"UDP";
+constexpr std::wstring_view NET_FW_RULE_DIR_IN_NAME = L"In";
+constexpr std::wstring_view NET_FW_RULE_DIR_OUT_NAME = L"Out";
+constexpr std::wstring_view NET_FW_RULE_ACTION_BLOCK_NAME = L"Block";
+constexpr std::wstring_view NET_FW_RULE_ACTION_ALLOW_NAME = L"Allow";
+constexpr std::wstring_view NET_FW_RULE_ENABLE_IN_NAME = L"TRUE";
+constexpr std::wstring_view NET_FW_RULE_DISABLE_IN_NAME = L"FALSE";
 
 INetFwRule *CreateRule() {  // Create a new Firewall Rule object.
     INetFwRule *rule = nullptr;
@@ -99,7 +96,9 @@ IEnumVARIANT *Policy::getEnum() {
 }
 
 long Policy::getRulesCount() {
-    if (rules_ == nullptr) return 0;
+    if (rules_ == nullptr) {
+        return 0;
+    }
 
     long rule_count = 0;
     auto hr = rules_->get_Count(&rule_count);
@@ -111,10 +110,10 @@ long Policy::getRulesCount() {
     return rule_count;
 }
 
-INetFwRule *ScanAllRules(std::function<INetFwRule *(INetFwRule *)> processor) {
+INetFwRule *ScanAllRules(
+    const std::function<INetFwRule *(INetFwRule *)> &processor) {
     Policy policy;
-    auto rules = policy.getRules();
-    if (rules == nullptr) {
+    if (policy.getRules() == nullptr) {
         return nullptr;
     }
 
@@ -144,7 +143,9 @@ INetFwRule *ScanAllRules(std::function<INetFwRule *(INetFwRule *)> processor) {
         }
 
         hr = ::VariantChangeType(&var, &var, 0, VT_DISPATCH);
-        if (!SUCCEEDED(hr)) break;
+        if (!SUCCEEDED(hr)) {
+            break;
+        }
 
         INetFwRule *rule = nullptr;
 
@@ -159,9 +160,13 @@ INetFwRule *ScanAllRules(std::function<INetFwRule *(INetFwRule *)> processor) {
         auto rule_candidate = processor(rule);
 
         // post processing
-        if (rule != rule_candidate) rule->Release();
+        if (rule != rule_candidate) {
+            rule->Release();
+        }
 
-        if (rule_candidate) return rule_candidate;
+        if (rule_candidate) {
+            return rule_candidate;
+        }
     }
 
     return nullptr;
@@ -172,30 +177,26 @@ INetFwRule *ScanAllRules(std::function<INetFwRule *(INetFwRule *)> processor) {
 // FROM MSDN
 // MAY HAVE MEMORY LEAKS!!!!
 INetFwRule *DumpFWRulesInCollection(INetFwRule *fw_rule) {
-    variant_t InterfaceArray;
-    variant_t InterfaceString;
+    variant_t interface_array;
+    variant_t interface_string;
 
-    VARIANT_BOOL bEnabled;
-    BSTR bstrVal;
+    VARIANT_BOOL fw_enabled;
+    BSTR bstr_val;
 
-    long lVal = 0;
-    long lProfileBitmask = 0;
+    long profile_bitmask = 0;
 
-    NET_FW_RULE_DIRECTION fwDirection;
-    NET_FW_ACTION fwAction;
+    NET_FW_RULE_DIRECTION fw_direction;
+    NET_FW_ACTION fw_action;
 
     struct ProfileMapElement {
         NET_FW_PROFILE_TYPE2 Id;
         LPCWSTR Name;
     };
 
-    ProfileMapElement ProfileMap[3];
-    ProfileMap[0].Id = NET_FW_PROFILE2_DOMAIN;
-    ProfileMap[0].Name = L"Domain";
-    ProfileMap[1].Id = NET_FW_PROFILE2_PRIVATE;
-    ProfileMap[1].Name = L"Private";
-    ProfileMap[2].Id = NET_FW_PROFILE2_PUBLIC;
-    ProfileMap[2].Name = L"Public";
+    constexpr std::array<ProfileMapElement, 3> profile_map = {
+        ProfileMapElement{NET_FW_PROFILE2_DOMAIN, L"Domain"},
+        ProfileMapElement{NET_FW_PROFILE2_PRIVATE, L"Private"},
+        ProfileMapElement{NET_FW_PROFILE2_PUBLIC, L"Public"}};
 
     XLOG::l.i("---------------------------------------------\n");
     auto to_utf8 = [](const auto bstr) -> auto {
@@ -203,148 +204,129 @@ INetFwRule *DumpFWRulesInCollection(INetFwRule *fw_rule) {
         return wtools::ToUtf8(bstr);
     };
 
-    if (SUCCEEDED(fw_rule->get_Name(&bstrVal))) {
-        XLOG::l.i("Name:             '{}'", to_utf8(bstrVal));
-        ::SysFreeString(bstrVal);
+    if (SUCCEEDED(fw_rule->get_Name(&bstr_val))) {
+        XLOG::l.i("Name:             '{}'", to_utf8(bstr_val));
+        ::SysFreeString(bstr_val);
     }
 
-    if (SUCCEEDED(fw_rule->get_Description(&bstrVal))) {
-        XLOG::l.i("Description:      '{}'", to_utf8(bstrVal));
-        ::SysFreeString(bstrVal);
+    if (SUCCEEDED(fw_rule->get_Description(&bstr_val))) {
+        XLOG::l.i("Description:      '{}'", to_utf8(bstr_val));
+        ::SysFreeString(bstr_val);
     }
 
-    if (SUCCEEDED(fw_rule->get_ApplicationName(&bstrVal))) {
-        XLOG::l.i("Application Name: '{}'", to_utf8(bstrVal));
-        ::SysFreeString(bstrVal);
+    if (SUCCEEDED(fw_rule->get_ApplicationName(&bstr_val))) {
+        XLOG::l.i("Application Name: '{}'", to_utf8(bstr_val));
+        ::SysFreeString(bstr_val);
     }
 
-    if (SUCCEEDED(fw_rule->get_ServiceName(&bstrVal))) {
-        XLOG::l.i("Service Name:     '{}'", to_utf8(bstrVal));
-        ::SysFreeString(bstrVal);
+    if (SUCCEEDED(fw_rule->get_ServiceName(&bstr_val))) {
+        XLOG::l.i("Service Name:     '{}'", to_utf8(bstr_val));
+        ::SysFreeString(bstr_val);
     }
 
-    if (SUCCEEDED(fw_rule->get_Protocol(&lVal))) {
-        switch (lVal) {
+    long protocol = 0;
+    if (SUCCEEDED(fw_rule->get_Protocol(&protocol))) {
+        switch (protocol) {
             case NET_FW_IP_PROTOCOL_TCP:
-
                 XLOG::l.i("IP Protocol:      '{}'",
                           wtools::ToUtf8(NET_FW_IP_PROTOCOL_TCP_NAME));
                 break;
-
             case NET_FW_IP_PROTOCOL_UDP:
 
                 XLOG::l.i("IP Protocol:      '{}'",
                           wtools::ToUtf8(NET_FW_IP_PROTOCOL_UDP_NAME));
                 break;
-
             default:
-
                 break;
         }
 
-        if (lVal != NET_FW_IP_VERSION_V4 && lVal != NET_FW_IP_VERSION_V6) {
-            if (SUCCEEDED(fw_rule->get_LocalPorts(&bstrVal))) {
-                XLOG::l.i("Local Ports:      '{}'", to_utf8(bstrVal));
-                ::SysFreeString(bstrVal);
+        if (protocol != NET_FW_IP_VERSION_V4 &&
+            protocol != NET_FW_IP_VERSION_V6) {
+            if (SUCCEEDED(fw_rule->get_LocalPorts(&bstr_val))) {
+                XLOG::l.i("Local Ports:      '{}'", to_utf8(bstr_val));
+                ::SysFreeString(bstr_val);
             }
-
-            if (SUCCEEDED(fw_rule->get_RemotePorts(&bstrVal))) {
-                XLOG::l.i("Remote Ports:      '{}'", to_utf8(bstrVal));
-                ::SysFreeString(bstrVal);
+            if (SUCCEEDED(fw_rule->get_RemotePorts(&bstr_val))) {
+                XLOG::l.i("Remote Ports:      '{}'", to_utf8(bstr_val));
+                ::SysFreeString(bstr_val);
             }
         } else {
-            if (SUCCEEDED(fw_rule->get_IcmpTypesAndCodes(&bstrVal))) {
-                XLOG::l.i("ICMP TypeCode:      '{}'", to_utf8(bstrVal));
-                ::SysFreeString(bstrVal);
+            if (SUCCEEDED(fw_rule->get_IcmpTypesAndCodes(&bstr_val))) {
+                XLOG::l.i("ICMP TypeCode:      '{}'", to_utf8(bstr_val));
+                ::SysFreeString(bstr_val);
             }
         }
     }
 
-    if (SUCCEEDED(fw_rule->get_LocalAddresses(&bstrVal))) {
-        XLOG::l.i("LocalAddresses:   '{}'", to_utf8(bstrVal));
-        ::SysFreeString(bstrVal);
+    if (SUCCEEDED(fw_rule->get_LocalAddresses(&bstr_val))) {
+        XLOG::l.i("LocalAddresses:   '{}'", to_utf8(bstr_val));
+        ::SysFreeString(bstr_val);
     }
-
-    if (SUCCEEDED(fw_rule->get_RemoteAddresses(&bstrVal))) {
-        XLOG::l.i("RemoteAddresses:  '{}'", to_utf8(bstrVal));
-        ::SysFreeString(bstrVal);
+    if (SUCCEEDED(fw_rule->get_RemoteAddresses(&bstr_val))) {
+        XLOG::l.i("RemoteAddresses:  '{}'", to_utf8(bstr_val));
+        ::SysFreeString(bstr_val);
     }
-
-    if (SUCCEEDED(fw_rule->get_Profiles(&lProfileBitmask))) {
+    if (SUCCEEDED(fw_rule->get_Profiles(&profile_bitmask))) {
         // The returned bitmask can have more than 1 bit set if multiple
         // profiles
         //   are active or current at the same time
-
-        for (int i = 0; i < 3; i++) {
-            if (lProfileBitmask & ProfileMap[i].Id) {
-                XLOG::l.i("Profile:  '{}'", to_utf8(ProfileMap[i].Name));
+        for (const auto &p : profile_map) {
+            if (profile_bitmask & p.Id) {
+                XLOG::l.i("Profile:  '{}'", to_utf8(p.Name));
             }
         }
     }
 
-    if (SUCCEEDED(fw_rule->get_Direction(&fwDirection))) {
-        switch (fwDirection) {
+    if (SUCCEEDED(fw_rule->get_Direction(&fw_direction))) {
+        switch (fw_direction) {
             case NET_FW_RULE_DIR_IN:
-
                 XLOG::l.i("Direction:        '{}'",
                           wtools::ToUtf8(NET_FW_RULE_DIR_IN_NAME));
                 break;
-
             case NET_FW_RULE_DIR_OUT:
-
                 XLOG::l.i("Direction:        '{}'",
                           wtools::ToUtf8(NET_FW_RULE_DIR_OUT_NAME));
                 break;
-
             default:
-
                 break;
         }
     }
 
-    if (SUCCEEDED(fw_rule->get_Action(&fwAction))) {
-        switch (fwAction) {
+    if (SUCCEEDED(fw_rule->get_Action(&fw_action))) {
+        switch (fw_action) {
             case NET_FW_ACTION_BLOCK:
-
                 XLOG::l.i("Action:           '{}'",
                           wtools::ToUtf8(NET_FW_RULE_ACTION_BLOCK_NAME));
                 break;
-
             case NET_FW_ACTION_ALLOW:
-
                 XLOG::l.i("Action:           '{}'",
                           wtools::ToUtf8(NET_FW_RULE_ACTION_ALLOW_NAME));
                 break;
-
             default:
-
                 break;
         }
     }
 
-    if (SUCCEEDED(fw_rule->get_Interfaces(&InterfaceArray))) {
-        if (InterfaceArray.vt != VT_EMPTY) {
-            SAFEARRAY *safe_arr = nullptr;
-
-            safe_arr = InterfaceArray.parray;
-
-            for (long index = safe_arr->rgsabound->lLbound;
-                 index < (long)safe_arr->rgsabound->cElements; index++) {
-                SafeArrayGetElement(safe_arr, &index, &InterfaceString);
-                XLOG::l.i("Interfaces:       '{}'",
-                          wtools::ToUtf8((BSTR)InterfaceString.bstrVal));
-                InterfaceString.Clear();
-            }
+    if (SUCCEEDED(fw_rule->get_Interfaces(&interface_array)) &&
+        (interface_array.vt != VT_EMPTY)) {
+        SAFEARRAY *safe_arr = interface_array.parray;
+        for (long index = safe_arr->rgsabound->lLbound;
+             index < static_cast<long>(safe_arr->rgsabound->cElements);
+             index++) {
+            SafeArrayGetElement(safe_arr, &index, &interface_string);
+            XLOG::l.i("Interfaces:       '{}'",
+                      wtools::ToUtf8(interface_string.bstrVal));
+            interface_string.Clear();
         }
     }
 
-    if (SUCCEEDED(fw_rule->get_InterfaceTypes(&bstrVal))) {
-        XLOG::l.i("Interface Types:  '{}'", to_utf8(bstrVal));
-        ::SysFreeString(bstrVal);
+    if (SUCCEEDED(fw_rule->get_InterfaceTypes(&bstr_val))) {
+        XLOG::l.i("Interface Types:  '{}'", to_utf8(bstr_val));
+        ::SysFreeString(bstr_val);
     }
 
-    if (SUCCEEDED(fw_rule->get_Enabled(&bEnabled))) {
-        if (bEnabled) {
+    if (SUCCEEDED(fw_rule->get_Enabled(&fw_enabled))) {
+        if (fw_enabled) {
             XLOG::l.i("Enabled:          '{}'",
                       wtools::ToUtf8(NET_FW_RULE_ENABLE_IN_NAME));
         } else {
@@ -353,13 +335,13 @@ INetFwRule *DumpFWRulesInCollection(INetFwRule *fw_rule) {
         }
     }
 
-    if (SUCCEEDED(fw_rule->get_Grouping(&bstrVal))) {
-        XLOG::l.i("Grouping:         '{}'", to_utf8(bstrVal));
-        ::SysFreeString(bstrVal);
+    if (SUCCEEDED(fw_rule->get_Grouping(&bstr_val))) {
+        XLOG::l.i("Grouping:         '{}'", to_utf8(bstr_val));
+        ::SysFreeString(bstr_val);
     }
 
-    if (SUCCEEDED(fw_rule->get_EdgeTraversal(&bEnabled))) {
-        if (bEnabled) {
+    if (SUCCEEDED(fw_rule->get_EdgeTraversal(&fw_enabled))) {
+        if (fw_enabled) {
             XLOG::l.i("Edge Traversal:   '{}'",
                       wtools::ToUtf8(NET_FW_RULE_ENABLE_IN_NAME));
         } else {
@@ -369,15 +351,15 @@ INetFwRule *DumpFWRulesInCollection(INetFwRule *fw_rule) {
     }
 
     return nullptr;  // continue enumeration
-}
+}  // namespace cma::fw
 
 // Instantiate INetFwPolicy2
 INetFwPolicy2 *WFCOMInitialize() {
     INetFwPolicy2 *net_fw_policy2 = nullptr;
 
-    auto hr =
-        CoCreateInstance(__uuidof(NetFwPolicy2), nullptr, CLSCTX_INPROC_SERVER,
-                         __uuidof(INetFwPolicy2), (void **)&net_fw_policy2);
+    auto hr = ::CoCreateInstance(__uuidof(NetFwPolicy2), nullptr,
+                                 CLSCTX_INPROC_SERVER, __uuidof(INetFwPolicy2),
+                                 (void **)&net_fw_policy2);
 
     if (FAILED(hr)) {
         XLOG::l("CoCreateInstance for INetFwPolicy2 failed: [{:#X}]", hr);
@@ -396,24 +378,22 @@ long CorrectFirewallBitMask() {
 
 std::optional<std::wstring> GetRuleName(INetFwRule *fw_rule) {
     BSTR rule_name = nullptr;
-    auto ret = fw_rule->get_Name(&rule_name);
-    if (ret != 0) return {};
-    ON_OUT_OF_SCOPE(SysFreeString(rule_name));
+    if (fw_rule->get_Name(&rule_name) != 0) {
+        return {};
+    }
+    ON_OUT_OF_SCOPE(::SysFreeString(rule_name));
 
-    if (rule_name == nullptr) return {};
-
-    return rule_name;
+    return rule_name != nullptr ? rule_name : std::optional<std::wstring>{};
 }
 
 std::optional<std::wstring> GetRuleAppName(INetFwRule *fw_rule) {
     BSTR app_name = nullptr;
-    auto ret = fw_rule->get_ApplicationName(&app_name);
-    if (ret != 0) return {};
-    ON_OUT_OF_SCOPE(SysFreeString(app_name));
+    if (fw_rule->get_ApplicationName(&app_name) != 0) {
+        return {};
+    }
+    ON_OUT_OF_SCOPE(::SysFreeString(app_name));
 
-    if (app_name == nullptr) return {};
-
-    return app_name;
+    return app_name != nullptr ? app_name : std::optional<std::wstring>{};
 }
 
 }  // namespace
@@ -425,21 +405,23 @@ bool CreateInboundRule(std::wstring_view rule_name,
     Policy policy;
 
     auto *rules = policy.getRules();
-    if (rules == nullptr) return false;
+    if (rules == nullptr) {
+        return false;
+    }
 
     auto bit_mask = CorrectFirewallBitMask();
 
     auto *rule = CreateRule();
 
     // Populate the Firewall Rule object
-    rule->put_Name(wtools::Bstr(rule_name));
-    rule->put_Description(wtools::Bstr(kRuleDescription));
-    rule->put_ApplicationName(wtools::Bstr(app_name));
+    rule->put_Name(wtools::Bstr(rule_name).bstr());
+    rule->put_Description(wtools::Bstr(kRuleDescription).bstr());
+    rule->put_ApplicationName(wtools::Bstr(app_name).bstr());
     rule->put_Protocol(NET_FW_IP_PROTOCOL_TCP);
     rule->put_LocalPorts(
-        wtools::Bstr(port == -1 ? L"*" : std::to_wstring(port)));
+        wtools::Bstr(port == -1 ? L"*" : std::to_wstring(port)).bstr());
     rule->put_Direction(NET_FW_RULE_DIR_IN);
-    rule->put_Grouping(wtools::Bstr(kRuleGroup));
+    rule->put_Grouping(wtools::Bstr(kRuleGroup).bstr());
     rule->put_Profiles(bit_mask);
     rule->put_Action(NET_FW_ACTION_ALLOW);
     rule->put_Enabled(VARIANT_TRUE);
@@ -462,7 +444,7 @@ bool RemoveRule(std::wstring_view rule_name) {
         return false;
     }
 
-    auto hr = rules->Remove(wtools::Bstr(rule_name));
+    auto hr = rules->Remove(wtools::Bstr(rule_name).bstr());
     if (FAILED(hr)) {
         XLOG::l("Firewall Rule REMOVE failed: [{:#X}]", hr);
         return false;
@@ -488,7 +470,9 @@ std::wstring GenerateRandomRuleName() {
 }  // namespace
 
 bool RemoveRule(std::wstring_view name, std::wstring_view raw_app_name) {
-    if (raw_app_name.empty()) return RemoveRule(name);
+    if (raw_app_name.empty()) {
+        return RemoveRule(name);
+    }
 
     auto app_name = wtools::ToCanonical(raw_app_name);
     std::wstring new_name;
@@ -514,7 +498,7 @@ bool RemoveRule(std::wstring_view name, std::wstring_view raw_app_name) {
             // rule by this random name
             {
                 new_name = GenerateRandomRuleName();
-                fw_rule->put_Name(wtools::Bstr(new_name));
+                fw_rule->put_Name(wtools::Bstr(new_name).bstr());
                 XLOG::t("Rule '{}' renamed to '{}' for deletion",
                         wtools::ToUtf8(name), wtools::ToUtf8(new_name));
                 return fw_rule;  // found
@@ -589,13 +573,16 @@ int CountRules(std::wstring_view name, std::wstring_view raw_app_name) {
 
 INetFwRule *FindRule(std::wstring_view name) {
     return ScanAllRules([name](INetFwRule *fw_rule) -> INetFwRule * {
-        if (fw_rule == nullptr) return nullptr;  // continue enumeration
+        if (fw_rule == nullptr) {
+            return nullptr;
+        }
 
         BSTR rule_name = nullptr;
-        auto ret = fw_rule->get_Name(&rule_name);
-        if (ret != 0) return nullptr;
+        if (fw_rule->get_Name(&rule_name) != 0) {
+            return nullptr;
+        }
 
-        ON_OUT_OF_SCOPE(SysFreeString(rule_name));
+        ON_OUT_OF_SCOPE(::SysFreeString(rule_name));
         return wcscmp(name.data(), rule_name) == 0 ? fw_rule : nullptr;
     });
 }

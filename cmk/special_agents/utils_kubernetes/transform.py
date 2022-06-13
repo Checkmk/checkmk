@@ -13,7 +13,18 @@ from __future__ import annotations
 
 import datetime
 import re
-from typing import Dict, List, Literal, Mapping, Optional, Sequence, Type, TypeGuard, Union
+from typing import (
+    Dict,
+    Iterable,
+    List,
+    Literal,
+    Mapping,
+    Optional,
+    Sequence,
+    Type,
+    TypeGuard,
+    Union,
+)
 
 from kubernetes import client  # type: ignore[import]
 
@@ -677,3 +688,37 @@ def resource_quota_from_client(
         metadata=parse_metadata(resource_quota.metadata),
         spec=spec,
     )
+
+
+WorkloadResource = Union[
+    client.V1Deployment,
+    client.V1ReplicaSet,
+    client.V1DaemonSet,
+    client.V1Job,
+    client.V1CronJob,
+    client.V1ReplicationController,
+    client.V1StatefulSet,
+]
+
+
+def dependent_object_owner_refererences_from_client(
+    dependent: WorkloadResource,
+) -> api.OwnerReferences:
+    return [
+        api.OwnerReference(
+            uid=ref.uid,
+            controller=ref.controller,
+        )
+        for ref in dependent.metadata.owner_references or []
+    ]
+
+
+def parse_object_to_owners(
+    workload_resources_client: Iterable[WorkloadResource],
+) -> Mapping[str, api.OwnerReferences]:
+    return {
+        workload_resource.metadata.uid: dependent_object_owner_refererences_from_client(
+            workload_resource
+        )
+        for workload_resource in workload_resources_client
+    }

@@ -20,6 +20,7 @@ from cmk.special_agents.utils_kubernetes.transform import (
     deployment_from_client,
     namespace_from_client,
     node_from_client,
+    parse_object_to_owners,
     pod_from_client,
     resource_quota_from_client,
     statefulset_from_client,
@@ -265,26 +266,10 @@ def version_from_json(
     return decompose_git_version(version_json["gitVersion"])
 
 
-WorkloadResource = Union[
-    client.V1Deployment,
-    client.V1ReplicaSet,
-    client.V1DaemonSet,
-    client.V1Job,
-    client.V1CronJob,
-    client.V1ReplicationController,
-    client.V1StatefulSet,
-]
-
-
 # TODO Needs an integration test
 def _match_controllers(
-    pods: Iterable[client.V1Pod],
-    workload_resources: Iterable[WorkloadResource],
+    pods: Iterable[client.V1Pod], object_to_owners: Mapping[str, api.OwnerReferences]
 ) -> Mapping[str, Sequence[api.PodUID]]:
-    object_to_owners = {
-        workload_resource.metadata.uid: workload_resource.metadata.owner_references or []
-        for workload_resource in workload_resources
-    }
     # owner_reference approach is taken from these two links:
     # https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/
     # https://github.com/kubernetes-client/python/issues/946
@@ -372,9 +357,8 @@ class APIServer:
         }
         self.api_health = raw_api.query_api_health()
 
-        self._controller_to_pods = _match_controllers(
-            pods=self.raw_pods,
-            workload_resources=itertools.chain(
+        object_to_owners = parse_object_to_owners(
+            workload_resources_client=itertools.chain(
                 self.raw_deployments,
                 self.raw_daemon_sets,
                 self.raw_statefulsets,
@@ -382,6 +366,11 @@ class APIServer:
                 self.raw_cron_jobs,
                 self.raw_jobs,
             ),
+        )
+
+        self._controller_to_pods = _match_controllers(
+            pods=self.raw_pods,
+            object_to_owners=object_to_owners,
         )
 
     def cron_jobs(self) -> Sequence[api.CronJob]:

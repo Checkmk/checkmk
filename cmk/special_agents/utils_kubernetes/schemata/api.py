@@ -620,6 +620,31 @@ class KubernetesVersion(BaseModel):
     minor: int
 
 
+class OwnerReference(BaseModel):
+    uid: str
+    controller: Optional[bool]  # Optional, since some owner references
+    # are user-defined and the controller field can be omitted from the yaml.
+    # This model is only intended for parsing. The absence of the controller
+    # field can be interpreted as controller=False, but this interpretation is
+    # done in _match_controllers, where all the interpretation for owner
+    # references happens.
+
+
+OwnerReferences = Sequence[OwnerReference]
+"""
+
+Example 1: A Pod is owned and controlled by a ReplicaSet with uid 123, then we obtain
+`[OwnerReference(uid="123", controller=True)]`
+
+Example 2: The Pod is additionaly owned by a ReplicaSet with uid abc, then we obtain
+`[OwnerReference(uid="abc", controller=False), OwnerReference(uid="123", controller=True)]` or
+`[OwnerReference(uid="abc", controller=None), OwnerReference(uid="123", controller=True)]`
+
+Example 3: A Node is owned by no object, then we obtain
+`[]`, but empty fields are omitted and we obtain `None`
+"""
+
+
 class API(Protocol):
     def cron_jobs(self) -> Sequence[CronJob]:
         ...

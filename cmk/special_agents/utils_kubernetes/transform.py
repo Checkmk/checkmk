@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import datetime
 import re
-from typing import Any, Dict, List, Literal, Mapping, Optional, Sequence, Type, TypeGuard, Union
+from typing import Dict, List, Literal, Mapping, Optional, Sequence, Type, TypeGuard, Union
 
 from kubernetes import client  # type: ignore[import]
 
@@ -95,7 +95,7 @@ def convert_to_timestamp(kube_date_time: Union[str, datetime.datetime]) -> float
 __validation_value = re.compile(r"(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])?")
 
 
-def _is_valid_label_value(value: Any) -> TypeGuard[LabelValue]:
+def _is_valid_label_value(value: object) -> TypeGuard[LabelValue]:
     # The length of a Kubernetes label value at most 63 chars
     return isinstance(value, str) and bool(__validation_value.fullmatch(value)) and len(value) < 64
 

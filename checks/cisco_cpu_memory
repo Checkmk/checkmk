@@ -28,6 +28,9 @@ def parse_cisco_cpu_memory_multiitem(info):
 
     parsed = {}
     for idx, used, free, reserved in info[0]:
+        if used == "0" and free == "0":
+            continue
+
         name = ph_idx_to_desc.get(idx, idx)
         try:
             parsed[name] = {

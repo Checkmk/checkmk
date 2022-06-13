@@ -133,7 +133,7 @@ $(DEB_PACKAGE): $(RPM_PACKAGE)
 	sed -i -e '/^Depends:/d' \
 	       -e 's/^Version:.*/Version: $(VERSION)-1/' \
 	       -e 's/^Maintainer:.*/Maintainer: feedback@checkmk.com/' ctrl/control && \
-	tar czf control.tar.gz $(TAROPTS) -C ctrl . && \
+	tar czf control.tar.gz $(TAROPTS) --group=0 --owner=0 -C ctrl . && \
 	xz --decompress data.tar.xz && \
 	gzip data.tar && \
 	ar r ../$(DEB_PACKAGE) debian-binary control.tar.gz data.tar.gz

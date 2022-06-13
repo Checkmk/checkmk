@@ -61,36 +61,6 @@ TEST(ExternalPortTest, StartStop) {
     EXPECT_TRUE(!test_port.io_thread_.joinable());
 }
 
-TEST(ExternalPortTest, Read) {
-    std::string remote_ip;
-    world::ReplyFunc reply =
-        [&remote_ip](const std::string &ip) -> std::vector<uint8_t> {
-        remote_ip = ip;
-        return {};
-    };
-    wtools::TestProcessor2 tp;
-    world::ExternalPort test_port(&tp);  //
-
-    EXPECT_TRUE(
-        test_port.startIo(reply, tst::TestPort(), world::LocalOnly::yes, {}));
-
-    asio::io_context ios;
-    tcp::endpoint endpoint(asio::ip::make_address("127.0.0.1"),
-                           tst::TestPort());
-
-    tcp::socket socket(ios);
-
-    EXPECT_NO_THROW(socket.connect(endpoint));
-
-    asio::error_code error;
-    char text[] = "abcdef";
-    auto count = socket.write_some(asio::buffer(text, 6), error);
-    socket.close();
-    tst::WaitForSuccessSilent(100ms, [&]() { return !remote_ip.empty(); });
-    test_port.shutdownIo();  // this is long operation
-    EXPECT_EQ(remote_ip, text);
-}
-
 class ExternalPortCheckProcessFixture : public ::testing::Test {
 public:
     ReplyFunc reply = [this](const std::string ip) -> std::vector<uint8_t> {
@@ -102,22 +72,40 @@ public:
     wtools::TestProcessor2 tp;
     world::ExternalPort test_port{&tp};
     const std::string text{"abcdef"};
-    void writeToSocket() {
+    [[nodiscard]] size_t writeToSocket(uint16_t port) const {
         asio::io_context ios;
-        tcp::endpoint endpoint{asio::ip::make_address("127.0.0.1"),
-                               tst::TestPort()};
+        tcp::endpoint endpoint{asio::ip::make_address("127.0.0.1"), port};
         tcp::socket socket{ios};
-        socket.connect(endpoint);
-        asio::error_code error;
-        auto count = socket.write_some(asio::buffer(text, 6), error);
+        asio::error_code ec;
+        socket.connect(endpoint, ec);
+        if (ec) {
+            fmt::print("connect: '{}'  [{}]\n", ec.message(), ec.value());
+            return 0;
+        }
+        auto count = socket.write_some(asio::buffer(text, 6), ec);
+        if (ec) {
+            fmt::print("write: '{}'  [{}]\n", ec.message(), ec.value());
+            return 0;
+        }
         socket.close();
+        return count;
     }
 };
+
+TEST_F(ExternalPortCheckProcessFixture, AnyProcess) {
+    EXPECT_TRUE(
+        test_port.startIo(reply, tst::TestPort(), world::LocalOnly::yes, {}));
+
+    EXPECT_EQ(writeToSocket(tst::TestPort()), 6U);
+    tst::WaitForSuccessSilent(100ms, [this]() { return !remote_ip.empty(); });
+    test_port.shutdownIo();  // this is long operation
+    EXPECT_EQ(remote_ip, text);
+}
 
 TEST_F(ExternalPortCheckProcessFixture, InvalidProcess) {
     EXPECT_TRUE(test_port.startIo(reply, tst::TestPort(), LocalOnly::yes, 1));
 
-    writeToSocket();
+    EXPECT_EQ(writeToSocket(tst::TestPort()), 6U);
     std::this_thread::sleep_for(300ms);
     test_port.shutdownIo();  // this is long operation
     EXPECT_TRUE(remote_ip.empty());
@@ -127,15 +115,15 @@ TEST_F(ExternalPortCheckProcessFixture, ValidProcess) {
     EXPECT_TRUE(test_port.startIo(reply, tst::TestPort(), LocalOnly::yes,
                                   ::GetCurrentProcessId()));
 
-    writeToSocket();
-    tst::WaitForSuccessSilent(100ms, [&]() { return !remote_ip.empty(); });
+    EXPECT_EQ(writeToSocket(tst::TestPort()), 6U);
+    tst::WaitForSuccessSilent(100ms, [this]() { return !remote_ip.empty(); });
     test_port.shutdownIo();  // this is long operation
     EXPECT_EQ(remote_ip, text);
 }
 
 class ExternalPortTestFixture : public ::testing::Test {
 public:
-    ReplyFunc reply = [this](const std::string /*ip*/) -> std::vector<uint8_t> {
+    ReplyFunc reply = [this](const std::string & /*ip*/) {
         std::vector<uint8_t> data(reply_text_.begin(), reply_text_.end());
         if (delay_) {
             std::this_thread::sleep_for(50ms);

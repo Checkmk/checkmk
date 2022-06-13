@@ -283,7 +283,11 @@ private:
     std::wstring argv0_;
 };
 
-constexpr int TestPort() { return 34531; }
+inline uint16_t TestPort() {
+    static uint32_t r =
+        (static_cast<uint32_t>(::GetCurrentProcessId()) / 4U % 0xFFU) + 22000;
+    return static_cast<uint16_t>(r);
+}
 
 namespace misc {
 void CopyFailedPythonLogFileToLog(const std::filesystem::path &data);

@@ -12,7 +12,8 @@
 #include "common/cfg_info.h"
 #include "providers/ohm.h"
 #include "service_processor.h"
-#include "test_tools.h"
+#include "test_tools.h."
+#include "tools/_process.h"
 
 namespace fs = std::filesystem;
 
@@ -44,6 +45,7 @@ bool SkipTest() {
         XLOG::l(XLOG::kStdio).w("Program must be elevated. Test is SKIPPED");
         return true;
     }
+    cma::tools::RunCommandAndWait(L"net.exe", L"stop WinRing0_1_2_0");
     wtools::KillProcess(cma::provider::ohm::kExeModuleWide, 1);
     if (CalcOhmCount() != 0) {
         XLOG::l(XLOG::kStdio).w("OHM is already started, TESTING IS SKIPPED");

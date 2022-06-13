@@ -1,0 +1,12 @@
+Title: liveproxyd: the heartbeat client now tests all open channels before disconnecting the remote site
+Class: fix
+Compatible: compat
+Component: liveproxy
+Date: 1655135191
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p26
+
+The feature itself was already implemented, but only worked once after every liveproxyd restart.

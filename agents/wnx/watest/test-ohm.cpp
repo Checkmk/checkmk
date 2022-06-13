@@ -65,6 +65,8 @@ TEST(SectionProviderOhm, Construction) {
 }
 
 TEST(SectionProviderOhm, ReadDataIntegration) {
+    XLOG::setup::DuplicateOnStdio(true);
+    ON_OUT_OF_SCOPE(XLOG::setup::DuplicateOnStdio(false));
     if (SkipTest()) {
         GTEST_SKIP();
     }
@@ -126,6 +128,8 @@ TEST(SectionProviderOhm, ReadDataIntegration) {
 }
 
 TEST(SectionProviderOhm, ErrorReportingIntegration) {
+    XLOG::setup::DuplicateOnStdio(true);
+    ON_OUT_OF_SCOPE(XLOG::setup::DuplicateOnStdio(false));
     if (SkipTest()) {
         GTEST_SKIP();
     }
@@ -144,6 +148,8 @@ TEST(SectionProviderOhm, ErrorReportingIntegration) {
 namespace cma::srv {
 
 TEST(SectionProviderOhm, DoubleStartIntegration) {
+    XLOG::setup::DuplicateOnStdio(true);
+    ON_OUT_OF_SCOPE(XLOG::setup::DuplicateOnStdio(false));
     if (SkipTest()) {
         GTEST_SKIP();
     }
@@ -163,6 +169,8 @@ TEST(SectionProviderOhm, DoubleStartIntegration) {
 }
 
 TEST(SectionProviderOhm, StartStopIntegration) {
+    XLOG::setup::DuplicateOnStdio(true);
+    ON_OUT_OF_SCOPE(XLOG::setup::DuplicateOnStdio(false));
     if (SkipTest()) {
         GTEST_SKIP();
     }

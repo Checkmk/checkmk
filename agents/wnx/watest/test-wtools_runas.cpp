@@ -69,7 +69,7 @@ TEST(WtoolsRunAs, TestUser_Integration) {
     ON_OUT_OF_SCOPE(XLOG::setup::DuplicateOnStdio(false));
     wtools::uc::LdapControl lc;
     auto pwd = GenerateRandomString(12);
-    std::wstring user = L"a1";
+    std::wstring user = L"a1" + fmt::format(L"_{}", ::GetCurrentProcessId());
     auto status = lc.userAdd(user, pwd);
     if (status == uc::Status::exists) {
         status = lc.changeUserPassword(user, pwd);
@@ -108,6 +108,8 @@ TEST(WtoolsRunAs, TestUser_Integration) {
     ASSERT_TRUE(b);
     auto data = ReadFromHandle(ar.getStdioRead());
     ASSERT_TRUE(!data.empty());
-    EXPECT_EQ("a1\r\nmarker 1\r\n", data);
+    EXPECT_EQ("a1"s + fmt::format("_{}", ::GetCurrentProcessId()) +
+                  "\r\nmarker 1\r\n",
+              data);
 }
 }  // namespace wtools::runas

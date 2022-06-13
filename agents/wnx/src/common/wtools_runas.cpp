@@ -784,9 +784,10 @@ bool StartProcess(AppSettings &settings, HANDLE command_pipe) {
     } else {
         if (!settings.user.empty())  // launching as a specific user
         {
-            XLOG::d.i("Exec starting process [{}] as {}", wtools::ToUtf8(path),
-                      wtools::ToUtf8(settings.user));
             starting_dir = GetUserHomeDir(settings.hUser);
+            XLOG::d.i("Exec starting process [{}] as {} in dir '{}'",
+                      wtools::ToUtf8(path), wtools::ToUtf8(settings.user),
+                      wtools::ToUtf8(starting_dir));
 
             if (!settings.run_limited) {
                 launched = CreateProcessWithLogonW(
@@ -799,14 +800,14 @@ bool StartProcess(AppSettings &settings, HANDLE command_pipe) {
                 launch_gle = ::GetLastError();
 
                 if (0 != launch_gle) {
-                    XLOG::t(
+                    XLOG::d.i(
                         "Launch (launchGLE={:X}) params: user=[{}] "
                         "domain=[{}] "
                         "prof=[{}] ",
                         launch_gle, wtools::ToUtf8(user),
                         wtools::ToUtf8(domain),
                         settings.dont_load_profile ? 0 : LOGON_WITH_PROFILE);
-                    XLOG::t(
+                    XLOG::d.i(
                         "path=[{}] flags=[x{:X}],"
                         " pEnv=[{}],"
                         " dir=[{}],"
@@ -817,15 +818,17 @@ bool StartProcess(AppSettings &settings, HANDLE command_pipe) {
                                              : wtools::ToUtf8(starting_dir),
                         si.hStdInput, si.hStdOutput, si.hStdError);
                 }
-            } else
+            } else {
+                XLOG::d.i("limited!");
                 launched = FALSE;  // force to run with CreateProcessAsUser so
                                    // rights can be limited
+            }
 
             // CreateProcessWithLogonW can't be called from LocalSystem on
             // Win2003 and earlier, so LogonUser/CreateProcessAsUser must be
             // used. Might as well try for everyone
             if ((launched == FALSE) && !wtools::IsBadHandle(settings.hUser)) {
-                XLOG::t(
+                XLOG::d(
                     "Failed CreateProcessWithLogonW - trying CreateProcessAsUser");
 
                 EnablePrivilege(SE_ASSIGNPRIMARYTOKEN_NAME);
@@ -846,7 +849,7 @@ bool StartProcess(AppSettings &settings, HANDLE command_pipe) {
                                      // original error
                 }
                 if (0 != launch_gle) {
-                    XLOG::t(
+                    XLOG::d(
                         "Launch (launchGLE={}) params: user=[{}] path=[{}] pEnv=[{}], dir=[{}], stdin=[{}], stdout=[{}], stderr=[{}]",
                         launch_gle, settings.hUser, wtools::ToUtf8(path),
                         environment != nullptr ? "{env}" : "{null}",
@@ -899,10 +902,14 @@ bool StartProcess(AppSettings &settings, HANDLE command_pipe) {
         SetAffinityMask(pi.hProcess, settings.allowed_processors);
 
         auto ret = ::SetPriorityClass(pi.hProcess, settings.priority);
-        if (ret == FALSE) XLOG::l(XLOG_FLINE + " error [{}]", ::GetLastError());
+        if (ret == FALSE) {
+            XLOG::l(XLOG_FLINE + " error [{}]", ::GetLastError());
+        }
         ResumeThread(pi.hThread);
         ret = ::CloseHandle(pi.hThread);
-        if (ret == FALSE) XLOG::l(XLOG_FLINE + " error [{}]", ::GetLastError());
+        if (ret == FALSE) {
+            XLOG::l(XLOG_FLINE + " error [{}]", ::GetLastError());
+        }
 
     } else {
         XLOG::l("Failed to start {} [{}]", wtools::ToUtf8(path), launch_gle);

@@ -1,19 +1,40 @@
-function scale_factor_prefix(
-    value: number,
-    base: number,
-    prefixes: string[] = ["", "k", "M", "G", "T", "P"]
-): [number, string] {
-    let factor = base;
-    let prefix = prefixes[prefixes.length - 1];
+abstract class UnitPrefixes {
+    static _BASE: number;
+    static _PREFIXES: string[];
 
-    for (const unit_prefix of prefixes.slice(0, -1)) {
-        if (Math.abs(value) < factor) {
-            prefix = unit_prefix;
-            break;
+    static scale_factor_and_prefix(value: number): [number, string] {
+        let factor = this._BASE;
+        let prefix = this._PREFIXES[this._PREFIXES.length - 1];
+
+        for (const unit_prefix of this._PREFIXES.slice(0, -1)) {
+            if (Math.abs(value) < factor) {
+                prefix = unit_prefix;
+                break;
+            }
+            factor *= this._BASE;
         }
-        factor *= base;
+        return [factor / this._BASE, prefix];
     }
-    return [factor / base, prefix];
+}
+
+export class SIUnitPrefixes extends UnitPrefixes {
+    static _BASE: number = 1000;
+    static _PREFIXES: string[] = ["", "k", "M", "G", "T", "P", "E", "Z", "Y"];
+}
+
+export class IECUnitPrefixes extends UnitPrefixes {
+    static _BASE: number = 1024;
+    static _PREFIXES: string[] = [
+        "",
+        "Ki",
+        "Mi",
+        "Gi",
+        "Ti",
+        "Pi",
+        "Ei",
+        "Zi",
+        "Yi",
+    ];
 }
 
 export function drop_dotzero(value, digits = 2) {
@@ -22,12 +43,12 @@ export function drop_dotzero(value, digits = 2) {
 
 export function fmt_number_with_precision(
     v,
-    base = 1000,
+    unit_prefix_type: typeof UnitPrefixes = SIUnitPrefixes,
     precision = 2,
     drop_zeroes = false,
     unit = ""
 ) {
-    const [factor, prefix] = scale_factor_prefix(v, base);
+    const [factor, prefix] = unit_prefix_type.scale_factor_and_prefix(v);
     const value = v / factor;
     const number = drop_zeroes
         ? drop_dotzero(value, precision)
@@ -35,15 +56,26 @@ export function fmt_number_with_precision(
     return `${number} ${prefix + unit}`;
 }
 
-export function fmt_bytes(b, base = 1024, precision = 2, unit = "B") {
-    return fmt_number_with_precision(b, base, precision, false, unit);
+export function fmt_bytes(
+    b,
+    unit_prefix_type: typeof UnitPrefixes = IECUnitPrefixes,
+    precision = 2,
+    unit = "B"
+) {
+    return fmt_number_with_precision(
+        b,
+        unit_prefix_type,
+        precision,
+        false,
+        unit
+    );
 }
 
 export function fmt_nic_speed(speed) {
     const speedi = parseInt(speed);
     if (isNaN(speedi)) return speed;
 
-    return fmt_number_with_precision(speedi, 1000, 2, false, "bit/s");
+    return fmt_number_with_precision(speedi, SIUnitPrefixes, 2, false, "bit/s");
 }
 
 export function percent(perc, scientific_notation = false) {

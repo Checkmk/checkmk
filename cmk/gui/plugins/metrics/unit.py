@@ -62,7 +62,7 @@ unit_info["count"] = {
     "title": _("Count"),
     "symbol": "",
     "render": lambda v: cmk.utils.render.fmt_number_with_precision(v, drop_zeroes=True),
-    "js_render": "v => cmk.number_format.fmt_number_with_precision(v, 1000, 2, true)",
+    "js_render": "v => cmk.number_format.fmt_number_with_precision(v, cmk.number_format.SIUnitPrefixes, 2, true)",
     "stepping": "integer",  # for vertical graph labels
     "valuespec": Integer,
 }
@@ -308,7 +308,7 @@ unit_info["RCU"] = {
     "symbol": _("RCU"),
     "description": _("Read Capacity Units"),
     "render": lambda v: cmk.utils.render.fmt_number_with_precision(v, precision=3, unit="RCU"),
-    "js_render": "v => cmk.number_format.fmt_number_with_precision(v, 1000, 3, false, 'RCU')",
+    "js_render": "v => cmk.number_format.fmt_number_with_precision(v, cmk.number_format.SIUnitPrefixes, 3, false, 'RCU')",
 }
 
 unit_info["WCU"] = {
@@ -316,5 +316,5 @@ unit_info["WCU"] = {
     "symbol": _("WCU"),
     "description": _("Write Capacity Units"),
     "render": lambda v: cmk.utils.render.fmt_number_with_precision(v, precision=3, unit="WCU"),
-    "js_render": "v => cmk.number_format.fmt_number_with_precision(v, 1000, 3, false, 'WCU')",
+    "js_render": "v => cmk.number_format.fmt_number_with_precision(v, cmk.number_format.SIUnitPrefixes, 3, false, 'WCU')",
 }

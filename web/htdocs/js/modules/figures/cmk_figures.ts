@@ -902,7 +902,7 @@ export function plot_render_function(plot) {
     let js_render = getIn(plot, "metric", "unit", "js_render");
     if (js_render) return get_function(js_render);
     return get_function(
-        "function(v) { return cmk.number_format.fmt_number_with_precision(v, 1000, 2, true); }"
+        "function(v) { return cmk.number_format.fmt_number_with_precision(v, cmk.number_format.SIUnitPrefixes, 2, true); }"
     );
 }
 

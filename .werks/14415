@@ -1,0 +1,27 @@
+Title: Graphs & dashboard elements: Render byte-related units using consistent SI/IEC prefixes
+Class: fix
+Compatible: compat
+Component: metrics
+Date: 1655115749
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+There are two options for rendering a raw value in bytes as a human-readable number:
+LI: SI unit prefixes, where the base factor is 1,000 and the unit prefixes are
+k, M, G, etc. For example, 1,500 B would be rendered as 1.5 kB.
+LI: IEC unit prefixes, where the base factor is 1,024 and the unit prefixes are
+Ki, Mi, Gi, etc. For example, 1,500 B would be rendered as 1.46 KiB.
+
+Before this werk, Checkmk mixed up these two systems when rendering graphs and
+dashboard elements by using a base factor of 1,024 in combination with SI unit
+prefixes. After this werk, Checkmk consistently uses IEC prefixes instead of the
+mixup mentioned above. Hence, numerical values will remain unchanged, but the
+displayed units will change from kB, MB, GB, ... to KiB, MiB, GiB, ... .
+
+Furthermore, as a result of this werk, there are now check plugins which
+report a given value using (consistent) SI unit prefixes but visualize the same
+value in a graph using IEC unit prefixes. While this is of course not optimal,
+we prefer this intermediate state over the state before this werk (inconsistent
+SI unit prefixes with mixed up base factors).

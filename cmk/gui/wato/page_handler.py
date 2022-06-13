@@ -10,6 +10,7 @@ import cmk.utils.store as store
 import cmk.utils.version as cmk_version
 
 import cmk.gui.pages
+import cmk.gui.watolib.read_only as read_only
 from cmk.gui.breadcrumb import make_main_menu_breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.display_options import display_options
@@ -120,11 +121,8 @@ def _wato_page_handler(  # pylint: disable=too-many-branches
                 if mode_permissions:
                     _ensure_mode_permissions(mode_permissions)
 
-            if (
-                cmk.gui.watolib.read_only.is_enabled()
-                and not cmk.gui.watolib.read_only.may_override()
-            ):
-                raise MKUserError(None, cmk.gui.watolib.read_only.message())
+            if read_only.is_enabled() and not read_only.may_override():
+                raise MKUserError(None, read_only.message())
 
             result = mode.action()
             if isinstance(result, (tuple, str, bool)):
@@ -161,9 +159,7 @@ def _wato_page_handler(  # pylint: disable=too-many-branches
         show_top_heading=display_options.enabled(display_options.T),
     )
 
-    if not transactions.is_transaction() or (
-        cmk.gui.watolib.read_only.is_enabled() and cmk.gui.watolib.read_only.may_override()
-    ):
+    if not transactions.is_transaction() or (read_only.is_enabled() and read_only.may_override()):
         _show_read_only_warning()
 
     # Show outcome of failed action on this page
@@ -200,5 +196,5 @@ def _ensure_mode_permissions(mode_permissions: Collection[PermissionName]) -> No
 
 
 def _show_read_only_warning() -> None:
-    if cmk.gui.watolib.read_only.is_enabled():
-        html.show_warning(cmk.gui.watolib.read_only.message())
+    if read_only.is_enabled():
+        html.show_warning(read_only.message())

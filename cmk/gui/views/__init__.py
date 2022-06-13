@@ -330,12 +330,12 @@ class VisualTypeViews(VisualType):
             return False
 
         return _has_inventory_tree(
-            Hostname(hostname),
+            HostName(hostname),
             SiteId(str(site_id)),
             link_from.get("has_inventory_tree", []),
             is_history=False,
         ) or _has_inventory_tree(
-            Hostname(hostname),
+            HostName(hostname),
             SiteId(str(site_id)),
             link_from.get("has_inventory_tree_history", []),
             is_history=True,
@@ -369,7 +369,9 @@ def _has_inventory_tree(
     )
 
 
-def _get_struct_tree(is_history, hostname, site_id):
+def _get_struct_tree(
+    is_history: bool, hostname: HostName, site_id: SiteId
+) -> Optional[StructuredDataNode]:
     struct_tree_cache = g.setdefault("struct_tree_cache", {})
     cache_id = (is_history, hostname, site_id)
     if cache_id in struct_tree_cache:

@@ -165,6 +165,9 @@ class RawAPI:
     def query_kubelet_health(self, node_name) -> api.HealthZ:
         return self._get_healthz(f"/api/v1/nodes/{node_name}/proxy/healthz")
 
+    def query_raw_statefulsets(self) -> Mapping:
+        return json.loads(self._request("GET", "/apis/apps/v1/statefulsets").response)
+
 
 def _extract_sequence_based_identifier(git_version: str) -> Optional[str]:
     """

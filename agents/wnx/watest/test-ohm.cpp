@@ -182,6 +182,8 @@ TEST(SectionProviderOhm, StartStopIntegration) {
 }
 
 TEST(SectionProviderOhm, ConditionallyStartOhmIntegration) {
+    XLOG::setup::DuplicateOnStdio(true);
+    ON_OUT_OF_SCOPE(XLOG::setup::DuplicateOnStdio(false));
     if (SkipTest()) {
         GTEST_SKIP();
     }

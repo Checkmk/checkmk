@@ -10,13 +10,18 @@
 #include "common/wtools_runas.h"
 #include "common/wtools_user_control.h"
 #include "test_tools.h"
+using namespace std::chrono_literals;
+using namespace std::string_literals;
 
 namespace wtools::runas {  // to become friendly for cma::cfg classes
 
 static bool WaitForExit(uint32_t pid) {
-    for (int i = 0; i < 300; i++) {
+    for (int i = 0; i < 100; i++) {
         auto [code, error] = GetProcessExitCode(pid);
-        if (code == 0) return true;
+        if (code == 0) {
+            return true;
+        }
+        fmt::print(" Code = {}, error = {}\n", code, error);
         cma::tools::sleep(100);
     }
     return false;
@@ -37,8 +42,6 @@ static std::string ReadFromHandle(HANDLE h) {
 }
 
 TEST(WtoolsRunAs, NoUser_Integration) {
-    using namespace std::chrono_literals;
-    using namespace std::string_literals;
     cma::OnStartTest();
     auto [in, out] = tst::CreateInOut();
     ON_OUT_OF_SCOPE(tst::SafeCleanTempDir());
@@ -62,6 +65,8 @@ TEST(WtoolsRunAs, NoUser_Integration) {
 }
 
 TEST(WtoolsRunAs, TestUser_Integration) {
+    XLOG::setup::DuplicateOnStdio(true);
+    ON_OUT_OF_SCOPE(XLOG::setup::DuplicateOnStdio(false));
     wtools::uc::LdapControl lc;
     auto pwd = GenerateRandomString(12);
     std::wstring user = L"a1";
@@ -73,8 +78,6 @@ TEST(WtoolsRunAs, TestUser_Integration) {
         GTEST_SKIP() << "failed to set password, maybe not admin?";
     }
 
-    using namespace std::chrono_literals;
-    using namespace std::string_literals;
     cma::OnStartTest();
     auto [in, out] = tst::CreateInOut();
     ON_OUT_OF_SCOPE(tst::SafeCleanTempDir());
@@ -85,10 +88,10 @@ TEST(WtoolsRunAs, TestUser_Integration) {
                         "@echo marker %1");
 
     // Allow Users to use the file
-    wtools::ChangeAccessRights((in / "runc.cmd").wstring().c_str(),
-                               SE_FILE_OBJECT, L"a1", TRUSTEE_IS_NAME,
-                               STANDARD_RIGHTS_ALL | GENERIC_ALL, GRANT_ACCESS,
-                               OBJECT_INHERIT_ACE);
+    EXPECT_TRUE(wtools::ChangeAccessRights(
+        (in / "runc.cmd").wstring().c_str(), SE_FILE_OBJECT, L"a1",
+        TRUSTEE_IS_NAME, STANDARD_RIGHTS_ALL | GENERIC_ALL, GRANT_ACCESS,
+        OBJECT_INHERIT_ACE));
 
     wtools::AppRunner ar;
 

@@ -973,6 +973,7 @@ def _internal_attributes(user_attributes):
     }
 
 
+@managedtest
 def test_openapi_new_user_with_cloned_role(
     base: str, aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch
 ):
@@ -1012,6 +1013,7 @@ def test_openapi_new_user_with_cloned_role(
     assert resp2.json["extensions"]["roles"] == ["user", "guest"]
 
 
+@managedtest
 def test_openapi_new_user_with_non_existing_role(
     base: str, aut_user_auth_wsgi_app: WebTestAppForCMK
 ):

@@ -1,0 +1,30 @@
+Title: Agent Bakery: Minimize time locking the Checkmk configuration
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1655114093
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+Previously, the agent bakery (or more precisely: The background job
+scheduling a call to the agent bakery) locked the Checkmk configuration
+for the entire baking time.
+
+This caused some other operations that need access to the configuration,
+like sending notifications or changing global settings, to fail with the
+following error message:
+
+C+:
+Couldn't lock the Checkmk configuration. Another
+process is running that holds this lock. In order for you to be
+able to perform the desired action, you have to wait until the
+other process has finished. Please try again later.
+C-:
+
+Instead of querying the Checkmk configuration multiple times, the agent
+bakery now gathers all needed configurations on startup while holding
+a lock, and releases it prior to invoking the more time consuming
+baking of agent packages.
+

@@ -5,19 +5,18 @@
 
 #pragma once
 
+#include <ShlObj.h>
 #include <Windows.h>
-#include <shlobj.h>
 
 #include <string>
 #include <string_view>
 #include <tuple>
 
 #include "tools/_raii.h"
-#include "tools/_xlog.h"
 
 namespace cma::tools {
 inline bool RunCommandAndWait(const std::wstring &command,
-                              const std::wstring &work_dir) {
+                              const std::wstring_view work_dir) {
     STARTUPINFOW si{0};
     ::memset(&si, 0, sizeof(si));
     si.cb = sizeof(STARTUPINFO);
@@ -29,8 +28,9 @@ inline bool RunCommandAndWait(const std::wstring &command,
 
     auto working_folder = work_dir.empty() ? nullptr : work_dir.data();
 
-    if (::CreateProcessW(nullptr,  // stupid windows want null here
-                         const_cast<wchar_t *>(command.c_str()),  // win32!
+    if (std::wstring c{command};
+        ::CreateProcessW(nullptr,         // stupid windows want null here
+                         c.data(),        // win32!
                          nullptr,         // security attribute
                          nullptr,         // thread attribute
                          FALSE,           // no handle inheritance
@@ -56,18 +56,18 @@ inline bool RunDetachedCommand(const std::string &command) {
     si.cb = sizeof(STARTUPINFO);
     si.dwFlags |= STARTF_USESTDHANDLES;  // SK: not sure with this flag
 
-    PROCESS_INFORMATION pi{0};
+    PROCESS_INFORMATION pi{nullptr};
     memset(&pi, 0, sizeof(pi));
-    // CREATE_NEW_CONSOLE
 
-    if (::CreateProcessA(nullptr,  // stupid windows want null here
-                         const_cast<char *>(command.c_str()),  // win32!
-                         nullptr,  // security attribute
-                         nullptr,  // thread attribute
-                         FALSE,    // no handle inheritance
-                         0,        // Creation Flags
-                         nullptr,  // environment
-                         nullptr,  // current directory
+    if (std::string c{command};
+        ::CreateProcessA(nullptr,   // stupid windows want null here
+                         c.data(),  // win32!
+                         nullptr,   // security attribute
+                         nullptr,   // thread attribute
+                         FALSE,     // no handle inheritance
+                         0,         // Creation Flags
+                         nullptr,   // environment
+                         nullptr,   // current directory
                          &si, &pi)) {
         CloseHandle(pi.hProcess);
         CloseHandle(pi.hThread);
@@ -83,9 +83,9 @@ inline uint32_t RunStdCommand(
     std::wstring_view command,    // full command with arguments
     bool wait_for_end,            // important flag! set false when you are sure
     BOOL inherit_handle = FALSE,  // recommended option
-    HANDLE stdio_handle = 0,      // when we want to catch output
-    HANDLE stderr_handle = 0,     // same
-    DWORD creation_flags = 0,     // never checked this
+    HANDLE stdio_handle = nullptr,   // when we want to catch output
+    HANDLE stderr_handle = nullptr,  // same
+    DWORD creation_flags = 0,        // never checked this
     DWORD start_flags = 0) {
     // windows "boiler plate"
     STARTUPINFOW si{0};
@@ -97,11 +97,12 @@ inline uint32_t RunStdCommand(
     if (inherit_handle)
         si.dwFlags = STARTF_USESTDHANDLES;  // switch to the handles in si
 
-    PROCESS_INFORMATION pi{0};
+    PROCESS_INFORMATION pi{nullptr};
     memset(&pi, 0, sizeof(pi));
 
-    if (::CreateProcessW(nullptr,  // stupid windows want null here
-                         const_cast<wchar_t *>(command.data()),  // win32!
+    if (std::wstring c{command};
+        ::CreateProcessW(nullptr,         // stupid windows want null here
+                         c.data(),        // win32!
                          nullptr,         // security attribute
                          nullptr,         // thread attribute
                          inherit_handle,  // handle inheritance
@@ -119,14 +120,13 @@ inline uint32_t RunStdCommand(
 }
 
 // Tree controlling command
-// #TODO make right API from this wrapper
 // returns [ProcId, JobHandle, ProcessHandle]
 inline std::tuple<DWORD, HANDLE, HANDLE> RunStdCommandAsJob(
-    const std::wstring &Command,  // full command with arguments
-    BOOL inherit_handle = FALSE,  // not optimal, but default
-    HANDLE stdio_handle = 0,      // when we want to catch output
-    HANDLE stderr_handle = 0,     // same
-    DWORD creation_flags = 0,     // never checked this
+    const std::wstring &command,     // full command with arguments
+    BOOL inherit_handle = FALSE,     // not optimal, but default
+    HANDLE stdio_handle = nullptr,   // when we want to catch output
+    HANDLE stderr_handle = nullptr,  // same
+    DWORD creation_flags = 0,        // never checked this
     DWORD start_flags = 0) noexcept {
     // windows "boiler plate"
     STARTUPINFOW si{0};
@@ -137,16 +137,19 @@ inline std::tuple<DWORD, HANDLE, HANDLE> RunStdCommandAsJob(
     si.hStdError = stderr_handle;
     if (inherit_handle)
         si.dwFlags = STARTF_USESTDHANDLES;  // switch to the handles in si
-    PROCESS_INFORMATION pi{0};
+    PROCESS_INFORMATION pi{nullptr};
     memset(&pi, 0, sizeof(pi));
     // -end-
 
-    auto job_handle = CreateJobObjectA(nullptr, nullptr);
+    auto job_handle = ::CreateJobObjectA(nullptr, nullptr);
 
-    if (!job_handle) return {0, nullptr, nullptr};
+    if (job_handle == nullptr) {
+        return {0, nullptr, nullptr};
+    }
 
-    if (!::CreateProcessW(NULL,  // stupid windows want null here
-                          const_cast<wchar_t *>(Command.c_str()),  // win32!
+    if (std::wstring c{command};
+        !::CreateProcessW(nullptr,         // stupid windows want null here
+                          c.data(),        // win32!
                           nullptr,         // security attribute
                           nullptr,         // thread attribute
                           inherit_handle,  // handle inheritance
@@ -172,15 +175,15 @@ inline std::tuple<DWORD, HANDLE, HANDLE> RunStdCommandAsJob(
 
 namespace win {
 inline bool IsElevated() {
-    HANDLE token = NULL;
+    HANDLE token = nullptr;
     if (!::OpenProcessToken(::GetCurrentProcess(), TOKEN_QUERY, &token))
         return false;
     ON_OUT_OF_SCOPE(if (token)::CloseHandle(token););
 
-    TOKEN_ELEVATION elevation;
-    DWORD size = sizeof(TOKEN_ELEVATION);
-    if (::GetTokenInformation(token, TokenElevation, &elevation,
-                              sizeof(elevation), &size)) {
+    TOKEN_ELEVATION elevation{0};
+
+    if (DWORD size = sizeof(TOKEN_ELEVATION); ::GetTokenInformation(
+            token, TokenElevation, &elevation, sizeof(elevation), &size)) {
         return elevation.TokenIsElevated == TRUE;
     }
     return false;
@@ -188,12 +191,15 @@ inline bool IsElevated() {
 
 inline std::wstring GetSomeSystemFolder(const KNOWNFOLDERID &rfid) noexcept {
     wchar_t *str = nullptr;
-    if (SHGetKnownFolderPath(rfid, KF_FLAG_DEFAULT, NULL, &str) != S_OK ||
-        !str)  // probably impossible case when executed ok, but str is nullptr
+    if (::SHGetKnownFolderPath(rfid, KF_FLAG_DEFAULT, nullptr, &str) != S_OK ||
+        str == nullptr)  // probably impossible case when executed ok, but str
+                         // is nullptr
         return {};
 
     std::wstring path = str;
-    if (str) CoTaskMemFree(str);  // win32
+    if (str) {
+        ::CoTaskMemFree(str);  // win32
+    }
     return path;
 }
 
@@ -202,8 +208,7 @@ inline std::wstring GetSystem32Folder() {
 }
 
 inline std::wstring GetTempFolder() {
-    wchar_t path[MAX_PATH * 2];
-    if (::GetTempPathW(MAX_PATH * 2, path)) {
+    if (wchar_t path[MAX_PATH * 2]; ::GetTempPathW(MAX_PATH * 2, path)) {
         return path;
     }
 

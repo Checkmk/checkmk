@@ -37,6 +37,7 @@
 #include "tools/_process.h"
 #include "tools/_tgt.h"
 #include "tools/_win.h"
+#include "tools/_xlog.h"
 
 namespace wtools {
 constexpr const wchar_t *kWToolsLogName = L"check_mk_wtools.log";

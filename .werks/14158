@@ -1,0 +1,12 @@
+Title: liveproxyd: fixed occassional connection loss/timeouts
+Class: fix
+Compatible: compat
+Component: liveproxy
+Date: 1655133987
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p3
+
+Sometimes the liveproxyd was unwilling to process clients with a pending request.

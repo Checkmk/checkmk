@@ -1,0 +1,11 @@
+Title: Fix duplicated "Customers" dashlet in main dashboard
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1655105686
+Edition: cme
+Knowledge: doc
+Level: 1
+Version: 2.1.0p3
+
+

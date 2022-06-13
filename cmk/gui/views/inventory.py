@@ -290,13 +290,10 @@ class ABCRowTable(RowTable):
                 rows.append(subrow)
         return rows, len(data)
 
-    def _get_raw_data(self, only_sites: OnlySites, query: str) -> LivestatusResponse:
-        sites.live().set_only_sites(only_sites)
-        sites.live().set_prepend_site(True)
-        data = sites.live().query(query)
-        sites.live().set_prepend_site(False)
-        sites.live().set_only_sites(None)
-        return data
+    @staticmethod
+    def _get_raw_data(only_sites: OnlySites, query: str) -> LivestatusResponse:
+        with sites.only_sites(only_sites), sites.prepend_site():
+            return sites.live().query(query)
 
     def _get_rows(self, hostrow: Row) -> Iterable[Row]:
         inv_data = self._get_inv_data(hostrow)
@@ -968,7 +965,8 @@ class DisplayHints:
         )
         return [_Column(self.get_column_hint(k), k, k in key_columns) for k in sorting_keys]
 
-    def sort_rows(self, rows: Sequence[SDRow], columns: Sequence[_Column]) -> Sequence[SDRow]:
+    @staticmethod
+    def sort_rows(rows: Sequence[SDRow], columns: Sequence[_Column]) -> Sequence[SDRow]:
         return sorted(rows, key=lambda r: tuple(r.get(c.key) or "" for c in columns))
 
     def sort_pairs(self, pairs: Mapping[SDKey, SDValue]) -> Sequence[Tuple[SDKey, SDValue]]:
@@ -2340,10 +2338,8 @@ class ABCNodeRenderer(abc.ABC):
         if (ret_value_to_write := self._get_retention_value(retention_intervals)) is not None:
             html.write_html(ret_value_to_write)
 
-    def _get_retention_value(
-        self,
-        retention_intervals: Optional[RetentionIntervals],
-    ) -> Optional[HTML]:
+    @staticmethod
+    def _get_retention_value(retention_intervals: Optional[RetentionIntervals]) -> Optional[HTML]:
         if retention_intervals is None:
             return None
 

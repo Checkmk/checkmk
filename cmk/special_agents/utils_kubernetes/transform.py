@@ -15,6 +15,7 @@ from typing import Dict, Iterable, List, Literal, Mapping, Optional, Sequence, T
 
 from kubernetes import client  # type: ignore[import]
 
+from . import transform_json
 from .schemata import api
 from .schemata.api import Label, LabelName
 from .transform_any import convert_to_timestamp, parse_annotations, parse_labels
@@ -639,10 +640,16 @@ def dependent_object_owner_refererences_from_client(
 
 def parse_object_to_owners(
     workload_resources_client: Iterable[WorkloadResource],
+    workload_resources_json: Iterable[transform_json.JSONStatefulSet],
 ) -> Mapping[str, api.OwnerReferences]:
     return {
         workload_resource.metadata.uid: dependent_object_owner_refererences_from_client(
             workload_resource
         )
         for workload_resource in workload_resources_client
+    } | {
+        transform_json.dependent_object_uid_from_json(
+            workload_resource
+        ): transform_json.dependent_object_owner_refererences_from_json(workload_resource)
+        for workload_resource in workload_resources_json
     }

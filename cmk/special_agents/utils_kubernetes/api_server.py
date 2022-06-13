@@ -9,7 +9,20 @@ import json
 import logging
 import re
 from dataclasses import dataclass
-from typing import Dict, Iterable, List, Literal, Mapping, Optional, Sequence, Tuple, Union
+from typing import (
+    Callable,
+    Dict,
+    Generic,
+    Iterable,
+    List,
+    Literal,
+    Mapping,
+    Optional,
+    Sequence,
+    Tuple,
+    TypeVar,
+    Union,
+)
 
 from kubernetes import client  # type: ignore[import]
 
@@ -24,8 +37,13 @@ from cmk.special_agents.utils_kubernetes.transform import (
     pod_from_client,
     resource_quota_from_client,
     statefulset_from_client,
+    WorkloadResource,
 )
-from cmk.special_agents.utils_kubernetes.transform_json import JSONStatefulSetList
+from cmk.special_agents.utils_kubernetes.transform_json import (
+    JSONStatefulSet,
+    JSONStatefulSetList,
+    statefulset_list_from_json,
+)
 
 LOGGER = logging.getLogger()
 VERSION_MATCH_RE = re.compile(r"\s*v?([0-9]+(?:\.[0-9]+)*).*")
@@ -315,116 +333,287 @@ def _verify_version_support(
     LOGGER.warning(msg="Processing data is done on a best effort basis.")
 
 
-class APIServer:
+@dataclass(frozen=True)
+class APIData:
+    cron_jobs: Sequence[api.CronJob]
+    deployments: Sequence[api.Deployment]
+    daemonsets: Sequence[api.DaemonSet]
+    statefulsets: Sequence[api.StatefulSet]
+    namespaces: Sequence[api.Namespace]
+    nodes: Sequence[api.Node]
+    pods: Sequence[api.Pod]
+    resource_quotas: Sequence[api.ResourceQuota]
+    cluster_details: api.ClusterDetails
+
+
+StatefulSets = TypeVar("StatefulSets", Sequence[client.V1StatefulSet], JSONStatefulSetList)
+
+
+@dataclass(frozen=True)
+class UnparsedAPIData(Generic[StatefulSets]):
+    raw_jobs: Sequence[client.V1Job]
+    raw_cron_jobs: Sequence[client.V1CronJob]
+    raw_pods: Sequence[client.V1Pod]
+    raw_nodes: Sequence[client.V1Node]
+    raw_namespaces: Sequence[client.V1Namespace]
+    raw_resource_quotas: Sequence[client.V1ResourceQuota]
+    raw_deployments: Sequence[client.V1Deployment]
+    raw_daemonsets: Sequence[client.V1DaemonSet]
+    raw_replica_sets: Sequence[client.V1ReplicaSet]
+    node_to_kubelet_health: Mapping[str, api.HealthZ]
+    api_health: api.APIHealth
+    raw_statefulsets: StatefulSets
+
+
+def query_raw_api_data_v1(
+    batch_api: BatchAPI,
+    core_api: CoreAPI,
+    raw_api: RawAPI,
+    external_api: AppsAPI,
+) -> UnparsedAPIData[Sequence[client.V1StatefulSet]]:
+    raw_nodes = core_api.query_raw_nodes()
+    return UnparsedAPIData(
+        raw_jobs=batch_api.query_raw_jobs(),
+        raw_cron_jobs=batch_api.query_raw_cron_jobs(),
+        raw_pods=core_api.query_raw_pods(),
+        raw_nodes=raw_nodes,
+        raw_namespaces=core_api.query_raw_namespaces(),
+        raw_resource_quotas=core_api.query_raw_resource_quotas(),
+        raw_deployments=external_api.query_raw_deployments(),
+        raw_daemonsets=external_api.query_raw_daemon_sets(),
+        raw_statefulsets=external_api.query_raw_statefulsets(),
+        raw_replica_sets=external_api.query_raw_replica_sets(),
+        node_to_kubelet_health={
+            raw_node.metadata.name: raw_api.query_kubelet_health(raw_node.metadata.name)
+            for raw_node in raw_nodes
+        },
+        api_health=raw_api.query_api_health(),
+    )
+
+
+def query_raw_api_data_v2(
+    batch_api: BatchAPI,
+    core_api: CoreAPI,
+    raw_api: RawAPI,
+    external_api: AppsAPI,
+) -> UnparsedAPIData[JSONStatefulSetList]:
+    raw_nodes = core_api.query_raw_nodes()
+    return UnparsedAPIData(
+        raw_jobs=batch_api.query_raw_jobs(),
+        raw_cron_jobs=batch_api.query_raw_cron_jobs(),
+        raw_pods=core_api.query_raw_pods(),
+        raw_nodes=raw_nodes,
+        raw_namespaces=core_api.query_raw_namespaces(),
+        raw_resource_quotas=core_api.query_raw_resource_quotas(),
+        raw_deployments=external_api.query_raw_deployments(),
+        raw_daemonsets=external_api.query_raw_daemon_sets(),
+        raw_statefulsets=raw_api.query_raw_statefulsets(),
+        raw_replica_sets=external_api.query_raw_replica_sets(),
+        node_to_kubelet_health={
+            raw_node.metadata.name: raw_api.query_kubelet_health(raw_node.metadata.name)
+            for raw_node in raw_nodes
+        },
+        api_health=raw_api.query_api_health(),
+    )
+
+
+def create_controller_to_pods(
+    raw_pods: Sequence[client.V1Pod],
+    workload_resources_client: Iterable[WorkloadResource],
+    workload_resources_json: Iterable[JSONStatefulSet],
+) -> Mapping[str, Sequence[api.PodUID]]:
+    object_to_owners = parse_object_to_owners(
+        workload_resources_client=workload_resources_client,
+        workload_resources_json=workload_resources_json,
+    )
+
+    return _match_controllers(
+        pods=raw_pods,
+        object_to_owners=object_to_owners,
+    )
+
+
+def statefulset_list_from_client(
+    statefulset_list: Sequence[client.V1StatefulSet],
+    controller_to_pods: Mapping[str, Sequence[api.PodUID]],
+) -> Sequence[api.StatefulSet]:
+    return [
+        statefulset_from_client(raw_statefulset, controller_to_pods[raw_statefulset.metadata.uid])
+        for raw_statefulset in statefulset_list
+    ]
+
+
+def parse_api_data(
+    raw_cron_jobs: Sequence[client.V1CronJob],
+    raw_pods: Sequence[client.V1Pod],
+    raw_nodes: Sequence[client.V1Node],
+    raw_namespaces: Sequence[client.V1Namespace],
+    raw_resource_quotas: Sequence[client.V1ResourceQuota],
+    raw_deployments: Sequence[client.V1Deployment],
+    raw_daemonsets: Sequence[client.V1DaemonSet],
+    raw_statefulsets: StatefulSets,
+    node_to_kubelet_health: Mapping[str, api.HealthZ],
+    api_health: api.APIHealth,
+    controller_to_pods: Mapping[str, Sequence[api.PodUID]],
+    git_version: api.GitVersion,
+    versioned_parse_statefulsets: Callable[
+        [StatefulSets, Mapping[str, Sequence[api.PodUID]]], Sequence[api.StatefulSet]
+    ],
+) -> APIData:
+    cron_jobs = [
+        cron_job_from_client(raw_cron_job, controller_to_pods[raw_cron_job.metadata.uid])
+        for raw_cron_job in raw_cron_jobs
+    ]
+    deployments = [
+        deployment_from_client(raw_deployment, controller_to_pods[raw_deployment.metadata.uid])
+        for raw_deployment in raw_deployments
+    ]
+    daemonsets = [
+        daemonset_from_client(raw_daemonset, controller_to_pods[raw_daemonset.metadata.uid])
+        for raw_daemonset in raw_daemonsets
+    ]
+    statefulsets = versioned_parse_statefulsets(raw_statefulsets, controller_to_pods)
+    namespaces = [namespace_from_client(raw_namespace) for raw_namespace in raw_namespaces]
+    nodes = [
+        node_from_client(raw_node, node_to_kubelet_health[raw_node.metadata.name])
+        for raw_node in raw_nodes
+    ]
+    pods = [pod_from_client(pod) for pod in raw_pods]
+    resource_quotas: Sequence[api.ResourceQuota] = [
+        api_resource_quota
+        for api_resource_quota in [
+            resource_quota_from_client(resource_quota) for resource_quota in raw_resource_quotas
+        ]
+        if api_resource_quota is not None
+    ]
+
+    cluster_details = api.ClusterDetails(api_health=api_health, version=git_version)
+    return APIData(
+        cron_jobs=cron_jobs,
+        deployments=deployments,
+        daemonsets=daemonsets,
+        statefulsets=statefulsets,
+        namespaces=namespaces,
+        nodes=nodes,
+        pods=pods,
+        resource_quotas=resource_quotas,
+        cluster_details=cluster_details,
+    )
+
+
+def create_api_data_v1(
+    batch_api: BatchAPI,
+    core_api: CoreAPI,
+    raw_api: RawAPI,
+    external_api: AppsAPI,
+    git_version: api.GitVersion,
+) -> APIData:
+    raw_api_data = query_raw_api_data_v1(
+        batch_api,
+        core_api,
+        raw_api,
+        external_api,
+    )
+    controller_to_pods = create_controller_to_pods(
+        raw_api_data.raw_pods,
+        workload_resources_client=itertools.chain(
+            raw_api_data.raw_deployments,
+            raw_api_data.raw_daemonsets,
+            raw_api_data.raw_statefulsets,
+            raw_api_data.raw_replica_sets,
+            raw_api_data.raw_cron_jobs,
+            raw_api_data.raw_jobs,
+        ),
+        workload_resources_json=(),
+    )
+    return parse_api_data(
+        raw_api_data.raw_cron_jobs,
+        raw_api_data.raw_pods,
+        raw_api_data.raw_nodes,
+        raw_api_data.raw_namespaces,
+        raw_api_data.raw_resource_quotas,
+        raw_api_data.raw_deployments,
+        raw_api_data.raw_daemonsets,
+        raw_api_data.raw_statefulsets,
+        raw_api_data.node_to_kubelet_health,
+        raw_api_data.api_health,
+        controller_to_pods,
+        git_version,
+        versioned_parse_statefulsets=statefulset_list_from_client,
+    )
+
+
+def create_api_data_v2(
+    batch_api: BatchAPI,
+    core_api: CoreAPI,
+    raw_api: RawAPI,
+    external_api: AppsAPI,
+    git_version: api.GitVersion,
+) -> APIData:
+    raw_api_data = query_raw_api_data_v2(
+        batch_api,
+        core_api,
+        raw_api,
+        external_api,
+    )
+    controller_to_pods = create_controller_to_pods(
+        raw_api_data.raw_pods,
+        workload_resources_client=itertools.chain(
+            raw_api_data.raw_deployments,
+            raw_api_data.raw_daemonsets,
+            raw_api_data.raw_replica_sets,
+            raw_api_data.raw_cron_jobs,
+            raw_api_data.raw_jobs,
+        ),
+        workload_resources_json=raw_api_data.raw_statefulsets["items"],
+    )
+    return parse_api_data(
+        raw_api_data.raw_cron_jobs,
+        raw_api_data.raw_pods,
+        raw_api_data.raw_nodes,
+        raw_api_data.raw_namespaces,
+        raw_api_data.raw_resource_quotas,
+        raw_api_data.raw_deployments,
+        raw_api_data.raw_daemonsets,
+        raw_api_data.raw_statefulsets,
+        raw_api_data.node_to_kubelet_health,
+        raw_api_data.api_health,
+        controller_to_pods,
+        git_version,
+        versioned_parse_statefulsets=statefulset_list_from_json,
+    )
+
+
+def from_kubernetes(api_client, timeout) -> APIData:
     """
-    APIServer provides a stable interface that should not change between kubernetes versions
+    This function provides a stable interface that should not change between kubernetes versions
     This should be the only data source for all special agent code!
     """
+    batch_api = BatchAPI(api_client, timeout)
+    core_api = CoreAPI(api_client, timeout)
+    raw_api = RawAPI(api_client, timeout)
+    external_api = AppsAPI(api_client, timeout)
 
-    @classmethod
-    def from_kubernetes(cls, api_client, timeout):
+    raw_version = raw_api.query_raw_version()
+    version = version_from_json(raw_version)
+    _verify_version_support(version)
 
-        return cls(
-            BatchAPI(api_client, timeout),
-            CoreAPI(api_client, timeout),
-            RawAPI(api_client, timeout),
-            AppsAPI(api_client, timeout),
+    if isinstance(version, api.UnknownKubernetesVersion) or (version.major, version.minor) in {
+        (1, 21),
+        (1, 22),
+    }:
+        return create_api_data_v1(
+            batch_api,
+            core_api,
+            raw_api,
+            external_api,
+            version.git_version,
         )
 
-    def __init__(
-        self,
-        batch_api: BatchAPI,
-        core_api: CoreAPI,
-        raw_api: RawAPI,
-        external_api: AppsAPI,
-    ) -> None:
-        raw_version = raw_api.query_raw_version()
-        self.version = version_from_json(raw_version)
-        _verify_version_support(self.version)
-
-        self.raw_jobs = batch_api.query_raw_jobs()
-        self.raw_cron_jobs = batch_api.query_raw_cron_jobs()
-        self.raw_pods = core_api.query_raw_pods()
-        self.raw_nodes = core_api.query_raw_nodes()
-        self.raw_namespaces = core_api.query_raw_namespaces()
-        self.raw_resource_quotas = core_api.query_raw_resource_quotas()
-        self.raw_deployments = external_api.query_raw_deployments()
-        self.raw_daemon_sets = external_api.query_raw_daemon_sets()
-        self.raw_statefulsets = external_api.query_raw_statefulsets()
-        self.raw_replica_sets = external_api.query_raw_replica_sets()
-
-        # It's best if queries to the api happen in a small time window, since then there will fewer
-        # mismatches between the objects (which might change inbetween api calls).
-        self.node_to_kubelet_health = {
-            raw_node.metadata.name: raw_api.query_kubelet_health(raw_node.metadata.name)
-            for raw_node in self.raw_nodes
-        }
-        self.api_health = raw_api.query_api_health()
-
-        object_to_owners = parse_object_to_owners(
-            workload_resources_client=itertools.chain(
-                self.raw_deployments,
-                self.raw_daemon_sets,
-                self.raw_statefulsets,
-                self.raw_replica_sets,
-                self.raw_cron_jobs,
-                self.raw_jobs,
-            ),
-        )
-
-        self._controller_to_pods = _match_controllers(
-            pods=self.raw_pods,
-            object_to_owners=object_to_owners,
-        )
-
-    def cron_jobs(self) -> Sequence[api.CronJob]:
-        return [
-            cron_job_from_client(raw_cron_job, self._controller_to_pods[raw_cron_job.metadata.uid])
-            for raw_cron_job in self.raw_cron_jobs
-        ]
-
-    def deployments(self) -> Sequence[api.Deployment]:
-        return [
-            deployment_from_client(
-                raw_deployment, self._controller_to_pods[raw_deployment.metadata.uid]
-            )
-            for raw_deployment in self.raw_deployments
-        ]
-
-    def daemon_sets(self) -> Sequence[api.DaemonSet]:
-        return [
-            daemonset_from_client(
-                raw_daemon_set, self._controller_to_pods[raw_daemon_set.metadata.uid]
-            )
-            for raw_daemon_set in self.raw_daemon_sets
-        ]
-
-    def statefulsets(self) -> Sequence[api.StatefulSet]:
-        return [
-            statefulset_from_client(
-                raw_statefulset, self._controller_to_pods[raw_statefulset.metadata.uid]
-            )
-            for raw_statefulset in self.raw_statefulsets
-        ]
-
-    def namespaces(self) -> Sequence[api.Namespace]:
-        return [namespace_from_client(raw_namespace) for raw_namespace in self.raw_namespaces]
-
-    def nodes(self) -> Sequence[api.Node]:
-        return [
-            node_from_client(raw_node, self.node_to_kubelet_health[raw_node.metadata.name])
-            for raw_node in self.raw_nodes
-        ]
-
-    def pods(self) -> Sequence[api.Pod]:
-        return [pod_from_client(pod) for pod in self.raw_pods]
-
-    def resource_quotas(self) -> Sequence[api.ResourceQuota]:
-        return [
-            api_resource_quota
-            for resource_quota in self.raw_resource_quotas
-            if (api_resource_quota := resource_quota_from_client(resource_quota)) is not None
-        ]
-
-    def cluster_details(self) -> api.ClusterDetails:
-        return api.ClusterDetails(api_health=self.api_health, version=self.version.git_version)
+    return create_api_data_v2(
+        batch_api,
+        core_api,
+        raw_api,
+        external_api,
+        version.git_version,
+    )

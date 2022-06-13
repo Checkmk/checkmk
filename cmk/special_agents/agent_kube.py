@@ -61,7 +61,7 @@ from cmk.utils.misc import typeshed_issue_7724
 from cmk.special_agents.utils import vcrtrace
 from cmk.special_agents.utils.agent_common import ConditionalPiggybackSection, SectionWriter
 from cmk.special_agents.utils.request_helper import get_requests_ca
-from cmk.special_agents.utils_kubernetes.api_server import APIServer
+from cmk.special_agents.utils_kubernetes.api_server import from_kubernetes
 from cmk.special_agents.utils_kubernetes.schemata import api, section
 
 LOGGER = logging.getLogger()
@@ -2522,7 +2522,7 @@ def main(args: Optional[List[str]] = None) -> int:  # pylint: disable=too-many-b
             LOGGER.info("Collecting API data")
 
             try:
-                api_server = APIServer.from_kubernetes(
+                api_data = from_kubernetes(
                     api_client,
                     timeout=(arguments.k8s_api_connect_timeout, arguments.k8s_api_read_timeout),
                 )
@@ -2534,19 +2534,19 @@ def main(args: Optional[List[str]] = None) -> int:  # pylint: disable=too-many-b
             except client.ApiException as e:
                 raise CustomKubernetesApiException(e) from e
 
-            api_pods = api_server.pods()
+            api_pods = api_data.pods
 
             # Namespaces are handled independently from the cluster object in order to improve
             # testability. The long term goal is to remove all objects from the cluster object
             cluster = Cluster.from_api_resources(
                 excluded_node_roles=arguments.roles or [],
                 pods=api_pods,
-                nodes=api_server.nodes(),
-                deployments=api_server.deployments(),
-                cron_jobs=api_server.cron_jobs(),
-                daemon_sets=api_server.daemon_sets(),
-                statefulsets=api_server.statefulsets(),
-                cluster_details=api_server.cluster_details(),
+                nodes=api_data.nodes,
+                deployments=api_data.deployments,
+                cron_jobs=api_data.cron_jobs,
+                daemon_sets=api_data.daemonsets,
+                statefulsets=api_data.statefulsets,
+                cluster_details=api_data.cluster_details,
             )
 
             # Sections based on API server data
@@ -2554,7 +2554,7 @@ def main(args: Optional[List[str]] = None) -> int:  # pylint: disable=too-many-b
             write_cluster_api_sections(arguments.cluster, cluster)
 
             monitored_namespace_names = filter_monitored_namespaces(
-                {namespace_name(namespace) for namespace in api_server.namespaces()},
+                {namespace_name(namespace) for namespace in api_data.namespaces},
                 arguments.namespace_include_patterns,
                 arguments.namespace_exclude_patterns,
             )
@@ -2581,7 +2581,7 @@ def main(args: Optional[List[str]] = None) -> int:  # pylint: disable=too-many-b
                     piggyback_formatter=functools.partial(piggyback_formatter, "deployment"),
                 )
 
-            resource_quotas = api_server.resource_quotas()
+            resource_quotas = api_data.resource_quotas
             if MonitoredObject.namespaces in arguments.monitored_objects:
                 LOGGER.info("Write namespaces sections based on API data")
 
@@ -2597,7 +2597,7 @@ def main(args: Optional[List[str]] = None) -> int:  # pylint: disable=too-many-b
                     pod_namespace(pod) for pod in running_pending_pods
                 }
                 monitored_api_namespaces = namespaces_from_namespacenames(
-                    api_server.namespaces(),
+                    api_data.namespaces,
                     monitored_namespace_names.intersection(namespacenames_running_pending_pods),
                 )
                 write_namespaces_api_sections(

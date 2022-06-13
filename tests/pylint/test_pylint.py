@@ -12,7 +12,9 @@ import shutil
 import subprocess
 import sys
 import tempfile
+from io import TextIOWrapper
 from pathlib import Path
+from typing import Iterator
 
 import pytest
 
@@ -103,7 +105,7 @@ def _get_files_to_check(pylint_test_dir):
 
 
 @contextlib.contextmanager
-def stand_alone_template(file_name):
+def stand_alone_template(file_name: str) -> Iterator[TextIOWrapper]:
 
     with open(file_name, "w") as file_handle:
 
@@ -168,7 +170,7 @@ def inv_tree(path, default_value=None):
         yield file_handle
 
 
-def _compile_check_and_inventory_plugins(pylint_test_dir):
+def _compile_check_and_inventory_plugins(pylint_test_dir: str) -> None:
 
     for idx, f_name in enumerate(pylint_cmk.check_files(repo_path() + "/checks")):
         with stand_alone_template(pylint_test_dir + "/cmk_checks_%s.py" % idx) as file_handle:

@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Optional
+from typing import Any, Mapping, Optional
 
 import pytest
 
@@ -332,3 +332,337 @@ def test_mountpoints_in_group(mplist, patterns_include, patterns_exclude, expect
 
     assert isinstance(result, list)
     assert result == expected
+
+
+@pytest.mark.parametrize(
+    "filesystem_size_gb, filesystem_params, parsed_params",
+    [
+        pytest.param(
+            10.0,
+            {
+                "levels": (80.0, 90.0),
+            },
+            {
+                "levels": (80.0, 90.0),
+                "levels_mb": (8 * 1024, 9 * 1024),
+                "levels_text": "(warn/crit at 80.00%/90.00%)",
+            },
+            id="Levels expressed in percent (float) of used space",
+        ),
+        pytest.param(
+            10.0,
+            {
+                "levels": (-20.0, -10.0),
+            },
+            {
+                "levels": (-20.0, -10.0),
+                "levels_mb": ((-2) * 1024, (-1) * 1024),
+                "levels_text": "(warn/crit at free space below 20.00%/10.00%)",
+            },
+            id="Levels expressed in percent (float) of free space",
+        ),
+        pytest.param(
+            10.0,
+            {
+                "levels": (8 * 1024, 9 * 1024),
+            },
+            {
+                "levels": (8 * 1024, 9 * 1024),
+                "levels_mb": (8 * 1024, 9 * 1024),
+                "levels_text": "(warn/crit at 8.00 GiB/9.00 GiB)",
+            },
+            id="Levels expressed in MB (int) of used space",
+        ),
+        pytest.param(
+            10.0,
+            {
+                "levels": ((-2) * 1024, (-1) * 1024),
+            },
+            {
+                "levels": ((-2) * 1024, (-1) * 1024),
+                "levels_mb": ((-2) * 1024, (-1) * 1024),
+                "levels_text": "(warn/crit at free space below 2.00 GiB/1.00 GiB)",
+            },
+            id="Levels expressed in MB (int) of free space",
+        ),
+        pytest.param(
+            10.0,
+            {
+                "levels": [
+                    (5.0 * 1024**3, (4 * 1024, 5 * 1024)),
+                    (15.0 * 1024**3, (60.0, 70.0)),
+                ],
+            },
+            {
+                "levels": [
+                    (5.0 * 1024**3, (4 * 1024, 5 * 1024)),
+                    (15.0 * 1024**3, (60.0, 70.0)),
+                ],
+                "levels_mb": (4 * 1024, 5 * 1024),
+                "levels_text": "(warn/crit at 4.00 GiB/5.00 GiB)",
+            },
+            id=(
+                "Different levels for different sizes of filesystems. "
+                "For a filesystem in the range of two filesystem size "
+                "configurations, the configuration of the smaller filesystem is "
+                "applied. Note it is possible to have both percent and absolute "
+                "as levels in the same list."
+            ),
+        ),
+        pytest.param(
+            10.0,
+            {
+                "levels": [
+                    (15.0 * 1024**3, (60.0, 70.0)),
+                    (5.0 * 1024**3, (4 * 1024, 5 * 1024)),
+                ],
+            },
+            {
+                "levels": [
+                    (15.0 * 1024**3, (60.0, 70.0)),
+                    (5.0 * 1024**3, (4 * 1024, 5 * 1024)),
+                ],
+                "levels_mb": (4 * 1024, 5 * 1024),
+                "levels_text": "(warn/crit at 4.00 GiB/5.00 GiB)",
+            },
+            id=("The order of filesystem sizes in the list of levels does not matter."),
+        ),
+        pytest.param(
+            10.0,
+            {
+                "levels": [
+                    (5.0 * 1024**3, (4 * 1024, 5 * 1024)),
+                    (10.0 * 1024**3, (60.0, 70.0)),
+                ],
+            },
+            {
+                "levels": [
+                    (5.0 * 1024**3, (4 * 1024, 5 * 1024)),
+                    (10.0 * 1024**3, (60.0, 70.0)),
+                ],
+                "levels_mb": (4 * 1024, 5 * 1024),
+                "levels_text": "(warn/crit at 4.00 GiB/5.00 GiB)",
+            },
+            id=(
+                "The levels of the filesystem size 10GB are not applied to "
+                "filesystems that are exactly 10GB in size, as the configuration "
+                "specifies filesystems need to be greater than in order for the "
+                "levels to apply."
+            ),
+        ),
+        pytest.param(
+            1.0,
+            {
+                "levels": [
+                    (5.0 * 1024**3, (4 * 1024, 5 * 1024)),
+                    (10.0 * 1024**3, (60.0, 70.0)),
+                ],
+            },
+            {
+                "levels": [
+                    (5.0 * 1024**3, (4 * 1024, 5 * 1024)),
+                    (10.0 * 1024**3, (60.0, 70.0)),
+                ],
+                "levels_mb": (1 * 1024, 1 * 1024),
+                "levels_text": "(warn/crit at 100.00%/100.00%)",
+            },
+            id=(
+                "If the filesystem size cannot be determined, levels revert to 100% "
+                "for WARN/CRIT. TODO: defaults should be used instead."
+            ),
+        ),
+    ],
+)
+def test_get_filesystem_levels(
+    filesystem_size_gb: float,
+    filesystem_params: Mapping[str, Any],
+    parsed_params: Mapping[str, Any],
+) -> None:
+    actual_parsed_params = df.get_filesystem_levels(filesystem_size_gb, filesystem_params)
+
+    assert actual_parsed_params["levels"] == parsed_params["levels"]
+    assert actual_parsed_params["levels_mb"] == parsed_params["levels_mb"]
+    assert actual_parsed_params["levels_text"] == parsed_params["levels_text"]
+
+
+@pytest.mark.parametrize(
+    "filesystem_size_gb, filesystem_params, parsed_params",
+    [
+        pytest.param(
+            100.0,
+            {
+                "levels": (80.0, 90.0),
+                "magic": 0.8,
+                "levels_low": (60.0, 70.0),
+                "magic_normsize": 100.0,
+            },
+            {
+                "levels": (80.0, 90.0),
+                "levels_mb": (
+                    80.0 * 1024,
+                    90.0 * 1024,
+                ),
+                "levels_text": "(warn/crit at 80.00%/90.00%)",
+            },
+            id=(
+                "Provided levels are applied without adjustment when reference size (aka 'magic normsize') is the same as filesystem size."
+            ),
+        ),
+        pytest.param(
+            100.0,
+            {
+                "levels": (80.0, 90.0),
+                "magic": 1,
+                "levels_low": (60.0, 70.0),
+                "magic_normsize": 20.0,
+            },
+            {
+                "levels": (80.0, 90.0),
+                "levels_mb": (
+                    80.0 * 1024,
+                    90.0 * 1024,
+                ),
+                "levels_text": "(warn/crit at 80.00%/90.00%)",
+            },
+            id=("Provided levels are applied without adjustment when MF is exactly equal 1."),
+        ),
+        pytest.param(
+            100.0,
+            {
+                "levels": (80.0, 90.0),
+                "magic": 0.8,
+                "levels_low": (60.0, 70.0),
+                "magic_normsize": 20.0,
+            },
+            {
+                "levels": (80.0, 90.0),
+                "levels_mb": (
+                    85.0 * 1024,
+                    93.0 * 1024,
+                ),
+                "levels_text": "(warn/crit at 85.50%/92.75%)",
+            },
+            id=("Magic factor adjusts levels."),
+        ),
+        pytest.param(
+            100.0,
+            {
+                "levels": (80 * 1024, 90 * 1024),
+                "magic": 0.8,
+                "levels_low": (60.0, 70.0),
+                "magic_normsize": 20.0,
+            },
+            {
+                "levels": (
+                    80 * 1024,
+                    90 * 1024,
+                ),
+                "levels_mb": (
+                    85 * 1024,
+                    93 * 1024,
+                ),
+                "levels_text": "(warn/crit at 85.50%/92.75%)",
+            },
+            id=("Magic factor adjusts absolute levels."),
+        ),
+        pytest.param(
+            100.0,
+            {
+                "levels": (80.0, 90.0),
+                "magic": 0.1,
+                "levels_low": (60.0, 70.0),
+                "magic_normsize": 1000.0,
+            },
+            {
+                "levels": (80.0, 90.0),
+                "levels_mb": (
+                    60 * 1024,
+                    70 * 1024,
+                ),
+                "levels_text": "(warn/crit at 60.00%/70.00%)",
+            },
+            id=("Magic factor does not adjust levels below minimum levels (aka 'levels low')."),
+        ),
+        pytest.param(
+            100.0,
+            {
+                "levels": (-40.0, -30.0),
+                "magic": 0.8,
+                "levels_low": (10.0, 20.0),
+                "magic_normsize": 100.0,
+            },
+            {
+                "levels": (-40.0, -30.0),
+                "levels_mb": (
+                    10 * 1024,
+                    20 * 1024,
+                ),
+                "levels_text": "(warn/crit at 10.00%/20.00%)",
+            },
+            id=(
+                "Minimum levels (aka 'levels low') do not make sense when levels are specified as free space. They are "
+                "assumed to be relating to used space. TODO: fix this behaviour..."
+            ),
+        ),
+    ],
+)
+def test_get_filesystem_levels_magic_factor(
+    filesystem_size_gb: float,
+    filesystem_params: Mapping[str, Any],
+    parsed_params: Mapping[str, Any],
+) -> None:
+    actual_parsed_params = df.get_filesystem_levels(filesystem_size_gb, filesystem_params)
+
+    assert actual_parsed_params["levels"] == parsed_params["levels"]
+    assert actual_parsed_params["levels_mb"] == pytest.approx(parsed_params["levels_mb"], rel=0.01)
+    assert actual_parsed_params["levels_text"] == parsed_params["levels_text"]
+
+
+@pytest.mark.parametrize(
+    "filesystem_params, parsed_params",
+    [
+        pytest.param(
+            {
+                "inodes_levels": (80.0, 90.0),
+            },
+            {
+                "inodes_levels": (80.0, 90.0),
+            },
+            id="Levels expressed in percent (float) of free inodes",
+        ),
+        pytest.param(
+            {
+                "inodes_levels": (50, 100),
+            },
+            {
+                "inodes_levels": (50, 100),
+            },
+            id="Levels expressed in count (int) of free inodes",
+        ),
+        pytest.param(
+            {
+                "inodes_levels": None,
+            },
+            {
+                "inodes_levels": (None, None),
+            },
+            id="Levels set to 'ignore' have a None value",
+        ),
+        pytest.param(
+            {},
+            {
+                "inodes_levels": (None, None),
+            },
+            id=(
+                "Levels for inodes are not configured: levels have a None value. TODO: this is a bug: defaults should be used."
+            ),
+        ),
+    ],
+)
+def test_get_filesystem_levels_inodes(
+    filesystem_params: Mapping[str, Any],
+    parsed_params: Mapping[str, Any],
+) -> None:
+    actual_parsed_params = df.get_filesystem_levels(10.0, filesystem_params)
+
+    assert actual_parsed_params["inodes_levels"] == parsed_params["inodes_levels"]

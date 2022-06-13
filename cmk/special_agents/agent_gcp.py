@@ -7,7 +7,7 @@ import json
 import time
 from dataclasses import dataclass, field
 from functools import cache
-from typing import Any, Callable, Iterable, Mapping, Optional, Sequence, Union
+from typing import Any, Callable, Iterable, Mapping, Optional, Protocol, Sequence, Union
 
 from google.cloud import asset_v1, monitoring_v3
 from google.cloud.monitoring_v3 import Aggregation as gAggregation
@@ -43,6 +43,18 @@ class Asset:
         return cls(asset=asset)
 
 
+class ClientProtocol(Protocol):
+    @property
+    def project(self) -> str:
+        ...
+
+    def list_time_series(self, request: Any) -> Iterable[TimeSeries]:
+        ...
+
+    def list_assets(self, request: Any) -> Iterable[asset_v1.Asset]:
+        ...
+
+
 @dataclass(unsafe_hash=True)
 class Client:
     account_info: dict[str, str] = field(compare=False)
@@ -55,6 +67,12 @@ class Client:
     @cache  # pylint: disable=method-cache-max-size-none
     def asset(self):
         return asset_v1.AssetServiceClient.from_service_account_info(self.account_info)
+
+    def list_time_series(self, request: Any) -> Iterable[TimeSeries]:
+        return self.monitoring().list_time_series(request)
+
+    def list_assets(self, request: Any) -> Iterable[asset_v1.Asset]:
+        return self.asset().list_assets(request)
 
 
 @dataclass(frozen=True)
@@ -230,7 +248,7 @@ class ResourceFilter:
 
 
 def time_series(
-    client: Client, service: Service, filter_by: Optional[ResourceFilter]
+    client: ClientProtocol, service: Service, filter_by: Optional[ResourceFilter]
 ) -> Iterable[Result]:
     now = time.time()
     seconds = int(now)
@@ -244,7 +262,7 @@ def time_series(
     for metric in service.metrics:
         request = metric.request(interval, groupby=service.default_groupby, project=client.project)
         try:
-            results = client.monitoring().list_time_series(request=request)
+            results = client.list_time_series(request=request)
         except Exception as e:
             raise RuntimeError(metric.name) from e
         for ts in results:
@@ -256,7 +274,7 @@ def time_series(
 
 
 def run_metrics(
-    client: Client, services: Iterable[Service], filter_by: Optional[ResourceFilter] = None
+    client: ClientProtocol, services: Iterable[Service], filter_by: Optional[ResourceFilter] = None
 ) -> Iterable[ResultSection]:
     for s in services:
         yield ResultSection(s.name, time_series(client, s, filter_by))
@@ -267,15 +285,15 @@ def run_metrics(
 ################################
 
 
-def gather_assets(client: Client) -> Sequence[Asset]:
+def gather_assets(client: ClientProtocol) -> Sequence[Asset]:
     request = asset_v1.ListAssetsRequest(
         parent=f"projects/{client.project}", content_type=asset_v1.ContentType.RESOURCE
     )
-    all_assets = client.asset().list_assets(request)
+    all_assets = client.list_assets(request)
     return [Asset(a) for a in all_assets]
 
 
-def run_assets(client: Client) -> AssetSection:
+def run_assets(client: ClientProtocol) -> AssetSection:
     return AssetSection("asset", gather_assets(client), client.project)
 
 
@@ -285,7 +303,7 @@ def run_assets(client: Client) -> AssetSection:
 
 
 def piggy_back(
-    client: Client, service: PiggyBackService, assets: Sequence[Asset]
+    client: ClientProtocol, service: PiggyBackService, assets: Sequence[Asset]
 ) -> Iterable[PiggyBackSection]:
     for host in [a for a in assets if a.asset.asset_type == service.asset_type]:
         label = host.asset.resource.data[service.asset_label]
@@ -301,7 +319,7 @@ def piggy_back(
 
 
 def run_piggy_back(
-    client: Client, services: Sequence[PiggyBackService], assets: Sequence[Asset]
+    client: ClientProtocol, services: Sequence[PiggyBackService], assets: Sequence[Asset]
 ) -> Iterable[PiggyBackSection]:
     for s in services:
         yield from piggy_back(client, s, assets)
@@ -313,7 +331,7 @@ def run_piggy_back(
 
 
 def run(
-    client: Client,
+    client: ClientProtocol,
     services: Sequence[Service],
     piggy_back_services: Sequence[PiggyBackService],
     serializer: Callable[[Union[Iterable[Section], Iterable[PiggyBackSection]]], None],

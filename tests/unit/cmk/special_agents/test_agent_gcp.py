@@ -11,7 +11,6 @@ import pytest
 from google.cloud import asset_v1, monitoring_v3
 from google.cloud.monitoring_v3 import Aggregation
 from google.cloud.monitoring_v3.types import TimeSeries
-from pytest_mock import MockerFixture
 
 # Those are enum classes defined in the Aggregation class. Not nice but works
 Aligner = Aggregation.Aligner
@@ -117,6 +116,21 @@ class FakeAssetClient:
         return self
 
 
+class FakeClient:
+    def __init__(
+        self, project: str, monitoring_client: FakeMonitoringClient, asset_client: FakeAssetClient
+    ):
+        self.project = project
+        self.monitoring_client = monitoring_client
+        self.asset_client = asset_client
+
+    def list_time_series(self, request: Any) -> Iterable[TimeSeries]:
+        return self.monitoring_client.list_time_series(request)
+
+    def list_assets(self, request: Any) -> Iterable[asset_v1.Asset]:
+        return self.asset_client.list_assets(request)
+
+
 def collector_factory(container: list[agent_gcp.Section]):
     def f(sections: Iterable[agent_gcp.Section]):
         container.extend(list(sections))
@@ -125,10 +139,8 @@ def collector_factory(container: list[agent_gcp.Section]):
 
 
 @pytest.fixture(name="agent_output")
-def fixture_agent_output(mocker: MockerFixture) -> Sequence[agent_gcp.Section]:
-    client = agent_gcp.Client({}, "test")
-    mocker.patch.object(client, "monitoring", FakeMonitoringClient)
-    mocker.patch.object(client, "asset", FakeAssetClient)
+def fixture_agent_output() -> Sequence[agent_gcp.Section]:
+    client = FakeClient("test", FakeMonitoringClient(), FakeAssetClient())
     sections: list[agent_gcp.Section] = []
     collector = collector_factory(sections)
     agent_gcp.run(client, list(agent_gcp.SERVICES.values()), [], serializer=collector)
@@ -157,13 +169,11 @@ def test_metric_serialization(agent_output: Sequence[agent_gcp.Section], capsys)
         agent_gcp.Result.deserialize(line)
 
 
-def test_metric_retrieval(mocker: MockerFixture):
+def test_metric_retrieval():
     timeseries = [
         '{"metric": {"type": "compute.googleapis.com/instance/cpu/utilization", "labels": {}}, "resource": {"type": "gce_instance", "labels": {"project_id": "tribe29-check-development", "instance_id": "4916403162284897775"}}, "metric_kind": 1, "value_type": 3, "points": [{"interval": {"start_time": "2022-04-13T11:19:37.193318Z", "end_time": "2022-04-13T11:19:37.193318Z"}, "value": {"double_value": 0.0033734199011726433}}], "unit": ""}'
     ]
-    client = agent_gcp.Client({}, "test")
-    mocker.patch.object(client, "monitoring", FakeMonitoringClient(timeseries))
-    mocker.patch.object(client, "asset", FakeAssetClient())
+    client = FakeClient("test", FakeMonitoringClient(timeseries), FakeAssetClient())
     sections: list[agent_gcp.Section] = []
     collector = collector_factory(sections)
     agent_gcp.run(client, [agent_gcp.RUN], [], serializer=collector)
@@ -186,10 +196,8 @@ def test_asset_serialization(agent_output: Sequence[agent_gcp.Section], capsys):
 
 
 @pytest.fixture(name="piggy_back_sections")
-def piggy_back_sections_fixture(mocker: MockerFixture):
-    client = agent_gcp.Client({}, "test")
-    mocker.patch.object(client, "monitoring", FakeMonitoringClient)
-    mocker.patch.object(client, "asset", FakeAssetClient)
+def piggy_back_sections_fixture():
+    client = FakeClient("test", FakeMonitoringClient(), FakeAssetClient())
     sections: list[agent_gcp.Section] = []
     collector = collector_factory(sections)
 
@@ -274,16 +282,14 @@ def test_piggy_back_host_labels(piggy_back_sections):
 
 
 @pytest.fixture(name="gce_sections")
-def fixture_gce_sections(mocker: MockerFixture) -> Sequence[agent_gcp.PiggyBackSection]:
+def fixture_gce_sections() -> Sequence[agent_gcp.PiggyBackSection]:
     timeseries = [
         '{"metric": {"type": "compute.googleapis.com/instance/cpu/utilization", "labels": {}}, "resource": {"type": "gce_instance", "labels": {"project_id": "tribe29-check-development", "instance_id": "4916403162284897775"}}, "metric_kind": 1, "value_type": 3, "points": [{"interval": {"start_time": "2022-04-13T11:36:37.193318Z", "end_time": "2022-04-13T11:36:37.193318Z"}, "value": {"double_value": 0.0035302032187011587}}, {"interval": {"start_time": "2022-04-13T11:35:37.193318Z", "end_time": "2022-04-13T11:35:37.193318Z"}, "value": {"double_value": 0.003718815888075729}}, {"interval": {"start_time": "2022-04-13T11:34:37.193318Z", "end_time": "2022-04-13T11:34:37.193318Z"}, "value": {"double_value": 0.003641066445975986}}, {"interval": {"start_time": "2022-04-13T11:33:37.193318Z", "end_time": "2022-04-13T11:33:37.193318Z"}, "value": {"double_value":0.006292206559268394}}, {"interval": {"start_time": "2022-04-13T11:32:37.193318Z", "end_time": "2022-04-13T11:32:37.193318Z"}, "value": {"double_value": 0.006182711671318082}}, {"interval": {"start_time": "2022-04-13T11:31:37.193318Z", "end_time": "2022-04-13T11:31:37.193318Z"}, "value": {"double_value": 0.004284212986899849}}, {"interval": {"start_time": "2022-04-13T11:30:37.193318Z", "end_time": "2022-04-13T11:30:37.193318Z"}, "value": {"double_value": 0.004311434884408142}}, {"interval": {"start_time": "2022-04-13T11:29:37.193318Z", "end_time": "2022-04-13T11:29:37.193318Z"}, "value": {"double_value": 0.0035632611313867932}}, {"interval": {"start_time": "2022-04-13T11:28:37.193318Z", "end_time": "2022-04-13T11:28:37.193318Z"}, "value": {"double_value": 0.003491919276933745}}, {"interval": {"start_time": "2022-04-13T11:27:37.193318Z", "end_time": "2022-04-13T11:27:37.193318Z"}, "value": {"double_value": 0.0032100898760082743}}, {"interval": {"start_time": "2022-04-13T11:26:37.193318Z", "end_time": "2022-04-13T11:26:37.193318Z"}, "value": {"double_value": 0.003219789863135425}}, {"interval": {"start_time": "2022-04-13T11:25:37.193318Z", "end_time": "2022-04-13T11:25:37.193318Z"}, "value": {"double_value": 0.0029431110570352632}}, {"interval": {"start_time": "2022-04-13T11:24:37.193318Z", "end_time": "2022-04-13T11:24:37.193318Z"}, "value": {"double_value": 0.0029444862618781538}}, {"interval": {"start_time": "2022-04-13T11:23:37.193318Z", "end_time": "2022-04-13T11:23:37.193318Z"}, "value": {"double_value": 0.0032960633851242998}}, {"interval": {"start_time": "2022-04-13T11:22:37.193318Z", "end_time": "2022-04-13T11:22:37.193318Z"}, "value": {"double_value": 0.003308212633207426}}, {"interval": {"start_time": "2022-04-13T11:21:37.193318Z", "end_time": "2022-04-13T11:21:37.193318Z"}, "value": {"double_value": 0.0030290040189213663}}, {"interval": {"start_time": "2022-04-13T11:20:37.193318Z", "end_time": "2022-04-13T11:20:37.193318Z"}, "value": {"double_value": 0.0029890867332067472}}, {"interval": {"start_time": "2022-04-13T11:19:37.193318Z", "end_time": "2022-04-13T11:19:37.193318Z"}, "value": {"double_value": 0.0033734199011726433}}], "unit": ""}'
     ]
     assets = [
         '{"name": "//compute.googleapis.com/projects/tribe29-check-development/zones/us-central1-a/instances/instance-1", "asset_type": "compute.googleapis.com/Instance", "resource": {"version": "v1", "discovery_document_uri": "https://www.googleapis.com/discovery/v1/apis/compute/v1/rest", "discovery_name": "Instance", "parent": "//cloudresourcemanager.googleapis.com/projects/1074106860578", "data": {"deletionProtection": false, "displayDevice": {"enableDisplay": false}, "lastStartTimestamp": "2022-03-28T02:37:10.106-07:00", "creationTimestamp": "2022-03-18T06:37:06.655-07:00", "id": "4916403162284897775", "name": "instance-1", "lastStopTimestamp": "2022-04-05T01:23:00.444-07:00", "machineType": "https://www.googleapis.com/compute/v1/projects/tribe29-check-development/zones/us-central1-a/machineTypes/f1-micro", "selfLink": "https://www.googleapis.com/compute/v1/projects/tribe29-check-development/zones/us-central1-a/instances/instance-1", "tags": {"fingerprint": "42WmSpB8rSM="}, "fingerprint": "im05qPmW++Q=", "status": "TERMINATED", "shieldedInstanceIntegrityPolicy": {"updateAutoLearnPolicy": true}, "shieldedInstanceConfig": {"enableIntegrityMonitoring": true, "enableSecureBoot": false, "enableVtpm": true}, "startRestricted": false, "description": "", "confidentialInstanceConfig": {"enableConfidentialCompute": false}, "zone": "https://www.googleapis.com/compute/v1/projects/tribe29-check-development/zones/us-central1-a", "canIpForward": false, "disks": [{"type": "PERSISTENT", "boot": true, "licenses": ["https://www.googleapis.com/compute/v1/projects/debian-cloud/global/licenses/debian-10-buster"], "mode": "READ_WRITE", "index": 0.0, "source": "https://www.googleapis.com/compute/v1/projects/tribe29-check-development/zones/us-central1-a/disks/instance-1", "deviceName": "instance-1", "diskSizeGb": "10", "guestOsFeatures": [{"type": "UEFI_COMPATIBLE"}, {"type": "VIRTIO_SCSI_MULTIQUEUE"}], "interface": "SCSI", "autoDelete": true}], "cpuPlatform": "Unknown CPU Platform", "labelFingerprint": "6Ok5Ta5mo84=", "allocationAffinity": {"consumeAllocationType": "ANY_ALLOCATION"}, "networkInterfaces": [{"network": "https://www.googleapis.com/compute/v1/projects/tribe29-check-development/global/networks/default", "name": "nic0", "subnetwork": "https://www.googleapis.com/compute/v1/projects/tribe29-check-development/regions/us-central1/subnetworks/default", "networkIP": "10.128.0.2", "stackType": "IPV4_ONLY", "accessConfigs": [{"name": "External NAT", "networkTier": "PREMIUM", "type": "ONE_TO_ONE_NAT"}], "fingerprint": "h7uoBU+ZS74="}], "serviceAccounts": [{"email": "1074106860578-compute@developer.gserviceaccount.com", "scopes": ["https://www.googleapis.com/auth/devstorage.read_only", "https://www.googleapis.com/auth/logging.write", "https://www.googleapis.com/auth/monitoring.write", "https://www.googleapis.com/auth/servicecontrol", "https://www.googleapis.com/auth/service.management.readonly", "https://www.googleapis.com/auth/trace.append"]}], "scheduling": {"preemptible": false, "automaticRestart": true, "onHostMaintenance": "MIGRATE"}, "labels": {"t": "tt"}}, "location": "us-central1-a", "resource_url": ""}, "ancestors": ["projects/1074106860578", "folders/1022571519427", "organizations/668598212003"], "update_time": "2022-04-05T08:23:00.662291Z", "org_policy": []}'
     ]
-    client = agent_gcp.Client({}, "test")
-    mocker.patch.object(client, "monitoring", FakeMonitoringClient(timeseries))
-    mocker.patch.object(client, "asset", FakeAssetClient(assets))
+    client = FakeClient("test", FakeMonitoringClient(timeseries), FakeAssetClient(assets))
     sections: list[agent_gcp.Section] = []
     collector = collector_factory(sections)
 

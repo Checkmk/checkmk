@@ -141,8 +141,8 @@ def _wato_page_handler(current_mode: str, mode: WatoMode) -> None:
         show_top_heading=display_options.enabled(display_options.T),
     )
 
-    if not transactions.is_transaction() or (read_only.is_enabled() and read_only.may_override()):
-        _show_read_only_warning()
+    if read_only.is_enabled() and (not transactions.is_transaction() or read_only.may_override()):
+        html.show_warning(read_only.message())
 
     # Show outcome of failed action on this page
     html.show_user_errors()
@@ -172,8 +172,3 @@ def _ensure_mode_permissions(mode_class: Type[WatoMode]) -> None:
         permissions = []
     for pname in permissions:
         user.need_permission(pname if "." in pname else ("wato." + pname))
-
-
-def _show_read_only_warning() -> None:
-    if read_only.is_enabled():
-        html.show_warning(read_only.message())

@@ -1,0 +1,14 @@
+Title: REST API user_config: Can't assign users with custom user role
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1655130773
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p26
+
+Previously, when attempting to assign custom user roles to a user,
+the REST API would return a 400 bad request. This werk fixes this
+issue by allowing custom user roles to be assigned to users.

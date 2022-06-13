@@ -8,31 +8,20 @@
 # TODO: once this agent can be used on a 2.x live system, it should be checked for functionality
 #       and against known exceptions
 
-import math
-import json
 import datetime as dt
-from pathlib import Path
 import logging
-from typing import Sequence, Generator, Any, Optional, Callable, Tuple
+from pathlib import Path
+from typing import Any, Callable, Generator, Optional, Sequence, Tuple
+
 import urllib3  # type: ignore[import]
-from requests_oauthlib import OAuth2Session  # type: ignore[import]
 from oauthlib.oauth2 import LegacyApplicationClient  # type: ignore[import]
+from requests_oauthlib import OAuth2Session  # type: ignore[import]
 
 import cmk.utils.paths
-from cmk.special_agents.utils.agent_common import (
-    special_agent_main,
-    SectionWriter,
-)
-from cmk.special_agents.utils.argument_parsing import (
-    Args,
-    create_default_argument_parser,
-)
-from cmk.special_agents.utils.request_helper import (
-    Requester,
-    StringMap,
-    TokenDict,
-    to_token_dict,
-)
+
+from cmk.special_agents.utils.agent_common import SectionWriter, special_agent_main
+from cmk.special_agents.utils.argument_parsing import Args, create_default_argument_parser
+from cmk.special_agents.utils.request_helper import Requester, StringMap, to_token_dict, TokenDict
 
 AnyGenerator = Generator[Any, None, None]
 ResultFn = Callable[..., AnyGenerator]
@@ -42,8 +31,6 @@ LOGGER = logging.getLogger("agent_storeonce4x")
 
 class StoreOnceOauth2Session(Requester):
 
-    # TODO: In case of an update, the tmpfs will be deleted. This is no problem at first sight as a
-    # new "fetch_token" will be triggered, however we should find better place for such tokens.
     _token_dir = Path(cmk.utils.paths.tmp_dir, "special_agents/agent_storeonce4x")
     _token_file_suffix = "%s_oAuthToken.json"
     _refresh_endpoint = "/pml/login/refresh"
@@ -63,68 +50,28 @@ class StoreOnceOauth2Session(Requester):
         # We need to use LegacyClient due to grant_type==password
         self._client = LegacyApplicationClient(None)
         self._client.prepare_request_body(username=self._user, password=self._secret)
+        self._oauth_session = OAuth2Session(
+            self._user,
+            client=self._client,
+            auto_refresh_url="https://%s:%s%s" % (self._host, self._port, self._refresh_endpoint),
+            token_updater=lambda x: self.update_expires_in_abs(to_token_dict(x)),
+        )
+        # Fetch token
+        token_dict = to_token_dict(
+            self._oauth_session.fetch_token(
+                token_url="https://%s:%s%s" % (self._host, self._port, self._token_endpoint),
+                username=self._user,
+                password=self._secret,
+                verify=self._verify_ssl,
+            ))
+        # Initially create the token file
+        self.update_expires_in_abs(token_dict)
+        self._json_token = token_dict
 
-        # Check if token file exists, read it & create OAuthSession with it
-        try:
-            self._json_token = self.load_token_file_and_update_expire_in()
-            LOGGER.debug("Loaded token content: %s", self._json_token)
-
-            self._oauth_session = OAuth2Session(
-                self._user,
-                client=self._client,
-                auto_refresh_url="https://%s:%s%s" %
-                (self._host, self._port, self._refresh_endpoint),
-                token_updater=lambda x: self.store_token_file_and_update_expires_in_abs(
-                    to_token_dict(x)),
-                token={
-                    "access_token": self._json_token["access_token"],
-                    "refresh_token": self._json_token["refresh_token"],
-                    "expires_in": self._json_token["expires_in"]
-                })
-        except (FileNotFoundError, KeyError):
-            LOGGER.debug("Token file not found or error in token file. Creating new connection.")
-            self._oauth_session = OAuth2Session(
-                self._user,
-                client=self._client,
-                auto_refresh_url="https://%s:%s%s" %
-                (self._host, self._port, self._refresh_endpoint),
-                token_updater=lambda x: self.store_token_file_and_update_expires_in_abs(
-                    to_token_dict(x)))
-            # Fetch token
-            token_dict = to_token_dict(
-                self._oauth_session.fetch_token(
-                    token_url='https://%s:%s%s' % (self._host, self._port, self._token_endpoint),
-                    username=self._user,
-                    password=self._secret,
-                    verify=self._verify_ssl,
-                ))
-            # Initially create the token file
-            self.store_token_file_and_update_expires_in_abs(token_dict)
-            self._json_token = token_dict
-
-    def store_token_file_and_update_expires_in_abs(self, token_dict: TokenDict) -> None:
-        if not self._token_dir.exists():
-            self._token_dir.mkdir(parents=True)
-
+    def update_expires_in_abs(self, token_dict: TokenDict) -> None:
         # Update expires_in_abs:
         # we need this to calculate a current "expires_in" (in seconds)
         token_dict["expires_in_abs"] = self.get_absolute_expire_time(token_dict["expires_in"])
-
-        with open(self._token_file, "w") as token_file:
-            json.dump(token_dict, token_file)
-
-    def load_token_file_and_update_expire_in(self) -> TokenDict:
-        with open(self._token_file, "r") as token_file:
-            token_json = json.load(token_file)
-
-            # Update expires_in from expires_in_abs
-            expires_in_abs = token_json["expires_in_abs"]
-            expires_in_updated = dt.datetime.strptime(
-                expires_in_abs,
-                self._dt_fmt,
-            ) - dt.datetime.now()
-            token_json["expires_in"] = math.floor(expires_in_updated.total_seconds())
-            return to_token_dict(token_json)
 
     def get_absolute_expire_time(self, expires_in: float, expires_in_earlier: int = 20) -> str:
         """

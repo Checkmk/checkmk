@@ -21,6 +21,7 @@ import io
 import os
 import subprocess
 import tempfile
+from dataclasses import dataclass
 from textwrap import wrap
 from typing import Any, List, Literal, Optional, Protocol, Sequence, Tuple, TypedDict, Union
 
@@ -976,6 +977,16 @@ class CellRenderer(Protocol):
         ...
 
 
+@dataclass
+class ColStat:
+    row_count: int
+    total_width: SizeInternal
+    min_width: SizeInternal
+    max_width: SizeInternal
+    weight: SizeInternal
+    is_dynamic: bool
+
+
 class TableRenderer:
     """Intelligent table rendering with word wrapping and pagination"""
 
@@ -1054,18 +1065,19 @@ class TableRenderer:
         # absolute minimum width (e.g. the width of the longest word) and
         # a maximum width (e.g. the length of the unwrapped text). All dimensions
         # are in internal units (not mm).
-        # TODO: Abusing a heterogeneous list as a product type is horrible!
-        stats = [[0, 0.0, 0.0, 0.0, None, True] for _c in range(num_cols)]
+        stats = [
+            ColStat(
+                row_count=0,
+                total_width=0.0,
+                min_width=0.0,
+                max_width=0.0,
+                weight=0.0,
+                is_dynamic=True,
+            )
+            for _c in range(num_cols)
+        ]
 
-        # Ease the typing pain a tiny bit... :-P
-        def _get_number(s, idx):
-            c = s[idx]
-            if c is None:
-                raise ValueError("something went wrong in add_table...")
-            return c
-
-        hurz: list[list[CellRenderer]] = [headers] if headers else []
-        for row in hurz + rows:
+        for row in ([headers] if headers else []) + rows:
             for col, render_object in enumerate(row):
                 max_width = render_object.maximal_width(self.pdf) * mm
                 min_width = render_object.minimal_width(self.pdf) * mm
@@ -1077,16 +1089,16 @@ class TableRenderer:
 
                 # TODO: indexes 0 (row count), 1 (total width)
                 #       -> drop them?
-                stats[col][0] = _get_number(stats[col], 0) + 1
-                stats[col][1] = _get_number(stats[col], 1) + max_width
-                stats[col][2] = max(min_width, stats[col][2])
-                stats[col][3] = max(max_width, stats[col][3])
+                stats[col].row_count += 1
+                stats[col].total_width += max_width
+                stats[col].min_width = max(min_width, stats[col].min_width)
+                stats[col].max_width = max(max_width, stats[col].max_width)
 
                 if not is_dynamic:
-                    stats[col][5] = False
+                    stats[col].is_dynamic = False
 
         # Compute required total width
-        sum_min = sum(s[2] for s in stats if s[2] is not None)
+        sum_min = sum(s.min_width for s in stats)
 
         # Now compute the available width, i.e. take the usable page width
         # and substract spacing and padding.
@@ -1103,41 +1115,41 @@ class TableRenderer:
 
         if sum_min <= available_width:
             remaining = available_width - sum_min
-            sum_weight = 0
+            sum_weight = 0.0
             for s in stats:
-                _row_count, _total_width, min_width, max_width, _weight, is_dynamic_ = s
-                if is_dynamic_:
-                    weight = (
-                        max_width - min_width + 1 * mm
-                    )  # add 1mm in order to avoid zero weights
-                    s[4] = weight
+                if s.is_dynamic:
+                    # add 1mm in order to avoid zero weights
+                    weight = s.max_width - s.min_width + 1 * mm
+                    s.weight = weight
                     sum_weight += weight
                 else:
-                    s[4] = 0
+                    s.weight = 0.0
 
             column_widths = []
-            for _row_count, _total_width, min_width, _max_width, weight, _is_dynamic in stats:
+            for s in stats:
                 if sum_weight > 0:
-                    width = min_width + (weight / sum_weight * remaining)  # fixed: true-division
+                    width = s.min_width + (
+                        s.weight / sum_weight * remaining
+                    )  # fixed: true-division
                 else:
-                    width = min_width
+                    width = s.min_width
                 column_widths.append(width)
 
         # Not enough space for even printing the table without breaking
         # words in half. Divide space according to sum_max.
         else:
-            sum_weight = 0
+            sum_weight = 0.0
             for s in stats:
-                if s[0]:
-                    weight = _get_number(s, 1) / _get_number(s, 0)  # fixed: true-division
+                if s.row_count:
+                    weight = s.total_width / s.row_count  # fixed: true-division
                 else:
-                    weight = 0
+                    weight = 0.0
                 sum_weight += weight
-                s[4] = weight
+                s.weight = weight
 
             column_widths = []
             for s in stats:
-                width = available_width * s[4] / sum_weight  # fixed: true-division
+                width = available_width * s.weight / sum_weight  # fixed: true-division
                 column_widths.append(width)
 
         row_oddeven: OddEven = "even"

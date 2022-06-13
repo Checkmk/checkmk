@@ -106,8 +106,8 @@ $(DEB_PACKAGE): $(BUILDROOT)
 	    -e 's|\(Installed-Size:\).*|\1 '"$$(du $(BUILDROOT) -s -B1024 | cut -f1)"'|' \
 	    "$(DEB_TOPDIR)/control/control" > "$(DEB_BUILDDIR)/control/control"
 	# gnu formatted tar
-	cd "$(BUILDROOT)"; tar czf "$(DEB_BUILDDIR)/data.tar.gz" *
-	cd "$(DEB_BUILDDIR)/control"; tar czf "$(DEB_BUILDDIR)/control.tar.gz" *
+	cd "$(BUILDROOT)"; tar -cz --group=0 --owner=0 -f "$(DEB_BUILDDIR)/data.tar.gz" *
+	cd "$(DEB_BUILDDIR)/control"; tar -cz --group=0 --owner=0 -f "$(DEB_BUILDDIR)/control.tar.gz" *
 	cd "$(DEB_TOPDIR)"; ar cr "$(AGENTS_DIR)/$(DEB_PACKAGE)" "control/debian-binary" "$(DEB_BUILDDIR)/control.tar.gz" "$(DEB_BUILDDIR)/data.tar.gz"
 	rm $(DEB_BUILDDIR) -rf
 

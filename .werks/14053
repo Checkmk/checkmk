@@ -1,0 +1,14 @@
+Title: cisco_cpu_memory: Services with total memory of size 0 aren't discovered
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1655126390
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p26
+
+CPU Memory utilization services with total memory of size 0 were previously
+discovered and assumed the state UNKNOWN. Since the service delivered no
+meaningful data in this case, it's no longer going to be discovered.

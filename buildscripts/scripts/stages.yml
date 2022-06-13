@@ -102,6 +102,10 @@ VARIABLES:
       SH: "echo '${CHANGED_FILES_REL}' | grep 'doc/documentation/' || true"
       REPLACE_NEWLINES: true
 
+    - NAME: CHANGED_WERK_FILES
+      SH: "echo '${CHANGED_FILES_REL}' | grep '.werks/' || true"
+      REPLACE_NEWLINES: true
+
 STAGES:
     - NAME: 'Python Typing'
       ONLY_WHEN_NOT_EMPTY: CHANGED_PYTHON_FILES,CHANGED_PIPFILE,CHANGED_TESTS_MAKEFILE,CHANGED_RUN_PIPENV_SCRIPT,CHANGED_RUN_MYPY_SCRIPT
@@ -144,13 +148,14 @@ STAGES:
       RESULT_CHECK_FILE_PATTERN: "results/python3-unit-junit.xml"
 
     - NAME: 'Python Code Quality Test'
-      ONLY_WHEN_NOT_EMPTY: CHANGED_PYTHON_FILES,CHANGED_PIPFILE,CHANGED_FILES_ABS
+      ONLY_WHEN_NOT_EMPTY: CHANGED_PYTHON_FILES,CHANGED_PIPFILE,CHANGED_FILES_ABS,CHANGED_WERK_FILES
       DIR: 'tests'
       ENV_VARS:
         PYTEST_ADDOPTS: "--junitxml=${RESULTS}/python3-code-quality-junit.xml --color=no"
         PYTHON_FILES: "${CHANGED_PYTHON_FILES}"
         IS_PIPFILE_CHANGED: "${CHANGED_PIPFILE}"
         CHANGED_FILES: "${CHANGED_FILES_ABS}"
+        IS_WERK_CHANGED: "${CHANGED_WERK_FILES}"
         CI: "true"
       COMMAND: "make test-code-quality-docker"
       TEXT_ON_SKIP: 'No Python files changed'

@@ -283,6 +283,8 @@ test-code-quality:
 	--log-cli-level=INFO $(realpath code_quality/test_pipfile.py); fi;
 	if test -n "$$CHANGED_FILES"; then echo "--changed-files $$CHANGED_FILES"; elif test -z "$$CI"; then echo "--test-all-files"; \
 	else echo ""; fi | xargs -n 1500 --no-run-if-empty $(PYTEST) -T code_quality --log-cli-level=INFO $(realpath code_quality/file_content);
+	if test -n "$$IS_WERK_CHANGED" || test -z "$$CI"; then $(PYTEST) -T code_quality \
+	--log-cli-level=INFO $(realpath code_quality/test_werks.py); fi;
 	exit $${PIPESTATUS[1]}
 
 test-code-quality-docker:

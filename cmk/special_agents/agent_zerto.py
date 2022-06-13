@@ -105,11 +105,17 @@ class AuthError(Exception):
 
 def main(argv=None):
     args = parse_arguments(argv or sys.argv[1:])
-    connection = ZertoConnection(args.hostaddress, args.username, args.password)
-    session_id = connection.get_session_id(args.authentication)
+    sys.stdout.write("<<<zerto_agent:sep(0)>>>")
+    try:
+        connection = ZertoConnection(args.hostaddress, args.username, args.password)
+        session_id = connection.get_session_id(args.authentication)
+    except Exception as e:
+        sys.stdout.write(f"Error: {e}")
+        sys.exit(1)
+    sys.stdout.write("Initialized OK")
+
     request = ZertoRequest(connection.base_url, session_id)
     vm_data = request.get_vms_data()
-
     for vm in vm_data:
         try:
             sys.stdout.write("<<<<{}>>>>\n".format(vm["VmName"]))

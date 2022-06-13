@@ -1,0 +1,12 @@
+title: Zerto Agent Status
+agents: zerto
+catalog: app/zerto
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the zerto agent. Since the agent only created piggy back
+ data, you can use this to ensure the zerto agent is being executed.
+
+
+discovery:
+ One service is created

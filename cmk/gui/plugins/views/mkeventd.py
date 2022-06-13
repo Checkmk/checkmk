@@ -1274,11 +1274,8 @@ class CommandECArchiveEventsOfHost(ECCommand):
 
             commands = []
             if tag and row.get("%s_check_command" % tag, "").startswith("check_mk_active-mkevents"):
-                data = sites.live().query(
-                    "GET eventconsoleevents\n"
-                    + "Columns: event_id\n"
-                    + "Filter: host_name = %s" % row["host_name"]
-                )
+                data = sites.live().query("GET eventconsoleevents\n" + "Columns: event_id\n" +
+                                          "Filter: host_name = %s" % row["host_name"])
                 events = ",".join([entry[0] for entry in data])
                 commands = ["DELETE;%s;%s" % (events, config.user.id)]
 

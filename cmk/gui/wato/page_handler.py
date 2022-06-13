@@ -84,7 +84,7 @@ def page_handler() -> None:
         raise MKGeneralException(_("Check_MK can only be configured on the managers central site."))
 
     current_mode = request.var("mode") or "main"
-    mode_permissions, mode_class = _get_mode_permission_and_class(current_mode)
+    mode_class = _get_mode_class(current_mode)
 
     display_options.load_from_html(request, html)
 
@@ -94,33 +94,17 @@ def page_handler() -> None:
     # If we do an action, we aquire an exclusive lock on the complete WATO.
     if transactions.is_transaction():
         with store.lock_checkmk_configuration():
-            _wato_page_handler(current_mode, mode_permissions, mode_class)
+            _wato_page_handler(current_mode, mode_class)
     else:
-        _wato_page_handler(current_mode, mode_permissions, mode_class)
+        _wato_page_handler(current_mode, mode_class)
 
 
-def _wato_page_handler(  # pylint: disable=too-many-branches
-    current_mode: str,
-    mode_permissions: None | Collection[PermissionName],
-    mode_class: Type[WatoMode],
-) -> None:
-    # Check general permission for this mode
-    if mode_permissions is not None and not user.may("wato.seeall"):
-        _ensure_mode_permissions(mode_permissions)
-
+def _wato_page_handler(current_mode: str, mode_class: Type[WatoMode]) -> None:
     mode = mode_class()
 
     # Do actions (might switch mode)
     if transactions.is_transaction():
         try:
-            user.need_permission("wato.edit")
-
-            # Even if the user has seen this mode because auf "seeall",
-            # he needs an explicit access permission for doing changes:
-            if user.may("wato.seeall"):
-                if mode_permissions:
-                    _ensure_mode_permissions(mode_permissions)
-
             if read_only.is_enabled() and not read_only.may_override():
                 raise MKUserError(None, read_only.message())
 
@@ -178,14 +162,21 @@ def _wato_page_handler(  # pylint: disable=too-many-branches
     wato_html_footer(show_body_end=display_options.enabled(display_options.H))
 
 
-def _get_mode_permission_and_class(
-    mode_name: str,
-) -> tuple[None | Collection[PermissionName], Type[WatoMode]]:
+def _get_mode_class(mode_name: str) -> Type[WatoMode]:
     mode_class = mode_registry.get(mode_name, ModeNotImplemented)
     mode_permissions = mode_class.permissions()
     if mode_permissions is not None and not user.may("wato.use"):
         raise MKAuthException(_("You are not allowed to use WATO."))
-    return mode_permissions, mode_class
+    # Check general permission for this mode
+    if mode_permissions is not None and not user.may("wato.seeall"):
+        _ensure_mode_permissions(mode_permissions)
+    if transactions.is_transaction():
+        user.need_permission("wato.edit")
+        # Even if the user has seen this mode because auf "seeall", he needs an explicit access
+        # permission for doing changes:
+        if user.may("wato.seeall") and mode_permissions:
+            _ensure_mode_permissions(mode_permissions)
+    return mode_class
 
 
 def _ensure_mode_permissions(mode_permissions: Collection[PermissionName]) -> None:

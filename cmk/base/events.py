@@ -36,7 +36,7 @@ Matcher = Callable[[EventRule, EventContext], Optional[str]]
 logger = logging.getLogger("cmk.base.events")
 
 
-def _send_reply_ready():
+def _send_reply_ready() -> None:
     sys.stdout.write("*\n")
     sys.stdout.flush()
 

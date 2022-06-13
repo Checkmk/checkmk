@@ -134,7 +134,9 @@ class ModeCheckPluginSearch(WatoMode):
                 title = ensure_str(  # pylint: disable= six-ensure-str-bin-call
                     entry.get("title", "")
                 )
-                if self._search in name.lower() or self._search in title.lower():
+                if self._search is not None and (
+                    self._search in name.lower() or self._search in title.lower()
+                ):
                     return entry
 
             return None

@@ -48,7 +48,7 @@ def host_storage_fileheader() -> str:
     return "# Created by HostStorage\n\n"
 
 
-def get_hosts_file_variables():
+def get_hosts_file_variables() -> HostsData:
     """These parameters imitate a cmk.base environment"""
     return {
         "FOLDER_PATH": "",
@@ -285,7 +285,7 @@ def make_experimental_hosts_storage(storage_format: StorageFormat) -> Optional[A
     return None
 
 
-def get_standard_hosts_storage():
+def get_standard_hosts_storage() -> ABCHostsStorage[str]:
     return StandardHostsStorage()
 
 

@@ -9,7 +9,7 @@ so it's best place is in the central library."""
 import itertools
 import json
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
 
 from six import ensure_str
 
@@ -98,12 +98,12 @@ class WerkTranslator:
         return self._compatibilities[werk["compatible"]]
 
 
-def _compiled_werks_dir():
+def _compiled_werks_dir() -> Path:
     return Path(cmk.utils.paths.share_dir, "werks")
 
 
-def load():
-    werks: Dict[int, Dict[str, Any]] = {}
+def load() -> dict[int, dict[str, Any]]:
+    werks: dict[int, dict[str, Any]] = {}
     # The suppressions are needed because of https://github.com/PyCQA/pylint/issues/1660
     for file_name in itertools.chain(
         _compiled_werks_dir().glob("werks"), _compiled_werks_dir().glob("werks-*")
@@ -154,8 +154,8 @@ _OPTIONAL_WERK_FIELDS = {
 _ALLOWED_WERK_FIELDS = _REQUIRED_WERK_FIELDS | _OPTIONAL_WERK_FIELDS
 
 
-def _load_werk(path):
-    werk: Dict[str, Any] = {
+def _load_werk(path) -> dict[str, Any]:
+    werk: dict[str, Any] = {
         "body": [],
         "compatible": "compat",
         "edition": "cre",

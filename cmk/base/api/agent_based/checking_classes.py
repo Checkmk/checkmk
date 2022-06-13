@@ -312,7 +312,7 @@ class Result(
     the output.
     You should always match the state to the output, and yield subresults:
 
-        >>> def my_check_function():
+        >>> def my_check_function() -> None:
         ...     # the back end will comput the worst overall state:
         ...     yield Result(state=State.CRIT, summary="All the foos are broken")
         ...     yield Result(state=State.OK, summary="All the bars are fine")
@@ -324,7 +324,7 @@ class Result(
     corresponding state is not OK. Otherwise we assume it is sufficient if the information
     is available in the details view:
 
-        >>> def my_check_function():
+        >>> def my_check_function() -> None:
         ...     count = 23
         ...     yield Result(
         ...         state=State.WARN if count <= 42 else State.OK,

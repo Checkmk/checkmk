@@ -21,7 +21,7 @@ from cmk.gui.watolib.activate_changes import get_pending_changes_info, get_pendi
 _html_head_open = False
 
 
-def initialize_wato_html_head():
+def initialize_wato_html_head() -> None:
     global _html_head_open
     _html_head_open = False
 

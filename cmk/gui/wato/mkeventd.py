@@ -11,6 +11,7 @@ import os
 import re
 import time
 import zipfile
+from html import escape as html_escape
 from pathlib import Path
 from typing import Callable, Collection, Dict, Iterable, Iterator, List
 from typing import Optional as _Optional
@@ -2787,7 +2788,7 @@ class ModeEventConsoleSettings(ABCEventConsoleMode, ABCGlobalSettingsMode):
 
     def title(self) -> str:
         if self._search:
-            return escape_to_html(_("Event Console configuration matching '%s'") % self._search)
+            return html_escape(_("Event Console configuration matching '%s'") % self._search)
         return _("Event Console configuration")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
@@ -3199,7 +3200,7 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
     # Used zipfile.is_zipfile(io.BytesIO(content)) before, but this only
     # possible with python 2.7. zipfile is only supporting checking of files by
     # their path.
-    def _is_zipfile(self, fo):
+    def _is_zipfile(self, fo) -> bool:
         try:
             with zipfile.ZipFile(fo) as _opened_file:
                 pass

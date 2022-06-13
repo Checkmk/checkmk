@@ -53,7 +53,7 @@ class Section(NamedTuple):
     logfiles: Mapping[str, ItemData]
 
 
-def get_ec_rule_params():
+def get_ec_rule_params() -> list:
     """Isolate the remaining API violation w.r.t. parameters"""
     return host_extra_conf(
         host_name(),

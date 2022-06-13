@@ -1184,7 +1184,7 @@ def get_palette_color_by_index(i: int, shading="a") -> str:
     return "%s/%s" % (color_key, shading)
 
 
-def get_next_random_palette_color():
+def get_next_random_palette_color() -> str:
     keys = list(_cmk_color_palette.keys())
     if "random_color_index" in g:
         last_index = g.random_color_index

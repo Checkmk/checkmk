@@ -38,12 +38,12 @@ def bail_out(text):
     sys.exit(1)
 
 
-def msi_file_table():
+def msi_file_table() -> list[str]:
     # we have to sort the table, the table is created by MSI installer
     return ["check_mk_install_yml", "checkmk.dat", "plugins_cap", "python_3.cab"]
 
 
-def msi_component_table():
+def msi_component_table() -> list[str]:
     # we have to sort the table, the table is created by MSI installer too
     return ["check_mk_install_yml_", "checkmk.dat", "plugins_cap_", "python_3.cab"]
 

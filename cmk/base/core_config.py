@@ -319,7 +319,7 @@ def do_create_config(core: MonitoringCore, hosts_to_update: HostsToUpdate = None
     _bake_on_restart()
 
 
-def _bake_on_restart():
+def _bake_on_restart() -> None:
     try:
         # Local import is needed, because this is not available in all environments
         import cmk.base.cee.bakery.agent_bakery as agent_bakery  # pylint: disable=redefined-outer-name,import-outside-toplevel

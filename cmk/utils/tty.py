@@ -49,7 +49,7 @@ error = ""
 states: Dict[int, str] = {}
 
 
-def reinit():
+def reinit() -> None:
     global black, red, green, yellow, blue, magenta, cyan, white
     global bgblue, bgmagenta, bgwhite, bgyellow, bgred, bgcyan
     global bold, underline, normal, ok, warn, error, states

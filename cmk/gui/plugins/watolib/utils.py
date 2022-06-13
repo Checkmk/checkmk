@@ -305,7 +305,7 @@ def filter_unknown_settings(settings):
     return settings
 
 
-def configvar_order():
+def configvar_order() -> dict[str, int]:
     raise NotImplementedError(
         "Please don't use this API anymore. Have a look at werk #6911 for further information."
     )

@@ -93,7 +93,7 @@ def setup_logging_handler(stream: IOLog, formatter: Optional[logging.Formatter] 
     logger.addHandler(handler)
 
 
-def get_default_formatter():
+def get_default_formatter() -> logging.Formatter:
     return get_formatter("%(asctime)s [%(levelno)s] [%(name)s] %(message)s")
 
 

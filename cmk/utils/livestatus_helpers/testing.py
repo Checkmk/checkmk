@@ -21,7 +21,7 @@ import re
 import socket
 import statistics
 import time
-from typing import Any, Callable, Dict, List, Literal, Mapping, Optional, Tuple, Union
+from typing import Any, Callable, Dict, Iterable, List, Literal, Mapping, Optional, Tuple, Union
 
 from livestatus import LivestatusTestingError
 
@@ -653,7 +653,7 @@ class MockSingleSiteConnection:
                 f" * {repr(query)}"
             )
 
-        def _generate_output():
+        def _generate_output() -> Iterable[list[ColumnName]]:
             if query.startswith("COMMAND"):
                 return
             _response, _columns = execute_query(self._multisite.tables, query, self._site_name)

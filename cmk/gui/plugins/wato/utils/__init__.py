@@ -100,7 +100,9 @@ from cmk.gui.valuespec import (
     Alternative,
     CascadingDropdown,
     Dictionary,
+    DictionaryEntry,
     DropdownChoice,
+    DropdownChoiceEntries,
     DualListChoice,
     ElementSelection,
     FixedValue,
@@ -204,7 +206,7 @@ class PermissionSectionWATO(PermissionSection):
         return _("Setup")
 
 
-def PluginCommandLine():
+def PluginCommandLine() -> ValueSpec:
     def _validate_custom_check_command_line(value, varprefix):
         if "--pwstore=" in value:
             raise MKUserError(
@@ -225,7 +227,7 @@ def PluginCommandLine():
     )
 
 
-def monitoring_macro_help():
+def monitoring_macro_help() -> str:
     return " " + _(
         "You can use monitoring macros here. The most important are: "
         "<ul>"
@@ -260,7 +262,7 @@ def UserIconOrAction(title: str, help: str) -> DropdownChoice:  # pylint: disabl
     )
 
 
-def _list_user_icons_and_actions():
+def _list_user_icons_and_actions() -> DropdownChoiceEntries:
     choices = []
     for key, action in active_config.user_icons_and_actions.items():
         label = key
@@ -371,16 +373,16 @@ def _snmpv3_no_auth_no_priv_credentials_element() -> ValueSpec:
 
 
 def _snmpv3_auth_no_priv_credentials_element() -> ValueSpec:
+    elements: list[ValueSpec] = [
+        FixedValue(
+            value="authNoPriv",
+            title=_("Security Level"),
+            totext=_("authentication but no privacy"),
+        ),
+    ]
     return Tuple(
         title=_("Credentials for SNMPv3 with authentication but without privacy (authNoPriv)"),
-        elements=[
-            FixedValue(
-                value="authNoPriv",
-                title=_("Security Level"),
-                totext=_("authentication but no privacy"),
-            ),
-        ]
-        + _snmpv3_auth_protocol_elements(),
+        elements=elements + _snmpv3_auth_protocol_elements(),
     )
 
 
@@ -401,31 +403,30 @@ def _snmpv3_auth_priv_credentials_element(for_ec: bool = False) -> ValueSpec:
                 ("AES-256-Blumenthal", _("AES-256-Blumenthal")),
             ]
         )
-
+    elements1: list[ValueSpec] = [
+        FixedValue(
+            value="authPriv",
+            title=_("Security Level"),
+            totext=_("authentication and encryption"),
+        ),
+    ]
+    elements2: list[ValueSpec] = [
+        DropdownChoice(
+            choices=priv_protocol_choices,
+            title=_("Privacy protocol"),
+        ),
+        Password(
+            title=_("Privacy pass phrase"),
+            minlen=8,
+        ),
+    ]
     return Tuple(
         title=_("Credentials for SNMPv3 with authentication and privacy (authPriv)"),
-        elements=[
-            FixedValue(
-                value="authPriv",
-                title=_("Security Level"),
-                totext=_("authentication and encryption"),
-            ),
-        ]
-        + _snmpv3_auth_protocol_elements()
-        + [
-            DropdownChoice(
-                choices=priv_protocol_choices,
-                title=_("Privacy protocol"),
-            ),
-            Password(
-                title=_("Privacy pass phrase"),
-                minlen=8,
-            ),
-        ],
+        elements=elements1 + _snmpv3_auth_protocol_elements() + elements2,
     )
 
 
-def _snmpv3_auth_protocol_elements():
+def _snmpv3_auth_protocol_elements() -> list[ValueSpec]:
     return [
         DropdownChoice(
             choices=[
@@ -746,11 +747,11 @@ def IndividualOrStoredPassword(  # pylint: disable=redefined-builtin
 _allowed_schemes = frozenset({"http", "https", "socks4", "socks4a", "socks5", "socks5h"})
 
 
-def HTTPProxyReference(allowed_schemes=_allowed_schemes):
+def HTTPProxyReference(allowed_schemes=_allowed_schemes) -> ValueSpec:
     """Use this valuespec in case you want the user to configure a HTTP proxy
     The configured value is is used for preparing requests to work in a proxied environment."""
 
-    def _global_proxy_choices():
+    def _global_proxy_choices() -> DropdownChoiceEntries:
         settings = _ConfigDomainCore().load()
         return [
             (p["ident"], p["title"])
@@ -2540,21 +2541,21 @@ def transform_simple_to_multi_host_rule_match_conditions(value):
     return value
 
 
-def _simple_host_rule_match_conditions():
+def _simple_host_rule_match_conditions() -> list[DictionaryEntry]:
     return [
         _site_rule_match_condition(),
         _single_folder_rule_match_condition(),
     ] + _common_host_rule_match_conditions()
 
 
-def multifolder_host_rule_match_conditions():
+def multifolder_host_rule_match_conditions() -> list[DictionaryEntry]:
     return [
         _site_rule_match_condition(),
         _multi_folder_rule_match_condition(),
     ] + _common_host_rule_match_conditions()
 
 
-def _site_rule_match_condition():
+def _site_rule_match_condition() -> DictionaryEntry:
     return (
         "match_site",
         DualListChoice(
@@ -2565,7 +2566,7 @@ def _site_rule_match_condition():
     )
 
 
-def _multi_folder_rule_match_condition():
+def _multi_folder_rule_match_condition() -> DictionaryEntry:
     return (
         "match_folders",
         ListOf(
@@ -2584,7 +2585,7 @@ def _multi_folder_rule_match_condition():
     )
 
 
-def _common_host_rule_match_conditions():
+def _common_host_rule_match_conditions() -> list[DictionaryEntry]:
     return [
         ("match_hosttags", HostTagCondition(title=_("Match host tags"))),
         (
@@ -2628,7 +2629,7 @@ def _common_host_rule_match_conditions():
     ]
 
 
-def _single_folder_rule_match_condition():
+def _single_folder_rule_match_condition() -> DictionaryEntry:
     return (
         "match_folder",
         FolderChoice(
@@ -2642,7 +2643,7 @@ def _single_folder_rule_match_condition():
     )
 
 
-def get_search_expression():
+def get_search_expression() -> None | str:
     search = request.get_str_input("search")
     if search is not None:
         search = search.strip().lower()
@@ -2720,7 +2721,7 @@ def get_section_information() -> Mapping[str, Mapping[str, str]]:
     return get_section_information_automation().section_infos
 
 
-def check_icmp_params():
+def check_icmp_params() -> list[DictionaryEntry]:
     return [
         (
             "rta",

@@ -51,7 +51,7 @@ def get_free_used_dynamic_valuespec(
     default_value=(80.0, 90.0),
     *,
     maxvalue: Union[None, int, float] = 101.0,
-):
+) -> ValueSpec:
     if what == "used":
         title = _("used space")
         course = _("above")
@@ -459,7 +459,7 @@ def _transform_filesystem_valuespec(params: Dict[str, Any]) -> Mapping[str, Any]
     return params
 
 
-def vs_filesystem(extra_elements=None):
+def vs_filesystem(extra_elements=None) -> ValueSpec:
     if extra_elements is None:
         extra_elements = []
     return Transform(

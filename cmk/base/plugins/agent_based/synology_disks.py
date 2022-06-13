@@ -43,7 +43,7 @@ def parse_synology(string_table: StringTable) -> Section:
 
 register.snmp_section(
     name="synology_disks",
-    detect=synology.detect(),
+    detect=synology.DETECT,
     parse_function=parse_synology,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.6574.2.1.1",

@@ -131,7 +131,7 @@ class IconRegistry(cmk.utils.plugin_registry.Registry[Type[Icon]]):
 icon_and_action_registry = IconRegistry()
 
 
-def update_icons_from_configuration():
+def update_icons_from_configuration() -> None:
     _update_builtin_icons(active_config.builtin_icon_visibility)
     _register_custom_user_icons_and_actions(active_config.user_icons_and_actions)
 

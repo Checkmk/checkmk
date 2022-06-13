@@ -67,7 +67,7 @@ def parse_multiline(string_table: StringTable) -> DockerParseMultilineResult:
     version = ensure_valid_docker_header(string_table)
     string_table = _cleanup_oci_error_message(string_table)
 
-    def generator():
+    def generator() -> Iterable[Dict[str, Any]]:
         for line in string_table[1:]:
             if len(line) != 1:
                 raise ValueError(

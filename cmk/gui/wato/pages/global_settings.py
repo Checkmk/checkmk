@@ -63,7 +63,7 @@ from cmk.gui.watolib.search import (
 
 class ABCGlobalSettingsMode(WatoMode):
     def __init__(self) -> None:
-        self._search = None
+        self._search: None | str = None
         self._show_only_modified = False
 
         super().__init__()
@@ -174,7 +174,7 @@ class ABCGlobalSettingsMode(WatoMode):
 
                 if not header_is_painted:
                     # always open headers when searching
-                    forms.header(group.title(), isopen=search or self._show_only_modified)
+                    forms.header(group.title(), isopen=bool(search) or self._show_only_modified)
                     header_is_painted = True
 
                 default_value = self._default_values[varname]

@@ -8,16 +8,9 @@ from typing import Final
 
 import pytest
 
-from cmk.utils.type_defs import InventoryPluginName
-
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
-
-
-@pytest.fixture(name="inventory_netapp_api_info", scope="module")
-def _inventory_netapp_api_info(fix_register):
-    return fix_register.inventory_plugins[InventoryPluginName("netapp_api_info")].inventory_function
-
+from cmk.base.plugins.agent_based.netapp_api_info import inventory_netapp_api_info
 
 STRING_TABLE: Final = [
     ["system-name", "aspnetapp09"],
@@ -60,7 +53,7 @@ def _get_section() -> StringTable:
     return STRING_TABLE
 
 
-def test_inventory_solaris_addresses(section: StringTable, inventory_netapp_api_info) -> None:
+def test_inventory_solaris_addresses(section: StringTable) -> None:
     assert list(inventory_netapp_api_info(section)) == [
         Attributes(
             path=["hardware", "chassis"],

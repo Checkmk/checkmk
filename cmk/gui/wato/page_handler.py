@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Collection, Type
+from typing import Type
 
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
@@ -26,7 +26,6 @@ from cmk.gui.plugins.wato.utils.html_elements import (
     wato_html_footer,
     wato_html_head,
 )
-from cmk.gui.type_defs import PermissionName
 from cmk.gui.utils.flashed_messages import get_flashed_messages
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.user_errors import user_errors
@@ -84,7 +83,8 @@ def page_handler() -> None:
         raise MKGeneralException(_("Check_MK can only be configured on the managers central site."))
 
     current_mode = request.var("mode") or "main"
-    mode_class = _get_mode_class(current_mode)
+    mode_class = mode_registry.get(current_mode, ModeNotImplemented)
+    _ensure_mode_permissions(mode_class)
 
     display_options.load_from_html(request, html)
 
@@ -94,14 +94,12 @@ def page_handler() -> None:
     # If we do an action, we aquire an exclusive lock on the complete WATO.
     if transactions.is_transaction():
         with store.lock_checkmk_configuration():
-            _wato_page_handler(current_mode, mode_class)
+            _wato_page_handler(current_mode, mode_class())
     else:
-        _wato_page_handler(current_mode, mode_class)
+        _wato_page_handler(current_mode, mode_class())
 
 
-def _wato_page_handler(current_mode: str, mode_class: Type[WatoMode]) -> None:
-    mode = mode_class()
-
+def _wato_page_handler(current_mode: str, mode: WatoMode) -> None:
     # Do actions (might switch mode)
     if transactions.is_transaction():
         try:
@@ -162,28 +160,18 @@ def _wato_page_handler(current_mode: str, mode_class: Type[WatoMode]) -> None:
     wato_html_footer(show_body_end=display_options.enabled(display_options.H))
 
 
-def _get_mode_class(mode_name: str) -> Type[WatoMode]:
-    mode_class = mode_registry.get(mode_name, ModeNotImplemented)
-    mode_permissions = mode_class.permissions()
-    if mode_permissions is not None and not user.may("wato.use"):
-        raise MKAuthException(_("You are not allowed to use WATO."))
-    # Check general permission for this mode
-    if mode_permissions is not None and not user.may("wato.seeall"):
-        _ensure_mode_permissions(mode_permissions)
+def _ensure_mode_permissions(mode_class: Type[WatoMode]) -> None:
+    permissions = mode_class.permissions()
+    if permissions is None:
+        permissions = []
+    else:
+        user.need_permission("wato.use")
     if transactions.is_transaction():
         user.need_permission("wato.edit")
-        # Even if the user has seen this mode because auf "seeall", he needs an explicit access
-        # permission for doing changes:
-        if user.may("wato.seeall") and mode_permissions:
-            _ensure_mode_permissions(mode_permissions)
-    return mode_class
-
-
-def _ensure_mode_permissions(mode_permissions: Collection[PermissionName]) -> None:
-    for pname in mode_permissions:
-        if "." not in pname:
-            pname = "wato." + pname
-        user.need_permission(pname)
+    elif user.may("wato.seeall"):
+        permissions = []
+    for pname in permissions:
+        user.need_permission(pname if "." in pname else ("wato." + pname))
 
 
 def _show_read_only_warning() -> None:

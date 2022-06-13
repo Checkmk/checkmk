@@ -17,6 +17,7 @@
 # <oid>.3: Status
 # the latter can be one of the following:
 
+from collections import Counter
 from typing import Any, Mapping, MutableMapping, NamedTuple
 
 fjdarye_item_status = {
@@ -162,67 +163,54 @@ def check_fjdarye_disks(item: str, params: Mapping[str, Any] | str, section: Sec
 #   '----------------------------------------------------------------------'
 
 
-def fjdarye_disks_summary(parsed):
-    states: dict = {}
-    for attrs in parsed.values():
-        if attrs["state_disk"] != "3":
-            states.setdefault(attrs["state_readable"], 0)
-            states[attrs["state_readable"]] += 1
-    return states
+def _fjdarye_disks_states_summary(section: SectionFjdaryeDisk) -> Mapping[str, int]:
+
+    return Counter([disk.state_description for disk in section.values() if disk.state_disk != "3"])
 
 
-def inventory_fjdarye_disks_summary(parsed):
-    current_state = fjdarye_disks_summary(parsed)
-    if len(current_state) > 0:
-        return [(None, current_state)]
-    return []
+def discover_fjdarye_disks_summary(section: SectionFjdaryeDisk):
+    if current_disks_states := _fjdarye_disks_states_summary(section):
+        yield None, current_disks_states
 
 
-def fjdarye_disks_printstates(states):
-    return ", ".join(["%s: %s" % (s.title(), c) for s, c in states.items()])
+def _fjdarye_disks_printstates(states: Mapping[str, int]) -> str:
+    """
+    >>> _fjdarye_disks_printstates({"available": 4, "notavailable": 1})
+    'Available: 4, Notavailable: 1'
+
+    >>> _fjdarye_disks_printstates({})
+    ''
+
+    """
+    return ", ".join([f"{s.title()}: {c}" for s, c in states.items()])
 
 
-def check_fjdarye_disks_summary(index, params, parsed):
-    map_states = {
-        "available": 0,
-        "broken": 2,
-        "notavailable": 1,
-        "notsupported": 1,
-        "present": 0,
-        "readying": 1,
-        "recovering": 1,
-        "partbroken": 1,
-        "spare": 1,
-        "formatting": 0,
-        "unformated": 0,
-        "notexist": 1,
-        "copying": 1,
-    }
+def check_fjdarye_disks_summary(
+    _item: str, params: Mapping[str, int | bool], section: SectionFjdaryeDisk
+):
+    current_disk_states = _fjdarye_disks_states_summary(section)
+    current_disks_states_text = _fjdarye_disks_printstates(current_disk_states)
 
-    use_devices_states = False
-    if "use_device_states" in params:
-        use_devices_states = params["use_device_states"]
+    if params.get("use_device_states"):
+        yield max(
+            disk.state for disk in section.values()
+        ), f"{current_disks_states_text} (using device states)"
+        return
+
     expected_state = {k: v for k, v in params.items() if k != "use_device_states"}
+    if current_disk_states == expected_state:
+        yield 0, current_disks_states_text
+        return
 
-    current_state = fjdarye_disks_summary(parsed)
-    infotext = fjdarye_disks_printstates(current_state)
-    if use_devices_states:
-        state = 0
-        for state_readable in current_state:
-            state = max(state, map_states.get(state_readable, 3))
-        infotext += " (ignore expected state)"
-        return state, infotext
+    summary = (
+        f"{current_disks_states_text} (expected: {_fjdarye_disks_printstates(expected_state)})"
+    )
+    for expected_state_name, expected_state_count in expected_state.items():
+        if current_disk_states.get(expected_state_name, 0) < expected_state_count:
+            yield 2, summary
+            return
 
-    if current_state == expected_state:
-        return 0, infotext
-
-    result = 1
-    for ename, ecount in expected_state.items():
-        if current_state.get(ename, 0) < ecount:
-            result = 2
-            break
-
-    return result, "%s (expected: %s)" % (infotext, fjdarye_disks_printstates(expected_state))
+    yield 1, summary
 
 
 # .

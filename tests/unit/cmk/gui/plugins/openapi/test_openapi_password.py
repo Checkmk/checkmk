@@ -206,6 +206,7 @@ def test_openapi_password_delete(aut_user_auth_wsgi_app: WebTestAppForCMK):
     assert len(resp.json_body["value"]) == 0
 
 
+@managedtest
 def test_password_with_newlines(
     aut_user_auth_wsgi_app: WebTestAppForCMK, mock_livestatus: MockLiveStatusConnection
 ):

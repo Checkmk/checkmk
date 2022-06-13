@@ -4,7 +4,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import inspect
 from typing import Collection, Type
 
 import cmk.utils.store as store
@@ -188,21 +187,8 @@ def _get_mode_permission_and_class(
 ) -> tuple[None | Collection[PermissionName], Type[WatoMode]]:
     mode_class = mode_registry.get(mode_name, ModeNotImplemented)
     mode_permissions = mode_class.permissions()
-
-    if mode_class is None:
-        raise MKGeneralException(_("No such WATO module '<tt>%s</tt>'") % mode_name)
-
-    if inspect.isfunction(mode_class):
-        raise MKGeneralException(
-            _(
-                "Deprecated WATO module: Implemented as function. "
-                "This needs to be refactored as WatoMode child class."
-            )
-        )
-
     if mode_permissions is not None and not user.may("wato.use"):
         raise MKAuthException(_("You are not allowed to use WATO."))
-
     return mode_permissions, mode_class
 
 

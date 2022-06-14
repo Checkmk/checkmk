@@ -85,7 +85,7 @@ def check_kaspersky_av_client(
         age = section.get(key)
         if age is None:
             yield Result(state=State.UNKNOWN, summary=f"{what} unkown")
-        elif isinstance(age, int):  # needed to make mypy happy
+        elif isinstance(age, float):  # needed to make mypy happy
             yield from check_levels(
                 value=age,
                 levels_upper=params[key],

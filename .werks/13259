@@ -1,0 +1,15 @@
+Title: ups_out_load: valuespec transform from 2.0.0 representations was missing
+Class: fix
+Compatible: compat
+Component: core
+Date: 1655179333
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p3
+
+After updating to Checkmk 2.1 rules configured for "output loads of UPSs and PDUs" check in
+Checkmk 2.0 and below would result in unhandled exceptions "KeyError (levels)" and error messages
+in the configuration interface "The type must be a dictionary, but it is a tuple."
+This change introduces a transform function for values of "ups_out_load" turning them into
+valid format.

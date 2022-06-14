@@ -198,6 +198,10 @@ class FolderField(base.String):
 
     def _serialize(self, value, attr, obj, **kwargs) -> typing.Optional[str]:
         if isinstance(value, str):
+            if not value.startswith("/"):
+                value = f"/{value}"
+            if len(value) > 1 and value.endswith("/"):
+                value = value[:-1]
             return value
 
         if isinstance(value, watolib.CREFolder):

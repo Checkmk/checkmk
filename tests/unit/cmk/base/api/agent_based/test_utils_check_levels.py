@@ -44,6 +44,18 @@ def test_boundaries(value, levels_upper, levels_lower, render_func, result) -> N
             ],
         ),
         (
+            5,
+            {
+                "metric_name": "battery",
+                "render_func": render.percent,
+                "levels_upper": (100, 200),
+            },
+            [
+                Result(state=State.OK, summary="5.00%"),
+                Metric("battery", 5.0, levels=(100.0, 200.0)),
+            ],
+        ),
+        (
             6,
             {
                 "metric_name": "disk",

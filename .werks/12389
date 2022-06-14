@@ -32,7 +32,7 @@ disadvantages, ie. Python dicts or lists were used for two different entities:
 </ul>
 
 Example: A raw tree looked like:
-C:+
+C+:
 {
     "first-path-to": {
         "specific-single_values": {
@@ -78,7 +78,7 @@ C:+
         ...
     ],
 }
-C:-
+C-:
 
 Moreover it was not clear and inflexible to which entity a path led:
 <ul>
@@ -98,7 +98,7 @@ The indexed categories are also cleaned up: there is no advantage of these
 list-based categories.
 
 Now the raw tree structure has basically the following form:
-C:+
+C+:
 {
     "Attributes": {
         "Pairs": {...},
@@ -124,7 +124,7 @@ C:+
         ...
     },
 }
-C:-
+C-:
 
 The main advantage of this new tree structure is that at every level each
 entity is encapsulated. Therefore single values ("Attributes"), a table

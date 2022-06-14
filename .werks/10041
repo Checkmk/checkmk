@@ -27,7 +27,7 @@ The new plugin API for registering check parameters is similar to the 1.5 API,
 but more explicit to make it easier to understand. For example the 'logins'
 check parameter declaration looks like this:
 
-C:+
+C+:
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Integer,

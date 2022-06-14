@@ -1,0 +1,15 @@
+Title: agent_prometheus & prometheus_build_info: change to display version of main instance
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1654694819
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p26
+
+Previously, the agent returned an error if the build_info PromQL returned multiple entries. This
+effectively prevented the user from using the agent for a Prometheus cluster setup. This werk removes
+this limitation and adjusts the Prometheus Build Service accordingly. The customization is only visible
+for Prometheus instances running below version 2.14 and the details can be found in the updated man page

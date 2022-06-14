@@ -7,7 +7,9 @@ description:
  This check lists the build information of the underlying Prometheus server.
  This information is shown alongside the number of Prometheus targets in the up
  state. Depending on the Prometheus version, additional information such as the
- storage retention time may be shown.
+ storage retention time may be shown. The version information of the main instance
+ is shown for Prometheus instances above 2.14. For instances below 2.14, the version
+ of all connected instances are shown instead.
 
 inventory:
  One service is created for the host

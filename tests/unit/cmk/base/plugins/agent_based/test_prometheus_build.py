@@ -14,7 +14,7 @@ from cmk.base.plugins.agent_based import prometheus_build
 def test_check_prometheus_build():
     assert list(
         prometheus_build.check_prometheus_build({
-            'version': '2.0.0',
+            'version': ['2.0.0'],
             'scrape_target': {
                 'targets_number': 8,
                 'down_targets': ['minikube', 'node']
@@ -35,4 +35,16 @@ def test_check_prometheus_build():
             summary='Scrape Targets in up state: 6 out of 8',
             details='Scrape Targets in up state: 6 out of 8 (Targets in down state: minikube, node)'
         )
+    ]
+
+
+def test_check_prometheus_build_with_multiple_versions():
+    assert list(prometheus_build.check_prometheus_build({
+        "version": ["2.0.0", "2.14.0"],
+    })) == [
+        Result(
+            state=state.OK,
+            summary="Version: multiple instances",
+            details="Versions: 2.0.0, 2.14.0",
+        ),
     ]

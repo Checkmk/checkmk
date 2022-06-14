@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
+from typing import Sequence
 from unittest.mock import MagicMock
 
 import pytest
@@ -967,6 +968,51 @@ def test_openapi_host_rename_on_invalid_hostname(
         headers={"If-Match": resp.headers["ETag"], "Accept": "application/json"},
         status=400,
     )
+
+
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
+def test_openapi_host_folder_config_normalization(
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+):
+    base = "/NO_SITE/check_mk/api/1.0"
+
+    def _create_folder(fname: str, parent: str):
+        params = f'{{"name": "{fname}", "title": "{fname}", "parent": "{parent}"}}'
+        aut_user_auth_wsgi_app.call_method(
+            "post",
+            base + "/domain-types/folder_config/collections/all",
+            params=params,
+            status=200,
+            headers={"Accept": "application/json"},
+            content_type="application/json",
+        )
+        parent += f"{fname}~"
+
+    def _create_folders_recursive(folders: Sequence[str]):
+        _create_folder(folders[0], "~")
+        parent = f"~{folders[0]}"
+        for fname in folders[1:]:
+            _create_folder(fname, parent)
+            parent += f"~{fname}"
+
+    _create_folders_recursive(["I", "want", "those"])
+
+    aut_user_auth_wsgi_app.call_method(
+        "post",
+        base + "/domain-types/host_config/collections/all",
+        params='{"host_name": "foobar", "folder": "/I/want/those"}',
+        status=200,
+        headers={"Accept": "application/json"},
+        content_type="application/json",
+    )
+
+    response = aut_user_auth_wsgi_app.call_method(
+        "get",
+        base + "/objects/host_config/foobar",
+        status=200,
+        headers={"Accept": "application/json"},
+    )
+    assert response.json["extensions"]["folder"] == "/I/want/those"
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")

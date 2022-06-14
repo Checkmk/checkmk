@@ -202,6 +202,8 @@ class FolderField(base.String):
 
     def _serialize(self, value, attr, obj, **kwargs) -> typing.Optional[str]:
         if isinstance(value, str):
+            if not value.startswith("/"):
+                value = f"/{value}"
             return value
 
         if isinstance(value, CREFolder):

@@ -451,7 +451,7 @@ class HostStatsDashlet(ABCFigureDashlet):
         return 45
 
     @classmethod
-    def is_resizable(cls):
+    def is_resizable(cls) -> bool:
         return False
 
     @classmethod
@@ -487,7 +487,7 @@ class ServiceStatsDashlet(ABCFigureDashlet):
         return 50
 
     @classmethod
-    def is_resizable(cls):
+    def is_resizable(cls) -> bool:
         return False
 
     def infos(self) -> SingleInfos:
@@ -521,7 +521,7 @@ class EventStatsDashlet(ABCFigureDashlet):
         return 55
 
     @classmethod
-    def is_resizable(cls):
+    def is_resizable(cls) -> bool:
         return False
 
     @classmethod

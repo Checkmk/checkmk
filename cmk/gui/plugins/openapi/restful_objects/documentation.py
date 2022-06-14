@@ -75,7 +75,7 @@ HOST_COLUMNS = tables.Hosts.__columns__()
 SERVICE_COLUMNS = tables.Services.__columns__()
 
 
-def is_adjacent_column(column):
+def is_adjacent_column(column) -> bool:
     return (column.name.startswith("host_") and column.name[5:] in HOST_COLUMNS) or (
         column.name.startswith("service_") and column.name[8:] in SERVICE_COLUMNS
     )

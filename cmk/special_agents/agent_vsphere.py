@@ -1656,7 +1656,7 @@ def get_section_systemtime(connection: ESXConnection, debug: bool) -> Sequence[s
     return ["<<<systemtime>>>", f"{systime} {time.time()}"]
 
 
-def is_placeholder_vm(devices):
+def is_placeholder_vm(devices) -> bool:
     elements = get_pattern('<VirtualDevice xsi:type="([^"]+)', devices)
     if "VirtualDisk" not in elements:
         return True

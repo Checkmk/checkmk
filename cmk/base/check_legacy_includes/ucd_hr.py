@@ -8,14 +8,14 @@
 # We must keep the functions here for the moment, to keep the auto migration working.
 
 
-def is_ucd(oid):
+def is_ucd(oid) -> bool:
     raise NotImplementedError("already migrated")
 
 
 #   ---general ucd/hr-------------------------------------------------------
 
 
-def is_hr(oid):
+def is_hr(oid) -> bool:
     raise NotImplementedError("already migrated")
 
 
@@ -26,11 +26,11 @@ def prefer_hr_else_ucd(oid):
 #   ---memory---------------------------------------------------------------
 
 
-def is_ucd_mem(oid):
+def is_ucd_mem(oid) -> bool:
     raise NotImplementedError("already migrated")
 
 
-def is_hr_mem(oid):
+def is_hr_mem(oid) -> bool:
     raise NotImplementedError("already migrated")
 
 

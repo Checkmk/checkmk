@@ -47,7 +47,7 @@ def check_ddn_s2a_statsdelay(item, params, parsed):
     def subtract_histograms(histogram1, histogram2):
         return [v1 - v2 for v1, v2 in zip(histogram1, histogram2)]
 
-    def is_zero(histogram):
+    def is_zero(histogram) -> bool:
         return not any(histogram)
 
     def histogram_min(time_intervals, values):

@@ -29,7 +29,7 @@ def check_df_netapp(item, params, info):
     return df_check_filesystem_list(item, params, fslist)
 
 
-def is_netapp_filer(oid):
+def is_netapp_filer(oid) -> bool:
     return "ontap" in oid(".1.3.6.1.2.1.1.1.0").lower() or oid(".1.3.6.1.2.1.1.2.0").startswith(
         ".1.3.6.1.4.1.789"
     )

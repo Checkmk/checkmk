@@ -65,7 +65,7 @@ def parse_chrony(string_table):
     return parsed or None
 
 
-def is_error_message(info):
+def is_error_message(info) -> bool:
     return len(info) == 1 and isinstance(info[0], list) and ":" not in info[0][0]
 
 

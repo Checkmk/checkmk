@@ -76,7 +76,7 @@ class PredefinedConditionModeType(SimpleModeType):
     def name_singular(self):
         return _("predefined condition")
 
-    def is_site_specific(self):
+    def is_site_specific(self) -> bool:
         return False
 
     def can_be_disabled(self):

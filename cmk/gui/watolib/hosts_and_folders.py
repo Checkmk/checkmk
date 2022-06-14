@@ -937,10 +937,10 @@ class BaseFolder:
     def host_validation_errors(self) -> dict[str, list[str]]:
         return validate_all_hosts(self.host_names())
 
-    def is_disk_folder(self):
+    def is_disk_folder(self) -> bool:
         return False
 
-    def is_search_folder(self):
+    def is_search_folder(self) -> bool:
         return False
 
     def has_parent(self):
@@ -949,7 +949,7 @@ class BaseFolder:
     def parent(self):
         raise NotImplementedError()
 
-    def is_same_as(self, folder):
+    def is_same_as(self, folder) -> bool:
         return self == folder or self.path() == folder.path()
 
     def path(self):
@@ -961,18 +961,18 @@ class BaseFolder:
     def __hash__(self):
         return id(self)
 
-    def is_current_folder(self):
+    def is_current_folder(self) -> bool:
         return self.is_same_as(Folder.current())
 
-    def is_parent_of(self, maybe_child):
+    def is_parent_of(self, maybe_child) -> bool:
         return maybe_child.parent() == self
 
-    def is_transitive_parent_of(self, maybe_child):
+    def is_transitive_parent_of(self, maybe_child) -> bool:
         return self.is_same_as(maybe_child) or (
             maybe_child.has_parent() and self.is_transitive_parent_of(maybe_child.parent())
         )
 
-    def is_root(self):
+    def is_root(self) -> bool:
         return not self.has_parent()
 
     def parent_folder_chain(self) -> List:
@@ -1349,7 +1349,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         """
         return self._parent
 
-    def is_disk_folder(self):
+    def is_disk_folder(self) -> bool:
         return True
 
     def _load_hosts_on_demand(self):
@@ -2987,7 +2987,7 @@ class SearchFolder(WithPermissions, WithAttributes, BaseFolder):
     def parent(self):
         return self._base_folder
 
-    def is_search_folder(self):
+    def is_search_folder(self) -> bool:
         return True
 
     def _user_needs_permission(self, how: str) -> None:
@@ -3197,13 +3197,13 @@ class CREHost(WithPermissions, WithAttributes):
     def need_unlocked(self):
         return self.folder().need_unlocked_hosts()
 
-    def is_cluster(self):
+    def is_cluster(self) -> bool:
         return self._cluster_nodes is not None
 
     def cluster_nodes(self):
         return self._cluster_nodes
 
-    def is_offline(self):
+    def is_offline(self) -> bool:
         return self.tag("criticality") == "offline"
 
     def site_id(self):
@@ -3270,7 +3270,7 @@ class CREHost(WithPermissions, WithAttributes):
         tags.add("site:%s" % self.tag_groups()["site"])
         return tags
 
-    def is_ping_host(self):
+    def is_ping_host(self) -> bool:
         return self.tag_groups().get("ping") == "ping"
 
     def tag(self, taggroup_name):

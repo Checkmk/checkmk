@@ -76,7 +76,7 @@ permission_registry.register(
 )
 
 
-def is_part_of_aggregation(host, service):
+def is_part_of_aggregation(host, service) -> bool:
     if BIAggregationPacks.get_num_enabled_aggregations() == 0:
         return False
     return get_cached_bi_compiler().is_part_of_aggregation(host, service)

@@ -596,7 +596,7 @@ def may_use_rules_in_pack(bi_pack):
     return bi_pack.public or is_contact_for_pack(bi_pack)
 
 
-def is_contact_for_pack(bi_pack):
+def is_contact_for_pack(bi_pack) -> bool:
     if user.may("wato.bi_admin"):
         return True  # meaning I am admin
 

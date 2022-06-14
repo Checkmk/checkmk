@@ -39,7 +39,7 @@ class TestDashlet(Dashlet):
         return 0
 
     @classmethod
-    def is_selectable(cls):
+    def is_selectable(cls) -> bool:
         return False
 
     def show(self):
@@ -101,7 +101,7 @@ class TestDashlet(Dashlet):
         return 0
 
     @classmethod
-    def is_selectable(cls):
+    def is_selectable(cls) -> bool:
         return False
 
     def show(self):

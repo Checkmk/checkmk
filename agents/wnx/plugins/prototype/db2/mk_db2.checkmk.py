@@ -33,7 +33,7 @@ class Database:
         parser.add_argument("-v", "--verbose", action="store_true", help="verbose output")
         return parser.parse_args()
 
-    def is_verbose(self):
+    def is_verbose(self) -> bool:
         return self.args.verbose
 
     def write_log(self, message: str) -> None:

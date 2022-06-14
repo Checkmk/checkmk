@@ -92,7 +92,7 @@ from cmk.gui.valuespec import (
 #   '----------------------------------------------------------------------'
 
 
-def is_site():
+def is_site() -> bool:
     return "OMD_ROOT" in os.environ
 
 
@@ -119,7 +119,7 @@ def hostname():
     return socket.gethostname()
 
 
-def is_canonical(directory):
+def is_canonical(directory) -> bool:
     if not directory.endswith("/"):
         directory += "/"
     return (
@@ -347,7 +347,7 @@ class Job(MKBackupJob, BackupEntity):
     def key_ident(self):
         return self._config["encrypt"]
 
-    def is_encrypted(self):
+    def is_encrypted(self) -> bool:
         return self._config["encrypt"] is not None
 
     # TODO: Duplicated code with mkbackup (globalize_job_id())

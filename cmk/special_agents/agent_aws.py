@@ -208,7 +208,7 @@ class AWSConfig:
         # out-of-date
         return hashlib.sha256("".join(sorted(filtered_sys_argv)).encode()).hexdigest()
 
-    def is_up_to_date(self):
+    def is_up_to_date(self) -> bool:
         old_config_hash = self._load_config_hash()
         if old_config_hash is None:
             logging.info(
@@ -501,7 +501,7 @@ class ResultDistributorS3Limits(ResultDistributor):
         self._received_results.setdefault(sender.name, (sender, result))
         super().distribute(sender, result)
 
-    def is_empty(self):
+    def is_empty(self) -> bool:
         return len(self._colleagues) == 0
 
 

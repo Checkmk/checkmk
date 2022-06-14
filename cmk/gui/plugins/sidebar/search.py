@@ -859,7 +859,9 @@ class ABCLivestatusMatchPlugin(ABCMatchPlugin):
     def get_preferred_livestatus_table(self) -> LivestatusTable:
         return self._preferred_livestatus_table
 
-    def is_used_for_table(self, livestatus_table: LivestatusTable, used_filters: UsedFilters):
+    def is_used_for_table(
+        self, livestatus_table: LivestatusTable, used_filters: UsedFilters
+    ) -> bool:
         # Check if this filters handles the table at all
         if livestatus_table not in self._supported_livestatus_tables:
             return False

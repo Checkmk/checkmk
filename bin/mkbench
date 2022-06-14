@@ -397,7 +397,7 @@ class Test:
                 l.append(m)
         return by_test_case
 
-    def is_stopped(self):
+    def is_stopped(self) -> bool:
         return self.state == Test.STATE_STOPPED
 
     def get_log(self):
@@ -777,7 +777,7 @@ class Analyzer(threading.Thread):
 
         m.save()
 
-    def is_stopped(self):
+    def is_stopped(self) -> bool:
         return not self.is_alive()
 
     def stop(self):

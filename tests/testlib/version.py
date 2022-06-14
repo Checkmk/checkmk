@@ -84,13 +84,13 @@ class CMKVersion:
             return "managed"
         raise NotImplementedError()
 
-    def is_managed_edition(self):
+    def is_managed_edition(self) -> bool:
         return self.edition_short == CMKVersion.CME
 
-    def is_enterprise_edition(self):
+    def is_enterprise_edition(self) -> bool:
         return self.edition_short == CMKVersion.CEE
 
-    def is_raw_edition(self):
+    def is_raw_edition(self) -> bool:
         return self.edition_short == CMKVersion.CRE
 
     def version_directory(self):
@@ -102,5 +102,5 @@ class CMKVersion:
     def version_path(self):
         return "/omd/versions/%s" % self.version_directory()
 
-    def is_installed(self):
+    def is_installed(self) -> bool:
         return os.path.exists(self.version_path())

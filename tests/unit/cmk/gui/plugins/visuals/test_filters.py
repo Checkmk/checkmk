@@ -1133,7 +1133,7 @@ def test_filters_filter_table(request_context, test, monkeypatch):
     )
 
     # Needed for FilterAggrServiceUsed test
-    def is_part_of_aggregation_patch(host, service):
+    def is_part_of_aggregation_patch(host, service) -> bool:
         return {("h", "srv1"): True}.get((host, service), False)
 
     monkeypatch.setattr(cmk.gui.bi, "is_part_of_aggregation", is_part_of_aggregation_patch)

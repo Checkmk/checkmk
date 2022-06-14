@@ -344,7 +344,7 @@ class UserConnector(abc.ABC):
     #
 
     @abc.abstractmethod
-    def is_enabled(self):
+    def is_enabled(self) -> bool:
         raise NotImplementedError()
 
     # Optional: Hook function can be registered here to be executed

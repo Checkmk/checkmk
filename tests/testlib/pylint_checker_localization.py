@@ -24,7 +24,7 @@ def register(linter):
 #
 
 
-def is_constant_string(first):
+def is_constant_string(first) -> bool:
     return isinstance(first, astroid.Const) and isinstance(first.value, str)
 
 

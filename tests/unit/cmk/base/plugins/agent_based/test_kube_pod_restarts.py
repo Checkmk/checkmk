@@ -89,7 +89,7 @@ def current_values():
 
 
 @pytest.fixture
-def is_empty_value_store():
+def is_empty_value_store() -> bool:
     return False
 
 

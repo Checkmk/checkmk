@@ -505,7 +505,7 @@ class LDAPUserConnector(UserConnector):
     def _directory_type(self):
         return self._config["directory_type"][0]
 
-    def is_active_directory(self):
+    def is_active_directory(self) -> bool:
         return self._directory_type() == "ad"
 
     def has_user_base_dn_configured(self):
@@ -1560,7 +1560,7 @@ class LDAPBuiltinAttributePlugin(LDAPAttributePlugin):
     """Base class for all builtin based sync plugins"""
 
     @property
-    def is_builtin(self):
+    def is_builtin(self) -> bool:
         return True
 
 
@@ -1568,7 +1568,7 @@ class LDAPUserAttributePlugin(LDAPAttributePlugin):
     """Base class for all custom user attribute based sync plugins"""
 
     @property
-    def is_builtin(self):
+    def is_builtin(self) -> bool:
         return False
 
 

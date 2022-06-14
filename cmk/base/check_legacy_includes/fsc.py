@@ -14,17 +14,17 @@ def _is_fsc_or_windows(oid):
     )
 
 
-def is_fsc(oid):
+def is_fsc(oid) -> bool:
     return _is_fsc_or_windows(oid) and bool(oid(".1.3.6.1.4.1.231.2.10.2.1.1.0"))
 
 
-def is_fsc_sc2(oid):
+def is_fsc_sc2(oid) -> bool:
     return _is_fsc_or_windows(oid) and bool(oid(".1.3.6.1.4.1.231.2.10.2.2.10.1.1.0"))
 
 
-def is_fsc_fans_prefer_sc2(oid):
+def is_fsc_fans_prefer_sc2(oid) -> bool:
     return is_fsc(oid) and not bool(oid(".1.3.6.1.4.1.231.2.10.2.2.10.5.2.1.3.*"))
 
 
-def is_fsc_temp_prefer_sc2(oid):
+def is_fsc_temp_prefer_sc2(oid) -> bool:
     return is_fsc(oid) and not bool(oid(".1.3.6.1.4.1.231.2.10.2.2.10.5.1.1.3.*"))

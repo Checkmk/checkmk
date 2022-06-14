@@ -394,7 +394,7 @@ class ExplicitConfig:
             raise RuntimeError("missing arg: group=<name>")
         self.current_group.add_key(key, value)
 
-    def is_configured(self, resource):
+    def is_configured(self, resource) -> bool:
         if self.fetchall:
             return True
         group_config = self.groups.get(resource.info["group"])
@@ -416,7 +416,7 @@ class TagBasedConfig:
         self._required = required
         self._values = key_values
 
-    def is_configured(self, resource):
+    def is_configured(self, resource) -> bool:
         if not all(k in resource.tags for k in self._required):
             return False
         for key, val in self._values:

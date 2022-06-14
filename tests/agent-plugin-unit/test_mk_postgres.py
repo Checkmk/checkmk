@@ -49,11 +49,11 @@ PG_PASSFILE = ["myhost:myport:mydb:myusr:mypw"]
 
 class TestNotImplementedOS:
     @pytest.fixture(autouse=True)
-    def is_not_implemented_os(self, monkeypatch):
+    def is_not_implemented_os(self, monkeypatch) -> None:
         monkeypatch.setattr(mk_postgres, "IS_WINDOWS", False)
         monkeypatch.setattr(mk_postgres, "IS_LINUX", False)
 
-    def test_not_implemented_os(self):
+    def test_not_implemented_os(self) -> None:
         with pytest.raises(Exception) as e:
             mk_postgres.helper_factory().get_default_path()
         assert "is not yet implemented" in str(e.value)
@@ -64,7 +64,7 @@ class TestNotImplementedOS:
 
 class TestLinux:
     @pytest.fixture(autouse=True)
-    def is_linux(self, monkeypatch):
+    def is_linux(self, monkeypatch) -> None:
         monkeypatch.setattr(mk_postgres, "IS_WINDOWS", False)
         monkeypatch.setattr(mk_postgres, "IS_LINUX", True)
         monkeypatch.setattr(mk_postgres, "open_env_file", lambda *_args: ["export PGPORT=5432"])
@@ -172,7 +172,7 @@ class TestLinux:
 
 class TestWindows:
     @pytest.fixture(autouse=True)
-    def is_windows(self, monkeypatch):
+    def is_windows(self, monkeypatch) -> None:
         monkeypatch.setattr(mk_postgres, "IS_WINDOWS", True)
         monkeypatch.setattr(mk_postgres, "IS_LINUX", False)
         monkeypatch.setattr(mk_postgres, "open_env_file", lambda *_args: ["export PGPORT=5432"])

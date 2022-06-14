@@ -580,7 +580,7 @@ class Overridable(Base):
             header += " (%s)" % self.owner()
         return header
 
-    def is_public(self):
+    def is_public(self) -> bool:
         """Checks whether a page is visible to other users than the owner.
 
         This does not only need a flag in the page itself, but also the
@@ -595,10 +595,10 @@ class Overridable(Base):
         return not self.owner() or user_may(self.owner(), "general.publish_" + self.type_name())
 
     # Same, but checks if the owner has the permission to override builtin views
-    def is_public_forced(self):
+    def is_public_forced(self) -> bool:
         return self.is_public() and user_may(self.owner(), "general.force_" + self.type_name())
 
-    def is_published_to_me(self):
+    def is_published_to_me(self) -> bool:
         """Whether or not the page is published to the currently active user"""
         if self._["public"] is True:
             return self.publish_is_allowed()
@@ -609,17 +609,17 @@ class Overridable(Base):
 
         return False
 
-    def is_hidden(self):
+    def is_hidden(self) -> bool:
         return self._.get("hidden", False)
 
     # Derived method for conveniance
-    def is_builtin(self):
+    def is_builtin(self) -> bool:
         return not self.owner()
 
-    def is_mine(self):
+    def is_mine(self) -> bool:
         return self.owner() == user.id
 
-    def is_mine_and_may_have_own(self):
+    def is_mine_and_may_have_own(self) -> bool:
         return self.is_mine() and user.may("general.edit_" + self.type_name())
 
     def _can_be_linked(self):
@@ -1684,7 +1684,7 @@ class Container(Base):
         del self._["elements"][nr]
         self._["elements"][whither:whither] = [el]
 
-    def is_empty(self):
+    def is_empty(self) -> bool:
         return not self.elements()
 
 

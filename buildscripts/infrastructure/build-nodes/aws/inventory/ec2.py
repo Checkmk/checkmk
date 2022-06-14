@@ -291,7 +291,7 @@ class Ec2Inventory(object):
 
         print(data_to_print)
 
-    def is_cache_valid(self):
+    def is_cache_valid(self) -> bool:
         ''' Determines if the cache files have expired, or if it is still valid '''
 
         if os.path.isfile(self.cache_path_cache):

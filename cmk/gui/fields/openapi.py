@@ -13,7 +13,7 @@ from marshmallow import base, fields
 from cmk.gui.fields.base import FieldWrapper, MultiNested, ValueTypedDictSchema
 
 
-def is_value_typed_dict(schema):
+def is_value_typed_dict(schema) -> bool:
     is_class = isinstance(schema, type) and issubclass(schema, ValueTypedDictSchema)
     is_instance = isinstance(schema, ValueTypedDictSchema)
     return is_class or is_instance

@@ -498,7 +498,7 @@ class ActivateChanges:
         changes = self._changes_of_site(site_id)
         return bool([c for c in changes if self._is_foreign(c)])
 
-    def is_sync_needed(self, site_id):
+    def is_sync_needed(self, site_id) -> bool:
         if site_is_local(site_id):
             return False
 

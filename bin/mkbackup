@@ -145,12 +145,12 @@ def hostname() -> str:
     return socket.gethostname()
 
 
-def is_root():
+def is_root() -> bool:
     # type () -> bool
     return os.getuid() == 0
 
 
-def is_cma():
+def is_cma() -> bool:
     # type () -> bool
     return os.path.exists("/etc/cma/cma.conf")
 
@@ -1327,18 +1327,18 @@ def write_to_tarfile_threaded(pipeout_fd: int, base_path: str, exclude_patterns:
 
 
 # Whether or not the data filesystem is mounted (-> on active cluster nodes)
-def is_inactive_cluster_node():
+def is_inactive_cluster_node() -> bool:
     import cma  # type: ignore[import] # pylint: disable=import-error,import-outside-toplevel
 
     cma.load_config()
     return cma.inactive_cluster_node()
 
 
-def is_cluster_backup(info):
+def is_cluster_backup(info) -> bool:
     return info.get("cma_cluster", {}).get("clustered", False)
 
 
-def is_inactive_cluster_backup(info):
+def is_inactive_cluster_backup(info) -> bool:
     return "cma_cluster" in info and info["cma_cluster"]["is_inactive"]
 
 

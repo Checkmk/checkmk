@@ -37,7 +37,7 @@ class FailedNotificationsDashlet(Dashlet):
         return 60
 
     @classmethod
-    def is_selectable(cls):
+    def is_selectable(cls) -> bool:
         return False
 
     @classmethod

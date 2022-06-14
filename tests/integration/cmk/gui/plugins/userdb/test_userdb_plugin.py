@@ -29,7 +29,7 @@ class TestConnector(UserConnector):
     def short_title(cls):
         return "test"
 
-    def is_enabled(self):
+    def is_enabled(self) -> bool:
         return False
 
     def check_credentials(self, user_id, password) -> CheckCredentialsResult:

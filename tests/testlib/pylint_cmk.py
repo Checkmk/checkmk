@@ -103,7 +103,7 @@ def get_pylint_files(base_path, file_pattern):
     return files
 
 
-def is_python_file(path, shebang_name=None):
+def is_python_file(path, shebang_name=None) -> bool:
     if shebang_name is None:
         shebang_name = "python3"
 

@@ -31,7 +31,7 @@ class MKLogoDashlet(Dashlet):
         return 0
 
     @classmethod
-    def is_selectable(cls):
+    def is_selectable(cls) -> bool:
         return False  # can not be selected using the dashboard editor
 
     def show(self):

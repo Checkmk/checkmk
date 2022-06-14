@@ -666,11 +666,11 @@ class CommandAcknowledge(Command):
         return "host_svc_problems"
 
     @property
-    def is_shortcut(self):
+    def is_shortcut(self) -> bool:
         return True
 
     @property
-    def is_suggested(self):
+    def is_suggested(self) -> bool:
         return True
 
     @property
@@ -942,11 +942,11 @@ class CommandScheduleDowntimes(Command):
         return "downtime"
 
     @property
-    def is_shortcut(self):
+    def is_shortcut(self) -> bool:
         return True
 
     @property
-    def is_suggested(self):
+    def is_suggested(self) -> bool:
         return True
 
     @property
@@ -1417,11 +1417,11 @@ class CommandRemoveDowntime(Command):
         return ["downtime"]
 
     @property
-    def is_shortcut(self):
+    def is_shortcut(self) -> bool:
         return True
 
     @property
-    def is_suggested(self):
+    def is_suggested(self) -> bool:
         return True
 
     def render(self, what):

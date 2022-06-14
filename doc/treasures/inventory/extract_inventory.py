@@ -106,7 +106,7 @@ if not omd_root:
     sys.exit(1)
 
 
-def is_list(relation):
+def is_list(relation) -> bool:
     list_start = ""
     if isinstance(relation, dict):  # filter and converter are dicts, check them too
         relation = relation.keys()
@@ -119,8 +119,11 @@ def is_list(relation):
                 is_list = False
             break
     for field in relation:
-        if ( is_list != (":*" in field) or not field.startswith(list_start) ) \
-                and not field.startswith("@") and not field.startswith("!"):
+        if (
+            (is_list != (":*" in field) or not field.startswith(list_start))
+            and not field.startswith("@")
+            and not field.startswith("!")
+        ):
             print("bad definition of relation, must be list or dict, not both:")
             sys.exit(1)
     return list_start
@@ -152,10 +155,10 @@ def convert_it(c_relation, item, field):
 
 
 def print_line(out_rel, items):
-    outtxt = "\", \"".join(map(str, items))
-    out_rel.write("\"")
+    outtxt = '", "'.join(map(str, items))
+    out_rel.write('"')
     out_rel.write("%s" % outtxt)
-    out_rel.write("\"\n")
+    out_rel.write('"\n')
 
 
 # special values starting with a "@"
@@ -182,7 +185,7 @@ def no_list_get(hostname, field):
                 except Exception:
                     break
             if type(subtree) in (str, int, float):
-                out_line = convert_it(relations[ofs]['converter'], subtree, field)
+                out_line = convert_it(relations[ofs]["converter"], subtree, field)
     return out_line
 
 
@@ -225,14 +228,14 @@ for hostname in os.listdir(inv_dir):
         continue
     fn = inv_dir + hostname
     if os.path.isfile(fn):
-        a = eval(open(fn, 'r').read())
+        a = eval(open(fn, "r").read())
         all_data[hostname] = a
         inventory_date[hostname] = os.path.getmtime(fn)
 
 # loop over all relations, create an output file for each relation
 for ofs in relations:
     ofn = out_dir + ofs
-    out_rel = open(ofn, 'w')
+    out_rel = open(ofn, "w")
     titles = [col[1] for col in relations[ofs]["columns"]]
     print_line(out_rel, titles)
     elements = [col[0] for col in relations[ofs]["columns"]]
@@ -270,7 +273,8 @@ for ofs in relations:
                                     for item2 in item.split("+"):
                                         if item2:
                                             if item2.startswith(
-                                                    "@"):  # take subtree vom special_value
+                                                "@"
+                                            ):  # take subtree vom special_value
                                                 concat += special_value(item2, hostname)
                                             else:
                                                 try:

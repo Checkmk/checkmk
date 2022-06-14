@@ -1413,7 +1413,7 @@ class IconCell:
 
 # On RedHat 5 the tool that we need is not available.
 # Better check this and do not break the layout
-def is_pdf2png_possible():
+def is_pdf2png_possible() -> bool:
     return os.path.exists("/usr/bin/pdftoppm")
 
 

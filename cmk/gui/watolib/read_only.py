@@ -32,7 +32,7 @@ def message():
     return text
 
 
-def is_enabled():
+def is_enabled() -> bool:
     if not active_config.wato_read_only:
         return False
     if active_config.wato_read_only["enabled"] is True:

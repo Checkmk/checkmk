@@ -11,5 +11,5 @@ def need_sidebar_reload():
     g.need_sidebar_reload = True
 
 
-def is_sidebar_reload_needed():
+def is_sidebar_reload_needed() -> bool:
     return "need_sidebar_reload" in g and g.need_sidebar_reload

@@ -204,7 +204,7 @@ class SnapinRegistry(cmk.utils.plugin_registry.Registry[Type[SidebarSnapin]]):
                 _custom_snapin = custom_snapin
 
                 @classmethod
-                def is_custom_snapin(cls):
+                def is_custom_snapin(cls) -> bool:
                     return True
 
                 @classmethod

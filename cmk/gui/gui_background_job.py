@@ -141,13 +141,13 @@ class GUIBackgroundJobSnapshottedFunctions(background_job.BackgroundJob):
     def acknowledged_by(self):
         return self.get_status().get("acknowledged_by")
 
-    def is_available(self):
+    def is_available(self) -> bool:
         return self.exists() and self.is_visible()
 
-    def is_deletable(self):
+    def is_deletable(self) -> bool:
         return self.get_status().get("deletable", True)
 
-    def is_visible(self):
+    def is_visible(self) -> bool:
         if user.may("background_jobs.see_foreign_jobs"):
             return True
         return user.id == self.get_status().get("user")
@@ -182,13 +182,13 @@ class GUIBackgroundJobSnapshottedFunctions(background_job.BackgroundJob):
 
         return True
 
-    def is_foreign(self):
+    def is_foreign(self) -> bool:
         return self.get_status().get("user") != user.id
 
     # FIXME: There is some arcane metaprogramming Kung Fu going on in
     # GUIBackgroundStatusSnapshot which needs the methods *in this class*,
     # although they are actually totally useless here.
-    def is_active(self):  # pylint: disable=useless-super-delegation
+    def is_active(self) -> bool:  # pylint: disable=useless-super-delegation
         return super().is_active()
 
     def exists(self):  # pylint: disable=useless-super-delegation

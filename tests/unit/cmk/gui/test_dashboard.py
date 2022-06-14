@@ -413,7 +413,7 @@ def test_size():
 
     class NotResizable(DummyDashlet):
         @classmethod
-        def is_resizable(cls):
+        def is_resizable(cls) -> bool:
             return False
 
     dashlet = NotResizable(

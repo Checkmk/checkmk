@@ -68,7 +68,7 @@ class DiscoveryState:
     LEGACY_IGNORED = "legacy_ignored"
 
     @classmethod
-    def is_discovered(cls, table_source):
+    def is_discovered(cls, table_source) -> bool:
         return table_source in [
             cls.UNDECIDED,
             cls.VANISHED,

@@ -86,6 +86,18 @@ BAKE_AGENT_PARAM = {
     )
 }
 
+EFFECTIVE_ATTRIBUTES = {
+    "effective_attributes": fields.Boolean(
+        load_default=False,
+        required=False,
+        example=False,
+        description=(
+            "Show all effective attributes on hosts, not just the attributes which were set on "
+            "this host specifically. This includes all attributes of all of this host's parent "
+            "folders."
+        ),
+    )
+}
 
 PERMISSIONS = permissions.AllPerm(
     [
@@ -245,23 +257,37 @@ def _bulk_host_action_response(
     method="get",
     response_schema=response_schemas.HostConfigCollection,
     permissions_required=permissions.Optional(permissions.Perm("wato.see_all_folders")),
+    query_params=[EFFECTIVE_ATTRIBUTES],
 )
 def list_hosts(param) -> Response:
     """Show all hosts"""
     root_folder = Folder.root_folder()
     root_folder.need_recursive_permission("read")
-    return serve_host_collection(root_folder.all_hosts_recursively().values())
+    effective_attributes: bool = param.get("effective_attributes", False)
+    return serve_host_collection(
+        root_folder.all_hosts_recursively().values(),
+        effective_attributes=effective_attributes,
+    )
 
 
-def serve_host_collection(hosts: Iterable[CREHost]) -> Response:
-    return constructors.serve_json(_host_collection(hosts))
+def serve_host_collection(hosts: Iterable[CREHost], effective_attributes: bool = False) -> Response:
+    return constructors.serve_json(
+        _host_collection(
+            hosts,
+            effective_attributes=effective_attributes,
+        )
+    )
 
 
-def _host_collection(hosts: Iterable[CREHost]) -> dict[str, Any]:
+def _host_collection(
+    hosts: Iterable[CREHost], effective_attributes: bool = False
+) -> dict[str, Any]:
     return {
         "id": "host",
         "domainType": "host_config",
-        "value": [serialize_host(host, effective_attributes=False) for host in hosts],
+        "value": [
+            serialize_host(host, effective_attributes=effective_attributes) for host in hosts
+        ],
         "links": [constructors.link_rel("self", constructors.collection_href("host_config"))],
     }
 
@@ -537,20 +563,7 @@ def bulk_delete(params: Mapping[str, Any]) -> Response:
     "cmk/show",
     method="get",
     path_params=[HOST_NAME],
-    query_params=[
-        {
-            "effective_attributes": fields.Boolean(
-                load_default=False,
-                required=False,
-                example=False,
-                description=(
-                    "Show all effective attributes, which affect this host, not just the "
-                    "attributes which were set on this host specifically. This includes "
-                    "all attributes of all of this host's parent folders."
-                ),
-            )
-        }
-    ],
+    query_params=[EFFECTIVE_ATTRIBUTES],
     etag="output",
     response_schema=response_schemas.HostConfigSchema,
     permissions_required=permissions.Optional(permissions.Perm("wato.see_all_folders")),
@@ -562,7 +575,7 @@ def show_host(params: Mapping[str, Any]) -> Response:
     return _serve_host(host, effective_attributes=params["effective_attributes"])
 
 
-def _serve_host(host, effective_attributes=False):
+def _serve_host(host: CREHost, effective_attributes: bool = False) -> Response:
     response = Response()
     response.set_data(json.dumps(serialize_host(host, effective_attributes)))
     response.set_content_type("application/json")
@@ -571,7 +584,7 @@ def _serve_host(host, effective_attributes=False):
     return response
 
 
-def serialize_host(host: CREHost, effective_attributes: bool):
+def serialize_host(host: CREHost, effective_attributes: bool) -> dict[str, Any]:
     extensions = {
         "folder": "/" + host.folder().path(),
         "attributes": host.attributes(),

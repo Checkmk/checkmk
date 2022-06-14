@@ -1,0 +1,15 @@
+Title: REST API: add effective_attribute switch to host list
+Class: feature
+Compatible: compat
+Component: rest-api
+Date: 1656321982
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1
+
+This werk adds the "effective_attributes" switch to the host 
+configuration list endpoint of the REST API. If it is switched
+to "true" all "effective attributes" will also be returned for
+each host in the returned list. The default is "false" because
+of performance reasons.

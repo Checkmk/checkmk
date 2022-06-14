@@ -1836,14 +1836,14 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             hosts.update(subfolder.all_hosts_recursively())
         return hosts
 
-    def all_folders_recursively(self, only_visible: bool = False) -> List["CREFolder"]:
+    def subfolders_recursively(self, only_visible: bool = False) -> List["CREFolder"]:
         def _add_folders(folder: CREFolder, collection: List[CREFolder]) -> None:
             collection.append(folder)
             for sub_folder in folder.subfolders(only_visible=only_visible):
                 _add_folders(sub_folder, collection)
 
         folders: List[CREFolder] = []
-        _add_folders(self.root_folder(), folders)
+        _add_folders(self, folders)
         return folders
 
     def subfolders(self, only_visible: bool = False) -> "List[CREFolder]":

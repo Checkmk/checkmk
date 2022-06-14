@@ -1,0 +1,13 @@
+Title: Show all folders in REST API starts recursion at parent
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1655209219
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p3
+
+When calling the endpoint `/domain-types/folder_config/collections/all` and setting recursive to true the API would return all folders, independent of the set parent.
+This has been fixed now.

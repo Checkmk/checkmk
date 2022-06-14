@@ -4,10 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """
-Special agent for monitoring Kubernetes clusters. The fully supported API version of Kubernetes
-depends on the corresponding python module. E.g. v11 of the python module will support mainly
-Kubernetes API v1.15. Please take a look on the official website to see, if you API version
-is supported: https://github.com/kubernetes-client/python
+Special agent for monitoring Kubernetes clusters. This agent is required for
+monitoring data provided by the Kubernetes API and the Checkmk collectors,
+which can optionally be deployed within a cluster. The agent requires
+Kubernetes version v1.21 or higher. Moreover, read access to the Kubernetes API
+endpoints monitored by Checkmk must be provided.
 """
 
 from __future__ import annotations

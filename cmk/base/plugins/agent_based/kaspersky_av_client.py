@@ -71,8 +71,8 @@ def check_kaspersky_av_client(
     params: Dict[str, Tuple[float, float]], section: Section
 ) -> Generator[Result, None, None]:
     """
-    >>> test_params = dict(signature_age=(2, 3), fullscan_age=(2, 3))
-    >>> test_section = dict(fullscan_age=1, signature_age=1)
+    >>> test_params = dict(signature_age=(2.0, 3.3), fullscan_age=(2.0, 3.0))
+    >>> test_section = dict(fullscan_age=1.123, signature_age=1.123)
     >>> for result in check_kaspersky_av_client(test_params, test_section):
     ...     result
     Result(state=<State.OK: 0>, summary='Last update of signatures: 1 second ago')

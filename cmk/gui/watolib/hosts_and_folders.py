@@ -1201,7 +1201,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         return g.folder_choices_full_title
 
     @staticmethod
-    def folder(folder_path):
+    def folder(folder_path: PathWithoutSlash):
         if folder_path in Folder.all_folders():
             return Folder.all_folders()[folder_path]
         raise MKGeneralException("No WATO folder %s." % folder_path)
@@ -1260,15 +1260,16 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         if folder:
             return folder
 
-        if request.has_var("folder"):
+        if (var_folder := request.var("folder")) is not None:
             try:
-                folder = Folder.folder(request.var("folder"))
+                folder = Folder.folder(var_folder)
             except MKGeneralException as e:
                 raise MKUserError("folder", "%s" % e)
         else:
-            host_name = request.var("host")
             folder = Folder.root_folder()
-            if host_name:  # find host with full scan. Expensive operation
+            if (
+                host_name := request.var("host")
+            ) is not None:  # find host with full scan. Expensive operation
                 host = Host.host(host_name)
                 if host:
                     folder = host.folder()

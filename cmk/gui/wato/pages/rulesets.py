@@ -46,7 +46,7 @@ from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import request
+from cmk.gui.http import mandatory_parameter, request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import (
@@ -789,11 +789,11 @@ class ModeEditRuleset(WatoMode):
     # working before. Focus this rule row again to make multiple actions with a single
     # rule easier to handle
     def _just_edited_rule_from_vars(self) -> None:
-        if not request.has_var("rule_folder") or not request.has_var("rule_id"):
+        if (folder := request.var("rule_folder")) is None or not request.has_var("rule_id"):
             self._just_edited_rule = None
             return
 
-        rule_folder = Folder.folder(request.var("rule_folder"))
+        rule_folder = Folder.folder(folder)
         rulesets = FolderRulesets(rule_folder)
         rulesets.load()
         ruleset = rulesets.get(self._name)
@@ -943,7 +943,9 @@ class ModeEditRuleset(WatoMode):
         if not transactions.check_transaction():
             return redirect(back_url)
 
-        rule_folder = Folder.folder(request.var("_folder", request.var("folder")))
+        folder = mandatory_parameter("folder", request.var("folder"))
+
+        rule_folder = Folder.folder(request.var("_folder", folder))
         rule_folder.need_permission("write")
         rulesets = FolderRulesets(rule_folder)
         rulesets.load()
@@ -2651,7 +2653,8 @@ class ModeNewRule(ABCEditRuleMode):
                 self._folder = Folder.folder(self._get_folder_path_from_vars())
             except MKUserError:
                 # Folder can not be gathered from form if an error occurs
-                self._folder = Folder.folder(request.var("rule_folder"))
+                folder = mandatory_parameter("rule_folder", request.var("rule_folder"))
+                self._folder = Folder.folder(folder)
 
     def _get_folder_path_from_vars(self) -> str:
         return self._get_rule_conditions_from_vars().host_folder

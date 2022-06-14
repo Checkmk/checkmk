@@ -21,7 +21,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.groups import load_contact_group_information
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import request
+from cmk.gui.http import mandatory_parameter, request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.num_split import key_num_split
@@ -550,8 +550,11 @@ class ModeFolder(WatoMode):
 
         if request.has_var("_move_folder_to"):
             if transactions.check_transaction():
-                what_folder = Folder.folder(request.var("_ident"))
-                target_folder = Folder.folder(request.var("_move_folder_to"))
+                var_ident = mandatory_parameter("_ident", request.var("_ident"))
+                what_folder = Folder.folder(var_ident)
+                target_folder = Folder.folder(
+                    mandatory_parameter("_move_folder_to", request.var("_move_folder_to"))
+                )
                 Folder.current().move_subfolder_to(what_folder, target_folder)
             return redirect(folder_url)
 
@@ -570,10 +573,9 @@ class ModeFolder(WatoMode):
             return redirect(folder_url)
 
         # Move single hosts to other folders
-        if request.has_var("_move_host_to"):
+        if (target_folder := request.var("_move_host_to")) is not None:
             hostname = request.var("_ident")
             if hostname and Folder.current().has_host(hostname):
-                target_folder = Folder.folder(request.var("_move_host_to"))
                 Folder.current().move_hosts([hostname], target_folder)
                 return redirect(folder_url)
 
@@ -1230,8 +1232,8 @@ class ABCFolderMode(WatoMode, abc.ABC):
         # When backfolder is set, we have the special situation that we want to redirect the user
         # two breadcrumb layers up. This is a very specific case, so we realize this locally instead
         # of using a generic approach. Just like it done locally by the action method.
-        if request.has_var("backfolder"):
-            breadcrumb = make_folder_breadcrumb(Folder.folder(request.var("backfolder")))
+        if (backfolder := request.var("backfolder")) is not None:
+            breadcrumb = make_folder_breadcrumb(Folder.folder(backfolder))
             breadcrumb.append(self._breadcrumb_item())
 
         return make_simple_form_page_menu(
@@ -1243,9 +1245,9 @@ class ABCFolderMode(WatoMode, abc.ABC):
         )
 
     def action(self) -> ActionResult:
-        if request.has_var("backfolder"):
+        if (backfolder := request.var("backfolder")) is not None:
             # Edit icon on subfolder preview should bring user back to parent folder
-            folder = Folder.folder(request.var("backfolder"))
+            folder = Folder.folder(backfolder)
         else:
             folder = Folder.current()
 

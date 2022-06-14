@@ -83,7 +83,7 @@ pytestmark = pytest.mark.checks
             ],
             (
                 0,
-                "post: 0 bit/s, drop: 0 bit/s, Policy-Name: mypolicy, Int-Bandwidth: 0 bit/s",
+                "post: 0 Bit/s, drop: 0 Bit/s, Policy-Name: mypolicy, Int-Bandwidth: 0 Bit/s",
                 [
                     ("post", 0.0, None, None, 0.0, 0.0),
                     ("drop", 0.0, 0.0, 0.0, 0.0, 0.0),

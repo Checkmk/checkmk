@@ -50,7 +50,7 @@ checks = {
         (u'node0', {'inv_speed': 16000000000, 'inv_state': u'online'}, [
             (0, 'Read: 150 B/s', [('read_bytes', 150.0)]),
             (0, 'Write: 160 B/s', [('write_bytes', 160.0)]),
-            (0, 'Speed: 16 Gbit/s', []),
+            (0, 'Speed: 16 GBit/s', []),
             (0, '\nState: online', []),
             (0, '\nRead OPS: 140', [('read_ops', 140)]),
             (0, '\nWrite OPS: 130', [('write_ops', 130)]),

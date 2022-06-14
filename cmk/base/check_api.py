@@ -318,7 +318,10 @@ def get_bytes_human_readable(
     return renderer(bytes_)[:-1] + unit
 
 
-get_nic_speed_human_readable = _render_from_utils.fmt_nic_speed
+def get_nic_speed_human_readable(bits_per_sec: float | str) -> str:
+    return _render.nicspeed(float(bits_per_sec) / 8)
+
+
 get_percent_human_readable = _render_from_utils.percent
 get_number_with_precision = _render_from_utils.fmt_number_with_precision
 quote_shell_string = _cmk_utils.quote_shell_string

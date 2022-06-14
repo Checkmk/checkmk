@@ -41,7 +41,7 @@ def container_metrics_store(
     )
 
 
-def test_determine_rate_metrics():
+def test_determine_rate_metrics() -> None:
     metric_name = "metric"
     current_containers = container_metrics_store(
         container_name=ContainerName("container"),
@@ -58,7 +58,7 @@ def test_determine_rate_metrics():
     assert len(containers_rate_metrics[ContainerName("container")]) == 1
 
 
-def test_determine_rate_metrics_for_containers_with_same_timestamp():
+def test_determine_rate_metrics_for_containers_with_same_timestamp() -> None:
     """Test that no rate metrics are returned if no rates can be determined."""
     timestamp = 0
     metric_name = "metric"
@@ -77,7 +77,7 @@ def test_determine_rate_metrics_for_containers_with_same_timestamp():
     assert len(containers_rate_metrics) == 0
 
 
-def test_map_lookup_name_to_piggyback_host_name(new_pod):
+def test_map_lookup_name_to_piggyback_host_name(new_pod) -> None:
     """Test that the namespace_name lookup name is used to find the piggyback host name"""
     pod = new_pod()
     pod_namespaced_name = PodLookupName(f"{pod.metadata.namespace}_{pod.metadata.name}")
@@ -88,7 +88,7 @@ def test_map_lookup_name_to_piggyback_host_name(new_pod):
     assert lookup_name_piggyback_mappings[pod_namespaced_name] == pod.name(prepend_namespace=True)
 
 
-def test_filter_associating_performance_pods_from_api_pods():
+def test_filter_associating_performance_pods_from_api_pods() -> None:
     # Arrange
     pod_name = "pod_matching"
     pod_namespace = "default"
@@ -114,7 +114,7 @@ def test_filter_associating_performance_pods_from_api_pods():
     assert filtered_performance_pods[0].lookup_name == pod_lookup_name
 
 
-def test_kube_object_performance_sections():
+def test_kube_object_performance_sections() -> None:
     performance_pods = [
         PerformancePodFactory.build(),
         PerformancePodFactory.build(),

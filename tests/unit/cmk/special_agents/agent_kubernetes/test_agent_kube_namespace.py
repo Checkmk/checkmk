@@ -14,7 +14,7 @@ from cmk.special_agents.utils_kubernetes.transform import parse_namespace_metada
 
 
 class TestAPINamespace:
-    def test_parse_metadata(self, core_client, dummy_host):
+    def test_parse_metadata(self, core_client, dummy_host) -> None:
         namespace_metadata = {
             "items": [
                 {
@@ -51,7 +51,7 @@ class TestAPINamespace:
         }
         assert metadata.annotations == {}
 
-    def test_parse_metadata_missing_annotations_and_labels(self, core_client, dummy_host):
+    def test_parse_metadata_missing_annotations_and_labels(self, core_client, dummy_host) -> None:
         namespace_metadata = {
             "items": [
                 {

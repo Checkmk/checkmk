@@ -51,7 +51,7 @@ def check_bluecat_dns_crit():
     ]
 
 
-def test_cluster_check_bluecat_all_ok():
+def test_cluster_check_bluecat_all_ok() -> None:
     assert list(
         bluecat_dns.cluster_check_bluecat_dns(
             {
@@ -85,7 +85,7 @@ def test_cluster_check_bluecat_all_ok():
     ]
 
 
-def test_cluster_check_bluecat_one_ok():
+def test_cluster_check_bluecat_one_ok() -> None:
     assert list(
         bluecat_dns.cluster_check_bluecat_dns(
             {
@@ -119,7 +119,7 @@ def test_cluster_check_bluecat_one_ok():
     ]
 
 
-def test_cluster_check_bluecat_none_ok():
+def test_cluster_check_bluecat_none_ok() -> None:
     assert list(
         bluecat_dns.cluster_check_bluecat_dns(
             {

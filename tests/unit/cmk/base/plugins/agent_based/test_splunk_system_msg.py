@@ -75,7 +75,7 @@ from cmk.base.plugins.agent_based.splunk_system_msg import check, parse, Section
         ),
     ],
 )
-def test_parsing(string_table: StringTable, section: Section):
+def test_parsing(string_table: StringTable, section: Section) -> None:
     assert parse(string_table) == section
 
 
@@ -115,5 +115,5 @@ def test_parsing(string_table: StringTable, section: Section):
         ),
     ],
 )
-def test_check(section: Section, results: list[Result]):
+def test_check(section: Section, results: list[Result]) -> None:
     assert list(check(section)) == results

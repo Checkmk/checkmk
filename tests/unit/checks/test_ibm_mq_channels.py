@@ -20,7 +20,7 @@ pytestmark = pytest.mark.checks
 CHECK_NAME = "ibm_mq_channels"
 
 
-def test_parse():
+def test_parse() -> None:
     lines = """\
 QMNAME(MY.TEST)                                           STATUS(RUNNING) NOW(2020-04-03T17:27:02+0200)
 5724-H72 (C) Copyright IBM Corp. 1994, 2015.
@@ -78,7 +78,7 @@ All valid MQSC commands were processed.
     assert attrs["MONCHL"] == "OFF"
 
 
-def test_parse_svrconn_with_multiple_instances():
+def test_parse_svrconn_with_multiple_instances() -> None:
     lines = """\
 QMNAME(MY.TEST)                                           STATUS(RUNNING) NOW(2020-04-03T17:27:02+0200)
 5724-H72 (C) Copyright IBM Corp. 1994, 2015.
@@ -105,7 +105,7 @@ All valid MQSC commands were processed.
     assert attrs["CONNAME"] == "10.25.19.183"
 
 
-def test_discovery_qmgr_not_included():
+def test_discovery_qmgr_not_included() -> None:
     check = Check(CHECK_NAME)
     parsed = {
         "QM1": {"STATUS": "RUNNING"},
@@ -118,7 +118,7 @@ def test_discovery_qmgr_not_included():
     assert ("QM1:CHAN2", {}) in discovery
 
 
-def test_check():
+def test_check() -> None:
     check = Check(CHECK_NAME)
     params: Dict[str, Any] = {}
     parsed = {
@@ -143,7 +143,7 @@ def test_check():
     assert actual == expected
 
 
-def test_no_xmit_queue_defined():
+def test_no_xmit_queue_defined() -> None:
     """
     Happened on queue manager MQZZZPPPP and channel FOO.TO.RESA. It
     is a misconfiguration on the queue manager, but the monitoring should
@@ -163,7 +163,7 @@ def test_no_xmit_queue_defined():
     assert actual == expected
 
 
-def test_stale_service_for_not_running_qmgr():
+def test_stale_service_for_not_running_qmgr() -> None:
     check = Check(CHECK_NAME)
     params: Dict[str, Any] = {}
     parsed = {"QM1": {"STATUS": "ENDED NORMALLY"}}
@@ -171,7 +171,7 @@ def test_stale_service_for_not_running_qmgr():
         list(check.run_check("QM1:CHAN2", params, parsed))
 
 
-def test_vanished_service_for_running_qmgr():
+def test_vanished_service_for_running_qmgr() -> None:
     check = Check(CHECK_NAME)
     params: Dict[str, Any] = {}
     parsed = {
@@ -182,7 +182,7 @@ def test_vanished_service_for_running_qmgr():
     assert len(actual) == 0
 
 
-def test_status_wato_override():
+def test_status_wato_override() -> None:
     check = Check(CHECK_NAME)
     parsed = {
         "QM1": {"STATUS": "RUNNING"},

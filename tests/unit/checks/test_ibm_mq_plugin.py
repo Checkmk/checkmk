@@ -15,7 +15,7 @@ pytestmark = pytest.mark.checks
 CHECK_NAME = "ibm_mq_plugin"
 
 
-def test_parse():
+def test_parse() -> None:
     lines = """\
 version: 2.0.4
 dspmq: OK
@@ -92,7 +92,7 @@ runmqsc: Not executable
         ),
     ],
 )
-def test_check(params, parsed, expected):
+def test_check(params, parsed, expected) -> None:
     check = Check(CHECK_NAME)
     actual = list(check.run_check(None, params, parsed))
     assert actual == expected

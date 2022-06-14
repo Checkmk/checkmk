@@ -144,6 +144,8 @@ def expected_output_engine():
     return expected
 
 
-def test_section_check_mk(request, testconfig_only_from, expected_output, actual_output, testfile):
+def test_section_check_mk(
+    request, testconfig_only_from, expected_output, actual_output, testfile
+) -> None:
     # request.node.name gives test name
     local_test(expected_output, actual_output, testfile, request.node.name)

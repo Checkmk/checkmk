@@ -69,7 +69,7 @@ pytestmark = pytest.mark.checks
         ),
     ],
 )
-def test_zfsget_parse(info, expected_parse_result):
+def test_zfsget_parse(info, expected_parse_result) -> None:
     assertEqual(Check("zfsget").run_parse(info), expected_parse_result)
 
 
@@ -312,7 +312,7 @@ def test_zfsget_parse(info, expected_parse_result):
         ),
     ],
 )
-def test_zfsget_discovery(info, expected_discovery_result):
+def test_zfsget_discovery(info, expected_discovery_result) -> None:
     check_zfsget = Check("zfsget")
     discovery_result = DiscoveryResult(check_zfsget.run_discovery(check_zfsget.run_parse(info)))
     assertDiscoveryResultsEqual(

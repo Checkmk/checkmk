@@ -33,7 +33,7 @@ pytestmark = pytest.mark.checks
         ),
     ],
 )
-def test_prism_argument_parsing(params, expected_args):
+def test_prism_argument_parsing(params, expected_args) -> None:
     """Tests if all required arguments are present."""
     agent = SpecialAgent("agent_prism")
     arguments = agent.argument_func(params, "host", "address")

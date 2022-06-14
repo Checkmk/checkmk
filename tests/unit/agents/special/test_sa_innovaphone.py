@@ -26,7 +26,7 @@ from cmk.special_agents import agent_innovaphone
         )
     ],
 )
-def test_agent_innovaphone_main(args, expected_stdout, capsys):
+def test_agent_innovaphone_main(args, expected_stdout, capsys) -> None:
     filepath = "%s/_innovaphone_vcrtrace" % os.path.dirname(os.path.abspath(__file__))
     with vcr.use_cassette(filepath, record_mode="none"):
         agent_innovaphone.main(args)

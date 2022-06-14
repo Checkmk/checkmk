@@ -96,7 +96,7 @@ from tests.testlib.site import Site
         "utils.sh",
     ],
 )
-def test_monitoring_plugins(site: Site, plugin: str):
+def test_monitoring_plugins(site: Site, plugin: str) -> None:
     plugin_path = Path(site.root, "lib", "nagios", "plugins", plugin)
     assert plugin_path.exists()
     assert os.access(plugin_path, os.X_OK)

@@ -31,7 +31,7 @@ def monkeymodule(request):
     mpatch.undo()
 
 
-def test_get_single_oid_ipv6(backend):
+def test_get_single_oid_ipv6(backend) -> None:
     if backend.config.is_usewalk_host:
         pytest.skip("Not relevant")
 
@@ -44,7 +44,7 @@ def test_get_single_oid_ipv6(backend):
     assert result == "Linux zeus 4.8.6.5-smp #2 SMP Sun Nov 13 14:58:11 CDT 2016 i686"
 
 
-def test_get_single_oid_snmpv3(backend):
+def test_get_single_oid_snmpv3(backend) -> None:
     if backend.config.is_usewalk_host:
         pytest.skip("Not relevant")
 
@@ -61,7 +61,7 @@ def test_get_single_oid_snmpv3(backend):
     assert result == "Linux zeus 4.8.6.5-smp #2 SMP Sun Nov 13 14:58:11 CDT 2016 i686"
 
 
-def test_get_single_oid_snmpv3_higher_encryption(backend):
+def test_get_single_oid_snmpv3_higher_encryption(backend) -> None:
     if backend.config.is_usewalk_host:
         pytest.skip("Not relevant")
 
@@ -85,7 +85,7 @@ def test_get_single_oid_snmpv3_higher_encryption(backend):
     assert result == "Linux zeus 4.8.6.5-smp #2 SMP Sun Nov 13 14:58:11 CDT 2016 i686"
 
 
-def test_get_single_oid_wrong_credentials(backend):
+def test_get_single_oid_wrong_credentials(backend) -> None:
     if backend.config.is_usewalk_host:
         pytest.skip("Not relevant")
 
@@ -95,13 +95,13 @@ def test_get_single_oid_wrong_credentials(backend):
     assert result is None
 
 
-def test_get_single_oid(backend):
+def test_get_single_oid(backend) -> None:
     result = snmp_modes.get_single_oid(".1.3.6.1.2.1.1.1.0", backend=backend)
     assert result == "Linux zeus 4.8.6.5-smp #2 SMP Sun Nov 13 14:58:11 CDT 2016 i686"
     assert isinstance(result, str)
 
 
-def test_get_single_oid_cache(backend):
+def test_get_single_oid_cache(backend) -> None:
     oid = ".1.3.6.1.2.1.1.1.0"
     expected_value = "Linux zeus 4.8.6.5-smp #2 SMP Sun Nov 13 14:58:11 CDT 2016 i686"
 
@@ -112,12 +112,12 @@ def test_get_single_oid_cache(backend):
     assert isinstance(cached_oid, str)
 
 
-def test_get_single_non_prefixed_oid(backend):
+def test_get_single_non_prefixed_oid(backend) -> None:
     with pytest.raises(MKGeneralException, match="does not begin with"):
         snmp_modes.get_single_oid("1.3.6.1.2.1.1.1.0", backend=backend)
 
 
-def test_get_single_oid_next(backend):
+def test_get_single_oid_next(backend) -> None:
     assert (
         snmp_modes.get_single_oid(".1.3.6.1.2.1.1.9.1.*", backend=backend)
         == ".1.3.6.1.6.3.10.3.1.1"
@@ -125,22 +125,22 @@ def test_get_single_oid_next(backend):
 
 
 # The get_single_oid function currently does not support OID_BIN handling
-# def test_get_single_oid_hex(snmp_config):
+# def test_get_single_oid_hex(snmp_config) -> None:
 #    assert snmp_modes.get_single_oid(snmp_config, ".1.3.6.1.2.1.2.2.1.6.2") == b"\x00\x12yb\xf9@"
 
 
-def test_get_single_oid_value(backend):
+def test_get_single_oid_value(backend) -> None:
     assert (
         snmp_modes.get_single_oid(".1.3.6.1.2.1.1.9.1.2.1", backend=backend)
         == ".1.3.6.1.6.3.10.3.1.1"
     )
 
 
-def test_get_single_oid_not_existing(backend):
+def test_get_single_oid_not_existing(backend) -> None:
     assert snmp_modes.get_single_oid(".1.3.100.200.300.400", backend=backend) is None
 
 
-def test_get_single_oid_not_resolvable(backend):
+def test_get_single_oid_not_resolvable(backend) -> None:
     if backend.config.is_usewalk_host:
         pytest.skip("Not relevant")
 
@@ -205,7 +205,7 @@ def test_get_single_oid_not_resolvable(backend):
         ),
     ],
 )
-def test_walk_for_export(backend, oid, expected_table):
+def test_walk_for_export(backend, oid, expected_table) -> None:
     if backend.config.is_usewalk_host:
         pytest.skip("Not relevant")
 

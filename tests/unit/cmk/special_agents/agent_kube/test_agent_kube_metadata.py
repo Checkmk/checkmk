@@ -51,7 +51,7 @@ def node_component(project_version: Version) -> NodeComponent:
     )
 
 
-def test_group_metadata_by_node():
+def test_group_metadata_by_node() -> None:
     node_name = "node"
     node_collector_machine = node_collector_metadata(CollectorType.MACHINE_SECTIONS, node_name)
     node_collector_container = node_collector_metadata(CollectorType.CONTAINER_METRICS, node_name)
@@ -62,7 +62,7 @@ def test_group_metadata_by_node():
     assert len(grouped_metadata[0].components) == 2
 
 
-def test_identify_unsupported_node_collector_components_with_invalid_version():
+def test_identify_unsupported_node_collector_components_with_invalid_version() -> None:
     version = 2
     component = node_component(Version(str(version)))
     node_metadata = NodeMetadataFactory.build(components={component.name: component})

@@ -27,7 +27,7 @@ from cmk.special_agents.utils_kubernetes.transform import (
 
 
 class TestAPIPod:
-    def test_parse_metadata(self, core_client, dummy_host):
+    def test_parse_metadata(self, core_client, dummy_host) -> None:
         mocked_pods = {
             "kind": "PodList",
             "apiVersion": "v1",
@@ -73,7 +73,7 @@ class TestAPIPod:
         assert metadata.labels == {"app": api.Label(name="app", value="cluster-collector")}
         assert metadata.annotations == {"foo": "case"}
 
-    def test_parse_metadata_missing_annotations_and_labels(self, core_client, dummy_host):
+    def test_parse_metadata_missing_annotations_and_labels(self, core_client, dummy_host) -> None:
         mocked_pods = {
             "kind": "PodList",
             "apiVersion": "v1",
@@ -114,7 +114,7 @@ class TestAPIPod:
         assert metadata.labels == {}
         assert metadata.annotations == {}
 
-    def test_parse_conditions(self, core_client, dummy_host):
+    def test_parse_conditions(self, core_client, dummy_host) -> None:
         node_with_conditions = {
             "items": [
                 {
@@ -146,7 +146,7 @@ class TestAPIPod:
         assert condition.detail is None
         assert condition.type == api.ConditionType.READY
 
-    def test_parse_containers(self, core_client, dummy_host):
+    def test_parse_containers(self, core_client, dummy_host) -> None:
         mocked_pods = {
             "kind": "PodList",
             "apiVersion": "v1",

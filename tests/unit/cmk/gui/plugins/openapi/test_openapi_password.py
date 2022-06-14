@@ -18,7 +18,7 @@ managedtest = pytest.mark.skipif(not version.is_managed_edition(), reason="see #
 
 @managedtest
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_password(aut_user_auth_wsgi_app: WebTestAppForCMK):
+def test_openapi_password(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     base = "/NO_SITE/check_mk/api/1.0"
 
     resp = aut_user_auth_wsgi_app.call_method(
@@ -74,7 +74,7 @@ def test_openapi_password(aut_user_auth_wsgi_app: WebTestAppForCMK):
 
 @managedtest
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_password_admin(aut_user_auth_wsgi_app: WebTestAppForCMK):
+def test_openapi_password_admin(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     base = "/NO_SITE/check_mk/api/1.0"
 
     _resp = aut_user_auth_wsgi_app.call_method(
@@ -105,7 +105,7 @@ def test_openapi_password_admin(aut_user_auth_wsgi_app: WebTestAppForCMK):
 
 @managedtest
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_password_customer(aut_user_auth_wsgi_app: WebTestAppForCMK):
+def test_openapi_password_customer(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     base = "/NO_SITE/check_mk/api/1.0"
 
     resp = aut_user_auth_wsgi_app.call_method(
@@ -150,7 +150,7 @@ def test_openapi_password_customer(aut_user_auth_wsgi_app: WebTestAppForCMK):
 
 @managedtest
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_password_delete(aut_user_auth_wsgi_app: WebTestAppForCMK):
+def test_openapi_password_delete(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     base = "/NO_SITE/check_mk/api/1.0"
 
     _resp = aut_user_auth_wsgi_app.call_method(

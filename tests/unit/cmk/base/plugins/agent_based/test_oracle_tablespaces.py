@@ -352,7 +352,7 @@ Section: SectionTableSpaces = {
 }
 
 
-def test_parse():
+def test_parse() -> None:
     actual_section = oracle_tablespaces.parse_oracle_tablespaces(StringTable)
     actual_tablespaces = actual_section["tablespaces"]
     actual_error_sid = actual_section["error_sids"]["ORA-bar"]
@@ -362,7 +362,7 @@ def test_parse():
     assert actual_error_sid.error_severity == expected_error_sids.error_severity
 
 
-def test_discovery():
+def test_discovery() -> None:
     assert [
         Service(item="CLUSTER.FOO", parameters={"autoextend": True}, labels=[]),
         Service(item="PRD.PSAPTEMP", parameters={"autoextend": True}, labels=[]),
@@ -535,7 +535,7 @@ def test_discovery():
         ),
     ],
 )
-def test_check(item, params, expected):
+def test_check(item, params, expected) -> None:
     assert expected == list(
         oracle_tablespaces.check_oracle_tablespaces(
             item,
@@ -545,7 +545,7 @@ def test_check(item, params, expected):
     )
 
 
-def test_check_raises():
+def test_check_raises() -> None:
     with pytest.raises(IgnoreResultsError):
         list(
             oracle_tablespaces.check_oracle_tablespaces(
@@ -556,7 +556,7 @@ def test_check_raises():
         )
 
 
-def test_check_cluster():
+def test_check_cluster() -> None:
     section2 = copy.deepcopy(Section)
     # Throw away one datafile in order for the cluster check to choose the node
     # with the longer datafile list
@@ -640,7 +640,7 @@ InvSection: SectionTableSpaces = {
 }
 
 
-def test_inventory():
+def test_inventory() -> None:
     assert sort_inventory_result(inventory_oracle_tablespaces(InvSection)) == sort_inventory_result(
         [
             TableRow(

@@ -103,7 +103,7 @@ def check_traceroute():
         ),
     ],
 )
-def test_ac_check_traceroute_no_routes(check_traceroute, lines, hops_info, expected_perf):
+def test_ac_check_traceroute_no_routes(check_traceroute, lines, hops_info, expected_perf) -> None:
     status, info, perf = check_traceroute.check_traceroute(lines, [])
     assert status == 0
     assert hops_info in info

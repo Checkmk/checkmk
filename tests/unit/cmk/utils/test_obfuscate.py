@@ -38,5 +38,5 @@ def deobfuscate(exec_obfuscate: Path) -> Path:
     return file_out
 
 
-def test_value_encrypter_transparent(exec_deobfuscate: Path):
+def test_value_encrypter_transparent(exec_deobfuscate: Path) -> None:
     assert exec_deobfuscate.read_bytes() == _text

@@ -44,7 +44,7 @@ class CollectorDaemonsFactory(ModelFactory):
     __allow_none_optionals__ = False
 
 
-def test_parse_collector_metadata():
+def test_parse_collector_metadata() -> None:
     string_table_element = json.dumps(
         {
             "processing_log": {"status": "ok", "title": "title", "detail": "detail"},
@@ -107,7 +107,7 @@ def test_parse_collector_metadata():
     )
 
 
-def test_parse_collector_components():
+def test_parse_collector_components() -> None:
     string_table_element = json.dumps(
         {
             "container": {"status": "ok", "title": "title", "detail": "detail"},
@@ -122,7 +122,7 @@ def test_parse_collector_components():
     )
 
 
-def test_parse_collector_daemons():
+def test_parse_collector_daemons() -> None:
     string_table_element = json.dumps(
         {
             "container": {"available": 3, "desired": 3},
@@ -147,7 +147,7 @@ def test_parse_collector_daemons():
     )
 
 
-def test_check_all_ok_sections():
+def test_check_all_ok_sections() -> None:
     # Arrange
     collector_metadata = CollectorComponentsMetadata(
         processing_log=CollectorHandlerLog(
@@ -185,7 +185,7 @@ def test_check_all_ok_sections():
     assert all(result.state == State.OK for result in check_result if isinstance(result, Result))
 
 
-def test_check_with_no_collector_components_section():
+def test_check_with_no_collector_components_section() -> None:
     # Arrange
     collector_metadata = CollectorComponentsMetadata(
         processing_log=CollectorHandlerLog(
@@ -221,7 +221,7 @@ def test_check_with_no_collector_components_section():
     assert len(check_result) == 4
 
 
-def test_check_with_errored_handled_metadata_section():
+def test_check_with_errored_handled_metadata_section() -> None:
     # Arrange
     collector_metadata = CollectorComponentsMetadata(
         processing_log=CollectorHandlerLog(
@@ -254,7 +254,7 @@ def test_check_with_errored_handled_metadata_section():
     assert isinstance(check_result[0], Result) and check_result[0].state == State.CRIT
 
 
-def test_check_with_errored_handled_component_section():
+def test_check_with_errored_handled_component_section() -> None:
     # Arrange
     collector_processing_logs = CollectorProcessingLogs(
         container=CollectorHandlerLog(status=CollectorState.ERROR, title="title", detail="OK"),

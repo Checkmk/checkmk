@@ -33,6 +33,6 @@ def test_inv_docker_container_node_name(section: Section) -> None:
     ]
 
 
-def test_inv_docker_container_node_name_legacy_agent_output():
+def test_inv_docker_container_node_name_legacy_agent_output() -> None:
     with pytest.raises(AgentOutputMalformatted):
         parse_docker_container_node_name([["node_name"]])

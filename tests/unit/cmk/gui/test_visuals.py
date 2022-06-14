@@ -18,24 +18,24 @@ import cmk.gui.visuals as visuals
 from cmk.gui.http import request
 
 
-def test_get_filter():
+def test_get_filter() -> None:
     f = visuals.get_filter("hostregex")
     assert isinstance(f, utils.Filter)
 
 
-def test_get_not_existing_filter():
+def test_get_not_existing_filter() -> None:
     with pytest.raises(KeyError):
         visuals.get_filter("dingelig")
 
 
 # TODO: The Next two are really poor tests. Put something better
-def test_filters_allowed_for_info():
+def test_filters_allowed_for_info() -> None:
     allowed = dict(visuals.filters_allowed_for_info("host"))
     assert isinstance(allowed["host"], cmk.gui.plugins.visuals.filters.AjaxDropdownFilter)
     assert "service" not in allowed
 
 
-def test_filters_allowed_for_infos():
+def test_filters_allowed_for_infos() -> None:
     allowed = visuals.filters_allowed_for_infos(["host", "service"])
     assert isinstance(allowed["host"], cmk.gui.plugins.visuals.filters.AjaxDropdownFilter)
     assert isinstance(allowed["service"], cmk.gui.plugins.visuals.filters.AjaxDropdownFilter)
@@ -76,11 +76,11 @@ def _expected_visual_types():
     return expected_visual_types
 
 
-def test_registered_visual_types():
+def test_registered_visual_types() -> None:
     assert sorted(utils.visual_type_registry.keys()) == sorted(_expected_visual_types().keys())
 
 
-def test_registered_visual_type_attributes():
+def test_registered_visual_type_attributes() -> None:
     for ident, plugin_class in utils.visual_type_registry.items():
         plugin = plugin_class()
         spec = _expected_visual_types()[ident]
@@ -3486,7 +3486,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
 # These tests make adding new elements needlessly painful.
 # Skip pending discussion with development team.
 @pytest.mark.skip
-def test_registered_filters():
+def test_registered_filters() -> None:
     names = cmk.gui.plugins.visuals.utils.filter_registry.keys()
     assert sorted(expected_filters.keys()) == sorted(names)
 
@@ -3689,14 +3689,14 @@ expected_infos: Dict[str, Dict[str, Any]] = {
 # These tests make adding new elements needlessly painful.
 # Skip pending discussion with development team.
 @pytest.mark.skip
-def test_registered_infos():
+def test_registered_infos() -> None:
     assert sorted(utils.visual_info_registry.keys()) == sorted(expected_infos.keys())
 
 
 # These tests make adding new elements needlessly painful.
 # Skip pending discussion with development team.
 @pytest.mark.skip
-def test_registered_info_attributes():
+def test_registered_info_attributes() -> None:
     for ident, cls in utils.visual_info_registry.items():
         info = cls()
         spec = expected_infos[ident]
@@ -3730,7 +3730,7 @@ def test_registered_info_attributes():
         ({"host": {"host": "abc"}, "service": {"service": "äää"}},
          [("host", "abc"), ("service", u"äää")]),
     ])
-def test_context_to_uri_vars(context, expected_vars):
+def test_context_to_uri_vars(context, expected_vars) -> None:
     context_vars = visuals.context_to_uri_vars(context)
     assert sorted(context_vars) == sorted(expected_vars)
 
@@ -3783,7 +3783,7 @@ def test_get_context_from_uri_vars(request_context, infos, uri_vars,
     ([("host", "aaa")], {"infos": ["host", "service"], "single_infos": [], "context": {}},
         {"host": {"host": "aaa"},}),
 ])
-def test_get_merged_context(request_context, uri_vars, visual, expected_context):
+def test_get_merged_context(request_context, uri_vars, visual, expected_context) -> None:
     for key, val in uri_vars:
         request.set_var(key, val)
 
@@ -3793,14 +3793,14 @@ def test_get_merged_context(request_context, uri_vars, visual, expected_context)
     assert context == expected_context
 
 
-def test_get_missing_single_infos_has_context():
+def test_get_missing_single_infos_has_context() -> None:
     assert (
         visuals.get_missing_single_infos(single_infos=["host"], context={"host": {"host": "abc"}})
         == set()
     )
 
 
-def test_get_missing_single_infos_missing_context():
+def test_get_missing_single_infos_missing_context() -> None:
     assert visuals.get_missing_single_infos(single_infos=["host"], context={}) == {"host"}
 
 
@@ -3898,5 +3898,5 @@ def test_get_missing_single_infos_missing_context():
         ),
     ],
 )
-def test_cleanup_contexts(context, single_infos, expected_context):
+def test_cleanup_contexts(context, single_infos, expected_context) -> None:
     assert visuals.cleanup_context_filters(context, single_infos) == expected_context

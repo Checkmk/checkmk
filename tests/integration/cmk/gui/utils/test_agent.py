@@ -8,7 +8,7 @@
 from cmk.gui.utils import agent
 
 
-def test_vanilla_agents_filenames(site, mocker):
+def test_vanilla_agents_filenames(site, mocker) -> None:
     # we have functions to receive the path to the vanilla agent packages.
     # this test makes sure that those functions always point to existing files.
 

@@ -77,5 +77,5 @@ from cmk.base.plugins.agent_based.bonding import _check_ieee_302_3ad_specific
         ),
     ],
 )
-def test_check_ieee_302_3ad_specific(params, status, result):
+def test_check_ieee_302_3ad_specific(params, status, result) -> None:
     assert list(_check_ieee_302_3ad_specific(params, status)) == result

@@ -26,7 +26,7 @@ def ensure_logging_framework_not_altered():
     logger.handlers = before_handlers
 
 
-def test_parse_arguments_defaults():
+def test_parse_arguments_defaults() -> None:
     assert main.parse_arguments(["old"]).__dict__ == {
         "debug": False,
         "verbose": 0,
@@ -34,23 +34,23 @@ def test_parse_arguments_defaults():
     }
 
 
-def test_parse_arguments_missing_old_site_id(capsys):
+def test_parse_arguments_missing_old_site_id(capsys) -> None:
     with pytest.raises(SystemExit, match="2"):
         main.parse_arguments([])
     assert "required: OLD_SITE_ID" in capsys.readouterr().err
 
 
-def test_parse_arguments_verbose():
+def test_parse_arguments_verbose() -> None:
     assert main.parse_arguments(["-v", "old"]).verbose == 1
     assert main.parse_arguments(["-v", "-v", "old"]).verbose == 2
     assert main.parse_arguments(["-v", "-v", "-v", "old"]).verbose == 3
 
 
-def test_parse_arguments_debug():
+def test_parse_arguments_debug() -> None:
     assert main.parse_arguments(["--debug", "old"]).debug is True
 
 
-def test_main_executes_run(monkeypatch, capsys):
+def test_main_executes_run(monkeypatch, capsys) -> None:
     def mock_run(args: argparse.Namespace, old_site_id: SiteId, new_site_id: SiteId) -> bool:
         sys.stdout.write("XYZ\n")
         return False
@@ -67,7 +67,7 @@ def fixture_test_registry(monkeypatch):
     return registry
 
 
-def test_run_executes_plugins(capsys, test_registry, mocker):
+def test_run_executes_plugins(capsys, test_registry, mocker) -> None:
     handler_mock = mocker.MagicMock()
     test_registry.register(
         RenameAction(name="test", title="Test Title", sort_index=0, handler=handler_mock)
@@ -83,7 +83,7 @@ def test_run_executes_plugins(capsys, test_registry, mocker):
     assert handler_mock.called_once_with(SiteId("old"), SiteId("NO_SITE"))
 
 
-def test_load_plugins():
+def test_load_plugins() -> None:
     main.load_plugins()
     expected = [
         "sites",

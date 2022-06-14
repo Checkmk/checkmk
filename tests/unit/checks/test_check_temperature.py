@@ -164,7 +164,7 @@ from .checktestlib import assertCheckResultsEqual, CheckResult, mock_item_state
          (2, u'5 \xb0C (device warn/crit below 6/6 \xb0C)', [('temp', 5, None, None)])),
     ],
 )
-def test_check_temperature(params, kwargs, expected):
+def test_check_temperature(params, kwargs, expected) -> None:
     check = Check('acme_temp')
     check_temperature = check.context['check_temperature']
     result = check_temperature(*params, **kwargs)
@@ -238,7 +238,7 @@ _WATO_DICT = {
         # Are the effects of last two test cases related somehow?
     ]
 )
-def test_check_temperature_trend(test_case):
+def test_check_temperature_trend(test_case) -> None:
     check = Check('acme_temp')
     check_trend = check.context['check_temperature_trend']
 
@@ -271,7 +271,7 @@ def test_check_temperature_trend(test_case):
         ),
     ]
 )
-def test_check_temperature_called(test_case):
+def test_check_temperature_called(test_case) -> None:
     check = Check('acme_temp')
     check_temperature = check.context['check_temperature']
     time = dt.datetime(2014, 1, 1, 0, 0, 0)

@@ -43,7 +43,7 @@ from cmk.notification_plugins.pagerduty import _notification_source_from_context
         ),
     ],
 )
-def test_notification_source_from_context(context, result):
+def test_notification_source_from_context(context, result) -> None:
     msg = _notification_source_from_context(context)
     assert msg == result
 
@@ -159,6 +159,6 @@ def test_notification_source_from_context(context, result):
         ),
     ],
 )
-def test_pagerduty_message(context, result):
+def test_pagerduty_message(context, result) -> None:
     msg = pagerduty_msg(context)
     assert msg == result

@@ -195,7 +195,9 @@ def manage_plugins_engine(request, plugin_dir):
                     time.sleep(1)
 
 
-def test_section_plugin_windows_if(request, testconfig, expected_output, actual_output, testfile):
+def test_section_plugin_windows_if(
+    request, testconfig, expected_output, actual_output, testfile
+) -> None:
     # request.node.name gives test name
     pytest.skip("This test is not conform with latest changes on Monitoring Site")
     if Globals.executionmode == "async+cached" and Globals.plugintype == "local":

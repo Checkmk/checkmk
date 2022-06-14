@@ -41,7 +41,7 @@ def _performance_container(
     )
 
 
-def test_group_metrics_by_containers():
+def test_group_metrics_by_containers() -> None:
     cluster_resp = [
         {
             "container_name": "container",
@@ -72,7 +72,7 @@ def test_group_metrics_by_containers():
     assert containers[0].pod_lookup_name == "default_pod"
 
 
-def test_containers_by_pods():
+def test_containers_by_pods() -> None:
     pod_names = ["pod_one", "pod_two"]
     namespace = "default"
     container_per_pod_count = 2

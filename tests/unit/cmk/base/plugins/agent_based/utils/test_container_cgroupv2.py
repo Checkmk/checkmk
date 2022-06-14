@@ -46,7 +46,7 @@ AGENT_OUTPUT_1 = [
 ]
 
 
-def test_parse_cpu_cgroupv2():
+def test_parse_cpu_cgroupv2() -> None:
     assert parse_cpu(AGENT_OUTPUT) == SectionCpuUtilizationOs(
         time_base=200716.86,
         num_cpus=8,
@@ -54,7 +54,7 @@ def test_parse_cpu_cgroupv2():
     )
 
 
-def test_check_cpu_cgroupv2():
+def test_check_cpu_cgroupv2() -> None:
     with pytest.raises(GetRateError):
         # no rate metrics yet
         _ = list(check_cpu_utilization_os({}, parse_cpu(AGENT_OUTPUT_0)))

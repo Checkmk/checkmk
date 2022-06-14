@@ -11,7 +11,7 @@ import pytest
 from cmk.base import notify
 
 
-def test_os_environment_does_not_override_notification_script_env(monkeypatch):
+def test_os_environment_does_not_override_notification_script_env(monkeypatch) -> None:
     """Regression test for Werk #7339"""
     monkeypatch.setattr(os, "environ", {"NOTIFY_CONTACTEMAIL": ""})
     script_env = notify.notification_script_env({"CONTACTEMAIL": "ab@test.de"})
@@ -40,7 +40,7 @@ def test_os_environment_does_not_override_notification_script_env(monkeypatch):
         ),
     ],
 )
-def test_raw_context_from_env_pipe_decoding(environ, expected):
+def test_raw_context_from_env_pipe_decoding(environ, expected) -> None:
     assert notify.raw_context_from_env(environ) == expected
 
 
@@ -66,5 +66,5 @@ def test_raw_context_from_env_pipe_decoding(environ, expected):
         ),
     ],
 )
-def test_create_plugin_context(raw_context, params, expected):
+def test_create_plugin_context(raw_context, params, expected) -> None:
     assert notify.create_plugin_context(raw_context, params) == expected

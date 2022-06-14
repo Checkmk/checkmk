@@ -23,7 +23,7 @@ class ParsingTester(ABC):
     def section_table(self) -> StringTable:
         raise NotImplementedError
 
-    def test_parse(self):
+    def test_parse(self) -> None:
         section = self.parse(self.section_table)
         n_rows = sum(len(i.rows) for i in section.values())
         # first row contains general section information and no metrics
@@ -66,15 +66,15 @@ class DiscoverTester(ABC):
     # Test implementation #
     #######################
 
-    def test_no_assets_yield_no_section(self):
+    def test_no_assets_yield_no_section(self) -> None:
         assert len(list(self.discover(assets=None))) == 0
 
-    def test_discover_project_label(self, services: Sequence[Service]):
+    def test_discover_project_label(self, services: Sequence[Service]) -> None:
         for asset in services:
             assert ServiceLabel("gcp/projectId", "backup-255820") in asset.labels
 
-    def test_discover_all_services(self, services: Sequence[Service]):
+    def test_discover_all_services(self, services: Sequence[Service]) -> None:
         assert {a.item for a in services} == self.expected_services
 
-    def test_discover_all_services_labels(self, services: Sequence[Service]):
+    def test_discover_all_services_labels(self, services: Sequence[Service]) -> None:
         assert set(services[0].labels) == self.expected_labels

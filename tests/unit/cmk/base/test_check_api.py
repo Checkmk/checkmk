@@ -20,7 +20,7 @@ from cmk.base import check_api
 
 
 @pytest.mark.parametrize("value_eight", ["8", 8])
-def test_oid_spec_binary(value_eight):
+def test_oid_spec_binary(value_eight) -> None:
     oid_bin = check_api.BINARY(value_eight)
     assert oid_bin.column == "8"
     assert oid_bin.encoding == "binary"
@@ -28,7 +28,7 @@ def test_oid_spec_binary(value_eight):
 
 
 @pytest.mark.parametrize("value_eight", ["8", 8])
-def test_oid_spec_cached(value_eight):
+def test_oid_spec_cached(value_eight) -> None:
     oid_cached = check_api.CACHED_OID(value_eight)
     assert oid_cached.column == "8"
     assert oid_cached.encoding == "string"
@@ -40,7 +40,7 @@ def check_foo(item, params, parsed_item_data):
     return 2, "bar"
 
 
-def test_get_parsed_item_data():
+def test_get_parsed_item_data() -> None:
     params: Dict[Any, Any] = {}
     parsed = {1: "one", 3: {}, 4: [], 5: ""}
     info = [[1, "one"], [2, "two"]]
@@ -54,7 +54,7 @@ def test_get_parsed_item_data():
     assert check_foo.__name__ == "check_foo"
 
 
-def test_validate_filter():
+def test_validate_filter() -> None:
     assert check_api.validate_filter(sum)((1, 4)) == 5
 
     with pytest.raises(ValueError):
@@ -73,7 +73,7 @@ def test_validate_filter():
         ({"first": "enabled"}, [(None, {})]),
     ],
 )
-def test_discover_single(parsed, result):
+def test_discover_single(parsed, result) -> None:
     assert check_api.discover_single(parsed) == result
 
 
@@ -172,7 +172,7 @@ def test_discover_single(parsed, result):
         ),
     ],
 )
-def test_discover_inputs_and_filters(parsed, selector, result):
+def test_discover_inputs_and_filters(parsed, selector, result) -> None:
     items = list(check_api.discover(selector)(parsed))
     for item in items:
         assert item in result
@@ -183,7 +183,7 @@ def test_discover_inputs_and_filters(parsed, selector, result):
         assert items == []
 
 
-def test_discover_decorator_key_match():
+def test_discover_decorator_key_match() -> None:
     @check_api.discover
     def selector(key, value):
         return key == "hello"
@@ -194,7 +194,7 @@ def test_discover_decorator_key_match():
     ) == [("hello", {})]
 
 
-def test_discover_decorator_with_params():
+def test_discover_decorator_with_params() -> None:
     @check_api.discover(default_params="empty")
     def selector2(entry):
         return "hello" in entry
@@ -202,7 +202,7 @@ def test_discover_decorator_with_params():
     assert list(selector2([["hello", "world"], ["hola", "mundo"]])) == [("hello", "empty")]
 
 
-def test_discover_decorator_returned_name():
+def test_discover_decorator_returned_name() -> None:
     @check_api.discover
     def inventory_thecheck(key, value):
         required_entries = ["used", "ready"]
@@ -220,7 +220,7 @@ def test_discover_decorator_returned_name():
     assert list(inventory_thecheck(data)) == [("TRY", {})]  # pylint: disable=no-value-for-parameter
 
 
-def test_discover_decorator_with_nested_entries():
+def test_discover_decorator_with_nested_entries() -> None:
     @check_api.discover
     def nested_discovery(instance, values):
         for dbname, used, avail in values:
@@ -258,7 +258,7 @@ def test_discover_decorator_with_nested_entries():
         (list(range(5)), lambda k, v: v == k, (TypeError, r"missing 1 required positional")),
     ],
 )
-def test_discover_exceptions(parsed, selector, error):
+def test_discover_exceptions(parsed, selector, error) -> None:
     with pytest.raises(error[0], match=error[1]):
         next(check_api.discover(selector)(parsed))
 
@@ -275,7 +275,7 @@ def test_discover_exceptions(parsed, selector, error):
         (-1, (3, 6, 1, 0), int, "", (2, " (warn/crit below 1/0)")),
     ],
 )
-def test_boundaries(value, levels, representation, unit, result):
+def test_boundaries(value, levels, representation, unit, result) -> None:
     assert check_api._do_check_levels(value, levels, representation, unit) == result
 
 
@@ -327,17 +327,17 @@ def test_boundaries(value, levels, representation, unit, result):
         ),
     ],
 )
-def test_check_levels(value, dsname, params, kwargs, result):
+def test_check_levels(value, dsname, params, kwargs, result) -> None:
     assert check_api.check_levels(value, dsname, params, **kwargs) == result
 
 
-def test_http_proxy(mocker):
+def test_http_proxy(mocker) -> None:
     proxy_patch = mocker.patch.object(config, "get_http_proxy")
     check_api.get_http_proxy(("url", "http://xy:123"))
     assert proxy_patch.called_once()
 
 
-def test_get_effective_service_level(monkeypatch):
+def test_get_effective_service_level(monkeypatch) -> None:
     ts = Scenario()
     ts.add_host("testhost1")
     ts.add_host("testhost2")
@@ -369,7 +369,7 @@ def test_get_effective_service_level(monkeypatch):
             assert check_api.get_effective_service_level() == 0
 
 
-def test_as_float():
+def test_as_float() -> None:
     assert check_api.as_float("8.00") == 8.0
     assert str(check_api.as_float("inf")) == "inf"
 

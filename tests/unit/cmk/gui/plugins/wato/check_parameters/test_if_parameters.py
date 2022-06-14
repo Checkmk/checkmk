@@ -341,7 +341,7 @@ from cmk.gui.plugins.wato.check_parameters.interfaces import (
         ),
     ],
 )
-def test_transform_discovery_if_rules(params, result):
+def test_transform_discovery_if_rules(params, result) -> None:
     assert _transform_discovery_if_rules(params) == result
 
 
@@ -445,7 +445,7 @@ def test_transform_discovery_if_rules(params, result):
         ),
     ],
 )
-def test_transform_check_if_rules(params, result):
+def test_transform_check_if_rules(params, result) -> None:
     assert _transform_if_check_parameters(params) == result
 
 

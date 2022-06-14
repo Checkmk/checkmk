@@ -25,12 +25,12 @@ from cmk.gui.watolib.site_changes import SiteChanges
 
 
 class TestObjectRef:
-    def test_serialize(self):
+    def test_serialize(self) -> None:
         ty = ObjectRefType.Host
         ident = "node1"
         assert ObjectRef(ty, ident).serialize() == {"ident": "node1", "object_type": "Host"}
 
-    def test_serialization_with_labels(self):
+    def test_serialization_with_labels(self) -> None:
         ty = ObjectRefType.Host
         ident = "node1"
         assert ObjectRef(ty, ident, {"a": "b"}).serialize() == {
@@ -39,12 +39,12 @@ class TestObjectRef:
             "labels": {"a": "b"},
         }
 
-    def test_serialize_represented_as_native_types(self):
+    def test_serialize_represented_as_native_types(self) -> None:
         serialized = ObjectRef(ObjectRefType.Host, "h1").serialize()
         as_text = repr(serialized)
         assert ast.literal_eval(as_text) == serialized
 
-    def test_serialize_in_sync_with_deserialize(self):
+    def test_serialize_in_sync_with_deserialize(self) -> None:
         ty = ObjectRefType.Host
         ident = "node1"
         ref = ObjectRef.deserialize(ObjectRef(ty, ident).serialize())
@@ -52,7 +52,7 @@ class TestObjectRef:
         assert ref.ident == ident
         assert ref.labels == {}
 
-    def test_serialize_in_sync_with_deserialize_with_labels(self):
+    def test_serialize_in_sync_with_deserialize_with_labels(self) -> None:
         ty = ObjectRefType.Host
         ident = "node1"
         labels = {"abc": "123"}
@@ -67,33 +67,33 @@ class TestAuditLogStore:
     def fixture_store(self, tmp_path):
         return AuditLogStore(tmp_path / "audit.log")
 
-    def test_read_not_existing(self, store):
+    def test_read_not_existing(self, store) -> None:
         assert not store.exists()
         assert list(store.read()) == []
 
-    def test_clear_not_existing(self, store):
+    def test_clear_not_existing(self, store) -> None:
         assert not store.exists()
         store.clear()
 
-    def test_append(self, store):
+    def test_append(self, store) -> None:
         entry = AuditLogStore.Entry(int(time.time()), None, "user", "action", "Mässädsch", None)
         store.append(entry)
         assert list(store.read()) == [entry]
 
-    def test_append_multiple(self, store):
+    def test_append_multiple(self, store) -> None:
         entry = AuditLogStore.Entry(int(time.time()), None, "user", "action", "Mässädsch", None)
         store.append(entry)
         store.append(entry)
         assert list(store.read()) == [entry, entry]
 
-    def test_transport_html(self, store, request_context):
+    def test_transport_html(self, store, request_context) -> None:
         entry = AuditLogStore.Entry(
             int(time.time()), None, "user", "action", HTML("Mäss<b>ädsch</b>"), None
         )
         store.append(entry)
         assert list(store.read()) == [entry]
 
-    def test_clear(self, store):
+    def test_clear(self, store) -> None:
         entry = AuditLogStore.Entry(int(time.time()), None, "user", "action", "Mässädsch", None)
         store.append(entry)
         assert list(store.read()) == [entry]
@@ -104,7 +104,7 @@ class TestAuditLogStore:
         archive_path = store._path.with_name(store._path.name + time.strftime(".%Y-%m-%d"))
         assert archive_path.exists()
 
-    def test_clear_produced_archive_file_per_clear(self, store):
+    def test_clear_produced_archive_file_per_clear(self, store) -> None:
         entry = AuditLogStore.Entry(int(time.time()), None, "user", "action", "Mässädsch", None)
 
         for n in range(5):
@@ -143,15 +143,15 @@ class TestSiteChanges:
             "need_restart": True,
         }
 
-    def test_read_not_existing(self, store):
+    def test_read_not_existing(self, store) -> None:
         assert not store.exists()
         assert list(store.read()) == []
 
-    def test_clear_not_existing(self, store):
+    def test_clear_not_existing(self, store) -> None:
         assert not store.exists()
         store.clear()
 
-    def test_write(self, store, entry):
+    def test_write(self, store, entry) -> None:
         store.append(entry)
         assert list(store.read()) == [entry]
 
@@ -161,11 +161,11 @@ class TestSiteChanges:
         store.write([entry2])
         assert list(store.read()) == [entry2]
 
-    def test_append(self, store, entry):
+    def test_append(self, store, entry) -> None:
         store.append(entry)
         assert list(store.read()) == [entry]
 
-    def test_clear(self, store, entry):
+    def test_clear(self, store, entry) -> None:
         store.append(entry)
         assert list(store.read()) == [entry]
 
@@ -181,7 +181,7 @@ class TestSiteChanges:
             ("CMEFolder", ObjectRefType.Folder),
         ],
     )
-    def test_read_pre_20_host_change(self, store, old_type, ref_type):
+    def test_read_pre_20_host_change(self, store, old_type, ref_type) -> None:
         with store._path.open("wb") as f:
             f.write(
                 repr(
@@ -203,7 +203,7 @@ class TestSiteChanges:
         assert store.read()[0]["object"] == ObjectRef(ref_type, "node1")
 
 
-def test_log_audit_with_object_diff(request_context):
+def test_log_audit_with_object_diff(request_context) -> None:
     old = {
         "a": "b",
         "b": "c",
@@ -234,7 +234,7 @@ def test_log_audit_with_object_diff(request_context):
     ]
 
 
-def test_log_audit_with_html_message(request_context):
+def test_log_audit_with_html_message(request_context) -> None:
     with on_time("2018-04-15 16:50", "CET"):
         log_audit(
             object_ref=None,

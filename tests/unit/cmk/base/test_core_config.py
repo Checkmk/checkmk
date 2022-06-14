@@ -37,14 +37,14 @@ def fixture_config_path():
         shutil.rmtree(ConfigPath.ROOT)
 
 
-def test_do_create_config_nagios(core_scenario, config_path):
+def test_do_create_config_nagios(core_scenario, config_path) -> None:
     core_config.do_create_config(create_core("nagios"))
 
     assert Path(cmk.utils.paths.nagios_objects_file).exists()
     assert config.PackedConfigStore.from_serial(LATEST_CONFIG).path.exists()
 
 
-def test_active_check_arguments_basics():
+def test_active_check_arguments_basics() -> None:
     assert (
         core_config.active_check_arguments(HostName("bla"), "blub", "args 123 -x 1 -y 2")
         == "args 123 -x 1 -y 2"
@@ -69,14 +69,14 @@ def test_active_check_arguments_basics():
 
 
 @pytest.mark.parametrize("pw", ["abc", "123", "x'äd!?", "aädg"])
-def test_active_check_arguments_password_store(pw):
+def test_active_check_arguments_password_store(pw) -> None:
     password_store.save({"pw-id": pw})
     assert core_config.active_check_arguments(
         HostName("bla"), "blub", ["arg1", ("store", "pw-id", "--password=%s"), "arg3"]
     ) == "--pwstore=2@11@pw-id 'arg1' '--password=%s' 'arg3'" % ("*" * len(pw))
 
 
-def test_active_check_arguments_not_existing_password(capsys):
+def test_active_check_arguments_not_existing_password(capsys) -> None:
     assert (
         core_config.active_check_arguments(
             HostName("bla"), "blub", ["arg1", ("store", "pw-id", "--password=%s"), "arg3"]
@@ -87,7 +87,7 @@ def test_active_check_arguments_not_existing_password(capsys):
     assert 'The stored password "pw-id" used by service "blub" on host "bla"' in stderr
 
 
-def test_active_check_arguments_wrong_types():
+def test_active_check_arguments_wrong_types() -> None:
     with pytest.raises(MKGeneralException):
         core_config.active_check_arguments(HostName("bla"), "blub", 1)  # type: ignore[arg-type]
 
@@ -97,22 +97,22 @@ def test_active_check_arguments_wrong_types():
         )
 
 
-def test_active_check_arguments_str():
+def test_active_check_arguments_str() -> None:
     assert (
         core_config.active_check_arguments(HostName("bla"), "blub", "args 123 -x 1 -y 2")
         == "args 123 -x 1 -y 2"
     )
 
 
-def test_active_check_arguments_list():
+def test_active_check_arguments_list() -> None:
     assert core_config.active_check_arguments(HostName("bla"), "blub", ["a", "123"]) == "'a' '123'"
 
 
-def test_active_check_arguments_list_with_numbers():
+def test_active_check_arguments_list_with_numbers() -> None:
     assert core_config.active_check_arguments(HostName("bla"), "blub", [1, 1.2]) == "1 1.2"
 
 
-def test_active_check_arguments_list_with_pwstore_reference():
+def test_active_check_arguments_list_with_pwstore_reference() -> None:
     assert (
         core_config.active_check_arguments(
             HostName("bla"), "blub", ["a", ("store", "pw1", "--password=%s")]
@@ -121,14 +121,14 @@ def test_active_check_arguments_list_with_pwstore_reference():
     )
 
 
-def test_active_check_arguments_list_with_invalid_type():
+def test_active_check_arguments_list_with_invalid_type() -> None:
     with pytest.raises(MKGeneralException):
         core_config.active_check_arguments(
             HostName("bla"), "blub", [None]  # type: ignore[list-item]
         )
 
 
-def test_get_host_attributes(fixup_ip_lookup, monkeypatch):
+def test_get_host_attributes(fixup_ip_lookup, monkeypatch) -> None:
     ts = Scenario()
     ts.add_host("test-host", tags={"agent": "no-agent"})
     ts.set_option(
@@ -186,7 +186,7 @@ def test_get_host_attributes(fixup_ip_lookup, monkeypatch):
         ("blub", {"check_interval": 40.0}),
     ],
 )
-def test_get_cmk_passive_service_attributes(monkeypatch, hostname, result):
+def test_get_cmk_passive_service_attributes(monkeypatch, hostname, result) -> None:
     ts = Scenario()
     ts.add_host("localhost")
     ts.add_host("blub")
@@ -247,7 +247,7 @@ def test_get_cmk_passive_service_attributes(monkeypatch, hostname, result):
         ),
     ],
 )
-def test_get_tag_attributes(tag_groups, result):
+def test_get_tag_attributes(tag_groups, result) -> None:
     attributes = core_config._get_tag_attributes(tag_groups, "TAG")
     assert attributes == result
     for k, v in attributes.items():

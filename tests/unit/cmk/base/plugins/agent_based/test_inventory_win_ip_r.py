@@ -437,7 +437,7 @@ from .utils_inventory import sort_inventory_result
         ),
     ],
 )
-def test_inventory_win_ip_r(string_table, expected_result):
+def test_inventory_win_ip_r(string_table, expected_result) -> None:
     assert sort_inventory_result(
         inventory_win_ip_r(parse_win_ip_r(string_table))
     ) == sort_inventory_result(expected_result)

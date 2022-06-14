@@ -22,7 +22,7 @@ def reset_hooks():
         hooks.hooks = old_hooks
 
 
-def test_request_memoize():
+def test_request_memoize() -> None:
     @hooks.request_memoize()
     def blah(a=[]):  # pylint: disable=dangerous-default-value
         a.append(1)
@@ -36,7 +36,7 @@ def test_request_memoize():
     assert blah() == [1, 1]
 
 
-def test_request_memoize_request_integration(logged_in_wsgi_app, mocker):
+def test_request_memoize_request_integration(logged_in_wsgi_app, mocker) -> None:
     mock = mocker.MagicMock()
 
     @hooks.request_memoize()
@@ -69,7 +69,7 @@ def test_request_memoize_request_integration(logged_in_wsgi_app, mocker):
     page_registry.unregister("my_page")
 
 
-def test_request_memoize_unregister():
+def test_request_memoize_unregister() -> None:
     # Make sure request-start hooks are still called, after plugin hooks are
     # unregistered. In previous versions unregister_plugin_hooks also
     # unregistered hooks used by memoize.
@@ -93,7 +93,7 @@ def test_request_memoize_unregister():
     assert blah() == [1, 1, 1]
 
 
-def test_hook_registration():
+def test_hook_registration() -> None:
     assert hooks.hooks == {}
 
     # pre 1.6 API
@@ -114,7 +114,7 @@ def test_hook_registration():
     assert len(hooks.get("bli")) == 0
 
 
-def test_call(mocker):
+def test_call(mocker) -> None:
     hook1_mock = mocker.Mock()
     hook2_mock = mocker.Mock()
     hooks.register("bla", hook1_mock)
@@ -129,7 +129,7 @@ def test_call(mocker):
     hook2_mock.assert_called_once()
 
 
-def test_call_exception_handling(request_context, mocker):
+def test_call_exception_handling(request_context, mocker) -> None:
     hooks.register_builtin("bli", lambda: 1.0 / 0.0)
     hook3_mock = mocker.Mock()
     hooks.register("bli", hook3_mock)
@@ -138,7 +138,7 @@ def test_call_exception_handling(request_context, mocker):
     hook3_mock.assert_not_called()
 
 
-def test_builtin_vs_plugin_hooks():
+def test_builtin_vs_plugin_hooks() -> None:
     hooks.register_builtin("bla", lambda: True)
     assert hooks.registered("bla") is True
 

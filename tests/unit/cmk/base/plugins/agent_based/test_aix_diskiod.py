@@ -18,7 +18,7 @@ DISK = {
 }
 
 
-def test_parse_aix_diskiod():
+def test_parse_aix_diskiod() -> None:
     assert aix_diskiod.parse_aix_diskiod(
         [
             ["hdisk0", "5.1", "675.7", "46.5", "2380130842", "12130437130"],
@@ -29,7 +29,7 @@ def test_parse_aix_diskiod():
     }
 
 
-def test_check_disk():
+def test_check_disk() -> None:
     value_store: dict[str, Any] = {}
     now = 1647029464.27418
 
@@ -82,7 +82,7 @@ DISK_HALF = {k: int(v / 2) for k, v in DISK.items()}
     "item",
     ["item", "SUMMARY"],
 )
-def test_check_aix_diskiod(item):
+def test_check_aix_diskiod(item) -> None:
     _test_check_aix_diskiod(
         item,
         {
@@ -99,7 +99,7 @@ def test_check_aix_diskiod(item):
     "item",
     ["item", "SUMMARY"],
 )
-def test_cluster_check_aix_diskiod(item):
+def test_cluster_check_aix_diskiod(item) -> None:
     _test_check_aix_diskiod(
         item,
         {

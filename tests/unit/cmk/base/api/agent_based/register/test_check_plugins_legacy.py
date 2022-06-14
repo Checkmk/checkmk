@@ -29,7 +29,7 @@ MINIMAL_CHECK_INFO = {
 }
 
 
-def test_create_discovery_function(monkeypatch):
+def test_create_discovery_function(monkeypatch) -> None:
     def insane_discovery(info):
         """Completely crazy discovery function:
 
@@ -68,7 +68,7 @@ def test_create_discovery_function(monkeypatch):
     assert result == expected
 
 
-def test_create_check_function():
+def test_create_check_function() -> None:
     def insane_check(item, _no_params, info):
         assert item == "Test Item"
         assert _no_params == {}
@@ -120,7 +120,7 @@ def test_create_check_function():
     ]
 
 
-def test_create_check_function_with_empty_summary_in_details():
+def test_create_check_function_with_empty_summary_in_details() -> None:
     def insane_check(item, _no_params, info):
         assert item == "Test Item"
         assert _no_params == {}
@@ -153,7 +153,7 @@ def test_create_check_function_with_empty_summary_in_details():
     ]
 
 
-def test_create_check_function_without_details():
+def test_create_check_function_without_details() -> None:
     def insane_check(item, _no_params, info):
         assert item == "Test Item"
         assert _no_params == {}
@@ -180,7 +180,7 @@ def test_create_check_function_without_details():
     ]
 
 
-def test_create_check_plugin_from_legacy_wo_params():
+def test_create_check_plugin_from_legacy_wo_params() -> None:
 
     plugin = check_plugins_legacy.create_check_plugin_from_legacy(
         "norris",
@@ -202,7 +202,7 @@ def test_create_check_plugin_from_legacy_wo_params():
     assert plugin.cluster_check_function is None
 
 
-def test_create_check_plugin_from_legacy_with_params():
+def test_create_check_plugin_from_legacy_with_params() -> None:
 
     plugin = check_plugins_legacy.create_check_plugin_from_legacy(
         "norris",
@@ -231,7 +231,7 @@ def test_create_check_plugin_from_legacy_with_params():
     assert plugin.cluster_check_function is None
 
 
-def test_get_default_params_clean_case():
+def test_get_default_params_clean_case() -> None:
     # with params
     assert check_plugins_legacy._get_default_parameters(
         check_legacy_info={"default_levels_variable": "foo"},
@@ -250,7 +250,7 @@ def test_get_default_params_clean_case():
     )
 
 
-def test_get_default_params_with_user_update():
+def test_get_default_params_with_user_update() -> None:
     # with params
     assert check_plugins_legacy._get_default_parameters(
         check_legacy_info={"default_levels_variable": "foo"},
@@ -263,7 +263,7 @@ def test_get_default_params_with_user_update():
     }
 
 
-def test_get_default_params_ignore_user_defined_tuple():
+def test_get_default_params_ignore_user_defined_tuple() -> None:
     # with params
     assert (
         check_plugins_legacy._get_default_parameters(

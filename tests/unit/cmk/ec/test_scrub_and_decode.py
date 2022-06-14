@@ -7,7 +7,7 @@
 import cmk.ec.main
 
 
-def test_scrub_and_decode():
+def test_scrub_and_decode() -> None:
     result = cmk.ec.main.scrub_and_decode("0123bla\nbla\tbla\0blub\1buh\2boh\3")
     assert result == "0123blabla blablubbuhboh\3"
     assert isinstance(result, str)

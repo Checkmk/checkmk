@@ -563,12 +563,12 @@ def three_levels_leaf_permissions(folder):
         ),
     ],
 )
-def test_recursive_subfolder_choices(make_folder, actual_builder, expected):
+def test_recursive_subfolder_choices(make_folder, actual_builder, expected) -> None:
     actual = actual_builder(make_folder)
     assert actual.recursive_subfolder_choices() == expected
 
 
-def test_recursive_subfolder_choices_function_calls(mocker: MagicMock, make_folder):
+def test_recursive_subfolder_choices_function_calls(mocker: MagicMock, make_folder) -> None:
     """Every folder should only be visited once"""
     spy = mocker.spy(hosts_and_folders.Folder, "_walk_tree")
 
@@ -777,7 +777,7 @@ def dump_wato_folder_structure(wato_folder: hosts_and_folders.CREFolder):
         ),
     ],
 )
-def test_folder_permissions(structure, testfolder_expected_groups):
+def test_folder_permissions(structure, testfolder_expected_groups) -> None:
     wato_folder = make_monkeyfree_folder(structure)
     # dump_wato_folder_structure(wato_folder)
     testfolder = wato_folder._subfolders["sub1"]._subfolders["testfolder"]
@@ -883,7 +883,7 @@ group_tree_test = (
     "structure, user_tests",
     [group_tree_test],
 )
-def test_num_hosts_normal_user(structure, user_tests, monkeypatch):
+def test_num_hosts_normal_user(structure, user_tests, monkeypatch) -> None:
     for user_test in user_tests:
         _run_num_host_test(
             structure,
@@ -899,7 +899,7 @@ def test_num_hosts_normal_user(structure, user_tests, monkeypatch):
     "structure, user_tests",
     [group_tree_test],
 )
-def test_num_hosts_admin_user(structure, user_tests, monkeypatch):
+def test_num_hosts_admin_user(structure, user_tests, monkeypatch) -> None:
     for user_test in user_tests:
         _run_num_host_test(structure, user_test, 117, True, monkeypatch)
 
@@ -985,7 +985,7 @@ class MockRedisClient:
 
 
 @pytest.mark.usefixtures("with_admin_login")
-def test_load_redis_folders_on_demand(monkeypatch):
+def test_load_redis_folders_on_demand(monkeypatch) -> None:
     wato_folder = make_monkeyfree_folder(group_tree_structure)
     with get_fake_setup_redis_client(
         monkeypatch, _convert_folder_tree_to_all_folders(wato_folder), []

@@ -22,7 +22,7 @@ SECTION = {
 }
 
 
-def test_parse_cadvisor_if():
+def test_parse_cadvisor_if() -> None:
     assert (
         parse_cadvisor_if(
             [

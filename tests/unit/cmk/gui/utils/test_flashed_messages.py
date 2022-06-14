@@ -22,7 +22,7 @@ def fixture_user_id(with_user):
     return UserId(with_user[0])
 
 
-def test_flash(user_id):
+def test_flash(user_id) -> None:
     # Execute the first request flash some message
     now = datetime.now()
     with application_and_request_context(), login.UserSessionContext(user_id):
@@ -54,7 +54,7 @@ def test_flash(user_id):
         assert get_flashed_messages() == []
 
 
-def test_flash_escape_html_in_str(user_id, request_context):
+def test_flash_escape_html_in_str(user_id, request_context) -> None:
     now = datetime.now()
     with login.UserSessionContext(user_id):
         on_succeeded_login(user_id, now)  # Create and activate session
@@ -63,7 +63,7 @@ def test_flash_escape_html_in_str(user_id, request_context):
         assert get_flashed_messages() == [HTML("&lt;script&gt;aaa&lt;/script&gt;")]
 
 
-def test_flash_dont_escape_html(user_id, request_context):
+def test_flash_dont_escape_html(user_id, request_context) -> None:
     now = datetime.now()
     with login.UserSessionContext(user_id):
         on_succeeded_login(user_id, now)  # Create and activate session

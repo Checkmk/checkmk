@@ -24,7 +24,7 @@ class TestCpuTracking:
     def now(self) -> Snapshot:
         return Snapshot.take()
 
-    def test_eq_neq(self, null: Snapshot, now):
+    def test_eq_neq(self, null: Snapshot, now) -> None:
         assert null == Snapshot.null()
         assert null != now
         assert now != null

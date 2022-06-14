@@ -116,7 +116,7 @@ from cmk.base.api.agent_based.register.section_plugins_legacy.convert_scan_funct
         ),
     ],
 )
-def test_evaluate_snmp_detection(fix_plugin_legacy, name, oids_data, expected_result):
+def test_evaluate_snmp_detection(fix_plugin_legacy, name, oids_data, expected_result) -> None:
     def oid_function(oid, _default=None, _name=None):
         return oids_data.get(oid)
 
@@ -195,7 +195,7 @@ def cache_oids(backend):
 @pytest.mark.usefixtures("scenario")
 @pytest.mark.usefixtures("cache_oids")
 @pytest.mark.parametrize("oid", [snmp_scan.OID_SYS_DESCR, snmp_scan.OID_SYS_OBJ])
-def test_snmp_scan_prefetch_description_object__oid_missing(oid, backend):
+def test_snmp_scan_prefetch_description_object__oid_missing(oid, backend) -> None:
     snmp_cache.single_oid_cache()[oid] = None
 
     with pytest.raises(snmp_scan.MKSNMPError, match=r"Cannot fetch [\w ]+ OID %s" % oid):
@@ -204,7 +204,7 @@ def test_snmp_scan_prefetch_description_object__oid_missing(oid, backend):
 
 @pytest.mark.usefixtures("scenario")
 @pytest.mark.usefixtures("cache_oids")
-def test_snmp_scan_prefetch_description_object__success(backend):
+def test_snmp_scan_prefetch_description_object__success(backend) -> None:
     sys_desc = snmp_cache.single_oid_cache()[snmp_scan.OID_SYS_DESCR]
     sys_obj = snmp_cache.single_oid_cache()[snmp_scan.OID_SYS_OBJ]
     assert sys_desc
@@ -219,7 +219,7 @@ def test_snmp_scan_prefetch_description_object__success(backend):
 
 @pytest.mark.usefixtures("scenario")
 @pytest.mark.usefixtures("cache_oids")
-def test_snmp_scan_fake_description_object__success(backend):
+def test_snmp_scan_fake_description_object__success(backend) -> None:
     snmp_scan._fake_description_object()
 
     assert snmp_cache.single_oid_cache()[snmp_scan.OID_SYS_DESCR] == ""
@@ -228,7 +228,7 @@ def test_snmp_scan_fake_description_object__success(backend):
 
 @pytest.mark.usefixtures("scenario")
 @pytest.mark.usefixtures("cache_oids")
-def test_snmp_scan_find_plugins__success(backend):
+def test_snmp_scan_find_plugins__success(backend) -> None:
     sections = [(s.name, s.detect_spec) for s in agent_based_register.iter_all_snmp_sections()]
     found = snmp_scan._find_sections(
         sections,
@@ -243,7 +243,7 @@ def test_snmp_scan_find_plugins__success(backend):
 
 @pytest.mark.usefixtures("scenario")
 @pytest.mark.usefixtures("cache_oids")
-def test_gather_available_raw_section_names_defaults(backend, mocker):
+def test_gather_available_raw_section_names_defaults(backend, mocker) -> None:
     assert snmp_cache.single_oid_cache()[snmp_scan.OID_SYS_DESCR]
     assert snmp_cache.single_oid_cache()[snmp_scan.OID_SYS_OBJ]
 

@@ -11,13 +11,13 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result
 from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
 
 
-def test_chrony_parse_errmsg():
+def test_chrony_parse_errmsg() -> None:
     assert chrony.parse_chrony([["506", "Cannot", "talk", "to", "daemon"]]) == {
         "error": "506 Cannot talk to daemon",
     }
 
 
-def test_chrony_parse_valid():
+def test_chrony_parse_valid() -> None:
     with on_time(1628000000, "UTC"):
         assert chrony.parse_chrony(
             [
@@ -44,15 +44,15 @@ def test_chrony_parse_valid():
         }
 
 
-def test_chrony_discover_skip_on_error_with_ntp():
+def test_chrony_discover_skip_on_error_with_ntp() -> None:
     assert not list(chrony.discover_chrony({"error": "some error"}, "something trueish"))
 
 
-def test_chrony_discover_error_without_ntp():
+def test_chrony_discover_error_without_ntp() -> None:
     assert list(chrony.discover_chrony({"error": "some error"}, []))
 
 
-def test_chrony_servers_unreachable():
+def test_chrony_servers_unreachable() -> None:
     assert list(
         chrony.check_chrony(
             {"ntp_levels": (None, None, None)},
@@ -70,7 +70,7 @@ def test_chrony_servers_unreachable():
     ]
 
 
-def test_chrony_stratum_crit():
+def test_chrony_stratum_crit() -> None:
     assert list(
         chrony.check_chrony(
             {"ntp_levels": (2, None, None)},
@@ -91,7 +91,7 @@ def test_chrony_stratum_crit():
     ]
 
 
-def test_chrony_offet_crit():
+def test_chrony_offet_crit() -> None:
     assert list(
         chrony.check_chrony(
             {"ntp_levels": (None, 0.12, 0.42)},
@@ -113,7 +113,7 @@ def test_chrony_offet_crit():
     ]
 
 
-def test_chrony_last_sync():
+def test_chrony_last_sync() -> None:
     assert list(
         chrony.check_chrony(
             {"ntp_levels": (None, 0.12, 0.42), "alert_delay": (1800, 3600)},
@@ -132,7 +132,7 @@ def test_chrony_last_sync():
     ]
 
 
-def test_chrony_negative_sync_time():
+def test_chrony_negative_sync_time() -> None:
     assert list(
         chrony.check_chrony(
             {"ntp_levels": (None, 0.12, 0.42), "alert_delay": (1800, 3600)},

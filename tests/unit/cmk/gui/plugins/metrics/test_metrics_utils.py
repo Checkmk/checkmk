@@ -22,7 +22,7 @@ from cmk.gui.type_defs import Perfdata
         ("hé ßß", ["hé", "ßß"]),
     ],
 )
-def test_split_perf_data(data_string, result):
+def test_split_perf_data(data_string, result) -> None:
     assert utils._split_perf_data(data_string) == result
 
 
@@ -73,11 +73,11 @@ def test_split_perf_data(data_string, result):
         ),
     ],
 )
-def test_parse_perf_data(request_context, perf_str, check_command, result):
+def test_parse_perf_data(request_context, perf_str, check_command, result) -> None:
     assert utils.parse_perf_data(perf_str, check_command) == result
 
 
-def test_parse_perf_data2(request_context, monkeypatch):
+def test_parse_perf_data2(request_context, monkeypatch) -> None:
     with pytest.raises(ValueError):
         monkeypatch.setattr(active_config, "debug", True)
         utils.parse_perf_data("hi ho", None)
@@ -95,7 +95,7 @@ def test_parse_perf_data2(request_context, monkeypatch):
         ("fake", "check_mk-imaginary", {"auto_graph": True, "name": "fake", "scale": 1.0}),
     ],
 )
-def test_perfvar_translation(perf_name, check_command, result):
+def test_perfvar_translation(perf_name, check_command, result) -> None:
     assert utils.perfvar_translation(perf_name, check_command) == result
 
 
@@ -132,7 +132,7 @@ def test_perfvar_translation(perf_name, check_command, result):
         ),
     ],
 )
-def test_normalize_perf_data(perf_data, check_command, result):
+def test_normalize_perf_data(perf_data, check_command, result) -> None:
     assert utils.normalize_perf_data(perf_data, check_command) == result
 
 
@@ -214,13 +214,13 @@ def test_reverse_translation_metric_name(
         ),
     ],
 )
-def test_get_graph_templates(metric_names, check_command, graph_ids):
+def test_get_graph_templates(metric_names, check_command, graph_ids) -> None:
     perfdata: Perfdata = [(n, 0, "", None, None, None, None) for n in metric_names]
     translated_metrics = utils.translate_metrics(perfdata, check_command)
     assert set(graph_ids) == set(t["id"] for t in utils.get_graph_templates(translated_metrics))
 
 
-def test_replace_expression():
+def test_replace_expression() -> None:
     perfdata: Perfdata = [(n, len(n), "", 120, 240, 0, 25) for n in ["load1"]]
     translated_metrics = utils.translate_metrics(perfdata, "check_mk-cpu.loads")
     assert (
@@ -238,11 +238,11 @@ def test_replace_expression():
         ("fs_size,fs_used,-@kb#e3fff9", ("fs_size,fs_used,-", "kb", "e3fff9")),
     ],
 )
-def test_extract_rpn(text, out):
+def test_extract_rpn(text, out) -> None:
     assert utils.split_expression(text) == out
 
 
-def test_evaluate():
+def test_evaluate() -> None:
     perfdata: Perfdata = [(n, len(n), "", 120, 240, 0, 24) for n in ["in", "out"]]
     translated_metrics = utils.translate_metrics(perfdata, "check_mk-openvpn_clients")
     assert utils.evaluate("if_in_octets,8,*@bits/s", translated_metrics) == (
@@ -308,23 +308,23 @@ def test_evaluate():
         ),
     ],
 )
-def test_stack_resolver(elements, is_operator, apply_operator, apply_element, result):
+def test_stack_resolver(elements, is_operator, apply_operator, apply_element, result) -> None:
     assert utils.stack_resolver(elements, is_operator, apply_operator, apply_element) == result
 
 
-def test_stack_resolver_exception():
+def test_stack_resolver_exception() -> None:
     with pytest.raises(utils.MKGeneralException, match="too many operands left"):
         utils.stack_resolver("1 2 3 +".split(), lambda x: x == "+", lambda op, f, s: f + s, int)
 
 
-def test_stack_resolver_exception_missing_operator_arguments():
+def test_stack_resolver_exception_missing_operator_arguments() -> None:
     with pytest.raises(
         utils.MKGeneralException, match="Syntax error in expression '3, T': too few operands"
     ):
         utils.stack_resolver("3 T".split(), lambda x: x == "T", lambda op, f, s: f + s, int)
 
 
-def test_graph_titles():
+def test_graph_titles() -> None:
     graphs_without_title = sorted(
         graph_id for graph_id, graph_info in utils.graph_info.items() if not graph_info.get("title")
     )
@@ -352,7 +352,7 @@ def test_graph_titles():
         ),
     ],
 )
-def test_horizontal_rules_from_thresholds(perf_string, result):
+def test_horizontal_rules_from_thresholds(perf_string, result) -> None:
     assert (
         utils.horizontal_rules_from_thresholds(
             [

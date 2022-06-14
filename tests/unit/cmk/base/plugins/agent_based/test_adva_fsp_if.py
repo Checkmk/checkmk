@@ -55,7 +55,7 @@ SECTION = {
 }
 
 
-def test_discover_adva_fsp_if():
+def test_discover_adva_fsp_if() -> None:
     assert list(adva_fsp_if.discover_adva_fsp_if(SECTION)) == [
         Service(item="CH-1-4-C1", parameters={}, labels=[]),
         Service(item="CH-1-4-NE", parameters={}, labels=[]),
@@ -132,7 +132,7 @@ def test_discover_adva_fsp_if():
         ),
     ],
 )
-def test_check_huawei_osn_if(item, params, expected_result):
+def test_check_huawei_osn_if(item, params, expected_result) -> None:
     assert (
         list(
             adva_fsp_if.check_adva_fsp_if(

@@ -63,11 +63,11 @@ def check_inotify(*a, **kw):
     return Check("inotify").context["_check_inotify"](*a, **kw)
 
 
-def test_inotify_parse():
+def test_inotify_parse() -> None:
     assert Section(*PARSED) == parse_inotify(INFO)
 
 
-def test_discovery():
+def test_discovery() -> None:
     assert sorted(discover_inotify(Section(*PARSED))) == [
         ("File /tmp/noti/nodata", {}),
         ("File /tmp/noti/test", {}),
@@ -75,7 +75,7 @@ def test_discovery():
     ]
 
 
-def test_updated_data():
+def test_updated_data() -> None:
     item = "Folder /tmp/noti"
     params = {
         "age_last_operation": [
@@ -103,7 +103,7 @@ def test_updated_data():
     }
 
 
-def test_not_configured():
+def test_not_configured() -> None:
     item = "File /tmp/noti/nodata"
     params = {"age_last_operation": [("modify", 90, 110)]}
     section = Section(Counter(), {}, {})
@@ -114,7 +114,7 @@ def test_not_configured():
     assert not last_status
 
 
-def test_nodata():
+def test_nodata() -> None:
     item = "File /tmp/noti/nodata"
     params = {"age_last_operation": [("modify", 90, 110)]}
     section = Section(Counter(), {"/tmp/noti/nodata": "file"}, {})
@@ -128,7 +128,7 @@ def test_nodata():
     assert not last_status
 
 
-def test_old_status():
+def test_old_status() -> None:
     item = "File /tmp/noti/nodata"
     params = {"age_last_operation": [("modify", 90, 110)]}
     section = Section(Counter(), {"/tmp/noti/nodata": "file"}, {})

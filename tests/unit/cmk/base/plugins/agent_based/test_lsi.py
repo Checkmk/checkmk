@@ -21,7 +21,7 @@ INFO = [
 ]
 
 
-def test_lsi_parsing(fix_register):
+def test_lsi_parsing(fix_register) -> None:
     result = parse_lsi(INFO)
     assert "disks" in result and "arrays" in result
     assert "286" in result["arrays"]
@@ -47,13 +47,13 @@ def test_lsi_parsing(fix_register):
         ),
     ],
 )
-def test_lsi_discovery(fix_register, plugin, expected):
+def test_lsi_discovery(fix_register, plugin, expected) -> None:
     plugin = fix_register.check_plugins[CheckPluginName(plugin)]
     section = parse_lsi(INFO)
     assert list(plugin.discovery_function(section=section)) == expected
 
 
-def test_lsi_array(fix_register):
+def test_lsi_array(fix_register) -> None:
     plugin = fix_register.check_plugins[CheckPluginName("lsi_array")]
     section = parse_lsi(INFO)
     assert list(plugin.check_function(item="286", params={}, section=section)) == [
@@ -78,7 +78,7 @@ def test_lsi_array(fix_register):
         ),
     ],
 )
-def test_lsi(fix_register, plugin, item, params, expected):
+def test_lsi(fix_register, plugin, item, params, expected) -> None:
     plugin = fix_register.check_plugins[CheckPluginName(plugin)]
     section = parse_lsi(INFO)
     assert (

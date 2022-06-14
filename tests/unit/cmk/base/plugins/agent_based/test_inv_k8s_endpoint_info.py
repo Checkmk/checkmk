@@ -160,7 +160,7 @@ RESULT1 = [
         (DATA1, RESULT1),
     ],
 )
-def test_inv_k8s_endpoint_info(data: StringTable, result: InventoryResult):
+def test_inv_k8s_endpoint_info(data: StringTable, result: InventoryResult) -> None:
     assert sort_inventory_result(
         inventory_k8s_endpoints(parse_k8s_endpoint_info(data))
     ) == sort_inventory_result(result)

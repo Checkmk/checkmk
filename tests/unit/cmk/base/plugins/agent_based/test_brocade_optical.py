@@ -69,7 +69,7 @@ from cmk.base.plugins.agent_based.utils import interfaces
         ),
     ],
 )
-def test_discover_brocade_optical(params, expect_service):
+def test_discover_brocade_optical(params, expect_service) -> None:
     section: brocade_optical.Section = {
         "1410": {
             "description": "10GigabitEthernet23/2",
@@ -170,7 +170,7 @@ def test_discover_brocade_optical(params, expect_service):
         ),
     ],
 )
-def test_check_brocade_optical(item, params, section, expected):
+def test_check_brocade_optical(item, params, section, expected) -> None:
     assert list(brocade_optical.check_brocade_optical(item, params, section)) == expected
 
 

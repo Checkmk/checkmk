@@ -17,7 +17,7 @@ import cmk.gui.plugins.metrics.timeseries as ts
         pytest.param(("%", []), id="Unknown symbol"),
     ],
 )
-def test_time_series_math_exc_symbol(args):
+def test_time_series_math_exc_symbol(args) -> None:
     with pytest.raises(MKGeneralException, match="Undefined operator"):
         ts.time_series_math(*args)
 
@@ -35,12 +35,12 @@ def test_time_series_math_exc_symbol(args):
         ),
     ],
 )
-def test_time_series_math_exc(args):
+def test_time_series_math_exc(args) -> None:
     with pytest.raises(MKGeneralException):
         ts.time_series_math(*args)
 
 
 @pytest.mark.parametrize("operator", ["+", "*", "MAX", "MIN", "AVERAGE", "MERGE"])
-def test_time_series_math_stable_singles(operator):
+def test_time_series_math_stable_singles(operator) -> None:
     test_ts = ts.TimeSeries([0, 180, 60, 6, 5, 10, None, -2, -3.14])
     assert ts.time_series_math(operator, [test_ts]) == test_ts

@@ -10,7 +10,7 @@ from cmk.special_agents.utils_kubernetes.transform import parse_cron_job_spec, p
 
 
 class TestAPICronJob:
-    def test_parse_metadata(self):
+    def test_parse_metadata(self) -> None:
         node_raw_metadata = {
             "name": "cronjob",
             "namespace": "default",
@@ -24,7 +24,7 @@ class TestAPICronJob:
         assert metadata.name == "cronjob"
         assert metadata.namespace is not None
 
-    def test_parse_cron_job_spec(self, dummy_host, batch_client):
+    def test_parse_cron_job_spec(self, dummy_host, batch_client) -> None:
         cron_job_list_with_info = {
             "items": [
                 {

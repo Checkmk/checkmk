@@ -15,7 +15,7 @@ from cmk.base.plugins.agent_based.cpu_threads import check_cpu_threads, discover
 from cmk.base.plugins.agent_based.utils.cpu import Load, Section, Threads
 
 
-def test_cpu_threads():
+def test_cpu_threads() -> None:
     section = Section(
         load=Load(0.1, 0.1, 0.1),
         num_cpus=4,
@@ -29,7 +29,7 @@ def test_cpu_threads():
     }
 
 
-def test_cpu_threads_max_threads():
+def test_cpu_threads_max_threads() -> None:
     section = Section(
         load=Load(0.1, 0.1, 0.1),
         num_cpus=4,
@@ -72,7 +72,7 @@ STRING_TABLE_RELATIVE: StringTable = [
         ),
     ],
 )
-def test_cpu_threads_regression(info, check_result):
+def test_cpu_threads_regression(info, check_result) -> None:
     section = parse_cpu(info)
     assert section is not None
     params = {"levels": ("levels", (2000, 4000))}

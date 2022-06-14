@@ -22,7 +22,7 @@ from tests.testlib import Check
         )
     ],
 )
-def test_check_sophos_disk(info, expected_result):
+def test_check_sophos_disk(info, expected_result) -> None:
     parsed_info = Check("sophos_disk").run_parse(info)
     result = Check("sophos_disk").run_check(None, {"disk_levels": (40, 60)}, parsed_info)
     assert result == expected_result

@@ -9,7 +9,7 @@ import cmk.utils.version as cmk_version
 import cmk.gui.cron as cron
 
 
-def test_registered_jobs():
+def test_registered_jobs() -> None:
 
     expected = [
         "cmk.gui.inventory.run",

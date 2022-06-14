@@ -43,6 +43,6 @@ from tests.testlib import Check
         )
     ],
 )
-def test_check_brocade_sfp(item, params, parsed, expected_result):
+def test_check_brocade_sfp(item, params, parsed, expected_result) -> None:
     result = Check("brocade_sfp").run_check(item, params, parsed)
     assert list(result) == expected_result

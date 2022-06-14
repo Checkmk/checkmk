@@ -54,7 +54,7 @@ KNOWN_NON_BUILTIN_LABEL_PRODUCERS: Final = {
 }
 
 
-def test_all_sections_have_host_labels_documented(fix_register):
+def test_all_sections_have_host_labels_documented(fix_register) -> None:
     """Test that all sections have documented their host labels"""
     sections = itertools.chain(
         fix_register.agent_sections.values(),
@@ -97,7 +97,7 @@ def test_all_sections_have_host_labels_documented(fix_register):
     assert ALL_DOCUMENTED_BUILTIN_HOST_LABELS == encountered_labels
 
 
-def test_builtin_labels_start_with_cmk():
+def test_builtin_labels_start_with_cmk() -> None:
     assert all(l.startswith("cmk/") for l in ALL_DOCUMENTED_BUILTIN_HOST_LABELS)
 
 

@@ -37,7 +37,7 @@ TOKEN_JSON_FROM_STOREONCE = {
 
 @responses.activate
 @freeze_time(NOW_SIMULATED)
-def test_invalid_tokenfile():
+def test_invalid_tokenfile() -> None:
 
     responses.add(
         responses.POST,
@@ -54,7 +54,7 @@ def test_invalid_tokenfile():
 
 @freeze_time(NOW_SIMULATED)
 @responses.activate
-def test_REST_call():
+def test_REST_call() -> None:
     responses.add(
         responses.POST,
         "https://%s:%s/pml/login/authenticate" % (HOST, PORT),

@@ -19,18 +19,18 @@ def _schema():
     return QuerySchema()
 
 
-def test_expr_schema(schema):
+def test_expr_schema(schema) -> None:
     from_json = schema.load({"q": '{"op": "=", "left": "hosts.name", "right": "example.com"}'})
     from_dict = schema.load({"q": {"op": "=", "left": "hosts.name", "right": "example.com"}})
     assert not isinstance(from_json["q"], dict)
     assert not isinstance(from_dict["q"], dict)
 
 
-def test_expr_schema_without_table_name(schema):
+def test_expr_schema_without_table_name(schema) -> None:
     schema.load({"q": {"op": "=", "left": "name", "right": "example.com"}})
 
 
-def test_expr_schema_with_wrong_column(schema):
+def test_expr_schema_with_wrong_column(schema) -> None:
     with pytest.raises(ValidationError):
         schema.load({"q": {"op": "=", "left": "foo", "right": "example.com"}})
 
@@ -38,11 +38,11 @@ def test_expr_schema_with_wrong_column(schema):
         schema.load({"q": {"op": "=", "left": "hosts.foo", "right": "example.com"}})
 
 
-def test_expr_schema_sticks_to_table(schema):
+def test_expr_schema_sticks_to_table(schema) -> None:
     with pytest.raises(ValidationError):
         schema.load({"q": {"op": "=", "left": "services.name", "right": "example.com"}})
 
 
-def test_expr_schema_invalid_json(schema):
+def test_expr_schema_invalid_json(schema) -> None:
     with pytest.raises(ValidationError):
         schema.load({"q": '{"asdf'})

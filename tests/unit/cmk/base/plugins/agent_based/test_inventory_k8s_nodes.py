@@ -48,7 +48,7 @@ from .utils_inventory import sort_inventory_result
         ),
     ],
 )
-def test_k8s_nodes(parsed, expected_result):
+def test_k8s_nodes(parsed, expected_result) -> None:
     assert sort_inventory_result(inventory_k8s_nodes(parsed)) == sort_inventory_result(
         expected_result
     )

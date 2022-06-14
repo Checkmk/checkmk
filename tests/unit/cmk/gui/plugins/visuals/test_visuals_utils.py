@@ -31,5 +31,5 @@ from cmk.gui.plugins.visuals.utils import get_only_sites_from_context
         ),
     ],
 )
-def test_get_only_sites_from_context(context, result):
+def test_get_only_sites_from_context(context, result) -> None:
     assert get_only_sites_from_context(context) == result

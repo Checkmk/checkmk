@@ -27,12 +27,12 @@ from cmk.base.api.agent_based.type_defs import Parameters
         "",
     ],
 )
-def test_paramters_invalid(data):
+def test_paramters_invalid(data) -> None:
     with pytest.raises(TypeError, match="expected dict"):
         _ = Parameters(data)
 
 
-def test_parameters_features():
+def test_parameters_features() -> None:
     par0 = Parameters({})
     par1 = Parameters({"olaf": "schneemann"})
 
@@ -60,7 +60,7 @@ def test_parameters_features():
     assert list(par1.items()) == [("olaf", "schneemann")]
 
 
-def test_service_label():
+def test_service_label() -> None:
     # as far as the API is concerned, the only important thing ist that they
     # exist, an can be created like this.
     _ = ServiceLabel("from-home-office", "true")
@@ -74,17 +74,17 @@ def test_service_label():
         (None, None, ["foo:bar"]),
     ],
 )
-def test_service_invalid(item, parameters, labels):
+def test_service_invalid(item, parameters, labels) -> None:
     with pytest.raises(TypeError):
         _ = Service(item=item, parameters=parameters, labels=labels)
 
 
-def test_service_kwargs_only():
+def test_service_kwargs_only() -> None:
     with pytest.raises(TypeError):
         _ = Service(None)  # type: ignore[misc] # pylint: disable=too-many-function-args
 
 
-def test_service_features():
+def test_service_features() -> None:
     service = Service(
         item="thingy",
         parameters={"size": 42},
@@ -112,7 +112,7 @@ def test_service_features():
     assert service != service_foo
 
 
-def test_state():
+def test_state() -> None:
     assert int(state.OK) == 0
     assert int(state.WARN) == 1
     assert int(state.CRIT) == 2
@@ -154,11 +154,11 @@ def test_state():
         ((0, 1, 2, 3, state.UNKNOWN), state.OK),
     ],
 )
-def test_best_state(states, best_state):
+def test_best_state(states, best_state) -> None:
     assert state.best(*states) is best_state
 
 
-def test_metric_kwarg():
+def test_metric_kwarg() -> None:
     with pytest.raises(TypeError):
         _ = Metric("universe", 42, (23, 23))  # type: ignore[misc] # pylint: disable=too-many-function-args
 
@@ -174,12 +174,12 @@ def test_metric_kwarg():
         ("name", 7, (23, 42), (None, "max")),
     ],
 )
-def test_metric_invalid(name, value, levels, boundaries):
+def test_metric_invalid(name, value, levels, boundaries) -> None:
     with pytest.raises(TypeError):
         _ = Metric(name, value, levels=levels, boundaries=boundaries)
 
 
-def test_metric():
+def test_metric() -> None:
     metric1 = Metric("reproduction_rate", 1.0, levels=(2.4, 3.0), boundaries=(0, None))
     metric2 = Metric("reproduction_rate", 2.0, levels=(2.4, 3.0), boundaries=(0, None))
     assert metric1.name == "reproduction_rate"
@@ -203,7 +203,7 @@ def test_metric():
         (state.OK, "summary", None, {"at the moment": "impossible", "someday": "maybe"}),
     ],
 )
-def test_result_invalid(state_, summary, notice, details):
+def test_result_invalid(state_, summary, notice, details) -> None:
     with pytest.raises((TypeError, ValueError)):
         _ = Result(
             state=state_,
@@ -243,7 +243,7 @@ def test_result(
     assert result != Result(state=state_, summary="a different summary")
 
 
-def test_ignore_results():
+def test_ignore_results() -> None:
     result1 = IgnoreResults()
     result2 = IgnoreResults("Login to DB failed")
     assert repr(result1) == "IgnoreResults('currently no results')"

@@ -20,7 +20,7 @@ from cmk.gui.valuespec import ValueSpec
 from cmk.gui.watolib.automation_commands import automation_command_registry
 
 
-def test_registered_config_domains():
+def test_registered_config_domains() -> None:
     expected_config_domains = [
         "apache",
         "ca-certificates",
@@ -43,7 +43,7 @@ def test_registered_config_domains():
     assert registered == sorted(expected_config_domains)
 
 
-def test_registered_automation_commands():
+def test_registered_automation_commands() -> None:
 
     expected_automation_commands = [
         "activate-changes",
@@ -75,7 +75,7 @@ def test_registered_automation_commands():
     assert registered == sorted(expected_automation_commands)
 
 
-def test_registered_configvars():
+def test_registered_configvars() -> None:
     expected_vars = [
         "actions",
         "adhoc_downtime",
@@ -266,7 +266,7 @@ def test_registered_configvars():
 
 
 # Can be removed once we use mypy there
-def test_registered_configvars_types():
+def test_registered_configvars_types() -> None:
     for var_class in config_variable_registry.values():
         var = var_class()
         assert issubclass(var.group(), ConfigVariableGroup)
@@ -275,7 +275,7 @@ def test_registered_configvars_types():
         assert isinstance(var.valuespec(), ValueSpec)
 
 
-def test_registered_configvar_groups():
+def test_registered_configvar_groups() -> None:
     expected_groups = [
         "Setup",
         "Event Console: Generic",
@@ -305,7 +305,7 @@ def test_registered_configvar_groups():
     assert registered == sorted(expected_groups)
 
 
-def test_legacy_configvar_order_access():
+def test_legacy_configvar_order_access() -> None:
     with pytest.raises(NotImplementedError) as e:
         configvar_order()["x"] = 10
     assert "werk #6911" in "%s" % e

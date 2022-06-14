@@ -44,7 +44,7 @@ def expected_output_engine():
     return expected
 
 
-def test_section_df(request, testconfig, expected_output, actual_output, testfile):
+def test_section_df(request, testconfig, expected_output, actual_output, testfile) -> None:
     # request.node.name gives test name
     result = actual_output
     actual_output_len = len(result)

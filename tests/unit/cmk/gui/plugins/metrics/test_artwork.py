@@ -23,7 +23,7 @@ from cmk.gui.plugins.metrics import artwork
         (None, 5, True, (-5, 5)),
     ],
 )
-def test_min(_min, _max, mirrored, result):
+def test_min(_min, _max, mirrored, result) -> None:
     assert artwork._purge_min_max(_min, _max, mirrored) == result
 
 
@@ -42,7 +42,7 @@ def test_min(_min, _max, mirrored, result):
         ),
     ],
 )
-def test_dist_equal(args, result):
+def test_dist_equal(args, result) -> None:
     with on_time("2019-09-09", "Europe/Berlin"):
         assert list(artwork.dist_equal(*args)) == result
 
@@ -72,7 +72,7 @@ def test_dist_equal(args, result):
         ),
     ],
 )
-def test_dist_week(args, result):
+def test_dist_week(args, result) -> None:
     with on_time("2019-09-09", "Europe/Berlin"):
         assert list(artwork.dist_week(*args)) == result
 
@@ -104,5 +104,5 @@ def test_halfstep_interpolation() -> None:
         ),
     ],
 )
-def test_fringe(args, result):
+def test_fringe(args, result) -> None:
     assert artwork.areastack(args[1], args[0]) == result

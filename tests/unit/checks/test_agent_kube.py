@@ -142,14 +142,14 @@ pytestmark = pytest.mark.checks
     ],
 )
 @pytest.mark.usefixtures("fix_register")
-def test_parse_arguments(params, expected_args):
+def test_parse_arguments(params, expected_args) -> None:
     """Tests if all required arguments are present."""
     agent = SpecialAgent("agent_kube")
     arguments = agent.argument_func(params, "host", "11.211.3.32")
     assert arguments == expected_args
 
 
-def test_parse_arguments_with_no_cluster_endpoint():
+def test_parse_arguments_with_no_cluster_endpoint() -> None:
     agent = SpecialAgent("agent_kube")
     params = {
         "cluster-name": "cluster",
@@ -179,7 +179,7 @@ def test_parse_arguments_with_no_cluster_endpoint():
     ]
 
 
-def test_cronjob_piggyback_option():
+def test_cronjob_piggyback_option() -> None:
     """Test the cronjob piggyback option"""
     agent = SpecialAgent("agent_kube")
     arguments = agent.argument_func(
@@ -214,7 +214,7 @@ def test_cronjob_piggyback_option():
     ]
 
 
-def test_cluster_resource_aggregation():
+def test_cluster_resource_aggregation() -> None:
     """Test the cluster-resource-aggregation option"""
     agent = SpecialAgent("agent_kube")
     arguments = agent.argument_func(
@@ -309,7 +309,7 @@ def test_cluster_resource_aggregation():
     ]
 
 
-def test_host_labels_annotation_selection():
+def test_host_labels_annotation_selection() -> None:
     """Test the import-annotations option"""
     agent = SpecialAgent("agent_kube")
 
@@ -388,7 +388,7 @@ def test_host_labels_annotation_selection():
     ]
 
 
-def test_parse_namespace_patterns():
+def test_parse_namespace_patterns() -> None:
     agent = SpecialAgent("agent_kube")
     arguments = agent.argument_func(
         {
@@ -554,7 +554,7 @@ def test_client_configuration_host(params: Mapping[str, Any], host) -> None:
     ],
 )
 @pytest.mark.usefixtures("fix_register")
-def test_proxy_arguments(params, expected_proxy_arg):
+def test_proxy_arguments(params, expected_proxy_arg) -> None:
     agent = SpecialAgent("agent_kube")
     arguments = agent.argument_func(params, "host", "11.211.3.32")
     for argument, argument_after in zip(arguments[:-1], arguments[1:]):
@@ -564,7 +564,7 @@ def test_proxy_arguments(params, expected_proxy_arg):
     assert False, "--api-server-proxy is missing"
 
 
-def test_valuespec_matches_agent_kube():
+def test_valuespec_matches_agent_kube() -> None:
     """agent_kube_arguments needs to be updated, if you remove any of the two assertions below."""
 
     valuespec = kube._valuespec_special_agents_kube()

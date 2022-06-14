@@ -36,14 +36,14 @@ def test_parse() -> None:
     assert SECTION == klr.parse_kemp_loadmaster_realserver(STRING_TABLE)
 
 
-def test_discovery():
+def test_discovery() -> None:
     assert list(klr.discover_kemp_loadmaster_realserver(SECTION)) == [
         Service(item="10.20.30.101"),
         Service(item="10.20.30.102"),
     ]
 
 
-def test_check():
+def test_check() -> None:
     assert list(klr.check_kemp_loadmaster_realserver("10.20.30.101", SECTION)) == [
         Result(state=State.OK, summary="In Service"),
     ]

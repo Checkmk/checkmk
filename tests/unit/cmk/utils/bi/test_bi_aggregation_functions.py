@@ -27,7 +27,7 @@ from cmk.utils.bi.bi_aggregation_functions import (
         ([-1, -1], -1, -1),
     ],
 )
-def test_aggr_default(states, expected_best_state, expected_worst_state):
+def test_aggr_default(states, expected_best_state, expected_worst_state) -> None:
     best_aggr_config = BIAggregationFunctionBest.schema()().dump({})
     best_aggr_function = BIAggregationFunctionBest(best_aggr_config)
     assert best_aggr_function.aggregate(states) == expected_best_state
@@ -49,7 +49,7 @@ def test_aggr_default(states, expected_best_state, expected_worst_state):
         ([-1, -1], -1, -1),
     ],
 )
-def test_aggr_exceed_count(states, expected_best_state, expected_worst_state):
+def test_aggr_exceed_count(states, expected_best_state, expected_worst_state) -> None:
     best_aggr_config = BIAggregationFunctionBest.schema()().dump({"count": 5})
     best_aggr_function = BIAggregationFunctionBest(best_aggr_config)
     assert best_aggr_function.aggregate(states) == expected_best_state
@@ -72,7 +72,7 @@ def test_aggr_exceed_count(states, expected_best_state, expected_worst_state):
         ([-1, -1], -1, -1),
     ],
 )
-def test_aggr_restrict_state_warn(states, expected_best_state, expected_worst_state):
+def test_aggr_restrict_state_warn(states, expected_best_state, expected_worst_state) -> None:
     best_aggr_config = BIAggregationFunctionBest.schema()().dump({"restrict_state": 1})
     best_aggr_function = BIAggregationFunctionBest(best_aggr_config)
     assert best_aggr_function.aggregate(states) == expected_best_state
@@ -98,7 +98,7 @@ def test_aggr_restrict_state_warn(states, expected_best_state, expected_worst_st
         ([1, 1, 1, 1], "percentage", 50, "percentage", 1, 2),
     ],
 )
-def test_aggr_count_ok(states, ok_type, ok_value, warn_type, warn_value, expected_state):
+def test_aggr_count_ok(states, ok_type, ok_value, warn_type, warn_value, expected_state) -> None:
     schema_config = {
         "levels_ok": {"type": ok_type, "value": ok_value},
         "levels_warn": {"type": warn_type, "value": warn_value},

@@ -424,7 +424,7 @@ info_empty_inodes = [
         ),
     ],
 )
-def test_df_discovery_with_parse(info, expected_result, inventory_df_rules):
+def test_df_discovery_with_parse(info, expected_result, inventory_df_rules) -> None:
     check = Check("df")
 
     def mocked_host_extra_conf_merged(_hostname, ruleset):
@@ -623,7 +623,7 @@ def make_test_df_params():
         ),
     ],
 )
-def test_df_check_with_parse(item, params, info, expected_result):
+def test_df_check_with_parse(item, params, info, expected_result) -> None:
     check = Check("df")
     actual = CheckResult(check.run_check(item, params, parse_df(info)))
     assertCheckResultsEqual(actual, CheckResult(expected_result))
@@ -1014,7 +1014,9 @@ info_df_groups = [
         ),
     ],
 )
-def test_df_discovery_groups_with_parse(inventory_df_rules, filesystem_groups, expected_result):
+def test_df_discovery_groups_with_parse(
+    inventory_df_rules, filesystem_groups, expected_result
+) -> None:
     check = Check("df")
 
     def mocked_host_extra_conf_merged(_hostname, ruleset):
@@ -1188,7 +1190,7 @@ def test_df_discovery_groups_with_parse(inventory_df_rules, filesystem_groups, e
         ),
     ],
 )
-def test_df_check_groups_with_parse(add_params, expected_result):
+def test_df_check_groups_with_parse(add_params, expected_result) -> None:
     check = Check("df")
     params = make_test_df_params()
     params.update(add_params)

@@ -23,7 +23,7 @@ def _tp_values() -> List[Tuple[str, LegacyCheckParameters]]:
 
 
 class TestTimespecificParameterSet:
-    def test_from_parameters_ts_dict(self):
+    def test_from_parameters_ts_dict(self) -> None:
 
         tsp = TimespecificParameterSet.from_parameters(
             {
@@ -34,39 +34,39 @@ class TestTimespecificParameterSet:
         assert tsp.default == _default()
         assert tsp.timeperiod_values == tuple(_tp_values())
 
-    def test_from_paramters_legacy_tuple(self):
+    def test_from_paramters_legacy_tuple(self) -> None:
         tsp = TimespecificParameterSet.from_parameters((1, 2))
         assert tsp.default == (1, 2)
         assert not tsp.timeperiod_values
 
-    def test_from_parameters_constant_dict(self):
+    def test_from_parameters_constant_dict(self) -> None:
         tsp = TimespecificParameterSet.from_parameters(_default())
         assert tsp.default == _default()
         assert not tsp.timeperiod_values
 
-    def test_evaluate_constant_reevaluates_to_itself(self):
+    def test_evaluate_constant_reevaluates_to_itself(self) -> None:
         assert TimespecificParameterSet(_default(), ()).evaluate(lambda x: True) == _default()
 
-    def test_evaluate_no_period_active(self):
+    def test_evaluate_no_period_active(self) -> None:
         assert (
             TimespecificParameterSet(_default(), _tp_values()).evaluate(lambda x: False)
             == _default()
         )
 
-    def test_evaluate_first_period_wins(self):
+    def test_evaluate_first_period_wins(self) -> None:
         assert TimespecificParameterSet(_default(), _tp_values()).evaluate(lambda x: True) == {
             "default": 42,
             "value": "from tp1",
         }
 
-    def test_evaluate_tp_filtering(self):
+    def test_evaluate_tp_filtering(self) -> None:
         assert TimespecificParameterSet(_default(), _tp_values()).evaluate(
             lambda x: x == "tp2"
         ) == {"default": 42, "value": "from tp2"}
 
 
 class TestTimespecificParameters:
-    def test_first_key_wins(self):
+    def test_first_key_wins(self) -> None:
         assert TimespecificParameters(
             (
                 TimespecificParameterSet(
@@ -86,7 +86,7 @@ class TestTimespecificParameters:
             )
         ).evaluate(lambda x: True) == {"key": "I am only default, but the most specific rule!"}
 
-    def test_first_tuple_wins(self):
+    def test_first_tuple_wins(self) -> None:
         tuple_1: List[Tuple[str, LegacyCheckParameters]] = [("tp3", (1, 1))]
         tuple_2: List[Tuple[str, LegacyCheckParameters]] = [("tp3", (2, 2))]
         assert TimespecificParameters(
@@ -106,7 +106,7 @@ def _with_tuple() -> Sequence[LegacyCheckParameters]:
     return [(23, 23), {"key": "first_value"}, (666, 666)]
 
 
-def test_boil_down_parameters_good_case():
+def test_boil_down_parameters_good_case() -> None:
     assert boil_down_parameters(_all_dicts(), {"default": "some_value"}) == {
         "key": "first_value",
         "key2": "some_value",
@@ -118,12 +118,12 @@ def test_boil_down_parameters_good_case():
     }
 
 
-def test_boil_down_parameters_first_tuple_wins():
+def test_boil_down_parameters_first_tuple_wins() -> None:
     assert boil_down_parameters(_with_tuple(), (42, 42)) == (23, 23)
     assert boil_down_parameters((), (42, 42)) == (42, 42)
 
 
-def test_boil_down_parameters_default_is_tuple():
+def test_boil_down_parameters_default_is_tuple() -> None:
     assert boil_down_parameters((), (42, 42)) == (42, 42)
     assert boil_down_parameters(_all_dicts(), (42, 42)) == {
         "key": "first_value",

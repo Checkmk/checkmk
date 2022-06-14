@@ -9,7 +9,7 @@ import os
 from tests.testlib.site import Site
 
 
-def test_basic_commands(site: Site):
+def test_basic_commands(site: Site) -> None:
     commands = [
         "bin/mkp",
         "bin/check_mk",

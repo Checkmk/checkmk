@@ -41,6 +41,6 @@ pytestmark = pytest.mark.checks
         )
     ],
 )
-def test_get_filesystem_levels(info, expected_result):
+def test_get_filesystem_levels(info, expected_result) -> None:
     result = parse_netapp_api_multiple_instances(info)
     assert result == expected_result

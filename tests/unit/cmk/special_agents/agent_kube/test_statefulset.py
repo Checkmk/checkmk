@@ -59,7 +59,7 @@ def test_statefulset_pod_resources_returns_all_pods(
     assert sum(len(pods) for _, pods in pod_resources) == statefulset_pods
 
 
-def test_statefulset_pod_resources_one_pod_per_phase(statefulset: agent_kube.StatefulSet):
+def test_statefulset_pod_resources_one_pod_per_phase(statefulset: agent_kube.StatefulSet) -> None:
     resources = dict(statefulset.pod_resources())
     pod_resources = section.PodResources(**resources)
     for _phase, pods in pod_resources:

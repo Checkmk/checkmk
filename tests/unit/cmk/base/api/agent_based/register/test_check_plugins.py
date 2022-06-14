@@ -63,13 +63,13 @@ def dummy_function_jj(section_jim, section_jill):  # pylint: disable=unused-argu
         ("", ValueError),
     ],
 )
-def test_invalid_service_name(string, exc_ty):
+def test_invalid_service_name(string, exc_ty) -> None:
     with pytest.raises(exc_ty):
         check_plugins._validate_service_name(CheckPluginName("test"), string)
 
 
 @pytest.mark.parametrize("string", ["whooop", "foo %s bar"])
-def test_valid_service_name(string):
+def test_valid_service_name(string) -> None:
     check_plugins._validate_service_name(CheckPluginName("test"), string)
 
 
@@ -80,7 +80,7 @@ def test_valid_service_name(string):
         ("Foo %s", True),
     ],
 )
-def test_requires_item(service_name, expected):
+def test_requires_item(service_name, expected) -> None:
     assert check_plugins._requires_item(service_name) == expected
 
 
@@ -91,7 +91,7 @@ def test_requires_item(service_name, expected):
         "mööp",
     ],
 )
-def test_create_sections_invalid(sections):
+def test_create_sections_invalid(sections) -> None:
     with pytest.raises((TypeError, ValueError)):
         check_plugins.create_subscribed_sections(sections, None)  # type: ignore[arg-type]
 
@@ -107,7 +107,7 @@ def test_create_sections_invalid(sections):
         ),
     ],
 )
-def test_create_sections(sections, plugin_name, expected):
+def test_create_sections(sections, plugin_name, expected) -> None:
     assert check_plugins.create_subscribed_sections(sections, plugin_name) == expected
 
 
@@ -141,7 +141,7 @@ def test_create_sections(sections, plugin_name, expected):
         (dummy_function_jj, False, False, [CheckPluginName("jim"), CheckPluginName("jill")], None),
     ],
 )
-def test_validate_function_args(function, has_item, has_params, sections, raises):
+def test_validate_function_args(function, has_item, has_params, sections, raises) -> None:
     if raises is None:
         check_plugins.validate_function_arguments(
             type_label="check",
@@ -163,13 +163,13 @@ def test_validate_function_args(function, has_item, has_params, sections, raises
 
 
 @pytest.mark.parametrize("key", list(MINIMAL_CREATION_KWARGS.keys()))
-def test_create_check_plugin_mandatory(key):
+def test_create_check_plugin_mandatory(key) -> None:
     kwargs = {k: v for k, v in MINIMAL_CREATION_KWARGS.items() if k != key}
     with pytest.raises(TypeError):
         _ = check_plugins.create_check_plugin(**kwargs)
 
 
-def test_create_check_plugin_mgmt_reserved():
+def test_create_check_plugin_mgmt_reserved() -> None:
     kwargs = MINIMAL_CREATION_KWARGS.copy()
     kwargs["service_name"] = "Management Interface: "
     with pytest.raises(ValueError):
@@ -186,7 +186,7 @@ def test_create_check_plugin_mgmt_reserved():
     _ = check_plugins.create_check_plugin(**kwargs)
 
 
-def test_create_check_plugin():
+def test_create_check_plugin() -> None:
     plugin = check_plugins.create_check_plugin(**MINIMAL_CREATION_KWARGS)
 
     assert plugin.name == CheckPluginName(MINIMAL_CREATION_KWARGS["name"])
@@ -202,6 +202,6 @@ def test_create_check_plugin():
     assert plugin.check_ruleset_name is None
 
 
-def test_module_attribute(fix_register):
+def test_module_attribute(fix_register) -> None:
     local_check = fix_register.check_plugins[CheckPluginName("local")]
     assert local_check.module == "local"

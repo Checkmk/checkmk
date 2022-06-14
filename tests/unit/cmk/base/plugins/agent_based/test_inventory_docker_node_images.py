@@ -16,7 +16,7 @@ from cmk.base.plugins.agent_based.inventory_docker_node_images import (
 from .utils_inventory import sort_inventory_result
 
 
-def test_inventory_docker_node_images_empty():
+def test_inventory_docker_node_images_empty() -> None:
     with pytest.raises(docker.AgentOutputMalformatted) as e:
         parse_docker_node_images([])
         assert (
@@ -68,7 +68,7 @@ AGENT_OUTPUT_NULL_LABELS_ST = [
 ]
 
 
-def test_inventory_docker_node_images():
+def test_inventory_docker_node_images() -> None:
     parsed = [line.split("\0") for line in AGENT_OUTPUT.split("\n")]
     assert sort_inventory_result(
         inventory_docker_node_images(parse_docker_node_images(parsed))
@@ -108,7 +108,7 @@ def test_inventory_docker_node_images():
     )
 
 
-def test_inventory_docker_node_images_labels_null():
+def test_inventory_docker_node_images_labels_null() -> None:
     assert sort_inventory_result(
         inventory_docker_node_images(parse_docker_node_images(AGENT_OUTPUT_NULL_LABELS_ST))
     ) == sort_inventory_result(

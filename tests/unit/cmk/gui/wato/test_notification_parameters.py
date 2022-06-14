@@ -30,12 +30,12 @@ expected_plugins = [
 ]
 
 
-def test_registered_notification_parameters():
+def test_registered_notification_parameters() -> None:
     registered_plugins = sorted(utils.notification_parameter_registry.keys())
     assert registered_plugins == sorted(expected_plugins)
 
 
-def test_register_legacy_notification_parameters(monkeypatch):
+def test_register_legacy_notification_parameters(monkeypatch) -> None:
     monkeypatch.setattr(
         utils, "notification_parameter_registry", utils.NotificationParameterRegistry()
     )

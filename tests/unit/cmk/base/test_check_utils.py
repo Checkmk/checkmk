@@ -23,7 +23,7 @@ def _service(plugin: str, item: Optional[str]) -> ConfiguredService:
     )
 
 
-def test_service_sortable():
+def test_service_sortable() -> None:
 
     assert sorted(
         [

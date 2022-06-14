@@ -36,7 +36,7 @@ from cmk.base.plugins.agent_based.utils import df
         ),
     ],
 )
-def test_df_discovery(params, expected):
+def test_df_discovery(params, expected) -> None:
     actual = df.df_discovery(params, ["SUMMARY", "ceph_foo", "ceph_bar"])
 
     assert len(actual) == len(expected)
@@ -325,7 +325,7 @@ def test_df_check_filesystem_single(
     ],
     ids=["unique", "duplicates"],
 )
-def test_mountpoints_in_group(mplist, patterns_include, patterns_exclude, expected):
+def test_mountpoints_in_group(mplist, patterns_include, patterns_exclude, expected) -> None:
     """Returns list of mountpoints without duplicates."""
 
     result = df.mountpoints_in_group(mplist, patterns_include, patterns_exclude)

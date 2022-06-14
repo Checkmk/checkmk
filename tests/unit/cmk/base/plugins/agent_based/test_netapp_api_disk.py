@@ -55,7 +55,7 @@ _AGENT_OUTPUT = [
         (_AGENT_OUTPUT, [Service()]),
     ],
 )
-def test_discover_netapp_api_disk(fix_register, string_table, expected_result):
+def test_discover_netapp_api_disk(fix_register, string_table, expected_result) -> None:
     check_plugin = fix_register.check_plugins[CheckPluginName("netapp_api_disk_summary")]
     assert (
         sorted(check_plugin.discovery_function(parse_netapp_api_disk(string_table)))
@@ -82,7 +82,7 @@ def test_discover_netapp_api_disk(fix_register, string_table, expected_result):
         ),
     ],
 )
-def test_check_netapp_api_disk(fix_register, string_table, expected_result):
+def test_check_netapp_api_disk(fix_register, string_table, expected_result) -> None:
     check_plugin = fix_register.check_plugins[CheckPluginName("netapp_api_disk_summary")]
     assert (
         list(check_plugin.check_function(params={}, section=parse_netapp_api_disk(string_table)))
@@ -137,7 +137,7 @@ def test_check_netapp_api_disk(fix_register, string_table, expected_result):
         ),
     ],
 )
-def test_inventory_netapp_api_disk(string_table, expected_result):
+def test_inventory_netapp_api_disk(string_table, expected_result) -> None:
     assert sort_inventory_result(
         inventory_netapp_api_disk(parse_netapp_api_disk(string_table))
     ) == sort_inventory_result(expected_result)

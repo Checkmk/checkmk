@@ -38,7 +38,7 @@ SECTION: Final = {
 }
 
 
-def test_parsing():
+def test_parsing() -> None:
     assert SECTION == parse_mrpe(
         [
             ["Foo_Application", "0", "Foo", "server", "up", "and", "running"],
@@ -75,7 +75,7 @@ def test_parsing():
     )
 
 
-def test_discovery():
+def test_discovery() -> None:
     assert list(discover_mrpe(SECTION)) == [
         Service(item="Bar_Extender"),
         Service(item="Foo_Application"),
@@ -84,7 +84,7 @@ def test_discovery():
     ]
 
 
-def test_check_mrpe():
+def test_check_mrpe() -> None:
     assert list(check_mrpe("Bar_Extender", SECTION)) == [
         Result(
             state=State.WARN,
@@ -116,7 +116,7 @@ def test_check_mrpe():
     ]
 
 
-def test_check_invalid_metric():
+def test_check_invalid_metric() -> None:
     assert list(check_mrpe("Invalid_Metric", SECTION)) == [
         Result(
             state=State.OK,

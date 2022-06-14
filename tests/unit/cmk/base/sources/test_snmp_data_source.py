@@ -52,7 +52,7 @@ def source_fixture(scenario, hostname, ipaddress):
     )
 
 
-def test_snmp_ipaddress_from_mgmt_board_unresolvable(hostname, monkeypatch):
+def test_snmp_ipaddress_from_mgmt_board_unresolvable(hostname, monkeypatch) -> None:
     def fake_lookup_ip_address(*_a, **_kw):
         raise MKIPAddressLookupError("Failed to ...")
 
@@ -71,20 +71,20 @@ def test_snmp_ipaddress_from_mgmt_board_unresolvable(hostname, monkeypatch):
     assert config.lookup_mgmt_board_ip_address(host_config) is None
 
 
-def test_attribute_defaults(source, hostname, ipaddress, monkeypatch):
+def test_attribute_defaults(source, hostname, ipaddress, monkeypatch) -> None:
     assert source.hostname == hostname
     assert source.ipaddress == ipaddress
     assert source.id == "snmp"
     assert source._on_snmp_scan_error == OnError.RAISE
 
 
-def test_description_with_ipaddress(source, monkeypatch):
+def test_description_with_ipaddress(source, monkeypatch) -> None:
     default = "SNMP (Community: 'public', Bulk walk: no, Port: 161, Backend: Classic)"
     assert source.description == default
 
 
 class TestSNMPSource_SNMP:
-    def test_attribute_defaults(self, monkeypatch):
+    def test_attribute_defaults(self, monkeypatch) -> None:
         hostname = "testhost"
         ipaddress = "1.2.3.4"
 
@@ -105,7 +105,7 @@ class TestSNMPSource_SNMP:
 
 
 class TestSNMPSource_MGMT:
-    def test_attribute_defaults(self, monkeypatch):
+    def test_attribute_defaults(self, monkeypatch) -> None:
         hostname = "testhost"
         ipaddress = "1.2.3.4"
 
@@ -159,13 +159,13 @@ class TestSNMPSummaryResult:
         )
 
     @pytest.mark.usefixtures("scenario")
-    def test_defaults(self, source):
+    def test_defaults(self, source) -> None:
         assert source.summarize(result.OK(HostSections[AgentRawDataSection]())) == [
             ActiveCheckResult(0, "Success")
         ]
 
     @pytest.mark.usefixtures("scenario")
-    def test_with_exception(self, source):
+    def test_with_exception(self, source) -> None:
         assert source.summarize(result.Error(Exception())) == [ActiveCheckResult(3)]
 
 

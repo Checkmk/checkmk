@@ -77,7 +77,7 @@ _CHECK_PARAMS = {
         ),
     ],
 )
-def test_cisco_asa_failover_parse(string_table, expected):
+def test_cisco_asa_failover_parse(string_table, expected) -> None:
     assert parse_cisco_asa_failover(string_table) == expected
 
 
@@ -98,7 +98,7 @@ def test_cisco_asa_failover_parse(string_table, expected):
         ),
     ],
 )
-def test_cisco_asa_failover_discover(section, expected):
+def test_cisco_asa_failover_discover(section, expected) -> None:
     assert list(discovery_cisco_asa_failover(section)) == expected
 
 
@@ -217,6 +217,6 @@ def test_cisco_asa_failover_discover(section, expected):
         ),
     ],
 )
-def test_cisco_asa_failover(params, section, expected):
+def test_cisco_asa_failover(params, section, expected) -> None:
     result = check_cisco_asa_failover(params, section)
     assert list(result) == expected

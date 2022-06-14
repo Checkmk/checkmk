@@ -69,7 +69,7 @@ _AGENT_OUTPUT_2 = [
         (_AGENT_OUTPUT_2, [Service(item="SGP")]),
     ],
 )
-def test_discover_oracle_performance(fix_register, string_table, expected_result):
+def test_discover_oracle_performance(fix_register, string_table, expected_result) -> None:
     check_plugin = fix_register.check_plugins[CheckPluginName("oracle_performance")]
     section = parse_oracle_performance(string_table)
     assert sorted(check_plugin.discovery_function(section)) == expected_result
@@ -135,7 +135,9 @@ def test_discover_oracle_performance(fix_register, string_table, expected_result
         ),
     ],
 )
-def test_check_oracle_performance(monkeypatch, fix_register, string_table, item, expected_result):
+def test_check_oracle_performance(
+    monkeypatch, fix_register, string_table, item, expected_result
+) -> None:
     # TODO hack: clean this up as soon as the check is migrated
     monkeypatch.setattr(cmk.base.plugin_contexts, "_hostname", "foo")
     monkeypatch.setattr(cmk.base.config.ConfigCache, "host_extra_conf_merged", lambda s, h, r: {})
@@ -186,7 +188,7 @@ def test_check_oracle_performance(monkeypatch, fix_register, string_table, item,
         ),
     ],
 )
-def test_inventory_oracle_performance(string_table, expected_result):
+def test_inventory_oracle_performance(string_table, expected_result) -> None:
     assert (
         list(inventory_oracle_performance(parse_oracle_performance(string_table)))
         == expected_result

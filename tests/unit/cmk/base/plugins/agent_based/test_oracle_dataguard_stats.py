@@ -56,7 +56,7 @@ _AGENT_OUTPUT = [
         ),
     ],
 )
-def test_discover_oracle_dataguard_stats(fix_register, string_table, expected_result):
+def test_discover_oracle_dataguard_stats(fix_register, string_table, expected_result) -> None:
     check_plugin = fix_register.check_plugins[CheckPluginName("oracle_dataguard_stats")]
     section = parse_oracle_dataguard_stats(string_table)
     assert sorted(check_plugin.discovery_function(section)) == expected_result
@@ -102,7 +102,7 @@ def test_discover_oracle_dataguard_stats(fix_register, string_table, expected_re
         ),
     ],
 )
-def test_check_oracle_dataguard_stats(fix_register, string_table, item, expected_result):
+def test_check_oracle_dataguard_stats(fix_register, string_table, item, expected_result) -> None:
     check_plugin = fix_register.check_plugins[CheckPluginName("oracle_dataguard_stats")]
     section = parse_oracle_dataguard_stats(string_table)
     assert (
@@ -162,7 +162,7 @@ def test_check_oracle_dataguard_stats(fix_register, string_table, item, expected
         ),
     ],
 )
-def test_inventory_oracle_dataguard_stats(string_table, expected_result):
+def test_inventory_oracle_dataguard_stats(string_table, expected_result) -> None:
     assert sort_inventory_result(
         inventory_oracle_dataguard_stats(parse_oracle_dataguard_stats(string_table))
     ) == sort_inventory_result(expected_result)

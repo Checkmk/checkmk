@@ -69,19 +69,19 @@ def fixture_check_result(sensor_id: str, params: TempParamDict, section: Section
     return cisco_ie_temp.check(SensorId(sensor_id), params, section)
 
 
-def test_parse(string_table: StringTable):
+def test_parse(string_table: StringTable) -> None:
     section = cisco_ie_temp.parse(string_table)
     assert section is not None
 
 
-def test_discovery(sensors_count: int, section: Section):
+def test_discovery(sensors_count: int, section: Section) -> None:
     assert len(list(cisco_ie_temp.discover(section))) == sensors_count
 
 
-def test_check_result_includes_metric(check_result: CheckResult):
+def test_check_result_includes_metric(check_result: CheckResult) -> None:
     assert any(isinstance(m, Metric) for m in check_result)
 
 
-def test_check_with_no_matching_sensor_id(sensor_id: str, section: Section):
+def test_check_with_no_matching_sensor_id(sensor_id: str, section: Section) -> None:
     check_result = list(cisco_ie_temp.check(SensorId(f"invalid_{sensor_id}"), {}, section))
     assert len(check_result) == 0

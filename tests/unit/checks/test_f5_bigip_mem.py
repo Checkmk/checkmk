@@ -21,7 +21,7 @@ pytestmark = pytest.mark.checks
         ([[1, 0, "", ""]], (1.0, 0.0, [("total", {})])),
     ],
 )
-def test_f5_bigip_mem_discovery(info, result):
+def test_f5_bigip_mem_discovery(info, result) -> None:
     mem_total, mem_used, items = result
     check = Check("f5_bigip_mem")
     parsed = check.run_parse(info)
@@ -42,7 +42,7 @@ def test_f5_bigip_mem_discovery(info, result):
         ([["", "", 1, 0]], [("TMM", {})]),
     ],
 )
-def test_f5_bigip_mem_tmm_discovery(info, result):
+def test_f5_bigip_mem_tmm_discovery(info, result) -> None:
     parsed = Check("f5_bigip_mem").run_parse(info)
     check = Check("f5_bigip_mem.tmm")
 
@@ -68,7 +68,7 @@ def test_f5_bigip_mem_tmm_discovery(info, result):
         ),
     ],
 )
-def test_f5_bigip_mem_check(parsed, expected_result):
+def test_f5_bigip_mem_check(parsed, expected_result) -> None:
     check = Check("f5_bigip_mem")
     assert check.run_check(None, {}, parsed) == expected_result
 
@@ -89,6 +89,6 @@ def test_f5_bigip_mem_check(parsed, expected_result):
         ),
     ],
 )
-def test_f5_bigip_mem_tmm_check(parsed, expected_result):
+def test_f5_bigip_mem_tmm_check(parsed, expected_result) -> None:
     check = Check("f5_bigip_mem.tmm")
     assert check.run_check(None, {}, parsed) == expected_result

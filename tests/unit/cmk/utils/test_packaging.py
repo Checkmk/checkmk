@@ -89,7 +89,7 @@ def fixture_reload_apache(mocker: MockerFixture) -> Callable[[], None]:
     )
 
 
-def test_package_parts():
+def test_package_parts() -> None:
     assert sorted(packaging.get_package_parts()) == sorted(
         [
             packaging.PackagePart(
@@ -141,7 +141,7 @@ def test_package_parts():
     )
 
 
-def test_config_parts():
+def test_config_parts() -> None:
     assert packaging.get_config_parts() == [
         packaging.PackagePart(
             "ec_rule_packs",
@@ -151,7 +151,7 @@ def test_config_parts():
     ]
 
 
-def test_get_permissions_unknown_path():
+def test_get_permissions_unknown_path() -> None:
     with pytest.raises(packaging.PackageException):
         assert packaging._get_permissions("lala")
 
@@ -163,19 +163,19 @@ def test_get_permissions_unknown_path():
         (str(cmk.utils.paths.local_bin_dir), 0o755),
     ],
 )
-def test_get_permissions(path, expected):
+def test_get_permissions(path, expected) -> None:
     assert packaging._get_permissions(path) == expected
 
 
-def test_package_dir():
+def test_package_dir() -> None:
     assert isinstance(packaging.package_dir(), Path)
 
 
-def test_get_config_parts():
+def test_get_config_parts() -> None:
     assert [p.ident for p in packaging.get_config_parts()] == ["ec_rule_packs"]
 
 
-def test_get_package_parts():
+def test_get_package_parts() -> None:
     assert sorted([p.ident for p in packaging.get_package_parts()]) == sorted(
         [
             "agent_based",
@@ -215,31 +215,31 @@ def _create_test_file(name):
         f.write("lala\n")
 
 
-def test_create():
+def test_create() -> None:
     assert packaging.installed_names() == []
     _create_simple_test_package("aaa")
     assert packaging.installed_names() == ["aaa"]
 
 
-def test_create_twice():
+def test_create_twice() -> None:
     _create_simple_test_package("aaa")
 
     with pytest.raises(packaging.PackageException):
         _create_simple_test_package("aaa")
 
 
-def test_read_package_info():
+def test_read_package_info() -> None:
     _create_simple_test_package("aaa")
     package_info = _read_package_info("aaa")
     assert package_info["version"] == "1.0"
     assert packaging.package_num_files(package_info) == 1
 
 
-def test_read_package_info_not_existing():
+def test_read_package_info_not_existing() -> None:
     assert packaging.read_package_info("aaa") is None
 
 
-def test_edit_not_existing():
+def test_edit_not_existing() -> None:
     new_package_info = packaging.get_initial_package_info("aaa")
     new_package_info["version"] = "2.0"
 
@@ -247,7 +247,7 @@ def test_edit_not_existing():
         packaging.edit("aaa", new_package_info)
 
 
-def test_edit():
+def test_edit() -> None:
     new_package_info = packaging.get_initial_package_info("aaa")
     new_package_info["version"] = "2.0"
 
@@ -259,7 +259,7 @@ def test_edit():
     assert _read_package_info("aaa")["version"] == "2.0"
 
 
-def test_edit_rename():
+def test_edit_rename() -> None:
     new_package_info = packaging.get_initial_package_info("bbb")
 
     _create_simple_test_package("aaa")
@@ -270,7 +270,7 @@ def test_edit_rename():
     assert packaging.read_package_info("aaa") is None
 
 
-def test_edit_rename_conflict():
+def test_edit_rename_conflict() -> None:
     new_package_info = packaging.get_initial_package_info("bbb")
     _create_simple_test_package("aaa")
     _create_simple_test_package("bbb")
@@ -279,7 +279,7 @@ def test_edit_rename_conflict():
         packaging.edit("aaa", new_package_info)
 
 
-def test_install(mkp_bytes, build_setup_search_index):
+def test_install(mkp_bytes, build_setup_search_index) -> None:
     packaging.install(mkp_bytes)
     build_setup_search_index.assert_called_once()
 
@@ -290,7 +290,7 @@ def test_install(mkp_bytes, build_setup_search_index):
     assert cmk.utils.paths.local_checks_dir.joinpath("aaa").exists()
 
 
-def test_install_by_path(mkp_file, build_setup_search_index):
+def test_install_by_path(mkp_file, build_setup_search_index) -> None:
     packaging.install_by_path(mkp_file)
     build_setup_search_index.assert_called_once()
 
@@ -301,12 +301,12 @@ def test_install_by_path(mkp_file, build_setup_search_index):
     assert cmk.utils.paths.local_checks_dir.joinpath("aaa").exists()
 
 
-def test_release_not_existing():
+def test_release_not_existing() -> None:
     with pytest.raises(packaging.PackageException):
         packaging.release("abc")
 
 
-def test_release():
+def test_release() -> None:
     _create_simple_test_package("aaa")
     assert packaging._package_exists("aaa") is True
     assert cmk.utils.paths.local_checks_dir.joinpath("aaa").exists()
@@ -317,7 +317,7 @@ def test_release():
     assert cmk.utils.paths.local_checks_dir.joinpath("aaa").exists()
 
 
-def test_write_file():
+def test_write_file() -> None:
     package_info = _create_simple_test_package("aaa")
 
     mkp = BytesIO()
@@ -339,14 +339,14 @@ def test_write_file():
     assert info2["name"] == "aaa"
 
 
-def test_remove(build_setup_search_index):
+def test_remove(build_setup_search_index) -> None:
     package_info = _create_simple_test_package("aaa")
     packaging.remove(package_info)
     build_setup_search_index.assert_called_once()
     assert packaging._package_exists("aaa") is False
 
 
-def test_unpackaged_files_none():
+def test_unpackaged_files_none() -> None:
     assert {part.ident: files for part, files in packaging.unpackaged_files().items()} == {
         "agent_based": [],
         "agents": [],
@@ -367,7 +367,7 @@ def test_unpackaged_files_none():
     }
 
 
-def test_unpackaged_files():
+def test_unpackaged_files() -> None:
     _create_test_file("abc")
 
     p = cmk.utils.paths.local_doc_dir.joinpath("docxx")
@@ -402,11 +402,11 @@ def test_unpackaged_files():
 # def test_package_part_info()
 
 
-def test_get_optional_package_infos_none():
+def test_get_optional_package_infos_none() -> None:
     assert packaging.get_optional_package_infos() == {}
 
 
-def test_get_optional_package_infos(monkeypatch, tmp_path):
+def test_get_optional_package_infos(monkeypatch, tmp_path) -> None:
     mkp_dir = tmp_path.joinpath("optional_packages")
     mkp_dir.mkdir(parents=True, exist_ok=True)
     monkeypatch.setattr(cmk.utils.paths, "optional_packages_dir", mkp_dir)
@@ -423,20 +423,20 @@ def test_get_optional_package_infos(monkeypatch, tmp_path):
     assert packaging.get_optional_package_infos() == {"optional.mkp": package_info}
 
 
-def test_parse_package_info_pre_160():
+def test_parse_package_info_pre_160() -> None:
     assert packaging.parse_package_info(repr({"name": "aaa"}))["version.usable_until"] is None
 
 
-def test_parse_package_info():
+def test_parse_package_info() -> None:
     info_str = repr(packaging.get_initial_package_info("pkgname"))
     assert packaging.parse_package_info(info_str)["name"] == "pkgname"
 
 
-def test_disable_package(mkp_file, build_setup_search_index):
+def test_disable_package(mkp_file, build_setup_search_index) -> None:
     _install_and_disable_package(mkp_file, build_setup_search_index)
 
 
-def test_is_disabled(mkp_file, build_setup_search_index):
+def test_is_disabled(mkp_file, build_setup_search_index) -> None:
     package_file_name = _install_and_disable_package(mkp_file, build_setup_search_index)
     assert packaging.is_disabled(package_file_name)
 
@@ -464,7 +464,7 @@ def _install_and_disable_package(mkp_file, build_setup_search_index):
     return package_file_name
 
 
-def test_enable_disabled_package(mkp_file, build_setup_search_index):
+def test_enable_disabled_package(mkp_file, build_setup_search_index) -> None:
     package_file_name = _install_and_disable_package(mkp_file, build_setup_search_index)
 
     packaging.enable(package_file_name)
@@ -474,7 +474,7 @@ def test_enable_disabled_package(mkp_file, build_setup_search_index):
     assert cmk.utils.paths.local_checks_dir.joinpath("aaa").exists()
 
 
-def test_remove_disabled_package(mkp_file, build_setup_search_index):
+def test_remove_disabled_package(mkp_file, build_setup_search_index) -> None:
     package_file_name = _install_and_disable_package(mkp_file, build_setup_search_index)
 
     packaging.remove_disabled(package_file_name)

@@ -69,7 +69,7 @@ range_data = {
         ),
     ],
 )
-def test_nimble_latency_ranges(params, data, result):
+def test_nimble_latency_ranges(params, data, result) -> None:
     """The user can specify a parameter range_reference, which serves as a starting
     point from which values should start to be stacked and checked against levels.
     Test whether the stacking is correct."""
@@ -95,7 +95,7 @@ def test_nimble_latency_ranges(params, data, result):
         ),
     ],
 )
-def test_nimble_latency_read_params(params, data, result):
+def test_nimble_latency_read_params(params, data, result) -> None:
     """Test that latency read levels are applied to read types only."""
 
     read_check = Check("nimble_latency")
@@ -122,7 +122,7 @@ def test_nimble_latency_read_params(params, data, result):
         ),
     ],
 )
-def test_nimble_latency_write_params(params, data, result):
+def test_nimble_latency_write_params(params, data, result) -> None:
     """Test that latency write levels are applied to write types only."""
 
     read_check = Check("nimble_latency")

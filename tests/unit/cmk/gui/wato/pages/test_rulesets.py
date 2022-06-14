@@ -297,7 +297,7 @@ class TestRuleConditionRenderer:
             ),
         ],
     )
-    def test_render_host_condition_text_raises(self, folder_lookup, conditions, exception):
+    def test_render_host_condition_text_raises(self, folder_lookup, conditions, exception) -> None:
         with pytest.raises(exception):
             assert RuleConditionRenderer()._render_host_condition_text(conditions)
 
@@ -408,7 +408,7 @@ class TestRuleConditionRenderer:
             ),
         ],
     )
-    def test_service_conditions(self, item_type, item_name, conditions, expected):
+    def test_service_conditions(self, item_type, item_name, conditions, expected) -> None:
         assert (
             list(RuleConditionRenderer()._service_conditions(item_type, item_name, conditions))
             == expected

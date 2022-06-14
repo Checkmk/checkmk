@@ -29,7 +29,7 @@ class HardResourceRequirementFactory(ModelFactory):
     __model__ = HardResourceRequirement
 
 
-def test_check_kube_resource_quota_memory_with_no_resources():
+def test_check_kube_resource_quota_memory_with_no_resources() -> None:
     resource_usage = PerformanceUsageFactory.build(resource=MemoryFactory.build(usage=1000.0))
 
     result = tuple(
@@ -46,7 +46,7 @@ def test_check_kube_resource_quota_memory_with_no_resources():
     assert [entry[0] for entry in result if isinstance(entry, Metric)] == ["kube_memory_usage"]
 
 
-def test_check_kube_resource_quota_memory_with_no_usage():
+def test_check_kube_resource_quota_memory_with_no_usage() -> None:
     hard_requirement = HardResourceRequirementFactory.build(request=1000.0, limit=2000.0)
 
     result = tuple(
@@ -69,7 +69,7 @@ def test_check_kube_resource_quota_memory_with_no_usage():
     ]
 
 
-def test_check_kube_resource_quota_memory_with_usage_and_requests_and_limits():
+def test_check_kube_resource_quota_memory_with_usage_and_requests_and_limits() -> None:
     hard_requirement = HardResourceRequirementFactory.build(request=1000.0, limit=2000.0)
     resource_usage = PerformanceUsageFactory.build(resource=MemoryFactory.build(usage=1000.0))
 
@@ -95,7 +95,7 @@ def test_check_kube_resource_quota_memory_with_usage_and_requests_and_limits():
     ]
 
 
-def test_check_kube_resource_quota_memory_with_usage_and_no_limits():
+def test_check_kube_resource_quota_memory_with_usage_and_no_limits() -> None:
     hard_requirement = HardResourceRequirementFactory.build(request=1000.0, limit=None)
     resource_usage = PerformanceUsageFactory.build(resource=MemoryFactory.build(usage=1000.0))
 
@@ -119,7 +119,7 @@ def test_check_kube_resource_quota_memory_with_usage_and_no_limits():
     ]
 
 
-def test_check_kube_resource_quota_memory_with_usage_params():
+def test_check_kube_resource_quota_memory_with_usage_params() -> None:
     resource_usage = PerformanceUsageFactory.build(resource=MemoryFactory.build(usage=1000.0))
 
     result = tuple(
@@ -140,7 +140,7 @@ def test_check_kube_resource_quota_memory_with_usage_params():
     assert [entry[0] for entry in result if isinstance(entry, Metric)] == ["kube_memory_usage"]
 
 
-def test_check_kube_resource_quota_memory_with_request_params():
+def test_check_kube_resource_quota_memory_with_request_params() -> None:
     resource_usage = PerformanceUsageFactory.build(resource=MemoryFactory.build(usage=1000.0))
     hard_requirement = HardResourceRequirementFactory.build(request=1000.0, limit=None)
 

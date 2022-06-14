@@ -26,7 +26,7 @@ from tests.testlib.base import Scenario
         ),
     ],
 )
-def test_mgmt_explicit_settings(monkeypatch, protocol, cred_attribute, credentials):
+def test_mgmt_explicit_settings(monkeypatch, protocol, cred_attribute, credentials) -> None:
     ts = Scenario()
     ts.add_host("mgmt-host")
     ts.set_option("ipaddresses", {"mgmt-host": "127.0.0.1"})
@@ -41,7 +41,7 @@ def test_mgmt_explicit_settings(monkeypatch, protocol, cred_attribute, credentia
     assert host_config.management_credentials == credentials
 
 
-def test_mgmt_explicit_address(monkeypatch):
+def test_mgmt_explicit_address(monkeypatch) -> None:
     ts = Scenario()
     ts.add_host("mgmt-host")
     ts.set_option("ipaddresses", {"mgmt-host": "127.0.0.1"})
@@ -56,7 +56,7 @@ def test_mgmt_explicit_address(monkeypatch):
     assert host_config.management_credentials == "public"
 
 
-def test_mgmt_disabled(monkeypatch):
+def test_mgmt_disabled(monkeypatch) -> None:
     ts = Scenario()
     ts.add_host("mgmt-host")
     ts.set_option("ipaddresses", {"mgmt-host": "127.0.0.1"})

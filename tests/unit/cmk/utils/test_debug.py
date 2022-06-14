@@ -7,7 +7,7 @@
 import cmk.utils.debug
 
 
-def test_toggle():
+def test_toggle() -> None:
     cmk.utils.debug.enable()
 
     assert cmk.utils.debug.enabled() is True

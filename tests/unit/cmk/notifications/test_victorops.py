@@ -62,6 +62,6 @@ from cmk.notification_plugins.victorops import victorops_msg
         ),
     ],
 )
-def test_victorops_message(context, result):
+def test_victorops_message(context, result) -> None:
     msg = victorops_msg(context)
     assert msg == result

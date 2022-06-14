@@ -28,7 +28,7 @@ test_device3 = Path(
 
 
 @responses.activate
-def test_agent_output_2_partitions(capsys):
+def test_agent_output_2_partitions(capsys) -> None:
     """Agent output contains piggyback data and sections from both partitions in args
     and from the second page of the first URL (in case total number of devices is more than 200)"""
     # standard request to the first partition but with more than 300 devices in reply

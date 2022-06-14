@@ -7,7 +7,7 @@
 from cmk.base.plugins.agent_based.utils import hp_msa
 
 
-def test_parse_hp_msa_if():
+def test_parse_hp_msa_if() -> None:
     assert hp_msa.parse_hp_msa(
         [
             ["port", "3", "durable-id", "hostport_A1"],

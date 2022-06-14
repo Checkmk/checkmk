@@ -26,7 +26,7 @@ def mock_value_store() -> MutableMapping[str, Any]:
     return {}
 
 
-def test_check_trend_raises():
+def test_check_trend_raises() -> None:
     with pytest.raises(IgnoreResultsError):
         _ = list(
             temperature._check_trend(
@@ -41,7 +41,7 @@ def test_check_trend_raises():
         )
 
 
-def test_check_trend_simple():
+def test_check_trend_simple() -> None:
     with freezegun.freeze_time("1970-01-01 00:01:00"):
         results = list(
             temperature._check_trend(
@@ -57,7 +57,7 @@ def test_check_trend_simple():
     assert results == [Result(state=state.OK, summary="Temperature trend: +12.0°C per 2 min")]
 
 
-def test_check_trend_ok():
+def test_check_trend_ok() -> None:
     with freezegun.freeze_time("1970-01-01 00:01:00"):
         results = list(
             temperature._check_trend(
@@ -77,7 +77,7 @@ def test_check_trend_ok():
     assert results == [Result(state=state.OK, summary="Temperature trend: +12.0°C per 2 min")]
 
 
-def test_check_trend_warn_upper():
+def test_check_trend_warn_upper() -> None:
     with freezegun.freeze_time("1970-01-01 00:01:00"):
         results = list(
             temperature._check_trend(
@@ -102,7 +102,7 @@ def test_check_trend_warn_upper():
     ]
 
 
-def test_check_trend_crit_upper():
+def test_check_trend_crit_upper() -> None:
     with freezegun.freeze_time("1970-01-01 00:01:00"):
         results = list(
             temperature._check_trend(
@@ -127,7 +127,7 @@ def test_check_trend_crit_upper():
     ]
 
 
-def test_check_trend_warn_lower():
+def test_check_trend_warn_lower() -> None:
     with freezegun.freeze_time("1970-01-01 00:01:00"):
         results = list(
             temperature._check_trend(
@@ -152,7 +152,7 @@ def test_check_trend_warn_lower():
     ]
 
 
-def test_check_trend_crit_lower():
+def test_check_trend_crit_lower() -> None:
     with freezegun.freeze_time("1970-01-01 00:01:00"):
         results = list(
             temperature._check_trend(
@@ -177,7 +177,7 @@ def test_check_trend_crit_lower():
     ]
 
 
-def test_check_trend_time_period_ok():
+def test_check_trend_time_period_ok() -> None:
     with freezegun.freeze_time("1970-01-01 00:01:00"):
         results = list(
             temperature._check_trend(
@@ -201,7 +201,7 @@ def test_check_trend_time_period_ok():
     ]
 
 
-def test_check_trend_time_period_warn_upper():
+def test_check_trend_time_period_warn_upper() -> None:
     with freezegun.freeze_time("1970-01-01 00:01:00"):
         results = list(
             temperature._check_trend(
@@ -228,7 +228,7 @@ def test_check_trend_time_period_warn_upper():
     ]
 
 
-def test_check_trend_time_period_crit_upper():
+def test_check_trend_time_period_crit_upper() -> None:
     with freezegun.freeze_time("1970-01-01 00:01:00"):
         results = list(
             temperature._check_trend(
@@ -255,7 +255,7 @@ def test_check_trend_time_period_crit_upper():
     ]
 
 
-def test_check_trend_time_period_warn_lower():
+def test_check_trend_time_period_warn_lower() -> None:
     with freezegun.freeze_time("1970-01-01 00:01:00"):
         results = list(
             temperature._check_trend(
@@ -282,7 +282,7 @@ def test_check_trend_time_period_warn_lower():
     ]
 
 
-def test_check_trend_time_period_crit_lower():
+def test_check_trend_time_period_crit_lower() -> None:
     with freezegun.freeze_time("1970-01-01 00:01:00"):
         results = list(
             temperature._check_trend(
@@ -309,7 +309,7 @@ def test_check_trend_time_period_crit_lower():
     ]
 
 
-def test_check_trend_time_period_zero_lower_bound():
+def test_check_trend_time_period_zero_lower_bound() -> None:
     with freezegun.freeze_time("1970-01-01 00:01:00"):
         results = list(
             temperature._check_trend(
@@ -336,7 +336,7 @@ def test_check_trend_time_period_zero_lower_bound():
     ]
 
 
-def test_check_temperature_simple():
+def test_check_temperature_simple() -> None:
     results = list(
         temperature.check_temperature(
             23.0,
@@ -355,7 +355,7 @@ def test_check_temperature_simple():
     ]
 
 
-def test_check_temperature_user_levels_ok():
+def test_check_temperature_user_levels_ok() -> None:
     results = list(
         temperature.check_temperature(
             23.0,
@@ -376,7 +376,7 @@ def test_check_temperature_user_levels_ok():
     ]
 
 
-def test_check_temperature_user_levels_warn_upper():
+def test_check_temperature_user_levels_warn_upper() -> None:
     results = list(
         temperature.check_temperature(
             23.0,
@@ -397,7 +397,7 @@ def test_check_temperature_user_levels_warn_upper():
     ]
 
 
-def test_check_temperature_user_levels_crit_upper():
+def test_check_temperature_user_levels_crit_upper() -> None:
     results = list(
         temperature.check_temperature(
             30.0,
@@ -418,7 +418,7 @@ def test_check_temperature_user_levels_crit_upper():
     ]
 
 
-def test_check_temperature_user_levels_warn_lower():
+def test_check_temperature_user_levels_warn_lower() -> None:
     results = list(
         temperature.check_temperature(
             -1.0,
@@ -439,7 +439,7 @@ def test_check_temperature_user_levels_warn_lower():
     ]
 
 
-def test_check_temperature_user_levels_crit_lower():
+def test_check_temperature_user_levels_crit_lower() -> None:
     results = list(
         temperature.check_temperature(
             -16.0,
@@ -460,7 +460,7 @@ def test_check_temperature_user_levels_crit_lower():
     ]
 
 
-def test_check_temperature_output_unit():
+def test_check_temperature_output_unit() -> None:
     results = list(
         temperature.check_temperature(
             10.0,
@@ -481,7 +481,7 @@ def test_check_temperature_output_unit():
     ]
 
 
-def test_check_temperature_input_unit():
+def test_check_temperature_input_unit() -> None:
     results = list(
         temperature.check_temperature(
             50.0,
@@ -502,7 +502,7 @@ def test_check_temperature_input_unit():
     ]
 
 
-def test_check_temperature_device_levels_ok():
+def test_check_temperature_device_levels_ok() -> None:
     results = list(
         temperature.check_temperature(
             10.0,
@@ -522,7 +522,7 @@ def test_check_temperature_device_levels_ok():
     ]
 
 
-def test_check_temperature_device_levels_warn_upper():
+def test_check_temperature_device_levels_warn_upper() -> None:
     results = list(
         temperature.check_temperature(
             10.0,
@@ -542,7 +542,7 @@ def test_check_temperature_device_levels_warn_upper():
     ]
 
 
-def test_check_temperature_device_levels_crit_upper():
+def test_check_temperature_device_levels_crit_upper() -> None:
     results = list(
         temperature.check_temperature(
             18.0,
@@ -562,7 +562,7 @@ def test_check_temperature_device_levels_crit_upper():
     ]
 
 
-def test_check_temperature_device_levels_warn_lower():
+def test_check_temperature_device_levels_warn_lower() -> None:
     results = list(
         temperature.check_temperature(
             0.0,
@@ -583,7 +583,7 @@ def test_check_temperature_device_levels_warn_lower():
     ]
 
 
-def test_check_temperature_device_levels_crit_lower():
+def test_check_temperature_device_levels_crit_lower() -> None:
     results = list(
         temperature.check_temperature(
             -20.0,
@@ -604,7 +604,7 @@ def test_check_temperature_device_levels_crit_lower():
     ]
 
 
-def test_check_temperature_use_user_levels():
+def test_check_temperature_use_user_levels() -> None:
     results = list(
         temperature.check_temperature(
             -20.0,
@@ -626,7 +626,7 @@ def test_check_temperature_use_user_levels():
     ]
 
 
-def test_check_temperature_use_device_levels():
+def test_check_temperature_use_device_levels() -> None:
     results = list(
         temperature.check_temperature(
             -20.0,
@@ -648,7 +648,7 @@ def test_check_temperature_use_device_levels():
     ]
 
 
-def test_check_temperature_default_device_levels():
+def test_check_temperature_default_device_levels() -> None:
     results = list(
         temperature.check_temperature(
             -20.0,
@@ -673,7 +673,7 @@ def test_check_temperature_default_device_levels():
     ]
 
 
-def test_check_temperature_default_user_levels():
+def test_check_temperature_default_user_levels() -> None:
     results = list(
         temperature.check_temperature(
             -20.0,
@@ -695,7 +695,7 @@ def test_check_temperature_default_user_levels():
     ]
 
 
-def test_check_temperature_use_device_default_no_levels():
+def test_check_temperature_use_device_default_no_levels() -> None:
     results = list(
         temperature.check_temperature(
             -20.0,
@@ -716,7 +716,7 @@ def test_check_temperature_use_device_default_no_levels():
     ]
 
 
-def test_check_temperature_use_user_default_device_levels():
+def test_check_temperature_use_user_default_device_levels() -> None:
     results = list(
         temperature.check_temperature(
             -20.0,
@@ -738,7 +738,7 @@ def test_check_temperature_use_user_default_device_levels():
     ]
 
 
-def test_check_temperature_use_user_default_user_levels():
+def test_check_temperature_use_user_default_user_levels() -> None:
     results = list(
         temperature.check_temperature(
             -20.0,
@@ -762,7 +762,7 @@ def test_check_temperature_use_user_default_user_levels():
     ]
 
 
-def test_check_temperature_use_user_default_no_levels():
+def test_check_temperature_use_user_default_no_levels() -> None:
     results = list(
         temperature.check_temperature(
             -20.0,
@@ -783,7 +783,7 @@ def test_check_temperature_use_user_default_no_levels():
     ]
 
 
-def test_check_temperature_show_worst():
+def test_check_temperature_show_worst() -> None:
     results = list(
         temperature.check_temperature(
             -20.0,
@@ -805,7 +805,7 @@ def test_check_temperature_show_worst():
     ]
 
 
-def test_check_temperature_show_best():
+def test_check_temperature_show_best() -> None:
     results = list(
         temperature.check_temperature(
             -20.0,
@@ -827,7 +827,7 @@ def test_check_temperature_show_best():
     ]
 
 
-def test_check_temperature_device_status_override_best():
+def test_check_temperature_device_status_override_best() -> None:
     results = list(
         temperature.check_temperature(
             -20.0,
@@ -852,7 +852,7 @@ def test_check_temperature_device_status_override_best():
     ]
 
 
-def test_check_temperature_device_status_override_worst():
+def test_check_temperature_device_status_override_worst() -> None:
     results = list(
         temperature.check_temperature(
             5.0,
@@ -877,7 +877,7 @@ def test_check_temperature_device_status_override_worst():
     ]
 
 
-def test_check_temperature_device_status_override_ok():
+def test_check_temperature_device_status_override_ok() -> None:
     results = list(
         temperature.check_temperature(
             5.0,
@@ -902,7 +902,7 @@ def test_check_temperature_device_status_override_ok():
     ]
 
 
-def test_check_temperature_ignores_trend_computation():
+def test_check_temperature_ignores_trend_computation() -> None:
     trend_params: temperature.TempParamDict = {"trend_compute": {"period": 30}}
     value_store = mock_value_store()
 

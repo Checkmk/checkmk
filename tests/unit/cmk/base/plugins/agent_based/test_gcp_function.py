@@ -155,7 +155,7 @@ def fixture_results(checkplugin, section, params, mocker: MockerFixture):
     return results, checkplugin
 
 
-def test_no_function_section_yields_no_metric_data(checkplugin):
+def test_no_function_section_yields_no_metric_data(checkplugin) -> None:
     params = {k: None for k in checkplugin.metrics}
     results = list(
         checkplugin.function(
@@ -168,14 +168,14 @@ def test_no_function_section_yields_no_metric_data(checkplugin):
     assert len(results) == 0
 
 
-def test_yield_metrics_as_specified(results):
+def test_yield_metrics_as_specified(results) -> None:
     results, checkplugin = results
     res = {r.name: r for r in results if isinstance(r, Metric)}
     assert len(res) == len(checkplugin.metrics)
     assert set(res.keys()) == set(checkplugin.metrics)
 
 
-def test_yield_results_as_specified(results):
+def test_yield_results_as_specified(results) -> None:
     results, checkplugin = results
     res = [r for r in results if isinstance(r, Result)]
     assert len(res) == len(checkplugin.metrics)
@@ -186,7 +186,7 @@ def test_yield_results_as_specified(results):
 class TestDefaultMetricValues:
     # requests does not contain example data
     @pytest.mark.xfail(reason="all metrics available need to filter before passing to check plugin")
-    def test_zero_default_if_metric_does_not_exist(self, section):
+    def test_zero_default_if_metric_does_not_exist(self, section) -> None:
         params = {k: None for k in ["faas_total_instance_count", "faas_active_instance_count"]}
         results = (
             el
@@ -201,7 +201,7 @@ class TestDefaultMetricValues:
         for result in results:
             assert result.value == 0.0
 
-    def test_zero_default_if_item_does_not_exist(self, section, checkplugin: Plugin):
+    def test_zero_default_if_item_does_not_exist(self, section, checkplugin: Plugin) -> None:
         params = {k: None for k in checkplugin.metrics}
         results = (
             el

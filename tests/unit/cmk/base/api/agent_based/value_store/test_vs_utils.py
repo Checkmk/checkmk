@@ -31,12 +31,12 @@ class Test_DynamicDiskSyncedMapping:
     def _get_ddsm() -> _DynamicDiskSyncedMapping[Tuple[str, str, str], object]:
         return _DynamicDiskSyncedMapping()
 
-    def test_init(self):
+    def test_init(self) -> None:
         ddsm = self._get_ddsm()
         assert not ddsm
         assert not ddsm.removed_keys
 
-    def test_removed_del(self):
+    def test_removed_del(self) -> None:
         ddsm = self._get_ddsm()
         try:
             del ddsm[_TEST_KEY]
@@ -44,12 +44,12 @@ class Test_DynamicDiskSyncedMapping:
             pass
         assert ddsm.removed_keys == {_TEST_KEY}
 
-    def test_removed_pop(self):
+    def test_removed_pop(self) -> None:
         ddsm = self._get_ddsm()
         ddsm.pop(_TEST_KEY, None)
         assert ddsm.removed_keys == {_TEST_KEY}
 
-    def test_setitem(self):
+    def test_setitem(self) -> None:
         ddsm = self._get_ddsm()
         value = object()
         ddsm[_TEST_KEY] = value
@@ -61,7 +61,7 @@ class Test_DynamicDiskSyncedMapping:
         ddsm[_TEST_KEY] = value
         assert not ddsm.removed_keys
 
-    def test_delitem(self):
+    def test_delitem(self) -> None:
         ddsm = self._get_ddsm()
         ddsm[_TEST_KEY] = None
         assert _TEST_KEY in ddsm  # setup
@@ -69,7 +69,7 @@ class Test_DynamicDiskSyncedMapping:
         del ddsm[_TEST_KEY]
         assert _TEST_KEY not in ddsm
 
-    def test_popitem(self):
+    def test_popitem(self) -> None:
         ddsm = self._get_ddsm()
         ddsm[_TEST_KEY] = None
         assert _TEST_KEY in ddsm  # setup
@@ -109,7 +109,7 @@ class Test_StaticDiskSyncedMapping:
             deserializer=literal_eval,
         )
 
-    def test_mapping_features(self, mocker, tmp_path: Path):
+    def test_mapping_features(self, mocker, tmp_path: Path) -> None:
 
         self._mock_load(mocker)
         sdsm = self._get_sdsm(tmp_path)
@@ -126,7 +126,7 @@ class Test_StaticDiskSyncedMapping:
         ]
         assert len(sdsm) == 2
 
-    def test_store(self, mocker, tmp_path: Path):
+    def test_store(self, mocker, tmp_path: Path) -> None:
 
         self._mock_load(mocker)
         self._mock_store(mocker)
@@ -165,7 +165,7 @@ class Test_DiskSyncedMapping:
             },
         )
 
-    def test_getitem(self):
+    def test_getitem(self) -> None:
         dsm = self._get_dsm()
         assert dsm[("stat", "key", "1")] == "stat-val-1"
         assert dsm.get(("stat", "key", "2")) == "stat-val-2"
@@ -174,7 +174,7 @@ class Test_DiskSyncedMapping:
         assert dsm.get(("dyn", "key", "2")) == "dyn-val-2"
         assert dsm.get(("dyn", "key", "3")) is None
 
-    def test_delitem(self):
+    def test_delitem(self) -> None:
         dsm = self._get_dsm()
         assert ("stat", "key", "1") in dsm
         assert ("dyn", "key", "2") in dsm
@@ -188,7 +188,7 @@ class Test_DiskSyncedMapping:
         del dsm[("dyn", "key", "1")]
         assert ("dyn", "key", "1") not in dsm
 
-    def test_pop(self):
+    def test_pop(self) -> None:
         dsm = self._get_dsm()
         assert ("stat", "key", "1") in dsm
         assert ("dyn", "key", "2") in dsm
@@ -199,7 +199,7 @@ class Test_DiskSyncedMapping:
         dsm.pop(("dyn", "key", "1"))
         assert ("dyn", "key", "1") not in dsm
 
-    def test_iter(self):
+    def test_iter(self) -> None:
         dsm = self._get_dsm()
         assert sorted(dsm) == [
             ("dyn", "key", "1"),
@@ -226,12 +226,12 @@ class Test_ValueStore:
             service_id=(CheckPluginName("check1"), "item"),
         )
 
-    def test_separation(self):
+    def test_separation(self) -> None:
         s_store = self._get_store()
         assert "key1" in s_store
         assert "key2" not in s_store
 
-    def test_invalid_key(self):
+    def test_invalid_key(self) -> None:
         s_store = self._get_store()
         with pytest.raises(TypeError):
             s_store[2] = "key must be string!"  # type: ignore[index]
@@ -239,7 +239,7 @@ class Test_ValueStore:
 
 class TestValueStoreManager:
     @staticmethod
-    def test_namespace_context():
+    def test_namespace_context() -> None:
         vsm = ValueStoreManager("test-host")
         service_inner = ServiceID(CheckPluginName("unit_test_inner"), None)
         service_outer = ServiceID(CheckPluginName("unit_test_outer"), None)

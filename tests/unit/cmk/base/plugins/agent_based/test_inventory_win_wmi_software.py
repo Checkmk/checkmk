@@ -85,6 +85,6 @@ _INSTALLED_DATE = 123
         ),
     ],
 )
-def test_inventory_win_wmi_software(monkeypatch, string_table, expected_result):
+def test_inventory_win_wmi_software(monkeypatch, string_table, expected_result) -> None:
     monkeypatch.setattr(time, "mktime", lambda s: _INSTALLED_DATE)
     assert list(inventory_win_wmi_software(parse_win_wmi_software(string_table))) == expected_result

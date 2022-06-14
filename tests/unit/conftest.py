@@ -358,11 +358,11 @@ def _mock_livestatus():
 
     Use it like this:
 
-        def test_function():
+        def test_function() -> None:
            from cmk.gui import sites
            sites.live().query("Foo")
 
-        def test_foo(mock_livestatus):
+        def test_foo(mock_livestatus) -> None:
            live = mock_livestatus
            live.expect_query("Foo")
            with live:

@@ -45,6 +45,6 @@ def expected_output_engine():
     return chain([re.escape(r"<<<%s>>>" % Globals.section)], repeat(re_str))
 
 
-def test_section_services(request, testconfig, expected_output, actual_output, testfile):
+def test_section_services(request, testconfig, expected_output, actual_output, testfile) -> None:
     # request.node.name gives test name
     local_test(expected_output, actual_output, testfile, request.node.name)

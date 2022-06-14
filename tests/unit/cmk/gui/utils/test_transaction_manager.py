@@ -26,13 +26,13 @@ def tm():
     return TransactionManager(request, MockLoggedInUser())
 
 
-def test_request_context_integration(request_context):
+def test_request_context_integration(request_context) -> None:
     assert callable(transactions.transaction_valid)
     assert callable(transactions.is_transaction)
     assert callable(transactions.check_transaction)
 
 
-def test_transaction_new_id(tm):
+def test_transaction_new_id(tm) -> None:
     assert tm._new_transids == []
     trans_id = tm.get()
     assert isinstance(trans_id, str)
@@ -71,7 +71,7 @@ class MockLoggedInUser(LoggedInUser):
         ("%d/abc" % time.time(), False, True, True),
     ],
 )
-def test_transaction_valid(tm, transid, ignore_transids, result, mocker, is_existing):
+def test_transaction_valid(tm, transid, ignore_transids, result, mocker, is_existing) -> None:
     assert tm._ignore_transids is False
     if ignore_transids:
         tm.ignore()
@@ -88,17 +88,17 @@ def test_transaction_valid(tm, transid, ignore_transids, result, mocker, is_exis
     assert tm.transaction_valid() == result
 
 
-def test_is_transaction(tm):
+def test_is_transaction(tm) -> None:
     assert not tm.is_transaction()
     tm._request.set_var("_transid", "123")
     assert tm.is_transaction()
 
 
-def test_check_transaction_invalid(tm, monkeypatch):
+def test_check_transaction_invalid(tm, monkeypatch) -> None:
     assert tm.check_transaction() is False
 
 
-def test_check_transaction_valid(tm, monkeypatch, mocker):
+def test_check_transaction_valid(tm, monkeypatch, mocker) -> None:
     valid_transid = "%d/abc" % time.time()
     tm._request.set_var("_transid", valid_transid)
     tm._user._ids = [valid_transid]
@@ -108,7 +108,7 @@ def test_check_transaction_valid(tm, monkeypatch, mocker):
     invalidate.assert_called_once_with(valid_transid)
 
 
-def test_check_transaction_automation(tm, monkeypatch, mocker):
+def test_check_transaction_automation(tm, monkeypatch, mocker) -> None:
     tm.ignore()
     tm._request.set_var("_transid", "-1")
 

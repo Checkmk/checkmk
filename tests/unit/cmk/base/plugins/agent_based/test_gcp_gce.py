@@ -13,7 +13,7 @@ from cmk.base.plugins.agent_based.gcp_gce import (
 from cmk.base.plugins.agent_based.utils import gcp, uptime
 
 
-def test_parse_piggy_back():
+def test_parse_piggy_back() -> None:
     uptime_section = parse_gce_uptime(
         [
             [
@@ -35,7 +35,7 @@ NETWORK_SECTION = [
 ]
 
 
-def test_network_check():
+def test_network_check() -> None:
     section = gcp.parse_piggyback(NETWORK_SECTION)
     params = CHECK_DEFAULT_PARAMETERS
     item = "nic0"
@@ -92,7 +92,7 @@ DISK_SECTION = [
 ]
 
 
-def test_disk_summary_check():
+def test_disk_summary_check() -> None:
     section = gcp.parse_piggyback(DISK_SECTION)
     params = {
         "disk_read_throughput": None,

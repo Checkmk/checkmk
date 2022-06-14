@@ -127,7 +127,7 @@ from cmk.special_agents.agent_aws import fetch_resources_matching_tags
         ),
     ],
 )
-def test_fetch_resources_matching_tags(fetched_data, tags_to_match, expected_result):
+def test_fetch_resources_matching_tags(fetched_data, tags_to_match, expected_result) -> None:
     with patch("cmk.special_agents.agent_aws._fetch_tagged_resources_with_types") as fetch_fn:
         fetch_fn.return_value = fetched_data
         assert (

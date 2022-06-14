@@ -66,6 +66,6 @@ pytestmark = pytest.mark.checks
         ),
     ],
 )
-def test_check_esx_vsphere_hostsystem_multipath(section, item, check_results):
+def test_check_esx_vsphere_hostsystem_multipath(section, item, check_results) -> None:
     check = Check("esx_vsphere_hostsystem.multipath")
     assert list(check.run_check(item, {}, section) or ()) == check_results

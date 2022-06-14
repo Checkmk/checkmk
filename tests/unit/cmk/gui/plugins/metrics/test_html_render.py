@@ -22,5 +22,5 @@ from cmk.gui.plugins.metrics.html_render import render_title_elements_plain
         ),
     ],
 )
-def test_render_title_elements_plain(elements, result):
+def test_render_title_elements_plain(elements, result) -> None:
     assert render_title_elements_plain(elements) == result

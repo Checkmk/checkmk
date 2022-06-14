@@ -27,7 +27,7 @@ from cmk.base.plugins.agent_based.sentry_pdu_outlets import (
         )
     ],
 )
-def test_parse_sentry_pdu_outlets(string_table, expected_section):
+def test_parse_sentry_pdu_outlets(string_table, expected_section) -> None:
     section = parse_sentry_pdu_outlets(string_table)
     assert section == expected_section
 

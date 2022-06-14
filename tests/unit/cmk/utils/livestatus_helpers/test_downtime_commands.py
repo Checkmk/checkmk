@@ -26,7 +26,7 @@ def _dates():
     )
 
 
-def test_host_downtime(mock_livestatus, with_request_context, dates):
+def test_host_downtime(mock_livestatus, with_request_context, dates) -> None:
     start_time, end_time = dates
 
     with mock_livestatus(
@@ -49,7 +49,7 @@ def test_host_downtime(mock_livestatus, with_request_context, dates):
         )
 
 
-def test_host_downtime_with_services(mock_livestatus, with_request_context, dates):
+def test_host_downtime_with_services(mock_livestatus, with_request_context, dates) -> None:
     start_time, end_time = dates
 
     with mock_livestatus(
@@ -84,7 +84,7 @@ def test_host_downtime_with_services(mock_livestatus, with_request_context, date
         )
 
 
-def test_hostgroup_host_downtime(mock_livestatus, with_request_context, dates):
+def test_hostgroup_host_downtime(mock_livestatus, with_request_context, dates) -> None:
     start_time, end_time = dates
 
     with mock_livestatus(
@@ -121,7 +121,9 @@ def test_hostgroup_host_downtime(mock_livestatus, with_request_context, dates):
         )
 
 
-def test_hostgroup_host_downtime_with_services(mock_livestatus, with_request_context, dates):
+def test_hostgroup_host_downtime_with_services(
+    mock_livestatus, with_request_context, dates
+) -> None:
     start_time, end_time = dates
 
     with mock_livestatus(
@@ -174,7 +176,7 @@ def test_hostgroup_host_downtime_with_services(mock_livestatus, with_request_con
         )
 
 
-def test_servicegroup_service_downtime(mock_livestatus, with_request_context, dates):
+def test_servicegroup_service_downtime(mock_livestatus, with_request_context, dates) -> None:
     start_time, end_time = dates
 
     with mock_livestatus(
@@ -211,7 +213,9 @@ def test_servicegroup_service_downtime(mock_livestatus, with_request_context, da
         )
 
 
-def test_servicegroup_service_downtime_and_hosts(mock_livestatus, with_request_context, dates):
+def test_servicegroup_service_downtime_and_hosts(
+    mock_livestatus, with_request_context, dates
+) -> None:
     start_time, end_time = dates
 
     with mock_livestatus(

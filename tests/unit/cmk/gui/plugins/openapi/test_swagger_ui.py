@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-def test_swagger_ui_http(wsgi_app):
+def test_swagger_ui_http(wsgi_app) -> None:
     resp = wsgi_app.get("/NO_SITE/check_mk/api/1.0.0/ui/index.html", status=200)
     assert resp.headers["content-type"] == "text/html"
     assert b"//" in resp.body
@@ -14,7 +14,7 @@ def test_swagger_ui_http(wsgi_app):
     assert b"openapi-swagger-ui.yaml" in resp.body
 
 
-def test_swagger_ui_https(wsgi_app):
+def test_swagger_ui_https(wsgi_app) -> None:
     wsgi_app.extra_environ = {"wsgi.url_scheme": "https"}
     resp = wsgi_app.get("/NO_SITE/check_mk/api/1.0.0/ui/index.html", status=200)
     assert b"//" in resp.body
@@ -23,7 +23,7 @@ def test_swagger_ui_https(wsgi_app):
     assert b"openapi-swagger-ui.yaml" in resp.body
 
 
-def test_swagger_ui_resource_urls(wsgi_app):
+def test_swagger_ui_resource_urls(wsgi_app) -> None:
     resp = wsgi_app.get("/NO_SITE/check_mk/api/0/ui/swagger-ui.js", status=200)
     assert resp.headers["content-type"] in ("application/javascript", "text/javascript")
     resp = wsgi_app.get("/NO_SITE/check_mk/api/0/ui/swagger-ui.css", status=200)

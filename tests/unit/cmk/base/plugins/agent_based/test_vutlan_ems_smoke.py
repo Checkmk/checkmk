@@ -15,7 +15,7 @@ from cmk.base.plugins.agent_based.vutlan_ems_smoke import SmokeSensor, SmokeSens
 pytestmark = pytest.mark.checks
 
 
-def test_parse_vutlan_ems_smoke(fix_register: FixRegister):
+def test_parse_vutlan_ems_smoke(fix_register: FixRegister) -> None:
     check = fix_register.snmp_sections[SectionName("vutlan_ems_smoke")]
 
     string_table = [
@@ -49,7 +49,7 @@ def test_parse_vutlan_ems_smoke(fix_register: FixRegister):
     assert result == expected_parse_result
 
 
-def test_parse_vutlan_ems_smoke_no_smoke_detector(fix_register: FixRegister):
+def test_parse_vutlan_ems_smoke_no_smoke_detector(fix_register: FixRegister) -> None:
     check = fix_register.snmp_sections[SectionName("vutlan_ems_smoke")]
 
     string_table = [
@@ -80,7 +80,7 @@ def test_parse_vutlan_ems_smoke_no_smoke_detector(fix_register: FixRegister):
     assert result == expected_parse_result
 
 
-def test_section_vutlan_ems_smoke(fix_register: FixRegister):
+def test_section_vutlan_ems_smoke(fix_register: FixRegister) -> None:
     check = fix_register.check_plugins[CheckPluginName("vutlan_ems_smoke")]
 
     section = {
@@ -97,7 +97,7 @@ def test_section_vutlan_ems_smoke(fix_register: FixRegister):
     assert list(result) == expected_section_result
 
 
-def test_check_vutlan_ems_smoke_state_crit(fix_register: FixRegister):
+def test_check_vutlan_ems_smoke_state_crit(fix_register: FixRegister) -> None:
     check = fix_register.check_plugins[CheckPluginName("vutlan_ems_smoke")]
 
     section = {
@@ -123,7 +123,7 @@ def test_check_vutlan_ems_smoke_state_crit(fix_register: FixRegister):
     assert list(result) == expected_check_result_state_crit
 
 
-def test_check_vutlan_ems_smoke_state_ok(fix_register: FixRegister):
+def test_check_vutlan_ems_smoke_state_ok(fix_register: FixRegister) -> None:
     check = fix_register.check_plugins[CheckPluginName("vutlan_ems_smoke")]
     section = {
         "Analog-5": SmokeSensor(name="Analog-5", state=0),
@@ -137,7 +137,7 @@ def test_check_vutlan_ems_smoke_state_ok(fix_register: FixRegister):
     assert list(result) == expected_check_result_state_ok
 
 
-def test_check_vutlan_ems_smoke_item_not_found(fix_register: FixRegister):
+def test_check_vutlan_ems_smoke_item_not_found(fix_register: FixRegister) -> None:
     check = fix_register.check_plugins[CheckPluginName("vutlan_ems_smoke")]
     section = {
         "Analog-5": SmokeSensor(name="Analog-5", state=0),

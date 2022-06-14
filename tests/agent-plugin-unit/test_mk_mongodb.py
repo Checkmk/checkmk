@@ -47,7 +47,7 @@ def call_mk_mongodb_functions(dataset):
         mk_mongodb.potentially_piggybacked_sections(None, dataset)
 
 
-def test_arbiter_instance_mongodb_4_0():
+def test_arbiter_instance_mongodb_4_0() -> None:
     """
     test mongodb cluster output:
     arbiter instance
@@ -59,7 +59,7 @@ def test_arbiter_instance_mongodb_4_0():
     mk_mongodb.sections_replica(dataset)
 
 
-def test_arbiter_instance_mongodb_3_6():
+def test_arbiter_instance_mongodb_3_6() -> None:
     """
     test mongodb cluster output:
     arbiter instance
@@ -71,7 +71,7 @@ def test_arbiter_instance_mongodb_3_6():
     mk_mongodb.sections_replica(dataset)
 
 
-def test_arbiter_instance_mongodb_3_4():
+def test_arbiter_instance_mongodb_3_4() -> None:
     """
     test mongodb cluster output:
     arbiter instance
@@ -83,7 +83,7 @@ def test_arbiter_instance_mongodb_3_4():
     mk_mongodb.sections_replica(dataset)
 
 
-def test_config_instance_mongodb_4_0():
+def test_config_instance_mongodb_4_0() -> None:
     """
     test mongodb cluster output:
     config instance
@@ -94,7 +94,7 @@ def test_config_instance_mongodb_4_0():
     mk_mongodb.sections_replica(dataset)
 
 
-def test_config_instance_mongodb_3_6():
+def test_config_instance_mongodb_3_6() -> None:
     """
     test mongodb cluster output:
     config instance
@@ -105,7 +105,7 @@ def test_config_instance_mongodb_3_6():
     mk_mongodb.sections_replica(dataset)
 
 
-def test_config_instance_mongodb_3_4():
+def test_config_instance_mongodb_3_4() -> None:
     """
     test mongodb cluster output:
     config instance
@@ -116,7 +116,7 @@ def test_config_instance_mongodb_3_4():
     mk_mongodb.sections_replica(dataset)
 
 
-def test_shard_instance_mongodb_4_0():
+def test_shard_instance_mongodb_4_0() -> None:
     """
     test mongodb cluster output:
     shard instance
@@ -127,7 +127,7 @@ def test_shard_instance_mongodb_4_0():
     mk_mongodb.sections_replica(dataset)
 
 
-def test_shard_instance_mongodb_3_6():
+def test_shard_instance_mongodb_3_6() -> None:
     """
     test mongodb cluster output:
     shard instance
@@ -138,7 +138,7 @@ def test_shard_instance_mongodb_3_6():
     mk_mongodb.sections_replica(dataset)
 
 
-def test_shard_instance_mongodb_3_4():
+def test_shard_instance_mongodb_3_4() -> None:
     """
     test mongodb cluster output:
     shard instance
@@ -149,7 +149,7 @@ def test_shard_instance_mongodb_3_4():
     mk_mongodb.sections_replica(dataset)
 
 
-def test_router_instance_mongodb_4_0():
+def test_router_instance_mongodb_4_0() -> None:
     """
     test mongodb cluster output:
     mongos (router)
@@ -161,7 +161,7 @@ def test_router_instance_mongodb_4_0():
     mk_mongodb.sections_replica(dataset)
 
 
-def test_router_instance_mongodb_3_6():
+def test_router_instance_mongodb_3_6() -> None:
     """
     test mongodb cluster output:
     mongos (router)
@@ -173,7 +173,7 @@ def test_router_instance_mongodb_3_6():
     mk_mongodb.sections_replica(dataset)
 
 
-def test_router_instance_mongodb_3_4():
+def test_router_instance_mongodb_3_4() -> None:
     """
     test mongodb cluster output:
     mongos (router)
@@ -249,7 +249,7 @@ def test_router_instance_mongodb_3_4():
         ),
     ],
 )
-def test_read_config(config, expected_pymongo_config):
+def test_read_config(config, expected_pymongo_config) -> None:
     """
     see if the config is corretly transformed to pymongo arguments
     """
@@ -281,7 +281,7 @@ def test_read_config(config, expected_pymongo_config):
         ),
     ],
 )
-def test_transform_config(pymongo_version, pymongo_config):
+def test_transform_config(pymongo_version, pymongo_config) -> None:
     class DummyConfig(mk_mongodb.Config):  # type: ignore[name-defined]
         def __init__(self) -> None:  # pylint: disable=super-init-not-called
             self.tls_enable = True

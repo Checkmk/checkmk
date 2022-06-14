@@ -17,7 +17,7 @@ SECTION: site_object_counts.Section = {
 }
 
 
-def test_parse_site_object_counts():
+def test_parse_site_object_counts() -> None:
     assert (
         site_object_counts.parse_site_object_counts(
             [
@@ -34,7 +34,7 @@ def test_parse_site_object_counts():
     )
 
 
-def test_check_site_object_counts():
+def test_check_site_object_counts() -> None:
     assert list(site_object_counts.check_site_object_counts(SECTION)) == [
         Result(
             state=state.OK,
@@ -59,7 +59,7 @@ def test_check_site_object_counts():
     ]
 
 
-def test_cluster_check_site_object_counts():
+def test_cluster_check_site_object_counts() -> None:
     assert list(
         site_object_counts.cluster_check_site_object_counts(
             {

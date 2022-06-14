@@ -487,7 +487,7 @@ SECTION = {
         ),
     ],
 )
-def test_check_ipmi_summarized(params, status_txt_mapping, exp_result):
+def test_check_ipmi_summarized(params, status_txt_mapping, exp_result) -> None:
     assert (
         list(
             ipmi.check_ipmi_summarized(

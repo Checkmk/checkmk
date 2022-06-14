@@ -13,7 +13,7 @@ def _get_and_try_cast_to_int(key, container, default_value=None):
     )
 
 
-def test_get_and_try_cast_to_int():
+def test_get_and_try_cast_to_int() -> None:
     container = {"ok": "1", "broken": "1,2,3,4,5"}
 
     assert _get_and_try_cast_to_int("ok", container) == 1

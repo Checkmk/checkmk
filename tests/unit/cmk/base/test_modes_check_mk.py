@@ -43,7 +43,7 @@ class TestModeDumpAgent:
 
     @pytest.mark.usefixtures("scenario")
     @pytest.mark.usefixtures("patch_fetch")
-    def test_success(self, hostname, raw_data, capsys):
+    def test_success(self, hostname, raw_data, capsys) -> None:
         assert FileCacheFactory.disabled is False
 
         check_mk.mode_dump_agent({}, hostname)

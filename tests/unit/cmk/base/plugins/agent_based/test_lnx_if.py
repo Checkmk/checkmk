@@ -167,7 +167,7 @@ from cmk.base.plugins.agent_based.utils import bonding, interfaces
         ),
     ],
 )
-def test_parse_lnx_if(string_table, result):
+def test_parse_lnx_if(string_table, result) -> None:
     assert lnx_if.parse_lnx_if(string_table)[0][0] == interfaces.Interface(*result)
 
 
@@ -202,7 +202,7 @@ PARAMS = {
 }
 
 
-def test_check_lnx_if(monkeypatch):
+def test_check_lnx_if(monkeypatch) -> None:
     section_if = [INTERFACE]
     section: lnx_if.Section = (section_if, {})
     monkeypatch.setattr("time.time", lambda: 0)

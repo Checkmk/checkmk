@@ -21,7 +21,7 @@ def fixture_user(request_context, monkeypatch):
     monkeypatch.setattr(user, "may", lambda x: True)
 
 
-def test_user_config_fold_unfold():
+def test_user_config_fold_unfold() -> None:
     user_config = sidebar.UserSidebarConfig(user, active_config.sidebar)
     assert user_config.folded is False
     user_config.folded = True
@@ -30,7 +30,7 @@ def test_user_config_fold_unfold():
     assert user_config.folded is False
 
 
-def test_user_config_add_snapin():
+def test_user_config_add_snapin() -> None:
     user_config = sidebar.UserSidebarConfig(user, active_config.sidebar)
     del user_config.snapins[:]
     snapin = UserSidebarSnapin.from_snapin_type_id("tactical_overview")
@@ -38,7 +38,7 @@ def test_user_config_add_snapin():
     assert user_config.snapins == [snapin]
 
 
-def test_user_config_get_snapin():
+def test_user_config_get_snapin() -> None:
     user_config = sidebar.UserSidebarConfig(user, active_config.sidebar)
     del user_config.snapins[:]
     snapin = UserSidebarSnapin.from_snapin_type_id("tactical_overview")
@@ -47,7 +47,7 @@ def test_user_config_get_snapin():
     assert user_config.get_snapin("tactical_overview") == snapin
 
 
-def test_user_config_get_not_existing_snapin():
+def test_user_config_get_not_existing_snapin() -> None:
     user_config = sidebar.UserSidebarConfig(user, active_config.sidebar)
     del user_config.snapins[:]
 
@@ -84,7 +84,7 @@ def test_user_config_get_not_existing_snapin():
         ),
     ],
 )
-def test_user_config_move_snapin_before(mocker, move_id, before_id, result):
+def test_user_config_move_snapin_before(mocker, move_id, before_id, result) -> None:
     user_config = sidebar.UserSidebarConfig(user, active_config.sidebar)
     del user_config.snapins[:]
     user_config.snapins.extend(
@@ -114,7 +114,7 @@ def test_user_config_move_snapin_before(mocker, move_id, before_id, result):
     ]
 
 
-def test_load_default_config(monkeypatch):
+def test_load_default_config(monkeypatch) -> None:
     user_config = sidebar.UserSidebarConfig(user, active_config.sidebar)
     assert user_config.folded is False
     assert user_config.snapins == [
@@ -126,7 +126,7 @@ def test_load_default_config(monkeypatch):
     ]
 
 
-def test_load_legacy_list_user_config(monkeypatch):
+def test_load_legacy_list_user_config(monkeypatch) -> None:
     monkeypatch.setattr(
         sidebar.UserSidebarConfig,
         "_user_config",
@@ -141,7 +141,7 @@ def test_load_legacy_list_user_config(monkeypatch):
     ]
 
 
-def test_load_legacy_off_user_config(monkeypatch):
+def test_load_legacy_off_user_config(monkeypatch) -> None:
     monkeypatch.setattr(
         sidebar.UserSidebarConfig,
         "_user_config",
@@ -155,7 +155,7 @@ def test_load_legacy_off_user_config(monkeypatch):
     ]
 
 
-def test_load_skip_not_existing(monkeypatch):
+def test_load_skip_not_existing(monkeypatch) -> None:
     monkeypatch.setattr(
         sidebar.UserSidebarConfig,
         "_user_config",
@@ -169,7 +169,7 @@ def test_load_skip_not_existing(monkeypatch):
     ]
 
 
-def test_load_skip_not_permitted(monkeypatch, request_context):
+def test_load_skip_not_permitted(monkeypatch, request_context) -> None:
     monkeypatch.setattr(
         sidebar.UserSidebarConfig,
         "_user_config",
@@ -187,7 +187,7 @@ def test_load_skip_not_permitted(monkeypatch, request_context):
     ]
 
 
-def test_load_user_config(monkeypatch):
+def test_load_user_config(monkeypatch) -> None:
     monkeypatch.setattr(
         sidebar.UserSidebarConfig,
         "_user_config",
@@ -208,7 +208,7 @@ def test_load_user_config(monkeypatch):
     ]
 
 
-def test_save_user_config_denied(mocker, monkeypatch):
+def test_save_user_config_denied(mocker, monkeypatch) -> None:
     monkeypatch.setattr(user, "may", lambda x: x != "general.configure_sidebar")
     save_user_file_mock = mocker.patch.object(user, "save_file")
     user_config = sidebar.UserSidebarConfig(user, active_config.sidebar)
@@ -216,7 +216,7 @@ def test_save_user_config_denied(mocker, monkeypatch):
     save_user_file_mock.assert_not_called()
 
 
-def test_save_user_config_allowed(request_context, mocker, monkeypatch):
+def test_save_user_config_allowed(request_context, mocker, monkeypatch) -> None:
     monkeypatch.setattr(user, "may", lambda x: x == "general.configure_sidebar")
     save_user_file_mock = mocker.patch.object(user, "save_file")
     user_config = sidebar.UserSidebarConfig(user, active_config.sidebar)
@@ -232,7 +232,7 @@ def test_save_user_config_allowed(request_context, mocker, monkeypatch):
         (True, "", False),
     ],
 )
-def test_ajax_fold(request_context, mocker, origin_state, fold_var, set_state):
+def test_ajax_fold(request_context, mocker, origin_state, fold_var, set_state) -> None:
     html.request.set_var("fold", fold_var)
     m_config = mocker.patch.object(
         user,
@@ -272,7 +272,7 @@ def test_ajax_fold(request_context, mocker, origin_state, fold_var, set_state):
         ("closed", "off"),
     ],
 )
-def test_ajax_openclose_close(request_context, mocker, origin_state, set_state):
+def test_ajax_openclose_close(request_context, mocker, origin_state, set_state) -> None:
     html.request.set_var("name", "tactical_overview")
     html.request.set_var("state", set_state)
     m_config = mocker.patch.object(
@@ -312,7 +312,7 @@ def test_ajax_openclose_close(request_context, mocker, origin_state, set_state):
     )
 
 
-def test_move_snapin_not_permitted(monkeypatch, mocker, request_context):
+def test_move_snapin_not_permitted(monkeypatch, mocker, request_context) -> None:
     monkeypatch.setattr(user, "may", lambda x: x != "general.configure_sidebar")
     m_load = mocker.patch.object(sidebar.UserSidebarConfig, "_load")
     sidebar.move_snapin()
@@ -326,7 +326,7 @@ def test_move_snapin_not_permitted(monkeypatch, mocker, request_context):
         ("not_existing", "performance", None),
     ],
 )
-def test_move_snapin(request_context, mocker, move, before, do_save):
+def test_move_snapin(request_context, mocker, move, before, do_save) -> None:
     html.request.set_var("name", move)
     html.request.set_var("before", before)
     m_save = mocker.patch.object(sidebar.UserSidebarConfig, "save")

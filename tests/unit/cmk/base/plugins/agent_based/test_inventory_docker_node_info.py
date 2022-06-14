@@ -151,7 +151,7 @@ from .utils_inventory import sort_inventory_result
         ),
     ],
 )
-def test_inv_docker_node_info(fix_register, parsed, expected):
+def test_inv_docker_node_info(fix_register, parsed, expected) -> None:
     assert sort_inventory_result(inventory_docker_node_info(parsed)) == sort_inventory_result(
         expected
     )

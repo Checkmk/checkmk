@@ -53,7 +53,7 @@ from cmk.base.plugins.agent_based.cisco_mem_asa import (
         ),
     ],
 )
-def test_parse_cisco_mem_asa(string_table, expected_parsed_data):
+def test_parse_cisco_mem_asa(string_table, expected_parsed_data) -> None:
     assert parse_cisco_mem_asa(string_table) == expected_parsed_data
 
 
@@ -74,7 +74,7 @@ def test_parse_cisco_mem_asa(string_table, expected_parsed_data):
         ),
     ],
 )
-def test_discovery_cisco_mem(string_table, expected_parsed_data):
+def test_discovery_cisco_mem(string_table, expected_parsed_data) -> None:
     assert list(discovery_cisco_mem(string_table)) == list(
         Service(item=item) for item in expected_parsed_data
     )
@@ -106,7 +106,7 @@ def test_discovery_cisco_mem(string_table, expected_parsed_data):
         ),
     ],
 )
-def test_check_cisco_mem(check_args, expected_result):
+def test_check_cisco_mem(check_args, expected_result) -> None:
     assert list(_idem_check_cisco_mem(value_store={}, **check_args)) == list(expected_result)
 
 

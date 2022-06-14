@@ -14,7 +14,7 @@ from cmk.special_agents.utils_kubernetes.transform import deployment_conditions,
 
 
 class TestAPIDeployments:
-    def test_parse_metadata(self, apps_client, dummy_host):
+    def test_parse_metadata(self, apps_client, dummy_host) -> None:
         mocked_deployments = {
             "items": [
                 {
@@ -50,7 +50,7 @@ class TestAPIDeployments:
         assert metadata.labels == {"app": api.Label(name="app", value="cluster-collector")}
         assert metadata.annotations == {"deployment.kubernetes.io/revision": "2"}
 
-    def test_parse_metadata_missing_annotations_and_labels(self, apps_client, dummy_host):
+    def test_parse_metadata_missing_annotations_and_labels(self, apps_client, dummy_host) -> None:
         mocked_deployments = {
             "items": [
                 {
@@ -81,7 +81,7 @@ class TestAPIDeployments:
         assert metadata.labels == {}
         assert metadata.annotations == {}
 
-    def test_parse_conditions(self, apps_client, dummy_host):
+    def test_parse_conditions(self, apps_client, dummy_host) -> None:
         deployment_with_conditions = {
             "items": [
                 {

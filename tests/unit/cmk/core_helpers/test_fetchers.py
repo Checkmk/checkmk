@@ -127,7 +127,7 @@ class TestAgentFileCache_and_SNMPFileCache:
         table: Sequence[SNMPTable] = []
         return {SectionName("X"): table}
 
-    def test_read_write(self, file_cache, raw_data):
+    def test_read_write(self, file_cache, raw_data) -> None:
         mode = Mode.DISCOVERY
         file_cache.file_cache_mode = FileCacheMode.READ_WRITE
 
@@ -146,7 +146,7 @@ class TestAgentFileCache_and_SNMPFileCache:
         assert clone.make_path(mode).exists()
         assert clone.read(mode) == raw_data
 
-    def test_read_only(self, file_cache, raw_data):
+    def test_read_only(self, file_cache, raw_data) -> None:
         mode = Mode.DISCOVERY
         file_cache.file_cache_mode = FileCacheMode.READ
 
@@ -157,7 +157,7 @@ class TestAgentFileCache_and_SNMPFileCache:
         assert not file_cache.make_path(mode).exists()
         assert file_cache.read(mode) is None
 
-    def test_write_only(self, file_cache, raw_data):
+    def test_write_only(self, file_cache, raw_data) -> None:
         mode = Mode.DISCOVERY
         file_cache.file_cache_mode = FileCacheMode.WRITE
 

@@ -23,7 +23,7 @@ AGENT_OUTPUT = (
 )
 
 
-def test_inv_docker_container_labels_parse():
+def test_inv_docker_container_labels_parse() -> None:
     info = [line.split("\0") for line in AGENT_OUTPUT.split("\n")]
     assert parse_docker_container_labels(info) == {
         "com.docker.swarm.node.id": "x2my5tv8bqg0yh5jq98gzodr2",
@@ -35,7 +35,7 @@ def test_inv_docker_container_labels_parse():
     }
 
 
-def test_inv_docker_container_labels():
+def test_inv_docker_container_labels() -> None:
     info = [line.split("\0") for line in AGENT_OUTPUT.split("\n")]
     assert sort_inventory_result(
         inventory_docker_container_labels(parse_docker_container_labels(info))

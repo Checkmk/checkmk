@@ -83,18 +83,18 @@ from cmk.gui.plugins.wato.check_parameters.kube_resources import _parameter_valu
 # def section_performance(string_table_performance):
 #    return kube_memory.parse_performance_memory(string_table_performance)
 #
-# def test_parse_resources(string_table_resources, resource_request, resource_limit):
+# def test_parse_resources(string_table_resources, resource_request, resource_limit) -> None:
 #    section = kube_memory.parse_memory_resources(string_table_resources)
 #    assert section.request == resource_request
 #    assert section.limit == resource_limit
 #
 #
-# def test_parse_performance(string_table_performance, usage):
+# def test_parse_performance(string_table_performance, usage) -> None:
 #    section = kube_memory.parse_performance_memory(string_table_performance)
 #    assert section.memory_usage_bytes == usage
 #
 #
-# def test_discovery_returns_an_iterable(string_table_resources, string_table_performance):
+# def test_discovery_returns_an_iterable(string_table_resources, string_table_performance) -> None:
 #    parsed_resources = kube_memory.parse_memory_resources(string_table_resources)
 #    parse_performance = kube_memory.parse_performance_memory(string_table_performance)
 #    assert list(kube_memory.discovery(parsed_resources, parse_performance))
@@ -105,15 +105,15 @@ from cmk.gui.plugins.wato.check_parameters.kube_resources import _parameter_valu
 #    return kube_memory.check({}, section_resources, section_performance)
 #
 #
-# def test_check_yields_results(check_result):
+# def test_check_yields_results(check_result) -> None:
 #    assert len(list(check_result)) == 7
 #
 #
-# def test_check_metrics_count(check_result):
+# def test_check_metrics_count(check_result) -> None:
 #    assert len([m for m in check_result if isinstance(m, Metric)]) == 4
 #
 #
-# def test_check_usage_value(check_result, usage, resource_limit):
+# def test_check_usage_value(check_result, usage, resource_limit) -> None:
 #    total_usage = usage
 #    percentage_usage = total_usage / resource_limit * 100
 #    usage_result = next(check_result)
@@ -123,7 +123,7 @@ from cmk.gui.plugins.wato.check_parameters.kube_resources import _parameter_valu
 #    )
 #
 #
-# def test_check_no_limit_usage(section_performance, section_unset_resources, usage):
+# def test_check_no_limit_usage(section_performance, section_unset_resources, usage) -> None:
 #    check_result = list(kube_memory.check({}, section_unset_resources, section_performance))
 #    usage_result = check_result[0]
 #    assert isinstance(usage_result, Result)
@@ -159,19 +159,19 @@ def section_kube_memory_allocatable_resource():
     return AllocatableResource(context="node", value=35917989.0)
 
 
-def test_register_agent_memory_section_calls(agent_performance_section):
+def test_register_agent_memory_section_calls(agent_performance_section) -> None:
     assert str(agent_performance_section.name) == "kube_performance_memory_v1"
     assert str(agent_performance_section.parsed_section_name) == "kube_performance_memory"
     assert agent_performance_section.parse_function == kube_memory.parse_performance_usage
 
 
-def test_register_agent_memory_resources_section_calls(agent_resources_section):
+def test_register_agent_memory_resources_section_calls(agent_resources_section) -> None:
     assert str(agent_resources_section.name) == "kube_memory_resources_v1"
     assert str(agent_resources_section.parsed_section_name) == "kube_memory_resources"
     assert agent_resources_section.parse_function == kube_memory.parse_resources
 
 
-def test_register_check_plugin_calls(check_plugin):
+def test_register_check_plugin_calls(check_plugin) -> None:
     assert str(check_plugin.name) == "kube_memory"
     assert check_plugin.service_name == "Memory resources"
     assert check_plugin.discovery_function.__wrapped__ == kube_memory.discovery_kube_memory

@@ -80,7 +80,7 @@ from .utils_inventory import sort_inventory_result
         ),
     ],
 )
-def test_inventory_perle_chassis_slots(string_table, expected_result):
+def test_inventory_perle_chassis_slots(string_table, expected_result) -> None:
     assert sort_inventory_result(
         inventory_perle_chassis_slots(string_table)
     ) == sort_inventory_result(expected_result)

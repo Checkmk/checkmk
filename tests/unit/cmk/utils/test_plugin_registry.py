@@ -27,12 +27,12 @@ def basic_registry():
     return registry
 
 
-def test_initialization():
+def test_initialization() -> None:
     registry = PluginRegistry()
     assert list(registry.items()) == []
 
 
-def test_decorator_registration():
+def test_decorator_registration() -> None:
     registry = PluginRegistry()
     assert list(registry.items()) == []
 
@@ -43,7 +43,7 @@ def test_decorator_registration():
     assert registry.get("DecoratedPlugin") == DecoratedPlugin
 
 
-def test_method_registration():
+def test_method_registration() -> None:
     registry = PluginRegistry()
     assert list(registry.items()) == []
 
@@ -54,12 +54,12 @@ def test_method_registration():
     assert registry.get("MethodRegisteredPlugin") == MethodRegisteredPlugin
 
 
-def test_contains(basic_registry):
+def test_contains(basic_registry) -> None:
     assert "bla" not in basic_registry
     assert "Plugin" in basic_registry
 
 
-def test_delitem(basic_registry):
+def test_delitem(basic_registry) -> None:
     with pytest.raises(KeyError):
         basic_registry.unregister("bla")
 
@@ -70,26 +70,26 @@ def test_delitem(basic_registry):
     basic_registry.unregister("DelPlugin")
 
 
-def test_getitem(basic_registry):
+def test_getitem(basic_registry) -> None:
     with pytest.raises(KeyError):
         _unused = basic_registry["bla"]  # noqa: F841
 
     assert basic_registry["Plugin"] == Plugin
 
 
-def test_values(basic_registry):
+def test_values(basic_registry) -> None:
     assert list(basic_registry.values()) == [Plugin]
 
 
-def test_items(basic_registry):
+def test_items(basic_registry) -> None:
     assert list(basic_registry.items()) == [("Plugin", Plugin)]
 
 
-def test_keys(basic_registry):
+def test_keys(basic_registry) -> None:
     assert list(basic_registry.keys()) == ["Plugin"]
 
 
-def test_get(basic_registry):
+def test_get(basic_registry) -> None:
     assert basic_registry.get("bla") is None
     assert basic_registry.get("bla", "blub") == "blub"
 
@@ -101,7 +101,7 @@ class InstanceRegistry(cmk.utils.plugin_registry.Registry[Plugin]):
         return instance.__class__.__name__
 
 
-def test_decorate_classes_for_instance_registry():
+def test_decorate_classes_for_instance_registry() -> None:
     registry = InstanceRegistry()
     assert list(registry.items()) == []
 

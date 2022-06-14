@@ -39,18 +39,18 @@ pytestmark = pytest.mark.checks
         ("some string", int),
     ],
 )
-def test__cast_value(value, cast_type):
+def test__cast_value(value, cast_type) -> None:
     cast_value = _cast_value(value, cast_type)
     assert cast_value is None
 
 
-def test__get_field():
+def test__get_field() -> None:
     my_list = [1, 2, 3]
     field_value = _get_field(my_list, 3)
     assert field_value is None
 
 
-def test__parse_single_legacy_row():
+def test__parse_single_legacy_row() -> None:
     row = ["No such file or directory"]
     parsed_row = _parse_single_legacy_row(row)
     assert not parsed_row
@@ -132,7 +132,7 @@ def test__parse_single_legacy_row():
         ),
     ],
 )
-def test_parse_fileinfo(info, expected_result):
+def test_parse_fileinfo(info, expected_result) -> None:
     assert parse_fileinfo(info) == expected_result
 
 
@@ -159,7 +159,7 @@ def test_parse_fileinfo(info, expected_result):
         ),
     ],
 )
-def test_fileinfo_groups_get_group_name(group_patterns, filename, reftime, expected_result):
+def test_fileinfo_groups_get_group_name(group_patterns, filename, reftime, expected_result) -> None:
     result = fileinfo_groups_get_group_name(group_patterns, filename, reftime)
     assert result == expected_result
 
@@ -175,7 +175,9 @@ def test_fileinfo_groups_get_group_name(group_patterns, filename, reftime, expec
         ),
     ],
 )
-def test_fileinfo_groups_get_group_name_error(group_patterns, filename, reftime, expected_result):
+def test_fileinfo_groups_get_group_name_error(
+    group_patterns, filename, reftime, expected_result
+) -> None:
     with pytest.raises(RuntimeError) as e:
         fileinfo_groups_get_group_name(group_patterns, filename, reftime)
 
@@ -198,7 +200,7 @@ def test_fileinfo_groups_get_group_name_error(group_patterns, filename, reftime,
     ],
 )
 @freeze_time("2021-07-12 12:00")
-def test_fileinfo_check_timeranges(params, expected_result):
+def test_fileinfo_check_timeranges(params, expected_result) -> None:
     result = fileinfo_check_timeranges(params)
 
     assert result == expected_result
@@ -295,7 +297,7 @@ def test_check_fileinfo_data(
         ),
     ],
 )
-def test__filename_matches(filename, reftime, inclusion, exclusion, expected_result):
+def test__filename_matches(filename, reftime, inclusion, exclusion, expected_result) -> None:
     result = _filename_matches(filename, reftime, inclusion, exclusion)
     assert result == expected_result
 
@@ -390,7 +392,7 @@ def test__filename_matches(filename, reftime, inclusion, exclusion, expected_res
         ),
     ],
 )
-def test_check_fileinfo_groups_data(item, params, parsed, expected_result):
+def test_check_fileinfo_groups_data(item, params, parsed, expected_result) -> None:
     result = list(check_fileinfo_groups_data(item, params, parsed, parsed.reftime))
     assert result == expected_result
 
@@ -413,7 +415,7 @@ def test_check_fileinfo_groups_data(item, params, parsed, expected_result):
         )
     ],
 )
-def test__fileinfo_check_function(check_definition, params, expected_result):
+def test__fileinfo_check_function(check_definition, params, expected_result) -> None:
     result = list(_fileinfo_check_function(check_definition, params))
     assert result == expected_result
 
@@ -435,6 +437,6 @@ def test__fileinfo_check_function(check_definition, params, expected_result):
         )
     ],
 )
-def test__fileinfo_check_conjunctions(check_definition, params, expected_result):
+def test__fileinfo_check_conjunctions(check_definition, params, expected_result) -> None:
     result = list(_fileinfo_check_conjunctions(check_definition, params))
     assert result == expected_result

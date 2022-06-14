@@ -7,7 +7,7 @@ from .checktestlib import assertCheckResultsEqual, BasicCheckResult, CheckResult
 pytestmark = pytest.mark.checks
 
 
-def test_fileinfo_min_max_age_levels():
+def test_fileinfo_min_max_age_levels() -> None:
     check = Check("prism_containers")
 
     item = "prism-item"

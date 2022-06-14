@@ -38,7 +38,7 @@ from cmk.gui.watolib.rulespecs import (
 from cmk.gui.watolib.search import MatchItem
 
 
-def test_rulespec_sub_group():
+def test_rulespec_sub_group() -> None:
     class TestGroup(RulespecGroup):
         @property
         def name(self) -> str:
@@ -70,7 +70,7 @@ def test_rulespec_sub_group():
     assert test_sub_group.title == "Sub"
 
 
-def test_legacy_register_rulegroup(monkeypatch):
+def test_legacy_register_rulegroup(monkeypatch) -> None:
     monkeypatch.setattr(
         cmk.gui.watolib.rulespecs, "rulespec_group_registry", RulespecGroupRegistry()
     )
@@ -83,7 +83,7 @@ def test_legacy_register_rulegroup(monkeypatch):
     assert group.help == "abc 123"
 
 
-def test_legacy_get_not_existing_rulegroup(monkeypatch):
+def test_legacy_get_not_existing_rulegroup(monkeypatch) -> None:
     monkeypatch.setattr(
         cmk.gui.watolib.rulespecs, "rulespec_group_registry", RulespecGroupRegistry()
     )
@@ -95,7 +95,7 @@ def test_legacy_get_not_existing_rulegroup(monkeypatch):
     assert group.help is None
 
 
-def test_legacy_get_not_existing_rule_sub_group(monkeypatch):
+def test_legacy_get_not_existing_rule_sub_group(monkeypatch) -> None:
     monkeypatch.setattr(
         cmk.gui.watolib.rulespecs, "rulespec_group_registry", RulespecGroupRegistry()
     )
@@ -110,7 +110,7 @@ def test_legacy_get_not_existing_rule_sub_group(monkeypatch):
 # These tests make adding new elements needlessly painful.
 # Skip pending discussion with development team.
 @pytest.mark.skip
-def test_grouped_rulespecs():
+def test_grouped_rulespecs() -> None:
     by_group = {
         "static/networking": [
             "static_checks:mtr",
@@ -1340,7 +1340,7 @@ def _expected_rulespec_group_choices():
         ("rulesets", _expected_rulespec_group_choices()),
     ],
 )
-def test_rulespec_group_choices(mode, result):
+def test_rulespec_group_choices(mode, result) -> None:
     assert sorted(rulespec_group_registry.get_group_choices()) == sorted(result)
 
 
@@ -1384,11 +1384,11 @@ def test_rulespec_group_choices(mode, result):
         ),
     ],
 )
-def test_rulespec_get_matching_group_names(term, result):
+def test_rulespec_get_matching_group_names(term, result) -> None:
     assert sorted(rulespec_group_registry.get_matching_group_names(term)) == sorted(result)
 
 
-def test_rulespec_get_main_groups():
+def test_rulespec_get_main_groups() -> None:
     main_group_names = [g_class().name for g_class in rulespec_group_registry.get_main_groups()]
     assert sorted(main_group_names) == sorted(
         [
@@ -1409,7 +1409,7 @@ def test_rulespec_get_main_groups():
     )
 
 
-def test_rulespec_get_all_groups():
+def test_rulespec_get_all_groups() -> None:
     expected_rulespec_groups = [
         "activechecks",
         "host_monconf/host_checks",
@@ -1462,7 +1462,7 @@ def test_rulespec_get_all_groups():
     assert sorted(rulespec_registry.get_all_groups()) == sorted(expected_rulespec_groups)
 
 
-def test_rulespec_get_host_groups():
+def test_rulespec_get_host_groups() -> None:
 
     expected_rulespec_host_groups = [
         "checkparams",
@@ -1501,7 +1501,7 @@ def test_rulespec_get_host_groups():
     assert sorted(group_names) == sorted(expected_rulespec_host_groups)
 
 
-def test_legacy_register_rule(monkeypatch):
+def test_legacy_register_rule(monkeypatch) -> None:
     group_registry = RulespecGroupRegistry()
     monkeypatch.setattr(cmk.gui.watolib.rulespecs, "rulespec_group_registry", group_registry)
     monkeypatch.setattr(
@@ -1547,7 +1547,7 @@ def test_legacy_register_rule(monkeypatch):
     assert spec.factory_default == Rulespec.NO_FACTORY_DEFAULT
 
 
-def test_legacy_register_rule_attributes(monkeypatch):
+def test_legacy_register_rule_attributes(monkeypatch) -> None:
     group_registry = RulespecGroupRegistry()
     monkeypatch.setattr(cmk.gui.watolib.rulespecs, "rulespec_group_registry", group_registry)
     monkeypatch.setattr(
@@ -1599,7 +1599,7 @@ def fixture_patch_rulespec_registries(monkeypatch):
     monkeypatch.setattr(cmk.gui.plugins.wato.utils, "rulespec_registry", test_rulespec_registry)
 
 
-def test_register_check_parameters(patch_rulespec_registries):
+def test_register_check_parameters(patch_rulespec_registries) -> None:
     register_check_parameters(
         "netblabla",
         "bla_params",
@@ -1675,7 +1675,7 @@ def test_register_check_parameters(patch_rulespec_registries):
     assert isinstance(rulespec.valuespec._elements[2], TimeperiodValuespec)
 
 
-def test_register_host_check_parameters(patch_rulespec_registries):
+def test_register_host_check_parameters(patch_rulespec_registries) -> None:
     register_check_parameters(
         "netblabla",
         "bla_params",
@@ -1700,7 +1700,7 @@ def test_register_host_check_parameters(patch_rulespec_registries):
     assert isinstance(rulespec.valuespec._elements[2], TimeperiodValuespec)
 
 
-def test_register_without_discovery(patch_rulespec_registries):
+def test_register_without_discovery(patch_rulespec_registries) -> None:
     with pytest.raises(MKGeneralException, match="registering manual check"):
         register_check_parameters(
             "netblabla",
@@ -1715,7 +1715,7 @@ def test_register_without_discovery(patch_rulespec_registries):
         )
 
 
-def test_register_without_static(patch_rulespec_registries):
+def test_register_without_static(patch_rulespec_registries) -> None:
     register_check_parameters(
         "netblabla",
         "bla_params",
@@ -1750,7 +1750,7 @@ class DummyGroup(RulespecGroup):
         return "help text"
 
 
-def test_rulespecs_get_by_group():
+def test_rulespecs_get_by_group() -> None:
     group_registry = RulespecGroupRegistry()
     registry = RulespecRegistry(group_registry)
 
@@ -1769,7 +1769,7 @@ def test_rulespecs_get_by_group():
     assert isinstance(result[0], HostRulespec)
 
 
-def test_match_item_generator_rules():
+def test_match_item_generator_rules() -> None:
     class SomeRulespecGroup(RulespecGroup):
         @property
         def name(self) -> str:
@@ -1826,7 +1826,7 @@ def test_match_item_generator_rules():
     ]
 
 
-def test_all_rulespec_groups_have_main_group():
+def test_all_rulespec_groups_have_main_group() -> None:
     for rulespec_group_name, rulespec_group_cls in rulespec_group_registry.items():
         if issubclass(rulespec_group_cls, RulespecGroup):
             main_module_from_rulespec_group_name(
@@ -1835,14 +1835,14 @@ def test_all_rulespec_groups_have_main_group():
             )
 
 
-def test_rulespec_groups_have_unique_names():
+def test_rulespec_groups_have_unique_names() -> None:
     # The title is e.g. shown in the mega menu search. With duplicate entries a user could not
     # distinguish where a rule is located in the menu hierarchy.
     main_group_titles = [e().title for e in rulespec_group_registry.get_main_groups()]
     assert len(main_group_titles) == len(set(main_group_titles)), "Main group titles are not unique"
 
 
-def test_validate_datatype_timeperiod_valuespec_inner():
+def test_validate_datatype_timeperiod_valuespec_inner() -> None:
     # make sure TimeperiodValuespec does propagate validate_datatype to its child
     value_spec = TimeperiodValuespec(Dictionary(elements=[]))
     with pytest.raises(MKUserError):

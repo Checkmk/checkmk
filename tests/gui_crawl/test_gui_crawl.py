@@ -671,12 +671,12 @@ def test_crawl(site: Site) -> None:
         ),
     ],
 )
-def test_mutate_url_with_xss_payload(url: str, payload: str, expected_urls: Iterable[str]):
+def test_mutate_url_with_xss_payload(url: str, payload: str, expected_urls: Iterable[str]) -> None:
     assert [u.url for u in mutate_url_with_xss_payload(Url(url), payload)] == expected_urls
 
 
 @pytest.mark.type("unit")
-def test_mutate_url_with_xss_payload_url_metadata():
+def test_mutate_url_with_xss_payload_url_metadata() -> None:
     url = Url(
         url="http://host/page.py?key=value",
         referer_url="http://host/referer.py",

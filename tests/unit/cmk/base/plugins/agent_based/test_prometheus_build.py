@@ -9,7 +9,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import Result
 from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
 
 
-def test_check_prometheus_build():
+def test_check_prometheus_build() -> None:
     assert list(
         prometheus_build.check_prometheus_build(
             {
@@ -35,7 +35,7 @@ def test_check_prometheus_build():
     ]
 
 
-def test_check_prometheus_build_with_multiple_versions():
+def test_check_prometheus_build_with_multiple_versions() -> None:
     assert list(prometheus_build.check_prometheus_build({"version": ["2.0.0", "2.14.0"],})) == [
         Result(
             state=state.OK,

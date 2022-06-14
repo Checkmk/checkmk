@@ -26,7 +26,7 @@ def parse_info(lines, separator=None):
 
 
 class TestRunmqscParser:
-    def test_normal(self):
+    def test_normal(self) -> None:
         lines = """\
 QMNAME(FOO.BAR)                                           STATUS(ENDED UNEXPECTEDLY) NOW(2020-04-03T17:27:02+0200)
 5724-H72 (C) Copyright IBM Corp. 1994, 2015.
@@ -95,7 +95,7 @@ All valid MQSC commands were processed.
         assert attrs["MSGAGE"] == "2201"
         assert attrs["QTIME"] == "999999999, 999999999"
 
-    def test_multiple_queue_managers(self):
+    def test_multiple_queue_managers(self) -> None:
         lines = """\
 QMNAME(QM.ONE)                                            STATUS(RUNNING) NOW(2020-04-03T17:27:02+0200)
 5724-H72 (C) Copyright IBM Corp. 1994, 2011.  ALL RIGHTS RESERVED.
@@ -147,7 +147,7 @@ All valid MQSC commands were processed.
         assert len(parsed["QM.ONE:MY.QUEUE"]) == 16
         assert len(parsed["QM.TWO:MY.QUEUE"]) == 16
 
-    def test_empty_value_for_msgage(self):
+    def test_empty_value_for_msgage(self) -> None:
         lines = """\
 QMNAME(MY.TEST)                                           STATUS(RUNNING) NOW(2020-04-03T17:27:02+0200)
 5724-H72 (C) Copyright IBM Corp. 1994, 2015.
@@ -175,7 +175,7 @@ All valid MQSC commands were processed.
         assert attrs["IPPROCS"] == "2"
         assert attrs["MSGAGE"] == ""
 
-    def test_no_channel_status_of_inactive_channels(self):
+    def test_no_channel_status_of_inactive_channels(self) -> None:
         lines = """\
 QMNAME(MY.TEST)                                           STATUS(RUNNING) NOW(2020-04-03T17:27:02+0200)
 5724-H72 (C) Copyright IBM Corp. 1994, 2015.
@@ -194,7 +194,7 @@ One valid MQSC command could not be processed.
         assert "MY.TEST:HERE.TO.THERE.TWO" in parsed
         assert "STATUS" not in parsed["MY.TEST:HERE.TO.THERE.TWO"]
 
-    def test_mq9_includes_severity_in_message_code(self):
+    def test_mq9_includes_severity_in_message_code(self) -> None:
         lines = """\
 QMNAME(MY.TEST)                                           STATUS(RUNNING) NOW(2020-04-03T17:27:02+0200)
 5724-H72 (C) Copyright IBM Corp. 1994, 2018.
@@ -242,28 +242,28 @@ AMQ8417I: Display Channel Status details.
 
 
 class TestServiceVanished:
-    def test_not_vanished(self):
+    def test_not_vanished(self) -> None:
         parsed = {
             "QM1": {"STATUS": "RUNNING"},
             "QM1:QUEUE1": {"CURDEPTH": "0"},
         }
         assert is_ibm_mq_service_vanished("QM1:QUEUE1", parsed) is False
 
-    def test_vanished_for_running_qmgr(self):
+    def test_vanished_for_running_qmgr(self) -> None:
         parsed = {
             "QM1": {"STATUS": "RUNNING"},
             "QM1:QUEUE1": {"CURDEPTH": "0"},
         }
         assert is_ibm_mq_service_vanished("QM1:VANISHED", parsed) is True
 
-    def test_stale_for_not_running_qmgr(self):
+    def test_stale_for_not_running_qmgr(self) -> None:
         parsed = {"QM1": {"STATUS": "ENDED NORMALLY"}}
         with pytest.raises(MKCounterWrapped, match=r"^Stale because .* ENDED NORMALLY"):
             is_ibm_mq_service_vanished("QM1:QUEUE1", parsed)
 
 
 class TestCheckVersion:
-    def test_specific(self):
+    def test_specific(self) -> None:
         params = {"version": (("specific", "2.1.0"), 2)}
         actual = ibm_mq_check_version("2.1.0", params, "MyLabel")
         expected = (0, "MyLabel: 2.1.0")
@@ -274,7 +274,7 @@ class TestCheckVersion:
         expected = (2, "MyLabel: 2.1.0 (should be 2.0)")
         assert expected == actual
 
-    def test_at_least(self):
+    def test_at_least(self) -> None:
         params = {"version": (("at_least", "2.0"), 2)}
         actual = ibm_mq_check_version("2.1.0", params, "MyLabel")
         expected = (0, "MyLabel: 2.1.0")
@@ -295,19 +295,19 @@ class TestCheckVersion:
         expected = (0, "MyLabel: 9.0.0.0")
         assert expected == actual
 
-    def test_wato_warning(self):
+    def test_wato_warning(self) -> None:
         params = {"version": (("at_least", "2.2"), 1)}
         actual = ibm_mq_check_version("2.1.0", params, "MyLabel")
         expected = (1, "MyLabel: 2.1.0 (should be at least 2.2)")
         assert expected == actual
 
-    def test_old_wato_without_state(self):
+    def test_old_wato_without_state(self) -> None:
         params = {"version": (("at_least", "2.2"), 2)}
         actual = ibm_mq_check_version("2.1.0", params, "MyLabel")
         expected = (2, "MyLabel: 2.1.0 (should be at least 2.2)")
         assert expected == actual
 
-    def test_unparseable(self):
+    def test_unparseable(self) -> None:
         const_error = (
             "Only numbers separated by characters 'b', 'i', 'p', or '.' are allowed for a version."
         )
@@ -322,13 +322,13 @@ class TestCheckVersion:
         expected = (3, "Cannot compare 2.x and 2.2. " + const_error)
         assert expected == actual
 
-    def test_unparseable_without_wato_rule(self):
+    def test_unparseable_without_wato_rule(self) -> None:
         params: Dict[str, Any] = {}
         actual = ibm_mq_check_version("2.x", params, "MyLabel")
         expected = (0, "MyLabel: 2.x")
         assert expected == actual
 
-    def test_no_version(self):
+    def test_no_version(self) -> None:
         params: Dict[str, Any] = {}
         actual = ibm_mq_check_version(None, params, "MyLabel")
         expected = (3, "MyLabel: None (no agent info)")

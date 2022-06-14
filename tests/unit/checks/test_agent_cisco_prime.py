@@ -68,7 +68,7 @@ pytestmark = pytest.mark.checks
         ),
     ],
 )
-def test_cisco_prime_argument_parsing(params, hostname, ipaddress, args):
+def test_cisco_prime_argument_parsing(params, hostname, ipaddress, args) -> None:
     agent = SpecialAgent("agent_cisco_prime")
     arguments = agent.argument_func(params, hostname, ipaddress)
     assert arguments == args

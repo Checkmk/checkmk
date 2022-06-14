@@ -19,13 +19,13 @@ from cmk.gui.utils.html import HTML
         "Oneüლ,ᔑ•ﺪ͟͠•ᔐ.ლ",
     ],
 )
-def test_class_HTML_value(value):
+def test_class_HTML_value(value) -> None:
     assert isinstance(HTML(value).value, str)
     assert HTML(HTML(value)) == HTML(value)
 
 
 # TODO: Split this up into multiple tests
-def test_class_HTML():
+def test_class_HTML() -> None:
     a = "Oneüლ,ᔑ•ﺪ͟͠•ᔐ.ლ"
     b = "two"
     c = "Three"

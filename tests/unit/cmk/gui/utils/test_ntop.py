@@ -18,7 +18,7 @@ from cmk.gui.utils.ntop import (
 
 
 @pytest.mark.usefixtures("load_config")
-def test_is_ntop_available():
+def test_is_ntop_available() -> None:
     available = is_ntop_available()
 
     if cmk_version.is_raw_edition():

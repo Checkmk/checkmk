@@ -9,7 +9,7 @@ import livestatus
 from cmk.gui import sites
 
 
-def test_local_table_assoc(mock_livestatus):
+def test_local_table_assoc(mock_livestatus) -> None:
     live = mock_livestatus
     live.set_sites(["local"])
     live.add_table(
@@ -45,7 +45,7 @@ def test_local_table_assoc(mock_livestatus):
         )
 
 
-def test_intercept_queries(mock_livestatus, with_request_context):
+def test_intercept_queries(mock_livestatus, with_request_context) -> None:
     with mock_livestatus(expect_status_query=True):
         live = sites.live()
 

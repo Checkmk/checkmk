@@ -159,7 +159,7 @@ from cmk.base.plugins.agent_based.printer_io import (
         ),
     ],
 )
-def test_check_printer_input(item, params, info, expected_result):
+def test_check_printer_input(item, params, info, expected_result) -> None:
     data = parse_printer_io(info)
     result = check_printer_input(item, params, data)
     assert list(result) == expected_result
@@ -238,7 +238,7 @@ def test_check_printer_input_capacity_not_reported_if_unit_is_unkown(
         ),
     ],
 )
-def test_check_priner_output(item, params, info, expected_result):
+def test_check_priner_output(item, params, info, expected_result) -> None:
     data = parse_printer_io(info)
     result = check_printer_output(item, params, data)
     assert list(result) == expected_result
@@ -260,7 +260,7 @@ def test_check_priner_output(item, params, info, expected_result):
         )
     ],
 )
-def test_inventory_printer_io(info, expected_result):
+def test_inventory_printer_io(info, expected_result) -> None:
     data = parse_printer_io(info)
     result = discovery_printer_io(data)
     assert list(result) == expected_result

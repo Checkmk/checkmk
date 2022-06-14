@@ -1637,7 +1637,7 @@ def test_get_node_services(monkeypatch: MonkeyPatch) -> None:
     }
 
 
-def test_make_discovery_diff_empty():
+def test_make_discovery_diff_empty() -> None:
     assert discovery._make_diff((), (), (), ()) == "Nothing was changed."
 
 
@@ -1646,7 +1646,7 @@ class _MockService(NamedTuple):
     item: Optional[str]
 
 
-def test_make_discovery_diff():
+def test_make_discovery_diff() -> None:
     assert discovery._make_diff(
         (HostLabel("foo", "bar"),),
         (HostLabel("gee", "boo"),),

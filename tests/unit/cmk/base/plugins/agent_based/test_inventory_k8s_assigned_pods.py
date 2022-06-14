@@ -48,7 +48,7 @@ from .utils_inventory import sort_inventory_result
         ),
     ],
 )
-def test_inventory_k8s_assigned_pods(raw_section, expected_result):
+def test_inventory_k8s_assigned_pods(raw_section, expected_result) -> None:
     assert sort_inventory_result(inventory_k8s_assigned_pods(raw_section)) == sort_inventory_result(
         expected_result
     )

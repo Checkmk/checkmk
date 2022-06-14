@@ -85,7 +85,7 @@ def _get_file_from_package(package_path, cmk_version, version_rel_path):
     ],
 )
 @pytest.mark.skip("skip for now until our build chaos has settled...")
-def test_package_sizes(package_path, pkg_format, min_size, max_size):
+def test_package_sizes(package_path, pkg_format, min_size, max_size) -> None:
     if not package_path.endswith(".%s" % pkg_format):
         pytest.skip("%s is another package type" % os.path.basename(package_path))
 
@@ -101,7 +101,7 @@ def test_package_sizes(package_path, pkg_format, min_size, max_size):
     )
 
 
-def test_files_not_in_version_path(package_path, cmk_version):
+def test_files_not_in_version_path(package_path, cmk_version) -> None:
     if not package_path.endswith(".rpm") and not package_path.endswith(".deb"):
         pytest.skip("%s is another package type" % os.path.basename(package_path))
 
@@ -172,7 +172,7 @@ def test_files_not_in_version_path(package_path, cmk_version):
         assert is_allowed, "Found unexpected global file: %s in %s" % (path, package_path)
 
 
-def test_cma_only_contains_version_paths(package_path, cmk_version):
+def test_cma_only_contains_version_paths(package_path, cmk_version) -> None:
     if not package_path.endswith(".cma"):
         pytest.skip("%s is another package type" % os.path.basename(package_path))
 
@@ -188,7 +188,7 @@ def test_cma_only_contains_version_paths(package_path, cmk_version):
         assert file_path.startswith(omd_version + "/")
 
 
-def test_cma_specific_files(package_path, cmk_version):
+def test_cma_specific_files(package_path, cmk_version) -> None:
     if not package_path.endswith(".cma"):
         pytest.skip("%s is another package type" % os.path.basename(package_path))
 
@@ -212,7 +212,7 @@ def test_cma_specific_files(package_path, cmk_version):
         assert "DEMO=1" not in cma_info
 
 
-def test_src_only_contains_relative_version_paths(package_path):
+def test_src_only_contains_relative_version_paths(package_path) -> None:
     if not package_path.endswith(".tar.gz"):
         pytest.skip("%s is not a source package" % os.path.basename(package_path))
 
@@ -224,7 +224,7 @@ def test_src_only_contains_relative_version_paths(package_path):
         assert path.startswith(prefix + "/")
 
 
-def test_src_not_contains_enterprise_sources(package_path):
+def test_src_not_contains_enterprise_sources(package_path) -> None:
     if not package_path.endswith(".tar.gz"):
         pytest.skip("%s is not a source package" % os.path.basename(package_path))
 
@@ -249,7 +249,7 @@ def test_src_not_contains_enterprise_sources(package_path):
     assert plus_files == []
 
 
-def test_demo_modifications(package_path, cmk_version):
+def test_demo_modifications(package_path, cmk_version) -> None:
     if package_path.endswith(".tar.gz"):
         pytest.skip("%s do not test source packages" % os.path.basename(package_path))
 

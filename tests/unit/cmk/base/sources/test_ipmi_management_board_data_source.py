@@ -17,7 +17,7 @@ from cmk.base.sources.agent import AgentRawDataSection
 from cmk.base.sources.ipmi import IPMISource
 
 
-def test_attribute_defaults(monkeypatch):
+def test_attribute_defaults(monkeypatch) -> None:
     hostname = HostName("testhost")
     ts = Scenario()
     ts.add_host(hostname)
@@ -37,7 +37,7 @@ def test_attribute_defaults(monkeypatch):
     assert source.id == "mgmt_ipmi"
 
 
-def test_ipmi_ipaddress_from_mgmt_board(monkeypatch):
+def test_ipmi_ipaddress_from_mgmt_board(monkeypatch) -> None:
     hostname = HostName("testhost")
     ipaddress = "127.0.0.1"
 
@@ -60,7 +60,7 @@ def test_ipmi_ipaddress_from_mgmt_board(monkeypatch):
     assert source.host_config.management_address == ipaddress
 
 
-def test_description_with_ipaddress(monkeypatch):
+def test_description_with_ipaddress(monkeypatch) -> None:
     assert (
         IPMISource._make_description(
             "1.2.3.4",
@@ -70,14 +70,14 @@ def test_description_with_ipaddress(monkeypatch):
     )
 
 
-def test_description_with_credentials(monkeypatch):
+def test_description_with_credentials(monkeypatch) -> None:
     assert (
         IPMISource._make_description(None, {"username": "Bobby"})
         == "Management board - IPMI (User: Bobby)"
     )
 
 
-def test_description_with_ipaddress_and_credentials(monkeypatch):
+def test_description_with_ipaddress_and_credentials(monkeypatch) -> None:
     assert (
         IPMISource._make_description(
             "1.2.3.4",

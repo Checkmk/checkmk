@@ -22,7 +22,7 @@ import cmk.utils.prediction as prediction
         ),
     ],
 )
-def test_lq_logic(filter_condition, values, join, result):
+def test_lq_logic(filter_condition, values, join, result) -> None:
     assert prediction.lq_logic(filter_condition, values, join) == result
 
 
@@ -59,14 +59,14 @@ Filter: service_description = invent\n""",
         ),
     ],
 )
-def test_livestatus_lql(args, result):
+def test_livestatus_lql(args, result) -> None:
     assert prediction.livestatus_lql(*args) == result
 
 
 @pytest.mark.parametrize(
     "twindow, result", [((0, 0, 0), []), ((100, 200, 25), [125, 150, 175, 200])]
 )
-def test_rrdtimestamps(twindow, result):
+def test_rrdtimestamps(twindow, result) -> None:
     assert prediction.rrd_timestamps(twindow) == result
 
 
@@ -91,7 +91,7 @@ def test_rrdtimestamps(twindow, result):
         ([0, 120, 40, 25, 65, 105], (330, 410, 10), 300, [25, 65, 65, 65, 65, 105, 105, 105]),
     ],
 )
-def test_time_series_upsampling(rrddata, twindow, shift, upsampled):
+def test_time_series_upsampling(rrddata, twindow, shift, upsampled) -> None:
     ts = prediction.TimeSeries(rrddata)
     assert ts.bfill_upsample(twindow, shift) == upsampled
 
@@ -114,12 +114,12 @@ def test_time_series_upsampling(rrddata, twindow, shift, upsampled):
         ([10, 45, 5, 15, 20, 25, 30, None, 40, 45], (10, 40, 10), "average", [17.5, 27.5, 40.0]),
     ],
 )
-def test_time_series_downsampling(rrddata, twindow, cf, downsampled):
+def test_time_series_downsampling(rrddata, twindow, cf, downsampled) -> None:
     ts = prediction.TimeSeries(rrddata)
     assert ts.downsample(twindow, cf) == downsampled
 
 
-def test__get_reference_deviation_absolute():
+def test__get_reference_deviation_absolute() -> None:
     factor = 3.1415
     assert (
         prediction._get_reference_deviation(
@@ -132,7 +132,7 @@ def test__get_reference_deviation_absolute():
     )
 
 
-def test__get_reference_deviation_relative():
+def test__get_reference_deviation_relative() -> None:
     reference_value = 42.0
     assert (
         prediction._get_reference_deviation(
@@ -145,7 +145,7 @@ def test__get_reference_deviation_relative():
     )
 
 
-def test__get_reference_deviation_stdev_good():
+def test__get_reference_deviation_stdev_good() -> None:
     stdev = 23.0
     assert (
         prediction._get_reference_deviation(
@@ -158,7 +158,7 @@ def test__get_reference_deviation_stdev_good():
     )
 
 
-def test__get_reference_deviation_stdev_bad():
+def test__get_reference_deviation_stdev_bad() -> None:
     with pytest.raises(TypeError):
         _ = prediction._get_reference_deviation(
             levels_type="stdev",
@@ -207,7 +207,9 @@ def test__get_reference_deviation_stdev_bad():
         ),
     ],
 )
-def test_estimate_levels(reference_value, reference_deviation, params, levels_factor, result):
+def test_estimate_levels(
+    reference_value, reference_deviation, params, levels_factor, result
+) -> None:
     assert (
         prediction.estimate_levels(
             reference_value=reference_value,

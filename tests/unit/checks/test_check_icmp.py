@@ -169,7 +169,7 @@ HOST_CONFIG = HostAddressConfiguration(
         ),
     ],
 )
-def test_generate_icmp_services(params, expected_result):
+def test_generate_icmp_services(params, expected_result) -> None:
     active_check = ActiveCheck("check_icmp")
     services = list(active_check.run_generate_icmp_services(HOST_CONFIG, params))
     assert services == expected_result

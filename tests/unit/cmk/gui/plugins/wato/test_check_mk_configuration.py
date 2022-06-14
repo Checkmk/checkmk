@@ -14,7 +14,7 @@ from cmk.gui.valuespec import DropdownChoice
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
 
 
-def test_ui_theme_registration():
+def test_ui_theme_registration() -> None:
     var = config_variable_registry["ui_theme"]()
     assert var.domain() == ConfigDomainGUI
     assert var.group() == ConfigVariableGroupUserInterface
@@ -24,7 +24,7 @@ def test_ui_theme_registration():
     assert valuespec.choices() == theme_choices()
 
 
-def test_ui_theme_default_value(request_context):
+def test_ui_theme_default_value(request_context) -> None:
     var = config_variable_registry["ui_theme"]()
 
     default_setting = var.domain()().default_globals()[var.ident()]
@@ -98,5 +98,5 @@ def test_ui_theme_default_value(request_context):
         ),
     ],
 )
-def test__transform_automatic_rediscover_parameters(parameters, result):
+def test__transform_automatic_rediscover_parameters(parameters, result) -> None:
     assert _transform_automatic_rediscover_parameters(parameters) == result

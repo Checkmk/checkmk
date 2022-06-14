@@ -9,7 +9,7 @@ import pytest
 import cmk.utils.diagnostics as diagnostics
 
 
-def test_diagnostics_serialize_wato_parameters_boolean():
+def test_diagnostics_serialize_wato_parameters_boolean() -> None:
     assert sorted(
         diagnostics.serialize_wato_parameters(
             {  # type: ignore[typeddict-item]
@@ -104,7 +104,9 @@ def test_diagnostics_serialize_wato_parameters_boolean():
         ),
     ],
 )
-def test_diagnostics_serialize_wato_parameters_files(mocker, wato_parameters, expected_parameters):
+def test_diagnostics_serialize_wato_parameters_files(
+    mocker, wato_parameters, expected_parameters
+) -> None:
     mocker.patch("cmk.utils.diagnostics._get_max_args", return_value=5)
     assert diagnostics.serialize_wato_parameters(wato_parameters) == expected_parameters
 
@@ -153,7 +155,7 @@ def test_diagnostics_serialize_wato_parameters_files(mocker, wato_parameters, ex
         ),
     ],
 )
-def test_diagnostics_deserialize(cl_parameters, modes_parameters, expected_parameters):
+def test_diagnostics_deserialize(cl_parameters, modes_parameters, expected_parameters) -> None:
     assert diagnostics.deserialize_cl_parameters(cl_parameters) == expected_parameters
     assert diagnostics.deserialize_modes_parameters(modes_parameters) == expected_parameters
 
@@ -168,7 +170,7 @@ def test_diagnostics_deserialize(cl_parameters, modes_parameters, expected_param
         (diagnostics.OPT_COMP_BUSINESS_INTELLIGENCE, [3, 3, 3, 3, 3, 3, 1]),
     ],
 )
-def test_diagnostics_get_checkmk_file_info_by_name(component, sensitivity_values):
+def test_diagnostics_get_checkmk_file_info_by_name(component, sensitivity_values) -> None:
     rel_filepaths = [
         "path/to/sites.mk",
         "path/to/global.mk",
@@ -237,7 +239,7 @@ def test_diagnostics_get_checkmk_file_info_by_name(component, sensitivity_values
         ("web.log", 1),
     ],
 )
-def test_diagnostics_file_info_of_comp_notifications(rel_filepath, sensitivity_value):
+def test_diagnostics_file_info_of_comp_notifications(rel_filepath, sensitivity_value) -> None:
     assert (
         diagnostics.get_checkmk_file_info(
             rel_filepath, diagnostics.OPT_COMP_NOTIFICATIONS

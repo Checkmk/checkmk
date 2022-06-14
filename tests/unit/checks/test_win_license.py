@@ -104,7 +104,7 @@ def splitter(text):
     ),
     ids=["win7", "win2012", "win2008", "win10"],
 )
-def test_parse_win_license(capture, result):
+def test_parse_win_license(capture, result) -> None:
     check = Check("win_license")
     assert result == check.run_parse(splitter(capture))
 
@@ -196,7 +196,7 @@ class check_ref(NamedTuple):
     ),
     ids=[str(x) for x in range(6)],
 )
-def test_check_win_license(capture, result):
+def test_check_win_license(capture, result) -> None:
     check = Check("win_license")
     output = check.run_check(
         None, result.parameters or check.default_parameters(), check.run_parse(splitter(capture))

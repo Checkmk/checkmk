@@ -82,7 +82,7 @@ def test_check_version_site_mismatch(fail_state: State) -> None:
     ]
 
 
-def test_check_version_at_least_success():
+def test_check_version_at_least_success() -> None:
     assert [
         *_check_version(
             "1.2.3",
@@ -93,7 +93,7 @@ def test_check_version_at_least_success():
     ] == [Result(state=State.OK, summary="Version: 1.2.3")]
 
 
-def test_check_version_at_least_dict_empty():
+def test_check_version_at_least_dict_empty() -> None:
     spec: dict[str, str] = {}
     assert [
         *_check_version(
@@ -105,7 +105,7 @@ def test_check_version_at_least_dict_empty():
     ] == [Result(state=State.OK, summary="Version: 1.2.3")]
 
 
-def test_check_version_at_least_daily_build():
+def test_check_version_at_least_daily_build() -> None:
     assert [
         *_check_version(
             "1.2.3-2021.02.03",
@@ -121,7 +121,7 @@ def test_check_version_at_least_daily_build():
     ]
 
 
-def test_check_version_at_least_daily_build_vs_release():
+def test_check_version_at_least_daily_build_vs_release() -> None:
     assert [
         *_check_version(
             "1.2.3-2022.02.03",

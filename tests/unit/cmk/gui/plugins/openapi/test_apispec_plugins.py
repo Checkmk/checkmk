@@ -109,7 +109,7 @@ def spec_fixture():
                    ])
 
 
-def test_apispec_plugin_string_to_schema_dict(spec):
+def test_apispec_plugin_string_to_schema_dict(spec) -> None:
     # Schema suffix of schemas gets stripped by library
     spec.components.schema('MovieDict', schema=MovieDictSchema)
 
@@ -122,7 +122,7 @@ def test_apispec_plugin_string_to_schema_dict(spec):
     }
 
 
-def test_apispec_plugin_string_to_string_dict(spec):
+def test_apispec_plugin_string_to_string_dict(spec) -> None:
     # Schema suffix of schemas gets stripped by library
     spec.components.schema('CustomTagDict', schema=CustomTagDictSchema)
     schemas = spec.to_dict()['components']['schemas']
@@ -137,7 +137,7 @@ def test_apispec_plugin_string_to_string_dict(spec):
     }
 
 
-def test_apispec_plugin_parameters(spec):
+def test_apispec_plugin_parameters(spec) -> None:
     # Different code paths are executed here. We need to make sure our plugin handles this.
     spec.components.parameter('var', 'path', {'description': "Some path variable"})
 
@@ -150,7 +150,7 @@ def test_apispec_plugin_parameters(spec):
         (EmailSchema, {'bob': 'bob@example.com'}, {'bob': 'bob@example.com'}),
     ],
 )
-def test_typed_dictionary_success(schema_class: Type[SchemaABC], in_data, expected_result):
+def test_typed_dictionary_success(schema_class: Type[SchemaABC], in_data, expected_result) -> None:
     schema = schema_class()
     result = schema.load(in_data)
     assert result == expected_result
@@ -162,7 +162,7 @@ def test_typed_dictionary_success(schema_class: Type[SchemaABC], in_data, expect
     (IntegerDictSchema, {'bar': 'eins'}),
     (EmailSchema, {'hans': 'foo'}),
 ])
-def test_typed_dictionary_failed_validation(schema_class, in_data):
+def test_typed_dictionary_failed_validation(schema_class, in_data) -> None:
     schema = schema_class()
     with pytest.raises(ValidationError):
         schema.load(in_data)

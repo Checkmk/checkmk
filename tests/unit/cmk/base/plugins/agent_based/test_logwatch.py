@@ -53,7 +53,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, Sta
         ),
     ],
 )
-def test_logwatch_groups_of_logfile(group_patterns, filename, expected):
+def test_logwatch_groups_of_logfile(group_patterns, filename, expected) -> None:
     actual = logwatch._groups_of_logfile(group_patterns, filename)
     assert actual == expected
 
@@ -64,7 +64,7 @@ def test_logwatch_groups_of_logfile(group_patterns, filename, expected):
         ([("%s_group", ("~.{6}.ack", ""))], "lumberjacks.log"),
     ],
 )
-def test_logwatch_groups_of_logfile_exception(group_patterns, filename):
+def test_logwatch_groups_of_logfile_exception(group_patterns, filename) -> None:
     with pytest.raises(RuntimeError):
         logwatch._groups_of_logfile(group_patterns, filename)
 
@@ -96,7 +96,7 @@ SECTION1 = logwatch.logwatch.Section(
 )
 
 
-def test_discovery_single(monkeypatch):
+def test_discovery_single(monkeypatch) -> None:
     monkeypatch.setattr(logwatch.logwatch, "get_ec_rule_params", lambda: [])
     assert sorted(logwatch.discover_logwatch_single([], SECTION1), key=lambda s: s.item or "",) == [
         Service(item="empty.log"),
@@ -107,7 +107,7 @@ def test_discovery_single(monkeypatch):
     assert not list(logwatch.discover_logwatch_groups([], SECTION1))
 
 
-def test_check_single(monkeypatch):
+def test_check_single(monkeypatch) -> None:
     monkeypatch.setattr(logwatch, "get_value_store", lambda: {})
     monkeypatch.setattr(logwatch, "_compile_params", lambda _item: [])
     monkeypatch.setattr(logwatch, "host_name", lambda: "test-host")
@@ -158,7 +158,7 @@ SECTION2 = logwatch.logwatch.Section(
 )
 
 
-def test_logwatch_discover_single_restrict(monkeypatch):
+def test_logwatch_discover_single_restrict(monkeypatch) -> None:
     monkeypatch.setattr(
         logwatch.logwatch,
         "get_ec_rule_params",
@@ -170,7 +170,7 @@ def test_logwatch_discover_single_restrict(monkeypatch):
     ]
 
 
-def test_logwatch_discover_single_groups(monkeypatch):
+def test_logwatch_discover_single_groups(monkeypatch) -> None:
     params = [
         {
             "grouping_patterns": [
@@ -186,7 +186,7 @@ def test_logwatch_discover_single_groups(monkeypatch):
     ]
 
 
-def test_logwatch_discover_groups(monkeypatch):
+def test_logwatch_discover_groups(monkeypatch) -> None:
     params = [
         {
             "grouping_patterns": [

@@ -22,7 +22,7 @@ from cmk.base.plugins.agent_based.cisco_wlc import (
         ([[["AP19", "1"], ["AP02", "1"]]], {"AP19": "1", "AP02": "1"}),
     ],
 )
-def test_parse_cisco_wlc(string_table, expected_parsed_data):
+def test_parse_cisco_wlc(string_table, expected_parsed_data) -> None:
     assert parse_cisco_wlc(string_table) == expected_parsed_data
 
 
@@ -38,7 +38,7 @@ def test_parse_cisco_wlc(string_table, expected_parsed_data):
         ),
     ],
 )
-def test_discovery_cisco_wlc(section, services):
+def test_discovery_cisco_wlc(section, services) -> None:
     assert list(discovery_cisco_wlc(section)) == services
 
 
@@ -59,7 +59,7 @@ def test_discovery_cisco_wlc(section, services):
         ),
     ],
 )
-def test_check_cisco_wlc(item, params, section, results):
+def test_check_cisco_wlc(item, params, section, results) -> None:
     assert list(check_cisco_wlc(item, params, section)) == results
 
 
@@ -80,5 +80,5 @@ def test_check_cisco_wlc(item, params, section, results):
         ),
     ],
 )
-def test_cluster_check_cisco_wlc(item, params, section, result):
+def test_cluster_check_cisco_wlc(item, params, section, result) -> None:
     assert list(cluster_check_cisco_wlc(item, params, section)) == result

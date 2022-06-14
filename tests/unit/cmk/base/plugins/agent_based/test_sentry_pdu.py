@@ -45,7 +45,7 @@ _SECTION_V4 = {
         ),
     ],
 )
-def test_parse_sentry_pdu(string_table, expected_section):
+def test_parse_sentry_pdu(string_table, expected_section) -> None:
     section = parse_sentry_pdu(string_table)
     assert section == expected_section
 

@@ -85,7 +85,7 @@ _INSTALLED_DATE = 123
         ),
     ],
 )
-def test_inventory_win_reg_uninstall(monkeypatch, string_table, expected_result):
+def test_inventory_win_reg_uninstall(monkeypatch, string_table, expected_result) -> None:
     monkeypatch.setattr(time, "mktime", lambda s: _INSTALLED_DATE)
     assert sort_inventory_result(
         inventory_win_reg_uninstall(parse_win_reg_uninstall(string_table))

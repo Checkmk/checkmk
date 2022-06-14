@@ -43,7 +43,7 @@ def pylint_test_dir():
     shutil.rmtree(test_dir)
 
 
-def test_pylint(pylint_test_dir, capsys):
+def test_pylint(pylint_test_dir, capsys) -> None:
     with capsys.disabled():
         print("\n")
         retcode = subprocess.call("python -m pylint --version".split(), shell=False)

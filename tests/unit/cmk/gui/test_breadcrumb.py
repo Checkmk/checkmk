@@ -7,13 +7,13 @@
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 
 
-def test_breadcrumb_item_creation():
+def test_breadcrumb_item_creation() -> None:
     i1 = BreadcrumbItem("Title", "index.py")
     assert i1.title == "Title"
     assert i1.url == "index.py"
 
 
-def test_breadcrumb_creation():
+def test_breadcrumb_creation() -> None:
     i1 = BreadcrumbItem("Title1", "index.py")
 
     b = Breadcrumb([i1])
@@ -34,7 +34,7 @@ def test_breadcrumb_creation():
     assert b[3].title == "Title4"
 
 
-def test_breadcrumb_add():
+def test_breadcrumb_add() -> None:
     i1 = BreadcrumbItem("Title1", "index.py")
     b1 = Breadcrumb([i1])
 

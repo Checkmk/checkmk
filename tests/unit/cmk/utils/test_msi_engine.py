@@ -7,7 +7,7 @@
 import cmk.utils.msi_engine as msi_engine
 
 
-def test_parse_command_line():
+def test_parse_command_line() -> None:
     msi_file, source_dir, revision, version_name, aghash = msi_engine.parse_command_line(
         ["stub", "msi", "dir", "rev", "vers", "aghash"]
     )
@@ -39,19 +39,19 @@ EXPECTED_COMPONENT_TABLE = [
 
 
 # check of constants: we do noy want to break build after soem refactoring, renaming or typo-fix
-def test_msi_tables():
+def test_msi_tables() -> None:
     assert msi_engine.msi_file_table() == EXPECTED_FILE_TABLE
     assert msi_engine.msi_component_table() == EXPECTED_COMPONENT_TABLE
 
 
-def test_msi_file_table():
+def test_msi_file_table() -> None:
     a = msi_engine.msi_file_table()
     assert len(a) == len(EXPECTED_FILE_TABLE)  # size for now(yml, dat & cap, zip)
     a_sorted = sorted(a)
     assert a == a_sorted  # array should be sorted
 
 
-def test_msi_component_table():
+def test_msi_component_table() -> None:
     a = msi_engine.msi_component_table()
     assert len(a) == len(EXPECTED_COMPONENT_TABLE)  # size now(yml, dat & cap, zip)
     a_sorted = sorted(a)

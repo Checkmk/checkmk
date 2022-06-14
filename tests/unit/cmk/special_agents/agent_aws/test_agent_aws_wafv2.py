@@ -141,7 +141,7 @@ wafv2_params = [
 ]
 
 
-def test_agent_aws_wafv2_regional_cloudfront():
+def test_agent_aws_wafv2_regional_cloudfront() -> None:
 
     config = AWSConfig("hostname", [], (None, None))
 
@@ -178,7 +178,7 @@ def _test_limits(wafv2_sections):
 
 
 @pytest.mark.parametrize("names,tags,found_instances", wafv2_params)
-def test_agent_aws_wafv2_limits(get_wafv2_sections, names, tags, found_instances):
+def test_agent_aws_wafv2_limits(get_wafv2_sections, names, tags, found_instances) -> None:
     for wafv2_sections in get_wafv2_sections(names, tags):
         _test_limits(wafv2_sections)
 
@@ -202,14 +202,16 @@ def _test_summary(wafv2_summary, found_instances):
 
 
 @pytest.mark.parametrize("names,tags,found_instances", wafv2_params)
-def test_agent_aws_wafv2_summary_w_limits(get_wafv2_sections, names, tags, found_instances):
+def test_agent_aws_wafv2_summary_w_limits(get_wafv2_sections, names, tags, found_instances) -> None:
     for wafv2_sections in get_wafv2_sections(names, tags):
         _wafv2_limits_results = wafv2_sections["wafv2_limits"].run().results
         _test_summary(wafv2_sections["wafv2_summary"], found_instances)
 
 
 @pytest.mark.parametrize("names,tags,found_instances", wafv2_params)
-def test_agent_aws_wafv2_summary_wo_limits(get_wafv2_sections, names, tags, found_instances):
+def test_agent_aws_wafv2_summary_wo_limits(
+    get_wafv2_sections, names, tags, found_instances
+) -> None:
     for wafv2_sections in get_wafv2_sections(names, tags):
         _test_summary(wafv2_sections["wafv2_summary"], found_instances)
 
@@ -231,13 +233,17 @@ def _test_web_acl(wafv2_sections, found_instances):
 
 
 @pytest.mark.parametrize("names,tags,found_instances", wafv2_params)
-def test_agent_aws_wafv2_web_acls_w_limits(get_wafv2_sections, names, tags, found_instances):
+def test_agent_aws_wafv2_web_acls_w_limits(
+    get_wafv2_sections, names, tags, found_instances
+) -> None:
     for wafv2_sections in get_wafv2_sections(names, tags):
         _wafv2_limits_results = wafv2_sections["wafv2_limits"].run().results
         _test_web_acl(wafv2_sections, found_instances)
 
 
 @pytest.mark.parametrize("names,tags,found_instances", wafv2_params)
-def test_agent_aws_wafv2_web_acls_wo_limits(get_wafv2_sections, names, tags, found_instances):
+def test_agent_aws_wafv2_web_acls_wo_limits(
+    get_wafv2_sections, names, tags, found_instances
+) -> None:
     for wafv2_sections in get_wafv2_sections(names, tags):
         _test_web_acl(wafv2_sections, found_instances)

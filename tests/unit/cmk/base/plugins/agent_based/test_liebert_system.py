@@ -64,7 +64,7 @@ from cmk.base.plugins.agent_based.liebert_system import (
         ),
     ],
 )
-def test_parse_liebert_system(string_table, result):
+def test_parse_liebert_system(string_table, result) -> None:
     parsed = parse_liebert_system(string_table)
     assert parsed == result
 
@@ -92,7 +92,7 @@ def test_parse_liebert_system(string_table, result):
         ),
     ],
 )
-def test_discover_liebert_system(section, result):
+def test_discover_liebert_system(section, result) -> None:
     discovered = list(discover_liebert_system(section))
     assert discovered == result
 
@@ -162,6 +162,6 @@ def test_discover_liebert_system(section, result):
         ),
     ],
 )
-def test_check_liebert_system(section, result):
+def test_check_liebert_system(section, result) -> None:
     checked = list(check_liebert_system("Liebert CRV", section))
     assert checked == result

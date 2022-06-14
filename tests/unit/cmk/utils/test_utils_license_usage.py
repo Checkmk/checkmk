@@ -24,7 +24,7 @@ from cmk.utils.license_usage.export import (
 )
 
 
-def test_serialize_history_dump():
+def test_serialize_history_dump() -> None:
     history_dump = LicenseUsageHistoryDump.parse(
         {
             "VERSION": "1.2",

@@ -147,19 +147,19 @@ def fixture_agent_output() -> Sequence[agent_gcp.Section]:
     return list(sections)
 
 
-def test_output_contains_defined_metric_sections(agent_output: Sequence[agent_gcp.Section]):
+def test_output_contains_defined_metric_sections(agent_output: Sequence[agent_gcp.Section]) -> None:
     names = {s.name for s in agent_output}
     assert names.issuperset({s.name for s in agent_gcp.SERVICES.values()})
 
 
-def test_output_contains_one_asset_section(agent_output: Sequence[agent_gcp.Section]):
+def test_output_contains_one_asset_section(agent_output: Sequence[agent_gcp.Section]) -> None:
     assert "asset" in {s.name for s in agent_output}
     asset_sections = list(s for s in agent_output if isinstance(s, agent_gcp.AssetSection))
     assert len(asset_sections) == 1
     assert asset_sections[0].project == "test"
 
 
-def test_metric_serialization(agent_output: Sequence[agent_gcp.Section], capsys):
+def test_metric_serialization(agent_output: Sequence[agent_gcp.Section], capsys) -> None:
     result_section = next(s for s in agent_output if isinstance(s, agent_gcp.ResultSection))
     agent_gcp.gcp_serializer([result_section])
     captured = capsys.readouterr()
@@ -169,7 +169,7 @@ def test_metric_serialization(agent_output: Sequence[agent_gcp.Section], capsys)
         agent_gcp.Result.deserialize(line)
 
 
-def test_metric_retrieval():
+def test_metric_retrieval() -> None:
     timeseries = [
         '{"metric": {"type": "compute.googleapis.com/instance/cpu/utilization", "labels": {}}, "resource": {"type": "gce_instance", "labels": {"project_id": "tribe29-check-development", "instance_id": "4916403162284897775"}}, "metric_kind": 1, "value_type": 3, "points": [{"interval": {"start_time": "2022-04-13T11:19:37.193318Z", "end_time": "2022-04-13T11:19:37.193318Z"}, "value": {"double_value": 0.0033734199011726433}}], "unit": ""}'
     ]
@@ -184,7 +184,7 @@ def test_metric_retrieval():
     assert len(results) == len(agent_gcp.RUN.metrics)
 
 
-def test_asset_serialization(agent_output: Sequence[agent_gcp.Section], capsys):
+def test_asset_serialization(agent_output: Sequence[agent_gcp.Section], capsys) -> None:
     asset_section = next(s for s in agent_output if isinstance(s, agent_gcp.AssetSection))
     agent_gcp.gcp_serializer([asset_section])
     captured = capsys.readouterr()
@@ -230,17 +230,17 @@ def piggy_back_sections_fixture():
     return list(s for s in sections if isinstance(s, agent_gcp.PiggyBackSection))
 
 
-def test_can_hash_client():
+def test_can_hash_client() -> None:
     client = agent_gcp.Client({}, "test")
     assert hash(client)
 
 
-def test_piggyback_identify_hosts(piggy_back_sections):
+def test_piggyback_identify_hosts(piggy_back_sections) -> None:
     assert piggy_back_sections[0].name == "a"
     assert piggy_back_sections[1].name == "b"
 
 
-def test_serialize_piggy_back_section(piggy_back_sections, capsys):
+def test_serialize_piggy_back_section(piggy_back_sections, capsys) -> None:
     section = piggy_back_sections[1]
     agent_gcp.gcp_serializer([section])
     captured = capsys.readouterr()
@@ -260,7 +260,7 @@ def test_serialize_piggy_back_section(piggy_back_sections, capsys):
     assert section_names == {"gcp_service_testing_uptime:sep(0)"}
 
 
-def test_piggy_back_sort_values_to_host(piggy_back_sections):
+def test_piggy_back_sort_values_to_host(piggy_back_sections) -> None:
     # I need two sections I can compare
     assert len(piggy_back_sections) == 2
     host_a = piggy_back_sections[0]
@@ -269,7 +269,7 @@ def test_piggy_back_sort_values_to_host(piggy_back_sections):
     assert next(next(host_b.sections).results).ts.points[0].value.double_value == pytest.approx(42)
 
 
-def test_piggy_back_host_labels(piggy_back_sections):
+def test_piggy_back_host_labels(piggy_back_sections) -> None:
     assert piggy_back_sections[0].labels == {
         "gcp/labels/van": "halen",
         "gcp/labels/iron": "maiden",
@@ -297,15 +297,15 @@ def fixture_gce_sections() -> Sequence[agent_gcp.PiggyBackSection]:
     return list(s for s in sections if isinstance(s, agent_gcp.PiggyBackSection))
 
 
-def test_gce_host_labels(gce_sections: Sequence[agent_gcp.PiggyBackSection]):
+def test_gce_host_labels(gce_sections: Sequence[agent_gcp.PiggyBackSection]) -> None:
     assert gce_sections[0].labels == {"gcp/labels/t": "tt", "gcp/project": "test"}
 
 
-def test_gce_host_name_mangling(gce_sections: Sequence[agent_gcp.PiggyBackSection]):
+def test_gce_host_name_mangling(gce_sections: Sequence[agent_gcp.PiggyBackSection]) -> None:
     assert gce_sections[0].name == "instance-1"
 
 
-def test_gce_metric_filtering(gce_sections: Sequence[agent_gcp.PiggyBackSection]):
+def test_gce_metric_filtering(gce_sections: Sequence[agent_gcp.PiggyBackSection]) -> None:
     assert 1 == len(list(list(gce_sections[0].sections)[0].results))
 
 
@@ -319,7 +319,7 @@ def _interval() -> monitoring_v3.TimeInterval:
     )
 
 
-def test_metric_requests(interval: monitoring_v3.TimeInterval):
+def test_metric_requests(interval: monitoring_v3.TimeInterval) -> None:
     metric = agent_gcp.Metric(
         name="compute.googleapis.com/instance/uptime",
         aggregation=agent_gcp.Aggregation(
@@ -344,7 +344,7 @@ def test_metric_requests(interval: monitoring_v3.TimeInterval):
     assert request == expected
 
 
-def test_metric_requests_additional_groupby_fields(interval: monitoring_v3.TimeInterval):
+def test_metric_requests_additional_groupby_fields(interval: monitoring_v3.TimeInterval) -> None:
     metric = agent_gcp.Metric(
         name="compute.googleapis.com/instance/uptime",
         aggregation=agent_gcp.Aggregation(

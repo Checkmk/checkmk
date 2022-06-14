@@ -35,7 +35,7 @@ from cmk.gui.views import View
         ),
     ],
 )
-def test_url_sorters_parse_encode(url, sorters):
+def test_url_sorters_parse_encode(url, sorters) -> None:
     sorters = [SorterSpec(*s) for s in sorters]
     assert _parse_url_sorters(url) == sorters
     assert _encode_sorter_url(sorters) == url

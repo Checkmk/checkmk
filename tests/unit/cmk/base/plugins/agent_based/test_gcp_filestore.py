@@ -72,7 +72,7 @@ class TestDiscover(DiscoverTester):
         yield from discover(section_gcp_service_filestore=None, section_gcp_assets=assets)
 
 
-def test_discover_labels_labels_without_user_labels():
+def test_discover_labels_labels_without_user_labels() -> None:
     asset_table = [
         ['{"project":"backup-255820"}'],
         [
@@ -142,7 +142,7 @@ def fixture_results(checkplugin, section, params, mocker: MockerFixture):
     return results, checkplugin
 
 
-def test_no_function_section_yields_no_metric_data(checkplugin):
+def test_no_function_section_yields_no_metric_data(checkplugin) -> None:
     params = {k: None for k in checkplugin.metrics}
     results = list(
         checkplugin.function(
@@ -155,14 +155,14 @@ def test_no_function_section_yields_no_metric_data(checkplugin):
     assert len(results) == 0
 
 
-def test_yield_metrics_as_specified(results):
+def test_yield_metrics_as_specified(results) -> None:
     results, checkplugin = results
     res = {r.name: r for r in results if isinstance(r, Metric)}
     assert len(res) == len(checkplugin.metrics)
     assert set(res.keys()) == set(checkplugin.metrics)
 
 
-def test_yield_results_as_specified(results):
+def test_yield_results_as_specified(results) -> None:
     results, checkplugin = results
     res = [r for r in results if isinstance(r, Result)]
     assert len(res) == len(checkplugin.metrics)

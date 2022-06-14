@@ -32,7 +32,7 @@ def view_fixture(request_context):
     return cmk.gui.views.View(view_name, view_spec, view_spec.get("context", {}))
 
 
-def test_registered_painter_options():
+def test_registered_painter_options() -> None:
     expected = [
         'aggr_expand',
         'aggr_onlyproblems',
@@ -56,7 +56,7 @@ def test_registered_painter_options():
         assert isinstance(vs, ValueSpec)
 
 
-def test_registered_layouts():
+def test_registered_layouts() -> None:
     expected = [
         'boxed',
         'boxed_graph',
@@ -73,7 +73,7 @@ def test_registered_layouts():
     assert sorted(expected) == sorted(names)
 
 
-def test_layout_properties():
+def test_layout_properties() -> None:
     expected = {
         'boxed': {
             'checkboxes': True,
@@ -123,7 +123,7 @@ def test_layout_properties():
         assert spec.get("has_csv_export", False) == plugin.has_individual_csv_export
 
 
-def test_get_layout_choices():
+def test_get_layout_choices() -> None:
     choices = cmk.gui.plugins.views.utils.layout_registry.get_choices()
     assert sorted(choices) == sorted([
         ('matrix', u'Matrix'),
@@ -138,7 +138,7 @@ def test_get_layout_choices():
     ])
 
 
-def test_registered_exporters():
+def test_registered_exporters() -> None:
     expected = [
         'csv',
         'csv_export',
@@ -152,7 +152,7 @@ def test_registered_exporters():
     assert sorted(expected) == sorted(names)
 
 
-def test_registered_command_groups():
+def test_registered_command_groups() -> None:
     expected = [
         'acknowledge',
         'downtimes',
@@ -164,7 +164,7 @@ def test_registered_command_groups():
     assert sorted(expected) == sorted(names)
 
 
-def test_legacy_register_command_group(monkeypatch):
+def test_legacy_register_command_group(monkeypatch) -> None:
     monkeypatch.setattr(cmk.gui.plugins.views.utils, "command_group_registry",
                         cmk.gui.plugins.views.utils.CommandGroupRegistry())
     cmk.gui.plugins.views.utils.register_command_group("abc", "A B C", 123)
@@ -176,7 +176,7 @@ def test_legacy_register_command_group(monkeypatch):
     assert group.sort_index == 123
 
 
-def test_registered_commands():
+def test_registered_commands() -> None:
     expected: Dict[str, Dict[str, Any]] = {
         'acknowledge': {
             'group': 'acknowledge',
@@ -297,7 +297,7 @@ def test_registered_commands():
         assert cmd.permission.name == cmd_spec["permission"]
 
 
-def test_legacy_register_command(monkeypatch):
+def test_legacy_register_command(monkeypatch) -> None:
     monkeypatch.setattr(cmk.gui.plugins.views.utils, "command_registry",
                         cmk.gui.plugins.views.utils.CommandRegistry())
 
@@ -325,7 +325,7 @@ def test_legacy_register_command(monkeypatch):
 # These tests make adding new elements needlessly painful.
 # Skip pending discussion with development team.
 @pytest.mark.skip
-def test_registered_datasources():
+def test_registered_datasources() -> None:
     expected: Dict[str, Dict[str, Any]] = {
         'alert_stats': {
             'add_columns': [
@@ -675,7 +675,7 @@ def test_registered_datasources():
         assert ds.infos == spec["infos"]
 
 
-def test_legacy_register_painter(monkeypatch):
+def test_legacy_register_painter(monkeypatch) -> None:
     monkeypatch.setattr(cmk.gui.plugins.views.utils, "painter_registry",
                         cmk.gui.plugins.views.utils.PainterRegistry())
 
@@ -711,7 +711,7 @@ def test_legacy_register_painter(monkeypatch):
 # These tests make adding new elements needlessly painful.
 # Skip pending discussion with development team.
 @pytest.mark.skip
-def test_registered_sorters():
+def test_registered_sorters() -> None:
     expected: Dict[str, Dict[str, Any]] = {
         'aggr_group': {
             'columns': ['aggr_group'],
@@ -2337,7 +2337,7 @@ def test_registered_sorters():
         assert sorter.load_inv == spec.get("load_inv", False)
 
 
-def test_register_sorter(monkeypatch):
+def test_register_sorter(monkeypatch) -> None:
     monkeypatch.setattr(cmk.gui.plugins.views.utils, "sorter_registry",
                         cmk.gui.plugins.views.utils.SorterRegistry())
 
@@ -2358,7 +2358,7 @@ def test_register_sorter(monkeypatch):
     assert sorter.cmp.__name__ == cmpfunc.__name__
 
 
-def test_get_needed_regular_columns(view):
+def test_get_needed_regular_columns(view) -> None:
     class SomeFilter(Filter):
         def display(self, value):
             return
@@ -2417,7 +2417,7 @@ def test_get_needed_regular_columns(view):
     ])
 
 
-def test_get_needed_join_columns(view, load_config):
+def test_get_needed_join_columns(view, load_config) -> None:
     view_spec = copy.deepcopy(view.spec)
     view_spec["painters"].append(PainterSpec('service_description', None, None, u'CPU load'))
     view = cmk.gui.views.View(view.name, view_spec, view_spec.get("context", {}))
@@ -2438,7 +2438,7 @@ def test_get_needed_join_columns(view, load_config):
     assert sorted(columns) == sorted(expected_columns)
 
 
-def test_create_view_basics():
+def test_create_view_basics() -> None:
     view_name = "allhosts"
     view_spec = cmk.gui.views.multisite_builtin_views[view_name]
     view = cmk.gui.views.View(view_name, view_spec, view_spec.get("context", {}))
@@ -2453,7 +2453,7 @@ def test_create_view_basics():
     assert view.only_sites is None
 
 
-def test_view_row_limit(view):
+def test_view_row_limit(view) -> None:
     assert view.row_limit is None
     view.row_limit = 101
     assert view.row_limit == 101
@@ -2475,7 +2475,7 @@ def test_view_row_limit(view):
     ("hard", {"general.ignore_soft_limit": True, "general.ignore_hard_limit": True}, 5000),
     ("none", {"general.ignore_soft_limit": True, "general.ignore_hard_limit": True}, None),
 ])
-def test_gui_view_row_limit(request_context, monkeypatch, mocker, limit, permissions, result):
+def test_gui_view_row_limit(request_context, monkeypatch, mocker, limit, permissions, result) -> None:
     if limit is not None:
         monkeypatch.setitem(html.request._vars, "limit", limit)
 
@@ -2484,25 +2484,25 @@ def test_gui_view_row_limit(request_context, monkeypatch, mocker, limit, permiss
     assert cmk.gui.views.get_limit() == result
 
 
-def test_view_only_sites(view):
+def test_view_only_sites(view) -> None:
     assert view.only_sites is None
     view.only_sites = ["unit"]
     assert view.only_sites == ["unit"]
 
 
-def test_view_user_sorters(view):
+def test_view_user_sorters(view) -> None:
     assert view.user_sorters is None
     view.user_sorters = [("abc", True)]
     assert view.user_sorters == [("abc", True)]
 
 
-def test_view_want_checkboxes(view):
+def test_view_want_checkboxes(view) -> None:
     assert view.want_checkboxes is False
     view.want_checkboxes = True
     assert view.want_checkboxes is True
 
 
-def test_registered_display_hints():
+def test_registered_display_hints() -> None:
     expected = [
     '.hardware.',
     '.hardware.chassis.',
@@ -3012,12 +3012,12 @@ def test_registered_display_hints():
     assert sorted(expected) == sorted(cmk.gui.plugins.views.utils.inventory_displayhints.keys())
 
 
-def test_get_inventory_display_hint():
+def test_get_inventory_display_hint() -> None:
     hint = cmk.gui.plugins.views.utils.inventory_displayhints.get(".software.packages:*.summary")
     assert isinstance(hint, dict)
 
 
-def test_view_page(logged_in_admin_wsgi_app, mock_livestatus):
+def test_view_page(logged_in_admin_wsgi_app, mock_livestatus) -> None:
     wsgi_app = logged_in_admin_wsgi_app
 
     def _prepend(prefix, dict_):

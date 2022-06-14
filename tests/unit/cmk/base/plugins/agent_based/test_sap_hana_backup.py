@@ -60,11 +60,11 @@ SECTION = {
         )
     ],
 )
-def test_parse(string_table_row, expected_parsed_data):
+def test_parse(string_table_row, expected_parsed_data) -> None:
     assert sap_hana_backup.parse_sap_hana_backup(string_table_row) == expected_parsed_data
 
 
-def test_discovery_sap_hana_backup():
+def test_discovery_sap_hana_backup() -> None:
 
     section = {
         "SAP INSTANCE - Backup": sap_hana_backup.Backup(),
@@ -77,7 +77,7 @@ def test_discovery_sap_hana_backup():
 
 
 @freeze_time(NOW_SIMULATED)
-def test_check_sap_hana_backup_OK():
+def test_check_sap_hana_backup_OK() -> None:
 
     params = {"backup_age": (24 * 60 * 60, 2 * 24 * 60 * 60)}
     yielded_results = list(sap_hana_backup.check_sap_hana_backup(ITEM, params, SECTION))
@@ -99,7 +99,7 @@ def test_check_sap_hana_backup_OK():
 
 
 @freeze_time(NOW_SIMULATED)
-def test_check_sap_hana_backup_CRIT():
+def test_check_sap_hana_backup_CRIT() -> None:
     params = {"backup_age": (1 * 60 * 60, 2 * 60 * 60)}
 
     yielded_results = list(sap_hana_backup.check_sap_hana_backup(ITEM, params, SECTION))
@@ -123,7 +123,7 @@ def test_check_sap_hana_backup_CRIT():
 
 
 @freeze_time(NOW_SIMULATED)
-def test_cluster_check_sap_hana_backup_CRIT():
+def test_cluster_check_sap_hana_backup_CRIT() -> None:
     params = {"backup_age": (1 * 60 * 60, 2 * 60 * 60)}
 
     section = {"node0": SECTION, "node1": SECTION}
@@ -152,7 +152,7 @@ def test_cluster_check_sap_hana_backup_CRIT():
 
 
 @freeze_time(NOW_SIMULATED)
-def test_cluster_check_sap_hana_backup_missing_node_data():
+def test_cluster_check_sap_hana_backup_missing_node_data() -> None:
     params = {"backup_age": (1 * 60 * 60, 2 * 60 * 60)}
 
     section = {"node0": None, "node1": SECTION}

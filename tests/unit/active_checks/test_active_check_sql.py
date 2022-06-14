@@ -25,7 +25,7 @@ def check_sql():
         ([[5, "count"]], (3, 5), (float("-inf"), 8), (1, "count: 5.0")),
     ],
 )
-def test_process_result(check_sql, result, warn, crit, reference):
+def test_process_result(check_sql, result, warn, crit, reference) -> None:
     assert (
         check_sql.process_result(
             result=result,

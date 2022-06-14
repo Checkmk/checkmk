@@ -31,7 +31,7 @@ SECTION = {
 }
 
 
-def test_parse_aws_rds():
+def test_parse_aws_rds() -> None:
     assert (
         parse_aws_rds(
             [
@@ -3034,7 +3034,7 @@ def test_parse_aws_rds():
     )
 
 
-def test_check_aws_rds_network_io():
+def test_check_aws_rds_network_io() -> None:
     assert list(check_aws_rds_network_io("database-1 [eu-central-1]", {}, SECTION,)) == [
         Result(state=State.OK, summary="[database-1]"),
         Result(state=State.OK, summary="(up)", details="Operational state: up"),

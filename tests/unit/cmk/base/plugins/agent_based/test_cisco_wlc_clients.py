@@ -114,7 +114,7 @@ def _run_parse_and_check(
 
 
 @pytest.mark.parametrize("item, result", ITEM_RESULT)
-def test_cisco_wlc_clients(item, result):
+def test_cisco_wlc_clients(item, result) -> None:
     assert _run_parse_and_check(item, INFO) == result
 
 
@@ -136,12 +136,12 @@ PARAM_STATUS = [
 
 
 @pytest.mark.parametrize("param, status", PARAM_STATUS)
-def test_cisco_wlc_clients_parameter(param, status):
+def test_cisco_wlc_clients_parameter(param, status) -> None:
     result = _run_parse_and_check("Summary", INFO, param)
     assert result[0].state == status
 
 
-def test_parse_cisco_wlc_clients():
+def test_parse_cisco_wlc_clients() -> None:
     result = parse_cisco_wlc_clients(INFO)
 
     assert result == WlcClientsSection(
@@ -177,7 +177,7 @@ INFO_9800 = [
 ]
 
 
-def test_parse_cisco_wlc_9800_clients():
+def test_parse_cisco_wlc_9800_clients() -> None:
     result = parse_cisco_wlc_9800_clients(INFO_9800)
 
     assert result == WlcClientsSection(

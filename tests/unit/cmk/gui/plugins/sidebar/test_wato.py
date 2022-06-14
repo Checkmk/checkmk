@@ -124,7 +124,7 @@ def expected_items() -> Dict[str, List[str]]:
 
 
 @pytest.mark.usefixtures("request_context", "with_admin_login")
-def test_get_wato_menu_items():
+def test_get_wato_menu_items() -> None:
     items_by_topic: Dict[str, List[str]] = {}
     for topic in get_wato_menu_items():
         items = items_by_topic.setdefault(topic.name, [])
@@ -135,7 +135,7 @@ def test_get_wato_menu_items():
 
 
 @pytest.mark.usefixtures("with_admin_login")
-def test_unique_wato_menu_item_titels():
+def test_unique_wato_menu_item_titels() -> None:
     titles = [
         entry.title
         for topic_menu_topic in get_wato_menu_items()
@@ -144,7 +144,7 @@ def test_unique_wato_menu_item_titels():
     assert len(titles) == len(set(titles))
 
 
-def test_match_item_generator_setup_menu():
+def test_match_item_generator_setup_menu() -> None:
     assert list(
         MatchItemGeneratorSetupMenu(
             "setup",

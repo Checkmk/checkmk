@@ -13,7 +13,7 @@ from cmk.utils.license_usage.export import LicenseUsageExtensions
 import cmk.base.license_usage as license_usage
 
 
-def test_update_history__may_update_successful(monkeypatch):
+def test_update_history__may_update_successful(monkeypatch) -> None:
     fake_now = datetime(1970, 1, 2, 12, 0, 0)
     fake_next_run_ts = int((fake_now - timedelta(hours=1)).timestamp())
 
@@ -29,7 +29,7 @@ def test_update_history__may_update_successful(monkeypatch):
     assert license_usage._may_update(fake_now.timestamp(), fake_next_run_ts)
 
 
-def test_update_history__may_update_try_not_10min_ago(monkeypatch):
+def test_update_history__may_update_try_not_10min_ago(monkeypatch) -> None:
     fake_now = datetime(1970, 1, 2, 12, 0, 0)
     fake_next_run_ts = int((fake_now - timedelta(hours=1)).timestamp())
 
@@ -45,7 +45,7 @@ def test_update_history__may_update_try_not_10min_ago(monkeypatch):
     assert not license_usage._may_update(fake_now.timestamp(), fake_next_run_ts)
 
 
-def test_update_history__may_update_next_run_not_reached(monkeypatch):
+def test_update_history__may_update_next_run_not_reached(monkeypatch) -> None:
     fake_now = datetime(1970, 1, 2, 12, 0, 0)
     fake_next_run_ts = int((fake_now + timedelta(hours=1)).timestamp())
 

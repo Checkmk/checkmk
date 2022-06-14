@@ -21,7 +21,7 @@ AGENT_OUTPUT = [
 
 
 @pytest.mark.usefixtures("fix_register")
-def test_check_docker_node_disk_usage():
+def test_check_docker_node_disk_usage() -> None:
     check = Check("docker_node_disk_usage")
     result = list(check.run_check("volumes", {}, check.run_parse(AGENT_OUTPUT)))
     assert result == [

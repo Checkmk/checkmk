@@ -184,13 +184,13 @@ class TestWindows:
             ),
         )
 
-    def test_get_default_path(self):
+    def test_get_default_path(self) -> None:
         assert (
             "c:\\ProgramData\\checkmk\\agent\\config"
             == mk_postgres.helper_factory().get_default_path()
         )
 
-    def test_get_default_postgres_user(self):
+    def test_get_default_postgres_user(self) -> None:
         assert "postgres" == mk_postgres.helper_factory().get_default_postgres_user()
 
     def test_config_with_instance(
@@ -209,7 +209,7 @@ class TestWindows:
 
     @patch("os.path.isfile", return_value=True)
     @patch("subprocess.Popen")
-    def test_factory_without_instance(self, mock_Popen, mock_isfile):
+    def test_factory_without_instance(self, mock_Popen, mock_isfile) -> None:
         process_mock = Mock()
         attrs = {"communicate.side_effect": [(b"postgres\ndb1", b"ok"), (b"12.1", b"ok")]}
         process_mock.configure_mock(**attrs)

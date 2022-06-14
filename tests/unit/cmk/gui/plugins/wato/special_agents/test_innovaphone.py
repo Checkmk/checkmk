@@ -19,5 +19,5 @@ from cmk.gui.plugins.wato.special_agents.innovaphone import special_agents_innov
         ),
     ],
 )
-def test__special_agents_innovaphone_transform(parameters, expected_result):
+def test__special_agents_innovaphone_transform(parameters, expected_result) -> None:
     assert special_agents_innovaphone_transform(parameters) == expected_result

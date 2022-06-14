@@ -83,7 +83,7 @@ class TestModeAutomation:
         "setup_request",
         "patch_version",
     )
-    def test_execute_cmk_automation_post_21(self, monkeypatch: pytest.MonkeyPatch):
+    def test_execute_cmk_automation_post_21(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setattr(
             request,
             "headers",
@@ -98,7 +98,7 @@ class TestModeAutomation:
         "setup_request",
         "patch_version",
     )
-    def test_execute_cmk_automation_pre_21(self, monkeypatch: pytest.MonkeyPatch):
+    def test_execute_cmk_automation_pre_21(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setattr(
             request,
             "headers",

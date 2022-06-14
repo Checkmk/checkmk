@@ -9,7 +9,7 @@ from cmk.utils.check_utils import maincheckify
 from cmk.gui.plugins.metrics.utils import check_metrics
 
 
-def test_all_keys_migrated():
+def test_all_keys_migrated() -> None:
     for key in check_metrics:
         if key.startswith("check_mk-"):
             assert key[9:] == maincheckify(key[9:])

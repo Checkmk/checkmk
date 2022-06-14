@@ -53,7 +53,7 @@ def fixture_livestatus_test_config(mock_livestatus):
 
 
 @pytest.mark.usefixtures("load_config")
-def test_registered_painters():
+def test_registered_painters() -> None:
     painters = painter_registry.keys()
     expected_painters = [
         "aggr_acknowledged",
@@ -798,7 +798,7 @@ def fixture_service_painter_names():
     return sorted(list(painters_of_datasource("services").keys()))
 
 
-def test_service_painters(request_context, service_painter_idents, live):
+def test_service_painters(request_context, service_painter_idents, live) -> None:
     with live(expect_status_query=False), request.stashed_vars(), on_time(
         "2018-04-15 16:50", "CET"
     ):

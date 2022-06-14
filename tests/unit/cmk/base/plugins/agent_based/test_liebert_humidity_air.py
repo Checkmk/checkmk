@@ -54,7 +54,7 @@ PARSED_EXTRA_SECTION = {
         ),
     ],
 )
-def test_parse_liebert_humidity_air(string_table, result):
+def test_parse_liebert_humidity_air(string_table, result) -> None:
     parsed = parse_liebert_humidity_air(string_table)
     assert parsed == result
 
@@ -69,7 +69,7 @@ def test_parse_liebert_humidity_air(string_table, result):
         )
     ],
 )
-def test_discover_liebert_humidity_air(section, extra_section, result):
+def test_discover_liebert_humidity_air(section, extra_section, result) -> None:
     discovered = list(discover_liebert_humidity_air(section, extra_section))
     assert discovered == result
 
@@ -105,6 +105,6 @@ def test_discover_liebert_humidity_air(section, extra_section, result):
         ),
     ],
 )
-def test_check_liebert_humidity_air(item, params, section, extra_section, result):
+def test_check_liebert_humidity_air(item, params, section, extra_section, result) -> None:
     checked = list(check_liebert_humidity_air(item, params, section, extra_section))
     assert checked == result

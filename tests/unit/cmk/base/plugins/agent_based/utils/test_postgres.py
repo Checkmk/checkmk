@@ -8,7 +8,7 @@
 from cmk.base.plugins.agent_based.utils import postgres
 
 
-def test_parse_function_for_stats_section():
+def test_parse_function_for_stats_section() -> None:
     assert postgres.parse_dbs(
         [
             ["[databases_start]"],

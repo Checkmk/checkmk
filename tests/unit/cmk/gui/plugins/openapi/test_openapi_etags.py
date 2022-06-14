@@ -16,7 +16,7 @@ def etags_off_fixture(aut_user_auth_wsgi_app: WebTestAppForCMK):
 
 
 @pytest.mark.usefixtures("with_host")
-def test_openapi_etag_disabled(etags_off, aut_user_auth_wsgi_app: WebTestAppForCMK):
+def test_openapi_etag_disabled(etags_off, aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     base = "/NO_SITE/check_mk/api/1.0"
 
     resp = aut_user_auth_wsgi_app.call_method(
@@ -37,7 +37,7 @@ def test_openapi_etag_disabled(etags_off, aut_user_auth_wsgi_app: WebTestAppForC
 
 
 @pytest.mark.usefixtures("with_host")
-def test_openapi_etag_enabled(aut_user_auth_wsgi_app: WebTestAppForCMK):
+def test_openapi_etag_enabled(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     base = "/NO_SITE/check_mk/api/1.0"
 
     resp = aut_user_auth_wsgi_app.call_method(

@@ -22,28 +22,28 @@ def _mocked_queue(tmpdir):
 
 
 class TestAutodiscoveryQueue:
-    def test_oldest_empty(self):
+    def test_oldest_empty(self) -> None:
         assert discovery._AutodiscoveryQueue().oldest() is None
 
-    def test_oldest_populated(self, autodiscovery_queue):
+    def test_oldest_populated(self, autodiscovery_queue) -> None:
         assert isinstance(autodiscovery_queue.oldest(), float)
 
-    def test_queued_empty(self, autodiscovery_queue, monkeypatch):
+    def test_queued_empty(self, autodiscovery_queue, monkeypatch) -> None:
         autodiscovery_queue = discovery._AutodiscoveryQueue()
         assert not list(autodiscovery_queue.queued_hosts())
 
-    def test_queued_populated(self, autodiscovery_queue, monkeypatch):
+    def test_queued_populated(self, autodiscovery_queue, monkeypatch) -> None:
         assert set(autodiscovery_queue.queued_hosts()) == {"most", "lost"}
 
-    def test_add(self, autodiscovery_queue, monkeypatch):
+    def test_add(self, autodiscovery_queue, monkeypatch) -> None:
         autodiscovery_queue = discovery._AutodiscoveryQueue()
         autodiscovery_queue.add("most")
         assert list(autodiscovery_queue.queued_hosts()) == ["most"]
 
-    def test_remove(self, autodiscovery_queue, monkeypatch):
+    def test_remove(self, autodiscovery_queue, monkeypatch) -> None:
         autodiscovery_queue.remove("lost")
         assert list(autodiscovery_queue.queued_hosts()) == ["most"]
 
-    def test_cleanup(self, autodiscovery_queue):
+    def test_cleanup(self, autodiscovery_queue) -> None:
         autodiscovery_queue.cleanup(valid_hosts={"lost", "rost"}, logger=lambda x: None)
         assert list(autodiscovery_queue.queued_hosts()) == ["lost"]

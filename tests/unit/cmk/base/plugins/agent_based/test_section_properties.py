@@ -7,7 +7,7 @@
 from cmk.base.api.agent_based.register import get_relevant_raw_sections
 
 
-def test_all_sections_are_subscribed_by_some_plugin(fix_register):
+def test_all_sections_are_subscribed_by_some_plugin(fix_register) -> None:
     """Test that all registered sections are subscribed to by some plugin
 
     We have very few sections (one at the time of this writing),
@@ -28,7 +28,7 @@ def test_all_sections_are_subscribed_by_some_plugin(fix_register):
     assert unsubscribed_sections_names == {"labels"}
 
 
-def test_section_detection_uses_sysdescr_or_sysobjid(fix_register):
+def test_section_detection_uses_sysdescr_or_sysobjid(fix_register) -> None:
     """Make sure the first OID is the system description or the system object ID
 
     Checking the system description or the system object ID first increases performance
@@ -104,7 +104,7 @@ def test_section_detection_uses_sysdescr_or_sysobjid(fix_register):
             """
 
 
-def test_section_parse_function_does_something(fix_register):
+def test_section_parse_function_does_something(fix_register) -> None:
     """We make sure that the parse function is not trivial
 
     To ease the learning curve when developing check plugins
@@ -264,7 +264,7 @@ def test_section_parse_function_does_something(fix_register):
         ), f"💚 The agent section {name} now has a parse function! Remove it from the list above!"
 
 
-def test_snmp_section_parse_function_deals_with_empty_input(fix_register):
+def test_snmp_section_parse_function_deals_with_empty_input(fix_register) -> None:
     """We make sure that all parse functions can handle empty table data"""
     for section in fix_register.snmp_sections.values():
         _ = section.parse_function(len(section.trees) * [[]])

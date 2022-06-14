@@ -55,14 +55,14 @@ SECTION = {
 }
 
 
-def test_discovery():
+def test_discovery() -> None:
     assert list(discovery_hp_proliant_mem(SECTION)) == [
         Service(item="0"),
         Service(item="8"),
     ]
 
 
-def test_check():
+def test_check() -> None:
     assert list(check_hp_proliant_mem("0", SECTION)) == [
         Result(state=State.OK, summary="Board: 0"),
         Result(state=State.OK, summary="Number: 0"),

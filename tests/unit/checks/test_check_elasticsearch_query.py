@@ -23,7 +23,7 @@ pytestmark = pytest.mark.checks
         )
     ],
 )
-def test_check_elasticsearch_query_argument_parsing(params, expected_args):
+def test_check_elasticsearch_query_argument_parsing(params, expected_args) -> None:
     """Tests if all required arguments are present."""
     active_check = ActiveCheck("check_elasticsearch_query")
     assert active_check.run_argument_function(params) == expected_args

@@ -45,13 +45,13 @@ def make_start_response() -> StartResponse:
     return start_response
 
 
-def test_checkmk_app_enables_timeout_handling():
+def test_checkmk_app_enables_timeout_handling() -> None:
     assert signal.alarm(0) == 0
     CheckmkTestApp()(create_environ(), make_start_response())
     assert signal.alarm(0) == 0
 
 
-def test_timeout_manager_raises_timeout():
+def test_timeout_manager_raises_timeout() -> None:
     tm = TimeoutManager()
 
     with pytest.raises(RequestTimeout):
@@ -59,7 +59,7 @@ def test_timeout_manager_raises_timeout():
         time.sleep(2)
 
 
-def test_timeout_manager_disable():
+def test_timeout_manager_disable() -> None:
     tm = TimeoutManager()
 
     tm.enable_timeout(1)

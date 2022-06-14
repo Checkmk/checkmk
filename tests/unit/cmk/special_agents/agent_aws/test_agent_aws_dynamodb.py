@@ -165,7 +165,7 @@ def _get_provisioned_table_names(tables):
 
 
 @pytest.mark.parametrize("names,tags,found_instances", dynamodb_params)
-def test_agent_aws_dynamodb_limits(get_dynamodb_sections, names, tags, found_instances):
+def test_agent_aws_dynamodb_limits(get_dynamodb_sections, names, tags, found_instances) -> None:
 
     dynamodb_sections = get_dynamodb_sections(names, tags)
     dynamodb_limits = dynamodb_sections["dynamodb_limits"]
@@ -206,14 +206,18 @@ def _test_summary(dynamodb_summary, found_instances):
 
 
 @pytest.mark.parametrize("names,tags,found_instances", dynamodb_params)
-def test_agent_aws_dynamodb_summary_w_limits(get_dynamodb_sections, names, tags, found_instances):
+def test_agent_aws_dynamodb_summary_w_limits(
+    get_dynamodb_sections, names, tags, found_instances
+) -> None:
     dynamodb_sections = get_dynamodb_sections(names, tags)
     _dynamodb_limits_results = dynamodb_sections["dynamodb_limits"].run().results
     _test_summary(dynamodb_sections["dynamodb_summary"], found_instances)
 
 
 @pytest.mark.parametrize("names,tags,found_instances", dynamodb_params)
-def test_agent_aws_dynamodb_summary_wo_limits(get_dynamodb_sections, names, tags, found_instances):
+def test_agent_aws_dynamodb_summary_wo_limits(
+    get_dynamodb_sections, names, tags, found_instances
+) -> None:
     dynamodb_sections = get_dynamodb_sections(names, tags)
     _test_summary(dynamodb_sections["dynamodb_summary"], found_instances)
 
@@ -232,7 +236,9 @@ def _test_table(dynamodb_table, found_instances):
 
 
 @pytest.mark.parametrize("names,tags,found_instances", dynamodb_params)
-def test_agent_aws_dynamodb_tables_w_limits(get_dynamodb_sections, names, tags, found_instances):
+def test_agent_aws_dynamodb_tables_w_limits(
+    get_dynamodb_sections, names, tags, found_instances
+) -> None:
     dynamodb_sections = get_dynamodb_sections(names, tags)
     _dynamodb_limits_results = dynamodb_sections["dynamodb_limits"].run().results
     _dynamodb_summary_results = dynamodb_sections["dynamodb_summary"].run().results
@@ -240,7 +246,9 @@ def test_agent_aws_dynamodb_tables_w_limits(get_dynamodb_sections, names, tags, 
 
 
 @pytest.mark.parametrize("names,tags,found_instances", dynamodb_params)
-def test_agent_aws_dynamodb_tables_wo_limits(get_dynamodb_sections, names, tags, found_instances):
+def test_agent_aws_dynamodb_tables_wo_limits(
+    get_dynamodb_sections, names, tags, found_instances
+) -> None:
     dynamodb_sections = get_dynamodb_sections(names, tags)
     _dynamodb_summary_results = dynamodb_sections["dynamodb_summary"].run().results
     _test_table(dynamodb_sections["dynamodb_table"], found_instances)

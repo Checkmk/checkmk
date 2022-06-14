@@ -9,24 +9,24 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
 from cmk.base.plugins.agent_based.zerto import check, parse
 
 
-def test_parse_errors():
+def test_parse_errors() -> None:
     section = parse([["Error: reason"]])
     assert section.has_errors
     assert section.error_details == "reason"
 
 
-def test_parse_ok():
+def test_parse_ok() -> None:
     section = parse([["Initialization OK"]])
     assert not section.has_errors
 
 
-def test_check_errors():
+def test_check_errors() -> None:
     results = list(check(parse([["Error: reason"]])))
     assert len(results) == 1
     assert results[0] == Result(state=State.CRIT, summary="Error starting agent", details="reason")
 
 
-def test_check_ok():
+def test_check_ok() -> None:
     results = list(check(parse([["Initializtion OK"]])))
     assert len(results) == 1
     assert results[0] == Result(state=State.OK, summary="Agent started without problem")

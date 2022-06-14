@@ -40,7 +40,7 @@ pytestmark = pytest.mark.checks
         ),
     ],
 )
-def test_siemens_plc_argument_parsing(params, expected_args):
+def test_siemens_plc_argument_parsing(params, expected_args) -> None:
     """Tests if all required arguments are present."""
     agent = SpecialAgent("agent_siemens_plc")
     arguments = agent.argument_func(params, "host", "address")

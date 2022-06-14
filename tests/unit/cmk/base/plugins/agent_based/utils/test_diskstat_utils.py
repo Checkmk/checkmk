@@ -69,7 +69,7 @@ from cmk.base.plugins.agent_based.utils import diskstat
         ),
     ],
 )
-def test_discovery_diskstat_generic(params, exp_res):
+def test_discovery_diskstat_generic(params, exp_res) -> None:
     assert (
         list(
             diskstat.discovery_diskstat_generic(
@@ -133,7 +133,7 @@ def _compute_rates_single_disk(
     return disk_w_rates
 
 
-def test_compute_rates_multiple_disks():
+def test_compute_rates_multiple_disks() -> None:
     disks = {
         "C:": DISK,
         "D:": DISK,
@@ -342,7 +342,7 @@ def test_summarize_disks(
         ),
     ],
 )
-def test_scale_levels(levels, factor):
+def test_scale_levels(levels, factor) -> None:
     scaled_levels = diskstat._scale_levels(levels, factor)
     if levels is None:
         assert scaled_levels is None
@@ -367,11 +367,11 @@ LEVELS_SCALED = {
 }
 
 
-def test_scale_levels_predictive():
+def test_scale_levels_predictive() -> None:
     assert diskstat._scale_levels_predictive(LEVELS, 10) == LEVELS_SCALED
 
 
-def test_load_levels_wato():
+def test_load_levels_wato() -> None:
     # when scaling the preditvie levels we make certain asumptions about the
     # wato structure of predictive levels here we try to make sure that these
     # asumptions are still correct. if this test fails, fix it and adapt
@@ -502,7 +502,7 @@ def test_load_levels_wato():
         ),
     ],
 )
-def test_check_diskstat_dict(params, disk, exp_res):
+def test_check_diskstat_dict(params, disk, exp_res) -> None:
     exp_res = exp_res.copy()
     value_store: Dict[str, Any] = {}
 

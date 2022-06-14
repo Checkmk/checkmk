@@ -185,20 +185,20 @@ def check_result(params, usage_section, resources_section, allocatable_resource_
     )
 
 
-def test_parse_resources(resources_string_table, resources_request, resources_limit):
+def test_parse_resources(resources_string_table, resources_request, resources_limit) -> None:
     resources_section = kube_cpu.parse_resources(resources_string_table)
     assert resources_section.request == resources_request
     assert resources_section.limit == resources_limit
 
 
-def test_parse_allocatable_resource(allocatable_resource_string_table, allocatable_value):
+def test_parse_allocatable_resource(allocatable_resource_string_table, allocatable_value) -> None:
     allocatable_resource_section = kube_cpu.parse_allocatable_resource(
         allocatable_resource_string_table
     )
     assert allocatable_resource_section.value == allocatable_value
 
 
-def test_discovery(usage_section, resources_section, allocatable_resource_section):
+def test_discovery(usage_section, resources_section, allocatable_resource_section) -> None:
     for s1, s2, s3 in itertools.product(
         (usage_section, None), (resources_section, None), (allocatable_resource_section, None)
     ):
@@ -206,29 +206,29 @@ def test_discovery(usage_section, resources_section, allocatable_resource_sectio
 
 
 @pytest.mark.parametrize("usage_section", [None])
-def test_check_missing_usage(check_result):
+def test_check_missing_usage(check_result) -> None:
     assert len(list(check_result)) == 6
 
 
-def test_count_metrics_all_sections_present(check_result):
+def test_count_metrics_all_sections_present(check_result) -> None:
     assert len([r for r in check_result if isinstance(r, Metric)]) == 7
 
 
-def test_count_results_all_sections_present(check_result):
+def test_count_results_all_sections_present(check_result) -> None:
     assert len([r for r in check_result if isinstance(r, Result)]) == 4
 
 
-def test_check_yields_check_results(check_result):
+def test_check_yields_check_results(check_result) -> None:
     assert len(list(check_result)) == 3 * 1 + 4 * 2
 
 
-def test_check_yields_results(check_result):
+def test_check_yields_results(check_result) -> None:
     expected = 1 + 2 + 1
     assert len([r for r in check_result if isinstance(r, Result)]) == expected
 
 
 @pytest.mark.parametrize("usage_section", [None])
-def test_check_results_without_usage(check_result):
+def test_check_results_without_usage(check_result) -> None:
     expected_beginnings = ["Requests: 0.180", "Limits: 0.360"]
     results = [r for r in check_result if isinstance(r, Result)]
     assert all(
@@ -238,7 +238,7 @@ def test_check_results_without_usage(check_result):
 
 
 @pytest.mark.parametrize("usage_section", [None])
-def test_check_metrics_without_usage(check_result):
+def test_check_metrics_without_usage(check_result) -> None:
     expected_metrics = {
         Metric("kube_cpu_allocatable", ALLOCATABLE, boundaries=(0.0, None)),
         Metric("kube_cpu_request", 0.18, boundaries=(0.0, None)),
@@ -249,7 +249,7 @@ def test_check_metrics_without_usage(check_result):
 
 
 @pytest.mark.parametrize("resources_section", [None])
-def test_check_if_no_resources(check_result):
+def test_check_if_no_resources(check_result) -> None:
     """Crashing is expected, because section_kube_cpu is only missing, if data from the api
     server missing."""
     with pytest.raises(AssertionError):
@@ -287,7 +287,7 @@ def test_check_yields_multiple_metrics_with_values(
     assert [(m.name, m.value) for m in check_result if isinstance(m, Metric)] == expected
 
 
-def test_check_all_states_ok(check_result):
+def test_check_all_states_ok(check_result) -> None:
     assert all(r.state == State.OK for r in check_result if isinstance(r, Result))
 
 
@@ -300,7 +300,7 @@ def test_check_all_states_ok(check_result):
     ],
 )
 @pytest.mark.parametrize("params_request, params_limit", [(("no_levels"), ("no_levels"))])
-def test_check_all_states_ok_params_ignore(check_result):
+def test_check_all_states_ok_params_ignore(check_result) -> None:
     assert all(r.state == State.OK for r in check_result if isinstance(r, Result))
 
 
@@ -329,7 +329,7 @@ def test_check_all_states_ok_params_ignore(check_result):
         ),
     ],
 )
-def test_check_abs_levels_with_mixed(expected_states, check_result):
+def test_check_abs_levels_with_mixed(expected_states, check_result) -> None:
     assert [r.state for r in check_result if isinstance(r, Result)] == expected_states
 
 
@@ -347,7 +347,7 @@ def test_check_abs_levels_with_mixed(expected_states, check_result):
         (CRIT, 2 * CRIT, [State.OK, State.CRIT, State.CRIT, State.OK]),
     ],
 )
-def test_check_result_states_mixed(expected_states, check_result):
+def test_check_result_states_mixed(expected_states, check_result) -> None:
     assert [r.state for r in check_result if isinstance(r, Result)] == expected_states
 
 

@@ -7,7 +7,7 @@
 from cmk.base.plugins.agent_based.juniper_cpu_util import parse_juniper_cpu_util
 
 
-def test_parse_juniper_cpu_util():
+def test_parse_juniper_cpu_util() -> None:
     assert parse_juniper_cpu_util(
         [
             ["midplane", "0"],

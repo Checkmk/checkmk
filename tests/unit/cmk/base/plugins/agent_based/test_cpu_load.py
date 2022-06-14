@@ -12,7 +12,7 @@ from cmk.base.plugins.agent_based.cpu_load import check_cpu_load
 STRING_TABLE: StringTable = [["0.88", "0.83", "0.87", "2/2148", "21050", "8"]]
 
 
-def test_basic_cpu_loads():
+def test_basic_cpu_loads() -> None:
     section = parse_cpu(STRING_TABLE)
     assert section
     result = list(

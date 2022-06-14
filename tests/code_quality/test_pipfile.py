@@ -321,6 +321,6 @@ def _get_lockfile_hash(lockfile_path) -> str:
     return ""
 
 
-def test_pipfile_lock_up_to_date(loaded_pipfile):
+def test_pipfile_lock_up_to_date(loaded_pipfile) -> None:
     lockfile_hash = _get_lockfile_hash(Path(repo_path(), "Pipfile.lock"))
     assert loaded_pipfile.hash == lockfile_hash

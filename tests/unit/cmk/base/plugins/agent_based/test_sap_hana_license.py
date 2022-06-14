@@ -89,11 +89,11 @@ SECTION = {
         ),
     ],
 )
-def test_sap_hana_license_parse(string_table_row, expected_parsed_data):
+def test_sap_hana_license_parse(string_table_row, expected_parsed_data) -> None:
     assert sap_hana_license.parse_sap_hana_license(string_table_row) == expected_parsed_data
 
 
-def test_sap_hana_license_discovery():
+def test_sap_hana_license_discovery() -> None:
     assert list(sap_hana_license.discovery_sap_hana_license(SECTION)) == [
         Service(item="Y04 10", parameters={}, labels=[]),
         Service(item="H62 10", parameters={}, labels=[]),
@@ -159,7 +159,7 @@ def test_sap_hana_license_discovery():
         ),
     ],
 )
-def test_sap_hana_license_check(cur_item, result):
+def test_sap_hana_license_check(cur_item, result) -> None:
     yielded_results = list(sap_hana_license.check_sap_hana_license(cur_item, {}, SECTION))
     assert yielded_results == result
 
@@ -170,6 +170,6 @@ def test_sap_hana_license_check(cur_item, result):
         ("Y04 10", {"Y04 10": {}}),
     ],
 )
-def test_sap_hana_license_check_stale(item, section):
+def test_sap_hana_license_check_stale(item, section) -> None:
     with pytest.raises(IgnoreResultsError):
         list(sap_hana_license.check_sap_hana_license(item, {}, section))

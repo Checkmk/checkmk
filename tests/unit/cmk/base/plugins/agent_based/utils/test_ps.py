@@ -12,7 +12,7 @@ from cmk.base.plugins.agent_based.utils import ps
 pytestmark = pytest.mark.checks
 
 
-def test_host_labels_ps_no_match_attr():
+def test_host_labels_ps_no_match_attr() -> None:
     section = (
         1,
         [
@@ -35,7 +35,7 @@ def test_host_labels_ps_no_match_attr():
     assert list(ps.host_labels_ps(params, section)) == []  # type: ignore[arg-type]
 
 
-def test_host_labels_ps_no_match_pattern():
+def test_host_labels_ps_no_match_pattern() -> None:
     section = (
         1,
         [
@@ -57,7 +57,7 @@ def test_host_labels_ps_no_match_pattern():
     assert list(ps.host_labels_ps(params, section)) == []  # type: ignore[arg-type]
 
 
-def test_host_labels_ps_match():
+def test_host_labels_ps_match() -> None:
     section = (
         1,
         [
@@ -93,7 +93,7 @@ def test_host_labels_ps_match():
         (["root", "/sbin/init", "splash"], "/sbin/init", None, True),
     ],
 )
-def test_process_matches(ps_line, ps_pattern, user_pattern, result):
+def test_process_matches(ps_line, ps_pattern, user_pattern, result) -> None:
     psi = ps.PsInfo(ps_line[0])
     matches_attr = ps.process_attributes_match(psi, user_pattern, (None, False))
     matches_proc = ps.process_matches(ps_line[1:], ps_pattern)
@@ -111,7 +111,9 @@ def test_process_matches(ps_line, ps_pattern, user_pattern, result):
         (["test", "c:\\a\\b\\123_foo"], "~.*\\\\(.*)_foo", None, ["123"], True),
     ],
 )
-def test_process_matches_match_groups(ps_line, ps_pattern, user_pattern, match_groups, result):
+def test_process_matches_match_groups(
+    ps_line, ps_pattern, user_pattern, match_groups, result
+) -> None:
     psi = ps.PsInfo(ps_line[0])
     matches_attr = ps.process_attributes_match(psi, user_pattern, (None, False))
     matches_proc = ps.process_matches(ps_line[1:], ps_pattern, match_groups)
@@ -132,7 +134,7 @@ def test_process_matches_match_groups(ps_line, ps_pattern, user_pattern, match_g
         ("users", "user", False),
     ],
 )
-def test_ps_match_user(attribute, pattern, result):
+def test_ps_match_user(attribute, pattern, result) -> None:
     assert ps.match_attribute(attribute, pattern) == result
 
 
@@ -153,11 +155,11 @@ def test_ps_match_user(attribute, pattern, result):
         ("%s %2 %s %1", ("one", "two", "three", "four"), "three two four one"),
     ],
 )
-def test_replace_service_description(service_description, matches, result):
+def test_replace_service_description(service_description, matches, result) -> None:
     assert ps.replace_service_description(service_description, matches, "") == result
 
 
-def test_replace_service_description_exception():
+def test_replace_service_description_exception() -> None:
     with pytest.raises(ValueError, match="1 replaceable elements"):
         ps.replace_service_description("%s", [], "")
 
@@ -194,11 +196,11 @@ PROCESSES = [
         ),
     ],
 )
-def test_format_process_list(processes, formatted_list, html_flag):
+def test_format_process_list(processes, formatted_list, html_flag) -> None:
     assert ps.format_process_list(processes, html_flag) == formatted_list
 
 
-def test_unused_value_remover():
+def test_unused_value_remover() -> None:
 
     value_store_test = {
         "test": {
@@ -219,7 +221,7 @@ def test_unused_value_remover():
     }
 
 
-def test_memory_perc_check_noop_no_resident_size():
+def test_memory_perc_check_noop_no_resident_size() -> None:
 
     procs = ps.ProcessAggregator(1, {})
     assert not list(
@@ -231,7 +233,7 @@ def test_memory_perc_check_noop_no_resident_size():
     )
 
 
-def test_memory_perc_check_noop_no_rule():
+def test_memory_perc_check_noop_no_rule() -> None:
 
     procs = ps.ProcessAggregator(1, {})
     # add a fake process
@@ -240,7 +242,7 @@ def test_memory_perc_check_noop_no_rule():
     assert not list(ps.memory_perc_check(procs, {}, {}))
 
 
-def test_memory_perc_check_missing_mem_total():
+def test_memory_perc_check_missing_mem_total() -> None:
 
     missing_mem_result = [
         Result(
@@ -264,7 +266,7 @@ def test_memory_perc_check_missing_mem_total():
     )
 
 
-def test_memory_perc_check_realnode():
+def test_memory_perc_check_realnode() -> None:
 
     procs = ps.ProcessAggregator(1, {})
     procs.resident_size = 42
@@ -279,7 +281,7 @@ def test_memory_perc_check_realnode():
     ]
 
 
-def test_memory_perc_check_cluster():
+def test_memory_perc_check_cluster() -> None:
 
     procs = ps.ProcessAggregator(1, {})
     procs.resident_size = 42
@@ -338,6 +340,6 @@ def test_memory_perc_check_cluster():
         )
     ],
 )
-def test_process_capture(process_lines, params, expected_processes):
+def test_process_capture(process_lines, params, expected_processes) -> None:
     process_aggregator = ps.process_capture(process_lines, params, 1, {})
     assert process_aggregator.processes == expected_processes

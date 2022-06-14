@@ -156,7 +156,7 @@ def test_storcli_cache_vault_check_ok(section: mcv.Section) -> None:
     ]
 
 
-def test_storcli_cache_vault_check_not_optimal():
+def test_storcli_cache_vault_check_not_optimal() -> None:
     # I've never seen non-optimal data, but this is what I assume should happen after parsing:
     assert list(
         mcv.check_storcli_cache_vault(

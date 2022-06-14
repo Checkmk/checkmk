@@ -71,7 +71,7 @@ def test_inventory_kube_statefulset(
     ) == sort_inventory_result(expected_inventory_result)
 
 
-def test_inventory_kube_statefulset_calls_labels_to_table(mocker):
+def test_inventory_kube_statefulset_calls_labels_to_table(mocker) -> None:
     """Test coverage and uniform look across inventories relies on the inventories calling
     labels_to_table."""
 

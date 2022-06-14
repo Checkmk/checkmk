@@ -35,7 +35,7 @@ def _raw_api():
     return RawAPI(kubernetes_api_client(), timeout=(10, 10))
 
 
-def test_raw_api_get_healthz_ok(raw_api):
+def test_raw_api_get_healthz_ok(raw_api) -> None:
     Entry.single_register(Entry.GET, "http://api-unittest/some_health_endpoint", body="response-ok")
     with Mocketizer():
         result = raw_api._get_healthz("/some_health_endpoint")
@@ -45,7 +45,7 @@ def test_raw_api_get_healthz_ok(raw_api):
     assert result.verbose_response is None
 
 
-def test_raw_api_get_healthz_nok(raw_api):
+def test_raw_api_get_healthz_nok(raw_api) -> None:
     Entry.single_register(
         Entry.GET, "http://api-unittest/some_health_endpoint", body="response-nok", status=500
     )
@@ -128,7 +128,7 @@ version_json_pytest_params = [
 
 
 @pytest.mark.parametrize("version_json, _", version_json_pytest_params)
-def test_version_endpoint(version_json: Mapping[str, str], _, raw_api):
+def test_version_endpoint(version_json: Mapping[str, str], _, raw_api) -> None:
     # arrange
     version_json_dump = json.dumps(version_json)
     Entry.single_register(
@@ -144,7 +144,7 @@ def test_version_endpoint(version_json: Mapping[str, str], _, raw_api):
     assert queried_version == version_json_dump
 
 
-def test_version_endpoint_no_json(raw_api):
+def test_version_endpoint_no_json(raw_api) -> None:
     """
 
     Invalid endpoint, since returned data is not json. RawAPI will not
@@ -156,7 +156,7 @@ def test_version_endpoint_no_json(raw_api):
     assert result == "I'm not json"
 
 
-def test_version_endpoint_invalid_json(raw_api):
+def test_version_endpoint_invalid_json(raw_api) -> None:
     """
 
     Invalid endpoint, since gitVersion field is missing. RawAPI will not
@@ -178,7 +178,7 @@ def test_version_endpoint_invalid_json(raw_api):
 
 
 @pytest.mark.parametrize("version_json, result", version_json_pytest_params)
-def test_version_from_json(version_json: Mapping[str, str], result):
+def test_version_from_json(version_json: Mapping[str, str], result) -> None:
     assert result == version_from_json(json.dumps(version_json))
 
 
@@ -197,7 +197,7 @@ def test_version_from_json(version_json: Mapping[str, str], result):
         ),
     ],
 )
-def test_version_from_json_invalid_json(data: str, message: str):
+def test_version_from_json_invalid_json(data: str, message: str) -> None:
     with pytest.raises(UnsupportedEndpointData) as excinfo:
         version_from_json(data)
     assert str(excinfo.value) == message

@@ -14,7 +14,7 @@ from cmk.special_agents.utils_kubernetes.transform import parse_daemonset_status
 
 
 class TestAPIDaemonSets:
-    def test_parse_metadata(self, apps_client, dummy_host):
+    def test_parse_metadata(self, apps_client, dummy_host) -> None:
         daemon_sets_metadata = {
             "items": [
                 {
@@ -50,7 +50,7 @@ class TestAPIDaemonSets:
         assert metadata.labels
         assert metadata.annotations == {"deprecated.daemonset.template.generation": "1"}
 
-    def test_parse_metadata_missing_annotations_and_labels(self, apps_client, dummy_host):
+    def test_parse_metadata_missing_annotations_and_labels(self, apps_client, dummy_host) -> None:
         daemon_sets_metadata = {
             "items": [
                 {
@@ -78,7 +78,7 @@ class TestAPIDaemonSets:
         assert metadata.labels == {}
         assert metadata.annotations == {}
 
-    def test_parse_status_failed_creation(self, apps_client, dummy_host):
+    def test_parse_status_failed_creation(self, apps_client, dummy_host) -> None:
         daemon_sets_data = {
             "items": [
                 {
@@ -109,7 +109,7 @@ class TestAPIDaemonSets:
         assert status.desired_number_scheduled == 2
         assert status.updated_number_scheduled == 1
 
-    def test_parse_status_no_matching_node(self, apps_client, dummy_host):
+    def test_parse_status_no_matching_node(self, apps_client, dummy_host) -> None:
         """
 
         Some DaemonSets may have no Nodes, on which they want to schedule Pods (because of their

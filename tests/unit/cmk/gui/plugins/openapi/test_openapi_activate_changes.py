@@ -17,7 +17,7 @@ from cmk.gui.plugins.openapi.restful_objects import constructors
 CMK_WAIT_FOR_COMPLETION = "cmk/wait-for-completion"
 
 
-def test_openapi_show_activations(aut_user_auth_wsgi_app: WebTestAppForCMK):
+def test_openapi_show_activations(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     base = "/NO_SITE/check_mk/api/1.0"
     aut_user_auth_wsgi_app.call_method(
         "get",
@@ -27,7 +27,7 @@ def test_openapi_show_activations(aut_user_auth_wsgi_app: WebTestAppForCMK):
     )
 
 
-def test_openapi_show_single_activation(aut_user_auth_wsgi_app: WebTestAppForCMK):
+def test_openapi_show_single_activation(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     base = "/NO_SITE/check_mk/api/1.0"
     aut_user_auth_wsgi_app.call_method(
         "get",
@@ -37,7 +37,9 @@ def test_openapi_show_single_activation(aut_user_auth_wsgi_app: WebTestAppForCMK
     )
 
 
-def test_openapi_list_currently_running_activations(aut_user_auth_wsgi_app: WebTestAppForCMK):
+def test_openapi_list_currently_running_activations(
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+) -> None:
     base = "/NO_SITE/check_mk/api/1.0"
     aut_user_auth_wsgi_app.call_method(
         "get",

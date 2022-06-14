@@ -32,7 +32,7 @@ def debug_logging():
     cmk.gui.log.set_log_levels(config.active_config.log_levels)
 
 
-def test_registered_background_jobs():
+def test_registered_background_jobs() -> None:
     expected_jobs = [
         "ActivateChangesSchedulerBackgroundJob",
         "ParentScanBackgroundJob",
@@ -64,7 +64,7 @@ def test_registered_background_jobs():
     assert sorted(gui_background_job.job_registry.keys()) == sorted(expected_jobs)
 
 
-def test_registered_background_jobs_attributes():
+def test_registered_background_jobs_attributes() -> None:
     for job_class in gui_background_job.job_registry.values():
         assert isinstance(job_class.job_prefix, str)
         assert isinstance(job_class.gui_title(), str)
@@ -115,7 +115,7 @@ class DummyBackgroundJob(gui_background_job.GUIBackgroundJob):
         time.sleep(100)
 
 
-def test_start_job(request_context):
+def test_start_job(request_context) -> None:
     job = DummyBackgroundJob()
     job.set_function(job.execute_hello)
 
@@ -146,7 +146,7 @@ def test_start_job(request_context):
     assert "Hallo :-)" in output
 
 
-def test_stop_job(request_context):
+def test_stop_job(request_context) -> None:
     job = DummyBackgroundJob()
     job.set_function(job.execute_endless)
     job.start()

@@ -24,11 +24,11 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
         ),
     ],
 )
-def test_parse_pulse_secure_users(string_table, expected_parsed_data):
+def test_parse_pulse_secure_users(string_table, expected_parsed_data) -> None:
     assert pulse_secure_users.parse_pulse_secure_users(string_table) == expected_parsed_data
 
 
-def test_check_pulse_secure_users():
+def test_check_pulse_secure_users() -> None:
     assert list(pulse_secure_users.check_pulse_secure_users({}, {"n_users": 172},)) == [
         Result(
             state=state.OK,
@@ -44,7 +44,7 @@ def test_check_pulse_secure_users():
     ]
 
 
-def test_cluster_check_pulse_secure_users():
+def test_cluster_check_pulse_secure_users() -> None:
     assert list(
         pulse_secure_users.cluster_check_pulse_secure_users(
             {},

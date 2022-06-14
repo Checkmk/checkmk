@@ -9,7 +9,7 @@ import os
 from tests.testlib.site import Site
 
 
-def test_hooks(site: Site):
+def test_hooks(site: Site) -> None:
     hooks = [
         "ADMIN_MAIL",
         "APACHE_MODE",

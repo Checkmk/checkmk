@@ -11,11 +11,11 @@ from cmk.snmplib.type_defs import SpecialColumn
 from cmk.base.api.agent_based.section_classes import OIDEnd, SNMPTree
 
 
-def test_oid_end_repr():
+def test_oid_end_repr() -> None:
     assert repr(OIDEnd()) == "OIDEnd()"
 
 
-def test_oid_end_compat_with_backend():
+def test_oid_end_compat_with_backend() -> None:
     assert OIDEnd().column == SpecialColumn.END
 
 
@@ -28,6 +28,6 @@ def test_oid_end_compat_with_backend():
         (".1.2", ["42.1", "42.2"]),  # 42 should be in base
     ],
 )
-def test_snmptree_valid(base, oids):
+def test_snmptree_valid(base, oids) -> None:
     with pytest.raises((ValueError, TypeError)):
         SNMPTree(base=base, oids=oids).validate()

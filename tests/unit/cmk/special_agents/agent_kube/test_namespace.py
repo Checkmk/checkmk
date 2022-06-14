@@ -19,7 +19,7 @@ from cmk.special_agents import agent_kube as agent
 from cmk.special_agents.utils_kubernetes.schemata import api
 
 
-def test_filter_matching_namespace_resource_quota():
+def test_filter_matching_namespace_resource_quota() -> None:
     namespace_name = api.NamespaceName("matching-namespace")
     resource_quotas = [
         APIResourceQuotaFactory.build(metadata=MetaDataFactory.build(namespace=namespace_name)),
@@ -36,7 +36,7 @@ def test_filter_matching_namespace_resource_quota():
     assert matching_resource_quota.metadata.namespace == namespace_name
 
 
-def test_filter_terminating_pods_by_quota_scope():
+def test_filter_terminating_pods_by_quota_scope() -> None:
     pods = [
         _pod_with_scopes_factory(name="pod-1", terminating=True),
         _pod_with_scopes_factory(name="pod-2", terminating=False),
@@ -53,7 +53,7 @@ def test_filter_terminating_pods_by_quota_scope():
     assert [p.metadata.name for p in non_terminating_pods] == ["pod-2"]
 
 
-def test_filter_pods_by_best_effort_quota_scope():
+def test_filter_pods_by_best_effort_quota_scope() -> None:
     pods = [
         _pod_with_scopes_factory(name="pod-1", best_effort=True),
         _pod_with_scopes_factory(name="pod-2", best_effort=False),
@@ -68,7 +68,7 @@ def test_filter_pods_by_best_effort_quota_scope():
     assert [p.metadata.name for p in not_best_effort_pods] == ["pod-2"]
 
 
-def test_filter_pods_with_terminating_best_effort_quota_scope():
+def test_filter_pods_with_terminating_best_effort_quota_scope() -> None:
     pods = [
         _pod_with_scopes_factory(name="pod-1", best_effort=True, terminating=True),
         _pod_with_scopes_factory(),
@@ -82,7 +82,7 @@ def test_filter_pods_with_terminating_best_effort_quota_scope():
     assert [p.metadata.name for p in terminating_best_effort_pods] == ["pod-1"]
 
 
-def test_filter_terminating_pods_from_scope_selector_match_expression():
+def test_filter_terminating_pods_from_scope_selector_match_expression() -> None:
     """This test is equivalent to the test_filter_terminating_pods_by_quote_scope test
     but it uses a scope selector match expression instead of a scope.
     """
@@ -120,7 +120,7 @@ def test_filter_terminating_pods_from_scope_selector_match_expression():
     assert [p.metadata.name for p in non_terminating_pods] == ["pod-2"]
 
 
-def test_filter_pods_with_best_effort_from_scope_selector_match_expression():
+def test_filter_pods_with_best_effort_from_scope_selector_match_expression() -> None:
     """This test is equivalent to the test_filter_pods_by_best_effort_quota_scope test
     but it uses a scope selector match expression instead of a scope.
     """
@@ -158,7 +158,7 @@ def test_filter_pods_with_best_effort_from_scope_selector_match_expression():
     assert [p.metadata.name for p in not_best_effort_pods] == ["pod-2"]
 
 
-def test_filter_terminating_best_effort_pods_from_scope_selector_match_expression():
+def test_filter_terminating_best_effort_pods_from_scope_selector_match_expression() -> None:
     """This test is equivalent to the test_filter_pods_with_terminating_best_effort_quota_scope
     test but it uses a scope selector with multiple match expressions instead of scopes.
     """
@@ -189,7 +189,7 @@ def test_filter_terminating_best_effort_pods_from_scope_selector_match_expressio
     assert [p.metadata.name for p in terminating_best_effort_pods] == ["pod-1"]
 
 
-def test_filter_from_scope_selector_match_expression_with_does_not_exist_operator():
+def test_filter_from_scope_selector_match_expression_with_does_not_exist_operator() -> None:
     # DoesNotExist operator is only allowed for the PriorityClass scope
     # (see schemata.api.ScopedResourceMatchExpression for further details)
     pods = [
@@ -213,7 +213,7 @@ def test_filter_from_scope_selector_match_expression_with_does_not_exist_operato
     assert [p.metadata.name for p in no_priority_class_pods] == ["pod-2"]
 
 
-def test_filter_pods_with_priority_class_from_scope_selector_match_expression():
+def test_filter_pods_with_priority_class_from_scope_selector_match_expression() -> None:
     pods = [
         _pod_with_scopes_factory(name="pod-1", priority_class="high"),
         _pod_with_scopes_factory(name="pod-2", priority_class="medium"),

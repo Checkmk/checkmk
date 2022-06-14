@@ -75,11 +75,11 @@ SECTION_ERROR = {
         ),
     ],
 )
-def test_sap_hana_status_parse(string_table_row, expected_parsed_data):
+def test_sap_hana_status_parse(string_table_row, expected_parsed_data) -> None:
     assert sap_hana_status.parse_sap_hana_status(string_table_row) == expected_parsed_data
 
 
-def test_sap_hana_status_discovery():
+def test_sap_hana_status_discovery() -> None:
     assert list(sap_hana_status.discovery_sap_hana_status(SECTION)) == [
         Service(item="Status %s" % ITEM),
         Service(item="Version %s" % ITEM),
@@ -113,7 +113,7 @@ def test_sap_hana_status_discovery():
         ),
     ],
 )
-def test_sap_hana_status_check(check_type, results, section):
+def test_sap_hana_status_check(check_type, results, section) -> None:
 
     yielded_results = list(
         sap_hana_status.check_sap_hana_status("%s %s" % (check_type, ITEM), section)
@@ -122,12 +122,12 @@ def test_sap_hana_status_check(check_type, results, section):
 
 
 @pytest.mark.parametrize("section, item", [({"Status H62 10": {}}, "Status H62 10")])
-def test_sap_hana_status_check_stale(section, item):
+def test_sap_hana_status_check_stale(section, item) -> None:
     with pytest.raises(IgnoreResultsError):
         list(sap_hana_status.check_sap_hana_status(item, section))
 
 
-def test_sap_hana_status_cluster_check():
+def test_sap_hana_status_cluster_check() -> None:
     section = {"node 1": SECTION, "node 2": SECTION_WARNING}
     yielded_results = list(
         sap_hana_status.cluster_check_sap_hana_status("Status %s" % ITEM, section)

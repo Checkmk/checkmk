@@ -82,17 +82,17 @@ def check_result(params, section, custom_section) -> CheckResult:
 
 
 @pytest.mark.parametrize("section", [None])
-def test_check_raises_when_section_is_none(check_result):
+def test_check_raises_when_section_is_none(check_result) -> None:
     with pytest.raises(IgnoreResultsError):
         list(check_result)
 
 
-def test_check_yields_single_result_when_all_conditions_pass(check_result):
+def test_check_yields_single_result_when_all_conditions_pass(check_result) -> None:
     results = list(check_result)
     assert len(results) == 1
 
 
-def test_check_all_results_state_ok(check_result):
+def test_check_all_results_state_ok(check_result) -> None:
     results = list(check_result)
     assert isinstance(results[0], Result)
     assert results[0].state == State.OK
@@ -130,7 +130,9 @@ def test_check_with_falsy_condition_yields_one_crit_among_others_ok(
     assert len([result for result in results if result.state == State.OK]) == expected_ok_results
 
 
-def test_check_ignores_missing_network_unavailable_when_all_conditions_pass(section, check_result):
+def test_check_ignores_missing_network_unavailable_when_all_conditions_pass(
+    section, check_result
+) -> None:
     section.networkunavailable = None
     results = [r for r in check_result if isinstance(r, Result)]
     assert len(results) == 1
@@ -154,7 +156,7 @@ def test_check_ignores_missing_network_unavailable_when_a_condition_does_not_pas
     assert len([result for result in results if result.state == State.OK]) == expected_ok_results
 
 
-def test_check_with_missing_network_unavailable_all_states_ok(section, check_result):
+def test_check_with_missing_network_unavailable_all_states_ok(section, check_result) -> None:
     section.networkunavailable = None
     results = list(check_result)
     assert isinstance(results[0], Result)

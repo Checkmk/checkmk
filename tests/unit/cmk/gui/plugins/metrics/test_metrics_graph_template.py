@@ -20,14 +20,14 @@ from cmk.gui.plugins.metrics.utils import GraphTemplate
         ("user.min,sys.max,+", None, [("user", "min"), ("sys", "max"), ("+", None)]),
     ],
 )
-def test_rpn_consolidation(expression, enforced_consolidation_function, result):
+def test_rpn_consolidation(expression, enforced_consolidation_function, result) -> None:
     assert list(gt.iter_rpn_expression(expression, enforced_consolidation_function)) == result
 
 
 @pytest.mark.parametrize(
     "expression, enforced_consolidation_function", [("user.min", "max"), ("user.min,sys,+", "avg")]
 )
-def test_rpn_consolidation_exception(expression, enforced_consolidation_function):
+def test_rpn_consolidation_exception(expression, enforced_consolidation_function) -> None:
     with pytest.raises(gt.MKGeneralException):
         list(gt.iter_rpn_expression(expression, enforced_consolidation_function))
 
@@ -66,7 +66,7 @@ def test_rpn_consolidation_exception(expression, enforced_consolidation_function
         ),
     ],
 )
-def test_rpn_stack(expression, result):
+def test_rpn_stack(expression, result) -> None:
     translated_metrics = metrics.translate_perf_data(
         "/=163651.992188;;;; fs_size=477500.03125;;;; growth=-1280.489081;;;;", "check_mk-df"
     )
@@ -79,7 +79,7 @@ def test_rpn_stack(expression, result):
     )
 
 
-def test_create_graph_recipe_from_template():
+def test_create_graph_recipe_from_template() -> None:
 
     metrics.fixup_unit_info()
     graph_template = GraphTemplate(
@@ -154,7 +154,7 @@ def test_create_graph_recipe_from_template():
         ("test", "test=5;5;10;0;20", "check_mk-local", "#cc00ff"),
     ],
 )
-def test_metric_unit_color(expression, perf_string, check_command, result_color):
+def test_metric_unit_color(expression, perf_string, check_command, result_color) -> None:
     metrics.fixup_unit_info()
     translated_metrics = metrics.translate_perf_data(perf_string, check_command)
     translated_metric = translated_metrics.get(expression)
@@ -175,7 +175,7 @@ def test_metric_unit_color(expression, perf_string, check_command, result_color)
         ("test", "", "check_mk-local"),
     ],
 )
-def test_metric_unit_color_skip(expression, perf_string, check_command):
+def test_metric_unit_color_skip(expression, perf_string, check_command) -> None:
     translated_metrics = metrics.translate_perf_data(perf_string, check_command)
     assert gt.metric_unit_color(expression, translated_metrics, ["test"]) is None
 
@@ -186,7 +186,7 @@ def test_metric_unit_color_skip(expression, perf_string, check_command):
         ("level,altitude,+", "test=5;5;10;0;20", "check_mk-local"),
     ],
 )
-def test_metric_unit_color_exception(metric, perf_string, check_command):
+def test_metric_unit_color_exception(metric, perf_string, check_command) -> None:
     translated_metrics = metrics.translate_perf_data(perf_string, check_command)
     with pytest.raises(gt.MKGeneralException):
         gt.metric_unit_color(metric, translated_metrics, ["test"])

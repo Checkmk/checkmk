@@ -62,5 +62,5 @@ from cmk.base.plugins.agent_based.inventory_lnx_video import inventory_lnx_video
         ),
     ],
 )
-def test_inventory_lnx_video(string_table, expected_result):
+def test_inventory_lnx_video(string_table, expected_result) -> None:
     assert list(inventory_lnx_video(parse_lnx_video(string_table))) == expected_result

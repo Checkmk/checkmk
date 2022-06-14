@@ -99,7 +99,7 @@ class TestParsing(ParsingTester):
         return SECTION_TABLE
 
 
-def test_discover_labels_labels_without_user_labels():
+def test_discover_labels_labels_without_user_labels() -> None:
     asset_table = [
         ['{"project":"backup-255820"}'],
         [
@@ -127,7 +127,7 @@ def fixture_section() -> Section:
 
 
 @pytest.mark.parametrize("state", (State.OK, State.WARN, State.CRIT))
-def test_gcp_sql_status_params(section, state):
+def test_gcp_sql_status_params(section, state) -> None:
     params = {"RUNNING": state}
     results = list(
         check_gcp_sql_status(
@@ -140,7 +140,7 @@ def test_gcp_sql_status_params(section, state):
     assert result == Result(state=state, summary="State: RUNNING")
 
 
-def test_gcp_sql_status_metric(section):
+def test_gcp_sql_status_metric(section) -> None:
     params = {"RUNNING": State.UNKNOWN}
     results = list(
         check_gcp_sql_status(
@@ -156,7 +156,7 @@ def test_gcp_sql_status_metric(section):
     assert result.value == 1.0
 
 
-def test_gcp_sql_status_no_state_metric_in_available_metrics():
+def test_gcp_sql_status_no_state_metric_in_available_metrics() -> None:
     params = {"RUNNING": State.UNKNOWN}
     results = list(
         check_gcp_sql_status(
@@ -172,7 +172,7 @@ def test_gcp_sql_status_no_state_metric_in_available_metrics():
     assert result == Result(state=State.UNKNOWN, summary="No data available")
 
 
-def test_gcp_sql_status_no_agent_data_is_no_result():
+def test_gcp_sql_status_no_agent_data_is_no_result() -> None:
     assert [] == list(
         check_gcp_sql_status(
             item=ITEM,
@@ -183,7 +183,7 @@ def test_gcp_sql_status_no_agent_data_is_no_result():
     )
 
 
-def test_gcp_sql_status_no_results_if_item_not_found(section: gcp.Section):
+def test_gcp_sql_status_no_results_if_item_not_found(section: gcp.Section) -> None:
     params = {k: None for k in ["requests"]}
     results = (
         el
@@ -254,7 +254,7 @@ def fixture_results(checkplugin: Plugin, section: Section) -> Results:
     return results, checkplugin
 
 
-def test_no_sql_section_yields_no_metric_data(checkplugin):
+def test_no_sql_section_yields_no_metric_data(checkplugin) -> None:
     params = {k: None for k in checkplugin.metrics}
     results = list(
         checkplugin.function(
@@ -267,14 +267,14 @@ def test_no_sql_section_yields_no_metric_data(checkplugin):
     assert len(results) == 0
 
 
-def test_yield_metrics_as_specified(results_and_plugin: Results):
+def test_yield_metrics_as_specified(results_and_plugin: Results) -> None:
     results, checkplugin = results_and_plugin
     res = {r.name: r for r in results if isinstance(r, Metric)}
     assert len(res) == len(checkplugin.metrics)
     assert set(res.keys()) == set(checkplugin.metrics)
 
 
-def test_yield_results_as_specified(results_and_plugin: Results):
+def test_yield_results_as_specified(results_and_plugin: Results) -> None:
     results, checkplugin = results_and_plugin
     res = [r for r in results if isinstance(r, Result)]
     assert len(res) == len(checkplugin.metrics)
@@ -282,7 +282,7 @@ def test_yield_results_as_specified(results_and_plugin: Results):
         assert r.state == State.OK
 
 
-def test_no_results_if_item_not_found(section: gcp.Section, checkplugin: Plugin):
+def test_no_results_if_item_not_found(section: gcp.Section, checkplugin: Plugin) -> None:
     params = {k: None for k in ["requests"]}
     results = (
         el

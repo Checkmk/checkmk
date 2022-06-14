@@ -25,7 +25,7 @@ def test_escape_to_html_permissive() -> None:
     assert str(escaping.escape_to_html_permissive("<b>")) == "<b>"
 
 
-def test_htmllib_integration():
+def test_htmllib_integration() -> None:
     assert escaping.escape_attribute("") == ""
     assert escaping.escape_text("") == ""
 
@@ -43,7 +43,7 @@ def test_htmllib_integration():
         (LazyString(str, "'"), "&#x27;"),
     ],
 )
-def test_escape_attribute(inp, out):
+def test_escape_attribute(inp, out) -> None:
     assert escaping.escape_attribute(inp) == out
 
 
@@ -110,7 +110,7 @@ def test_escape_attribute(inp, out):
         ),
     ],
 )
-def test_escape_text(inp, out):
+def test_escape_text(inp, out) -> None:
     if out is None:
         out = inp
     assert escaping.escape_text(inp) == out
@@ -125,5 +125,5 @@ def test_escape_text(inp, out):
         (LazyString(str, "some <a>link</a> in lazy text"), "some link in lazy text"),
     ],
 )
-def test_strip_tags(inp, out):
+def test_strip_tags(inp, out) -> None:
     assert escaping.strip_tags(inp) == out

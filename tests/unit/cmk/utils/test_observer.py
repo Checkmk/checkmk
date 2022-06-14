@@ -9,7 +9,7 @@ import pytest
 from cmk.utils.observer import FetcherMemoryObserver
 
 
-def test_fetcher_memory_observer():
+def test_fetcher_memory_observer() -> None:
     observer = FetcherMemoryObserver(170)
 
     # Phase 1. Wait for steady and ignore any problems

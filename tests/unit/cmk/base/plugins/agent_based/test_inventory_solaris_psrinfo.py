@@ -182,7 +182,7 @@ def _section(
         ),
     ],
 )
-def test_inventory_solaris_cpus(test_set, expected_result):
+def test_inventory_solaris_cpus(test_set, expected_result) -> None:
     assert sort_inventory_result(
         inventory_solaris_cpus(
             _section(parse_solaris_psrinfo_physical, test_set.psrinfo_p),

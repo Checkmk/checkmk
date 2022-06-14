@@ -353,7 +353,7 @@ def run_as_user() -> Callable[[UserId], ContextManager[None]]:
 
     Examples:
 
-        def test_function(run_as_user):
+        def test_function(run_as_user) -> None:
             print("Run as Nobody")
             with run_as_user(UserID("egon")):
                  print("Run as 'egon'")
@@ -376,7 +376,7 @@ def run_as_superuser() -> Callable[[], ContextManager[None]]:
 
     Examples:
 
-        def test_function(run_as_superuser):
+        def test_function(run_as_superuser) -> None:
             print("Run as Nobody")
             with run_as_superuser():
                  print("Run as Superuser")

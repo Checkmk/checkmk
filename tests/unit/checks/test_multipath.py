@@ -438,6 +438,6 @@ def test_parse_multipath(test_data: TupleTestData) -> None:
         ),
     ],
 )
-def test_multipath_parse_groups(group, result):
+def test_multipath_parse_groups(group, result) -> None:
     check = Check("multipath")
     assert result in check.run_parse([group])

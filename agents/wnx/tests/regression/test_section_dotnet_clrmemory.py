@@ -62,7 +62,9 @@ def expected_output_engine():
     return chain(base, repeat(re_str))
 
 
-def test_section_dotnet_clrmemory(request, testconfig, expected_output, actual_output, testfile):
+def test_section_dotnet_clrmemory(
+    request, testconfig, expected_output, actual_output, testfile
+) -> None:
     # special case wmi may timeout
     required_lines = 5
     name = "dotnet"

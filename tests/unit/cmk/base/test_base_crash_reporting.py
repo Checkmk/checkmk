@@ -14,7 +14,7 @@ from cmk.utils.type_defs import HostName
 import cmk.base.crash_reporting as crash_reporting
 
 
-def test_base_crash_report_registry():
+def test_base_crash_report_registry() -> None:
     assert (
         cmk.utils.crash_reporting.crash_report_registry["base"]
         == crash_reporting.CMKBaseCrashReport
@@ -43,7 +43,7 @@ def _check_generic_crash_info(crash):
         )
 
 
-def test_base_crash_report_from_exception():
+def test_base_crash_report_from_exception() -> None:
     crash = None
     try:
         raise ValueError("DING")
@@ -59,7 +59,7 @@ def test_base_crash_report_from_exception():
     assert crash.crash_info["exc_value"] == "DING"
 
 
-def test_base_crash_report_save():
+def test_base_crash_report_save() -> None:
     store = crash_reporting.CrashReportStore()
     try:
         raise ValueError("DINGELING")
@@ -73,7 +73,7 @@ def test_base_crash_report_save():
     assert crash.crash_info["time"] == crash2.crash_info["time"]
 
 
-def test_check_crash_report_from_exception(monkeypatch):
+def test_check_crash_report_from_exception(monkeypatch) -> None:
     Scenario().apply(monkeypatch)
     crash = None
     try:
@@ -117,7 +117,7 @@ def test_check_crash_report_from_exception(monkeypatch):
         assert crash.crash_info["details"][key] == value, "%r has invalid value" % key
 
 
-def test_check_crash_report_save(monkeypatch):
+def test_check_crash_report_save(monkeypatch) -> None:
     Scenario().apply(monkeypatch)
     store = crash_reporting.CrashReportStore()
     try:
@@ -137,7 +137,7 @@ def test_check_crash_report_save(monkeypatch):
     assert crash2.crash_info["exc_value"] == "DING"
 
 
-def test_check_crash_report_read_agent_output(monkeypatch):
+def test_check_crash_report_read_agent_output(monkeypatch) -> None:
     Scenario().apply(monkeypatch)
     cache_path = Path(cmk.utils.paths.tcp_cache_dir, "testhost")
     cache_path.parent.mkdir(parents=True, exist_ok=True)
@@ -162,7 +162,7 @@ def test_check_crash_report_read_agent_output(monkeypatch):
     assert crash.snmp_info is None
 
 
-def test_check_crash_report_read_snmp_info(monkeypatch):
+def test_check_crash_report_read_snmp_info(monkeypatch) -> None:
     Scenario().apply(monkeypatch)
     cache_path = Path(cmk.utils.paths.data_source_cache_dir, "snmp", "testhost")
     cache_path.parent.mkdir(parents=True, exist_ok=True)

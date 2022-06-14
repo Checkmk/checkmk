@@ -120,7 +120,7 @@ custom_checks = [
         ),
     ],
 )
-def test_get_rrd_data(cfg_setup, utcdate, timezone, period, result):
+def test_get_rrd_data(cfg_setup, utcdate, timezone, period, result) -> None:
 
     with on_time(utcdate, timezone):
         timestamp = time.time()
@@ -145,7 +145,7 @@ def test_get_rrd_data(cfg_setup, utcdate, timezone, period, result):
     "max_entries, result",
     [(400, (180, 401)), (20, (3600, 21)), (50, (1800, 41)), (1000, (120, 600)), (1200, (60, 1200))],
 )
-def test_get_rrd_data_point_max(cfg_setup, max_entries, result):
+def test_get_rrd_data_point_max(cfg_setup, max_entries, result) -> None:
     from_time, until_time = 1543430040, 1543502040
     timeseries = cmk.utils.prediction.get_rrd_data(
         HostName("test-prediction"), "CPU load", "load15", "MAX", from_time, until_time, max_entries
@@ -414,7 +414,7 @@ def test_get_rrd_data_point_max(cfg_setup, max_entries, result):
         ),
     ],
 )
-def test_retieve_grouped_data_from_rrd(cfg_setup, utcdate, timezone, params, reference):
+def test_retieve_grouped_data_from_rrd(cfg_setup, utcdate, timezone, params, reference) -> None:
     "This mostly verifies the up-sampling"
 
     period_info = prediction._PREDICTION_PERIODS[params["period"]]
@@ -467,7 +467,7 @@ def _load_expected_result(path: str) -> object:
         ),
     ],
 )
-def test_calculate_data_for_prediction(cfg_setup, utcdate, timezone, params):
+def test_calculate_data_for_prediction(cfg_setup, utcdate, timezone, params) -> None:
 
     period_info = prediction._PREDICTION_PERIODS[params["period"]]
     with on_time(utcdate, timezone):
@@ -515,7 +515,7 @@ def test_calculate_data_for_prediction(cfg_setup, utcdate, timezone, params):
         ),
     ],
 )
-def test_get_rrd_data_incomplete(cfg_setup, timerange, result):
+def test_get_rrd_data_incomplete(cfg_setup, timerange, result) -> None:
     from_time, until_time = timerange
     timeseries = cmk.utils.prediction.get_rrd_data(
         HostName("test-prediction"), "CPU load", "load15", "MAX", from_time, until_time
@@ -526,7 +526,7 @@ def test_get_rrd_data_incomplete(cfg_setup, timerange, result):
     assert (timeseries.step, timeseries.values) == result
 
 
-def test_get_rrd_data_fails(cfg_setup):
+def test_get_rrd_data_fails(cfg_setup) -> None:
     timestamp = time.mktime(datetime.strptime("2018-11-28 12", "%Y-%m-%d %H").timetuple())
     _, from_time, until_time, _ = prediction._get_prediction_timegroup(
         int(timestamp), prediction._PREDICTION_PERIODS["hour"]

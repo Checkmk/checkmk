@@ -113,7 +113,7 @@ from cmk.base.plugins.agent_based.netapp_api_snapvault import (
         ),
     ],
 )
-def test_parse_netapp_api_snapvault(string_table, expected_parsed):
+def test_parse_netapp_api_snapvault(string_table, expected_parsed) -> None:
     assert parse_netapp_api_snapvault(string_table) == expected_parsed
 
 
@@ -220,7 +220,7 @@ def test_parse_netapp_api_snapvault(string_table, expected_parsed):
         ),
     ],
 )
-def test_discover_netapp_api_snapvault(string_table, discovery_params, expected_discovery):
+def test_discover_netapp_api_snapvault(string_table, discovery_params, expected_discovery) -> None:
     assert (
         list(
             discover_netapp_api_snapvault(
@@ -401,5 +401,5 @@ def test_discover_netapp_api_snapvault(string_table, discovery_params, expected_
         ),
     ],
 )
-def test_check_netapp_api_snapvault(item, params, parsed, expected_result):
+def test_check_netapp_api_snapvault(item, params, parsed, expected_result) -> None:
     assert list(check_netapp_api_snapvault(item, params, parsed)) == expected_result

@@ -14,7 +14,7 @@ pytestmark = pytest.mark.checks
 @pytest.mark.parametrize(
     "params,expected_args", [(("foo", 60, ()), ["-r", 60]), (("foo", 60, (20, 50)), ["-r", 60])]
 )
-def test_check_notify_count_argument_parsing(params, expected_args):
+def test_check_notify_count_argument_parsing(params, expected_args) -> None:
     """Tests if all required arguments are present."""
     active_check = ActiveCheck("check_notify_count")
     assert active_check.run_argument_function(params) == expected_args

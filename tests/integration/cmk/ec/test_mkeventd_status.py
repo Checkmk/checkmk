@@ -12,7 +12,7 @@ from tests.testlib.site import Site
 
 
 @pytest.mark.skip("needs to be analyzed later...")
-def test_command_reload(site: Site, ec):
+def test_command_reload(site: Site, ec) -> None:
     live = site.live
 
     old_t = live.query_value("GET eventconsolestatus\nColumns: status_config_load_time\n")

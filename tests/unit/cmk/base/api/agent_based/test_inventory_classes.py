@@ -10,19 +10,19 @@ from cmk.base.api.agent_based.inventory_classes import Attributes, TableRow
 
 @pytest.mark.parametrize("class_", [TableRow, Attributes])
 @pytest.mark.parametrize("path", [["a", 23], ("a", "b")])
-def test_common_raise_path_type(class_, path):
+def test_common_raise_path_type(class_, path) -> None:
     with pytest.raises(TypeError):
         _ = class_(path=path)
 
 
-def test_common_kwarg_only():
+def test_common_kwarg_only() -> None:
     with pytest.raises(TypeError):
         _ = Attributes(["a"])  # type: ignore[misc] #pylint:disable= E1125, E1121
     with pytest.raises(TypeError):
         _ = TableRow(["a"], key_columns={"ding": "dong"})  # type: ignore[misc]   #pylint:disable= E1125, E1121
 
 
-def test_atrributes_wrong_types():
+def test_atrributes_wrong_types() -> None:
     with pytest.raises(TypeError):
         _ = Attributes(
             path=["software", "os"],
@@ -30,7 +30,7 @@ def test_atrributes_wrong_types():
         )
 
 
-def test_attributes_duplicate_keys():
+def test_attributes_duplicate_keys() -> None:
     with pytest.raises(ValueError):
         _ = Attributes(
             path=["software", "os"],
@@ -39,7 +39,7 @@ def test_attributes_duplicate_keys():
         )
 
 
-def test_attributes_instanciated():
+def test_attributes_instanciated() -> None:
     attr = Attributes(
         path=["software", "os"],
         status_attributes={"vendor": "emmentaler"},
@@ -63,18 +63,18 @@ def test_attributes_instanciated():
     assert attr2 != attr
 
 
-def test_tablerow_missing_key_columns():
+def test_tablerow_missing_key_columns() -> None:
     with pytest.raises(TypeError):
         _ = TableRow(path=["hardware"], key_columns=None)  # type: ignore[arg-type]
         _ = TableRow(path=["hardware"], key_columns={})
 
 
-def test_tablerow_wrong_types():
+def test_tablerow_wrong_types() -> None:
     with pytest.raises(TypeError):
         _ = TableRow(path=["hardware"], key_columns={23: 42})  # type: ignore[dict-item]
 
 
-def test_tablerow_conflicting_keys():
+def test_tablerow_conflicting_keys() -> None:
     with pytest.raises(ValueError):
         _ = TableRow(
             path=["hardware"],
@@ -83,7 +83,7 @@ def test_tablerow_conflicting_keys():
         )
 
 
-def test_tablerow_instanciated():
+def test_tablerow_instanciated() -> None:
     table_row = TableRow(
         path=["software", "os"],
         key_columns={"foo": "bar"},

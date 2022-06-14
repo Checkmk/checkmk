@@ -12,7 +12,7 @@ from cmk.gui.wato.mkeventd import MatchItemGeneratorECRulePacksAndRules
 from cmk.gui.watolib.search import MatchItem
 
 
-def test_match_item_generator_ec_rule_packs_and_rules():
+def test_match_item_generator_ec_rule_packs_and_rules() -> None:
     mkp_rule_pack = MkpRulePackProxy("mkp_rule_pack_id")
     mkp_rule_pack.rule_pack = {
         "title": "MKP Rule pack",

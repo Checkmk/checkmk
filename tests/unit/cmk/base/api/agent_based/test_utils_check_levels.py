@@ -25,7 +25,7 @@ from cmk.base.api.agent_based.checking_classes import Metric, Result, State
         (-1, (3, 6), (1, 0), int, (State.CRIT, " (warn/crit below 1/0)")),
     ],
 )
-def test_boundaries(value, levels_upper, levels_lower, render_func, result):
+def test_boundaries(value, levels_upper, levels_lower, render_func, result) -> None:
     assert utils._do_check_levels(value, levels_upper, levels_lower, render_func) == result
 
 
@@ -78,5 +78,5 @@ def test_boundaries(value, levels_upper, levels_lower, render_func, result):
         ),
     ],
 )
-def test_check_levels(value, kwargs, result):
+def test_check_levels(value, kwargs, result) -> None:
     assert list(utils.check_levels(value, **kwargs)) == result

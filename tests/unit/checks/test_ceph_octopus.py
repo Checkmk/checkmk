@@ -192,7 +192,7 @@ discovery: List[Tuple[str, Mapping]] = [
         (octopus_info, discovery),
     ],
 )
-def test_ceph_df_octopus_discovery(info, result):
+def test_ceph_df_octopus_discovery(info, result) -> None:
     check = Check("ceph_df")
     parsed = check.run_parse(info)
     assert sorted(check.run_discovery(parsed)) == result

@@ -7,7 +7,7 @@
 from tests.testlib import Check
 
 
-def test_parse_simple():
+def test_parse_simple() -> None:
     check = Check("arista_bgp")
     data = [
         [
@@ -35,7 +35,7 @@ def test_parse_simple():
     }
 
 
-def test_parse_empty_address():
+def test_parse_empty_address() -> None:
     check = Check("arista_bgp")
     data = [
         [

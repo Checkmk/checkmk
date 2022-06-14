@@ -17,7 +17,7 @@ SECTION = {
 }
 
 
-def test_check_netscaler_sslcertificates_ok():
+def test_check_netscaler_sslcertificates_ok() -> None:
     assert list(
         netscaler_sslcertificates.check_netscaler_sslcertificates(
             "cert1",
@@ -30,7 +30,7 @@ def test_check_netscaler_sslcertificates_ok():
     ]
 
 
-def test_check_netscaler_sslcertificates_crit():
+def test_check_netscaler_sslcertificates_crit() -> None:
     assert list(
         netscaler_sslcertificates.check_netscaler_sslcertificates(
             "cert2",

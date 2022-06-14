@@ -9,7 +9,7 @@ import subprocess
 from tests.testlib.site import Site
 
 
-def test_run_omd(site: Site):
+def test_run_omd(site: Site) -> None:
     p = site.execute(["omd"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = p.communicate()
     assert p.wait() == 1
@@ -18,7 +18,7 @@ def test_run_omd(site: Site):
     assert "omd COMMAND -h" in stdout
 
 
-def test_run_omd_help(site: Site):
+def test_run_omd_help(site: Site) -> None:
     p = site.execute(["omd", "help"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = p.communicate()
     assert p.wait() == 0
@@ -27,7 +27,7 @@ def test_run_omd_help(site: Site):
     assert "omd COMMAND -h" in stdout
 
 
-def test_run_omd_version(site: Site):
+def test_run_omd_version(site: Site) -> None:
     p = site.execute(["omd", "version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = p.communicate()
     assert p.wait() == 0
@@ -35,7 +35,7 @@ def test_run_omd_version(site: Site):
     assert stdout.endswith("%s\n" % site.version.omd_version())
 
 
-def test_run_omd_version_bare(site: Site):
+def test_run_omd_version_bare(site: Site) -> None:
     p = site.execute(["omd", "version", "-b"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = p.communicate()
     assert p.wait() == 0
@@ -43,7 +43,7 @@ def test_run_omd_version_bare(site: Site):
     assert stdout.rstrip("\n") == site.version.omd_version()
 
 
-def test_run_omd_versions(site: Site):
+def test_run_omd_versions(site: Site) -> None:
     p = site.execute(["omd", "versions"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = p.communicate()
     assert p.wait() == 0
@@ -53,7 +53,7 @@ def test_run_omd_versions(site: Site):
     assert site.version.omd_version() in versions
 
 
-def test_run_omd_versions_bare(site: Site):
+def test_run_omd_versions_bare(site: Site) -> None:
     p = site.execute(["omd", "versions", "-b"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = p.communicate()
     assert p.wait() == 0
@@ -63,7 +63,7 @@ def test_run_omd_versions_bare(site: Site):
     assert site.version.omd_version() in versions
 
 
-def test_run_omd_sites(site: Site):
+def test_run_omd_sites(site: Site) -> None:
     p = site.execute(["omd", "sites"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = p.communicate()
     assert p.wait() == 0
@@ -71,7 +71,7 @@ def test_run_omd_sites(site: Site):
     assert site.id in stdout
 
 
-def test_run_omd_sites_bare(site: Site):
+def test_run_omd_sites_bare(site: Site) -> None:
     p = site.execute(["omd", "sites", "-b"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = p.communicate()
     assert p.wait() == 0

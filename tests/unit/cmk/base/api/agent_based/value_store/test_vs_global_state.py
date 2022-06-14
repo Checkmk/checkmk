@@ -18,7 +18,7 @@ from cmk.base.api.agent_based.value_store._utils import ServiceID
 _TEST_KEY = ("check", "item", "user-key")
 
 
-def test_load_host_value_store_loads_file(monkeypatch):
+def test_load_host_value_store_loads_file(monkeypatch) -> None:
 
     service_id = ServiceID(CheckPluginName("test_service"), None)
 

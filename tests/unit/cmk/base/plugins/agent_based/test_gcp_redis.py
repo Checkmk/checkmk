@@ -130,7 +130,7 @@ def fixture_results(checkplugin, redis_section):
     return results, checkplugin
 
 
-def test_no_redis_section_yields_no_metric_data(checkplugin):
+def test_no_redis_section_yields_no_metric_data(checkplugin) -> None:
     params = {k: None for k in checkplugin.metrics}
     results = list(
         checkplugin.function(
@@ -140,14 +140,14 @@ def test_no_redis_section_yields_no_metric_data(checkplugin):
     assert len(results) == 0
 
 
-def test_yield_metrics_as_specified(results):
+def test_yield_metrics_as_specified(results) -> None:
     results, checkplugin = results
     res = {r.name: r for r in results if isinstance(r, Metric)}
     assert len(res) == len(checkplugin.metrics)
     assert set(res.keys()) == set(checkplugin.metrics)
 
 
-def test_yield_results_as_specified(results):
+def test_yield_results_as_specified(results) -> None:
     results, checkplugin = results
     res = [r for r in results if isinstance(r, Result)]
     assert len(res) == len(checkplugin.metrics)
@@ -157,7 +157,7 @@ def test_yield_results_as_specified(results):
 
 class TestDefaultMetricValues:
     # requests does not contain example data
-    def test_zero_default_if_metric_does_not_exist(self, redis_section):
+    def test_zero_default_if_metric_does_not_exist(self, redis_section) -> None:
         params = {k: None for k in ["util"]}
         results = (
             el
@@ -173,7 +173,7 @@ class TestDefaultMetricValues:
             assert result.value == 0.0
 
     # objects does contain example data
-    def test_non_zero_if_metric_exist(self, redis_section):
+    def test_non_zero_if_metric_exist(self, redis_section) -> None:
         params = {k: None for k in ["memory_util", "system_memory_util"]}
         results = (
             el
@@ -188,7 +188,7 @@ class TestDefaultMetricValues:
         for result in results:
             assert result.value != 0.0
 
-    def test_zero_default_if_item_does_not_exist(self, redis_section, checkplugin: Plugin):
+    def test_zero_default_if_item_does_not_exist(self, redis_section, checkplugin: Plugin) -> None:
         params = {k: None for k in checkplugin.metrics}
         results = (
             el
@@ -230,7 +230,7 @@ class ABCTestRedisChecks(abc.ABC):
         kwargs = self._parametrize(hitratio, params=params)
         return list(check(**kwargs))
 
-    def test_expected_number_of_results_and_metrics(self, check: CheckFunction):
+    def test_expected_number_of_results_and_metrics(self, check: CheckFunction) -> None:
         params = {"levels_upper_hitratio": None, "levels_lower_hitratio": None}
         results = self.run(50, params, check)
         assert len(results) == 2
@@ -256,13 +256,13 @@ class ABCTestRedisChecks(abc.ABC):
         assert results[0] == Result(state=state, summary=summary)
 
     @given(hitratio=st.floats(min_value=0, max_value=1))
-    def test_yield_no_levels(self, hitratio: float, check: CheckFunction):
+    def test_yield_no_levels(self, hitratio: float, check: CheckFunction) -> None:
         params = {"levels_upper_hitratio": None, "levels_lower_hitratio": None}
         results = [el for el in self.run(hitratio, params, check) if isinstance(el, Result)]
         assert results[0].state == State.OK
 
     @given(hitratio=st.floats(min_value=0, max_value=1))
-    def test_metric(self, hitratio: float, check: CheckFunction):
+    def test_metric(self, hitratio: float, check: CheckFunction) -> None:
         params = {"levels_upper_hitratio": None, "levels_lower_hitratio": None}
         metrics = [el for el in self.run(hitratio, params, check) if isinstance(el, Metric)]
         assert metrics[0] == Metric(self.METRIC_NAME, hitratio * 100)

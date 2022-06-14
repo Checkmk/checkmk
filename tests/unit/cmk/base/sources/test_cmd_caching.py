@@ -161,7 +161,7 @@ def without_inventory_plugins(monkeypatch):
     ids=["force=True", "force=False"],
 )
 @pytest.mark.usefixtures("scenario", "without_inventory_plugins")
-def test_mode_inventory_caching(hosts, cache, force, mocker):
+def test_mode_inventory_caching(hosts, cache, force, mocker) -> None:
     kwargs = {}
     kwargs.update(hosts[1])
     kwargs.update(cache[1])
@@ -201,13 +201,13 @@ def test_mode_inventory_caching(hosts, cache, force, mocker):
 @pytest.mark.usefixtures("scenario")
 @pytest.mark.usefixtures("patch_data_source")
 @pytest.mark.usefixtures("without_inventory_plugins")
-def test_mode_inventory_as_check():
+def test_mode_inventory_as_check() -> None:
     assert cmk.base.modes.check_mk.mode_inventory_as_check({}, HostName("ds-test-host1")) == 0
     assert Source.parse.call_count == 2  # type: ignore[attr-defined]
 
 
 @pytest.mark.usefixtures("scenario")
-def test_mode_discover_marked_hosts(mocker):
+def test_mode_discover_marked_hosts(mocker) -> None:
     _patch_data_source(
         mocker,
         max_age=config.max_cachefile_age(),
@@ -219,7 +219,7 @@ def test_mode_discover_marked_hosts(mocker):
 
 @pytest.mark.usefixtures("fix_register")
 @pytest.mark.usefixtures("scenario")
-def test_mode_check_discovery_default(mocker):
+def test_mode_check_discovery_default(mocker) -> None:
     _patch_data_source(mocker, max_age=MaxAge(checking=0, discovery=0, inventory=120))
     assert cmk.base.modes.check_mk.mode_check_discovery({}, HostName("ds-test-host1")) == 1
     assert Source.parse.call_count == 2  # type: ignore[attr-defined]
@@ -227,7 +227,7 @@ def test_mode_check_discovery_default(mocker):
 
 @pytest.mark.usefixtures("fix_register")
 @pytest.mark.usefixtures("scenario")
-def test_mode_check_discovery_cached(mocker):
+def test_mode_check_discovery_cached(mocker) -> None:
     _patch_data_source(
         mocker,
         max_age=config.max_cachefile_age(),
@@ -248,7 +248,7 @@ def test_mode_check_discovery_cached(mocker):
 
 
 @pytest.mark.usefixtures("scenario")
-def test_mode_discover_all_hosts(mocker):
+def test_mode_discover_all_hosts(mocker) -> None:
     _patch_data_source(
         mocker,
         maybe=True,
@@ -261,7 +261,7 @@ def test_mode_discover_all_hosts(mocker):
 
 
 @pytest.mark.usefixtures("scenario")
-def test_mode_discover_explicit_hosts(mocker):
+def test_mode_discover_explicit_hosts(mocker) -> None:
     # TODO: Is it correct that no cache is used here?
     _patch_data_source(mocker, max_age=config.max_cachefile_age())
     cmk.base.modes.check_mk.mode_discover({"discover": 1}, ["ds-test-host1"])
@@ -269,7 +269,7 @@ def test_mode_discover_explicit_hosts(mocker):
 
 
 @pytest.mark.usefixtures("scenario")
-def test_mode_discover_explicit_hosts_cache(mocker):
+def test_mode_discover_explicit_hosts_cache(mocker) -> None:
     _patch_data_source(
         mocker,
         max_age=config.max_cachefile_age(),
@@ -287,7 +287,7 @@ def test_mode_discover_explicit_hosts_cache(mocker):
 
 
 @pytest.mark.usefixtures("scenario")
-def test_mode_discover_explicit_hosts_no_cache(mocker):
+def test_mode_discover_explicit_hosts_no_cache(mocker) -> None:
     _patch_data_source(mocker, disabled=True, max_age=config.max_cachefile_age())
     cmk.base.modes.check_mk.mode_discover(
         {
@@ -301,13 +301,13 @@ def test_mode_discover_explicit_hosts_no_cache(mocker):
 
 @pytest.mark.usefixtures("scenario")
 @pytest.mark.usefixtures("patch_data_source")
-def test_mode_check_explicit_host():
+def test_mode_check_explicit_host() -> None:
     cmk.base.modes.check_mk.mode_check({}, ["ds-test-host1"])
     assert Source.parse.call_count == 2  # type: ignore[attr-defined]
 
 
 @pytest.mark.usefixtures("scenario")
-def test_mode_check_explicit_host_cache(mocker):
+def test_mode_check_explicit_host_cache(mocker) -> None:
     _patch_data_source(mocker, maybe=True, use_outdated=True)
     cmk.base.modes.check_mk.mode_check(
         {
@@ -319,7 +319,7 @@ def test_mode_check_explicit_host_cache(mocker):
 
 
 @pytest.mark.usefixtures("scenario")
-def test_mode_check_explicit_host_no_cache(mocker):
+def test_mode_check_explicit_host_no_cache(mocker) -> None:
     _patch_data_source(
         mocker,
         disabled=True,
@@ -335,7 +335,7 @@ def test_mode_check_explicit_host_no_cache(mocker):
 
 
 @pytest.mark.usefixtures("scenario")
-def test_mode_dump_agent_explicit_host(mocker, capsys):
+def test_mode_dump_agent_explicit_host(mocker, capsys) -> None:
     _patch_data_source(mocker, max_age=config.max_cachefile_age())
     cmk.base.modes.check_mk.mode_dump_agent({}, HostName("ds-test-host1"))
     assert Source.parse.call_count == 2  # type: ignore[attr-defined]
@@ -343,7 +343,7 @@ def test_mode_dump_agent_explicit_host(mocker, capsys):
 
 
 @pytest.mark.usefixtures("scenario")
-def test_mode_dump_agent_explicit_host_cache(mocker, capsys):
+def test_mode_dump_agent_explicit_host_cache(mocker, capsys) -> None:
     _patch_data_source(
         mocker,
         max_age=config.max_cachefile_age(),
@@ -361,7 +361,7 @@ def test_mode_dump_agent_explicit_host_cache(mocker, capsys):
 
 
 @pytest.mark.usefixtures("scenario")
-def test_mode_dump_agent_explicit_host_no_cache(mocker, capsys):
+def test_mode_dump_agent_explicit_host_no_cache(mocker, capsys) -> None:
     _patch_data_source(mocker, disabled=True, max_age=config.max_cachefile_age())
     cmk.base.modes.check_mk.mode_dump_agent(
         {
@@ -406,7 +406,7 @@ def test_mode_dump_agent_explicit_host_no_cache(mocker, capsys):
     ids=["raise_errors=@raiseerrors", "raise_errors=None"],
 )
 @pytest.mark.usefixtures("scenario", "reset_log_level", "initialised_item_state")
-def test_automation_try_discovery_caching(scan, raise_errors, mocker):
+def test_automation_try_discovery_caching(scan, raise_errors, mocker) -> None:
     kwargs = {}
     kwargs.update(scan[1])
     kwargs.update(raise_errors[1])
@@ -437,7 +437,7 @@ def test_automation_try_discovery_caching(scan, raise_errors, mocker):
     ],
 )
 @pytest.mark.usefixtures("scenario")
-def test_automation_discovery_caching(raise_errors, scan, mocker):
+def test_automation_discovery_caching(raise_errors, scan, mocker) -> None:
     kwargs = {}
     kwargs.update(raise_errors[1])
     # The next options come from the call to `_set_cache_opts_of_checkers()`

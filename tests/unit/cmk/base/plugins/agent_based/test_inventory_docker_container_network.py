@@ -55,7 +55,7 @@ EXPECTED_RESULT = [
 ]
 
 
-def test_inventory_docker_container_network_empty():
+def test_inventory_docker_container_network_empty() -> None:
     with pytest.raises(docker.AgentOutputMalformatted) as e:
         parse_docker_container_network([])
         assert (
@@ -71,6 +71,6 @@ def test_inventory_docker_container_network_empty():
         (AGENT_OUTPUT_WITH_OCI_ERROR, EXPECTED_RESULT),
     ],
 )
-def test_inventory_docker_container_network(string_table, expected_result):
+def test_inventory_docker_container_network(string_table, expected_result) -> None:
     section = parse_docker_container_network(string_table)
     assert list(inventory_docker_container_network(section)) == expected_result

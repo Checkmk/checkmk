@@ -62,7 +62,9 @@ def fixture_gen_id(monkeypatch):
         ("clustered_services", True, True),
     ],
 )
-def test_rule_from_ruleset_defaults(request_context, ruleset_name, default_value, is_binary):
+def test_rule_from_ruleset_defaults(
+    request_context, ruleset_name, default_value, is_binary
+) -> None:
     ruleset = _ruleset(ruleset_name)
     rule = rulesets.Rule.from_ruleset_defaults(hosts_and_folders.Folder.root_folder(), ruleset)
     assert isinstance(rule.conditions, rulesets.RuleConditions)
@@ -525,7 +527,7 @@ checkgroup_parameters['local'] = [
         # """),
     ],
 )
-def test_ruleset_to_config(request_context, monkeypatch, wato_use_git, expected_result):
+def test_ruleset_to_config(request_context, monkeypatch, wato_use_git, expected_result) -> None:
     monkeypatch.setattr(active_config, "wato_use_git", wato_use_git)
 
     ruleset = rulesets.Ruleset(
@@ -580,7 +582,9 @@ checkgroup_parameters['local'] = [
         ),
     ],
 )
-def test_ruleset_to_config_sub_folder(with_admin_login, monkeypatch, wato_use_git, expected_result):
+def test_ruleset_to_config_sub_folder(
+    with_admin_login, monkeypatch, wato_use_git, expected_result
+) -> None:
     monkeypatch.setattr(active_config, "wato_use_git", wato_use_git)
 
     ruleset = rulesets.Ruleset(
@@ -614,7 +618,7 @@ def test_ruleset_to_config_sub_folder(with_admin_login, monkeypatch, wato_use_gi
     assert ruleset.to_config(folder) == expected_result
 
 
-def test_rule_clone(request_context):
+def test_rule_clone(request_context) -> None:
     rule = rulesets.Rule.from_config(
         hosts_and_folders.Folder.root_folder(),
         _ruleset("clustered_services"),

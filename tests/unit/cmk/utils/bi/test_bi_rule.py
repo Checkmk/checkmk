@@ -9,7 +9,7 @@
 from .bi_test_data import sample_config
 
 
-def test_load_sample_config_rule(bi_packs_sample_config):
+def test_load_sample_config_rule(bi_packs_sample_config) -> None:
     applications_rule = bi_packs_sample_config.get_rule("networking")
     assert applications_rule.nodes[0].action.service_regex == "NFS|Interface|TCP"
 

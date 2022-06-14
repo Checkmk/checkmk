@@ -15,40 +15,40 @@ from cmk.utils.type_defs import CheckPluginName, SectionName
 @pytest.mark.parametrize(
     "str_name", ["", 23] + list("\"'^°!²³§$½¬%&/{([])}=?ß\\'`*+~#-.:,;ÜÖÄüöä<>|")
 )
-def test_invalid_plugin_name(str_name):
+def test_invalid_plugin_name(str_name) -> None:
     with pytest.raises((TypeError, ValueError)):
         CheckPluginName(str_name)
 
 
-def test_plugin_name_repr():
+def test_plugin_name_repr() -> None:
     assert repr(CheckPluginName("Margo")) == "CheckPluginName('Margo')"
 
 
-def test_plugin_name_str():
+def test_plugin_name_str() -> None:
     assert str(CheckPluginName("Margo")) == "Margo"
 
 
-def test_plugin_name_equal():
+def test_plugin_name_equal() -> None:
     assert CheckPluginName("Stuart") == CheckPluginName("Stuart")
     with pytest.raises(TypeError):
         _ = CheckPluginName("Stuart") == "Stuart"
 
 
-def test_copyability():
+def test_copyability() -> None:
     section_name = SectionName("SectionName")
     assert section_name == copy.copy(section_name)
     assert section_name == copy.deepcopy(section_name)
     assert section_name == pickle.loads(pickle.dumps(section_name))
 
 
-def test_plugin_name_as_key():
+def test_plugin_name_as_key() -> None:
     plugin_dict = {
         CheckPluginName("Stuart"): None,
     }
     assert CheckPluginName("Stuart") in plugin_dict
 
 
-def test_plugin_name_sort():
+def test_plugin_name_sort() -> None:
     plugin_dict = {
         CheckPluginName("Stuart"): None,
         CheckPluginName("Bob"): None,
@@ -62,6 +62,6 @@ def test_plugin_name_sort():
     ]
 
 
-def test_cross_class_comparison_fails():
+def test_cross_class_comparison_fails() -> None:
     with pytest.raises(TypeError):
         _ = CheckPluginName("foo") == SectionName("foo")

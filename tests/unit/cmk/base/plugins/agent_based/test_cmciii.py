@@ -24,7 +24,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Serv
         ("one.two.three", ["one", "two", "three"]),
     ],
 )
-def test_sanitize_variable(variable, expected):
+def test_sanitize_variable(variable, expected) -> None:
     assert cmciii.sanitize_variable(variable) == expected
 
 
@@ -40,7 +40,7 @@ def test_sanitize_variable(variable, expected):
         ("phase", "not 2", ["ONE", "TWO", "THREE", "FOUR", "END"], "THREE FOUR"),
     ],
 )
-def test_sensor_key(table, var_type, variable, expected):
+def test_sensor_key(table, var_type, variable, expected) -> None:
     assert cmciii.sensor_key(table, var_type, variable) == expected
 
 
@@ -60,11 +60,11 @@ def test_sensor_key(table, var_type, variable, expected):
         ("other_sensors", ["one", "two"], "device one"),
     ],
 )
-def test_sensor_id(sensor_type, variable, expected):
+def test_sensor_id(sensor_type, variable, expected) -> None:
     assert cmciii.sensor_id(sensor_type, variable, "device") == expected
 
 
-def test_sensor_id_temp_in_out():
+def test_sensor_id_temp_in_out() -> None:
     assert cmciii.sensor_id("temp_in_out", ["Air"], "Liquid_Cooling_Package") == "Air LCP"
 
 
@@ -134,7 +134,7 @@ def _leakage_info(status, position):
         ),
     ],
 )
-def test_cmciii_leakage_sensors(status, position, expected):
+def test_cmciii_leakage_sensors(status, position, expected) -> None:
     assert (
         run_check(
             "cmciii",
@@ -226,7 +226,7 @@ def _lcp_sensor():
         ),
     ],
 )
-def test_cmciii_lcp_discovery(plugin, expected):
+def test_cmciii_lcp_discovery(plugin, expected) -> None:
     assert run_discovery("cmciii", plugin, _lcp_sensor(), params={}) == expected
 
 
@@ -269,7 +269,7 @@ def test_cmciii_lcp_discovery(plugin, expected):
         ),
     ],
 )
-def test_cmciii_lcp_check(item, expected):
+def test_cmciii_lcp_check(item, expected) -> None:
     assert run_check("cmciii", "cmciii_temp_in_out", item, _lcp_sensor(), params={}) == expected
 
 
@@ -442,7 +442,7 @@ def _phase_sensor():
     ]  # yapf: disable
 
 
-def test_phase_sensors():
+def test_phase_sensors() -> None:
     params = {"use_sensor_description": False}
     section = cmciii.parse_cmciii(_phase_sensor())
     assert list(cmciii_phase.discover_cmciii_phase(params, section)) == [
@@ -473,7 +473,7 @@ def test_phase_sensors():
         ),
     ],
 )
-def test_cmciii_phase_check(item, expected):
+def test_cmciii_phase_check(item, expected) -> None:
     assert run_check("cmciii", "cmciii_phase", item, _phase_sensor(), params={}) == expected
 
 
@@ -510,7 +510,7 @@ def _status_info(variable, status):
         "Ignition",
     ],
 )
-def test_cmciii_status_discovery(variable):
+def test_cmciii_status_discovery(variable) -> None:
     service_description = "DET-AC_III_Master %s" % variable
     params = {"use_sensor_description": False}
     section = cmciii.parse_cmciii(_status_info(variable, "OK"))
@@ -528,7 +528,7 @@ def test_cmciii_status_discovery(variable):
         ("Battery change", "Service", [Result(state=State.CRIT, summary="Status: Service")]),
     ],
 )
-def test_cmciii_status_sensors(variable, status, expected):
+def test_cmciii_status_sensors(variable, status, expected) -> None:
     assert (
         run_check(
             "cmciii",
@@ -557,14 +557,14 @@ def _access_info():
 
 
 @pytest.mark.usefixtures("fix_register")
-def test_cmciii_access_discovery():
+def test_cmciii_access_discovery() -> None:
     assert run_discovery("cmciii", "cmciii_access", _access_info(), {}) == [
         Service(item="Tuer_GN-31-F Access", parameters={"_item_key": "Tuer_GN-31-F Access"})
     ]
 
 
 @pytest.mark.usefixtures("fix_register")
-def test_cmciii_access_check():
+def test_cmciii_access_check() -> None:
     assert run_check(
         "cmciii",
         "cmciii_access",
@@ -985,7 +985,7 @@ def _generictest_cmciii():
         ("cmciii_phase", {}, []),
     ],
 )
-def test_genericdataset_cmciii_discovery(plugin, params, expected):
+def test_genericdataset_cmciii_discovery(plugin, params, expected) -> None:
     assert run_discovery("cmciii", plugin, _generictest_cmciii(), params) == expected
 
 
@@ -1236,7 +1236,7 @@ def test_genericdataset_cmciii_discovery(plugin, params, expected):
         ),
     ],
 )
-def test_genericdataset_cmciii_check(plugin, params, items):
+def test_genericdataset_cmciii_check(plugin, params, items) -> None:
     for item, expected in items:
         assert run_check("cmciii", plugin, item, _generictest_cmciii(), params,) == expected, (
             "Item %s does not match" % item
@@ -1346,7 +1346,7 @@ def _generictest_cmciii_input_regression():
         ("cmciii_phase", {}, []),
     ],
 )
-def test_genericdataset_cmciii_input_regression_discovery(plugin, params, expected):
+def test_genericdataset_cmciii_input_regression_discovery(plugin, params, expected) -> None:
     assert (
         run_discovery(
             "cmciii",
@@ -1446,7 +1446,7 @@ def test_genericdataset_cmciii_input_regression_discovery(plugin, params, expect
         ),
     ],
 )
-def test_genericdataset_cmciii_input_regression_check(plugin, params, items):
+def test_genericdataset_cmciii_input_regression_check(plugin, params, items) -> None:
     for item, expected in items:
         assert (
             run_check(

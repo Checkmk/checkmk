@@ -32,7 +32,7 @@ def response():
         },
     ],
 )
-def test_http_cfg_versions(cfg):
+def test_http_cfg_versions(cfg) -> None:
     assert apache_status._unpack(cfg) == (("http", None), "127.0.0.1", None, "", "server-status")
 
 
@@ -49,7 +49,7 @@ def test_http_cfg_versions(cfg):
         },
     ],
 )
-def test_https_cfg_versions(cfg):
+def test_https_cfg_versions(cfg) -> None:
     assert apache_status._unpack(cfg) == (
         ("https", "/path/to/ca.pem"),
         "127.0.0.1",
@@ -67,7 +67,7 @@ def test_https_cfg_versions(cfg):
         [("http", "127.0.0.1", None)],
     ],
 )
-def test_agent(cfg, response, monkeypatch, capsys):
+def test_agent(cfg, response, monkeypatch, capsys) -> None:
     monkeypatch.setattr(apache_status, "get_config", lambda: {"servers": cfg, "ssl_ports": [443]})
     monkeypatch.setattr(apache_status, "get_response_body", lambda *args: response)
     apache_status.main()

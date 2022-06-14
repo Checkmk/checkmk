@@ -14,7 +14,7 @@ from cmk.special_agents.utils_kubernetes.transform import parse_metadata, parse_
 
 
 class TestAPIStatefulSets:
-    def test_parse_metadata(self, apps_client, dummy_host):
+    def test_parse_metadata(self, apps_client, dummy_host) -> None:
         statefulsets_metadata = {
             "items": [
                 {
@@ -47,7 +47,7 @@ class TestAPIStatefulSets:
         assert metadata.labels
         assert metadata.annotations == {"foo": "bar"}
 
-    def test_parse_metadata_missing_annotations_and_labels(self, apps_client, dummy_host):
+    def test_parse_metadata_missing_annotations_and_labels(self, apps_client, dummy_host) -> None:
         statefulsets_metadata = {
             "items": [
                 {
@@ -75,7 +75,7 @@ class TestAPIStatefulSets:
         assert metadata.labels == {}
         assert metadata.annotations == {}
 
-    def test_parse_status_successful_creation(self, apps_client, dummy_host):
+    def test_parse_status_successful_creation(self, apps_client, dummy_host) -> None:
         statefulsets_data = {
             "items": [
                 {
@@ -106,7 +106,7 @@ class TestAPIStatefulSets:
         assert status.ready_replicas == 3
         assert status.updated_replicas == 3
 
-    def test_parse_status_failed_creation(self, apps_client, dummy_host):
+    def test_parse_status_failed_creation(self, apps_client, dummy_host) -> None:
         statefulsets_data = {
             "items": [
                 {

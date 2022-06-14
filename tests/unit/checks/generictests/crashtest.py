@@ -166,7 +166,7 @@ class CrashReportList(list):
                 cr_info[3] = "Exception: %s" % exc
 
 
-def test_crashreport(fix_plugin_legacy, crashdata):
+def test_crashreport(fix_plugin_legacy, crashdata) -> None:
     try:
         run(fix_plugin_legacy.check_info, crashdata)
         check = Check(crashdata.full_checkname)

@@ -159,7 +159,7 @@ def fixture_results(checkplugin: Plugin, section: Section) -> Results:
     return results, checkplugin
 
 
-def test_no_run_section_yields_no_metric_data(checkplugin):
+def test_no_run_section_yields_no_metric_data(checkplugin) -> None:
     params = {k: None for k in checkplugin.metrics}
     results = list(
         checkplugin.function(
@@ -172,14 +172,14 @@ def test_no_run_section_yields_no_metric_data(checkplugin):
     assert len(results) == 0
 
 
-def test_yield_metrics_as_specified(results_and_plugin: Results):
+def test_yield_metrics_as_specified(results_and_plugin: Results) -> None:
     results, checkplugin = results_and_plugin
     res = {r.name: r for r in results if isinstance(r, Metric)}
     assert len(res) == len(checkplugin.metrics)
     assert set(res.keys()) == set(checkplugin.metrics)
 
 
-def test_yield_results_as_specified(results_and_plugin: Results):
+def test_yield_results_as_specified(results_and_plugin: Results) -> None:
     results, checkplugin = results_and_plugin
     res = [r for r in results if isinstance(r, Result)]
     assert len(res) == len(checkplugin.metrics)
@@ -190,7 +190,7 @@ def test_yield_results_as_specified(results_and_plugin: Results):
 class TestConfiguredNotificationLevels:
     # In the example sections we do not have data for all metrics. To be able to test all check plugins
     # use 0, the default value, to check notification levels.
-    def test_warn_levels(self, checkplugin: Plugin, section: Section):
+    def test_warn_levels(self, checkplugin: Plugin, section: Section) -> None:
         params = {k: (0, None) for k in checkplugin.metrics}
         results = list(
             checkplugin.function(
@@ -204,7 +204,7 @@ class TestConfiguredNotificationLevels:
         for r in results:
             assert r.state == State.WARN
 
-    def test_crit_levels(self, checkplugin: Plugin, section: Section):
+    def test_crit_levels(self, checkplugin: Plugin, section: Section) -> None:
         params = {k: (None, 0) for k in checkplugin.metrics}
         results = list(
             checkplugin.function(
@@ -219,7 +219,7 @@ class TestConfiguredNotificationLevels:
             assert r.state == State.CRIT
 
 
-def test_multiple_groupby_requests(section: Section):
+def test_multiple_groupby_requests(section: Section) -> None:
     item = "aaaa"
     params = {
         "faas_total_instance_count": None,

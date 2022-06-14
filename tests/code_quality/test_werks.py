@@ -33,7 +33,7 @@ import cmk.utils.werks
         "2020.05.26",
     ],
 )
-def test_old_parse_check_mk_version_equals_new_version_class(version_str):
+def test_old_parse_check_mk_version_equals_new_version_class(version_str) -> None:
     assert (
         cmk_version.parse_check_mk_version(version_str)
         == cmk_version.Version(version_str).parse_to_int()
@@ -68,7 +68,7 @@ def test_old_parse_check_mk_version_equals_new_version_class(version_str):
         ("2.1.0-2022.06.02-sandbox-lm-2.2-thing", "2.1.0-2022.06.01"),
     ],
 )
-def test_version_comparison(version_str_a, version_str_b):
+def test_version_comparison(version_str_a, version_str_b) -> None:
     a = cmk_version.Version(version_str_a)
     b = cmk_version.Version(version_str_b)
 
@@ -82,7 +82,7 @@ def precompiled_werks(tmp_path, monkeypatch):
     monkeypatch.setattr(cmk.utils.werks, "_compiled_werks_dir", lambda: tmp_path)
 
 
-def test_write_precompiled_werks(tmp_path, monkeypatch):
+def test_write_precompiled_werks(tmp_path, monkeypatch) -> None:
     tmp_dir = str(tmp_path)
 
     all_werks = cmk.utils.werks.load_raw_files(Path(testlib.cmk_path()) / ".werks")
@@ -110,7 +110,7 @@ def test_write_precompiled_werks(tmp_path, monkeypatch):
     assert merged_werks == werks_loaded
 
 
-def test_werk_versions(precompiled_werks):
+def test_werk_versions(precompiled_werks) -> None:
     parsed_version = cmk_version.Version(cmk_version.__version__)
 
     for werk_id, werk in cmk.utils.werks.load().items():
@@ -121,7 +121,7 @@ def test_werk_versions(precompiled_werks):
         ), "Version %s of werk #%d is not allowed in this branch" % (werk["version"], werk_id)
 
 
-def test_werk_versions_after_tagged(precompiled_werks):
+def test_werk_versions_after_tagged(precompiled_werks) -> None:
     list_of_offenders = []
     for werk_id, werk in cmk.utils.werks.load().items():
         if werk_id < 8800:

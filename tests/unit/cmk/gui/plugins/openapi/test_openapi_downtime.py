@@ -872,7 +872,7 @@ def test_openapi_downtime_non_existing_instance(
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_downtime_non_existing_groups(aut_user_auth_wsgi_app: WebTestAppForCMK):
+def test_openapi_downtime_non_existing_groups(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     base = "/NO_SITE/check_mk/api/1.0"
 
     aut_user_auth_wsgi_app.post(

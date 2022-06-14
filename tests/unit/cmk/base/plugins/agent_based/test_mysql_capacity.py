@@ -20,7 +20,7 @@ from cmk.base.plugins.agent_based import mysql_capacity
         pytest.param("[[cmk]]", "cmk", id="named instance"),
     ],
 )
-def test_parse(sub_section: Optional[str], instance_name: str):
+def test_parse(sub_section: Optional[str], instance_name: str) -> None:
     args: StringTable = [
         ["greendb", "163840", "1428160512"],
     ]
@@ -35,7 +35,7 @@ def test_parse(sub_section: Optional[str], instance_name: str):
     assert mysql_capacity.parse_size(args) == expected
 
 
-def test_parse_empty_instance_default_to_previous():
+def test_parse_empty_instance_default_to_previous() -> None:
     args = [
         ["[[some]]"],
         ["greendb", "163840", "1428160512"],
@@ -51,7 +51,7 @@ def test_parse_empty_instance_default_to_previous():
     assert mysql_capacity.parse_size(args) == expected
 
 
-def test_parse_exclude_non_int_size_info():
+def test_parse_exclude_non_int_size_info() -> None:
     args = [
         ["greendb", "1dd63840", "1428160512"],
     ]
@@ -59,7 +59,7 @@ def test_parse_exclude_non_int_size_info():
     assert mysql_capacity.parse_size(args) == expected
 
 
-def test_discovery():
+def test_discovery() -> None:
     section = {
         "mysql": {
             "red": 12,
@@ -71,7 +71,7 @@ def test_discovery():
     assert list(mysql_capacity.discover_capacity(section)) == [Service(item="mysql:red")]
 
 
-def test_check():
+def test_check() -> None:
     item = "mysql:reddb"
     params = {"levels": (None, None)}
     section = {"mysql": {"reddb": 42}}

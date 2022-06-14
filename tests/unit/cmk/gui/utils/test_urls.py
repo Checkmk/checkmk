@@ -26,7 +26,7 @@ from cmk.gui.utils.urls import doc_reference_url, DocReference, urlencode, urlen
         ([("a", None)], "a="),
     ],
 )
-def test_urlencode_vars(inp, out):
+def test_urlencode_vars(inp, out) -> None:
     assert urlencode_vars(inp) == out
 
 
@@ -44,13 +44,13 @@ def test_urlencode_vars(inp, out):
         ("/", "%2F"),
     ],
 )
-def test_urlencode(inp, out):
+def test_urlencode(inp, out) -> None:
     assert urlencode(inp) == out
 
 
-def test_empty_doc_reference():
+def test_empty_doc_reference() -> None:
     assert doc_reference_url() == user.get_docs_base_url()
 
 
-def test_doc_references():
+def test_doc_references() -> None:
     assert [doc_reference_url(r) for r in DocReference]

@@ -193,7 +193,7 @@ def _get_out_filename(datasetfile, inplace):
     return out_name.replace(".py", "_regression.py")
 
 
-def test_main(fix_plugin_legacy, datasetfile, inplace):
+def test_main(fix_plugin_legacy, datasetfile, inplace) -> None:
     """Script to create test datasets.
 
     This is a script. But we need the py.test environment, so it comes in the

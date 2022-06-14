@@ -83,7 +83,7 @@ from tests.testlib import SpecialAgent
         ),
     ],
 )
-def test_3par(params, result):
+def test_3par(params, result) -> None:
     agent = SpecialAgent("agent_3par")
     arguments = agent.argument_func(params, "host", "address")
     assert arguments == result

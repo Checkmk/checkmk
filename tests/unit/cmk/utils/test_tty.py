@@ -7,7 +7,7 @@
 import cmk.utils.tty as tty
 
 
-def test_print_table(capsys):
+def test_print_table(capsys) -> None:
     tty.reinit()
     tty.print_table(["foo", "bar"], ["", ""], [["Guildo", "Horn"], ["Dieter Thomas", "Kuhn"]])  #
     captured = capsys.readouterr()
@@ -17,7 +17,7 @@ def test_print_table(capsys):
     assert captured.err == ""
 
 
-def test_print_colored_table(capsys):
+def test_print_colored_table(capsys) -> None:
     tty.reinit()
     tty.print_table(["foo", "bar"], ["XX", "YY"], [["Angus", "Young"], ["Estas", "Tonne"]])  #
     captured = capsys.readouterr()
@@ -27,7 +27,7 @@ def test_print_colored_table(capsys):
     assert captured.err == ""
 
 
-def test_print_indented_colored_table(capsys):
+def test_print_indented_colored_table(capsys) -> None:
     tty.reinit()
     tty.print_table(
         ["foo", "bar"], ["XX", "YY"], [["Dieter", "Bohlen"], ["Thomas", "Anders"]], indent="===="  #

@@ -87,7 +87,7 @@ def _check_paths(root: str, namespace_dict: Mapping[str, object]) -> None:
         assert str(value).startswith(required_prefix), repr((var, value, required_prefix))
 
 
-def test_paths_in_omd_and_opt_root(monkeypatch):
+def test_paths_in_omd_and_opt_root(monkeypatch) -> None:
 
     omd_root = "/omd/sites/dingeling"
     with monkeypatch.context() as m:

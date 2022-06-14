@@ -47,7 +47,7 @@ NODE_SECTION = {"node1": SECTION, "node2": SECTION, "node3": {"foo": ["7.1", "9.
         ),
     ],
 )
-def test_check(item, params, expected):
+def test_check(item, params, expected) -> None:
 
     actual = list(tsm_stagingpools.check_tsm_stagingpools(item, params, SECTION))
     assert actual == expected
@@ -94,7 +94,7 @@ def test_check(item, params, expected):
         ),
     ],
 )
-def test_cluster_check(item, params, expected):
+def test_cluster_check(item, params, expected) -> None:
 
     actual = list(tsm_stagingpools.cluster_check_tsm_stagingspools(item, params, NODE_SECTION))
     assert actual == expected

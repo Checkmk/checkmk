@@ -20,7 +20,7 @@ from cmk.base.plugins.agent_based.ups_out_load import (
         ([[["1", "2", "1"], ["0", "2", "2"]]], [Service(item="1")]),
     ],
 )
-def test_ups_out_load_discovery(info, expected_result):
+def test_ups_out_load_discovery(info, expected_result) -> None:
     section = parse_ups_load(info)
     result = discovery_ups(section)
     assert list(result) == expected_result
@@ -70,7 +70,7 @@ def test_ups_out_load_discovery(info, expected_result):
         ),
     ],
 )
-def test_ups_out_load_check(item, params, info, expected_result):
+def test_ups_out_load_check(item, params, info, expected_result) -> None:
     section = parse_ups_load(info)
     result = check_ups_out_load(item, params, section)
     assert list(result) == expected_result

@@ -16,7 +16,7 @@ from cmk.core_helpers.cache import FileCacheMode, MaxAge
 from cmk.base.sources.tcp import TCPSource
 
 
-def test_attribute_defaults(monkeypatch):
+def test_attribute_defaults(monkeypatch) -> None:
     ipaddress = "1.2.3.4"
     hostname = HostName("testhost")
 

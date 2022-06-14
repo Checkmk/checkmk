@@ -312,7 +312,7 @@ PS_DISCOVERED_ITEMS = [
 ]
 
 
-def test_inventory_common():
+def test_inventory_common() -> None:
     info = list(itertools.chain.from_iterable(generate_inputs()))
     assert sorted(
         {
@@ -529,7 +529,7 @@ check_results = [
     list(zip(PS_DISCOVERED_ITEMS, check_results)),
     ids=[s.item for s in PS_DISCOVERED_ITEMS],
 )
-def test_check_ps_common(inv_item, reference):
+def test_check_ps_common(inv_item, reference) -> None:
     parsed: List = []
     for info in generate_inputs():
         _cpu_cores, data = ps_section.parse_ps(info)
@@ -648,7 +648,7 @@ cpu_util_data = [
 
 
 @pytest.mark.parametrize("data", cpu_util_data, ids=[a.name for a in cpu_util_data])
-def test_check_ps_common_cpu(data):
+def test_check_ps_common_cpu(data) -> None:
     def time_info(service, agent_info, check_time, cputime, cpu_cores):
         with on_time(datetime.datetime.utcfromtimestamp(check_time), "CET"):
             _cpu_info, parsed_lines = ps_section.parse_ps(splitter(agent_info.format(cputime)))
@@ -717,7 +717,7 @@ def test_check_ps_common_cpu(data):
         ),
     ],
 )
-def test_check_ps_common_count(levels, reference):
+def test_check_ps_common_count(levels, reference) -> None:
     _cpu_info, parsed_lines = ps_section.parse_ps(
         splitter("(on,105,30,00:00:{:02}/03:59:39,902) single")
     )
@@ -742,7 +742,7 @@ def test_check_ps_common_count(levels, reference):
     assert output == reference
 
 
-def test_subset_patterns():
+def test_subset_patterns() -> None:
 
     section_ps = ps_section.parse_ps(
         splitter(
@@ -818,7 +818,7 @@ def test_subset_patterns():
 
 
 @pytest.mark.parametrize("cpu_cores", [2, 4, 5])
-def test_cpu_util_single_process_levels(cpu_cores):
+def test_cpu_util_single_process_levels(cpu_cores) -> None:
     """Test CPU utilization per single process.
     - Check that Number of cores weight is active
     - Check that single process CPU utilization is present only on warn/crit states"""

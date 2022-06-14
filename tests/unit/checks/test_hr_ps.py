@@ -93,7 +93,7 @@ pytestmark = pytest.mark.checks
         ),
     ],
 )
-def test_hr_ps_discovery(info, discovery_params, expected_discovery_result):
+def test_hr_ps_discovery(info, discovery_params, expected_discovery_result) -> None:
     """Test that the hr_ps check returns the correct discovery results given different
     discovery parameters.
     """

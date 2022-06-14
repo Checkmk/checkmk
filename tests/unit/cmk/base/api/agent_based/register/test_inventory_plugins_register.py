@@ -18,7 +18,7 @@ def dummy_generator(section):  # pylint: disable=unused-argument
     yield "this will raise an exception, when encountered"
 
 
-def test_create_inventory_plugin_missing_kwarg():
+def test_create_inventory_plugin_missing_kwarg() -> None:
     with pytest.raises(TypeError):
         _ = inventory_plugins.create_inventory_plugin(name="norris")  # type: ignore[call-arg] #pylint: disable=missing-kwoa
 
@@ -28,7 +28,7 @@ def test_create_inventory_plugin_missing_kwarg():
         )  # type: ignore[call-arg]
 
 
-def test_create_inventory_plugin_not_a_generator():
+def test_create_inventory_plugin_not_a_generator() -> None:
     def dummy_function(section):  # pylint: disable=unused-argument
         pass
 
@@ -39,7 +39,7 @@ def test_create_inventory_plugin_not_a_generator():
         )
 
 
-def test_create_inventory_plugin_wrong_arg_name():
+def test_create_inventory_plugin_wrong_arg_name() -> None:
     def dummy_generator(noitces):  # pylint: disable=unused-argument
         return
         yield  # pylint: disable=unreachable
@@ -51,7 +51,7 @@ def test_create_inventory_plugin_wrong_arg_name():
         )
 
 
-def test_create_inventory_plugin_minimal():
+def test_create_inventory_plugin_minimal() -> None:
     plugin = inventory_plugins.create_inventory_plugin(
         name="norris",
         inventory_function=dummy_generator,

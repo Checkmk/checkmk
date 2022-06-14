@@ -8,7 +8,7 @@ import cmk.gui.plugins.wato.utils.main_menu as main_menu
 from cmk.gui.watolib.main_menu import ModuleRegistry
 
 
-def test_register_modules(monkeypatch):
+def test_register_modules(monkeypatch) -> None:
     monkeypatch.setattr(main_menu, "main_module_registry", ModuleRegistry())
     module = main_menu.WatoModule(
         mode_or_url="dang",

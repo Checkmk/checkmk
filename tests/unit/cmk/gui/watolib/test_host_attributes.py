@@ -339,7 +339,7 @@ expected_attributes = {
 }
 
 
-def test_registered_host_attributes(load_config):
+def test_registered_host_attributes(load_config) -> None:
     names = attrs.host_attribute_registry.keys()
     assert sorted(expected_attributes.keys()) == sorted(names)
 
@@ -362,7 +362,7 @@ def test_registered_host_attributes(load_config):
         assert spec["from_config"] == attr.from_config()
 
 
-def test_legacy_register_rulegroup_with_defaults(monkeypatch):
+def test_legacy_register_rulegroup_with_defaults(monkeypatch) -> None:
     monkeypatch.setattr(attrs, "host_attribute_registry", attrs.HostAttributeRegistry())
 
     assert "lat" not in attrs.host_attribute_registry
@@ -391,7 +391,7 @@ def test_legacy_register_rulegroup_with_defaults(monkeypatch):
     assert attr.from_config() is False
 
 
-def test_legacy_register_rulegroup_without_defaults(monkeypatch):
+def test_legacy_register_rulegroup_without_defaults(monkeypatch) -> None:
     monkeypatch.setattr(attrs, "host_attribute_registry", attrs.HostAttributeRegistry())
 
     assert "lat" not in attrs.host_attribute_registry
@@ -446,7 +446,7 @@ def test_legacy_register_rulegroup_without_defaults(monkeypatch):
         ("xyz_unknown", "custom_attributes"),
     ],
 )
-def test_custom_host_attribute_transform(old, new):
+def test_custom_host_attribute_transform(old, new) -> None:
     attributes = [
         {
             "add_custom_macro": True,
@@ -473,7 +473,7 @@ def test_custom_host_attribute_transform(old, new):
         "bulk",
     ],
 )
-def test_host_attribute_topics(for_what):
+def test_host_attribute_topics(for_what) -> None:
     assert attrs.get_sorted_host_attribute_topics(for_what=for_what, new=False) == [
         ("basic", "Basic settings"),
         ("address", "Network address"),
@@ -485,7 +485,7 @@ def test_host_attribute_topics(for_what):
 
 
 @pytest.mark.usefixtures("load_config")
-def test_host_attribute_topics_for_folders():
+def test_host_attribute_topics_for_folders() -> None:
     assert attrs.get_sorted_host_attribute_topics("folder", new=False) == [
         ("basic", "Basic settings"),
         ("address", "Network address"),
@@ -509,7 +509,7 @@ def test_host_attribute_topics_for_folders():
     ],
 )
 @pytest.mark.parametrize("new", [True, False])
-def test_host_attributes(for_what, new):
+def test_host_attributes(for_what, new) -> None:
     topics = {
         "basic": [
             "alias",

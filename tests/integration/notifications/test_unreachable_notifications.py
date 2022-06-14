@@ -224,7 +224,9 @@ def test_unreachable_child_down_before_parent_down(
 # Test the situation where:
 # a) Parent goes down
 # b) Child goes down, becomes unreachable
-def test_unreachable_child_after_parent_is_down(unreachable_enabled, site: Site, initial_state):
+def test_unreachable_child_after_parent_is_down(
+    unreachable_enabled, site: Site, initial_state
+) -> None:
     with WatchLog(site) as log:
         # - Set parent down, expect DOWN notification
         _send_parent_down(site, log)
@@ -240,7 +242,7 @@ def test_unreachable_child_after_parent_is_down(unreachable_enabled, site: Site,
 # a) Child goes down
 # b) Parent goes down
 # c) Child goes up while parent is down
-def test_parent_down_child_up_on_up_result(unreachable_enabled, site: Site, initial_state):
+def test_parent_down_child_up_on_up_result(unreachable_enabled, site: Site, initial_state) -> None:
     with WatchLog(site) as log:
         # - Set child down, expect DOWN notification
         _send_child_down(site, log)
@@ -260,7 +262,7 @@ def test_parent_down_child_up_on_up_result(unreachable_enabled, site: Site, init
 # b) Child goes down and becomes unreachable
 # c) Child goes up while parent is down
 # d) Child goes down and becomes unreachable while parent is down
-def test_parent_down_child_state_changes(unreachable_enabled, site: Site, initial_state):
+def test_parent_down_child_state_changes(unreachable_enabled, site: Site, initial_state) -> None:
     with WatchLog(site) as log:
         # - Set parent down, expect DOWN notification
         _send_parent_down(site, log)
@@ -315,7 +317,7 @@ def test_parent_down_child_state_changes(unreachable_enabled, site: Site, initia
 # b) Child goes down and becomes unreachable
 # c) Parent goes up
 # d) Child is still down and becomes down
-def test_child_down_after_parent_recovers(unreachable_enabled, site: Site, initial_state):
+def test_child_down_after_parent_recovers(unreachable_enabled, site: Site, initial_state) -> None:
     with WatchLog(site) as log:
         # - Set parent down, expect DOWN notification
         _send_parent_down(site, log)
@@ -385,7 +387,9 @@ def test_child_up_after_parent_recovers(
 # b) Child goes down and becomes unreachable
 # c) Child goes up
 # d) Parent goes up
-def test_child_down_and_up_while_not_reachable(unreachable_enabled, site: Site, initial_state):
+def test_child_down_and_up_while_not_reachable(
+    unreachable_enabled, site: Site, initial_state
+) -> None:
     with WatchLog(site) as log:
         # - Set parent down, expect DOWN notification
         _send_parent_down(site, log)
@@ -481,7 +485,9 @@ def test_down_child_becomes_unreachable_and_down_again(
 # b) Parent goes down, child becomes unreachable
 # c) Child goes up
 # d) Parent goes up
-def test_down_child_becomes_unreachable_then_up(unreachable_enabled, site: Site, initial_state):
+def test_down_child_becomes_unreachable_then_up(
+    unreachable_enabled, site: Site, initial_state
+) -> None:
     with WatchLog(site) as log:
         # - Set child down, expect DOWN notification
         site.send_host_check_result("notify-test-child", STATE_DOWN, "DOWN")

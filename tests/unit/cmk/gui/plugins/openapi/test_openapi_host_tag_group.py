@@ -14,7 +14,7 @@ from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_host_tag_group_update(aut_user_auth_wsgi_app: WebTestAppForCMK):
+def test_openapi_host_tag_group_update(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     base = "/NO_SITE/check_mk/api/1.0"
 
     resp = aut_user_auth_wsgi_app.call_method(
@@ -69,7 +69,7 @@ def test_openapi_host_tag_group_update(aut_user_auth_wsgi_app: WebTestAppForCMK)
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_host_tag_group_get_collection(aut_user_auth_wsgi_app: WebTestAppForCMK):
+def test_openapi_host_tag_group_get_collection(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     base = "/NO_SITE/check_mk/api/1.0"
 
     builtin_groups_count = len(BuiltinTagConfig().tag_groups)
@@ -84,7 +84,7 @@ def test_openapi_host_tag_group_get_collection(aut_user_auth_wsgi_app: WebTestAp
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_host_tag_group_delete(aut_user_auth_wsgi_app: WebTestAppForCMK):
+def test_openapi_host_tag_group_delete(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     base = "/NO_SITE/check_mk/api/1.0"
 
     resp = aut_user_auth_wsgi_app.call_method(
@@ -126,7 +126,7 @@ def test_openapi_host_tag_group_delete(aut_user_auth_wsgi_app: WebTestAppForCMK)
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_host_tag_group_invalid_id(aut_user_auth_wsgi_app: WebTestAppForCMK):
+def test_openapi_host_tag_group_invalid_id(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     base = "/NO_SITE/check_mk/api/1.0"
     _resp = aut_user_auth_wsgi_app.call_method(
         "post",
@@ -147,7 +147,7 @@ def test_openapi_host_tag_group_invalid_id(aut_user_auth_wsgi_app: WebTestAppFor
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_host_tag_group_built_in(aut_user_auth_wsgi_app: WebTestAppForCMK):
+def test_openapi_host_tag_group_built_in(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     base = "/NO_SITE/check_mk/api/1.0"
 
     resp = aut_user_auth_wsgi_app.call_method(
@@ -197,7 +197,7 @@ def test_openapi_host_tag_group_built_in(aut_user_auth_wsgi_app: WebTestAppForCM
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_host_tag_group_update_use_case(aut_user_auth_wsgi_app: WebTestAppForCMK):
+def test_openapi_host_tag_group_update_use_case(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     base = "/NO_SITE/check_mk/api/1.0"
     resp = aut_user_auth_wsgi_app.call_method(
         "post",

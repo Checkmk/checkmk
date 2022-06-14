@@ -187,7 +187,7 @@ def test_check_functions_perfdata(
         ),
     ],
 )
-def test_parse_and_discovery_function_2(line: List[str], item: str):
+def test_parse_and_discovery_function_2(line: List[str], item: str) -> None:
     section = lnx_thermal.parse_lnx_thermal([line])
     assert list(lnx_thermal.discover_lnx_thermal(section)) == [Service(item=item)]
 

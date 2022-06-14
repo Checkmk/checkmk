@@ -64,7 +64,7 @@ PARSED_EXTRA_SECTION = {
         ),
     ],
 )
-def test_parse_liebert_temp_air(string_table, result):
+def test_parse_liebert_temp_air(string_table, result) -> None:
     parsed = parse_liebert_temp_air(string_table)
     assert parsed == result
 
@@ -79,7 +79,7 @@ def test_parse_liebert_temp_air(string_table, result):
         )
     ],
 )
-def test_discover_liebert_temp_air(section, extra_section, result):
+def test_discover_liebert_temp_air(section, extra_section, result) -> None:
     discovered = list(discover_liebert_temp_air(section, extra_section))
     assert discovered == result
 
@@ -115,7 +115,7 @@ def test_discover_liebert_temp_air(section, extra_section, result):
         ),
     ],
 )
-def test_check_liebert_temp_air(item, params, section, extra_section, result):
+def test_check_liebert_temp_air(item, params, section, extra_section, result) -> None:
     checked = list(_check_liebert_temp_air(item, params, section, extra_section, {}))
     assert checked == result
 

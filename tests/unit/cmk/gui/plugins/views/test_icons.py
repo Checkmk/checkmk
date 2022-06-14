@@ -17,7 +17,7 @@ if not cmk_version.is_raw_edition():
 from cmk.gui.plugins.views.icons.utils import get_multisite_icons
 
 
-def test_builtin_icons_and_actions():
+def test_builtin_icons_and_actions() -> None:
     expected_icons_and_actions = [
         "action_menu",
         "aggregation_checks",
@@ -67,7 +67,7 @@ def test_builtin_icons_and_actions():
     assert builtin_icons == sorted(expected_icons_and_actions)
 
 
-def test_legacy_icon_plugin(monkeypatch):
+def test_legacy_icon_plugin(monkeypatch) -> None:
     icon: Dict[str, Any] = {
         "columns": ["column"],
         "host_columns": ["hcol"],
@@ -88,7 +88,7 @@ def test_legacy_icon_plugin(monkeypatch):
     assert registered_icon.sort_index() == 10
 
 
-def test_legacy_icon_plugin_defaults(monkeypatch):
+def test_legacy_icon_plugin_defaults(monkeypatch) -> None:
     icon = {
         "columns": ["column"],
         "host_columns": ["hcol"],

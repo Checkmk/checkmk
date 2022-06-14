@@ -87,7 +87,7 @@ CORE_RESULT = [
 ]
 
 
-def test_discovery():
+def test_discovery() -> None:
     assert list(kernel.discover_kernel_util(SECTION)) == [
         Service(),
     ]
@@ -489,7 +489,7 @@ def test_discovery():
         ),
     ],
 )
-def test_check(monkeypatch, parameters, additional_results):
+def test_check(monkeypatch, parameters, additional_results) -> None:
     monkeypatch.setattr(
         kernel,
         "get_value_store",

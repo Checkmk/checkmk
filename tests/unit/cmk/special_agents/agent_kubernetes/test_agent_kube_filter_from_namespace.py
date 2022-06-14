@@ -17,7 +17,7 @@ from cmk.special_agents.agent_kube import kube_objects_from_namespaces, pods_fro
 from cmk.special_agents.utils_kubernetes.schemata import api
 
 
-def test_filter_pods_from_namespaces():
+def test_filter_pods_from_namespaces() -> None:
     # Arrange
     pods = [
         api_to_agent_pod(
@@ -44,7 +44,7 @@ def test_filter_pods_from_namespaces():
     assert filtered_pods[0].name() == "one"
 
 
-def test_filter_deployments_from_monitored_namespaces():
+def test_filter_deployments_from_monitored_namespaces() -> None:
     # Arrange
     deployments = [
         api_to_agent_deployment(

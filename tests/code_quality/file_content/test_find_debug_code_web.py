@@ -11,7 +11,7 @@ from tests.testlib import cmk_path
 from ..conftest import ChangedFiles
 
 
-def test_find_debug_code(changed_files: ChangedFiles):
+def test_find_debug_code(changed_files: ChangedFiles) -> None:
     to_scan = _files_to_scan(changed_files)
 
     for path in to_scan:

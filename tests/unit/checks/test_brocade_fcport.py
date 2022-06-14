@@ -13,6 +13,6 @@ from tests.testlib import Check
     "info, expected_result",
     [([[], [], [["", "", ""]], []], None), ([[["", "", 3]], [], [["", "", ""]], []], None)],
 )
-def test_services_split(info, expected_result):
+def test_services_split(info, expected_result) -> None:
     result = Check("brocade_fcport").run_parse(info)
     assert result == expected_result

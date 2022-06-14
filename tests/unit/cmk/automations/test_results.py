@@ -90,14 +90,14 @@ class TestDiscoveryResult:
         ),
     }
 
-    def test_serialization(self):
+    def test_serialization(self) -> None:
         assert DiscoveryResult.deserialize(
             DiscoveryResult(self.HOSTS).serialize()
         ) == DiscoveryResult(self.HOSTS)
 
 
 class TestTryDiscoveryResult:
-    def test_serialization(self):
+    def test_serialization(self) -> None:
         result = TryDiscoveryResult(
             output="output",
             check_table=[

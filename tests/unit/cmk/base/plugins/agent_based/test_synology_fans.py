@@ -8,12 +8,12 @@ SECTION_TABLE = [
 ]
 
 
-def test_parsing():
+def test_parsing() -> None:
     section = synology_fans.parse(SECTION_TABLE)
     assert section == {"System": 1, "CPU": 0}
 
 
-def test_discovery():
+def test_discovery() -> None:
     section = synology_fans.parse(SECTION_TABLE)
     assert section is not None
     services = list(synology_fans.discovery(section))
@@ -24,7 +24,7 @@ def test_discovery():
     "item, expected",
     [("System", State.CRIT), ("CPU", State.OK)],
 )
-def test_result_state(item, expected):
+def test_result_state(item, expected) -> None:
     section = synology_fans.parse(SECTION_TABLE)
     assert section is not None
     result = list(synology_fans.check(item=item, section=section))[0]

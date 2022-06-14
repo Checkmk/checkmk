@@ -83,7 +83,7 @@ _INSTALLED_DATE = 123
         ),
     ],
 )
-def test_inventory_solaris_pkginfo(monkeypatch, string_table, expected_result):
+def test_inventory_solaris_pkginfo(monkeypatch, string_table, expected_result) -> None:
     monkeypatch.setattr(time, "mktime", lambda s: _INSTALLED_DATE)
     assert sort_inventory_result(
         inventory_solaris_pkginfo(parse_solaris_pkginfo(string_table))

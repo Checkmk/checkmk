@@ -140,7 +140,7 @@ def test_parse_tree_path(
         ),
     ],
 )
-def test__load_status_data_tree(monkeypatch, hostname, row, expected_tree):
+def test__load_status_data_tree(monkeypatch, hostname, row, expected_tree) -> None:
     monkeypatch.setattr(
         cmk.gui.inventory,
         "_load_structured_data_tree",
@@ -164,7 +164,9 @@ _MergedTree = StructuredDataNode.deserialize({"inv": "node", "status": "node"})
         (_InvTree, _StatusDataTree, _MergedTree),
     ],
 )
-def test__merge_inventory_and_status_data_tree(inventory_tree, status_data_tree, expected_tree):
+def test__merge_inventory_and_status_data_tree(
+    inventory_tree, status_data_tree, expected_tree
+) -> None:
     merged_tree = cmk.gui.inventory._merge_inventory_and_status_data_tree(
         inventory_tree,
         status_data_tree,
@@ -173,12 +175,12 @@ def test__merge_inventory_and_status_data_tree(inventory_tree, status_data_tree,
     assert merged_tree.is_equal(expected_tree)
 
 
-def test__merge_inventory_and_status_data_tree_both_None():
+def test__merge_inventory_and_status_data_tree_both_None() -> None:
     merged_tree = cmk.gui.inventory._merge_inventory_and_status_data_tree(None, None)
     assert merged_tree is None
 
 
-def test_get_history_empty():
+def test_get_history_empty() -> None:
     for hostname in [
         "inv-host",
         "/inv-host",
@@ -189,7 +191,7 @@ def test_get_history_empty():
         assert len(corrupted_history_files) == 0
 
 
-def test_get_history_archive_but_no_inv_tree():
+def test_get_history_archive_but_no_inv_tree() -> None:
     hostname = "inv-host"
 
     # history
@@ -308,7 +310,7 @@ def test_load_delta_tree(
 
 
 @pytest.mark.usefixtures("create_inventory_history")
-def test_load_delta_tree_no_such_timestamp():
+def test_load_delta_tree_no_such_timestamp() -> None:
     hostname = "inv-host"
     with pytest.raises(MKGeneralException) as e:
         cmk.gui.inventory.load_delta_tree(hostname, -1)

@@ -485,7 +485,7 @@ SECTION_NVME = {
 @pytest.mark.parametrize(
     "string_table, section", [(STRING_TABLE_SD, SECTION_SD), (STRING_TABLE_NVME, SECTION_NVME)]
 )
-def test_parse_smart(string_table, section):
+def test_parse_smart(string_table, section) -> None:
     assert smart.parse_raw_values(string_table) == section
 
 
@@ -521,7 +521,7 @@ def test_parse_smart(string_table, section):
         ),
     ],
 )
-def test_discover_smart_stats(section, discovered):
+def test_discover_smart_stats(section, discovered) -> None:
     assert list(smart.discover_smart_stats(section)) == discovered
 
 
@@ -584,11 +584,11 @@ def test_discover_smart_stats(section, discovered):
         ),
     ],
 )
-def test_check_smart_stats(item, params, section, result):
+def test_check_smart_stats(item, params, section, result) -> None:
     assert list(smart.check_smart_stats(item, params, section)) == result
 
 
-def test_check_smart_command_timeout_rate():
+def test_check_smart_command_timeout_rate() -> None:
     section_timeout = {"/dev/sda": {"Command_Timeout": 0}}
     now_simulated = 581792400, "UTC"
     with pytest.raises(GetRateError), on_time(*now_simulated):

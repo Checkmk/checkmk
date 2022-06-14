@@ -396,14 +396,14 @@ MERGED_SECTION_RAWEDITION = {
         (True, MERGED_SECTION_RAWEDITION),
     ],
 )
-def test_merge_sections(monkeypatch, is_raw_edition, merged_sections):
+def test_merge_sections(monkeypatch, is_raw_edition, merged_sections) -> None:
     monkeypatch.setattr(inv_checkmk.cmk_version, "is_raw_edition", lambda: is_raw_edition)
     assert merged_sections == inv_checkmk.merge_sections(
         SECTION_LIVESTATUS_STATUS, SECTION_OMD_STATUS, SECTION_OMD_INFO
     )
 
 
-def test_inventory_checkmk():
+def test_inventory_checkmk() -> None:
     assert sort_inventory_result(
         inv_checkmk.generate_inventory(MERGED_SECTION_ENTERPRISE)
     ) == sort_inventory_result(

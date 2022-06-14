@@ -87,7 +87,7 @@ PARSED_NOT_RUNNING = {"Status": "stopped"}
         (STRING_TABLE_WITH_VERSION, dict),
     ],
 )
-def test_parse_docker_container_status(string_table, parse_type):
+def test_parse_docker_container_status(string_table, parse_type) -> None:
     actual_parsed = docker.parse_docker_container_status(string_table)
     assert actual_parsed == PARSED
     assert isinstance(actual_parsed, parse_type)
@@ -99,7 +99,7 @@ def test_parse_docker_container_status(string_table, parse_type):
         (STRING_TABLE_WITHOUT_VERSION, AgentOutputMalformatted),
     ],
 )
-def test_parse_docker_container_status_legacy_raises(string_table, exception_type):
+def test_parse_docker_container_status_legacy_raises(string_table, exception_type) -> None:
     with pytest.raises(exception_type):
         docker.parse_docker_container_status(string_table)
 
@@ -109,7 +109,7 @@ def _test_discovery(discovery_function, section, expected_discovery):
         assert list(discovery_function({**section, "Status": status})) == expected_discovery
 
 
-def test_discovery_docker_container_status():
+def test_discovery_docker_container_status() -> None:
     _test_discovery(
         docker.discover_docker_container_status,
         PARSED,
@@ -117,7 +117,7 @@ def test_discovery_docker_container_status():
     )
 
 
-def test_check_docker_container_status():
+def test_check_docker_container_status() -> None:
     expected_results = [Result(state=state.OK, summary="Container running")]
     assert list(docker.check_docker_container_status(PARSED)) == expected_results
 
@@ -137,7 +137,7 @@ def test_check_docker_container_status():
         ),
     ],
 )
-def test_discovery_docker_container_status_uptime(section_uptime, expected_services):
+def test_discovery_docker_container_status_uptime(section_uptime, expected_services) -> None:
     _test_discovery(
         lambda parsed: docker.discover_docker_container_status_uptime(parsed, section_uptime),
         PARSED,
@@ -177,13 +177,13 @@ def test_discovery_docker_container_status_uptime(section_uptime, expected_servi
         ),
     ],
 )
-def test_check_docker_container_status_uptime(params, expected_results):
+def test_check_docker_container_status_uptime(params, expected_results) -> None:
     with on_time(*NOW_SIMULATED):
         yielded_results = list(docker.check_docker_container_status_uptime(params, PARSED, None))
         assert expected_results == yielded_results
 
 
-def test_discover_docker_container_status_health():
+def test_discover_docker_container_status_health() -> None:
     _test_discovery(
         docker.discover_docker_container_status_health,
         PARSED,
@@ -237,6 +237,6 @@ def test_discover_docker_container_status_health():
         ),
     ],
 )
-def test_check_docker_container_status_health(section, expected):
+def test_check_docker_container_status_health(section, expected) -> None:
     yielded_results = list(docker.check_docker_container_status_health(section))
     assert yielded_results == expected

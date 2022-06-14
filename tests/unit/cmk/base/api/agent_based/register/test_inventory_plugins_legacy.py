@@ -15,7 +15,7 @@ from cmk.base.api.agent_based.register.inventory_plugins_legacy import (
 )
 
 
-def test__generate_table_rows_list():
+def test__generate_table_rows_list() -> None:
     local_status_data_tree = MockStructuredDataNode()
     local_inventory_tree = MockStructuredDataNode()
 
@@ -43,7 +43,7 @@ def test__generate_table_rows_list():
     ]
 
 
-def test__generate_table_rows_nested_list():
+def test__generate_table_rows_nested_list() -> None:
     # Now such (shipped) inventory plugins exists any more.
     local_status_data_tree = MockStructuredDataNode()
     local_inventory_tree = MockStructuredDataNode()

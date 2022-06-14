@@ -441,7 +441,7 @@ input_ids = [
     ),
     ids=input_ids,
 )
-def test_parse_ps(capture, result):
+def test_parse_ps(capture, result) -> None:
     cpu_core, lines = ps_section.parse_ps(copy.deepcopy(capture))
     assert cpu_core == result[0]  # cpu_cores
 

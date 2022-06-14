@@ -79,7 +79,7 @@ from cmk.base.plugins.agent_based.sap_hana_instance_status import InstanceProces
         ),
     ],
 )
-def test_parse_sap_hana_instance_status(fix_register, info, expected_result):
+def test_parse_sap_hana_instance_status(fix_register, info, expected_result) -> None:
     section_plugin = fix_register.agent_sections[SectionName("sap_hana_instance_status")]
     assert section_plugin.parse_function(info) == expected_result
 
@@ -124,7 +124,7 @@ def test_parse_sap_hana_instance_status(fix_register, info, expected_result):
         ),
     ],
 )
-def test_inventory_sap_hana_instance_status(fix_register, info, expected_result):
+def test_inventory_sap_hana_instance_status(fix_register, info, expected_result) -> None:
     section = fix_register.agent_sections[SectionName("sap_hana_instance_status")].parse_function(
         info
     )
@@ -199,7 +199,7 @@ def test_inventory_sap_hana_instance_status(fix_register, info, expected_result)
         ),
     ],
 )
-def test_check_sap_hana_instance_status(fix_register, item, info, expected_result):
+def test_check_sap_hana_instance_status(fix_register, item, info, expected_result) -> None:
     section = fix_register.agent_sections[SectionName("sap_hana_instance_status")].parse_function(
         info
     )

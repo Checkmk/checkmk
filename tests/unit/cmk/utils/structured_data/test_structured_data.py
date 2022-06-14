@@ -84,7 +84,7 @@ def _create_filled_tree():
     return root
 
 
-def test_get_node():
+def test_get_node() -> None:
     root = _create_empty_tree()
 
     nta = root.get_node(("path", "to", "nta"))
@@ -100,7 +100,7 @@ def test_get_node():
     assert root.get_node(["path", "to", "unknown"]) is None
 
 
-def test_set_path():
+def test_set_path() -> None:
     root = _create_empty_tree()
 
     nta = root.get_node(("path", "to", "nta"))
@@ -125,7 +125,7 @@ def test_set_path():
     assert ta.path == tuple(["path", "to", "nta", "ta"])
 
 
-def test_set_path_sub_nodes_error():
+def test_set_path_sub_nodes_error() -> None:
     root = _create_empty_tree()
     nta = root.get_node(("path", "to", "nta"))
 
@@ -136,7 +136,7 @@ def test_set_path_sub_nodes_error():
         nta.add_node(sub_node)
 
 
-def test_set_path_sub_nodes():
+def test_set_path_sub_nodes() -> None:
     root = _create_empty_tree()
     nta = root.get_node(("path", "to", "nta"))
 
@@ -165,7 +165,7 @@ def test_set_path_sub_nodes():
     assert path_to_sub_node.path == ("path", "to", "nta", "node", "sub-path-to", "sub-node")
 
 
-def test_empty_but_different_structure():
+def test_empty_but_different_structure() -> None:
     root = _create_empty_tree()
 
     nt = root.get_node(["path", "to", "nta", "nt"])
@@ -195,7 +195,7 @@ def test_empty_but_different_structure():
     assert not root.is_equal(StructuredDataNode())
 
 
-def test_not_empty():
+def test_not_empty() -> None:
     root = _create_filled_tree()
 
     nt = root.get_node(["path", "to", "nta", "nt"])
@@ -236,7 +236,7 @@ def test_not_empty():
     assert root.count_entries() == 12
 
 
-def test_add_node():
+def test_add_node() -> None:
     root = _create_filled_tree()
 
     sub_node = StructuredDataNode(name="node")
@@ -267,7 +267,7 @@ def test_add_node():
     assert root.count_entries() == 18
 
 
-def test_compare_with_self():
+def test_compare_with_self() -> None:
     empty_root = _create_empty_tree()
     delta_result0 = empty_root.compare_with(empty_root)
     assert delta_result0.counter["new"] == 0
@@ -283,7 +283,7 @@ def test_compare_with_self():
     assert delta_result1.delta.is_empty()
 
 
-def test_compare_with():
+def test_compare_with() -> None:
     # Results must be symmetric
     empty_root = _create_empty_tree()
     filled_root = _create_filled_tree()
@@ -336,7 +336,7 @@ def test_compare_with():
         ),
     ],
 )
-def test_attributes_compare_with(old_attributes_data, new_attributes_data, result):
+def test_attributes_compare_with(old_attributes_data, new_attributes_data, result) -> None:
     old_attributes = Attributes()
     old_attributes.add_pairs(old_attributes_data)
 
@@ -400,7 +400,7 @@ def test_attributes_compare_with(old_attributes_data, new_attributes_data, resul
         ),
     ],
 )
-def test_table_compare_with(old_table_data, new_table_data, result):
+def test_table_compare_with(old_table_data, new_table_data, result) -> None:
     old_table = Table(key_columns=["id"])
     old_table.add_rows(old_table_data)
     new_table = Table(key_columns=["id"])
@@ -413,12 +413,12 @@ def test_table_compare_with(old_table_data, new_table_data, result):
     ) == result
 
 
-def test_filtering_node_no_paths():
+def test_filtering_node_no_paths() -> None:
     filled_root = _create_filled_tree()
     assert filled_root.get_filtered_node([]).is_empty()
 
 
-def test_filtering_node_wrong_node():
+def test_filtering_node_wrong_node() -> None:
     filled_root = _create_filled_tree()
     filters = _make_filters([(["path", "to", "nta", "ta"], None)])
     filtered = filled_root.get_filtered_node(filters)
@@ -426,7 +426,7 @@ def test_filtering_node_wrong_node():
     assert filtered.get_node(["path", "to", "nta", "nt"]) is None
 
 
-def test_filtering_node_paths_no_keys():
+def test_filtering_node_paths_no_keys() -> None:
     filled_root = _create_filled_tree()
     filters = _make_filters([(["path", "to", "nta", "ta"], None)])
     filtered_node = filled_root.get_filtered_node(filters).get_node(["path", "to", "nta", "ta"])
@@ -446,7 +446,7 @@ def test_filtering_node_paths_no_keys():
     ]
 
 
-def test_filtering_node_paths_and_keys():
+def test_filtering_node_paths_and_keys() -> None:
     filled_root = _create_filled_tree()
     filters = _make_filters([(["path", "to", "nta", "ta"], ["ta1"])])
     filtered_node = filled_root.get_filtered_node(filters).get_node(["path", "to", "nta", "ta"])
@@ -474,7 +474,7 @@ def test_filtering_node_paths_and_keys():
     ]
 
 
-def test_filtering_node_mixed():
+def test_filtering_node_mixed() -> None:
     filled_root = _create_filled_tree()
     another_node1 = filled_root.setdefault_node(["path", "to", "another", "node1"])
     another_node1.attributes.add_pairs({"ak11": "Another value 11", "ak12": "Another value 12"})
@@ -553,11 +553,11 @@ new_trees = [
 
 
 @pytest.mark.parametrize("tree_name", old_trees + new_trees)
-def test_structured_data_StructuredDataTree_load_from(tree_name: HostName):
+def test_structured_data_StructuredDataTree_load_from(tree_name: HostName) -> None:
     TEST_DATA_STORE.load(host_name=tree_name)
 
 
-def test_real_save_gzip(tmp_path):
+def test_real_save_gzip(tmp_path) -> None:
     host_name = HostName("heute")
     target = tmp_path / str(host_name)
     raw_tree = {
@@ -620,25 +620,25 @@ trees_new = [
 trees = trees_old + trees_new
 
 
-def test_real_is_empty():
+def test_real_is_empty() -> None:
     assert StructuredDataNode().is_empty() is True
 
 
 @pytest.mark.parametrize("tree", trees)
-def test_real_is_empty_trees(tree):
+def test_real_is_empty_trees(tree) -> None:
     assert not tree.is_empty()
 
 
 @pytest.mark.parametrize("tree_x", trees)
 @pytest.mark.parametrize("tree_y", trees)
-def test_real_is_equal(tree_x, tree_y):
+def test_real_is_equal(tree_x, tree_y) -> None:
     if id(tree_x) == id(tree_y):
         assert tree_x.is_equal(tree_y)
     else:
         assert not tree_x.is_equal(tree_y)
 
 
-def test_real_equal_tables():
+def test_real_equal_tables() -> None:
     tree_addresses_ordered = TEST_DATA_STORE.load(host_name=HostName("tree_addresses_ordered"))
     tree_addresses_unordered = TEST_DATA_STORE.load(host_name=HostName("tree_addresses_unordered"))
 
@@ -647,7 +647,7 @@ def test_real_equal_tables():
 
 
 @pytest.mark.parametrize("tree", trees)
-def test_real_is_equal_save_and_load(tree, tmp_path):
+def test_real_is_equal_save_and_load(tree, tmp_path) -> None:
     store = StructuredDataStore(tmp_path)
     try:
         store.save(host_name=HostName("foo"), tree=tree)
@@ -679,12 +679,12 @@ def test_real_is_equal_save_and_load(tree, tmp_path):
         )
     ),
 )
-def test_real_count_entries(tree, result):
+def test_real_count_entries(tree, result) -> None:
     assert tree.count_entries() == result
 
 
 @pytest.mark.parametrize("tree", trees)
-def test_real_compare_with_self(tree):
+def test_real_compare_with_self(tree) -> None:
     delta_result = tree.compare_with(tree)
     assert (
         delta_result.counter["new"],
@@ -710,7 +710,7 @@ def test_real_compare_with_self(tree):
         )
     ),
 )
-def test_real_compare_with(tree_old, tree_new, result):
+def test_real_compare_with(tree_old, tree_new, result) -> None:
     delta_result = tree_new.compare_with(tree_old)
     assert (
         delta_result.counter["new"],
@@ -749,7 +749,7 @@ def test_real_compare_with(tree_old, tree_new, result):
         )
     ),
 )
-def test_real_get_node(tree, edges_t, edges_f):
+def test_real_get_node(tree, edges_t, edges_f) -> None:
     for edge_t in edges_t:
         assert tree.get_node([edge_t]) is not None
     for edge_f in edges_f:
@@ -765,7 +765,7 @@ def test_real_get_node(tree, edges_t, edges_f):
         )
     ),
 )
-def test_real_get_children(tree, len_children):
+def test_real_get_children(tree, len_children) -> None:
     tree_children = tree._nodes
     assert len(tree_children) == len_children
 
@@ -813,7 +813,7 @@ def test_real_get_children(tree, len_children):
         ),
     ],
 )
-def test_real_merge_with_get_children(tree_start, tree_edges):
+def test_real_merge_with_get_children(tree_start, tree_edges) -> None:
     for tree, edges, sub_children in tree_edges:
         the_tree = tree_start.merge_with(tree)
         assert id(tree) == id(tree)
@@ -836,7 +836,7 @@ TREE_STATUS = TEST_DATA_STORE.load(host_name=HostName("tree_status"))
         (TREE_INV, TREE_STATUS),
     ],
 )
-def test_real_merge_with_table(tree_inv, tree_status):
+def test_real_merge_with_table(tree_inv, tree_status) -> None:
     tree = tree_inv.merge_with(tree_status)
     assert "foobar" in tree.serialize()["Nodes"]
     assert len(tree.get_table(["foobar"]).rows) == 5
@@ -857,7 +857,7 @@ def test_real_merge_with_table(tree_inv, tree_status):
         ),
     ],
 )
-def test_real_filtered_tree(tree, paths, unavail):
+def test_real_filtered_tree(tree, paths, unavail) -> None:
     filtered = tree.get_filtered_node(_make_filters(paths))
     assert id(tree) != id(filtered)
     assert not tree.is_equal(filtered)
@@ -936,7 +936,7 @@ def test_real_filtered_tree(tree, paths, unavail):
         ),
     ],
 )
-def test_real_filtered_tree_networking(tree, paths, amount_if_entries):
+def test_real_filtered_tree_networking(tree, paths, amount_if_entries) -> None:
     the_paths = list(paths)
     filtered = tree.get_filtered_node(_make_filters(paths))
     assert the_paths == paths
@@ -950,7 +950,7 @@ def test_real_filtered_tree_networking(tree, paths, amount_if_entries):
 
 
 @pytest.mark.parametrize("zipped_trees", list(zip(old_trees, new_trees)))
-def test_delta_structured_data_tree_serialization(zipped_trees):
+def test_delta_structured_data_tree_serialization(zipped_trees) -> None:
     old_filename, new_filename = zipped_trees
 
     old_tree = TEST_DATA_STORE.load(host_name=old_filename)
@@ -1120,7 +1120,7 @@ class ExpectedFilterResults(NamedTuple):
         ),
     ],
 )
-def test_make_filter(entry, expected_path, expected_filter_results):
+def test_make_filter(entry, expected_path, expected_filter_results) -> None:
     f = make_filter(entry)
 
     assert f.path == expected_path
@@ -1145,11 +1145,11 @@ def test_make_filter(entry, expected_path, expected_filter_results):
         ("path.to.node_1", ("path", "to", "node_1")),
     ],
 )
-def test_parse_visible_tree_path(raw_path, expected_path):
+def test_parse_visible_tree_path(raw_path, expected_path) -> None:
     assert parse_visible_raw_path(raw_path) == expected_path
 
 
-def test__is_table():
+def test__is_table() -> None:
     raw_tree = {
         "path-to": {
             "idx-node": [
@@ -1247,7 +1247,7 @@ def test__is_table():
     assert table_node.table.rows == [{"col": "value"}]
 
 
-def test_add_attributes():
+def test_add_attributes() -> None:
     path = ("path-to", "node")
     retentions = {"key": RetentionIntervals(1, 2, 3)}
 
@@ -1259,7 +1259,7 @@ def test_add_attributes():
     assert node.attributes.retentions == retentions
 
 
-def test_add_table():
+def test_add_table() -> None:
     path = ("path-to", "node")
     key_columns = ["key-0"]
     retentions: TableRetentions = {

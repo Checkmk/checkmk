@@ -49,7 +49,7 @@ def _search_deprecated_api_feature(check_file_path, deprecated_pattern):
         r"\btags_of_host\b",
     ],
 )
-def test_deprecated_api_features(deprecated_pattern):
+def test_deprecated_api_features(deprecated_pattern) -> None:
     check_files = (
         pathname
         for pathname in Path(cmk.utils.paths.checks_dir).glob("*")
@@ -67,13 +67,13 @@ def test_deprecated_api_features(deprecated_pattern):
     )
 
 
-def test_includes_are_deprecated(fix_plugin_legacy):
+def test_includes_are_deprecated(fix_plugin_legacy) -> None:
     for name, check_info in fix_plugin_legacy.check_info.items():
         assert not check_info.get("includes"), f"Plugin {name}: includes are deprecated!"
 
 
 @pytest.mark.parametrize("plugin_path", ["checks", "inventory"])
-def test_check_plugin_header(plugin_path: str):
+def test_check_plugin_header(plugin_path: str) -> None:
     for plugin in Path(testlib.repo_path(), plugin_path).iterdir():
         if plugin.name.startswith("."):
             # .f12

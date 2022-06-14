@@ -49,12 +49,12 @@ def get_catalog() -> man_pages.ManPageCatalog:
     return man_pages.load_man_page_catalog()
 
 
-def test_man_page_path_only_shipped():
+def test_man_page_path_only_shipped() -> None:
     assert man_pages.man_page_path("if64") == Path(cmk_path()) / "checkman" / "if64"
     assert man_pages.man_page_path("not_existant") is None
 
 
-def test_man_page_path_both_dirs(tmp_path):
+def test_man_page_path_both_dirs(tmp_path) -> None:
     f1 = tmp_path / "file1"
     f1.write_text("x", encoding="utf-8")
 
@@ -67,14 +67,14 @@ def test_man_page_path_both_dirs(tmp_path):
     assert man_pages.man_page_path("if") == tmp_path / "if"
 
 
-def test_all_manpages_migrated(all_pages: ManPages):
+def test_all_manpages_migrated(all_pages: ManPages) -> None:
     for name in all_pages:
         if name in ("check-mk-inventory", "check-mk"):
             continue
         assert CheckPluginName(name)
 
 
-def test_all_man_pages(tmp_path):
+def test_all_man_pages(tmp_path) -> None:
     (tmp_path / ".asd").write_text("", encoding="utf-8")
     (tmp_path / "asd~").write_text("", encoding="utf-8")
     (tmp_path / "if").write_text("", encoding="utf-8")
@@ -89,12 +89,12 @@ def test_all_man_pages(tmp_path):
     assert pages["if64"] == "%s/checkman/if64" % cmk_path()
 
 
-def test_load_all_man_pages(all_pages: ManPages):
+def test_load_all_man_pages(all_pages: ManPages) -> None:
     for _name, man_page in all_pages.items():
         assert isinstance(man_page, man_pages.ManPage)
 
 
-def test_print_man_page_table(capsys):
+def test_print_man_page_table(capsys) -> None:
     man_pages.print_man_page_table()
     out, err = capsys.readouterr()
     assert err == ""
@@ -111,7 +111,7 @@ def man_page_catalog_titles():
     assert man_pages.CATALOG_TITLES["os"]
 
 
-def test_load_man_page_catalog(catalog):
+def test_load_man_page_catalog(catalog) -> None:
     assert isinstance(catalog, dict)
 
     for path, entries in catalog.items():
@@ -130,16 +130,18 @@ def test_no_unsorted_man_pages(catalog: man_pages.ManPageCatalog) -> None:
     assert not unsorted_page_names
 
 
-def test_manpage_files(all_pages: ManPages):
+def test_manpage_files(all_pages: ManPages) -> None:
     assert len(all_pages) > 1000
 
 
-def test_find_missing_manpages_passive(fix_register: FixRegister, all_pages: ManPages):
+def test_find_missing_manpages_passive(fix_register: FixRegister, all_pages: ManPages) -> None:
     for plugin_name in fix_register.check_plugins:
         assert str(plugin_name) in all_pages, "Manpage missing: %s" % plugin_name
 
 
-def test_find_missing_manpages_active(fix_plugin_legacy: FixPluginLegacy, all_pages: ManPages):
+def test_find_missing_manpages_active(
+    fix_plugin_legacy: FixPluginLegacy, all_pages: ManPages
+) -> None:
     for plugin_name in ("check_%s" % n for n in fix_plugin_legacy.active_check_info):
         assert plugin_name in all_pages, "Manpage missing: %s" % plugin_name
 
@@ -184,7 +186,7 @@ def test_cluster_check_functions_match_manpages_cluster_sections(
     assert not unexpected_cluster_description
 
 
-def test_no_subtree_and_entries_on_same_level(catalog):
+def test_no_subtree_and_entries_on_same_level(catalog) -> None:
     for category, entries in catalog.items():
         has_entries = entries != []
         has_categories = man_pages._manpage_catalog_subtree_names(catalog, category) != []
@@ -196,11 +198,11 @@ def test_no_subtree_and_entries_on_same_level(catalog):
 # TODO: print_man_page_browser()
 
 
-def test_load_man_page_not_existing():
+def test_load_man_page_not_existing() -> None:
     assert man_pages.load_man_page("not_existing") is None
 
 
-def test_print_man_page_nowiki_index(capsys):
+def test_print_man_page_nowiki_index(capsys) -> None:
     renderer = man_pages.NowikiManPageRenderer("if64")
     index_entry = renderer.index_entry()
     out, err = capsys.readouterr()
@@ -211,7 +213,7 @@ def test_print_man_page_nowiki_index(capsys):
     assert "[check_if64|" in index_entry
 
 
-def test_print_man_page_nowiki_content(capsys):
+def test_print_man_page_nowiki_content(capsys) -> None:
     renderer = man_pages.NowikiManPageRenderer("if64")
     content = renderer.render()
     out, err = capsys.readouterr()
@@ -223,7 +225,7 @@ def test_print_man_page_nowiki_content(capsys):
     assert "License:" in content
 
 
-def test_print_man_page(capsys):
+def test_print_man_page(capsys) -> None:
     man_pages.ConsoleManPageRenderer("if64").paint()
     out, err = capsys.readouterr()
     assert err == ""

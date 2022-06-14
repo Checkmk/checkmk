@@ -9,7 +9,7 @@ from typing import List
 import cmk.utils.notify as notify
 
 
-def test_notification_result_message():
+def test_notification_result_message() -> None:
     """Regression test for Werk #8783"""
     plugin = notify.NotificationPluginName("bulk asciimail")
     exit_code = notify.NotificationResultCode(0)

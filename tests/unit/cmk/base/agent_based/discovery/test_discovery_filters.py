@@ -37,7 +37,7 @@ from cmk.base.agent_based.discovery import _filters
         },
     ],
 )
-def test__get_service_filter_func_no_lists(parameters_rediscovery):
+def test__get_service_filter_func_no_lists(parameters_rediscovery) -> None:
     service_filters = _filters.ServiceFilters.from_settings(parameters_rediscovery)
     assert service_filters.new is _filters._accept_all_services
     assert service_filters.vanished is _filters._accept_all_services
@@ -52,7 +52,7 @@ def test__get_service_filter_func_no_lists(parameters_rediscovery):
         ([".*Descript$"], False),
     ],
 )
-def test__get_service_filter_func_same_lists(monkeypatch, whitelist, result):
+def test__get_service_filter_func_same_lists(monkeypatch, whitelist, result) -> None:
     service_filters = _filters.ServiceFilters.from_settings({"service_whitelist": whitelist})
     assert service_filters.new is not None
     assert service_filters.new("Test Description") is result
@@ -112,7 +112,7 @@ def test__get_service_filter_func_same_lists(monkeypatch, whitelist, result):
         ),
     ],
 )
-def test__get_service_filter_func(monkeypatch, parameters_rediscovery, result):
+def test__get_service_filter_func(monkeypatch, parameters_rediscovery, result) -> None:
     service_filters = _filters.ServiceFilters.from_settings(parameters_rediscovery)
     assert service_filters.new is not None
     assert service_filters.new("Test Description") is result

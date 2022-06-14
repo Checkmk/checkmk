@@ -23,12 +23,12 @@ import cmk.utils.render
         ((6e15,), "5.33 PB"),
     ],
 )
-def test_fmt_bytes(entry, result):
+def test_fmt_bytes(entry, result) -> None:
     assert cmk.utils.render.fmt_bytes(*entry) == result
 
 
 @pytest.mark.parametrize("args, result", [((0.433 / 1, 10), (4.33, -1)), ((5, 10), (5, 0))])
-def test_frexpb(args, result):
+def test_frexpb(args, result) -> None:
     assert cmk.utils.render._frexpb(*args) == result
 
 
@@ -49,7 +49,7 @@ def test_frexpb(args, result):
         (1234567, "1234567%"),
     ],
 )
-def test_percent_std(perc, result):
+def test_percent_std(perc, result) -> None:
     assert cmk.utils.render.percent(perc, False) == result
 
 
@@ -74,7 +74,7 @@ def test_percent_std(perc, result):
         (9000000, 2, "9.00e+6"),
     ],
 )
-def test_scientific(value, precision, result):
+def test_scientific(value, precision, result) -> None:
     assert cmk.utils.render.scientific(value, precision) == result
 
 
@@ -87,7 +87,7 @@ def test_scientific(value, precision, result):
         (1234567, "1.2e+6%"),
     ],
 )
-def test_percent_scientific(perc, result):
+def test_percent_scientific(perc, result) -> None:
     assert cmk.utils.render.percent(perc, True) == result
 
 
@@ -98,7 +98,7 @@ def test_percent_scientific(perc, result):
         (100000000, {"drop_zeroes": False}, "100.00 M"),
     ],
 )
-def test_fmt_number_with_precision(value, kwargs, result):
+def test_fmt_number_with_precision(value, kwargs, result) -> None:
     assert cmk.utils.render.fmt_number_with_precision(value, **kwargs) == result
 
 
@@ -115,5 +115,5 @@ def test_fmt_number_with_precision(value, kwargs, result):
         (7.84e9, "7.84 Gbit/s"),
     ],
 )
-def test_fmt_nic_speed(entry, result):
+def test_fmt_nic_speed(entry, result) -> None:
     assert cmk.utils.render.fmt_nic_speed(entry) == result

@@ -658,7 +658,7 @@ def test_openapi_bulk_hosts(
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_bulk_simple(aut_user_auth_wsgi_app: WebTestAppForCMK):
+def test_openapi_bulk_simple(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     base = "/NO_SITE/check_mk/api/1.0"
     aut_user_auth_wsgi_app.call_method(
         "post",
@@ -1002,7 +1002,7 @@ def test_openapi_host_rename_with_pending_activate_changes(
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_host_move(aut_user_auth_wsgi_app: WebTestAppForCMK):
+def test_openapi_host_move(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     base = "/NO_SITE/check_mk/api/1.0"
 
     resp = aut_user_auth_wsgi_app.call_method(
@@ -1034,7 +1034,7 @@ def test_openapi_host_move(aut_user_auth_wsgi_app: WebTestAppForCMK):
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_host_move_to_non_valid_folder(aut_user_auth_wsgi_app: WebTestAppForCMK):
+def test_openapi_host_move_to_non_valid_folder(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     base = "/NO_SITE/check_mk/api/1.0"
 
     resp = aut_user_auth_wsgi_app.call_method(
@@ -1066,7 +1066,7 @@ def test_openapi_host_move_to_non_valid_folder(aut_user_auth_wsgi_app: WebTestAp
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_host_move_of_non_existing_host(aut_user_auth_wsgi_app: WebTestAppForCMK):
+def test_openapi_host_move_of_non_existing_host(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     base = "/NO_SITE/check_mk/api/1.0"
     _resp = aut_user_auth_wsgi_app.call_method(
         "post",
@@ -1079,7 +1079,7 @@ def test_openapi_host_move_of_non_existing_host(aut_user_auth_wsgi_app: WebTestA
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_host_update_invalid(aut_user_auth_wsgi_app: WebTestAppForCMK):
+def test_openapi_host_update_invalid(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     base = "/NO_SITE/check_mk/api/1.0"
 
     resp = aut_user_auth_wsgi_app.call_method(
@@ -1108,7 +1108,7 @@ def test_openapi_host_update_invalid(aut_user_auth_wsgi_app: WebTestAppForCMK):
 
 
 @managedtest
-def test_openapi_create_host_with_contact_group(aut_user_auth_wsgi_app: WebTestAppForCMK):
+def test_openapi_create_host_with_contact_group(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     base = "/NO_SITE/check_mk/api/1.0"
 
     group = {"name": "code_monkeys", "alias": "banana team", "customer": "global"}

@@ -8,7 +8,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Stat
 from cmk.base.plugins.agent_based.aws_ec2 import check_aws_ec2_network_io
 
 
-def test_check_aws_ec2_network_io():
+def test_check_aws_ec2_network_io() -> None:
     assert list(check_aws_ec2_network_io("Summary", {}, {"NetworkIn": 1, "NetworkOut": 2,},)) == [
         Result(state=State.OK, summary="[0]"),
         Result(state=State.OK, summary="(up)", details="Operational state: up"),

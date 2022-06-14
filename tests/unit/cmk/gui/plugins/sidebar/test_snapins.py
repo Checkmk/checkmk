@@ -9,7 +9,7 @@ import cmk.utils.version as cmk_version
 from cmk.gui.plugins.sidebar.utils import snapin_registry
 
 
-def test_registered_snapins():
+def test_registered_snapins() -> None:
     expected_snapins = [
         "admin_mini",
         "biaggr_groups",
@@ -46,7 +46,7 @@ def test_registered_snapins():
     assert sorted(snapin_registry.keys()) == sorted(expected_snapins)
 
 
-def test_refresh_snapins():
+def test_refresh_snapins() -> None:
     expected_refresh_snapins = [
         "admin_mini",
         "performance",

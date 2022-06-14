@@ -34,28 +34,28 @@ def crash():
         return UnitTestCrashReport.from_exception()
 
 
-def test_crash_report_type(crash):
+def test_crash_report_type(crash) -> None:
     assert crash.type() == "test"
 
 
-def test_crash_report_ident(crash):
+def test_crash_report_ident(crash) -> None:
     assert crash.ident() == (crash.crash_info["id"],)
 
 
-def test_crash_report_ident_to_text(crash):
+def test_crash_report_ident_to_text(crash) -> None:
     assert crash.ident_to_text() == crash.crash_info["id"]
 
 
-def test_crash_report_crash_dir(crash):
+def test_crash_report_crash_dir(crash) -> None:
     assert crash.crash_dir() == (cmk.utils.paths.crash_dir / crash.type() / crash.ident_to_text())
 
 
-def test_crash_report_local_crash_report_url(crash):
+def test_crash_report_local_crash_report_url(crash) -> None:
     url = "crash.py?component=test&ident=%s" % crash.ident_to_text()
     assert crash.local_crash_report_url() == url
 
 
-def test_format_var_for_export_strip_nested_dict():
+def test_format_var_for_export_strip_nested_dict() -> None:
     orig_var: Dict[str, Any] = {
         "a": {
             "b": {
@@ -76,7 +76,7 @@ def test_format_var_for_export_strip_nested_dict():
     assert orig_var == var
 
 
-def test_format_var_for_export_strip_large_data():
+def test_format_var_for_export_strip_large_data() -> None:
     orig_var = {
         "a": {"y": ("a" * 1024 * 1024) + "a"},
     }
@@ -91,7 +91,7 @@ def test_format_var_for_export_strip_large_data():
     assert orig_var == var
 
 
-def test_format_var_for_export_strip_nested_dict_with_list():
+def test_format_var_for_export_strip_nested_dict_with_list() -> None:
     orig_var: Dict[str, Any] = {
         "a": {
             "b": {
@@ -142,7 +142,7 @@ def cache_general_version_infos(monkeypatch):
 
 @pytest.mark.usefixtures("patch_uuid1", "cache_general_version_infos")
 @pytest.mark.parametrize("n_crashes", [15, 45])
-def test_crash_report_store_cleanup(crash_dir, n_crashes):
+def test_crash_report_store_cleanup(crash_dir, n_crashes) -> None:
     store = CrashReportStore()
     assert not set(crash_dir.glob("*"))
 

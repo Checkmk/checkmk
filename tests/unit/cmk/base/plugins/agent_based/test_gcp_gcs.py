@@ -104,7 +104,7 @@ class TestGCSDiscover(DiscoverTester):
         yield from discover(section_gcp_service_gcs=None, section_gcp_assets=assets)
 
 
-def test_discover_bucket_labels_without_user_labels():
+def test_discover_bucket_labels_without_user_labels() -> None:
     asset_table = [
         ['{"project":"backup-255820"}'],
         [
@@ -158,7 +158,7 @@ def fixture_results(checkplugin, gcs_section):
     return results, checkplugin
 
 
-def test_no_gcs_section_yields_no_metric_data(checkplugin):
+def test_no_gcs_section_yields_no_metric_data(checkplugin) -> None:
     # TODO make library function using inspect?
     params = {k: None for k in checkplugin.metrics}
     results = list(
@@ -169,14 +169,14 @@ def test_no_gcs_section_yields_no_metric_data(checkplugin):
     assert len(results) == 0
 
 
-def test_yield_metrics_as_specified(results):
+def test_yield_metrics_as_specified(results) -> None:
     # TODO use common assert from a new test utility
     results, checkplugin = results
     res = {r.name: r for r in results if isinstance(r, Metric)}
     assert set(res.keys()) == set(checkplugin.metrics)
 
 
-def test_yield_results_as_specified(results):
+def test_yield_results_as_specified(results) -> None:
     # TODO use common assert from a new test utility
     results, checkplugin = results
     res = [r for r in results if isinstance(r, Result)]
@@ -187,7 +187,7 @@ def test_yield_results_as_specified(results):
 
 class TestDefaultMetricValues:
     # requests does not contain example data
-    def test_zero_default_if_metric_does_not_exist(self, gcs_section):
+    def test_zero_default_if_metric_does_not_exist(self, gcs_section) -> None:
         params = {k: None for k in ["requests"]}
         results = (
             el
@@ -203,7 +203,7 @@ class TestDefaultMetricValues:
             assert result.value == 0.0
 
     # objects does contain example data
-    def test_non_zero_if_metric_exist(self, gcs_section):
+    def test_non_zero_if_metric_exist(self, gcs_section) -> None:
         params = {k: None for k in ["aws_bucket_size", "aws_num_objects"]}
         results = (
             el
@@ -218,7 +218,7 @@ class TestDefaultMetricValues:
         for result in results:
             assert result.value != 0.0
 
-    def test_zero_default_if_item_does_not_exist(self, gcs_section, checkplugin: Plugin):
+    def test_zero_default_if_item_does_not_exist(self, gcs_section, checkplugin: Plugin) -> None:
         # TODO: generalize using inspect
         params = {k: None for k in checkplugin.metrics}
         results = (

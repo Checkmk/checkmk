@@ -24,7 +24,7 @@ def cluster_stats(node_names, stat_timestamps):
     return nodes.cluster_stats()
 
 
-def test_node_timestamps_utc():
+def test_node_timestamps_utc() -> None:
     node_names = ["node1", "node2", "node3"]
     stat_time_formatted = [
         "2019-02-15T13:53:27.825541873Z",
@@ -39,7 +39,7 @@ def test_node_timestamps_utc():
     ), "The timestamp of a cluster has to be the average timestamp of its nodes"
 
 
-def test_node_timestamps_non_utc():
+def test_node_timestamps_non_utc() -> None:
     node_names = ["node1", "node2", "node3"]
     stat_time_formatted = [
         "2019-03-01T10:44:58.19881199+01:00",
@@ -67,7 +67,7 @@ def test_node_timestamps_non_utc():
         ),
     ],
 )
-def test_node_metadata_creation_timestamp(metadata, parsed_time):
+def test_node_metadata_creation_timestamp(metadata, parsed_time) -> None:
     assert Node(V1Node(metadata=metadata), "").creation_timestamp == parsed_time
 
 
@@ -136,5 +136,5 @@ def test_node_metadata_creation_timestamp(metadata, parsed_time):
         ),
     ],
 )
-def test_init_node_stats(raw_node_stats, parsed_stats):
+def test_init_node_stats(raw_node_stats, parsed_stats) -> None:
     assert Node(V1Node(metadata=V1ObjectMeta(name="mynode")), raw_node_stats).stats == parsed_stats

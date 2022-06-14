@@ -111,7 +111,7 @@ def _expected_replication_paths():
     return expected
 
 
-def test_get_replication_paths_defaults(edition, monkeypatch):
+def test_get_replication_paths_defaults(edition, monkeypatch) -> None:
     expected = _expected_replication_paths()
     assert sorted(activate_changes.get_replication_paths()) == sorted(expected)
 
@@ -184,7 +184,7 @@ def test_get_replication_components(
     ) == sorted(expected)
 
 
-def test_add_replication_paths_pre_17(monkeypatch):
+def test_add_replication_paths_pre_17(monkeypatch) -> None:
     monkeypatch.setattr(cmk.utils.paths, "omd_root", Path("/path"))
     # dir/file, ident, path, optional list of excludes
     activate_changes.add_replication_paths(
@@ -203,7 +203,7 @@ def test_add_replication_paths_pre_17(monkeypatch):
     )
 
 
-def test_add_replication_paths():
+def test_add_replication_paths() -> None:
     activate_changes.add_replication_paths(
         [
             ReplicationPath("dir", "abc", "path/to/abc", ["e1", "e2"]),
@@ -229,11 +229,11 @@ def test_add_replication_paths():
         (True, {"livestatus_version": "1.5.0p23"}),
     ],
 )
-def test_is_pre_17_remote_site(site_status, expected):
+def test_is_pre_17_remote_site(site_status, expected) -> None:
     assert cmk.gui.watolib.utils.is_pre_17_remote_site(site_status) == expected
 
 
-def test_automation_get_config_sync_state():
+def test_automation_get_config_sync_state() -> None:
     get_state = activate_changes.AutomationGetConfigSyncState()
     response = get_state.execute([ReplicationPath("dir", "abc", "etc", [])])
     assert response == (
@@ -273,7 +273,7 @@ def test_automation_get_config_sync_state():
     )
 
 
-def test_get_config_sync_file_infos():
+def test_get_config_sync_file_infos() -> None:
     base_dir = cmk.utils.paths.omd_root / "replication"
     _create_get_config_sync_file_infos_test_config(base_dir)
 
@@ -388,7 +388,7 @@ def _create_get_config_sync_file_infos_test_config(base_dir):
     base_dir.joinpath("links/working-symlink-to-file").symlink_to("../etc/d3/xyz")
 
 
-def test_get_file_names_to_sync():
+def test_get_file_names_to_sync() -> None:
     remote, central = _get_test_file_infos()
     to_sync_new, to_sync_changed, to_delete = activate_changes.get_file_names_to_sync(
         logger, central, remote, None
@@ -544,7 +544,7 @@ def _get_test_file_infos():
     return remote, central
 
 
-def test_get_sync_archive(tmp_path):
+def test_get_sync_archive(tmp_path) -> None:
     sync_archive = _get_test_sync_archive(tmp_path)
     with tarfile.TarFile(mode="r", fileobj=io.BytesIO(sync_archive)) as f:
         assert sorted(f.getnames()) == sorted(
@@ -690,7 +690,7 @@ class TestAutomationReceiveConfigSync:
         )
 
 
-def test_get_current_config_generation():
+def test_get_current_config_generation() -> None:
     assert activate_changes._get_current_config_generation() == 0
     activate_changes.update_config_generation()
     assert activate_changes._get_current_config_generation() == 1

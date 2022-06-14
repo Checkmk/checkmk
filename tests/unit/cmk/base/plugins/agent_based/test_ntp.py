@@ -15,21 +15,21 @@ from cmk.base.plugins.agent_based.ntp import (
 )
 
 
-def test_check_ntp():
+def test_check_ntp() -> None:
     section: Section = {
         "42.202.61.100": Peer("-", "42.202.61.100", ".INIT.", 16, _ntp_fmt_time("-"), "0", 0.0, 0.0)
     }
     assert list(check_ntp("item", {}, section)) == []
 
 
-def test_check_ntp_summanry():
+def test_check_ntp_summanry() -> None:
     section: Section = {}
     assert list(check_ntp_summary({}, section)) == [
         Result(state=State.OK, summary="Time since last sync: N/A (started monitoring)")
     ]
 
 
-def test_parse_ntp():
+def test_parse_ntp() -> None:
     assert parse_ntp(
         [
             [

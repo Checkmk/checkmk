@@ -19,7 +19,7 @@ pytestmark = pytest.mark.checks
 # ##### hp_msa_volume (health) #########
 
 
-def test_health_parse_yields_with_volume_name_as_items():
+def test_health_parse_yields_with_volume_name_as_items() -> None:
     info = [["volume", "1", "volume-name", "Foo"]]
     expected_yield = {"Foo": {"volume-name": "Foo"}}
     check = Check("hp_msa_volume")
@@ -27,7 +27,7 @@ def test_health_parse_yields_with_volume_name_as_items():
     assert parse_result == expected_yield
 
 
-def test_health_parse_yields_volume_name_as_items_despite_of_durable_id():
+def test_health_parse_yields_volume_name_as_items_despite_of_durable_id() -> None:
     info = [
         ["volume", "1", "durable-id", "Foo 1"],
         ["volume", "1", "volume-name", "Bar 1"],
@@ -47,14 +47,14 @@ def test_health_parse_yields_volume_name_as_items_despite_of_durable_id():
     assert parsed_items == expected_items
 
 
-def test_health_discovery_forwards_info():
+def test_health_discovery_forwards_info() -> None:
     info = [["volume", "1", "volume-name", "Foo"]]
     check = Check("hp_msa_volume")
     discovery_result = check.run_discovery(info)
     assert discovery_result == [(info[0], None)]
 
 
-def test_health_check_accepts_volume_name_and_durable_id_as_item():
+def test_health_check_accepts_volume_name_and_durable_id_as_item() -> None:
     item_1st = "VMFS_01"
     item_2nd = "V4"
     check = Check("hp_msa_volume")
@@ -83,7 +83,7 @@ def test_health_check_accepts_volume_name_and_durable_id_as_item():
 # ##### hp_msa_volume.df ######
 
 
-def test_df_discovery_yields_volume_name_as_item():
+def test_df_discovery_yields_volume_name_as_item() -> None:
     parsed = {"Foo": {"durable-id": "Bar"}}
     expected_yield: Tuple[str, Dict[Any, Any]] = ("Foo", {})
     check = Check("hp_msa_volume.df")
@@ -91,7 +91,7 @@ def test_df_discovery_yields_volume_name_as_item():
         assert item == expected_yield
 
 
-def test_df_check():
+def test_df_check() -> None:
     item_1st = "VMFS_01"
     params = {"flex_levels": "irrelevant"}
     check = Check("hp_msa_volume.df")
@@ -132,7 +132,7 @@ def test_df_check():
 # #### hp_msa_io.io  #####
 
 
-def test_io_discovery_yields_summary():
+def test_io_discovery_yields_summary() -> None:
     parsed = {"Foo": {"durable-id": "Bar"}}
     expected_yield = ("SUMMARY", "diskstat_default_levels")
     check = Check("hp_msa_volume.io")
@@ -140,7 +140,7 @@ def test_io_discovery_yields_summary():
         assert item == expected_yield
 
 
-def test_io_check():
+def test_io_check() -> None:
     item_1st = "VMFS_01"
     params = {"flex_levels": "irrelevant"}
     check = Check("hp_msa_volume.io")

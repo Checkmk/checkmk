@@ -31,7 +31,7 @@ def site(tmp_path, monkeypatch):
     return UnitTestSite("unit")
 
 
-def test_backup_site_to_tarfile(site, tmp_path):
+def test_backup_site_to_tarfile(site, tmp_path) -> None:
     # Write some file for testing the backup procedure
     with Path(site.dir + "/test123").open("w", encoding="utf-8") as f:
         f.write("uftauftauftata")
@@ -49,7 +49,7 @@ def test_backup_site_to_tarfile(site, tmp_path):
     assert "unit/test123" in names
 
 
-def test_backup_site_to_tarfile_broken_link(site, tmp_path):
+def test_backup_site_to_tarfile_broken_link(site, tmp_path) -> None:
     Path(site.dir + "/link").symlink_to("agag")
 
     tar_path = tmp_path / "backup.tar"
@@ -64,7 +64,7 @@ def test_backup_site_to_tarfile_broken_link(site, tmp_path):
         assert link.linkname == "agag"
 
 
-def test_backup_site_to_tarfile_vanishing_files(site, tmp_path, monkeypatch):
+def test_backup_site_to_tarfile_vanishing_files(site, tmp_path, monkeypatch) -> None:
     test_dir = Path(site.dir) / "xyz"
     test_file = test_dir / "test_file"
     test_dir.mkdir(parents=True, exist_ok=True)

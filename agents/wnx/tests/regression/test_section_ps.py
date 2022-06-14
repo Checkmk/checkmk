@@ -80,6 +80,6 @@ def expected_output_engine():
     return chain([re.escape(r"<<<ps:sep(9)>>>")], repeat(re_str))
 
 
-def test_section_ps(request, full_path_config, expected_output, actual_output, testfile):
+def test_section_ps(request, full_path_config, expected_output, actual_output, testfile) -> None:
     # request.node.name gives test name
     local_test(expected_output, actual_output, testfile, request.node.name)

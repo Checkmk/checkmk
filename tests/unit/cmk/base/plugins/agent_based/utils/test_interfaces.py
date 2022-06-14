@@ -1589,7 +1589,7 @@ def test_check_single_interface_group_w_nodes(
     )
 
 
-def test_check_single_interface_packet_levels():
+def test_check_single_interface_packet_levels() -> None:
     assert list(
         interfaces.check_single_interface(
             "1",

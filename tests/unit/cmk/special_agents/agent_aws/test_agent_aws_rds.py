@@ -134,7 +134,7 @@ rds_params = [
 
 
 @pytest.mark.parametrize("names,tags,found_instances", rds_params)
-def test_agent_aws_rds_limits(get_rds_sections, names, tags, found_instances):
+def test_agent_aws_rds_limits(get_rds_sections, names, tags, found_instances) -> None:
     rds_limits, _rds_summary, _rds = get_rds_sections(names, tags)
     rds_limits_results = rds_limits.run().results
 
@@ -150,7 +150,7 @@ def test_agent_aws_rds_limits(get_rds_sections, names, tags, found_instances):
 
 
 @pytest.mark.parametrize("names,tags,found_instances", rds_params)
-def test_agent_aws_rds_summary(get_rds_sections, names, tags, found_instances):
+def test_agent_aws_rds_summary(get_rds_sections, names, tags, found_instances) -> None:
     _rds_limits, rds_summary, _rds = get_rds_sections(names, tags)
     rds_summary_results = rds_summary.run().results
 
@@ -168,7 +168,7 @@ def test_agent_aws_rds_summary(get_rds_sections, names, tags, found_instances):
 
 
 @pytest.mark.parametrize("names,tags,found_instances", rds_params)
-def test_agent_aws_rds(get_rds_sections, names, tags, found_instances):
+def test_agent_aws_rds(get_rds_sections, names, tags, found_instances) -> None:
     _rds_limits, rds_summary, rds = get_rds_sections(names, tags)
     _rds_summary_results = rds_summary.run().results
     rds_results = rds.run().results

@@ -7,7 +7,7 @@
 import cmk.gui.plugins.metrics.rrd_fetch as rf
 
 
-def test_needed_elements_of_expression():
+def test_needed_elements_of_expression() -> None:
     assert set(
         rf.needed_elements_of_expression(
             (

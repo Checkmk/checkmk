@@ -86,7 +86,7 @@ def test_pod_node_allocation_within_cluster(
     assert len(cluster.nodes()[0].pods()) == 1
 
 
-def test_pod_deployment_allocation_within_cluster(api_node, api_pod):
+def test_pod_deployment_allocation_within_cluster(api_node, api_pod) -> None:
     """Test pod is correctly allocated to deployment within cluster"""
 
     class APIDeployment(ModelFactory):
@@ -172,7 +172,7 @@ def test_aggregate_resources_with_only_zeroed_limit_memory() -> None:
 
 
 @pytest.mark.parametrize("pods_count", [0, 5])
-def test_pod_resources_from_api_pods(pods_count: int):
+def test_pod_resources_from_api_pods(pods_count: int) -> None:
     pods = [
         APIPodFactory.build(
             metadata=PodMetaDataFactory.build(name=str(i)),
@@ -190,7 +190,7 @@ def test_pod_resources_from_api_pods(pods_count: int):
     )
 
 
-def test_pod_name():
+def test_pod_name() -> None:
     name = "name"
     namespace = "namespace"
     pod = APIPodFactory.build(metadata=PodMetaDataFactory.build(name=name, namespace=namespace))
@@ -202,7 +202,7 @@ def test_pod_name():
     assert pod_namespaced_name == f"{namespace}_{name}"
 
 
-def test_filter_pods_by_namespace():
+def test_filter_pods_by_namespace() -> None:
     pod_one = APIPodFactory.build(
         metadata=PodMetaDataFactory.build(name="pod_one", namespace="one")
     )
@@ -225,7 +225,7 @@ def test_filter_pods_by_namespace():
         api.Phase.UNKNOWN,
     ],
 )
-def test_filter_pods_by_phase(phase: api.Phase):
+def test_filter_pods_by_phase(phase: api.Phase) -> None:
     pods_count = len(api.Phase)
     phases = pod_phase_generator()
     pods = [
@@ -239,7 +239,7 @@ def test_filter_pods_by_phase(phase: api.Phase):
 
 
 @pytest.mark.parametrize("pods_count", [0, 5])
-def test_collect_workload_resources_from_api_pods(pods_count: int):
+def test_collect_workload_resources_from_api_pods(pods_count: int) -> None:
     requirements = ResourcesRequirementsFactory.build(memory=ONE_MiB, cpu=0.5)
     pods = [
         APIPodFactory.build(
@@ -279,7 +279,7 @@ def test_collect_workload_resources_from_api_pods(pods_count: int):
 
 
 @pytest.mark.parametrize("pods_count", [5, 10, 15])
-def test_collect_workload_resources_from_agent_pods(pods_count: int):
+def test_collect_workload_resources_from_agent_pods(pods_count: int) -> None:
     requests = ResourcesRequirementsFactory.build(memory=ONE_MiB, cpu=0.5)
     limits = ResourcesRequirementsFactory.build(memory=2 * ONE_MiB, cpu=1.0)
     pods = [
@@ -321,7 +321,7 @@ def test_collect_workload_resources_from_agent_pods(pods_count: int):
     )
 
 
-def test_collect_workload_resources_from_agent_pods_no_pods_in_cluster():
+def test_collect_workload_resources_from_agent_pods_no_pods_in_cluster() -> None:
     pods: Sequence[agent.Pod] = []
     memory_resources = agent._collect_memory_resources(pods)
     cpu_resources = agent._collect_cpu_resources(pods)

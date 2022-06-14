@@ -52,12 +52,12 @@ class WaterflowReading(NamedTuple):
         ),
     ],
 )
-def test_parse_cmciii_lcp_waterflow(string_table: StringTable, section: StringTable):
+def test_parse_cmciii_lcp_waterflow(string_table: StringTable, section: StringTable) -> None:
     check = Check("cmciii_lcp_waterflow")
     assert check.run_parse(string_table) == section
 
 
-def test_parse_cmciii_lcp_waterflow_empty_section():
+def test_parse_cmciii_lcp_waterflow_empty_section() -> None:
     check = Check("cmciii_lcp_waterflow")
     assert check.run_parse([]) is None
 
@@ -79,7 +79,7 @@ def test_parse_cmciii_lcp_waterflow_empty_section():
         ),
     ],
 )
-def test_discover_cmciii_lcp_waterflow(string_table: StringTable, discovered_item):
+def test_discover_cmciii_lcp_waterflow(string_table: StringTable, discovered_item) -> None:
     check = Check("cmciii_lcp_waterflow")
     assert list(check.run_discovery(string_table)) == discovered_item
 
@@ -100,11 +100,11 @@ def test_discover_cmciii_lcp_waterflow(string_table: StringTable, discovered_ite
         ),
     ],
 )
-def test_check_cmciii_lcp_waterflow(string_table: StringTable, check_results: Sequence):
+def test_check_cmciii_lcp_waterflow(string_table: StringTable, check_results: Sequence) -> None:
     check = Check("cmciii_lcp_waterflow")
     assert list(check.run_check("item not relevant", {}, string_table)) == check_results
 
 
-def test_check_cmciii_lcp_waterflow_empty_section():
+def test_check_cmciii_lcp_waterflow_empty_section() -> None:
     check = Check("cmciii_lcp_waterflow")
     assert check.run_check("item not relevant", {}, None) is None

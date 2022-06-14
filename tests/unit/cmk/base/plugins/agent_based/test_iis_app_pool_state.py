@@ -67,5 +67,5 @@ from cmk.base.plugins.agent_based.iis_app_pool_state import (
         ),
     ],
 )
-def test_check_iis_app_pool_state(item, section, params, results):
+def test_check_iis_app_pool_state(item, section, params, results) -> None:
     assert list(check_iis_app_pool_state(item, params, section)) == results

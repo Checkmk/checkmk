@@ -155,7 +155,7 @@ from cmk.base.plugins.agent_based.systemd_units import (
         ),
     ],
 )
-def test_services_split(services, blacklist, expected):
+def test_services_split(services, blacklist, expected) -> None:
     actual = _services_split(services, blacklist)
     assert actual == expected
 
@@ -417,7 +417,7 @@ SEC_PER_YEAR = 31557600
         ("0 years 12 months ago", timedelta(seconds=SEC_PER_MONTH * 12)),
     ],
 )
-def test_parse_time_since_state_change(time, expected):
+def test_parse_time_since_state_change(time, expected) -> None:
     condition = f" Condition: start condition failed at Tue 2022-04-12 12:53:54 CEST; {time}"
     pre_string_table = [
         "[list-unit-files]",
@@ -448,7 +448,7 @@ def test_parse_time_since_state_change(time, expected):
     "icon",
     ["●", "○", "↻", "×", "x", "*"],
 )
-def test_all_possible_service_states_in_status_section(icon):
+def test_all_possible_service_states_in_status_section(icon) -> None:
     pre_string_table = [
         "[list-unit-files]",
         "[status]",
@@ -478,7 +478,7 @@ def test_all_possible_service_states_in_status_section(icon):
     "icon",
     ["●", "○", "↻", "×", "x", "*"],
 )
-def test_all_possible_service_states_in_all_section(icon):
+def test_all_possible_service_states_in_all_section(icon) -> None:
     pre_string_table = [
         "[list-unit-files]",
         "[status]",
@@ -592,7 +592,7 @@ SECTION = {
         ),
     ],
 )
-def test_discover_systemd_units_services(section, discovery_params, discovered_services):
+def test_discover_systemd_units_services(section, discovery_params, discovered_services) -> None:
     assert (
         list(discovery_systemd_units_services(params=discovery_params, section=section))
         == discovered_services
@@ -608,7 +608,7 @@ def test_discover_systemd_units_services(section, discovery_params, discovered_s
         ),
     ],
 )
-def test_discover_systemd_units_services_summary(section, discovered_services):
+def test_discover_systemd_units_services_summary(section, discovered_services) -> None:
     assert list(discovery_systemd_units_services_summary(section)) == discovered_services
 
 
@@ -666,7 +666,7 @@ def test_discover_systemd_units_services_summary(section, discovered_services):
         ),
     ],
 )
-def test_check_systemd_units_services(item, params, section, check_results):
+def test_check_systemd_units_services(item, params, section, check_results) -> None:
     assert list(check_systemd_units_services(item, params, section)) == check_results
 
 
@@ -859,7 +859,7 @@ def test_check_systemd_units_services(item, params, section, check_results):
         ),
     ],
 )
-def test_check_systemd_units_services_summary(params, section, check_results):
+def test_check_systemd_units_services_summary(params, section, check_results) -> None:
     assert (
         list(
             check_systemd_units_services_summary(

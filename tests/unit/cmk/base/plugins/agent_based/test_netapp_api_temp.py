@@ -10,7 +10,7 @@ from cmk.utils.type_defs import CheckPluginName
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
 
 
-def test_check_netapp_api_temp_missing_value(fix_register):
+def test_check_netapp_api_temp_missing_value(fix_register) -> None:
     result = list(
         fix_register.check_plugins[CheckPluginName("netapp_api_temp")].check_function(
             item="Ambient Shelf 70",

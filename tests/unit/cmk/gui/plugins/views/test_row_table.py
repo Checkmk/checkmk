@@ -8,7 +8,7 @@ from cmk.gui.type_defs import VisualContext
 from cmk.gui.views import View
 
 
-def test_row_table_object(mock_livestatus, request_context):
+def test_row_table_object(mock_livestatus, request_context) -> None:
     live = mock_livestatus
     live.add_table(
         "hosts",

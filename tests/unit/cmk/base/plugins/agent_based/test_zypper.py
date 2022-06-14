@@ -11,7 +11,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, Sta
 
 
 @pytest.mark.parametrize("string_table", [None])
-def test_zypper_discover(string_table):
+def test_zypper_discover(string_table) -> None:
     services = list(zypper.discover_zypper(string_table))
     assert len(services) == 1
     assert services[0] == Service()
@@ -140,6 +140,6 @@ def test_zypper_discover(string_table):
         ),
     ],
 )
-def test_zypper_check(string_table, expected_result):
+def test_zypper_check(string_table, expected_result) -> None:
     section = zypper.parse_zypper(string_table)
     assert list(zypper.check_zypper({}, section)) == expected_result

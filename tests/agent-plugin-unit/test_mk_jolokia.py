@@ -11,14 +11,14 @@ import agents.plugins.mk_jolokia as mk_jolokia
 
 
 @pytest.mark.parametrize("removed", ["protocol", "server", "port", "suburi", "timeout"])
-def test_missing_config_basic(removed):
+def test_missing_config_basic(removed) -> None:
     config = mk_jolokia.get_default_config_dict()
     config.pop(removed)
     with pytest.raises(ValueError):
         mk_jolokia.JolokiaInstance._sanitize_config(config)
 
 
-def test_missing_config_auth():
+def test_missing_config_auth() -> None:
     def missing_keys(key_string):
         msg_pattern = r"Missing key\(s\): %s in configuration for UnitTest" % key_string
         return pytest.raises(ValueError, match=msg_pattern)
@@ -49,7 +49,7 @@ def test_missing_config_auth():
         mk_jolokia.JolokiaInstance._sanitize_config(config)
 
 
-def test_config_instance():
+def test_config_instance() -> None:
     config = mk_jolokia.get_default_config_dict()
     assert mk_jolokia.JolokiaInstance._sanitize_config(config).get("instance") == "8080"
     config["instance"] = "some spaces in string"
@@ -59,13 +59,13 @@ def test_config_instance():
     )
 
 
-def test_config_timeout():
+def test_config_timeout() -> None:
     config = mk_jolokia.get_default_config_dict()
     config["timeout"] = "23"
     assert isinstance(mk_jolokia.JolokiaInstance._sanitize_config(config).get("timeout"), float)
 
 
-def test_config_legacy_cert_path_to_verify():
+def test_config_legacy_cert_path_to_verify() -> None:
     config = mk_jolokia.get_default_config_dict()
     config["verify"] = None
     assert mk_jolokia.JolokiaInstance._sanitize_config(config).get("verify") is True
@@ -91,12 +91,12 @@ def test_config_legacy_cert_path_to_verify():
         )
     ],
 )
-def test_jolokia_instance_base_url(config, base_url):
+def test_jolokia_instance_base_url(config, base_url) -> None:
     joloi = mk_jolokia.JolokiaInstance(config)
     assert joloi._get_base_url() == base_url
 
 
-def test_jolokia_yield_configured_instances():
+def test_jolokia_yield_configured_instances() -> None:
     yci = mk_jolokia.yield_configured_instances(
         {
             "instances": [{"server": "s1"}, {"server": "s2"}],
@@ -119,7 +119,7 @@ class _MockHttpResponse(object):  # pylint: disable=useless-object-inheritance
         return self._payload
 
 
-def test_jolokia_validate_response_skip_mbean():
+def test_jolokia_validate_response_skip_mbean() -> None:
     for status in (199, 300):
         with pytest.raises(mk_jolokia.SkipMBean):
             mk_jolokia.validate_response(_MockHttpResponse(status))
@@ -133,7 +133,7 @@ def test_jolokia_validate_response_skip_mbean():
         mk_jolokia.validate_response(_MockHttpResponse(200, status=200))
 
 
-def test_jolokia_validate_response_skip_instance():
+def test_jolokia_validate_response_skip_instance() -> None:
     for status in (401, 403, 502):
         with pytest.raises(mk_jolokia.SkipInstance):
             mk_jolokia.validate_response(_MockHttpResponse(status))
@@ -148,5 +148,5 @@ def test_jolokia_validate_response_skip_instance():
         },
     ],
 )
-def test_jolokia_validate_response_ok(data):
+def test_jolokia_validate_response_ok(data) -> None:
     assert data == mk_jolokia.validate_response(_MockHttpResponse(200, **data))

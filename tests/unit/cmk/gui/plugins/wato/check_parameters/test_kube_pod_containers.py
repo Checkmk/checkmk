@@ -14,18 +14,18 @@ from cmk.gui.valuespec import Dictionary
 SECTION_ELEMENTS = ("failed_state",)
 
 
-def test_parameter_valuespec_returns_a_dictionary():
+def test_parameter_valuespec_returns_a_dictionary() -> None:
     parameters = kube_pod_containers._parameter_valuespec()
     assert isinstance(parameters, Dictionary)
 
 
-def test_parameter_valuespec_has_as_much_elements_as_section_elements():
+def test_parameter_valuespec_has_as_much_elements_as_section_elements() -> None:
     parameters = kube_pod_containers._parameter_valuespec()
     assert len(parameters._elements()) == len(SECTION_ELEMENTS)
 
 
 @pytest.mark.parametrize("section_element", SECTION_ELEMENTS)
-def test_parameter_valuespec_has_element_for_section_element(section_element):
+def test_parameter_valuespec_has_element_for_section_element(section_element) -> None:
     expected_title = section_element
     parameters = kube_pod_containers._parameter_valuespec()
     assert any(title == expected_title for title, _ in parameters._elements())
@@ -40,13 +40,13 @@ def rulespec():
 
 
 @pytest.mark.xfail(reason="`match_type` should be dict")
-def test_rulespec_registry_match_type(rulespec):
+def test_rulespec_registry_match_type(rulespec) -> None:
     assert rulespec.match_type == "dict"
 
 
-def test_rulespec_registry_parameter_valuespec(rulespec):
+def test_rulespec_registry_parameter_valuespec(rulespec) -> None:
     assert rulespec._parameter_valuespec == kube_pod_containers._parameter_valuespec
 
 
-def test_rulespec_registry_title(rulespec):
+def test_rulespec_registry_title(rulespec) -> None:
     assert rulespec.title == "Kubernetes pod containers"

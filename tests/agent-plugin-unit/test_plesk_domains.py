@@ -7,7 +7,7 @@
 import pytest
 
 
-def test_import_module(capfd):
+def test_import_module(capfd) -> None:
     with pytest.raises(SystemExit) as pytest_wrapped_e:
         import agents.plugins.plesk_domains  # pylint: disable=unused-import
     out, _ = capfd.readouterr()

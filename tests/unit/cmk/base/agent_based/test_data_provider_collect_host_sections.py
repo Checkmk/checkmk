@@ -126,7 +126,7 @@ class TestMakeHostSectionsHosts:
         ts.add_host(hostname)
         return ts.apply(monkeypatch)
 
-    def test_no_sources(self, hostname, ipaddress, config_cache, host_config):
+    def test_no_sources(self, hostname, ipaddress, config_cache, host_config) -> None:
         host_sections = _collect_host_sections(
             fetched=(),
             file_cache_max_age=file_cache.MaxAge.none(),
@@ -134,7 +134,7 @@ class TestMakeHostSectionsHosts:
         )[0]
         assert not host_sections
 
-    def test_one_snmp_source(self, hostname, ipaddress, config_cache, host_config):
+    def test_one_snmp_source(self, hostname, ipaddress, config_cache, host_config) -> None:
         raw_data: SNMPRawData = {}
         host_sections = _collect_host_sections(
             fetched=[
@@ -178,7 +178,9 @@ class TestMakeHostSectionsHosts:
             TCPSource,
         ],
     )
-    def test_one_nonsnmp_source(self, hostname, ipaddress, config_cache, host_config, source):
+    def test_one_nonsnmp_source(
+        self, hostname, ipaddress, config_cache, host_config, source
+    ) -> None:
         source = source(hostname, ipaddress)
         assert source.source_type is SourceType.HOST
 
@@ -349,11 +351,11 @@ class TestMakeHostSectionsClusters:
         return ts.apply(monkeypatch)
 
     @pytest.mark.usefixtures("config_cache")
-    def test_host_config_for_cluster(self, host_config):
+    def test_host_config_for_cluster(self, host_config) -> None:
         assert host_config.is_cluster is True
         assert host_config.nodes
 
-    def test_no_sources(self, cluster, nodes, config_cache, host_config):
+    def test_no_sources(self, cluster, nodes, config_cache, host_config) -> None:
         sources = make_cluster_sources(config_cache, host_config)
 
         host_sections = _collect_host_sections(
@@ -388,7 +390,7 @@ class TestMakeHostSectionsClusters:
             assert not section.piggybacked_raw_data
 
 
-def test_get_host_sections_cluster(monkeypatch, mocker):
+def test_get_host_sections_cluster(monkeypatch, mocker) -> None:
     hostname = HostName("testhost")
     hosts = {
         HostName("host0"): "10.0.0.0",

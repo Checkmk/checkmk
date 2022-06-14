@@ -17,7 +17,7 @@ def check_mail_loop():
     return import_module("active_checks/check_mail_loop")
 
 
-def test_ac_check_mail_main_loop_failed_to_send_mail(check_mail_loop):
+def test_ac_check_mail_main_loop_failed_to_send_mail(check_mail_loop) -> None:
     state, info, perf = _active_check_main_core(
         check_mail_loop.create_argument_parser(),
         check_mail_loop.check_mail_roundtrip,
@@ -184,7 +184,7 @@ def test_ac_check_mail_loop(
         "RE: Wg: re: subject",
     ],
 )
-def test_regex_pattern(check_mail_loop, subject):
+def test_regex_pattern(check_mail_loop, subject) -> None:
     assert check_mail_loop._regex_pattern(subject).match(f"{subject} a b").groups() == (
         "a",
         "b",

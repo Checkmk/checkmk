@@ -30,7 +30,7 @@ def _get_section():
     )
 
 
-def test_discover_mssql_databases(section):
+def test_discover_mssql_databases(section) -> None:
 
     assert sorted(
         discover_mssql_databases(section), key=lambda s: s.item or ""
@@ -44,14 +44,14 @@ def test_discover_mssql_databases(section):
     ]
 
 
-def test_check_error(section):
+def test_check_error(section) -> None:
 
     assert list(check_mssql_databases("MSSQL_Mouse -", {}, section)) == [
         Result(state=state.CRIT, summary="We are out of cheese!"),
     ]
 
 
-def test_check_warn_auto_shrink(section):
+def test_check_warn_auto_shrink(section) -> None:
 
     assert list(check_mssql_databases("MSSQL_MSSQL46 NOC_ALARM_T", {}, section)) == [
         Result(state=state.OK, summary="Status: ONLINE"),

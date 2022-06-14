@@ -41,7 +41,7 @@ DATA_2X2 = [["1", "2"], ["3", "4"]]
         ),
     ],
 )
-def test_create_layout_recover_function(suboids_list, input_data, expected_output):
+def test_create_layout_recover_function(suboids_list, input_data, expected_output) -> None:
     layout_recover_func = _create_layout_recover_function(suboids_list)
     assert layout_recover_func(input_data) == expected_output
 
@@ -91,5 +91,5 @@ def test_create_layout_recover_function(suboids_list, input_data, expected_outpu
         ),
     ],
 )
-def test_create_snmp_trees_from_tuple(element, expected_tree, expected_suboids):
+def test_create_snmp_trees_from_tuple(element, expected_tree, expected_suboids) -> None:
     assert _create_snmp_trees_from_tuple(element) == (expected_tree, expected_suboids)

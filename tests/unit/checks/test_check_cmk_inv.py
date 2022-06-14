@@ -28,7 +28,7 @@ STATIC_ARGS = ["--inventory-as-check", "$HOSTNAME$"]
         ),
     ],
 )
-def test_check_cmk_inv_argument_parsing(params, expected_args):
+def test_check_cmk_inv_argument_parsing(params, expected_args) -> None:
     """Tests if all required arguments are present."""
     active_check = ActiveCheck("check_cmk_inv")
     assert active_check.run_argument_function(params) == expected_args

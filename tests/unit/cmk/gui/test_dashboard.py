@@ -34,7 +34,7 @@ class DummyDashlet(dashboard.Dashlet):
         html.write_text("dummy")
 
 
-def test_dashlet_registry_plugins():
+def test_dashlet_registry_plugins() -> None:
     expected_plugins = [
         "hoststats",
         "servicestats",
@@ -158,7 +158,7 @@ def _legacy_dashlet_type(attrs=None):
     return dashboard.dashlet_registry["test123"]
 
 
-def test_registry_of_old_dashlet_plugins(reset_dashlet_types):
+def test_registry_of_old_dashlet_plugins(reset_dashlet_types) -> None:
     dashlet_type = _legacy_dashlet_type()
     assert dashlet_type.title() == "Test dashlet"
     assert dashlet_type.description() == "Descr"
@@ -183,14 +183,14 @@ _attr_map = [
 ]
 
 
-def test_old_dashlet_defaults(reset_dashlet_types):
+def test_old_dashlet_defaults(reset_dashlet_types) -> None:
     dashlet_type = _legacy_dashlet_type()
     dashlet = dashlet_type(dashboard_name="main", dashboard={}, dashlet_id=0, dashlet={})
     for _attr, new_method, deflt in _attr_map:
         assert getattr(dashlet, new_method)() == deflt
 
 
-def test_old_dashlet_title_func(reset_dashlet_types):
+def test_old_dashlet_title_func(reset_dashlet_types) -> None:
     dashlet_type = _legacy_dashlet_type(
         {
             "title_func": lambda d: "xyz",
@@ -202,7 +202,7 @@ def test_old_dashlet_title_func(reset_dashlet_types):
     assert dashlet.display_title() == "xyz"
 
 
-def test_old_dashlet_on_resize(reset_dashlet_types):
+def test_old_dashlet_on_resize(reset_dashlet_types) -> None:
     dashlet_type = _legacy_dashlet_type(
         {
             "on_resize": lambda x, y: "xyz",
@@ -213,7 +213,7 @@ def test_old_dashlet_on_resize(reset_dashlet_types):
     assert dashlet.on_resize() == "xyz"
 
 
-def test_old_dashlet_on_refresh(reset_dashlet_types):
+def test_old_dashlet_on_refresh(reset_dashlet_types) -> None:
     dashlet_type = _legacy_dashlet_type(
         {
             "on_refresh": lambda nr, the_dashlet: "xyz",
@@ -224,7 +224,7 @@ def test_old_dashlet_on_refresh(reset_dashlet_types):
     assert dashlet.on_refresh() == "xyz"
 
 
-def test_old_dashlet_iframe_render(mocker, request_context, reset_dashlet_types):
+def test_old_dashlet_iframe_render(mocker, request_context, reset_dashlet_types) -> None:
     iframe_render_mock = mocker.Mock()
 
     dashlet_type = _legacy_dashlet_type(
@@ -246,7 +246,7 @@ def test_old_dashlet_iframe_render(mocker, request_context, reset_dashlet_types)
     assert dashlet._get_iframe_url() == "dashboard_dashlet.py?id=1&mtime=123&name=main"
 
 
-def test_old_dashlet_iframe_urlfunc(mocker, request_context, reset_dashlet_types):
+def test_old_dashlet_iframe_urlfunc(mocker, request_context, reset_dashlet_types) -> None:
     dashlet_type = _legacy_dashlet_type(
         {
             "iframe_urlfunc": lambda x: "blaurl",
@@ -257,7 +257,7 @@ def test_old_dashlet_iframe_urlfunc(mocker, request_context, reset_dashlet_types
     assert dashlet._get_iframe_url() == "blaurl"
 
 
-def test_old_dashlet_render(mocker, request_context, reset_dashlet_types):
+def test_old_dashlet_render(mocker, request_context, reset_dashlet_types) -> None:
     render_mock = mocker.Mock()
 
     dashlet_type = _legacy_dashlet_type(
@@ -274,13 +274,13 @@ def test_old_dashlet_render(mocker, request_context, reset_dashlet_types):
     assert render_mock.called_once()
 
 
-def test_old_dashlet_add_urlfunc(mocker, reset_dashlet_types):
+def test_old_dashlet_add_urlfunc(mocker, reset_dashlet_types) -> None:
     dashlet_type = _legacy_dashlet_type({"add_urlfunc": lambda: "xyz"})
     dashlet = dashlet_type(dashboard_name="main", dashboard={}, dashlet_id=0, dashlet={})
     assert dashlet.add_url() == "xyz"
 
 
-def test_old_dashlet_position(mocker, reset_dashlet_types):
+def test_old_dashlet_position(mocker, reset_dashlet_types) -> None:
     dashlet_type = _legacy_dashlet_type({})
     assert dashlet_type.initial_position() == (1, 1)
 
@@ -293,7 +293,7 @@ def test_old_dashlet_position(mocker, reset_dashlet_types):
     assert dashlet.position() == (10, 12)
 
 
-def test_old_dashlet_size(mocker, reset_dashlet_types):
+def test_old_dashlet_size(mocker, reset_dashlet_types) -> None:
     dashlet_type = _legacy_dashlet_type({})
     assert dashlet_type.initial_size() == (12, 12)
 
@@ -309,7 +309,7 @@ def test_old_dashlet_size(mocker, reset_dashlet_types):
     assert dashlet.size() == (30, 20)
 
 
-def test_old_dashlet_settings(reset_dashlet_types):
+def test_old_dashlet_settings(reset_dashlet_types) -> None:
     dashlet_attrs = {}
     for attr, _new_method, _deflt in _attr_map:
         dashlet_attrs[attr] = attr
@@ -321,7 +321,7 @@ def test_old_dashlet_settings(reset_dashlet_types):
         assert getattr(dashlet, new_method)() == attr
 
 
-def test_dashlet_type_defaults(request_context):
+def test_dashlet_type_defaults(request_context) -> None:
     assert dashboard.Dashlet.single_infos() == []
     assert dashboard.Dashlet.is_selectable() is True
     assert dashboard.Dashlet.is_resizable() is True
@@ -339,7 +339,7 @@ def test_dashlet_type_defaults(request_context):
     assert DummyDashlet.add_url() == "edit_dashlet.py?back=index.py%3Fedit%3D1&type=dummy"
 
 
-def test_dashlet_defaults():
+def test_dashlet_defaults() -> None:
     dashlet = DummyDashlet(
         dashboard_name="main", dashboard={}, dashlet_id=1, dashlet={"xyz": "abc"}
     )
@@ -349,7 +349,7 @@ def test_dashlet_defaults():
     assert dashlet.dashboard_name == "main"
 
 
-def test_dashlet_title():
+def test_dashlet_title() -> None:
     dashlet = DummyDashlet(
         dashboard_name="main", dashboard={}, dashlet_id=1, dashlet={"title": "abc"}
     )
@@ -359,7 +359,7 @@ def test_dashlet_title():
     assert dashlet.display_title() == "DUMMy"
 
 
-def test_show_title():
+def test_show_title() -> None:
     dashlet = DummyDashlet(dashboard_name="main", dashboard={}, dashlet_id=1, dashlet={})
     assert dashlet.show_title() is True
 
@@ -369,7 +369,7 @@ def test_show_title():
     assert dashlet.show_title() is False
 
 
-def test_title_url():
+def test_title_url() -> None:
     dashlet = DummyDashlet(dashboard_name="main", dashboard={}, dashlet_id=1, dashlet={})
     assert dashlet.title_url() is None
 
@@ -382,7 +382,7 @@ def test_title_url():
     assert dashlet.title_url() == "index.py?bla=blub"
 
 
-def test_show_background():
+def test_show_background() -> None:
     dashlet = DummyDashlet(dashboard_name="main", dashboard={}, dashlet_id=1, dashlet={})
     assert dashlet.show_background() is True
 
@@ -392,17 +392,17 @@ def test_show_background():
     assert dashlet.show_background() is False
 
 
-def test_on_resize():
+def test_on_resize() -> None:
     dashlet = DummyDashlet(dashboard_name="main", dashboard={}, dashlet_id=1, dashlet={})
     assert dashlet.on_resize() is None
 
 
-def test_on_refresh():
+def test_on_refresh() -> None:
     dashlet = DummyDashlet(dashboard_name="main", dashboard={}, dashlet_id=1, dashlet={})
     assert dashlet.on_refresh() is None
 
 
-def test_size():
+def test_size() -> None:
     dashlet = DummyDashlet(dashboard_name="main", dashboard={}, dashlet_id=1, dashlet={})
     assert dashlet.size() == DummyDashlet.initial_size()
 
@@ -422,7 +422,7 @@ def test_size():
     assert dashlet.size() == NotResizable.initial_size()
 
 
-def test_position():
+def test_position() -> None:
     dashlet = DummyDashlet(dashboard_name="main", dashboard={}, dashlet_id=1, dashlet={})
     assert dashlet.position() == DummyDashlet.initial_position()
 
@@ -432,7 +432,7 @@ def test_position():
     assert dashlet.position() == (4, 4)
 
 
-def test_refresh_interval():
+def test_refresh_interval() -> None:
     dashlet = DummyDashlet(dashboard_name="main", dashboard={}, dashlet_id=1, dashlet={})
     assert dashlet.refresh_interval() == DummyDashlet.initial_refresh_interval()
 
@@ -442,7 +442,7 @@ def test_refresh_interval():
     assert dashlet.refresh_interval() == 22
 
 
-def test_dashlet_context_inheritance():
+def test_dashlet_context_inheritance() -> None:
     dashboard_spec = dashboard._add_context_to_dashboard(
         {
             "context": {

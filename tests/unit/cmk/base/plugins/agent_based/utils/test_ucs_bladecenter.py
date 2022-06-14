@@ -7,7 +7,7 @@
 from cmk.base.plugins.agent_based.utils.ucs_bladecenter import generic_parse
 
 
-def test_generic_parse():
+def test_generic_parse() -> None:
     assert generic_parse(
         [
             [

@@ -115,11 +115,11 @@ VALUE_STORE = {
 }
 
 
-def test_parse_function():
+def test_parse_function() -> None:
     assert winperf_processor.parse_winperf_processor(INFO) == SECTION
 
 
-def test_discovery():
+def test_discovery() -> None:
     assert list(winperf_processor.discover_winperf_processor_util(SECTION)) == [
         Service(),
     ]
@@ -169,6 +169,6 @@ def test_discovery():
         ),
     ],
 )
-def test_check(monkeypatch, value_store, params, result):
+def test_check(monkeypatch, value_store, params, result) -> None:
     monkeypatch.setattr(winperf_processor, "get_value_store", value_store.copy)
     assert list(winperf_processor.check_winperf_processor_util(params, SECTION)) == result

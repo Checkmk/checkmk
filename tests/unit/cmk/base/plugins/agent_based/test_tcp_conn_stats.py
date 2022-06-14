@@ -8,13 +8,13 @@ from cmk.base.plugins.agent_based import tcp_conn_stats
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 
 
-def test_discovery_winperf_section():
+def test_discovery_winperf_section() -> None:
     assert list(tcp_conn_stats.discover_tcp_connections({"ESTABLISHED": 3})) == [
         Service(),
     ]
 
 
-def test_check_winperf_section():
+def test_check_winperf_section() -> None:
     assert list(tcp_conn_stats.check_tcp_connections({}, {"ESTABLISHED": 3})) == [
         Result(
             state=State.OK,
@@ -24,7 +24,7 @@ def test_check_winperf_section():
     ]
 
 
-def test_check_tcp_conn_section():
+def test_check_tcp_conn_section() -> None:
     assert list(
         tcp_conn_stats.check_tcp_connections(
             {},

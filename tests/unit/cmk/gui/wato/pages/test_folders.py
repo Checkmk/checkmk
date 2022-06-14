@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-def test_ajax_call(logged_in_wsgi_app):
+def test_ajax_call(logged_in_wsgi_app) -> None:
     ajax_page = "/NO_SITE/check_mk/ajax_popup_move_to_folder.py"
     app = logged_in_wsgi_app
     resp = app.get(

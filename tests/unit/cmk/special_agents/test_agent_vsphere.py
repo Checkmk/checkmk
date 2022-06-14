@@ -51,11 +51,11 @@ PROP_NAME = "foo"
         ),
     ],
 )
-def test_eval_multipath_info(propset, expected):
+def test_eval_multipath_info(propset, expected) -> None:
     assert eval_multipath_info("", PROP_NAME, propset) == expected
 
 
-def test_cloning_vm_is_processed(mocker):
+def test_cloning_vm_is_processed(mocker) -> None:
     """
     VMs that are in the process of being cloned do not define runtime.host.
     Make sure that this does not lead to a KeyError.

@@ -25,7 +25,7 @@ def should_raise_a_mkusererror():
         raise AssertionError("An MKUserError should have been raised and it wasn't!")
 
 
-def test_cant_delete_default_user_roles(mocker: MockerFixture):
+def test_cant_delete_default_user_roles(mocker: MockerFixture) -> None:
     default_roles: Mapping[RoleID, UserRole] = userroles.get_all_roles()
     mocker.patch(
         "cmk.gui.utils.transaction_manager.transactions.transaction_valid", return_value=True
@@ -36,7 +36,7 @@ def test_cant_delete_default_user_roles(mocker: MockerFixture):
             userroles.delete_role(roleid)
 
 
-def test_deleting_cloned_user_roles():
+def test_deleting_cloned_user_roles() -> None:
     userroles.clone_role(RoleID("admin"))
 
     all_roles: Mapping[RoleID, UserRole] = userroles.get_all_roles()
@@ -46,7 +46,7 @@ def test_deleting_cloned_user_roles():
     assert len(roles_after_deletion) == 3
 
 
-def test_cloning_user_roles():
+def test_cloning_user_roles() -> None:
     default_roles: Mapping[RoleID, UserRole] = userroles.get_all_roles()
 
     for roleid in default_roles.keys():
@@ -61,12 +61,12 @@ def test_cloning_user_roles():
     }
 
 
-def test_get_default_user_roles():
+def test_get_default_user_roles() -> None:
     default_roles: Mapping[RoleID, UserRole] = userroles.get_all_roles()
     assert {role.name for role in default_roles.values()} == {"admin", "guest", "user"}
 
 
-def test_get_non_existent_user_roles():
+def test_get_non_existent_user_roles() -> None:
     with should_raise_a_mkusererror():
         userroles.get_role(RoleID("roleid_that_doesnt_exist"))
     assert userroles.role_exists(RoleID("roleid_that_doesnt_exist")) is False

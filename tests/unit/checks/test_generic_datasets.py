@@ -29,7 +29,7 @@ from . import generictests
 
 # Making this a single test with a loop instead of a parameterized test cuts down the runtime
 # from 9.2s to 4.9s. Furthermore, freezing the time only once is a big win, too.
-def test_dataset(fix_plugin_legacy):
+def test_dataset(fix_plugin_legacy) -> None:
     with on_time(1572247138, "CET"):
         for datasetname in generictests.DATASET_NAMES:
             dataset = import_module(f"tests.unit.checks.generictests.datasets.{datasetname}")

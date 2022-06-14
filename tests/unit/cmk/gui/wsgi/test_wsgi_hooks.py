@@ -8,7 +8,7 @@ from unittest.mock import MagicMock
 from cmk.gui import hooks
 
 
-def test_hooks(logged_in_wsgi_app, mock_livestatus):
+def test_hooks(logged_in_wsgi_app, mock_livestatus) -> None:
     start_func = MagicMock()
     end_func = MagicMock()
     hooks.register("request-start", start_func)

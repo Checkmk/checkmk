@@ -250,7 +250,7 @@ def test_inventory_netapp_api_qtree_quota(
         )
     ],
 )
-def test_get_item_names(qtree: Qtree, expected_result):
+def test_get_item_names(qtree: Qtree, expected_result) -> None:
     result = get_item_names(qtree)
     assert result == expected_result
 

@@ -51,7 +51,7 @@ from cmk.gui.htmllib.html import html
         (("next", 3 * 3600), ((1567702200, 1567713000), "The next 3 hours")),
     ],
 )
-def test_timerange(entry, result):
+def test_timerange(entry, result) -> None:
     with on_time("2019-09-05 16:50", "UTC"):
         assert vs.Timerange.compute_range(entry) == vs.ComputedTimerange(*result)
 
@@ -77,7 +77,7 @@ def test_timerange(entry, result):
         ("l1", "2020-03-25", ((1582934400, 1583020800), "29/02/2020")),
     ],
 )
-def test_timerange2(entry, refutcdate, result):
+def test_timerange2(entry, refutcdate, result) -> None:
     with on_time(refutcdate, "UTC"):
         assert vs.Timerange.compute_range(entry) == vs.ComputedTimerange(*result)
 
@@ -94,7 +94,7 @@ def test_timerange2(entry, refutcdate, result):
         ((1546300800, -6, "m"), 1530403200),
     ],
 )
-def test_timehelper_add(args, result):
+def test_timehelper_add(args, result) -> None:
     with on_time("2019-09-05", "UTC"):
         assert vs.TimeHelper.add(*args) == result
 
@@ -108,7 +108,7 @@ def test_timehelper_add(args, result):
         (1850000000, "2028-08-16"),
     ],
 )
-def test_absolutedate_value_to_json_conversion(value, result):
+def test_absolutedate_value_to_json_conversion(value, result) -> None:
     with on_time("2020-03-02", "UTC"):
         assert vs.AbsoluteDate().value_to_html(value) == result
         json_value = vs.AbsoluteDate().value_to_json(value)
@@ -122,7 +122,7 @@ def test_absolutedate_value_to_json_conversion(value, result):
         ((1577833200, 1580425200), "2019-12-31, 2020-01-30"),
     ],
 )
-def test_tuple_value_to_json_conversion(value, result):
+def test_tuple_value_to_json_conversion(value, result) -> None:
     with on_time("2020-03-02", "UTC"):
         assert (
             vs.Tuple(elements=[vs.AbsoluteDate(), vs.AbsoluteDate()]).value_to_html(value) == result
@@ -143,7 +143,7 @@ def test_tuple_value_to_json_conversion(value, result):
         (527500, "6 days 2 hours 31 minutes 40 seconds"),
     ],
 )
-def test_age_value_to_json_conversion(value, result):
+def test_age_value_to_json_conversion(value, result) -> None:
     assert vs.Age().value_to_html(value) == result
     json_value = vs.Age().value_to_json(value)
     assert vs.Age().value_from_json(json_value) == value
@@ -160,7 +160,7 @@ def test_age_value_to_json_conversion(value, result):
         ),
     ],
 )
-def test_dropdownchoice_value_to_json_conversion(choices, value, result):
+def test_dropdownchoice_value_to_json_conversion(choices, value, result) -> None:
     assert vs.DropdownChoice(choices=choices).value_to_html(value) == result
     json_value = vs.DropdownChoice(choices=choices).value_to_json(value)
     assert vs.DropdownChoice(choices=choices).value_from_json(json_value) == value
@@ -181,7 +181,9 @@ def test_dropdownchoice_value_to_json_conversion(choices, value, result):
         "invalid_choice_invalid_deprecated_choice",
     ],
 )
-def test_dropdownchoice_validate_datatype(choices, deprecated_choices, value, is_valid_datatype):
+def test_dropdownchoice_validate_datatype(
+    choices, deprecated_choices, value, is_valid_datatype
+) -> None:
     dropdown_choice = vs.DropdownChoice(
         choices=choices,
         deprecated_choices=deprecated_choices,
@@ -203,7 +205,9 @@ def test_dropdownchoice_validate_datatype(choices, deprecated_choices, value, is
         (3600 * 24 * 7 * 1.5, "Since a sesquiweek"),  # defaults are idents
     ],
 )
-def test_timerange_value_to_html_conversion(request_context, monkeypatch, value, result_title):
+def test_timerange_value_to_html_conversion(
+    request_context, monkeypatch, value, result_title
+) -> None:
     monkeypatch.setattr(
         active_config,
         "graph_timeranges",
@@ -217,7 +221,7 @@ def test_timerange_value_to_html_conversion(request_context, monkeypatch, value,
     assert vs.Timerange().value_to_html(value) == result_title
 
 
-def test_timerange_value_to_json_conversion(request_context):
+def test_timerange_value_to_json_conversion(request_context) -> None:
     with on_time("2020-03-02", "UTC"):
         for ident, title, _vs in vs.Timerange().choices():
             choice_value: vs.CascadingDropdownChoiceValue = ident
@@ -242,7 +246,7 @@ def test_timerange_value_to_json_conversion(request_context):
         ([("a", vs.Tuple(elements=[]))], {"a": tuple()}, {"a": []}),
     ],
 )
-def test_dictionary_value_to_json(elements, value, expected):
+def test_dictionary_value_to_json(elements, value, expected) -> None:
     assert vs.Dictionary(elements=elements).value_to_json(value) == expected
 
 
@@ -258,7 +262,7 @@ def test_dictionary_value_to_json(elements, value, expected):
         "אሗ@test.de",  # non-ASCII characters
     ],
 )
-def test_email_validation(address):
+def test_email_validation(address) -> None:
     vs.EmailAddress().validate_value(address, "")
 
 
@@ -271,7 +275,7 @@ def test_email_validation(address):
         "ab@c..de",
     ],
 )
-def test_email_validation_non_compliance(address):
+def test_email_validation_non_compliance(address) -> None:
     # TODO: validate_value should raise an exception in these
     #       cases since subsequent dots without any ASCII
     #       character in between are not allowed in RFC5322.
@@ -290,18 +294,18 @@ def test_email_validation_non_compliance(address):
         "\t\n a@localhost \t\n",  # whitespace is removed in from_html_vars
     ],
 )
-def test_email_validation_raises(address):
+def test_email_validation_raises(address) -> None:
     with pytest.raises(MKUserError):
         vs.EmailAddress().validate_value(address, "")
 
 
-def test_transform_value_no_transform_vs():
+def test_transform_value_no_transform_vs() -> None:
     valuespec = vs.TextInput()
     assert valuespec.transform_value("lala") == "lala"
     assert valuespec.transform_value("AAA") == "AAA"
 
 
-def test_transform_value_with_transform_vs():
+def test_transform_value_with_transform_vs() -> None:
     valuespec = vs.Transform(
         valuespec=vs.TextInput(),
         forth=lambda x: x if x == "lala" else x.upper(),
@@ -312,7 +316,7 @@ def test_transform_value_with_transform_vs():
     assert valuespec.transform_value("AAA") == "AAAaaa"
 
 
-def test_transform_value_dict():
+def test_transform_value_dict() -> None:
     valuespec = vs.Dictionary(
         elements=[
             ("a", vs.TextInput()),
@@ -321,7 +325,7 @@ def test_transform_value_dict():
     assert valuespec.transform_value({"a": "lala"}) == {"a": "lala"}
 
 
-def test_transform_value_in_dict():
+def test_transform_value_in_dict() -> None:
     valuespec = vs.Dictionary(
         elements=[
             (
@@ -339,7 +343,7 @@ def test_transform_value_in_dict():
     assert valuespec.transform_value({"a": "AAA"}) == {"a": "AAAaaa"}
 
 
-def test_transform_value_in_tuple():
+def test_transform_value_in_tuple() -> None:
     valuespec = vs.Tuple(
         elements=[
             vs.Transform(
@@ -358,7 +362,7 @@ def test_transform_value_in_tuple():
     assert valuespec.transform_value(("lala", "AAA")) == ("lalaaaa", "AAAaaa")
 
 
-def test_transform_value_in_cascading_dropdown():
+def test_transform_value_in_cascading_dropdown() -> None:
     valuespec = vs.CascadingDropdown(
         choices=[
             ("a", "Title a", vs.TextInput()),
@@ -379,7 +383,7 @@ def test_transform_value_in_cascading_dropdown():
     assert valuespec.transform_value(("b", "AAA")) == ("b", "AAAaaa")
 
 
-def test_transform_value_and_json():
+def test_transform_value_and_json() -> None:
     # before all keys where upper case, then we decided to move to lower case,
     # but want to keep compatibility with old values saved in the config
     valuespec = vs.Transform(
@@ -421,7 +425,7 @@ def fixture_auth_secret():
         f.write(b"auth-secret")
 
 
-def test_password_from_html_vars_empty(request_context):
+def test_password_from_html_vars_empty(request_context) -> None:
     html.request.set_var("pw_orig", "")
     html.request.set_var("pw", "")
 
@@ -429,13 +433,13 @@ def test_password_from_html_vars_empty(request_context):
     assert pw.from_html_vars("pw") == ""
 
 
-def test_password_from_html_vars_not_set(request_context):
+def test_password_from_html_vars_not_set(request_context) -> None:
     pw = vs.Password()
     assert pw.from_html_vars("pw") == ""
 
 
 @pytest.mark.usefixtures("fixture_auth_secret")
-def test_password_from_html_vars_initial_pw(request_context):
+def test_password_from_html_vars_initial_pw(request_context) -> None:
     html.request.set_var("pw_orig", "")
     html.request.set_var("pw", "abc")
     pw = vs.Password()
@@ -446,7 +450,7 @@ def test_password_from_html_vars_initial_pw(request_context):
     not hasattr(hashlib, "scrypt"), reason="OpenSSL version too old, must be >= 1.1"
 )
 @pytest.mark.usefixtures("fixture_auth_secret")
-def test_password_from_html_vars_unchanged_pw(request_context):
+def test_password_from_html_vars_unchanged_pw(request_context) -> None:
     html.request.set_var("pw_orig", base64.b64encode(Encrypter.encrypt("abc")).decode("ascii"))
     html.request.set_var("pw", "")
     pw = vs.Password()
@@ -457,7 +461,7 @@ def test_password_from_html_vars_unchanged_pw(request_context):
     not hasattr(hashlib, "scrypt"), reason="OpenSSL version too old, must be >= 1.1"
 )
 @pytest.mark.usefixtures("fixture_auth_secret")
-def test_password_from_html_vars_change_pw(request_context):
+def test_password_from_html_vars_change_pw(request_context) -> None:
     html.request.set_var("pw_orig", base64.b64encode(Encrypter.encrypt("abc")).decode("ascii"))
     html.request.set_var("pw", "xyz")
     pw = vs.Password()

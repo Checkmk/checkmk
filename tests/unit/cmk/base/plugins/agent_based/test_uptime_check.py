@@ -27,7 +27,7 @@ pytestmark = pytest.mark.checks
         ("2 hr(s)", 7200),
     ],
 )
-def test_human_read_uptime(string, result):
+def test_human_read_uptime(string, result) -> None:
     assert uptime.parse_human_read_uptime(string) == result
 
 
@@ -38,11 +38,11 @@ def test_human_read_uptime(string, result):
         (uptime_utils.Section(None, None), False),
     ],
 )
-def test_uptime_discovery(section, do_discover):
+def test_uptime_discovery(section, do_discover) -> None:
     assert bool(list(uptime_utils.discover(section))) is do_discover
 
 
-def test_uptime_check_basic():
+def test_uptime_check_basic() -> None:
 
     with on_time("2018-04-15 16:50", "CET"):
         assert list(uptime_utils.check({}, uptime_utils.Section(123, None))) == [
@@ -52,7 +52,7 @@ def test_uptime_check_basic():
         ]
 
 
-def test_uptime_check_zero():
+def test_uptime_check_zero() -> None:
     with on_time("2018-04-15 16:50", "CET"):
         assert list(uptime_utils.check({}, uptime_utils.Section(0, None))) == [
             Result(state=State.OK, summary="Up since Apr 15 2018 18:50:00"),
@@ -218,7 +218,7 @@ def test_uptime_check_zero():
         ),
     ],
 )
-def test_uptime_solaris_inputs(info, reference):
+def test_uptime_solaris_inputs(info, reference) -> None:
 
     section = uptime.parse_uptime(info)
     assert section is not None

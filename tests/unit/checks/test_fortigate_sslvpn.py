@@ -4,7 +4,7 @@
 from tests.testlib import Check
 
 
-def test_fortigate_sslvpn_old_params():
+def test_fortigate_sslvpn_old_params() -> None:
     check = Check("fortigate_sslvpn")
     parsed = {
         "domain": {

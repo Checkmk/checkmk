@@ -52,7 +52,7 @@ class TestPArsedSectionsResolver:
             ),
         )
 
-    def test_straight_forward_case(self):
+    def test_straight_forward_case(self) -> None:
         resolver, parser = self.make_provider(
             section_plugins=[
                 _section("section_one", "parsed_section_name", set()),
@@ -75,7 +75,7 @@ class TestPArsedSectionsResolver:
             is None
         )
 
-    def test_superseder_is_present(self):
+    def test_superseder_is_present(self) -> None:
         resolver, parser = self.make_provider(
             section_plugins=[
                 _section("section_one", "parsed_section_one", set()),
@@ -91,7 +91,7 @@ class TestPArsedSectionsResolver:
             is None
         )
 
-    def test_superseder_with_same_name(self):
+    def test_superseder_with_same_name(self) -> None:
         resolver, parser = self.make_provider(
             section_plugins=[
                 _section("section_one", "parsed_section", set()),
@@ -108,7 +108,7 @@ class TestPArsedSectionsResolver:
         assert parsed and parsed.data == 2
         assert section and section.name == SectionName("section_two")
 
-    def test_superseder_has_no_data(self):
+    def test_superseder_has_no_data(self) -> None:
         resolver, parser = self.make_provider(
             section_plugins=[
                 _section("section_one", "parsed_section_one", set()),
@@ -125,7 +125,7 @@ class TestPArsedSectionsResolver:
         assert parsed and parsed.data == 1
         assert section and section.name == SectionName("section_one")
 
-    def test_iteration(self):
+    def test_iteration(self) -> None:
         sections = [
             _section("section_one", "parsed_section_one", set()),
             _section("section_two", "parsed_section_two", set()),

@@ -12,7 +12,7 @@ import cmk.gui.plugins.watolib.utils as utils
 import cmk.gui.wato  # noqa: F401 # pylint: disable=unused-import
 
 
-def test_registered_generators():
+def test_registered_generators() -> None:
     expected_generators = [
         "acknowledge_initial_werks",
         "basic_wato_config",
@@ -29,7 +29,7 @@ def test_registered_generators():
     assert sorted(utils.sample_config_generator_registry.keys()) == sorted(expected_generators)
 
 
-def test_get_sorted_generators():
+def test_get_sorted_generators() -> None:
     expected = [
         "basic_wato_config",
     ]

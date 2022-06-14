@@ -149,7 +149,7 @@ pytestmark = pytest.mark.checks
         ),
     ],
 )
-def test_ra32e_sensors_inputs(info, discoveries_expected, checks_expected):
+def test_ra32e_sensors_inputs(info, discoveries_expected, checks_expected) -> None:
     ra32e_sensors_checks = [
         "ra32e_sensors",
         "ra32e_sensors.humidity",

@@ -10,7 +10,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
 from cmk.base.plugins.agent_based.utils.timesync import tolerance_check
 
 
-def test_tolerance_check_set_sync_time():
+def test_tolerance_check_set_sync_time() -> None:
     sync_time = 23.0
     value_store: Dict[str, Any] = {}
     assert (
@@ -27,7 +27,7 @@ def test_tolerance_check_set_sync_time():
     assert value_store["time_server"] == sync_time
 
 
-def test_tolerance_check_no_last_sync():
+def test_tolerance_check_no_last_sync() -> None:
     now = 42.0
     value_store: Dict[str, Any] = {}
     assert list(
@@ -46,7 +46,7 @@ def test_tolerance_check_no_last_sync():
     assert value_store["time_server"] == now
 
 
-def test_tolerance_check():
+def test_tolerance_check() -> None:
     value_store: Dict[str, Any] = {
         "time_server": 90.0,
     }

@@ -49,13 +49,13 @@ def test_write_daemon_sets_api_sections_calls_write_sections_for_each_daemon_set
 
 
 @pytest.mark.parametrize("daemon_set_pods", [0, 10, 20])
-def test_daemon_set_pod_resources_returns_all_pods(daemon_set, daemon_set_pods):
+def test_daemon_set_pod_resources_returns_all_pods(daemon_set, daemon_set_pods) -> None:
     resources = dict(daemon_set.pod_resources())
     pod_resources = section.PodResources(**resources)
     assert sum(len(pods) for _, pods in pod_resources) == daemon_set_pods
 
 
-def test_daemon_set_pod_resources_one_pod_per_phase(daemon_set):
+def test_daemon_set_pod_resources_one_pod_per_phase(daemon_set) -> None:
     resources = dict(daemon_set.pod_resources())
     pod_resources = section.PodResources(**resources)
     for _phase, pods in pod_resources:
@@ -65,7 +65,7 @@ def test_daemon_set_pod_resources_one_pod_per_phase(daemon_set):
 @pytest.mark.parametrize(
     "phases", [["running"], ["pending"], ["succeeded"], ["failed"], ["unknown"]]
 )
-def test_daemon_set_pod_resources_pods_in_phase(daemon_set, phases, daemon_set_pods):
+def test_daemon_set_pod_resources_pods_in_phase(daemon_set, phases, daemon_set_pods) -> None:
     pods = daemon_set.pods(phases[0])
     assert len(pods) == daemon_set_pods
 
@@ -73,7 +73,7 @@ def test_daemon_set_pod_resources_pods_in_phase(daemon_set, phases, daemon_set_p
 @pytest.mark.parametrize(
     "phases", [["running"], ["pending"], ["succeeded"], ["failed"], ["unknown"]]
 )
-def test_daemon_set_pod_resources_pods_in_phase_no_phase_param(daemon_set, daemon_set_pods):
+def test_daemon_set_pod_resources_pods_in_phase_no_phase_param(daemon_set, daemon_set_pods) -> None:
     pods = daemon_set.pods()
     assert len(pods) == daemon_set_pods
 

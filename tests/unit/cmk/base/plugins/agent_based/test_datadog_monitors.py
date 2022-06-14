@@ -41,7 +41,7 @@ _SECTION = {
 }
 
 
-def test_parse_datadog_monitors():
+def test_parse_datadog_monitors() -> None:
     assert (
         parse_datadog_monitors(
             [
@@ -91,7 +91,7 @@ def test_parse_datadog_monitors():
         ),
     ),
 )
-def test_discover_datadog_monitors(params, expected_result):
+def test_discover_datadog_monitors(params, expected_result) -> None:
     assert (
         list(
             discover_datadog_monitors(
@@ -192,7 +192,7 @@ def test_discover_datadog_monitors(params, expected_result):
         ),
     ),
 )
-def test_check_datadog_monitors(item, params, expected_result):
+def test_check_datadog_monitors(item, params, expected_result) -> None:
     assert (
         list(
             check_datadog_monitors(
@@ -205,5 +205,5 @@ def test_check_datadog_monitors(item, params, expected_result):
     )
 
 
-def test_default_datadog_and_checkmk_states():
+def test_default_datadog_and_checkmk_states() -> None:
     assert _DEFAULT_DATADOG_AND_CHECKMK_STATES == WATO_DEFAULTS

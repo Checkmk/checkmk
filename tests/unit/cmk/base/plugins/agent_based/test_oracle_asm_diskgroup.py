@@ -208,7 +208,7 @@ def value_store_fixture(monkeypatch):
         ),
     ],
 )
-def test_parse(string_table, expected):
+def test_parse(string_table, expected) -> None:
     parsed_section = asm.parse_oracle_asm_diskgroup(string_table)
     assert parsed_section == expected
 
@@ -238,7 +238,7 @@ def test_parse(string_table, expected):
         (SECTION_OLD_DISMOUNTED, [Service(item=ITEM)]),
     ],
 )
-def test_discovery(section, expected):
+def test_discovery(section, expected) -> None:
     yielded_services = list(asm.discovery_oracle_asm_diskgroup(section))
     assert yielded_services == expected
 
@@ -378,7 +378,7 @@ def test_discovery(section, expected):
         ),
     ],
 )
-def test_check(value_store_patch, section, params, expected):
+def test_check(value_store_patch, section, params, expected) -> None:
     with on_time(*NOW_SIMULATED):
 
         assert expected == list(asm.check_oracle_asm_diskgroup(ITEM, params, section))
@@ -426,7 +426,7 @@ def test_check(value_store_patch, section, params, expected):
         ),
     ],
 )
-def test_cluster(value_store_patch, section, params, expected):
+def test_cluster(value_store_patch, section, params, expected) -> None:
     with on_time(*NOW_SIMULATED):
         yielded_results = list(asm.cluster_check_oracle_asm_diskgroup(ITEM, params, section))
         assert yielded_results == expected

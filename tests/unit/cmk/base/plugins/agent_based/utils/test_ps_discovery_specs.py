@@ -16,7 +16,7 @@ TEST_LABELS = {
 }
 
 
-def test_get_discovery_specs():
+def test_get_discovery_specs() -> None:
     assert ps.get_discovery_specs(
         [
             {

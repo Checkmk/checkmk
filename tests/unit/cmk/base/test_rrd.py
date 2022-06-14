@@ -208,7 +208,7 @@ NAGIOS_SERVICE_XML_MULTIPLE_METRIC_RENAME = """<?xml version="1.0" encoding="UTF
         )
     ],
 )
-def test_update_metric_pnp_xml_info_file(tmp_path, perfvar, newvar, xml_file, result):
+def test_update_metric_pnp_xml_info_file(tmp_path, perfvar, newvar, xml_file, result) -> None:
     filepath = tmp_path / "pnp.xml"
     with filepath.open("w") as fid:
         fid.write(xml_file)

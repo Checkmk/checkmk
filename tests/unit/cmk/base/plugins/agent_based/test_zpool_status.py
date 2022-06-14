@@ -146,7 +146,7 @@ def test_zpool_status_discover(section: Section, expected_result: Sequence[Servi
         ),
     ],
 )
-def test_zpool_status_check(string_table, expected_result):
+def test_zpool_status_check(string_table, expected_result) -> None:
     section = zpool_status.parse_zpool_status(string_table)
     assert section
     assert list(zpool_status.check_zpool_status({}, section)) == [expected_result]

@@ -10,7 +10,12 @@ from typing import Any, Mapping, Optional, Sequence
 def agent_ucsbladecenter_arguments(
     params: Mapping[str, Any], hostname: str, ipaddress: Optional[str]
 ) -> Sequence[str]:
-    args = ["-u", f"{params['username']}", "-p", f"{params['password']}"]
+    args = [
+        "-u",
+        f"{params['username']}",
+        "-p",
+        passwordstore_get_cmdline("%s", params["password"]),
+    ]
 
     if params.get("no_cert_check"):
         args.append("--no-cert-check")

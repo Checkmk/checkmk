@@ -14,6 +14,7 @@ import requests
 import urllib3
 
 from cmk.utils.exceptions import MKException
+from cmk.utils.password_store import replace_passwords
 
 from cmk.special_agents.utils import vcrtrace
 
@@ -559,8 +560,7 @@ def setup_logging(opt_debug):
 
 def main(args=None):
     if args is None:
-        # TODO Add functionality in the future
-        # cmk.utils.password_store.replace_passwords()
+        replace_passwords()
         args = sys.argv[1:]
 
     args = parse_arguments(args)

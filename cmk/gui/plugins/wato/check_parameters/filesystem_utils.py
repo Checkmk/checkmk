@@ -5,9 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Module to hold shared code for filesystem check parameter module internals"""
 
-from typing import Any, Dict, List, Mapping
-from typing import Tuple as _Tuple
-from typing import Union
+from typing import Any, Dict, List, Mapping, Union
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
@@ -15,6 +13,7 @@ from cmk.gui.valuespec import (
     Alternative,
     Checkbox,
     Dictionary,
+    DictionaryEntry,
     DropdownChoice,
     Filesize,
     FixedValue,
@@ -136,7 +135,7 @@ def transform_filesystem_free(value):
     return result
 
 
-fs_levels_elements = [
+fs_levels_elements: List[DictionaryEntry] = [
     (
         "levels",
         Alternative(
@@ -172,7 +171,7 @@ fs_levels_elements = [
 ]
 
 # Note: This hack is only required on very old filesystem checks (prior August 2013)
-fs_levels_elements_hack: List[_Tuple[str, ValueSpec]] = [
+fs_levels_elements_hack: List[DictionaryEntry] = [
     # Beware: this is a nasty hack that helps us to detect new-style parameters.
     # Something hat has todo with float/int conversion and has not been documented
     # by the one who implemented this.
@@ -186,7 +185,7 @@ fs_levels_elements_hack: List[_Tuple[str, ValueSpec]] = [
     ),
 ]
 
-fs_reserved_elements: List[_Tuple[str, ValueSpec]] = [
+fs_reserved_elements: List[DictionaryEntry] = [
     (
         "show_reserved",
         DropdownChoice(
@@ -223,7 +222,7 @@ fs_reserved_elements: List[_Tuple[str, ValueSpec]] = [
     ),
 ]
 
-fs_volume_name: List[_Tuple[str, ValueSpec]] = [
+fs_volume_name: List[DictionaryEntry] = [
     (
         "show_volume_name",
         Checkbox(
@@ -234,7 +233,7 @@ fs_volume_name: List[_Tuple[str, ValueSpec]] = [
     ),
 ]
 
-fs_inodes_elements = [
+fs_inodes_elements: List[DictionaryEntry] = [
     (
         "inodes_levels",
         Alternative(
@@ -293,7 +292,7 @@ fs_inodes_elements = [
     ),
 ]
 
-fs_magic_elements: List[_Tuple[str, ValueSpec]] = [
+fs_magic_elements: List[DictionaryEntry] = [
     (
         "magic",
         Float(
@@ -338,7 +337,7 @@ fs_magic_elements: List[_Tuple[str, ValueSpec]] = [
 ]
 
 
-size_trend_elements = [
+size_trend_elements: List[DictionaryEntry] = [
     (
         "trend_range",
         Integer(
@@ -443,7 +442,7 @@ size_trend_elements = [
     ),
 ]
 
-filesystem_elements: List[_Tuple[str, ValueSpec]] = (
+filesystem_elements: List[DictionaryEntry] = (
     fs_levels_elements
     + fs_levels_elements_hack
     + fs_reserved_elements

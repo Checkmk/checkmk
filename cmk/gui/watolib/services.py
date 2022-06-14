@@ -11,7 +11,21 @@ import os
 import sys
 import time
 from hashlib import sha256
-from typing import Any, Iterable, List, NamedTuple, Optional, Sequence, Set, Tuple, TypedDict
+from typing import (
+    Any,
+    Callable,
+    Iterable,
+    List,
+    NamedTuple,
+    Optional,
+    Sequence,
+    Set,
+    Tuple,
+    TypedDict,
+    Union,
+)
+
+from mypy_extensions import NamedArg
 
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 from cmk.utils.type_defs import HostOrServiceConditions, Item, SetAutochecksTable
@@ -21,7 +35,7 @@ from cmk.automations.results import CheckPreviewEntry, TryDiscoveryResult
 import cmk.gui.gui_background_job as gui_background_job
 import cmk.gui.watolib as watolib
 from cmk.gui.background_job import BackgroundProcessInterface, JobStatusStates
-from cmk.gui.globals import config, transactions, user
+from cmk.gui.globals import config, user
 from cmk.gui.i18n import _
 from cmk.gui.sites import get_site_config, site_is_local
 from cmk.gui.watolib import CREHost
@@ -415,117 +429,88 @@ class Discovery:
         )
 
 
-def perform_discovery_action(
-    discovery_options: DiscoveryOptions,
-    host: CREHost,
-    previous_discovery_result: Optional[DiscoveryResult],
-    update_services: List[str],
-    update_source: Optional[str],
-    update_target: Optional[str],
-) -> Tuple[DiscoveryOptions, DiscoveryResult]:
+def service_discovery_call(
+    perform_action_call: Union[
+        Callable[
+            [DiscoveryOptions, DiscoveryResult, NamedArg(CREHost, "host")],
+            DiscoveryResult,
+        ],
+        Callable[
+            [
+                DiscoveryOptions,
+                DiscoveryResult,
+                List[str],
+                Optional[str],
+                Optional[str],
+                NamedArg(CREHost, "host"),
+            ],
+            DiscoveryResult,
+        ],
+    ]
+):
+    def decorate(*args, **kwargs) -> DiscoveryResult:
+        user.need_permission("wato.services")
+        result = perform_action_call(*args, **kwargs)
+        host: CREHost = kwargs["host"]
+        if not host.locked():
+            host.clear_discovery_failed()
+        return result
 
-    # Refuse action requests in case the user is not permitted
-    if discovery_options.action != DiscoveryAction.NONE and not user.may("wato.services"):
-        discovery_options = discovery_options._replace(action=DiscoveryAction.NONE)
-    if discovery_options.action != DiscoveryAction.TABULA_RASA and not (
-        user.may("wato.service_discovery_to_undecided")
-        and user.may("wato.service_discovery_to_monitored")
-        and user.may("wato.service_discovery_to_ignored")
-        and user.may("wato.service_discovery_to_removed")
-    ):
-        discovery_options = discovery_options._replace(action=DiscoveryAction.NONE)
-
-    if _use_previous_discovery_result(discovery_options.action, previous_discovery_result):
-        assert previous_discovery_result is not None
-        discovery_result = previous_discovery_result
-    else:
-        discovery_result = get_check_table(
-            StartDiscoveryRequest(host, host.folder(), discovery_options)
-        )
-
-    discovery_result = perform_discovery_steps(
-        discovery_options,
-        discovery_result,
-        host,
-        update_services,
-        update_source,
-        update_target,
-    )
-
-    if not discovery_result.check_table_created and previous_discovery_result:
-        discovery_result = DiscoveryResult(
-            job_status=discovery_result.job_status,
-            check_table_created=previous_discovery_result.check_table_created,
-            check_table=previous_discovery_result.check_table,
-            host_labels=previous_discovery_result.host_labels,
-            new_labels=previous_discovery_result.new_labels,
-            vanished_labels=previous_discovery_result.vanished_labels,
-            changed_labels=previous_discovery_result.changed_labels,
-        )
-    return discovery_options, discovery_result
+    return decorate
 
 
-def perform_discovery_steps(
+@service_discovery_call
+def perform_fix_all(
     discovery_options: DiscoveryOptions,
     discovery_result: DiscoveryResult,
+    *,
     host: CREHost,
-    update_services: List[str],
-    update_source: Optional[str],
-    update_target: Optional[str],
-):
-
-    if (action := discovery_options.action) in [
-        DiscoveryAction.NONE,
-        DiscoveryAction.REFRESH,
-        DiscoveryAction.TABULA_RASA,
-        DiscoveryAction.STOP,
-    ] or not transactions.check_transaction():
-        return discovery_result
-
-    user.need_permission("wato.services")
-    if action == DiscoveryAction.FIX_ALL:
-        _perform_update_host_labels(host, discovery_result.host_labels)
-        discovery_result = _perform_discovery_and_retrieve_new_table(
-            discovery_options,
-            discovery_result,
-            host,
-            update_services,
-            update_source,
-            update_target,
-        )
-    elif action == DiscoveryAction.UPDATE_HOST_LABELS:
-        _perform_update_host_labels(host, discovery_result.host_labels)
-        discovery_result = get_check_table(
-            StartDiscoveryRequest(host, host.folder(), discovery_options)
-        )
-    elif action in (
-        DiscoveryAction.SINGLE_UPDATE,
-        DiscoveryAction.BULK_UPDATE,
-        DiscoveryAction.UPDATE_SERVICES,
-    ):
-        discovery_result = _perform_discovery_and_retrieve_new_table(
-            discovery_options,
-            discovery_result,
-            host,
-            update_services,
-            update_source,
-            update_target,
-        )
-
-    if not host.locked():
-        host.clear_discovery_failed()
-
+) -> DiscoveryResult:
+    """
+    Handle fix all ('Accept All' on UI) discovery action
+    """
+    _perform_update_host_labels(host, discovery_result.host_labels)
+    Discovery(
+        host,
+        discovery_options,
+        update_target=None,
+        update_services=[],
+        update_source=None,
+    ).do_discovery(discovery_result)
+    discovery_result = get_check_table(
+        StartDiscoveryRequest(host, host.folder(), discovery_options)
+    )
     return discovery_result
 
 
-def _perform_discovery_and_retrieve_new_table(
+@service_discovery_call
+def perform_host_label_discovery(
     discovery_options: DiscoveryOptions,
     discovery_result: DiscoveryResult,
+    *,
     host: CREHost,
+) -> DiscoveryResult:
+    """Handle update host labels discovery action"""
+    _perform_update_host_labels(host, discovery_result.host_labels)
+    discovery_result = get_check_table(
+        StartDiscoveryRequest(host, host.folder(), discovery_options)
+    )
+    return discovery_result
+
+
+@service_discovery_call
+def perform_service_discovery(
+    discovery_options: DiscoveryOptions,
+    discovery_result: DiscoveryResult,
     update_services: List[str],
     update_source: Optional[str],
     update_target: Optional[str],
-):
+    *,
+    host: CREHost,
+) -> DiscoveryResult:
+    """
+    Handle discovery action for Update Services, Single Update & Bulk Update
+    """
     Discovery(
         host,
         discovery_options,
@@ -537,6 +522,41 @@ def _perform_discovery_and_retrieve_new_table(
         StartDiscoveryRequest(host, host.folder(), discovery_options)
     )
     return discovery_result
+
+
+def has_discovery_action_specific_permissions(intended_discovery_action: str) -> bool:
+    if intended_discovery_action == DiscoveryAction.NONE and not user.may("wato.services"):
+        return False
+    if intended_discovery_action != DiscoveryAction.TABULA_RASA and not (
+        user.may("wato.service_discovery_to_undecided")
+        and user.may("wato.service_discovery_to_monitored")
+        and user.may("wato.service_discovery_to_ignored")
+        and user.may("wato.service_discovery_to_removed")
+    ):
+        return False
+    return True
+
+
+def initial_discovery_result(
+    discovery_options: DiscoveryOptions,
+    host: CREHost,
+    previous_discovery_result: Optional[DiscoveryResult],
+) -> DiscoveryResult:
+    if _use_previous_discovery_result(previous_discovery_result):
+        assert previous_discovery_result is not None
+        return previous_discovery_result
+
+    return get_check_table(StartDiscoveryRequest(host, host.folder(), discovery_options))
+
+
+def _use_previous_discovery_result(previous_discovery_result: Optional[DiscoveryResult]) -> bool:
+    if not previous_discovery_result:
+        return False
+
+    if has_active_job(previous_discovery_result):
+        return False
+
+    return True
 
 
 def _perform_update_host_labels(host, host_labels):
@@ -556,23 +576,6 @@ def _perform_update_host_labels(host, host_labels):
     )
 
 
-def _use_previous_discovery_result(discovery_action: str, previous_discovery_result) -> bool:
-    if not previous_discovery_result:
-        return False
-
-    if (
-        discovery_action
-        in [DiscoveryAction.TABULA_RASA, DiscoveryAction.REFRESH, DiscoveryAction.STOP]
-        and transactions.check_transaction()
-    ):
-        return False
-
-    if has_active_job(previous_discovery_result):
-        return False
-
-    return True
-
-
 def _apply_state_change(  # pylint: disable=too-many-branches
     table_source: str,
     table_target: str,
@@ -584,7 +587,6 @@ def _apply_state_change(  # pylint: disable=too-many-branches
     add_disabled_rule: Set[str],
     remove_disabled_rule: Set[str],
 ):
-
     if table_source == DiscoveryState.UNDECIDED:
         if table_target == DiscoveryState.MONITORED:
             autochecks_to_save[key] = value

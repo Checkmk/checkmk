@@ -50,23 +50,16 @@ TEST(WtoolsRunAs, NoUser_Integration) {
                         "@echo %USERNAME%\n"
                         "@powershell  Start-Sleep -Milliseconds 150\n"
                         "@echo marker %1");
-    //
-    // test();
-    {
-        wtools::AppRunner ar;
-        auto ret = ar.goExecAsJob((in / "runc.cmd 1").wstring());
-        EXPECT_TRUE(ret);
-        ASSERT_TRUE(WaitForExit(ar.processId()));
-        auto data = ReadFromHandle(ar.getStdioRead());
-        ASSERT_TRUE(!data.empty());
-        EXPECT_EQ(cma::tools::win::GetEnv("USERNAME"s) + "\r\nmarker 1\r\n",
-                  data);
-    }
+    wtools::AppRunner ar;
+    auto ret = ar.goExecAsJob((in / "runc.cmd 1").wstring());
+    EXPECT_TRUE(ret);
+    ASSERT_TRUE(WaitForExit(ar.processId()));
+    auto data = ReadFromHandle(ar.getStdioRead());
+    ASSERT_TRUE(!data.empty());
+    EXPECT_EQ(cma::tools::win::GetEnv("USERNAME"s) + "\r\nmarker 1\r\n", data);
 }
 
 TEST(WtoolsRunAs, TestUser_Integration) {
-    XLOG::setup::DuplicateOnStdio(true);
-    ON_OUT_OF_SCOPE(XLOG::setup::DuplicateOnStdio(false));
     wtools::uc::LdapControl lc;
     auto pwd = GenerateRandomString(12);
     std::wstring user = L"a1" + fmt::format(L"_{}", ::GetCurrentProcessId());
@@ -88,8 +81,10 @@ TEST(WtoolsRunAs, TestUser_Integration) {
                         "@echo marker %1");
 
     // Allow Users to use the file
+    // Must be done for testing. Plugin Engine must use own method to allow
+    // execution
     EXPECT_TRUE(wtools::ChangeAccessRights(
-        (in / "runc.cmd").wstring().c_str(), SE_FILE_OBJECT, L"a1",
+        (in / "runc.cmd").wstring().c_str(), SE_FILE_OBJECT, user.c_str(),
         TRUSTEE_IS_NAME, STANDARD_RIGHTS_ALL | GENERIC_ALL, GRANT_ACCESS,
         OBJECT_INHERIT_ACE));
 

@@ -26,7 +26,12 @@ from cmk.gui.watolib.services import (
     DiscoveryAction,
     DiscoveryOptions,
     DiscoveryResult,
-    perform_discovery_action,
+    get_check_table,
+    initial_discovery_result,
+    perform_fix_all,
+    perform_host_label_discovery,
+    perform_service_discovery,
+    StartDiscoveryRequest,
 )
 
 MOCK_DISCOVERY_RESULT = TryDiscoveryResult(
@@ -121,7 +126,7 @@ def fixture_sample_host(
 
 @pytest.mark.usefixtures("inline_background_jobs")
 def test_perform_discovery_none_action(sample_host: CREHost, mock_try_discovery: MagicMock) -> None:
-    _, discovery_result = perform_discovery_action(
+    discovery_result = initial_discovery_result(
         discovery_options=DiscoveryOptions(
             action=DiscoveryAction.NONE,
             show_checkboxes=False,
@@ -132,38 +137,8 @@ def test_perform_discovery_none_action(sample_host: CREHost, mock_try_discovery:
         ),
         host=sample_host,
         previous_discovery_result=None,
-        update_services=[],
-        update_source=None,
-        update_target=None,
     )
     mock_try_discovery.assert_called_once()
-    assert discovery_result.check_table == MOCK_DISCOVERY_RESULT.check_table
-
-
-@pytest.mark.usefixtures("inline_background_jobs")
-def test_perform_discovery_refresh_with_previous_discovery_result(
-    sample_host_name: str,
-    sample_host: CREHost,
-    mock_try_discovery: MagicMock,
-    mock_check_transaction,
-) -> None:
-    with mock_check_transaction:
-        _, discovery_result = perform_discovery_action(
-            discovery_options=DiscoveryOptions(
-                action=DiscoveryAction.REFRESH,
-                show_checkboxes=False,
-                show_parameters=False,
-                show_discovered_labels=False,
-                show_plugin_names=False,
-                ignore_errors=False,
-            ),
-            host=sample_host,
-            previous_discovery_result=None,
-            update_services=[],
-            update_source=None,
-            update_target=None,
-        )
-    mock_try_discovery.assert_called_with("NO_SITE", ["@noscan"], sample_host_name)
     assert discovery_result.check_table == MOCK_DISCOVERY_RESULT.check_table
 
 
@@ -171,12 +146,13 @@ def test_perform_discovery_refresh_with_previous_discovery_result(
 def test_perform_discovery_tabula_rasa_action_with_no_previous_discovery_result(
     sample_host_name: str,
     sample_host: CREHost,
-    mock_check_transaction,
     mock_try_discovery: MagicMock,
 ) -> None:
-    with mock_check_transaction:
-        _, discovery_result = perform_discovery_action(
-            discovery_options=DiscoveryOptions(
+    discovery_result = get_check_table(
+        StartDiscoveryRequest(
+            sample_host,
+            sample_host.folder(),
+            options=DiscoveryOptions(
                 action=DiscoveryAction.TABULA_RASA,
                 show_checkboxes=False,
                 show_parameters=False,
@@ -184,96 +160,11 @@ def test_perform_discovery_tabula_rasa_action_with_no_previous_discovery_result(
                 show_plugin_names=False,
                 ignore_errors=False,
             ),
-            host=sample_host,
-            previous_discovery_result=None,
-            update_services=[],
-            update_source=None,
-            update_target=None,
         )
-    mock_try_discovery.assert_has_calls(
-        [
-            call("NO_SITE", ["@noscan"], sample_host_name),
-            call("NO_SITE", ["@noscan"], sample_host_name),
-        ]
     )
-    assert discovery_result.check_table == MOCK_DISCOVERY_RESULT.check_table
 
-
-@pytest.mark.usefixtures("inline_background_jobs")
-def test_perform_discovery_tabula_rasa_action_with_previous_discovery_result(
-    sample_host_name: str,
-    sample_host: CREHost,
-    mock_try_discovery: MagicMock,
-    mock_check_transaction,
-) -> None:
-    with mock_check_transaction:
-        _, discovery_result = perform_discovery_action(
-            discovery_options=DiscoveryOptions(
-                action=DiscoveryAction.TABULA_RASA,
-                show_checkboxes=False,
-                show_parameters=False,
-                show_discovered_labels=False,
-                show_plugin_names=False,
-                ignore_errors=False,
-            ),
-            host=sample_host,
-            previous_discovery_result=DiscoveryResult(
-                job_status={
-                    "duration": 2.585845708847046,
-                    "estimated_duration": 2.5156571865081787,
-                    "host_name": "heute",
-                    "logfile_path": "~/var/log/web.log",
-                    "pid": 308943,
-                    "ppid": 308942,
-                    "started": 1654002154.264968,
-                    "state": "finished",
-                    "statusfile": "service_discovery-heute/jobstatus.mk",
-                    "stoppable": True,
-                    "title": "Tabula rasa",
-                    "user": "cmkadmin",
-                    "loginfo": {
-                        "JobProgressUpdate": ["Starting job...", "Completed."],
-                        "JobResult": [],
-                        "JobException": [],
-                    },
-                    "is_active": False,
-                },
-                check_table_created=1654002157,
-                check_table=[
-                    CheckPreviewEntry(
-                        "old",
-                        "cpu.loads",
-                        "cpu_load",
-                        None,
-                        "cpuload_default_levels",
-                        (5.0, 10.0),
-                        "CPU load",
-                        0,
-                        "15 min load: 1.32 at 8 Cores (0.17 per Core)",
-                        [
-                            ("load1", 2.7, 40.0, 80.0, 0, 8),
-                            ("load5", 1.63, 40.0, 80.0, 0, 8),
-                            ("load15", 1.32, 40.0, 80.0, 0, 8),
-                        ],
-                        {},
-                        ["heute"],
-                    ),
-                ],
-                host_labels={
-                    "cmk/check_mk_server": {"value": "yes", "plugin_name": "omd_info"},
-                    "cmk/os_family": {"value": "linux", "plugin_name": "check_mk"},
-                },
-                new_labels={},
-                vanished_labels={},
-                changed_labels={},
-            ),
-            update_services=[],
-            update_source=None,
-            update_target=None,
-        )
     mock_try_discovery.assert_has_calls(
         [
-            call("NO_SITE", ["@noscan"], sample_host_name),
             call("NO_SITE", ["@noscan"], sample_host_name),
         ]
     )
@@ -395,24 +286,24 @@ def test_perform_discovery_fix_all_with_previous_discovery_result(
         changed_labels={},
     )
 
-    with patch.object(
-        transaction_manager.TransactionManager, "check_transaction", MagicMock(side_effect=[True])
-    ):
-        _, discovery_result = perform_discovery_action(
-            discovery_options=DiscoveryOptions(
-                action=DiscoveryAction.FIX_ALL,
-                show_checkboxes=False,
-                show_parameters=True,
-                show_discovered_labels=False,
-                show_plugin_names=False,
-                ignore_errors=False,
-            ),
+    discovery_options = DiscoveryOptions(
+        action=DiscoveryAction.FIX_ALL,
+        show_checkboxes=False,
+        show_parameters=True,
+        show_discovered_labels=False,
+        show_plugin_names=False,
+        ignore_errors=False,
+    )
+
+    discovery_result = perform_fix_all(
+        discovery_options=discovery_options,
+        discovery_result=initial_discovery_result(
+            discovery_options=discovery_options,
             host=sample_host,
             previous_discovery_result=previous_discovery_result,
-            update_services=[],
-            update_source=None,
-            update_target=None,
-        )
+        ),
+        host=sample_host,
+    )
     mock_set_autochecks.assert_called_with(
         "NO_SITE",
         sample_host_name,
@@ -439,7 +330,6 @@ def test_perform_discovery_single_update(
     sample_host_name: str,
     sample_host: CREHost,
     mock_set_autochecks: MagicMock,
-    mock_check_transaction,
 ) -> None:
     mock_try_discovery = mocker.patch(
         "cmk.gui.watolib.services.try_discovery",
@@ -593,22 +483,26 @@ def test_perform_discovery_single_update(
         changed_labels={},
     )
 
-    with mock_check_transaction:
-        _, discovery_result = perform_discovery_action(
-            discovery_options=DiscoveryOptions(
-                action=DiscoveryAction.SINGLE_UPDATE,
-                show_checkboxes=False,
-                show_parameters=False,
-                show_discovered_labels=False,
-                show_plugin_names=False,
-                ignore_errors=False,
-            ),
+    discovery_options = DiscoveryOptions(
+        action=DiscoveryAction.SINGLE_UPDATE,
+        show_checkboxes=False,
+        show_parameters=False,
+        show_discovered_labels=False,
+        show_plugin_names=False,
+        ignore_errors=False,
+    )
+    discovery_result = perform_service_discovery(
+        discovery_options=discovery_options,
+        discovery_result=initial_discovery_result(
+            discovery_options=discovery_options,
             host=sample_host,
             previous_discovery_result=previous_discovery_result,
-            update_services=[checkbox_id("mem_linux", None)],
-            update_source="new",
-            update_target="old",
-        )
+        ),
+        update_services=[checkbox_id("mem_linux", None)],
+        update_source="new",
+        update_target="old",
+        host=sample_host,
+    )
     mock_set_autochecks.assert_called_with(
         "NO_SITE",
         sample_host_name,
@@ -635,7 +529,6 @@ def test_perform_discovery_action_update_services(
     sample_host_name: str,
     sample_host: CREHost,
     mock_set_autochecks: MagicMock,
-    mock_check_transaction,
 ) -> None:
     mock_try_discovery = mocker.patch(
         "cmk.gui.watolib.services.try_discovery",
@@ -784,22 +677,26 @@ def test_perform_discovery_action_update_services(
         changed_labels={},
     )
 
-    with mock_check_transaction:
-        _, discovery_result = perform_discovery_action(
-            discovery_options=DiscoveryOptions(
-                action=DiscoveryAction.UPDATE_SERVICES,
-                show_checkboxes=False,
-                show_parameters=False,
-                show_discovered_labels=False,
-                show_plugin_names=False,
-                ignore_errors=False,
-            ),
+    discovery_options = DiscoveryOptions(
+        action=DiscoveryAction.UPDATE_SERVICES,
+        show_checkboxes=False,
+        show_parameters=False,
+        show_discovered_labels=False,
+        show_plugin_names=False,
+        ignore_errors=False,
+    )
+    discovery_result = perform_service_discovery(
+        discovery_options=discovery_options,
+        discovery_result=initial_discovery_result(
+            discovery_options=discovery_options,
             host=sample_host,
             previous_discovery_result=previous_discovery_result,
-            update_services=[],
-            update_source=None,
-            update_target=None,
-        )
+        ),
+        update_services=[],
+        update_source=None,
+        update_target=None,
+        host=sample_host,
+    )
     mock_set_autochecks.assert_called_with(
         "NO_SITE",
         sample_host_name,
@@ -826,7 +723,6 @@ def test_perform_discovery_action_update_host_labels(
     sample_host_name: str,
     sample_host: CREHost,
     mock_set_autochecks: MagicMock,
-    mock_check_transaction,
 ) -> None:
     mock_update_host_labels = mocker.patch(
         "cmk.gui.watolib.services.update_host_labels", return_value=None
@@ -896,22 +792,23 @@ def test_perform_discovery_action_update_host_labels(
         changed_labels={},
     )
 
-    with mock_check_transaction:
-        _, discovery_result = perform_discovery_action(
-            discovery_options=DiscoveryOptions(
-                action=DiscoveryAction.UPDATE_HOST_LABELS,
-                show_checkboxes=False,
-                show_parameters=False,
-                show_discovered_labels=False,
-                show_plugin_names=False,
-                ignore_errors=False,
-            ),
+    discovery_options = DiscoveryOptions(
+        action=DiscoveryAction.UPDATE_HOST_LABELS,
+        show_checkboxes=False,
+        show_parameters=False,
+        show_discovered_labels=False,
+        show_plugin_names=False,
+        ignore_errors=False,
+    )
+    discovery_result = perform_host_label_discovery(
+        discovery_options=discovery_options,
+        discovery_result=initial_discovery_result(
+            discovery_options=discovery_options,
             host=sample_host,
             previous_discovery_result=previous_discovery_result,
-            update_services=[],
-            update_source=None,
-            update_target=None,
-        )
+        ),
+        host=sample_host,
+    )
 
     mock_update_host_labels.assert_called_once_with(
         "NO_SITE",

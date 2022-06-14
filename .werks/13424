@@ -1,0 +1,15 @@
+Title: KUBE: dashboard: multiple sites: Node overview showing sites
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1655197338
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0i1
+
+The Nodes overview in the "Kubernetes Cluster" dashboard showed sites instead
+of hosts/nodes if checkmk was configured in a distributed setup.
+
+This is fixed with this werk: Now hosts/nodes are shown in the node overview.

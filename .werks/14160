@@ -1,0 +1,11 @@
+Title: ntop: fixed mostly broken network statistic pages due to the use of an incompatible library
+Class: fix
+Compatible: compat
+Component: ntopng_integration
+Date: 1655200168
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.1.0p3
+
+

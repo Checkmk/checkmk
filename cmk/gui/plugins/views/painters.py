@@ -5318,7 +5318,7 @@ class _PainterHostKubernetes(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ["host_labels", "host_name"]
+        return ["host_labels", "host_name", "site"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         labels = row.get("host_labels", {})
@@ -5340,6 +5340,7 @@ class _PainterHostKubernetes(Painter):
                 # name of the dashboard we are linking to
                 ("name", f"kubernetes_{self._kubernetes_object_type}"),
                 ("host", row["host_name"]),
+                ("site", row["site"]),
             ],
             filename="dashboard.py",
         )

@@ -1072,7 +1072,7 @@ def test_openapi_host_move(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     _resp = aut_user_auth_wsgi_app.call_method(
         "post",
         base + "/objects/host_config/foobar/actions/move/invoke",
-        params='{"target_folder": "/new_folder"}',
+        params='{"target_folder": "/new_folder/"}',
         headers={"If-Match": resp.headers["ETag"], "Accept": "application/json"},
         content_type="application/json",
         status=200,

@@ -39,7 +39,7 @@ def test_parse_kaspersky_av_client(string_table, now, expected_section):
     "section,results",
     [
         (
-            dict(fullscan_age=2, signature_age=2),
+            dict(fullscan_age=2.3549888134, signature_age=2.3549888134),
             [
                 Result(
                     state=State.WARN,
@@ -52,7 +52,7 @@ def test_parse_kaspersky_av_client(string_table, now, expected_section):
             ],
         ),
         (
-            dict(fullscan_age=3, signature_age=3),
+            dict(fullscan_age=3.35498881343, signature_age=3.3549888134),
             [
                 Result(
                     state=State.CRIT,
@@ -65,7 +65,7 @@ def test_parse_kaspersky_av_client(string_table, now, expected_section):
             ],
         ),
         (
-            dict(fullscan_failed=True, fullscan_age=1, signature_age=1),
+            dict(fullscan_failed=True, fullscan_age=1.3549888134, signature_age=1.3549888134),
             [
                 Result(state=State.OK, summary="Last update of signatures: 1 second ago"),
                 Result(state=State.OK, summary="Last fullscan: 1 second ago"),

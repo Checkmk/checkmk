@@ -12,7 +12,7 @@ Version: 2.1.0b1
 Plugins in the folder {{/usr/check_mk/lib/plugins/NUMBER}} are executed
 asynchronously. Since Checkmk version 2.0.0b4 it was broken because in ksh,
 dash or similar the following command in the run_cached function
-C:+
+C+:
 sh -c "COMMAND-STRING"
-C:-
+C-:
 expects executable commands/files but not inline functions.

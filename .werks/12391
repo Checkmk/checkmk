@@ -31,7 +31,7 @@ Previous delta tree heuristic:
 
 Assume the following rows which are compared.
 
-C:+
+C+:
 old_rows = [
     {
         "col1": "value 11",
@@ -62,7 +62,7 @@ new_rows = [
         ...
     },
 ]
-C:-
+C-:
 
 First both lists were filtered, ie. find rows which
 <ul>
@@ -98,7 +98,7 @@ Especially the above filtering of both lists is expensive. We also want to make
 these operations more reliable. For this we need a row identifier which can be
 calculated from the {{key_columns}} declared in newer inventory plugins:
 
-C:+
+C+:
 TableRow(
     path=["path", "to", "node"],
     key_columns = {
@@ -111,10 +111,10 @@ TableRow(
     },
     ...
 )
-C:-
+C-:
 
 Then the internal table structure looks like:
-C:+
+C+:
 rows = {
     ('value 11', ...): {
         "col1": "value 11",
@@ -127,4 +127,4 @@ rows = {
         ...
     },
 }
-C:-
+C-:

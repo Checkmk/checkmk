@@ -832,12 +832,12 @@ def test_openapi_host_custom_attributes(
     )
 
 
+@pytest.mark.usefixtures("with_host")
 def test_openapi_host_collection(
+    base: str,
     aut_user_auth_wsgi_app: WebTestAppForCMK,
     with_host,
 ):
-    base = "/NO_SITE/check_mk/api/1.0"
-
     resp = aut_user_auth_wsgi_app.call_method(
         "get",
         base + "/domain-types/host_config/collections/all",
@@ -851,6 +851,30 @@ def test_openapi_host_collection(
         assert "members" in host
         assert "title" in host
         assert "id" in host
+
+
+@pytest.mark.usefixtures("with_host")
+def test_openapi_host_collection_effective_attributes(
+    base: str,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+):
+    resp = aut_user_auth_wsgi_app.call_method(
+        "get",
+        base + "/domain-types/host_config/collections/all?effective_attributes=true",
+        status=200,
+        headers={"Accept": "application/json"},
+    )
+    for host in resp.json["value"]:
+        assert isinstance(host["extensions"]["effective_attributes"], dict)
+
+    resp = aut_user_auth_wsgi_app.call_method(
+        "get",
+        base + "/domain-types/host_config/collections/all?effective_attributes=false",
+        status=200,
+        headers={"Accept": "application/json"},
+    )
+    for host in resp.json["value"]:
+        assert host["extensions"]["effective_attributes"] is None
 
 
 def test_openapi_host_rename(

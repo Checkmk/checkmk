@@ -104,7 +104,7 @@ class PythonString(base.String):
 
 # NOTE
 # All these non-capturing match groups are there to properly distinguish the alternatives.
-FOLDER_PATTERN = r"(?:(?:[~\\\/]|(?:[~\\\/][-_ a-zA-Z0-9.]+)+)|[0-9a-fA-F]{32})"
+FOLDER_PATTERN = r"(?:(?:[~\\\/]|(?:[~\\\/][-_ a-zA-Z0-9.]+)+[~\\\/]?)|[0-9a-fA-F]{32})"
 
 
 class FolderField(base.String):
@@ -155,6 +155,9 @@ class FolderField(base.String):
             >>> FolderField._normalize_folder("~foo~bar")
             '/foo/bar'
 
+            >>> FolderField._normalize_folder("/foo/bar/")
+            '/foo/bar'
+
         Returns:
             The normalized representation.
 
@@ -167,6 +170,8 @@ class FolderField(base.String):
             if prev == folder_id:
                 break
             prev = folder_id
+        if len(folder_id) > 1 and folder_id.endswith("/"):
+            folder_id = folder_id[:-1]
         return folder_id
 
     @classmethod

@@ -14,29 +14,16 @@ Packages created by the agent bakery (enterprise editions only) were not affecte
 Previous to this Werk a user with the UID 1001 on a monitored host could gain root privileges.
 
 This was caused by wrong file ownership of the maintainer scripts located at <tt>/var/lib/dpkg/info</tt>: they were owned by the user and group with the ID 1001 instead of root.
-If such a user exists on your system, they can change the content of these files which are then executed by root, leading to a local privilege escalation on the monitored host.
-
-<b>Caution:</b> If you are compromised, the agent update process might trigger a potential exploit.
+If such a user exists on your system, they can change the content of these files which are later executed by root (during package installation, update or removal), leading to a local privilege escalation on the monitored host.
 
 To see if you are affected check the ownership of the files <tt>/var/lib/dpkg/info/check-mk-agent.*</tt> -- they should be owned by root and only writable by root.
 
-If those files are not owned by root, you should perform the following three <b>befor updating the agent</b>:
+If those files are not owned by root, you should perform the following steps <b>before updating the agent</b>:
 
-<ol>
-<li>ensure they have not been tampered with</li>
-<li>change the ownership of the files to <tt>root.root</tt> and the permissions to <tt>755</tt></li>
-</ol>
+LI: Ensure they have not been tampered with.
+LI: Either immediately upgrade the agent or change the ownership of the files to <tt>root.root</tt> and the permissions to <tt>755</tt>
 
-To make sure the files have not been tampered with, you can check out the expected content in the "%pre", "%post" and "%preun" sections of <a href"https://github.com/tribe29/checkmk/blob/2.1.0/agents/check-mk-agent.spec">this file</a>.
+To make sure the files have not been tampered with, you can check out the expected content in the "%pre", "%post" and "%preun" sections of <a href="https://github.com/tribe29/checkmk/blob/master/agents/check-mk-agent.spec">this file</a> (make sure to select the right Checkmk version in the dropdown choice that reads "master").
 
-The expected sha256 sums of the maintainer scripts of the Checkmk agent 2.1.0p2 are
-
-<pre>
-
-user@MyHost:/var/lib/dpkg/info$ sha256sum check-mk-agent.p*
-33000bbc72ca7706e405c1af81f395291c52ab0f48ec8473095c57e836fc1131  check-mk-agent.postinst
-43b4b16d0264defc04f4334648cba64e87af7295b2ced55119821783e7829342  check-mk-agent.preinst
-c524b041d93173a5afeb9bbdbdec353f31001d1621ddb796798c28fd5299ba94  check-mk-agent.prerm
-
-</pre>
-
+To get an idea of what the files should look like in the 2.1.0 version, you can also look at the checked in versions of the master branch <a href="https://github.com/tribe29/checkmk/tree/master/agents/debian/control">here</a>.
+Note that smaller deviations are no cause for concern.

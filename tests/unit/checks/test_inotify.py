@@ -89,9 +89,17 @@ def test_updated_data() -> None:
     now = 1465470156
 
     assert list(check_inotify(item, params, section, last_status, now)) == [
-        (0, "Time since last delete: 98 s", []),
-        (1, "Time since last modify: 100 s (warn/crit at 90 s/110 s)", []),
-        (2, "Time since last open: 100 s (warn/crit at 80 s/90 s)", []),
+        (0, "Time since last delete: 1 minute 38 seconds", []),
+        (
+            1,
+            "Time since last modify: 1 minute 40 seconds (warn/crit at 1 minute 30 seconds/1 minute 50 seconds)",
+            [],
+        ),
+        (
+            2,
+            "Time since last open: 1 minute 40 seconds (warn/crit at 1 minute 20 seconds/1 minute 30 seconds)",
+            [],
+        ),
         (3, "Time since last just_for_test_coverage: unknown"),
         (1, "Incomplete data!"),
         (1, "1 warning(s): I assume a warning looks like this!"),
@@ -136,6 +144,10 @@ def test_old_status() -> None:
     now = 1465470156
 
     assert list(check_inotify(item, params, section, last_status, now)) == [
-        (2, "Time since last modify: 156 s (warn/crit at 90 s/110 s)", []),
+        (
+            2,
+            "Time since last modify: 2 minutes 36 seconds (warn/crit at 1 minute 30 seconds/1 minute 50 seconds)",
+            [],
+        ),
     ]
     assert last_status == {"modify": 1465470000}

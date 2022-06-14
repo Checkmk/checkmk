@@ -259,7 +259,7 @@ checks = {'': [('TUX12C', {'levels': (1800, 3600)}, [(0, 'No locks existing', []
                ('newdb',
                 {'levels': (1800, 3600)},
                 [(2,
-                  'locktime 63 m (!!) Session (sid,serial, proc) 25,15231,13275 machine ol6131 osuser oracle object: . ; ',
+                  'locktime 1 hour 3 minutes (!!) Session (sid,serial, proc) 25,15231,13275 machine ol6131 osuser oracle object: . ; ',
                   [])]),
                ('newdb1',
                 {'levels': (1800, 3600)},

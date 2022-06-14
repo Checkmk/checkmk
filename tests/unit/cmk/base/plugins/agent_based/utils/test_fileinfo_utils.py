@@ -409,7 +409,7 @@ def test_check_fileinfo_groups_data(item, params, parsed, expected_result) -> No
             [
                 Result(state=State.OK, summary="Size: 7 B"),
                 Metric("size", 7),
-                Result(state=State.OK, summary="Age: 3.00 s"),
+                Result(state=State.OK, summary="Age: 3 seconds"),
                 Metric("age", 3),
             ],
         )
@@ -431,7 +431,8 @@ def test__fileinfo_check_function(check_definition, params, expected_result) -> 
             {"conjunctions": [(2, [("size", 12), ("newest_age_lower", 86400)])]},
             [
                 Result(
-                    state=State.CRIT, summary="Conjunction: size at 12 B AND newest age below 24 h"
+                    state=State.CRIT,
+                    summary="Conjunction: size at 12 B AND newest age below 1 day 0 hours",
                 )
             ],
         )

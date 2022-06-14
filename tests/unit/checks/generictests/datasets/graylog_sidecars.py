@@ -32,7 +32,7 @@ checks = {
             }, [
                 (2, 'Active: no', []),
                 (0, 'Last seen: 2019-10-23 13:36:26', []),
-                (0, 'Before: 23 h', []),
+                (0, 'Before: 23 hours 11 minutes', []),
                 (2, u'Collectors: Received no ping signal from sidecar', [])
             ]
         ),
@@ -44,7 +44,7 @@ checks = {
             }, [
                 (2, 'Active: no', []),
                 (0, 'Last seen: 2019-10-21 10:01:08', []),
-                (0, 'Before: 3.1 d', []),
+                (0, 'Before: 3 days 2 hours', []),
                 (2, u'Collectors: Received no ping signal from sidecar', []),
                 (2, 'see long output for more details', []),
                 (

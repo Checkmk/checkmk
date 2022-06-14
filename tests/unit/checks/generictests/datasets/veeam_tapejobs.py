@@ -66,19 +66,19 @@ checks = {
         ]),
         ('Job Four', (86400, 172800), [
             (0, 'Backup in progress since 2019-07-02 10:26:40 (currently working)', []),
-            (0, 'Running time: 14 m', []),
+            (0, 'Running time: 14 minutes 37 seconds', []),
         ]),
         ('Job Five (older)', (86400, 172800), [
             (0, 'Backup in progress since 2019-06-08 17:00:00 (currently working)', []),
-            (2, 'Running time: 24 d (warn/crit at 24 h/2 d)', []),
+            (2, 'Running time: 23 days 17 hours (warn/crit at 1 day 0 hours/2 days 0 hours)', []),
         ]),
         ('Job Six', (86400, 172800), [
             (0, 'Backup in progress since 2019-07-02 10:26:40 (currently idle)', []),
-            (0, 'Running time: 14 m', []),
+            (0, 'Running time: 14 minutes 37 seconds', []),
         ]),
         ('Job Seven (older)', (86400, 172800), [
             (0, 'Backup in progress since 2019-06-08 17:00:00 (currently idle)', []),
-            (2, 'Running time: 24 d (warn/crit at 24 h/2 d)', []),
+            (2, 'Running time: 23 days 17 hours (warn/crit at 1 day 0 hours/2 days 0 hours)', []),
         ]),
     ],
 }

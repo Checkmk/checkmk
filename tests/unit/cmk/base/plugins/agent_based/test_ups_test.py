@@ -69,4 +69,4 @@ def test_check_ups_test_time_check_no_start_time(check_ups_test) -> None:
 def test_check_ups_test_time_check_start_time_warn(check_ups_test) -> None:
     _, result, *_ = check_ups_test(PARAMS, [[[str(360000 * 52)]], [["1", "1000", ""]]])
     assert result.state is State.WARN
-    assert result.summary.startswith("Time since start of last test: 2.1 d")
+    assert result.summary.startswith("Time since start of last test: 2 days 3 hours")

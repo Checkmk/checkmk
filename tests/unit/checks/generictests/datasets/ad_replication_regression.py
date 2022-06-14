@@ -83,7 +83,7 @@ checks = {
         (u'HAM/SADS015', (-1, 2),
          [(1, 'Replications with failures: 3, Total failures: 0', []),
           (0,
-           u'\nHAM/SADS015 replication of context "CN=Configuration;DC=internal" reached  the threshold of maximum failures (-1) (Last success: 4.7 d ago, Last failure: unknown, Num failures: 0, Status: 0)(!)\nHAM/SADS015 replication of context "CN=Schema;CN=Configuration;DC=internal" reached  the threshold of maximum failures (-1) (Last success: 4.7 d ago, Last failure: unknown, Num failures: 0, Status: 0)(!)\nHAM/SADS015 replication of context "DC=network;DC=internal" reached  the threshold of maximum failures (-1) (Last success: 4.7 d ago, Last failure: unknown, Num failures: 0, Status: 0)(!)',
+           u'\nHAM/SADS015 replication of context "CN=Configuration;DC=internal" reached  the threshold of maximum failures (-1) (Last success: 4 days 16 hours ago, Last failure: unknown, Num failures: 0, Status: 0)(!)\nHAM/SADS015 replication of context "CN=Schema;CN=Configuration;DC=internal" reached  the threshold of maximum failures (-1) (Last success: 4 days 17 hours ago, Last failure: unknown, Num failures: 0, Status: 0)(!)\nHAM/SADS015 replication of context "DC=network;DC=internal" reached  the threshold of maximum failures (-1) (Last success: 4 days 16 hours ago, Last failure: unknown, Num failures: 0, Status: 0)(!)',
            [])]), (u'HAM/SADS055', (15, 20), [(0, 'All replications are OK.', [])]),
         (u'HAM/SADS015', (15, 20), [(0, 'All replications are OK.', [])])
     ]

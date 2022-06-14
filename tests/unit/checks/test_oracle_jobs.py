@@ -94,7 +94,7 @@ def test_discovery_cdb_noncdb() -> None:
             "CDB.CDB$ROOT.SYS.AUTO_SPACE_ADVISOR_JOB",
             (
                 0,
-                "Job-State: SCHEDULED, Enabled: Yes, Last Duration: 0.00 s, Next Run: 15-JUN-21 01.01.01.143871 AM +00:00, Last Run Status: SUCCEEDED (ignored disabled Job)",
+                "Job-State: SCHEDULED, Enabled: Yes, Last Duration: 0 seconds, Next Run: 15-JUN-21 01.01.01.143871 AM +00:00, Last Run Status: SUCCEEDED (ignored disabled Job)",
                 [
                     ("duration", 0),
                 ],
@@ -105,7 +105,7 @@ def test_discovery_cdb_noncdb() -> None:
             "NONCDB.SYS.AUTO_SPACE_ADVISOR_JOB",
             (
                 1,
-                "Job-State: SCHEDULED, Enabled: Yes, Last Duration: 16 m, Next Run: 16-JUN-21 01.01.01.143871 AM +00:00,  no log information found(!)",
+                "Job-State: SCHEDULED, Enabled: Yes, Last Duration: 16 minutes 35 seconds, Next Run: 16-JUN-21 01.01.01.143871 AM +00:00,  no log information found(!)",
                 [
                     ("duration", 995),
                 ],

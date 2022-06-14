@@ -23,5 +23,5 @@ checks = {'': [(None,
                 {},
                 [(1, 'Update: failed', []),
                  (0, 'Last update: 2016/02/26 15:42:06', []),
-                 (0, 'Age: 506 d', []),
+                 (0, 'Age: 1 year 140 days', []),
                  (0, 'Security version: 456.180', [])])]}

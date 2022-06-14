@@ -22,7 +22,7 @@ checks = {
         (
             None, {'levels': (30, 60)}, [
                 (
-                    2, 'Offset: 264 d (warn/crit at 30.0 s/60 s)', [
+                    2, 'Offset: 263 days 12 hours (warn/crit at 30 seconds/1 minute 0 seconds)', [
                         ('offset', 22769275, 30, 60)
                     ]
                 )

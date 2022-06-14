@@ -133,7 +133,7 @@ class check_ref(NamedTuple):
                     CheckResult(
                         [
                             (0, "Software is Initial grace period"),
-                            (0, "License will expire in 9 d"),
+                            (0, "License will expire in 9 days 0 hours"),
                         ]
                     ),
                 ),
@@ -145,7 +145,10 @@ class check_ref(NamedTuple):
                     CheckResult(
                         [
                             (0, "Software is Licensed"),
-                            (1, "License will expire in 176 d (warn/crit at 180 d/90 d)"),
+                            (
+                                1,
+                                "License will expire in 176 days 2 hours (warn/crit at 180 days 0 hours/90 days 0 hours)",
+                            ),
                         ]
                     ),
                 ),
@@ -157,7 +160,10 @@ class check_ref(NamedTuple):
                     CheckResult(
                         [
                             (0, "Software is Licensed"),
-                            (2, "License will expire in 174 d (warn/crit at 360 d/180 d)"),
+                            (
+                                2,
+                                "License will expire in 174 days 9 hours (warn/crit at 360 days 0 hours/180 days 0 hours)",
+                            ),
                         ]
                     ),
                 ),
@@ -183,13 +189,18 @@ class check_ref(NamedTuple):
                     CheckResult(
                         [
                             (2, "Software is Initial grace period Required: Registered"),
-                            (0, "License will expire in 9 d"),
+                            (0, "License will expire in 9 days 0 hours"),
                         ]
                     ),
                 ),
                 check_ref(
                     None,
-                    CheckResult([(0, "Software is Licensed"), (0, "License will expire in 176 d")]),
+                    CheckResult(
+                        [
+                            (0, "Software is Licensed"),
+                            (0, "License will expire in 176 days 2 hours"),
+                        ]
+                    ),
                 ),
             ],
         )

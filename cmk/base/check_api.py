@@ -31,7 +31,6 @@ Modules available by default (pre imported by Check_MK):
 
 Global variables:
     from cmk.utils.regex import regex
-    import cmk.utils.render as render
     core_state_names     Names of states. Usually used to convert numeric states
                          to their name for adding it to the plugin output.
                          The mapping is like this:
@@ -104,7 +103,7 @@ import cmk.utils.debug as _debug
 import cmk.utils.defines as _defines
 import cmk.utils.log.console as _console  # noqa: F401 # pylint: disable=unused-import
 import cmk.utils.paths as _paths
-import cmk.utils.render as render
+import cmk.utils.render as _render_from_utils
 
 # These imports are not meant for use in the API. So we prefix the names
 # with an underscore. These names will be skipped when loading into the
@@ -133,6 +132,7 @@ import cmk.base.api.agent_based.register as _agent_based_register
 import cmk.base.config as _config
 import cmk.base.item_state as _item_state
 import cmk.base.prediction as _prediction
+from cmk.base.api.agent_based import render as _render
 from cmk.base.api.agent_based.section_classes import OIDBytes as _OIDBytes
 from cmk.base.api.agent_based.section_classes import OIDCached as _OIDCached
 from cmk.base.plugin_contexts import check_type
@@ -297,11 +297,15 @@ def is_ipv6_primary(hostname: HostName) -> bool:
 nagios_illegal_chars = _config.nagios_illegal_chars
 is_cmc = _config.is_cmc
 
-get_age_human_readable: Callable[[float], str] = lambda secs: "%s" % render.Age(secs)
-get_bytes_human_readable = render.fmt_bytes
-get_nic_speed_human_readable = render.fmt_nic_speed
-get_percent_human_readable = render.percent
-get_number_with_precision = render.fmt_number_with_precision
+
+def get_age_human_readable(seconds: float) -> str:
+    return _render.timespan(seconds) if seconds >= 0 else f"-{_render.timespan(-seconds)}"
+
+
+get_bytes_human_readable = _render_from_utils.fmt_bytes
+get_nic_speed_human_readable = _render_from_utils.fmt_nic_speed
+get_percent_human_readable = _render_from_utils.percent
+get_number_with_precision = _render_from_utils.fmt_number_with_precision
 quote_shell_string = _cmk_utils.quote_shell_string
 
 

@@ -75,7 +75,7 @@ def test_check(check_suseconnect, section_1: Section) -> None:
                     "Expires at: 2019-12-31 00:00:00 UTC"
                 ),
             ),
-            Result(state=State.CRIT, summary="Expired since: 197 d"),
+            Result(state=State.CRIT, summary="Expired since: 197 days 0 hours"),
         ]
 
 

@@ -26,6 +26,6 @@ checks = {'': [(
     {'state': 2},
     [
         (2, 'Summary: 1 blocked by 1 ID(s)', []),
-        (0, '\nSession 1 blocked by 2 (Type: Foo, Wait: 2.7 d)', [])
+        (0, '\nSession 1 blocked by 2 (Type: Foo, Wait: 2 days 16 hours)', [])
     ]
 )]}

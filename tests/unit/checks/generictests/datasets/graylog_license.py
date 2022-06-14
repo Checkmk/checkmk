@@ -38,7 +38,7 @@ checks = {
                 (0, 'Nodes exceeded: no', []),
                 (1, 'Remote checks failed: yes', []),
                 (0, 'Traffic limit: 5.00 GB', []),
-                (0, 'Expires in: -15 d', []),
+                (0, 'Expires in: -15 days 3 hours', []),
                 (0, 'Subject: /license/enterprise', []), (0, 'Trial: yes', []),
                 (0, 'Requires remote checks: yes', [])
             ]

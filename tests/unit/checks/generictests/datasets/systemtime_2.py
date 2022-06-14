@@ -22,7 +22,7 @@ checks = {
         (
             None, (30, 60), [
                 (
-                    2, 'Offset: -102 d (warn/crit below -30.0 s/-60 s)', [
+                    2, 'Offset: -102 days 11 hours (warn/crit below -30 seconds/-1 minute 0 seconds)', [
                         ('offset', -8853125, 30.0, 60.0, None, None)
                     ]
                 )

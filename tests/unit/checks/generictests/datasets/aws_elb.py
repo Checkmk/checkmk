@@ -73,7 +73,7 @@ checks = {
         (
             None, {}, [
                 (
-                    0, '28.4 s', [
+                    0, '28 seconds', [
                         (
                             'aws_load_balancer_latency', 28.426270178386144,
                             None, None, None, None

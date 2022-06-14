@@ -31,7 +31,7 @@ discovery = {'': [('mysql', {})]}
 checks = {
     '': [('mysql', {}, [
         (0,
-         'Slave-IO: running, Relay Log: 89.37 MB, Slave-SQL: running, Time behind Master: 0.00 s',
+         'Slave-IO: running, Relay Log: 89.37 MB, Slave-SQL: running, Time behind Master: 0 seconds',
          [('relay_log_space', 93709799, None, None, None, None),
           ('sync_latency', 0, None, None, None, None)])
     ])]

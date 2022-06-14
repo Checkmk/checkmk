@@ -289,7 +289,7 @@ checks = {
                     ]
                 ), (0, u'Estimated time to complete: 4 minutes', []),
                 (
-                    0, 'Age: 4 m', [
+                    0, 'Age: 4 minutes 0 seconds', [
                         (
                             'emcvnx_time_to_complete', 240, 1814400.0,
                             2419200.0, None, None

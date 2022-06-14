@@ -332,7 +332,7 @@ def list_folders(params):
     parent: CREFolder = params["parent"]
     if params["recursive"]:
         parent.need_recursive_permission("read")
-        folders = parent.all_folders_recursively()
+        folders = parent.subfolders_recursively()
     else:
         parent.need_permission("read")
         folders = parent.subfolders()

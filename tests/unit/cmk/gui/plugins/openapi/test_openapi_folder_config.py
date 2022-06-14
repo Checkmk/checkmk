@@ -7,6 +7,7 @@
 import json
 import re
 import uuid
+from typing import Sequence
 
 import pytest
 
@@ -562,3 +563,38 @@ def test_openapi_folder_remove_attribute(aut_user_auth_wsgi_app: WebTestAppForCM
         headers={"Accept": "application/json"},
     )
     assert "tag_address_family" not in resp.json["extensions"]["attributes"]
+
+
+def test_openapi_folder_config_collections_recursive_list(aut_user_auth_wsgi_app: WebTestAppForCMK):
+    def _create_folder(fname: str, parent: str):
+        params = f'{{"name": "{fname}", "title": "{fname}", "parent": "{parent}"}}'
+        aut_user_auth_wsgi_app.call_method(
+            "post",
+            "/NO_SITE/check_mk/api/1.0/domain-types/folder_config/collections/all",
+            params=params,
+            status=200,
+            headers={"Accept": "application/json"},
+            content_type="application/json",
+        )
+        parent += f"{fname}~"
+
+    def _create_folders_recursive(folders: Sequence[str]):
+        _create_folder(folders[0], "~")
+        parent = f"~{folders[0]}"
+        for fname in folders[1:]:
+            _create_folder(fname, parent)
+            parent += f"~{fname}"
+
+    _create_folders_recursive(["I", "want", "those"])
+    _create_folders_recursive(["na", "na", "batman"])
+
+    response = aut_user_auth_wsgi_app.call_method(
+        "get",
+        "/NO_SITE/check_mk/api/1.0/domain-types/folder_config/collections/all",
+        params={"parent": "~I", "recursive": "True"},
+        status=200,
+        headers={"Accept": "application/json"},
+    )
+
+    for folder in response.json["value"]:
+        assert "batman" not in folder["id"]

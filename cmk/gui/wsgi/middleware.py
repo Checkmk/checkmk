@@ -5,7 +5,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import functools
-import wsgiref.util
 
 from cmk.gui import hooks
 
@@ -21,21 +20,32 @@ class CallHooks:
         return response
 
 
-def apache_env(app):
-    """Add missing WSGI environment keys when a request comes from Apache."""
+def recreate_apache_env(app):
+    """Recreate the environment as if it comes from Apache."""
 
     @functools.wraps(app)
     def _add_apache_env(environ, start_response):
-        if not environ.get("REQUEST_URI"):
-            environ["REQUEST_URI"] = wsgiref.util.request_uri(environ)
-
-        path_info = environ.get("PATH_INFO")
-        if not path_info or path_info == "/":
-            environ["PATH_INFO"] = environ["SCRIPT_NAME"]
+        # mod_proxy will result in a broken request_uri. To recreate this environment in the
+        # unit tests, we need to add SCRIPT_NAME.
+        if environ.get("paste.testing"):
+            # We only want to do this in testing. webtest.TestApp will set this key.
+            environ["SCRIPT_NAME"] = environ.get("PATH_INFO")
 
         return app(environ, start_response)
 
     return _add_apache_env
+
+
+def fix_apache_env(app):
+    """Remove superfluous environment keys when a request comes from Apache."""
+
+    @functools.wraps(app)
+    def _fix_apache_env(environ, start_response):
+        environ["SCRIPT_NAME"] = ""
+
+        return app(environ, start_response)
+
+    return _fix_apache_env
 
 
 class OverrideRequestMethod:

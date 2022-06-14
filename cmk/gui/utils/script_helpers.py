@@ -43,7 +43,7 @@ def application_context() -> Iterator[None]:
 
 
 def make_request_context(environ: Optional[Mapping[str, Any]] = None) -> RequestContext:
-    req = Request(dict(create_environ(), REQUEST_URI="") if environ is None else environ)
+    req = Request(dict(create_environ()) if environ is None else environ)
     resp = Response(mimetype="text/html")
     funnel = OutputFunnel(resp)
     return RequestContext(

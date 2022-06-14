@@ -8,14 +8,14 @@ import pathlib
 
 import cmk.utils.paths
 
-from cmk.gui.wsgi.middleware import apache_env, CallHooks
+from cmk.gui.wsgi.middleware import CallHooks, fix_apache_env, recreate_apache_env
 from cmk.gui.wsgi.profiling import ProfileSwitcher
 from cmk.gui.wsgi.routing import make_router
 
 
 def make_app(debug=False):
     return ProfileSwitcher(
-        CallHooks(apache_env(make_router(debug=debug))),
+        CallHooks(recreate_apache_env(fix_apache_env(make_router(debug=debug)))),
         profile_file=pathlib.Path(cmk.utils.paths.var_dir) / "multisite.profile",
     )
 

@@ -13,6 +13,7 @@ from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 from cmk.automations.results import DeleteHostsResult
 
 from cmk.gui.plugins.openapi.restful_objects import constructors
+from cmk.gui.watolib.activate_changes import ActivateChangesManager
 
 CMK_WAIT_FOR_COMPLETION = "cmk/wait-for-completion"
 
@@ -25,6 +26,37 @@ def test_openapi_show_activations(aut_user_auth_wsgi_app: WebTestAppForCMK) -> N
         status=404,
         headers={"Accept": "application/json"},
     )
+
+
+def test_openapi_redirect_location(
+    base: str,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    mock_livestatus: MockLiveStatusConnection,
+    monkeypatch,
+):
+    live = mock_livestatus
+    url = base + "/domain-types/activation_run/actions/activate-changes/invoke"
+    with live:
+        resp = aut_user_auth_wsgi_app.post(
+            url,
+            status=302,
+            params='{"redirect": true}',
+            headers={"Accept": "application/json"},
+            content_type="application/json",
+        )
+
+    def wait_for_completion(self, timeout=None):
+        # Never complete.
+        return False
+
+    monkeypatch.setattr(ActivateChangesManager, "wait_for_completion", wait_for_completion)
+
+    wait_url = f"{resp.headers['Location']}?redirect=true"
+    resp = aut_user_auth_wsgi_app.get(
+        wait_url,
+        headers={"Accept": "application/json"},
+    )
+    assert resp.headers["Location"] == wait_url
 
 
 def test_openapi_show_single_activation(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:

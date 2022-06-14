@@ -32,14 +32,14 @@ _factory_settings = {"deleted": 2,
 
 checks = {'': [('/data/col1/boost_vmware',
                 _factory_settings,
-                [(0, 'Status: read-write, Precompiled: 3.85 TB',
+                [(0, 'Status: read-write, Precompiled: 3.85 TiB',
                   [('precompiled', 4234086134579)])]),
                ('/data/col1/repl_cms_dc1',
                 _factory_settings,
-                [(1, 'Status: read-only, Precompiled: 33.30 GB', [('precompiled', 35755602739)])]),
+                [(1, 'Status: read-only, Precompiled: 33.3 GiB', [('precompiled', 35755602739)])]),
                ('/data/col1/nfs_cms_dc1',
                 _factory_settings,
-                [(2, 'Status: deleted, Precompiled: 0.00 B', [('precompiled', 0)])]),
+                [(2, 'Status: deleted, Precompiled: 0 B', [('precompiled', 0)])]),
                ('something',
                 _factory_settings,
-                [(3, 'Status: invalid code -1, Precompiled: 0.00 B', [('precompiled', 0)])])]}
+                [(3, 'Status: invalid code -1, Precompiled: 0 B', [('precompiled', 0)])])]}

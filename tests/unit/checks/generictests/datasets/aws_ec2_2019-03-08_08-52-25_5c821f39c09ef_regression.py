@@ -44,8 +44,8 @@ checks = {
     'disk_io':
         [('Summary',
           {},
-          [(0, 'Read: 50.00 B/s', [('disk_read_throughput', 50.0, None, None)]),
-           (0, 'Write: 66.67 B/s', [('disk_write_throughput', 66.66666666666667, None, None)]),
+          [(0, 'Read: 50.0 B/s', [('disk_read_throughput', 50.0, None, None)]),
+           (0, 'Write: 66.7 B/s', [('disk_write_throughput', 66.66666666666667, None, None)]),
            (0, 'Read operations: 16.67 1/s', [('disk_read_ios', 16.666666666666668, None, None)]),
            (0, 'Write operations: 33.33 1/s', [('disk_write_ios', 33.333333333333336, None, None)]),
            ])],

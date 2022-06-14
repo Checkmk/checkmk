@@ -35,11 +35,11 @@ checks = {
                 'levels_nindexes': (62, 65)
             }, [
                 (
-                    0, 'Uncompressed size in memory: 170.00 B',
+                    0, 'Uncompressed size in memory: 170 B',
                     [('mongodb_collection_size', 170, None, None, None, None)]
                 ),
                 (
-                    0, 'Allocated for document storage: 16.00 kB', [
+                    0, 'Allocated for document storage: 16.0 KiB', [
                         (
                             'mongodb_collection_storage_size', 16384, None,
                             None, None, None
@@ -47,7 +47,7 @@ checks = {
                     ]
                 ),
                 (
-                    0, 'Total size of indexes: 16.00 kB', [
+                    0, 'Total size of indexes: 16.0 KiB', [
                         (
                             'mongodb_collection_total_index_size', 16384, None,
                             None, None, None
@@ -56,7 +56,7 @@ checks = {
                 ), (0, 'Number of indexes: 1', []),
                 (
                     0,
-                    u"\nCollection\n- Document Count: 2 (Number of documents in collection)\n- Object Size: 85.00 B (Average object size)\n- Collection Size: 170.00 B (Uncompressed size in memory)\n- Storage Size: 16.00 kB (Allocated for document storage)\n\nIndexes:\n- Total Index Size: 16.00 kB (Total size of all indexes)\n- Number of Indexes: 1\n-- Index '_id_' used 0 times since 2019-11-08 13:37:44",
+                    u"\nCollection\n- Document Count: 2 (Number of documents in collection)\n- Object Size: 85 B (Average object size)\n- Collection Size: 170 B (Uncompressed size in memory)\n- Storage Size: 16.0 KiB (Allocated for document storage)\n\nIndexes:\n- Total Index Size: 16.0 KiB (Total size of all indexes)\n- Number of Indexes: 1\n-- Index '_id_' used 0 times since 2019-11-08 13:37:44",
                     []
                 )
             ]
@@ -66,11 +66,11 @@ checks = {
                 'levels_nindexes': (62, 65)
             }, [
                 (
-                    0, 'Uncompressed size in memory: 59.00 B',
+                    0, 'Uncompressed size in memory: 59 B',
                     [('mongodb_collection_size', 59, None, None, None, None)]
                 ),
                 (
-                    0, 'Allocated for document storage: 16.00 kB', [
+                    0, 'Allocated for document storage: 16.0 KiB', [
                         (
                             'mongodb_collection_storage_size', 16384, None,
                             None, None, None
@@ -78,7 +78,7 @@ checks = {
                     ]
                 ),
                 (
-                    0, 'Total size of indexes: 16.00 kB', [
+                    0, 'Total size of indexes: 16.0 KiB', [
                         (
                             'mongodb_collection_total_index_size', 16384, None,
                             None, None, None
@@ -87,7 +87,7 @@ checks = {
                 ), (0, 'Number of indexes: 1', []),
                 (
                     0,
-                    u"\nCollection\n- Document Count: 1 (Number of documents in collection)\n- Object Size: 59.00 B (Average object size)\n- Collection Size: 59.00 B (Uncompressed size in memory)\n- Storage Size: 16.00 kB (Allocated for document storage)\n\nIndexes:\n- Total Index Size: 16.00 kB (Total size of all indexes)\n- Number of Indexes: 1\n-- Index '_id_' used 0 times since 2019-11-08 13:37:44",
+                    u"\nCollection\n- Document Count: 1 (Number of documents in collection)\n- Object Size: 59 B (Average object size)\n- Collection Size: 59 B (Uncompressed size in memory)\n- Storage Size: 16.0 KiB (Allocated for document storage)\n\nIndexes:\n- Total Index Size: 16.0 KiB (Total size of all indexes)\n- Number of Indexes: 1\n-- Index '_id_' used 0 times since 2019-11-08 13:37:44",
                     []
                 )
             ]
@@ -97,7 +97,7 @@ checks = {
                 'levels_nindexes': (62, 65)
             }, [
                 (
-                    0, 'Uncompressed size in memory: 2.03 kB', [
+                    0, 'Uncompressed size in memory: 2.03 KiB', [
                         (
                             'mongodb_collection_size', 2079, None, None, None,
                             None
@@ -105,7 +105,7 @@ checks = {
                     ]
                 ),
                 (
-                    0, 'Allocated for document storage: 36.00 kB', [
+                    0, 'Allocated for document storage: 36.0 KiB', [
                         (
                             'mongodb_collection_storage_size', 36864, None,
                             None, None, None
@@ -113,7 +113,7 @@ checks = {
                     ]
                 ),
                 (
-                    0, 'Total size of indexes: 72.00 kB', [
+                    0, 'Total size of indexes: 72.0 KiB', [
                         (
                             'mongodb_collection_total_index_size', 73728, None,
                             None, None, None
@@ -122,7 +122,7 @@ checks = {
                 ), (0, 'Number of indexes: 2', []),
                 (
                     0,
-                    u"\nCollection\n- Document Count: 21 (Number of documents in collection)\n- Object Size: 99.00 B (Average object size)\n- Collection Size: 2.03 kB (Uncompressed size in memory)\n- Storage Size: 36.00 kB (Allocated for document storage)\n\nIndexes:\n- Total Index Size: 72.00 kB (Total size of all indexes)\n- Number of Indexes: 2\n-- Index '_id_' used 27 times since 2019-11-08 13:37:44\n-- Index 'lsidTTLIndex' used 0 times since 2019-11-08 13:37:44",
+                    u"\nCollection\n- Document Count: 21 (Number of documents in collection)\n- Object Size: 99 B (Average object size)\n- Collection Size: 2.03 KiB (Uncompressed size in memory)\n- Storage Size: 36.0 KiB (Allocated for document storage)\n\nIndexes:\n- Total Index Size: 72.0 KiB (Total size of all indexes)\n- Number of Indexes: 2\n-- Index '_id_' used 27 times since 2019-11-08 13:37:44\n-- Index 'lsidTTLIndex' used 0 times since 2019-11-08 13:37:44",
                     []
                 )
             ]
@@ -132,12 +132,12 @@ checks = {
                 'levels_nindexes': (62, 65)
             }, [
                 (
-                    0, 'Uncompressed size in memory: 0.00 B', [
+                    0, 'Uncompressed size in memory: 0 B', [
                         ('mongodb_collection_size', 0, None, None, None, None)
                     ]
                 ),
                 (
-                    0, 'Allocated for document storage: 4.00 kB', [
+                    0, 'Allocated for document storage: 4.00 KiB', [
                         (
                             'mongodb_collection_storage_size', 4096, None,
                             None, None, None
@@ -145,7 +145,7 @@ checks = {
                     ]
                 ),
                 (
-                    0, 'Total size of indexes: 4.00 kB', [
+                    0, 'Total size of indexes: 4.00 KiB', [
                         (
                             'mongodb_collection_total_index_size', 4096, None,
                             None, None, None
@@ -154,7 +154,7 @@ checks = {
                 ), (0, 'Number of indexes: 1', []),
                 (
                     0,
-                    u"\nCollection\n- Document Count: 0 (Number of documents in collection)\n- Object Size: n/a (Average object size)\n- Collection Size: 0.00 B (Uncompressed size in memory)\n- Storage Size: 4.00 kB (Allocated for document storage)\n\nIndexes:\n- Total Index Size: 4.00 kB (Total size of all indexes)\n- Number of Indexes: 1\n-- Index '_id_' used 5 times since 2019-11-08 13:37:44",
+                    u"\nCollection\n- Document Count: 0 (Number of documents in collection)\n- Object Size: n/a (Average object size)\n- Collection Size: 0 B (Uncompressed size in memory)\n- Storage Size: 4.00 KiB (Allocated for document storage)\n\nIndexes:\n- Total Index Size: 4.00 KiB (Total size of all indexes)\n- Number of Indexes: 1\n-- Index '_id_' used 5 times since 2019-11-08 13:37:44",
                     []
                 )
             ]
@@ -164,7 +164,7 @@ checks = {
                 'levels_nindexes': (62, 65)
             }, [
                 (
-                    0, 'Uncompressed size in memory: 17.90 MB', [
+                    0, 'Uncompressed size in memory: 17.9 MiB', [
                         (
                             'mongodb_collection_size', 18768774, None, None,
                             None, None
@@ -172,7 +172,7 @@ checks = {
                     ]
                 ),
                 (
-                    0, 'Allocated for document storage: 5.61 MB', [
+                    0, 'Allocated for document storage: 5.61 MiB', [
                         (
                             'mongodb_collection_storage_size', 5885952, None,
                             None, None, None
@@ -180,7 +180,7 @@ checks = {
                     ]
                 ),
                 (
-                    0, 'Total size of indexes: 0.00 B', [
+                    0, 'Total size of indexes: 0 B', [
                         (
                             'mongodb_collection_total_index_size', 0, None,
                             None, None, None
@@ -189,7 +189,7 @@ checks = {
                 ), (0, 'Number of indexes: 0', []),
                 (
                     0,
-                    '\nCollection\n- Document Count: 123910 (Number of documents in collection)\n- Object Size: 151.00 B (Average object size)\n- Collection Size: 17.90 MB (Uncompressed size in memory)\n- Storage Size: 5.61 MB (Allocated for document storage)\n\nIndexes:\n- Total Index Size: 0.00 B (Total size of all indexes)\n- Number of Indexes: 0',
+                    '\nCollection\n- Document Count: 123910 (Number of documents in collection)\n- Object Size: 151 B (Average object size)\n- Collection Size: 17.9 MiB (Uncompressed size in memory)\n- Storage Size: 5.61 MiB (Allocated for document storage)\n\nIndexes:\n- Total Index Size: 0 B (Total size of all indexes)\n- Number of Indexes: 0',
                     []
                 )
             ]
@@ -199,11 +199,11 @@ checks = {
                 'levels_nindexes': (62, 65)
             }, [
                 (
-                    0, 'Uncompressed size in memory: 60.00 B',
+                    0, 'Uncompressed size in memory: 60 B',
                     [('mongodb_collection_size', 60, None, None, None, None)]
                 ),
                 (
-                    0, 'Allocated for document storage: 36.00 kB', [
+                    0, 'Allocated for document storage: 36.0 KiB', [
                         (
                             'mongodb_collection_storage_size', 36864, None,
                             None, None, None
@@ -211,7 +211,7 @@ checks = {
                     ]
                 ),
                 (
-                    0, 'Total size of indexes: 16.00 kB', [
+                    0, 'Total size of indexes: 16.0 KiB', [
                         (
                             'mongodb_collection_total_index_size', 16384, None,
                             None, None, None
@@ -220,7 +220,7 @@ checks = {
                 ), (0, 'Number of indexes: 1', []),
                 (
                     0,
-                    u"\nCollection\n- Document Count: 1 (Number of documents in collection)\n- Object Size: 60.00 B (Average object size)\n- Collection Size: 60.00 B (Uncompressed size in memory)\n- Storage Size: 36.00 kB (Allocated for document storage)\n\nIndexes:\n- Total Index Size: 16.00 kB (Total size of all indexes)\n- Number of Indexes: 1\n-- Index '_id_' used 0 times since 2019-11-08 13:37:44",
+                    u"\nCollection\n- Document Count: 1 (Number of documents in collection)\n- Object Size: 60 B (Average object size)\n- Collection Size: 60 B (Uncompressed size in memory)\n- Storage Size: 36.0 KiB (Allocated for document storage)\n\nIndexes:\n- Total Index Size: 16.0 KiB (Total size of all indexes)\n- Number of Indexes: 1\n-- Index '_id_' used 0 times since 2019-11-08 13:37:44",
                     []
                 )
             ]
@@ -230,11 +230,11 @@ checks = {
                 'levels_nindexes': (62, 65)
             }, [
                 (
-                    0, 'Uncompressed size in memory: 45.00 B',
+                    0, 'Uncompressed size in memory: 45 B',
                     [('mongodb_collection_size', 45, None, None, None, None)]
                 ),
                 (
-                    0, 'Allocated for document storage: 36.00 kB', [
+                    0, 'Allocated for document storage: 36.0 KiB', [
                         (
                             'mongodb_collection_storage_size', 36864, None,
                             None, None, None
@@ -242,7 +242,7 @@ checks = {
                     ]
                 ),
                 (
-                    0, 'Total size of indexes: 16.00 kB', [
+                    0, 'Total size of indexes: 16.0 KiB', [
                         (
                             'mongodb_collection_total_index_size', 16384, None,
                             None, None, None
@@ -251,7 +251,7 @@ checks = {
                 ), (0, 'Number of indexes: 1', []),
                 (
                     0,
-                    u"\nCollection\n- Document Count: 1 (Number of documents in collection)\n- Object Size: 45.00 B (Average object size)\n- Collection Size: 45.00 B (Uncompressed size in memory)\n- Storage Size: 36.00 kB (Allocated for document storage)\n\nIndexes:\n- Total Index Size: 16.00 kB (Total size of all indexes)\n- Number of Indexes: 1\n-- Index '_id_' used 0 times since 2019-11-08 13:37:44",
+                    u"\nCollection\n- Document Count: 1 (Number of documents in collection)\n- Object Size: 45 B (Average object size)\n- Collection Size: 45 B (Uncompressed size in memory)\n- Storage Size: 36.0 KiB (Allocated for document storage)\n\nIndexes:\n- Total Index Size: 16.0 KiB (Total size of all indexes)\n- Number of Indexes: 1\n-- Index '_id_' used 0 times since 2019-11-08 13:37:44",
                     []
                 )
             ]
@@ -261,11 +261,11 @@ checks = {
                 'levels_nindexes': (62, 65)
             }, [
                 (
-                    0, 'Uncompressed size in memory: 71.00 B',
+                    0, 'Uncompressed size in memory: 71 B',
                     [('mongodb_collection_size', 71, None, None, None, None)]
                 ),
                 (
-                    0, 'Allocated for document storage: 36.00 kB', [
+                    0, 'Allocated for document storage: 36.0 KiB', [
                         (
                             'mongodb_collection_storage_size', 36864, None,
                             None, None, None
@@ -273,7 +273,7 @@ checks = {
                     ]
                 ),
                 (
-                    0, 'Total size of indexes: 16.00 kB', [
+                    0, 'Total size of indexes: 16.0 KiB', [
                         (
                             'mongodb_collection_total_index_size', 16384, None,
                             None, None, None
@@ -282,7 +282,7 @@ checks = {
                 ), (0, 'Number of indexes: 1', []),
                 (
                     0,
-                    u"\nCollection\n- Document Count: 1 (Number of documents in collection)\n- Object Size: 71.00 B (Average object size)\n- Collection Size: 71.00 B (Uncompressed size in memory)\n- Storage Size: 36.00 kB (Allocated for document storage)\n\nIndexes:\n- Total Index Size: 16.00 kB (Total size of all indexes)\n- Number of Indexes: 1\n-- Index '_id_' used 0 times since 2019-11-08 13:37:44",
+                    u"\nCollection\n- Document Count: 1 (Number of documents in collection)\n- Object Size: 71 B (Average object size)\n- Collection Size: 71 B (Uncompressed size in memory)\n- Storage Size: 36.0 KiB (Allocated for document storage)\n\nIndexes:\n- Total Index Size: 16.0 KiB (Total size of all indexes)\n- Number of Indexes: 1\n-- Index '_id_' used 0 times since 2019-11-08 13:37:44",
                     []
                 )
             ]
@@ -292,7 +292,7 @@ checks = {
                 'levels_nindexes': (62, 65)
             }, [
                 (
-                    0, 'Uncompressed size in memory: 40.20 kB', [
+                    0, 'Uncompressed size in memory: 40.2 KiB', [
                         (
                             'mongodb_collection_size', 41160, None, None, None,
                             None
@@ -300,7 +300,7 @@ checks = {
                     ]
                 ),
                 (
-                    0, 'Allocated for document storage: 40.00 kB', [
+                    0, 'Allocated for document storage: 40.0 KiB', [
                         (
                             'mongodb_collection_storage_size', 40960, None,
                             None, None, None
@@ -308,7 +308,7 @@ checks = {
                     ]
                 ),
                 (
-                    0, 'Total size of indexes: 36.00 kB', [
+                    0, 'Total size of indexes: 36.0 KiB', [
                         (
                             'mongodb_collection_total_index_size', 36864, None,
                             None, None, None
@@ -317,7 +317,7 @@ checks = {
                 ), (0, 'Number of indexes: 1', []),
                 (
                     0,
-                    u"\nCollection\n- Document Count: 28 (Number of documents in collection)\n- Object Size: 1.44 kB (Average object size)\n- Collection Size: 40.20 kB (Uncompressed size in memory)\n- Storage Size: 40.00 kB (Allocated for document storage)\n\nIndexes:\n- Total Index Size: 36.00 kB (Total size of all indexes)\n- Number of Indexes: 1\n-- Index '_id_' used 0 times since 2019-11-08 13:37:44",
+                    u"\nCollection\n- Document Count: 28 (Number of documents in collection)\n- Object Size: 1.44 KiB (Average object size)\n- Collection Size: 40.2 KiB (Uncompressed size in memory)\n- Storage Size: 40.0 KiB (Allocated for document storage)\n\nIndexes:\n- Total Index Size: 36.0 KiB (Total size of all indexes)\n- Number of Indexes: 1\n-- Index '_id_' used 0 times since 2019-11-08 13:37:44",
                     []
                 )
             ]
@@ -327,11 +327,11 @@ checks = {
                 'levels_nindexes': (62, 65)
             }, [
                 (
-                    0, 'Uncompressed size in memory: 794.00 B',
+                    0, 'Uncompressed size in memory: 794 B',
                     [('mongodb_collection_size', 794, None, None, None, None)]
                 ),
                 (
-                    0, 'Allocated for document storage: 16.00 kB', [
+                    0, 'Allocated for document storage: 16.0 KiB', [
                         (
                             'mongodb_collection_storage_size', 16384, None,
                             None, None, None
@@ -339,7 +339,7 @@ checks = {
                     ]
                 ),
                 (
-                    0, 'Total size of indexes: 16.00 kB', [
+                    0, 'Total size of indexes: 16.0 KiB', [
                         (
                             'mongodb_collection_total_index_size', 16384, None,
                             None, None, None
@@ -348,7 +348,7 @@ checks = {
                 ), (0, 'Number of indexes: 1', []),
                 (
                     0,
-                    u"\nCollection\n- Document Count: 1 (Number of documents in collection)\n- Object Size: 794.00 B (Average object size)\n- Collection Size: 794.00 B (Uncompressed size in memory)\n- Storage Size: 16.00 kB (Allocated for document storage)\n\nIndexes:\n- Total Index Size: 16.00 kB (Total size of all indexes)\n- Number of Indexes: 1\n-- Index '_id_' used 0 times since 2019-11-08 13:37:44",
+                    u"\nCollection\n- Document Count: 1 (Number of documents in collection)\n- Object Size: 794 B (Average object size)\n- Collection Size: 794 B (Uncompressed size in memory)\n- Storage Size: 16.0 KiB (Allocated for document storage)\n\nIndexes:\n- Total Index Size: 16.0 KiB (Total size of all indexes)\n- Number of Indexes: 1\n-- Index '_id_' used 0 times since 2019-11-08 13:37:44",
                     []
                 )
             ]
@@ -358,11 +358,11 @@ checks = {
                 'levels_nindexes': (62, 65)
             }, [
                 (
-                    0, 'Uncompressed size in memory: 41.00 B',
+                    0, 'Uncompressed size in memory: 41 B',
                     [('mongodb_collection_size', 41, None, None, None, None)]
                 ),
                 (
-                    0, 'Allocated for document storage: 16.00 kB', [
+                    0, 'Allocated for document storage: 16.0 KiB', [
                         (
                             'mongodb_collection_storage_size', 16384, None,
                             None, None, None
@@ -370,7 +370,7 @@ checks = {
                     ]
                 ),
                 (
-                    0, 'Total size of indexes: 16.00 kB', [
+                    0, 'Total size of indexes: 16.0 KiB', [
                         (
                             'mongodb_collection_total_index_size', 16384, None,
                             None, None, None
@@ -379,7 +379,7 @@ checks = {
                 ), (0, 'Number of indexes: 1', []),
                 (
                     0,
-                    u"\nCollection\n- Document Count: 1 (Number of documents in collection)\n- Object Size: 41.00 B (Average object size)\n- Collection Size: 41.00 B (Uncompressed size in memory)\n- Storage Size: 16.00 kB (Allocated for document storage)\n\nIndexes:\n- Total Index Size: 16.00 kB (Total size of all indexes)\n- Number of Indexes: 1\n-- Index '_id_' used 0 times since 2019-11-08 13:37:44",
+                    u"\nCollection\n- Document Count: 1 (Number of documents in collection)\n- Object Size: 41 B (Average object size)\n- Collection Size: 41 B (Uncompressed size in memory)\n- Storage Size: 16.0 KiB (Allocated for document storage)\n\nIndexes:\n- Total Index Size: 16.0 KiB (Total size of all indexes)\n- Number of Indexes: 1\n-- Index '_id_' used 0 times since 2019-11-08 13:37:44",
                     []
                 )
             ]
@@ -389,7 +389,7 @@ checks = {
                 'levels_nindexes': (62, 65)
             }, [
                 (
-                    0, 'Uncompressed size in memory: 205.08 kB', [
+                    0, 'Uncompressed size in memory: 205 KiB', [
                         (
                             'mongodb_collection_size', 210000, None, None,
                             None, None
@@ -397,7 +397,7 @@ checks = {
                     ]
                 ),
                 (
-                    0, 'Allocated for document storage: 148.00 kB', [
+                    0, 'Allocated for document storage: 148 KiB', [
                         (
                             'mongodb_collection_storage_size', 151552, None,
                             None, None, None
@@ -405,7 +405,7 @@ checks = {
                     ]
                 ),
                 (
-                    0, 'Total size of indexes: 276.00 kB', [
+                    0, 'Total size of indexes: 276 KiB', [
                         (
                             'mongodb_collection_total_index_size', 282624,
                             None, None, None, None
@@ -414,7 +414,7 @@ checks = {
                 ), (0, 'Number of indexes: 2', []),
                 (
                     0,
-                    u"\nCollection\n- Document Count: 6000 (Number of documents in collection)\n- Object Size: 35.00 B (Average object size)\n- Collection Size: 205.08 kB (Uncompressed size in memory)\n- Storage Size: 148.00 kB (Allocated for document storage)\n\nIndexes:\n- Total Index Size: 276.00 kB (Total size of all indexes)\n- Number of Indexes: 2\n-- Index '_id_' used 0 times since 2019-11-08 13:37:44\n-- Index 'x_1' used 0 times since 2019-11-08 13:37:44",
+                    u"\nCollection\n- Document Count: 6000 (Number of documents in collection)\n- Object Size: 35 B (Average object size)\n- Collection Size: 205 KiB (Uncompressed size in memory)\n- Storage Size: 148 KiB (Allocated for document storage)\n\nIndexes:\n- Total Index Size: 276 KiB (Total size of all indexes)\n- Number of Indexes: 2\n-- Index '_id_' used 0 times since 2019-11-08 13:37:44\n-- Index 'x_1' used 0 times since 2019-11-08 13:37:44",
                     []
                 )
             ]
@@ -424,7 +424,7 @@ checks = {
                 'levels_nindexes': (62, 65)
             }, [
                 (
-                    0, 'Uncompressed size in memory: 597.66 kB', [
+                    0, 'Uncompressed size in memory: 598 KiB', [
                         (
                             'mongodb_collection_size', 612000, None, None,
                             None, None
@@ -432,7 +432,7 @@ checks = {
                     ]
                 ),
                 (
-                    0, 'Allocated for document storage: 336.00 kB', [
+                    0, 'Allocated for document storage: 336 KiB', [
                         (
                             'mongodb_collection_storage_size', 344064, None,
                             None, None, None
@@ -440,7 +440,7 @@ checks = {
                     ]
                 ),
                 (
-                    0, 'Total size of indexes: 204.00 kB', [
+                    0, 'Total size of indexes: 204 KiB', [
                         (
                             'mongodb_collection_total_index_size', 208896,
                             None, None, None, None
@@ -449,7 +449,7 @@ checks = {
                 ), (0, 'Number of indexes: 1', []),
                 (
                     0,
-                    u"\nCollection\n- Document Count: 18000 (Number of documents in collection)\n- Object Size: 34.00 B (Average object size)\n- Collection Size: 597.66 kB (Uncompressed size in memory)\n- Storage Size: 336.00 kB (Allocated for document storage)\n\nIndexes:\n- Total Index Size: 204.00 kB (Total size of all indexes)\n- Number of Indexes: 1\n-- Index '_id_' used 0 times since 2019-11-08 13:37:44",
+                    u"\nCollection\n- Document Count: 18000 (Number of documents in collection)\n- Object Size: 34 B (Average object size)\n- Collection Size: 598 KiB (Uncompressed size in memory)\n- Storage Size: 336 KiB (Allocated for document storage)\n\nIndexes:\n- Total Index Size: 204 KiB (Total size of all indexes)\n- Number of Indexes: 1\n-- Index '_id_' used 0 times since 2019-11-08 13:37:44",
                     []
                 )
             ]
@@ -459,7 +459,7 @@ checks = {
                 'levels_nindexes': (62, 65)
             }, [
                 (
-                    0, 'Uncompressed size in memory: 140.48 kB', [
+                    0, 'Uncompressed size in memory: 140 KiB', [
                         (
                             'mongodb_collection_size', 143856, None, None,
                             None, None
@@ -467,7 +467,7 @@ checks = {
                     ]
                 ),
                 (
-                    0, 'Allocated for document storage: 120.00 kB', [
+                    0, 'Allocated for document storage: 120 KiB', [
                         (
                             'mongodb_collection_storage_size', 122880, None,
                             None, None, None
@@ -475,7 +475,7 @@ checks = {
                     ]
                 ),
                 (
-                    0, 'Total size of indexes: 84.00 kB', [
+                    0, 'Total size of indexes: 84.0 KiB', [
                         (
                             'mongodb_collection_total_index_size', 86016, None,
                             None, None, None
@@ -484,7 +484,7 @@ checks = {
                 ), (0, 'Number of indexes: 1', []),
                 (
                     0,
-                    u"\nCollection\n- Document Count: 3996 (Number of documents in collection)\n- Object Size: 36.00 B (Average object size)\n- Collection Size: 140.48 kB (Uncompressed size in memory)\n- Storage Size: 120.00 kB (Allocated for document storage)\n\nIndexes:\n- Total Index Size: 84.00 kB (Total size of all indexes)\n- Number of Indexes: 1\n-- Index '_id_' used 0 times since 2019-11-08 13:37:44",
+                    u"\nCollection\n- Document Count: 3996 (Number of documents in collection)\n- Object Size: 36 B (Average object size)\n- Collection Size: 140 KiB (Uncompressed size in memory)\n- Storage Size: 120 KiB (Allocated for document storage)\n\nIndexes:\n- Total Index Size: 84.0 KiB (Total size of all indexes)\n- Number of Indexes: 1\n-- Index '_id_' used 0 times since 2019-11-08 13:37:44",
                     []
                 )
             ]

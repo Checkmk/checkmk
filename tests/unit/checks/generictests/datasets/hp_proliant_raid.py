@@ -25,11 +25,11 @@ discovery = {
 
 checks = {
     '': [
-        ('', {}, [(0, 'Status: OK, Logical volume size: 279.37 GB', [])]),
-        ('2', {}, [(0, 'Status: OK, Logical volume size: 24.56 TB', [])]),
-        ('3', {}, [(0, 'Status: OK, Logical volume size: 29.11 TB', [])]),
-        ('4', {}, [(0, 'Status: OK, Logical volume size: 15.00 MB', [])]),
-        ('5', {}, [(0, 'Status: OK, Logical volume size: 15.00 MB', [])]),
-        ('6', {}, [(0, 'Status: OK, Logical volume size: 16.37 TB', [])])
+        ('', {}, [(0, 'Status: OK, Logical volume size: 279 GiB', [])]),
+        ('2', {}, [(0, 'Status: OK, Logical volume size: 24.6 TiB', [])]),
+        ('3', {}, [(0, 'Status: OK, Logical volume size: 29.1 TiB', [])]),
+        ('4', {}, [(0, 'Status: OK, Logical volume size: 15.0 MiB', [])]),
+        ('5', {}, [(0, 'Status: OK, Logical volume size: 15.0 MiB', [])]),
+        ('6', {}, [(0, 'Status: OK, Logical volume size: 16.4 TiB', [])])
     ]
 }

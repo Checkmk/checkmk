@@ -40,14 +40,14 @@ checks = {
                 'levels_vmalloc': ('abs_free', (52428800, 31457280)),
                 'levels_hardwarecorrupted': ('abs_used', (1, 1))
             }, [
-                (0, 'Total virtual memory: 13.78% - 1.27 GB of 9.25 GB', []),
+                (0, 'Total virtual memory: 13.78% - 1.27 GiB of 9.25 GiB', []),
                 (
                     2,
-                    'Largest Free VMalloc Chunk: 0% free - 2.00 kB of 32.00 TB VMalloc Area (warn/crit below 50.0 MiB/30.0 MiB free)',
+                    'Largest Free VMalloc Chunk: 0% free - 2.00 KiB of 32.0 TiB VMalloc Area (warn/crit below 50.0 MiB/30.0 MiB free)',
                     []
                 ),
                 (
-                    0, '\nRAM: 13.56% - 1.08 GB of 8.00 GB', [
+                    0, '\nRAM: 13.56% - 1.08 GiB of 8.00 GiB', [
                         ('mem_used', 1164308480, None, None, 0, 8588865536),
                         (
                             'mem_used_percent', 13.556021748388446, None, None,
@@ -56,13 +56,13 @@ checks = {
                     ]
                 ),
                 (
-                    0, '\nSwap: 15.23% - 194.90 MB of 1.25 GB', [
+                    0, '\nSwap: 15.23% - 195 MiB of 1.25 GiB', [
                         ('swap_used', 204369920, None, None, 0, 1342177280)
                     ]
                 ),
                 (
                     0,
-                    '\nCommitted: 28.44% - 2.63 GB of 9.25 GB virtual memory',
+                    '\nCommitted: 28.44% - 2.63 GiB of 9.25 GiB virtual memory',
                     [
                         (
                             'mem_lnx_committed_as', 2824531968, 9931042816.0,
@@ -71,14 +71,14 @@ checks = {
                     ]
                 ),
                 (
-                    0, '\nPage tables: 0.09% - 7.49 MB of 8.00 GB RAM', [
+                    0, '\nPage tables: 0.09% - 7.49 MiB of 8.00 GiB RAM', [
                         (
                             'mem_lnx_page_tables', 7856128, 687109242.88,
                             1374218485.76, 0, 8588865536
                         )
                     ]
                 ),
-                (0, '\nDisk Writeback: 0.008% - 644.00 kB of 8.00 GB RAM', []),
+                (0, '\nDisk Writeback: 0.008% - 644 KiB of 8.00 GiB RAM', []),
                 (
                     0, '', [
                         ('buffers', 837836800, None, None, None, None),
@@ -108,14 +108,14 @@ checks = {
                 'levels_vmalloc': ('abs_free', (52428800, 31457280)),
                 'levels_hardwarecorrupted': ('abs_used', (1, 1))
             }, [
-                (0, 'Total virtual memory: 13.78% - 1.27 GB of 9.25 GB', []),
+                (0, 'Total virtual memory: 13.78% - 1.27 GiB of 9.25 GiB', []),
                 (
                     2,
-                    'Largest Free VMalloc Chunk: 0% free - 2.00 kB of 32.00 TB VMalloc Area (warn/crit below 50.0 MiB/30.0 MiB free)',
+                    'Largest Free VMalloc Chunk: 0% free - 2.00 KiB of 32.0 TiB VMalloc Area (warn/crit below 50.0 MiB/30.0 MiB free)',
                     []
                 ),
                 (
-                    0, '\nRAM: 13.56% - 1.08 GB of 8.00 GB', [
+                    0, '\nRAM: 13.56% - 1.08 GiB of 8.00 GiB', [
                         ('mem_used', 1164308480, None, None, 0, 8588865536),
                         (
                             'mem_used_percent', 13.556021748388446, None, None,
@@ -124,13 +124,13 @@ checks = {
                     ]
                 ),
                 (
-                    0, '\nSwap: 15.23% - 194.90 MB of 1.25 GB', [
+                    0, '\nSwap: 15.23% - 195 MiB of 1.25 GiB', [
                         ('swap_used', 204369920, None, None, 0, 1342177280)
                     ]
                 ),
                 (
                     0,
-                    '\nCommitted: 28.44% - 2.63 GB of 9.25 GB virtual memory',
+                    '\nCommitted: 28.44% - 2.63 GiB of 9.25 GiB virtual memory',
                     [
                         (
                             'mem_lnx_committed_as', 2824531968, 9931042816.0,
@@ -139,14 +139,14 @@ checks = {
                     ]
                 ),
                 (
-                    0, '\nPage tables: 0.09% - 7.49 MB of 8.00 GB RAM', [
+                    0, '\nPage tables: 0.09% - 7.49 MiB of 8.00 GiB RAM', [
                         (
                             'mem_lnx_page_tables', 7856128, 687109242.88,
                             1374218485.76, 0, 8588865536
                         )
                     ]
                 ),
-                (0, '\nDisk Writeback: 0.008% - 644.00 kB of 8.00 GB RAM', []),
+                (0, '\nDisk Writeback: 0.008% - 644 KiB of 8.00 GiB RAM', []),
                 (
                     0, '', [
                         ('buffers', 837836800, None, None, None, None),

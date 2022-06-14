@@ -48,7 +48,7 @@ info = [
 
 _common_discovery = [(u'glastonburydiag381', {}), (u'st0ragetestaccount', {})]
 
-MB = 1024**2
+MiB = 1024**2
 
 discovery = {sub: _common_discovery for sub in ('', 'flow', 'performance')}
 
@@ -56,30 +56,30 @@ checks = {
     '': [
         (u'glastonburydiag381', {}, [
             (0, u'Kind: Storage', []),
-            (0, 'Used capacity: 10.03 GB', [('used_space', 10773519964, None, None, 0, None)]),
+            (0, 'Used capacity: 10.0 GiB', [('used_space', 10773519964, None, None, 0, None)]),
             (0, u'Location: westeurope', []),
         ]),
         (u'st0ragetestaccount', {
-            'used_capacity_levels': (2 * MB, 4 * MB)
+            'used_capacity_levels': (2 * MiB, 4 * MiB)
         }, [
             (0, u'Kind: BlobStorage', []),
-            (1, 'Used capacity: 3.65 MB (warn/crit at 2.00 MB/4.00 MB)',
-             [('used_space', 3822551, 2 * MB, 4 * MB, 0, None)]),
+            (1, 'Used capacity: 3.65 MiB (warn/crit at 2.00 MiB/4.00 MiB)',
+             [('used_space', 3822551, 2 * MiB, 4 * MiB, 0, None)]),
             (0, u'Location: westeurope', []),
             (0, u'Monitoring: some value', []),
         ]),
     ],
     'flow': [(u'glastonburydiag381', {}, [
-        (0, 'Ingress: 41.20 MB', [('ingress', 43202937, None, None, 0, None)]),
-        (0, 'Egress: 5.57 MB', [('egress', 5835881, None, None, 0, None)]),
+        (0, 'Ingress: 41.2 MiB', [('ingress', 43202937, None, None, 0, None)]),
+        (0, 'Egress: 5.57 MiB', [('egress', 5835881, None, None, 0, None)]),
         (0, 'Transactions: 1907', [('transactions', 1907.0, None, None, 0, None)]),
     ]),
              (u'st0ragetestaccount', {
-                 'egress_levels': (100 * MB, 200 * MB)
+                 'egress_levels': (100 * MiB, 200 * MiB)
              }, [
-                 (0, 'Ingress: 30.88 kB', [('ingress', 31620, None, None, 0, None)]),
-                 (2, 'Egress: 226.03 MB (warn/crit at 100.00 MB/200.00 MB)', [
-                     ('egress', 237007090, 100 * MB, 200 * MB, 0, None),
+                 (0, 'Ingress: 30.9 KiB', [('ingress', 31620, None, None, 0, None)]),
+                 (2, 'Egress: 226 MiB (warn/crit at 100 MiB/200 MiB)', [
+                     ('egress', 237007090, 100 * MiB, 200 * MiB, 0, None),
                  ]),
                  (0, 'Transactions: 62', [('transactions', 62.0, None, None, 0, None)]),
              ])],

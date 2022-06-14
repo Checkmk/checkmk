@@ -261,7 +261,7 @@ def check_esx_vsphere_counters_swap(item, params, parsed):
 
     for key in ("in", "out", "used"):
         if SWAP.get(key):
-            value = get_bytes_human_readable(float(SWAP[key]), unit="KB")
+            value = get_bytes_human_readable(float(SWAP[key]))
         else:
             value = "not available"
 

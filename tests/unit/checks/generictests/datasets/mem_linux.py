@@ -69,14 +69,14 @@ checks = {
                 'levels_committed': ('perc_used', (100.0, 150.0)),
                 'levels_pagetables': ('perc_used', (8.0, 16.0))
             }, [
-                (0, 'Total virtual memory: 7.9% - 3.12 GB of 39.56 GB', []),
+                (0, 'Total virtual memory: 7.9% - 3.12 GiB of 39.6 GiB', []),
                 (
                     2,
-                    'Hardware Corrupted: 0.00002% - 6.00 kB of 23.56 GB RAM (warn/crit at 5 B/10 B used)',
+                    'Hardware Corrupted: 0.00002% - 6.00 KiB of 23.6 GiB RAM (warn/crit at 5 B/10 B used)',
                     []
                 ),
                 (
-                    0, '\nRAM: 12.96% - 3.05 GB of 23.56 GB', [
+                    0, '\nRAM: 12.96% - 3.05 GiB of 23.6 GiB', [
                         ('mem_used', 3279134720, None, None, 0, 25300574208),
                         (
                             'mem_used_percent', 12.960712642494665, None, None,
@@ -85,13 +85,13 @@ checks = {
                     ]
                 ),
                 (
-                    0, '\nSwap: 0.44% - 72.15 MB of 16.00 GB', [
+                    0, '\nSwap: 0.44% - 72.2 MiB of 16.0 GiB', [
                         ('swap_used', 75657216, None, None, 0, 17179865088)
                     ]
                 ),
                 (
                     0,
-                    '\nCommitted: 8.53% - 3.38 GB of 39.56 GB virtual memory',
+                    '\nCommitted: 8.53% - 3.38 GiB of 39.6 GiB virtual memory',
                     [
                         (
                             'mem_lnx_committed_as', 3624763392, 42480439296.0,
@@ -101,11 +101,11 @@ checks = {
                 ),
                 (
                     0,
-                    '\nCommit Limit: 5.96% - 2.36 GB of 39.56 GB virtual memory',
+                    '\nCommit Limit: 5.96% - 2.36 GiB of 39.6 GiB virtual memory',
                     []
                 ),
                 (
-                    0, '\nShared memory: 0.14% - 32.98 MB of 23.56 GB RAM', [
+                    0, '\nShared memory: 0.14% - 33.0 MiB of 23.6 GiB RAM', [
                         (
                             'mem_lnx_shmem', 34582528, 5060114841.6,
                             7590172262.4, 0, 25300574208
@@ -113,17 +113,17 @@ checks = {
                     ]
                 ),
                 (
-                    0, '\nPage tables: 0.06% - 15.52 MB of 23.56 GB RAM', [
+                    0, '\nPage tables: 0.06% - 15.5 MiB of 23.6 GiB RAM', [
                         (
                             'mem_lnx_page_tables', 16273408, 2024045936.64,
                             4048091873.28, 0, 25300574208
                         )
                     ]
                 ),
-                (0, '\nDisk Writeback: 18.0% - 4.24 GB of 23.56 GB RAM', []),
+                (0, '\nDisk Writeback: 18.0% - 4.24 GiB of 23.6 GiB RAM', []),
                 (
                     0,
-                    '\nLargest Free VMalloc Chunk: 99.96% free - 31.99 TB of 32.00 TB VMalloc Area',
+                    '\nLargest Free VMalloc Chunk: 99.96% free - 32.0 TiB of 32.0 TiB VMalloc Area',
                     []
                 ),
                 (
@@ -175,10 +175,10 @@ checks = {
                 'levels_vmalloc': ('abs_free', (52428800, 31457280)),
                 'levels_hardwarecorrupted': ('abs_used', (1, 1))
             }, [
-                (0, 'Total virtual memory: 7.9% - 3.12 GB of 39.56 GB', []),
-                (2, 'Hardware Corrupted: 0.00002% - 6.00 kB of 23.56 GB RAM (warn/crit at 1 B/1 B used)', []),
+                (0, 'Total virtual memory: 7.9% - 3.12 GiB of 39.6 GiB', []),
+                (2, 'Hardware Corrupted: 0.00002% - 6.00 KiB of 23.6 GiB RAM (warn/crit at 1 B/1 B used)', []),
                 (
-                    0, '\nRAM: 12.96% - 3.05 GB of 23.56 GB', [
+                    0, '\nRAM: 12.96% - 3.05 GiB of 23.6 GiB', [
                         ('mem_used', 3279134720, None, None, 0, 25300574208),
                         (
                             'mem_used_percent', 12.960712642494665, None, None,
@@ -187,13 +187,13 @@ checks = {
                     ]
                 ),
                 (
-                    0, '\nSwap: 0.44% - 72.15 MB of 16.00 GB', [
+                    0, '\nSwap: 0.44% - 72.2 MiB of 16.0 GiB', [
                         ('swap_used', 75657216, None, None, 0, 17179865088)
                     ]
                 ),
                 (
                     0,
-                    '\nCommitted: 8.53% - 3.38 GB of 39.56 GB virtual memory',
+                    '\nCommitted: 8.53% - 3.38 GiB of 39.6 GiB virtual memory',
                     [
                         (
                             'mem_lnx_committed_as', 3624763392, 42480439296.0,
@@ -203,11 +203,11 @@ checks = {
                 ),
                 (
                     0,
-                    '\nCommit Limit: 5.96% - 2.36 GB of 39.56 GB virtual memory',
+                    '\nCommit Limit: 5.96% - 2.36 GiB of 39.6 GiB virtual memory',
                     []
                 ),
                 (
-                    0, '\nShared memory: 0.14% - 32.98 MB of 23.56 GB RAM', [
+                    0, '\nShared memory: 0.14% - 33.0 MiB of 23.6 GiB RAM', [
                         (
                             'mem_lnx_shmem', 34582528, 5060114841.6,
                             7590172262.4, 0, 25300574208
@@ -215,17 +215,17 @@ checks = {
                     ]
                 ),
                 (
-                    0, '\nPage tables: 0.06% - 15.52 MB of 23.56 GB RAM', [
+                    0, '\nPage tables: 0.06% - 15.5 MiB of 23.6 GiB RAM', [
                         (
                             'mem_lnx_page_tables', 16273408, 2024045936.64,
                             4048091873.28, 0, 25300574208
                         )
                     ]
                 ),
-                (0, '\nDisk Writeback: 18.0% - 4.24 GB of 23.56 GB RAM', []),
+                (0, '\nDisk Writeback: 18.0% - 4.24 GiB of 23.6 GiB RAM', []),
                 (
                     0,
-                    '\nLargest Free VMalloc Chunk: 99.96% free - 31.99 TB of 32.00 TB VMalloc Area',
+                    '\nLargest Free VMalloc Chunk: 99.96% free - 32.0 TiB of 32.0 TiB VMalloc Area',
                     []
                 ),
                 (

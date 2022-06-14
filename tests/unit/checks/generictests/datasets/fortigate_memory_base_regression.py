@@ -25,27 +25,27 @@ discovery = {
 checks = {
     '': [
         (None, (70, 80), [
-            (0, 'Used: 19.0% - 350.21 MB of 1.80 GB', [
+            (0, 'Used: 19.0% - 350 MiB of 1.80 GiB', [
                 ('mem_used', 367217213.44, 1352905523.1999998, 1546177740.8000002, 0, 1932722176),
             ]),
         ]),
         (None, {"levels": (15., 85.)}, [
-            (1, 'Used: 19.0% - 350.21 MB of 1.80 GB (warn/crit at 15.00%/85.00% used)', [
+            (1, 'Used: 19.0% - 350 MiB of 1.80 GiB (warn/crit at 15.00%/85.00% used)', [
                 ('mem_used', 367217213.44, 289908326.4, 1642813849.6, 0, 1932722176)
             ]),
         ]),
         (None, {"levels": (-85., -15.)}, [
-            (1, 'Used: 19.0% - 350.21 MB of 1.80 GB (warn/crit below 85.00%/15.00% free)', [
+            (1, 'Used: 19.0% - 350 MiB of 1.80 GiB (warn/crit below 85.00%/15.00% free)', [
                 ('mem_used', 367217213.44, 289908326.4000001, 1642813849.6, 0, 1932722176),
             ]),
         ]),
         (None, {"levels": (340, 1500)}, [
-            (1, 'Used: 19.0% - 350.21 MB of 1.80 GB (warn/crit at 340 MiB/1.46 GiB used)', [
+            (1, 'Used: 19.0% - 350 MiB of 1.80 GiB (warn/crit at 340 MiB/1.46 GiB used)', [
                 ('mem_used', 367217213.44, 356515840.0, 1572864000.0, 0, 1932722176),
             ]),
         ]),
         (None, {"levels": (-1717, -1)}, [
-            (1, 'Used: 19.0% - 350.21 MB of 1.80 GB (warn/crit below 1.68 GiB/1.00 MiB free)', [
+            (1, 'Used: 19.0% - 350 MiB of 1.80 GiB (warn/crit below 1.68 GiB/1.00 MiB free)', [
                 ('mem_used', 367217213.44, 132317184.0, 1931673600.0, 0, 1932722176),
             ]),
         ]),

@@ -270,7 +270,7 @@ def _apply_predictive_levels(
         used / _MB,  # Current value stored in MB in RRDs
         dsname,
         params[paramname],
-        unit="GB",  # Levels are specified in GB...
+        unit="GiB",  # Levels are specified in GiB...
         scale=1024,  # ... in WATO ValueSpec
         infoname=titleinfo,
     )

@@ -27,7 +27,7 @@ from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_LEVELS
             [
                 (
                     1,
-                    "Size of filesystem is 0 MB",
+                    "Size of filesystem is 0 B",
                     [],
                 ),
             ],
@@ -44,7 +44,7 @@ from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_LEVELS
             [
                 (
                     0,
-                    "42.71% used (42.81 of 100.25 GB)",
+                    "42.71% used (42.8 of 100 GiB)",
                     [
                         ("fs_used", 43841, 82124.0, 92389.5, 0, 102655),
                         ("fs_size", 102655),
@@ -53,7 +53,7 @@ from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_LEVELS
                 ),
                 (
                     0,
-                    "trend: 0.00 B / 24 hours",
+                    "trend: 0 B / 24 hours",
                     [
                         ("growth", 161105947.82608697),
                         ("trend", 0.0, None, None, 0, 4277.291666666667),
@@ -73,7 +73,7 @@ from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_LEVELS
             [
                 (
                     0,
-                    "42.71% used (42.81 of 100.25 GB)",
+                    "42.71% used (42.8 of 100 GiB)",
                     [
                         ("fs_used", 43841, 82124.0, 92389.5, 0, 102655),
                         ("fs_size", 102655),
@@ -82,7 +82,7 @@ from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_LEVELS
                 ),
                 (
                     0,
-                    "trend: 0.00 B / 24 hours",
+                    "trend: 0 B / 24 hours",
                     [
                         ("growth", 161105947.82608697),
                         ("trend", 0.0, None, None, 0, 4277.291666666667),
@@ -108,7 +108,7 @@ from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_LEVELS
             [
                 (
                     0,
-                    "42.71% used (42.81 of 100.25 GB)",
+                    "42.71% used (42.8 of 100 GiB)",
                     [
                         ("fs_used", 43841, 82124.0, 92389.5, 0, 102655),
                         ("fs_size", 102655),
@@ -117,7 +117,7 @@ from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_LEVELS
                 ),
                 (
                     0,
-                    "trend: 0.00 B / 24 hours",
+                    "trend: 0 B / 24 hours",
                     [
                         ("growth", 161105947.82608697),
                         ("trend", 0.0, None, None, 0, 4277.291666666667),

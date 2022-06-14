@@ -78,7 +78,7 @@ checks = {
                 'show_reserved': False
             }, [
                 (
-                    0, '7.0% used (14.00 of 200.00 TB)', [
+                    0, '7.0% used (14.0 of 200 TiB)', [
                         (
                             'fs_used', 14680064.0, 167772160.0, 188743680.0, 0,
                             209715200.0
@@ -101,7 +101,7 @@ checks = {
                 'show_reserved': False
             }, [
                 (
-                    0, '3.67% used (4.53 of 123.53 TB)', [
+                    0, '3.67% used (4.53 of 124 TiB)', [
                         (
                             'fs_used', 4754432.0, 103627980.8, 116581478.4, 0,
                             129534976.0
@@ -127,7 +127,7 @@ checks = {
                 'show_reserved': False
             }, [
                 (
-                    0, '9.68% used (79.77 of 823.77 GB)', [
+                    0, '9.68% used (79.8 of 824 GiB)', [
                         ('fs_used', 81681.0, 674829.6, 759183.3, 0, 843537.0),
                         ('fs_size', 843537.0, None, None, None, None),
                         (
@@ -151,7 +151,7 @@ checks = {
                 'show_reserved': False
             }, [
                 (
-                    0, '0.02% used (131.00 MB of 744.13 GB)', [
+                    0, '0.02% used (131 MiB of 744 GiB)', [
                         ('fs_used', 131.0, 609589.6, 685788.3, 0, 761987.0),
                         ('fs_size', 761987.0, None, None, None, None),
                         (
@@ -175,7 +175,7 @@ checks = {
                 'show_reserved': False
             }, [
                 (
-                    0, '2.49% used (3.03 of 122.03 TB)', [
+                    0, '2.49% used (3.03 of 122 TiB)', [
                         (
                             'fs_used', 3180544.0, 102368870.4, 115164979.2, 0,
                             127961088.0
@@ -201,7 +201,7 @@ checks = {
                 'show_reserved': False
             }, [
                 (
-                    0, '5.07% used (39.70 of 783.70 GB)', [
+                    0, '5.07% used (39.7 of 784 GiB)', [
                         ('fs_used', 40652.0, 642006.4, 722257.2, 0, 802508.0),
                         ('fs_size', 802508.0, None, None, None, None),
                         (
@@ -225,7 +225,7 @@ checks = {
                 'show_reserved': False
             }, [
                 (
-                    0, '0.56% used (685.00 GB of 119.67 TB)', [
+                    0, '0.56% used (685 GiB of 120 TiB)', [
                         (
                             'fs_used', 701440.0, 100385587.2, 112933785.6, 0,
                             125481984.0
@@ -251,7 +251,7 @@ checks = {
                 'show_reserved': False
             }, [
                 (
-                    0, '16.69% used (149.00 of 893.00 GB)', [
+                    0, '16.69% used (149 of 893 GiB)', [
                         ('fs_used', 152576.0, 731545.6, 822988.8, 0, 914432.0),
                         ('fs_size', 914432.0, None, None, None, None),
                         (
@@ -275,7 +275,7 @@ checks = {
                 'show_reserved': False
             }, [
                 (
-                    0, '0.04% used (276.00 MB of 744.27 GB)', [
+                    0, '0.04% used (276 MiB of 744 GiB)', [
                         ('fs_used', 276.0, 609705.6, 685918.8, 0, 762132.0),
                         ('fs_size', 762132.0, None, None, None, None),
                         (
@@ -299,7 +299,7 @@ checks = {
                 'show_reserved': False
             }, [
                 (
-                    0, '1.48% used (11.14 of 755.14 GB)', [
+                    0, '1.48% used (11.1 of 755 GiB)', [
                         ('fs_used', 11412.0, 618614.4, 695941.2, 0, 773268.0),
                         ('fs_size', 773268.0, None, None, None, None),
                         (

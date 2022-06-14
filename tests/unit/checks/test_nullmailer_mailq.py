@@ -44,7 +44,7 @@ def test_parse_function(info, expected_parsed) -> None:
             (10, 20),
             [
                 (0, "Deferred: 0 mails", [("length", 0, 10, 20)]),
-                (0, "Size: 25.00 B", [("size", 25)]),
+                (0, "Size: 25 B", [("size", 25)]),
             ],
         ),
         (
@@ -56,7 +56,7 @@ def test_parse_function(info, expected_parsed) -> None:
                     "Deferred: 12 mails (warn/crit at 10 mails/20 mails)",
                     [("length", 12, 10, 20)],
                 ),
-                (0, "Size: 25.00 B", [("size", 25)]),
+                (0, "Size: 25 B", [("size", 25)]),
             ],
         ),
         # Other queues have no metrics:
@@ -65,7 +65,7 @@ def test_parse_function(info, expected_parsed) -> None:
             (10, 20),
             [
                 (2, "Other queue: 123 mails (warn/crit at 10 mails/20 mails)"),
-                (0, "Size: 1.00 kB"),
+                (0, "Size: 1.00 KiB"),
             ],
         ),
     ],
@@ -86,9 +86,9 @@ def test_check_single_queue(raw_queue, levels_length, expected_result) -> None:
             [(25, 0, "deferred"), (25, 0, "failed")],
             [
                 (0, "Deferred: 0 mails", [("length", 0, 10, 20)]),
-                (0, "Size: 25.00 B", [("size", 25)]),
+                (0, "Size: 25 B", [("size", 25)]),
                 (0, "Failed: 0 mails", []),
-                (0, "Size: 25.00 B", []),
+                (0, "Size: 25 B", []),
             ],
         ),
     ],

@@ -40,7 +40,7 @@ _SECTION = {
             [
                 Result(
                     state=State.WARN,
-                    summary="RAM: 81.51% - 104.33 GB of 128.00 GB (warn/crit at 80.00%/90.00% used)",
+                    summary="RAM: 81.51% - 104 GiB of 128 GiB (warn/crit at 80.00%/90.00% used)",
                 ),
                 Metric(
                     "mem_used",
@@ -60,7 +60,7 @@ _SECTION = {
                 ),
                 Result(
                     state=State.WARN,
-                    summary="Commit charge: 75.43% - 110.88 GB of 147.00 GB (warn/crit at 70.00%/90.00% used)",
+                    summary="Commit charge: 75.43% - 111 GiB of 147 GiB (warn/crit at 70.00%/90.00% used)",
                 ),
                 Metric(
                     "pagefile_used",
@@ -84,7 +84,7 @@ _SECTION = {
             [
                 Result(
                     state=State.OK,
-                    summary="RAM: 81.51% - 104.33 GB of 128.00 GB, 10 min average: 81.51% (104.33 GB)",
+                    summary="RAM: 81.51% - 104 GiB of 128 GiB, 10 min average: 81.51% (104 GiB)",
                 ),
                 Metric(
                     "mem_used",
@@ -108,7 +108,7 @@ _SECTION = {
                 ),
                 Result(
                     state=State.WARN,
-                    summary="Commit charge: 75.43% - 110.88 GB of 147.00 GB, 10 min average: 75.43% (110.88 GB)",
+                    summary="Commit charge: 75.43% - 111 GiB of 147 GiB, 10 min average: 75.43% (111 GiB)",
                 ),
                 Metric(
                     "pagefile_used",
@@ -144,7 +144,7 @@ _SECTION = {
             [
                 Result(
                     state=State.WARN,
-                    summary="RAM: 81.51% - 104.33 GB of 128.00 GB, RAM: 104.33 GB (predicted reference: 97.66) (warn/crit at 87.89 GB/107.42 GB)",
+                    summary="RAM: 81.51% - 104 GiB of 128 GiB, RAM: 104.33 GiB (predicted reference: 97.66) (warn/crit at 87.89 GiB/107.42 GiB)",
                 ),
                 Metric(
                     "mem_used",
@@ -171,7 +171,7 @@ _SECTION = {
                 ),
                 Result(
                     state=State.CRIT,
-                    summary="Commit charge: 75.43% - 110.88 GB of 147.00 GB, Commit charge: 110.88 GB (predicted reference: 97.66) (warn/crit at 87.89 GB/107.42 GB)",
+                    summary="Commit charge: 75.43% - 111 GiB of 147 GiB, Commit charge: 110.88 GiB (predicted reference: 97.66) (warn/crit at 87.89 GiB/107.42 GiB)",
                 ),
                 Metric(
                     "pagefile_used",
@@ -211,7 +211,7 @@ _SECTION = {
             [
                 Result(
                     state=State.WARN,
-                    summary="RAM: 81.51% - 104.33 GB of 128.00 GB, 60 min average: 81.51% (104.33 GB), RAM: 104.33 GB (predicted reference: 97.66) (warn/crit at 87.89 GB/107.42 GB)",
+                    summary="RAM: 81.51% - 104 GiB of 128 GiB, 60 min average: 81.51% (104 GiB), RAM: 104.33 GiB (predicted reference: 97.66) (warn/crit at 87.89 GiB/107.42 GiB)",
                 ),
                 Metric(
                     "mem_used",
@@ -238,7 +238,7 @@ _SECTION = {
                 ),
                 Result(
                     state=State.CRIT,
-                    summary="Commit charge: 75.43% - 110.88 GB of 147.00 GB, 60 min average: 75.43% (110.88 GB), Commit charge: 110.88 GB (predicted reference: 97.66) (warn/crit at 87.89 GB/107.42 GB)",
+                    summary="Commit charge: 75.43% - 111 GiB of 147 GiB, 60 min average: 75.43% (111 GiB), Commit charge: 110.88 GiB (predicted reference: 97.66) (warn/crit at 87.89 GiB/107.42 GiB)",
                 ),
                 Metric(
                     "pagefile_used",

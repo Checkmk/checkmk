@@ -20,9 +20,9 @@ discovery = {'': [(None, {})]}
 
 checks = {'': [(None,
                 {'usage_bytes': (80.0, 90.0)},
-                [(0, 'Quota: 500.00 MB', []),
+                [(0, 'Quota: 500 MiB', []),
                  (0,
-                  'Slaves usage: 5.62 MB',
+                  'Slaves usage: 5.62 MiB',
                   [('splunk_slave_usage_bytes',
                     5895880,
                     419430400.0,

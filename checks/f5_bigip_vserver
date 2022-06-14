@@ -7,6 +7,7 @@
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.f5_bigip import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.plugins.agent_based.agent_based_api.v1 import render
 
 # Current server status
 # vserver["status"]
@@ -138,8 +139,8 @@ def get_aggregated_values(vserver):
 
 def iter_counter_params():
     for unit, hr_function in (
-        ("octets", lambda x: get_bytes_human_readable(x, base=1000.0)),
-        ("pkts", lambda x: "%s" % x),
+        ("octets", render.iobandwidth),
+        ("pkts", lambda x: "%s/s" % x),
     ):
         for direction in ("in", "out", "total"):
             for boundary in ("", "_lower"):
@@ -190,7 +191,6 @@ def check_f5_bigip_vserver(_item, params, data):
             levels,
             human_readable_func=hr_function,
             infoname=MAP_PARAM_TO_TEXT[key],
-            unit="/sec",
         )
         if state:
             yield state, infotext

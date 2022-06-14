@@ -29,10 +29,10 @@ checks = {
         (0, 'Usage: 21.28%', [('k8s_cpu_usage', 100.0 * 0.200 / 0.940, None, None, 0.0, None)]),
     ])],
     'memory': [(None, {}, [
-        (0, 'Request: 0.00 B', [('k8s_memory_request', 0.0)]),
+        (0, 'Request: 0 B', [('k8s_memory_request', 0.0)]),
         (0, 'Limit: n.a.', []),
-        (0, 'Allocatable: 581.59 MB', [('k8s_memory_allocatable', 609845248.0)]),
-        (0, 'Capacity: 581.59 MB', [('k8s_memory_capacity', 609845248.0)]),
+        (0, 'Allocatable: 582 MiB', [('k8s_memory_allocatable', 609845248.0)]),
+        (0, 'Capacity: 582 MiB', [('k8s_memory_capacity', 609845248.0)]),
         (0, 'Usage: 0%', [('k8s_memory_usage', 0.0, None, None, 0.0, None)]),
     ])],
     'pods': [(None, {}, [

@@ -11,13 +11,13 @@ import cmk.utils.aws_constants as agent_aws_types
 
 from cmk.base.check_api import (
     check_levels,
-    get_bytes_human_readable,
     get_number_with_precision,
     get_percent_human_readable,
     MKCounterWrapped,
     ServiceCheckResult,
     state_markers,
 )
+from cmk.base.plugins.agent_based.agent_based_api.v1 import render
 from cmk.base.plugins.agent_based.utils import aws
 
 AWSRegions = dict(agent_aws_types.AWSRegions)
@@ -139,7 +139,7 @@ def aws_get_counts_rate_human_readable(rate):
 
 
 def aws_get_bytes_rate_human_readable(rate):
-    return get_bytes_human_readable(rate) + "/s"
+    return render.iobandwidth(rate)
 
 
 def check_aws_request_rate(request_rate):

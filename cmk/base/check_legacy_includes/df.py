@@ -200,7 +200,7 @@ def df_check_filesystem_single_coroutine(
     this_time=None,
 ):
     if size_mb == 0:
-        yield 1, "Size of filesystem is 0 MB", []
+        yield 1, "Size of filesystem is 0 B", []
         return
 
     # params might still be a tuple
@@ -230,8 +230,11 @@ def df_check_filesystem_single_coroutine(
     used_perc_hr = get_percent_human_readable(100.0 * used_mb / used_max)
 
     # If both numbers end with the same unit, then drop the first one
-    if used_hr[-2:] == used_max_hr[-2:]:
-        used_hr = used_hr[:-3]
+    if (unit_used_hr := used_hr.split(" ", maxsplit=1,)[-1]) == used_max_hr.split(
+        " ",
+        maxsplit=1,
+    )[-1]:
+        used_hr = used_hr[: used_hr.find(unit_used_hr)].rstrip()
 
     infotext = ["%s used (%s of %s)" % (used_perc_hr, used_hr, used_max_hr)]
 

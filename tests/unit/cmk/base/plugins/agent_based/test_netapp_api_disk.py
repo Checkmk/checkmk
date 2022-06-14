@@ -69,7 +69,7 @@ def test_discover_netapp_api_disk(fix_register, string_table, expected_result) -
         (
             _AGENT_OUTPUT,
             [
-                Result(state=State.OK, summary="Total raw capacity: 1000.00 B"),
+                Result(state=State.OK, summary="Total raw capacity: 1000 B"),
                 Metric("total_disk_capacity", 1000.0),
                 Result(state=State.OK, summary="Total disks: 1"),
                 Metric("total_disks", 1.0),

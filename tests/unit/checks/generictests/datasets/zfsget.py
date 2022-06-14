@@ -65,7 +65,7 @@ checks = {
                 'show_reserved': False
             }, [
                 (
-                    0, '17.91% used (1.75 of 9.78 GB)', [
+                    0, '17.91% used (1.75 of 9.78 GiB)', [
                         (
                             'fs_used', 1793.4736328125, 8012.215625,
                             9013.742578125, 0, 10015.26953125
@@ -89,7 +89,7 @@ checks = {
                 'inodes_levels': (10.0, 5.0),
                 'show_inodes': 'onlow',
                 'show_reserved': False
-            }, [(1, 'Size of filesystem is 0 MB', [])]
+            }, [(1, 'Size of filesystem is 0 B', [])]
         ),
         (
             '/etc/mnttab', {
@@ -102,7 +102,7 @@ checks = {
                 'inodes_levels': (10.0, 5.0),
                 'show_inodes': 'onlow',
                 'show_reserved': False
-            }, [(1, 'Size of filesystem is 0 MB', [])]
+            }, [(1, 'Size of filesystem is 0 B', [])]
         ),
         (
             '/etc/svc/volatile', {
@@ -117,7 +117,7 @@ checks = {
                 'show_reserved': False
             }, [
                 (
-                    0, '0.0002% used (232.00 kB of 146.37 GB)', [
+                    0, '0.0002% used (232 KiB of 146 GiB)', [
                         (
                             'fs_used', 0.2265625, 119906.7125, 134895.0515625,
                             0, 149883.390625
@@ -143,7 +143,7 @@ checks = {
                 'show_reserved': False
             }, [
                 (
-                    0, '0.0004% used (21.00 kB of 4.89 GB)', [
+                    0, '0.0004% used (21.0 KiB of 4.89 GiB)', [
                         ('fs_used', 0.0205078125, 4006.8, 4507.65, 0, 5008.5),
                         ('fs_size', 5008.5, None, None, None, None),
                         (
@@ -167,7 +167,7 @@ checks = {
                 'show_reserved': False
             }, [
                 (
-                    0, '0.001% used (55.00 kB of 4.89 GB)', [
+                    0, '0.001% used (55.0 KiB of 4.89 GiB)', [
                         ('fs_used', 0.0537109375, 4006.8, 4507.65, 0, 5008.5),
                         ('fs_size', 5008.5, None, None, None, None),
                         (
@@ -191,7 +191,7 @@ checks = {
                 'show_reserved': False
             }, [
                 (
-                    0, '2.84% used (142.33 MB of 4.89 GB)', [
+                    0, '2.84% used (142 MiB of 4.89 GiB)', [
                         (
                             'fs_used', 142.3271484375, 4006.8, 4507.65, 0,
                             5008.5
@@ -215,7 +215,7 @@ checks = {
                 'inodes_levels': (10.0, 5.0),
                 'show_inodes': 'onlow',
                 'show_reserved': False
-            }, [(1, 'Size of filesystem is 0 MB', [])]
+            }, [(1, 'Size of filesystem is 0 B', [])]
         ),
         (
             '/system/contract', {
@@ -228,7 +228,7 @@ checks = {
                 'inodes_levels': (10.0, 5.0),
                 'show_inodes': 'onlow',
                 'show_reserved': False
-            }, [(1, 'Size of filesystem is 0 MB', [])]
+            }, [(1, 'Size of filesystem is 0 B', [])]
         ),
         (
             '/system/object', {
@@ -241,7 +241,7 @@ checks = {
                 'inodes_levels': (10.0, 5.0),
                 'show_inodes': 'onlow',
                 'show_reserved': False
-            }, [(1, 'Size of filesystem is 0 MB', [])]
+            }, [(1, 'Size of filesystem is 0 B', [])]
         ),
         (
             '/tmp', {
@@ -256,7 +256,7 @@ checks = {
                 'show_reserved': False
             }, [
                 (
-                    0, '0.53% used (10.80 MB of 2.00 GB)', [
+                    0, '0.53% used (10.8 MiB of 2.00 GiB)', [
                         ('fs_used', 10.8046875, 1638.4, 1843.2, 0, 2048.0),
                         ('fs_size', 2048.0, None, None, None, None),
                         (
@@ -280,7 +280,7 @@ checks = {
                 'show_reserved': False
             }, [
                 (
-                    0, '0.0004% used (21.00 kB of 4.89 GB)', [
+                    0, '0.0004% used (21.0 KiB of 4.89 GiB)', [
                         ('fs_used', 0.0205078125, 4006.8, 4507.65, 0, 5008.5),
                         ('fs_size', 5008.5, None, None, None, None),
                         (
@@ -304,7 +304,7 @@ checks = {
                 'show_reserved': False
             }, [
                 (
-                    0, '64.85% used (18.99 of 29.29 GB)', [
+                    0, '64.85% used (19.0 of 29.3 GiB)', [
                         (
                             'fs_used', 19447.615234375, 23990.4, 26989.2, 0,
                             29988.0
@@ -330,7 +330,7 @@ checks = {
                 'show_reserved': False
             }, [
                 (
-                    0, '0.00002% used (24.00 kB of 146.37 GB)', [
+                    0, '0.00002% used (24.0 KiB of 146 GiB)', [
                         (
                             'fs_used', 0.0234375, 119906.55, 134894.86875, 0,
                             149883.1875

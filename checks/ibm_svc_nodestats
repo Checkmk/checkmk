@@ -11,6 +11,7 @@ from cmk.base.check_legacy_includes.cpu_util import *  # pylint: disable=wildcar
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.ibm_svc import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.plugins.agent_based.agent_based_api.v1 import render
 
 # Note: This file is almost identical with ibm_svc_nodestats. We should
 # create an include file for sharing common code!
@@ -148,8 +149,7 @@ def check_ibm_svc_nodestats_diskio(item, _no_params, info):
 
     return (
         0,
-        "%s/s read, %s/s write"
-        % (get_bytes_human_readable(read_bytes), get_bytes_human_readable(write_bytes)),
+        "%s read, %s write" % (render.iobandwidth(read_bytes), render.iobandwidth(write_bytes)),
         perfdata,
     )
 

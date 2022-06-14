@@ -124,13 +124,13 @@ checks = {
             }, [
                 (
                     0,
-                    u'State: Ready, Status: OK(0x0), [Phys. capacity] User capacity: 15.04 TB, Consumed capacity: 12.75 TB, Available capacity: 2.29 TB',
+                    u'State: Ready, Status: OK(0x0), [Phys. capacity] User capacity: 15.0 TiB, Consumed capacity: 12.8 TiB, Available capacity: 2.29 TiB',
                     []
                 ),
-                (1, 'Percent full: 84.76% (warn/crit at 70.00 B/90.00 B)', []),
+                (1, 'Percent full: 84.76% (warn/crit at 70 B/90 B)', []),
                 (
                     0,
-                    '[Virt. capacity] Percent subscribed: 84.76%, Oversubscribed by: 0.00 B, Total subscribed capacity: 12.75 TB',
+                    '[Virt. capacity] Percent subscribed: 84.76%, Oversubscribed by: 0 B, Total subscribed capacity: 12.8 TiB',
                     [
                         (
                             'emcvnx_consumed_capacity', 14021409290321.92,
@@ -161,9 +161,9 @@ checks = {
     'tieringtypes': [
         (
             u'backup Capacity', {}, [
-                (0, 'User capacity: 10.75 TB', []),
+                (0, 'User capacity: 10.7 TiB', []),
                 (
-                    0, 'Consumed capacity: 8.88 TB', [
+                    0, 'Consumed capacity: 8.88 TiB', [
                         (
                             'emcvnx_consumed_capacity', 9767807898091.52, None,
                             None, None, None
@@ -171,7 +171,7 @@ checks = {
                     ]
                 ),
                 (
-                    0, 'Available capacity: 1.86 TB', [
+                    0, 'Available capacity: 1.86 TiB', [
                         (
                             'emcvnx_avail_capacity', 2048667187937.28, None,
                             None, None, None
@@ -187,7 +187,7 @@ checks = {
                     ]
                 ),
                 (
-                    0, 'Move higher: 17.03 GB', [
+                    0, 'Move higher: 17.0 GiB', [
                         (
                             'emcvnx_targeted_higher', 18285823262.72, None,
                             None, None, None
@@ -195,21 +195,21 @@ checks = {
                     ]
                 ),
                 (
-                    0, 'Move lower: 0.00 B', [
+                    0, 'Move lower: 0 B', [
                         ('emcvnx_targeted_lower', 0.0, None, None, None, None)
                     ]
                 ),
                 (
-                    0, 'Move within: 0.00 B',
+                    0, 'Move within: 0 B',
                     [('emcvnx_targeted_within', 0.0, None, None, None, None)]
                 )
             ]
         ),
         (
             u'backup Performance', {}, [
-                (0, 'User capacity: 4.30 TB', []),
+                (0, 'User capacity: 4.30 TiB', []),
                 (
-                    0, 'Consumed capacity: 3.87 TB', [
+                    0, 'Consumed capacity: 3.87 TiB', [
                         (
                             'emcvnx_consumed_capacity', 4253059152609.28, None,
                             None, None, None
@@ -217,7 +217,7 @@ checks = {
                     ]
                 ),
                 (
-                    0, 'Available capacity: 439.86 GB', [
+                    0, 'Available capacity: 440 GiB', [
                         (
                             'emcvnx_avail_capacity', 472296078704.64, None,
                             None, None, None
@@ -233,11 +233,11 @@ checks = {
                     ]
                 ),
                 (
-                    0, 'Move higher: 0.00 B',
+                    0, 'Move higher: 0 B',
                     [('emcvnx_targeted_higher', 0.0, None, None, None, None)]
                 ),
                 (
-                    0, 'Move lower: 17.03 GB', [
+                    0, 'Move lower: 17.0 GiB', [
                         (
                             'emcvnx_targeted_lower', 18285823262.72, None,
                             None, None, None
@@ -245,7 +245,7 @@ checks = {
                     ]
                 ),
                 (
-                    0, 'Move within: 0.00 B',
+                    0, 'Move within: 0 B',
                     [('emcvnx_targeted_within', 0.0, None, None, None, None)]
                 )
             ]
@@ -260,7 +260,7 @@ checks = {
                 (0, u'Relocation status: Inactive', []),
                 (0, u'Relocation rate: Medium', []),
                 (
-                    0, 'Move up: 17.03 GB', [
+                    0, 'Move up: 17.0 GiB', [
                         (
                             'emcvnx_move_up', 18285823262.72, None, None, None,
                             None
@@ -268,7 +268,7 @@ checks = {
                     ]
                 ),
                 (
-                    0, 'Move down: 17.03 GB', [
+                    0, 'Move down: 17.0 GiB', [
                         (
                             'emcvnx_move_down', 18285823262.72, None, None,
                             None, None
@@ -276,12 +276,12 @@ checks = {
                     ]
                 ),
                 (
-                    0, 'Move within: 0.00 B', [
+                    0, 'Move within: 0 B', [
                         ('emcvnx_move_within', 0.0, None, None, None, None)
                     ]
                 ),
                 (
-                    0, 'Movement completed: 102.70 GB', [
+                    0, 'Movement completed: 103 GiB', [
                         (
                             'emcvnx_move_completed', 110273285324.8, None,
                             None, None, None

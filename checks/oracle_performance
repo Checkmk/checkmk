@@ -35,6 +35,8 @@
 
 import cmk.utils.oracle_constants as oracle_constants
 
+from cmk.base.plugins.agent_based.agent_based_api.v1 import render
+
 oracle_performance_discovery = []
 
 
@@ -320,8 +322,7 @@ def _check_oracle_performance_iostat_file(item, params, data, unit, io_fields):
         total = totals[i]
 
         if unit == "bytes/s":
-            total_readable = get_bytes_human_readable(total)
-            total_output = "%s/s" % total_readable
+            total_output = render.iobandwidth(total)
         else:
             total_readable = total
             total_output = "%.2f %s" % (total_readable, unit)

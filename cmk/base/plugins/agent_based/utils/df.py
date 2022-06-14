@@ -359,7 +359,7 @@ def df_check_filesystem_single(
     this_time=None,
 ) -> CheckResult:
     if size_mb == 0:
-        yield Result(state=State.WARN, summary="Size of filesystem is 0 MB")
+        yield Result(state=State.WARN, summary="Size of filesystem is 0 B")
         return
 
     if (size_mb is None) or (avail_mb is None) or (reserved_mb is None):

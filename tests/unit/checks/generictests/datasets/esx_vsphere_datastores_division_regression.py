@@ -50,7 +50,7 @@ checks = {
                 'show_reserved': False
             }, [
                 (
-                    0, '23.59% used (4.27 of 18.12 TB)', [
+                    0, '23.59% used (4.27 of 18.1 TiB)', [
                         (
                             'fs_used', 4481822.59375, 15200550.09375,
                             17100618.85546875, 0, 19000687.6171875
@@ -63,7 +63,7 @@ checks = {
                     ]
                 ),
                 (
-                    0, 'Uncommitted: 0.00 B', [
+                    0, 'Uncommitted: 0 B', [
                         ('uncommitted', 0.0, None, None, None, None)
                     ]
                 ), (0, 'Provisioning: 23.59%', []),
@@ -90,7 +90,7 @@ checks = {
                 'show_reserved': False
             }, [
                 (
-                    0, '62.57% used (2.56 of 4.09 TB)', [
+                    0, '62.57% used (2.56 of 4.09 TiB)', [
                         (
                             'fs_used', 2685473.0, 3433676.8, 3862886.4, 0,
                             4292096.0
@@ -102,7 +102,7 @@ checks = {
                     ]
                 ),
                 (
-                    0, 'Uncommitted: 0.00 B', [
+                    0, 'Uncommitted: 0 B', [
                         ('uncommitted', 0.0, None, None, None, None)
                     ]
                 ), (0, 'Provisioning: 62.57%', []),
@@ -126,7 +126,7 @@ checks = {
                 'show_reserved': False
             }, [
                 (
-                    0, '76.68% used (5.49 of 7.16 TB)', [
+                    0, '76.68% used (5.49 of 7.16 TiB)', [
                         (
                             'fs_used', 5754936.7265625, 6004113.728125,
                             6754627.944140625, 0, 7505142.16015625
@@ -139,7 +139,7 @@ checks = {
                     ]
                 ),
                 (
-                    0, 'Uncommitted: 0.00 B', [
+                    0, 'Uncommitted: 0 B', [
                         ('uncommitted', 0.0, None, None, None, None)
                     ]
                 ), (0, 'Provisioning: 76.68%', []),
@@ -166,7 +166,7 @@ checks = {
                 'show_reserved': False
             }, [
                 (
-                    0, '0.21% used (974.00 MB of 458.25 GB)', [
+                    0, '0.21% used (974 MiB of 458 GiB)', [
                         ('fs_used', 974.0, 375398.4, 422323.2, 0, 469248.0),
                         ('fs_size', 469248.0, None, None, None, None),
                         (
@@ -176,7 +176,7 @@ checks = {
                     ]
                 ),
                 (
-                    0, 'Uncommitted: 0.00 B', [
+                    0, 'Uncommitted: 0 B', [
                         ('uncommitted', 0.0, None, None, None, None)
                     ]
                 ), (0, 'Provisioning: 0.21%', []),
@@ -196,7 +196,7 @@ checks = {
                 'show_reserved': False
             }, [
                 (
-                    0, '76.68% used (5.49 of 7.16 TB)', [
+                    0, '76.68% used (5.49 of 7.16 TiB)', [
                         (
                             'fs_used', 5754936.7265625, 6004113.728125,
                             6754627.944140625, 0, 7505142.16015625
@@ -209,7 +209,7 @@ checks = {
                     ]
                 ),
                 (
-                    0, 'Uncommitted: 0.00 B', [
+                    0, 'Uncommitted: 0 B', [
                         ('uncommitted', 0.0, None, None, None, None)
                     ]
                 ), (0, 'Provisioning: 76.68%', []),

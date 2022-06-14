@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 tribe29 GMiBH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -271,7 +271,7 @@ info_empty_inodes = [
         (
             info_df_lnx_tmpfs,
             [],
-            {"ignore_fs_types": ["tmpfs", "nfs", "smbfs", "cifs", "iso9660"]},
+            {"ignore_fs_types": ["tmpfs", "nfs", "sMiBfs", "cifs", "iso9660"]},
         ),
         # Ignoring tmpfs explicitly, but including one mountpoint explicitly:
         (
@@ -286,7 +286,7 @@ info_empty_inodes = [
                 ),
             ],
             {
-                "ignore_fs_types": ["tmpfs", "nfs", "smbfs", "cifs", "iso9660"],
+                "ignore_fs_types": ["tmpfs", "nfs", "sMiBfs", "cifs", "iso9660"],
                 "never_ignore_mountpoints": ["/opt/omd/sites/heute/tmp"],
             },
         ),
@@ -309,7 +309,7 @@ info_empty_inodes = [
                     },
                 ),
             ],
-            {"ignore_fs_types": ["nfs", "smbfs", "cifs", "iso9660"]},
+            {"ignore_fs_types": ["nfs", "sMiBfs", "cifs", "iso9660"]},
         ),
         # Including tmpfs and volume name:
         (
@@ -331,7 +331,7 @@ info_empty_inodes = [
                 ),
             ],
             {
-                "ignore_fs_types": ["nfs", "smbfs", "cifs", "iso9660"],
+                "ignore_fs_types": ["nfs", "sMiBfs", "cifs", "iso9660"],
                 "item_appearance": "volume_name_and_mountpoint",
             },
         ),
@@ -348,7 +348,7 @@ info_empty_inodes = [
                 ),
             ],
             {
-                "ignore_fs_types": ["tmpfs", "nfs", "smbfs", "cifs", "iso9660"],
+                "ignore_fs_types": ["tmpfs", "nfs", "sMiBfs", "cifs", "iso9660"],
                 "item_appearance": "volume_name_and_mountpoint",
                 "never_ignore_mountpoints": ["~.*/omd/sites/[^/]+/tmp$"],
             },
@@ -462,7 +462,7 @@ def make_test_df_params():
             [
                 (
                     0,
-                    "75.79% used (103.92 of 137.13 GB)",
+                    "75.79% used (104 of 137 GiB)",
                     [
                         (
                             "fs_used",
@@ -492,7 +492,7 @@ def make_test_df_params():
             [
                 (
                     0,
-                    "75.79% used (103.92 of 137.13 GB)",
+                    "75.79% used (104 of 137 GiB)",
                     [
                         (
                             "fs_used",
@@ -522,7 +522,7 @@ def make_test_df_params():
             [
                 (
                     0,
-                    "1.82% used (181.89 MB of 9.77 GB)",
+                    "1.82% used (182 MiB of 9.77 GiB)",
                     [
                         ("fs_used", 181.890625, 8000.621875, 9000.699609375, 0, 10000.77734375),
                         ("fs_size", 10000.77734375),
@@ -538,7 +538,7 @@ def make_test_df_params():
             [
                 (
                     0,
-                    "1.82% used (181.89 MB of 9.77 GB)",
+                    "1.82% used (182 MiB of 9.77 GiB)",
                     [
                         ("fs_used", 181.890625, 8000.621875, 9000.699609375, 0, 10000.77734375),
                         ("fs_size", 10000.77734375, None, None, None, None),
@@ -554,7 +554,7 @@ def make_test_df_params():
             [
                 (
                     0,
-                    "21.13% used (4.23 of 20.00 GB)",
+                    "21.13% used (4.23 of 20.0 GiB)",
                     [
                         ("fs_used", 4327.29296875, 16383.2, 18431.1, 0, 20479.0),
                         ("fs_size", 20479.0, None, None, None, None),
@@ -577,7 +577,7 @@ def make_test_df_params():
                 (0, "[/dev/sda1]"),
                 (
                     0,
-                    "21.13% used (4.23 of 20.00 GB)",
+                    "21.13% used (4.23 of 20.0 GiB)",
                     [
                         ("fs_used", 4327.29296875, 16383.2, 18431.1, 0, 20479.0),
                         ("fs_size", 20479.0, None, None, None, None),
@@ -593,7 +593,7 @@ def make_test_df_params():
             [
                 (
                     0,
-                    "21.13% used (4.23 of 20.00 GB)",
+                    "21.13% used (4.23 of 20.0 GiB)",
                     [
                         ("fs_used", 4327.29296875, 16383.2, 18431.1, 0, 20479.0),
                         ("fs_size", 20479.0, None, None, None, None),
@@ -612,7 +612,7 @@ def make_test_df_params():
             [
                 (
                     0,
-                    "21.13% used (4.23 of 20.00 GB)",
+                    "21.13% used (4.23 of 20.0 GiB)",
                     [
                         ("fs_used", 4327.29296875, 16383.2, 18431.1, 0, 20479.0),
                         ("fs_size", 20479.0, None, None, None, None),
@@ -1053,7 +1053,7 @@ def test_df_discovery_groups_with_parse(
             [
                 (
                     2,
-                    "90.0% used (189.00 of 210.00 kB, warn/crit at 80.00%/90.00%)",
+                    "90.0% used (189 of 210 KiB, warn/crit at 80.00%/90.00%)",
                     [
                         ("fs_used", 0.1845703125, 0.1640625, 0.1845703125, 0, 0.205078125),
                         ("fs_size", 0.205078125, None, None, None, None),
@@ -1072,7 +1072,7 @@ def test_df_discovery_groups_with_parse(
             [
                 (
                     2,
-                    "90.0% used (189.00 of 210.00 kB, warn/crit at 80.00%/90.00%)",
+                    "90.0% used (189 of 210 KiB, warn/crit at 80.00%/90.00%)",
                     [
                         ("fs_used", 0.1845703125, 0.1640625, 0.1845703125, 0, 0.205078125),
                         ("fs_size", 0.205078125, None, None, None, None),
@@ -1091,7 +1091,7 @@ def test_df_discovery_groups_with_parse(
             [
                 (
                     2,
-                    "90.0% used (189.00 of 210.00 kB, warn/crit at 80.00%/90.00%)",
+                    "90.0% used (189 of 210 KiB, warn/crit at 80.00%/90.00%)",
                     [
                         ("fs_used", 0.1845703125, 0.1640625, 0.1845703125, 0, 0.205078125),
                         ("fs_size", 0.205078125, None, None, None, None),
@@ -1132,7 +1132,7 @@ def test_df_discovery_groups_with_parse(
             [
                 (
                     2,
-                    "90.0% used (207.00 of 230.00 kB, warn/crit at 80.00%/90.00%)",
+                    "90.0% used (207 of 230 KiB, warn/crit at 80.00%/90.00%)",
                     [
                         ("fs_used", 0.2021484375, 0.1796875, 0.2021484375, 0, 0.224609375),
                         ("fs_size", 0.224609375, None, None, None, None),
@@ -1154,7 +1154,7 @@ def test_df_discovery_groups_with_parse(
             [
                 (
                     2,
-                    "90.0% used (207.00 of 230.00 kB, warn/crit at 80.00%/90.00%)",
+                    "90.0% used (207 of 230 KiB, warn/crit at 80.00%/90.00%)",
                     [
                         ("fs_used", 0.2021484375, 0.1796875, 0.2021484375, 0, 0.224609375),
                         ("fs_size", 0.224609375, None, None, None, None),

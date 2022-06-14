@@ -278,7 +278,7 @@ checks = {
             [
                 (
                     0,
-                    '2.35% used (67.14 GB of 2.79 TB)',
+                    '2.35% used (67.1 GiB of 2.79 TiB)',
                     [
                         ('fs_used', 68750.97265625, 2341335.171875, 2634002.068359375, 0,
                          2926668.96484375),
@@ -288,7 +288,7 @@ checks = {
                 ),
                 (
                     0,
-                    'trend: +45.21 GB / 24 hours',
+                    'trend: +45.2 GiB / 24 hours',
                     [
                         ('growth', 816618.6468930437),
                         ('trend', 46290.73742521239, None, None, 0, 121944.54020182292),
@@ -314,7 +314,7 @@ checks = {
                 "show_reserved": False,
             },
             [
-                (0, '1.11% used (31.67 GB of 2.79 TB)', [
+                (0, '1.11% used (31.7 GiB of 2.79 TiB)', [
                     ('fs_used', 32429.234375, 2341335.171875, 2634002.068359375, 0,
                      2926668.96484375),
                     ('fs_size', 2926668.96484375),
@@ -322,7 +322,7 @@ checks = {
                 ]),
                 (
                     0,
-                    'trend: +21.32 GB / 24 hours',
+                    'trend: +21.3 GiB / 24 hours',
                     [
                         ('growth', 385191.89579323615),
                         ('trend', 21834.93724313627, None, None, 0, 121944.54020182292),
@@ -374,13 +374,13 @@ checks = {
                 'trend_showtimeleft': True
             },
             [
-                (2, '60.04% used (180.13 of 300.00 GB, warn/crit at 50.00%/60.00%)', [
+                (2, '60.04% used (180 of 300 GiB, warn/crit at 50.00%/60.00%)', [
                     ('fs_used', 184455.7265625, 153600.0, 184320.0, 0, 307200.0),
                     ('fs_size', 307200.0),
                     ('fs_used_percent', 60.04418182373047),
                 ]),
                 (2,
-                 'trend: +121.29 GB / 24 hours - growing too fast (warn/crit at 100.00 MB/200.00 MB per 24.0 h)'
+                 'trend: +121 GiB / 24 hours - growing too fast (warn/crit at 100 MiB/200 MiB per 24.0 h)'
                  '(!!), growing too fast (warn/crit at 5.0%/10.0% per 24.0 h)(!!), time '
                  'left until disk full: 23 hours', [
                      ('growth', 2190950.615204839),
@@ -457,7 +457,7 @@ checks = {
             [
                 (
                     0,
-                    '0.06% used (670.75 MB of 1.00 TB, warn/crit at 59.04%/63.59%)',
+                    '0.06% used (671 MiB of 1.00 TiB, warn/crit at 59.04%/63.59%)',
                     [
                         ('fs_used', 670.75390625, 619051.0158057379, 666776.0140495448, 0,
                          1048576.0),
@@ -467,8 +467,8 @@ checks = {
                 ),
                 (
                     2,
-                    'trend: +451.63 MB / 24 hours - growing too fast (warn/crit at 100.00 MB/'
-                    '200.00 MB per 24.0 h)(!!), time left until disk full: more than a year',
+                    'trend: +452 MiB / 24 hours - growing too fast (warn/crit at 100 MiB/'
+                    '200 MiB per 24.0 h)(!!), time left until disk full: more than a year',
                     [
                         ('growth', 7967.162152873247),
                         ('trend', 451.6255079968184, 100.0, 200.0, 0, 43690.666666666664),
@@ -538,7 +538,7 @@ checks = {
             [
                 (
                     0,
-                    '8.15% used (17.32 of 212.50 GB)',
+                    '8.15% used (17.3 of 212 GiB)',
                     [
                         ('fs_used', 17738.44921875, 174080.0, 195840.0, 0, 217600.0),
                         ('fs_size', 217600.0),
@@ -547,7 +547,7 @@ checks = {
                 ),
                 (
                     0,
-                    'trend: +11.66 GB / 24 hours',
+                    'trend: +11.7 GiB / 24 hours',
                     [
                         ('growth', 210695.9049353863),
                         ('trend', 11943.480410396396, None, None, 0, 9066.666666666666),
@@ -575,7 +575,7 @@ checks = {
                 ),
                 (
                     0,
-                    '50.47% used (30.46 of 60.36 TB)',
+                    '50.47% used (30.5 of 60.4 TiB)',
                     [
                         ('fs_used', 31942130.44140625, 50630282.453125, 56959067.759765625, 0,
                          63287853.06640625),
@@ -585,7 +585,7 @@ checks = {
                 ),
                 (
                     0,
-                    'trend: +20.51 TB / 24 hours',
+                    'trend: +20.5 TiB / 24 hours',
                     [
                         ('growth', 379406113.5740308),
                         ('trend', 21506965.151722867, None, None, 0, 2636993.8777669272),

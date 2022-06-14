@@ -82,7 +82,7 @@ checks = {
             'rabbit@my-rabbit', {}, [
                 (
                     0,
-                    'Memory used: 1.71% - 108.05 MB of 6.15 GB High watermark',
+                    'Memory used: 1.71% - 108 MiB of 6.15 GiB High watermark',
                     [('mem_used', 113299456, None, None, 0, 6608874700)]
                 )
             ]
@@ -108,7 +108,7 @@ checks = {
                     ]
                 ),
                 (
-                    0, 'Bytes reclaimed by GC: 15.97 GB', [
+                    0, 'Bytes reclaimed by GC: 16.0 GiB', [
                         ('gc_bytes', 17144463144, None, None, None, None)
                     ]
                 ),

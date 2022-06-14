@@ -93,16 +93,16 @@ discovery = {
 checks = {
     '': [
         ('aix agent files', {}, [(0, 'Files in total: 6', [('file_count', 6, None, None, None,
-                                                            None)]), (0, 'Smallest: 1.12 kB', []),
-                                 (0, 'Largest: 12.58 kB', []), (0, 'Newest: 2 days 15 hours', []),
+                                                            None)]), (0, 'Smallest: 1.12 KiB', []),
+                                 (0, 'Largest: 12.6 KiB', []), (0, 'Newest: 2 days 15 hours', []),
                                  (0, 'Oldest: 217 days 0 hours', []),
                                  (0, '\n', [])]),
         ('aix agent files', {
             "maxsize_largest": (12 * 1024, 13 * 1024),
             "minage_newest": (3600 * 72, 3600 * 96)
         }, [(0, 'Files in total: 6', [('file_count', 6, None, None, None, None)]),
-            (0, 'Smallest: 1.12 kB', []),
-            (1, 'Largest: 12.58 kB (warn/crit at 12.00 kB/13.00 kB)', []),
+            (0, 'Smallest: 1.12 KiB', []),
+            (1, 'Largest: 12.6 KiB (warn/crit at 12.0 KiB/13.0 KiB)', []),
             (2, 'Newest: 2 days 15 hours (warn/crit below 3 days 0 hours/4 days 0 hours)', []), (0, 'Oldest: 217 days 0 hours',
                                                                             []),
             (0, '\n', [])]),
@@ -114,8 +114,8 @@ checks = {
         ]),
         ('log files', {}, [
             (0, 'Files in total: 17', [('file_count', 17, None, None, None, None)]),
-            (0, 'Smallest: 0.00 B', []),
-            (0, 'Largest: 2.40 MB', []),
+            (0, 'Smallest: 0 B', []),
+            (0, 'Largest: 2.40 MiB', []),
             (0, 'Newest: 4 minutes 12 seconds', []),
             (0, 'Oldest: 2 years 302 days', []),
             (0, '\n', []),
@@ -124,7 +124,7 @@ checks = {
     'single': [
         ('file1.txt', {},
             [
-                (0, 'Size: 3.71 kB', [('size', 3804)]),
+                (0, 'Size: 3.71 KiB', [('size', 3804)]),
                 (0, 'Age: 14 hours 34 minutes', []),
             ]
             ),
@@ -134,7 +134,7 @@ checks = {
                 'max_size': (3 * 1024, 4 * 1024)
             },
             [
-                (1, 'Size: 3.71 kB (warn/crit at 3.00 kB/4.00 kB)', [('size', 3804, 3072.0, 4096.0)]),
+                (1, 'Size: 3.71 KiB (warn/crit at 3.00 KiB/4.00 KiB)', [('size', 3804, 3072.0, 4096.0)]),
                 (0, 'Age: 14 hours 34 minutes', []),
             ]
         ),
@@ -144,7 +144,7 @@ checks = {
                 'max_age': (3 * 60, 4 * 60)
             },
             [
-                (0, 'Size: 3.71 kB', [('size', 3804)]),
+                (0, 'Size: 3.71 KiB', [('size', 3804)]),
                 (2, 'Age: 14 hours 34 minutes (warn/crit at 3 minutes 0 seconds/4 minutes 0 seconds)', []),
             ]
         ),
@@ -152,7 +152,7 @@ checks = {
             {},
             [
                 (1, 'Received multiple filestats per single file service. Please check agent plugin configuration (mk_filestats).', []),
-                (0, 'Size: 3.71 kB', [('size', 3804)]),
+                (0, 'Size: 3.71 KiB', [('size', 3804)]),
                 (0, 'Age: 14 hours 34 minutes', []),
             ]
         )

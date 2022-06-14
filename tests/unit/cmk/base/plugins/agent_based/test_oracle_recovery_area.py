@@ -43,7 +43,7 @@ def test_discover_oracle_recovery_area(fix_register, string_table, expected_resu
             [
                 Result(
                     state=State.CRIT,
-                    summary="47.85 GB out of 50.03 GB used (95.1%, warn/crit at 70.0%/90.0%), 300.00 MB reclaimable",
+                    summary="47.9 GiB out of 50.0 GiB used (95.1%, warn/crit at 70.0%/90.0%), 300 MiB reclaimable",
                 ),
                 Metric("used", 49000.0, levels=(35864.5, 46111.5), boundaries=(0.0, 51235.0)),
                 Metric("reclaimable", 300.0),

@@ -83,6 +83,6 @@ checks = {
     'storage': [(u'hugo-server/Testdatabase', {
         'storage_percent_levels': (85.0, 95.0),
     }, [
-        (0, 'Storage: 10.0% (10.88 MB)', [('storage_percent', 10.0, 85., 95., 0, None)]),
+        (0, 'Storage: 10.0% (10.9 MiB)', [('storage_percent', 10.0, 85., 95., 0, None)]),
     ]),],
 }

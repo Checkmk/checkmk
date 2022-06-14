@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.plugins.agent_based.agent_based_api.v1 import render
+
 # .1.3.6.1.4.1.3375.2.1.2.4.4.3.1.1.  index for ifname
 # .1.3.6.1.4.1.3375.2.1.2.4.1.2.1.17. index for ifstate
 # .1.3.6.1.4.1.3375.2.1.2.4.4.3.1.3.  index for IN bytes
@@ -34,13 +36,13 @@ def check_f5_bigip_interfaces(item, params, info):
         in_per_sec = get_rate("f5_interface.in.%s" % item, this_time, saveint(inbytes))
         out_per_sec = get_rate("f5_interface.out.%s" % item, this_time, saveint(outbytes))
 
-        inbytes_h = get_bytes_human_readable(in_per_sec)
-        outbytes_h = get_bytes_human_readable(out_per_sec)
+        inbytes_h = render.iobandwidth(in_per_sec)
+        outbytes_h = render.iobandwidth(out_per_sec)
         perf = [
             ("bytes_in", in_per_sec),
             ("bytes_out", out_per_sec),
         ]
-        return (0, "in bytes: %s/s, out bytes: %s/s" % (inbytes_h, outbytes_h), perf)
+        return (0, "in bytes: %s, out bytes: %s" % (inbytes_h, outbytes_h), perf)
     return 3, "Interface not found in SNMP data"
 
 

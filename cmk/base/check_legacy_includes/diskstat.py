@@ -29,12 +29,12 @@ from cmk.base.check_api import (
     check_levels,
     get_age_human_readable,
     get_average,
-    get_bytes_human_readable,
     get_percent_human_readable,
     get_rate,
     host_extra_conf,
     host_name,
 )
+from cmk.base.plugins.agent_based.agent_based_api.v1 import render
 from cmk.base.plugins.agent_based.utils.diskstat import _METRICS_TO_BE_AVERAGED
 
 diskstat_inventory_mode = "rule"  # "summary", "single", "legacy"
@@ -168,8 +168,7 @@ def check_diskstat_line(  # pylint: disable=too-many-branches
             levels,
             scale=1048576,
             statemarkers=True,
-            unit="/s",
-            human_readable_func=get_bytes_human_readable,
+            human_readable_func=render.iobandwidth,
             infoname=what,
         )
         if text:
@@ -505,10 +504,9 @@ def check_diskstat_dict(  # pylint: disable=too-many-branches
                 throughput,
                 "disk_" + what + "_throughput",
                 params.get(what),
-                unit="/s",
                 scale=1048576,
                 statemarkers=False,
-                human_readable_func=get_bytes_human_readable,
+                human_readable_func=render.iobandwidth,
                 infoname=what.title(),
             )
 

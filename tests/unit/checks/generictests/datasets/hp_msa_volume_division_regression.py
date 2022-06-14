@@ -248,7 +248,7 @@ checks = {
                 (0, 'IMSAKO2B1_U1_B01-04 (RAID10)', []),
                 (
                     2,
-                    '100% used (1.09 of 1.09 TB, warn/crit at 80.00%/90.00%)',
+                    '100% used (1.09 of 1.09 TiB, warn/crit at 80.00%/90.00%)',
                     [
                         ('fs_used', 1143452, 914761.6, 1029106.8, 0, 1143452),
                         ('fs_size', 1143452, None, None, None, None),
@@ -272,7 +272,7 @@ checks = {
                 (0, 'IMSAKO2B1_U1_B05-08 (RAID10)', []),
                 (
                     2,
-                    '100% used (1.09 of 1.09 TB, warn/crit at 80.00%/90.00%)',
+                    '100% used (1.09 of 1.09 TiB, warn/crit at 80.00%/90.00%)',
                     [
                         ('fs_used', 1143452, 914761.6, 1029106.8, 0, 1143452),
                         ('fs_size', 1143452, None, None, None, None),

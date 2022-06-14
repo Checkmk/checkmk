@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.plugins.agent_based.agent_based_api.v1 import render
+
 # Taken from connUnitPortState
 # user selected state of the port hardware
 fc_port_admstates = {
@@ -183,13 +185,13 @@ def check_fc_port(item, params, info):  # pylint: disable=too-many-branches
             crit_bytes = crit * 1048576.0
 
     for what, value in [("In", in_bytes), ("Out", out_bytes)]:
-        output.append("%s: %s/s" % (what, get_bytes_human_readable(value)))
+        output.append("%s: %s" % (what, render.iobandwidth(value)))
         perfdata.append((what.lower(), value, warn_bytes, crit_bytes, 0, wirespeed))
 
         # average turned on: use averaged traffic values instead of current ones
         if average:
             value = get_average("fc_port.%s.%s.avg" % (what, item), this_time, value, average)
-            output.append("Avg(%dmin): %s/s" % (average, get_bytes_human_readable(value)))
+            output.append("Avg(%dmin): %s" % (average, render.iobandwidth(value)))
             perfaverages.append(
                 ("%s_avg" % what.lower(), value, warn_bytes, crit_bytes, 0, wirespeed)
             )
@@ -197,10 +199,10 @@ def check_fc_port(item, params, info):  # pylint: disable=too-many-branches
         # handle levels for in/out
         if crit_bytes is not None and value >= crit_bytes:
             summarystate = 2
-            output.append(" >= %s/s(!!)" % (get_bytes_human_readable(crit_bytes)))
+            output.append(" >= %s(!!)" % (render.iobandwidth(crit_bytes)))
         elif warn_bytes is not None and value >= warn_bytes:
             summarystate = max(1, summarystate)
-            output.append(" >= %s/s(!!)" % (get_bytes_human_readable(warn_bytes)))
+            output.append(" >= %s(!!)" % (render.iobandwidth(warn_bytes)))
 
     # put perfdata of averages after perfdata for in and out in order not to confuse the perfometer
     perfdata.extend(perfaverages)

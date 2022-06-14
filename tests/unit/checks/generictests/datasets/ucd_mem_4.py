@@ -21,7 +21,7 @@ checks = {
                 'levels_ram': ('abs_free', (2048, 1024)),
             }, [
                 (
-                    0, 'RAM: 10.0% - 1.00 kB of 10.00 kB',
+                    0, 'RAM: 10.0% - 1.00 KiB of 10.0 KiB',
                     [
                         ('mem_used', 1024, 8192.0, 9216.0, 0, 10240),
                         ('mem_used_percent', 10.0, 80.0, 90.0, 0.0, None)

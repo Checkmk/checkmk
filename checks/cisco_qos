@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.plugins.agent_based.agent_based_api.v1 import render
+
 # Author: Lars Michelsen <lm@mathias-kettner.de>
 
 # Relevant SNMP OIDs:
@@ -273,7 +275,7 @@ def check_cisco_qos(item, params, info):  # pylint: disable=too-many-branches
         if unit == "bit":
             value = value * 8
             return get_nic_speed_human_readable(value)
-        return "%s/s" % get_bytes_human_readable(value)
+        return render.iobandwidth(value)
 
     if average:
         post_rate = rates[1]

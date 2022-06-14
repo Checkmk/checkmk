@@ -30,6 +30,7 @@ import json
 
 from cmk.base.check_legacy_includes.mem import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from cmk.base.check_legacy_includes.uptime import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.plugins.agent_based.agent_based_api.v1 import render
 
 # <<<rabbitmq_nodes>>>
 # {"fd_total": 1098576, "sockets_total": 973629, "mem_limit": 6808874700,
@@ -305,6 +306,8 @@ check_info["rabbitmq_nodes.mem"] = {
     "group": "memory_multiitem",
 }
 
+_UNITS_NODES_GC = {"gc_num_rate": "1/s"}
+
 
 def check_rabbitmq_nodes_gc(item, params, parsed):
     gc_data = parsed.get(item, {}).get("gc")
@@ -315,17 +318,13 @@ def check_rabbitmq_nodes_gc(item, params, parsed):
         ("gc_num", "GC runs", int, "gc_runs"),
         ("gc_num_rate", "Rate", float, "gc_runs_rate"),
         ("gc_bytes_reclaimed", "Bytes reclaimed by GC", get_bytes_human_readable, "gc_bytes"),
-        ("gc_bytes_reclaimed_rate", "Rate", get_bytes_human_readable, "gc_bytes_rate"),
+        ("gc_bytes_reclaimed_rate", "Rate", render.iobandwidth, "gc_bytes_rate"),
         ("run_queue", "Runtime run queue", int, "runtime_run_queue"),
     ]:
 
         value = gc_data.get(key)
         if value is None:
             continue
-
-        unit = ""
-        if "rate" in key:
-            unit = "1/s"
 
         levels_upper = params.get("%s_upper" % key, (None, None))
         levels_lower = params.get("%s_lower" % key, (None, None))
@@ -335,7 +334,7 @@ def check_rabbitmq_nodes_gc(item, params, parsed):
             perf_key,
             levels_upper + levels_lower,
             human_readable_func=hr_func,
-            unit=unit,
+            unit=_UNITS_NODES_GC.get(key, ""),
             infoname=infotext,
         )
 

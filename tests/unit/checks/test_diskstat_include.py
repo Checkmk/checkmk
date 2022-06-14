@@ -31,7 +31,7 @@ def get_average(_counter, _time, value, _time_span):
             CheckResult(
                 (
                     0,
-                    "read: 50.50 kB/s, write: 100.50 kB/s",
+                    "read: 51.7 kB/s, write: 103 kB/s",
                     [
                         ("read", 51712),
                         ("write", 102912),
@@ -44,7 +44,7 @@ def get_average(_counter, _time, value, _time_span):
             CheckResult(
                 (
                     0,
-                    "read: 50.50 kB/s, write: 100.50 kB/s",
+                    "read: 51.7 kB/s, write: 103 kB/s",
                     [
                         ("read", 51712),
                         ("write", 102912),
@@ -71,7 +71,7 @@ def test_check_diskstat_line(monkeypatch, args, expected_result) -> None:
             CheckResult(
                 (
                     0,
-                    "read: 1.00 kB/s, write: 2.00 kB/s",
+                    "read: 1.02 kB/s, write: 2.05 kB/s",
                     [
                         ("read", 1024),
                         ("write", 2048),

@@ -96,7 +96,7 @@ import socket  # noqa: F401 # pylint: disable=unused-import
 import sys  # noqa: F401 # pylint: disable=unused-import
 import time
 from contextlib import suppress
-from typing import Any, Callable, Dict, Iterable, List, Optional, Set, Tuple, Union
+from typing import Any, Callable, Dict, Iterable, List, Literal, Optional, Set, Tuple, Union
 
 import cmk.utils as _cmk_utils
 import cmk.utils.debug as _debug
@@ -302,7 +302,22 @@ def get_age_human_readable(seconds: float) -> str:
     return _render.timespan(seconds) if seconds >= 0 else f"-{_render.timespan(-seconds)}"
 
 
-get_bytes_human_readable = _render_from_utils.fmt_bytes
+def get_bytes_human_readable(
+    bytes_: int,
+    base: Literal[1000, 1024] = 1024,
+    precision: object = None,  # for legacy compatibility
+    unit: str = "B",
+) -> str:
+    if not (
+        renderer := {
+            1000: _render.disksize,
+            1024: _render.bytes,
+        }.get(int(base))
+    ):
+        raise ValueError(f"Unsupported value for 'base' in get_bytes_human_readable: {base=}")
+    return renderer(bytes_)[:-1] + unit
+
+
 get_nic_speed_human_readable = _render_from_utils.fmt_nic_speed
 get_percent_human_readable = _render_from_utils.percent
 get_number_with_precision = _render_from_utils.fmt_number_with_precision

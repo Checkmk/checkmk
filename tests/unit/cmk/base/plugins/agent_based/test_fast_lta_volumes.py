@@ -47,7 +47,7 @@ def test_discovery_fast_lta_volumes(discover_fast_lta_volumes) -> None:
 
 def test_check_fast_lta_volumes(check_fast_lta_volumes) -> None:
     assert list(check_fast_lta_volumes("Archiv_Test", {}, parsed)) == [
-        Result(state=State.OK, summary="1.0% used (9.31 of 931.32 GB)"),
+        Result(state=State.OK, summary="1.0% used (9.31 of 931 GiB)"),
         Metric(
             "fs_used",
             9536.7431640625,

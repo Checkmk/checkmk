@@ -22,16 +22,16 @@ checks = {
                 'levels_ram': (80.0, 90.0)
             }, [
                 (
-                    0, 'RAM: 78.09% - 47.89 GB of 61.33 GB',
+                    0, 'RAM: 78.09% - 47.9 GiB of 61.3 GiB',
                         [
                             ('mem_used', 51426668544, None, None, 0, 65857241088),
                             ('mem_used_percent', 78.08810040384546, None, None, 0.0, None)
                         ]
                 ),
-                (0, 'Swap: 0% - 0.00 B of 8.00 GB', [
+                (0, 'Swap: 0% - 0 B of 8.00 GiB', [
                     ('swap_used', 0, None, None, 0, 8589930496)]),
                 (
-                    0, 'Total virtual memory: 69.08% - 47.89 GB of 69.33 GB', []
+                    0, 'Total virtual memory: 69.08% - 47.9 GiB of 69.3 GiB', []
                 )
             ]
         )

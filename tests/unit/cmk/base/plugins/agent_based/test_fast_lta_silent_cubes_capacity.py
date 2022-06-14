@@ -36,7 +36,7 @@ def test_discovery_fast_lta_silent_cube_capacity(discover_fast_lta_silent_cubes_
 def test_check_fast_lta_silent_cube_capacity(check_fast_lta_silent_cubes_capacity) -> None:
 
     assert list(check_fast_lta_silent_cubes_capacity(None, {}, info)) == [
-        Result(state=State.OK, summary="48.43% used (3.52 of 7.28 TB)"),
+        Result(state=State.OK, summary="48.43% used (3.52 of 7.28 TiB)"),
         Metric(
             "fs_used", 3695972.90234375, levels=(6104729.6, 6867820.8), boundaries=(0.0, 7630912.0)
         ),

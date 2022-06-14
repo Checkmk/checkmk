@@ -77,10 +77,10 @@ def test_check_oracle_performance_dbtime(
             [
                 Result(
                     state=State.CRIT,
-                    summary="Maximum SGA Size: 32.00 GB (warn/crit at 1.00 B/2.00 B)",
+                    summary="Maximum SGA Size: 32.0 GiB (warn/crit at 1 B/2 B)",
                 ),
                 Metric("oracle_sga_size", 34359738368.0, levels=(1.0, 2.0)),
-                Result(state=State.OK, summary="total PGA allocated: 2.39 GB"),
+                Result(state=State.OK, summary="total PGA allocated: 2.39 GiB"),
                 Metric("oracle_pga_total_pga_allocated", 2561432576.0),
             ],
         )

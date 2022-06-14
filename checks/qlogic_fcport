@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.plugins.agent_based.agent_based_api.v1 import render
+
 # settings for inventory: which ports should be inventorized
 qlogic_fcport_inventory_opstates = ["1", "3"]
 qlogic_fcport_inventory_admstates = ["1", "3"]
@@ -156,8 +158,8 @@ def check_qlogic_fcport(item, _no_params, info):  # pylint: disable=too-many-bra
                 "qlogic_fcport.out_octets.%s" % port_id, this_time, out_octets
             )
 
-            message += ", In: %s/s" % get_bytes_human_readable(in_octet_rate)
-            message += ", Out: %s/s" % get_bytes_human_readable(out_octet_rate)
+            message += ", In: %s" % render.iobandwidth(in_octet_rate)
+            message += ", Out: %s" % render.iobandwidth(out_octet_rate)
 
             perfdata.append(("in", in_octet_rate))
             perfdata.append(("out", out_octet_rate))

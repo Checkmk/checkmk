@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.plugins.agent_based.agent_based_api.v1 import render
+
 factory_settings["veeam_client"] = {
     "age": (108000, 172800),  # 30h/2d
 }
@@ -135,7 +137,7 @@ def check_veeam_client(item, params, parsed):  # pylint: disable=too-many-branch
     if "AvgSpeedBps" in data:
         avg_speed_bps = int(data["AvgSpeedBps"])
         perfdata.append(("avgspeed", avg_speed_bps))
-        infotexts.append(("Average Speed: %s/s" % get_bytes_human_readable(avg_speed_bps)))
+        infotexts.append(("Average Speed: %s" % render.iobandwidth(avg_speed_bps)))
 
     # Append backup server if available
     if "BackupServer" in data:

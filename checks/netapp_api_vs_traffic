@@ -7,6 +7,7 @@
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.netapp_api import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.plugins.agent_based.agent_based_api.v1 import render
 
 # <<<netapp_api_vs_traffic:sep(9)>>>
 # lif:vserver        instance_uuid 4294967295        instance_name sb1        sent_errors 0        recv_errors 0 ...
@@ -111,14 +112,14 @@ def check_netapp_api_vs_traffic(item, _no_params, parsed):
                     "nfs_read_throughput",
                     "read throughput",
                     1,
-                    lambda x: get_bytes_human_readable(x) + "/s",
+                    render.iobandwidth,
                 ),
                 (
                     "nfsv3_write_throughput",
                     "nfs_write_throughput",
                     "write throughput",
                     1,
-                    lambda x: get_bytes_human_readable(x) + "/s",
+                    render.iobandwidth,
                 ),
                 ("nfsv3_ops", "nfs_ios", "OPs", 1, int),
             ],
@@ -133,14 +134,14 @@ def check_netapp_api_vs_traffic(item, _no_params, parsed):
                     "nfsv4_read_throughput",
                     "read throughput",
                     1,
-                    lambda x: get_bytes_human_readable(x) + "/s",
+                    render.iobandwidth,
                 ),
                 (
                     "nfs4_write_throughput",
                     "nfsv4_write_throughput",
                     "write throughput",
                     1,
-                    lambda x: get_bytes_human_readable(x) + "/s",
+                    render.iobandwidth,
                 ),
                 ("nfsv4_ops", "nfsv4_ios", "OPs", 1, int),
             ],
@@ -154,14 +155,14 @@ def check_netapp_api_vs_traffic(item, _no_params, parsed):
                     "nfsv4_1_read_throughput",
                     "read throughput",
                     1,
-                    lambda x: get_bytes_human_readable(x) + "/s",
+                    render.iobandwidth,
                 ),
                 (
                     "nfs41_write_throughput",
                     "nfsv4_1_write_throughput",
                     "write throughput",
                     1,
-                    lambda x: get_bytes_human_readable(x) + "/s",
+                    render.iobandwidth,
                 ),
             ],
         ),

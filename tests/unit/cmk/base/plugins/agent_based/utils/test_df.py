@@ -74,7 +74,7 @@ def test_df_discovery(params, expected) -> None:
             [
                 Result(
                     state=State.WARN,
-                    summary="Size of filesystem is 0 MB",
+                    summary="Size of filesystem is 0 B",
                 ),
             ],
             id="zero capacity",

@@ -121,12 +121,12 @@ checks = {
             }, [
                 (
                     0,
-                    u'State: Ready, Status: OK(0x0), [Phys. capacity] User capacity: 16.76 TB, Consumed capacity: 9.41 TB, Available capacity: 7.35 TB',
+                    u'State: Ready, Status: OK(0x0), [Phys. capacity] User capacity: 16.8 TiB, Consumed capacity: 9.41 TiB, Available capacity: 7.35 TiB',
                     []
                 ), (0, 'Percent full: 56.13%', []),
                 (
                     0,
-                    '[Virt. capacity] Percent subscribed: 56.13%, Oversubscribed by: 0.00 B, Total subscribed capacity: 9.41 TB',
+                    '[Virt. capacity] Percent subscribed: 56.13%, Oversubscribed by: 0 B, Total subscribed capacity: 9.41 TiB',
                     [
                         (
                             'emcvnx_consumed_capacity', 10343115546165.248,
@@ -163,9 +163,9 @@ checks = {
     'tieringtypes': [
         (
             u'Pool 0 Performance', {}, [
-                (0, 'User capacity: 16.76 TB', []),
+                (0, 'User capacity: 16.8 TiB', []),
                 (
-                    0, 'Consumed capacity: 9.41 TB', [
+                    0, 'Consumed capacity: 9.41 TiB', [
                         (
                             'emcvnx_consumed_capacity', 10343118767390.72,
                             None, None, None, None
@@ -173,7 +173,7 @@ checks = {
                     ]
                 ),
                 (
-                    0, 'Available capacity: 7.35 TB', [
+                    0, 'Available capacity: 7.35 TiB', [
                         (
                             'emcvnx_avail_capacity', 8083858595512.32, None,
                             None, None, None

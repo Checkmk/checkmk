@@ -39,7 +39,7 @@ checks = {
                     ]
                 ),
                 (
-                    0, 'Total size: 14.86 MB', [
+                    0, 'Total size: 14.9 MiB', [
                         (
                             'elasticsearch_size', 15581765.0, None, None, None,
                             None
@@ -47,7 +47,7 @@ checks = {
                     ]
                 ),
                 (
-                    0, 'Average size: 0.00 B  per Minute',
+                    0, 'Average size: 0 B  per Minute',
                     [('elasticsearch_size_rate', 0.0, None, None, None, None)]
                 )
             ]
@@ -68,11 +68,11 @@ checks = {
                     ]
                 ),
                 (
-                    0, 'Total size: 747.30 kB',
+                    0, 'Total size: 747 KiB',
                     [('elasticsearch_size', 765236.0, None, None, None, None)]
                 ),
                 (
-                    0, 'Average size: 0.00 B  per Minute',
+                    0, 'Average size: 0 B  per Minute',
                     [('elasticsearch_size_rate', 0.0, None, None, None, None)]
                 )
             ]
@@ -92,7 +92,7 @@ checks = {
                     ]
                 ),
                 (
-                    0, 'Total size: 20.53 MB', [
+                    0, 'Total size: 20.5 MiB', [
                         (
                             'elasticsearch_size', 21524354.0, None, None, None,
                             None
@@ -100,7 +100,7 @@ checks = {
                     ]
                 ),
                 (
-                    0, 'Average size: 0.00 B  per Minute',
+                    0, 'Average size: 0 B  per Minute',
                     [('elasticsearch_size_rate', 0.0, None, None, None, None)]
                 )
             ]

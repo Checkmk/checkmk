@@ -23,12 +23,12 @@ checks = {
         (
             None, {}, [
                 (
-                    0, 'Used heap space: 440.54 MB', [
+                    0, 'Used heap space: 441 MiB', [
                         ('mem_heap', 461934992, None, None, None, None)
                     ]
                 ),
                 (
-                    0, 'Committed heap space: 972.81 MB', [
+                    0, 'Committed heap space: 973 MiB', [
                         (
                             'mem_heap_committed', 1020067840, None, None, None,
                             None

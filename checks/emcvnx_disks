@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.plugins.agent_based.agent_based_api.v1 import render
+
 # Example output from agent:
 # <<<emcvnx_disks>>>
 #
@@ -165,11 +167,11 @@ def check_emcvnx_disks(item, params, parsed):
     countername_w = "emcvnx_disks.write_bytes.%s" % item.replace(" ", "_")
 
     read_bytes_per_sec = get_rate(countername_r, now, read_bytes)
-    message += ", Read: %s/s" % get_bytes_human_readable(read_bytes_per_sec)
+    message += ", Read: %s" % render.iobandwidth(read_bytes_per_sec)
     perfdata.append(("read", read_bytes_per_sec))
 
     write_bytes_per_sec = get_rate(countername_w, now, write_bytes)
-    message += ", Write: %s/s" % get_bytes_human_readable(write_bytes_per_sec)
+    message += ", Write: %s" % render.iobandwidth(write_bytes_per_sec)
     perfdata.append(("write", write_bytes_per_sec))
 
     return nagstate, message, perfdata

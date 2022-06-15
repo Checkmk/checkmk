@@ -5,13 +5,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from enum import auto, Enum
-from typing import NamedTuple
+from typing import Any, Iterable, Iterator, Mapping, NamedTuple, Sequence
 
-# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables needed for accessing discovery rulesets.
-from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from cmk.base.check_legacy_includes.size_trend import size_trend
-from cmk.base.plugins.agent_based.utils.df import df_discovery, DfBlock
+from cmk.base.check_legacy_includes.df import (
+    df_check_filesystem_list_coroutine,
+    FILESYSTEM_DEFAULT_LEVELS,
+    filesystem_groups,
+    inventory_df_exclude_mountpoints,
+)
+from cmk.base.plugins.agent_based.agent_based_api.v1 import regex
+from cmk.base.plugins.agent_based.utils.df import df_discovery, DfBlock, DfInode, DfSection
 
 factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_LEVELS
 
@@ -20,7 +23,9 @@ inventory_df_rules = []
 inventory_df_exclude_fs = ["tmpfs", "nfs", "smbfs", "cifs", "iso9660"]
 
 
-def _filter_df_blocks(df_blocks, inventory_options):
+def _filter_df_blocks(
+    df_blocks: Iterable[DfBlock], inventory_options: Mapping[str, Any]
+) -> Iterator[DfBlock]:
     ignore_fs_types = inventory_options.get("ignore_fs_types", inventory_df_exclude_fs)
     never_ignore_mountpoints = inventory_options.get("never_ignore_mountpoints", [])
 
@@ -43,7 +48,7 @@ def _filter_df_blocks(df_blocks, inventory_options):
             continue
 
 
-def _ignore_mountpoint(mountpoint, never_ignore_mountpoints):
+def _ignore_mountpoint(mountpoint: str, never_ignore_mountpoints: Iterable[str]) -> bool:
     # Filesystem is not ignored, so check against mount point patterns
     for p in never_ignore_mountpoints:
         if p[0] == "~" and regex(p[1:]).match(mountpoint):
@@ -67,7 +72,7 @@ class ItemAndGrouping(NamedTuple):
     for_single: ItemBehaviour
 
 
-def _get_item_behaviour_for_block_devices(params) -> ItemBehaviour:
+def _get_item_behaviour_for_block_devices(params: Mapping[str, Any]) -> ItemBehaviour:
     # The first one comes from WATO ruleset the second one is set during discovery
     # which is kind of normalized name.
     if params.get("mountpoint_for_block_devices") in ["uuid_as_mountpoint", "uuid"]:
@@ -75,7 +80,7 @@ def _get_item_behaviour_for_block_devices(params) -> ItemBehaviour:
     return ItemBehaviour.volume_name
 
 
-def _get_item_and_grouping(params) -> ItemAndGrouping:
+def _get_item_and_grouping(params: Mapping[str, Any]) -> ItemAndGrouping:
     item = params.get("item_appearance", "mountpoint")
     grouping = params.get("grouping_behaviour", "mountpoint")
 
@@ -101,7 +106,7 @@ def _get_item_and_grouping(params) -> ItemAndGrouping:
     )
 
 
-def _prepare_item_name(entry, behaviour):
+def _prepare_item_name(entry: DfBlock | DfInode, behaviour: ItemBehaviour) -> str:
     if entry.device and behaviour == ItemBehaviour.volume_name:
         return "%s %s" % (entry.device, entry.mountpoint)
 
@@ -111,7 +116,10 @@ def _prepare_item_name(entry, behaviour):
     return entry.mountpoint
 
 
-def _handle_block_devices(df_blocks, mountpoint_for_block_devices):
+def _handle_block_devices(
+    df_blocks: Iterable[DfBlock],
+    mountpoint_for_block_devices: ItemBehaviour,
+) -> Sequence[DfBlock]:
     # TODO What about df_inodes?
     # Not sure but it seems that inodes of btrfs FS are always zero (seen in our data pool):
     # /dev/sda1      btrfs         0     0      0     - /.snapshots
@@ -146,7 +154,7 @@ def _handle_block_devices(df_blocks, mountpoint_for_block_devices):
     return handled_df_blocks
 
 
-def inventory_df(parsed):
+def inventory_df(parsed: DfSection):
     inventory_options = host_extra_conf_merged(host_name(), inventory_df_rules)
     mountpoint_for_block_devices = _get_item_behaviour_for_block_devices(inventory_options)
     item_and_grouping = _get_item_and_grouping(inventory_options)
@@ -186,7 +194,9 @@ def inventory_df(parsed):
 
 
 # Legacy params
-def _get_mountpoint_from_item(item, params, df_blocks):
+def _get_mountpoint_from_item(
+    item: str, params: Mapping[str, Any], df_blocks: Iterable[DfBlock]
+) -> str:
     item_to_mp = {
         _prepare_item_name(df_block, ItemBehaviour.volume_name): df_block.mountpoint
         for df_block in df_blocks
@@ -207,7 +217,7 @@ def _get_mountpoint_from_item(item, params, df_blocks):
     return item
 
 
-def check_df(item, params, parsed):
+def check_df(item: str, params: Mapping[str, Any], parsed: DfSection):
     mountpoint_for_block_devices = _get_item_behaviour_for_block_devices(params)
     item_and_grouping = _get_item_and_grouping(params)
 

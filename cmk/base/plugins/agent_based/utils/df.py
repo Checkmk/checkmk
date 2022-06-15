@@ -48,6 +48,9 @@ FSBlocks = Sequence[FSBlock]
 BlocksSubsection = Sequence[DfBlock]
 InodesSubsection = Sequence[DfInode]
 
+DfSection = tuple[BlocksSubsection, InodesSubsection]
+
+
 FILESYSTEM_DEFAULT_LEVELS = {
     "levels": (80.0, 90.0),  # warn/crit in percent
     "magic_normsize": 20,  # Standard size if 20 GB

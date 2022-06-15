@@ -14,6 +14,7 @@ from cmk.base.plugins.agent_based.utils.df import (
     BlocksSubsection,
     DfBlock,
     DfInode,
+    DfSection,
     InodesSubsection,
 )
 
@@ -136,7 +137,7 @@ def _parse_lsblk_subsection(lsblk_subsection: StringTable) -> LsblkMap:
     return {row["name"]: row["uuid"] for row in lsblk.get("blockdevices") if row["name"]}
 
 
-def parse_df(string_table: StringTable) -> Tuple[BlocksSubsection, InodesSubsection]:
+def parse_df(string_table: StringTable) -> DfSection:
     """
     >>> for s in parse_df([
     ...     ['/dev/empty', 'vfat', '0', '6188', '517060', '2%', '/boot/efi'] ,

@@ -1086,40 +1086,6 @@ def test_host_config_discovery_check_parameters(
 @pytest.mark.parametrize(
     "hostname_str,result",
     [
-        ("testhost1", []),
-        (
-            "testhost2",
-            [
-                ("abc", {"param1": 1}),
-                ("xyz", {"param2": 1}),
-            ],
-        ),
-    ],
-)
-def test_host_config_inventory_export_hooks(
-    monkeypatch: MonkeyPatch, hostname_str: str, result: List[Tuple]
-) -> None:
-    hostname = HostName(hostname_str)
-    ts = Scenario()
-    ts.add_host(hostname)
-    ts.set_option(
-        "inv_exports",
-        {
-            "abc": [
-                ({"param1": 1}, [], ["testhost2"], {}),
-            ],
-            "xyz": [
-                ({"param2": 1}, [], ["testhost2"], {}),
-            ],
-        },
-    )
-    config_cache = ts.apply(monkeypatch)
-    assert config_cache.get_host_config(hostname).inventory_export_hooks == result
-
-
-@pytest.mark.parametrize(
-    "hostname_str,result",
-    [
         ("testhost1", {}),
         (
             "testhost2",

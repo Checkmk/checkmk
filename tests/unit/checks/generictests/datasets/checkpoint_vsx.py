@@ -62,7 +62,7 @@ checks = {
                     0, 'Used connections: 104470', [
                         ('connections', 104470, None, None, None, None)
                     ]
-                ), (0, 'Used percentage: 20.9%', [])
+                ), (0, 'Used percentage: 20.90%', [])
             ]
         ),
         (
@@ -73,7 +73,7 @@ checks = {
                     0, 'Used connections: 104470', [
                         ('connections', 104470, None, None, None, None)
                     ]
-                ), (0, 'Used percentage: 20.9%', [])
+                ), (0, 'Used percentage: 20.90%', [])
             ]
         )
     ],

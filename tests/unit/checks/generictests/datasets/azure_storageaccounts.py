@@ -89,14 +89,14 @@ checks = {
                                                       None)]),
             (0, 'End-to-end server latency: 37606 ms', [('e2e_latency', 37.606, None, None, 0,
                                                          None)]),
-            (0, 'Availability: 190700%', [('availability', 190700.0, None, None, 0, None)]),
+            (0, 'Availability: 190700.00%', [('availability', 190700.0, None, None, 0, None)]),
         ]),
         (u'st0ragetestaccount', {}, [
             (0, 'Success server latency: 5624 ms', [('server_latency', 5.624, None, None, 0,
                                                      None)]),
             (0, 'End-to-end server latency: 9584 ms', [('e2e_latency', 9.584, None, None, 0,
                                                         None)]),
-            (0, 'Availability: 6200%', [('availability', 6200.0, None, None, 0, None)]),
+            (0, 'Availability: 6200.00%', [('availability', 6200.0, None, None, 0, None)]),
         ]),
     ],
 }

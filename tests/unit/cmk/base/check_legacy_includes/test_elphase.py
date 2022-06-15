@@ -37,7 +37,7 @@ from cmk.base.check_legacy_includes.elphase import check_elphase  # type: ignore
                 ),
                 (
                     0,
-                    "Load: 4.0%",
+                    "Load: 4.00%",
                     [("output_load", 4.0, None, None)],
                 ),
             ],
@@ -69,7 +69,7 @@ from cmk.base.check_legacy_includes.elphase import check_elphase  # type: ignore
                 ),
                 (
                     2,
-                    "Load: 4.0% (warn/crit at 0%/2.0%)",
+                    "Load: 4.00% (warn/crit at 0%/2.00%)",
                     [("output_load", 4.0, 0, 2)],
                 ),
             ],

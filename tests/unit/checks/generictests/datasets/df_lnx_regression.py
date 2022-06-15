@@ -158,7 +158,7 @@ checks = {
             [
                 (
                     0,
-                    '75.79% used (104 of 137 GiB), therein reserved for root: 5.1% (6.99 GiB)',
+                    '75.79% used (104 of 137 GiB), therein reserved for root: 5.10% (6.99 GiB)',
                     [
                         ('fs_used', 106418.50390625, 112333.35625, 126375.02578125, 0,
                          140416.6953125),
@@ -192,7 +192,7 @@ checks = {
             [
                 (
                     0,
-                    '75.79% used (104 of 137 GiB), therein reserved for root: 5.1% (6.99 GiB)',
+                    '75.79% used (104 of 137 GiB), therein reserved for root: 5.10% (6.99 GiB)',
                     [
                         ('fs_used', 106418.50390625, 112333.35625, 126375.02578125, 0,
                          140416.6953125),

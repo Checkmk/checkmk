@@ -126,7 +126,7 @@ checks = {
             [
                 (
                     0,
-                    "Percent Critical: 25.0%",
+                    "Percent Critical: 25.00%",
                     [
                         ("ap_devices_percent_unhealthy", 25.0, None, None, None, None),
                     ],
@@ -141,7 +141,7 @@ checks = {
             [
                 (
                     1,
-                    "Percent Critical: 25.0% (warn/crit at 20.0%/40.0%)",
+                    "Percent Critical: 25.00% (warn/crit at 20.00%/40.00%)",
                     [("ap_devices_percent_unhealthy", 25.0, 20.0, 40.0, None, None)],
                 ),
                 (0, "Cleared: 3", [("ap_devices_cleared", 3, None, None, None, None)]),

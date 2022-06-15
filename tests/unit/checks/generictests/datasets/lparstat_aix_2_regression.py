@@ -76,10 +76,10 @@ checks = {
             None,
             None,
             [
-                (0, "User: 0.2%", [("user", 0.2)]),
-                (0, "System: 0.4%", [("system", 0.4)]),
+                (0, "User: 0.20%", [("user", 0.2)]),
+                (0, "System: 0.40%", [("system", 0.4)]),
                 (0, "Wait: 0%", [("wait", 0.0)]),
-                (0, "Total CPU: 0.6%", [("util", 0.6000000000000001, None, None, 0, None)]),
+                (0, "Total CPU: 0.60%", [("util", 0.6000000000000001, None, None, 0, None)]),
                 (0, "Physical CPU consumption: 0.02 CPUs", [("cpu_entitlement_util", 0.02)]),
                 (0, "Entitlement: 1.00 CPUs", [("cpu_entitlement", 1.00)]),
             ],

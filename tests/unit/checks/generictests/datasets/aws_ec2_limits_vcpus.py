@@ -350,7 +350,7 @@ checks = {
                     0,
                     '\nActive Spot Fleet Requests: 0 (of max. 1000)\nElastic IP Addresses: 0 (of '
                     'max. 5)\nRunning On-Demand Standard (A, C, D, H, I, M, R, T, Z) instances '
-                    'vCPUs: 8 (of max. 10), Usage: 80.0% (warn/crit at 50.0%/70.0%)(!!)\nRunning '
+                    'vCPUs: 8 (of max. 10), Usage: 80.00% (warn/crit at 50.00%/70.00%)(!!)\nRunning '
                     'On-Demand t2.medium Instances: 3 (of max. 10)\nRunning On-Demand t2.nano '
                     'Instances: 2 (of max. 10)\nSpot Fleet Requests Total Target Capacity: 0 (of '
                     'max. 5000)\nSpot Instance Requests: 0 (of max. 20)\nTotal Running On-Demand '

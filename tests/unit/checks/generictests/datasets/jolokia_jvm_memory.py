@@ -93,7 +93,7 @@ checks = {
             ]),
             (0, '14.12%', []),
             (0, 'Total: 180 MiB', []),
-            (1, '14.31% (warn/crit at 13.0%/15.0%)', []),
+            (1, '14.31% (warn/crit at 13.00%/15.00%)', []),
         ]),
         ('MyInstance', {'abs_heap': (450, 460)}, [
             (2, 'Heap: 74.7 MiB (warn/crit at 450 B/460 B)', [
@@ -119,7 +119,7 @@ checks = {
             (0, '14.12%', [
             ]),
             (0, 'Total: 180 MiB', []),
-            (1, '14.31% (warn/crit at 12.0%/30.0%)', []),
+            (1, '14.31% (warn/crit at 12.00%/30.00%)', []),
         ]),
     ],
     'pools': [
@@ -144,7 +144,7 @@ checks = {
         ('MyInstance Memory Pool Code Cache', {'perc_used': (60, 70)}, [
             (0, 'Used: 353 MiB', [
                 ('mem_used', 370254912, None, None, None, 536870912.0)]),
-            (1, '68.97% (warn/crit at 60.0%/70.0%)', []),
+            (1, '68.97% (warn/crit at 60.00%/70.00%)', []),
             (0, 'Initially: 32.0 MiB', []),
             (0, 'Committed: 356 MiB', []),
         ]),

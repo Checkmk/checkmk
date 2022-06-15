@@ -287,7 +287,7 @@ def test_boundaries(value, levels, representation, unit, result) -> None:
             "battery",
             None,
             {"human_readable_func": check_api.get_percent_human_readable},
-            (0, "5.0%", [("battery", 5, None, None)]),
+            (0, "5.00%", [("battery", 5, None, None)]),
         ),
         (
             6,

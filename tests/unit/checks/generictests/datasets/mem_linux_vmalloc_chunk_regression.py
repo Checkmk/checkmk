@@ -69,10 +69,10 @@ checks = {
                 'levels_vmalloc': ('abs_free', (52428800, 31457280)),
                 'levels_hardwarecorrupted': ('abs_used', (1, 1))
             }, [
-                (0, 'Total virtual memory: 7.9% - 3.12 GiB of 39.6 GiB', []),
+                (0, 'Total virtual memory: 7.90% - 3.12 GiB of 39.6 GiB', []),
                 (
                     2,
-                    'Hardware Corrupted: 0.00002% - 6.00 KiB of 23.6 GiB RAM (warn/crit at 1 B/1 B used)',
+                    'Hardware Corrupted: <0.01% - 6.00 KiB of 23.6 GiB RAM (warn/crit at 1 B/1 B used)',
                     []
                 ),
                 (
@@ -120,7 +120,7 @@ checks = {
                         )
                     ]
                 ),
-                (0, '\nDisk Writeback: 18.0% - 4.24 GiB of 23.6 GiB RAM', []),
+                (0, '\nDisk Writeback: 18.00% - 4.24 GiB of 23.6 GiB RAM', []),
                 (
                     0, '', [
                         ('active', 8967041024, None, None, None, None),
@@ -170,10 +170,10 @@ checks = {
                 'levels_vmalloc': ('abs_free', (52428800, 31457280)),
                 'levels_hardwarecorrupted': ('abs_used', (1, 1))
             }, [
-                (0, 'Total virtual memory: 7.9% - 3.12 GiB of 39.6 GiB', []),
+                (0, 'Total virtual memory: 7.90% - 3.12 GiB of 39.6 GiB', []),
                 (
                     2,
-                    'Hardware Corrupted: 0.00002% - 6.00 KiB of 23.6 GiB RAM (warn/crit at 1 B/1 B used)',
+                    'Hardware Corrupted: <0.01% - 6.00 KiB of 23.6 GiB RAM (warn/crit at 1 B/1 B used)',
                     []
                 ),
                 (
@@ -221,7 +221,7 @@ checks = {
                         )
                     ]
                 ),
-                (0, '\nDisk Writeback: 18.0% - 4.24 GiB of 23.6 GiB RAM', []),
+                (0, '\nDisk Writeback: 18.00% - 4.24 GiB of 23.6 GiB RAM', []),
                 (
                     0, '', [
                         ('active', 8967041024, None, None, None, None),

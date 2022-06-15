@@ -176,7 +176,7 @@ checks = {
                     ]
                 ),
                 (
-                    0, '5XX-Errors of total requests: 50.0%', [
+                    0, '5XX-Errors of total requests: 50.00%', [
                         ('aws_http_5xx_perc', 50.0, None, None, None, None)
                     ]
                 )
@@ -189,7 +189,7 @@ checks = {
                 (0, 'Healthy hosts: 1', []), (0, 'Unhealthy hosts: 0', []),
                 (0, 'Total: 1', []),
                 (
-                    0, 'Proportion of healthy hosts: 100%', [
+                    0, 'Proportion of healthy hosts: 100.00%', [
                         (
                             'aws_overall_hosts_health_perc', 100.0, None, None,
                             None, None

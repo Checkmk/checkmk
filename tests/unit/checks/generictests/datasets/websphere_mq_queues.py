@@ -53,11 +53,11 @@ checks = {'': [('BRK.REPLY.CONVERTQ',
                 [(1,
                   'Messages in queue: 1000 (warn/crit at 1000/1200)',
                   [('queue', 1000, 1000, 1200, None, None)]),
-                 (0, 'Of max. 100000 messages: 1.0%', []),
+                 (0, 'Of max. 100000 messages: 1.00%', []),
                  (0, 'Messages not processed since 1 hour 0 minutes', [])]),
                ('DEAD.QUEUE.SECURITY2',
                 {'message_count': (1000, 1200), 'message_count_perc': (80.0, 90.0)},
                 [(2,
                   'Messages in queue: 2000 (warn/crit at 1000/1200)',
                   [('queue', 2000, 1000, 1200, None, None)]),
-                 (0, 'Of max. 200000 messages: 1.0%', [])])]}
+                 (0, 'Of max. 200000 messages: 1.00%', [])])]}

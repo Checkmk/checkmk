@@ -37,10 +37,10 @@ checks = {
             None,
             {},
             [
-                (0, "User: 0.1%", [("user", 0.1, None, None, None, None)]),
-                (0, "System: 58.8%", [("system", 58.8, None, None, None, None)]),
+                (0, "User: 0.10%", [("user", 0.1, None, None, None, None)]),
+                (0, "System: 58.80%", [("system", 58.8, None, None, None, None)]),
                 (0, "Wait: 0%", [("wait", 0.0, None, None, None, None)]),
-                (0, "Total CPU: 58.9%", [("util", 58.9, None, None, 0, None)]),
+                (0, "Total CPU: 58.90%", [("util", 58.9, None, None, 0, None)]),
             ],
         )
     ]

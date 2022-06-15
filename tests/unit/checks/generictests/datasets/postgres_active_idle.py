@@ -33,7 +33,7 @@ checks = {
                     0, 'Used idle connections: 1', [
                         ('idle_connections', 1.0, None, None, 0, 100.0)
                     ]
-                ), (0, 'Used idle percentage: 1.0%', [])
+                ), (0, 'Used idle percentage: 1.00%', [])
             ]
         ),
         (
@@ -50,7 +50,7 @@ checks = {
                     0, 'Used idle connections: 2', [
                         ('idle_connections', 2.0, None, None, 0, 100.0)
                     ]
-                ), (1, 'Used idle percentage: 2.0% (warn/crit at 1.0%/5.0%)', [])
+                ), (1, 'Used idle percentage: 2.00% (warn/crit at 1.00%/5.00%)', [])
             ]
         ),
         (
@@ -63,12 +63,12 @@ checks = {
                     2, 'Used active connections: 9 (warn/crit at 2/5)', [
                         ('active_connections', 9.0, 2, 5, 0, 100.0)
                     ]
-                ), (0, 'Used active percentage: 9.0%', []),
+                ), (0, 'Used active percentage: 9.00%', []),
                 (
                     0, 'Used idle connections: 4', [
                         ('idle_connections', 4.0, None, None, 0, 100.0)
                     ]
-                ), (0, 'Used idle percentage: 4.0%', [])
+                ), (0, 'Used idle percentage: 4.00%', [])
             ]
         )
     ]

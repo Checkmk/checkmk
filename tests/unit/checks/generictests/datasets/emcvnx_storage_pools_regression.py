@@ -306,7 +306,7 @@ checks = {
                 (0, u'Status: OK', []), (0, u'Rate: Medium', []),
                 (0, 'Efficiency savings: N/A', []),
                 (
-                    0, 'Percent completed: -42.0%', [
+                    0, 'Percent completed: -42.00%', [
                         (
                             'emcvnx_dedupl_perc_completed', -42.0, None, None,
                             None, None

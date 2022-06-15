@@ -45,7 +45,7 @@ range_data = {
             {
                 "itemxyz": {"read": range_data},
             },
-            (2, "At or above 0-0.1 ms: 100% (warn/crit at 99.0%/100%)", []),
+            (2, "At or above 0-0.1 ms: 100.00% (warn/crit at 99.00%/100.00%)", []),
         ),
         (
             {
@@ -55,7 +55,7 @@ range_data = {
             {
                 "itemxyz": {"read": range_data},
             },
-            (0, "At or above 20-50 ms: 20.0%", []),
+            (0, "At or above 20-50 ms: 20.00%", []),
         ),
         (
             {
@@ -91,7 +91,7 @@ def test_nimble_latency_ranges(params, data, result) -> None:
             {
                 "itemxyz": {"read": range_data},
             },
-            (0, "At or above 20-50 ms: 20.0%", []),
+            (0, "At or above 20-50 ms: 20.00%", []),
         ),
     ],
 )
@@ -118,7 +118,7 @@ def test_nimble_latency_read_params(params, data, result) -> None:
             {
                 "itemxyz": {"write": range_data},
             },
-            (2, "At or above 20-50 ms: 20.0% (warn/crit at 1.0%/2.0%)", []),
+            (2, "At or above 20-50 ms: 20.00% (warn/crit at 1.00%/2.00%)", []),
         ),
     ],
 )

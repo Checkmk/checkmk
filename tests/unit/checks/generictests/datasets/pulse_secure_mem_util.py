@@ -20,7 +20,7 @@ checks = {
                 'swap_used_percent': (5, None)
             }, [
                 (
-                    0, 'RAM used: 8.0%', [
+                    0, 'RAM used: 8.00%', [
                         ('mem_used_percent', 8, 90.0, 95.0, None, None)
                     ]
                 ),

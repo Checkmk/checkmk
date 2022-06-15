@@ -56,7 +56,7 @@ pytestmark = pytest.mark.checks
                     "ra32e_sensors.humidity",
                     "Internal",
                     {},
-                    BasicCheckResult(0, "60.0%", [("humidity", 60.0, None, None, 0, 100)]),
+                    BasicCheckResult(0, "60.00%", [("humidity", 60.0, None, None, 0, 100)]),
                 ),
             ],
         ),
@@ -141,7 +141,7 @@ pytestmark = pytest.mark.checks
                     {"levels_lower": (85.0, 75.0)},
                     BasicCheckResult(
                         1,
-                        "75.0% (warn/crit below 85.0%/75.0%)",
+                        "75.00% (warn/crit below 85.00%/75.00%)",
                         [("humidity", 75.0, None, None, 0, 100)],
                     ),
                 ),

@@ -59,7 +59,7 @@ checks = {
                     ]
                 ),
                 (
-                    2, 'Usage: 100% (warn/crit at 80.0%/90.0%)', [
+                    2, 'Usage: 100.00% (warn/crit at 80.00%/90.00%)', [
                         ('license_percentage', 100.0, 80.0, 90.0, 0.0, 100.0)
                     ]
                 )
@@ -101,7 +101,7 @@ checks = {
                     ]
                 ),
                 (
-                    0, 'Usage: 46.0%', [
+                    0, 'Usage: 46.00%', [
                         ('license_percentage', 46.0, 80.0, 90.0, 0.0, 100.0)
                     ]
                 )
@@ -143,7 +143,7 @@ checks = {
                     ]
                 ),
                 (
-                    2, 'Usage: 98.09% (warn/crit at 80.0%/90.0%)', [
+                    2, 'Usage: 98.09% (warn/crit at 80.00%/90.00%)', [
                         (
                             'license_percentage', 98.08720112517581, 80.0,
                             90.0, 0.0, 100.0
@@ -177,7 +177,7 @@ checks = {
                     ]
                 ),
                 (
-                    1, 'Usage: 80.0% (warn/crit at 80.0%/90.0%)', [
+                    1, 'Usage: 80.00% (warn/crit at 80.00%/90.00%)', [
                         ('license_percentage', 80.0, 80.0, 90.0, 0.0, 100.0)
                     ]
                 ), (0, ' Warning units: 1', [])
@@ -198,7 +198,7 @@ checks = {
                     ]
                 ),
                 (
-                    2, 'Usage: 92.31% (warn/crit at 80.0%/90.0%)', [
+                    2, 'Usage: 92.31% (warn/crit at 80.00%/90.00%)', [
                         (
                             'license_percentage', 92.3076923076923, 80.0, 90.0,
                             0.0, 100.0
@@ -243,7 +243,7 @@ checks = {
                     ]
                 ),
                 (
-                    2, 'Usage: 96.27% (warn/crit at 80.0%/90.0%)', [
+                    2, 'Usage: 96.27% (warn/crit at 80.00%/90.00%)', [
                         (
                             'license_percentage', 96.27376425855513, 80.0,
                             90.0, 0.0, 100.0
@@ -267,7 +267,7 @@ checks = {
                     ]
                 ),
                 (
-                    2, 'Usage: 98.84% (warn/crit at 80.0%/90.0%)', [
+                    2, 'Usage: 98.84% (warn/crit at 80.00%/90.00%)', [
                         (
                             'license_percentage', 98.84210526315789, 80.0,
                             90.0, 0.0, 100.0

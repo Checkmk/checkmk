@@ -40,7 +40,7 @@ checks = {
         (
             'rabbit@my-rabbit', {}, [
                 (
-                    0, 'File descriptors used: 34 of 1048576, 0.003%', [
+                    0, 'File descriptors used: 34 of 1048576, <0.01%', [
                         ('open_file_descriptors', 34, None, None, 0, 1048576)
                     ]
                 ),

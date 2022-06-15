@@ -43,7 +43,7 @@ checks = {
                 (0, 'Total virtual memory: 13.78% - 1.27 GiB of 9.25 GiB', []),
                 (
                     2,
-                    'Largest Free VMalloc Chunk: 0% free - 2.00 KiB of 32.0 TiB VMalloc Area (warn/crit below 50.0 MiB/30.0 MiB free)',
+                    'Largest Free VMalloc Chunk: <0.01% free - 2.00 KiB of 32.0 TiB VMalloc Area (warn/crit below 50.0 MiB/30.0 MiB free)',
                     []
                 ),
                 (
@@ -78,7 +78,7 @@ checks = {
                         )
                     ]
                 ),
-                (0, '\nDisk Writeback: 0.008% - 644 KiB of 8.00 GiB RAM', []),
+                (0, '\nDisk Writeback: <0.01% - 644 KiB of 8.00 GiB RAM', []),
                 (
                     0, '', [
                         ('buffers', 837836800, None, None, None, None),
@@ -111,7 +111,7 @@ checks = {
                 (0, 'Total virtual memory: 13.78% - 1.27 GiB of 9.25 GiB', []),
                 (
                     2,
-                    'Largest Free VMalloc Chunk: 0% free - 2.00 KiB of 32.0 TiB VMalloc Area (warn/crit below 50.0 MiB/30.0 MiB free)',
+                    'Largest Free VMalloc Chunk: <0.01% free - 2.00 KiB of 32.0 TiB VMalloc Area (warn/crit below 50.0 MiB/30.0 MiB free)',
                     []
                 ),
                 (
@@ -146,7 +146,7 @@ checks = {
                         )
                     ]
                 ),
-                (0, '\nDisk Writeback: 0.008% - 644 KiB of 8.00 GiB RAM', []),
+                (0, '\nDisk Writeback: <0.01% - 644 KiB of 8.00 GiB RAM', []),
                 (
                     0, '', [
                         ('buffers', 837836800, None, None, None, None),

@@ -1053,7 +1053,7 @@ def test_df_discovery_groups_with_parse(
             [
                 (
                     2,
-                    "90.0% used (189 of 210 KiB, warn/crit at 80.00%/90.00%)",
+                    "90.00% used (189 of 210 KiB, warn/crit at 80.00%/90.00%)",
                     [
                         ("fs_used", 0.1845703125, 0.1640625, 0.1845703125, 0, 0.205078125),
                         ("fs_size", 0.205078125, None, None, None, None),
@@ -1072,7 +1072,7 @@ def test_df_discovery_groups_with_parse(
             [
                 (
                     2,
-                    "90.0% used (189 of 210 KiB, warn/crit at 80.00%/90.00%)",
+                    "90.00% used (189 of 210 KiB, warn/crit at 80.00%/90.00%)",
                     [
                         ("fs_used", 0.1845703125, 0.1640625, 0.1845703125, 0, 0.205078125),
                         ("fs_size", 0.205078125, None, None, None, None),
@@ -1091,7 +1091,7 @@ def test_df_discovery_groups_with_parse(
             [
                 (
                     2,
-                    "90.0% used (189 of 210 KiB, warn/crit at 80.00%/90.00%)",
+                    "90.00% used (189 of 210 KiB, warn/crit at 80.00%/90.00%)",
                     [
                         ("fs_used", 0.1845703125, 0.1640625, 0.1845703125, 0, 0.205078125),
                         ("fs_size", 0.205078125, None, None, None, None),
@@ -1132,7 +1132,7 @@ def test_df_discovery_groups_with_parse(
             [
                 (
                     2,
-                    "90.0% used (207 of 230 KiB, warn/crit at 80.00%/90.00%)",
+                    "90.00% used (207 of 230 KiB, warn/crit at 80.00%/90.00%)",
                     [
                         ("fs_used", 0.2021484375, 0.1796875, 0.2021484375, 0, 0.224609375),
                         ("fs_size", 0.224609375, None, None, None, None),
@@ -1154,7 +1154,7 @@ def test_df_discovery_groups_with_parse(
             [
                 (
                     2,
-                    "90.0% used (207 of 230 KiB, warn/crit at 80.00%/90.00%)",
+                    "90.00% used (207 of 230 KiB, warn/crit at 80.00%/90.00%)",
                     [
                         ("fs_used", 0.2021484375, 0.1796875, 0.2021484375, 0, 0.224609375),
                         ("fs_size", 0.224609375, None, None, None, None),

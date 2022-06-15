@@ -40,7 +40,7 @@ checks = {
                 'write': (1.0, 2.0)
             }, [
                 (
-                    1, 'At or above 10-20 ms: 1.32% (warn/crit at 1.0%/2.0%)',
+                    1, 'At or above 10-20 ms: 1.32% (warn/crit at 1.00%/2.00%)',
                     []
                 ), (0, '\nLatency breakdown:', []),
                 (
@@ -124,7 +124,7 @@ checks = {
                     ]
                 ),
                 (
-                    0, '100-200 ms: 0.002%', [
+                    0, '100-200 ms: <0.01%', [
                         (
                             'nimble_read_latency_200', 0.002121231769074361,
                             None, None, None, None
@@ -132,7 +132,7 @@ checks = {
                     ]
                 ),
                 (
-                    0, '200-500 ms: 0.0007%', [
+                    0, '200-500 ms: <0.01%', [
                         (
                             'nimble_read_latency_500', 0.0006544353358302322,
                             None, None, None, None
@@ -231,7 +231,7 @@ checks = {
                     ]
                 ),
                 (
-                    0, '20-50 ms: 0.008%', [
+                    0, '20-50 ms: <0.01%', [
                         (
                             'nimble_write_latency_50', 0.007663856984021115,
                             None, None, None, None
@@ -239,7 +239,7 @@ checks = {
                     ]
                 ),
                 (
-                    0, '50-100 ms: 0.004%', [
+                    0, '50-100 ms: <0.01%', [
                         (
                             'nimble_write_latency_100', 0.003595323219772841,
                             None, None, None, None
@@ -247,7 +247,7 @@ checks = {
                     ]
                 ),
                 (
-                    0, '100-200 ms: 0.001%', [
+                    0, '100-200 ms: <0.01%', [
                         (
                             'nimble_write_latency_200', 0.0010716603455007867,
                             None, None, None, None
@@ -255,7 +255,7 @@ checks = {
                     ]
                 ),
                 (
-                    0, '200-500 ms: 0.0007%', [
+                    0, '200-500 ms: <0.01%', [
                         (
                             'nimble_write_latency_500', 0.0006844132158651357,
                             None, None, None, None

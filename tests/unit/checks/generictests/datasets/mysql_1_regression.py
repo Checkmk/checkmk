@@ -249,7 +249,7 @@ checks = {
     ],
     'connections': [
         ('mysql', {'perc_used': (75, 80), 'perc_conn_threads': (40, 50)}, [
-            (0, 'Max. parallel connections since server start: 50.0%', [
+            (0, 'Max. parallel connections since server start: 50.00%', [
                 ('connections_perc_used', 50.0, 75, 80, None, None),
             ]),
             (0, '', [
@@ -258,7 +258,7 @@ checks = {
             (0, '', [
                 ('connections_max', 4.0, None, None, None, None),
             ]),
-            (2, 'Currently open connections: 75.0% (warn/crit at 40.0%/50.0%)', [
+            (2, 'Currently open connections: 75.00% (warn/crit at 40.00%/50.00%)', [
                 ('connections_perc_conn_threads', 75.0, 40, 50, None, None),
             ]),
             (0, '', [

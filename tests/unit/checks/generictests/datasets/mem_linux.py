@@ -69,10 +69,10 @@ checks = {
                 'levels_committed': ('perc_used', (100.0, 150.0)),
                 'levels_pagetables': ('perc_used', (8.0, 16.0))
             }, [
-                (0, 'Total virtual memory: 7.9% - 3.12 GiB of 39.6 GiB', []),
+                (0, 'Total virtual memory: 7.90% - 3.12 GiB of 39.6 GiB', []),
                 (
                     2,
-                    'Hardware Corrupted: 0.00002% - 6.00 KiB of 23.6 GiB RAM (warn/crit at 5 B/10 B used)',
+                    'Hardware Corrupted: <0.01% - 6.00 KiB of 23.6 GiB RAM (warn/crit at 5 B/10 B used)',
                     []
                 ),
                 (
@@ -120,7 +120,7 @@ checks = {
                         )
                     ]
                 ),
-                (0, '\nDisk Writeback: 18.0% - 4.24 GiB of 23.6 GiB RAM', []),
+                (0, '\nDisk Writeback: 18.00% - 4.24 GiB of 23.6 GiB RAM', []),
                 (
                     0,
                     '\nLargest Free VMalloc Chunk: 99.96% free - 32.0 TiB of 32.0 TiB VMalloc Area',
@@ -175,8 +175,8 @@ checks = {
                 'levels_vmalloc': ('abs_free', (52428800, 31457280)),
                 'levels_hardwarecorrupted': ('abs_used', (1, 1))
             }, [
-                (0, 'Total virtual memory: 7.9% - 3.12 GiB of 39.6 GiB', []),
-                (2, 'Hardware Corrupted: 0.00002% - 6.00 KiB of 23.6 GiB RAM (warn/crit at 1 B/1 B used)', []),
+                (0, 'Total virtual memory: 7.90% - 3.12 GiB of 39.6 GiB', []),
+                (2, 'Hardware Corrupted: <0.01% - 6.00 KiB of 23.6 GiB RAM (warn/crit at 1 B/1 B used)', []),
                 (
                     0, '\nRAM: 12.96% - 3.05 GiB of 23.6 GiB', [
                         ('mem_used', 3279134720, None, None, 0, 25300574208),
@@ -222,7 +222,7 @@ checks = {
                         )
                     ]
                 ),
-                (0, '\nDisk Writeback: 18.0% - 4.24 GiB of 23.6 GiB RAM', []),
+                (0, '\nDisk Writeback: 18.00% - 4.24 GiB of 23.6 GiB RAM', []),
                 (
                     0,
                     '\nLargest Free VMalloc Chunk: 99.96% free - 32.0 TiB of 32.0 TiB VMalloc Area',

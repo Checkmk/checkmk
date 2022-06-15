@@ -366,7 +366,7 @@ checks = {
                              [(u'varnish_backend_reuse_rate', 0.0, None, None, None, None)])])],
     'backend_success_ratio': [(None, {
         'levels_lower': (70.0, 60.0)
-    }, [(0, '100%', [('varnish_backend_success_ratio', 100.0, None,
+    }, [(0, '100.00%', [('varnish_backend_success_ratio', 100.0, None,
                                                        None, None, None)])])],
     'cache': [(None, {}, [(0, u'0.0 misses/s',
                            [(u'varnish_cache_miss_rate', 0.0, None, None, None, None)]),

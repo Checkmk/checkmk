@@ -48,7 +48,7 @@ checks = {
             u'49155', {}, [
                 (
                     2,
-                    'POE usage (29.0W/30.0W): : 96.67% (warn/crit at 90.0%/95.0%)',
+                    'POE usage (29.0W/30.0W): : 96.67% (warn/crit at 90.00%/95.00%)',
                     [
                         (
                             'power_usage_percentage', 96.66666666666667, 90.0,
@@ -61,7 +61,7 @@ checks = {
         (
             u'49156', {}, [
                 (
-                    0, 'POE usage (3.6W/30.0W): : 12.0%', [
+                    0, 'POE usage (3.6W/30.0W): : 12.00%', [
                         (
                             'power_usage_percentage', 12.000000000000002, 90.0,
                             95.0, None, None
@@ -90,7 +90,7 @@ checks = {
         (
             u'49160', {}, [
                 (
-                    0, 'POE usage (3.9W/30.0W): : 13.0%',
+                    0, 'POE usage (3.9W/30.0W): : 13.00%',
                     [('power_usage_percentage', 13.0, 90.0, 95.0, None, None)]
                 )
             ]

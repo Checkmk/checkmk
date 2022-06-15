@@ -16,15 +16,15 @@ discovery = {'': [(None, {})]}
 
 checks = {
     '': [(None, {}, [
-        (0, 'User: 35.7%', [('user', 35.7, None, None, None, None)]),
-        (0, 'System: 23.1%', [('system', 23.1, None, None, None, None)]),
-        (0, 'Interrupt: 56.7%', [('interrupt', 56.7, None, None, None, None)]),
-        (0, 'Total: 115%', [])
+        (0, 'User: 35.70%', [('user', 35.7, None, None, None, None)]),
+        (0, 'System: 23.10%', [('system', 23.1, None, None, None, None)]),
+        (0, 'Interrupt: 56.70%', [('interrupt', 56.7, None, None, None, None)]),
+        (0, 'Total: 115.50%', [])
     ]),
        (None, None, [
-        (0, 'User: 35.7%', [('user', 35.7, None, None, None, None)]),
-        (0, 'System: 23.1%', [('system', 23.1, None, None, None, None)]),
-        (0, 'Interrupt: 56.7%', [('interrupt', 56.7, None, None, None, None)]),
-        (0, 'Total: 115%', [])
+        (0, 'User: 35.70%', [('user', 35.7, None, None, None, None)]),
+        (0, 'System: 23.10%', [('system', 23.1, None, None, None, None)]),
+        (0, 'Interrupt: 56.70%', [('interrupt', 56.7, None, None, None, None)]),
+        (0, 'Total: 115.50%', [])
     ])]
 }

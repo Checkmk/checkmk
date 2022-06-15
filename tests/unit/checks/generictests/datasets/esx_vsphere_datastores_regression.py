@@ -87,7 +87,7 @@ checks = {
                     0, 'Uncommitted: 0 B', [
                         ('uncommitted', 0.0, None, None, None, None)
                     ]
-                ), (1, 'Provisioning: 78.18% (warn/crit at 70.0%/80.0%)', []),
+                ), (1, 'Provisioning: 78.18% (warn/crit at 70.00%/80.00%)', []),
                 (
                     0, '', [
                         (

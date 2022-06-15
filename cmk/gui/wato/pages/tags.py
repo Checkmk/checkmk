@@ -219,7 +219,7 @@ class ModeTags(ABCTagMode):
                 flash(message)
         return redirect(mode_url("tags"))
 
-    def _is_cleaning_up_user_tag_group_to_builtin(self, del_id):
+    def _is_cleaning_up_user_tag_group_to_builtin(self, del_id) -> bool:
         """The "Agent type" tag group was user defined in previous versions
 
         Have a look at cmk/gui/watolib/tags.py (_migrate_old_sample_config_tag_groups)
@@ -467,7 +467,7 @@ class ABCEditTagMode(ABCTagMode, abc.ABC):
     def _get_id(self):
         raise NotImplementedError()
 
-    def _is_new_tag(self):
+    def _is_new_tag(self) -> bool:
         return request.var("edit") is None
 
     def _basic_elements(self, id_title):

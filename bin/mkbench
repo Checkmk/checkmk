@@ -384,7 +384,7 @@ class Test:
     def add_measurement(self, m):
         self._measurements.append(m)
 
-    def has_measurements(self):
+    def has_measurements(self) -> bool:
         return bool(self._measurements)
 
     def get_measurements_by_test_case(self):

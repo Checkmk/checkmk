@@ -869,7 +869,7 @@ class WithAttributes:
     def set_attribute(self, attrname, value):
         self._attributes[attrname] = value
 
-    def has_explicit_attribute(self, attrname):
+    def has_explicit_attribute(self, attrname) -> bool:
         return attrname in self.attributes()
 
     def effective_attributes(self):
@@ -928,10 +928,10 @@ class BaseFolder:
     def host(self, host_name: str) -> Optional[CREHost]:
         return self.hosts().get(host_name)
 
-    def has_host(self, host_name):
+    def has_host(self, host_name) -> bool:
         return host_name in self.hosts()
 
-    def has_hosts(self):
+    def has_hosts(self) -> bool:
         return len(self.hosts()) != 0
 
     def host_validation_errors(self) -> dict[str, list[str]]:
@@ -943,7 +943,7 @@ class BaseFolder:
     def is_search_folder(self) -> bool:
         return False
 
-    def has_parent(self):
+    def has_parent(self) -> bool:
         return self.parent() is not None
 
     def parent(self):
@@ -998,7 +998,7 @@ class BaseFolder:
     def subfolder(self, name):
         raise NotImplementedError()
 
-    def has_subfolders(self):
+    def has_subfolders(self) -> bool:
         raise NotImplementedError()
 
     def subfolder_choices(self):
@@ -3010,10 +3010,10 @@ class SearchFolder(WithPermissions, WithAttributes, BaseFolder):
     def show_locking_information(self):
         pass
 
-    def has_subfolder(self, name):
+    def has_subfolder(self, name) -> bool:
         return False
 
-    def has_subfolders(self):
+    def has_subfolders(self) -> bool:
         return False
 
     def choices_for_moving_host(self):

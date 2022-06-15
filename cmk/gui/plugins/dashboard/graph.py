@@ -162,7 +162,7 @@ class GraphDashlet(Dashlet):
         return ["host", "service"]
 
     @classmethod
-    def has_context(cls):
+    def has_context(cls) -> bool:
         return True
 
     def default_display_title(self) -> str:

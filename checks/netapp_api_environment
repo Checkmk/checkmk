@@ -150,7 +150,7 @@ check_info["netapp_api_environment"] = {
 }
 
 
-def _is_fan(_sensor_name):
+def _is_fan(_sensor_name) -> bool:
     return _sensor_name is not None and "fan" in _sensor_name.lower()
 
 

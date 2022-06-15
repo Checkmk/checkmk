@@ -101,10 +101,10 @@ def to_openapi(
     if not isinstance(params, list):
         raise ValueError("Needs to be a sequence of parameters.")
 
-    def _is_field_param(dict_):
+    def _is_field_param(dict_) -> bool:
         return all(isinstance(value, fields.Field) for value in dict_.values())
 
-    def _is_schema_class(klass):
+    def _is_schema_class(klass) -> bool:
         try:
             return issubclass(klass, Schema)
         except TypeError:

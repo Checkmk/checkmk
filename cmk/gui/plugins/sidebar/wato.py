@@ -165,7 +165,7 @@ class SidebarSnapinWATOMini(SidebarSnapin):
         return _("Quick setup")
 
     @classmethod
-    def has_show_more_items(cls):
+    def has_show_more_items(cls) -> bool:
         return True
 
     @classmethod

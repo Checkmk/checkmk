@@ -1282,7 +1282,7 @@ class ModeEditUser(WatoMode):
         assert self._user_id is not None
         return base64.b64encode(self._user_id.encode("utf-8")).decode("ascii")
 
-    def _is_locked(self, attr):
+    def _is_locked(self, attr) -> bool:
         """Returns true if an attribute is locked and should be read only. Is only
         checked when modifying an existing user"""
         return not self._is_new_user and attr in self._locked_attributes

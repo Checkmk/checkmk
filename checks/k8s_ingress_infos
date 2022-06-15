@@ -14,7 +14,7 @@ _flatten = itertools.chain.from_iterable
 ###########################################################################
 
 
-def _has_tls(path, hosts):
+def _has_tls(path, hosts) -> bool:
     """Return True if path is available over TLS, otherwise return False."""
     return path.split("/", 1)[0] in _flatten(iter(hosts.values()))
 

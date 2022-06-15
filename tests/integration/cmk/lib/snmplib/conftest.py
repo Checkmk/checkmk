@@ -137,7 +137,7 @@ def _create_listening_condition(process_def):
     return lambda: _is_listening(process_def)
 
 
-def _is_listening(process_def):
+def _is_listening(process_def) -> bool:
     p = process_def.process
     port = process_def.port
     exitcode = p.poll()

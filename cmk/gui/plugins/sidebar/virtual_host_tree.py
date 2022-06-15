@@ -176,7 +176,7 @@ class VirtualHostTree(SidebarSnapin):
                 else:
                     self._render_tag_tree_level(tree_spec, subpath, cwd, node_title, subtree)
 
-    def _is_tag_subdir(self, path, cwd):
+    def _is_tag_subdir(self, path, cwd) -> bool:
         if not cwd:
             return True
         if not path:

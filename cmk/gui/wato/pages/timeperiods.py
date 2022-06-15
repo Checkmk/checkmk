@@ -975,7 +975,7 @@ class ModeEditTimeperiod(WatoMode):
             },
         )
 
-    def _has_same_time_specs_during_whole_week(self, tp_spec):
+    def _has_same_time_specs_during_whole_week(self, tp_spec) -> bool:
         """Put the time ranges of all weekdays into a set to reduce the duplicates to see whether
         or not all days have the same time spec and return True if they have the same."""
         unified_time_ranges = set(tuple(tp_spec.get(day, [])) for day in defines.weekday_ids())

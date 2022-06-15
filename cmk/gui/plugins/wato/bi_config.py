@@ -1918,7 +1918,7 @@ class BIModeAggregations(ABCBIMode):
     def title(self) -> str:
         return self.title_for_pack(self.bi_pack) + " - " + _("Aggregations")
 
-    def have_rules(self):
+    def have_rules(self) -> bool:
         return sum(x.num_rules() for x in self._bi_packs.get_packs().values()) > 0
 
     def action(self) -> ActionResult:

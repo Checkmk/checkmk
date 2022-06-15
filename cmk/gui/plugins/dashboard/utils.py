@@ -709,7 +709,7 @@ class ABCFigureDashlet(Dashlet, abc.ABC):
         return []
 
     @classmethod
-    def has_context(cls):
+    def has_context(cls) -> bool:
         return True
 
     @property

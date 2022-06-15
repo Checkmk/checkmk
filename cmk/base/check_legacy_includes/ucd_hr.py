@@ -40,11 +40,11 @@ def is_hr_mem(oid) -> bool:
 # in order to expand this list of devices easily.
 
 
-def _is_ucd(oid):
+def _is_ucd(oid) -> bool:
     raise NotImplementedError("already migrated")
 
 
-def _is_ucd_mem(oid):
+def _is_ucd_mem(oid) -> bool:
     raise NotImplementedError("already migrated")
 
 

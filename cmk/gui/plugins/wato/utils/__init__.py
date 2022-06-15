@@ -2283,7 +2283,7 @@ class DictHostTagCondition(Transform):
             orientation="horizontal",
         )
 
-    def _is_or_is_not(self, **kwargs):
+    def _is_or_is_not(self, **kwargs) -> DropdownChoice:
         return DropdownChoice(
             choices=[
                 ("is", _("is")),

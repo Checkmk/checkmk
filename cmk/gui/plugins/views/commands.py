@@ -1309,7 +1309,7 @@ class CommandScheduleDowntimes(Command):
             new_children.update(rec_childs)
         return list(new_children)
 
-    def _has_recurring_downtimes(self):
+    def _has_recurring_downtimes(self) -> bool:
         try:
             # TODO(ml): Import cycle
             import cmk.gui.cee.plugins.wato.cmc  # noqa: F401 # pylint: disable=unused-variable,unused-import,import-outside-toplevel

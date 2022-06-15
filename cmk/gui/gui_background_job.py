@@ -135,7 +135,7 @@ class GUIBackgroundProcess(background_job.BackgroundProcess):
 # These functions here are included in a frozen snapshot of a background job
 # Restrictions for newly added functions: no function arguments, only getters
 class GUIBackgroundJobSnapshottedFunctions(background_job.BackgroundJob):
-    def has_exception(self):
+    def has_exception(self) -> bool:
         return self.get_status().get("state") == background_job.JobStatusStates.EXCEPTION
 
     def acknowledged_by(self):

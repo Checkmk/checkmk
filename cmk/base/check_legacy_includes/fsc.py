@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-def _is_fsc_or_windows(oid):
+def _is_fsc_or_windows(oid) -> bool:
     # sysObjId is from FSC or Windows or Net-SNMP
     return (
         oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.231")

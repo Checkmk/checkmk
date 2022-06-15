@@ -69,7 +69,7 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
         return _("Overview")
 
     @classmethod
-    def has_show_more_items(cls):
+    def has_show_more_items(cls) -> bool:
         return True
 
     @classmethod

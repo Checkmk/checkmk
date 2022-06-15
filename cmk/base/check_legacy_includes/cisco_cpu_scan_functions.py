@@ -49,13 +49,13 @@ def snmp_scan_cisco_oldcpu(oid):
 #   ---helper---------------------------------------------------------------
 
 
-def _is_cisco(oid):
+def _is_cisco(oid) -> bool:
     return "cisco" in oid(".1.3.6.1.2.1.1.1.0").lower()
 
 
-def _is_cisco_nexus(oid):
+def _is_cisco_nexus(oid) -> bool:
     return "nx-os" in oid(".1.3.6.1.2.1.1.1.0").lower()
 
 
-def _has_table_2(oid):
+def _has_table_2(oid) -> bool:
     return bool(oid(".1.3.6.1.4.1.9.9.109.1.1.1.1.2.*"))

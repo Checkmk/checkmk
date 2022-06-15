@@ -20,7 +20,7 @@ def _get_omd_version(cmk_version, package_path):
     return "%s.%s" % (cmk_version, edition_short)
 
 
-def _is_demo(package_path):
+def _is_demo(package_path) -> bool:
     return _edition_short_from_pkg_path(package_path) == "cfe"
 
 

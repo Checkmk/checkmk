@@ -460,13 +460,13 @@ class ABCFoldableTreeRenderer(abc.ABC):
 
         return state, assumed_state, node, new_subtrees
 
-    def _is_leaf(self, tree):
+    def _is_leaf(self, tree) -> bool:
         return len(tree) == 3
 
     def _path_id(self, path):
         return "/".join(path)
 
-    def _is_open(self, path):
+    def _is_open(self, path) -> bool:
         is_open = self._treestate.get(self._path_id(path))
         if is_open is None:
             is_open = len(path) <= self._expansion_level

@@ -294,7 +294,7 @@ class Base:
         return cls.__instances[key]
 
     @classmethod
-    def has_instance(cls, key):
+    def has_instance(cls, key) -> bool:
         return key in cls.__instances
 
     # Return a dict of all instances of this type
@@ -855,7 +855,7 @@ class Overridable(Base):
         )
 
     @classmethod
-    def has_overriding_permission(cls, how):
+    def has_overriding_permission(cls, how) -> bool:
         return user.may("general.%s_%s" % (how, cls.type_name()))
 
     @classmethod
@@ -1428,7 +1428,7 @@ def _page_menu_entries_related(current_type_name: str) -> Iterator[PageMenuEntry
             item=make_simple_link("edit_dashboards.py"),
         )
 
-    def has_reporting():
+    def has_reporting() -> bool:
         try:
             # TODO(ml): Import cycle
             import cmk.gui.cee.reporting as _dummy  # noqa: F401 # pylint: disable=import-outside-toplevel
@@ -1799,7 +1799,7 @@ def page_type(page_type_name):
     return page_types[page_type_name]
 
 
-def has_page_type(page_type_name):
+def has_page_type(page_type_name) -> bool:
     return page_type_name in page_types
 
 

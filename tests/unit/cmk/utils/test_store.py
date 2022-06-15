@@ -299,7 +299,7 @@ def test_try_locked(locked_file, path_type) -> None:
 def test_try_locked_fails(locked_file, path_type, monkeypatch) -> None:
     path = path_type(locked_file)
 
-    def _is_already_locked(path, blocking):
+    def _is_already_locked(path, blocking) -> bool:
         raise IOError(errno.EAGAIN, "%s is already locked" % path)
 
     monkeypatch.setattr(store._locks, "aquire_lock", _is_already_locked)
@@ -502,7 +502,7 @@ def _wait_for_waiting_lock():
     https://man7.org/linux/man-pages/man5/proc.5.html
     """
 
-    def has_waiting_lock():
+    def has_waiting_lock() -> bool:
         pid = os.getpid()
         with Path("/proc/locks").open() as f:
             for line in f:

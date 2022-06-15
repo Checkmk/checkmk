@@ -504,7 +504,7 @@ class ActivateChanges:
 
         return any(c["need_sync"] for c in self._changes_of_site(site_id))
 
-    def _is_activate_needed(self, site_id):
+    def _is_activate_needed(self, site_id) -> bool:
         return any(c["need_restart"] for c in self._changes_of_site(site_id))
 
     def _last_activation_state(self, site_id: SiteId):
@@ -516,20 +516,20 @@ class ActivateChanges:
     def _get_last_change_id(self) -> str:
         return self._changes[-1][1]["id"]
 
-    def has_changes(self):
+    def has_changes(self) -> bool:
         return bool(self._changes)
 
-    def has_foreign_changes(self):
+    def has_foreign_changes(self) -> bool:
         return any(change for _change_id, change in self._changes if self._is_foreign(change))
 
-    def _has_foreign_changes_on_any_site(self):
+    def _has_foreign_changes_on_any_site(self) -> bool:
         return any(
             change
             for _change_id, change in self._changes
             if self._is_foreign(change) and self._affects_all_sites(change)
         )
 
-    def _is_foreign(self, change):
+    def _is_foreign(self, change) -> bool:
         return change["user_id"] and change["user_id"] != user.id
 
     def _affects_all_sites(self, change):
@@ -1671,7 +1671,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
             else:
                 store.release_lock(_site_replication_status_path(self._site_id))
 
-    def _is_currently_activating(self, site_rep_status):
+    def _is_currently_activating(self, site_rep_status) -> bool:
         current_activation_id = site_rep_status.get("current_activation")
         if not current_activation_id:
             return False

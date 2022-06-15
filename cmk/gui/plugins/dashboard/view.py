@@ -28,7 +28,7 @@ class ABCViewDashlet(IFrameDashlet):
         return (40, 20)
 
     @classmethod
-    def has_context(cls):
+    def has_context(cls) -> bool:
         return True
 
     def _show_view_as_dashlet(self, view_spec: ViewSpec):

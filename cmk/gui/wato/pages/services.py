@@ -466,7 +466,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
 
         return True
 
-    def _is_active(self, discovery_result):
+    def _is_active(self, discovery_result) -> bool:
         return discovery_result.job_status["is_active"]
 
     def _get_check_table(self) -> DiscoveryResult:
@@ -729,7 +729,7 @@ class DiscoveryPageRenderer:
             html.hidden_fields()
             html.end_form()
 
-    def _is_active(self, discovery_result):
+    def _is_active(self, discovery_result) -> bool:
         return discovery_result.job_status["is_active"]
 
     def _group_check_table_by_state(

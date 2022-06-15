@@ -508,7 +508,7 @@ class LDAPUserConnector(UserConnector):
     def is_active_directory(self) -> bool:
         return self._directory_type() == "ad"
 
-    def has_user_base_dn_configured(self):
+    def has_user_base_dn_configured(self) -> bool:
         return self._config["user_dn"] != ""
 
     def _create_users_only_on_login(self):
@@ -520,10 +520,10 @@ class LDAPUserConnector(UserConnector):
     def _member_attr(self):
         return self._config.get("group_member", self.ldap_attr("member")).lower()
 
-    def has_bind_credentials_configured(self):
+    def has_bind_credentials_configured(self) -> bool:
         return self._config.get("bind", ("", ""))[0] != ""
 
-    def has_group_base_dn_configured(self):
+    def has_group_base_dn_configured(self) -> bool:
         return self._config["group_dn"] != ""
 
     def get_group_dn(self) -> DistinguishedName:
@@ -535,7 +535,7 @@ class LDAPUserConnector(UserConnector):
     def _get_suffix(self):
         return self._config.get("suffix")
 
-    def _has_suffix(self):
+    def _has_suffix(self) -> bool:
         return self._config.get("suffix") is not None
 
     def _save_suffix(self):

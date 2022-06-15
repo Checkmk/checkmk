@@ -24,7 +24,7 @@ def parse_liebert_system_events(info):
     return {"events": parse_liebert_without_unit_wrapper(info, str)}
 
 
-def _is_active_event(event):
+def _is_active_event(event) -> bool:
     event_name, event_type = event
 
     if not event_name or not event_type:

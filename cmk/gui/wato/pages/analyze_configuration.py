@@ -453,10 +453,10 @@ class ModeAnalyzeConfig(WatoMode):
             result_queue.join_thread()
             result_queue.join()
 
-    def _is_acknowledged(self, result):
+    def _is_acknowledged(self, result) -> bool:
         return (result.test_id, result.site_id, result.status) in self._acks
 
-    def _is_test_disabled(self, test_id):
+    def _is_test_disabled(self, test_id) -> bool:
         return not self._acks.get(test_id, True)
 
     def _unacknowledge_test(self, test_id, site_id, status_id):

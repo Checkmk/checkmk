@@ -123,7 +123,7 @@ class ABCHostMode(WatoMode, abc.ABC):
                 is_suggested=True,
             )
 
-    def _is_cluster(self):
+    def _is_cluster(self) -> bool:
         return self._host.is_cluster()
 
     def _get_cluster_nodes(self):
@@ -702,7 +702,7 @@ class ModeCreateCluster(CreateHostMode):
     def permissions(cls) -> Collection[PermissionName]:
         return ["hosts", "manage_hosts"]
 
-    def _is_cluster(self):
+    def _is_cluster(self) -> bool:
         return True
 
     def title(self) -> str:

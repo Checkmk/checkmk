@@ -46,7 +46,7 @@ class FakeUser:
     ) -> None:
         self.perms = perms
 
-    def has_permission(self, perm: str):
+    def has_permission(self, perm: str) -> bool:
         return perm in self.perms
 
 
@@ -155,7 +155,7 @@ class AllPerm(MultiPerm):
         >>> class User:
         ...     def __init__(self, perms) -> None:
         ...         self.perms = perms
-        ...     def has_permission(self, perm_name):
+        ...     def has_permission(self, perm_name) -> bool:
         ...         return perm_name in self.perms
 
         >>> p.has_permission(User(["wato.edit"]))
@@ -197,7 +197,7 @@ class AnyPerm(MultiPerm):
         >>> class User:
         ...     def __init__(self, perms) -> None:
         ...         self.perms = perms
-        ...     def has_permission(self, perm_name):
+        ...     def has_permission(self, perm_name) -> bool:
         ...         return perm_name in self.perms
 
         >>> p.has_permission(User(["foo"]))

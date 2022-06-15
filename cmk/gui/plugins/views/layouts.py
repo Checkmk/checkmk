@@ -764,7 +764,7 @@ class LayoutMatrix(Layout):
         return False
 
     @property
-    def has_individual_csv_export(self):
+    def has_individual_csv_export(self) -> bool:
         return True
 
     def csv_export(self, rows, view, group_cells, cells):

@@ -390,7 +390,8 @@ def start_mtr(host, mtr_binary, config, status):  # pylint: disable=too-many-bra
     os._exit(os.EX_OK)
 
 
-def _is_exe(fpath) -> bool:
+def _is_exe(fpath):
+    # type: (str) -> bool
     return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
 
 

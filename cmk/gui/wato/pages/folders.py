@@ -1041,7 +1041,7 @@ class ModeFolder(WatoMode):
             labels = dict(sorted(labels.items())[:limit])
         return labels, show_all
 
-    def _render_contact_group(self, contact_group_names, c):
+    def _render_contact_group(self, contact_group_names, c) -> HTML:
         display_name = contact_group_names.get(c, {"alias": c})["alias"]
         return HTMLWriter.render_a(display_name, "wato.py?mode=edit_contact_group&edit=%s" % c)
 

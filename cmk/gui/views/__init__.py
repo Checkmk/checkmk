@@ -1926,7 +1926,7 @@ class PageAjaxCascadingRenderPainterParameters(AjaxPage):
         raise MKGeneralException("Invaild choice")
 
 
-def render_view_config(view_spec: ViewSpec, general_properties=True):
+def render_view_config(view_spec: ViewSpec, general_properties=True) -> None:
     ds_name = view_spec.get("datasource", request.var("datasource"))
     if not ds_name:
         raise MKInternalError(_("No datasource defined."))

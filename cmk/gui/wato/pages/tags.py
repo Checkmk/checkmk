@@ -348,7 +348,7 @@ class ModeTags(ABCTagMode):
             % ", ".join(customized)
         )
 
-    def _render_tag_group_list(self):
+    def _render_tag_group_list(self) -> None:
         with table_element(
             "tags",
             _("Tag groups"),

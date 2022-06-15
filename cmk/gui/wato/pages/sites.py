@@ -10,7 +10,17 @@ import socket
 import time
 import traceback
 from multiprocessing import JoinableQueue, Process
-from typing import Collection, Dict, Iterable, Iterator, Mapping, NamedTuple, Optional, overload
+from typing import (
+    Any,
+    Collection,
+    Dict,
+    Iterable,
+    Iterator,
+    Mapping,
+    NamedTuple,
+    Optional,
+    overload,
+)
 from typing import Tuple as _Tuple
 from typing import Type, Union
 
@@ -58,6 +68,7 @@ from cmk.gui.sites import SiteStatus
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, PermissionName, UserId
 from cmk.gui.utils.flashed_messages import flash
+from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import (
     DocReference,
@@ -901,7 +912,9 @@ class ModeAjaxFetchSiteStatus(AjaxPage):
             }
         return site_states
 
-    def _render_configuration_connection_status(self, site_id, site, replication_status):
+    def _render_configuration_connection_status(
+        self, site_id, site, replication_status
+    ) -> str | HTML:
         """Check whether or not the replication connection is possible.
 
         This deals with these situations:
@@ -928,7 +941,7 @@ class ModeAjaxFetchSiteStatus(AjaxPage):
             msg, style="vertical-align:middle"
         )
 
-    def _render_status_connection_status(self, site_id, site):
+    def _render_status_connection_status(self, site_id, site) -> HTML:
         site_status: SiteStatus = cmk.gui.sites.states().get(site_id, SiteStatus({}))
         if site.get("disabled", False) is True:
             status = status_msg = "disabled"
@@ -1342,6 +1355,9 @@ class ModeSiteLivestatusEncryption(WatoMode):
         html.open_table(class_=["data", "headerleft"])
 
         server_cert = cert_details[0]
+        title: str
+        css_class: None | str
+        value: Any  # TODO: Should be HTMLContent! Bugs ahead...
         for title, css_class, value in [
             (_("Issued to"), None, server_cert.issued_to),
             (_("Issued by"), None, server_cert.issued_by),
@@ -1384,10 +1400,10 @@ class ModeSiteLivestatusEncryption(WatoMode):
                 table.cell(
                     _("Trusted"),
                     self._render_cert_trusted(cert_detail),
-                    css=self._cert_trusted_css_class(cert_detail),
+                    css=[self._cert_trusted_css_class(cert_detail)],
                 )
 
-    def _render_cert_trusted(self, cert):
+    def _render_cert_trusted(self, cert) -> str:
         if cert.verify_result.is_valid:
             return _("Yes")
 
@@ -1397,7 +1413,7 @@ class ModeSiteLivestatusEncryption(WatoMode):
             cert.verify_result.error_depth,
         )
 
-    def _cert_trusted_css_class(self, cert):
+    def _cert_trusted_css_class(self, cert) -> str:
         return "state state0" if cert.verify_result.is_valid else "state state2"
 
     def _fetch_certificate_details(self) -> Iterable[CertificateDetails]:

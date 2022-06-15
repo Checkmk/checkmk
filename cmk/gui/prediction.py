@@ -282,40 +282,40 @@ def create_graph(name, size, bounds, v_range, legend):
     )
 
 
-def render_coordinates(v_scala, t_scala):
+def render_coordinates(v_scala, t_scala) -> None:
     html.javascript(
         "cmk.prediction.render_coordinates(%s, %s);" % (json.dumps(v_scala), json.dumps(t_scala))
     )
 
 
-def render_curve(points, color, width=1, square=False):
+def render_curve(points, color, width=1, square=False) -> None:
     html.javascript(
         "cmk.prediction.render_curve(%s, %s, %d, %d);"
         % (json.dumps(points), json.dumps(color), width, square and 1 or 0)
     )
 
 
-def render_point(t, v, color):
+def render_point(t, v, color) -> None:
     html.javascript(
         "cmk.prediction.render_point(%s, %s, %s);"
         % (json.dumps(t), json.dumps(v), json.dumps(color))
     )
 
 
-def render_area(points, color, alpha=1.0):
+def render_area(points, color, alpha=1.0) -> None:
     html.javascript(
         "cmk.prediction.render_area(%s, %s, %f);" % (json.dumps(points), json.dumps(color), alpha)
     )
 
 
-def render_area_reverse(points, color, alpha=1.0):
+def render_area_reverse(points, color, alpha=1.0) -> None:
     html.javascript(
         "cmk.prediction.render_area_reverse(%s, %s, %f);"
         % (json.dumps(points), json.dumps(color), alpha)
     )
 
 
-def render_dual_area(lower_points, upper_points, color, alpha=1.0):
+def render_dual_area(lower_points, upper_points, color, alpha=1.0) -> None:
     html.javascript(
         "cmk.prediction.render_dual_area(%s, %s, %s, %f);"
         % (json.dumps(lower_points), json.dumps(upper_points), json.dumps(color), alpha)

@@ -32,7 +32,7 @@ def discover_bi_aggregation(section: Section) -> DiscoveryResult:
         yield Service(item=aggr_name)
 
 
-def render_bi_infos(infos):
+def render_bi_infos(infos) -> None | list[str]:
     if not infos:
         return None
 
@@ -47,6 +47,7 @@ def render_bi_infos(infos):
 
     for nested_info in nested_infos:
         nested_lines = render_bi_infos(nested_info)
+        assert nested_lines is not None
         for idx, line in enumerate(nested_lines):
             if idx == 0:
                 lines.append("+-- %s" % line)
@@ -77,7 +78,9 @@ def check_bi_aggregation(item: str, section: Section) -> CheckResult:
 
     if bi_data["infos"]:
         infos = ["", "Aggregation Errors"]
-        infos.extend(render_bi_infos(bi_data["infos"]))
+        info = render_bi_infos(bi_data["infos"])
+        assert info is not None
+        infos.extend(info)
         yield Result(state=State.OK, notice="\n".join(infos))
 
 

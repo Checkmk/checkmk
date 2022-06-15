@@ -722,7 +722,7 @@ multisite_builtin_views.update(
 #   '----------------------------------------------------------------------'
 
 
-def render_mobile_table(rows, view, group_cells, cells, num_columns, show_checkboxes):
+def render_mobile_table(rows, view, group_cells, cells, num_columns, show_checkboxes) -> None:
     if not is_mobile(request, response):
         html.show_error(_("This view can only be used in mobile mode."))
         return
@@ -776,12 +776,12 @@ class LayoutMobileTable(Layout):
     def can_display_checkboxes(self):
         return False
 
-    def render(self, rows, view, group_cells, cells, num_columns, show_checkboxes):
+    def render(self, rows, view, group_cells, cells, num_columns, show_checkboxes) -> None:
         # TODO: Move to class
         render_mobile_table(rows, view, group_cells, cells, num_columns, show_checkboxes)
 
 
-def render_mobile_list(rows, view, group_cells, cells, num_columns, show_checkboxes):
+def render_mobile_list(rows, view, group_cells, cells, num_columns, show_checkboxes) -> None:
     if not is_mobile(request, response):
         html.show_error(_("This view can only be used in mobile mode."))
         return
@@ -835,12 +835,12 @@ class LayoutMobileList(Layout):
     def can_display_checkboxes(self):
         return False
 
-    def render(self, rows, view, group_cells, cells, num_columns, show_checkboxes):
+    def render(self, rows, view, group_cells, cells, num_columns, show_checkboxes) -> None:
         # TODO: Move to class
         render_mobile_list(rows, view, group_cells, cells, num_columns, show_checkboxes)
 
 
-def render_mobile_dataset(rows, view, group_cells, cells, num_columns, show_checkboxes):
+def render_mobile_dataset(rows, view, group_cells, cells, num_columns, show_checkboxes) -> None:
     if not is_mobile(request, response):
         html.show_error(_("This view can only be used in mobile mode."))
         return
@@ -884,6 +884,6 @@ class LayoutMobileDataset(Layout):
     def can_display_checkboxes(self):
         return False
 
-    def render(self, rows, view, group_cells, cells, num_columns, show_checkboxes):
+    def render(self, rows, view, group_cells, cells, num_columns, show_checkboxes) -> None:
         # TODO: Move to class
         render_mobile_dataset(rows, view, group_cells, cells, num_columns, show_checkboxes)

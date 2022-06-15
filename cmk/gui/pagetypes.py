@@ -64,6 +64,7 @@ from cmk.gui.permissions import (
 from cmk.gui.table import init_rowselect, table_element
 from cmk.gui.type_defs import HTTPVariables, Icon, MegaMenu, TopicMenuItem, TopicMenuTopic
 from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
+from cmk.gui.utils.html import HTML
 from cmk.gui.utils.ntop import is_ntop_configured
 from cmk.gui.utils.roles import is_user_with_publish_permissions, user_may
 from cmk.gui.utils.transaction_manager import transactions
@@ -239,7 +240,7 @@ class Base:
     def _can_be_linked(self) -> bool:
         return True
 
-    def render_title(self) -> str:
+    def render_title(self) -> str | HTML:
         return _u(self.title())
 
     def is_empty(self) -> bool:
@@ -505,7 +506,7 @@ class PageRenderer(Base):
             filename="%s.py" % self.type_name(),
         )
 
-    def render_title(self):
+    def render_title(self) -> str | HTML:
         if self._can_be_linked():
             return HTMLWriter.render_a(self.title(), href=self.page_url())
         return self.title()
@@ -1264,7 +1265,7 @@ class Overridable(Base):
 
     # Override this in order to display additional columns of an instance
     # in the table of all instances.
-    def render_extra_columns(self, table):
+    def render_extra_columns(self, table) -> None:
         pass
 
     # Page for editing an existing page, or creating a new one
@@ -1901,7 +1902,7 @@ class PagetypeTopics(Overridable):
 
         return parameters
 
-    def render_extra_columns(self, table):
+    def render_extra_columns(self, table) -> None:
         """Show some specific useful columns in the list view"""
         table.cell(_("Icon"), html.render_icon(self._["icon_name"]))
         table.cell(_("Nr. of items"), str(self.max_entries()))

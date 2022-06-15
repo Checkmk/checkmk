@@ -317,7 +317,7 @@ class CommandDeleteCrashReports(Command):
             ungettext("report", "reports", len_action_rows),
         )
 
-    def render(self, what):
+    def render(self, what) -> None:
         html.button("_delete_crash_reports", _("Delete"))
 
     def _action(

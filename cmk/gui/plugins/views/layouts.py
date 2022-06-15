@@ -28,20 +28,20 @@ from cmk.gui.table import init_rowselect, table_element
 from cmk.gui.utils.theme import theme
 
 
-def render_checkbox(view, row, num_tds):
+def render_checkbox(view, row, num_tds) -> None:
     # value contains the number of columns of this datarow. This is
     # needed for hiliting the correct number of TDs
     html.input(type_="checkbox", name=row_id(view, row), value=(num_tds + 1))
     html.label("", row_id(view, row))
 
 
-def render_checkbox_td(view, row, num_tds):
+def render_checkbox_td(view, row, num_tds) -> None:
     html.open_td(class_="checkbox")
     render_checkbox(view, row, num_tds)
     html.close_td()
 
 
-def render_group_checkbox_th():
+def render_group_checkbox_th() -> None:
     html.open_th()
     html.input(
         type_="button",
@@ -71,7 +71,7 @@ class LayoutSingleDataset(Layout):
     def can_display_checkboxes(self):
         return False
 
-    def render(self, rows, view, group_cells, cells, num_columns, show_checkboxes):
+    def render(self, rows, view, group_cells, cells, num_columns, show_checkboxes) -> None:
         html.open_table(class_="data single")
         rownum = 0
         odd = "odd"
@@ -107,7 +107,7 @@ class GroupedBoxesLayout(Layout):
     def _css_class(self):
         raise NotImplementedError()
 
-    def render(self, rows, view, group_cells, cells, num_columns, show_checkboxes):
+    def render(self, rows, view, group_cells, cells, num_columns, show_checkboxes) -> None:
         # N columns. Each should contain approx the same number of entries
         groups = []
         last_group = None

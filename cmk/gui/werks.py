@@ -550,7 +550,7 @@ def _werk_table_option_entries():
     ]
 
 
-def render_unacknowleged_werks():
+def render_unacknowleged_werks() -> None:
     werks = unacknowledged_incompatible_werks()
     if werks and not request.has_var("show_unack"):
         html.open_div(class_=["warning"])
@@ -581,7 +581,7 @@ _SORT_AND_GROUP = {
 }
 
 
-def render_werks_table(werk_table_options: Dict[str, Any]):
+def render_werks_table(werk_table_options: Dict[str, Any]) -> None:
     translator = cmk.utils.werks.WerkTranslator()
     number_of_werks = 0
     sorter, grouper = _SORT_AND_GROUP[werk_table_options["grouping"]]
@@ -600,7 +600,7 @@ def render_werks_table(werk_table_options: Dict[str, Any]):
         html.h3(_("No matching Werks found."))
 
 
-def render_werks_table_row(table, translator, werk):
+def render_werks_table_row(table, translator, werk) -> None:
     table.row()
     table.cell(_("ID"), render_werk_id(werk, with_link=True), css="number narrow")
     table.cell(_("Version"), werk["version"], css="number narrow")
@@ -697,7 +697,7 @@ def render_werk_id(werk, with_link) -> Union[HTML, str]:
     return "#%04d" % werk["id"]
 
 
-def render_werk_date(werk):
+def render_werk_date(werk) -> str:
     return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(werk["date"]))
 
 

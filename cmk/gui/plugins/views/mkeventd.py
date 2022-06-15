@@ -710,7 +710,7 @@ def paint_event_icons(row, history=False):
     return "", ""
 
 
-def render_event_phase_icons(row):
+def render_event_phase_icons(row) -> str | HTML:
     phase = row["event_phase"]
 
     if phase == "ack":
@@ -725,7 +725,7 @@ def render_event_phase_icons(row):
     return html.render_icon(phase, title=title)
 
 
-def render_delete_event_icons(row):
+def render_delete_event_icons(row) -> str | HTML:
     if not user.may("mkeventd.delete"):
         return ""
     urlvars: HTTPVariables = []
@@ -1081,7 +1081,7 @@ class CommandECUpdateEvent(ECCommand):
             ungettext("event", "events", len_action_rows),
         )
 
-    def render(self, what):
+    def render(self, what) -> None:
         html.open_table(border="0", cellpadding="0", cellspacing="3")
         if user.may("mkeventd.update_comment"):
             html.open_tr()
@@ -1171,7 +1171,7 @@ class CommandECChangeState(ECCommand):
             ungettext("event", "events", len_action_rows),
         )
 
-    def render(self, what):
+    def render(self, what) -> None:
         html.button("_mkeventd_changestate", _("Change Event state to:"))
         html.nbsp()
         MonitoringState().render_input("_mkeventd_state", 2)
@@ -1219,7 +1219,7 @@ class CommandECCustomAction(ECCommand):
             ungettext("event", "events", len_action_rows),
         )
 
-    def render(self, what):
+    def render(self, what) -> None:
         for action_id, title in mkeventd.action_choices(omit_hidden=True):
             html.button("_action_" + action_id, title)
             html.br()
@@ -1265,7 +1265,7 @@ class CommandECArchiveEvent(ECCommand):
             ungettext("event", "events", len_action_rows),
         )
 
-    def render(self, what):
+    def render(self, what) -> None:
         html.button("_delete_event", _("Archive Event"))
 
     def _action(
@@ -1307,7 +1307,7 @@ class CommandECArchiveEventsOfHost(ECCommand):
     def tables(self):
         return ["service"]
 
-    def render(self, what):
+    def render(self, what) -> None:
         html.help(
             _(
                 "Note: With this command you can archive all events of one host. "

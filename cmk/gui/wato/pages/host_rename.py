@@ -553,7 +553,7 @@ def rename_hosts(renamings, job_interface=None):
     return action_texts, auth_problems
 
 
-def render_renaming_actions(action_counts):
+def render_renaming_actions(action_counts) -> list[str]:
     action_titles = {
         "folder": _("Folder"),
         "notify_user": _("Users' notification rule"),

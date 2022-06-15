@@ -711,7 +711,7 @@ class ModeNotifications(ABCNotificationsMode):
             # Warn if there are unsent bulk notifications
             self._render_bulks(only_ripe=True)
 
-    def _render_bulks(self, only_ripe):
+    def _render_bulks(self, only_ripe) -> bool:
         bulks = notification_get_bulks(only_ripe).result
         if not bulks:
             return False

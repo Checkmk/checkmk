@@ -301,7 +301,7 @@ def test_legacy_register_command(monkeypatch) -> None:
     monkeypatch.setattr(cmk.gui.plugins.views.utils, "command_registry",
                         cmk.gui.plugins.views.utils.CommandRegistry())
 
-    def render():
+    def render() -> None:
         pass
 
     def action():

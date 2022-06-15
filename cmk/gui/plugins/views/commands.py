@@ -113,7 +113,7 @@ class CommandReschedule(Command):
     def tables(self):
         return ["host", "service"]
 
-    def render(self, what):
+    def render(self, what) -> None:
         html.open_div(class_="group")
         html.write_text(_("Spread over") + " ")
         html.text_input("_resched_spread", default_value="0", size=3, cssclass="number")
@@ -189,7 +189,7 @@ class CommandNotifications(Command):
     def tables(self):
         return ["host", "service"]
 
-    def render(self, what):
+    def render(self, what) -> None:
         html.button("_enable_notifications", _("Enable"))
         html.button("_disable_notifications", _("Disable"))
 
@@ -254,7 +254,7 @@ class CommandToggleActiveChecks(Command):
     def tables(self):
         return ["host", "service"]
 
-    def render(self, what):
+    def render(self, what) -> None:
         html.button("_enable_checks", _("Enable"))
         html.button("_disable_checks", _("Disable"))
 
@@ -303,7 +303,7 @@ class CommandTogglePassiveChecks(Command):
     def tables(self):
         return ["host", "service"]
 
-    def render(self, what):
+    def render(self, what) -> None:
         html.button("_enable_passive_checks", _("Enable"))
         html.button("_disable_passive_checks", _("Disable"))
 
@@ -371,7 +371,7 @@ class CommandClearModifiedAttributes(Command):
     def tables(self):
         return ["host", "service"]
 
-    def render(self, what):
+    def render(self, what) -> None:
         html.button("_clear_modattr", _("Clear modified attributes"))
 
     def _action(
@@ -450,7 +450,7 @@ class CommandFakeCheckResult(Command):
     def is_show_more(self) -> bool:
         return True
 
-    def render(self, what):
+    def render(self, what) -> None:
         html.open_table()
 
         html.open_tr()
@@ -575,7 +575,7 @@ class CommandCustomNotification(Command):
     def is_show_more(self) -> bool:
         return True
 
-    def render(self, what):
+    def render(self, what) -> None:
         html.open_div(class_="group")
         html.text_input(
             "_cusnot_comment",
@@ -685,7 +685,7 @@ class CommandAcknowledge(Command):
     def tables(self):
         return ["host", "service", "aggr"]
 
-    def render(self, what):
+    def render(self, what) -> None:
         html.open_div(class_="group")
         html.text_input(
             "_ack_comment",
@@ -847,7 +847,7 @@ class CommandAddComment(Command):
     def tables(self):
         return ["host", "service"]
 
-    def render(self, what):
+    def render(self, what) -> None:
         html.open_div(class_="group")
         html.text_input(
             "_comment",
@@ -982,7 +982,7 @@ class CommandScheduleDowntimes(Command):
             ]
         return super().user_confirm_options(len_rows, cmdtag)
 
-    def render(self, what):
+    def render(self, what) -> None:
         html.open_div(class_="group")
         html.text_input(
             "_down_comment",
@@ -1424,7 +1424,7 @@ class CommandRemoveDowntime(Command):
     def is_suggested(self) -> bool:
         return True
 
-    def render(self, what):
+    def render(self, what) -> None:
         html.button("_remove_downtimes", _("Remove"))
 
     def _action(
@@ -1467,7 +1467,7 @@ class CommandRemoveComments(Command):
             ungettext("comment", "comments", len_action_rows),
         )
 
-    def render(self, what):
+    def render(self, what) -> None:
         html.button("_remove_comments", _("Remove"))
 
     def _action(
@@ -1532,7 +1532,7 @@ class CommandFavorites(Command):
     def tables(self):
         return ["host", "service"]
 
-    def render(self, what):
+    def render(self, what) -> None:
         html.button("_star", _("Add to Favorites"), cssclass="hot")
         html.button("_unstar", _("Remove from Favorites"))
 

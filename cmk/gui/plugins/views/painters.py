@@ -5255,7 +5255,7 @@ class AbstractPainterSpecificMetric(Painter):
             key=lambda x: x[1],
         )
 
-    def _render(self, row, cell, perf_data_entries, check_command):
+    def _render(self, row, cell, perf_data_entries, check_command) -> tuple[str, str]:
         show_metric = cell.painter_parameters()["metric"]
         translated_metrics = metrics.translate_perf_data(
             perf_data_entries, check_command=check_command

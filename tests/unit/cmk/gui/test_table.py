@@ -223,7 +223,7 @@ def test_table_cubical(
     html.request.set_var("_%s_sort" % table_id, "1,0")
     html.request.set_var("_%s_actions" % table_id, "1")
 
-    def _render_table():
+    def _render_table() -> None:
         with table_element(
             table_id="%d" % table_id,
             title=title,

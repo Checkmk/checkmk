@@ -34,7 +34,7 @@ define textbox {
     )
 
 
-def render_hostgroup(name, alias):
+def render_hostgroup(name, alias) -> None:
     global g_y
     g_y += lineheight
 

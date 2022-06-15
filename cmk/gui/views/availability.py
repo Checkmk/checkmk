@@ -520,7 +520,7 @@ def do_render_availability(
     show_annotations(annotations, av_rawdata, what, avoptions, omit_service=av_object is not None)
 
 
-def render_availability_tables(availability_tables, what, avoptions):
+def render_availability_tables(availability_tables, what, avoptions) -> None:
     if not availability_tables:
         html.show_message(_("No matching hosts/services."))
         return
@@ -666,7 +666,7 @@ def render_timeline_legend(what: AVObjectType) -> None:
     html.close_div()
 
 
-def render_availability_table(group_title, availability_table, what, avoptions):
+def render_availability_table(group_title, availability_table, what, avoptions) -> None:
     av_table = availability.layout_availability_table(
         what, group_title, availability_table, avoptions
     )
@@ -728,7 +728,7 @@ def render_availability_table(group_title, availability_table, what, avoptions):
                 )
 
 
-def render_timeline_bar(timeline_layout, style, timeline_nr=0):
+def render_timeline_bar(timeline_layout, style, timeline_nr=0) -> None:
     render_date = timeline_layout["render_date"]
     time_range: AVTimeRange = timeline_layout["range"]
     from_time, until_time = time_range

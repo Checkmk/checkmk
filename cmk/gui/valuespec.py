@@ -5725,7 +5725,7 @@ class Dictionary(ValueSpec[DictionaryModel]):
             if param in section_elements
         )
 
-    def render_input_form_header(self, varprefix, value, title, section_elements, css):
+    def render_input_form_header(self, varprefix, value, title, section_elements, css) -> None:
         for param, vs in self._get_elements():
             if param in self._hidden_keys:
                 continue

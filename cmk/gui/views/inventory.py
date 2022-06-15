@@ -2142,7 +2142,7 @@ multisite_builtin_views["inv_host_history"] = {
 
 
 # Just for compatibility
-def render_inv_dicttable(*args):
+def render_inv_dicttable(*args) -> None:
     pass
 
 

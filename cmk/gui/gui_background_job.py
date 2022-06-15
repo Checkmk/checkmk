@@ -530,7 +530,7 @@ class JobRenderer:
         ]
 
     @classmethod
-    def render_job_row(cls, job_id, job_status, odd, job_details_back_url=None):
+    def render_job_row(cls, job_id, job_status, odd, job_details_back_url=None) -> None:
         html.open_tr(css="data %s0" % odd)
 
         # Actions

@@ -39,7 +39,7 @@ class MkeventdIcon(Icon):
     def host_columns(self):
         return ["address", "name"]
 
-    def render(self, what, row, tags, custom_vars):
+    def render(self, what, row, tags, custom_vars) -> None | tuple[str, str, str]:
         if not active_config.mkeventd_enabled:
             return None
 

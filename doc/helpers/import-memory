@@ -149,7 +149,7 @@ class JSONFormatter:
         if self.open:
             _spawn("gvim", filename)
 
-    def render_json(self):
+    def render_json(self) -> str:
         # We skip to the first entry, so we start with a dict as root
         return json.dumps(self.stack[0], indent=4)
 

@@ -30,7 +30,7 @@ class MemBytes(_MemBytesTuple):
     def __new__(cls, value):
         return super().__new__(cls, int(value * 1024), float(value), value / 1024.0)
 
-    def render(self):
+    def render(self) -> str:
         return get_bytes_human_readable(self.bytes, base=1024)
 
 

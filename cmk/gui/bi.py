@@ -297,7 +297,7 @@ def ajax_render_tree():
     html.write_html(renderer.render())
 
 
-def render_tree_json(row):
+def render_tree_json(row) -> tuple[str, dict[str, Any]]:
     expansion_level = request.get_integer_input_mandatory("expansion_level", 999)
 
     treestate = user.get_tree_states("bi")
@@ -306,7 +306,7 @@ def render_tree_json(row):
         user.set_tree_states("bi", treestate)
         user.save_tree_states()
 
-    def render_node_json(tree, show_host):
+    def render_node_json(tree, show_host) -> dict[str, Any]:
         is_leaf = len(tree) == 3
         if is_leaf:
             service = tree[2].get("service")
@@ -343,7 +343,7 @@ def render_tree_json(row):
         json_node["output"] = compute_output_message(effective_state, tree[2])
         return json_node
 
-    def render_subtree_json(node, path, show_host):
+    def render_subtree_json(node, path, show_host) -> dict[str, Any]:
         json_node = render_node_json(node, show_host)
 
         is_leaf = len(node) == 3
@@ -540,7 +540,7 @@ class ABCFoldableTreeRenderer(abc.ABC):
             cssclass="assumption",
         )
 
-    def _render_bi_state(self, state):
+    def _render_bi_state(self, state: int) -> str:
         return {
             PENDING: _("PD"),
             OK: _("OK"),

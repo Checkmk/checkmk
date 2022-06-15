@@ -106,7 +106,7 @@ class ViewDashlet(ABCViewDashlet):
 
     @classmethod
     def vs_parameters(cls):
-        def _render_input(dashlet):
+        def _render_input(dashlet) -> None:
             # TODO: Don't modify the self._dashlet data structure here!
             views.transform_view_to_valuespec_value(dashlet)
             return views.render_view_config(dashlet)

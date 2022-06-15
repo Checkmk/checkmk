@@ -308,7 +308,7 @@ def _add_breadcrumb_topic_items(breadcrumb, titles, path):
     return breadcrumb
 
 
-def _render_manpage_list(titles, manpage_list, path_comp, heading):
+def _render_manpage_list(titles, manpage_list, path_comp, heading) -> None:
     def translate(t):
         return titles.get(t, t)
 

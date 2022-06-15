@@ -1482,7 +1482,7 @@ class MenuSearchResultsRenderer:
             html_text = output_funnel.drain()
         return html_text
 
-    def _render_topic(self, topic: str, icons: Tuple[Icon, Icon]):
+    def _render_topic(self, topic: str, icons: Tuple[Icon, Icon]) -> None:
         html.open_h2()
         html.div(class_="spacer", content="")
 
@@ -1501,7 +1501,7 @@ class MenuSearchResultsRenderer:
         html.span(topic)
         html.close_h2()
 
-    def _render_result(self, result, hidden=False):
+    def _render_result(self, result, hidden=False) -> None:
         html.open_li(
             class_="hidden" if hidden else "",
             **{"data-extended": "false" if hidden else ""},

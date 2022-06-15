@@ -225,7 +225,9 @@ uint32_t AppRunner::goExecAsJobAndUser(
         process_handle_ = ph;
 
         // check and return on success
-        if (process_id_ != 0) return process_id_;
+        if (process_id_ != 0) {
+            return process_id_;
+        }
 
         // failure s here
         XLOG::l(XLOG_FLINE + " Failed RunStd: [{}]*", GetLastError());
@@ -372,7 +374,7 @@ ServiceController::StopType ServiceController::registerAndRun(
 bool InstallService(const wchar_t *service_name, const wchar_t *display_name,
                     uint32_t start_type, const wchar_t *dependencies,
                     const wchar_t *account, const wchar_t *password) {
-    wchar_t service_path[MAX_PATH];
+    wchar_t service_path[MAX_PATH] = {0};
     XLOG::setup::ColoredOutputOnStdio(true);
 
     if (::GetModuleFileName(nullptr, service_path, ARRAYSIZE(service_path)) ==
@@ -623,7 +625,7 @@ void ServiceController::Start(DWORD /*agc*/, wchar_t ** /*argv*/) {
     } catch (const DWORD &error_exception) {
         xlog::SysLogEvent(processor_->getMainLogName(), xlog::LogEvents::kError,
                           error_exception, L"Service Start");
-        setServiceStatus(SERVICE_STOPPED, error_exception);
+        setServiceStatus(SERVICE_STOPPED, error_exception, 0);
     } catch (...) {
         xlog::SysLogEvent(processor_->getMainLogName(), xlog::LogEvents::kError,
                           0, L"Service failed to start.");
@@ -873,11 +875,15 @@ NameMap GenerateNameMap() {
     while (true) {
         // get id
         auto *id_as_text = GetMultiSzEntry(data, end);
-        if (id_as_text == nullptr) break;
+        if (id_as_text == nullptr) {
+            break;
+        }
 
         // get name
         auto *potential_name = GetMultiSzEntry(data, end);
-        if (potential_name == nullptr) break;
+        if (potential_name == nullptr) {
+            break;
+        }
 
         // check name
         auto id = ::wcstol(id_as_text, nullptr, 10);
@@ -949,8 +955,6 @@ DataSequence ReadPerformanceDataFromRegistry(
     BYTE *buffer = nullptr;
 
     while (true) {
-        // allocation(a bit stupid, but we do not want to have STL inside
-        // of very low level Windows calls
         try {
             buffer = new BYTE[buf_size];
         } catch (...) {
@@ -966,7 +970,9 @@ DataSequence ReadPerformanceDataFromRegistry(
         // MSDN requirement
         ::RegCloseKey(HKEY_PERFORMANCE_DATA);  // NOLINT
 
-        if (ret == ERROR_SUCCESS) break;  // normal exit
+        if (ret == ERROR_SUCCESS) {
+            break;
+        }
 
         if (ret != ERROR_MORE_DATA) {
             XLOG::l("Can't read counter '{}' error [{}]",
@@ -985,7 +991,9 @@ const PERF_OBJECT_TYPE *FindPerfObject(const DataSequence &data_buffer,
                                        DWORD counter_index) noexcept {
     auto *data = data_buffer.data_;
     auto max_offset = data_buffer.len_;
-    if (data == nullptr || max_offset == 0) return nullptr;
+    if (data == nullptr || max_offset == 0) {
+        return nullptr;
+    }
 
     auto *data_block = reinterpret_cast<PERF_DATA_BLOCK *>(data);
     const auto *object = FindFirstObject(data_block);
@@ -1910,6 +1918,9 @@ std::wstring GetRegistryValue(std::wstring_view path,
                               std::wstring_view value_name,
                               std::wstring_view dflt) noexcept {
     HKEY hkey = nullptr;
+    if (dflt.data() == nullptr) {
+        dflt = L"";
+    }
     auto result =
         ::RegOpenKeyW(HKEY_LOCAL_MACHINE, path.data(), &hkey);  // NOLINT
     if (ERROR_SUCCESS != result || nullptr == hkey) {
@@ -1921,7 +1932,7 @@ std::wstring GetRegistryValue(std::wstring_view path,
 
     ON_OUT_OF_SCOPE(::RegCloseKey(hkey));
     DWORD type = REG_SZ;
-    wchar_t buffer[512];
+    wchar_t buffer[512] = {0};
     DWORD count = sizeof(buffer);
     auto ret = ::RegQueryValueExW(hkey, value_name.data(), nullptr, &type,
                                   reinterpret_cast<LPBYTE>(buffer), &count);
@@ -2001,7 +2012,7 @@ bool KillProcess(std::wstring_view process_name, int exit_code) noexcept {
 
     ON_OUT_OF_SCOPE(CloseHandle(snapshot));
 
-    PROCESSENTRY32 entry32;
+    PROCESSENTRY32 entry32 = {0};
     entry32.dwSize = sizeof(entry32);
     auto result = Process32First(snapshot, &entry32);
     while (result != 0) {
@@ -2095,7 +2106,7 @@ bool ScanProcessList(const std::function<bool(const PROCESSENTRY32 &)> &op) {
 
     auto current_process_id = ::GetCurrentProcessId();
     // scan...
-    PROCESSENTRY32 entry32;
+    PROCESSENTRY32 entry32 = {0};
     entry32.dwSize = sizeof(entry32);
     auto result = ::Process32First(snapshot, &entry32);
     while (result != FALSE) {
@@ -2211,7 +2222,7 @@ bool IsAgentHealthy() noexcept {
 // Low level function to get parent reliable
 uint32_t GetParentPid(uint32_t pid)  // By Napalm @ NetCore2K
 {
-    ULONG_PTR pbi[6];
+    ULONG_PTR pbi[6] = {0};
     ULONG size = 0;
     LONG(WINAPI * nt_query_information_process)
     (HANDLE ProcessHandle, ULONG ProcessInformationClass,
@@ -2369,11 +2380,11 @@ std::string PrintPermissions(bool allowed, ACCESS_MASK permissions) {
         std::pair{EXECUTE_PERMISSIONS, "X"}};
     std::string os;
     if (allowed) {
-        for (const auto [value, text] : mapping) {
+        for (const auto &[value, text] : mapping) {
             os += (value & permissions) == value ? text : " ";
         }
     } else {
-        for (const auto [value, text] : mapping) {
+        for (const auto &[value, text] : mapping) {
             os += (value & permissions) != 0 ? text : " ";
         }
     }
@@ -2451,7 +2462,7 @@ std::string ACLInfo::output() {
 
 std::string ReadWholeFile(const fs::path &fname) noexcept {
     try {
-        std::ifstream f(fname.u8string(), std::ios::binary);
+        std::ifstream f(ToUtf8(fname.wstring()), std::ios::binary);
 
         if (!f.good()) {
             return {};
@@ -2480,7 +2491,7 @@ bool PatchFileLineEnding(const fs::path &fname) noexcept {
     if (result.empty()) return false;
 
     try {
-        std::ofstream tst(fname.u8string());  // text file
+        std::ofstream tst(ToUtf8(fname.wstring()));  // text file
         tst.write(result.c_str(), result.size());
         return true;
     } catch (const std::exception &e) {

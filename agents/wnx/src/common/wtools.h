@@ -60,7 +60,7 @@ public:
     explicit SecurityAttributeKeeper(SecurityLevel sl);
     ~SecurityAttributeKeeper();
 
-    const SECURITY_ATTRIBUTES *get() const { return sa_; }
+    [[nodiscard]] const SECURITY_ATTRIBUTES *get() const { return sa_; }
     SECURITY_ATTRIBUTES *get() { return sa_; }
 
 private:
@@ -146,10 +146,12 @@ bool InstallService(const wchar_t *service_name, const wchar_t *display_name,
 //   error in the standard output stream for users to diagnose the problem.
 //
 enum class UninstallServiceMode { normal, test };
-bool UninstallService(
-    const wchar_t *service_name,
-    UninstallServiceMode uninstall_mode = UninstallServiceMode::normal);
+bool UninstallService(const wchar_t *service_name,
+                      UninstallServiceMode uninstall_mode);
 
+inline bool UninstallService(const wchar_t *service_name) {
+    return UninstallService(service_name, UninstallServiceMode::normal);
+}
 // Abstract Interface template for SERVICE PROCESSOR:
 // WE ARE NOT GOING TO USE AT ALL.
 // One binary - one object of one class
@@ -163,7 +165,7 @@ public:
     virtual void pauseService() = 0;
     virtual void continueService() = 0;
     virtual void shutdownService() = 0;
-    virtual const wchar_t *getMainLogName() const = 0;
+    [[nodiscard]] virtual const wchar_t *getMainLogName() const = 0;
     virtual void cleanupOnStop() {
         // may  be but not should overridden
     }
@@ -199,7 +201,7 @@ public:
             }
         }
 
-        if (!::CreatePipe(&read_, &write_, &sa_, 0)) {
+        if (::CreatePipe(&read_, &write_, &sa_, 0) == 0) {
             read_ = nullptr;
             write_ = nullptr;
             xlog::l("Failed to create pipe, %d", GetLastError()).print();
@@ -207,7 +209,7 @@ public:
         }
 
         // disable inheriting from the child
-        if (!SetHandleInformation(read_, HANDLE_FLAG_INHERIT, 0)) {
+        if (SetHandleInformation(read_, HANDLE_FLAG_INHERIT, 0) == 0) {
             xlog::l("Failed to change handle information, %d", GetLastError())
                 .print();
             ::CloseHandle(read_);
@@ -222,11 +224,11 @@ public:
 
     void shutdown() {
         std::lock_guard lk(lock_);
-        if (read_) {
+        if (read_ != nullptr) {
             ::CloseHandle(read_);
             read_ = nullptr;
         }
-        if (write_) {
+        if (write_ != nullptr) {
             ::CloseHandle(write_);
             write_ = nullptr;
         }
@@ -243,7 +245,7 @@ public:
 
     HANDLE moveWrite() noexcept {
         std::lock_guard lk(lock_);
-        auto write = write_;
+        auto *write = write_;
         write_ = nullptr;
         return write;
     }
@@ -252,7 +254,7 @@ private:
     bool initDescriptorsWithFullAccess() {
         auto ret =
             ::InitializeSecurityDescriptor(&sd_, SECURITY_DESCRIPTOR_REVISION);
-        if (!ret) {
+        if (ret == 0) {
             xlog::l(XLOG_FLINE + "Stupid fail").print();
             return false;
         }
@@ -264,8 +266,8 @@ private:
         // NOW THIS IS BY DESIGN of Check MK
         // https://docs.microsoft.com/de-at/windows/desktop/SecAuthZ/creating-a-security-descriptor-for-a-new-object-in-c--
         // ******************************************************
-        ret = ::SetSecurityDescriptorDacl(&sd_, true, nullptr, false);
-        if (!ret) {
+        ret = ::SetSecurityDescriptorDacl(&sd_, 1, nullptr, 0);
+        if (ret == 0) {
             xlog::l(XLOG_FLINE + "Not so stupid fail %d", GetLastError())
                 .print();
             return false;
@@ -342,7 +344,7 @@ public:
         }
 
         if (kill_tree_too) {
-            if (job_handle_) {
+            if (job_handle_ != nullptr) {
                 // this is normal case but with job
                 TerminateJobObject(job_handle_, 0);
 
@@ -354,7 +356,9 @@ public:
                 CloseHandle(process_handle_);  // must
                 process_handle_ = nullptr;
             } else {
-                if (kProcessTreeKillAllowed) KillProcessTree(proc_id);
+                if (kProcessTreeKillAllowed) {
+                    KillProcessTree(proc_id);
+                }
             }
 
             return;
@@ -362,8 +366,9 @@ public:
 
         if (exit_code_ == STILL_ACTIVE) {
             auto success = KillProcess(proc_id, -1);
-            if (!success)
+            if (!success) {
                 xlog::v("Failed kill {} status {}", proc_id, GetLastError());
+            }
         }
     }
 
@@ -377,7 +382,7 @@ public:
     auto &getData() { return data_; }
 
     bool trySetExitCode(uint32_t pid, uint32_t code) {
-        if (pid && pid == process_id_) {
+        if ((pid != 0u) && pid == process_id_) {
             exit_code_ = code;
             return true;
         }
@@ -421,16 +426,18 @@ public:
 
     virtual ~ServiceController() {
         std::lock_guard lk(s_lock_);
-        if (s_controller_ && s_controller_ == this) {
+        if ((s_controller_ != nullptr) && s_controller_ == this) {
             s_controller_ = nullptr;
         }
     }
 
     // no return from here till service ends
     enum class StopType { normal, no_connect, fail };
-    StopType registerAndRun(const wchar_t *service_name, bool can_stop = true,
-                            bool can_shutdown = true,
-                            bool can_pause_continue = true);
+    StopType registerAndRun(const wchar_t *service_name, bool can_stop,
+                            bool can_shutdown, bool can_pause_continue);
+    StopType registerAndRun(const wchar_t *service_name) {
+        return registerAndRun(service_name, true, true, true);
+    }
 
 protected:
     //
@@ -444,8 +451,8 @@ protected:
     //   * Win32ExitCode - error code to report
     //   * WaitHint - estimated time for pending operation, in milliseconds
     //
-    void setServiceStatus(DWORD current_state, DWORD win32_exit_code = NO_ERROR,
-                          DWORD wait_hint = 0) {
+    void setServiceStatus(DWORD current_state, DWORD win32_exit_code,
+                          DWORD wait_hint) {
         static DWORD check_point = 1;
 
         // Fill in the SERVICE_STATUS structure of the service.
@@ -461,8 +468,11 @@ protected:
         // Report the status of the service to the SCM.
         auto ret = ::SetServiceStatus(status_handle_, &status_);
         xlog::l("Setting state %d result %d", current_state,
-                ret ? 0 : GetLastError())
+                ret != 0 ? 0 : GetLastError())
             .print();
+    }
+    void setServiceStatus(DWORD current_state) {
+        return setServiceStatus(current_state, NO_ERROR, 0);
     }
 
 private:
@@ -536,7 +546,9 @@ inline std::string ToUtf8(const std::wstring_view src) noexcept {
     auto in_len = static_cast<int>(src.length());
     auto out_len = ::WideCharToMultiByte(CP_UTF8, 0, src.data(), in_len,
                                          nullptr, 0, nullptr, nullptr);
-    if (out_len == 0) return {};
+    if (out_len == 0) {
+        return {};
+    }
 
     std::string str;
     try {
@@ -571,7 +583,7 @@ std::wstring ToCanonical(std::wstring_view raw_app_name);
 inline std::wstring ConvertToUTF16(std::string_view src) noexcept {
 #if defined(WINDOWS_OS)
     auto in_len = static_cast<int>(src.length());
-    auto utf8_str = src.data();
+    const auto *utf8_str = src.data();
     auto out_len =
         MultiByteToWideChar(CP_UTF8, 0, utf8_str, in_len, nullptr, 0);
     std::wstring wstr;
@@ -687,11 +699,13 @@ std::string SmartConvertUtf16toUtf8(const std::vector<T> &original_data) {
     static_assert(sizeof(T) == 1, "Invalid Data Type in template");
 
     if (IsVectorMarkedAsUTF16(original_data)) {
-        auto raw_data =
+        const auto *raw_data =
             reinterpret_cast<const wchar_t *>(original_data.data() + 2);
 
         std::wstring wdata(raw_data, raw_data + (original_data.size() - 2) / 2);
-        if (wdata.empty()) return {};
+        if (wdata.empty()) {
+            return {};
+        }
 
         return wtools::ToUtf8(wdata);
     }
@@ -706,7 +720,9 @@ inline void AddSafetyEndingNull(std::string &data) {
     // end without changing length
     // this is required for some stupid engines like iostream+YAML
     auto length = data.size();
-    if (data.capacity() <= length) data.reserve(length + 1);
+    if (data.capacity() <= length) {
+        data.reserve(length + 1);
+    }
     data[length] = 0;
 }
 
@@ -726,7 +742,7 @@ std::string ConditionallyConvertFromUTF16(const std::vector<T> &original_data) {
 
 // local implementation of shitty registry access functions
 inline uint32_t LocalReadUint32(const char *root_name, const char *name,
-                                uint32_t default_value = 0) noexcept {
+                                uint32_t default_value) noexcept {
     HKEY hkey = nullptr;
     auto result = ::RegOpenKeyExA(HKEY_LOCAL_MACHINE, root_name, 0,
                                   KEY_QUERY_VALUE, &hkey);
@@ -737,8 +753,8 @@ inline uint32_t LocalReadUint32(const char *root_name, const char *name,
     DWORD value = 0;
     DWORD type = REG_DWORD;
     DWORD size = sizeof(DWORD);
-    result =
-        ::RegQueryValueExA(hkey, name, nullptr, &type, (PBYTE)&value, &size);
+    result = ::RegQueryValueExA(hkey, name, nullptr, &type,
+                                reinterpret_cast<PBYTE>(&value), &size);
     ::RegCloseKey(hkey);
 
     if (result == ERROR_SUCCESS) {
@@ -1033,7 +1049,7 @@ public:
         data_ = ::SysAllocString(str.data());
     }
     ~Bstr() { ::SysFreeString(data_); }
-    BSTR bstr() { return data_; }
+    BSTR bstr() const { return data_; }
     BSTR data_;
 };
 

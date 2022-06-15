@@ -550,8 +550,7 @@ TEST(AgentConfig, YamlRead) {
     auto ret = fs::exists(file);
     ASSERT_TRUE(ret);
 
-    int err = 0;
-    auto result = LoadAndCheckYamlFile(file.wstring(), &err);
+    auto result = LoadAndCheckYamlFile(file.wstring());
     auto sz = result.size();
     auto val_global = result["global"];
     auto v = result["globalvas"];

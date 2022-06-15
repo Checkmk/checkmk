@@ -2,6 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
+use super::misc::anyhow_error_to_human_redable;
 use anyhow::{anyhow, Context, Error as AnyhowError, Result as AnyhowResult};
 use std::fmt::Display;
 use std::str::FromStr;
@@ -149,13 +150,6 @@ impl AgentRecvPortDiscoverer {
             .context(error_msg)
     }
 
-    fn anyhow_error_to_string(err: &AnyhowError) -> String {
-        err.chain()
-            .map(|e| e.to_string())
-            .collect::<Vec<String>>()
-            .join("\n")
-    }
-
     pub fn discover(&self) -> AnyhowResult<u16> {
         let mut error_messages = std::collections::HashMap::new();
 
@@ -170,8 +164,8 @@ impl AgentRecvPortDiscoverer {
 
         return Err(anyhow!(
             "Failed to discover agent receiver port from Checkmk REST API, both with http and https.\n\nError with http:\n{}\n\nError with https:\n{}",
-            Self::anyhow_error_to_string(&error_messages["http"]),
-            Self::anyhow_error_to_string(&error_messages["https"]),
+            anyhow_error_to_human_redable(&error_messages["http"]),
+            anyhow_error_to_human_redable(&error_messages["https"]),
         ));
     }
 }
@@ -292,16 +286,6 @@ mod test_agent_recv_port_discoverer {
             .unwrap()
             .to_string(),
             "http://some-server/some-site/check_mk/api/1.0/domain-types/internal/actions/discover-receiver/invoke",
-        )
-    }
-
-    #[test]
-    fn test_anyhow_error_to_string() {
-        assert_eq!(
-            AgentRecvPortDiscoverer::anyhow_error_to_string(
-                &anyhow!("something went wrong").context("some context")
-            ),
-            "some context\nsomething went wrong"
         )
     }
 }

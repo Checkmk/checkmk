@@ -9,6 +9,7 @@ pub mod config;
 mod constants;
 #[cfg(windows)]
 mod log_ext;
+mod misc;
 pub mod modes;
 mod monitoring_data;
 mod setup;

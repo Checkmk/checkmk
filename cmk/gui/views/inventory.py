@@ -1015,10 +1015,10 @@ def declare_inventory_columns() -> None:
 
         ident = ("inv",) + hints.abc_path
 
-        _declare_inv_column(
+        _register_node_painter(
             inventory.InventoryPath(path=hints.abc_path, source=inventory.TreeSource.node),
             "_".join(ident),
-            hints.node_hint,
+            hints,
         )
 
         for key, attr_hint in hints.attribute_hints.items():
@@ -1031,77 +1031,52 @@ def declare_inventory_columns() -> None:
             )
 
 
-def _declare_inv_column(
+def _register_node_painter(
     inventory_path: inventory.InventoryPath,
     name: str,
-    hint: NodeDisplayHint | AttributeDisplayHint,
+    hints: DisplayHints,
 ) -> None:
-    """Declares painters, sorters and filters to be used in views based on all host related
-    datasources."""
+    """Declares painters for (sub) trees on all host related datasources."""
+    hint = hints.node_hint
 
-    # Declare column painter
-    painter_spec = {
-        "title": (
-            (_("Inventory") + ": " + hint.long_title)
-            if inventory_path.path
-            else _("Inventory Tree")
-        ),
-        "short": hint.short_title,
-        "columns": ["host_inventory", "host_structured_status"],
-        "options": ["show_internal_tree_paths"],
-        "params": Dictionary(
-            title=_("Report options"),
-            elements=[
-                (
-                    "use_short",
-                    Checkbox(
-                        title=_("Use short title in reports header"),
-                        default_value=False,
+    register_painter(
+        name,
+        {
+            "title": (
+                (_("Inventory") + ": " + hint.long_title)
+                if inventory_path.path
+                else _("Inventory Tree")
+            ),
+            "short": hint.short_title,
+            "columns": ["host_inventory", "host_structured_status"],
+            "options": ["show_internal_tree_paths"],
+            "params": Dictionary(
+                title=_("Report options"),
+                elements=[
+                    (
+                        "use_short",
+                        Checkbox(
+                            title=_("Use short title in reports header"),
+                            default_value=False,
+                        ),
                     ),
-                ),
-            ],
-            required_keys=["use_short"],
-        ),
-        # Only attributes can be shown in reports. There is currently no way to render trees.
-        # The HTML code would simply be stripped by the default rendering mechanism which does
-        # not look good for the HW/SW inventory tree
-        "printable": isinstance(hint, AttributeDisplayHint),
-        "load_inv": True,
-        "paint": lambda row: _paint_host_inventory_tree(row, inventory_path),
-        "sorter": name,
-    }
-
-    register_painter(name, painter_spec)
-
-    # Sorters and Filters only for attributes
-    if isinstance(hint, AttributeDisplayHint):
-        # Declare sorter. It will detect numbers automatically
-        register_sorter(
-            name,
-            {
-                "_inventory_path": inventory_path,
-                "title": _("Inventory") + ": " + hint.long_title,
-                "columns": ["host_inventory", "host_structured_status"],
-                "load_inv": True,
-                "cmp": lambda self, a, b: _cmp_inventory_node(a, b, self._spec["_inventory_path"]),
-            },
-        )
-
-        # Declare filter. Sync this with _declare_invtable_column()
-        filter_registry.register(hint.make_filter(name, inventory_path))
+                ],
+                required_keys=["use_short"],
+            ),
+            # Only attributes can be shown in reports. There is currently no way to render trees.
+            # The HTML code would simply be stripped by the default rendering mechanism which does
+            # not look good for the HW/SW inventory tree
+            "printable": False,
+            "load_inv": True,
+            "paint": lambda row: _paint_host_inventory_tree(row, inventory_path, hints),
+            "sorter": name,
+        },
+    )
 
 
-def _cmp_inventory_node(
-    a: Dict[str, StructuredDataNode],
-    b: Dict[str, StructuredDataNode],
-    inventory_path: inventory.InventoryPath,
-) -> int:
-    val_a = inventory.get_attribute(a["host_inventory"], inventory_path)
-    val_b = inventory.get_attribute(b["host_inventory"], inventory_path)
-    return _decorate_sort_func(_cmp_inv_generic)(val_a, val_b)
-
-
-def _paint_host_inventory_tree(row: Row, inventory_path: inventory.InventoryPath) -> CellSpec:
+def _paint_host_inventory_tree(
+    row: Row, inventory_path: inventory.InventoryPath, hints: DisplayHints
+) -> CellSpec:
     try:
         _validate_inventory_tree_uniqueness(row)
     except MultipleInventoryTreesError:
@@ -1119,29 +1094,111 @@ def _paint_host_inventory_tree(row: Row, inventory_path: inventory.InventoryPath
         row["host_name"],
         show_internal_tree_paths=painter_options.get("show_internal_tree_paths"),
     )
-    hints = DISPLAY_HINTS.get_hints(node.path)
 
-    td_class = ""
     with output_funnel.plugged():
-        if inventory_path.source == inventory.TreeSource.node:
-            tree_renderer.show(node, hints)
-            td_class = "invtree"
+        tree_renderer.show(node, hints)
+        code = HTML(output_funnel.drain())
 
-        elif inventory_path.source == inventory.TreeSource.table:
-            tree_renderer.show_table(node.table, hints)
+    return "invtree", code
 
-        elif (
-            inventory_path.source == inventory.TreeSource.attributes
-            and inventory_path.key in node.attributes.pairs
-        ):
+
+def _declare_inv_column(
+    inventory_path: inventory.InventoryPath,
+    name: str,
+    hint: AttributeDisplayHint,
+) -> None:
+    """Declares painters, sorters and filters to be used in views based on all host related
+    datasources."""
+
+    # Declare column painter
+    register_painter(
+        name,
+        {
+            "title": (
+                (_("Inventory") + ": " + hint.long_title)
+                if inventory_path.path
+                else _("Inventory Tree")
+            ),
+            "short": hint.short_title,
+            "columns": ["host_inventory", "host_structured_status"],
+            "options": ["show_internal_tree_paths"],
+            "params": Dictionary(
+                title=_("Report options"),
+                elements=[
+                    (
+                        "use_short",
+                        Checkbox(
+                            title=_("Use short title in reports header"),
+                            default_value=False,
+                        ),
+                    ),
+                ],
+                required_keys=["use_short"],
+            ),
+            "printable": True,
+            "load_inv": True,
+            "paint": lambda row: _paint_host_inventory_attribute(row, inventory_path, hint),
+            "sorter": name,
+        },
+    )
+
+    # Declare sorter. It will detect numbers automatically
+    register_sorter(
+        name,
+        {
+            "_inventory_path": inventory_path,
+            "title": _("Inventory") + ": " + hint.long_title,
+            "columns": ["host_inventory", "host_structured_status"],
+            "load_inv": True,
+            "cmp": lambda self, a, b: _cmp_inventory_node(a, b, self._spec["_inventory_path"]),
+        },
+    )
+
+    # Declare filter. Sync this with _declare_invtable_column()
+    filter_registry.register(hint.make_filter(name, inventory_path))
+
+
+def _cmp_inventory_node(
+    a: Dict[str, StructuredDataNode],
+    b: Dict[str, StructuredDataNode],
+    inventory_path: inventory.InventoryPath,
+) -> int:
+    val_a = inventory.get_attribute(a["host_inventory"], inventory_path)
+    val_b = inventory.get_attribute(b["host_inventory"], inventory_path)
+    return _decorate_sort_func(_cmp_inv_generic)(val_a, val_b)
+
+
+def _paint_host_inventory_attribute(
+    row: Row, inventory_path: inventory.InventoryPath, hint: AttributeDisplayHint
+) -> CellSpec:
+    try:
+        _validate_inventory_tree_uniqueness(row)
+    except MultipleInventoryTreesError:
+        return "", ""
+
+    if not isinstance(tree := row.get("host_inventory"), StructuredDataNode):
+        return "", ""
+
+    if (node := tree.get_node(inventory_path.path)) is None:
+        return "", ""
+
+    painter_options = PainterOptions.get_instance()
+    tree_renderer = NodeRenderer(
+        row["site"],
+        row["host_name"],
+        show_internal_tree_paths=painter_options.get("show_internal_tree_paths"),
+    )
+
+    with output_funnel.plugged():
+        if inventory_path.key in node.attributes.pairs:
             tree_renderer.show_attribute(
                 node.attributes.pairs[inventory_path.key],
-                hints.get_attribute_hint(inventory_path.key),
+                hint,
             )
 
         code = HTML(output_funnel.drain())
 
-    return td_class, code
+    return "", code
 
 
 # .

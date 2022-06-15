@@ -41,7 +41,6 @@ _PERMISSIONS: List[Tuple[str, Callable[[Path], bool], List[str], List[str]]] = [
     ),
     ("checks/*", is_not_executable, [], []),
     ("checkman/*", is_not_executable, [], []),
-    ("inventory/*", is_not_executable, [], []),
     ("pnp-templates/*", is_not_executable, [], []),
     ("notifications/*", is_executable, ["README", "debug"], []),
     ("bin/*", is_executable, ["Makefile", "mkevent.cc", "mkeventd_open514.cc"], []),

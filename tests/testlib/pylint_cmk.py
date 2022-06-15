@@ -119,7 +119,7 @@ def is_python_file(path: str, shebang_name: str | None = None) -> bool:
 # python modules. This custom reporter rewrites the found
 # messages to tell the users the original location in the
 # python sources
-# TODO: This can be dropped once we have refactored checks/inventory/bakery plugins
+# TODO: This can be dropped once we have refactored checks/bakery plugins
 # to real modules
 class CMKFixFileMixin:
     def handle_message(self, msg: Message) -> None:

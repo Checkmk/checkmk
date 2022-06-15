@@ -247,8 +247,6 @@ check_mk_agent_target_versions: _List = []
 check_periods: _List = []
 snmp_check_interval: _List = []
 snmp_exclude_sections: _List = []
-# Rulesets for inventory export hooks
-inv_exports: _Dict = {}
 # Rulesets for parameters of notification scripts
 notification_parameters: _Dict = {}
 use_new_descriptions_for: _List = []
@@ -266,6 +264,7 @@ agent_config: _Dict = {}
 bake_agents_on_restart = False
 
 # Kept for compatibility, but are deprecated and not used anymore
+inv_exports: _Dict = {}  # Rulesets for inventory export hooks
 extra_summary_host_conf: _Dict = {}
 extra_summary_service_conf: _Dict = {}
 summary_host_groups: _List = []

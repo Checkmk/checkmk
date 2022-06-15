@@ -59,7 +59,7 @@ def test_pylint(pylint_test_dir, capsys) -> None:
 def _get_files_to_check(pylint_test_dir):
     # Add the compiled files for things that are no modules yet
     Path(pylint_test_dir + "/__init__.py").touch()
-    _compile_check_and_inventory_plugins(pylint_test_dir)
+    _compile_check_plugins(pylint_test_dir)
 
     # Not checking compiled check, inventory, bakery plugins with Python 3
     files = [pylint_test_dir]
@@ -78,7 +78,7 @@ def _get_files_to_check(pylint_test_dir):
         rel_path = fname[len(repo_path()) + 1 :]
 
         # Can currently not be checked alone. Are compiled together below
-        if rel_path.startswith("checks/") or rel_path.startswith("inventory/"):
+        if rel_path.startswith("checks/"):
             continue
 
         # TODO: We should also test them...
@@ -128,18 +128,6 @@ snmp_scan_functions                = {}
 active_check_info                  = {}
 special_agent_info                 = {}
 
-inv_info   = {} # Inventory plugins
-inv_export = {} # Inventory export hooks
-
-def inv_tree_list(path):
-    return inv_tree(path, [])
-
-def inv_tree(path, default_value=None):
-    if default_value is not None:
-        node = default_value
-    else:
-        node = {}
-    return node
 """
         )
 
@@ -170,13 +158,8 @@ def inv_tree(path, default_value=None):
         yield file_handle
 
 
-def _compile_check_and_inventory_plugins(pylint_test_dir: str) -> None:
+def _compile_check_plugins(pylint_test_dir: str) -> None:
 
     for idx, f_name in enumerate(pylint_cmk.check_files(repo_path() + "/checks")):
         with stand_alone_template(pylint_test_dir + "/cmk_checks_%s.py" % idx) as file_handle:
             pylint_cmk.add_file(file_handle, f_name)
-
-    with stand_alone_template(pylint_test_dir + "/cmk_checks.py") as file_handle:
-        pylint_cmk.add_file(file_handle, repo_path() + "/cmk/base/inventory_plugins.py")
-        for path in pylint_cmk.check_files(repo_path() + "/inventory"):
-            pylint_cmk.add_file(file_handle, path)

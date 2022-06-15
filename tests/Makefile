@@ -294,7 +294,6 @@ test-mypy: prepare-protobuf-files
 	PYTHON_FILES=$$($(FIND_PYTHON_FILES) | \
 	`: filter out plugins, they are not real modules` \
 	grep -v $$(realpath '../checks') | \
-	grep -v $$(realpath '../inventory') | \
 	`: files are only needed for pylint to understand the module hierarchy` \
 	grep -v $$(realpath -m '../enterprise/cmk/__init__.py') | \
 	grep -v $$(realpath -m '../enterprise/cmk/base/__init__.py') | \

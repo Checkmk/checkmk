@@ -36,7 +36,6 @@ from cmk.utils.log import console
 import cmk.base.check_api as check_api  # pylint: disable=cmk-module-layer-violation
 import cmk.base.config as config  # pylint: disable=cmk-module-layer-violation
 import cmk.base.crash_reporting  # pylint: disable=cmk-module-layer-violation
-import cmk.base.inventory_plugins as inventory_plugins  # pylint: disable=cmk-module-layer-violation
 import cmk.base.profiling as profiling  # pylint: disable=cmk-module-layer-violation
 import cmk.base.utils  # pylint: disable=cmk-module-layer-violation
 from cmk.base.modes import modes  # pylint: disable=cmk-module-layer-violation
@@ -79,7 +78,6 @@ try:
     if mode_name not in modes.non_checks_options():
         errors = config.load_all_agent_based_plugins(
             check_api.get_check_api_context,
-            inventory_plugins.load_legacy_inventory_plugins,
         )
         if sys.stderr.isatty():
             for error_msg in errors:

@@ -72,9 +72,8 @@ def test_includes_are_deprecated(fix_plugin_legacy) -> None:
         assert not check_info.get("includes"), f"Plugin {name}: includes are deprecated!"
 
 
-@pytest.mark.parametrize("plugin_path", ["checks", "inventory"])
-def test_check_plugin_header(plugin_path: str) -> None:
-    for plugin in Path(testlib.repo_path(), plugin_path).iterdir():
+def test_check_plugin_header() -> None:
+    for plugin in Path(testlib.repo_path(), "checks").iterdir():
         if plugin.name.startswith("."):
             # .f12
             continue

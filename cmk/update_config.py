@@ -70,7 +70,6 @@ from cmk.utils.type_defs import (
 import cmk.base.autochecks
 import cmk.base.check_api
 import cmk.base.config
-import cmk.base.inventory_plugins as inventory_plugins
 from cmk.base.api.agent_based import register
 
 import cmk.gui.config
@@ -293,7 +292,6 @@ class UpdateConfig:
         cmk.base.config.load()
         cmk.base.config.load_all_agent_based_plugins(
             cmk.base.check_api.get_check_api_context,
-            inventory_plugins.load_legacy_inventory_plugins,
         )
 
     def _rewrite_wato_tag_config(self) -> None:

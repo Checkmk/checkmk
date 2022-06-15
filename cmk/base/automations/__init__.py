@@ -21,7 +21,6 @@ from cmk.automations.results import ABCAutomationResult
 
 import cmk.base.check_api as check_api
 import cmk.base.config as config
-import cmk.base.inventory_plugins as inventory_plugins
 import cmk.base.obsolete_output as out
 import cmk.base.profiling as profiling
 
@@ -55,7 +54,6 @@ class Automations:
                     log.setup_console_logging()
                     config.load_all_agent_based_plugins(
                         check_api.get_check_api_context,
-                        inventory_plugins.load_legacy_inventory_plugins,
                     )
 
             if automation.needs_config:

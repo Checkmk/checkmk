@@ -52,7 +52,6 @@ get_candidates_fallback() {
         PRUNE+=" -path $(realpath enterprise/agents/plugins/cmk_update_agent.py) -prune -o" # cmk_update_agent.py checked directly
         PRUNE+=" -path $(realpath enterprise/cmk/post_rename_site/cee) -prune -o"           # cmk/post_rename_site/cee symlink points here
     fi
-    SEARCH+=" inventory"
     SEARCH+=" livestatus/api/python"
     SEARCH+=" locale"
     if [ -d "managed" ]; then

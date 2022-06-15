@@ -51,9 +51,6 @@ $(CHECK_MK_INSTALL): $(CHECK_MK_BUILD) $(PACKAGE_PYTHON3_MODULES_PYTHON_DEPS)
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/check_mk/notifications
 	$(TAR_GZ) $(CHECK_MK_BUILD_DIR)/notifications.tar.gz -C $(DESTDIR)$(OMD_ROOT)/share/check_mk/notifications
 
-	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/check_mk/inventory
-	$(TAR_GZ) $(CHECK_MK_BUILD_DIR)/inventory.tar.gz -C $(DESTDIR)$(OMD_ROOT)/share/check_mk/inventory
-
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/check_mk/web
 	$(TAR_GZ) $(CHECK_MK_BUILD_DIR)/web.tar.gz -C $(DESTDIR)$(OMD_ROOT)/share/check_mk/web
 

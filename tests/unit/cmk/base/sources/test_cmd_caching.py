@@ -25,7 +25,6 @@ from cmk.core_helpers.cache import MaxAge
 import cmk.base.automations
 import cmk.base.automations.check_mk
 import cmk.base.config as config
-import cmk.base.inventory_plugins
 import cmk.base.modes
 import cmk.base.modes.check_mk
 from cmk.base.sources import Source

@@ -1,0 +1,15 @@
+Title: Drop "Export List of Software packages as CSV file"
+Class: feature
+Compatible: incomp
+Component: inv
+Date: 1655331472
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1
+
+The rule set "<i>Export List of Software packages as CSV file</i>" has no effect anymore.
+
+As announced in <a href="14084">Werk #14084</a>, plugins residing in <tt>{local/,}share/check_mk/inventory</tt> are not supported anymore.
+
+This also affects the plugin triggert by the mentioned rule.

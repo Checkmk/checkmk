@@ -1542,10 +1542,6 @@ def max_cachefile_age(
 
 def load_all_agent_based_plugins(
     get_check_api_context: GetCheckApiContext,
-    legacy_inventory_plugins_loader: Callable[
-        [GetCheckApiContext, GetInventoryApiContext],
-        Sequence[str],
-    ],
 ) -> List[str]:
     """Load all checks and includes"""
     global _all_checks_loaded
@@ -1561,12 +1557,6 @@ def load_all_agent_based_plugins(
     )
 
     errors.extend(load_checks(get_check_api_context, filelist))
-    errors.extend(
-        legacy_inventory_plugins_loader(
-            get_check_api_context,
-            agent_based_register.inventory_plugins_legacy.get_inventory_context,
-        )
-    )
 
     _all_checks_loaded = True
 
@@ -3005,15 +2995,6 @@ class HostConfig:
         return self._config_cache.host_extra_conf_merged(
             self.hostname, inv_parameters.get(str(ruleset_name), [])
         )
-
-    @property
-    def inventory_export_hooks(self) -> List[Tuple[str, Dict]]:
-        hooks: List[Tuple[str, Dict]] = []
-        for hookname, ruleset in sorted(inv_exports.items(), key=lambda x: x[0]):
-            entries = self._config_cache.host_extra_conf(self.hostname, ruleset)
-            if entries:
-                hooks.append((hookname, entries[0]))
-        return hooks
 
     def notification_plugin_parameters(self, plugin_name: CheckPluginNameStr) -> Dict:
         return self._config_cache.host_extra_conf_merged(

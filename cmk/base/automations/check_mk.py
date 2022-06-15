@@ -77,7 +77,6 @@ import cmk.base.check_utils
 import cmk.base.config as config
 import cmk.base.core
 import cmk.base.core_config as core_config
-import cmk.base.inventory_plugins as inventory_plugins
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.nagios_utils
 import cmk.base.notify as notify
@@ -274,7 +273,6 @@ class AutomationSetAutochecks(DiscoveryAutomation):
         if host_config.is_cluster:
             config.load_all_agent_based_plugins(
                 check_api.get_check_api_context,
-                inventory_plugins.load_legacy_inventory_plugins,
             )
 
         # Fix data from version <2.0
@@ -1095,7 +1093,6 @@ class AutomationGetConfiguration(Automation):
         if missing_variables:
             config.load_all_agent_based_plugins(
                 check_api.get_check_api_context,
-                inventory_plugins.load_legacy_inventory_plugins,
             )
             config.load(with_conf_d=False)
 

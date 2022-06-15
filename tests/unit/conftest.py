@@ -232,14 +232,12 @@ class FixRegister:
         import cmk.base.api.agent_based.register as register  # pylint: disable=bad-option-value,import-outside-toplevel
         import cmk.base.check_api as check_api  # pylint: disable=bad-option-value,import-outside-toplevel
         import cmk.base.config as config  # pylint: disable=bad-option-value,import-outside-toplevel
-        import cmk.base.inventory_plugins as inventory_plugins  # pylint: disable=bad-option-value,import-outside-toplevel
 
         config._initialize_data_structures()
         assert config.check_info == {}
 
         config.load_all_agent_based_plugins(
             check_api.get_check_api_context,
-            inventory_plugins.load_legacy_inventory_plugins,
         )
 
         # our test environment does not deal with namespace packages properly. load plus plugins:
@@ -250,11 +248,6 @@ class FixRegister:
         else:
             for _plugin, exception in load_plugins:
                 raise exception
-
-        inventory_plugins.load_legacy_inventory_plugins(
-            check_api.get_check_api_context,
-            register.inventory_plugins_legacy.get_inventory_context,
-        )
 
         self._snmp_sections = copy.deepcopy(register._config.registered_snmp_sections)
         self._agent_sections = copy.deepcopy(register._config.registered_agent_sections)
@@ -283,13 +276,11 @@ class FixPluginLegacy:
 
     def __init__(self, fixed_register: FixRegister) -> None:
         import cmk.base.config as config  # pylint: disable=bad-option-value,import-outside-toplevel
-        import cmk.base.inventory_plugins as inventory_plugins
 
         assert isinstance(fixed_register, FixRegister)  # make sure plugins are loaded
 
         self._check_info = copy.deepcopy(config.check_info)
         self._snmp_info = copy.deepcopy(config.snmp_info)
-        self._inv_info = copy.deepcopy(inventory_plugins._inv_info)
         self._active_check_info = copy.deepcopy(config.active_check_info)
         self._snmp_scan_functions = copy.deepcopy(config.snmp_scan_functions)
         self._check_variables = copy.deepcopy(config.get_check_variables())
@@ -301,10 +292,6 @@ class FixPluginLegacy:
     @property
     def snmp_info(self):
         return self._snmp_info
-
-    @property
-    def inv_info(self):
-        return self._inv_info
 
     @property
     def active_check_info(self):

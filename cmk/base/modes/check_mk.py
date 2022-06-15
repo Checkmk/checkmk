@@ -1496,7 +1496,13 @@ modes.register(
 
 def mode_discover_marked_hosts(options: Mapping[str, Literal[True]]) -> None:
     _handle_fetcher_options(options)
-    discovery.discover_marked_hosts(create_core(config.monitoring_core))
+
+    if not (queue := discovery.AutodiscoveryQueue()):
+        console.verbose("Autodiscovery: No hosts marked by discovery check\n")
+        return
+
+    config.load()
+    discovery.discover_marked_hosts(create_core(config.monitoring_core), queue)
 
 
 modes.register(
@@ -1511,6 +1517,7 @@ modes.register(
             "automatically if configured.",
         ],
         sub_options=_FETCHER_OPTIONS,
+        needs_config=False,
     )
 )
 

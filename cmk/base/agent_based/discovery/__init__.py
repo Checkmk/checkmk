@@ -759,7 +759,7 @@ def _schedule_rediscovery(
     if not need_rediscovery:
         return ActiveCheckResult()
 
-    autodiscovery_queue = _AutodiscoveryQueue()
+    autodiscovery_queue = AutodiscoveryQueue()
     if host_config.is_cluster and host_config.nodes:
         for nodename in host_config.nodes:
             autodiscovery_queue.add(nodename)
@@ -769,7 +769,7 @@ def _schedule_rediscovery(
     return ActiveCheckResult(0, "rediscovery scheduled")
 
 
-class _AutodiscoveryQueue:
+class AutodiscoveryQueue:
     @staticmethod
     def _host_name(file_path: Path) -> HostName:
         return HostName(file_path.name)
@@ -780,13 +780,16 @@ class _AutodiscoveryQueue:
     def __init__(self) -> None:
         self._dir = Path(cmk.utils.paths.var_dir, "autodiscovery")
 
-    def _ls(self) -> Iterable[Path]:
+    def _ls(self) -> Sequence[Path]:
         try:
             # we must consume the .iterdir generator to make sure
             # the FileNotFoundError gets raised *here*.
             return list(self._dir.iterdir())
         except FileNotFoundError:
             return []
+
+    def __len__(self) -> int:
+        return len(self._ls())
 
     def oldest(self) -> Optional[float]:
         return min((f.stat().st_mtime for f in self._ls()), default=None)
@@ -808,11 +811,11 @@ class _AutodiscoveryQueue:
             self.remove(host_name)
 
 
-def discover_marked_hosts(core: MonitoringCore) -> None:
+def discover_marked_hosts(
+    core: MonitoringCore,
+    autodiscovery_queue: AutodiscoveryQueue,
+) -> None:
     """Autodiscovery"""
-
-    console.verbose("Doing discovery for all marked hosts:\n")
-    autodiscovery_queue = _AutodiscoveryQueue()
 
     config_cache = config.get_config_cache()
 
@@ -821,10 +824,10 @@ def discover_marked_hosts(core: MonitoringCore) -> None:
         logger=console.verbose,
     )
 
-    oldest_queued = autodiscovery_queue.oldest()
-    if oldest_queued is None:
-        console.verbose("  Nothing to do. No hosts marked by discovery check.\n")
+    if (oldest_queued := autodiscovery_queue.oldest()) is None:
+        console.verbose("Autodiscovery: No hosts marked by discovery check\n")
         return
+    console.verbose("Autodiscovery: Discovering all hosts marked by discovery check:\n")
 
     process_hosts = EVERYTHING if (up_hosts := _get_up_hosts()) is None else up_hosts
 
@@ -879,7 +882,7 @@ def _discover_marked_host(
     *,
     config_cache: config.ConfigCache,
     host_config: config.HostConfig,
-    autodiscovery_queue: _AutodiscoveryQueue,
+    autodiscovery_queue: AutodiscoveryQueue,
     reference_time: float,
     oldest_queued: float,
 ) -> bool:
@@ -997,7 +1000,6 @@ def _may_rediscover(
         if start_time <= now <= end_time:
             return "we are currently in a disallowed time of day"
 
-    # we could check this earlier. No need to to it for every host.
     if reference_time - oldest_queued < rediscovery_parameters["group_time"]:
         return "last activation is too recent"
 

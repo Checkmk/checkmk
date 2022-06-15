@@ -13,7 +13,7 @@ import cmk.base.agent_based.discovery as discovery
 
 @pytest.fixture(name="autodiscovery_queue")
 def _mocked_queue(tmpdir):
-    adq = discovery._AutodiscoveryQueue()
+    adq = discovery.AutodiscoveryQueue()
     mockdir = Path(tmpdir)
     (mockdir / "most").touch()
     (mockdir / "lost").touch()
@@ -22,21 +22,29 @@ def _mocked_queue(tmpdir):
 
 
 class TestAutodiscoveryQueue:
+    def test_len(self, autodiscovery_queue) -> None:
+        assert len(discovery.AutodiscoveryQueue()) == 0
+        assert len(autodiscovery_queue) == 2
+
+    def test_bool(self, autodiscovery_queue) -> None:
+        assert not discovery.AutodiscoveryQueue()
+        assert autodiscovery_queue
+
     def test_oldest_empty(self) -> None:
-        assert discovery._AutodiscoveryQueue().oldest() is None
+        assert discovery.AutodiscoveryQueue().oldest() is None
 
     def test_oldest_populated(self, autodiscovery_queue) -> None:
         assert isinstance(autodiscovery_queue.oldest(), float)
 
     def test_queued_empty(self, autodiscovery_queue, monkeypatch) -> None:
-        autodiscovery_queue = discovery._AutodiscoveryQueue()
+        autodiscovery_queue = discovery.AutodiscoveryQueue()
         assert not list(autodiscovery_queue.queued_hosts())
 
     def test_queued_populated(self, autodiscovery_queue, monkeypatch) -> None:
         assert set(autodiscovery_queue.queued_hosts()) == {"most", "lost"}
 
     def test_add(self, autodiscovery_queue, monkeypatch) -> None:
-        autodiscovery_queue = discovery._AutodiscoveryQueue()
+        autodiscovery_queue = discovery.AutodiscoveryQueue()
         autodiscovery_queue.add("most")
         assert list(autodiscovery_queue.queued_hosts()) == ["most"]
 

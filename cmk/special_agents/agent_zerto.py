@@ -16,6 +16,8 @@ import sys
 
 import requests
 
+from cmk.utils.password_store import replace_passwords
+
 LOGGER = logging.getLogger(__name__)
 
 
@@ -104,6 +106,7 @@ class AuthError(Exception):
 
 
 def main(argv=None):
+    replace_passwords()
     args = parse_arguments(argv or sys.argv[1:])
     sys.stdout.write("<<<zerto_agent:sep(0)>>>")
     try:

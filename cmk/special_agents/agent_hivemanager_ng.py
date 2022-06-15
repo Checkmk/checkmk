@@ -10,6 +10,8 @@ import traceback
 
 import requests
 
+from cmk.utils.password_store import replace_passwords
+
 
 def bail_out(message, debug=False):
     if debug:
@@ -39,6 +41,7 @@ def parse_args():
 
 
 def main():
+    replace_passwords()
     args = parse_args()
 
     print("<<<hivemanager_ng_devices:sep(124)>>>")

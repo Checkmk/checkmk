@@ -47,6 +47,7 @@ from typing import (
     Callable,
     cast,
     Dict,
+    Final,
     IO,
     Iterable,
     List,
@@ -1828,7 +1829,7 @@ def main_help(
         _command_options,
         descr,
         _confirm_text,
-    ) in commands:
+    ) in COMMANDS:
         if only_root and not is_root():
             continue
 
@@ -3742,9 +3743,7 @@ class Command(NamedTuple):
     confirm_text: str
 
 
-commands: List[Command] = []
-
-commands.append(
+COMMANDS: Final = [
     Command(
         command="help",
         only_root=False,
@@ -3757,10 +3756,7 @@ commands.append(
         options=[],
         description="Show general help",
         confirm_text="",
-    )
-)
-
-commands.append(
+    ),
     Command(
         command="setversion",
         only_root=True,
@@ -3773,10 +3769,7 @@ commands.append(
         options=[],
         description="Sets the default version of OMD which will be used by new sites",
         confirm_text="",
-    )
-)
-
-commands.append(
+    ),
     Command(
         command="version",
         only_root=False,
@@ -3791,10 +3784,7 @@ commands.append(
         ],
         description="Show version of OMD",
         confirm_text="",
-    )
-)
-
-commands.append(
+    ),
     Command(
         command="versions",
         only_root=False,
@@ -3809,10 +3799,7 @@ commands.append(
         ],
         description="List installed OMD versions",
         confirm_text="",
-    )
-)
-
-commands.append(
+    ),
     Command(
         command="sites",
         only_root=False,
@@ -3827,10 +3814,7 @@ commands.append(
         ],
         description="Show list of sites",
         confirm_text="",
-    )
-)
-
-commands.append(
+    ),
     Command(
         command="create",
         only_root=True,
@@ -3870,10 +3854,7 @@ commands.append(
         "- Create and populate the site home directory\n"
         "- Restart the system wide apache daemon\n"
         "- Add tmpfs for the site to fstab and mount it",
-    )
-)
-
-commands.append(
+    ),
     Command(
         command="init",
         only_root=True,
@@ -3893,10 +3874,7 @@ commands.append(
         ],
         description="Populate site directory with default files and enable the site",
         confirm_text="",
-    )
-)
-
-commands.append(
+    ),
     Command(
         command="rm",
         only_root=True,
@@ -3928,10 +3906,7 @@ commands.append(
         "- Remove the system group <SITENAME>\n"
         "- Remove the site home directory\n"
         "- Restart the system wide apache daemon\n",
-    )
-)
-
-commands.append(
+    ),
     Command(
         command="disable",
         only_root=True,
@@ -3946,10 +3921,7 @@ commands.append(
         ],
         description="Disable a site (stop it, unmount tmpfs, remove Apache hook)",
         confirm_text="",
-    )
-)
-
-commands.append(
+    ),
     Command(
         command="enable",
         only_root=True,
@@ -3962,10 +3934,7 @@ commands.append(
         options=[],
         description="Enable a site (reenable a formerly disabled site)",
         confirm_text="",
-    )
-)
-
-commands.append(
+    ),
     Command(
         command="mv",
         only_root=True,
@@ -4002,10 +3971,7 @@ commands.append(
         ],
         description="Rename a site",
         confirm_text="",
-    )
-)
-
-commands.append(
+    ),
     Command(
         command="cp",
         only_root=True,
@@ -4045,10 +4011,7 @@ commands.append(
         ],
         description="Make a copy of a site",
         confirm_text="",
-    )
-)
-
-commands.append(
+    ),
     Command(
         command="update",
         only_root=False,
@@ -4068,10 +4031,7 @@ commands.append(
         ],
         description="Update site to other version of OMD",
         confirm_text="",
-    )
-)
-
-commands.append(
+    ),
     Command(
         command="start",
         only_root=False,
@@ -4089,10 +4049,7 @@ commands.append(
         ],
         description="Start services of one or all sites",
         confirm_text="",
-    )
-)
-
-commands.append(
+    ),
     Command(
         command="stop",
         only_root=False,
@@ -4110,10 +4067,7 @@ commands.append(
         ],
         description="Stop services of site(s)",
         confirm_text="",
-    )
-)
-
-commands.append(
+    ),
     Command(
         command="restart",
         only_root=False,
@@ -4130,10 +4084,7 @@ commands.append(
         ],
         description="Restart services of site(s)",
         confirm_text="",
-    )
-)
-
-commands.append(
+    ),
     Command(
         command="reload",
         only_root=False,
@@ -4150,10 +4101,7 @@ commands.append(
         ],
         description="Reload services of site(s)",
         confirm_text="",
-    )
-)
-
-commands.append(
+    ),
     Command(
         command="status",
         only_root=False,
@@ -4172,10 +4120,7 @@ commands.append(
         ],
         description="Show status of services of site(s)",
         confirm_text="",
-    )
-)
-
-commands.append(
+    ),
     Command(
         command="config",
         only_root=False,
@@ -4192,10 +4137,7 @@ Usage:\n\
  omd config [site] show\t\t\tshow configuration settings\n\
  omd config [site] set VAR VAL\t\tset specific setting VAR to VAL",
         confirm_text="",
-    )
-)
-
-commands.append(
+    ),
     Command(
         command="diff",
         only_root=False,
@@ -4210,10 +4152,7 @@ commands.append(
         ],
         description="Shows differences compared to the original version files",
         confirm_text="",
-    )
-)
-
-commands.append(
+    ),
     Command(
         command="su",
         only_root=True,
@@ -4226,10 +4165,7 @@ commands.append(
         options=[],
         description="Run a shell as a site-user",
         confirm_text="",
-    )
-)
-
-commands.append(
+    ),
     Command(
         command="umount",
         only_root=False,
@@ -4245,10 +4181,7 @@ commands.append(
         ],
         description="Umount ramdisk volumes of site(s)",
         confirm_text="",
-    )
-)
-
-commands.append(
+    ),
     Command(
         command="backup",
         only_root=False,
@@ -4264,10 +4197,7 @@ commands.append(
         ],
         description="Create a backup tarball of a site, writing it to a file or stdout",
         confirm_text="",
-    )
-)
-
-commands.append(
+    ),
     Command(
         command="restore",
         only_root=False,
@@ -4308,10 +4238,7 @@ commands.append(
         ],
         description="Restores the backup of a site to an existing site or creates a new site",
         confirm_text="",
-    )
-)
-
-commands.append(
+    ),
     Command(
         command="cleanup",
         only_root=True,
@@ -4324,8 +4251,8 @@ commands.append(
         options=[],
         description="Uninstall all Check_MK versions that are not used by any site.",
         confirm_text="",
-    )
-)
+    ),
+]
 
 
 class GlobalOptions(NamedTuple):
@@ -4641,7 +4568,7 @@ def _get_command(
     global_opts: GlobalOptions,
     command_arg: str,
 ) -> Command:
-    for command in commands:
+    for command in COMMANDS:
         if command.command == command_arg:
             return command
 

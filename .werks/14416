@@ -1,0 +1,21 @@
+Title: Agent controller: Fix agent data transport for IPv4-only hosts
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1655289075
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p3
+
+The agent controller (<tt>cmk-agent-ctl</tt>) crashed on IPv4-only hosts when
+attempting to open a TCP socket in order to allow Checkmk to connect to the host
+and collect agent data. Note that on Linux hosts, this crash only occured if
+IPv6 was disabled at the kernel level. The corresponding error message read
+C+:
+ERROR [cmk_agent_ctl] Address family not supported by protocol (os error 97)
+C-:
+
+Note that this crash only affected the transport of agent data, not the host
+registration.

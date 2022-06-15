@@ -135,7 +135,7 @@ def aws_get_float_human_readable(f, unit=""):
 
 
 def aws_get_counts_rate_human_readable(rate):
-    return aws_get_float_human_readable(rate)[:-1] + "/s"
+    return aws_get_float_human_readable(rate) + "/s"
 
 
 def aws_get_bytes_rate_human_readable(rate):

@@ -103,7 +103,6 @@ import cmk.utils.debug as _debug
 import cmk.utils.defines as _defines
 import cmk.utils.log.console as _console  # noqa: F401 # pylint: disable=unused-import
 import cmk.utils.paths as _paths
-import cmk.utils.render as _render_from_utils
 
 # These imports are not meant for use in the API. So we prefix the names
 # with an underscore. These names will be skipped when loading into the
@@ -329,7 +328,23 @@ def get_percent_human_readable(
     return _render.percent(percentage)
 
 
-get_number_with_precision = _render_from_utils.fmt_number_with_precision
+def get_number_with_precision(
+    v: float,
+    base: object = None,  # for legacy compatibility
+    precision: int = 2,
+    drop_zeroes: object = None,  # for legacy compatibility
+    unit: str = "",
+    zero_non_decimal: object = None,  # for legacy compatibility
+) -> str:
+    """
+    >>> get_number_with_precision(123.4324)
+    '123.43'
+    >>> get_number_with_precision(2.3e5, precision=3, unit='V')
+    '230000.000 V'
+    """
+    return "%.*f" % (precision, v) + f"{' ' if unit else ''}{unit}"
+
+
 quote_shell_string = _cmk_utils.quote_shell_string
 
 

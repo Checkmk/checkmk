@@ -9,9 +9,10 @@ from typing import Dict, Sequence, Union
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.http import request
 from cmk.gui.i18n import _
-from cmk.gui.plugins.views.utils import Painter, painter_registry, Sorter, sorter_registry
+from cmk.gui.plugins.views.utils import Cell, Painter, painter_registry, Sorter, sorter_registry
 from cmk.gui.type_defs import ColumnName, Row
 from cmk.gui.utils.html import HTML
+from cmk.gui.view_utils import CellSpec
 from cmk.gui.watolib.hosts_and_folders import get_folder_title_path
 
 
@@ -31,7 +32,7 @@ class PainterHostFilename(Painter):
     def columns(self) -> Sequence[ColumnName]:
         return ["host_filename"]
 
-    def render(self, row, cell):
+    def render(self, row: Row, cell: Cell) -> CellSpec:
         return ("tt", row["host_filename"])
 
 
@@ -91,7 +92,7 @@ class PainterWatoFolderAbs(Painter):
     def sorter(self):
         return "wato_folder_abs"
 
-    def render(self, row, cell):
+    def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_wato_folder(row, "abs")
 
 
@@ -115,7 +116,7 @@ class PainterWatoFolderRel(Painter):
     def sorter(self):
         return "wato_folder_rel"
 
-    def render(self, row, cell):
+    def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_wato_folder(row, "rel")
 
 
@@ -139,7 +140,7 @@ class PainterWatoFolderPlain(Painter):
     def sorter(self):
         return "wato_folder_plain"
 
-    def render(self, row, cell):
+    def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_wato_folder(row, "plain")
 
 

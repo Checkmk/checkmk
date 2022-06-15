@@ -18,6 +18,7 @@ from cmk.gui.i18n import _, _l, ungettext
 from cmk.gui.permissions import Permission, permission_registry
 from cmk.gui.plugins.views.commands import PermissionSectionAction
 from cmk.gui.plugins.views.utils import (
+    Cell,
     cmp_simple_number,
     Command,
     command_registry,
@@ -31,8 +32,9 @@ from cmk.gui.plugins.views.utils import (
     Sorter,
     sorter_registry,
 )
-from cmk.gui.type_defs import ColumnName, SingleInfos
+from cmk.gui.type_defs import ColumnName, Row, SingleInfos
 from cmk.gui.utils.urls import makeuri_contextless
+from cmk.gui.view_utils import CellSpec
 
 
 @data_source_registry.register
@@ -166,7 +168,7 @@ class PainterCrashIdent(Painter):
     def columns(self) -> Sequence[ColumnName]:
         return ["crash_id"]
 
-    def render(self, row, cell):
+    def render(self, row: Row, cell: Cell) -> CellSpec:
         url = makeuri_contextless(
             request,
             [
@@ -194,7 +196,7 @@ class PainterCrashType(Painter):
     def columns(self) -> Sequence[ColumnName]:
         return ["crash_type"]
 
-    def render(self, row, cell):
+    def render(self, row: Row, cell: Cell) -> CellSpec:
         return (None, row["crash_type"])
 
 
@@ -218,7 +220,7 @@ class PainterCrashTime(Painter):
     def painter_options(self):
         return ["ts_format", "ts_date"]
 
-    def render(self, row, cell):
+    def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_age(row["crash_time"], has_been_checked=True, bold_if_younger_than=3600)
 
 
@@ -238,7 +240,7 @@ class PainterCrashVersion(Painter):
     def columns(self) -> Sequence[ColumnName]:
         return ["crash_version"]
 
-    def render(self, row, cell):
+    def render(self, row: Row, cell: Cell) -> CellSpec:
         return (None, row["crash_version"])
 
 
@@ -258,7 +260,7 @@ class PainterCrashException(Painter):
     def columns(self) -> Sequence[ColumnName]:
         return ["crash_exc_type", "crash_exc_value"]
 
-    def render(self, row, cell):
+    def render(self, row: Row, cell: Cell) -> CellSpec:
         return (None, "%s: %s" % (row["crash_exc_type"], row["crash_exc_value"]))
 
 

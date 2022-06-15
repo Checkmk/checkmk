@@ -14,6 +14,7 @@ from cmk.gui.i18n import _
 from cmk.gui.plugins.metrics import html_render
 from cmk.gui.plugins.metrics.valuespecs import vs_graph_render_options
 from cmk.gui.plugins.views.utils import (
+    Cell,
     get_graph_timerange_from_painter_options,
     multisite_builtin_views,
     Painter,
@@ -22,10 +23,11 @@ from cmk.gui.plugins.views.utils import (
     PainterOption,
     PainterOptions,
 )
-from cmk.gui.type_defs import ColumnName, TemplateGraphSpec
+from cmk.gui.type_defs import ColumnName, Row, TemplateGraphSpec
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import Dictionary, DropdownChoice, Transform, ValueSpec
+from cmk.gui.view_utils import CellSpec
 
 multisite_builtin_views.update(
     {
@@ -244,7 +246,7 @@ class PainterServiceGraphs(Painter):
     def parameters(self):
         return cmk_time_graph_params()
 
-    def render(self, row, cell):
+    def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_cmk_graphs_with_timeranges(row, cell)
 
 
@@ -273,7 +275,7 @@ class PainterHostGraphs(Painter):
     def parameters(self):
         return cmk_time_graph_params()
 
-    def render(self, row, cell):
+    def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_cmk_graphs_with_timeranges(row, cell)
 
 

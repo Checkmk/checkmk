@@ -4,6 +4,7 @@
 #include "pch.h"
 
 #include <filesystem>
+#include <ranges>
 
 #include "cap.h"
 #include "cfg.h"
@@ -24,77 +25,72 @@
 #include "upgrade.h"
 
 using namespace std::chrono_literals;
+using namespace std::literals;
 namespace fs = std::filesystem;
-
-// we want to avoid those data public
-namespace cma {
-void ResetCleanOnExit();
-}  // namespace cma
+namespace rs = std::ranges;
 
 namespace cma::commander {
 
-static bool GetEnabledFlag(bool dflt) {
-    auto yaml = cma::cfg::GetLoadedConfig();
-    auto yaml_global = yaml[cma::cfg::groups::kGlobal];
-    return cma::cfg::GetVal(yaml_global, cma::cfg::vars::kEnabled, true);
+namespace {
+bool GetEnabledFlag(bool default_value) {
+    auto yaml = cfg::GetLoadedConfig();
+    auto yaml_global = yaml[cfg::groups::kGlobal];
+    return cfg::GetVal(yaml_global, cfg::vars::kEnabled, default_value);
 }
 
-static void SetEnabledFlag(bool flag) {
-    auto yaml = cma::cfg::GetLoadedConfig();
-    auto yaml_global = yaml[cma::cfg::groups::kGlobal];
-    yaml_global[cma::cfg::vars::kEnabled] = flag;
+void SetEnabledFlag(bool flag) {
+    auto yaml = cfg::GetLoadedConfig();
+    auto yaml_global = yaml[cfg::groups::kGlobal];
+    yaml_global[cfg::vars::kEnabled] = flag;
 }
+}  // namespace
 
 TEST(Cma, Commander) {
-    using namespace std::chrono_literals;
-    //
     auto temp_cfg = tst::TempCfgFs::Create();
     ASSERT_TRUE(temp_cfg->loadFactoryConfig());
-    auto yaml = cma::cfg::GetLoadedConfig();
-    auto yaml_global = yaml[cma::cfg::groups::kGlobal];
-    EXPECT_TRUE(yaml_global[cma::cfg::vars::kEnabled].IsScalar());
-    auto enabled =
-        cma::cfg::GetVal(yaml_global, cma::cfg::vars::kEnabled, false);
+    auto yaml = cfg::GetLoadedConfig();
+    auto yaml_global = yaml[cfg::groups::kGlobal];
+    EXPECT_TRUE(yaml_global[cfg::vars::kEnabled].IsScalar());
+    auto enabled = cfg::GetVal(yaml_global, cfg::vars::kEnabled, false);
     ASSERT_TRUE(enabled);
     SetEnabledFlag(false);
-    enabled = cma::cfg::GetVal(yaml_global, cma::cfg::vars::kEnabled, true);
+    enabled = cfg::GetVal(yaml_global, cfg::vars::kEnabled, true);
     ASSERT_FALSE(enabled);
-    cma::commander::RunCommand("a", cma::commander::kReload);
+    commander::RunCommand("a", commander::kReload);
     EXPECT_FALSE(enabled);
-    cma::commander::RunCommand(cma::commander::kMainPeer, "aa");
-    EXPECT_FALSE(enabled);
-
-    cma::commander::RunCommand(cma::commander::kMainPeer, "aa");
+    commander::RunCommand(commander::kMainPeer, "aa");
     EXPECT_FALSE(enabled);
 
-    EXPECT_NO_THROW(cma::commander::RunCommand("", ""));
-    cma::commander::RunCommand(cma::commander::kMainPeer,
-                               cma::commander::kReload);
+    commander::RunCommand(commander::kMainPeer, "aa");
+    EXPECT_FALSE(enabled);
+
+    EXPECT_NO_THROW(commander::RunCommand("", ""));
+    commander::RunCommand(commander::kMainPeer, commander::kReload);
     enabled = GetEnabledFlag(false);
     EXPECT_TRUE(enabled);
     SetEnabledFlag(false);
 
-    cma::MailSlot mailbox("WinAgentTestLocal", 0);
-    using namespace cma::carrier;
+    MailSlot mailbox("WinAgentTestLocal", 0);
+    using namespace carrier;
     auto internal_port =
         BuildPortName(kCarrierMailslotName, mailbox.GetName());  // port here
-    cma::srv::ServiceProcessor processor;
+    srv::ServiceProcessor processor;
     mailbox.ConstructThread(
-        cma::srv::SystemMailboxCallback, 20, &processor,
+        srv::SystemMailboxCallback, 20, &processor,
         wtools::SecurityLevel::standard);  // standard is intentional
     ON_OUT_OF_SCOPE(mailbox.DismantleThread());
-    cma::tools::sleep(100ms);
+    tools::sleep(100ms);
 
-    cma::carrier::CoreCarrier cc;
+    carrier::CoreCarrier cc;
     // "mail"
     auto ret = cc.establishCommunication(internal_port);
     EXPECT_TRUE(ret) << fmt::format("Failed port '{}'", internal_port);
-    cc.sendCommand(cma::commander::kMainPeer, "a");
-    cma::tools::sleep(100ms);
+    cc.sendCommand(commander::kMainPeer, "a");
+    tools::sleep(100ms);
     enabled = GetEnabledFlag(true);
     EXPECT_FALSE(enabled);
-    cc.sendCommand(cma::commander::kMainPeer, cma::commander::kReload);
-    cma::tools::sleep(100ms);
+    cc.sendCommand(commander::kMainPeer, commander::kReload);
+    tools::sleep(100ms);
 
     enabled = GetEnabledFlag(false);
     EXPECT_TRUE(enabled);
@@ -105,7 +101,7 @@ TEST(Cma, Commander) {
 
 namespace cma::cfg {
 
-std::string packaged_ini(kIniFromInstallMarker);
+const std::string packaged_ini(kIniFromInstallMarker);
 
 namespace details {
 TEST(CmaCfg, InitEnvironment) {
@@ -117,69 +113,50 @@ TEST(CmaCfg, InitEnvironment) {
     EXPECT_TRUE(ci.getMsiExecPath().empty());
     EXPECT_TRUE(ci.getHostName().empty());
     ci.initEnvironment();
-    EXPECT_EQ(ci.getCwd(), std::filesystem::current_path().wstring());
+    EXPECT_EQ(ci.getCwd(), fs::current_path().wstring());
     EXPECT_EQ(ci.getMsiExecPath(), msi);
     EXPECT_EQ(ci.getHostName(), host);
 
-    cma::OnStartTest();
-    EXPECT_FALSE(cma::cfg::GetUserDir().empty());
+    OnStartTest();
+    EXPECT_FALSE(cfg::GetUserDir().empty());
 }
 
 TEST(CmaCfg, LogFileLocation) {
-    namespace fs = std::filesystem;
-    //
-    cma::OnStartTest();
+    auto temp_fs = tst::TempCfgFs::CreateNoIo();
+    ASSERT_TRUE(temp_fs->loadFactoryConfig());
     fs::path expected = GetUserDir();
     expected /= dirs::kLog;
 
-    {
-        // default config to data/log
-        fs::path dflt = details::GetDefaultLogPath();
-        EXPECT_TRUE(!dflt.empty());
-        EXPECT_TRUE(cma::tools::IsEqual(dflt.u8string(), expected.u8string()));
-    }
+    // default config to data/log
+    fs::path dflt = details::GetDefaultLogPath();
+    EXPECT_TRUE(!dflt.empty());
+    EXPECT_TRUE(tools::IsEqual(dflt.wstring(), expected.wstring()));
+    fs::path converted = details::ConvertLocationToLogPath("");
+    EXPECT_TRUE(!converted.empty());
+    EXPECT_TRUE(tools::IsEqual(converted.wstring(), expected.wstring()));
+}
 
-    {
-        // empty data to user/public
-        auto &user = GetCfg().folders_.data_;
-        auto old_user = user;
-        ON_OUT_OF_SCOPE(GetCfg().folders_.data_ = old_user);
-        user.clear();
-        fs::path dflt = details::GetDefaultLogPath();
-        EXPECT_TRUE(!dflt.empty());
-        EXPECT_TRUE(cma::tools::IsEqual(dflt.u8string(), "c:\\Users\\public"));
-    }
+TEST(CmaCfg, LogFileLocationDefault) {
+    auto temp_fs = tst::TempCfgFs::CreateNoIo();
 
-    {
-        // empty gives us default to the data/log
-        fs::path dflt = details::ConvertLocationToLogPath("");
-        EXPECT_TRUE(!dflt.empty());
-        EXPECT_TRUE(cma::tools::IsEqual(dflt.u8string(), expected.u8string()));
-    }
+    GetCfg().pushFolders("", "");
+    ON_OUT_OF_SCOPE(GetCfg().popFolders());
+    EXPECT_TRUE(tools::IsEqual(details::GetDefaultLogPath().wstring(),
+                               L"c:\\ProgramData\\checkmk\\agent\\log"));
 
-    {
-        // empty without user gives us default to the public/user
-        auto &user = GetCfg().folders_.data_;
-        auto old_user = user;
-        ON_OUT_OF_SCOPE(GetCfg().folders_.data_ = old_user);
-        user.clear();
+    auto x = wtools::ToUtf8(details::ConvertLocationToLogPath("").wstring());
+    EXPECT_TRUE(tools::IsEqual(x, "c:\\ProgramData\\checkmk\\agent\\log"));
+}
 
-        fs::path dflt = details::ConvertLocationToLogPath("");
-        EXPECT_TRUE(!dflt.empty());
-        EXPECT_TRUE(cma::tools::IsEqual(dflt.u8string(), "c:\\Users\\public"));
-    }
-
-    {
-        // non empty gives us the dir
-        fs::path dflt = details::ConvertLocationToLogPath("c:\\Windows\\Logs");
-        EXPECT_TRUE(!dflt.empty());
-        EXPECT_TRUE(cma::tools::IsEqual(dflt.u8string(), "c:\\Windows\\Logs"));
-    }
+TEST(CmaCfg, DirectLogFileLocation) {
+    fs::path f = details::ConvertLocationToLogPath("c:\\Windows\\Logs");
+    EXPECT_TRUE(!f.empty());
+    EXPECT_TRUE(tools::IsEqual(f.wstring(), L"c:\\Windows\\Logs"));
 }
 }  // namespace details
 
 TEST(CmaCfg, RemoveLegacy_Base) {
-    using namespace cma::install;
+    using namespace install;
     if (upgrade::FindLegacyAgent().empty()) {
         XLOG::SendStringToStdio(
             "To test Agent, you have to install Legacy Agent",
@@ -225,16 +202,15 @@ TEST(CmaCfg, RemoveLegacy_Base) {
 }
 
 TEST(CmaCfg, RemoveLegacy_Long) {
-    namespace fs = std::filesystem;
-    auto temp_dir = cma::cfg::GetTempDir();
-    auto path = cma::cfg::CreateWmicUninstallFile(temp_dir, "zzz");
+    auto temp_dir = cfg::GetTempDir();
+    auto path = cfg::CreateWmicUninstallFile(temp_dir, "zzz");
     EXPECT_TRUE(!path.empty());
     EXPECT_TRUE(fs::exists(path));
-    auto content = cma::tools::ReadFileInString(path.wstring().c_str());
+    auto content = tools::ReadFileInString(path.wstring().c_str());
     ON_OUT_OF_SCOPE(fs::remove(path););
     ASSERT_TRUE(content.has_value());
-    EXPECT_EQ(content.value(), cma::cfg::CreateWmicCommand("zzz"));
-    auto result = cma::cfg::UninstallProduct("zzz");
+    EXPECT_EQ(content.value(), cfg::CreateWmicCommand("zzz"));
+    auto result = cfg::UninstallProduct("zzz");
     EXPECT_TRUE(result);
 }
 
@@ -244,7 +220,7 @@ TEST(CmaCfg, SmallFoos) {
 }
 
 TEST(CmaCfg, InstallProtocol) {
-    auto name = ConstructInstallFileName(cma::cfg::GetRootDir());
+    auto name = ConstructInstallFileName(cfg::GetRootDir());
     EXPECT_TRUE(!name.empty());
     auto str = name.string();
     EXPECT_TRUE(str.find(files::kInstallProtocol) != std::string::npos);
@@ -254,9 +230,9 @@ TEST(CmaCfg, InstallProtocol) {
 }
 
 TEST(CmaCfg, Modules) {
-    ASSERT_TRUE(!cma::cfg::GetUserModulesDir().empty());
-    ASSERT_TRUE(std::wstring(cma::cfg::dirs::kUserModules) == L"modules");
-    ASSERT_TRUE(std::wstring(cma::cfg::dirs::kInstalledModules) == L"modules");
+    ASSERT_TRUE(!cfg::GetUserModulesDir().empty());
+    ASSERT_TRUE(std::wstring(cfg::dirs::kUserModules) == L"modules");
+    ASSERT_TRUE(std::wstring(cfg::dirs::kInstalledModules) == L"modules");
     ASSERT_TRUE(envs::kMkModulesDirName == "MK_MODULESDIR");
     auto all_dir = details::AllDirTable();
 
@@ -272,7 +248,7 @@ TEST(CmaCfg, Modules) {
 
 TEST(CmaCfg, ProcessPluginEnvironment) {
     //
-    cma::OnStartTest();
+    OnStartTest();
     std::vector<std::pair<std::string, std::string>> pairs;
     ProcessPluginEnvironment(
         [&pairs](std::string_view name, std::string_view value) {
@@ -280,17 +256,14 @@ TEST(CmaCfg, ProcessPluginEnvironment) {
         });
 
     EXPECT_EQ(pairs.size(), 10) << "Count of environment variables";
-    auto ret = std::none_of(pairs.begin(), pairs.end(),
-                            [](std::pair<std::string, std::string> p) {
-                                return p.first.empty() || p.second.empty();
-                            });
+    auto ret = rs::none_of(pairs, [](const auto &p) {
+        return p.first.empty() || p.second.empty();
+    });
     EXPECT_TRUE(ret);
     //
 }
 
 TEST(CmaCfg, InstallationTypeCheck) {
-    namespace fs = std::filesystem;
-    //
     auto temp_fs{tst::TempCfgFs::Create()};
 
     fs::path install_yml{fs::path(dirs::kFileInstallDir) /
@@ -316,44 +289,42 @@ TEST(CmaToolsDetails, FindServiceImage) {
     EXPECT_TRUE(FindServiceImagePath(L"").empty());
     auto x = FindServiceImagePath(L"check_mk_agent");
     if (x.empty()) {
-        XLOG::SendStringToStdio(
-            "Legacy Agent is not installed, test is not full",
-            XLOG::Colors::yellow);
-    } else {
-        EXPECT_TRUE(std::filesystem::exists(x));
+        GTEST_SKIP() << "Legacy agent not installed test is not possible";
     }
+    std::error_code ec;
+    EXPECT_TRUE(fs::exists(x, ec));
 }
 TEST(CmaToolsDetails, ExtractPathFromServiceName) {
     auto x = ExtractPathFromServiceName(L"check_mk_agent");
     if (x.empty()) {
-        XLOG::SendStringToStdio(
-            "Legacy Agent is not installed, test is not full",
-            XLOG::Colors::yellow);
-    } else {
-        EXPECT_TRUE(std::filesystem::exists(x));
-        EXPECT_TRUE(cma::tools::IsEqual(x.u8string(),
-                                        "c:\\Program Files (x86)\\check_mk"));
+        GTEST_SKIP() << "Legacy agent not installed test is not possible";
+        return;
     }
+    std::error_code ec;
+    EXPECT_TRUE(fs::exists(x, ec));
+    EXPECT_TRUE(tools::IsEqual(wtools::ToUtf8(x.wstring()),
+                               "c:\\Program Files (x86)\\check_mk"));
 }
 
 TEST(CmaToolsDetails, FindRootByExePath) {
-    using namespace std::literals;
     auto x = ExtractPathFromServiceName(L"checkmkservice");
-    if (std::filesystem::exists(x)) {
-        auto x_no_ext = x / "check_mk_agent";
-        auto x_with_ext = x / "check_mk_agent.exe";
-        auto path = L"\""s + x_with_ext.wstring() + L"\""s;
-        auto upper_path = path;
-        cma::tools::WideUpper(upper_path);
-
-        auto valid_path = x.wstring();
-
-        EXPECT_EQ(valid_path, FindRootByExePath(path));
-        EXPECT_EQ(valid_path, FindRootByExePath(upper_path));
-        EXPECT_EQ(valid_path, FindRootByExePath(x_no_ext.wstring()));
-    } else {
-        GTEST_SKIP() << "agent not installed test is not possible";
+    std::error_code ec;
+    if (!fs::exists(x, ec)) {
+        GTEST_SKIP() << "The agent not installed test is not possible";
+        return;
     }
+
+    auto x_no_ext = x / "check_mk_agent";
+    auto x_with_ext = x / "check_mk_agent.exe";
+    auto path = L"\""s + x_with_ext.wstring() + L"\""s;
+    auto upper_path = path;
+    tools::WideUpper(upper_path);
+
+    auto valid_path = x.wstring();
+
+    EXPECT_EQ(valid_path, FindRootByExePath(path));
+    EXPECT_EQ(valid_path, FindRootByExePath(upper_path));
+    EXPECT_EQ(valid_path, FindRootByExePath(x_no_ext.wstring()));
 }
 
 }  // namespace details
@@ -361,13 +332,13 @@ TEST(CmaToolsDetails, FindRootByExePath) {
 TEST(Cma, FindAlternateDirs) {
     for (auto app_type :
          {AppType::exe, AppType::automatic, AppType::failed, AppType::srv}) {
-        auto [r, d] = cma::FindAlternateDirs(app_type);
+        auto [r, d] = FindAlternateDirs(app_type);
         EXPECT_EQ(r, "");
         EXPECT_EQ(d, "");
     }
 
     auto expected = tools::win::GetEnv(env::unit_base_dir);
-    auto [r, d] = cma::FindAlternateDirs(AppType::test);
+    auto [r, d] = FindAlternateDirs(AppType::test);
     EXPECT_TRUE(r.wstring().find(expected) != std::wstring::npos);
     EXPECT_TRUE(d.wstring().find(expected) != std::wstring::npos);
 }
@@ -388,22 +359,22 @@ public:
     fs::path expected_;
 };
 TEST_F(CmaFixture, FindAlternateDirsExeEnvVar) {
-    auto [r, d] = cma::FindAlternateDirs(AppType::exe);
+    auto [r, d] = FindAlternateDirs(AppType::exe);
     EXPECT_TRUE(r.wstring().find(expected_) != std::wstring::npos);
     EXPECT_TRUE(d.wstring().find(expected_) != std::wstring::npos);
 }
 
 TEST(CmaCfg, ReloadCfg) {
-    cma::OnStartTest();
+    OnStartTest();
     auto id = GetCfg().uniqId();
     EXPECT_TRUE(id > 0);
-    cma::LoadConfigFull({});
+    LoadConfigFull({});
     auto id2 = GetCfg().uniqId();
     EXPECT_TRUE(id2 > id);
 }
 
 TEST(Cma, CleanApi) {
-    auto &alert = cma::g_uninstall_alert;
+    auto &alert = g_uninstall_alert;
     ASSERT_FALSE(alert.isSet()) << "initial always false";
     alert.clear();
     ASSERT_FALSE(alert.isSet());
@@ -412,7 +383,7 @@ TEST(Cma, CleanApi) {
         << "forbidden to set for non service executable";
     const auto m = GetModus();
     ON_OUT_OF_SCOPE(cma::details::SetModus(m));
-    cma::details::SetModus(cma::Modus::service);
+    cma::details::SetModus(Modus::service);
     alert.set();
     EXPECT_TRUE(alert.isSet());
     cma::details::SetModus(m);
@@ -421,12 +392,11 @@ TEST(Cma, CleanApi) {
 }
 
 TEST(Cma, PushPop) {
-    cma::OnStartTest();
-    namespace fs = std::filesystem;
+    OnStartTest();
     tst::SafeCleanTempDir();
     auto [r, u] = tst::CreateInOut();
-    auto root = r.wstring();
-    auto user = u.wstring();
+    fs::path root{r.wstring()};
+    fs::path user{u.wstring()};
     ON_OUT_OF_SCOPE(tst::SafeCleanTempDir(););
     std::error_code ec;
 
@@ -460,8 +430,8 @@ TEST(Cma, PushPop) {
 
 namespace cma::srv {
 TEST(CmaCfg, RestartBinaries) {
-    cma::srv::ServiceProcessor sp;
-    uint64_t id = cma::cfg::GetCfg().uniqId();
+    srv::ServiceProcessor sp;
+    uint64_t id = cfg::GetCfg().uniqId();
     auto old_id = id;
     EXPECT_FALSE(sp.restartBinariesIfCfgChanged(id));
     EXPECT_EQ(old_id, id);
@@ -482,16 +452,16 @@ protected:
 
         root_ = temp_fs_->root().wstring();
         user_ = temp_fs_->data().wstring();
+        ASSERT_TRUE(GetRootDir() == root_);
+        ASSERT_TRUE(GetUserDir() == user_);
     }
-
-    void TearDown() override {}
 
     auto prepareAll() {
         fs::path pd = GetUserDir();
         details::CreateTree(pd);
         auto table = details::AllDirTable();
         auto table_removed = details::RemovableDirTable();
-        for (auto &n : table) {
+        for (const auto &n : table) {
             tst::CreateTextFile(pd / n / "1.tmp", wtools::ToUtf8(n));
         }
 
@@ -500,28 +470,31 @@ protected:
         return std::make_tuple(pd, table, table_removed);
     }
 
+    fs::path capBase() const { return cap_base_; }
+    size_t userFoldersCount() const { return user_folders_count_; };
+
+private:
     std::wstring root_;
     std::wstring user_;
-    std::filesystem::path cap_base_;
-    size_t user_folders_count_ = 0;
+    fs::path cap_base_;
+    size_t user_folders_count_{0};
 
     tst::TempCfgFs::ptr temp_fs_;
 };
 
 TEST_F(CmaCfg_F, CreateTree) {
-    ASSERT_TRUE(GetRootDir() == root_);
-    ASSERT_TRUE(GetUserDir() == user_);
     fs::path pd = GetUserDir();
     details::CreateTree(pd);
     auto table = details::AllDirTable();
-    for (auto &n : table)
+    for (const auto &n : table) {
         ASSERT_TRUE(fs::is_directory(pd / n))
             << "Doesn't exist: " << n.data() << "\n";
+    }
 }
 
 TEST_F(CmaCfg_F, CleanInstallOnInvalidFolder) {
     // prepare damaged folder
-    fs::path user_dir = cma::cfg::GetUserDir();
+    fs::path user_dir = cfg::GetUserDir();
     fs::remove_all(user_dir / dirs::kBakery);
 
     for (auto m : {details::CleanMode::none, details::CleanMode::smart,
@@ -535,7 +508,7 @@ TEST_F(CmaCfg_F, CleanDataFolderNoneAllSmartEmpty) {
 
     ASSERT_TRUE(details::CleanDataFolder(details::CleanMode::none));
 
-    for (auto &n : table) {
+    for (const auto &n : table) {
         EXPECT_TRUE(fs::exists(pd / n / "1.tmp"))
             << "directory doesn't exist: " << n.data();
     }
@@ -543,18 +516,18 @@ TEST_F(CmaCfg_F, CleanDataFolderNoneAllSmartEmpty) {
     // check that all removes all folders
     ASSERT_TRUE(details::CleanDataFolder(details::CleanMode::all));
 
-    for (auto &n : table) {
+    for (const auto &n : table) {
         EXPECT_TRUE(!fs::exists(pd / n));
     }
 
     // check that smart removes also all empty folders
     details::CreateTree(pd);
-    for (auto &n : table_removed) {
+    for (const auto &n : table_removed) {
         EXPECT_TRUE(fs::exists(pd / n));
     }
     details::CleanDataFolder(details::CleanMode::smart);
 
-    for (auto &n : table) {
+    for (const auto &n : table) {
         if (n == dirs::kLog) {
             continue;
         }
@@ -567,14 +540,14 @@ TEST_F(CmaCfg_F, CleanDataFolderSmart) {
     auto [pd, table, table_removed] = prepareAll();
 
     // test additional preparation
-    ASSERT_TRUE(fs::exists(cap_base_));
+    ASSERT_TRUE(fs::exists(capBase()));
     auto [tgt, ignored] = cap::GetInstallPair(files::kCapFile);
-    ASSERT_TRUE(fs::copy_file(cap_base_, tgt));
+    ASSERT_TRUE(fs::copy_file(capBase(), tgt));
 
     std::vector<std::wstring> files;
-    cap::Process(tgt.u8string(), cap::ProcMode::install, files);
+    cap::Process(wtools::ToUtf8(tgt.wstring()), cap::ProcMode::install, files);
     ASSERT_TRUE(files.size() > 0);
-    for (auto &f : files) {
+    for (const auto &f : files) {
         EXPECT_TRUE(fs::exists(f));
     }
 
@@ -583,13 +556,13 @@ TEST_F(CmaCfg_F, CleanDataFolderSmart) {
     tst::CreateTextFile(pd / files::kUserYmlFile, "aaa");
 
     ASSERT_TRUE(details::CleanDataFolder(details::CleanMode::smart));
-    for (auto &f : files) {
+    for (const auto &f : files) {
         EXPECT_TRUE(!fs::exists(f));
     }
     EXPECT_TRUE(!fs::exists(target_yml_example));
     EXPECT_TRUE(!fs::exists(pd / files::kUserYmlFile));
 
-    for (auto &n : table_removed) {
+    for (const auto &n : table_removed) {
         EXPECT_EQ(fs::exists(pd / n), !details::g_remove_dirs_on_clean)
             << "directory state is invalid : " << n.data();
     }
@@ -608,11 +581,13 @@ TEST_F(CmaCfg_F, CleanDataFolderSmart) {
         << "this file must be left on disk";
 
     int exists_count = 0;
-    for (auto &n : table) {
-        if (fs::exists(pd / n / "1.tmp")) ++exists_count;
+    for (const auto &n : table) {
+        if (fs::exists(pd / n / "1.tmp")) {
+            ++exists_count;
+        }
     }
 
-    EXPECT_EQ(exists_count == user_folders_count_,
+    EXPECT_EQ(exists_count == userFoldersCount(),
               details::g_remove_dirs_on_clean)
         << "you delete wrong count of folders";
 }
@@ -620,7 +595,7 @@ TEST_F(CmaCfg_F, CleanDataFolderSmart) {
 namespace {
 class JobToCheckEnvironment {
 public:
-    JobToCheckEnvironment(const std::string &case_name)
+    explicit JobToCheckEnvironment(const std::string &case_name)
         : dirs{case_name}
         , cmd_file_{dirs.in() / "printer.cmd"}
         , results_file_{dirs.out() / "results.txt"} {}
@@ -653,7 +628,7 @@ private:
         ofs << bat_file;
     }
 
-    std::vector<std::string> runScript() {
+    std::vector<std::string> runScript() const {
         auto [pid, job, process] =
             tools::RunStdCommandAsJob(cmd_file_.wstring());
         tst::WaitForSuccessSilent(1000ms, [process]() {
@@ -680,7 +655,7 @@ TEST(CmaCfg, SetupPluginEnvironmentIntegration) {
     auto table = job.getEnvironment();
 
     // check for uniqueness
-    std::set<std::string> all;
+    std::set<std::string, std::less<>> all;
     for (auto const &raw : table) {
         all.insert(raw);
     }

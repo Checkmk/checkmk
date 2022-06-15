@@ -31,14 +31,13 @@ TEST(FirewallApi, PolicyCtor) {
 }
 
 class FirewallApiFixture : public ::testing::Test {
-    void SetUp() override {
+    void SetUp() override { reset(); }
+
+    void TearDown() override { reset(); }
+
+    void reset() {
         RemoveRule(rule_name);  // to be sure that no rules are
         RemoveRule(rule_name);  // Windows can create many rules with same name
-    }
-
-    void TearDown() override {
-        RemoveRule(rule_name);
-        RemoveRule(rule_name);
     }
 };
 

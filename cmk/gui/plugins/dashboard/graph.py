@@ -207,7 +207,8 @@ class GraphDashlet(Dashlet):
         except Exception:
             raise MKGeneralException(_("Failed to calculate a graph recipe."))
 
-        self._dashlet_spec["_graph_title"] = graph_recipes[0]["title"]
+        if graph_recipes:
+            self._dashlet_spec["_graph_title"] = graph_recipes[0]["title"]
 
     @staticmethod
     def _resolve_site(host: str):

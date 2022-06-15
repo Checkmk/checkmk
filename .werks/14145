@@ -1,0 +1,18 @@
+Title: Crash: Performance Graph dashlet without service context
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1655281930
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+When creating a performance graph dashlet without the service context you would expect
+the dashlet to use the available host metrics from the Host Check Command.
+
+Since 2.1.0i1 this was no longer possible because the dashlet crashed with the error:
+
+<b>Exception: AttributeError ('str' object has no attribute 'values')</b>
+
+Now the dashlet works as intended again.

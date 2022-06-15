@@ -5,10 +5,10 @@
 
 #include <WinSock2.h>
 
+#include <ShlObj.h>  // known path
+#include <VersionHelpers.h>
 #include <direct.h>  // known path
 #include <shellapi.h>
-#include <shlobj.h>  // known path
-#include <versionhelpers.h>
 
 #include <atomic>
 #include <filesystem>
@@ -57,7 +57,8 @@ InstallationType DetermineInstallationType() {
     source_install_yml /= files::kInstallYmlFileW;
 
     try {
-        auto file = YAML::LoadFile(source_install_yml.u8string());
+        auto file =
+            YAML::LoadFile(wtools::ToUtf8(source_install_yml.wstring()));
 
         if (file[groups::kGlobal][vars::kInstall].as<std::string>() == "no"s) {
             return InstallationType::packaged;
@@ -66,7 +67,7 @@ InstallationType DetermineInstallationType() {
     } catch (const std::exception &e) {
         XLOG::l.i(
             "Exception '{}' when checking installation type '{}' - assumed wato installation",
-            e.what(), source_install_yml.u8string());
+            e.what(), source_install_yml);
     }
 
     return InstallationType::wato;
@@ -474,7 +475,7 @@ std::wstring FindServiceImagePath(std::wstring_view service_name) {
     key_path += service_name;
 
     auto service_path_new =
-        wtools::GetRegistryValue(key_path, L"ImagePath"sv, std::wstring());
+        wtools::GetRegistryValue(key_path, L"ImagePath"sv, L"");
 
     return cma::tools::RemoveQuotes(service_path_new);
 }
@@ -648,13 +649,15 @@ void RemoveCapGeneratedFile() {
     XLOG::l.i("Removing generated files...");
 
     std::error_code ec;
-    if (!fs::exists(target_cap, ec)) return;  // nothing to do
+    if (!fs::exists(target_cap, ec)) {
+        return;
+    }
 
-    XLOG::l.i("Removing files from the cap '{}' file...",
-              target_cap.u8string());
+    XLOG::l.i("Removing files from the cap '{}' file...", target_cap);
 
     std::vector<std::wstring> files_on_disk;
-    cap::Process(target_cap.u8string(), cap::ProcMode::remove, files_on_disk);
+    cap::Process(wtools::ToUtf8(target_cap.wstring()), cap::ProcMode::remove,
+                 files_on_disk);
     XLOG::l.i("Removed [{}] files from the cap file.", files_on_disk.size());
 }
 
@@ -950,7 +953,7 @@ std::string GetCurrentLogFileName() {
         s_first_start = false;
         fs::path p{tools::win::GetSomeSystemFolder(cma::cfg::kPublicFolderId)};
         p /= kDefaultLogFileName;
-        s_log_filename = p.u8string();
+        s_log_filename = wtools::ToUtf8(p.wstring());
     }
     return s_log_filename;
 }
@@ -984,31 +987,22 @@ namespace cma::cfg {
 
 // Safe loader of any yaml file with fallback on fail
 YAML::Node LoadAndCheckYamlFile(const std::wstring &file_name,
-                                FallbackPolicy fallback_policy,
-                                int *error_code_ptr) {
+                                FallbackPolicy fallback_policy) {
     auto name = wtools::ToUtf8(file_name);
     if (fs::exists(file_name)) {
-        int error_code = 0;
         try {
             YAML::Node config = YAML::LoadFile(name);
             if (config[groups::kGlobal].IsDefined()) {
-                if (error_code_ptr != nullptr) *error_code_ptr = 0;
                 return config;
             }
 
-            error_code = ErrorCode::kNotCheckMK;
-
         } catch (const YAML::ParserException &e) {
             XLOG::l.crit(XLOG_FLINE + " yaml: '{}'", e.what());
-            error_code = ErrorCode::kMalformed;
         } catch (const YAML::BadFile &e) {
             XLOG::l.crit(XLOG_FLINE + " yaml: '{}'", e.what());
-            error_code = ErrorCode::kMissing;
         } catch (...) {
             XLOG::l.crit("Strange exception");
-            error_code = ErrorCode::kWeird;
         }
-        if (error_code_ptr != nullptr) *error_code_ptr = error_code;
     } else {
         XLOG::l("Attempt to load non-existing '{}', fallback...", name);
     }
@@ -1027,10 +1021,8 @@ YAML::Node LoadAndCheckYamlFile(const std::wstring &file_name,
     return {};
 }
 
-YAML::Node LoadAndCheckYamlFile(const std::wstring &file_name,
-                                int *error_code_ptr) {
-    return LoadAndCheckYamlFile(file_name, FallbackPolicy::kNone,
-                                error_code_ptr);
+YAML::Node LoadAndCheckYamlFile(const std::wstring &file_name) {
+    return LoadAndCheckYamlFile(file_name, FallbackPolicy::kNone);
 }
 
 std::vector<std::string> StringToTable(const std::string &WholeValue) {
@@ -1155,7 +1147,6 @@ std::vector<std::string> GetInternalArray(const YAML::Node &yaml_node,
     return {};
 }
 
-// #TODO refactor this trash
 void SetupPluginEnvironment() {
     const std::array<std::pair<const std::string_view, const std::wstring>, 10>
         env_pairs{{{envs::kMkLocalDirName, GetLocalDir()},
@@ -1456,7 +1447,7 @@ void CombineSequence(std::string_view name, YAML::Node target_value,
 
                 if (std::none_of(std::begin(target_value),
                                  std::end(target_value),
-                                 [s_name](const YAML::Node &Node) -> bool {
+                                 [s_name](const YAML::Node &Node) {
                                      return s_name == GetMapNodeName(Node);
                                  })) {
                     target_value.push_back(entry);
@@ -1475,7 +1466,7 @@ void CombineSequence(std::string_view name, YAML::Node target_value,
 
                 if (std::none_of(std::begin(source_value),
                                  std::end(source_value),
-                                 [s_name](const YAML::Node &node) -> bool {
+                                 [s_name](const YAML::Node &node) {
                                      return s_name == GetMapNodeName(node);
                                  })) {
                     new_seq.push_back(entry);
@@ -1670,7 +1661,7 @@ bool TryMerge(YAML::Node &config_node, const ConfigInfo::YamlData &yaml_data) {
         return false;
     }
 
-    auto bakery = YAML::LoadFile(yaml_data.path_.u8string());
+    auto bakery = YAML::LoadFile(wtools::ToUtf8(yaml_data.path_.wstring()));
     // special cases for plugins and folder
     PreMergeSections(bakery, config_node);
 
@@ -1745,7 +1736,7 @@ void ConfigInfo::mergeYamlData(YAML::Node &config_node,
 // Order main -> bakery -> user
 // ON SUCCESS -> all successfully loaded diles are cached
 // ON FAIL
-// standard call is tryAggregateLoad(L"check_mk.yml", true, true);
+// standard call is tryAggregateLoad(L"check_mk.yml", true, true)
 LoadCfgStatus ConfigInfo::loadAggregated(const std::wstring &config_filename,
                                          YamlCacheOp cache_op) {
     if (config_filename.empty()) {
@@ -1775,7 +1766,7 @@ LoadCfgStatus ConfigInfo::loadAggregated(const std::wstring &config_filename,
 
     int error_code = 0;
     try {
-        auto config = YAML::LoadFile(yamls[0].path_.u8string());
+        auto config = YAML::LoadFile(wtools::ToUtf8(yamls[0].path_.wstring()));
 
         if (config[groups::kGlobal].IsDefined()) {
             mergeYamlData(config, yamls);
@@ -2031,7 +2022,7 @@ fs::path CreateWmicUninstallFile(const fs::path &temp_dir,
                                  std::string_view product_name) {
     auto file = temp_dir / "exec_uninstall.cmd";
     try {
-        std::ofstream ofs(file.u8string());
+        std::ofstream ofs(wtools::ToUtf8(file.wstring()));
         ofs << CreateWmicCommand(product_name);
         ofs.close();
         if (fs::exists(file)) {

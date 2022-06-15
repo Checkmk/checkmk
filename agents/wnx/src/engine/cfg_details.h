@@ -13,6 +13,7 @@
 #include <stack>
 #include <string>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 #include "cfg.h"
@@ -60,73 +61,73 @@ public:
     // for testing and reloading
     void cleanAll();
 
-    inline std::filesystem::path getSystemPlugins() const {
+    [[nodiscard]] inline std::filesystem::path getSystemPlugins() const {
         return root_.empty() ? L"" : root_ / dirs::kAgentPlugins;
     }
 
-    inline std::filesystem::path getUserPlugins() const {
+    [[nodiscard]] inline std::filesystem::path getUserPlugins() const {
         return getData() / dirs::kUserPlugins;
     }
 
-    inline std::filesystem::path getProviders() const {
+    [[nodiscard]] inline std::filesystem::path getProviders() const {
         return root_.empty() ? L"" : root_ / dirs::kAgentProviders;
     }
 
-    inline std::filesystem::path getMrpe() const {
+    [[nodiscard]] inline std::filesystem::path getMrpe() const {
         return root_.empty() ? L"" : root_ / dirs::kAgentMrpe;
     }
-    inline std::filesystem::path getRoot() const { return root_; }
+    [[nodiscard]] inline std::filesystem::path getRoot() const { return root_; }
 
-    inline std::filesystem::path getUser() const { return data_; }
+    [[nodiscard]] inline std::filesystem::path getUser() const { return data_; }
 
-    inline std::filesystem::path getLocal() const {
+    [[nodiscard]] inline std::filesystem::path getLocal() const {
         return getData() / dirs::kLocal;
     }
 
-    inline std::filesystem::path getSpool() const {
+    [[nodiscard]] inline std::filesystem::path getSpool() const {
         return getData() / dirs::kSpool;
     }
 
-    inline std::filesystem::path getTemp() const {
+    [[nodiscard]] inline std::filesystem::path getTemp() const {
         return getData() / dirs::kTemp;
     }
 
-    inline std::filesystem::path getBakery() const {
+    [[nodiscard]] inline std::filesystem::path getBakery() const {
         return data_ / dirs::kBakery;
     }
 
-    inline std::filesystem::path getState() const {
+    [[nodiscard]] inline std::filesystem::path getState() const {
         return data_ / dirs::kState;
     }
 
-    inline std::filesystem::path getAuState() const {
+    [[nodiscard]] inline std::filesystem::path getAuState() const {
         return data_ / dirs::kAuStateLocation;
     }
 
-    inline std::filesystem::path getPluginConfigPath() const {
+    [[nodiscard]] inline std::filesystem::path getPluginConfigPath() const {
         return data_ / dirs::kPluginConfig;
     }
 
-    inline std::filesystem::path getLog() const { return data_ / dirs::kLog; }
+    [[nodiscard]] inline std::filesystem::path getLog() const { return data_ / dirs::kLog; }
 
-    inline std::filesystem::path getBackup() const {
+    [[nodiscard]] inline std::filesystem::path getBackup() const {
         return data_ / dirs::kBackup;
     }
 
-    inline std::filesystem::path getUserBin() const {
+    [[nodiscard]] inline std::filesystem::path getUserBin() const {
         return data_ / dirs::kUserBin;
     }
 
-    inline std::filesystem::path getUpdate() const {
+    [[nodiscard]] inline std::filesystem::path getUpdate() const {
         return data_ / dirs::kUpdate;
     }
 
-    inline std::filesystem::path getPublicLogs() const { return public_logs_; }
-    inline std::filesystem::path getPrivateLogs() const {
+    [[nodiscard]] inline std::filesystem::path getPublicLogs() const { return public_logs_; }
+    [[nodiscard]] inline std::filesystem::path getPrivateLogs() const {
         return private_logs_;
     }
 
-    inline std::filesystem::path getData() const { return data_; }
+    [[nodiscard]] inline std::filesystem::path getData() const { return data_; }
 
 private:
     // make [recursive] folder in windows
@@ -169,9 +170,9 @@ void CombineSequence(std::string_view name, YAML::Node target_value,
 class ConfigInfo {
 public:
     struct YamlData {
-        YamlData(const std::filesystem::path &Path,
-                 std::filesystem::file_time_type Timestamp) noexcept
-            : path_(Path) {}
+        YamlData(std::filesystem::path Path,
+                 std::filesystem::file_time_type  /*Timestamp*/) noexcept
+            : path_(std::move(Path)) {}
 
         void loadFile() {
             checkStatus();
@@ -190,11 +191,11 @@ public:
             }
         }
 
-        bool exists() const { return exists_; }
-        bool bad() const { return bad_; }
-        bool changed() const { return last_loaded_time_ != timestamp_; }
-        const std::string &data() const { return data_; }
-        auto timestamp() const { return timestamp_; }
+        [[nodiscard]] bool exists() const { return exists_; }
+        [[nodiscard]] bool bad() const { return bad_; }
+        [[nodiscard]] bool changed() const { return last_loaded_time_ != timestamp_; }
+        [[nodiscard]] const std::string &data() const { return data_; }
+        [[nodiscard]] auto timestamp() const { return timestamp_; }
 
         std::filesystem::path path_;
 
@@ -205,10 +206,11 @@ public:
             namespace fs = std::filesystem;
             std::error_code ec;
             exists_ = fs::exists(path_, ec);
-            if (exists_)
+            if (exists_) {
                 timestamp_ = fs::last_write_time(path_, ec);
-            else
-                timestamp_ = timestamp_.min();
+            } else {
+                timestamp_ = std::filesystem::file_time_type::min();
+}
         }
 
         // try to load data as yaml
@@ -236,7 +238,7 @@ public:
     };
 
     using sptr = std::shared_ptr<ConfigInfo>;
-    ConfigInfo() {}
+    ConfigInfo() = default;
     ConfigInfo(const ConfigInfo &) = delete;
     ConfigInfo &operator=(const ConfigInfo &) = delete;
     void initFolders(
@@ -264,12 +266,13 @@ public:
     // not so heavy operation, use free
     YAML::Node getConfig() const noexcept {
         std::lock_guard lk(lock_);
-        if (ok_) return yaml_;
+        if (ok_) { return yaml_;
+}
 
         return {};
     }
 
-    void setConfig(YAML::Node yaml) {
+    void setConfig(const YAML::Node& yaml) {
         std::lock_guard lk(lock_);
         if (yaml_.IsDefined()) {
             yaml_ = yaml;
@@ -424,7 +427,7 @@ public:
     bool loadDirect(const std::filesystem::path &file);
     bool loadDirect(std::string_view text);
 
-    uint64_t uniqId() const noexcept { return g_uniq_id; }
+    static uint64_t uniqId() noexcept { return g_uniq_id; }
 
 private:
     void fillExePaths(const std::filesystem::path &root);

@@ -15,11 +15,11 @@
 #include "common/cfg_info.h"
 #include "common/cmdline_info.h"
 #include "common/yaml.h"
+#include "cstdint"  // for int64_t, uint32_t, uint64_t
 #include "install_api.h"
 #include "logger.h"
 #include "on_start.h"  // for AppType, OnStartApp, AppType::exe, AppType::srv
 #include "providers/perf_counters_cl.h"
-#include "stdint.h"  // for int64_t, uint32_t, uint64_t
 #include "windows_service_api.h"
 
 using namespace std::chrono_literals;
@@ -357,7 +357,7 @@ namespace srv {
 int RunService(std::wstring_view app_name) {
     cma::details::SetModus(Modus::service);  // we know that we are service
 
-    auto ret = ServiceAsService(app_name, 1000ms, []() -> bool {
+    auto ret = ServiceAsService(app_name, 1000ms, []() {
         // Auto Update when  MSI file is located by specified address
         // this part of code have to be tested manually
         auto [command, started] = cma::install::CheckForUpdateFile(
@@ -385,7 +385,9 @@ int RunService(std::wstring_view app_name) {
 
 namespace {
 void WaitForPostInstall() {
-    if (!cma::install::IsPostInstallRequired()) return;
+    if (!cma::install::IsPostInstallRequired()) {
+        return;
+    }
 
     std::cout << "Finalizing installation, please wait";
     int count = 0;
@@ -409,7 +411,7 @@ int ProcessWinperf(const std::vector<std::wstring> &args) {
     if (args[0][0] == '@') {
         try {
             std::filesystem::path p{args[0].c_str() + 1};
-            XLOG::setup::ChangeLogFileName(p.u8string());
+            XLOG::setup::ChangeLogFileName(wtools::ToUtf8(p.wstring()));
             XLOG::setup::EnableDebugLog(true);
             XLOG::setup::EnableTraceLog(true);
             XLOG::d.i("winperf started");
@@ -419,7 +421,7 @@ int ProcessWinperf(const std::vector<std::wstring> &args) {
             // command line is bad, log file probably too
             return 1;
         }
-    };
+    }
 
     auto parsed =
         exe::cmdline::ParseExeCommandLine({args.begin() + offset, args.end()});
@@ -485,9 +487,9 @@ int MainFunction(int argc, wchar_t const *argv[]) {
     }
 
     if (param == kCheckParam) {
-        std::wstring param = argc > 2 ? argv[2] : L"";
+        std::wstring param_next = argc > 2 ? argv[2] : L"";
         auto interval = argc > 3 ? ToInt(argv[3]) : 0;
-        return CheckMainService(param, interval);
+        return CheckMainService(param_next, interval);
     }
 
     if (param == kLegacyTestParam) {

@@ -19,7 +19,7 @@ from cmk.gui.plugins.dashboard import utils
                 "show_service": True,
                 "single_infos": [],
                 "context": {
-                    "host": "abc",
+                    "host": {"host": "abc"},
                 },
             },
             {
@@ -27,8 +27,8 @@ from cmk.gui.plugins.dashboard import utils
                 "single_infos": ["service", "host"],
                 "type": "pnpgraph",
                 "context": {
-                    "host": "abc",
-                    "service": "_HOST_",
+                    "host": {"host": "abc"},
+                    "service": {"service": "_HOST_"},
                 },
             },
             id="->1.5.0i2->2.0.0b6 pnpgraph",
@@ -43,7 +43,7 @@ from cmk.gui.plugins.dashboard import utils
                 },
                 "single_infos": ["host", "service"],
                 "context": {
-                    "host": "abc",
+                    "host": {"host": "abc"},
                 },
             },
             {
@@ -53,8 +53,8 @@ from cmk.gui.plugins.dashboard import utils
                 "single_infos": ["host", "service"],
                 "type": "pnpgraph",
                 "context": {
-                    "host": "abc",
-                    "service": "_HOST_",
+                    "host": {"host": "abc"},
+                    "service": {"service": "_HOST_"},
                 },
             },
             id="1.6.0->2.0.0b6 pnpgraph",

@@ -870,7 +870,8 @@ def _transform_dashlets_mut(dashlet_spec: DashletConfig) -> DashletConfig:
 
         # The service context has to be set, otherwise the pnpgraph dashlet would
         # complain about missing context information when displaying host graphs.
-        dashlet_spec["context"].setdefault("service", "_HOST_")
+        # -> 2.1.0i1 dashlets now use dict as context: change "_HOST_" to {"service": "_HOST_"}
+        dashlet_spec["context"].setdefault("service", {"service": "_HOST_"})
 
     if dashlet_spec["type"] in ["pnpgraph", "custom_graph"]:
         # -> 1.5.0i2

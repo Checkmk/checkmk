@@ -1838,7 +1838,7 @@ multisite_builtin_views["inv_host"] = {
     "group_painters": [],
     "painters": [
         ("host", "host", ""),
-        ("inv", None, ""),
+        ("inventory_tree", None, ""),
     ],
     # Filters
     "hard_filters": [],

@@ -48,7 +48,7 @@ public:
     UninstallAlert(UninstallAlert &&) = delete;
     UninstallAlert &operator=(const UninstallAlert &) = delete;
     UninstallAlert &operator=(UninstallAlert &&) = delete;
-    bool isSet() const noexcept {
+    [[nodiscard]] bool isSet() const noexcept {
         return set_;
     }                       // check during exit from the service
     void clear() noexcept;  // test only

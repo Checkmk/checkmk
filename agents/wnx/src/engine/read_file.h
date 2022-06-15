@@ -37,11 +37,12 @@ template <typename T>
 void DisplayReadFileError(const T *file_name) {
     std::error_code ec;
     auto cur_dir = std::filesystem::current_path(ec);
-    if constexpr (sizeof(T) == 2)
+    if constexpr (sizeof(T) == 2) {
         XLOG::l("File '{}' not found in {}", wtools::ToUtf8(file_name),
                 cur_dir);
-    else
+    } else {
         XLOG::l("File '{}' not found in {}", file_name, cur_dir);
+    }
 }
 
 inline uint32_t GetFileStreamSize(std::ifstream &f) {
@@ -60,7 +61,9 @@ inline uint32_t GetFileStreamSize(std::ifstream &f) {
 template <typename T>
 std::optional<std::vector<uint8_t>> ReadFileInVector(
     const T *FileName) noexcept {
-    if (FileName == nullptr) return {};
+    if (FileName == nullptr) {
+        return {};
+    }
     try {
         auto f = details::OpenFileStream(FileName);
         /*
@@ -127,7 +130,9 @@ std::optional<std::string> ReadFileInString(const T *FileName) noexcept {
 inline std::optional<std::vector<uint8_t>> ReadFileInVector(
     const std::filesystem::path &File) noexcept {
     auto path = File.u8string();
-    if (path.empty()) return {};
+    if (path.empty()) {
+        return {};
+    }
 
     return ReadFileInVector(path.c_str());
 }

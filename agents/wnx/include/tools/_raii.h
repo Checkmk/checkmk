@@ -21,7 +21,7 @@ namespace {
 template <typename T>
 struct InternalScopeGuard {
     T deleter_;
-    InternalScopeGuard(T deleter) : deleter_(deleter) {}
+    explicit InternalScopeGuard(T deleter) : deleter_(deleter) {}
     ~InternalScopeGuard() { deleter_(); }
 };
 }  // namespace

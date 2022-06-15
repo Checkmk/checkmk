@@ -20,10 +20,7 @@
 #include "tools/_xlog.h"
 
 // Common Namespace for whole Windows Agent
-namespace cma {
-
-// Related to Service Agent Logic
-namespace srv {
+namespace cma::srv {
 enum class StdioLog { no, yes, extended };
 enum class FwMode { show, configure, clear };
 class ServiceProcessor;
@@ -107,7 +104,6 @@ bool ConfigureServiceAsRestartable(SC_HANDLE handle);
 
 bool IsGlobalStopSignaled();
 
-}  // namespace srv
-};  // namespace cma
+};  // namespace cma::srv
 
 #endif  // windows_service_api_h__

@@ -5,8 +5,7 @@
 // data owners  here
 
 #pragma once
-namespace cma {
-namespace tools {
+namespace cma::tools {
 // ownership belongs to DataBlock
 // supplementary structure to store data
 // tested in perf_reader.exe(part of the old win agent)
@@ -22,14 +21,14 @@ struct DataBlock {
     DataBlock& operator=(const DataBlock&) = delete;
 
     // default move
-    DataBlock(DataBlock&& Rhs) {
+    DataBlock(DataBlock&& Rhs)  noexcept {
         data_ = Rhs.data_;
         len_ = Rhs.len_;
         Rhs.data_ = nullptr;
         Rhs.len_ = 0;
     }
 
-    DataBlock& operator=(DataBlock&& Rhs) {
+    DataBlock& operator=(DataBlock&& Rhs)  noexcept {
         delete[] data_;
         data_ = Rhs.data_;
         len_ = Rhs.len_;
@@ -42,5 +41,4 @@ struct DataBlock {
     T* data_;
 };
 
-}  // namespace tools
 }  // namespace cma

@@ -14,9 +14,7 @@
 
 #include "tools/_misc.h"
 
-namespace cma {
-namespace exe {
-namespace cmdline {
+namespace cma::exe::cmdline {
 // 1st Param
 constexpr const wchar_t *kTestParam = L"-test";
 constexpr const wchar_t *kLegacyTestParam = L"test";
@@ -94,6 +92,4 @@ inline ExeCommandLine ParseExeCommandLine(
 
 // 3-rd param
 // what to execute
-}  // namespace cmdline
-}  // namespace exe
 };  // namespace cma

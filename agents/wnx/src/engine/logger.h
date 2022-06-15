@@ -74,7 +74,9 @@ template <typename... Args>
 void LogWindowsEvent(EventLevel Level, int Code, const char *Format,
                      Args &&...args) {
     auto allowed_level = cma::cfg::GetCurrentEventLevel();
-    if (Level > allowed_level) return;
+    if (Level > allowed_level) {
+        return;
+    }
 
     LogWindowsEventAlways(Level, Code, Format, std::forward<Args>(args)...);
 }
@@ -116,11 +118,15 @@ void LogWindowsEventInfo(int Code, const char *Format, Args &&...args) {
 namespace xlog {
 
 inline void AddCr(std::string &s) noexcept {
-    if (s.empty() || s.back() != '\n') s.push_back('\n');
+    if (s.empty() || s.back() != '\n') {
+        s.push_back('\n');
+    }
 }
 
 inline void RmCr(std::string &s) noexcept {
-    if (!s.empty() && s.back() == '\n') s.pop_back();
+    if (!s.empty() && s.back() == '\n') {
+        s.pop_back();
+    }
 }
 
 inline bool IsNoCrFlag(int Flag) noexcept { return (Flag & kNoCr) != 0; }
@@ -131,14 +137,18 @@ inline std::string formatString(int Fl, const char *Prefix,
                                 const char *String) {
     std::string s;
     auto length = String != nullptr ? strlen(String) : 0;
-    auto prefix = Fl & Flags::kNoPrefix ? nullptr : Prefix;
+    const auto *prefix = (Fl & Flags::kNoPrefix) != 0 ? nullptr : Prefix;
     length += prefix != nullptr ? strlen(prefix) : 0;
     length++;
 
     try {
         s.reserve(length);
-        if (prefix != nullptr) s = prefix;
-        if (String != nullptr) s += String;
+        if (prefix != nullptr) {
+            s = prefix;
+        }
+        if (String != nullptr) {
+            s += String;
+        }
     } catch (const std::exception &) {
         return {};
     }
@@ -178,7 +188,9 @@ constexpr uint16_t GetColorAttribute(Colors color) {
 }
 
 constexpr int GetBitOffset(uint16_t color_mask) {
-    if (color_mask == 0) return 0;
+    if (color_mask == 0) {
+        return 0;
+    }
 
     int bit_offset = 0;
     while ((color_mask & 1) == 0) {
@@ -387,7 +399,7 @@ public:
     }
     // **********************************
 
-    inline std::string SafePrintToDebuggerAndEventLog(
+    static inline std::string SafePrintToDebuggerAndEventLog(
         const std::string &text) noexcept {
         try {
             return fmt::format(
@@ -440,7 +452,7 @@ public:
     }
     // **********************************
 
-    void bp() {
+    static void bp() {
         if (bp_allowed_) {
             xdbg::bp();
         }
@@ -592,27 +604,30 @@ public:
     }
 
     void enableFileLog(bool enable) {
-        if (enable)
+        if (enable) {
             log_param_.directions_ |= xlog::Directions::kFilePrint;
-        else
+        } else {
             log_param_.directions_ &= ~xlog::Directions::kFilePrint;
+        }
     }
 
     void enableEventLog(bool enable) {
         if (type_ == LogType::log) {
             // only kLog has right to create event log entries
-            if (enable)
+            if (enable) {
                 log_param_.directions_ |= xlog::Directions::kEventPrint;
-            else
+            } else {
                 log_param_.directions_ &= ~xlog::Directions::kEventPrint;
+            }
         }
     }
 
     void enableWinDbg(bool enable) {
-        if (enable)
+        if (enable) {
             log_param_.directions_ |= xlog::Directions::kDebuggerPrint;
-        else
+        } else {
             log_param_.directions_ &= ~xlog::Directions::kDebuggerPrint;
+        }
     }
 
     bool isWinDbg() const {

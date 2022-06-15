@@ -30,7 +30,7 @@ public:
         time_ = t;
         started_ = false;
     }
-    StopWatch(StopWatch &&sw) {
+    StopWatch(StopWatch &&sw) noexcept {
         auto [c, t] = sw.getAndReset();
         counter_ = c;
         time_ = t;
@@ -44,7 +44,7 @@ public:
         started_ = false;
         return *this;
     }
-    StopWatch &operator=(StopWatch &&sw) {
+    StopWatch &operator=(StopWatch &&sw) noexcept {
         std::lock_guard lk(lock_);
         auto [c, t] = sw.getAndReset();
         counter_ = c;
@@ -55,14 +55,18 @@ public:
 
     void start() {
         std::lock_guard lk(lock_);
-        if (started_) return;
+        if (started_) {
+            return;
+        }
         started_ = true;
         pos_ = std::chrono::steady_clock::now();
     }
 
     uint64_t stop() {
         std::lock_guard lk(lock_);
-        if (!started_) return 0;
+        if (!started_) {
+            return 0;
+        }
         started_ = false;
         counter_++;
         auto t = std::chrono::steady_clock::now();
@@ -78,7 +82,9 @@ public:
 
     uint64_t check() const {
         std::lock_guard lk(lock_);
-        if (!started_) return 0;
+        if (!started_) {
+            return 0;
+        }
         auto t = std::chrono::steady_clock::now();
         auto c =
             std::chrono::duration_cast<std::chrono::microseconds>(t - pos_);
@@ -103,7 +109,7 @@ public:
     }
     uint64_t getAverage() const {
         std::lock_guard lk(lock_);
-        return counter_ ? time_.count() / counter_ : 0;
+        return counter_ != 0u ? time_.count() / counter_ : 0;
     }
 
     std::pair<uint64_t, std::chrono::microseconds> get() const {

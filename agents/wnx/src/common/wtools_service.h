@@ -30,29 +30,33 @@ public:
                                std::string_view name);
 
     // no copy
-    WinService(const WinService& rhs) = delete;
-    WinService& operator=(const WinService& rhs) = delete;
+    WinService(const WinService &rhs) = delete;
+    WinService &operator=(const WinService &rhs) = delete;
 
     // move
-    WinService(WinService&& rhs) noexcept {
+    WinService(WinService &&rhs) noexcept {
         std::lock_guard lk(rhs.lock_);
         handle_ = rhs.handle_;
         rhs.handle_ = nullptr;
     }
 
-    WinService& operator=(WinService&& rhs) noexcept {
+    WinService &operator=(WinService &&rhs) noexcept {
         std::unique_lock lk(rhs.lock_);
-        auto handle = rhs.handle_;
+        auto *handle = rhs.handle_;
         rhs.handle_ = nullptr;
         lk.unlock();
 
         std::lock_guard l(lock_);
-        if (IsGoodHandle(handle_)) ::CloseServiceHandle(handle_);
+        if (IsGoodHandle(handle_)) {
+            ::CloseServiceHandle(handle_);
+        }
         handle_ = handle;
     }
 
     ~WinService() {
-        if (isOpened()) ::CloseServiceHandle(handle_);
+        if (isOpened()) {
+            ::CloseServiceHandle(handle_);
+        }
     }
 
     bool isOpened() const noexcept {

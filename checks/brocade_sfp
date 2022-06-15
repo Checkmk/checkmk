@@ -75,6 +75,8 @@ def check_brocade_sfp_temp(item, params, parsed):
     #       item to brocade.include and do the same
     #       for brocade.fcport.
     port_index = int(item.split()[0]) + 1
+    if port_index not in parsed:
+        return None
     port_info = parsed[port_index]
 
     return check_temperature(port_info["temp"], params, item)
@@ -107,6 +109,8 @@ def check_brocade_sfp(item, params, parsed):
     #       item to brocade.include and do the same
     #       for brocade.fcport.
     port_index = int(item.split()[0]) + 1
+    if port_index not in parsed:
+        return
     port_info = parsed[port_index]
 
     def sort_params(key):

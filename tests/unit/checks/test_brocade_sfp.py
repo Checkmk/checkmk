@@ -15,9 +15,8 @@ from tests.testlib import Check
         (
             "00 ISL B001FCSW1P00",
             {"voltage": (0.0, 0.0, 3.3, 3.5)},
-            [
-                "",
-                {
+            {
+                1: {
                     "port_name": "B001FCSW1P00",
                     "temp": 41,
                     "phystate": 6,
@@ -29,7 +28,7 @@ from tests.testlib import Check
                     "tx_power": 0.5,
                     "is_isl": True,
                 },
-            ],
+            },
             [
                 (0, "Rx: -3.00 dBm", [("input_signal_power_dbm", -3.0, None, None)]),
                 (0, "Tx: 0.50 dBm", [("output_signal_power_dbm", 0.5, None, None)]),

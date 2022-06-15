@@ -27,7 +27,7 @@
 // I am not sure...
 namespace cma {
 using ByteVector = std::vector<unsigned char>;
-}
+}  // namespace cma
 
 namespace cma::tools {
 
@@ -83,8 +83,8 @@ inline void sleep(std::chrono::duration<T, B> dur) noexcept {
 // #TODO USE IBM ICU or Boost.Locale
 inline void WideUpper(std::wstring &str) {
     if constexpr (tgt::IsWindows()) {
-        auto work_string = str.data();  // C++ 17, mutable string
-        CharUpperW(work_string);        // Microsoft specific, but safe
+        auto *work_string = str.data();  // C++ 17, mutable string
+        CharUpperW(work_string);         // Microsoft specific, but safe
     } else {
         // for windows doesn't work, for Linux probably too
         std::transform(str.begin(), str.end(), str.begin(),
@@ -94,8 +94,8 @@ inline void WideUpper(std::wstring &str) {
 
 inline void StringLower(std::string &str) {
     if constexpr (tgt::IsWindows()) {
-        auto work_string = str.data();  // C++ 17, mutable string
-        CharLowerA(work_string);        // Microsoft specific, but safe
+        auto *work_string = str.data();  // C++ 17, mutable string
+        CharLowerA(work_string);         // Microsoft specific, but safe
     } else {
         // for windows doesn't work, for Linux probably too
         std::transform(str.begin(), str.end(), str.begin(),
@@ -105,7 +105,7 @@ inline void StringLower(std::string &str) {
 
 inline void StringUpper(std::string &str) {
     if constexpr (tgt::IsWindows()) {
-        auto work_string = str.data();
+        auto *work_string = str.data();
         CharUpperA(work_string);
 
     } else {
@@ -117,7 +117,7 @@ inline void StringUpper(std::string &str) {
 
 inline void WideLower(std::wstring &str) {
     if constexpr (tgt::IsWindows()) {
-        auto work_string = str.data();
+        auto *work_string = str.data();
         CharLowerW(work_string);
     } else {
         // for windows doesn't work, for Linux probably too
@@ -151,7 +151,9 @@ inline bool IsValidRegularFile(const std::filesystem::path &filepath) {
 template <typename T>
 inline void AddVector(std::vector<char> &accu, const T &add) noexcept {
     auto add_size = add.size();
-    if (add_size == 0) return;
+    if (add_size == 0) {
+        return;
+    }
     auto old_size = accu.size();
     try {
         accu.resize(add_size + old_size);
@@ -272,11 +274,11 @@ public:
     WithEnv &operator=(const WithEnv &rhs) = delete;
 
     // move is allowed
-    WithEnv(WithEnv &&rhs) {
+    WithEnv(WithEnv &&rhs) noexcept {
         name_ = rhs.name_;
         rhs.name_.clear();
     }
-    WithEnv &operator=(WithEnv &&rhs) {
+    WithEnv &operator=(WithEnv &&rhs) noexcept {
         if (!name_.empty()) {
             SetEnv(name_, {});
         }
@@ -284,7 +286,7 @@ public:
         rhs.name_.clear();
     }
 
-    const auto name() noexcept { return name_; }
+    auto name() noexcept { return name_; }
 
 private:
     std::basic_string<T> name_;
@@ -292,10 +294,8 @@ private:
 
 template <typename T>
 std::basic_string<T> GetEnv(const T *name) noexcept {
-    T env_var_value[MAX_PATH];
-    env_var_value[0] = 0;
+    T env_var_value[MAX_PATH] = {0};
 
-    // we need constexpr here to eliminate compilation error
     if constexpr (sizeof(T) == 1) {
         ::GetEnvironmentVariableA(name, env_var_value, MAX_PATH);
     } else {
@@ -319,13 +319,13 @@ std::basic_string<T> GetEnv(const std::basic_string_view<T> &name) noexcept {
 
 inline void LeftTrim(std::string &str) {
     str.erase(str.begin(), std::find_if(str.cbegin(), str.cend(), [](int Ch) {
-                  return !std::isspace(Ch);
+                  return std::isspace(Ch) == 0;
               }));
 }
 
 inline void RightTrim(std::string &str) {
     str.erase(std::find_if(str.crbegin(), str.crend(),
-                           [](int Ch) { return !std::isspace(Ch); })
+                           [](int Ch) { return std::isspace(Ch) == 0; })
                   .base(),
               str.end());
 }
@@ -349,10 +349,14 @@ inline std::vector<std::string_view> ToView(
 /// max_count == 0 means inifinite parsing
 inline std::vector<std::string> SplitString(const std::string &str,
                                             std::string_view delimiter,
-                                            size_t max_count = 0) noexcept {
+                                            size_t max_count) noexcept {
     // sanity
-    if (str.empty()) return {};
-    if (delimiter.empty()) return {str};
+    if (str.empty()) {
+        return {};
+    }
+    if (delimiter.empty()) {
+        return {str};
+    }
 
     size_t start = 0U;
     std::vector<std::string> result;
@@ -379,16 +383,25 @@ inline std::vector<std::string> SplitString(const std::string &str,
     return result;
 }
 
+inline std::vector<std::string> SplitString(
+    const std::string &str, std::string_view delimiter) noexcept {
+    return SplitString(str, delimiter, 0);
+}
+
 // "a.b.", "." => {"a", "b"}
 // "a.b", "." => {"a", "b"}
 // ".b", "." => { "b"}
 // max_count == 0 means inifinite parsing
 inline std::vector<std::wstring> SplitString(const std::wstring &str,
                                              std::wstring_view delimiter,
-                                             size_t max_count = 0) noexcept {
+                                             size_t max_count) noexcept {
     // sanity
-    if (str.empty()) return {};
-    if (delimiter.empty()) return {str};
+    if (str.empty()) {
+        return {};
+    }
+    if (delimiter.empty()) {
+        return {str};
+    }
 
     size_t start = 0U;
     std::vector<std::wstring> result;
@@ -408,9 +421,16 @@ inline std::vector<std::wstring> SplitString(const std::wstring &str,
     }
 
     auto last_string = str.substr(start, end);
-    if (!last_string.empty()) result.push_back(last_string);
+    if (!last_string.empty()) {
+        result.push_back(last_string);
+    }
 
     return result;
+}
+
+inline std::vector<std::wstring> SplitString(
+    const std::wstring &str, std::wstring_view delimiter) noexcept {
+    return SplitString(str, delimiter, 0);
 }
 
 // special case when we are parsing to the end
@@ -419,8 +439,12 @@ inline std::vector<std::wstring> SplitStringExact(const std::wstring &str,
                                                   std::wstring_view delimiter,
                                                   size_t max_count) noexcept {
     // sanity
-    if (str.empty()) return {};
-    if (delimiter.empty()) return {str};
+    if (str.empty()) {
+        return {};
+    }
+    if (delimiter.empty()) {
+        return {str};
+    }
 
     size_t start = 0U;
     std::vector<std::wstring> result;
@@ -449,7 +473,7 @@ inline std::vector<std::wstring> SplitStringExact(const std::wstring &str,
 // C++ is not happy with templating of this function
 // we have to make call like JoinVector<wchar_t>
 // so we have to implementations
-inline std::wstring JoinVector(const std::vector<std::wstring> values,
+inline std::wstring JoinVector(const std::vector<std::wstring> &values,
                                std::wstring_view separator) {
     if (values.empty()) {
         return {};
@@ -503,7 +527,7 @@ inline std::string TimeToString(
     std::chrono::system_clock::time_point time_point) {
     auto in_time_t = std::chrono::system_clock::to_time_t(time_point);
     std::stringstream sss;
-    auto loc_time = std::localtime(&in_time_t);
+    auto *loc_time = std::localtime(&in_time_t);
     auto p_time = std::put_time(loc_time, "%Y-%m-%d %T");
     sss << p_time << std::ends;
     return sss.str();
@@ -517,20 +541,32 @@ inline auto SecondsSinceEpoch() {
 }
 
 inline std::string RemoveQuotes(const std::string &in) {
-    auto val = in;
-    if (val.size() < 2) return val;
+    std::string val{in};
+    if (val.size() < 2) {
+        return val;
+    }
 
-    if (val.back() == '\'' || val.back() == '\"') val.pop_back();
-    if (val[0] == '\'' || val[0] == '\"') val = val.substr(1, val.size() - 1);
+    if (val.back() == '\'' || val.back() == '\"') {
+        val.pop_back();
+    }
+    if (val[0] == '\'' || val[0] == '\"') {
+        val = val.substr(1, val.size() - 1);
+    }
     return val;
 }
 
 inline std::wstring RemoveQuotes(const std::wstring &in) {
-    auto val = in;
-    if (val.size() < 2) return val;
+    std::wstring val{in};
+    if (val.size() < 2) {
+        return val;
+    }
 
-    if (val.back() == L'\'' || val.back() == L'\"') val.pop_back();
-    if (val[0] == L'\'' || val[0] == L'\"') val = val.substr(1, val.size() - 1);
+    if (val.back() == L'\'' || val.back() == L'\"') {
+        val.pop_back();
+    }
+    if (val[0] == L'\'' || val[0] == L'\"') {
+        val = val.substr(1, val.size() - 1);
+    }
     return val;
 }
 

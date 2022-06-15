@@ -218,11 +218,8 @@ class PainterInventoryTree(Painter):
         except MultipleInventoryTreesError:
             return "", ""
 
-        tree = row.get("host_inventory")
-        if tree is None:
+        if not isinstance(tree := row.get("host_inventory"), StructuredDataNode):
             return "", ""
-
-        assert isinstance(tree, StructuredDataNode)
 
         painter_options = PainterOptions.get_instance()
         tree_renderer = NodeRenderer(
@@ -1110,11 +1107,8 @@ def _paint_host_inventory_tree(row: Row, inventory_path: inventory.InventoryPath
     except MultipleInventoryTreesError:
         return "", ""
 
-    tree = row.get("host_inventory")
-    if tree is None:
+    if not isinstance(tree := row.get("host_inventory"), StructuredDataNode):
         return "", ""
-
-    assert isinstance(tree, StructuredDataNode)
 
     if (node := tree.get_node(inventory_path.path)) is None:
         return "", ""
@@ -2000,11 +1994,8 @@ class PainterInvhistDelta(Painter):
         except MultipleInventoryTreesError:
             return "", ""
 
-        tree = row.get("invhist_delta")
-        if tree is None:
+        if not isinstance(tree := row.get("invhist_delta"), StructuredDataNode):
             return "", ""
-
-        assert isinstance(tree, StructuredDataNode)
 
         tree_renderer = DeltaNodeRenderer(
             row["site"],

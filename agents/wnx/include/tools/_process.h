@@ -26,7 +26,7 @@ inline bool RunCommandAndWait(const std::wstring &command,
     ::memset(&pi, 0, sizeof(pi));
     // CREATE_NEW_CONSOLE
 
-    auto working_folder = work_dir.empty() ? nullptr : work_dir.data();
+    const auto *working_folder = work_dir.empty() ? nullptr : work_dir.data();
 
     if (std::wstring c{command};
         ::CreateProcessW(nullptr,         // stupid windows want null here
@@ -94,8 +94,9 @@ inline uint32_t RunStdCommand(
     si.dwFlags = start_flags;
     si.hStdOutput = stdio_handle;
     si.hStdError = stderr_handle;
-    if (inherit_handle)
+    if (inherit_handle != 0) {
         si.dwFlags = STARTF_USESTDHANDLES;  // switch to the handles in si
+    }
 
     PROCESS_INFORMATION pi{nullptr};
     memset(&pi, 0, sizeof(pi));
@@ -111,7 +112,9 @@ inline uint32_t RunStdCommand(
                          nullptr,         // current directory
                          &si, &pi)) {
         auto process_id = pi.dwProcessId;
-        if (wait_for_end) WaitForSingleObject(pi.hProcess, INFINITE);
+        if (wait_for_end) {
+            WaitForSingleObject(pi.hProcess, INFINITE);
+        }
         CloseHandle(pi.hProcess);
         CloseHandle(pi.hThread);
         return process_id;
@@ -135,28 +138,29 @@ inline std::tuple<DWORD, HANDLE, HANDLE> RunStdCommandAsJob(
     si.dwFlags = start_flags;
     si.hStdOutput = stdio_handle;
     si.hStdError = stderr_handle;
-    if (inherit_handle)
+    if (inherit_handle != 0) {
         si.dwFlags = STARTF_USESTDHANDLES;  // switch to the handles in si
+    }
     PROCESS_INFORMATION pi{nullptr};
     memset(&pi, 0, sizeof(pi));
     // -end-
 
-    auto job_handle = ::CreateJobObjectA(nullptr, nullptr);
+    auto *job_handle = ::CreateJobObjectA(nullptr, nullptr);
 
     if (job_handle == nullptr) {
         return {0, nullptr, nullptr};
     }
 
     if (std::wstring c{command};
-        !::CreateProcessW(nullptr,         // stupid windows want null here
-                          c.data(),        // win32!
-                          nullptr,         // security attribute
-                          nullptr,         // thread attribute
-                          inherit_handle,  // handle inheritance
-                          creation_flags,  // Creation Flags
-                          nullptr,         // environment
-                          nullptr,         // current directory
-                          &si, &pi)) {
+        ::CreateProcessW(nullptr,         // stupid windows want null here
+                         c.data(),        // win32!
+                         nullptr,         // security attribute
+                         nullptr,         // thread attribute
+                         inherit_handle,  // handle inheritance
+                         creation_flags,  // Creation Flags
+                         nullptr,         // environment
+                         nullptr,         // current directory
+                         &si, &pi) == 0) {
         // #TODO diagnostic here!
         // clean out here. No process created
         CloseHandle(job_handle);
@@ -176,8 +180,9 @@ inline std::tuple<DWORD, HANDLE, HANDLE> RunStdCommandAsJob(
 namespace win {
 inline bool IsElevated() {
     HANDLE token = nullptr;
-    if (!::OpenProcessToken(::GetCurrentProcess(), TOKEN_QUERY, &token))
+    if (::OpenProcessToken(::GetCurrentProcess(), TOKEN_QUERY, &token) == 0) {
         return false;
+    }
     ON_OUT_OF_SCOPE(if (token)::CloseHandle(token););
 
     TOKEN_ELEVATION elevation{0};
@@ -192,12 +197,13 @@ inline bool IsElevated() {
 inline std::wstring GetSomeSystemFolder(const KNOWNFOLDERID &rfid) noexcept {
     wchar_t *str = nullptr;
     if (::SHGetKnownFolderPath(rfid, KF_FLAG_DEFAULT, nullptr, &str) != S_OK ||
-        str == nullptr)  // probably impossible case when executed ok, but str
-                         // is nullptr
+        str == nullptr) {  // probably impossible case when executed ok, but str
+                           // is nullptr
         return {};
+    }
 
     std::wstring path = str;
-    if (str) {
+    if (str != nullptr) {
         ::CoTaskMemFree(str);  // win32
     }
     return path;

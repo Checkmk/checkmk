@@ -82,10 +82,9 @@ void somefoo_about_video()
 // disable them Using NOMINMAX may not help when you have pre-compiled headers
 #undef min
 #undef max
-#include <stdarg.h>
-#include <stdio.h>
-#include <string.h>
-
+#include <cstdarg>
+#include <cstdio>
+#include <cstring>
 #include <sstream>  // str in strstream
 
 #define XLOG_INCLUDED
@@ -95,9 +94,8 @@ void somefoo_about_video()
 
 #define XLOG_DEFAULT_DIRECTIONS Directions::kDebuggerPrint
 
-#include <wchar.h>
-
 #include <chrono>
+#include <cwchar>
 #include <functional>
 #include <iomanip>
 #include <string>
@@ -152,7 +150,7 @@ namespace xlog {
                                const T *format_string, ...) {
         static_assert(sizeof(T) == 1 || sizeof(T) == 2);
 
-        va_list args;
+        va_list args = nullptr;
         va_start(args, format_string);
         if constexpr (sizeof(T) == 1) {
             auto offset = ConvertWchar2Char(buf, len, prefix);
@@ -161,7 +159,7 @@ namespace xlog {
             }
 
         } else {
-            size_t offset;
+            size_t offset = 0;
             if (prefix != nullptr) {
                 ::wcscpy_s(buf, len, prefix);
                 offset = ::wcslen(buf);
@@ -211,7 +209,7 @@ namespace xlog {
                 type = EVENTLOG_INFORMATION_TYPE;
                 break;
         }
-        T buf[4096];
+        T buf[4096] = {0};
         xlog::internal_Print2Buffer(nullptr, buf, 4096, event_text,
                                     std::forward<Args>(args)...);
 
@@ -235,7 +233,7 @@ namespace xlog {
     using WorkString = std::basic_string<T>;
     constexpr std::wstring_view kDefaultPrefix{L"***: "};
     constexpr std::string_view kDefaultLogFileName{"default.log"};
-    constexpr std::string_view kDefaultFile{""};
+    constexpr std::string_view kDefaultFile;
 
     enum Consts {
         kInternalMaxOut = 8192,
@@ -288,7 +286,7 @@ namespace xlog {
         auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(
                       cur_time.time_since_epoch()) %
                   1000;
-        auto loc_time = std::localtime(&in_time_t);
+        auto *loc_time = std::localtime(&in_time_t);
         auto p_time = std::put_time(loc_time, "%Y-%m-%d %T");
 
         std::stringstream sss;
@@ -353,7 +351,7 @@ namespace xlog {
     public:
         explicit TextInfo(const T *value) { setText(value); }
         explicit TextInfo(const std::basic_string<T> &value) : text_{value} {}
-        explicit TextInfo(const TextInfo &rhs) { setText(rhs.text_); }
+        TextInfo(const TextInfo &rhs) { setText(rhs.text_); }
         TextInfo &operator=(const TextInfo &rhs) {
             setText(rhs.text_);
             return *this;
@@ -363,10 +361,11 @@ namespace xlog {
             text_ = std::move(rhs.text_);
             return *this;
         }
-        ~TextInfo() {}
+        ~TextInfo() = default;
 
         // EXTENDED API
-        const TextInfo &filelog(std::string_view filename) const {
+        [[maybe_unused]] const TextInfo &filelog(
+            std::string_view filename) const {
             if (filename.empty()) return *this;
             internal_PrintStringFile(filename,
                                      std::basic_string_view<T>{text_});
@@ -374,9 +373,9 @@ namespace xlog {
         }
 
         // LogName is syslog source name.
-        const TextInfo &syslog(std::basic_string_view<T> log_name,
-                               LogEvents log_event,
-                               int code = LogCodes::kIamLazy) const {
+        [[maybe_unused]] const TextInfo &syslog(
+            std::basic_string_view<T> log_name, LogEvents log_event,
+            int code) const {
             if constexpr (sizeof(T) == 2) {
                 // have to convert
                 auto output_buf = std::make_unique<char[]>(len() + 1);
@@ -390,17 +389,19 @@ namespace xlog {
         }
 
         // print on screen
-        const TextInfo &print() const { return print(true); }
+        [[maybe_unused]] const TextInfo &print() const { return print(true); }
 
-        const TextInfo &print(bool enable) const {
-            if (enable) internal_PrintStringStdio(text());
+        [[maybe_unused]] const TextInfo &print(bool enable) const {
+            if (enable) {
+                internal_PrintStringStdio(text());
+            }
             return *this;
         }
 
         //
-        const T *text() const { return text_.c_str(); }
+        [[nodiscard]] const T *text() const { return text_.c_str(); }
 
-        size_t len() const { text_.length(); }
+        [[nodiscard]] size_t len() const { text_.length(); }
 
     private:
         void setText(const T *text) {
@@ -444,13 +445,14 @@ namespace xlog {
         }
         LogParam() : LogParam(nullptr) {}
 
-        const char *filename() const { return file_name_out_; }
+        [[nodiscard]] const char *filename() const { return file_name_out_; }
         void setFileName(const char *fname) {
             if (fname == nullptr) {
                 file_name_out_[0] = 0;
             } else {
-                if (::strlen(fname) < kFileNameLength)
+                if (::strlen(fname) < kFileNameLength) {
                     ::strcpy(file_name_out_, fname);
+                }
             }
         }
 
@@ -465,11 +467,11 @@ namespace xlog {
         char file_name_out_[kFileNameLength];
 
     public:
-        auto prefix() const { return prefix_; }
-        auto prefixAscii() const { return prefix_ascii_; }
+        [[nodiscard]] auto prefix() const { return prefix_; }
+        [[nodiscard]] auto prefixAscii() const { return prefix_ascii_; }
 
         void initPrefix(const wchar_t *prefix_text) {
-            const auto prefix =
+            const auto *const prefix =
                 prefix_text != nullptr ? prefix_text : GetPrefix().data();
 
             // safe ASCIIZ copy
@@ -482,17 +484,20 @@ namespace xlog {
             for (int i = 0;; ++i) {
                 auto ch = prefix_[i];
                 prefix_ascii_[i] = static_cast<char>(ch);
-                if (ch == 0) break;
+                if (ch == 0) {
+                    break;
+                }
             }
         }
     };
 
     class AdvancedLog {
     public:
-        AdvancedLog(std::function<void(LogParam &)> log_function) {
+        explicit AdvancedLog(
+            const std::function<void(LogParam &)> &log_function) {
             log_function(this->log_param_);
         }
-        AdvancedLog() {}
+        AdvancedLog() = default;
         LogParam log_param_;
         template <typename T, typename... Args>
         inline void d(const T *format_string, Args &&...args) {
@@ -523,45 +528,58 @@ namespace xlog {
 
     template <typename T>
     size_t calc_len(const T *buf) {
-        if constexpr (sizeof(T) == 1)
+        if constexpr (sizeof(T) == 1) {
             return ::strlen((const char *)buf);
-        else
+        } else {
             return ::wcslen((const wchar_t *)buf);
+        }
     }
 
     inline void kill_cr(wchar_t * buf) {
-        if (buf == nullptr) return;
+        if (buf == nullptr) {
+            return;
+        }
         auto len = ::wcslen(buf);
-        if (len == 0) return;
+        if (len == 0) {
+            return;
+        }
 
         len--;
-        while (len) {
+        while (len != 0u) {
             if (buf[len] == L'\n') {
                 buf[len] = 0;
                 len--;
-            } else
+            } else {
                 break;
+            }
         }
     }
 
     inline void kill_cr(char *buf) {
-        if (buf == nullptr) return;
+        if (buf == nullptr) {
+            return;
+        }
 
         auto len = ::strlen(buf);
-        if (len == 0) return;
+        if (len == 0) {
+            return;
+        }
 
         len--;
-        while (len) {
+        while (len != 0u) {
             if (buf[len] == '\n') {
                 buf[len] = 0;
                 len--;
-            } else
+            } else {
                 break;
+            }
         }
     }
 
     inline void add_cr(wchar_t * buf) {
-        if (buf == nullptr) return;
+        if (buf == nullptr) {
+            return;
+        }
 
         auto len = ::wcslen(buf);
         buf[len] = L'\n';
@@ -569,7 +587,9 @@ namespace xlog {
     }
 
     inline void add_cr(char *buf) {
-        if (buf == nullptr) return;
+        if (buf == nullptr) {
+            return;
+        }
 
         auto len = ::strlen(buf);
         buf[len] = '\n';
@@ -581,7 +601,7 @@ namespace xlog {
     template <typename T, typename... Args>
     [[maybe_unused]] inline TextInfo<T> internal_dout(
         const LogParam &log_param, const T *format_string, Args &&...args) {
-        T buf[kInternalMaxOut];
+        T buf[kInternalMaxOut] = {0};
 
         internal_Print2Buffer(
             log_param.flags_ & Flags::kNoPrefix ? nullptr : log_param.prefix(),
@@ -594,10 +614,12 @@ namespace xlog {
             add_cr(buf);
         }
 
-        if (log_param.directions_ & Directions::kDebuggerPrint)
+        if (log_param.directions_ & Directions::kDebuggerPrint) {
             internal_PrintStringDebugger(buf);
-        if (log_param.directions_ & Directions::kStdioPrint)
+        }
+        if (log_param.directions_ & Directions::kStdioPrint) {
             internal_PrintStringStdio(buf);
+        }
 
         if (log_param.mark_ == Marker::kErrorMark) {
             xdbg::bp();
@@ -676,7 +698,7 @@ namespace xlog {
     template <typename T>
     struct Concatenator {
     public:
-        Concatenator(const T *value) : val_(value) {}
+        explicit Concatenator(const T *value) : val_(value) {}
         const T *operator+(const T *y) {
             val_ += ": ";
             val_ += y;
@@ -688,7 +710,7 @@ namespace xlog {
             val_ += y.get();
             return *this;
         };
-        const WorkString<T> &get() const { return val_; }
+        [[nodiscard]] const WorkString<T> &get() const { return val_; }
 
     private:
         WorkString<T> val_;
@@ -705,13 +727,13 @@ namespace xlog {
         char buf[32];
         ConvertInt2Char(buf, 30, line);
         file_line += buf;
-        return Concatenator<char>(file_line.c_str());
+        return Concatenator<char>{file_line.c_str()};
     }
-}
+} // namespace xlog
 ;  // namespace xlog
 
 #define KX_FUNCTION_PREFIX xlog::FunctionPrefix(__FUNCTION__)
 #define XLOG_FUNC xlog::FunctionPrefix(__FUNCTION__)
 
 #define XLOG_FLINE xlog::FileLinePrefix(__FILE__, __LINE__)
-#define XLOG_ALL XLOG_FUNC + XLOG_FLINE
+#define XLOG_ALL (XLOG_FUNC + XLOG_FLINE)

@@ -116,10 +116,10 @@ class Column:
         # This needs to be a @property, due to the descriptor magic mentioned elsewhere.
         return f"{self.table.__tablename__}.{self.name}"
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.name
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         class_name = self.__class__.__name__
         return f"{class_name}({self.full_name}: {self.type})"
 

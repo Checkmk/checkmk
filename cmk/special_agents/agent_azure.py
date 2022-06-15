@@ -365,7 +365,7 @@ class GroupConfig:
             return
         raise ValueError("unknown config key: %s" % key)
 
-    def __str__(self):
+    def __str__(self) -> str:
         if self.fetchall:
             return "[%s]\n  <fetchall>" % self.name
         return "[%s]\n" % self.name + "\n".join("resource: %s" % r for r in self.resources)
@@ -404,7 +404,7 @@ class ExplicitConfig:
             return True
         return resource.info["name"] in group_config.resources
 
-    def __str__(self):
+    def __str__(self) -> str:
         if self.fetchall:
             return "[<fetchall>]"
         return "\n".join(str(group) for group in self.groups.values())
@@ -424,7 +424,7 @@ class TagBasedConfig:
                 return False
         return True
 
-    def __str__(self):
+    def __str__(self) -> str:
         lines = []
         if self._required:
             lines.append("required tags: %s" % ", ".join(self._required))
@@ -446,7 +446,7 @@ class Selector:
             return False
         return True
 
-    def __str__(self):
+    def __str__(self) -> str:
         lines = [
             "Explicit configuration:\n  %s" % str(self._explicit_config).replace("\n", "\n  "),
             "Tag based configuration:\n  %s" % str(self._tag_based_config).replace("\n", "\n  "),

@@ -75,7 +75,7 @@ class MenuItem:
             return mode_or_url
         return makeuri_contextless(request, [("mode", mode_or_url)], filename="wato.py")
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return (
             "%s(mode_or_url=%r, title=%r, icon=%r, permission=%r, description=%r, sort_index=%r)"
             % (

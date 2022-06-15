@@ -310,7 +310,7 @@ class EvalableFloat(float):
     """Extends the float representation for Infinities in such way that
     they can be parsed by eval"""
 
-    def __str__(self):
+    def __str__(self) -> str:
         return super().__repr__()
 
     def __repr__(self) -> str:

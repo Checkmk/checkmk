@@ -89,7 +89,7 @@ class UnaryExpression(abc.ABC):
             other = LiteralExpression(other)
         return BinaryExpression(self, other, operator)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "<%s %s 0x%x>" % (self.__class__.__name__, self.value, id(self))
 
     @abc.abstractmethod
@@ -289,7 +289,7 @@ class BinaryExpression(QueryExpression):
         self.operator = operator
         self._header = header
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "%s(%s %s %s)" % (
             self._header,
             self.left.value,
@@ -297,7 +297,7 @@ class BinaryExpression(QueryExpression):
             self.right.value,
         )
 
-    def __str__(self):
+    def __str__(self) -> str:
         return "%s %s %s" % (self.left.value, self.operator, self.right.value)
 
     def render(self) -> RenderIntermediary:
@@ -317,7 +317,7 @@ class BoolExpression(QueryExpression):
             # to have empty arguments, though we'd have to decide on an actual use-case to be sure.
             raise ValueError("Need at least one parameter.")
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{self.expr}{self.args!r}"
 
     def render(self) -> RenderIntermediary:
@@ -374,7 +374,7 @@ class Not(QueryExpression):
     def __init__(self, other: QueryExpression):
         self.other = other
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"Not({self.other!r})"
 
     def render(self) -> RenderIntermediary:

@@ -24,7 +24,7 @@ class Movie:
         self.kw = kw
         self.value = tuple(sorted(kw.items()))
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "<Movie %r>" % (self.kw,)
 
     def __lt__(self, other):

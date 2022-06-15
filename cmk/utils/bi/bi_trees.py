@@ -98,7 +98,7 @@ class BICompiledLeaf(ABCBICompiledNode):
     def required_elements(self) -> Set[RequiredBIElement]:
         return {RequiredBIElement(self.site_id, self.host_name, self.service_description)}
 
-    def __str__(self):
+    def __str__(self) -> str:
         return "BICompiledLeaf[Site %s, Host: %s, Service %s]" % (
             self.site_id,
             self.host_name,
@@ -256,7 +256,7 @@ class BICompiledRule(ABCBICompiledNode):
         self.aggregation_function = aggregation_function
         self.node_visualization = node_visualization
 
-    def __str__(self):
+    def __str__(self) -> str:
         return "BICompiledRule[%s, %d rules, %d leaves %d remaining]" % (
             self.properties.title,
             len([x for x in self.nodes if x.type() == "rule"]),

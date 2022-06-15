@@ -90,7 +90,7 @@ class SNMPPluginStore(Mapping[SectionName, SNMPPluginStoreItem]):
     ) -> None:
         self._store: Final[Mapping[SectionName, SNMPPluginStoreItem]] = store if store else {}
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "%s(%r)" % (type(self).__name__, self._store)
 
     def __getitem__(self, key: SectionName) -> SNMPPluginStoreItem:

@@ -214,7 +214,7 @@ class _NullContext:
     def __exit__(self, *exc_info: object) -> None:
         pass
 
-    def __bool__(self):
+    def __bool__(self) -> bool:
         return False
 
 

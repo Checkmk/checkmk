@@ -227,6 +227,7 @@ class FileStat(object):  # pylint: disable=useless-object-inheritance
         self.isdir = S_ISDIR(stat.st_mode)
 
     def __repr__(self):
+        # type: () -> str
         return "FileStat(%r)" % self.path
 
     def dumps(self):

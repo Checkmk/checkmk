@@ -162,5 +162,5 @@ Therefore we also omit the "is_hex" mechanism, introduced on mainline.
 +        else:
 +            self.__dict__[name] = STR(val)
 
-     def __str__(self):
+     def __str__(self) -> str:
          return obj_to_str(self)

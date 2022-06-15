@@ -2460,7 +2460,7 @@ class CollectorHandlingException(Exception):
         self.detail = detail
         super().__init__()
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.title}: {self.detail}" if self.detail else self.title
 
 
@@ -2485,7 +2485,7 @@ class CustomKubernetesApiException(Exception):
         self.e = api_exception
         super().__init__()
 
-    def __str__(self):
+    def __str__(self) -> str:
         """
 
         This is a modified version of __str__ method of client.kubernetes.ApiException.

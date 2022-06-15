@@ -749,7 +749,7 @@ bi_config_aggregation_function_registry = BIConfigAggregationFunctionRegistry()
 
 @bi_config_aggregation_function_registry.register
 class BIConfigAggregationFunctionBest(BIAggregationFunctionBest, ABCBIConfigAggregationFunction):
-    def __str__(self):
+    def __str__(self) -> str:
         return _("Best state, %d nodes, restrict to %s") % (
             self.count,
             short_service_state_name(self.restrict_state),
@@ -803,7 +803,7 @@ class BIConfigAggregationFunctionBest(BIAggregationFunctionBest, ABCBIConfigAggr
 
 @bi_config_aggregation_function_registry.register
 class BIConfigAggregationFunctionWorst(BIAggregationFunctionWorst, ABCBIConfigAggregationFunction):
-    def __str__(self):
+    def __str__(self) -> str:
         return _("Worst state, %d nodes, restrict to %s") % (
             self.count,
             short_service_state_name(self.restrict_state),
@@ -860,7 +860,7 @@ class BIConfigAggregationFunctionWorst(BIAggregationFunctionWorst, ABCBIConfigAg
 class BIConfigAggregationFunctionCountOK(
     BIAggregationFunctionCountOK, ABCBIConfigAggregationFunction
 ):
-    def __str__(self):
+    def __str__(self) -> str:
         info = []
         for state, settings in [(_("OK"), self.levels_ok), (_("WARN"), self.levels_warn)]:
             if settings["type"] == "count":

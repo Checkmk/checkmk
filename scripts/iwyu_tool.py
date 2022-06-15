@@ -286,7 +286,7 @@ class Invocation(object):
         self.command = command
         self.cwd = cwd
 
-    def __str__(self):
+    def __str__(self) -> str:
         return ' '.join(self.command)
 
     @classmethod

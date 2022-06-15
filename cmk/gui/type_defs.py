@@ -215,7 +215,7 @@ class PainterSpec(
 
         return super().__new__(cls, *value)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return str(
             (self.painter_name, tuple(self.link_spec) if self.link_spec else None) + tuple(self)[2:]
         )

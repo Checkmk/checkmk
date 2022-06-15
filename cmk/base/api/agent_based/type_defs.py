@@ -43,7 +43,7 @@ class PluginSuppliedLabel(
         if not isinstance(value, str):
             raise TypeError(f"Invalid label value given: Expected string (got {value!r})")
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "%s(%r, %r)" % (self.__class__.__name__, self.name, self.value)
 
 
@@ -73,13 +73,13 @@ class Parameters(ParametersTypeAlias):
     def __getitem__(self, key):
         return self._data[key]
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._data)
 
     def __iter__(self):
         return iter(self._data)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         # use pformat to be testable.
         return "%s(%s)" % (self.__class__.__name__, pprint.pformat(self._data))
 

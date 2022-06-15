@@ -78,7 +78,7 @@ class PerfValue(Tuploid):
     def tuple(self):
         return (self.key, self.value, self.warn, self.crit, self.minimum, self.maximum)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "PerfValue(%r, %r, %r, %r, %r, %r)" % self.tuple
 
 
@@ -161,7 +161,7 @@ class BasicCheckResult(Tuploid):
     def tuple(self):
         return (self.status, self.infotext, self.perfdata, self.multiline)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "BasicCheckResult(%r, %r, %r, multiline=%r)" % self.tuple
 
 
@@ -235,7 +235,7 @@ class CheckResult:
         else:
             self.subresults.append(BasicCheckResult(*result))
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "CheckResult(%r)" % self.subresults
 
     def __eq__(self, other):
@@ -295,7 +295,7 @@ class DiscoveryEntry(Tuploid):
     def tuple(self):
         return self.item, self.default_params
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"DiscoveryEntry{self.tuple!r}"
 
 

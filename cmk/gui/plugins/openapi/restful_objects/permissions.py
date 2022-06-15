@@ -77,7 +77,7 @@ class Optional(BasePerm):
     def __init__(self, perm: BasePerm):
         self.perm = perm
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{self.perm}?"
 
     def has_permission(self, user: UserLike) -> bool:
@@ -100,7 +100,7 @@ class MultiPerm(BasePerm, abc.ABC):
     def __init__(self, perms: List[BasePerm]):
         self.perms = perms
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{self.__class__.__name__}([{', '.join([repr(o) for o in self.perms])})"
 
     def iter_perms(self) -> Iterable[str]:
@@ -130,7 +130,7 @@ class Perm(BasePerm):
     def __init__(self, name: str):
         self.name = name
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{{{self.name}}}"
 
     def has_permission(self, user: UserLike) -> bool:

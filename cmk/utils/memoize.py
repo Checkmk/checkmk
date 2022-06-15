@@ -60,8 +60,9 @@ class _HashedSeq(list):
         self[:] = tup
         self.hashvalue = hash(tup)
 
+    # FIXME: This is severely broken: list.__hash__ returns None, i.e. lists are *not* hashable!
+    # Perhaps we should derive from tuple instead?
     def __hash__(self):
-        # FIXME Removed type declaration 'type: () -> int'
         return self.hashvalue
 
 

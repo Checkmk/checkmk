@@ -124,7 +124,7 @@ class CrashDataset(WritableDataset):
                 return line[0].split("share/check_mk/checks/")[-1]
         return None
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "CrashDataset(checkname=%r, id=%r)" % (self.checkname, self.crash_id)
 
 

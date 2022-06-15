@@ -26,7 +26,7 @@ class Breadcrumb(MutableSequence[BreadcrumbItem]):  # pylint: disable=too-many-a
         super().__init__()
         self._items: List[BreadcrumbItem] = list(items) if items else []
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._items)
 
     def __getitem__(self, index):

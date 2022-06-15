@@ -50,7 +50,7 @@ class BuiltinBakeryHostName(enum.Enum):
         self.raw_name = raw_name
         self._display_name = name
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self._display_name
 
     VANILLA = ("_VANILLA", "VANILLA")

@@ -464,7 +464,7 @@ class Endpoint:
         the request has been done, everything is forgotten again."""
         self._used_permissions.add(permission)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<Endpoint {self.func.__module__}:{self.func.__name__}>"
 
     def _list(self, sequence: Optional[Sequence[T]]) -> List[T]:

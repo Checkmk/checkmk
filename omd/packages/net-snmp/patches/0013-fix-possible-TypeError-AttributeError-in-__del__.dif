@@ -18,5 +18,5 @@ index daf11a4c4..4aae1876f 100644
 +            # Add the exception handler here to catch this problem.
 +            pass
 
-     def __str__(self):
+     def __str__(self) -> str:
          return obj_to_str(self)

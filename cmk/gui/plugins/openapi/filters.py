@@ -29,7 +29,7 @@ class Node:
     def parse(self, value):
         return value
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.parsed})"
 
 

@@ -958,7 +958,7 @@ class BaseFolder:
     def __eq__(self, other):
         return id(self) == id(other) or self.path() == other.path()
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return id(self)
 
     def is_current_folder(self) -> bool:
@@ -1330,7 +1330,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             self._loaded_subfolders = self._load_subfolders()
         return self._loaded_subfolders
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "Folder(%r, %r)" % (self.path(), self._title)
 
     def get_root_dir(self):
@@ -2974,7 +2974,7 @@ class SearchFolder(WithPermissions, WithAttributes, BaseFolder):
         self._found_hosts = None
         self._name = None
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "SearchFolder(%r, %s)" % (self._base_folder.path(), self._name)
 
     # .--------------------------------------------------------------------.
@@ -3161,7 +3161,7 @@ class CREHost(WithPermissions, WithAttributes):
         self._cluster_nodes = cluster_nodes
         self._cached_host_tags = None
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "Host(%r)" % (self._name)
 
     def drop_caches(self):

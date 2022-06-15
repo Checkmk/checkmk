@@ -44,7 +44,7 @@ else
 MANAGED            := no
 endif
 
-VERSION            := 1.6.0p29
+VERSION            := 1.6.0p30
 # Will be set to ".demo" by cmk build system when building a demo package
 DEMO_SUFFIX        :=
 OMD_VERSION        := $(VERSION).$(EDITION_SHORT)$(DEMO_SUFFIX)

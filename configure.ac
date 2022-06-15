@@ -25,7 +25,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.61)
-AC_INIT([MK Livestatus], [1.6.0p29], [mk@mathias-kettner.de])
+AC_INIT([MK Livestatus], [1.6.0p30], [mk@mathias-kettner.de])
 AM_INIT_AUTOMAKE([-Wall -Wno-portability foreign])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_SRCDIR([config.h.in])

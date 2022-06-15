@@ -126,12 +126,12 @@ class BackupTarFile(tarfile.TarFile):
     """We need to use our tarfile class here to perform a rrdcached SUSPEND/RESUME
     to prevent writing to individual RRDs during backups."""
 
-    def __init__(self, name, mode, fileobj, **kwargs):
+    def __init__(self, name, mode, fileobj, **kwargs) -> None:
         self._site = kwargs.pop("site")
         self._verbose = kwargs.pop("verbose")
         self._site_stopped = self._site.is_stopped()
         self._rrdcached_socket_path = self._site.dir + "/tmp/run/rrdcached.sock"
-        self._sock = None
+        self._sock: None | socket.socket = None
         self._sites_path = os.path.realpath("/omd/sites")
 
         super().__init__(name, mode, fileobj, **kwargs)

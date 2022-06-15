@@ -333,7 +333,7 @@ class CommunicationException(MKException):
 
 
 class Server:
-    def __init__(self, hostname, username, password, verify_ssl):
+    def __init__(self, hostname, username, password, verify_ssl) -> None:
         self._url = "https://%s/nuova" % hostname
         self._username = username
         self._password = password

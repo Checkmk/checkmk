@@ -25,7 +25,7 @@ from reportlab.platypus.tableofcontents import TableOfContents
 
 class MyDocTemplate(SimpleDocTemplate):
     """Custom DocTemplate configured for handling of table of contents"""
-    def __init__(self, filename, **kw):
+    def __init__(self, filename, **kw) -> None:
         self.allowSplitting = 0
         SimpleDocTemplate.__init__(self, filename, **kw)
         template = PageTemplate('normal', [Frame(2.5 * cm, 2.5 * cm, 15 * cm, 25 * cm, id='F1')])

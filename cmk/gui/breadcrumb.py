@@ -22,7 +22,7 @@ class BreadcrumbItem(NamedTuple):
 
 
 class Breadcrumb(MutableSequence[BreadcrumbItem]):  # pylint: disable=too-many-ancestors
-    def __init__(self, items: Optional[Iterable[BreadcrumbItem]] = None):
+    def __init__(self, items: Optional[Iterable[BreadcrumbItem]] = None) -> None:
         super().__init__()
         self._items: List[BreadcrumbItem] = list(items) if items else []
 

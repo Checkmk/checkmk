@@ -238,7 +238,7 @@ class TestConfigParsing:
 
 
 class MockedFileStatFile:
-    def __init__(self, path):
+    def __init__(self, path) -> None:
         self.path = path
 
     def __eq__(self, other):

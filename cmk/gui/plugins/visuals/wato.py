@@ -36,9 +36,9 @@ def _wato_folders_to_lq_regex(path: str) -> str:
 
 
 class FilterWatoFolder(Filter):
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
-        self.last_wato_data_update = None
+        self.last_wato_data_update: None | float = None
 
     def available(self):
         # This filter is also available on slave sites with disabled WATO

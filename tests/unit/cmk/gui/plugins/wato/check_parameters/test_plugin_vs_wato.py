@@ -41,7 +41,7 @@ class DefaultLoadingFailed(BaseException):
 class Base(t.Generic[T], abc.ABC):
     type: str
 
-    def __init__(self, element: T):
+    def __init__(self, element: T) -> None:
         self._element: T = element
 
     @abc.abstractmethod
@@ -749,7 +749,7 @@ def test_merge() -> None:
 
 def test_compare() -> None:
     class CompareBase(Base[MergeKey]):
-        def __init__(self, element: MergeKey):
+        def __init__(self, element: MergeKey) -> None:
             self._element: MergeKey
             super().__init__(element)
 

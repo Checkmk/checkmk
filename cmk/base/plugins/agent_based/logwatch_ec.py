@@ -392,7 +392,7 @@ def check_logwatch_ec_common(  # pylint: disable=too-many-branches
 
 
 class LogwatchFordwardResult:
-    def __init__(self, num_forwarded=0, num_spooled=0, num_dropped=0, exception=None):
+    def __init__(self, num_forwarded=0, num_spooled=0, num_dropped=0, exception=None) -> None:
         self.num_forwarded = num_forwarded
         self.num_spooled = num_spooled
         self.num_dropped = num_dropped

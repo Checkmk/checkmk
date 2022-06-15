@@ -3,8 +3,10 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
 # pylint: disable=protected-access,redefined-outer-name
+
+from typing import Dict
+
 import pytest
 
 import agents.plugins.mk_jolokia as mk_jolokia
@@ -109,9 +111,9 @@ def test_jolokia_yield_configured_instances() -> None:
 
 
 class _MockHttpResponse(object):  # pylint: disable=useless-object-inheritance
-    def __init__(self, http_status, **kwargs):
+    def __init__(self, http_status, **kwargs) -> None:
         self.status_code = http_status
-        self.headers = {}
+        self.headers = {}  # type: Dict
         self.content = b"\x00"
         self._payload = kwargs
 

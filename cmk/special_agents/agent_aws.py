@@ -165,10 +165,10 @@ AWSStrings = Union[bytes, str]
 
 
 class AWSConfig:
-    def __init__(self, hostname, sys_argv, overall_tags):
+    def __init__(self, hostname, sys_argv, overall_tags) -> None:
         self.hostname = hostname
         self._overall_tags = self._prepare_tags(overall_tags)
-        self.service_config = {}
+        self.service_config: dict = {}
         self._config_hash_file = AWSCacheFilePath / ("%s.config_hash" % hostname)
         self._current_config_hash = self._compute_config_hash(sys_argv)
 
@@ -552,14 +552,14 @@ AWSCacheFilePath = Path(tmp_dir) / "agents" / "agent_aws"
 
 
 class AWSSection(DataCache):
-    def __init__(self, client, region, config, distributor=None):
+    def __init__(self, client, region, config, distributor=None) -> None:
         cache_dir = AWSCacheFilePath / region / config.hostname
         super().__init__(cache_dir, self.name)
         self._client = client
         self._region = region
         self._config = config
         self._distributor = ResultDistributor() if distributor is None else distributor
-        self._received_results = {}
+        self._received_results: dict = {}
 
     @property
     @abc.abstractmethod
@@ -769,10 +769,10 @@ class AWSSection(DataCache):
 
 
 class AWSSectionLimits(AWSSection):
-    def __init__(self, client, region, config, distributor=None, quota_client=None):
+    def __init__(self, client, region, config, distributor=None, quota_client=None) -> None:
         super().__init__(client, region, config, distributor=distributor)
         self._quota_client = quota_client
-        self._limits = {}
+        self._limits: dict = {}
 
     def _add_limit(self, piggyback_hostname, limit, region=None):
         assert isinstance(limit, AWSLimit), "%s: Limit must be of type 'AWSLimit'" % self.name
@@ -1259,7 +1259,7 @@ class EC2Limits(AWSSectionLimits):
 
 
 class EC2Summary(AWSSection):
-    def __init__(self, client, region, config, distributor=None):
+    def __init__(self, client, region, config, distributor=None) -> None:
         super().__init__(client, region, config, distributor=distributor)
         self._names = self._config.service_config["ec2_names"]
         self._tags = self._config.service_config["ec2_tags"]
@@ -1411,7 +1411,7 @@ class EC2Labels(AWSSectionLabels):
 
 
 class EC2SecurityGroups(AWSSection):
-    def __init__(self, client, region, config, distributor=None):
+    def __init__(self, client, region, config, distributor=None) -> None:
         super().__init__(client, region, config, distributor=distributor)
         self._names = self._config.service_config["ec2_names"]
         self._tags = self._config.service_config["ec2_tags"]
@@ -1677,7 +1677,7 @@ class EBSLimits(AWSSectionLimits):
 
 
 class EBSSummary(AWSSection):
-    def __init__(self, client, region, config, distributor=None):
+    def __init__(self, client, region, config, distributor=None) -> None:
         super().__init__(client, region, config, distributor=distributor)
         self._names = self._config.service_config["ebs_names"]
         self._tags = self._config.service_config["ebs_tags"]
@@ -1947,7 +1947,7 @@ class S3Limits(AWSSectionLimits):
 
 
 class S3Summary(AWSSection):
-    def __init__(self, client, region, config, distributor=None):
+    def __init__(self, client, region, config, distributor=None) -> None:
         super().__init__(client, region, config, distributor=distributor)
         self._names = self._config.service_config["s3_names"]
         self._tags = self._prepare_tags_for_api_response(self._config.service_config["s3_tags"])
@@ -2247,7 +2247,7 @@ class GlacierLimits(AWSSectionLimits):
 
 
 class GlacierSummary(AWSSection):
-    def __init__(self, client, region, config, distributor=None):
+    def __init__(self, client, region, config, distributor=None) -> None:
         super().__init__(client, region, config, distributor=distributor)
         self._names = self._config.service_config["glacier_names"]
         self._tags = self._prepare_tags_for_api_response(
@@ -2460,7 +2460,7 @@ class ELBLimits(AWSSectionLimits):
 
 
 class ELBSummaryGeneric(AWSSection):
-    def __init__(self, client, region, config, distributor=None, resource=""):
+    def __init__(self, client, region, config, distributor=None, resource="") -> None:
 
         self._resource = resource
         if self._resource == "elb":
@@ -2562,7 +2562,7 @@ class ELBSummaryGeneric(AWSSection):
 
 
 class ELBLabelsGeneric(AWSSectionLabels):
-    def __init__(self, client, region, config, distributor=None, resource=""):
+    def __init__(self, client, region, config, distributor=None, resource="") -> None:
         self._resource = resource
         super().__init__(client, region, config, distributor=distributor)
 
@@ -3043,7 +3043,7 @@ class ELBv2ApplicationTargetGroupsResponses(AWSSectionCloudwatch):
     Additional monitoring for target groups of application load balancers.
     """
 
-    def __init__(self, client, region, config, distributor=None):
+    def __init__(self, client, region, config, distributor=None) -> None:
         super().__init__(client, region, config, distributor=distributor)
         self._separator = " "
 
@@ -3331,7 +3331,7 @@ class RDSLimits(AWSSectionLimits):
 
 
 class RDSSummary(AWSSection):
-    def __init__(self, client, region, config, distributor=None):
+    def __init__(self, client, region, config, distributor=None) -> None:
         super().__init__(client, region, config, distributor=distributor)
         self._names = self._config.service_config["rds_names"]
         self._tags = self._prepare_tags_for_api_response(self._config.service_config["rds_tags"])
@@ -3409,7 +3409,7 @@ class RDSSummary(AWSSection):
 
 
 class RDS(AWSSectionCloudwatch):
-    def __init__(self, client, region, config, distributor=None):
+    def __init__(self, client, region, config, distributor=None) -> None:
         super().__init__(client, region, config, distributor=distributor)
         self._separator = " "
 
@@ -3512,7 +3512,7 @@ class RDS(AWSSectionCloudwatch):
 
 
 class CloudFrontSummary(AWSSection):
-    def __init__(self, client, tagging_client, region, config, distributor=None):
+    def __init__(self, client, tagging_client, region, config, distributor=None) -> None:
         super().__init__(client, region, config, distributor=distributor)
         self._tagging_client = tagging_client
         self._names = self._config.service_config["cloudfront_names"]
@@ -3709,7 +3709,7 @@ class CloudwatchAlarmsLimits(AWSSectionLimits):
 
 
 class CloudwatchAlarms(AWSSection):
-    def __init__(self, client, region, config, distributor=None):
+    def __init__(self, client, region, config, distributor=None) -> None:
         super().__init__(client, region, config, distributor=distributor)
         self._names = self._config.service_config["cloudwatch_alarms"]
 
@@ -3870,7 +3870,7 @@ class DynamoDBLimits(AWSSectionLimits):
 
 
 class DynamoDBSummary(AWSSection):
-    def __init__(self, client, region, config, distributor=None):
+    def __init__(self, client, region, config, distributor=None) -> None:
         super().__init__(client, region, config, distributor=distributor)
         self._names = self._config.service_config["dynamodb_names"]
         self._tags = self._prepare_tags_for_api_response(
@@ -4063,7 +4063,7 @@ class DynamoDBTable(AWSSectionCloudwatch):
 
 
 class WAFV2Limits(AWSSectionLimits):
-    def __init__(self, client, region, config, scope, distributor=None, quota_client=None):
+    def __init__(self, client, region, config, scope, distributor=None, quota_client=None) -> None:
         super().__init__(client, region, config, distributor=distributor, quota_client=quota_client)
         self._region_report = _validate_wafv2_scope_and_region(scope, self._region)
         self._scope = scope
@@ -4155,7 +4155,7 @@ class WAFV2Limits(AWSSectionLimits):
 
 
 class WAFV2Summary(AWSSection):
-    def __init__(self, client, region, config, scope, distributor=None):
+    def __init__(self, client, region, config, scope, distributor=None) -> None:
         super().__init__(client, region, config, distributor=distributor)
         self._region_report = _validate_wafv2_scope_and_region(scope, self._region)
         self._scope = scope
@@ -4238,7 +4238,7 @@ class WAFV2Summary(AWSSection):
 
 
 class WAFV2WebACL(AWSSectionCloudwatch):
-    def __init__(self, client, region, config, is_regional, distributor=None):
+    def __init__(self, client, region, config, is_regional, distributor=None) -> None:
         super().__init__(client, region, config, distributor=distributor)
         if not is_regional:
             assert self._region == "us-east-1", (
@@ -4379,7 +4379,7 @@ class LambdaRegionLimits(AWSSectionLimits):
 
 
 class LambdaSummary(AWSSection):
-    def __init__(self, client, region, config, distributor=None):
+    def __init__(self, client, region, config, distributor=None) -> None:
         super().__init__(client, region, config, distributor=distributor)
         self._names = self._config.service_config["lambda_names"]
         self._tags = self._prepare_tags_for_api_response(self._config.service_config["lambda_tags"])
@@ -4962,11 +4962,11 @@ class SNSLimits(AWSSectionLimits):
 
 
 class AWSSections(abc.ABC):
-    def __init__(self, hostname, session, debug=False, config=None):
+    def __init__(self, hostname, session, debug=False, config=None) -> None:
         self._hostname = hostname
         self._session = session
         self._debug = debug
-        self._sections = []
+        self._sections: list = []
         self.config = config
 
     @abc.abstractmethod

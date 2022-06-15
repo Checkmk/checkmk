@@ -963,9 +963,9 @@ def get_fake_setup_redis_client(monkeypatch, all_folders, redis_answers: List):
 
 
 class MockRedisClient:
-    def __init__(self, answers: List[List[str]]):
+    def __init__(self, answers: List[List[str]]) -> None:
         class FakePipeline:
-            def __init__(self, answers):
+            def __init__(self, answers) -> None:
                 self._answers = answers
 
             def execute(self):

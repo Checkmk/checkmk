@@ -939,7 +939,7 @@ def _rulespec_class_for(varname: str, has_valuespec: bool, has_itemtype: bool) -
 
 
 class RulespecRegistry(cmk.utils.plugin_registry.Registry[Rulespec]):
-    def __init__(self, group_registry):
+    def __init__(self, group_registry) -> None:
         super().__init__()
         self._group_registry = group_registry
 
@@ -1041,7 +1041,7 @@ class TimeperiodValuespec(ValueSpec[dict[str, Any]]):
     tp_default_value_key = "tp_default_value"  # Used in valuespec
     tp_values_key = "tp_values"  # Used in valuespec
 
-    def __init__(self, valuespec: ValueSpec[dict[str, Any]]):
+    def __init__(self, valuespec: ValueSpec[dict[str, Any]]) -> None:
         super().__init__(
             title=valuespec.title(),
             help=valuespec.help(),

@@ -17,7 +17,7 @@ from cryptography.x509.oid import NameOID
 
 
 class Host:
-    def __init__(self, uuid: UUID):
+    def __init__(self, uuid: UUID) -> None:
         self._source_path = agent_output_dir() / str(uuid)
 
         self._registered = self.source_path.is_symlink()

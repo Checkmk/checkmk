@@ -17,7 +17,7 @@ from cmk.special_agents.utils.argument_parsing import Args, create_default_argum
 
 
 class InnovaphoneConnection:
-    def __init__(self, *, host, protocol, user, password, verify_ssl):
+    def __init__(self, *, host, protocol, user, password, verify_ssl) -> None:
         self._base_url = f"{protocol}://{host}"
         self._user = user
         self._password = password

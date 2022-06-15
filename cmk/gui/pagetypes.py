@@ -527,7 +527,7 @@ class PageRenderer(Base):
 
 
 class Overridable(Base):
-    def __init__(self, d):
+    def __init__(self, d) -> None:
         super().__init__(d)
         self._.setdefault("public", False)
 
@@ -1634,7 +1634,7 @@ def _page_menu_entries_sub_pages(
 class ContactGroupChoice(DualListChoice):
     """A multiple selection of contact groups that are part of the current active config"""
 
-    def __init__(self, with_foreign_groups=True, **kwargs):
+    def __init__(self, with_foreign_groups=True, **kwargs) -> None:
         super().__init__(choices=self._load_groups, **kwargs)
         self._with_foreign_groups = with_foreign_groups
 
@@ -1663,7 +1663,7 @@ class ContactGroupChoice(DualListChoice):
 
 
 class Container(Base):
-    def __init__(self, d):
+    def __init__(self, d) -> None:
         super().__init__(d)
         self._.setdefault("elements", [])
 

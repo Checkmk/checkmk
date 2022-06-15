@@ -129,7 +129,7 @@ class BIHostSearch(ABCBISearch):
             "refer_to": self.refer_to,
         }
 
-    def __init__(self, search_config: Dict[str, Any]):
+    def __init__(self, search_config: Dict[str, Any]) -> None:
         super().__init__(search_config)
         self.conditions = search_config["conditions"]
         self.refer_to = search_config["refer_to"]
@@ -269,7 +269,7 @@ class BIServiceSearch(ABCBISearch):
             "conditions": self.conditions,
         }
 
-    def __init__(self, search_config: Dict[str, Any]):
+    def __init__(self, search_config: Dict[str, Any]) -> None:
         super().__init__(search_config)
         self.conditions = search_config["conditions"]
 
@@ -323,7 +323,7 @@ class BIFixedArgumentsSearch(ABCBISearch):
     def schema(cls) -> Type["BIFixedArgumentsSearchSchema"]:
         return BIFixedArgumentsSearchSchema
 
-    def __init__(self, search_config: Dict[str, Any]):
+    def __init__(self, search_config: Dict[str, Any]) -> None:
         super().__init__(search_config)
         self.arguments = search_config["arguments"]
 

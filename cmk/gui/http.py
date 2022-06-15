@@ -237,7 +237,7 @@ class Request(
 
     # pylint: disable=too-many-ancestors
 
-    def __init__(self, environ, populate_request=True, shallow=False):
+    def __init__(self, environ, populate_request=True, shallow=False) -> None:
         super().__init__(environ, populate_request=populate_request, shallow=shallow)
         self._verify_not_using_threaded_mpm()
 

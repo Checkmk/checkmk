@@ -2367,7 +2367,7 @@ def get_timeline_containers(
 
 # Not a real class, more a struct
 class TimelineContainer:
-    def __init__(self, aggr_row):
+    def __init__(self, aggr_row) -> None:
         self._aggr_row = aggr_row
 
         # PUBLIC accessible data

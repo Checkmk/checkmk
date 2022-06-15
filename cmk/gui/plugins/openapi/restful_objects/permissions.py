@@ -74,7 +74,7 @@ class Optional(BasePerm):
     Both of these cases are valid, so it always returns True.
     """
 
-    def __init__(self, perm: BasePerm):
+    def __init__(self, perm: BasePerm) -> None:
         self.perm = perm
 
     def __repr__(self) -> str:
@@ -97,7 +97,7 @@ class Ignore(Optional):
 
 
 class MultiPerm(BasePerm, abc.ABC):
-    def __init__(self, perms: List[BasePerm]):
+    def __init__(self, perms: List[BasePerm]) -> None:
         self.perms = perms
 
     def __repr__(self) -> str:
@@ -127,7 +127,7 @@ class NoPerm(BasePerm):
 class Perm(BasePerm):
     """A permission identified by a string."""
 
-    def __init__(self, name: str):
+    def __init__(self, name: str) -> None:
         self.name = name
 
     def __repr__(self) -> str:
@@ -153,7 +153,7 @@ class AllPerm(MultiPerm):
         >>> p = AnyPerm([AllPerm([Perm("wato.edit"), Perm("wato.users")]), Perm("wato.seeall")])
 
         >>> class User:
-        ...     def __init__(self, perms):
+        ...     def __init__(self, perms) -> None:
         ...         self.perms = perms
         ...     def has_permission(self, perm_name):
         ...         return perm_name in self.perms
@@ -195,7 +195,7 @@ class AnyPerm(MultiPerm):
         >>> p = AnyPerm([Perm("foo"), AnyPerm([Perm("bar"), Perm("baz")])])
 
         >>> class User:
-        ...     def __init__(self, perms):
+        ...     def __init__(self, perms) -> None:
         ...         self.perms = perms
         ...     def has_permission(self, perm_name):
         ...         return perm_name in self.perms

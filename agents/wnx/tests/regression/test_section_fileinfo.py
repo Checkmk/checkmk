@@ -15,7 +15,7 @@ from .local import local_test, user_dir
 
 
 class TestPaths:
-    def __init__(self):
+    def __init__(self) -> None:
         self.drive, _ = os.path.splitdrive(user_dir)
 
     def tempdir1(self):

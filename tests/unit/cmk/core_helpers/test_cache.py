@@ -16,7 +16,7 @@ from cmk.core_helpers.type_defs import AgentRawDataSection, Mode
 
 
 class MockStore:
-    def __init__(self, data):
+    def __init__(self, data) -> None:
         super().__init__()
         self._data = data
 

@@ -61,7 +61,7 @@ class SkipReport(RuntimeError):
 
 
 class CrashDataset(WritableDataset):
-    def __init__(self, crash_report_fn):
+    def __init__(self, crash_report_fn) -> None:
         """
         Try to create a dataset like object from a crash report
 
@@ -133,7 +133,7 @@ class CrashReportList(list):
     Use update_crashes.py in order to read new crash reports and list them in the state file.
     Crash reports are read from state_file in order to speed up generic crash report tests"""
 
-    def __init__(self, state_file):
+    def __init__(self, state_file) -> None:
         self.state_file = state_file
         with open(self.state_file) as file_:
             # A line contains: ID STATE AMOUNT I N F O

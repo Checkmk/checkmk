@@ -34,7 +34,7 @@ class ConfigStatus(TypedDict):
 
 
 class BICompiler:
-    def __init__(self, bi_configuration_file, sites_callback: SitesCallback):
+    def __init__(self, bi_configuration_file, sites_callback: SitesCallback) -> None:
         self._sites_callback = sites_callback
         self._bi_configuration_file = bi_configuration_file
 

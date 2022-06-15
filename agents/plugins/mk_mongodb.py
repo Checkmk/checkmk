@@ -824,6 +824,7 @@ class MongoDBConfigParser(configparser.ConfigParser):
 
 class Config:
     def __init__(self, config):
+        # type: (MongoDBConfigParser) -> None
         self.tls_enable = config.get_mongodb_bool("tls_enable")
         self.tls_verify = config.get_mongodb_bool("tls_verify")
         self.tls_ca_file = config.get_mongodb_str("tls_ca_file")

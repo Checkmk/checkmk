@@ -190,9 +190,9 @@ class ApiErrorMissingData(ApiError):
 class BaseApiClient(abc.ABC):
     AUTHORITY = "https://login.microsoftonline.com"
 
-    def __init__(self, base_url):
+    def __init__(self, base_url) -> None:
         self._ratelimit = float("Inf")
-        self._headers = {}
+        self._headers: dict = {}
         self._base_url = base_url
 
     @property
@@ -292,7 +292,7 @@ class GraphApiClient(BaseApiClient):
 
 
 class MgmtApiClient(BaseApiClient):
-    def __init__(self, subscription):
+    def __init__(self, subscription) -> None:
         base_url = "%s/subscriptions/%s/" % (self.resource, subscription)
         super().__init__(base_url)
 
@@ -348,12 +348,12 @@ class MgmtApiClient(BaseApiClient):
 
 
 class GroupConfig:
-    def __init__(self, name):
+    def __init__(self, name) -> None:
         super().__init__()
         if not name:
             raise ValueError("falsey group name: %r" % name)
         self.name = name
-        self.resources = []
+        self.resources: list = []
 
     @property
     def fetchall(self):
@@ -372,9 +372,9 @@ class GroupConfig:
 
 
 class ExplicitConfig:
-    def __init__(self, raw_list=()):
+    def __init__(self, raw_list=()) -> None:
         super().__init__()
-        self.groups = {}
+        self.groups: dict = {}
         self.current_group = None
         for item in raw_list:
             if "=" not in item:
@@ -411,7 +411,7 @@ class ExplicitConfig:
 
 
 class TagBasedConfig:
-    def __init__(self, required, key_values):
+    def __init__(self, required, key_values) -> None:
         super().__init__()
         self._required = required
         self._values = key_values
@@ -434,7 +434,7 @@ class TagBasedConfig:
 
 
 class Selector:
-    def __init__(self, args):
+    def __init__(self, args) -> None:
         super().__init__()
         self._explicit_config = ExplicitConfig(raw_list=args.explicit_config)
         self._tag_based_config = TagBasedConfig(args.require_tag, args.require_tag_value)
@@ -457,11 +457,11 @@ class Selector:
 class Section:
     LOCK = Lock()
 
-    def __init__(self, name, piggytargets, separator, options):
+    def __init__(self, name, piggytargets, separator, options) -> None:
         super().__init__()
         self._sep = chr(separator)
         self._piggytargets = list(piggytargets)
-        self._cont = []
+        self._cont: list = []
         section_options = ":".join(["sep(%d)" % separator] + options)
         self._title = f"<<<{name.replace('-', '_')}:{section_options}>>>\n"
 
@@ -490,17 +490,17 @@ class Section:
 
 
 class AzureSection(Section):
-    def __init__(self, name, piggytargets=("",)):
+    def __init__(self, name, piggytargets=("",)) -> None:
         super().__init__("azure_%s" % name, piggytargets, separator=124, options=[])
 
 
 class LabelsSection(Section):
-    def __init__(self, piggytarget):
+    def __init__(self, piggytarget) -> None:
         super().__init__("labels", [piggytarget], separator=0, options=[])
 
 
 class UsageSection(Section):
-    def __init__(self, usage_details, piggytargets, cacheinfo):
+    def __init__(self, usage_details, piggytargets, cacheinfo) -> None:
         options = ["cached(%d,%d)" % cacheinfo]
         super().__init__(
             "azure_%s" % usage_details.section, piggytargets, separator=124, options=options
@@ -579,7 +579,7 @@ def get_attrs_from_uri(uri):
 
 
 class AzureResource:
-    def __init__(self, info):
+    def __init__(self, info) -> None:
         super().__init__()
         self.info = info
         self.info.update(get_attrs_from_uri(info["id"]))
@@ -590,7 +590,7 @@ class AzureResource:
         group = self.info.get("group")
         if group:
             self.piggytargets.append(group)
-        self.metrics = []
+        self.metrics: list = []
 
     def dumpinfo(self):
         # TODO: Hmmm, should the variable-length tuples actually be lists?
@@ -615,7 +615,7 @@ def process_vm(mgmt_client, vmach, args):
 
 
 class MetricCache(DataCache):
-    def __init__(self, resource, metric_definition, ref_time, debug=False):
+    def __init__(self, resource, metric_definition, ref_time, debug=False) -> None:
         self.metric_definition = metric_definition
         metricnames = metric_definition[0]
         super().__init__(self.get_cache_path(resource), metricnames, debug=debug)
@@ -681,7 +681,7 @@ class UsageClient(DataCache):
         "offer MS-AZR-0144P",
     )
 
-    def __init__(self, client, subscription, debug=False):
+    def __init__(self, client, subscription, debug=False) -> None:
         super().__init__(AZURE_CACHE_FILE_PATH, "%s-usage" % subscription, debug=debug)
         self._client = client
 

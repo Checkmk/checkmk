@@ -266,7 +266,7 @@ def ActionList(vs, **kwargs):
 
 
 class RuleState(CascadingDropdown):
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs) -> None:
         choices: List[CascadingDropdownChoice] = [
             (0, _("OK")),
             (1, _("WARN")),

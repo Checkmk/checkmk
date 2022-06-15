@@ -381,7 +381,7 @@ def version_in_range(
 
 
 class TimeQuery(NumberRangeQuery):
-    def __init__(self, *, ident: str, column: Optional[str] = None):
+    def __init__(self, *, ident: str, column: Optional[str] = None) -> None:
 
         super().__init__(ident=ident, column=column)
         self.request_vars.extend([var + "_range" for var in self.request_vars])
@@ -485,7 +485,9 @@ class TextQuery(Query):
 
 
 class TableTextQuery(TextQuery):
-    def __init__(self, *, ident: str, row_filter: Callable[[str, str], Callable[[Row], bool]]):
+    def __init__(
+        self, *, ident: str, row_filter: Callable[[str, str], Callable[[Row], bool]]
+    ) -> None:
         super().__init__(ident=ident, op="=")
         self.link_columns = []
         self.row_filter = row_filter
@@ -605,7 +607,7 @@ class OptEventEffectiveContactgroupQuery(TextQuery):
 
 
 class IPAddressQuery(Query):
-    def __init__(self, *, ident: str, what: str):
+    def __init__(self, *, ident: str, what: str) -> None:
         request_vars = [ident, ident + "_prefix"]
         super().__init__(ident=ident, request_vars=request_vars)
         self._what = what
@@ -695,7 +697,7 @@ class LabelsQuery(Query):
 
 
 class AllLabelsQuery(LabelsQuery):
-    def __init__(self, *, object_type: Literal["host", "service"]):
+    def __init__(self, *, object_type: Literal["host", "service"]) -> None:
         self.object_type = object_type
         self.column = f"{object_type}_labels"
         super().__init__(ident=f"{object_type}_labels", request_vars=[f"{object_type}_label"])
@@ -739,7 +741,7 @@ class TagsQuery(LabelsQuery):
 
 
 class AuxTagsQuery(LabelsQuery):
-    def __init__(self, *, object_type: Literal["host"]):
+    def __init__(self, *, object_type: Literal["host"]) -> None:
         self.object_type = object_type
         self.column = f"{object_type}_tags"
         self.count = 3

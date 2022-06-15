@@ -214,7 +214,7 @@ class LDAPUserConnector(UserConnector):
 
         return cfg
 
-    def __init__(self, cfg):
+    def __init__(self, cfg) -> None:
         super().__init__(self.transform_config(cfg))
 
         self._ldap_obj: Optional[ldap.ldapobject.ReconnectLDAPObject] = None
@@ -222,9 +222,9 @@ class LDAPUserConnector(UserConnector):
         self._logger = log.logger.getChild("ldap.Connection(%s)" % self.id())
 
         self._num_queries = 0
-        self._user_cache = {}
-        self._group_cache = {}
-        self._group_search_cache = {}
+        self._user_cache: dict = {}
+        self._group_cache: dict = {}
+        self._group_search_cache: dict = {}
 
         # File for storing the time of the last success event
         self._sync_time_file = Path(cmk.utils.paths.var_dir).joinpath(

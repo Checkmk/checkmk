@@ -41,7 +41,9 @@ from cmk.gui.watolib.utils import mk_eval, mk_repr
 
 
 class SynchronizationResult:
-    def __init__(self, site_id, error_text=None, disabled=False, succeeded=False, failed=False):
+    def __init__(
+        self, site_id, error_text=None, disabled=False, succeeded=False, failed=False
+    ) -> None:
         self.site_id = site_id
         self.error_text = error_text
         self.failed = failed

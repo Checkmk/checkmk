@@ -23,7 +23,7 @@ from cmk.utils.aws_constants import AWSEC2InstTypes
 
 
 class Entity(abc.ABC):
-    def __init__(self, key):
+    def __init__(self, key) -> None:
         self.key = key
 
     @abc.abstractmethod
@@ -35,7 +35,7 @@ class Entity(abc.ABC):
 
 
 class List(Entity):
-    def __init__(self, key, elements, from_choice=None):
+    def __init__(self, key, elements, from_choice=None) -> None:
         super().__init__(key)
         self._elements = elements
         self._from_choice = from_choice
@@ -52,7 +52,7 @@ class List(Entity):
 
 
 class Dict(Entity):
-    def __init__(self, key, values, enumerate_keys: Optional[Entity] = None):
+    def __init__(self, key, values, enumerate_keys: Optional[Entity] = None) -> None:
         super().__init__(key)
         self._values = values
         self._enumerate_keys = enumerate_keys
@@ -71,7 +71,7 @@ class Dict(Entity):
 
 
 class Str(Entity):
-    def __init__(self, key, value=None):
+    def __init__(self, key, value=None) -> None:
         super().__init__(key)
         self.value = value
 
@@ -103,7 +103,7 @@ class Enum(Entity):
 
 
 class Choice(Entity):
-    def __init__(self, key, choices):
+    def __init__(self, key, choices) -> None:
         super().__init__(key)
         self.choices = choices
 
@@ -112,7 +112,7 @@ class Choice(Entity):
 
 
 class BoolChoice(Choice):
-    def __init__(self, key):
+    def __init__(self, key) -> None:
         super().__init__(key, [True, False])
 
 
@@ -135,7 +135,7 @@ class Bytes(Str):
 
 
 class InstanceBuilder(abc.ABC):
-    def __init__(self, idx, amount, skip_entities=None):
+    def __init__(self, idx, amount, skip_entities=None) -> None:
         self._idx = idx
         self._amount = amount
         self._skip_entities = [] if not skip_entities else skip_entities
@@ -187,7 +187,7 @@ class DictInstanceBuilder(abc.ABC):
     #   }
     # }
 
-    def __init__(self, idx, amount):
+    def __init__(self, idx, amount) -> None:
         self._idx = idx
         self._amount = amount
 

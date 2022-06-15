@@ -75,7 +75,7 @@ class HTTPSConfigurableConnection(HTTPSConnection):
 
 
 class HTTPSAuthHandler(HTTPSHandler):
-    def __init__(self, ca_file: str):
+    def __init__(self, ca_file: str) -> None:
         super().__init__()
         self.__ca_file = ca_file
 

@@ -18,7 +18,7 @@ from cmk import fields
 
 
 class Movie:
-    def __init__(self, **kw):
+    def __init__(self, **kw) -> None:
         for key, value in kw.items():
             setattr(self, key, value)
         self.kw = kw

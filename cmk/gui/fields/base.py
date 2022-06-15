@@ -64,7 +64,7 @@ class BaseSchema(Schema):
 
 
 class FieldWrapper:
-    def __init__(self, field: fields.Field):
+    def __init__(self, field: fields.Field) -> None:
         self.field = field
 
 

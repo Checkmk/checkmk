@@ -522,7 +522,7 @@ def container_exec(
 
 
 class ContainerExec:
-    def __init__(self, client, container_id, output):
+    def __init__(self, client, container_id, output) -> None:
         self.client = client
         self.id = container_id
         self.output = output

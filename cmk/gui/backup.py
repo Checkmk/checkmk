@@ -130,7 +130,7 @@ def is_canonical(directory) -> bool:
 
 # TODO: Locking!
 class Config:
-    def __init__(self, file_path):
+    def __init__(self, file_path) -> None:
         self._file_path = file_path
 
     def load(self):
@@ -158,9 +158,9 @@ class Config:
 
 
 class BackupEntity:
-    def __init__(self, ident, config):
+    def __init__(self, ident, config) -> None:
         self._ident = ident
-        self._config = {}
+        self._config: dict = {}
 
         self.from_config(config)
 
@@ -181,7 +181,7 @@ class BackupEntity:
 
 
 class BackupEntityCollection:
-    def __init__(self, config_file_path, cls, config_attr):
+    def __init__(self, config_file_path, cls, config_attr) -> None:
         self._config_path = config_file_path
         self._config = Config(config_file_path).load()
         self._cls = cls
@@ -433,7 +433,7 @@ class Job(MKBackupJob, BackupEntity):
 
 
 class Jobs(BackupEntityCollection):
-    def __init__(self, config_file_path):
+    def __init__(self, config_file_path) -> None:
         super().__init__(config_file_path, cls=Job, config_attr="jobs")
 
         etc_path = os.path.dirname(os.path.dirname(config_file_path))
@@ -1142,7 +1142,7 @@ class Target(BackupEntity):
 
 
 class Targets(BackupEntityCollection):
-    def __init__(self, config_file_path):
+    def __init__(self, config_file_path) -> None:
         super().__init__(config_file_path, cls=Target, config_attr="targets")
 
     def show_list(self, title=None, editable=True):
@@ -1457,7 +1457,7 @@ class ABCBackupTargetType(abc.ABC):
     def title(cls):
         raise NotImplementedError()
 
-    def __init__(self, params):
+    def __init__(self, params) -> None:
         self._params = params
 
     @classmethod
@@ -1746,7 +1746,7 @@ def show_key_download_warning(keys: dict[int, key_mgmt.Key]) -> None:
 
 
 class RestoreJob(MKBackupJob):
-    def __init__(self, target_ident, backup_ident, passphrase=None):
+    def __init__(self, target_ident, backup_ident, passphrase=None) -> None:
         super().__init__()
         self._target_ident = target_ident
         self._backup_ident = backup_ident

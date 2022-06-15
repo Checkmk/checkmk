@@ -31,7 +31,7 @@ LOG = logging.getLogger(__name__)
 
 
 class AgentJSON:
-    def __init__(self, key, title):
+    def __init__(self, key, title) -> None:
         self._key = key
         self._title = title
 
@@ -243,7 +243,7 @@ def vcrtrace(**vcr_init_kwargs):
     """
 
     class VcrTraceAction(argparse.Action):
-        def __init__(self, *args, **kwargs):
+        def __init__(self, *args, **kwargs) -> None:
             kwargs.setdefault("metavar", "TRACEFILE")
             help_part = "" if vcrtrace.__doc__ is None else vcrtrace.__doc__.split("\n\n")[3]
             kwargs["help"] = "%s %s" % (help_part, kwargs.get("help", ""))

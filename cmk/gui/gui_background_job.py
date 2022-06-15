@@ -204,7 +204,7 @@ class GUIBackgroundJobSnapshottedFunctions(background_job.BackgroundJob):
 class GUIBackgroundJob(GUIBackgroundJobSnapshottedFunctions):
     _background_process_class = GUIBackgroundProcess
 
-    def __init__(self, job_id, **kwargs):
+    def __init__(self, job_id, **kwargs) -> None:
         logger = log.logger.getChild("background-job")
         kwargs["user"] = user.id
         kwargs["logfile_path"] = "~/var/log/web.log"
@@ -258,7 +258,7 @@ job_registry = GUIBackgroundJobRegistry()
 # TODO: BackgroundJob should provide an explicit status object, which we can use
 # here without any metaprogramming Kung Fu and arcane inheritance hierarchies.
 class GUIBackgroundStatusSnapshot:
-    def __init__(self, job):
+    def __init__(self, job) -> None:
         super().__init__()
         self._job_status = job.get_status()
         self._logger = job._logger.getChild("snapshot")
@@ -628,7 +628,7 @@ class ActionHandler:
     delete_job_var = "_delete_job"
     acknowledge_job_var = "_acknowledge_job"
 
-    def __init__(self, breadcrumb: Breadcrumb):
+    def __init__(self, breadcrumb: Breadcrumb) -> None:
         super().__init__()
         self._breadcrumb = breadcrumb
         self._did_acknowledge_job = False

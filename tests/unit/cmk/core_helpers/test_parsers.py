@@ -766,7 +766,7 @@ class TestSNMPParser:
 
 
 class MockStore(SectionStore):
-    def __init__(self, path, sections, *, logger):
+    def __init__(self, path, sections, *, logger) -> None:
         super().__init__(path, logger=logger)
         assert isinstance(sections, PersistedSections)
         self._sections = sections

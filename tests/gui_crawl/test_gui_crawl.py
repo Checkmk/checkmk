@@ -141,7 +141,7 @@ class CrawlResult:
 
 
 class Crawler:
-    def __init__(self, site: Site, report_file: Optional[str]):
+    def __init__(self, site: Site, report_file: Optional[str]) -> None:
         self.duration = 0.0
         self.results: MutableMapping[str, CrawlResult] = {}
         self.site = site

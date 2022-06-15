@@ -145,7 +145,7 @@ class StartDiscoveryRequest(NamedTuple):
 
 
 class Discovery:
-    def __init__(self, host, discovery_options, api_request):
+    def __init__(self, host, discovery_options, api_request) -> None:
         self._host = host
         self._options = discovery_options
         self._discovery_info = {

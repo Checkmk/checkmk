@@ -25,7 +25,7 @@ from cmk.special_agents.agent_smb_share import (
 
 
 class MockShare:
-    def __init__(self, name):
+    def __init__(self, name) -> None:
         self._name = name
 
     @property
@@ -34,7 +34,7 @@ class MockShare:
 
 
 class MockSMBConnection:
-    def __init__(self, *args, filesystem=None, shares=None, is_direct_tcp=False):
+    def __init__(self, *args, filesystem=None, shares=None, is_direct_tcp=False) -> None:
         self.filesystem = filesystem
         self.shares = shares
         self.is_direct_tcp = is_direct_tcp
@@ -60,7 +60,7 @@ class MockSMBConnection:
 class MockSectionWriter:
     writer: List[str] = []
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         self.writer.clear()
 
     def __enter__(self):

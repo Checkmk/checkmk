@@ -24,11 +24,11 @@ logger = logging.getLogger()
 
 
 class CMKWebSession:
-    def __init__(self, site):
+    def __init__(self, site) -> None:
         super().__init__()
-        self.transids = []
+        self.transids: list = []
         # Resources are only fetched and verified once per session
-        self.verified_resources = set()
+        self.verified_resources: set = set()
         self.site = site
         self.session = requests.Session()
 

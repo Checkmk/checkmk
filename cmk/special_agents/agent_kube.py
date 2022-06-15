@@ -528,7 +528,7 @@ def aggregate_resources(
 
 
 class CronJob(PodNamespacedOwner):
-    def __init__(self, metadata: api.MetaData, spec: api.CronJobSpec):
+    def __init__(self, metadata: api.MetaData, spec: api.CronJobSpec) -> None:
         super().__init__()
         self.metadata = metadata
         self.spec = spec
@@ -2455,7 +2455,7 @@ def write_cluster_collector_info_section(
 
 class CollectorHandlingException(Exception):
     # This exception is used as report medium for the Cluster Collector service
-    def __init__(self, title: str, detail: str):
+    def __init__(self, title: str, detail: str) -> None:
         self.title = title
         self.detail = detail
         super().__init__()
@@ -2481,7 +2481,7 @@ def collector_exception_handler(logs: List[section.CollectorHandlerLog], debug: 
 
 
 class CustomKubernetesApiException(Exception):
-    def __init__(self, api_exception: client.ApiException):
+    def __init__(self, api_exception: client.ApiException) -> None:
         self.e = api_exception
         super().__init__()
 

@@ -386,7 +386,9 @@ UNAVAIL = 4
 
 
 class ABCFoldableTreeRenderer(abc.ABC):
-    def __init__(self, row, omit_root, expansion_level, only_problems, lazy, wrap_texts=True):
+    def __init__(
+        self, row, omit_root, expansion_level, only_problems, lazy, wrap_texts=True
+    ) -> None:
         self._row = row
         self._omit_root = omit_root
         self._expansion_level = expansion_level

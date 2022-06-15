@@ -606,7 +606,7 @@ def translation_elements(what: str) -> List[_Tuple[str, ValueSpec]]:
 # TODO: Refactor this and all other childs of ElementSelection() to base on
 #       DropdownChoice(). Then remove ElementSelection()
 class _GroupSelection(ElementSelection):
-    def __init__(self, what, choices, no_selection=None, **kwargs):
+    def __init__(self, what, choices, no_selection=None, **kwargs) -> None:
         kwargs.setdefault(
             "empty_text",
             _(
@@ -1313,7 +1313,7 @@ def valuespec_check_plugin_selection(
 
 
 class _CheckTypeHostSelection(DualListChoice):
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs) -> None:
         super().__init__(rows=25, **kwargs)
 
     def get_elements(self):
@@ -1327,7 +1327,7 @@ class _CheckTypeHostSelection(DualListChoice):
 
 
 class _CheckTypeMgmtSelection(DualListChoice):
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs) -> None:
         super().__init__(rows=25, **kwargs)
 
     def get_elements(self):
@@ -2109,7 +2109,7 @@ def register_notification_parameters(scriptname, valuespec):
 
 
 class DictHostTagCondition(Transform):
-    def __init__(self, title, help_txt):
+    def __init__(self, title, help_txt) -> None:
         super().__init__(
             valuespec=ListOfMultiple(
                 title=title,
@@ -2468,7 +2468,7 @@ class HostTagCondition(ValueSpec[Sequence[str]]):
 
 
 class LabelCondition(Transform):
-    def __init__(self, title, help_txt):
+    def __init__(self, title, help_txt) -> None:
         super().__init__(
             valuespec=ListOf(
                 valuespec=Tuple(
@@ -2697,14 +2697,14 @@ def get_hosts_from_checkboxes(filterfunc=None):
 
 
 class FullPathFolderChoice(DropdownChoice):
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs) -> None:
         kwargs["choices"] = _hosts_and_folders.Folder.folder_choices_fulltitle
         kwargs.setdefault("title", _("Folder"))
         DropdownChoice.__init__(self, **kwargs)
 
 
 class FolderChoice(DropdownChoice):
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs) -> None:
         kwargs["choices"] = _hosts_and_folders.Folder.folder_choices
         kwargs.setdefault("title", _("Folder"))
         DropdownChoice.__init__(self, **kwargs)

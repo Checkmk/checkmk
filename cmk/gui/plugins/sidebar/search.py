@@ -511,7 +511,7 @@ class LivestatusQuicksearchConductor(ABCQuicksearchConductor):
 class QuicksearchManager:
     """Producing the results for the given search query"""
 
-    def __init__(self, raise_too_many_rows_error: bool = True):
+    def __init__(self, raise_too_many_rows_error: bool = True) -> None:
         self.raise_too_many_rows_error = raise_too_many_rows_error
 
     def generate_results(self, query: SearchQuery) -> SearchResultsByTopic:
@@ -822,7 +822,7 @@ class QuicksearchResultRenderer:
 class ABCMatchPlugin(abc.ABC):
     """Base class for all match plugins"""
 
-    def __init__(self, name: str):
+    def __init__(self, name: str) -> None:
         super().__init__()
         self._name = name
 
@@ -914,7 +914,7 @@ match_plugin_registry = MatchPluginRegistry()
 
 
 class GroupMatchPlugin(ABCLivestatusMatchPlugin):
-    def __init__(self, group_type: str, name: str):
+    def __init__(self, group_type: str, name: str) -> None:
         super().__init__(
             ["%sgroups" % group_type, "%ss" % group_type, "services"],
             "%sgroups" % group_type,
@@ -1055,7 +1055,7 @@ match_plugin_registry.register(ServiceMatchPlugin())
 
 
 class HostMatchPlugin(ABCLivestatusMatchPlugin):
-    def __init__(self, livestatus_field, name):
+    def __init__(self, livestatus_field, name) -> None:
         super().__init__(["hosts", "services"], "hosts", name)
         self._livestatus_field = livestatus_field  # address, name or alias
 
@@ -1370,7 +1370,7 @@ match_plugin_registry.register(MonitorMenuMatchPlugin())
 class MenuSearchResultsRenderer:
     _max_num_displayed_results = 10
 
-    def __init__(self, search_type: str):
+    def __init__(self, search_type: str) -> None:
 
         # TODO: In the future, we should separate the rendering and the generation of the results
         if search_type == "monitoring":

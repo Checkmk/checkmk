@@ -64,7 +64,7 @@ def log(msg, *args):
 class ConsoleFormatter:
     __slots__ = ["out"]
 
-    def __init__(self, args):
+    def __init__(self, args) -> None:
         self.out = sys.stdout
 
     def push(self, importer, imported):
@@ -98,7 +98,7 @@ class JSONFormatter:
 
     __slots__ = ("metric", "stack", "open")
 
-    def __init__(self, args):
+    def __init__(self, args) -> None:
         self.open = args.open
         self.metric = {"name": "root"}
         # TODO: The stack is an almost untypeable mess...
@@ -157,11 +157,11 @@ class JSONFormatter:
 class GraphVizFormatter:
     __slots__ = ("from_", "to", "out", "open")
 
-    def __init__(self, args):
+    def __init__(self, args) -> None:
         self.open = args.open
-        self.from_ = []
-        self.to = []
-        self.out = []
+        self.from_: list = []
+        self.to: list = []
+        self.out: list = []
 
     def push(self, from_, to):
         self.from_.append(from_)
@@ -242,7 +242,7 @@ _FORMATTER: Optional["Formatter"] = None
 
 
 class Formatter:
-    def __init__(self, *formatters):
+    def __init__(self, *formatters) -> None:
         self.formatters = formatters
 
     def __enter__(self):

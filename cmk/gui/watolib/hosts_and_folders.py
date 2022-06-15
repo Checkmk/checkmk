@@ -739,8 +739,8 @@ class _WATOInfoStorageManager:
 class WithUniqueIdentifier(abc.ABC):
     """Provides methods for giving Hosts and Folders unique identifiers."""
 
-    def __init__(self, *args, **kw):
-        self._id = None
+    def __init__(self, *args, **kw) -> None:
+        self._id: None | str = None
         super().__init__(*args, **kw)
 
     def id(self) -> str:
@@ -851,7 +851,7 @@ class WithAttributes:
 
     Used in the Host and Folder classes."""
 
-    def __init__(self, *args, **kw):
+    def __init__(self, *args, **kw) -> None:
         super().__init__(*args, **kw)
         self._attributes: Dict[str, Any] = {"meta_data": {}}
         self._effective_attributes = None
@@ -2897,7 +2897,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
 
 
 class WATOFoldersOnDemand(Mapping[PathWithoutSlash, Optional[CREFolder]]):
-    def __init__(self, values: Dict[PathWithoutSlash, Optional[CREFolder]]):
+    def __init__(self, values: Dict[PathWithoutSlash, Optional[CREFolder]]) -> None:
         self._raw_dict: Dict[PathWithoutSlash, Optional[CREFolder]] = values
 
     def __getitem__(self, path_without_slash: PathWithoutSlash) -> CREFolder:
@@ -2967,7 +2967,7 @@ class SearchFolder(WithPermissions, WithAttributes, BaseFolder):
     # | CONSTRUCTION                                                       |
     # '--------------------------------------------------------------------'
 
-    def __init__(self, base_folder, criteria):
+    def __init__(self, base_folder, criteria) -> None:
         super().__init__()
         self._criteria = criteria
         self._base_folder = base_folder
@@ -3153,13 +3153,13 @@ class CREHost(WithPermissions, WithAttributes):
     # | CONSTRUCTION, LOADING & SAVING                                     |
     # '--------------------------------------------------------------------'
 
-    def __init__(self, folder, host_name, attributes, cluster_nodes):
+    def __init__(self, folder, host_name, attributes, cluster_nodes) -> None:
         super().__init__()
         self._folder = folder
         self._name = host_name
         self._attributes = attributes
         self._cluster_nodes = cluster_nodes
-        self._cached_host_tags = None
+        self._cached_host_tags: None | dict[str, str] = None
 
     def __repr__(self) -> str:
         return "Host(%r)" % (self._name)

@@ -78,7 +78,7 @@ class NothingExpression(QueryExpression):
 class UnaryExpression(abc.ABC):
     """Base class of all concrete single parts of BinaryExpression."""
 
-    def __init__(self, value):
+    def __init__(self, value) -> None:
         self.value = value
 
     def op(self, operator: str, other: Any) -> "BinaryExpression":
@@ -310,7 +310,7 @@ class BoolExpression(QueryExpression):
     def expr(self):
         raise NotImplementedError()
 
-    def __init__(self, *args: QueryExpression):
+    def __init__(self, *args: QueryExpression) -> None:
         self.args = args
         if not args:
             # For now this seems reasonable, but there are cases where it could be advantageous
@@ -371,7 +371,7 @@ class Not(QueryExpression):
 
     """
 
-    def __init__(self, other: QueryExpression):
+    def __init__(self, other: QueryExpression) -> None:
         self.other = other
 
     def __repr__(self) -> str:

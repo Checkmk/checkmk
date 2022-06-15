@@ -281,7 +281,7 @@ class FixRegister:
 class FixPluginLegacy:
     """Access legacy dicts like `check_info`"""
 
-    def __init__(self, fixed_register: FixRegister):
+    def __init__(self, fixed_register: FixRegister) -> None:
         import cmk.base.config as config  # pylint: disable=bad-option-value,import-outside-toplevel
         import cmk.base.inventory_plugins as inventory_plugins
 

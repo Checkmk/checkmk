@@ -57,7 +57,7 @@ class WalkCache(
 
     __slots__ = ("_store", "_path")
 
-    def __init__(self, host_name: HostName):
+    def __init__(self, host_name: HostName) -> None:
         self._store: MutableMapping[str, Tuple[bool, SNMPRowInfo]] = {}
         self._path = Path(cmk.utils.paths.var_dir, "snmp_cache", host_name)
 

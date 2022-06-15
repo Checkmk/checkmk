@@ -13,7 +13,7 @@ from .agent_aws_fake_clients import SNSListSubscriptionsIB, SNSListTopicsIB
 
 
 class PaginatorTopics:
-    def __init__(self, topics: Sequence[Mapping]):
+    def __init__(self, topics: Sequence[Mapping]) -> None:
         self._topics = topics
 
     def paginate(self) -> Iterable[Mapping]:
@@ -23,7 +23,7 @@ class PaginatorTopics:
 
 
 class PaginatorSubscriptions:
-    def __init__(self, subscriptions: Sequence[Mapping]):
+    def __init__(self, subscriptions: Sequence[Mapping]) -> None:
         self._subscriptions = subscriptions
 
     def paginate(self) -> Iterable[Mapping]:

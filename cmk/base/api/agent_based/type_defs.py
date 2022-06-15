@@ -36,7 +36,7 @@ class PluginSuppliedLabel(
     code from internal representations.
     """
 
-    def __init__(self, name, value):
+    def __init__(self, name, value) -> None:
         super().__init__()
         if not isinstance(name, str):
             raise TypeError(f"Invalid label name given: Expected string (got {name!r})")
@@ -64,7 +64,7 @@ ParametersTypeAlias = Mapping[str, Any]  # Modification may result in an incompa
 class Parameters(ParametersTypeAlias):
     """Parameter objects are used to pass parameters to plugin functions"""
 
-    def __init__(self, data):
+    def __init__(self, data) -> None:
         if not isinstance(data, dict):
             self._data = data  # error handling will try to repr(self).
             raise TypeError("Parameters expected dict, got %r" % (data,))

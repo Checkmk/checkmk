@@ -312,7 +312,7 @@ class ComponentStatus(Metadata):
 
 
 class Service(Metadata):
-    def __init__(self, service, use_namespace):
+    def __init__(self, service, use_namespace) -> None:
         super().__init__(service.metadata, "service", use_namespace)
 
         spec = service.spec
@@ -413,7 +413,7 @@ class Deployment(Metadata):
 
 
 class Ingress(Metadata):
-    def __init__(self, ingress, use_namespace):
+    def __init__(self, ingress, use_namespace) -> None:
         super().__init__(ingress.metadata, "ingress", use_namespace)
         self._backends = []  # list of (path, service_name, service_port)
         self._hosts = defaultdict(list)  # secret -> list of hosts
@@ -609,7 +609,7 @@ class Endpoint(Metadata):
     # See Also:
     #   https://github.com/kubernetes-client/python/blob/master/kubernetes/docs/V1Endpoints.md
 
-    def __init__(self, endpoint, use_namespace):
+    def __init__(self, endpoint, use_namespace) -> None:
         super().__init__(endpoint.metadata, "endpoint", use_namespace)
         # There is no spec here.
         self._subsets = [
@@ -651,7 +651,7 @@ class Endpoint(Metadata):
 
 
 class Job(Metadata):
-    def __init__(self, job, use_namespace):
+    def __init__(self, job, use_namespace) -> None:
         super().__init__(job.metadata, "job", use_namespace)
         spec = job.spec
         if spec:
@@ -726,7 +726,7 @@ class Job(Metadata):
 
 
 class DaemonSet(Metadata):
-    def __init__(self, daemon_set, use_namespace):
+    def __init__(self, daemon_set, use_namespace) -> None:
         super().__init__(daemon_set.metadata, "daemon_set", use_namespace)
         status = daemon_set.status
         if status:
@@ -784,7 +784,7 @@ class DaemonSet(Metadata):
 
 
 class StatefulSet(Metadata):
-    def __init__(self, stateful_set, use_namespace):
+    def __init__(self, stateful_set, use_namespace) -> None:
         super().__init__(stateful_set.metadata, "stateful_set", use_namespace)
         spec = stateful_set.spec
         strategy = spec.update_strategy

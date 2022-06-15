@@ -164,7 +164,7 @@ _dispatch: Dict[Any, Any] = {
 class _safe_key:
     __slots__ = ["obj"]
 
-    def __init__(self, obj):
+    def __init__(self, obj) -> None:
         self.obj = obj
 
     def __lt__(self, other):

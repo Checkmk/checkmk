@@ -19,7 +19,7 @@ from cmk.gui.watolib.main_menu import (
 
 
 class MainMenu:
-    def __init__(self, items=None, columns=2):
+    def __init__(self, items=None, columns=2) -> None:
         self._items = items or []
         self._columns = columns
 

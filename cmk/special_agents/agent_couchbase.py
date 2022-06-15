@@ -169,7 +169,7 @@ def set_up_logging(verbosity):
 
 
 class CouchbaseClient:
-    def __init__(self, host, port, timeout, user, password):
+    def __init__(self, host, port, timeout, user, password) -> None:
         self._session = requests.Session()
         self._timeout = timeout
         if None not in (user, password):

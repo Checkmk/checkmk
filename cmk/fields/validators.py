@@ -70,7 +70,7 @@ class ValidateIPv4Network(Validator):
     message_min = "Prefix of {network} must be at least {min} bit"
     message_max = "Prefix of {network} must be at most {max} bit"
 
-    def __init__(self, min_prefix=0, max_prefix=32):
+    def __init__(self, min_prefix=0, max_prefix=32) -> None:
         self.min_prefix = min_prefix
         self.max_prefix = max_prefix
 
@@ -106,7 +106,7 @@ class ValidateAnyOfValidators(Validator):
 
     """
 
-    def __init__(self, validators):
+    def __init__(self, validators) -> None:
         self.validators = validators
 
     def __call__(self, value):

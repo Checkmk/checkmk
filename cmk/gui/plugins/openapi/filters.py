@@ -22,7 +22,7 @@ from cmk.utils.livestatus_helpers import tables
 
 
 class Node:
-    def __init__(self, value):
+    def __init__(self, value) -> None:
         self.value = value
         self.parsed = self.parse(value)
 

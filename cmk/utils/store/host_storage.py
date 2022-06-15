@@ -154,7 +154,7 @@ class HostsStorageFieldsGenerator:
 
 
 class ABCHostsStorage(Generic[THostsReadData]):
-    def __init__(self, storage_format: StorageFormat):
+    def __init__(self, storage_format: StorageFormat) -> None:
         self._storage_format = storage_format
 
     def exists(self, file_path_without_extension: Path):

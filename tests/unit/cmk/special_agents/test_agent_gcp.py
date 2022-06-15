@@ -45,7 +45,7 @@ TS2 = datetime.datetime(2016, 4, 6, 22, 5, 2, 42)
 
 
 class FakeMonitoringClient:
-    def __init__(self, timeseries: Optional[Iterable[str]] = None):
+    def __init__(self, timeseries: Optional[Iterable[str]] = None) -> None:
         self._timeseries = timeseries
 
     def list_time_series(self, request: Any) -> Iterable[TimeSeries]:
@@ -98,7 +98,7 @@ class FakeMonitoringClient:
 
 
 class FakeAssetClient:
-    def __init__(self, assets: Optional[Iterable[str]] = None):
+    def __init__(self, assets: Optional[Iterable[str]] = None) -> None:
         if assets is None:
             self._assets: Iterable[str] = [
                 '{"name": "//compute.googleapis.com/projects/tribe29-check-development/zones/us-central1-a/instances/instance-1", "asset_type": "compute.googleapis.com/Instance", "resource": {"version": "v1", "discovery_document_uri": "https://www.googleapis.com/discovery/v1/apis/compute/v1/rest", "discovery_name": "Instance", "parent": "//cloudresourcemanager.googleapis.com/projects/1074106860578", "data": {}, "location": "us-central1-a", "resource_url": ""}, "ancestors": ["projects/1074106860578", "folders/1022571519427", "organizations/668598212003"], "update_time": "2022-04-05T08:23:00.662291Z", "org_policy": []}',

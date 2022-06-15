@@ -171,7 +171,7 @@ class TestAgentFileCache_and_SNMPFileCache:
 class StubFileCache(AgentFileCache):
     """Holds the data to be cached in-memory for testing"""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.cache: Optional[AgentRawData] = None
 

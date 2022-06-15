@@ -81,7 +81,7 @@ YAPF_STYLE = {
 
 
 class WritableDataset:
-    def __init__(self, init_dict):
+    def __init__(self, init_dict) -> None:
         self.writelist = (
             "checkname",
             "freeze_time",

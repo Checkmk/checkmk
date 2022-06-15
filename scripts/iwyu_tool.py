@@ -236,7 +236,7 @@ IWYU_EXECUTABLE = find_include_what_you_use()
 
 class Process(object):
     """ Manages an IWYU process in flight """
-    def __init__(self, proc, outfile):
+    def __init__(self, proc, outfile) -> None:
         self.proc = proc
         self.outfile = outfile
         self.output = None
@@ -282,7 +282,7 @@ KNOWN_COMPILER_WRAPPERS=frozenset([
 
 class Invocation(object):
     """ Holds arguments of an IWYU invocation. """
-    def __init__(self, command, cwd):
+    def __init__(self, command, cwd) -> None:
         self.command = command
         self.cwd = cwd
 

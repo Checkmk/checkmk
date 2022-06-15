@@ -234,7 +234,7 @@ class ErrorMessages:
 
 
 class NetAppConnection:
-    def __init__(self, hostname, user, password):
+    def __init__(self, hostname, user, password) -> None:
         self.hostname = hostname
         self.user = user
         self.password = password
@@ -337,7 +337,7 @@ class NetAppConnection:
 
 
 class NetAppNode:
-    def __init__(self, xml_element):
+    def __init__(self, xml_element) -> None:
         if isinstance(xml_element, str):
             xml_element = ET.Element(xml_element)
         self.node = xml_element
@@ -386,7 +386,7 @@ class NetAppNode:
 
 
 class NetAppRootNode(NetAppNode):
-    def __init__(self, vfiler=False):
+    def __init__(self, vfiler=False) -> None:
         root_node = ET.Element(
             "netapp",
             version="1.8",
@@ -409,7 +409,7 @@ class NetAppResponse:
     # these should never be in an XML output:
     INVALID_XML = re.compile("[\x00-\x08\x0B-\x0C\x0E-\x1F\x7F]")
 
-    def __init__(self, response, debug):
+    def __init__(self, response, debug) -> None:
         self.status = None
         self.content = None
         self.reason = None

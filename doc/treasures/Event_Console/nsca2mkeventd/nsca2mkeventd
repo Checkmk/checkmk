@@ -144,7 +144,7 @@ def daemonize(user=0, group=0):
 
 
 class MKSignalException(Exception):
-    def __init__(self, signum):
+    def __init__(self, signum) -> None:
         Exception.__init__(self, "Got signal %d" % signum)
         self._signum = signum
 

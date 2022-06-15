@@ -317,7 +317,7 @@ def wait_until_liveproxyd_ready(site: Site, site_ids):
 class WatchLog:
     """Small helper for integration tests: Watch a sites log file"""
 
-    def __init__(self, site: Site, default_timeout: Optional[int] = None):
+    def __init__(self, site: Site, default_timeout: Optional[int] = None) -> None:
         self._site = site
         self._log_path = site.core_history_log()
         self._log: Optional[TextIO] = None
@@ -433,9 +433,9 @@ class MissingCheckInfoError(KeyError):
 class BaseCheck(abc.ABC):
     """Abstract base class for Check and ActiveCheck"""
 
-    def __init__(self, name):
+    def __init__(self, name) -> None:
         self.name = name
-        self.info = {}
+        self.info: dict = {}
         # we cant use the current_host context, b/c some tests rely on a persistent
         # item state across several calls to run_check
         import cmk.base.plugin_contexts  # pylint: disable=import-outside-toplevel
@@ -444,7 +444,7 @@ class BaseCheck(abc.ABC):
 
 
 class Check(BaseCheck):
-    def __init__(self, name):
+    def __init__(self, name) -> None:
         import cmk.base.config as config  # pylint: disable=import-outside-toplevel
         from cmk.base.api.agent_based import register  # pylint: disable=import-outside-toplevel
 
@@ -484,7 +484,7 @@ class Check(BaseCheck):
 
 
 class ActiveCheck(BaseCheck):
-    def __init__(self, name):
+    def __init__(self, name) -> None:
         import cmk.base.config as config  # pylint: disable=import-outside-toplevel
 
         super().__init__(name)
@@ -504,7 +504,7 @@ class ActiveCheck(BaseCheck):
 
 
 class SpecialAgent:
-    def __init__(self, name):
+    def __init__(self, name) -> None:
         import cmk.base.config as config  # pylint: disable=import-outside-toplevel
 
         super().__init__()

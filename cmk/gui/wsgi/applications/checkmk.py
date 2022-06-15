@@ -196,7 +196,7 @@ def get_mime_type_from_output_format(output_format: str) -> str:
 class CheckmkApp:
     """The Check_MK GUI WSGI entry point"""
 
-    def __init__(self, debug=False):
+    def __init__(self, debug=False) -> None:
         self.debug = debug
 
     def __call__(self, environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:

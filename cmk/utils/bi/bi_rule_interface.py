@@ -31,7 +31,7 @@ class BIRulePropertiesSchema(Schema):
 
 
 class BIRuleProperties(ABCWithSchema):
-    def __init__(self, properties_config: Dict[str, Any]):
+    def __init__(self, properties_config: Dict[str, Any]) -> None:
         super().__init__()
         self.title = properties_config["title"]
         self.comment = properties_config["comment"]
@@ -58,7 +58,7 @@ class BIRuleComputationOptionsSchema(Schema):
 
 
 class BIRuleComputationOptions(ABCWithSchema):
-    def __init__(self, computation_config: Dict[str, Any]):
+    def __init__(self, computation_config: Dict[str, Any]) -> None:
         super().__init__()
         self.disabled = computation_config["disabled"]
 

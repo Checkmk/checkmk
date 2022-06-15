@@ -38,7 +38,7 @@ SCOPE_GLOBAL = None
 
 
 class BIAggregation:
-    def __init__(self, aggr_config: Optional[AggrConfigDict] = None, pack_id: str = ""):
+    def __init__(self, aggr_config: Optional[AggrConfigDict] = None, pack_id: str = "") -> None:
         super().__init__()
         if aggr_config is None:
             aggr_config = self.schema()().dump({})

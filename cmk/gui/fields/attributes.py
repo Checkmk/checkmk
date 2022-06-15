@@ -551,7 +551,7 @@ class MappingConverter(Converter):
 
     """
 
-    def __init__(self, mapping):
+    def __init__(self, mapping) -> None:
         self.mapping = mapping
 
     def to_checkmk(self, data):

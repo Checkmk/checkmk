@@ -49,7 +49,7 @@ from cmk.utils.macros import MacroMapping
 
 
 class BIRule(ABCBIRule, ABCWithSchema):
-    def __init__(self, rule_config: Optional[Dict[str, Any]] = None, pack_id: str = ""):
+    def __init__(self, rule_config: Optional[Dict[str, Any]] = None, pack_id: str = "") -> None:
         super().__init__()
         if rule_config is None:
             rule_config = get_schema_default_config(self.schema())

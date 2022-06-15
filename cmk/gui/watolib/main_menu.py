@@ -18,7 +18,7 @@ from cmk.gui.utils.urls import makeuri_contextless
 
 
 class MenuItem:
-    def __init__(self, mode_or_url, title, icon, permission, description, sort_index=20):
+    def __init__(self, mode_or_url, title, icon, permission, description, sort_index=20) -> None:
         self._mode_or_url = mode_or_url
         self._title = title
         self._icon = icon

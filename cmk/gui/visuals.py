@@ -418,7 +418,7 @@ def cleanup_context_filters(context, single_infos: SingleInfos) -> VisualContext
 class _CombinedVisualsCache:
     _visuals_cache_dir: Final[Path] = Path(cmk.utils.paths.tmp_dir) / "visuals_cache"
 
-    def __init__(self, visual_type: VisualType):
+    def __init__(self, visual_type: VisualType) -> None:
         self._visual_type: Final[VisualType] = visual_type
 
     @classmethod
@@ -1756,7 +1756,7 @@ class VisualFilterList(ListOfMultiple):
         for fname, filter_ in filters_allowed_for_info(info):
             yield fname, VisualFilter(name=fname, title=filter_.title)
 
-    def __init__(self, info_list: SingleInfos, **kwargs):
+    def __init__(self, info_list: SingleInfos, **kwargs) -> None:
         self._filters = filters_allowed_for_infos(info_list)
 
         kwargs.setdefault("title", _("Filters"))

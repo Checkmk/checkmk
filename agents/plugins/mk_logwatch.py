@@ -44,6 +44,7 @@ import shlex
 import shutil
 import socket
 import time
+from typing import Dict
 
 # For Python 3 sys.stdout creates \r\n as newline for Windows.
 # Checkmk can't handle this therefore we rewrite sys.stdout to a new_stdout function.
@@ -731,7 +732,8 @@ class Options(object):  # pylint: disable=useless-object-inheritance
     }
 
     def __init__(self):
-        self.values = {}
+        # type: () -> None
+        self.values = {}  # type: Dict
 
     @property
     def encoding(self):

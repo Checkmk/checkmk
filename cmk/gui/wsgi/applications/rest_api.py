@@ -222,7 +222,7 @@ class Authenticate:
     the memory foot-print of this is feasible and should be done if a good way has been found.
     """
 
-    def __init__(self, endpoint: Endpoint):
+    def __init__(self, endpoint: Endpoint) -> None:
         self.endpoint = endpoint
 
     def __repr__(self) -> str:
@@ -356,7 +356,7 @@ def _url(environ: WSGIEnvironment) -> str:
 
 
 class ServeSwaggerUI:
-    def __init__(self, prefix=""):
+    def __init__(self, prefix="") -> None:
         self.prefix = prefix
         self.data: Optional[Dict[str, Any]] = None
 

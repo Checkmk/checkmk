@@ -345,9 +345,9 @@ def action_result(
 
 
 class DomainObjectMembers:
-    def __init__(self, base):
+    def __init__(self, base) -> None:
         self.base = base
-        self.members = {}
+        self.members: dict[str, dict[str, Any]] = {}
 
     def object_property(
         self,

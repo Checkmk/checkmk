@@ -254,7 +254,7 @@ class RequiredBIElement(NamedTuple):
 
 
 class BIAggregationComputationOptions(ABCWithSchema):
-    def __init__(self, computation_config: ComputationConfigDict):
+    def __init__(self, computation_config: ComputationConfigDict) -> None:
         super().__init__()
         self.disabled = computation_config["disabled"]
         self.use_hard_states = computation_config["use_hard_states"]
@@ -279,7 +279,7 @@ class BIAggregationComputationOptionsSchema(Schema):
 
 
 class BIAggregationGroups(ABCWithSchema):
-    def __init__(self, group_config: GroupConfigDict):
+    def __init__(self, group_config: GroupConfigDict) -> None:
         super().__init__()
         self.names: List[str] = group_config["names"]
         self.paths: List[List[str]] = group_config["paths"]
@@ -307,7 +307,7 @@ class BIAggregationGroupsSchema(Schema):
 
 
 class BIParams(ABCWithSchema):
-    def __init__(self, params_config: Dict[str, List[str]]):
+    def __init__(self, params_config: Dict[str, List[str]]) -> None:
         super().__init__()
         self.arguments = params_config["arguments"]
         # Note: The BIParams may get additional options
@@ -412,7 +412,7 @@ class ABCBISearcher(abc.ABC):
 
 
 class ABCBIStatusFetcher(abc.ABC):
-    def __init__(self, sites_callback: SitesCallback):
+    def __init__(self, sites_callback: SitesCallback) -> None:
         self._sites_callback = sites_callback
         self.states: BIStatusInfo = {}
         self.assumed_states: Dict = {}
@@ -477,7 +477,7 @@ class ABCBICompiledNode(abc.ABC):
 
 
 class ABCBIAction(abc.ABC):
-    def __init__(self, action_config: Dict[str, Any]):
+    def __init__(self, action_config: Dict[str, Any]) -> None:
         super().__init__()
 
     @classmethod
@@ -537,7 +537,7 @@ bi_action_registry = BIActionRegistry()
 
 
 class ABCBISearch(abc.ABC):
-    def __init__(self, search_config: Dict[str, Any]):
+    def __init__(self, search_config: Dict[str, Any]) -> None:
         super().__init__()
 
     @classmethod
@@ -580,7 +580,7 @@ bi_search_registry = BISearchRegistry()
 
 
 class ABCBIAggregationFunction(abc.ABC):
-    def __init__(self, aggr_function_config: Dict[str, Any]):
+    def __init__(self, aggr_function_config: Dict[str, Any]) -> None:
         super().__init__()
 
     @classmethod

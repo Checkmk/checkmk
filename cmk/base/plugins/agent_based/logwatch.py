@@ -359,10 +359,10 @@ class LogwatchBlock:
     CHAR_TO_STATE = {"O": 0, "W": 1, "u": 1, "C": 2}
     STATE_TO_STR = {0: "OK", 1: "WARN"}
 
-    def __init__(self, header, patterns):
+    def __init__(self, header, patterns) -> None:
         self._timestamp = header.strip("<>").rsplit(None, 1)[0]
         self.worst = -1
-        self.lines = []
+        self.lines: list = []
         self.saw_lines = False
         self.last_worst_line = ""
         self.counts: Counter[int] = Counter()  # matches of a certain pattern

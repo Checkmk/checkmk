@@ -21,7 +21,7 @@ class CMKVersion:
     CRE = "cre"
     CME = "cme"
 
-    def __init__(self, version_spec, edition, branch):
+    def __init__(self, version_spec, edition, branch) -> None:
         self.version_spec = version_spec
         self._branch = branch
 

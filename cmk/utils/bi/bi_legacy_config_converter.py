@@ -52,7 +52,7 @@ class ErrorCounter:
 
 
 class BIRuleSchemaConverter:
-    def __init__(self, logger: logging.Logger, error_counter: ErrorCounter):
+    def __init__(self, logger: logging.Logger, error_counter: ErrorCounter) -> None:
         self._logger = logger
         self._error_counter = error_counter
 
@@ -237,7 +237,7 @@ class BIRuleSchemaConverter:
 
 
 class BIAggregationSchemaConverter:
-    def __init__(self, logger: logging.Logger, error_counter: ErrorCounter):
+    def __init__(self, logger: logging.Logger, error_counter: ErrorCounter) -> None:
         self._logger = logger
         self._error_counter = error_counter
 
@@ -279,7 +279,7 @@ class BIAggregationSchemaConverter:
 
 
 class BIPackSchemaConverter:
-    def __init__(self, logger: logging.Logger, error_counter: ErrorCounter):
+    def __init__(self, logger: logging.Logger, error_counter: ErrorCounter) -> None:
         self._logger = logger
         self._error_counter = error_counter
 
@@ -304,7 +304,7 @@ class BIPackSchemaConverter:
 
 
 class BIManagement:
-    def __init__(self, logger: logging.Logger):
+    def __init__(self, logger: logging.Logger) -> None:
         self._logger = logger
         self._load_config()
 
@@ -642,7 +642,7 @@ class BIManagement:
 
 
 class BILegacyConfigConverter(BIManagement):
-    def __init__(self, logger: logging.Logger):
+    def __init__(self, logger: logging.Logger) -> None:
         super().__init__(logger)
         self._logger = logger
         self._error_counter = ErrorCounter()
@@ -657,7 +657,7 @@ class BILegacyConfigConverter(BIManagement):
 
 
 class BILegacyPacksConverter(BIAggregationPacks):
-    def __init__(self, logger: logging.Logger, bi_configuration_file: str):
+    def __init__(self, logger: logging.Logger, bi_configuration_file: str) -> None:
         super().__init__(bi_configuration_file)
         self._logger = logger
 

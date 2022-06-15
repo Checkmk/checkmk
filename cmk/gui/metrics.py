@@ -657,7 +657,7 @@ class MetricometerRendererDual(MetricometerRenderer):
     def type_name(cls) -> str:
         return "dual"
 
-    def __init__(self, perfometer, translated_metrics):
+    def __init__(self, perfometer, translated_metrics) -> None:
         super().__init__(perfometer, translated_metrics)
 
         if len(perfometer["perfometers"]) != 2:

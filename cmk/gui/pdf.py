@@ -140,7 +140,7 @@ class GFXState(TypedDict):
 
 
 class Document:
-    def __init__(self, **args):
+    def __init__(self, **args) -> None:
         # Static paper settings for this document
         self._pagesize = from_mm(args["pagesize"])
         self._margins = from_mm(args["margins"])
@@ -164,12 +164,12 @@ class Document:
         # create PDF document
         self._output_buffer = io.BytesIO()
         self._canvas = canvas.Canvas(self._output_buffer, pagesize=self._pagesize)
-        self._heading_entries = []
+        self._heading_entries: list[tuple[str, int]] = []
 
         # initialize our page state
         self._page_number = 1
         self._tabstops: list[tuple[str, SizeInternal]] = []
-        self._heading_numbers = {}
+        self._heading_numbers: dict[int, int] = {}
         # The level number of the last added heading
         self._heading_level = 0
         # Increase all future added headings by this level offset
@@ -192,7 +192,7 @@ class Document:
             "tt": False,
             "heading_offset": 0,
         }
-        self._gfx_state_stack = []
+        self._gfx_state_stack: list[GFXState] = []
         self.set_gfx_state()
 
     def end(self, sendas: Optional[str] = None, do_send: bool = True) -> Optional[bytes]:

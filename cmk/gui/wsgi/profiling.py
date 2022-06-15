@@ -26,7 +26,7 @@ class ProfileSwitcher:
 
     """
 
-    def __init__(self, app, profile_file: Optional[pathlib.Path] = None):
+    def __init__(self, app, profile_file: Optional[pathlib.Path] = None) -> None:
         self.app = app
         if profile_file is None:
             profile_file = pathlib.Path(cmk.utils.paths.var_dir) / "multisite.profile"

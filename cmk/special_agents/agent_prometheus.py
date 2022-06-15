@@ -84,7 +84,7 @@ def parse_pod_name(labels: Dict[str, str], prepend_namespace: bool = False):
 
 
 class FilesystemInfo:
-    def __init__(self, name, fstype, mountpoint, size=None, available=None, used=None):
+    def __init__(self, name, fstype, mountpoint, size=None, available=None, used=None) -> None:
         self.name = name
         self.fstype = fstype
         self.mountpoint = mountpoint
@@ -103,7 +103,7 @@ class FilesystemInfo:
 
 
 class NodeExporter:
-    def __init__(self, api_client):
+    def __init__(self, api_client) -> None:
         self.api_client = api_client
 
     def df_summary(self) -> Dict[str, List[str]]:
@@ -351,11 +351,11 @@ class NodeExporter:
 
 
 class CAdvisorExporter:
-    def __init__(self, api_client, options):
+    def __init__(self, api_client, options) -> None:
         self.api_client = api_client
         self.container_name_option = options.get("container_id", "short")
-        self.pod_containers = {}
-        self.container_ids = {}
+        self.pod_containers: dict = {}
+        self.container_ids: dict = {}
         self.prepend_namespaces = options.get("prepend_namespaces", True)
         self.namespace_include_patterns = options.get("namespace_include_patterns", [])
 
@@ -637,7 +637,7 @@ class CAdvisorExporter:
 
 
 class KubeStateExporter:
-    def __init__(self, api_client, options: Dict[str, Any]):
+    def __init__(self, api_client, options: Dict[str, Any]) -> None:
         self.api_client = api_client
         self.cluster_name = options["cluster_name"]
         self.prepend_namespaces = options.get("prepend_namespaces", True)
@@ -1131,7 +1131,7 @@ class PromQLResponse:
 class PromQLResult:
     """The PromQL result object representation for internal usage"""
 
-    def __init__(self, raw_response: Dict[str, Any]):
+    def __init__(self, raw_response: Dict[str, Any]) -> None:
         """
 
         Args:
@@ -1755,7 +1755,7 @@ class ApiData:
     Server & the Prometheus Exporters
     """
 
-    def __init__(self, api_client, exporter_options):
+    def __init__(self, api_client, exporter_options) -> None:
         self.api_client = api_client
         self.prometheus_server = PrometheusServer(api_client)
         if "cadvisor" in exporter_options:

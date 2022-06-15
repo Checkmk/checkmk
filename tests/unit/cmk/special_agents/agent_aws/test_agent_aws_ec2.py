@@ -33,7 +33,7 @@ from .agent_aws_fake_clients import (
 
 
 class FakeEC2Client:
-    def __init__(self, skip_entities=None):
+    def __init__(self, skip_entities=None) -> None:
         self._skip_entities = {} if not skip_entities else skip_entities
 
     def describe_instances(self, InstanceIds=None, Filters=None):

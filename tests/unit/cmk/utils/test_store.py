@@ -411,7 +411,7 @@ class LockTestJob(enum.Enum):
 
 
 class LockTestThread(threading.Thread):
-    def __init__(self, store_mod, path):
+    def __init__(self, store_mod, path) -> None:
         super().__init__()
         self.daemon = True
 

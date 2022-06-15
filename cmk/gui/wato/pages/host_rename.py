@@ -63,7 +63,7 @@ class RenameHostsBackgroundJob(WatoBackgroundJob):
     def gui_title(cls):
         return _("Host renaming")
 
-    def __init__(self, title=None):
+    def __init__(self, title=None) -> None:
         last_job_status = WatoBackgroundJob(self.job_prefix).get_status()
         super().__init__(
             self.job_prefix,
@@ -82,7 +82,7 @@ class RenameHostsBackgroundJob(WatoBackgroundJob):
 
 @gui_background_job.job_registry.register
 class RenameHostBackgroundJob(RenameHostsBackgroundJob):
-    def __init__(self, host, title=None):
+    def __init__(self, host, title=None) -> None:
         super().__init__(title)
         self._host = host
 

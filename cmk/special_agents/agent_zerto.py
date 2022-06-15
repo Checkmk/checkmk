@@ -51,7 +51,7 @@ def parse_arguments(argv):
 
 
 class ZertoRequest:
-    def __init__(self, connection_url, session_id):
+    def __init__(self, connection_url, session_id) -> None:
         self._endpoint = "%s/vms" % connection_url
         self._headers = {"x-zerto-session": session_id, "content-type": "application/json"}
 
@@ -72,7 +72,7 @@ class ZertoRequest:
 
 
 class ZertoConnection:
-    def __init__(self, hostaddress, username, password):
+    def __init__(self, hostaddress, username, password) -> None:
         self._credentials = username, password
         self._host = hostaddress
         self.base_url = "https://%s:9669/v1" % self._host

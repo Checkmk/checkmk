@@ -58,7 +58,7 @@ class BICallARuleAction(ABCBIAction, ABCWithSchema):
             "params": self.params.serialize(),
         }
 
-    def __init__(self, action_config: Dict[str, Any]):
+    def __init__(self, action_config: Dict[str, Any]) -> None:
         super().__init__(action_config)
         self.rule_id = action_config["rule_id"]
         self.params = BIParams(action_config["params"])
@@ -118,7 +118,7 @@ class BIStateOfHostAction(ABCBIAction, ABCWithSchema):
             "host_regex": self.host_regex,
         }
 
-    def __init__(self, action_config: Dict[str, Any]):
+    def __init__(self, action_config: Dict[str, Any]) -> None:
         super().__init__(action_config)
         self.host_regex = action_config["host_regex"]
 
@@ -168,7 +168,7 @@ class BIStateOfServiceAction(ABCBIAction, ABCWithSchema):
             "service_regex": self.service_regex,
         }
 
-    def __init__(self, action_config: Dict[str, Any]):
+    def __init__(self, action_config: Dict[str, Any]) -> None:
         super().__init__(action_config)
         self.host_regex = action_config["host_regex"]
         self.service_regex = action_config["service_regex"]
@@ -237,7 +237,7 @@ class BIStateOfRemainingServicesAction(ABCBIAction, ABCWithSchema):
             "host_regex": self.host_regex,
         }
 
-    def __init__(self, action_config: Dict[str, Any]):
+    def __init__(self, action_config: Dict[str, Any]) -> None:
         super().__init__(action_config)
         self.host_regex = action_config["host_regex"]
 

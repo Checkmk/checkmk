@@ -24,17 +24,17 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 class AggregationData:
-    def __init__(self, bi_rawdata, config, error):
+    def __init__(self, bi_rawdata, config, error) -> None:
         super().__init__()
         self._bi_rawdata = bi_rawdata
         self._error = error
 
-        self._output = []
+        self._output: list = []
         self._options = config.get("options", {})
         self._assignments = config.get("assignments", {})
-        self._missing_sites = []
-        self._missing_aggr = []
-        self._aggregation_targets = {}
+        self._missing_sites: list = []
+        self._missing_aggr: list = []
+        self._aggregation_targets: dict = {}
 
     @property
     def bi_rawdata(self):

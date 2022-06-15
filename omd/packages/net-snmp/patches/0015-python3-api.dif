@@ -144,7 +144,7 @@ Therefore we also omit the "is_hex" mechanism, introduced on mainline.
 --- a/python/netsnmp/client.py      2022-02-03 15:05:47.049520547 +0100
 +++ b/python/netsnmp/client.py   2022-02-03 15:06:37.793551045 +0100
 @@ -56,7 +56,7 @@
-     def __init__(self, tag=None, iid=None, val=None, type_arg=None):
+     def __init__(self, tag=None, iid=None, val=None, type_arg=None) -> None:
          self.tag = STR(tag)
          self.iid = STR(iid)
 -        self.val = STR(val)

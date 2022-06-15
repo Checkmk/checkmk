@@ -81,7 +81,7 @@ class HTMLWriter:
       - All attributes will be escaped, i.e. the characters '&', '<', '>', '"' will be replaced by
         non HtML relevant signs '&amp;', '&lt;', '&gt;' and '&quot;'."""
 
-    def __init__(self, output_funnel: OutputFunnel, output_format: str, mobile: bool):
+    def __init__(self, output_funnel: OutputFunnel, output_format: str, mobile: bool) -> None:
         self.output_funnel: Final = output_funnel
         self.output_format: Final = output_format
         self.mobile: Final = mobile

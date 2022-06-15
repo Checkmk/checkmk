@@ -320,7 +320,7 @@ def cpu_rate(value_store, counter, now, lifetime):
 class ProcessAggregator:
     """Collects information about all instances of monitored processes"""
 
-    def __init__(self, cpu_cores, params):
+    def __init__(self, cpu_cores, params) -> None:
         self.cpu_cores = cpu_cores
         self.params = params
         self.virtual_size = 0
@@ -330,7 +330,7 @@ class ProcessAggregator:
         self.max_elapsed: Optional[float] = None
         self.min_elapsed: Optional[float] = None
         self.processes: List[_Process] = []
-        self.running_on_nodes = set()
+        self.running_on_nodes: set = set()
 
     def __getitem__(self, item: int) -> _Process:
         return self.processes[item]

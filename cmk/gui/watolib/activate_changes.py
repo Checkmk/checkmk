@@ -1244,7 +1244,7 @@ class ActivationCleanupBackgroundJob(WatoBackgroundJob):
     def gui_title(cls):
         return _("Activation cleanup")
 
-    def __init__(self, maximum_age: int = 300):
+    def __init__(self, maximum_age: int = 300) -> None:
         """
         Args:
 

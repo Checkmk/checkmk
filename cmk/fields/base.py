@@ -11,7 +11,7 @@ from marshmallow import fields, ValidationError
 
 
 class OpenAPIAttributes:
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         metadata = kwargs.setdefault("metadata", {})
         for key in [
             "description",

@@ -417,7 +417,7 @@ class BIRemainingResult(ABCBICompiledNode):
     def type(cls) -> str:
         return "remaining"
 
-    def __init__(self, host_names: List[HostName]):
+    def __init__(self, host_names: List[HostName]) -> None:
         super().__init__()
         self.host_names = host_names
 

@@ -634,7 +634,7 @@ class CEESiteManagement(SiteManagement):
 
 # TODO: Change to factory
 class LivestatusViaTCP(Dictionary):
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs) -> None:
         kwargs["elements"] = [
             (
                 "port",

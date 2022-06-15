@@ -32,7 +32,7 @@ class MethodAjax(PopupMethod):
     endpoint: Optional[str]
     url_vars: Optional[str]
 
-    def __init__(self, endpoint: str, url_vars: Optional[HTTPVariables]):
+    def __init__(self, endpoint: str, url_vars: Optional[HTTPVariables]) -> None:
         super().__init__(type="ajax")
         self.endpoint = endpoint if endpoint else None
         self.url_vars = urlencode_vars(url_vars) if url_vars else None
@@ -42,7 +42,7 @@ class MethodAjax(PopupMethod):
 class MethodInline(PopupMethod):
     _content: str  # used only for server side rendering
 
-    def __init__(self, content: str):
+    def __init__(self, content: str) -> None:
         super().__init__(type="inline")
         self._content: str = content
 
@@ -56,7 +56,7 @@ class MethodColorpicker(PopupMethod):
     varprefix: Optional[str]
     value: Optional[str]
 
-    def __init__(self, varprefix: str, value: str):
+    def __init__(self, varprefix: str, value: str) -> None:
         super().__init__(type="colorpicker")
         self.varprefix = varprefix
         self.value = value

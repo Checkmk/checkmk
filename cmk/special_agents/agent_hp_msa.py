@@ -131,7 +131,7 @@ class AuthError(RuntimeError):
 
 
 class HPMSAConnection:
-    def __init__(self, hostaddress, opt_timeout, debug):
+    def __init__(self, hostaddress, opt_timeout, debug) -> None:
         self._host = hostaddress
         self._base_url = "https://%s/api/" % self._host
         self._timeout = opt_timeout

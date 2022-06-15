@@ -274,12 +274,12 @@ class Test:
     def exists(cls, id_) -> bool:
         return cls.test_dir(id_).exists()
 
-    def __init__(self, id_=None):
-        self._log = []
+    def __init__(self, id_=None) -> None:
+        self._log: list = []
         self._log_to_stdout = False
         self.version = __version__
         self.state = Test.STATE_INITIALIZING
-        self._measurements = []
+        self._measurements: list = []
         self.result: Optional[str] = None
         self.result_msg: Optional[str] = None
         self.system_info = SystemInfo()
@@ -287,7 +287,7 @@ class Test:
         if id_ is None:
             self.system_info.collect()
             self.id_ = self._get_test_id()
-            self.test_cases = []
+            self.test_cases: list = []
         else:
             self.id_ = id_
             self.load()
@@ -437,7 +437,7 @@ class TestRunner(threading.Thread):
         20000,
     ]
 
-    def __init__(self, num_hosts=100, num_helpers=20):
+    def __init__(self, num_hosts=100, num_helpers=20) -> None:
         super().__init__()
         self.name = "test-runner"
         self._stop = threading.Event()
@@ -745,7 +745,7 @@ class TestRunner(threading.Thread):
 
 
 class Analyzer(threading.Thread):
-    def __init__(self, runner):
+    def __init__(self, runner) -> None:
         self._runner = runner
         super().__init__()
 
@@ -789,7 +789,7 @@ class Start:
 
 
 class Wait:
-    def __init__(self, duration):
+    def __init__(self, duration) -> None:
         self.until = time.time() + duration
 
 
@@ -941,20 +941,20 @@ class Measurement:
 
         return average
 
-    def __init__(self, runner=None):
+    def __init__(self, runner=None) -> None:
         super().__init__()
         self._runner = runner
 
         self.test_case: Optional[TestAgentBasedStandardHosts] = None
         self.disk_counters = None
-        self.site_state = None
+        self.site_state: None | int = None
 
         self.time: Optional[float] = None
         self.cpu_load: Optional[Tuple[float, float, float]] = None
         self.memory: Optional[svmem] = None
         self.disk_usage: Optional[sdiskusage] = None
         self.disk_io: Optional[sdiskio] = None
-        self.site_stats = None
+        self.site_stats: None | dict[str, Any] = None
 
     def measure(self, last=None):
         self.test_case = self._runner.test_case.name() if self._runner.test_case else None
@@ -1022,8 +1022,9 @@ class Measurement:
 
         setattr(self, k, val)
 
-    def _get_disk_io(self, last):
+    def _get_disk_io(self, last) -> None:
         self.disk_counters = self._get_disk_counters()
+        assert self.disk_counters is not None
 
         if not last:
             self.disk_io = DiskIO(0.0, 0.0)
@@ -1031,11 +1032,11 @@ class Measurement:
 
         read_bytes_per_sec = (self.disk_counters.read_bytes - last.disk_counters.read_bytes) / (
             self.time - last.time
-        )  # fixed: true-division
+        )
 
         write_bytes_per_sec = (self.disk_counters.write_bytes - last.disk_counters.write_bytes) / (
             self.time - last.time
-        )  # fixed: true-division
+        )
 
         self.disk_io = DiskIO(read_bytes_per_sec, write_bytes_per_sec)
 
@@ -1088,15 +1089,15 @@ class Measurement:
 
 
 class AgentListener(multiprocessing.Process):
-    def __init__(self, host_ids, *args, **kwargs):
+    def __init__(self, host_ids, *args, **kwargs) -> None:
         self._hosts = host_ids
-        self._sockets = []
-        self._socket_map = {}
+        self._sockets: list = []
+        self._socket_map: dict = {}
         super().__init__(*args, **kwargs)
         self.name = "mkbench_agent-listener"
 
         # Holds the counters per host that are used to track the dynamic agent data
-        self._counters = {}
+        self._counters: dict = {}
 
     def run(self):
         try:
@@ -2510,7 +2511,7 @@ class TestAgentBasedStandardHosts(TestCase):
 
     host_name_template = "std-agent-host-%05d"
 
-    def __init__(self, runner=None, num_hosts=None, planned_duration=None):
+    def __init__(self, runner=None, num_hosts=None, planned_duration=None) -> None:
         super().__init__()
         self._runner = runner
         self._test = runner.test if runner else None
@@ -2518,7 +2519,7 @@ class TestAgentBasedStandardHosts(TestCase):
         self.num_hosts = num_hosts
         self.planned_duration = planned_duration
 
-        self._listeners = []
+        self._listeners: list = []
         self._hosts_per_listener = 100
 
     def name(self) -> str:
@@ -3029,7 +3030,7 @@ class Window(npyscreen.FormBaseNew):  # pylint: disable=too-many-ancestors
 
 
 class GeneralInformation(npyscreen.BoxTitle):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.name = "General Information"
         self.editable = False
@@ -3060,7 +3061,7 @@ class GeneralInformation(npyscreen.BoxTitle):
 
 
 class SiteInformation(npyscreen.BoxTitle):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.name = "Site"
         self.editable = False
@@ -3109,7 +3110,7 @@ class SiteInformation(npyscreen.BoxTitle):
 class Log(npyscreen.BoxTitle):
     _contained_widget = npyscreen.BufferPager
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         kwargs["contained_widget_arguments"] = {
             "autowrap": True,
         }
@@ -3137,13 +3138,13 @@ class Log(npyscreen.BoxTitle):
 
 
 class HelpText(npyscreen.FixedText):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.value = "^C: quit"
 
 
 class ConsoleRenderer(npyscreen.NPSApp):
-    def __init__(self, runner):
+    def __init__(self, runner) -> None:
         super().__init__()
 
         self._runner = runner

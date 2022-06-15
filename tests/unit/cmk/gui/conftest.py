@@ -152,7 +152,7 @@ def suppress_remote_automation_calls(mocker: MagicMock) -> Iterator[RemoteAutoma
 @pytest.fixture()
 def make_html_object_explode(mocker: MagicMock) -> None:
     class HtmlExploder:
-        def __init__(self, *args, **kw):
+        def __init__(self, *args, **kw) -> None:
             raise NotImplementedError("Tried to instantiate html")
 
     mocker.patch("cmk.gui.htmllib.html", new=HtmlExploder)

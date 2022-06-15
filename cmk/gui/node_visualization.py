@@ -401,7 +401,7 @@ BILeafTreeState = Tuple[Dict[str, Any], Any, Dict[str, Any]]
 
 # Creates are hierarchical dictionary which can be read by the NodeVisualization framework
 class NodeVisualizationBIDataMapper:
-    def __init__(self, is_single_host_aggregation=False):
+    def __init__(self, is_single_host_aggregation=False) -> None:
         super().__init__()
         self._is_single_host_aggregation = is_single_host_aggregation
 

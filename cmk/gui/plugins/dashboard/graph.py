@@ -64,7 +64,7 @@ class AvailableGraphs(DropdownChoiceWithHostAndServiceHints):
     ident = "available_graphs"
     _MARKER_DEPRECATED_CHOICE = "_deprecated_int_value"
 
-    def __init__(self, **kwargs: Any):
+    def __init__(self, **kwargs: Any) -> None:
         kwargs_with_defaults: Mapping[str, Any] = {
             "css_spec": ["ajax-vals"],
             "hint_label": _("graph"),

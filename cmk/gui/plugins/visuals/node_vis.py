@@ -25,7 +25,7 @@ class _FilterRangeConfig:
 
 
 class FilterRange(Filter):
-    def __init__(self, filter_range_config: _FilterRangeConfig):
+    def __init__(self, filter_range_config: _FilterRangeConfig) -> None:
         super().__init__(
             ident=filter_range_config.column,
             title=filter_range_config.title,

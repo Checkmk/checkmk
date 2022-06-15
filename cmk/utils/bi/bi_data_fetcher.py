@@ -62,7 +62,7 @@ def get_cache_dir() -> Path:
 
 
 class BIStructureFetcher:
-    def __init__(self, sites_callback: SitesCallback):
+    def __init__(self, sites_callback: SitesCallback) -> None:
         self._sites_callback = sites_callback
         self._hosts: Dict[HostName, BIHostData] = {}
         self._have_sites: Set[SiteId] = set()

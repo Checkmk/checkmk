@@ -346,6 +346,8 @@ class NetAppConnection:
         user: str,
         password: str,
         no_tls: bool,
+        timeout: int,
+        *,
         debug: bool = False,
         dump_xml: bool = False,
     ) -> None:
@@ -355,6 +357,7 @@ class NetAppConnection:
         )
         self.user = user
         self.password = password
+        self.timeout = timeout
         self.vfiler: Optional[str] = None
 
         self.status = None
@@ -419,9 +422,9 @@ class NetAppConnection:
             auth=(self.user, self.password),
         )
         prepped = self.session.prepare_request(req)  # type: ignore[no-untyped-call]
-        # No SSL certificate check..
 
-        response = self.session.send(prepped, verify=False)
+        # No SSL certificate check..
+        response = self.session.send(prepped, timeout=self.timeout, verify=False)
 
         netapp_response = NetAppResponse(response, self.debug)
 
@@ -1681,7 +1684,13 @@ def query_counters(
 def netapp_session(args: Args) -> NetAppConnection:
     try:
         return NetAppConnection(
-            args.host_address, args.user, args.secret, args.no_tls, args.debug, args.dump_xml
+            args.host_address,
+            args.user,
+            args.secret,
+            args.no_tls,
+            args.timeout,
+            debug=args.debug,
+            dump_xml=args.dump_xml,
         )
 
     except Exception:

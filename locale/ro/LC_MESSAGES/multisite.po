@@ -550,10 +550,6 @@ msgid "%s is too low. The minimum allowed value is %s."
 msgstr ""
 
 #, python-format
-msgid "%s larger than"
-msgstr "%s mai mare decât"
-
-#, python-format
 msgid "%s latency"
 msgstr ""
 
@@ -2220,6 +2216,10 @@ msgid "AWS/S3 Limits"
 msgstr "Adaugă limite"
 
 #, fuzzy
+msgid "AWS/SNS Limits"
+msgstr "Adaugă limite"
+
+#, fuzzy
 msgid "AWS/WAFV2 Limits"
 msgstr "Adaugă limite"
 
@@ -2256,10 +2256,6 @@ msgstr "Nivel-urile absolute de licențe neutilizate"
 
 msgid "Absolute"
 msgstr "Absolut"
-
-#, python-format
-msgid "Absolute %s"
-msgstr "Absolut %s"
 
 #, python-format
 msgid "Absolute %s space"
@@ -5228,6 +5224,15 @@ msgstr ""
 msgid "Assign service to following host"
 msgstr "Adaugă instanță NGINX"
 
+#, fuzzy
+msgid "Assign services to AWS host"
+msgstr "Adaugă instanță NGINX"
+
+msgid ""
+"Assign services to piggyback host(s) named as the 'Origin Domain' configured "
+"in AWS"
+msgstr ""
+
 msgid "Assign services to the following cluster:"
 msgstr ""
 
@@ -7110,6 +7115,10 @@ msgid "Bytes accepted"
 msgstr ""
 
 #, fuzzy
+msgid "Bytes downloaded"
+msgstr "Conexiuni Active"
+
+#, fuzzy
 msgid "Bytes dropped"
 msgstr "Conexiuni Active"
 
@@ -7134,6 +7143,10 @@ msgstr "Sterge Elementul"
 #, fuzzy
 msgid "Bytes sent/received"
 msgstr "Sterge Elementul"
+
+#, fuzzy
+msgid "Bytes uploaded"
+msgstr "Mesajul Text"
 
 msgid "C"
 msgstr ""
@@ -9129,6 +9142,10 @@ msgstr "Adresă"
 msgid "Cloud based environments"
 msgstr ""
 
+#, fuzzy
+msgid "CloudFront"
+msgstr "Conexiuni Active"
+
 msgid "CloudFront WAFs"
 msgstr ""
 
@@ -9728,10 +9745,6 @@ msgid ""
 "for user processes and kernel routines over all available cores within the "
 "last check interval. The possible range is from 0% to 100%"
 msgstr ""
-
-#, fuzzy
-msgid "Configure levels for used space"
-msgstr "Nivel-urile absolute de licențe neutilizate"
 
 msgid ""
 "Configure monitoring of networking services using classical nagios plugins "
@@ -12103,6 +12116,10 @@ msgid ""
 "encoded."
 msgstr ""
 
+#, fuzzy
+msgid "Data transfer"
+msgstr "% / gamă"
+
 msgid "Data type"
 msgstr ""
 
@@ -12507,6 +12524,9 @@ msgstr ""
 msgid "Deferred files in Spool"
 msgstr ""
 
+msgid "Define Host Assignment"
+msgstr ""
+
 msgid ""
 "Define a direct translation of the possible states of the HAProxy frontend "
 "to monitoring states, i.e. to the result of the check. This overwrites the "
@@ -12594,6 +12614,14 @@ msgstr ""
 msgid ""
 "Define patterns for including kernel configuration parameters in the "
 "inventory."
+msgstr ""
+
+msgid ""
+"Define the host to assign the discovered CloudFront services. You can assign "
+"them to the AWS host as any other AWS service or to a piggyback host that "
+"will be named as the 'Origin Domain' specified in the CloudFront "
+"distribution - in case you select the second option, you will have to create "
+"the piggyback host(s)"
 msgstr ""
 
 #, fuzzy
@@ -13305,11 +13333,6 @@ msgstr "Ascude regulile de utilizator"
 
 #, python-format
 msgid "Deprecated WATO modes found: %r. They need to be refactored to new API."
-msgstr ""
-
-msgid ""
-"Deprecated WATO module: Implemented as function. This needs to be refactored "
-"as WatoMode child class."
 msgstr ""
 
 msgid "Deprecated choice, please re-select"
@@ -16677,7 +16700,7 @@ msgstr ""
 msgid "Escape HTML globally enabled"
 msgstr ""
 
-msgid "Escape HTML in host output(Dangerous to deactivate - read help)"
+msgid "Escape HTML in host output (Dangerous to deactivate - read help)"
 msgstr ""
 
 msgid "Escape HTML in service output (Dangerous to deactivate - read help)"
@@ -17493,6 +17516,9 @@ msgid "FC Ports"
 msgstr ""
 
 msgid "FCP"
+msgstr ""
+
+msgid "FIFO Topics"
 msgstr ""
 
 msgid "FIN_WAIT1"
@@ -20410,7 +20436,7 @@ msgid ""
 msgstr ""
 
 msgid ""
-"Here you can set different warn/crit levels regarding the free cooling  "
+"Here you can set different warn/crit levels regarding the free cooling "
 "positions."
 msgstr ""
 
@@ -24265,10 +24291,10 @@ msgstr ""
 msgid "Invalid user input"
 msgstr ""
 
-msgid "Invalid valid for based on. Must be id of builtin rule."
+msgid "Invalid value for ack parameter."
 msgstr ""
 
-msgid "Invalid value for ack parameter."
+msgid "Invalid value for based on. Must be id of builtin rule."
 msgstr ""
 
 #, python-format
@@ -25412,10 +25438,6 @@ msgstr "Nivelurile maxime pentru voltaj"
 msgid "Levels for %s"
 msgstr ""
 
-#, python-format
-msgid "Levels for %s %s"
-msgstr ""
-
 #, fuzzy, python-format
 msgid "Levels for %s mail queue"
 msgstr "Nivelurile maxime pentru voltaj"
@@ -25465,10 +25487,6 @@ msgstr "Nivelurile maxime pentru voltaj"
 
 msgid "Levels for Inodes"
 msgstr ""
-
-#, fuzzy
-msgid "Levels for LUN"
-msgstr "Nivelurile maxime pentru voltaj"
 
 #, fuzzy
 msgid "Levels for Memory"
@@ -25564,14 +25582,12 @@ msgstr "Nivelurile maxime pentru incarcare in procente"
 msgid "Levels for file descriptor usage"
 msgstr "Nivelurile maxime pentru voltaj"
 
-msgid "Levels for filesystem"
-msgstr ""
-
-msgid "Levels for filesystem free space"
-msgstr ""
-
 msgid "Levels for free memory"
 msgstr ""
+
+#, fuzzy
+msgid "Levels for free space"
+msgstr "Nivelurile maxime pentru voltaj"
 
 #, fuzzy
 msgid "Levels for half closed connections"
@@ -25764,20 +25780,12 @@ msgstr ""
 msgid "Levels for used space (reclaimable is considered as free)"
 msgstr ""
 
+#, fuzzy
+msgid "Levels for used/free space"
+msgstr "Nivelurile maxime pentru voltaj"
+
 msgid "Levels for user managed backup files"
 msgstr ""
-
-#, fuzzy
-msgid "Levels for volume"
-msgstr "Nivelurile maxime pentru voltaj"
-
-#, fuzzy
-msgid "Levels for volume group"
-msgstr "Nivelurile maxime pentru voltaj"
-
-#, fuzzy
-msgid "Levels for volume group free space"
-msgstr "Nivelurile maxime pentru voltaj"
 
 #, fuzzy
 msgid "Levels for wait"
@@ -26700,10 +26708,6 @@ msgid "Logfile information of logwatch plugin"
 msgstr ""
 
 #, fuzzy
-msgid "Logfile levels"
-msgstr "Editeaza regulile de loguri"
-
-#, fuzzy
 msgid "Logfile pattern analyzer"
 msgstr "Editeaza regulile de loguri"
 
@@ -26742,7 +26746,7 @@ msgid "Logging"
 msgstr ""
 
 #, fuzzy
-msgid "Logging Level"
+msgid "Logging level"
 msgstr "Editeaza regulile de loguri"
 
 msgid "Logging of RRD creation"
@@ -28011,8 +28015,16 @@ msgid "Maximal free cooling positions"
 msgstr "Numarul maxim de fisiere"
 
 #, fuzzy
+msgid "Maximal log file size"
+msgstr "Dimensiunea Maxima"
+
+#, fuzzy
 msgid "Maximal number of daemon threads"
 msgstr "Numarul maxim de mesaje"
+
+#, fuzzy
+msgid "Maximal number of log files to backup"
+msgstr "Numarum maxim de biti pentru primire"
 
 #, fuzzy
 msgid "Maximal number of threads"
@@ -28027,6 +28039,10 @@ msgstr "Dimensiunea Maxima"
 
 #, fuzzy
 msgid "Maximal size of a file"
+msgstr "Dimensiunea maxima pentru cel mai mare fisier"
+
+#, fuzzy
+msgid "Maximal size of a log file"
 msgstr "Dimensiunea maxima pentru cel mai mare fisier"
 
 msgid "Maximal size of largest file"
@@ -30859,10 +30875,6 @@ msgstr "(element fără element)"
 msgid "No successful synchronization so far."
 msgstr "<li>Nici o sincronizare de succes până acum.</li"
 
-#, python-format
-msgid "No such WATO module '<tt>%s</tt>'"
-msgstr ""
-
 #, fuzzy
 msgid "No such file"
 msgstr "(element fără element)"
@@ -31802,6 +31814,11 @@ msgstr ""
 msgid ""
 "Number of lock requests per second that timed out, including requests for "
 "NOWAIT locks."
+msgstr ""
+
+msgid ""
+"Number of log files used during log rotation as a backup. Once this number "
+"of log files is exceeded, the oldest log file will be deleted."
 msgstr ""
 
 msgid "Number of logged in users (Linux)"
@@ -33897,10 +33914,6 @@ msgid "Percentage"
 msgstr ""
 
 #, python-format
-msgid "Percentage %s"
-msgstr ""
-
-#, python-format
 msgid "Percentage %s Requests"
 msgstr ""
 
@@ -34561,6 +34574,9 @@ msgid ""
 "lib/nagios/plugins</tt> or <tt>~/lib/nagios/plugins</tt> within your site "
 "directory, you can strip the path name and just configure the plugin file "
 "name as command <tt>check_foobar</tt>."
+msgstr ""
+
+msgid "Please enter the date in the format YYYY-MM-DD HH:mm:ss."
 msgstr ""
 
 msgid "Please enter the date in the format YYYY-MM-DD."
@@ -40859,6 +40875,10 @@ msgstr ""
 msgid "Silently skip exceeding messages"
 msgstr ""
 
+#, fuzzy
+msgid "Simple Notification Service (SNS)"
+msgstr "trimite notificare"
+
 msgid "Simple Storage Service (S3)"
 msgstr ""
 
@@ -42031,6 +42051,9 @@ msgid "Staleness value to mark hosts / services stale"
 msgstr ""
 
 msgid "Standalone"
+msgstr ""
+
+msgid "Standard Topics"
 msgstr ""
 
 msgid "Standard deviation of roundtrip times in ms"
@@ -43627,6 +43650,10 @@ msgstr "Afectat de serviciu"
 #, fuzzy
 msgid "Systemd single services discovery"
 msgstr "Afectat de serviciu"
+
+#, fuzzy
+msgid "Systems larger than"
+msgstr "%s mai mare decât"
 
 msgid "TCP"
 msgstr ""
@@ -49616,9 +49643,6 @@ msgid ""
 "scripts."
 msgstr ""
 
-msgid "This ruleset allows to set parameters for space and inodes usage"
-msgstr ""
-
 msgid ""
 "This ruleset allows you to configure explicit PING monitoring of hosts. "
 "Usually a PING is being used as a host check, so this is not neccessary. "
@@ -50016,7 +50040,8 @@ msgid "This stored report does not exist."
 msgstr ""
 
 #, python-format
-msgid "This suffix is already used by connection %s.Please choose another one."
+msgid ""
+"This suffix is already used by connection %s. Please choose another one."
 msgstr ""
 
 msgid "This synchronization plugin has no parameters."
@@ -50662,6 +50687,9 @@ msgstr ""
 
 #, python-format
 msgid "Timespecific parameters computed at %s"
+msgstr ""
+
+msgid "Timestamp (YYYY-MM-DD HH:mm:ss)"
 msgstr ""
 
 msgid "Timestamp of a remote file"
@@ -53295,6 +53323,9 @@ msgstr ""
 msgid "Use mountpoint"
 msgstr " pe siteul de monitorizare: "
 
+msgid "Use narrow rendering for this number"
+msgstr ""
+
 msgid "Use new service descriptions"
 msgstr ""
 
@@ -55810,6 +55841,10 @@ msgid "Windows agent controller troubleshooting"
 msgstr "trimite notificare"
 
 #, fuzzy
+msgid "Windows agent logging"
+msgstr "(fără Nivel de serviciu)"
+
+#, fuzzy
 msgid "Windows authentication"
 msgstr "trimite notificare"
 
@@ -56330,9 +56365,6 @@ msgstr ""
 msgid ""
 "You are not allowed to perform actions. If you think this is an error, "
 "please ask your administrator grant you the permission to do so."
-msgstr ""
-
-msgid "You are not allowed to use WATO."
 msgstr ""
 
 msgid "You are not allowed to use passwords from the password store here."
@@ -59705,6 +59737,30 @@ msgstr "z/OS"
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr ""
 
+#, python-format
+#~ msgid "Absolute %s"
+#~ msgstr "Absolut %s"
+
+#, fuzzy
+#~ msgid "Configure levels for used space"
+#~ msgstr "Nivel-urile absolute de licențe neutilizate"
+
+#, fuzzy
+#~ msgid "Levels for LUN"
+#~ msgstr "Nivelurile maxime pentru voltaj"
+
+#, fuzzy
+#~ msgid "Levels for volume"
+#~ msgstr "Nivelurile maxime pentru voltaj"
+
+#, fuzzy
+#~ msgid "Levels for volume group"
+#~ msgstr "Nivelurile maxime pentru voltaj"
+
+#, fuzzy
+#~ msgid "Logfile levels"
+#~ msgstr "Editeaza regulile de loguri"
+
 #, fuzzy
 #~ msgid "Use default DNS server"
 #~ msgstr "Matrice"
@@ -60327,10 +60383,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Busy threads"
 #~ msgstr "fire"
-
-#, fuzzy
-#~ msgid "Bytes processed"
-#~ msgstr "Mesajul Text"
 
 #, fuzzy
 #~ msgid "Bytes reclaimed by GC"
@@ -62791,10 +62843,6 @@ msgstr ""
 #~ msgstr "Cautare"
 
 #, fuzzy
-#~ msgid "See failed Notifications (all)"
-#~ msgstr "trimite notificare"
-
-#, fuzzy
 #~ msgid "See failed Notifications (last 24 hours)"
 #~ msgstr "trimite notificare"
 
@@ -64180,10 +64228,6 @@ msgstr ""
 #~ "alte notificari pe email, SMS, sau similar. Aceasta suprascrie toate "
 #~ "celelalte reguli sau setari pentru notificari, deci fii sigur ca stii "
 #~ "ceea ce faci."
-
-#, fuzzy
-#~ msgid "Windows Plugins"
-#~ msgstr "(fără Nivel de serviciu)"
 
 #, fuzzy
 #~ msgid "activating..."

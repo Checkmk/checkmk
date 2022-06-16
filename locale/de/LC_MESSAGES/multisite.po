@@ -561,10 +561,6 @@ msgid "%s is too low. The minimum allowed value is %s."
 msgstr "%s ist zu niedrig (erlaubtes Minimum: %s)."
 
 #, python-format
-msgid "%s larger than"
-msgstr "%s größer als"
-
-#, python-format
 msgid "%s latency"
 msgstr "%s Latenz"
 
@@ -2570,6 +2566,10 @@ msgstr "AWS/S3 Latenzzeit"
 msgid "AWS/S3 Limits"
 msgstr "AWS/S3 Grenzwerte"
 
+#, fuzzy
+msgid "AWS/SNS Limits"
+msgstr "AWS/S3 Grenzwerte"
+
 msgid "AWS/WAFV2 Limits"
 msgstr "AWS/WAFV2 Grenzwerte"
 
@@ -2603,10 +2603,6 @@ msgstr "Absoluter Schwellwert für die Gesamtanzahl an benutzten Sockets"
 
 msgid "Absolute"
 msgstr "Absolut"
-
-#, python-format
-msgid "Absolute %s"
-msgstr "Absolut %s"
 
 #, python-format
 msgid "Absolute %s space"
@@ -5540,6 +5536,15 @@ msgstr "Zuweisung SLA zu Service"
 msgid "Assign service to following host"
 msgstr "Service dem folgenden Host zuweisen"
 
+#, fuzzy
+msgid "Assign services to AWS host"
+msgstr "Service dem folgenden Host zuweisen"
+
+msgid ""
+"Assign services to piggyback host(s) named as the 'Origin Domain' configured "
+"in AWS"
+msgstr ""
+
 msgid "Assign services to the following cluster:"
 msgstr "Services zu folgendem Cluster zuordnen:"
 
@@ -7594,6 +7599,10 @@ msgstr "Bytes"
 msgid "Bytes accepted"
 msgstr "Bytes akzeptiert"
 
+#, fuzzy
+msgid "Bytes downloaded"
+msgstr "Bytes verworfen"
+
 msgid "Bytes dropped"
 msgstr "Bytes verworfen"
 
@@ -7616,6 +7625,10 @@ msgstr "Gesendete Bytes"
 #, fuzzy
 msgid "Bytes sent/received"
 msgstr "Gesendete Bytes"
+
+#, fuzzy
+msgid "Bytes uploaded"
+msgstr "Bytes verarbeitet"
 
 msgid "C"
 msgstr "C"
@@ -9748,6 +9761,10 @@ msgstr "IP-Netzwerk"
 msgid "Cloud based environments"
 msgstr "Cloud-basierte Umgebungen"
 
+#, fuzzy
+msgid "CloudFront"
+msgstr "CloudFront WAFs"
+
 msgid "CloudFront WAFs"
 msgstr "CloudFront WAFs"
 
@@ -10366,9 +10383,6 @@ msgstr ""
 "Die CPU Auslastung ist der prozentuale Gesamtwert der CPU Zeit für Benutzer "
 "Prozesse und Kernel Routinen aller verfügbaren Prozessor-Kerne innerhalb des "
 "letzten Überprüfungs-Intervalls. Gültige Werte: 0% bis 100%."
-
-msgid "Configure levels for used space"
-msgstr "Prozentuale Schwellen für verbrauchten Speicherplatz"
 
 msgid ""
 "Configure monitoring of networking services using classical nagios plugins "
@@ -12716,6 +12730,10 @@ msgstr ""
 "Daten die über HTTP POST verwendet werden. Bitte sicherstellen, dass die "
 "Daten URL codiert sind."
 
+#, fuzzy
+msgid "Data transfer"
+msgstr "Datenbereich"
+
 msgid "Data type"
 msgstr "Datentyp"
 
@@ -13106,6 +13124,9 @@ msgstr "Alter von Verzögerte Dateien"
 msgid "Deferred files in Spool"
 msgstr "Verzögerte Dateien im Spooler"
 
+msgid "Define Host Assignment"
+msgstr ""
+
 #, fuzzy
 msgid ""
 "Define a direct translation of the possible states of the HAProxy frontend "
@@ -13220,6 +13241,14 @@ msgid ""
 msgstr ""
 "Definiere Muster um die Kernel Konfigurationsparameter bei der Inventur "
 "einzuschließen."
+
+msgid ""
+"Define the host to assign the discovered CloudFront services. You can assign "
+"them to the AWS host as any other AWS service or to a piggyback host that "
+"will be named as the 'Origin Domain' specified in the CloudFront "
+"distribution - in case you select the second option, you will have to create "
+"the piggyback host(s)"
+msgstr ""
 
 #, fuzzy
 msgid "Define upper levels for number of running containers"
@@ -13948,13 +13977,6 @@ msgid "Deprecated WATO modes found: %r. They need to be refactored to new API."
 msgstr ""
 "Veraltetet WATO-Modi gefunden: %r. Diese müssen an die neue API angepasst "
 "werden."
-
-msgid ""
-"Deprecated WATO module: Implemented as function. This needs to be refactored "
-"as WatoMode child class."
-msgstr ""
-"Veraltetes WATO-Modul: Als Funktion implementiert. Dieses muss als "
-"Kindklasse von WatoMode neu implementiert werden."
 
 msgid "Deprecated choice, please re-select"
 msgstr "Veraltete Auswahl, bitte neu auswählen"
@@ -17341,7 +17363,8 @@ msgstr "Escape von HTML-Codes in der Service-Ausgabe"
 msgid "Escape HTML globally enabled"
 msgstr "Escape HTML global aktiviert"
 
-msgid "Escape HTML in host output(Dangerous to deactivate - read help)"
+#, fuzzy
+msgid "Escape HTML in host output (Dangerous to deactivate - read help)"
 msgstr ""
 "Escape HTML in der Host-Ausgabe (Gefährlich zum Deaktivieren - Hilfe lesen)"
 
@@ -18113,6 +18136,10 @@ msgstr "FC Ports"
 
 msgid "FCP"
 msgstr "FCP"
+
+#, fuzzy
+msgid "FIFO Topics"
+msgstr "Themen"
 
 msgid "FIN_WAIT1"
 msgstr "FIN_WAIT1"
@@ -21309,8 +21336,9 @@ msgstr ""
 "Hier können Sie unterschiedliche warn/crit Schwellwerte für die verfügbare "
 "Kühlleistung festlegen."
 
+#, fuzzy
 msgid ""
-"Here you can set different warn/crit levels regarding the free cooling  "
+"Here you can set different warn/crit levels regarding the free cooling "
 "positions."
 msgstr ""
 "Hier können Sie unterschiedliche warn/crit Schwellwerte für die freien "
@@ -25894,11 +25922,12 @@ msgstr "Ungültige Benutzerverbindung: %s"
 msgid "Invalid user input"
 msgstr "Ungültige Benutzeeingabe"
 
-msgid "Invalid valid for based on. Must be id of builtin rule."
-msgstr "Ungültiger Wert: muss ID einer eingebauten Regel sein."
-
 msgid "Invalid value for ack parameter."
 msgstr "Ungültiger Wert für ACK Parameter."
+
+#, fuzzy
+msgid "Invalid value for based on. Must be id of builtin rule."
+msgstr "Ungültiger Wert: muss ID einer eingebauten Regel sein."
 
 #, python-format
 msgid "Invalid value in column %d (%s) of row %d: %s"
@@ -27047,10 +27076,6 @@ msgstr "Schwellen für Platten-I/O"
 msgid "Levels for %s"
 msgstr "Schwellen für %s"
 
-#, python-format
-msgid "Levels for %s %s"
-msgstr "Schwellen für %s %s"
-
 #, fuzzy, python-format
 msgid "Levels for %s mail queue"
 msgstr "Schwellwerte für die Swap-Nutzung"
@@ -27093,9 +27118,6 @@ msgstr "Schwellwerte für E/A-Stats-Anfragen"
 
 msgid "Levels for Inodes"
 msgstr "Schwellen für Inodes"
-
-msgid "Levels for LUN"
-msgstr "Schwellwerte der LUN"
 
 msgid "Levels for Memory"
 msgstr "Schwellwerte für Speicher"
@@ -27174,14 +27196,12 @@ msgstr "Schwellwerte für fehlerhafte Kapazität in Prozent"
 msgid "Levels for file descriptor usage"
 msgstr "Schwellwerte für die Verwendung von Dateideskriptoren"
 
-msgid "Levels for filesystem"
-msgstr "Schwellen für Dateisystem"
-
-msgid "Levels for filesystem free space"
-msgstr "Schwellwerte für freien Speicherplatz"
-
 msgid "Levels for free memory"
 msgstr "Schwellwerte für freien Speicher"
+
+#, fuzzy
+msgid "Levels for free space"
+msgstr "Schwellwerte für freien Speicherplatz"
 
 msgid "Levels for half closed connections"
 msgstr "Schwellen für halbgeschlossene Verbindungen"
@@ -27356,17 +27376,12 @@ msgstr "Schwellen für die benutzten Prozesse"
 msgid "Levels for used space (reclaimable is considered as free)"
 msgstr "Schwellen für belegten Platz (Reclaimable wird als frei betrachtet)"
 
+#, fuzzy
+msgid "Levels for used/free space"
+msgstr "Schwellwert für benutzten Speicherplatz"
+
 msgid "Levels for user managed backup files"
 msgstr "Schwellwerte für Benutzerverwaltete Backupdateien"
-
-msgid "Levels for volume"
-msgstr "Schwellwerte für das Volume"
-
-msgid "Levels for volume group"
-msgstr "Schwellwerte Volumegruppe"
-
-msgid "Levels for volume group free space"
-msgstr "Schwellwerte für freien Speicherplatz"
 
 msgid "Levels for wait"
 msgstr "Schwellen für Wartezeiten"
@@ -28283,9 +28298,6 @@ msgstr "Logfile-Gruppierung"
 msgid "Logfile information of logwatch plugin"
 msgstr "Informationen zu Logdateien des Logwatch-Plugins"
 
-msgid "Logfile levels"
-msgstr "Schwellwerte für Logdateien"
-
 msgid "Logfile pattern analyzer"
 msgstr "Logdatei-Muster Analyse"
 
@@ -28322,7 +28334,8 @@ msgstr "Abgemeldet."
 msgid "Logging"
 msgstr "Logging"
 
-msgid "Logging Level"
+#, fuzzy
+msgid "Logging level"
 msgstr "Loglevel"
 
 msgid "Logging of RRD creation"
@@ -29531,8 +29544,16 @@ msgstr "Maximale Dateianzahl"
 msgid "Maximal free cooling positions"
 msgstr "Maximale freie Kühlpositionen"
 
+#, fuzzy
+msgid "Maximal log file size"
+msgstr "Maximale Größe"
+
 msgid "Maximal number of daemon threads"
 msgstr "Maximale Anzahl von Daemon Threads"
+
+#, fuzzy
+msgid "Maximal number of log files to backup"
+msgstr "Maximale Größe aller Dateien am Sicherungsspeicherplatz"
 
 msgid "Maximal number of threads"
 msgstr "Maximale Anzahl von Threads"
@@ -29544,6 +29565,10 @@ msgid "Maximal size"
 msgstr "Maximale Größe"
 
 msgid "Maximal size of a file"
+msgstr "Maximale Größe einer Datei"
+
+#, fuzzy
+msgid "Maximal size of a log file"
 msgstr "Maximale Größe einer Datei"
 
 msgid "Maximal size of largest file"
@@ -32272,10 +32297,6 @@ msgstr "Kein Status-Host"
 msgid "No successful synchronization so far."
 msgstr "Keine erfolgreiche Synchronisation bisher."
 
-#, python-format
-msgid "No such WATO module '<tt>%s</tt>'"
-msgstr "Es gibt kein WATO-Modul mit dem Namen '<tt>%s</tt>'"
-
 msgid "No such file"
 msgstr "Datei existiert nicht"
 
@@ -33237,6 +33258,11 @@ msgid ""
 msgstr ""
 "Anzahl von abgelaufenen Sperr-Anfragen pro Sek. einschließlich Abfragen für "
 "NOWAIT Sperren."
+
+msgid ""
+"Number of log files used during log rotation as a backup. Once this number "
+"of log files is exceeded, the oldest log file will be deleted."
+msgstr ""
 
 msgid "Number of logged in users (Linux)"
 msgstr "Anzahl angemeldeter Benutzer (Linux)"
@@ -35364,10 +35390,6 @@ msgid "Percentage"
 msgstr "Prozentwert"
 
 #, python-format
-msgid "Percentage %s"
-msgstr "Prozentwert %s"
-
-#, python-format
 msgid "Percentage %s Requests"
 msgstr "Prozentwert %s Anfragen"
 
@@ -36057,6 +36079,10 @@ msgstr ""
 "lib/nagios/plugins</tt> liegt, können Sie auf den kompletten Pfad für das "
 "Plugin verzichten und direkt dessen Namen angeben, z.B. <tt>check_foobar</"
 "tt>."
+
+#, fuzzy
+msgid "Please enter the date in the format YYYY-MM-DD HH:mm:ss."
+msgstr "Bitte Datum im Format YYYY-MM-DD eigeben."
 
 msgid "Please enter the date in the format YYYY-MM-DD."
 msgstr "Bitte Datum im Format YYYY-MM-DD eigeben."
@@ -42356,6 +42382,10 @@ msgstr "Problem stillschweigend ignorieren, diesen Graphen auslassen"
 msgid "Silently skip exceeding messages"
 msgstr "Übrige Nachrichten stillschweigend auslassen"
 
+#, fuzzy
+msgid "Simple Notification Service (SNS)"
+msgstr "Simple Storage Service (S3)"
+
 msgid "Simple Storage Service (S3)"
 msgstr "Simple Storage Service (S3)"
 
@@ -43764,6 +43794,9 @@ msgstr "Veraltungswert, ab dem Hosts/Services als veraltet gelten"
 
 msgid "Standalone"
 msgstr "Allein stehend"
+
+msgid "Standard Topics"
+msgstr ""
 
 msgid "Standard deviation of roundtrip times in ms"
 msgstr "Standardabweichung der Antwortzeit in Milisekunden"
@@ -45311,6 +45344,10 @@ msgstr "Systemd einzelne Dienste"
 
 msgid "Systemd single services discovery"
 msgstr "Erkennung einzelner Systemd Services"
+
+#, fuzzy
+msgid "Systems larger than"
+msgstr "%s größer als"
 
 msgid "TCP"
 msgstr "TCP"
@@ -53225,11 +53262,6 @@ msgstr ""
 "Mit diesem Regelsatz kann ausgewählt werden, welcher Python-Interpreter zur "
 "Ausführung von Python-Skripten verwendet werden soll."
 
-msgid "This ruleset allows to set parameters for space and inodes usage"
-msgstr ""
-"Dieser Regelsatz ermöglicht es, Parameter für die Verwendung von "
-"Speicherplatz und Inodes festzulegen."
-
 msgid ""
 "This ruleset allows you to configure explicit PING monitoring of hosts. "
 "Usually a PING is being used as a host check, so this is not neccessary. "
@@ -53813,8 +53845,9 @@ msgstr ""
 msgid "This stored report does not exist."
 msgstr "Dieser gespeicherte Bericht existiert nicht."
 
-#, python-format
-msgid "This suffix is already used by connection %s.Please choose another one."
+#, fuzzy, python-format
+msgid ""
+"This suffix is already used by connection %s. Please choose another one."
 msgstr ""
 "Dieses Suffix wird bereits von der Verbindung %s verwendet, bitte wählen Sie "
 "ein anderes."
@@ -54588,6 +54621,10 @@ msgstr "Zeitspanne oder Dauer in Sekunden"
 #, python-format
 msgid "Timespecific parameters computed at %s"
 msgstr "Zeitspezifische Parameter, berechnet zu %s"
+
+#, fuzzy
+msgid "Timestamp (YYYY-MM-DD HH:mm:ss)"
+msgstr "JJJJ-MM-TT HH:MM:SS"
 
 msgid "Timestamp of a remote file"
 msgstr "Zeitstempel einer entfernten Datei"
@@ -57165,6 +57202,9 @@ msgstr ""
 #, fuzzy
 msgid "Use mountpoint"
 msgstr "Ist ein Mount-Point"
+
+msgid "Use narrow rendering for this number"
+msgstr ""
 
 msgid "Use new service descriptions"
 msgstr "Neue Servicenamen verwenden"
@@ -60175,6 +60215,10 @@ msgstr "Windows Module"
 msgid "Windows agent controller troubleshooting"
 msgstr "Windows-Authentifizierung"
 
+#, fuzzy
+msgid "Windows agent logging"
+msgstr "Windows-Agent - Plugins"
+
 msgid "Windows authentication"
 msgstr "Windows-Authentifizierung"
 
@@ -60792,9 +60836,6 @@ msgid ""
 msgstr ""
 "Sie dürfen keine Aktionen ausführen. Wenn Sie diese Berechtigungen "
 "benötigen, dann wenden Sie sich an den Administrator."
-
-msgid "You are not allowed to use WATO."
-msgstr "Sie dürfen WATO nicht benutzen."
 
 msgid "You are not allowed to use passwords from the password store here."
 msgstr "Sie dürfen hier keine Passworte aus dem Passwortspeicher nutzen."
@@ -64563,6 +64604,58 @@ msgstr "z/OS"
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Alle Rechte vorbehalten."
 
+#, python-format
+#~ msgid "Absolute %s"
+#~ msgstr "Absolut %s"
+
+#~ msgid "Configure levels for used space"
+#~ msgstr "Prozentuale Schwellen für verbrauchten Speicherplatz"
+
+#, python-format
+#~ msgid "Levels for %s %s"
+#~ msgstr "Schwellen für %s %s"
+
+#~ msgid "Levels for LUN"
+#~ msgstr "Schwellwerte der LUN"
+
+#~ msgid "Levels for filesystem"
+#~ msgstr "Schwellen für Dateisystem"
+
+#~ msgid "Levels for volume"
+#~ msgstr "Schwellwerte für das Volume"
+
+#~ msgid "Levels for volume group"
+#~ msgstr "Schwellwerte Volumegruppe"
+
+#~ msgid "Levels for volume group free space"
+#~ msgstr "Schwellwerte für freien Speicherplatz"
+
+#~ msgid "Logfile levels"
+#~ msgstr "Schwellwerte für Logdateien"
+
+#, python-format
+#~ msgid "Percentage %s"
+#~ msgstr "Prozentwert %s"
+
+#~ msgid "This ruleset allows to set parameters for space and inodes usage"
+#~ msgstr ""
+#~ "Dieser Regelsatz ermöglicht es, Parameter für die Verwendung von "
+#~ "Speicherplatz und Inodes festzulegen."
+
+#~ msgid ""
+#~ "Deprecated WATO module: Implemented as function. This needs to be "
+#~ "refactored as WatoMode child class."
+#~ msgstr ""
+#~ "Veraltetes WATO-Modul: Als Funktion implementiert. Dieses muss als "
+#~ "Kindklasse von WatoMode neu implementiert werden."
+
+#, python-format
+#~ msgid "No such WATO module '<tt>%s</tt>'"
+#~ msgstr "Es gibt kein WATO-Modul mit dem Namen '<tt>%s</tt>'"
+
+#~ msgid "You are not allowed to use WATO."
+#~ msgstr "Sie dürfen WATO nicht benutzen."
+
 #~ msgid "Manual Check"
 #~ msgstr "Manueller Check"
 
@@ -66228,9 +66321,6 @@ msgstr "© %s tribe29 GmbH. Alle Rechte vorbehalten."
 
 #~ msgid "Busy threads"
 #~ msgstr "Belegte Threads"
-
-#~ msgid "Bytes processed"
-#~ msgstr "Bytes verarbeitet"
 
 #~ msgid "Bytes reclaimed by GC"
 #~ msgstr "von GC zurückgeforderte Bytes"
@@ -72904,9 +72994,6 @@ msgstr "© %s tribe29 GmbH. Alle Rechte vorbehalten."
 
 #~ msgid "Windows Agent - OpenHardwareMonitor (headless)"
 #~ msgstr "Windows Agent - OpenHardwareMonitor (ohne Oberfläche)"
-
-#~ msgid "Windows Agent - Plugins"
-#~ msgstr "Windows-Agent - Plugins"
 
 #~ msgid ""
 #~ "With this permission set, the BI aggregation rules are applied to all "

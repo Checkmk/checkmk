@@ -562,10 +562,6 @@ msgid "%s is too low. The minimum allowed value is %s."
 msgstr "%s is te laag. De minimum toegestane waarde is %s."
 
 #, python-format
-msgid "%s larger than"
-msgstr "%s groter dan"
-
-#, python-format
 msgid "%s latency"
 msgstr "%s latentie"
 
@@ -2564,6 +2560,10 @@ msgstr "AWS/S3 Latency"
 msgid "AWS/S3 Limits"
 msgstr "AWS/S3 Grenzen"
 
+#, fuzzy
+msgid "AWS/SNS Limits"
+msgstr "AWS/S3 Grenzen"
+
 msgid "AWS/WAFV2 Limits"
 msgstr "AWS/WAFV2 Grenzen"
 
@@ -2596,10 +2596,6 @@ msgstr "Absoluut niveau voor totaal aantal gebruikte contactdozen"
 
 msgid "Absolute"
 msgstr "Absoluut"
-
-#, python-format
-msgid "Absolute %s"
-msgstr "Absoluut %s"
 
 #, python-format
 msgid "Absolute %s space"
@@ -5540,6 +5536,15 @@ msgstr "Wijs SLA toe aan dienst"
 msgid "Assign service to following host"
 msgstr "Wijs de dienst toe aan de volgende host"
 
+#, fuzzy
+msgid "Assign services to AWS host"
+msgstr "Wijs de dienst toe aan de volgende host"
+
+msgid ""
+"Assign services to piggyback host(s) named as the 'Origin Domain' configured "
+"in AWS"
+msgstr ""
+
 msgid "Assign services to the following cluster:"
 msgstr "Wijs diensten toe aan het volgende cluster:"
 
@@ -7595,6 +7600,10 @@ msgstr "Bytes"
 msgid "Bytes accepted"
 msgstr "Aanvaarde bytes"
 
+#, fuzzy
+msgid "Bytes downloaded"
+msgstr "Gedropte bytes"
+
 msgid "Bytes dropped"
 msgstr "Gedropte bytes"
 
@@ -7617,6 +7626,10 @@ msgstr "Verstuurde bytes"
 #, fuzzy
 msgid "Bytes sent/received"
 msgstr "Verstuurde bytes"
+
+#, fuzzy
+msgid "Bytes uploaded"
+msgstr "Verwerkte bytes"
 
 msgid "C"
 msgstr "C"
@@ -9733,6 +9746,10 @@ msgstr "IP-netwerk"
 msgid "Cloud based environments"
 msgstr "Cloud-gebaseerde omgevingen"
 
+#, fuzzy
+msgid "CloudFront"
+msgstr "CloudFront WAF's"
+
 msgid "CloudFront WAFs"
 msgstr "CloudFront WAF's"
 
@@ -10353,9 +10370,6 @@ msgstr ""
 "gebruikt voor gebruikersprocessen en kernelroutines over alle beschikbare "
 "cores binnen het laatste controle-interval. Het mogelijke bereik is van 0% "
 "tot 100%"
-
-msgid "Configure levels for used space"
-msgstr "Configureer niveaus voor gebruikte ruimte"
 
 msgid ""
 "Configure monitoring of networking services using classical nagios plugins "
@@ -12684,6 +12698,10 @@ msgstr ""
 "Gegevens om te versturen via HTTP POST methode. Zorg ervoor dat de gegevens "
 "URL-gecodeerd zijn."
 
+#, fuzzy
+msgid "Data transfer"
+msgstr "Gegevensbereik"
+
 msgid "Data type"
 msgstr "Gegevenstype"
 
@@ -13076,6 +13094,9 @@ msgstr "Uitgestelde bestanden Leeftijd"
 msgid "Deferred files in Spool"
 msgstr "Uitgestelde bestanden in Spool"
 
+msgid "Define Host Assignment"
+msgstr ""
+
 msgid ""
 "Define a direct translation of the possible states of the HAProxy frontend "
 "to monitoring states, i.e. to the result of the check. This overwrites the "
@@ -13186,6 +13207,14 @@ msgid ""
 msgstr ""
 "Definieer patronen voor het opnemen van kernel configuratie parameters in de "
 "inventaris."
+
+msgid ""
+"Define the host to assign the discovered CloudFront services. You can assign "
+"them to the AWS host as any other AWS service or to a piggyback host that "
+"will be named as the 'Origin Domain' specified in the CloudFront "
+"distribution - in case you select the second option, you will have to create "
+"the piggyback host(s)"
+msgstr ""
 
 #, fuzzy
 msgid "Define upper levels for number of running containers"
@@ -13905,13 +13934,6 @@ msgid "Deprecated WATO modes found: %r. They need to be refactored to new API."
 msgstr ""
 "Afgeschreven WATO-modi gevonden: %r. Ze moeten worden aangepast aan de "
 "nieuwe API."
-
-msgid ""
-"Deprecated WATO module: Implemented as function. This needs to be refactored "
-"as WatoMode child class."
-msgstr ""
-"Afgeschreven WATO module: Geïmplementeerd als functie. Deze moet worden "
-"gerefactored als WatoMode child class."
 
 msgid "Deprecated choice, please re-select"
 msgstr "Afgeschafte keuze, gelieve opnieuw te selecteren"
@@ -17288,7 +17310,8 @@ msgstr "Escape HTML-codes in dienstuitvoer"
 msgid "Escape HTML globally enabled"
 msgstr "Escape HTML globaal ingeschakeld"
 
-msgid "Escape HTML in host output(Dangerous to deactivate - read help)"
+#, fuzzy
+msgid "Escape HTML in host output (Dangerous to deactivate - read help)"
 msgstr ""
 "Escape HTML in host uitvoer(Gevaarlijk om uit te schakelen - lees help)"
 
@@ -18052,6 +18075,10 @@ msgstr "FC Poorten"
 
 msgid "FCP"
 msgstr "FCP"
+
+#, fuzzy
+msgid "FIFO Topics"
+msgstr "Onderwerpen"
 
 msgid "FIN_WAIT1"
 msgstr "FIN_WAIT1"
@@ -21227,8 +21254,9 @@ msgstr ""
 "Hier kunt u verschillende waarschuwings-/kritiekniveaus instellen met "
 "betrekking tot de beschikbare koelcapaciteit."
 
+#, fuzzy
 msgid ""
-"Here you can set different warn/crit levels regarding the free cooling  "
+"Here you can set different warn/crit levels regarding the free cooling "
 "positions."
 msgstr ""
 "Hier kunt u verschillende waarschuwings-/criticoniveaus instellen met "
@@ -25833,11 +25861,12 @@ msgstr "Ongeldige gebruikersverbinding: %s"
 msgid "Invalid user input"
 msgstr "Ongeldige gebruikersinvoer"
 
-msgid "Invalid valid for based on. Must be id of builtin rule."
-msgstr "Ongeldig geldig voor gebaseerd op. Moet id van ingebouwde regel zijn."
-
 msgid "Invalid value for ack parameter."
 msgstr "Ongeldige waarde voor ack parameter."
+
+#, fuzzy
+msgid "Invalid value for based on. Must be id of builtin rule."
+msgstr "Ongeldig geldig voor gebaseerd op. Moet id van ingebouwde regel zijn."
 
 #, python-format
 msgid "Invalid value in column %d (%s) of row %d: %s"
@@ -26989,10 +27018,6 @@ msgstr "Niveaus"
 msgid "Levels for %s"
 msgstr "Niveaus voor %s"
 
-#, python-format
-msgid "Levels for %s %s"
-msgstr "Niveaus voor %s %s"
-
 #, fuzzy, python-format
 msgid "Levels for %s mail queue"
 msgstr "Niveaus voor swapgebruik"
@@ -27035,9 +27060,6 @@ msgstr "Niveaus voor IO Stats Verzoeken"
 
 msgid "Levels for Inodes"
 msgstr "Niveaus voor Inodes"
-
-msgid "Levels for LUN"
-msgstr "Niveaus voor LUN"
 
 msgid "Levels for Memory"
 msgstr "Niveaus voor geheugen"
@@ -27115,14 +27137,12 @@ msgstr "Niveaus voor uitgevallen capaciteit in procenten"
 msgid "Levels for file descriptor usage"
 msgstr "Niveaus voor bestandsdescriptorgebruik"
 
-msgid "Levels for filesystem"
-msgstr "Niveaus voor bestandssysteem"
-
-msgid "Levels for filesystem free space"
-msgstr "Niveaus voor bestandssysteem vrije ruimte"
-
 msgid "Levels for free memory"
 msgstr "Niveaus voor vrij geheugen"
+
+#, fuzzy
+msgid "Levels for free space"
+msgstr "Niveaus voor bestandssysteem vrije ruimte"
 
 msgid "Levels for half closed connections"
 msgstr "Niveaus voor half gesloten verbindingen"
@@ -27300,17 +27320,12 @@ msgstr "Niveaus voor gebruikte processen"
 msgid "Levels for used space (reclaimable is considered as free)"
 msgstr "Niveaus voor gebruikte ruimte (reclaimable wordt beschouwd als vrij)"
 
+#, fuzzy
+msgid "Levels for used/free space"
+msgstr "Niveaus voor gebruikte schijfruimte"
+
 msgid "Levels for user managed backup files"
 msgstr "Niveaus voor door de gebruiker beheerde back-upbestanden"
-
-msgid "Levels for volume"
-msgstr "Niveaus voor volume"
-
-msgid "Levels for volume group"
-msgstr "Niveaus voor volumegroep"
-
-msgid "Levels for volume group free space"
-msgstr "Niveaus voor volume groep vrije ruimte"
 
 msgid "Levels for wait"
 msgstr "Niveaus voor wachten"
@@ -28225,9 +28240,6 @@ msgstr "Logbestand groepering"
 msgid "Logfile information of logwatch plugin"
 msgstr "Logbestand informatie van logwatch plugin"
 
-msgid "Logfile levels"
-msgstr "Logbestand niveaus"
-
 msgid "Logfile pattern analyzer"
 msgstr "Logfile patroon analyser"
 
@@ -28264,7 +28276,8 @@ msgstr "Uitgelogd."
 msgid "Logging"
 msgstr "Loggen"
 
-msgid "Logging Level"
+#, fuzzy
+msgid "Logging level"
 msgstr "Logging Niveau"
 
 msgid "Logging of RRD creation"
@@ -29473,8 +29486,16 @@ msgstr "Maximaal aantal bestanden"
 msgid "Maximal free cooling positions"
 msgstr "Maximale vrije koelingsposities"
 
+#, fuzzy
+msgid "Maximal log file size"
+msgstr "Maximale grootte"
+
 msgid "Maximal number of daemon threads"
 msgstr "Maximaal aantal daemon-threads"
+
+#, fuzzy
+msgid "Maximal number of log files to backup"
+msgstr "Maximumgrootte van alle bestanden op de back-upruimte"
 
 msgid "Maximal number of threads"
 msgstr "Maximaal aantal threads"
@@ -29486,6 +29507,10 @@ msgid "Maximal size"
 msgstr "Maximale grootte"
 
 msgid "Maximal size of a file"
+msgstr "Maximale grootte van een bestand"
+
+#, fuzzy
+msgid "Maximal size of a log file"
 msgstr "Maximale grootte van een bestand"
 
 msgid "Maximal size of largest file"
@@ -32193,10 +32218,6 @@ msgstr "Geen status host"
 msgid "No successful synchronization so far."
 msgstr "Geen succesvolle synchronisatie tot nu toe."
 
-#, python-format
-msgid "No such WATO module '<tt>%s</tt>'"
-msgstr "Geen dergelijke WATO-module '<tt>%s</tt>'"
-
 msgid "No such file"
 msgstr "No such file"
 
@@ -33161,6 +33182,11 @@ msgid ""
 msgstr ""
 "Aantal lock-verzoeken per seconde dat is verlopen, inclusief verzoeken voor "
 "NOWAIT-locks."
+
+msgid ""
+"Number of log files used during log rotation as a backup. Once this number "
+"of log files is exceeded, the oldest log file will be deleted."
+msgstr ""
 
 msgid "Number of logged in users (Linux)"
 msgstr "Aantal ingelogde gebruikers (Linux)"
@@ -35287,10 +35313,6 @@ msgid "Percentage"
 msgstr "Percentage"
 
 #, python-format
-msgid "Percentage %s"
-msgstr "Percentage %s"
-
-#, python-format
 msgid "Percentage %s Requests"
 msgstr "Percentage %s Verzoeken"
 
@@ -35967,6 +35989,10 @@ msgstr ""
 "plugins</tt> of <tt>~/lib/nagios/plugins</tt> in uw site directory staat, "
 "kunt u de padnaam weglaten en alleen de bestandsnaam van de plugin "
 "configureren als commando <tt>check_foobar</tt>."
+
+#, fuzzy
+msgid "Please enter the date in the format YYYY-MM-DD HH:mm:ss."
+msgstr "Geef de datum op in het formaat JJJJ-MM-DD."
 
 msgid "Please enter the date in the format YYYY-MM-DD."
 msgstr "Geef de datum op in het formaat JJJJ-MM-DD."
@@ -42254,6 +42280,10 @@ msgstr "Stilzwijgend het probleem negeren, deze grafiek overslaan"
 msgid "Silently skip exceeding messages"
 msgstr "Overslaan van berichten"
 
+#, fuzzy
+msgid "Simple Notification Service (SNS)"
+msgstr "Eenvoudige opslagdienst (S3)"
+
 msgid "Simple Storage Service (S3)"
 msgstr "Eenvoudige opslagdienst (S3)"
 
@@ -43664,6 +43694,9 @@ msgstr "Stalenheidswaarde om hosts / diensten als oud te markeren"
 
 msgid "Standalone"
 msgstr "Standalone"
+
+msgid "Standard Topics"
+msgstr ""
 
 msgid "Standard deviation of roundtrip times in ms"
 msgstr "Standaardafwijking van de rondreistijd in ms"
@@ -45210,6 +45243,10 @@ msgstr "Systemd enkele diensten"
 
 msgid "Systemd single services discovery"
 msgstr "Systemd single services ontdekking"
+
+#, fuzzy
+msgid "Systems larger than"
+msgstr "%s groter dan"
 
 msgid "TCP"
 msgstr "TCP"
@@ -53165,11 +53202,6 @@ msgstr ""
 "Deze regelset laat toe om te kiezen welke Python interpreter gebruikt wordt "
 "om python scripts uit te voeren."
 
-msgid "This ruleset allows to set parameters for space and inodes usage"
-msgstr ""
-"Deze regelset laat toe om parameters in te stellen voor het gebruik van "
-"ruimte en inodes"
-
 msgid ""
 "This ruleset allows you to configure explicit PING monitoring of hosts. "
 "Usually a PING is being used as a host check, so this is not neccessary. "
@@ -53759,8 +53791,9 @@ msgstr ""
 msgid "This stored report does not exist."
 msgstr "Dit opgeslagen rapport bestaat niet."
 
-#, python-format
-msgid "This suffix is already used by connection %s.Please choose another one."
+#, fuzzy, python-format
+msgid ""
+"This suffix is already used by connection %s. Please choose another one."
 msgstr ""
 "Dit achtervoegsel wordt al gebruikt door verbinding %s. Kies a.u.b. een "
 "ander."
@@ -54533,6 +54566,10 @@ msgstr "Tijdsduur in seconden"
 #, python-format
 msgid "Timespecific parameters computed at %s"
 msgstr "Tijdspecifieke parameters berekend op %s"
+
+#, fuzzy
+msgid "Timestamp (YYYY-MM-DD HH:mm:ss)"
+msgstr "JJJJ-MM-DD UU:MM:SS"
 
 msgid "Timestamp of a remote file"
 msgstr "Tijdstempel van een bestand op afstand"
@@ -57089,6 +57126,9 @@ msgstr "Gebruik de meest kritische van uw en apparaat niveaus"
 
 msgid "Use mountpoint"
 msgstr "Gebruik mountpoint"
+
+msgid "Use narrow rendering for this number"
+msgstr ""
 
 msgid "Use new service descriptions"
 msgstr "Gebruik nieuwe dienstbeschrijvingen"
@@ -60123,6 +60163,10 @@ msgstr "Windows Modules"
 msgid "Windows agent controller troubleshooting"
 msgstr "Windows-verificatie"
 
+#, fuzzy
+msgid "Windows agent logging"
+msgstr "Windows Gebeurtenislogboeken"
+
 msgid "Windows authentication"
 msgstr "Windows-verificatie"
 
@@ -60750,9 +60794,6 @@ msgid ""
 msgstr ""
 "U mag geen acties uitvoeren. Als u denkt dat dit een fout is, vraag dan uw "
 "beheerder om u hiervoor de toestemming te geven."
-
-msgid "You are not allowed to use WATO."
-msgstr "Je mag WATO niet gebruiken."
 
 msgid "You are not allowed to use passwords from the password store here."
 msgstr "U mag hier geen wachtwoorden uit de wachtwoordwinkel gebruiken."
@@ -64502,6 +64543,58 @@ msgstr "z/OS"
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Alle rechten voorbehouden."
 
+#, python-format
+#~ msgid "Absolute %s"
+#~ msgstr "Absoluut %s"
+
+#~ msgid "Configure levels for used space"
+#~ msgstr "Configureer niveaus voor gebruikte ruimte"
+
+#, python-format
+#~ msgid "Levels for %s %s"
+#~ msgstr "Niveaus voor %s %s"
+
+#~ msgid "Levels for LUN"
+#~ msgstr "Niveaus voor LUN"
+
+#~ msgid "Levels for filesystem"
+#~ msgstr "Niveaus voor bestandssysteem"
+
+#~ msgid "Levels for volume"
+#~ msgstr "Niveaus voor volume"
+
+#~ msgid "Levels for volume group"
+#~ msgstr "Niveaus voor volumegroep"
+
+#~ msgid "Levels for volume group free space"
+#~ msgstr "Niveaus voor volume groep vrije ruimte"
+
+#~ msgid "Logfile levels"
+#~ msgstr "Logbestand niveaus"
+
+#, python-format
+#~ msgid "Percentage %s"
+#~ msgstr "Percentage %s"
+
+#~ msgid "This ruleset allows to set parameters for space and inodes usage"
+#~ msgstr ""
+#~ "Deze regelset laat toe om parameters in te stellen voor het gebruik van "
+#~ "ruimte en inodes"
+
+#~ msgid ""
+#~ "Deprecated WATO module: Implemented as function. This needs to be "
+#~ "refactored as WatoMode child class."
+#~ msgstr ""
+#~ "Afgeschreven WATO module: Geïmplementeerd als functie. Deze moet worden "
+#~ "gerefactored als WatoMode child class."
+
+#, python-format
+#~ msgid "No such WATO module '<tt>%s</tt>'"
+#~ msgstr "Geen dergelijke WATO-module '<tt>%s</tt>'"
+
+#~ msgid "You are not allowed to use WATO."
+#~ msgstr "Je mag WATO niet gebruiken."
+
 #~ msgid "Manual Check"
 #~ msgstr "Handmatige controle"
 
@@ -66172,9 +66265,6 @@ msgstr "© 2020 tribe29 GmbH. Alle rechten voorbehouden."
 
 #~ msgid "Busy threads"
 #~ msgstr "Drukke draden"
-
-#~ msgid "Bytes processed"
-#~ msgstr "Verwerkte bytes"
 
 #~ msgid "Bytes reclaimed by GC"
 #~ msgstr "Bytes teruggevorderd door GC"

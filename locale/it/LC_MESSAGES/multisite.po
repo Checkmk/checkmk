@@ -564,10 +564,6 @@ msgid "%s is too low. The minimum allowed value is %s."
 msgstr "%s è troppo basso. Il valore minimo consentito è %s."
 
 #, python-format
-msgid "%s larger than"
-msgstr "%s più grande di"
-
-#, python-format
 msgid "%s latency"
 msgstr "%s latenza"
 
@@ -2564,6 +2560,10 @@ msgstr "Latenza AWS/S3"
 msgid "AWS/S3 Limits"
 msgstr "Limiti AWS/S3"
 
+#, fuzzy
+msgid "AWS/SNS Limits"
+msgstr "Limiti AWS/S3"
+
 msgid "AWS/WAFV2 Limits"
 msgstr "Limiti AWS/WAFV2"
 
@@ -2596,10 +2596,6 @@ msgstr "Livello assoluto per il numero totale di prese utilizzate"
 
 msgid "Absolute"
 msgstr "Assoluto"
-
-#, python-format
-msgid "Absolute %s"
-msgstr "Assoluto %s"
 
 #, python-format
 msgid "Absolute %s space"
@@ -5543,6 +5539,15 @@ msgstr "Assegnare SLA al servizio"
 msgid "Assign service to following host"
 msgstr "Assegnare il servizio al seguente host"
 
+#, fuzzy
+msgid "Assign services to AWS host"
+msgstr "Assegnare il servizio al seguente host"
+
+msgid ""
+"Assign services to piggyback host(s) named as the 'Origin Domain' configured "
+"in AWS"
+msgstr ""
+
 msgid "Assign services to the following cluster:"
 msgstr "Assegnare i servizi al seguente cluster:"
 
@@ -7607,6 +7612,10 @@ msgstr "Bytes"
 msgid "Bytes accepted"
 msgstr "Byte accettati"
 
+#, fuzzy
+msgid "Bytes downloaded"
+msgstr "Bytes caduti"
+
 msgid "Bytes dropped"
 msgstr "Bytes caduti"
 
@@ -7629,6 +7638,10 @@ msgstr "Bytes inviati"
 #, fuzzy
 msgid "Bytes sent/received"
 msgstr "Bytes inviati"
+
+#, fuzzy
+msgid "Bytes uploaded"
+msgstr "Bytes processati"
 
 msgid "C"
 msgstr "C"
@@ -9763,6 +9776,10 @@ msgstr "Rete IP"
 msgid "Cloud based environments"
 msgstr "Ambienti basati sul cloud"
 
+#, fuzzy
+msgid "CloudFront"
+msgstr "WAF di CloudFront"
+
 msgid "CloudFront WAFs"
 msgstr "WAF di CloudFront"
 
@@ -10384,9 +10401,6 @@ msgstr ""
 "che viene utilizzato per i processi utente e le routine del kernel su tutti "
 "i core disponibili nell'ultimo intervallo di controllo. L'intervallo "
 "possibile è da 0% a 100%."
-
-msgid "Configure levels for used space"
-msgstr "Configurare i livelli per lo spazio usato"
 
 msgid ""
 "Configure monitoring of networking services using classical nagios plugins "
@@ -12716,6 +12730,10 @@ msgstr ""
 "Dati da inviare tramite il metodo HTTP POST. Assicurati che i dati siano "
 "codificati come URL."
 
+#, fuzzy
+msgid "Data transfer"
+msgstr "Gamma di dati"
+
 msgid "Data type"
 msgstr "Tipo di dati"
 
@@ -13109,6 +13127,9 @@ msgstr "File differiti Età"
 msgid "Deferred files in Spool"
 msgstr "File differiti nello spool"
 
+msgid "Define Host Assignment"
+msgstr ""
+
 msgid ""
 "Define a direct translation of the possible states of the HAProxy frontend "
 "to monitoring states, i.e. to the result of the check. This overwrites the "
@@ -13219,6 +13240,14 @@ msgid ""
 msgstr ""
 "Definire i modelli per includere i parametri di configurazione del kernel "
 "nell'inventario."
+
+msgid ""
+"Define the host to assign the discovered CloudFront services. You can assign "
+"them to the AWS host as any other AWS service or to a piggyback host that "
+"will be named as the 'Origin Domain' specified in the CloudFront "
+"distribution - in case you select the second option, you will have to create "
+"the piggyback host(s)"
+msgstr ""
 
 #, fuzzy
 msgid "Define upper levels for number of running containers"
@@ -13940,13 +13969,6 @@ msgstr "Percorsi di inventario HW/SW consentiti"
 #, python-format
 msgid "Deprecated WATO modes found: %r. They need to be refactored to new API."
 msgstr "Trovati modi WATO deprecati: %r. Devono essere rifatte alle nuove API."
-
-msgid ""
-"Deprecated WATO module: Implemented as function. This needs to be refactored "
-"as WatoMode child class."
-msgstr ""
-"Modulo WATO deprecato: Implementato come funzione. Deve essere rifatto come "
-"classe figlia di WatoMode."
 
 msgid "Deprecated choice, please re-select"
 msgstr "Scelta deprecata, si prega di riselezionare"
@@ -17339,7 +17361,8 @@ msgstr "Escape dei codici HTML nell'output del servizio"
 msgid "Escape HTML globally enabled"
 msgstr "Escape HTML globalmente abilitato"
 
-msgid "Escape HTML in host output(Dangerous to deactivate - read help)"
+#, fuzzy
+msgid "Escape HTML in host output (Dangerous to deactivate - read help)"
 msgstr ""
 "Escape HTML nell'output dell'host (pericoloso da disattivare - leggi l'aiuto)"
 
@@ -18108,6 +18131,10 @@ msgstr "Porte FC"
 
 msgid "FCP"
 msgstr "FCP"
+
+#, fuzzy
+msgid "FIFO Topics"
+msgstr "Argomenti"
 
 msgid "FIN_WAIT1"
 msgstr "FIN_WAIT1"
@@ -21287,8 +21314,9 @@ msgstr ""
 "Qui potete impostare diversi livelli di avvertimento/criticità per quanto "
 "riguarda la capacità di raffreddamento disponibile."
 
+#, fuzzy
 msgid ""
-"Here you can set different warn/crit levels regarding the free cooling  "
+"Here you can set different warn/crit levels regarding the free cooling "
 "positions."
 msgstr ""
 "Qui si possono impostare diversi livelli di avvertimento/criticità per "
@@ -25892,12 +25920,13 @@ msgstr "Connessione utente non valida: %s"
 msgid "Invalid user input"
 msgstr "Inserimento utente non valido"
 
-msgid "Invalid valid for based on. Must be id of builtin rule."
-msgstr ""
-"Valido non valido per based on. Deve essere l'id della regola incorporata."
-
 msgid "Invalid value for ack parameter."
 msgstr "Valore non valido per il parametro ack."
+
+#, fuzzy
+msgid "Invalid value for based on. Must be id of builtin rule."
+msgstr ""
+"Valido non valido per based on. Deve essere l'id della regola incorporata."
 
 #, python-format
 msgid "Invalid value in column %d (%s) of row %d: %s"
@@ -27042,10 +27071,6 @@ msgstr "Livelli"
 msgid "Levels for %s"
 msgstr "Livelli per %s"
 
-#, python-format
-msgid "Levels for %s %s"
-msgstr "Livelli per %s %s"
-
 #, fuzzy, python-format
 msgid "Levels for %s mail queue"
 msgstr "Livelli per l'uso di swap"
@@ -27090,9 +27115,6 @@ msgstr "Livelli per le richieste di statistiche IO"
 
 msgid "Levels for Inodes"
 msgstr "Livelli per Inodes"
-
-msgid "Levels for LUN"
-msgstr "Livelli per LUN"
 
 msgid "Levels for Memory"
 msgstr "Livelli per la memoria"
@@ -27170,14 +27192,12 @@ msgstr "Livelli per la capacità fallita in percentuale"
 msgid "Levels for file descriptor usage"
 msgstr "Livelli per l'uso dei descrittori di file"
 
-msgid "Levels for filesystem"
-msgstr "Livelli per il filesystem"
-
-msgid "Levels for filesystem free space"
-msgstr "Livelli per lo spazio libero del filesystem"
-
 msgid "Levels for free memory"
 msgstr "Livelli per la memoria libera"
+
+#, fuzzy
+msgid "Levels for free space"
+msgstr "Livelli per lo spazio libero del filesystem"
 
 msgid "Levels for half closed connections"
 msgstr "Livelli per connessioni semichiuse"
@@ -27354,17 +27374,12 @@ msgid "Levels for used space (reclaimable is considered as free)"
 msgstr ""
 "Livelli per lo spazio usato (il recuperabile è considerato come libero)"
 
+#, fuzzy
+msgid "Levels for used/free space"
+msgstr "Livelli per lo spazio su disco utilizzato"
+
 msgid "Levels for user managed backup files"
 msgstr "Livelli per i file di backup gestiti dall'utente"
-
-msgid "Levels for volume"
-msgstr "Livelli per il volume"
-
-msgid "Levels for volume group"
-msgstr "Livelli per il gruppo di volume"
-
-msgid "Levels for volume group free space"
-msgstr "Livelli per lo spazio libero del gruppo di volumi"
 
 msgid "Levels for wait"
 msgstr "Livelli di attesa"
@@ -28281,9 +28296,6 @@ msgstr "Raggruppamento di file di log"
 msgid "Logfile information of logwatch plugin"
 msgstr "Informazioni sul file di log del plugin logwatch"
 
-msgid "Logfile levels"
-msgstr "Livelli di logfile"
-
 msgid "Logfile pattern analyzer"
 msgstr "Analizzatore di modelli di logfile"
 
@@ -28320,7 +28332,8 @@ msgstr "Disconnesso."
 msgid "Logging"
 msgstr "Registrazione"
 
-msgid "Logging Level"
+#, fuzzy
+msgid "Logging level"
 msgstr "Livello di registrazione"
 
 msgid "Logging of RRD creation"
@@ -29537,8 +29550,16 @@ msgstr "Numero massimo di file"
 msgid "Maximal free cooling positions"
 msgstr "Posizioni massime di raffreddamento libero"
 
+#, fuzzy
+msgid "Maximal log file size"
+msgstr "Dimensione massima"
+
 msgid "Maximal number of daemon threads"
 msgstr "Numero massimo di thread del demone"
+
+#, fuzzy
+msgid "Maximal number of log files to backup"
+msgstr "Dimensione massima di tutti i file nello spazio di backup"
 
 msgid "Maximal number of threads"
 msgstr "Numero massimo di thread"
@@ -29550,6 +29571,10 @@ msgid "Maximal size"
 msgstr "Dimensione massima"
 
 msgid "Maximal size of a file"
+msgstr "Dimensione massima di un file"
+
+#, fuzzy
+msgid "Maximal size of a log file"
 msgstr "Dimensione massima di un file"
 
 msgid "Maximal size of largest file"
@@ -32271,10 +32296,6 @@ msgstr "Nessun host di stato"
 msgid "No successful synchronization so far."
 msgstr "Nessuna sincronizzazione riuscita finora."
 
-#, python-format
-msgid "No such WATO module '<tt>%s</tt>'"
-msgstr "Nessun modulo WATO simile '<tt>%s</tt>'"
-
 msgid "No such file"
 msgstr "Nessun file di questo tipo"
 
@@ -33244,6 +33265,11 @@ msgid ""
 msgstr ""
 "Numero di richieste di lock al secondo che sono scadute, incluse le "
 "richieste di lock NOWAIT."
+
+msgid ""
+"Number of log files used during log rotation as a backup. Once this number "
+"of log files is exceeded, the oldest log file will be deleted."
+msgstr ""
 
 msgid "Number of logged in users (Linux)"
 msgstr "Numero di utenti connessi (Linux)"
@@ -35380,10 +35406,6 @@ msgid "Percentage"
 msgstr "Percentuale"
 
 #, python-format
-msgid "Percentage %s"
-msgstr "Percentuale %s"
-
-#, python-format
 msgid "Percentage %s Requests"
 msgstr "Percentuale %s Richieste"
 
@@ -36067,6 +36089,10 @@ msgstr ""
 "directory del vostro sito, potete eliminare il nome del percorso e "
 "configurare solo il nome del file del plugin come comando <tt>check_foobar</"
 "tt>."
+
+#, fuzzy
+msgid "Please enter the date in the format YYYY-MM-DD HH:mm:ss."
+msgstr "Inserisci la data nel formato AAAA-MM-GG."
 
 msgid "Please enter the date in the format YYYY-MM-DD."
 msgstr "Inserisci la data nel formato AAAA-MM-GG."
@@ -42374,6 +42400,10 @@ msgstr "Ignorare silenziosamente il problema, saltare questo grafico"
 msgid "Silently skip exceeding messages"
 msgstr "Saltare silenziosamente i messaggi in eccesso"
 
+#, fuzzy
+msgid "Simple Notification Service (SNS)"
+msgstr "Servizio di stoccaggio semplice (S3)"
+
 msgid "Simple Storage Service (S3)"
 msgstr "Servizio di stoccaggio semplice (S3)"
 
@@ -43784,6 +43814,9 @@ msgstr "Valore di staleness per marcare host/servizi stantii"
 
 msgid "Standalone"
 msgstr "Standalone"
+
+msgid "Standard Topics"
+msgstr ""
 
 msgid "Standard deviation of roundtrip times in ms"
 msgstr "Deviazione standard dei tempi di andata e ritorno in ms"
@@ -45331,6 +45364,10 @@ msgstr "Servizi singoli Systemd"
 
 msgid "Systemd single services discovery"
 msgstr "Scoperta dei servizi singoli di Systemd"
+
+#, fuzzy
+msgid "Systems larger than"
+msgstr "%s più grande di"
 
 msgid "TCP"
 msgstr "TCP"
@@ -53287,11 +53324,6 @@ msgstr ""
 "Questo insieme di regole permette di scegliere quale interprete Python viene "
 "utilizzato per eseguire gli script Python."
 
-msgid "This ruleset allows to set parameters for space and inodes usage"
-msgstr ""
-"Questo insieme di regole permette di impostare i parametri per l'uso dello "
-"spazio e degli inode"
-
 msgid ""
 "This ruleset allows you to configure explicit PING monitoring of hosts. "
 "Usually a PING is being used as a host check, so this is not neccessary. "
@@ -53879,8 +53911,9 @@ msgstr ""
 msgid "This stored report does not exist."
 msgstr "Questo rapporto memorizzato non esiste."
 
-#, python-format
-msgid "This suffix is already used by connection %s.Please choose another one."
+#, fuzzy, python-format
+msgid ""
+"This suffix is already used by connection %s. Please choose another one."
 msgstr ""
 "Questo suffisso è già usato dalla connessione %s. Sceglietene un altro."
 
@@ -54651,6 +54684,10 @@ msgstr "Durata in secondi"
 #, python-format
 msgid "Timespecific parameters computed at %s"
 msgstr "Parametri temporali calcolati a %s"
+
+#, fuzzy
+msgid "Timestamp (YYYY-MM-DD HH:mm:ss)"
+msgstr "AAAA-MM-GG HH:MM:SS"
 
 msgid "Timestamp of a remote file"
 msgstr "Timestamp di un file remoto"
@@ -57215,6 +57252,9 @@ msgstr "Utilizzare i livelli più critici del tuo e del dispositivo"
 
 msgid "Use mountpoint"
 msgstr "Utilizzare il punto di montaggio"
+
+msgid "Use narrow rendering for this number"
+msgstr ""
 
 msgid "Use new service descriptions"
 msgstr "Utilizzare le nuove descrizioni dei servizi"
@@ -60244,6 +60284,10 @@ msgstr "Moduli Windows"
 msgid "Windows agent controller troubleshooting"
 msgstr "Autenticazione Windows"
 
+#, fuzzy
+msgid "Windows agent logging"
+msgstr "Registri eventi di Windows"
+
 msgid "Windows authentication"
 msgstr "Autenticazione Windows"
 
@@ -60871,9 +60915,6 @@ msgid ""
 msgstr ""
 "Non ti è permesso di eseguire azioni. Se pensi che questo sia un errore, "
 "chiedi al tuo amministratore il permesso di farlo."
-
-msgid "You are not allowed to use WATO."
-msgstr "Non ti è permesso usare WATO."
 
 msgid "You are not allowed to use passwords from the password store here."
 msgstr "Non ti è permesso usare password dal negozio di password qui."
@@ -64629,6 +64670,58 @@ msgstr "z/OS"
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Tutti i diritti riservati."
 
+#, python-format
+#~ msgid "Absolute %s"
+#~ msgstr "Assoluto %s"
+
+#~ msgid "Configure levels for used space"
+#~ msgstr "Configurare i livelli per lo spazio usato"
+
+#, python-format
+#~ msgid "Levels for %s %s"
+#~ msgstr "Livelli per %s %s"
+
+#~ msgid "Levels for LUN"
+#~ msgstr "Livelli per LUN"
+
+#~ msgid "Levels for filesystem"
+#~ msgstr "Livelli per il filesystem"
+
+#~ msgid "Levels for volume"
+#~ msgstr "Livelli per il volume"
+
+#~ msgid "Levels for volume group"
+#~ msgstr "Livelli per il gruppo di volume"
+
+#~ msgid "Levels for volume group free space"
+#~ msgstr "Livelli per lo spazio libero del gruppo di volumi"
+
+#~ msgid "Logfile levels"
+#~ msgstr "Livelli di logfile"
+
+#, python-format
+#~ msgid "Percentage %s"
+#~ msgstr "Percentuale %s"
+
+#~ msgid "This ruleset allows to set parameters for space and inodes usage"
+#~ msgstr ""
+#~ "Questo insieme di regole permette di impostare i parametri per l'uso "
+#~ "dello spazio e degli inode"
+
+#~ msgid ""
+#~ "Deprecated WATO module: Implemented as function. This needs to be "
+#~ "refactored as WatoMode child class."
+#~ msgstr ""
+#~ "Modulo WATO deprecato: Implementato come funzione. Deve essere rifatto "
+#~ "come classe figlia di WatoMode."
+
+#, python-format
+#~ msgid "No such WATO module '<tt>%s</tt>'"
+#~ msgstr "Nessun modulo WATO simile '<tt>%s</tt>'"
+
+#~ msgid "You are not allowed to use WATO."
+#~ msgstr "Non ti è permesso usare WATO."
+
 #~ msgid "Manual Check"
 #~ msgstr "Controllo manuale"
 
@@ -66317,9 +66410,6 @@ msgstr "© 2020 tribe29 GmbH. Tutti i diritti riservati."
 
 #~ msgid "Busy threads"
 #~ msgstr "Flussi di lavoro"
-
-#~ msgid "Bytes processed"
-#~ msgstr "Bytes processati"
 
 #~ msgid "Bytes reclaimed by GC"
 #~ msgstr "Byte recuperati da GC"

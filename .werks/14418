@@ -1,0 +1,28 @@
+Title: Changes in rendering functions used in legacy check API
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1655363603
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+This werk might be incompatible only for users with custom check plugins in the
+legacy check API. The following rendering functions in the legacy check API have
+been changed. In case you are negatively affected by these changes, we strongly
+recommend to migrate to the new API (see <a href="https://checkmk.com/blog/migrating-check-plug-ins-to-checkmk-2-0">this blog post</a> for help and further references).
+
+LI: <tt>get_age_human_readable</tt>: Changes in rendering format only, no API changes.
+LI: <tt>get_bytes_human_readable</tt>: SI and IEC prefixes are now used consistently, see
+also werk #14417. Furthermore, the value for the <tt>base</tt> argument must now be either 1,000
+or 1,024, any other value results in a <tt>ValueError</tt>. Finally, the argument <tt>precision</tt>
+is now ignored. Instead, the number of decimal places is set automatically.
+LI: <tt>get_nic_speed_human_readable</tt>: Changes in rendering format only, no API changes.
+LI: <tt>get_percent_human_readable</tt>: The argument <tt>scientific_notation</tt> is now ignored.
+Hence, values are not rendered in scientific notation any more. Furthermore, percentages are
+always rendered with two decimal places, except for very small values.
+LI: <tt>get_number_with_precision</tt>: No unit prefixes are added any more to the rendered
+value. Instead, the value is displayed as is with the specified number of decimal places. Hence,
+the argument <tt>base</tt> is now ignored. Furthermore, the arguments <tt>drop_zeroes</tt> and
+<tt>zero_non_decimal</tt> are also ignored.

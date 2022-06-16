@@ -2130,6 +2130,9 @@ class HostTagCondition(ValueSpec):
         html.open_div(id_="%stag_sel_%s" % (varprefix, id_),
                       style="display: none;" if not div_is_open else None)
 
+    def mask(self, value):
+        return value
+
 
 class LabelCondition(Transform):
     def __init__(self, title, help_txt):

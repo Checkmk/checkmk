@@ -1787,7 +1787,11 @@ class ABCEditRuleMode(WatoMode):
         return VSExplicitConditions(rulespec=self._rulespec, **kwargs)
 
     def _show_rule_representation(self):
-        pretty_rule_config = pprint.pformat(self._rule.to_config()).replace("\n", "<br>")
+        # create a temporary copy of the rule with passwords masked
+        masked = self._rule.clone(preserve_id=True)
+        masked.value = masked.ruleset.valuespec().mask(masked.value)
+
+        pretty_rule_config = pprint.pformat(masked.to_config()).replace("\n", "<br>")
         content = html.render_text(pretty_rule_config)
 
         html.write(_("This rule representation can be used for Web API calls."))

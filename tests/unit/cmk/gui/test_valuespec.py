@@ -426,3 +426,37 @@ def test_value_encrypter_encrypt():
 def test_value_encrypter_transparent():
     enc = vs.ValueEncrypter
     assert enc.decrypt(enc.encrypt("abc")) == "abc"
+
+
+@pytest.mark.parametrize(
+    "valuespec,value,expected",
+    [
+        (vs.Integer(), 42, 42),
+        (
+            vs.Dictionary(elements=[("the answer", vs.Password())]),
+            {
+                "the answer": "42"
+            },
+            {
+                "the answer": "******"
+            },
+        ),
+        (
+            vs.SSHKeyPair(),
+            ("-----BEGIN PRIVATE KEY and so on", "ssh-ed25519 AAAA..."),
+            ["******", "ssh-ed25519 AAAA..."],
+        ),
+        (
+            vs.Tuple(elements=[
+                vs.TextInput(),
+                vs.Password(),
+                vs.CascadingDropdown(choices=[("password", "_", vs.Password())]),
+            ]),
+            ("credentials", "hunter2", ("password", "stars")),
+            ["credentials", "******", ["password", "******"]],
+        ),
+    ],
+)
+def test_mask_to_json(valuespec, value, expected):
+    masked = valuespec.mask(value)
+    assert valuespec.value_to_json(masked) == expected

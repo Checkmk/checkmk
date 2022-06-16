@@ -1377,6 +1377,9 @@ class NodeVisualizationLayoutStyle(ValueSpec):
             "let example = new cmk.node_visualization_layout_styles.LayoutStyleExampleGenerator(%s);"
             "example.create_example(%s)" % (json.dumps(varprefix), json.dumps(value)))
 
+    def mask(self, value):
+        return value
+
     def value_to_text(self, value):
         return ""
 

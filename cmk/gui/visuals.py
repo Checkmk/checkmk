@@ -1726,6 +1726,9 @@ class VisualFilter(ValueSpec):
     def validate_value(self, value, varprefix):
         self._filter.validate_value(value)
 
+    def mask(self, value):
+        return value
+
     def set_value(self, value):
         """Is used to populate a value, for example loaded from persistance, into
         the HTML context where it can be used by e.g. the display() method."""

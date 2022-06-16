@@ -30,6 +30,7 @@ AWSRegions = [
     ("eu-central-1", "EU (Frankfurt)"),
     ("eu-west-1", "EU (Ireland)"),
     ("eu-west-2", "EU (London)"),
+    ("eu-south-1", "EU (Milan)"),
     ("eu-west-3", "EU (Paris)"),
     ("eu-north-1", "EU (Stockholm)"),
     ("sa-east-1", "South America (Sao Paulo)"),

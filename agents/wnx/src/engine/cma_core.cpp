@@ -437,6 +437,24 @@ void RemoveDuplicatedEntriesByName(UnitMap &um, bool local) {
     }
 }
 
+namespace {
+
+void AllowAccess(const fs::path &f, std::wstring_view name) {
+    wtools::ChangeAccessRights(
+        f.wstring().c_str(), SE_FILE_OBJECT, name.data(), TRUSTEE_IS_NAME,
+        STANDARD_RIGHTS_ALL | GENERIC_ALL, GRANT_ACCESS, OBJECT_INHERIT_ACE);
+}
+
+void ConditionallyAllowAccess(const fs::path &f,
+                              const cfg::Plugins::ExeUnit &unit) {
+    if (!unit.group().empty()) {
+        AllowAccess(f, wtools::ConvertToUTF16(unit.group()));
+    } else if (!unit.user().empty()) {
+        AllowAccess(f, wtools::ConvertToUTF16(unit.user()));
+    }
+}
+}  // namespace
+
 void ApplyEverythingToPluginMap(PluginMap &plugin_map,
                                 const std::vector<cfg::Plugins::ExeUnit> &units,
                                 const std::vector<fs::path> &found_files,
@@ -465,6 +483,7 @@ void ApplyEverythingToPluginMap(PluginMap &plugin_map,
                 XLOG::t("To plugin '{}' to be applied rule '{}'", f,
                         it->sourceText());
                 exe->apply(entry_full_name, it->source());
+                ConditionallyAllowAccess(f, *exe);
             }
 
             ApplyEverythingLogResult(fmt_string, entry_full_name, local);

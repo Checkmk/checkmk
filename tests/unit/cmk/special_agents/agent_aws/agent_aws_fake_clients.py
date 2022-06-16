@@ -1637,7 +1637,9 @@ class EC2DescribeSpotInstanceRequestsIB(InstanceBuilder):
                                         [
                                             "standard",
                                             "io1",
+                                            "io2",
                                             "gp2",
+                                            "gp3",
                                             "sc1",
                                             "st1",
                                         ],
@@ -1835,7 +1837,9 @@ class EC2DescribeSpotFleetRequestsIB(InstanceBuilder):
                                                 [
                                                     "standard",
                                                     "io1",
+                                                    "io2",
                                                     "gp2",
+                                                    "gp3",
                                                     "sc1",
                                                     "st1",
                                                 ],
@@ -2417,7 +2421,9 @@ class EC2DescribeVolumesIB(InstanceBuilder):
                 [
                     "standard",
                     "io1",
+                    "io2",
                     "gp2",
+                    "gp3",
                     "sc1",
                     "st1",
                 ],

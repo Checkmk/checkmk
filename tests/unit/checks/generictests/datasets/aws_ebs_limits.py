@@ -19,12 +19,15 @@ checks = {
         (
             "REGION", {
                 'block_store_space_gp2': (None, 80.0, 90.0),
+                'block_store_space_gp3': (None, 80.0, 90.0),
                 'block_store_space_sc1': (None, 80.0, 90.0),
                 'block_store_space_st1': (None, 80.0, 90.0),
                 'block_store_snapshots': (None, 80.0, 90.0),
                 'block_store_iops_io1': (None, 80.0, 90.0),
+                'block_store_iops_io2': (None, 80.0, 90.0),
                 'block_store_space_standard': (None, 80.0, 90.0),
-                'block_store_space_io1': (None, 80.0, 90.0)
+                'block_store_space_io1': (None, 80.0, 90.0),
+                'block_store_space_io2': (None, 80.0, 90.0),
             }, [
                 (
                     0, 'No levels reached', [

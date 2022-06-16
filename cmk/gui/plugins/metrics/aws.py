@@ -514,21 +514,39 @@ metric_info["aws_ebs_block_store_space_standard"] = {
 }
 
 metric_info["aws_ebs_block_store_space_io1"] = {
-    "title": _l("Provisioned IOPS SSD space"),
+    "title": _l("Provisioned IOPS SSD (io1) space"),
     "unit": "bytes",
     "color": "13/a",
 }
 
 metric_info["aws_ebs_block_store_iops_io1"] = {
-    "title": _l("Provisioned IOPS SSD IO operations per second"),
+    "title": _l("Provisioned IOPS SSD (io1) IO operations per second"),
     "unit": "1/s",
     "color": "14/a",
 }
 
+metric_info["aws_ebs_block_store_space_io2"] = {
+    "title": _l("Provisioned IOPS SSD (io2) space"),
+    "unit": "bytes",
+    "color": "23/a",
+}
+
+metric_info["aws_ebs_block_store_iops_io2"] = {
+    "title": _l("Provisioned IOPS SSD (io2) IO operations per second"),
+    "unit": "1/s",
+    "color": "24/a",
+}
+
 metric_info["aws_ebs_block_store_space_gp2"] = {
-    "title": _l("General Purpose SSD space"),
+    "title": _l("General Purpose SSD (gp2) space"),
     "unit": "bytes",
     "color": "15/a",
+}
+
+metric_info["aws_ebs_block_store_space_gp3"] = {
+    "title": _l("General Purpose SSD (gp3) space"),
+    "unit": "bytes",
+    "color": "22/a",
 }
 
 metric_info["aws_ebs_block_store_space_sc1"] = {

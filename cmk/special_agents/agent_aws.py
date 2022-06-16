@@ -1587,10 +1587,13 @@ class EBSLimits(AWSSectionLimits):
 
         vol_storage_standard = 0
         vol_storage_io1 = 0
+        vol_storage_io2 = 0
         vol_storage_gp2 = 0
+        vol_storage_gp3 = 0
         vol_storage_sc1 = 0
         vol_storage_st1 = 0
         vol_iops_io1 = 0
+        vol_iops_io2 = 0
         for volume in volumes:
             vol_type = volume["VolumeType"]
             vol_size = volume["Size"]
@@ -1599,8 +1602,13 @@ class EBSLimits(AWSSectionLimits):
             elif vol_type == "io1":
                 vol_storage_io1 += vol_size
                 vol_iops_io1 += volume["Iops"]
+            elif vol_type == "io2":
+                vol_storage_io2 += vol_size
+                vol_iops_io2 += volume["Iops"]
             elif vol_type == "gp2":
                 vol_storage_gp2 += vol_size
+            elif vol_type == "gp3":
+                vol_storage_gp3 += vol_size
             elif vol_type == "sc1":
                 vol_storage_sc1 += vol_size
             elif vol_type == "st1":
@@ -1610,6 +1618,7 @@ class EBSLimits(AWSSectionLimits):
 
         # These are total limits and not instance specific
         # Space values are in TiB.
+        # Reference: https://docs.aws.amazon.com/general/latest/gr/ebs-service.html
         self._add_limit(
             "",
             AWSLimit(
@@ -1632,7 +1641,7 @@ class EBSLimits(AWSSectionLimits):
             "",
             AWSLimit(
                 "block_store_space_io1",
-                "Provisioned IOPS SSD space",
+                "Provisioned IOPS SSD (io1) space",
                 300,
                 vol_storage_io1,
             ),
@@ -1641,7 +1650,7 @@ class EBSLimits(AWSSectionLimits):
             "",
             AWSLimit(
                 "block_store_iops_io1",
-                "Provisioned IOPS SSD IO operations per second",
+                "Provisioned IOPS SSD (io1) IO operations per second",
                 300000,
                 vol_storage_io1,
             ),
@@ -1649,10 +1658,37 @@ class EBSLimits(AWSSectionLimits):
         self._add_limit(
             "",
             AWSLimit(
+                "block_store_space_io2",
+                "Provisioned IOPS SSD (io2) space",
+                20,
+                vol_storage_io2,
+            ),
+        )
+        self._add_limit(
+            "",
+            AWSLimit(
+                "block_store_iops_io2",
+                "Provisioned IOPS SSD (io2) IO operations per second",
+                100000,
+                vol_storage_io2,
+            ),
+        )
+        self._add_limit(
+            "",
+            AWSLimit(
                 "block_store_space_gp2",
-                "General Purpose SSD space",
+                "General Purpose SSD (gp2) space",
                 300,
                 vol_storage_gp2,
+            ),
+        )
+        self._add_limit(
+            "",
+            AWSLimit(
+                "block_store_space_gp3",
+                "General Purpose SSD (gp3) space",
+                300,
+                vol_storage_gp3,
             ),
         )
         self._add_limit(

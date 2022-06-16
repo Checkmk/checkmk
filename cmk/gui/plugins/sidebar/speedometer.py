@@ -28,7 +28,8 @@ class Speedometer(SidebarSnapin):
     def description(cls):
         return _(
             "A gadget that shows your current service check rate in relation to "
-            "the scheduled check rate. If the Speed-O-Meter shows a speed "
+            "the scheduled check rate, ignoring passive checks. If the "
+            "Speed-O-Meter shows a speed "
             "of 100 percent, all service checks are being executed in exactly "
             "the rate that is desired."
         )
@@ -82,7 +83,11 @@ class Speedometer(SidebarSnapin):
                 # Manually added services without check_interval could be a problem, but
                 # we have no control there.
                 scheduled_rate = (
-                    sites.live().query_summed_stats("GET services\nStats: suminv check_interval\n")[
+                    sites.live().query_summed_stats(
+                        "GET services\n"
+                        "Filter: check_command !~ check-mk-custom!$\n"
+                        "Stats: suminv check_interval\n"
+                    )[
                         0
                     ]
                     / 60.0

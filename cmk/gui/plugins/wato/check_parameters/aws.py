@@ -1124,17 +1124,41 @@ def _parameter_valuespec_aws_ebs_limits() -> Dictionary:
             (
                 "block_store_space_io1",
                 _vs_limits(
-                    _("Total Provisioned IOPS SSD space"), 300 * 1024**4, vs_limit_cls=Filesize
+                    _("Total Provisioned IOPS SSD (io1) space"),
+                    300 * 1024**4,
+                    vs_limit_cls=Filesize,
                 ),
             ),
             (
                 "block_store_iops_io1",
-                _vs_limits(_("Total Provisioned IOPS SSD IO operations per seconds"), 300000),
+                _vs_limits(_("Total Provisioned IOPS SSD (io1) IO operations per seconds"), 300000),
+            ),
+            (
+                "block_store_space_io2",
+                _vs_limits(
+                    _("Total Provisioned IOPS SSD (io2) space"),
+                    20 * 1024**4,
+                    vs_limit_cls=Filesize,
+                ),
+            ),
+            (
+                "block_store_iops_io2",
+                _vs_limits(_("Total Provisioned IOPS SSD (io2) IO operations per seconds"), 100000),
             ),
             (
                 "block_store_space_gp2",
                 _vs_limits(
-                    _("Total General Purpose SSD space"), 300 * 1024**4, vs_limit_cls=Filesize
+                    _("Total General Purpose SSD (gp2) space"),
+                    300 * 1024**4,
+                    vs_limit_cls=Filesize,
+                ),
+            ),
+            (
+                "block_store_space_gp3",
+                _vs_limits(
+                    _("Total General Purpose SSD (gp3) space"),
+                    300 * 1024**4,
+                    vs_limit_cls=Filesize,
                 ),
             ),
             (

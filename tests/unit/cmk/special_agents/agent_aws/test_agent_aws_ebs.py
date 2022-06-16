@@ -120,7 +120,7 @@ def test_agent_aws_ebs_limits(get_ebs_sections, names, tags, found_ebs):
 
     ebs_limits_result = ebs_limits_results[0]
     assert ebs_limits_result.piggyback_hostname == ""
-    assert len(ebs_limits_result.content) == 7
+    assert len(ebs_limits_result.content) == 10
 
     for limit in ebs_limits_result.content:
         assert limit.key in [
@@ -128,7 +128,10 @@ def test_agent_aws_ebs_limits(get_ebs_sections, names, tags, found_ebs):
             "block_store_space_standard",
             "block_store_space_io1",
             "block_store_iops_io1",
+            "block_store_space_io2",
+            "block_store_iops_io2",
             "block_store_space_gp2",
+            "block_store_space_gp3",
             "block_store_space_sc1",
             "block_store_space_st1",
         ]

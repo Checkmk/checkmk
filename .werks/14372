@@ -1,0 +1,17 @@
+Title: AWS EBS: add support for gp3 and io2 volume types
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1655362351
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0p4
+
+This werk adds the support for gp3 and io2 volume types to the AWS/EBS
+check.
+
+The user can now set a threshold on the AWS account-wide limits on these
+volume types.
+

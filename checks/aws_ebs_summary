@@ -11,8 +11,11 @@
 from cmk.base.check_legacy_includes.aws import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 AWSEBSStorageTypes = {
-    "gp2": "General Purpose SSD",
-    "io1": "Provisioned IOPS SSD",
+    "standard": "Magnetic volumes",
+    "gp2": "General Purpose SSD (gp2)",
+    "gp3": "General Purpose SSD (gp3)",
+    "io1": "Provisioned IOPS SSD (io1)",
+    "io2": "Provisioned IOPS SSD (io2)",
     "st1": "Throughput Optimized HDD",
     "sc1": "Cold HDD",
 }

@@ -23,7 +23,7 @@ import subprocess
 import tempfile
 from dataclasses import dataclass
 from textwrap import wrap
-from typing import Literal, Optional, Protocol, Sequence, TypedDict, Union
+from typing import Callable, Literal, Optional, Protocol, Sequence, TypedDict, Union
 
 from PIL import Image, PngImagePlugin  # type: ignore[import]
 from reportlab.lib.units import mm  # type: ignore[import]
@@ -46,7 +46,6 @@ RawTableColumn = tuple[str, Union[str, RawIconColumn, RawRendererColumn]]
 RawTableRow = list[RawTableColumn]
 RawTableRows = list[RawTableRow]
 RGBColor = tuple[float, float, float]  # (1.5, 0.0, 0.5)
-Position = Literal["c", "n", "ne", "e", "se", "s", "sw", "w", "nw"]
 SizePT = float
 SizeInternal = float
 SizeMM = float
@@ -54,6 +53,11 @@ SizeDPI = int
 Align = Literal["left", "right", "center"]
 VerticalAlign = Literal["bottom", "middle"]
 OddEven = Literal["even", "odd", "heading"]
+Position = Union[
+    tuple[Literal["n", "s", "w", "e"], SizeMM],
+    tuple[Literal["nw", "ne", "sw", "se"], tuple[SizeMM, SizeMM]],
+    Literal["c"],
+]
 
 
 class RowShading(TypedDict):
@@ -140,13 +144,23 @@ class GFXState(TypedDict):
 
 
 class Document:
-    def __init__(self, **args) -> None:
+    def __init__(
+        self,
+        font_family: str,
+        font_size: SizePT,
+        lineheight: float,
+        pagesize: tuple[SizeMM, SizeMM],
+        margins: tuple[SizeMM, SizeMM, SizeMM, SizeMM],
+        mirror_margins: bool = False,
+        pagebreak_function: Optional[Callable] = None,
+        pagebreak_arguments: Optional[tuple] = None,
+    ) -> None:
         # Static paper settings for this document
-        self._pagesize = from_mm(args["pagesize"])
-        self._margins = from_mm(args["margins"])
-        self._mirror_margins = args["margins"]
-        self._pagebreak_function = args.get("pagebreak_function")
-        self._pagebreak_arguments = args.get("pagebreak_arguments", [])
+        self._pagesize = from_mm(pagesize)
+        self._margins = from_mm(margins)
+        self._mirror_margins = mirror_margins
+        self._pagebreak_function = pagebreak_function
+        self._pagebreak_arguments = pagebreak_arguments or tuple()
 
         # set derived helper variables (all in pt)
         self._width, self._height = self._pagesize
@@ -180,11 +194,11 @@ class Document:
         # that can change while the document is being rendered. We keep a stack
         # a graphics states to that can be pushed and from that can be pulled.
         self._gfx_state: GFXState = {
-            "font_family": args["font_family"],
-            "font_size": args["font_size"],  # pt
+            "font_family": font_family,
+            "font_size": font_size,  # pt
             "font_zoom_factor": 1.0,
             "line_width": 0.05 * mm,
-            "line_height": args["lineheight"],  # in relation to font_size
+            "line_height": lineheight,  # in relation to font_size
             "fill_color": black,
             "dashes": [],
             "line_color": black,
@@ -361,8 +375,9 @@ class Document:
 
         if position == "c":
             return h_center, v_center
+
         anchor = position[0]
-        if len(anchor) == 1:  # s, n, w, e
+        if anchor in ("s", "n", "w", "e"):
             offset = position[1] * mm
             if anchor == "n":
                 return h_center, self._top - offset
@@ -373,7 +388,8 @@ class Document:
             if anchor == "e":
                 return self._right - offset - el_width, v_center
 
-        else:  # nw, sw, ne, se
+        if anchor in ("nw", "sw", "ne", "se"):
+            assert isinstance(position[1], tuple)
             h_offset = position[1][0] * mm
             v_offset = position[1][1] * mm
             if anchor[0] == "n":
@@ -385,6 +401,7 @@ class Document:
             else:
                 x = self._right - h_offset - el_width
             return x, y
+
         raise ValueError(f"Invalid position: {position}")
 
     def place_hrule(
@@ -1055,7 +1072,7 @@ class TableRenderer:
                     elif entry[0] == "object":
                         row.append(entry[1])
                     else:
-                        raise Exception("Invalid table entry %r in add_table()" % entry)
+                        raise Exception("Invalid table entry %r in add_table()" % (entry,))
                 elif css == "leftheading":
                     row.append(TitleCell(css, entry))
                 else:

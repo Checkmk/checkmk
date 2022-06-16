@@ -12,6 +12,7 @@ import pytest
 from _pytest.monkeypatch import (
     MonkeyPatch,  # type: ignore[import] # pylint: disable=import-outside-toplevel
 )
+from pytest_mock import MockerFixture
 
 from cmk.special_agents.agent_aws import (
     _create_lamdba_sections,
@@ -27,6 +28,7 @@ from .agent_aws_fake_clients import (
     FAKE_CLOUDWATCH_CLIENT_LOGS_CLIENT_DEFAULT_RESPONSE,
     FakeCloudwatchClient,
     FakeCloudwatchClientLogsClient,
+    FakeResourceNotFoundException,
     LambdaListFunctionsIB,
     LambdaListProvisionedConcurrencyConfigsIB,
     LambdaListTagsInstancesIB,
@@ -274,3 +276,33 @@ def test_lambda_cloudwatch_insights_query_results_timeout(monkeypatch: MonkeyPat
         )
         is None
     )
+
+
+@pytest.mark.parametrize("names,tags", no_tags_or_names_params)
+def test_lambda_cloudwatch_insights_log_not_existing(
+    mocker: MockerFixture, names: Sequence[str], tags: Sequence[Tuple[str, str]]
+) -> None:
+    (
+        _lambda_limits,
+        lambda_summary,
+        lambda_provisioned_concurrency_configuration,
+        _lambda_cloudwatch,
+        lambda_cloudwatch_insights,
+    ) = get_lambda_sections(names, tags)
+    mocker.patch.object(
+        FakeCloudwatchClientLogsClient,
+        "get_query_results",
+        side_effect=FakeResourceNotFoundException,
+    )
+
+    lambda_summary.run()
+    # LambdaProvisionedConcurrency needs LambdaSummary content in order to have content
+    # (as it is specified in the _get_colleague_contents method)
+    lambda_provisioned_concurrency_configuration.run()
+    # LambdaCloudwatchInsights needs LambdaProvisionedConcurrency content in order to have
+    # content (as it is specified in the _get_colleague_contents method).
+    # We are asserting that the colleague contents is present because otherwise the test is not
+    # checking anything
+    assert lambda_cloudwatch_insights._get_colleague_contents().content
+    lambda_cloudwatch_logs_results = lambda_cloudwatch_insights.run().results
+    assert len(lambda_cloudwatch_logs_results) == 0

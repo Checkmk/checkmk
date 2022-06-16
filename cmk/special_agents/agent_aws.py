@@ -4493,11 +4493,10 @@ class LambdaCloudwatchInsights(AWSSection):
         self, *args: AWSColleagueContents
     ) -> Mapping[str, Optional[LambdaMetricStats]]:
         (colleague_contents,) = args
-        return {
-            function_arn: results
-            for function_arn in colleague_contents.content.keys()
-            if (
-                results := self._query_with_cloudwatch_insights(
+        cloudwatch_data = {}
+        for function_arn in colleague_contents.content.keys():
+            try:
+                current_data = self._query_with_cloudwatch_insights(
                     log_group_name=f"/aws/lambda/{_function_arn_to_function_name_dim(function_arn)}",
                     query_string='filter @type = "REPORT"'
                     "| stats "
@@ -4507,8 +4506,15 @@ class LambdaCloudwatchInsights(AWSSection):
                     "count() as count_invocations",
                     timeout_seconds=30,
                 )
-            )
-        }
+            except self._client.exceptions.ResourceNotFoundException as e:
+                logging.debug(
+                    "CloudWatch logs not found for lambda function %s: %s", function_arn, e
+                )
+                continue
+            if not current_data:
+                continue
+            cloudwatch_data[function_arn] = current_data
+        return cloudwatch_data
 
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents

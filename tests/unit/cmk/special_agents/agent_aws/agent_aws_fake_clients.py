@@ -2974,18 +2974,31 @@ class FakeCloudwatchClient:
 
 class QueryResults(TypedDict):
     status: str
-    results: Mapping[str, Sequence[Mapping[str, str]]]
+    results: Sequence[Sequence[Mapping[str, str]]]
+    statistics: Mapping[str, float]
+    ResponseMetadata: Mapping[str, Any]
 
 
 FAKE_CLOUDWATCH_CLIENT_LOGS_CLIENT_DEFAULT_RESPONSE: QueryResults = {
-    "status": "Complete",
-    "results": {
-        "arn:aws:lambda:eu-central-1:710145618630:function:my_python_test_function": [
-            {"field": "max_memory_used_bytes", "value": "52000000"},
-            {"field": "max_init_duration_ms", "value": "1702.11"},
-            {"field": "count_cold_starts", "value": "2"},
-            {"field": "count_invocations", "value": "4"},
+    "results": [
+        [
+            {"field": "max_memory_used_bytes", "value": "35000000"},
+            {"field": "count_cold_starts", "value": "0"},
+            {"field": "count_invocations", "value": "2"},
         ]
+    ],
+    "statistics": {"recordsMatched": 2.0, "recordsScanned": 6.0, "bytesScanned": 710.0},
+    "status": "Complete",
+    "ResponseMetadata": {
+        "RequestId": "0bb17f7e-1230-474a-a9dc-93d583a6a01a",
+        "HTTPStatusCode": 200,
+        "HTTPHeaders": {
+            "x-amzn-requestid": "0bb17f7e-1230-474a-a9dc-93d583a6a01a",
+            "content-type": "application/x-amz-json-1.1",
+            "content-length": "250",
+            "date": "Thu, 16 Jun 2022 11:49:00 GMT",
+        },
+        "RetryAttempts": 0,
     },
 }
 
@@ -2994,7 +3007,17 @@ class QueryId(TypedDict):
     queryId: str
 
 
+class FakeResourceNotFoundException(Exception):
+    pass
+
+
+class FakeCloudwatchClientLogsClientExceptions:
+    ResourceNotFoundException = FakeResourceNotFoundException
+
+
 class FakeCloudwatchClientLogsClient:
+    exceptions = FakeCloudwatchClientLogsClientExceptions()
+
     def start_query(
         self, logGroupName: str, startTime: int, endTime: int, queryString: str
     ) -> QueryId:

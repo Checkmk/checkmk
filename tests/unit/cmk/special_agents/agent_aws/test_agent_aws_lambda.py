@@ -179,21 +179,26 @@ def test_agent_aws_lambda_summary(
 def test_agent_aws_lambda_cloudwatch(names: Sequence[str], tags: Sequence[Tuple[str, str]]) -> None:
     (
         _lambda_limits,
-        _lambda_summary,
-        _lambda_provisioned_concurrency_configuration,
+        lambda_summary,
+        lambda_provisioned_concurrency_configuration,
         lambda_cloudwatch,
         _lambda_cloudwatch_insights,
     ) = get_lambda_sections(
         names,
         tags,
     )
+    lambda_summary.run()
+    lambda_provisioned_concurrency_configuration.run()
+    # We are asserting that the colleague contents is present because otherwise the test is not
+    # checking anything
+    assert lambda_cloudwatch._get_colleague_contents().content
     _lambda_cloudwatch_results = lambda_cloudwatch.run().results
 
     assert lambda_cloudwatch.cache_interval == 300
     assert lambda_cloudwatch.period == 600
     assert lambda_cloudwatch.name == "lambda"
     for result in _lambda_cloudwatch_results:
-        assert len(result.content) == 28  # all metrics
+        assert len(result.content) == 84  # all metrics
 
 
 @pytest.mark.parametrize("names,tags", no_tags_or_names_params)
@@ -211,6 +216,9 @@ def test_agent_aws_lambda_provisioned_concurrency_configuration(
         tags,
     )
     lambda_summary.run()
+    # We are asserting that the colleague contents is present because otherwise the test is not
+    # checking anything
+    assert lambda_provisioned_concurrency_configuration._get_colleague_contents().content
     lambda_provisioned_concurrency_configuration_results = (
         lambda_provisioned_concurrency_configuration.run().results
     )
@@ -227,21 +235,27 @@ def test_agent_aws_lambda_cloudwatch_insights(
 ) -> None:
     (
         _lambda_limits,
-        _lambda_summary,
-        _lambda_provisioned_concurrency_configuration,
+        lambda_summary,
+        lambda_provisioned_concurrency_configuration,
         _lambda_cloudwatch,
         lambda_cloudwatch_insights,
     ) = get_lambda_sections(
         names,
         tags,
     )
+    lambda_summary.run()
+    lambda_provisioned_concurrency_configuration.run()
+    # We are asserting that the colleague contents is present because otherwise the test is not
+    # checking anything
+    assert lambda_cloudwatch_insights._get_colleague_contents().content
     lambda_cloudwatch_logs_results = lambda_cloudwatch_insights.run().results
 
     assert lambda_cloudwatch_insights.cache_interval == 300
     assert lambda_cloudwatch_insights.period == 600
     assert lambda_cloudwatch_insights.name == "lambda_cloudwatch_insights"
     for result in lambda_cloudwatch_logs_results:
-        assert len(result.content) == 3  # all metrics
+        for metrics in result.content.values():
+            assert len(metrics) == 3  # all metrics
 
 
 def test_lambda_cloudwatch_insights_query_results_timeout(monkeypatch: MonkeyPatch) -> None:

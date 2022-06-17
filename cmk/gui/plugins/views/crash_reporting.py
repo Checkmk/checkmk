@@ -104,7 +104,7 @@ class CrashReportsRowTable(RowTable):
             headers = ["crash_info"]
             columns = ["file:crash_info:%s/crash.info" % livestatus.lqencode(file_path)]
 
-            if crash_info["crash_type"] == "check":
+            if crash_info["crash_type"] in ("check", "section"):
                 headers += ["agent_output", "snmp_info"]
                 columns += [
                     "file:agent_output:%s/agent_output" % livestatus.lqencode(file_path),

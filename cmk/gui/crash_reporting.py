@@ -560,6 +560,7 @@ class ReportRendererSection(ABCReportRenderer):
     def show_details(self, crash_info: CrashInfo, row) -> None:
         self._show_crashed_section_details(crash_info)
         self._show_section_content(row)
+        _show_agent_output(row)
 
     def _show_crashed_section_details(self, info: CrashInfo) -> None:
         def format_bool(val):
@@ -631,7 +632,7 @@ class ReportRendererCheck(ABCReportRenderer):
 
     def show_details(self, crash_info: CrashInfo, row) -> None:
         self._show_crashed_check_details(crash_info)
-        self._show_agent_output(row)
+        _show_agent_output(row)
 
     def _show_crashed_check_details(self, info: CrashInfo) -> None:
         def format_bool(val):
@@ -659,12 +660,6 @@ class ReportRendererCheck(ABCReportRenderer):
             _crash_row(_("Parameters"), "This Check has no parameters", odd=False)
 
         html.close_table()
-
-    def _show_agent_output(self, row):
-        agent_output = row.get("agent_output")
-        if agent_output:
-            assert isinstance(agent_output, bytes)
-            _show_output_box(_("Agent output"), agent_output)
 
 
 @report_renderer_registry.register
@@ -739,6 +734,13 @@ def _show_output_box(title: str, content: bytes) -> None:
         )
     )
     html.close_div()
+
+
+def _show_agent_output(row):
+    agent_output = row.get("agent_output")
+    if agent_output:
+        assert isinstance(agent_output, bytes)
+        _show_output_box(_("Agent output"), agent_output)
 
 
 @cmk.gui.pages.page_registry.register_page("download_crash_report")

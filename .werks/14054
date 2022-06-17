@@ -1,0 +1,13 @@
+Title: crash_reporting: Add agent_output to section crash report
+Class: feature
+Compatible: compat
+Component: reporting
+Date: 1655468111
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0p3
+
+Section crashes now have an agent output which can be viewed,
+downloaded and submitted in a crash report.

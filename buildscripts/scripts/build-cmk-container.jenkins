@@ -118,15 +118,16 @@ timeout(time: 12, unit: 'HOURS') {
                         PORT: INTERNAL_DEPLOY_PORT,
                     )
 
-                    upload.upload(
-                        NAME: "check-mk-${EDITION}-docker-${CMK_VERS}.tar.gz",
-                        FILE_PATH: "${PACKAGE_DIR}/download/${CMK_VERS}",
-                        FILE_NAME: "check-mk-${EDITION}-docker-${CMK_VERS}.tar.gz",
-                        CMK_VERS: CMK_VERS,
-                        UPLOAD_DEST: WEB_DEPLOY_DEST,
-                        PORT: "52022",
-                    )
-
+                    if (params.PUSH_TO_REGISTRY) {
+                        upload.upload(
+                            NAME: "check-mk-${EDITION}-docker-${CMK_VERS}.tar.gz",
+                            FILE_PATH: "${PACKAGE_DIR}/download/${CMK_VERS}",
+                            FILE_NAME: "check-mk-${EDITION}-docker-${CMK_VERS}.tar.gz",
+                            CMK_VERS: CMK_VERS,
+                            UPLOAD_DEST: WEB_DEPLOY_DEST,
+                            PORT: "52022",
+                        )
+                    }
 
                     if (params.PUSH_TO_REGISTRY) {
                         stage("Push images") {

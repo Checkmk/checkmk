@@ -10,7 +10,6 @@ from typing import Any, Iterable, Iterator, Mapping, NamedTuple, Sequence
 from cmk.base.check_legacy_includes.df import (
     df_check_filesystem_list_coroutine,
     FILESYSTEM_DEFAULT_PARAMS,
-    filesystem_groups,
     inventory_df_exclude_mountpoints,
 )
 from cmk.base.plugins.agent_based.agent_based_api.v1 import regex
@@ -172,7 +171,7 @@ def inventory_df(parsed: DfSection):
     #      df_inventory should also return a list of DfBlocks or similar.
     mp_to_df_block = {df_block.mountpoint: df_block for df_block in df_blocks}
 
-    for mountpoint, params in df_discovery(host_extra_conf(host_name(), filesystem_groups), mplist):
+    for mountpoint, params in df_discovery([inventory_options], mplist):
         df_block = mp_to_df_block.get(mountpoint)
         if "patterns" in params:
             # Add the grouping_behaviour info to the discovered parameters of this service. With this information

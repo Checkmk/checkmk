@@ -143,6 +143,7 @@ def _valuespec_inventory_df_rules():
                         ),
                     ),
                 ),
+                _list_of_filesystem_groups_specs_elements(),
             ],
             validate=_validate_discovery_filesystem_params,
         ),

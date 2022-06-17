@@ -650,12 +650,11 @@ info_df_groups = [
 
 
 @pytest.mark.parametrize(
-    "inventory_df_rules, filesystem_groups, expected_result",
+    "inventory_df_rules, expected_result",
     [
         # no groups
         (
             {},
-            [],
             [
                 (
                     "/",
@@ -691,7 +690,6 @@ info_df_groups = [
             {
                 "item_appearance": "mountpoint",
             },
-            [],
             [
                 (
                     "/",
@@ -727,7 +725,6 @@ info_df_groups = [
             {
                 "item_appearance": "volume_name_and_mountpoint",
             },
-            [],
             [
                 (
                     "/dev/sda1 /",
@@ -763,7 +760,6 @@ info_df_groups = [
             {
                 "item_appearance": "volume_name_and_mountpoint",
             },
-            [],
             [
                 (
                     "/dev/sda1 /",
@@ -797,18 +793,15 @@ info_df_groups = [
         ),
         # groups
         (
-            {},
-            [
-                {
-                    "groups": [
-                        {
-                            "group_name": "my-group",
-                            "patterns_include": ["/", "/foo"],
-                            "patterns_exclude": ["/bar"],
-                        }
-                    ]
-                }
-            ],
+            {
+                "groups": [
+                    {
+                        "group_name": "my-group",
+                        "patterns_include": ["/", "/foo"],
+                        "patterns_exclude": ["/bar"],
+                    }
+                ]
+            },
             [
                 (
                     "my-group",
@@ -838,18 +831,14 @@ info_df_groups = [
         (
             {
                 "item_appearance": "volume_name_and_mountpoint",
+                "groups": [
+                    {
+                        "group_name": "my-group",
+                        "patterns_include": ["/", "/foo"],
+                        "patterns_exclude": ["/bar"],
+                    }
+                ],
             },
-            [
-                {
-                    "groups": [
-                        {
-                            "group_name": "my-group",
-                            "patterns_include": ["/", "/foo"],
-                            "patterns_exclude": ["/bar"],
-                        }
-                    ]
-                }
-            ],
             [
                 (
                     "my-group",
@@ -879,19 +868,15 @@ info_df_groups = [
         (
             {
                 "item_appearance": "volume_name_and_mountpoint",
+                # groups do not apply
+                "groups": [
+                    {
+                        "group_name": "my-group",
+                        "patterns_include": ["/dev/sda1 /", "/dev/sda2 /foo"],
+                        "patterns_exclude": ["/dev/sda3 /bar"],
+                    }
+                ],
             },
-            # groups do not apply
-            [
-                {
-                    "groups": [
-                        {
-                            "group_name": "my-group",
-                            "patterns_include": ["/dev/sda1 /", "/dev/sda2 /foo"],
-                            "patterns_exclude": ["/dev/sda3 /bar"],
-                        }
-                    ]
-                }
-            ],
             [
                 (
                     "/dev/sda1 /",
@@ -927,18 +912,14 @@ info_df_groups = [
             {
                 "item_appearance": "volume_name_and_mountpoint",
                 "grouping_behaviour": "volume_name_and_mountpoint",
+                "groups": [
+                    {
+                        "group_name": "my-group",
+                        "patterns_include": ["/dev/sda1 /", "/dev/sda2 /foo"],
+                        "patterns_exclude": ["/dev/sda3 /bar"],
+                    }
+                ],
             },
-            [
-                {
-                    "groups": [
-                        {
-                            "group_name": "my-group",
-                            "patterns_include": ["/dev/sda1 /", "/dev/sda2 /foo"],
-                            "patterns_exclude": ["/dev/sda3 /bar"],
-                        }
-                    ]
-                }
-            ],
             [
                 (
                     "my-group",
@@ -969,19 +950,15 @@ info_df_groups = [
             {
                 "item_appearance": "volume_name_and_mountpoint",
                 "grouping_behaviour": "volume_name_and_mountpoint",
+                # groups do not apply
+                "groups": [
+                    {
+                        "group_name": "my-group",
+                        "patterns_include": ["/", "/foo"],
+                        "patterns_exclude": ["/bar"],
+                    }
+                ],
             },
-            # groups do not apply
-            [
-                {
-                    "groups": [
-                        {
-                            "group_name": "my-group",
-                            "patterns_include": ["/", "/foo"],
-                            "patterns_exclude": ["/bar"],
-                        }
-                    ]
-                }
-            ],
             [
                 (
                     "/dev/sda1 /",
@@ -1015,9 +992,7 @@ info_df_groups = [
         ),
     ],
 )
-def test_df_discovery_groups_with_parse(
-    inventory_df_rules, filesystem_groups, expected_result
-) -> None:
+def test_df_discovery_groups_with_parse(inventory_df_rules, expected_result) -> None:
     check = Check("df")
 
     def mocked_host_extra_conf_merged(_hostname, ruleset):
@@ -1027,17 +1002,9 @@ def test_df_discovery_groups_with_parse(
             "Unknown/unhandled ruleset 'inventory_df_rules' used in mock of host_extra_conf_merged"
         )
 
-    def mocked_host_extra_conf(_hostname, ruleset):
-        if ruleset is check.context.get("filesystem_groups"):
-            return filesystem_groups
-        raise AssertionError(
-            "Unknown/unhandled ruleset 'filesystem_groups' used in mock of host_extra_conf"
-        )
-
     with MockHostExtraConf(check, mocked_host_extra_conf_merged, "host_extra_conf_merged"):
-        with MockHostExtraConf(check, mocked_host_extra_conf, "host_extra_conf"):
-            raw_discovery_result = check.run_discovery(parse_df(info_df_groups))
-            discovery_result = DiscoveryResult(raw_discovery_result)
+        raw_discovery_result = check.run_discovery(parse_df(info_df_groups))
+        discovery_result = DiscoveryResult(raw_discovery_result)
 
     expected_result = DiscoveryResult(expected_result)
     assertDiscoveryResultsEqual(check, discovery_result, expected_result)

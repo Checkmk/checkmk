@@ -48,8 +48,10 @@ parsed = parse_df([
     ['[df_inodes_end]'],
 ])
 
-mock_host_conf = {
-    '': [{
+mock_host_conf_merged = {
+    '': {
+        'ignore_fs_types': ['tmpfs', 'nfs', 'smbfs', 'cifs', 'iso9660'],
+        'never_ignore_mountpoints': ['~.*/omd/sites/[^/]+/tmp$'],
         "groups": [
             {
                 'group_name': 'group1',
@@ -117,13 +119,6 @@ mock_host_conf = {
                 'patterns_exclude': []
             },
         ]
-    },],
-}
-
-mock_host_conf_merged = {
-    '': {
-        'ignore_fs_types': ['tmpfs', 'nfs', 'smbfs', 'cifs', 'iso9660'],
-        'never_ignore_mountpoints': ['~.*/omd/sites/[^/]+/tmp$']
     }
 }
 

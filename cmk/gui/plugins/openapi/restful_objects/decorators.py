@@ -16,6 +16,7 @@ import functools
 import hashlib
 import http.client
 import json
+import logging
 import typing
 from types import FunctionType
 from typing import (
@@ -94,6 +95,9 @@ K = TypeVar("K")
 V = TypeVar("V")
 
 WrappedFunc = Callable[[typing.Mapping[str, Any]], cmk_http.Response]
+
+
+_logger = logging.getLogger(__name__)
 
 
 class WrappedEndpoint:
@@ -708,17 +712,35 @@ class Endpoint:
                     self.permissions_required is not None
                     and not self.permissions_required.validate(list(self._used_permissions))
                 ):
-                    # Intentionally generate a crash report.
-                    raise PermissionError(
-                        "Permission mismatch\n"
-                        "There can be some causes for this error:\n"
-                        "* a permission which was required (successfully) was not declared\n"
-                        "* a permission which was declared (not optional) was not required\n"
-                        "* No permission was required at all, although permission were declared\n"
-                        f"Endpoint: {self}\n"
-                        f"Params: {_params!r}\n"
-                        f"Required: {list(self._used_permissions)}\n"
-                        f"Declared: {self.permissions_required}\n"
+
+                    required_permissions = list(self._used_permissions)
+                    declared_permissions = self.permissions_required
+
+                    _logger.error(
+                        "Permission mismatch: %r Params: %s Required: %s Declared: %s",
+                        self,
+                        _params,
+                        required_permissions,
+                        declared_permissions,
+                    )
+
+                    if request.environ.get("paste.testing"):
+                        raise PermissionError(
+                            "Permission mismatch\n"
+                            "There can be some causes for this error:\n"
+                            "* a permission which was required (successfully) was not declared\n"
+                            "* a permission which was declared (not optional) was not required\n"
+                            "* No permission was required at all, although permission were declared\n"
+                            f"Endpoint: {self}\n"
+                            f"Params: {_params!r}\n"
+                            f"Required: {required_permissions}\n"
+                            f"Declared: {declared_permissions}\n"
+                        )
+
+                    return problem(
+                        status=500,
+                        title="Internal Server Error",
+                        detail="Permission mismatch. See the server logs for more information.",
                     )
 
             if self.output_empty and response.status_code < 400 and response.data:

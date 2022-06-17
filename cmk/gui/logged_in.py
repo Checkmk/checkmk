@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import contextlib
 import errno
+import logging
 import os
 import time
 from typing import (
@@ -46,6 +47,8 @@ if TYPE_CHECKING:
     from cmk.gui.plugins.openapi.restful_objects import Endpoint
 
 endpoint: Endpoint = request_local_attr("endpoint")
+
+_logger = logging.getLogger(__name__)
 
 
 class LoggedInUser:
@@ -396,13 +399,20 @@ class LoggedInUser:
                 and pname not in endpoint.permissions_required
             )
             if permission_not_declared:
-                raise PermissionError(
-                    f"Required permissions not declared for this endpoint.\n"
-                    f"Endpoint: {endpoint}\n"
-                    f"Permission: {pname}\n"
-                    f"Used permission: {endpoint._used_permissions}\n"
-                    f"Declared: {endpoint.permissions_required}\n"
+                _logger.error(
+                    "Permission mismatch: Endpoint %r Use of undeclared permission %s",
+                    endpoint,
+                    pname,
                 )
+
+                if request.environ.get("paste.testing"):
+                    raise PermissionError(
+                        f"Required permissions not declared for this endpoint.\n"
+                        f"Endpoint: {endpoint}\n"
+                        f"Permission: {pname}\n"
+                        f"Used permission: {endpoint._used_permissions}\n"
+                        f"Declared: {endpoint.permissions_required}\n"
+                    )
 
         return they_may
 

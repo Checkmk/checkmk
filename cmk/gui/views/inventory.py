@@ -2221,7 +2221,7 @@ class ABCNodeRenderer(abc.ABC):
             self._show_attributes(node.attributes, hints)
 
         if not node.table.is_empty():
-            self.show_table(node.table, hints)
+            self._show_table(node.table, hints)
 
         for the_node in sorted(node.nodes, key=lambda n: n.name):
             self._show_node(the_node)
@@ -2260,7 +2260,7 @@ class ABCNodeRenderer(abc.ABC):
 
     #   ---table----------------------------------------------------------------
 
-    def show_table(self, table: Table, hints: DisplayHints) -> None:
+    def _show_table(self, table: Table, hints: DisplayHints) -> None:
         if hints.table_hint.view_name:
             # Link to Multisite view with exactly this table
             html.div(

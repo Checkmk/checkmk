@@ -52,7 +52,7 @@ def parse_cisco_cpu_multiitem(string_table: List[StringTable]) -> Section:
     for idx, desc, class_idx in string_table[1]:
         if desc.lower().startswith("cpu "):
             desc = desc[4:]
-        ph_idx_to_entity[idx] = Entity(desc, PhysicalClasses(class_idx))
+        ph_idx_to_entity[idx] = Entity(desc, PhysicalClasses.parse_cisco(class_idx))
 
     parsed = {}
     for cpu_id, idx, util in string_table[0]:

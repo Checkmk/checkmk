@@ -41,6 +41,36 @@ def test_parse() -> None:
     }
 
 
+def test_parse_invalid_phyiscal_class() -> None:
+    assert (
+        cisco_fru_module_status.parse(
+            [
+                [
+                    ["9", "3", "CHASSIS-1"],
+                    ["10", "0", ""],
+                    ["11", "7", "FAN-1"],
+                    ["12", "0", ""],
+                    ["13", "0", ""],
+                    ["14", "0", ""],
+                    ["15", "6", "PSU-1"],
+                    ["16", "0", ""],
+                    ["17", "1", "MEMORY-1"],
+                    ["18", "0", ""],
+                    ["19", "0", ""],
+                    ["20", "0", ""],
+                    ["21", "1", "SSD-1"],
+                    ["22", "0", ""],
+                    ["23", "12", "CPU-1"],
+                    ["24", "0", ""],
+                    ["25", "0", ""],
+                ],
+                [],
+            ]
+        )
+        == {}
+    )
+
+
 def test_discover(check_plugin: CheckPlugin) -> None:
     assert list(
         check_plugin.discovery_function(

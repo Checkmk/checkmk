@@ -1334,9 +1334,9 @@ def _dashboard_add_checkmk_dashlet_entries(name: DashboardName) -> Iterable[Page
     )
 
     yield PageMenuEntryCEEOnly(
-        title="Alert statistics",
+        title="Alert overview",
         icon_name={"icon": "alerts", "emblem": "statistic"},
-        item=_dashboard_add_non_view_dashlet_link(name, "alert_statistics"),
+        item=_dashboard_add_non_view_dashlet_link(name, "alert_overview"),
     )
     yield PageMenuEntry(
         title="Host statistics",

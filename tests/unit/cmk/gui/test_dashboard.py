@@ -54,7 +54,7 @@ def test_dashlet_registry_plugins():
     if not cmk_version.is_raw_edition():
         expected_plugins += [
             "alerts_bar_chart",
-            "alert_statistics",
+            "alert_overview",
             "average_scatterplot",
             "barplot",
             "gauge",

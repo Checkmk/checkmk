@@ -127,7 +127,8 @@ export function call_ajax(url, optional_args) {
     if (
         typeof args.post_data == "string" &&
         !args.post_data.includes("&csrf_token=") &&
-        !args.post_data.startsWith("csrf_token=")
+        !args.post_data.startsWith("csrf_token=") &&
+        !args.for_license_usage
     ) {
         args.post_data += "&csrf_token=" + encodeURIComponent(global_csrf_token);
     }

@@ -1,0 +1,61 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+from pathlib import Path
+
+import cmk.utils.debug
+import cmk.utils.paths
+
+
+def inv_export_software_csv(hostname, params, tree):
+    separator = params.get("separator", ";")
+    quotes = params.get("quotes", None)  # Also: "single", "double"
+    headers = params.get("headers", False)
+
+    if quotes == "single":
+        quote = lambda s: (  # pylint: disable=unnecessary-lambda-assignment
+            "'" + s.replace("'", "\\'") + "'"
+        )
+    elif quotes == "double":
+        quote = lambda s: (  # pylint: disable=unnecessary-lambda-assignment
+            '"' + s.replace('"', '\\"') + '"'
+        )
+    else:
+        quote = lambda s: s  # pylint: disable=unnecessary-lambda-assignment
+
+    try:
+        packages = tree["software"]["packages"]
+    except KeyError:
+        return  # No software information available
+
+    filename = params["filename"].replace("<HOST>", hostname)
+    if not filename.startswith("/"):
+        filename = cmk.utils.paths.var_dir + "/" + filename
+    dirname = filename.rsplit("/", 1)[0]
+    if not os.path.exists(dirname):
+        try:
+            os.makedirs(dirname)
+        except Exception as e:
+            if cmk.utils.debug.enabled():
+                raise
+            raise MKGeneralException("Cannot create missing directory %s: %s" % (dirname, e))
+
+    with Path(filename).open(mode="w") as out:
+        keys = ["name", "version", "arch"]
+
+        if headers:
+            out.write(separator.join(map(quote, keys)) + "\n")
+
+        for package in packages:
+            line = []
+            for key in keys:
+                line.append(quote(package.get(key, "")))
+            out.write("%s\n" % separator.join(line))
+
+
+inv_export["software_csv"] = {
+    "export_function": inv_export_software_csv,
+}

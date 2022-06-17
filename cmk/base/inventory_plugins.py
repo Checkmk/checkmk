@@ -50,6 +50,8 @@ GetInventoryApiContext = config.GetInventoryApiContext
 
 # Inventory plugins
 _inv_info: Dict[str, InventoryInfo] = {}
+# Inventory export hooks
+inv_export: Dict[str, Dict[str, Any]] = {}
 # The checks are loaded into this dictionary. Each check
 _plugin_contexts: Dict[str, Dict[str, Any]] = {}
 # becomes a separate sub-dictionary, named by the check name
@@ -180,6 +182,7 @@ def _new_inv_context(
     # Add the data structures where the inventory plugins register with Checkmk
     context = {
         "inv_info": _inv_info,
+        "inv_export": inv_export,
     }
     # NOTE: For better separation it would be better to copy the values, but
     # this might consume too much memory, so we simply reference them.

@@ -194,7 +194,6 @@ rulespec_registry.register(
         group=RulespecGroupInventory,
         name="inv_exports:software_csv",
         valuespec=_valuespec_inv_exports_software_csv,
-        is_deprecated=True,
     )
 )
 

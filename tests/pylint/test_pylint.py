@@ -129,6 +129,7 @@ active_check_info                  = {}
 special_agent_info                 = {}
 
 inv_info   = {} # Inventory plugins
+inv_export = {} # Inventory export hooks
 
 def inv_tree_list(path):
     return inv_tree(path, [])

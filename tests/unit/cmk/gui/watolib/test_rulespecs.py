@@ -537,6 +537,7 @@ def test_grouped_rulespecs() -> None:
         ],
         "inventory": [
             "active_checks:cmk_inv",
+            "inv_exports:software_csv",
             "inv_parameters:inv_if",
         ],
         "static/virtualization": [

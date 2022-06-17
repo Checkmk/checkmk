@@ -13,6 +13,7 @@ from typing import (
     Mapping,
     MutableMapping,
     NamedTuple,
+    NewType,
     Optional,
     Sequence,
     Set,
@@ -47,6 +48,7 @@ FSBlock = Tuple[str, Optional[float], Optional[float], float]
 FSBlocks = Sequence[FSBlock]
 BlocksSubsection = Sequence[DfBlock]
 InodesSubsection = Sequence[DfInode]
+Bytes = NewType("Bytes", int)
 
 DfSection = tuple[BlocksSubsection, InodesSubsection]
 
@@ -62,6 +64,24 @@ FILESYSTEM_DEFAULT_LEVELS = {
     "show_inodes": "onlow",
     "show_reserved": False,
 }
+
+
+def _determine_levels_for_filesystem(levels: list, filesystem_size: Bytes) -> Tuple[Any, Any]:
+    # A list of levels. Choose the correct one depending on the
+    # size of the current filesystem. We do not make the first
+    # rule match, but that with the largest size_gb. That way
+    # the order of the entries is not important.
+    found = False
+    found_size = 0
+    # Type-ingore: levels["levels"] was overridden by params and should be list of tuples
+    for to_size, this_levels in levels:  # type: ignore[attr-defined]
+        if filesystem_size > to_size >= found_size:
+            warn, crit = this_levels
+            found_size = to_size
+            found = True
+        if not found:
+            warn, crit = 100.0, 100.0  # entry not found in list
+    return warn, crit
 
 
 def savefloat(raw: Any) -> float:
@@ -118,6 +138,7 @@ def get_filesystem_levels(  # pylint: disable=too-many-branches
     """
     mega = 1024 * 1024
     giga = mega * 1024
+    filesystem_size = Bytes(int(size_gb * giga))
 
     # Override default levels with params
     levels: Dict[str, Any] = {**FILESYSTEM_DEFAULT_LEVELS, **params}
@@ -126,20 +147,7 @@ def get_filesystem_levels(  # pylint: disable=too-many-branches
     if isinstance(levels["levels"], tuple):
         warn, crit = levels["levels"]
     else:
-        # A list of levels. Choose the correct one depending on the
-        # size of the current filesystem. We do not make the first
-        # rule match, but that with the largest size_gb. That way
-        # the order of the entries is not important.
-        found = False
-        found_size = 0
-        # Type-ingore: levels["levels"] was overridden by params and should be list of tuples
-        for to_size, this_levels in levels["levels"]:  # type: ignore[attr-defined]
-            if size_gb * giga > to_size >= found_size:
-                warn, crit = this_levels
-                found_size = to_size
-                found = True
-        if not found:
-            warn, crit = 100.0, 100.0  # entry not found in list
+        warn, crit = _determine_levels_for_filesystem(levels["levels"], filesystem_size)
 
     # Take into account magic scaling factor (third optional argument
     # in check params). A factor of 1.0 changes nothing. Factor should

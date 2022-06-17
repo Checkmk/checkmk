@@ -638,7 +638,6 @@ class TableDisplayHint:
 class ColumnDisplayHint:
     title: str
     short_title: str
-    data_type: str
     paint_function: PaintFunction
     sort_function: Callable[[Any, Any], int]  # TODO improve type hints for args
     filter_class: (
@@ -655,12 +654,11 @@ class ColumnDisplayHint:
     def make_from_hint(
         cls, path: SDPath, key: str, raw_hint: InventoryHintSpec
     ) -> ColumnDisplayHint:
-        data_type, paint_function = _get_paint_function(raw_hint)
+        _data_type, paint_function = _get_paint_function(raw_hint)
         title = _make_title_function(raw_hint)(key)
         return cls(
             title=title,
             short_title=raw_hint.get("short", title),
-            data_type=data_type,
             paint_function=paint_function,
             sort_function=raw_hint.get("sort", _cmp_inv_generic),
             filter_class=raw_hint.get("filter"),

@@ -536,7 +536,6 @@ def test_sort_table_rows_displayhint(rows: Sequence[SDRow], expected: Sequence[S
             "key",
             ColumnDisplayHint(
                 short_title="Key",
-                data_type="str",
                 paint_function=inv_paint_generic,
                 title="Key",
                 sort_function=_cmp_inv_generic,
@@ -548,7 +547,6 @@ def test_sort_table_rows_displayhint(rows: Sequence[SDRow], expected: Sequence[S
             "oper_status",
             ColumnDisplayHint(
                 short_title="Status",
-                data_type="if_oper_status",
                 paint_function=inv_paint_if_oper_status,
                 title="Operational Status",
                 sort_function=_cmp_inv_generic,
@@ -560,7 +558,6 @@ def test_sort_table_rows_displayhint(rows: Sequence[SDRow], expected: Sequence[S
             "key",
             ColumnDisplayHint(
                 short_title="Key",
-                data_type="str",
                 paint_function=inv_paint_generic,
                 title="Key",
                 sort_function=_cmp_inv_generic,
@@ -574,7 +571,6 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
 
     assert hint.title == expected.title
     assert hint.short_title == expected.short_title
-    assert hint.data_type == expected.data_type
     assert hint.paint_function == expected.paint_function
     assert hint.sort_function == expected.sort_function
 
@@ -586,7 +582,6 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
             ".foo:*.bar",
             ColumnDisplayHint(
                 short_title="Bar",
-                data_type="str",
                 paint_function=inv_paint_generic,
                 title="Bar",
                 sort_function=_cmp_inv_generic,
@@ -597,7 +592,6 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
             ".software.packages:*.package_version",
             ColumnDisplayHint(
                 short_title="Package Version",
-                data_type="str",
                 paint_function=inv_paint_generic,
                 title="Package Version",
                 sort_function=cmp_version,
@@ -608,7 +602,6 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
             ".software.packages:*.version",
             ColumnDisplayHint(
                 short_title="Version",
-                data_type="str",
                 paint_function=inv_paint_generic,
                 title="Version",
                 sort_function=cmp_version,
@@ -619,7 +612,6 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
             ".networking.interfaces:*.index",
             ColumnDisplayHint(
                 short_title="Index",
-                data_type="number",
                 paint_function=inv_paint_number,
                 title="Index",
                 sort_function=_cmp_inv_generic,
@@ -630,7 +622,6 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
             ".networking.interfaces:*.oper_status",
             ColumnDisplayHint(
                 short_title="Status",
-                data_type="if_oper_status",
                 paint_function=inv_paint_if_oper_status,
                 title="Operational Status",
                 sort_function=_cmp_inv_generic,
@@ -647,7 +638,6 @@ def test_make_column_displayhint_from_hint(
 
     assert hint.title == expected.title
     assert hint.short_title == expected.short_title
-    assert hint.data_type == expected.data_type
     assert hint.paint_function == expected.paint_function
     assert hint.sort_function == expected.sort_function
 

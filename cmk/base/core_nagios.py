@@ -852,13 +852,11 @@ def _create_nagios_config_timeperiods(cfg: NagiosConfig) -> None:
 
 
 def _create_nagios_config_contacts(cfg: NagiosConfig, hostnames: List[HostName]) -> None:
-    if len(config.contacts) > 0:
+    if config.contacts:
         cfg.write("\n# ------------------------------------------------------------\n")
         cfg.write("# Contact definitions (controlled by variable 'contacts')\n")
         cfg.write("# ------------------------------------------------------------\n\n")
-        cnames = sorted(config.contacts)
-        for cname in cnames:
-            contact = config.contacts[cname]
+        for cname, contact in sorted(config.contacts.items()):
             # Create contact groups in nagios, even when they are empty. This is needed
             # for RBN to work correctly when using contactgroups as recipients which are
             # not assigned to any host
@@ -876,7 +874,7 @@ def _create_nagios_config_contacts(cfg: NagiosConfig, hostnames: List[HostName])
             if not cgrs:
                 continue
 
-            contact_spec = {
+            contact_spec: ObjectSpec = {
                 "contact_name": cname,
             }
 
@@ -889,13 +887,19 @@ def _create_nagios_config_contacts(cfg: NagiosConfig, hostnames: List[HostName])
             if "pager" in contact:
                 contact_spec["pager"] = contact["pager"]
 
-            if config.enable_rulebased_notifications:
-                not_enabled = False
-            else:
-                not_enabled = contact.get("notifications_enabled", True)
+            not_enabled = (
+                False
+                if config.enable_rulebased_notifications
+                else contact.get("notifications_enabled", True)
+            )
 
             for what in ["host", "service"]:
-                no = contact.get(what + "_notification_options", "")
+                if what == "host":
+                    no: str = contact.get("host_notification_options", "")
+                elif what == "service":
+                    no = contact.get("service_notification_options", "")
+                else:
+                    raise ValueError()
 
                 if not no or not not_enabled:
                     contact_spec["%s_notifications_enabled" % what] = 0
@@ -911,8 +915,7 @@ def _create_nagios_config_contacts(cfg: NagiosConfig, hostnames: List[HostName])
                 )
 
             # Add custom macros
-            for macro in [m for m in contact if m.startswith("_")]:
-                contact_spec[macro] = contact[macro]
+            contact_spec.update({key: val for key, val in contact.items() if key.startswith("_")})
 
             contact_spec["contactgroups"] = ", ".join(cgrs)
             cfg.write(_format_nagios_object("contact", contact_spec))

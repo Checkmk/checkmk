@@ -368,3 +368,6 @@ class KeepaliveAPI(Protocol):
         cache_info: Optional[tuple[int, int]],
     ) -> None:
         ...
+
+
+InfluxDBConnectionSpec = dict[str, Any]

@@ -525,12 +525,12 @@ def _transform_mgmt_config_vars_from_140_to_150() -> None:
     # are 'management_protocol' and 'management_snmp_community'.
     # Clean this up one day!
     for hostname, attributes in host_attributes.items():
-        for name, var in [
-            ("management_protocol", management_protocol),
-            ("management_snmp_community", management_snmp_credentials),
-        ]:
-            if attributes.get(name):
-                var.setdefault(hostname, attributes[name])
+        if attributes.get("management_protocol"):
+            management_protocol.setdefault(hostname, attributes["management_protocol"])
+        if attributes.get("management_snmp_community"):
+            management_snmp_credentials.setdefault(
+                hostname, attributes["management_snmp_community"]
+            )
 
 
 def _transform_plugin_names_from_160_to_170(global_dict: Dict[str, Any]) -> None:
@@ -3109,14 +3109,14 @@ class HostConfig:
     @property
     def management_credentials(self) -> Optional[ManagementCredentials]:
         protocol = self.management_protocol
+        credentials_variable: Mapping[HostName, ManagementCredentials]
         default_value: Optional[ManagementCredentials] = None
         if protocol == "snmp":
-            credentials_variable, default_value = (
-                management_snmp_credentials,
-                snmp_default_community,
-            )
+            credentials_variable = management_snmp_credentials
+            default_value = snmp_default_community
         elif protocol == "ipmi":
-            credentials_variable, default_value = management_ipmi_credentials, None
+            credentials_variable = management_ipmi_credentials
+            default_value = None
         elif protocol is None:
             return None
         else:

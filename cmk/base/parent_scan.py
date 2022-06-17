@@ -275,7 +275,7 @@ def scan_parents_of(  # pylint: disable=too-many-branches
             if ip == nagios_ip:
                 gateways.append((None, "root", 0, ""))  # We are the root-monitoring host
                 dot(tty.white, "N")
-            elif config.monitoring_host:
+            elif config.monitoring_host and nagios_ip:
                 gateways.append(((config.monitoring_host, nagios_ip, None), "direct", 0, ""))
                 dot(tty.cyan, "L")
             else:

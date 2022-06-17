@@ -748,8 +748,9 @@ def user_notification_rules() -> List[EventRule]:
             # WATO-only feature anyway...
             user_rules.append(rule)
 
-            if "authorized_sites" in config.contacts[contactname] and "match_site" not in rule:
-                rule["match_site"] = config.contacts[contactname]["authorized_sites"]
+            authorized_sites = config.contacts[contactname].get("authorized_sites")
+            if authorized_sites is not None and "match_site" not in rule:
+                rule["match_site"] = authorized_sites
 
     logger.debug("Found %d user specific rules", len(user_rules))
     return user_rules

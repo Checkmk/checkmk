@@ -105,6 +105,11 @@ class Contact(TypedDict, total=False):
     email: str
     name: str
     pager: str
+    notification_rules: list[EventRule]
+    authorized_sites: Optional[list[str]]
+    notifications_enabled: bool
+    host_notification_options: str
+    service_notification_options: str
 
 
 class EventContext(TypedDict, total=False):

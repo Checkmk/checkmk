@@ -7,24 +7,6 @@ ExecStart=/usr/bin/cmk-agent-ctl daemon
 Type=simple
 Restart=on-failure
 
-CapabilityBoundingSet=
-LockPersonality=yes
-NoNewPrivileges=yes
-ProtectClock=yes
-ProtectControlGroups=yes
-ProtectHome=yes
-ProtectKernelModules=yes
-ProtectKernelTunables=yes
-ProtectKernelLogs=yes
-ProtectSystem=full
-PrivateMounts=yes
-ProtectHostname=yes
-RemoveIPC=yes
-RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
-RestrictRealtime=yes
-RestrictSUIDSGID=yes
-UMask=0077
-
 User=cmk-agent
 
 [Install]

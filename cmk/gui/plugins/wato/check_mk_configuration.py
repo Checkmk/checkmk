@@ -4273,40 +4273,31 @@ rulespec_registry.register(
     ))
 
 
-def _help_bulkwalk_hosts():
-    return _("Most SNMP hosts support SNMP version 2c. However, Check_MK defaults to version "
-             "1, in order to support as many devices as possible. Please use this ruleset in "
-             "order to configure SNMP v2c for as many hosts as possible. That version has two "
-             "advantages: it supports 64 bit counters, which avoids problems with wrapping "
-             "counters at too much traffic. And it supports bulk walk, which saves much CPU "
-             "and network resources. Please be aware, however, that there are some broken "
-             "devices out there, that support bulk walk but behave very bad when it is used. "
-             "When you want to enable v2c while not using bulk walk, please use the rule set "
-             "snmpv2c_hosts instead.")
+def _help_enable_snmpv2c():
+    return _("Checkmk defaults to SNMPv1 in order to support as many devices as "
+             "possible. In practice, most SNMP devices also support SNMPv2c, which "
+             "has two advantages: it supports 64 bit counters and bulk walk, which "
+             "saves CPU and network resources and is more performant. Use this rule "
+             "to configure SNMPv2c for as many devices as possible. However, please be "
+             "aware that some devices that support SNMPv2c may be buggy. In such cases, "
+             'you may want to try disabling bulk walk using the ruleset "Disable '
+             'bulk walks on SNMPv2c/v3".')
 
 
 rulespec_registry.register(
     BinaryHostRulespec(
         group=RulespecGroupAgentSNMP,
-        help_func=_help_bulkwalk_hosts,
+        help_func=_help_enable_snmpv2c,
         name="bulkwalk_hosts",
-        title=lambda: _("Bulk walk: Hosts using bulk walk (enforces SNMP v2c)"),
+        title=lambda: _("Enable SNMPv2c and bulk walk for hosts"),
     ))
 
-
-def _help_management_bulkwalk_hosts():
-    return _("SNMP monitoring of management boards defaults to SNMPv2 for all hosts by default. "
-             "In case some of your management boards don't support SNMPv2 or bulk walks, you "
-             "can use this ruleset to enforce Checkmk to contact these management boards "
-             "using SNMPv1.")
-
-
 rulespec_registry.register(
     BinaryHostRulespec(
         group=RulespecGroupAgentSNMP,
-        help_func=_help_management_bulkwalk_hosts,
+        help_func=_help_enable_snmpv2c,
         name="management_bulkwalk_hosts",
-        title=lambda: _("Management board SNMP using bulk walk (enforces SNMP v2c)"),
+        title=lambda: _("Enable SNMPv2c and bulk walk for management boards"),
     ))
 
 
@@ -4349,21 +4340,20 @@ rulespec_registry.register(
     ))
 
 
-def _help_snmpv2c_hosts():
-    return _("There exist a few devices out there that behave very badly when using SNMP v2c "
-             "and bulk walk. If you want to use SNMP v2c on those devices, nevertheless, you "
-             "need to configure this device as legacy snmp device and upgrade it to SNMP v2c "
-             "(without bulk walk) with this rule set. One reason is enabling 64 bit counters. "
-             "Note: This rule won't apply if the device is already configured as SNMP v2c "
-             "device.")
+def _help_snmpv2c_without_bulkwalk():
+    return _("Some SNMPv2c/v3 capable devices are buggy when being queried using "
+             "bulk walks. In such cases, you can disable bulk walks with this "
+             "ruleset. Please be aware that you should only do this if no other "
+             "approach is feasible (e.g. limiting the bulk size), as bulk walks are "
+             "much more performant.")
 
 
 rulespec_registry.register(
     BinaryHostRulespec(
         group=RulespecGroupAgentSNMP,
-        help_func=_help_snmpv2c_hosts,
+        help_func=_help_snmpv2c_without_bulkwalk,
         name="snmpv2c_hosts",
-        title=lambda: _("Legacy SNMP devices using SNMP v2c"),
+        title=lambda: _("Disable bulk walks on SNMPv2c/v3"),
     ))
 
 

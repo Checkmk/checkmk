@@ -425,7 +425,7 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
                 'condition': {},
                 'value': True,
                 'options': {
-                    'description': u'All management boards use SNMP v2 (incl. bulk walks) by default'
+                    'description': u'All management boards use SNMPv2 and bulk walk'
                 },
             },],
 

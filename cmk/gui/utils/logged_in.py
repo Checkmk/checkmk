@@ -7,6 +7,7 @@
 
 import contextlib
 import errno
+import logging
 import os
 import time
 from typing import Any, ContextManager, Dict, Iterator, List, Optional, Set, Tuple, Union
@@ -26,6 +27,8 @@ from cmk.gui.globals import config, endpoint, local, request
 from cmk.gui.i18n import _
 from cmk.gui.utils.roles import may_with_roles, roles_of_user
 from cmk.gui.utils.transaction_manager import TransactionManager
+
+_logger = logging.getLogger(__name__)
 
 
 class LoggedInUser:
@@ -366,13 +369,20 @@ class LoggedInUser:
                 and pname not in endpoint.permissions_required
             )
             if permission_not_declared:
-                raise PermissionError(
-                    f"Required permissions not declared for this endpoint.\n"
-                    f"Endpoint: {endpoint}\n"
-                    f"Permission: {pname}\n"
-                    f"Used permission: {endpoint._used_permissions}\n"
-                    f"Declared: {endpoint.permissions_required}\n"
+                _logger.error(
+                    "Permission mismatch: Endpoint %r Use of undeclared permission %s",
+                    endpoint,
+                    pname,
                 )
+
+                if request.environ.get("paste.testing"):
+                    raise PermissionError(
+                        f"Required permissions not declared for this endpoint.\n"
+                        f"Endpoint: {endpoint}\n"
+                        f"Permission: {pname}\n"
+                        f"Used permission: {endpoint._used_permissions}\n"
+                        f"Declared: {endpoint.permissions_required}\n"
+                    )
 
         return they_may
 

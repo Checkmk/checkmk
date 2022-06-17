@@ -1,0 +1,17 @@
+Title: non JSON 500 page in REST API
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1655820017
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p4
+
+In some error cases, a non-JSON result page was returned by the REST
+API. This led to problems with script execution as the page was not
+valid JSON and thus the parsers threw errors.
+
+The errors which led to the non-JSON result will now be returned as
+a JSON result and a log entry will be made.

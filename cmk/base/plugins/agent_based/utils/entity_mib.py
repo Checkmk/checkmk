@@ -20,3 +20,8 @@ class PhysicalClasses(Enum):
     port = "10"
     stack = "11"
     cpu = "12"
+
+    # SUP-10602: Cisco decided to not stick to the official MiB ...
+    @classmethod
+    def parse_cisco(cls, raw_phys_class: str) -> "PhysicalClasses":
+        return cls.unknown if raw_phys_class == "0" else cls(raw_phys_class)

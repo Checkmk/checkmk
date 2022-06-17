@@ -156,9 +156,7 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
                     "id": "59d84cde-ee3a-4f8d-8bec-fce35a2b0d15",
                     "condition": {},
                     "value": True,
-                    "options": {
-                        "description": "All management boards use SNMP v2 (incl. bulk walks) by default"
-                    },
+                    "options": {"description": "All management boards use SNMPv2 and bulk walk"},
                 },
             ],
             # Put all hosts and the contact group 'all'

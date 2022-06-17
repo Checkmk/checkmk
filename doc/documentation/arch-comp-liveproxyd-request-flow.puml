@@ -1,0 +1,39 @@
+@startuml
+!pragma teoz true
+scale 0.8
+
+box "Central site"
+    participant "GUI" as gui_central
+
+    box "Liveproxyd sub-process for remote site"
+        participant "Unix socket" as unix_socket_liveproxyd
+        participant "Scheduler" as scheduler_liveproxyd
+        participant "Channel" as channel_liveproxyd
+    end box
+end box
+
+box "Remote site"
+participant "Livestatus TCP socket" as livestatus_tcp_socket_remote
+participant "Livestatus unix socket" as livestatus_unix_socket_remote
+participant "CMC" as cmc_remote
+end box
+
+gui_central -> unix_socket_liveproxyd: Connect
+unix_socket_liveproxyd -> scheduler_liveproxyd: Scheduler detects\nnew client
+hnote over scheduler_liveproxyd : Client
+gui_central -> scheduler_liveproxyd: Livestatus query
+scheduler_liveproxyd -> channel_liveproxyd: Mediate client\nto free channel
+hnote over channel_liveproxyd : Client
+channel_liveproxyd -> channel_liveproxyd: Receive next query\nfrom client
+channel_liveproxyd -> livestatus_tcp_socket_remote: Send query\n(persistent connection)
+livestatus_tcp_socket_remote -> livestatus_unix_socket_remote: Forward query
+livestatus_unix_socket_remote -> cmc_remote: Read query
+
+cmc_remote -> livestatus_unix_socket_remote: Send response
+livestatus_unix_socket_remote -> livestatus_tcp_socket_remote: Forward response
+livestatus_tcp_socket_remote -> channel_liveproxyd: Read response\n(persistent connection)
+channel_liveproxyd -> channel_liveproxyd: Send response\nto client
+channel_liveproxyd -> unix_socket_liveproxyd: Client writes response\ninto unix socket
+unix_socket_liveproxyd -> gui_central: Read response
+
+@enduml

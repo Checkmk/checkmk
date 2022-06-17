@@ -1,0 +1,39 @@
+@startuml
+
+package "Central site" {
+    component liveproxyd {
+        component "Sub-process //n//" as subprocess_n
+        component "Sub-process 2" as subprocess_2
+        component "Sub-process 1" as subprocess_1
+    }
+
+    interface "Unix socket" as unix_sock_n
+    interface "Unix socket" as unix_sock_2
+    interface "Unix socket" as unix_sock_1
+
+    node "[[../arch-comp-livestatus-client.html Livestatus clients]]" as livestatus_queries
+
+    subprocess_n -u-( unix_sock_n
+    subprocess_2 -u-( unix_sock_2
+    subprocess_1 -u-( unix_sock_1
+    livestatus_queries -d-> unix_sock_n
+    livestatus_queries -d-> unix_sock_2
+    livestatus_queries -d-> unix_sock_1
+}
+
+cloud "Remote site //n//" as remote_site_n
+cloud "Remote site 2" as remote_site_2
+cloud "Remote site 1" as remote_site_1
+
+interface "TCP socket " as tcp_sock_n
+interface "TCP socket " as tcp_sock_2
+interface "TCP socket" as tcp_sock_1
+
+remote_site_n -u-( tcp_sock_n
+remote_site_2 -u-( tcp_sock_2
+remote_site_1 -u-( tcp_sock_1
+subprocess_n -d-> tcp_sock_n: persistent
+subprocess_2 -d-> tcp_sock_2: persistent
+subprocess_1 -d-> tcp_sock_1: persistent
+
+@enduml

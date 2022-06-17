@@ -8,7 +8,7 @@ Introduction and goals
 The main requirement we solve with the Livestatus proxy daemon is:
 
 * Optimize Livestatus connections from the central site to the remote site in
-  distributed setups of the Enterprise Edition.
+  :doc:`arch-comp-distributed` (Enterprise Edition).
 
 Other features we get:
 
@@ -21,18 +21,41 @@ The Livestatus proxy daemon is an Enterprise feature.
 Architecture
 ============
 
-Liveproxyd is a daemon running in the context of an OMD site. It starts one
-child process per remote site to manage the site connections.
+Liveproxyd is a daemon running in the context of an OMD site.
 
 Internal structure
 ------------------
 
-TODO: Add a diagram showing the internal architecture of the Liveproxyd.
+Liveproxyd starts one child process per remote site to manage the site connections. The entry point
+of the program is `enterprise/bin/liveproxyd`, which in turn calls `enterprise/cmk/cee/liveproxy/main.py`.
+
+.. uml:: arch-comp-liveproxyd-structure.puml
+
+Code
+----
+
+This component is implemented in `enterprise/cmk/cee/liveproxy`. There are two main loops regulating
+the flow of our program. The outer one is located in `Manager.py`. This loop administrates the
+individual sub-processes. Each sub-process manages the connections to one remote site. This is
+administrated within an inner main loop in `Site.py`.
+
+.. uml:: arch-comp-liveproxyd-classes.puml
+
+Logs
+----
+
+Logs are written to `$OMD_ROOT/var/log/liveproxyd.log`. Additionally, `$OMD_ROOT/var/log/liveproxyd.state`
+contains a snapshot of the current state of the program, which is updated in short intervals.
 
 Runtime view
 ============
 
-TODO: Add a sequence diagram showing the processing of a livestatus request.
+Requests typically originate from within the GUI in order to render a page which requires data from
+remote sites. The diagram below shows the basic workflow for such requests. Note that there are a
+number of variants not shown here, such as cached requests, timeouts and requests by special clients
+(e.g. the heartbeat client).
+
+.. uml:: arch-comp-liveproxyd-request-flow.puml
 
 Managing the GUIs livestatus connections
 ========================================
@@ -98,5 +121,7 @@ See also
 ~~~~~~~~
 - :doc:`arch-comp-core`
 - :doc:`arch-comp-livestatus`
+- :doc:`arch-comp-livestatus-client`
+- :doc:`arch-comp-distributed`
 - `User manual: Liveproxyd <https://docs.checkmk.com/latest/de/distributed_monitoring.html#livestatusproxy>`_
 - `User manual: Retrieving status data via Livestatus <https://docs.checkmk.com/latest/en/livestatus.html>`_

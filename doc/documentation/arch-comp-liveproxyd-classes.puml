@@ -1,0 +1,31 @@
+@startuml
+
+class Manager
+class Site
+class Channel
+abstract class ABCClient
+abstract class ABCInternalClient extends ABCClient
+class Client extends ABCClient
+class HeartbeatClient extends ABCClient
+class InventoryUpdateClient extends ABCInternalClient
+
+Manager "1" *-- "many" Site : administrates >
+Site "1" *-- "many" Channel : manage &\nassign clients >
+Site "1" *-- "many" ABCClient : accept & assign\nto channel >
+Channel "1" *-- "1" ABCClient: process requests >
+
+note bottom of Client
+  Processes standard
+  livestatus queries.
+end note
+note bottom of HeartbeatClient
+  Keeps channels open.
+  Check if remote is still there.
+end note
+note bottom of InventoryUpdateClient
+  Fetches HW/SW inventory information
+  from remote site and stores it centrally
+  for the UI.
+end note
+
+@enduml

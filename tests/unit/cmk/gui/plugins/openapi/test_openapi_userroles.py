@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import json
+
 import pytest
 
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
@@ -40,3 +42,25 @@ def test_get_userroles_endpoint(
     )
 
     assert {user_role["id"] for user_role in resp.json["value"]} == {"user", "admin", "guest"}
+
+
+def test_post_userrole_endpoint(
+    collection_base: str, object_base: str, aut_user_auth_wsgi_app: WebTestAppForCMK
+) -> None:
+    aut_user_auth_wsgi_app.post(
+        collection_base,
+        status=200,
+        params=json.dumps({"role_id": "admin"}),
+        headers={"Accept": "application/json"},
+        content_type="application/json",
+    )
+
+    resp = aut_user_auth_wsgi_app.get(
+        object_base + "adminx",
+        status=200,
+        headers={"Accept": "application/json"},
+    )
+
+    assert resp.json["extensions"].keys() == {"alias", "permissions", "builtin", "basedon"}
+    assert resp.json["id"] == "adminx"
+    assert {link["method"] for link in resp.json["links"]} == {"GET", "PUT", "DELETE"}

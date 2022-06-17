@@ -22,19 +22,25 @@ from cmk.gui.watolib.utils import multisite_dir
 RoleID = NewType("RoleID", str)
 
 
-def clone_role(role_id: RoleID) -> UserRole:
+def clone_role(
+    role_id: RoleID, new_role_id: str | None = None, new_alias: str | None = None
+) -> UserRole:
     all_roles: Dict[RoleID, UserRole] = get_all_roles()
     role_to_clone: UserRole = get_role(role_id)
 
-    new_role_id = str(role_id)
+    if new_role_id is None:
+        new_role_id = str(role_id)
+
     while new_role_id in all_roles.keys():
         new_role_id += "x"
 
-    newalias = role_to_clone.alias
-    while newalias in {role.alias for role in all_roles.values()}:
-        newalias += _(" (copy)")
+    if new_alias is None:
+        new_alias = role_to_clone.alias
 
-    cloned_user_role = UserRole(name=new_role_id, basedon=role_to_clone.name, alias=newalias)
+    while new_alias in {role.alias for role in all_roles.values()}:
+        new_alias += _(" (copy)")
+
+    cloned_user_role = UserRole(name=new_role_id, basedon=role_to_clone.name, alias=new_alias)
     all_roles[RoleID(new_role_id)] = cloned_user_role
     save_all_roles(all_roles)
 

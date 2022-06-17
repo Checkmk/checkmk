@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import urllib.parse
+from typing import Literal
 
 from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
 
@@ -11,6 +12,7 @@ from cmk.utils.defines import weekday_ids
 from cmk.utils.livestatus_helpers import tables
 
 from cmk.gui import fields as gui_fields
+from cmk.gui.config import builtin_role_ids
 from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.livestatus_utils.commands.acknowledgments import (
     acknowledge_host_problem,
@@ -1063,15 +1065,43 @@ class Username(fields.String):
             raise self.make_error("should_not_exist", username=value)
 
 
-class ExistingUserRole(fields.String):
+class UserRoleID(fields.String):
     default_error_messages = {
-        "invalid_role": "The specified role does not exist: {role!r}",
+        "should_not_exist": "The role should not exist but it does: {role!r}",
+        "should_exist": "The role should exist but it doesn't: {role!r}",
+        "should_be_custom": "The role should be a custom role but it's not: {role!r}",
+        "should_be_builtin": "The role should be a builtin role but it's not: {role!r}",
     }
 
-    def _validate(self, value):
+    def __init__(
+        self,
+        presence: Literal["should_exist", "should_not_exist", "ignore"] = "ignore",
+        userrole_type: Literal["should_be_custom", "should_be_builtin", "ignore"] = "ignore",
+        required=False,
+        **kwargs,
+    ) -> None:
+        super().__init__(required=required, **kwargs)
+        self.presence = presence
+        self.userrole_type = userrole_type
+
+    def _validate(self, value) -> None:
         super()._validate(value)
-        if not userroles.role_exists(value):
-            raise self.make_error("invalid_role", role=value)
+
+        if self.presence == "should_not_exist":
+            if userroles.role_exists(value):
+                raise self.make_error("should_not_exist", role=value)
+
+        elif self.presence == "should_exist":
+            if not userroles.role_exists(value):
+                raise self.make_error("should_exist", role=value)
+
+        if self.userrole_type == "should_be_builtin":
+            if value not in builtin_role_ids:
+                raise self.make_error("should_be_builtin", role=value)
+
+        elif self.userrole_type == "should_be_custom":
+            if value in builtin_role_ids:
+                raise self.make_error("should_be_custom", role=value)
 
 
 class CustomTimeRange(BaseSchema):
@@ -1373,7 +1403,12 @@ class CreateUser(BaseSchema):
         example={"option": "global"},
     )
     roles = fields.List(
-        ExistingUserRole(description="A user role", required=True, example="user"),
+        UserRoleID(
+            description="An existing user role",
+            required=True,
+            example="user",
+            presence="should_exist",
+        ),
         required=False,
         load_default=list,
         description="The list of assigned roles to the user",
@@ -1472,7 +1507,12 @@ class UpdateUser(BaseSchema):
         example={},
     )
     roles = fields.List(
-        ExistingUserRole(description="A user role", required=True, example="user"),
+        UserRoleID(
+            description="An existing user role",
+            required=True,
+            example="user",
+            presence="should_exist",
+        ),
         required=False,
         description="The list of assigned roles to the user",
         example=["user"],
@@ -2016,7 +2056,7 @@ class CreateHostComment(BaseSchema):
         required=True,
     )
     persistent = fields.Boolean(
-        description="If set, the comment will persist a restart. Defaults to False.",
+        description="If set, the comment will persist a restart.",
         example=False,
         load_default=False,
         required=False,
@@ -2041,8 +2081,28 @@ class CreateServiceComment(BaseSchema):
         required=True,
     )
     persistent = fields.Boolean(
-        description="If set, the comment will persist a restart. Defaults to False.",
+        description="If set, the comment will persist a restart.",
         example=False,
         load_default=False,
         required=False,
+    )
+
+
+class CreateUserRole(BaseSchema):
+    role_id = UserRoleID(
+        required=True,
+        description="Existing userrole that you want to clone.",
+        example="admin",
+        presence="should_exist",
+    )
+    new_role_id = UserRoleID(
+        required=False,
+        description="The new role id for the newly created user role.",
+        example="limited_permissions_user",
+        presence="should_not_exist",
+    )
+    new_alias = fields.String(
+        required=False,
+        description="A new alias that you want to give to the newly created user role.",
+        example="user_a",
     )

@@ -76,10 +76,11 @@ def serialize_user_role(user_role: UserRole) -> DomainObject:
     tag_group="Setup",
     path_params=[
         {
-            "role_id": request_schemas.ExistingUserRole(
+            "role_id": request_schemas.UserRoleID(
                 required=True,
                 description="An existing user role.",
                 example="userx",
+                presence="should_exist",
             )
         }
     ],
@@ -113,3 +114,25 @@ def list_user_roles(params: Mapping[str, Any]) -> Response:
             ],
         )
     )
+
+
+@Endpoint(
+    constructors.collection_href("user_role"),
+    "cmk/create",
+    method="post",
+    tag_group="Setup",
+    request_schema=request_schemas.CreateUserRole,
+    response_schema=response_schemas.UserRoleObject,
+    permissions_required=RW_PERMISSIONS,
+)
+def create_userrole(params: Mapping[str, Any]) -> Response:
+    """Create/clone a user role"""
+    user.need_permission("wato.users")
+    user.need_permission("wato.edit")
+    body = params["body"]
+    cloned_user_role = userroles.clone_role(
+        role_id=RoleID(body["role_id"]),
+        new_role_id=body.get("new_role_id"),
+        new_alias=body.get("new_alias"),
+    )
+    return constructors.serve_json(serialize_user_role(cloned_user_role))

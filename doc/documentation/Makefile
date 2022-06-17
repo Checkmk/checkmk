@@ -8,7 +8,7 @@ SPHINXOPTS    ?= -W
 SPHINXBUILD   ?= ../../scripts/run-pipenv run sphinx-build
 SOURCEDIR     = .
 BUILDDIR      = _build
-PLANTUML_VERSION = 1.2020.6
+PLANTUML_VERSION = 1.2022.5
 PLANTUML_JAR = plantuml.${PLANTUML_VERSION}.jar
 
 .PHONY: help

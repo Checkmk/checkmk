@@ -1,0 +1,16 @@
+Title: Fix title of Forecast graphs
+Class: fix
+Compatible: incomp
+Component: multisite
+Date: 1655489181
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.1.0p3
+
+If new Forecast graphs were saved with the option "Save & go to Forecast graph"
+or existing graphs were edited via "Edit model", the defined titel was
+overwritten with "HOSTNAME - SERVICEDESCRIPTION".
+
+We are sorry but existing Forecast graphs have to be saved again with the
+intended title.

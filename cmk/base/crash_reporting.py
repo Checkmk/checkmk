@@ -106,8 +106,33 @@ def create_check_crash_dump(
         return "check failed - failed to create a crash report: %s" % traceback.format_exc()
 
 
+class CrashReportWithAgentOutput(crash_reporting.ABCCrashReport):
+    def __init__(
+        self,
+        crash_info: Dict,
+        snmp_info: Optional[bytes] = None,
+        agent_output: Optional[bytes] = None,
+    ) -> None:
+        super().__init__(crash_info)
+        self.snmp_info = snmp_info
+        self.agent_output = agent_output
+
+    def _serialize_attributes(self) -> Dict:
+        """Serialize object type specific attributes for transport"""
+        attributes = super()._serialize_attributes()
+
+        for key, val in [
+            ("snmp_info", self.snmp_info),
+            ("agent_output", self.agent_output),
+        ]:
+            if val is not None:
+                attributes[key] = val
+
+        return attributes
+
+
 @crash_reporting.crash_report_registry.register
-class SectionCrashReport(crash_reporting.ABCCrashReport):
+class SectionCrashReport(CrashReportWithAgentOutput):
     @classmethod
     def type(cls) -> str:
         return "section"
@@ -120,17 +145,24 @@ class SectionCrashReport(crash_reporting.ABCCrashReport):
         section_content: object,
         host_name: HostName,
     ) -> crash_reporting.ABCCrashReport:
+        snmp_info = _read_snmp_info(host_name)
+        agent_output = _read_agent_output(host_name)
+
         return cls.from_exception(
             details={
                 "section_name": str(section_name),
                 "section_content": section_content,
                 "host_name": host_name,
             },
+            type_specific_attributes={
+                "snmp_info": snmp_info,
+                "agent_output": agent_output,
+            },
         )
 
 
 @crash_reporting.crash_report_registry.register
-class CheckCrashReport(crash_reporting.ABCCrashReport):
+class CheckCrashReport(CrashReportWithAgentOutput):
     @classmethod
     def type(cls) -> str:
         return "check"
@@ -168,29 +200,6 @@ class CheckCrashReport(crash_reporting.ABCCrashReport):
                 "agent_output": agent_output,
             },
         )
-
-    def __init__(
-        self,
-        crash_info: Dict,
-        snmp_info: Optional[bytes] = None,
-        agent_output: Optional[bytes] = None,
-    ) -> None:
-        super().__init__(crash_info)
-        self.snmp_info = snmp_info
-        self.agent_output = agent_output
-
-    def _serialize_attributes(self) -> Dict:
-        """Serialize object type specific attributes for transport"""
-        attributes = super()._serialize_attributes()
-
-        for key, val in [
-            ("snmp_info", self.snmp_info),
-            ("agent_output", self.agent_output),
-        ]:
-            if val is not None:
-                attributes[key] = val
-
-        return attributes
 
 
 def _read_snmp_info(hostname: str) -> Optional[bytes]:

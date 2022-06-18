@@ -137,7 +137,7 @@ def check_ipmi_detailed(
     status_txt_mapping: StatusTxtMapping,
 ) -> type_defs.CheckResult:
 
-    overwrite_state = State(2)
+    overwrite_state = State(3)
 
     for wato_status_txt, wato_status in params.get("sensor_states", []):
         if sensor.status_txt.startswith(wato_status_txt):

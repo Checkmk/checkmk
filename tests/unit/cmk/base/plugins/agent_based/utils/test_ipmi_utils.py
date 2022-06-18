@@ -271,12 +271,12 @@ from cmk.base.plugins.agent_based.utils import ipmi
             False,
             lambda txt: State.OK,
             [
-                Result(state=State.OK, summary="Status: ok"),
-                Result(state=State.OK, summary="1.04 Volts"),
-                Metric("PCH_1.05V", 1.04, levels=(None, 1.13)),
                 Result(
                     state=State.UNKNOWN, summary="User-defined state", details="User-defined state"
                 ),
+                Result(state=State.OK, summary="Status: ok"),
+                Result(state=State.OK, summary="1.04 Volts"),
+                Metric("PCH_1.05V", 1.04, levels=(None, 1.13)),
             ],
         ),
     ],

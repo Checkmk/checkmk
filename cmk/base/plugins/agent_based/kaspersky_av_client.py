@@ -103,8 +103,8 @@ register.check_plugin(
     discovery_function=discover_kaspersky_av_client,
     check_function=check_kaspersky_av_client,
     check_default_parameters={
-        "signature_age": (86400.0, 7 * 86400.0),
-        "fullscan_age": (86400.0, 7 * 86400.0),
+        "signature_age": (86400, 7 * 86400),
+        "fullscan_age": (86400, 7 * 86400),
     },
     check_ruleset_name="kaspersky_av_client",
 )

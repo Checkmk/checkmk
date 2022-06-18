@@ -15,6 +15,6 @@ if "%p%"=="mid_ext" call call_unit_tests.cmd *Integration:*IntegrationExt && pow
 if "%p%"=="mid_ext_long" call call_unit_tests.cmd *Integration:*IntegrationExt:*_Long && powershell write-Host "SUCCESS!" -Foreground Green && exit /b 0 ||  powershell write-Host "FAIL!" -Foreground Red && exit /b 20 
 if "%p%"=="integration" call scripts\call_integration_tests.cmd && powershell write-Host "SUCCESS!" -Foreground Green && exit /b 0 ||  powershell write-Host "FAIL!" -Foreground Red && exit /b 20 
 if not "%p%"=="all" powershell write-Host "Bad parameter %p%" -Foreground Red && exit /b 1
-call call_unit_tests.cmd *Integration && powershell write-Host "Success 1" -Foreground Green  ||  powershell write-Host "FAIL 1" -Foreground Red
+call call_unit_tests.cmd *Integration && powershell write-Host "Success 1" -Foreground Green  ||  powershell write-Host "FAIL 1" -Foreground Red  && exit /b 77
 call scripts\call_regression_tests.cmd && powershell write-Host "Success 2" -Foreground Green  ||  powershell write-Host "FAIL 2" -Foreground Red && exit /b 17
 call scripts\call_integration_tests.cmd && powershell write-Host "Success 3" -Foreground Green && exit /b 0  ||  powershell write-Host "FAIL 3" -Foreground Red  && exit /b 18

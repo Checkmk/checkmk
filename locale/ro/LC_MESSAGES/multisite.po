@@ -4237,6 +4237,14 @@ msgid "Alert on too high power consumption"
 msgstr "APC consum de Curent"
 
 #, fuzzy
+msgid "Alert overview"
+msgstr "Numele Elementului"
+
+#, fuzzy, python-format
+msgid "Alert overview - %s"
+msgstr "Numele Elementului"
+
+#, fuzzy
 msgid "Alert rule names"
 msgstr "Nume nou"
 
@@ -21739,6 +21747,10 @@ msgstr ""
 
 msgid "ID"
 msgstr ""
+
+#, fuzzy, python-format
+msgid "ID <b>%s</b> is reserved for internal use."
+msgstr "<tt>%s</tt> este un cuvânt cheie rezervat."
 
 #, fuzzy
 msgid "ID cache size"
@@ -50844,14 +50856,6 @@ msgid "Top Talkers"
 msgstr ""
 
 #, fuzzy
-msgid "Top alerters"
-msgstr "Dezactiveaza Notificarile"
-
-#, python-format
-msgid "Top alerters - %s"
-msgstr ""
-
-#, fuzzy
 msgid "Top application traffic: last day view"
 msgstr "Adresă"
 
@@ -59736,6 +59740,10 @@ msgstr "z/OS"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr ""
+
+#, fuzzy
+#~ msgid "Top alerters"
+#~ msgstr "Dezactiveaza Notificarile"
 
 #, python-format
 #~ msgid "Absolute %s"

@@ -4470,6 +4470,14 @@ msgid "Alert on too high power consumption"
 msgstr "Allarme su un consumo di energia troppo elevato"
 
 #, fuzzy
+msgid "Alert overview"
+msgstr "Panoramica dell'host"
+
+#, fuzzy, python-format
+msgid "Alert overview - %s"
+msgstr "Panoramica dell'host"
+
+#, fuzzy
 msgid "Alert rule names"
 msgstr "Nome della coda"
 
@@ -22700,6 +22708,10 @@ msgstr "Pacchetti ICMP"
 
 msgid "ID"
 msgstr "ID"
+
+#, fuzzy, python-format
+msgid "ID <b>%s</b> is reserved for internal use."
+msgstr "Il gruppo di tag \"%s\" è riservato per uso interno."
 
 msgid "ID cache size"
 msgstr "Dimensione cache ID"
@@ -54859,13 +54871,6 @@ msgstr "Top"
 msgid "Top Talkers"
 msgstr "Top Talkers"
 
-msgid "Top alerters"
-msgstr "Top alerters"
-
-#, python-format
-msgid "Top alerters - %s"
-msgstr "Top alerters - %s"
-
 msgid "Top application traffic: last day view"
 msgstr "Top traffico delle applicazioni: vista dell'ultimo giorno"
 
@@ -64669,6 +64674,13 @@ msgstr "z/OS"
 #, fuzzy, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Tutti i diritti riservati."
+
+#~ msgid "Top alerters"
+#~ msgstr "Top alerters"
+
+#, python-format
+#~ msgid "Top alerters - %s"
+#~ msgstr "Top alerters - %s"
 
 #, python-format
 #~ msgid "Absolute %s"

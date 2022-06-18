@@ -4465,6 +4465,14 @@ msgid "Alert on too high power consumption"
 msgstr "Waarschuwing bij te hoog stroomverbruik"
 
 #, fuzzy
+msgid "Alert overview"
+msgstr "Overzicht gastheren"
+
+#, fuzzy, python-format
+msgid "Alert overview - %s"
+msgstr "Overzicht gastheren"
+
+#, fuzzy
 msgid "Alert rule names"
 msgstr "Naam wachtrij"
 
@@ -22639,6 +22647,10 @@ msgstr "ICMP-pakketten"
 
 msgid "ID"
 msgstr "ID"
+
+#, fuzzy, python-format
+msgid "ID <b>%s</b> is reserved for internal use."
+msgstr "De tag groep \"%s\" is gereserveerd voor intern gebruik."
 
 msgid "ID cache size"
 msgstr "ID-cachegrootte"
@@ -54743,13 +54755,6 @@ msgstr "Top"
 msgid "Top Talkers"
 msgstr "Top praters"
 
-msgid "Top alerters"
-msgstr "Top waarschuwers"
-
-#, python-format
-msgid "Top alerters - %s"
-msgstr "Top waarschuwers - %s"
-
 msgid "Top application traffic: last day view"
 msgstr "Top applicatie verkeer: laatste dag weergave"
 
@@ -64542,6 +64547,13 @@ msgstr "z/OS"
 #, fuzzy, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Alle rechten voorbehouden."
+
+#~ msgid "Top alerters"
+#~ msgstr "Top waarschuwers"
+
+#, python-format
+#~ msgid "Top alerters - %s"
+#~ msgstr "Top waarschuwers - %s"
 
 #, python-format
 #~ msgid "Absolute %s"

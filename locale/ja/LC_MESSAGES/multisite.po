@@ -4270,6 +4270,14 @@ msgstr "全体的な使用率が高すぎる場合のアラート"
 msgid "Alert on too high power consumption"
 msgstr "消費電力が高すぎる場合のアラート"
 
+#, fuzzy
+msgid "Alert overview"
+msgstr "ホストの概要"
+
+#, fuzzy, python-format
+msgid "Alert overview - %s"
+msgstr "ホストの概要"
+
 msgid "Alert rule names"
 msgstr "アラートルール名"
 
@@ -21575,6 +21583,10 @@ msgstr "ICMPパケット"
 
 msgid "ID"
 msgstr "ID"
+
+#, fuzzy, python-format
+msgid "ID <b>%s</b> is reserved for internal use."
+msgstr "タググループ \"%s\" は内部使用のために予約されています。"
 
 msgid "ID cache size"
 msgstr "IDキャッシュサイズ"
@@ -51566,13 +51578,6 @@ msgstr "トップ"
 msgid "Top Talkers"
 msgstr "トップトーカー"
 
-msgid "Top alerters"
-msgstr "トップアラート"
-
-#, python-format
-msgid "Top alerters - %s"
-msgstr ""
-
 msgid "Top application traffic: last day view"
 msgstr ""
 
@@ -60738,6 +60743,9 @@ msgstr "z/OS"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. All Rights Reserved."
+
+#~ msgid "Top alerters"
+#~ msgstr "トップアラート"
 
 #, python-format
 #~ msgid "Absolute %s"

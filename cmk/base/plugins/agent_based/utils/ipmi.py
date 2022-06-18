@@ -145,7 +145,7 @@ def check_ipmi_detailed(
             yield Result(state=overwrite_state, summary="User-defined state")
             break
 
-    # stay compatible with older versions
+    # stay compatible with older versions and compare with overwrite_state
     yield Result(
         state=State.best(status_txt_mapping(sensor.status_txt), overwrite_state),
         summary="Status: %s" % sensor.status_txt,

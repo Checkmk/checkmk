@@ -863,7 +863,7 @@ TEST(PluginTest, GeneratePluginEntry) {
 
         InsertInPluginMap(pm, pv_main);
         EXPECT_EQ(pm.size(), pv_main.size());
-        ApplyExeUnitToPluginMap(pm, exe_units_base, true);
+        ApplyEverythingToPluginMap(pm, exe_units_base, pv_main, true);
         {
             int indexes[] = {0, 3, 5};
             for (auto i : indexes) {

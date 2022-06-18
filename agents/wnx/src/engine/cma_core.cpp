@@ -1327,30 +1327,6 @@ void FilterPluginMap(PluginMap &out_map, const PathVector &found_files) {
     }
 }
 
-// gtest only partly(name, but not full path)
-void ApplyExeUnitToPluginMap(PluginMap &out_map,
-                             const std::vector<cfg::Plugins::ExeUnit> &units,
-                             bool local) {
-    for (auto &out : out_map) {
-        auto p = out.second.path();
-
-        for (const auto &unit : units) {
-            if (!MatchNameOrAbsolutePath(unit.pattern(), p)) {
-                continue;
-            }
-
-            // string is match stop scanning exe units
-            if (unit.run())
-                out.second.applyConfigUnit(unit, local);
-            else {
-                XLOG::d.t("Run is 'NO' for the '{}'", p);
-                out.second.removeFromExecution();
-            }
-            break;
-        }
-    }
-}
-
 // CheckExists = false is only for testing,
 // set true for Production
 // Out is mutable

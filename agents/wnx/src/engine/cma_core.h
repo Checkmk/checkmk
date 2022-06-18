@@ -638,10 +638,6 @@ void ApplyEverythingToPluginMap(
 
 void FilterPluginMap(PluginMap &out_map, const PathVector &found_files);
 
-void ApplyExeUnitToPluginMap(PluginMap &out_map,
-                             const std::vector<cfg::Plugins::ExeUnit> &units,
-                             bool local);
-
 void RemoveDuplicatedPlugins(PluginMap &plugin_map, bool check_exists);
 
 void UpdatePluginMap(PluginMap &plugin_map, bool local,

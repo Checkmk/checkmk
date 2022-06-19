@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
+from typing import Mapping
 
 from mocket import Mocketizer  # type: ignore[import]
 from mocket.mockhttp import Entry  # type: ignore[import]
@@ -125,3 +126,27 @@ class TestAPIDeployments:
         assert all(
             condition.status == api.ConditionStatus.TRUE for _, condition in conditions.items()
         )
+
+    def test_parse_conditions_no_conditions(self, apps_client, dummy_host) -> None:
+        """Deployment with empty status.
+
+        Sometimes a Deployment has an empty status. This occurs during start-up
+        of the Minikube with the core-dns Deployment."""
+        # Arrange
+        deployment_with_conditions: Mapping = {
+            "items": [
+                {"status": {}},
+            ]
+        }
+        Entry.single_register(
+            Entry.GET,
+            f"{dummy_host}/apis/apps/v1/deployments",
+            body=json.dumps(deployment_with_conditions),
+            headers={"content-type": "application/json"},
+        )
+        with Mocketizer():
+            deployment = apps_client.list_deployment_for_all_namespaces().items[0]
+        # Act
+        conditions = deployment_conditions(deployment.status)
+        # Assert
+        assert conditions == {}

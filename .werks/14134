@@ -1,0 +1,17 @@
+Title: KUBE: agent_kube: Deployement conditions are optional
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1655631779
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p3
+
+Previously, the Kubernetes special agent raised the error
+
+[special_kube] TypeError: 'NoneType' object is not iterable
+
+if the Kubernetes API omitted the conditions of a Deployment.  With this werk, the error is fixed.
+The Condition service is not discovered on the corresponding Deployment.

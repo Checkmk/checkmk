@@ -406,15 +406,15 @@ def deployment_replicas(
 def deployment_conditions(
     status: client.V1DeploymentStatus,
 ) -> Mapping[str, api.DeploymentCondition]:
-    conditions = {}
-    for condition in status.conditions:
-        conditions[condition.type.lower()] = api.DeploymentCondition(
+    return {
+        condition.type.lower(): api.DeploymentCondition(
             status=condition.status,
             last_transition_time=convert_to_timestamp(condition.last_transition_time),
             reason=condition.reason,
             message=condition.message,
         )
-    return conditions
+        for condition in status.conditions or []
+    }
 
 
 def pod_from_client(pod: client.V1Pod) -> api.Pod:

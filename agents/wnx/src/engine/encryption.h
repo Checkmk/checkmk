@@ -35,9 +35,11 @@ enum class Length {
 
 class Commander {
 public:
-    explicit Commander();
+    Commander();
 
-    Commander(const std::string &key, Length length = Length::kDefault);
+    Commander(const std::string &key, Length length);
+    explicit Commander(const std::string &key)
+        : Commander(key, Length::kDefault) {}
 
     Commander(const BYTE *key, DWORD length);
 
@@ -45,35 +47,43 @@ public:
 
     // in-place encrypt buffer
     std::tuple<bool, size_t> encode(void *in_out, size_t size,
-                                    size_t buffer_size,
-                                    bool last_block = true) const;
+                                    size_t buffer_size, bool last_block) const;
+    std::tuple<bool, size_t> encode(void *in_out, size_t size,
+                                    size_t buffer_size) const {
+        return encode(in_out, size, buffer_size, true);
+    }
     std::tuple<bool, size_t> decode(void *in_out, size_t size,
-                                    bool last_block = true) const;
+                                    bool last_block) const;
+    std::tuple<bool, size_t> decode(void *in_out, size_t size) const {
+        return decode(in_out, size, true);
+    }
 
-    std::optional<cma::ByteVector> getKey() const;
+    [[nodiscard]] std::optional<cma::ByteVector> getKey() const;
 
     bool randomizeBuffer(void *buffer, size_t buffer_size) const;
 
-    const bool available() const { return key_ != 0; }
+    [[nodiscard]] bool available() const { return key_ != 0; }
 
-    std::optional<uint32_t> blockSize() const;
+    [[nodiscard]] std::optional<uint32_t> blockSize() const;
 
-    std::optional<size_t> CalcBufferOverhead(size_t data_size) const;
+    [[nodiscard]] std::optional<size_t> CalcBufferOverhead(
+        size_t data_size) const;
 
 private:
     void cleanup();
-    HCRYPTPROV obtainContext() const;
+    [[nodiscard]] HCRYPTPROV obtainContext() const;
     void releaseContext();
 
     void checkAndConfigure();
 
     static size_t keySize(ALG_ID algorithm);
 
-    HCRYPTKEY generateKey(Length key_length) const;
+    [[nodiscard]] HCRYPTKEY generateKey(Length key_length) const;
     HCRYPTKEY importKey(const BYTE *key, DWORD key_size) const;
     // derive key and iv from the password in the same manner as openssl does
-    HCRYPTKEY deriveOpenSSLKey(const std::string &password, Length key_length,
-                               int iterations) const;
+    [[nodiscard]] HCRYPTKEY deriveOpenSSLKey(const std::string &password,
+                                             Length key_length,
+                                             int iterations) const;
     void releaseKey();
 
     HCRYPTPROV crypt_provider_;

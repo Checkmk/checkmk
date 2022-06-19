@@ -50,15 +50,17 @@ std::tuple<bool, size_t> Commander::encode(void *in_out, size_t size,
     }
 
     auto input_size = static_cast<DWORD>(size);
-    if (input_size == 0) return {true, 0};
+    if (input_size == 0) {
+        return {true, 0};
+    }
     if (nullptr == in_out) {
         XLOG::l.crit(XLOG_FLINE + " nullptr in param");
         return {false, 0};
     }
 
-    if (FALSE == ::CryptEncrypt(key_, 0, last_block ? TRUE : FALSE, 0,
-                                static_cast<BYTE *>(in_out), &input_size,
-                                static_cast<DWORD>(buffer_size))) {
+    if (::CryptEncrypt(key_, 0, last_block ? TRUE : FALSE, 0,
+                       static_cast<BYTE *>(in_out), &input_size,
+                       static_cast<DWORD>(buffer_size)) == FALSE) {
         // special case, when error is recoverable
         if (GetLastError() == ERROR_MORE_DATA) {
             return {false, input_size};
@@ -78,15 +80,17 @@ std::tuple<bool, size_t> Commander::decode(void *in_out, size_t size,
     }
 
     auto input_size = static_cast<DWORD>(size);
-    if (input_size == 0) return {true, 0};
+    if (input_size == 0) {
+        return {true, 0};
+    }
 
-    if (nullptr == in_out) {
+    if (in_out == nullptr) {
         XLOG::l.crit(XLOG_FLINE + " nullptr in param");
         return {false, 0};
     }
 
-    if (FALSE == ::CryptDecrypt(key_, 0, last_block ? TRUE : FALSE, 0,
-                                static_cast<BYTE *>(in_out), &input_size)) {
+    if (::CryptDecrypt(key_, 0, last_block ? TRUE : FALSE, 0,
+                       static_cast<BYTE *>(in_out), &input_size) == FALSE) {
         // special case, when error is recoverable
         if (GetLastError() == ERROR_MORE_DATA) {
             return {false, input_size};
@@ -127,7 +131,7 @@ HCRYPTPROV Commander::obtainContext() const {
 // called from destructor
 void Commander::releaseContext() {
     //
-    if (0 != crypt_provider_) {
+    if (crypt_provider_ != 0) {
         ::CryptReleaseContext(crypt_provider_, 0);
         crypt_provider_ = 0;
     }
@@ -135,31 +139,32 @@ void Commander::releaseContext() {
 
 // called only from constructor
 void Commander::checkAndConfigure() {
-    if (0 == key_) {
+    if (key_ == 0) {
         cleanup();
         return;
     }
 
     DWORD mode = CRYPT_MODE_CBC;
     auto *pmode = reinterpret_cast<BYTE *>(&mode);
-    if (FALSE == ::CryptSetKeyParam(key_, KP_MODE, pmode, 0)) {
+    if (::CryptSetKeyParam(key_, KP_MODE, pmode, 0) == FALSE) {
         XLOG::l.crit("Cannot set crypto mode error is [{}]", GetLastError());
         return;
     }
 
     // in fact, pkcs5 seems to be the only padding supported by MS bundled CSPs?
     mode = PKCS5_PADDING;
-    if (FALSE == ::CryptSetKeyParam(key_, KP_PADDING, pmode, 0)) {
+    if (::CryptSetKeyParam(key_, KP_PADDING, pmode, 0) == FALSE) {
         XLOG::l.crit("Cannot set pad mode error is [{}]", GetLastError());
         return;
     }
-
     XLOG::t.i("Modes for a key set correctly");
 }
 
 HCRYPTKEY Commander::generateKey(Length key_length) const {
     HCRYPTKEY hkey = 0;
-    if (crypt_provider_ == 0) return 0;
+    if (crypt_provider_ == 0) {
+        return 0;
+    }
     if (FALSE ==
         ::CryptGenKey(crypt_provider_, algorithm_,
                       static_cast<unsigned>(key_length) | CRYPT_EXPORTABLE,
@@ -198,9 +203,9 @@ HCRYPTKEY Commander::importKey(const BYTE *key, DWORD key_size) const {
     key_blob.insert(key_blob.end(), key, key + key_size);
 
     HCRYPTKEY crypt_key = 0;
-    if (FALSE == ::CryptImportKey(crypt_provider_, &key_blob[0],
-                                  static_cast<DWORD>(key_blob.size()), 0, 0,
-                                  &crypt_key)) {
+    if (::CryptImportKey(crypt_provider_, &key_blob[0],
+                         static_cast<DWORD>(key_blob.size()), 0, 0,
+                         &crypt_key) == FALSE) {
         XLOG::l.crit(XLOG_FLINE + " Cannot import key, error is [{}]",
                      GetLastError());
         return 0;
@@ -290,7 +295,9 @@ HCRYPTKEY Commander::deriveOpenSSLKey(const std::string &password,
     auto to_kill_base_hash = base_hash;
     ON_OUT_OF_SCOPE(
         if (to_kill_base_hash)::CryptDestroyHash(to_kill_base_hash););
-    if (hash_size == 0) return 0;
+    if (hash_size == 0) {
+        return 0;
+    }
 
     cma::ByteVector buffer;
     buffer.resize(hash_size);
@@ -309,8 +316,9 @@ HCRYPTKEY Commander::deriveOpenSSLKey(const std::string &password,
 
     while ((key_offset < key.size()) || (iv_offset < iv.size())) {
         HCRYPTHASH hash = DuplicateHash(base_hash);
-        if (0 == hash) return 0;
-
+        if (hash == 0) {
+            return 0;
+        }
         ON_OUT_OF_SCOPE(::CryptDestroyHash(hash));
 
         // after the first iteration, include the hash from the previous
@@ -318,22 +326,34 @@ HCRYPTKEY Commander::deriveOpenSSLKey(const std::string &password,
         if (first_iteration) {
             first_iteration = false;
         } else {
-            if (FALSE == HashData(hash, buffer)) return 0;
+            if (HashData(hash, buffer) == FALSE) {
+                return 0;
+            }
         }
         // include password in hash (duh!)
-        if (FALSE == HashData(hash, password)) return 0;
+        if (HashData(hash, password) == FALSE) {
+            return 0;
+        }
 
         // #TODO: include salt
-        if (FALSE == GetHashData(hash, buffer)) return 0;
+        if (GetHashData(hash, buffer) == FALSE) {
+            return 0;
+        }
 
         for (int i = 1; i < iterations; ++i) {
             auto hash_inner = DuplicateHash(base_hash);
-            if (FALSE == hash_inner) return 0;
+            if (hash_inner == FALSE) {
+                return 0;
+            }
 
             ON_OUT_OF_SCOPE(::CryptDestroyHash(hash_inner));
 
-            if (FALSE == HashData(hash_inner, buffer)) return 0;
-            if (FALSE == GetHashData(hash_inner, buffer)) return 0;
+            if (HashData(hash_inner, buffer) == FALSE) {
+                return 0;
+            }
+            if (GetHashData(hash_inner, buffer) == FALSE) {
+                return 0;
+            }
         }
 
         size_t usable_bytes = buffer.size();
@@ -366,7 +386,7 @@ HCRYPTKEY Commander::deriveOpenSSLKey(const std::string &password,
     }
 
     // apply iv
-    if (hkey != 0 && FALSE == ::CryptSetKeyParam(hkey, KP_IV, &iv[0], 0)) {
+    if (hkey != 0 && ::CryptSetKeyParam(hkey, KP_IV, &iv[0], 0) == FALSE) {
         ::CryptDestroyKey(hkey);
         XLOG::l("Failure applying key [{}]", GetLastError());
         return 0;
@@ -376,26 +396,28 @@ HCRYPTKEY Commander::deriveOpenSSLKey(const std::string &password,
 }
 
 void Commander::releaseKey() {
-    if (0 != key_) {
+    if (key_ != 0) {
         ::CryptDestroyKey(key_);
         key_ = 0;
     }
 }
 
 std::optional<cma::ByteVector> Commander::getKey() const {
-    if (!available()) return {};
+    if (!available()) {
+        return {};
+    }
 
     DWORD key_size = 0;
-    if (FALSE ==
-        ::CryptExportKey(key_, 0, PLAINTEXTKEYBLOB, 0, nullptr, &key_size)) {
+    if (::CryptExportKey(key_, 0, PLAINTEXTKEYBLOB, 0, nullptr, &key_size) ==
+        FALSE) {
         XLOG::l("Failed to get key size, error [{}]", GetLastError());
         return {};
     }
 
     std::vector<BYTE> result;
     result.resize(key_size);
-    if (FALSE ==
-        ::CryptExportKey(key_, 0, PLAINTEXTKEYBLOB, 0, &result[0], &key_size)) {
+    if (::CryptExportKey(key_, 0, PLAINTEXTKEYBLOB, 0, &result[0], &key_size) ==
+        FALSE) {
         XLOG::l("Failed to export key, error [{}]", GetLastError());
         return {};
     }
@@ -405,11 +427,12 @@ std::optional<cma::ByteVector> Commander::getKey() const {
 }
 
 bool Commander::randomizeBuffer(void *buffer, size_t buffer_size) const {
-    if (!available()) return false;
+    if (!available()) {
+        return false;
+    }
 
-    if (FALSE == ::CryptGenRandom(crypt_provider_,
-                                  static_cast<DWORD>(buffer_size),
-                                  static_cast<BYTE *>(buffer))) {
+    if (::CryptGenRandom(crypt_provider_, static_cast<DWORD>(buffer_size),
+                         static_cast<BYTE *>(buffer)) == FALSE) {
         XLOG::l("Failed generate random data, error [{}]", GetLastError());
         return false;
     }
@@ -434,7 +457,7 @@ std::optional<size_t> Commander::CalcBufferOverhead(size_t data_size) const {
         return {};
     }
 
-    if (0 == blockSize().value()) {
+    if (blockSize().value() == 0) {
         XLOG::l("Impossible situation, block is too short");
         return {};
     }

@@ -41,6 +41,8 @@ TEST_F(PerfCpuLoadTest, Construction) {
 }
 
 TEST_F(PerfCpuLoadTest, Generation) {
+    auto temp_fs = tst::TempCfgFs::CreateNoIo();
+    ASSERT_TRUE(temp_fs->loadFactoryConfig());
     uint64_t low = wtools::QueryPerformanceCo();
     auto table = getOutput();
     uint64_t high = wtools::QueryPerformanceCo();

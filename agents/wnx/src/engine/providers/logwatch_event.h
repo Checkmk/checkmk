@@ -12,6 +12,7 @@
 #include <filesystem>
 #include <string>
 #include <string_view>
+#include <utility>
 
 #include "cfg_engine.h"
 #include "common/cfg_info.h"
@@ -19,9 +20,7 @@
 #include "providers/internal.h"
 #include "section_header.h"
 
-namespace cma {
-
-namespace provider {
+namespace cma::provider {
 constexpr std::string_view kLogWatchEventStateFileName{"eventstate"};
 constexpr std::string_view kLogWatchEventStateFileExt{".txt"};
 
@@ -36,12 +35,15 @@ struct LogWatchLimits {
 // simple data structure to keep states internally
 // name, value and new or not
 struct State {
-    State(const std::string &name, uint64_t pos, bool new_found)
-        : name_(name), pos_(pos), presented_(new_found), in_config_(false) {
+    State(std::string name, uint64_t pos, bool new_found)
+        : name_(std::move(name))
+        , pos_(pos)
+        , presented_(new_found)
+        , in_config_(false) {
         setDefaults();
     }
-    State() : State("", 0, false) {}
-    State(const std::string &name) : State(name, 0, true) {}
+    State() = default;
+    explicit State(const std::string &name) : State(name, 0, true) {}
 
     // #IMPORTANT default set of the level and context set MINIMAL
     void setDefaults() {
@@ -49,12 +51,12 @@ struct State {
         hide_context_ = true;              // #IMPORTANT
     }
     std::string name_;
-    uint64_t pos_;
-    bool presented_;  // either in registry or in config
-    bool in_config_;  // config described
+    uint64_t pos_{0};
+    bool presented_{false};  // either in registry or in config
+    bool in_config_{false};  // config described
 
     cfg::EventLevels level_{cfg::EventLevels::kAll};
-    bool hide_context_ = false;
+    bool hide_context_{false};
 };
 
 using StateVector = std::vector<State>;
@@ -62,27 +64,16 @@ using StateVector = std::vector<State>;
 // loaded normally from the yaml
 struct LogWatchEntry {
 public:
-    LogWatchEntry()
-        : loaded_(false), context_(false), level_(cfg::EventLevels::kOff) {}
+    LogWatchEntry() = default;
 
-    LogWatchEntry(const LogWatchEntry &Rhs)
-        : loaded_(Rhs.loaded_)
-        , context_(Rhs.context_)
-        , level_(Rhs.level_)
-        , name_(Rhs.name_) {}
+    LogWatchEntry(const LogWatchEntry &Rhs) = default;
 
-    LogWatchEntry &operator=(const LogWatchEntry &Rhs) {
-        loaded_ = Rhs.loaded_;
-        context_ = Rhs.context_;
-        level_ = Rhs.level_;
-        name_ = Rhs.name_;
-    }
+    LogWatchEntry &operator=(const LogWatchEntry &rhs) = default;
 
-    LogWatchEntry(LogWatchEntry &&Rhs) = default;
-    LogWatchEntry &operator=(LogWatchEntry &&Rhs) = default;
+    LogWatchEntry(LogWatchEntry &&rhs) = default;
+    LogWatchEntry &operator=(LogWatchEntry &&rhs) = default;
     ~LogWatchEntry() = default;
 
-    // bool loadFrom(const YAML::Node Node) noexcept;
     bool loadFromMapNode(const YAML::Node &node);
     bool loadFrom(std::string_view line);
     void init(std::string_view name, std::string_view level_value,
@@ -92,19 +83,18 @@ public:
         return *this;
     }
 
-    const std::string name() const noexcept {
-        if (loaded_) return name_;
-        return {};
+    [[nodiscard]] std::string name() const noexcept {
+        return loaded_ ? name_ : std::string{};
     }
-    const bool context() const noexcept { return context_; }
-    const bool loaded() const noexcept { return loaded_; }
-    const cfg::EventLevels level() const noexcept { return level_; }
+    [[nodiscard]] bool context() const noexcept { return context_; }
+    [[nodiscard]] bool loaded() const noexcept { return loaded_; }
+    [[nodiscard]] cfg::EventLevels level() const noexcept { return level_; }
 
 private:
     std::string name_;
-    cfg::EventLevels level_;
-    bool context_;
-    bool loaded_;
+    cfg::EventLevels level_{cfg::EventLevels::kOff};
+    bool context_{false};
+    bool loaded_{false};
 };
 
 enum class EvlType { classic, vista };
@@ -118,7 +108,7 @@ public:
     LogWatchEvent(const std::string &name, char separator)
         : Asynchronous(name, separator) {}
 
-    virtual void loadConfig();
+    void loadConfig() override;
 
     auto entries() const { return entries_; }
     const LogWatchEntry *defaultEntry() const {
@@ -162,7 +152,8 @@ enum class SendMode { all, normal };
 // Update States vector with log entries and Send All flags
 // event logs are available
 // returns count of processed Logs entries
-int UpdateEventLogStates(StateVector &states, std::vector<std::string> &logs,
+int UpdateEventLogStates(StateVector &states,
+                         const std::vector<std::string> &logs,
                          SendMode send_mode);
 
 LogWatchEntry GenerateDefaultValue();
@@ -210,8 +201,6 @@ struct RawLogWatchData {
     bool context_;
 };
 
-}  // namespace provider
-
-};  // namespace cma
+};  // namespace cma::provider
 
 #endif  // logwatch_event_h__

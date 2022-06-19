@@ -21,7 +21,7 @@
 
 namespace cma::srv {
 class ServiceProcessor;
-}
+}  // namespace cma::srv
 
 namespace cma::provider {
 
@@ -37,7 +37,7 @@ inline std::string MakeStateFileName(std::string_view name,
 
     std::string ip = ip_address.empty() ? "" : " " + std::string{ip_address};
     std::transform(ip.cbegin(), ip.cend(), ip.begin(),
-                   [](char c) { return std::isalnum(c) ? c : L'_'; });
+                   [](char c) { return std::isalnum(c) != 0 ? c : L'_'; });
 
     auto out = std::string{name} + ip + std::string{extension};
 
@@ -61,8 +61,8 @@ public:
         , error_count_{0} {
         allowed_from_time_ = std::chrono::steady_clock::now();
     }
-    Basic(std::string_view name) : Basic(name, '\0') {}
-    virtual ~Basic() {}
+    explicit Basic(std::string_view name) : Basic(name, '\0') {}
+    virtual ~Basic() = default;
 
     virtual bool startExecution(
         const std::string &internal_port,  // format "type:value", where type:
@@ -76,7 +76,7 @@ public:
     virtual bool stop(bool wait) = 0;
 
     std::string getUniqName() const { return uniq_name_; }
-    const std::string ip() const { return ip_; }
+    std::string ip() const { return ip_; }
 
     // implemented only for very special providers which has to change
     // itself during generation of output(like plugins)
@@ -168,16 +168,16 @@ private:
 // use as a parent
 class Synchronous : public Basic {
 public:
-    Synchronous(std::string_view name) : Basic(name, 0) {}
+    explicit Synchronous(std::string_view name) : Basic(name, 0) {}
     Synchronous(std::string_view name, char separator)
         : Basic(name, separator) {}
-    virtual ~Synchronous() = default;
+    ~Synchronous() override = default;
 
     bool startExecution(
         const std::string &internal_port,  // format "type:value
         const std::string &command_line    // format "id name whatever"
         ) override;
-    bool stop(bool wait) override { return true; }
+    bool stop(bool /*wait*/) override { return true; }
 };
 
 // Reference *ASYNC* Class for internal Sections
@@ -185,10 +185,10 @@ public:
 // When you need choice, then  use this class
 class Asynchronous : public Basic {
 public:
-    Asynchronous(std::string_view name) : Basic(name, 0) {}
+    explicit Asynchronous(std::string_view name) : Basic(name, 0) {}
     Asynchronous(std::string_view name, char separator)
         : Basic(name, separator) {}
-    virtual ~Asynchronous() = default;
+    ~Asynchronous() override = default;
 
     bool startExecution(
         const std::string &internal_port,  // format "type:value"

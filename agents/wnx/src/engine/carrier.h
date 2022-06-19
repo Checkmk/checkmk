@@ -66,34 +66,39 @@ struct CarrierDataHeader {
             CarrierDataHeader::destroy);
     }
 
-    static void destroy(CarrierDataHeader *Cdh) {
-        if (Cdh) delete[] reinterpret_cast<char *>(Cdh);
+    static void destroy(CarrierDataHeader *cdh) {
+        if (cdh != nullptr) {
+            delete[] reinterpret_cast<char *>(cdh);
+        }
     }
 
-    const void *data() const {
-        auto p = reinterpret_cast<const char *>(this);
+    [[nodiscard]] const void *data() const {
+        const auto *p = reinterpret_cast<const char *>(this);
 
-        return data_length_ ? static_cast<const void *>(p + sizeof(*this))
-                            : nullptr;
+        return data_length_ != 0U ? static_cast<const void *>(p + sizeof(*this))
+                                  : nullptr;
     }
 
-    const std::string string() const {
-        auto p = reinterpret_cast<const char *>(this);
+    [[nodiscard]] std::string string() const {
+        const auto *p = reinterpret_cast<const char *>(this);
 
-        auto str = data_length_ ? static_cast<const char *>(p + sizeof(*this))
-                                : nullptr;
-        if (!str)
+        const auto *str = data_length_ != 0U
+                              ? static_cast<const char *>(p + sizeof(*this))
+                              : nullptr;
+        if (str == nullptr) {
             return {};
-        else
-            return std::string(str, str + data_length_);
+        }
+        return std::string(str, str + data_length_);
     }
 
-    const auto providerId() const { return provider_id_; }
-    auto answerId() const { return data_id_; }
-    auto length() const { return data_length_; }
-    auto fullLength() const { return data_length_ + sizeof(CarrierDataHeader); }
-    auto info() const { return info_; }
-    auto type() const { return static_cast<DataType>(type_); }
+    [[nodiscard]] auto providerId() const { return provider_id_; }
+    [[nodiscard]] auto answerId() const { return data_id_; }
+    [[nodiscard]] auto length() const { return data_length_; }
+    [[nodiscard]] auto fullLength() const {
+        return data_length_ + sizeof(CarrierDataHeader);
+    }
+    [[nodiscard]] auto info() const { return info_; }
+    [[nodiscard]] auto type() const { return static_cast<DataType>(type_); }
 
 private:
     /// \brief - requires ON_OUT_OF SCOPE
@@ -111,14 +116,15 @@ private:
         try {
             const auto length = static_cast<size_t>(data_length);
             // data payload
-            auto block = new char[length + sizeof(CarrierDataHeader)];
+            auto *block = new char[length + sizeof(CarrierDataHeader)];
             ::memset(block, 0, +sizeof(CarrierDataHeader));
-            auto cdh = reinterpret_cast<CarrierDataHeader *>(block);
+            auto *cdh = reinterpret_cast<CarrierDataHeader *>(block);
             cdh->data_length_ = length;
-            if (data && cdh->data()) {
+            if ((data != nullptr) && (cdh->data() != nullptr)) {
                 memcpy(cdh->data(), data, length);
-            } else
+            } else {
                 cdh->data_length_ = 0;  // clean
+            }
 
             // header
             ::strcpy(cdh->provider_id_, provider_name);
@@ -135,9 +141,10 @@ private:
     }
 
     void *data() {
-        auto p = const_cast<char *>(reinterpret_cast<const char *>(this));
+        auto *p = const_cast<char *>(reinterpret_cast<const char *>(this));
 
-        return data_length_ ? static_cast<void *>(p + sizeof(*this)) : nullptr;
+        return data_length_ != 0u ? static_cast<void *>(p + sizeof(*this))
+                                  : nullptr;
     }
     // DATA IS STARTED HERE ****************************************
     char provider_id_[kMaxNameLen + 1];
@@ -148,9 +155,9 @@ private:
 
     uint64_t data_length_;
     // DATA ENDED HERE *********************************************
-private:
-    CarrierDataHeader() {}
-    ~CarrierDataHeader() {}
+
+    CarrierDataHeader() = default;
+    ~CarrierDataHeader() = default;
 };
 #pragma pack(pop)
 
@@ -161,7 +168,7 @@ private:
 class CoreCarrier {
 public:
     CoreCarrier() : first_file_write_(true) {}
-    virtual ~CoreCarrier() {}
+    virtual ~CoreCarrier() = default;
 
     // BASE API
     bool establishCommunication(const std::string &internal_port);
@@ -172,8 +179,10 @@ public:
     void shutdownCommunication();
 
     // Accessors
-    std::string getName() const noexcept { return carrier_name_; }
-    std::string getAddress() const noexcept { return carrier_address_; }
+    [[nodiscard]] std::string getName() const noexcept { return carrier_name_; }
+    [[nodiscard]] std::string getAddress() const noexcept {
+        return carrier_address_;
+    }
 
     // Helper API
     static inline bool FireSend(
@@ -181,8 +190,7 @@ public:
         const std::wstring &port_name,  // standard format
         const std::wstring &answer_id,  // identifies Answer
         const void *data, size_t length) {
-        auto id = tools::ConvertToUint64(answer_id);
-        if (id.has_value()) {
+        if (auto id = tools::ConvertToUint64(answer_id); id.has_value()) {
             auto port = wtools::ToUtf8(port_name);
             CoreCarrier cc;
             cc.establishCommunication(port);

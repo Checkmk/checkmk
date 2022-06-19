@@ -266,7 +266,7 @@ const std::array<std::wstring, 3> TryToKillAllowedNames = {
             return false;
         }
 
-        wtools::KillProcessFully(proc_name);
+        wtools::KillProcessFully(proc_name, 9);
         tools::sleep(500ms);
     }
 

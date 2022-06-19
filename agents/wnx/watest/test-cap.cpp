@@ -114,7 +114,7 @@ TEST_F(CapTestFixture, InstallFileAsCopy) {
 }
 
 static bool ValidateInstallYml(const std::filesystem::path &file) {
-    auto yml = YAML::LoadFile(file.u8string());
+    auto yml = YAML::LoadFile(wtools::ToUtf8(file.wstring()));
     if (!yml.IsDefined() || !yml.IsMap()) return false;
     try {
         return yml[groups::kGlobal][vars::kInstall].as<bool>() &&
@@ -332,7 +332,7 @@ TEST(CapTest, StoreFileAgressive) {
     fs::path ping(R"(c:\windows\system32\ping.exe)");
     if (!fs::exists(ping)) GTEST_SKIP() << "there is no ping.exe";
     fs::path cmk_test_ping = work / "cmk-update-aGent.exe";
-    wtools::KillProcessFully(cmk_test_ping.filename().wstring());
+    wtools::KillProcessFully(cmk_test_ping.filename().wstring(), 9);
     cma::tools::sleep(200ms);
     ASSERT_TRUE(fs::copy_file(ping, cmk_test_ping,
                               fs::copy_options::overwrite_existing));
@@ -352,7 +352,7 @@ TEST(CapTest, StoreFileAgressive) {
     fs::remove(cmk_test_ping, ec);
     ASSERT_FALSE(StoreFile(cmk_test_ping, buf));
     ASSERT_TRUE(StoreFileAgressive(cmk_test_ping, buf, 1));
-    wtools::KillProcessFully(cmk_test_ping.filename().wstring());
+    wtools::KillProcessFully(cmk_test_ping.filename().wstring(), 9);
 }
 
 class CapTestProcessFixture : public ::testing::Test {

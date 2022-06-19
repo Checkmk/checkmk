@@ -225,10 +225,9 @@ inline void sendStringToDebugger(const char *String) {
     internal_PrintStringDebugger(String);
 }
 
-inline void sendStringToStdio(const char *String,
-                              internal::Colors Color = internal::Colors::dflt) {
+inline void sendStringToStdio(const char *str, internal::Colors color) {
     if (!XLOG::details::IsColoredOnStdio()) {
-        internal_PrintStringStdio(String);
+        internal_PrintStringStdio(str);
         return;
     }
 
@@ -238,7 +237,7 @@ inline void sendStringToStdio(const char *String,
     CONSOLE_SCREEN_BUFFER_INFO buffer_info;
     GetConsoleScreenBufferInfo(stdout_handle, &buffer_info);
     const uint16_t old_color_attrs = buffer_info.wAttributes;
-    const uint16_t new_color = internal::CalculateColor(Color, old_color_attrs);
+    const uint16_t new_color = internal::CalculateColor(color, old_color_attrs);
 
     // We need to flush the stream buffers into the console before each
     // SetConsoleTextAttribute call lest it affect the text that is
@@ -246,11 +245,15 @@ inline void sendStringToStdio(const char *String,
     fflush(stdout);
     SetConsoleTextAttribute(stdout_handle, new_color);
 
-    internal_PrintStringStdio(String);
+    internal_PrintStringStdio(str);
 
     fflush(stdout);
     // Restores the text color.
     SetConsoleTextAttribute(stdout_handle, old_color_attrs);
+}
+
+inline void sendStringToStdio(const char *str) {
+    return sendStringToStdio(str, internal::Colors::dflt);
 }
 
 }  // namespace xlog
@@ -271,9 +274,12 @@ void SetContext(std::string_view context);
 
 using Colors = xlog::internal::Colors;
 
-inline void SendStringToStdio(std::string_view string,
-                              Colors Color = Colors::dflt) {
-    return xlog::sendStringToStdio(string.data(), Color);
+inline void SendStringToStdio(std::string_view string, Colors color) {
+    return xlog::sendStringToStdio(string.data(), color);
+}
+
+inline void SendStringToStdio(std::string_view string) {
+    return xlog::sendStringToStdio(string.data());
 }
 
 enum Mods : int {
@@ -543,11 +549,15 @@ public:
     }
 
     // this if for stream operations
-    [[maybe_unused]] XLOG::Emitter operator()(int Flags = kCopy) noexcept {
+    [[maybe_unused]] XLOG::Emitter operator()(int Flags) const noexcept {
         auto e = *this;
         e.mods_ = Flags;
 
         return e;
+    }
+
+    [[maybe_unused]] XLOG::Emitter operator()() const noexcept {
+        return operator()(kCopy);
     }
 
     [[maybe_unused]] Emitter t() noexcept {

@@ -20,10 +20,10 @@ class UptimeSync : public Synchronous {
 public:
     UptimeSync() : Synchronous(cma::section::kUptimeName, 0) {}
 
-    UptimeSync(const std::string &name, char separator = 0)
+    UptimeSync(const std::string &name, char separator)
         : Synchronous(name, separator) {}
 
-    UptimeSync(const std::string &name) : Synchronous(name, 0) {}
+    explicit UptimeSync(const std::string &name) : Synchronous(name, 0) {}
 
 protected:
     std::string makeBody() override;
@@ -33,10 +33,10 @@ class UptimeAsync : public Asynchronous {
 public:
     UptimeAsync() : Asynchronous(cma::section::kUptimeName, 0) {}
 
-    UptimeAsync(const std::string &name, char separator = 0)
+    UptimeAsync(const std::string &name, char separator)
         : Asynchronous(name, separator) {}
 
-    UptimeAsync(const std::string &name) : Asynchronous(name, 0) {}
+    explicit UptimeAsync(const std::string &name) : Asynchronous(name, 0) {}
 
 protected:
     std::string makeBody() override;

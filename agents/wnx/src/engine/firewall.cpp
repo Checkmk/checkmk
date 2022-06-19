@@ -10,8 +10,6 @@
 #include <comutil.h>
 #include <netfw.h>
 
-#include <filesystem>
-
 #include "common/wtools.h"
 #include "logger.h"
 #include "tools/_misc.h"
@@ -91,8 +89,7 @@ IEnumVARIANT *Policy::getEnum() {
     auto hr =
         enumerator->QueryInterface(__uuidof(IEnumVARIANT), (void **)&variant);
 
-    if (SUCCEEDED(hr)) return variant;
-    return nullptr;
+    return (SUCCEEDED(hr)) ? variant : nullptr;
 }
 
 long Policy::getRulesCount() {
@@ -119,7 +116,7 @@ INetFwRule *ScanAllRules(
 
     long rule_count = policy.getRulesCount();
     if (rule_count == 0) {
-        return 0;
+        return nullptr;
     }
 
     XLOG::t.i("Firewall Rules count is [{}]", rule_count);
@@ -547,7 +544,9 @@ int CountRules(std::wstring_view name, std::wstring_view raw_app_name) {
 
     int count = 0;
     ScanAllRules([name, app_name, &count](INetFwRule *fw_rule) -> INetFwRule * {
-        if (fw_rule == nullptr) return nullptr;
+        if (fw_rule == nullptr) {
+            return nullptr;
+        }
 
         auto rule_name = GetRuleName(fw_rule);
 

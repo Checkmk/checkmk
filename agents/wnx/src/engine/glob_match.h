@@ -103,63 +103,63 @@ inline bool NeedsEscape(wchar_t c) {
 }
 
 template <typename T>
-void InsertEscapes(std::basic_string<T> &Pattern) {
+void InsertEscapes(std::basic_string<T> &pattern) {
     // Escape special characters (apart from '*' and '?')
-    for (size_t pos = 0; pos != Pattern.size(); ++pos) {
-        auto insert_escape = NeedsEscape(Pattern[pos]);
+    for (size_t pos = 0; pos != pattern.size(); ++pos) {
+        auto insert_escape = NeedsEscape(pattern[pos]);
         if (insert_escape) {
-            Pattern.insert(pos++, 1, MakeBackSlash<T>());
+            pattern.insert(pos++, 1, MakeBackSlash<T>());
         }
     }
 }
 
 template <typename T>
-void GlobCharReplace(std::basic_string<T> &Pattern) {
+void GlobCharReplace(std::basic_string<T> &pattern) {
     // Regex needs '.' instead of glob '?'
-    std::replace(Pattern.begin(), Pattern.end(),
+    std::replace(pattern.begin(), pattern.end(),
                  MakeQuestionMark<T>(),  // "?"
                  MakeDot<T>());          // "."
 
     // Regex needs '.*' instead of glob '*'
-    for (auto pos = Pattern.find(MakeStar<T>());
+    for (auto pos = pattern.find(MakeStar<T>());
          pos != std::basic_string<T>::npos;
-         pos = Pattern.find(MakeStar<T>(), pos)) {
-        Pattern.insert(pos, 1, MakeDot<T>());
+         pos = pattern.find(MakeStar<T>(), pos)) {
+        pattern.insert(pos, 1, MakeDot<T>());
         pos += 2;
     }
 }
 
 template <typename T>
-std::basic_regex<T> GlobToRegex(const std::basic_string<T> &GlobPattern) {
-    std::basic_string<T> pattern = GlobPattern;
-    pattern.reserve(GlobPattern.size() * 2 + 2);  // worst case
+std::basic_regex<T> GlobToRegex(const std::basic_string<T> &pattern) {
+    std::basic_string<T> result{pattern};
+    result.reserve(result.size() * 2 + 2);  // worst case
 
-    InsertEscapes<T>(pattern);
-    pattern.insert(0, 1, MakeCap<T>());
-    pattern.push_back(MakeDollar<T>());
-    GlobCharReplace<T>(pattern);
+    InsertEscapes<T>(result);
+    result.insert(0, 1, MakeCap<T>());
+    result.push_back(MakeDollar<T>());
+    GlobCharReplace<T>(result);
 
-    return std::basic_regex<T>{pattern, std::regex_constants::ECMAScript |
-                                            std::regex_constants::icase};
+    return std::basic_regex<T>{
+        result, std::regex_constants::ECMAScript | std::regex_constants::icase};
 }
 }  // namespace cma::tools::gm
 
 namespace cma::tools {
 template <class T>
-inline bool GlobMatch(const T *Glob, const T *Target) {
-    const auto reg = gm::GlobToRegex(std::basic_string<T>(Glob));
+inline bool GlobMatch(const T *pattern, const T *target) {
+    const auto reg = gm::GlobToRegex(std::basic_string<T>(pattern));
     std::match_results<std::basic_string<T>::const_iterator> match;
-    return std::regex_match(std::basic_string<T>(Target), match, reg);
+    return std::regex_match(std::basic_string<T>(target), match, reg);
 }
 
-inline bool GlobMatch(const std::string &glob, const std::string &target) {
-    const auto reg = gm::GlobToRegex(glob);
+inline bool GlobMatch(const std::string &pattern, const std::string &target) {
+    const auto reg = gm::GlobToRegex(pattern);
     std::match_results<std::string::const_iterator> match;
     return std::regex_match(target, match, reg);
 }
 
-inline bool GlobMatch(const std::wstring &glob, const std::wstring &target) {
-    const auto reg = gm::GlobToRegex(glob);
+inline bool GlobMatch(const std::wstring &pattern, const std::wstring &target) {
+    const auto reg = gm::GlobToRegex(pattern);
     std::match_results<std::wstring::const_iterator> match;
     return std::regex_match(target, match, reg);
 }

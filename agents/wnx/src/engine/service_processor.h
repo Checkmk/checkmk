@@ -18,6 +18,7 @@
 #include <mutex>       //
 #include <optional>    //
 #include <thread>      //
+#include <utility>
 
 #include "async_answer.h"
 #include "carrier.h"
@@ -160,7 +161,9 @@ public:
     const T &getEngine() const { return engine_; }
     T &getEngine() { return engine_; }
 
-    int expectedTimeout() const { return section_expected_timeout_; }
+    [[nodiscard]] int expectedTimeout() const {
+        return section_expected_timeout_;
+    }
 
 protected:
     void goGoGo(const std::string &section_name,  //
@@ -486,8 +489,8 @@ private:
 
     class SectionProviderText {
     public:
-        SectionProviderText(const std::string &name, const std::string &text)
-            : name_(name), text_(text) {}
+        SectionProviderText(std::string name, std::string text)
+            : name_(std::move(name)), text_(std::move(text)) {}
 
         std::future<bool> kick(AnswerId stamp, ServiceProcessor *proc) {
             return std::async(
@@ -519,9 +522,8 @@ private:
 
     class SectionProviderFile {
     public:
-        SectionProviderFile(const std::string &name,
-                            const std::wstring &filename)
-            : name_(name), file_name_(filename) {}
+        SectionProviderFile(std::string name, std::wstring filename)
+            : name_(std::move(name)), file_name_(std::move(filename)) {}
 
         std::future<bool> kick(const AnswerId answer_id,
                                ServiceProcessor *service_processor) {
@@ -545,7 +547,7 @@ private:
     private:
         std::string name_;
         std::wstring file_name_;
-        std::optional<std::vector<uint8_t>> gatherData() const {
+        [[nodiscard]] std::optional<std::vector<uint8_t>> gatherData() const {
             return tools::ReadFileInVector(file_name_.c_str());
         }
     };

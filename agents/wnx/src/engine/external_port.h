@@ -38,10 +38,11 @@ class AsioSession : public std::enable_shared_from_this<AsioSession> {
 public:
     using s_ptr = std::shared_ptr<AsioSession>;
 
-    AsioSession(asio::ip::tcp::socket socket) : socket_(std::move(socket)) {}
+    explicit AsioSession(asio::ip::tcp::socket socket)
+        : socket_(std::move(socket)) {}
     virtual ~AsioSession() { XLOG::d("destroy connection"); }
 
-    void start(ReplyFunc reply_func) {
+    void start(const ReplyFunc &reply_func) {
         // standard functionality of current agent
         // accept connection, get data, write data, close connection
         auto send_back = reply_func(getCurrentRemoteIp());
@@ -64,7 +65,7 @@ public:
 private:
     // prints last line of the output in the log
     // to see how correct was an answer
-    void logWhenDebugging(const ByteVector &send_back) const noexcept {
+    static void logWhenDebugging(const ByteVector &send_back) noexcept {
         if (!tgt::IsDebug()) {
             return;
         }
@@ -151,13 +152,10 @@ inline std::tuple<std::string, uint16_t, bool> GetSocketInfo(
 class ExternalPort : public std::enable_shared_from_this<ExternalPort> {
 public:
     // ctor&dtor
-    ExternalPort(wtools::BaseServiceProcessor *owner)
-        : shutdown_thread_(false)
-        , io_started_(false)
-        , owner_(owner)
-        , wake_delay_(std::chrono::milliseconds(500)) {}
+    explicit ExternalPort(wtools::BaseServiceProcessor *owner)
+        : owner_(owner) {}
 
-    virtual ~ExternalPort() {}
+    virtual ~ExternalPort() = default;
 
     // no copy, no move
     ExternalPort(const ExternalPort &) = delete;
@@ -174,7 +172,6 @@ public:
     void shutdownIo();
 
     // Supplementary API
-    void reloadConfig() {}
     bool isIoStarted() const noexcept { return io_started_; }
 
     void putOnQueue(AsioSession::s_ptr asio_session);
@@ -185,8 +182,8 @@ public:
 private:
     wtools::BaseServiceProcessor *owner_ = nullptr;
     class server {
-        asio::ip::tcp::endpoint makeEndpoint(bool ipv6, uint16_t port,
-                                             LocalOnly local_only) {
+        static asio::ip::tcp::endpoint makeEndpoint(bool ipv6, uint16_t port,
+                                                    LocalOnly local_only) {
             return local_only == LocalOnly::yes
                        ? asio::ip::tcp::endpoint(
                              asio::ip::make_address("127.0.0.1"), port)
@@ -249,7 +246,7 @@ protected:
         // call of the function Signal under lock
         std::lock_guard<std::mutex> lk(io_thread_lock_);
         XLOG::l.t("Stopping execution");
-        if (context_) {
+        if (context_ != nullptr) {
             context_->stop();  // non blocking call to stop IO
         }
         shutdown_thread_ = true;
@@ -262,8 +259,8 @@ protected:
     // everything is going smooth
     mutable std::mutex io_thread_lock_;
     std::thread io_thread_;
-    bool shutdown_thread_;
-    bool io_started_;
+    bool shutdown_thread_{false};
+    bool io_started_{false};
 
     asio::io_context *context_;  // NOT OWNED, should not be locked
 
@@ -274,7 +271,7 @@ protected:
     // asio sessions waker
     mutable std::mutex wake_lock_;
     std::condition_variable wake_thread_;
-    std::chrono::milliseconds wake_delay_;
+    std::chrono::milliseconds wake_delay_{500};
 
 #if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
     friend class ExternalPortTest;

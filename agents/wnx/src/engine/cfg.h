@@ -10,6 +10,7 @@
 #include <ranges>
 #include <string>
 #include <string_view>
+#include <utility>
 
 #include "common/cfg_info.h"
 #include "common/wtools.h"
@@ -782,8 +783,8 @@ struct WinPerf : public Group {
 public:
     struct Counter {
         Counter() = default;
-        Counter(const std::string &id, const std::string &name)
-            : id_(id), name_(name) {}
+        Counter(std::string id, std::string name)
+            : id_(std::move(id)), name_(std::move(name)) {}
         [[nodiscard]] auto name() const noexcept { return name_; }
         [[nodiscard]] auto id() const noexcept { return id_; }
 

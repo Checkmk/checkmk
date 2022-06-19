@@ -49,12 +49,13 @@ public:
                        const std::filesystem::path &modules_dir);
 
     //
-    bool isMyScript(const std::filesystem::path &script) const noexcept;
-    std::wstring buildCommandLine(
+    [[nodiscard]] bool isMyScript(
+        const std::filesystem::path &script) const noexcept;
+    [[nodiscard]] std::wstring buildCommandLine(
         const std::filesystem::path &script) const noexcept;
 
     // makes command line with script, if bin_ is empty returns nothing
-    std::wstring buildCommandLineForced(
+    [[nodiscard]] std::wstring buildCommandLineForced(
         const std::filesystem::path &script) const noexcept;
 
     void removeExtension(std::string_view ext);
@@ -71,10 +72,10 @@ private:
     std::filesystem::path bin_;      // executable from the exec:
     std::filesystem::path package_;  // path to valid package file
 
-    std::filesystem::path findPackage(
+    [[nodiscard]] std::filesystem::path findPackage(
         const std::filesystem::path &backup_dir) const noexcept;
 
-    std::filesystem::path findBin(
+    [[nodiscard]] std::filesystem::path findBin(
         const std::filesystem::path &modules_dir) const noexcept;
 
 #if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
@@ -121,7 +122,7 @@ public:
 
     static void moveModulesToStore(const std::filesystem::path &user);
 
-    std::vector<std::string> getExtensions() const;
+    [[nodiscard]] std::vector<std::string> getExtensions() const;
 
     static std::filesystem::path GetModBackup(
         const std::filesystem::path &user) {
@@ -165,7 +166,8 @@ private:
     static bool PrepareCleanTargetDir(const std::filesystem::path &mod_dir);
     static void CreateBackupFolder(const std::filesystem::path &user);
     // internal API
-    bool isBelongsToModules(const std::filesystem::path &file) const noexcept;
+    [[nodiscard]] bool isBelongsToModules(
+        const std::filesystem::path &file) const noexcept;
     static PathVector ScanDir(const std::filesystem::path &dir) noexcept;
     std::vector<std::filesystem::path> files_;
     std::vector<Module> modules_;

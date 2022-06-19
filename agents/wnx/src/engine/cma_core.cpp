@@ -40,7 +40,7 @@ bool IsExecutable(const fs::path &file_to_exec) {
 }
 
 std::wstring FindPowershellExe() noexcept {
-    constexpr std::wstring_view powershell_name = L"powershell.exe";
+    constexpr std::wstring_view powershell_name{L"powershell.exe"};
     wchar_t buffer[16];
     if (::SearchPathW(nullptr, powershell_name.data(), nullptr, 1, buffer,
                       nullptr) != 0) {
@@ -48,8 +48,7 @@ std::wstring FindPowershellExe() noexcept {
     }
 
     // file not found on path
-    auto powershell_path =
-        cma::tools::win::GetSomeSystemFolder(FOLDERID_System);
+    auto powershell_path = tools::win::GetSomeSystemFolder(FOLDERID_System);
 
     try {
         fs::path ps(powershell_path);
@@ -535,7 +534,9 @@ std::optional<std::string> GetPiggyBackName(const std::string &in_string) {
     }
 
     auto end = in_string.find(section::kFooter4Right);
-    if (end == std::string::npos) return {};
+    if (end == std::string::npos) {
+        return {};
+    }
     constexpr auto footer_len = section::kFooter4Left.length();
     if (footer_len > end) {
         XLOG::l(XLOG_FUNC + " impossible");
@@ -672,9 +673,7 @@ std::vector<char> PluginEntry::getResultsSync(const std::wstring &id,
         return {};
     }
 
-    auto started =
-        minibox_.startEx(L"id", exec, TheMiniBox::StartMode::job, iu_);
-    if (!started) {
+    if (!minibox_.startEx(L"id", exec, TheMiniBox::StartMode::job, iu_)) {
         XLOG::l("Failed to start minibox sync '{}'", wtools::ToUtf8(id));
         return {};
     }
@@ -947,7 +946,7 @@ bool TheMiniBox::waitForEndWindows(std::chrono::milliseconds Timeout) {
 
 namespace {
 constexpr std::chrono::milliseconds time_grane{250};
-}
+}  // namespace
 
 void TheMiniBox::readAndAppend(HANDLE read_handle,
                                std::chrono::milliseconds timeout) {
@@ -987,7 +986,7 @@ bool TheMiniBox::waitForUpdater(std::chrono::milliseconds timeout) {
         return false;
     }
 
-    auto read_handle = getReadHandle();
+    auto *read_handle = getReadHandle();
 
     while (true) {
         readAndAppend(read_handle, timeout);
@@ -1110,7 +1109,9 @@ void PluginEntry::fillInternalUser() {
         return;
     }
 
-    if (user_.empty()) return;  // situation when both fields are empty
+    if (user_.empty()) {
+        return;  // situation when both fields are empty
+    }
 
     // user
     iu_ = PluginsExecutionUser2Iu(user_);
@@ -1294,7 +1295,9 @@ void PluginEntry::storeData(uint32_t proc_id, const std::vector<char> &data) {
     // Remove trailing zero's looks weird, but nulls
     // can be created in some cases by plugin and processing(ConvertTo)
     // But must be removed in output
-    while (!data_.empty() && data_.back() == '\0') data_.pop_back();
+    while (!data_.empty() && data_.back() == '\0') {
+        data_.pop_back();
+    }
 }  // namespace cma
 
 // remove what not present in the file vector
@@ -1305,18 +1308,18 @@ void FilterPluginMap(PluginMap &out_map, const PathVector &found_files) {
         return;
     }
 
-    // check every entry for presence in the foundfiles vector
+    // check every entry for presence in the found files vector
     // absent entries are in to_delete
-    for (const auto &out : out_map) {
+    for (const auto &[path, plugin] : out_map) {
         bool exists = false;
         for (const auto &ff : found_files) {
-            if (out.first == wtools::ToUtf8(ff.wstring())) {
+            if (path == wtools::ToUtf8(ff.wstring())) {
                 exists = true;
                 break;
             }
         }
         if (!exists) {
-            to_delete.push_back(out.first);  // store path to be removed
+            to_delete.push_back(path);  // store path to be removed
         }
     }
 
@@ -1361,10 +1364,13 @@ const bool g_set_logwatch_pos_to_end = true;
 bool IsRunAsync(const PluginEntry &plugin) noexcept {
     auto run_async = plugin.async();
 
-    if (g_async_plugin_without_cache_age_run_async) return run_async;
+    if (g_async_plugin_without_cache_age_run_async) {
+        return run_async;
+    }
 
-    if (run_async && plugin.cacheAge() == 0)
+    if (run_async && plugin.cacheAge() == 0) {
         return config::g_async_plugin_without_cache_age_run_async;
+    }
 
     return run_async;
 }
@@ -1374,21 +1380,17 @@ using DataBlock = std::vector<char>;
 void StartSyncPlugins(PluginMap &plugins,
                       std::vector<std::future<DataBlock>> &results,
                       int timeout) {
-    for (auto &entry_pair : plugins) {
-        auto &entry = entry_pair.second;
-        if (provider::config::IsRunAsync(entry)) {
+    for (auto &[path, plugin] : plugins) {
+        if (provider::config::IsRunAsync(plugin)) {
             continue;
         }
-        XLOG::t("Executing '{}'", entry.path());
+        XLOG::t("Executing '{}'", plugin.path());
         results.emplace_back(std::async(
             std::launch::async,
             [](cma::PluginEntry *e, int /*timeout*/) -> DataBlock {
-                if (e == nullptr) {
-                    return {};
-                }
                 return e->getResultsSync(e->path().wstring());
             },
-            &entry, timeout));
+            &plugin, timeout));
     }
 }
 
@@ -1468,27 +1470,17 @@ std::vector<char> RunAsyncPlugins(PluginMap &plugins, int &total,
     std::vector<char> out;
 
     int count = 0;
-    for (auto &entry_pair : plugins) {
-        auto &entry = entry_pair.second;
-
-        if (!entry.async()) {
+    for (auto &[path, plugin] : plugins) {
+        if (!plugin.async() || !provider::config::IsRunAsync(plugin)) {
             continue;
         }
-
-        auto run_async = provider::config::IsRunAsync(entry);
-        if (!run_async) {
-            continue;
-        }
-
-        auto ret = entry.getResultsAsync(start_immediately);
+        auto ret = plugin.getResultsAsync(start_immediately);
         if (!ret.empty()) {
             ++count;
         }
         tools::AddVector(out, ret);
     }
-
     total = count;
-
     return out;
 }
 }  // namespace cma
@@ -1500,8 +1492,8 @@ std::unordered_map<std::wstring, wtools::InternalUser> g_users;
 wtools::InternalUser ObtainInternalUser(std::wstring_view group) {
     std::wstring group_name(group);
     std::lock_guard lk(g_users_lock);
-    auto it = g_users.find(group_name);
-    if (it != g_users.end()) {
+
+    if (auto it = g_users.find(group_name); it != g_users.end()) {
         return it->second;
     }
 
@@ -1517,8 +1509,8 @@ wtools::InternalUser ObtainInternalUser(std::wstring_view group) {
 
 void KillAllInternalUsers() {
     std::lock_guard lk(g_users_lock);
-    for (const auto &iu : g_users) {
-        wtools::RemoveCmaUser(iu.second.first);
+    for (const auto &[group_name, iu] : g_users) {
+        wtools::RemoveCmaUser(iu.first);
     }
     g_users.clear();
 }

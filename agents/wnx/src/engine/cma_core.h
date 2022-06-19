@@ -132,9 +132,7 @@ inline std::wstring ConstructCommandToExec(const std::filesystem::path &path) {
 namespace cma {
 class TheMiniBox {
 public:
-    TheMiniBox() : process_(nullptr), proc_id_(0), stop_set_(false) {
-        stop_event_ = ::CreateEvent(nullptr, TRUE, FALSE, nullptr);
-    }
+    TheMiniBox() { stop_event_ = ::CreateEvent(nullptr, TRUE, FALSE, nullptr); }
     TheMiniBox(const TheMiniBox &) = delete;
     TheMiniBox &operator=(const TheMiniBox &) = delete;
 
@@ -168,7 +166,7 @@ public:
             // now exec
             auto *ar = new wtools::AppRunner;
             proc_id_ = ar->goExecAsJob(exec_);
-            if (proc_id_ != 0u) {
+            if (proc_id_ != 0U) {
                 process_ = ar;
                 return true;
             }
@@ -198,7 +196,6 @@ public:
         return process_->processId();
     }
 
-    // really obtained proc id. Safe function
     [[nodiscard]] uint32_t startedProcId() const { return proc_id_; }
 
     bool appendResult(HANDLE handle, const std::vector<char> &buf) {
@@ -225,14 +222,14 @@ public:
     [[nodiscard]] bool failed() const noexcept { return failed_; }
 
     // very special, only used for cmk-updater
-    bool waitForUpdater(std::chrono::milliseconds Timeout);
+    bool waitForUpdater(std::chrono::milliseconds timeout);
 
     // With kGrane interval tries to check running processes
     // returns true if all processes ended
     // returns false on timeout or break
-    bool waitForEnd(std::chrono::milliseconds Timeout);
+    bool waitForEnd(std::chrono::milliseconds timeout);
 
-    bool waitForEndWindows(std::chrono::milliseconds Timeout);
+    bool waitForEndWindows(std::chrono::milliseconds timeout);
 
     // normally kill process and associated data
     // also removes and resets other resources
@@ -350,11 +347,11 @@ private:
     std::wstring exec_;
 
     std::mutex lock_;
-    wtools::AppRunner *process_;  // #TODO ? replace with unique_ptr ?
-    uint32_t proc_id_;
+    wtools::AppRunner *process_{nullptr};  // #TODO ? replace with unique_ptr ?
+    uint32_t proc_id_{0};
     std::condition_variable cv_stop_;
-    bool stop_set_ = false;
-    bool failed_ = false;
+    bool stop_set_{false};
+    bool failed_{false};
 };
 
 }  // namespace cma

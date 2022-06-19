@@ -182,7 +182,8 @@ uint32_t AppRunner::goExecAsJob(std::wstring_view command_line) noexcept {
         prepareResources(command_line, true);
 
         auto [pid, jh, ph] = cma::tools::RunStdCommandAsJob(
-            command_line.data(), TRUE, stdio_.getWrite(), stderr_.getWrite());
+            command_line.data(), TRUE, stdio_.getWrite(), stderr_.getWrite(), 0,
+            0);
         // store data to reuse
         process_id_ = pid;
         job_handle_ = jh;
@@ -252,7 +253,7 @@ uint32_t AppRunner::goExecAsDetached(std::wstring_view command_line) noexcept {
 
         process_id_ = cma::tools::RunStdCommand(
             command_line, false, TRUE, stdio_.getWrite(), stderr_.getWrite(),
-            CREATE_NEW_PROCESS_GROUP | DETACHED_PROCESS);
+            CREATE_NEW_PROCESS_GROUP | DETACHED_PROCESS, 0);
         if (process_id_ != 0) {
             return process_id_;
         }
@@ -1522,7 +1523,9 @@ IEnumWbemClassObject *WmiExecQuery(IWbemServices *Services,
         nullptr,                                                // nobody knows
         &enumerator);
 
-    if (SUCCEEDED(hres)) return enumerator;
+    if (SUCCEEDED(hres)) {
+        return enumerator;
+    }
     // SHOULD NOT HAPPEN
     XLOG::l.e("Failed query wmi {:#X}, query is {}",
               static_cast<unsigned>(hres), ToUtf8(Query));
@@ -1635,31 +1638,29 @@ bool WmiWrapper::impersonate() noexcept {
 // RETURNS RAW OBJECT
 // returns nullptr, WmiStatus
 std::tuple<IWbemClassObject *, WmiStatus> WmiGetNextObject(
-    IEnumWbemClassObject *Enumerator, uint32_t timeout) {
-    if (nullptr == Enumerator) {
+    IEnumWbemClassObject *enumerator, uint32_t timeout) {
+    if (enumerator == nullptr) {
         XLOG::l.e("nullptr in Enumerator");
         return {nullptr, WmiStatus::error};
     }
-    ULONG returned = 0;
-    IWbemClassObject *wmi_object = nullptr;
+    ULONG returned{0};
+    IWbemClassObject *wmi_object{nullptr};
 
-    auto hres = Enumerator->Next(timeout * 1000, 1, &wmi_object,
-                                 &returned);  // legacy code
-    if (WBEM_S_TIMEDOUT == hres) {
-        XLOG::l.e("Timeout [{}] seconds broken  when query WMI", timeout);
-        return {nullptr, WmiStatus::timeout};
+    auto hres = enumerator->Next(timeout * 1000, 1, &wmi_object, &returned);
+    switch (hres) {
+        case WBEM_S_TIMEDOUT:
+            XLOG::l.e("Timeout [{}] seconds broken  when query WMI", timeout);
+            return {nullptr, WmiStatus::timeout};
+        case WBEM_S_FALSE:
+            return {nullptr, WmiStatus::ok};  // no more data
+        case WBEM_NO_ERROR:
+            return (returned == 0) ? std::tuple{nullptr, WmiStatus::ok}  // eof
+                                   : std::tuple{wmi_object, WmiStatus::ok};
+        default:
+            XLOG::t("Return {:#X}. Object doesn't exist",
+                    static_cast<uint64_t>(hres));
+            return {nullptr, WmiStatus::error};
     }
-
-    if (WBEM_S_FALSE == hres) return {nullptr, WmiStatus::ok};  // no more data
-    if (WBEM_NO_ERROR != hres) {
-        XLOG::t("Return {:#X} probably object doesn't exist",
-                static_cast<unsigned int>(hres));
-        return {nullptr, WmiStatus::error};
-    }
-
-    if (0 == returned) return {nullptr, WmiStatus::ok};  // eof
-
-    return {wmi_object, WmiStatus::ok};
 }
 
 static void FillAccuAndNames(std::wstring &accu,
@@ -1674,8 +1675,9 @@ static void FillAccuAndNames(std::wstring &accu,
     accu = cma::tools::JoinVector(names, separator);
     if (accu.empty()) {
         XLOG::l("Failed to get names");
-    } else
+    } else {
         accu += L'\n';
+    }
 }
 
 // returns nullptr, WmiStatus
@@ -1696,7 +1698,9 @@ std::tuple<std::wstring, WmiStatus> WmiWrapper::produceTable(
         auto [wmi_object, status] = WmiGetNextObject(enumerator, wmi_timeout);
         status_to_return = status;  // last status is most important
 
-        if (nullptr == wmi_object) break;
+        if (nullptr == wmi_object) {
+            break;
+        }
 
         auto kill_wmi_object = wmi_object;
         ON_OUT_OF_SCOPE(kill_wmi_object->Release());
@@ -1708,7 +1712,9 @@ std::tuple<std::wstring, WmiStatus> WmiWrapper::produceTable(
         }
 
         auto raw = wtools::WmiStringFromObject(wmi_object, names, separator);
-        if (!raw.empty()) accu += raw + L"\n";
+        if (!raw.empty()) {
+            accu += raw + L"\n";
+        }
     }
 
     return {accu, status_to_return};
@@ -1784,7 +1790,7 @@ HMODULE LoadWindowsLibrary(const std::wstring &dll_path) {
     // load the library as a datafile without loading referenced dlls. This
     // is quicker but most of all it prevents problems if dependent dlls
     // can't be loaded.
-    return LoadLibraryExW(
+    return ::LoadLibraryExW(
         dllpath_expanded.c_str(), nullptr,
         DONT_RESOLVE_DLL_REFERENCES | LOAD_LIBRARY_AS_DATAFILE);
 }
@@ -1818,7 +1824,7 @@ std::vector<std::string> EnumerateAllRegistryKeys(const char *reg_path) {
             break;
         }
         entries.emplace_back(ToUtf8(key_name));
-    };
+    }
     return entries;
 }
 
@@ -1826,7 +1832,7 @@ uint32_t GetRegistryValue(std::wstring_view path, std::wstring_view value_name,
                           uint32_t dflt) noexcept {
     HKEY hkey = nullptr;
     auto ret = ::RegOpenKeyW(HKEY_LOCAL_MACHINE, path.data(), &hkey);  // NOLINT
-    if (ERROR_SUCCESS == ret && nullptr != hkey) {
+    if (ret == ERROR_SUCCESS && hkey != nullptr) {
         ON_OUT_OF_SCOPE(::RegCloseKey(hkey));
         DWORD type = REG_DWORD;
         uint32_t buffer = dflt;
@@ -1849,7 +1855,9 @@ bool DeleteRegistryValue(std::wstring_view path,
     if (ERROR_SUCCESS == ret && nullptr != hkey) {
         ON_OUT_OF_SCOPE(::RegCloseKey(hkey));
         ret = ::RegDeleteValue(hkey, value_name.data());
-        if (ret == ERROR_SUCCESS) return true;
+        if (ret == ERROR_SUCCESS) {
+            return true;
+        }
         if (ret == ERROR_FILE_NOT_FOUND) {
             XLOG::t.t(XLOG_FLINE + "No need to delete {}\\{}", ToUtf8(path),
                       ToUtf8(value_name));
@@ -1870,17 +1878,19 @@ namespace {
 
 HKEY CreateRegistryKey(std::wstring_view path) noexcept {
     HKEY key = nullptr;
-    auto ret = ::RegCreateKeyEx(HKEY_LOCAL_MACHINE, path.data(), 0L, nullptr,
-                                REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS,
-                                nullptr, &key, nullptr);  // NOLINT
-    if (ERROR_SUCCESS != ret) return nullptr;
-    return key;
+    return ::RegCreateKeyEx(HKEY_LOCAL_MACHINE, path.data(), 0L, nullptr,
+                            REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, nullptr,
+                            &key, nullptr) == ERROR_SUCCESS
+               ? key
+               : nullptr;  // NOLINT
 }
 // returns true on success
 bool SetRegistryValue(std::wstring_view path, std::wstring_view value_name,
                       std::wstring_view value, DWORD type) noexcept {
     auto *key = CreateRegistryKey(path);
-    if (key == nullptr) return false;
+    if (key == nullptr) {
+        return false;
+    }
 
     // Set full application path with a keyname to registry
     auto ret =
@@ -1909,7 +1919,9 @@ bool SetRegistryValue(std::wstring_view path, std::wstring_view value_name,
     auto ret =
         ::RegSetKeyValue(HKEY_LOCAL_MACHINE, path.data(), value_name.data(),
                          REG_DWORD, &value, 4);  // NOLINT
-    if (ret != 0) XLOG::d("Bad with reg set value {}", ret);
+    if (ret != ERROR_SUCCESS) {
+        XLOG::d("Bad with reg set value {}", ret);
+    }
 
     return ret == ERROR_SUCCESS;
 }
@@ -1923,7 +1935,7 @@ std::wstring GetRegistryValue(std::wstring_view path,
     }
     auto result =
         ::RegOpenKeyW(HKEY_LOCAL_MACHINE, path.data(), &hkey);  // NOLINT
-    if (ERROR_SUCCESS != result || nullptr == hkey) {
+    if (result != ERROR_SUCCESS || hkey == nullptr) {
         // failure here
         XLOG::t.t(XLOG_FLINE + "Cannot open Key '{}' query return code [{}]",
                   ToUtf8(path), result);
@@ -1946,8 +1958,9 @@ std::wstring GetRegistryValue(std::wstring_view path,
         return dflt.data();
     }
 
-    if (ret == ERROR_SUCCESS)
+    if (ret == ERROR_SUCCESS) {
         return type == REG_SZ ? buffer : ExpandStringWithEnvironment(buffer);
+    }
 
     if (ret == ERROR_MORE_DATA) {
         // realloc required
@@ -1967,9 +1980,10 @@ std::wstring GetRegistryValue(std::wstring_view path,
             return dflt.data();
         }
 
-        if (ret == ERROR_SUCCESS)
+        if (ret == ERROR_SUCCESS) {
             return type == REG_SZ ? buffer_big
                                   : ExpandStringWithEnvironment(buffer_big);
+        }
     }
 
     // failure here
@@ -2006,7 +2020,9 @@ bool KillProcess(uint32_t pid, int code) noexcept {
 // used to kill OpenHardwareMonitor or Agent controller
 bool KillProcess(std::wstring_view process_name, int exit_code) noexcept {
     auto *snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPALL, NULL);
-    if (snapshot == nullptr) return false;
+    if (snapshot == nullptr) {
+        return false;
+    }
 
     auto current_process_id = GetCurrentProcessId();
 
@@ -2085,7 +2101,7 @@ std::string WmiPostProcess(const std::string &in, StatusColumn status_column,
 
     // data(body), first line of the table is skipped
     std::transform(table.begin() + 1, table.end(), table.begin() + 1,
-                   [tail_for_data](const std::string &value) {
+                   [&tail_for_data](const std::string &value) {
                        return value + tail_for_data;
                    });
 
@@ -2147,10 +2163,12 @@ int FindProcess(std::wstring_view process_name) noexcept {
     int count = 0;
     std::wstring name(process_name);
     cma::tools::WideLower(name);
-    ScanProcessList([name, &count](const PROCESSENTRY32 &entry) -> bool {
+    ScanProcessList([name, &count](const PROCESSENTRY32 &entry) {
         std::wstring incoming_name = entry.szExeFile;
         cma::tools::WideLower(incoming_name);
-        if (name == incoming_name) count++;
+        if (name == incoming_name) {
+            count++;
+        }
         return true;
     });
 
@@ -2181,19 +2199,23 @@ std::wstring GetArgv(uint32_t index) noexcept {
     int n_args = 0;
     auto *argv = ::CommandLineToArgvW(GetCommandLineW(), &n_args);
 
-    if (argv == nullptr) return {};
+    if (argv == nullptr) {
+        return {};
+    }
 
     ON_OUT_OF_SCOPE(::LocalFree(argv));
 
-    if (index < static_cast<uint32_t>(n_args)) return argv[index];
+    if (index < static_cast<uint32_t>(n_args)) {
+        return argv[index];
+    }
 
     return {};
 }
 
 fs::path GetCurrentExePath() {
-    WCHAR path[MAX_PATH];
-    auto ret = ::GetModuleFileNameW(nullptr, path, MAX_PATH);
-    if (ret) return {path};
+    if (WCHAR path[MAX_PATH]; ::GetModuleFileNameW(nullptr, path, MAX_PATH)) {
+        return {path};
+    }
     XLOG::l("Can't determine exe path [{}]", ::GetLastError());
     return {};
 }
@@ -2230,7 +2252,9 @@ uint32_t GetParentPid(uint32_t pid)  // By Napalm @ NetCore2K
      PULONG ReturnLength) = nullptr;
     *(FARPROC *)&nt_query_information_process = ::GetProcAddress(
         LoadLibraryA("NTDLL.DLL"), "NtQueryInformationProcess");  // NOLINT
-    if (nt_query_information_process == nullptr) return 0;
+    if (nt_query_information_process == nullptr) {
+        return 0;
+    }
 
     HANDLE h = ::OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, pid);
     if (h == nullptr) {
@@ -2293,7 +2317,7 @@ HRESULT ACLInfo::query() noexcept {
     success = ::GetFileSecurityW(path_.GetBSTR(), DACL_SECURITY_INFORMATION,
                                  nullptr, 0, &size_needed);
 
-    if (0 == size_needed) {
+    if (size_needed == 0) {
         return E_FAIL;
     }
     security_descriptor_buffer = new BYTE[size_needed];
@@ -2488,7 +2512,9 @@ std::string ReadWholeFile(const fs::path &fname) noexcept {
 
 bool PatchFileLineEnding(const fs::path &fname) noexcept {
     auto result = ReadWholeFile(fname);
-    if (result.empty()) return false;
+    if (result.empty()) {
+        return false;
+    }
 
     try {
         std::ofstream tst(ToUtf8(fname.wstring()));  // text file
@@ -2563,9 +2589,7 @@ InternalUser CreateCmaUserInGroup(const std::wstring &group) noexcept {
     }
 
     // Now add the user to the local group.
-    auto add_user_to_group_status =
-        primary_dc.localGroupAddMembers(group, name);
-    if (add_user_to_group_status != uc::Status::error) {
+    if (primary_dc.localGroupAddMembers(group, name) != uc::Status::error) {
         return {name, pwd};
     }
 

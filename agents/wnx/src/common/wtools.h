@@ -295,12 +295,11 @@ bool KillProcess(uint32_t pid, int exit_code) noexcept;
 
 // process terminator
 // used to kill OpenHardwareMonitor
-bool KillProcess(std::wstring_view process_name, int exit_code = 9) noexcept;
+bool KillProcess(std::wstring_view process_name, int exit_code) noexcept;
 
 // special function to kill suspicious processes with all here children
 // useful mostly to stop legacy agent which may have plugins running
-bool KillProcessFully(const std::wstring &process_name,
-                      int exit_code = 9) noexcept;
+bool KillProcessFully(const std::wstring &process_name, int exit_code) noexcept;
 
 // calculates count of processes in the system
 int FindProcess(std::wstring_view process_name) noexcept;
@@ -382,7 +381,7 @@ public:
     auto &getData() { return data_; }
 
     bool trySetExitCode(uint32_t pid, uint32_t code) {
-        if ((pid != 0u) && pid == process_id_) {
+        if ((pid != 0U) && pid == process_id_) {
             exit_code_ = code;
             return true;
         }
@@ -1045,11 +1044,10 @@ public:
     Bstr &operator=(const Bstr &) = delete;
     Bstr &operator=(Bstr &&) = delete;
 
-    explicit Bstr(std::wstring_view str) {
-        data_ = ::SysAllocString(str.data());
-    }
+    explicit Bstr(std::wstring_view str)
+        : data_{::SysAllocString(str.data())} {}
     ~Bstr() { ::SysFreeString(data_); }
-    BSTR bstr() const { return data_; }
+    [[nodiscard]] BSTR bstr() const { return data_; }
     BSTR data_;
 };
 

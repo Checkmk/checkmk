@@ -80,13 +80,13 @@ inline bool RunDetachedCommand(const std::string &command) {
 // Returns process id on success
 /// IMPORTANT: SET inherit_handle to TRUE may prevent script form start
 inline uint32_t RunStdCommand(
-    std::wstring_view command,    // full command with arguments
-    bool wait_for_end,            // important flag! set false when you are sure
-    BOOL inherit_handle = FALSE,  // recommended option
-    HANDLE stdio_handle = nullptr,   // when we want to catch output
-    HANDLE stderr_handle = nullptr,  // same
-    DWORD creation_flags = 0,        // never checked this
-    DWORD start_flags = 0) {
+    std::wstring_view command,  // full command with arguments
+    bool wait_for_end,          // important flag! set false when you are sure
+    BOOL inherit_handle,        // recommended option FALSE
+    HANDLE stdio_handle,        // when we want to catch output
+    HANDLE stderr_handle,       // same
+    DWORD creation_flags,       // never checked this
+    DWORD start_flags) {
     // windows "boiler plate"
     STARTUPINFOW si{0};
     memset(&si, 0, sizeof(si));
@@ -122,15 +122,19 @@ inline uint32_t RunStdCommand(
     return 0;
 }
 
+inline uint32_t RunStdCommand(std::wstring_view command, bool wait_for_end) {
+    return RunStdCommand(command, wait_for_end, FALSE, nullptr, nullptr, 0, 0);
+}
+
 // Tree controlling command
 // returns [ProcId, JobHandle, ProcessHandle]
 inline std::tuple<DWORD, HANDLE, HANDLE> RunStdCommandAsJob(
-    const std::wstring &command,     // full command with arguments
-    BOOL inherit_handle = FALSE,     // not optimal, but default
-    HANDLE stdio_handle = nullptr,   // when we want to catch output
-    HANDLE stderr_handle = nullptr,  // same
-    DWORD creation_flags = 0,        // never checked this
-    DWORD start_flags = 0) noexcept {
+    const std::wstring &command,  // full command with arguments
+    BOOL inherit_handle,          // not optimal, but default
+    HANDLE stdio_handle,          // when we want to catch output
+    HANDLE stderr_handle,         // same
+    DWORD creation_flags,         // never checked this
+    DWORD start_flags) noexcept {
     // windows "boiler plate"
     STARTUPINFOW si{0};
     memset(&si, 0, sizeof(si));
@@ -173,6 +177,11 @@ inline std::tuple<DWORD, HANDLE, HANDLE> RunStdCommandAsJob(
 
     CloseHandle(pi.hThread);
     return {process_id, job_handle, pi.hProcess};
+}
+
+inline std::tuple<DWORD, HANDLE, HANDLE> RunStdCommandAsJob(
+    const std::wstring &command) noexcept {
+    return RunStdCommandAsJob(command, FALSE, nullptr, nullptr, 0, 0);
 }
 
 #if defined(_WIN32)

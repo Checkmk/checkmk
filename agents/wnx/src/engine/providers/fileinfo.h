@@ -14,9 +14,7 @@
 #include "providers/internal.h"
 #include "section_header.h"
 
-namespace cma {
-
-namespace provider {
+namespace cma::provider {
 class FileInfo : public Asynchronous {
 public:
     static constexpr std::string_view kMissing = "missing";
@@ -37,15 +35,13 @@ public:
     FileInfo(const std::string &name, char separator)
         : Asynchronous(name, separator) {}
 
-    virtual void loadConfig();
+    void loadConfig() override;
 
 protected:
     std::string makeBody() override;
     std::string generateFileList(const YAML::Node &path_array_val);
     Mode mode_{Mode::legacy};
 };
-}  // namespace provider
-
-}  // namespace cma
+}  // namespace cma::provider
 
 #endif  // fileinfo_h__

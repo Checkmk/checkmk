@@ -109,7 +109,7 @@ public:
     }
     uint64_t getAverage() const {
         std::lock_guard lk(lock_);
-        return counter_ != 0u ? time_.count() / counter_ : 0;
+        return counter_ != 0U ? time_.count() / counter_ : 0;
     }
 
     std::pair<uint64_t, std::chrono::microseconds> get() const {

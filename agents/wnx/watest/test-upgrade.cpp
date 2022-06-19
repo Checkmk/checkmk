@@ -211,8 +211,7 @@ static auto CreateIniFile(std::filesystem::path Lwa, const std::string Content,
 }
 
 static std::tuple<std::filesystem::path, std::filesystem::path> CreateInOut() {
-    namespace fs = std::filesystem;
-    fs::path temp_dir = cma::cfg::GetTempDir();
+    fs::path temp_dir = cfg::GetTempDir();
     auto normal_dir =
         temp_dir.wstring().find(L"\\tmp", 0) != std::wstring::npos;
     if (normal_dir) {
@@ -227,7 +226,6 @@ static std::tuple<std::filesystem::path, std::filesystem::path> CreateInOut() {
 }
 
 TEST(UpgradeTest, CheckProtocolUpdate) {
-    namespace fs = std::filesystem;
     tst::SafeCleanTempDir();
     ON_OUT_OF_SCOPE(tst::SafeCleanTempDir());
     auto [old_location, new_location] = CreateInOut();
@@ -250,7 +248,7 @@ TEST(UpgradeTest, CheckProtocolUpdate) {
     auto new_file = ConstructProtocolFileName(new_location);
     EXPECT_TRUE(fs::exists(new_file, ec));
     EXPECT_FALSE(fs::exists(old_file, ec));
-    auto content = cma::tools::ReadFileInString(new_file.string().c_str());
+    auto content = tools::ReadFileInString(new_file.string().c_str());
     ASSERT_TRUE(content.has_value());
     EXPECT_TRUE(content->find("old_file") != std::string::npos);
 
@@ -259,7 +257,7 @@ TEST(UpgradeTest, CheckProtocolUpdate) {
         UpdateProtocolFile(new_location.wstring(), old_location.wstring()));
     EXPECT_TRUE(fs::exists(new_file, ec));
     EXPECT_FALSE(fs::exists(old_file, ec));
-    content = cma::tools::ReadFileInString(new_file.string().c_str());
+    content = tools::ReadFileInString(new_file.string().c_str());
     ASSERT_TRUE(content.has_value());
     EXPECT_TRUE(content->find("old_file") != std::string::npos);
 }
@@ -267,17 +265,16 @@ TEST(UpgradeTest, CheckProtocolUpdate) {
 TEST(UpgradeTest, CreateProtocol) {
     tst::SafeCleanTempDir();
     ON_OUT_OF_SCOPE(tst::SafeCleanTempDir());
-    namespace fs = std::filesystem;
-    fs::path dir = cma::cfg::GetTempDir();
+    fs::path dir = cfg::GetTempDir();
     auto x = CreateProtocolFile(dir, "  aaa: aaa");
     ASSERT_TRUE(x);
 
     auto protocol_file = ConstructProtocolFileName(dir);
-    auto f = cma::tools::ReadFileInVector(protocol_file);
+    auto f = tools::ReadFileInVector(protocol_file);
     ASSERT_TRUE(f.has_value());
     auto file_content = f.value();
     std::string str((const char *)file_content.data(), file_content.size());
-    auto table = cma::tools::SplitString(str, "\n");
+    auto table = tools::SplitString(str, "\n");
     EXPECT_EQ(table.size(), 3);
 }
 
@@ -301,42 +298,42 @@ static std::string for_patch =
 
 TEST(UpgradeTest, PatchRelativePath) {
     auto yaml = YAML::Load(for_patch);
-    EXPECT_FALSE(PatchRelativePath(
-        yaml, groups::kLocal, vars::kPluginsExecution, vars::kPluginPattern,
-        cma::cfg::vars::kPluginUserFolder));
-    EXPECT_FALSE(PatchRelativePath(
-        yaml, groups::kPlugins, vars::kPluginAsyncStart, vars::kPluginPattern,
-        cma::cfg::vars::kPluginUserFolder));
+    EXPECT_FALSE(
+        PatchRelativePath(yaml, groups::kLocal, vars::kPluginsExecution,
+                          vars::kPluginPattern, cfg::vars::kPluginUserFolder));
+    EXPECT_FALSE(
+        PatchRelativePath(yaml, groups::kPlugins, vars::kPluginAsyncStart,
+                          vars::kPluginPattern, cfg::vars::kPluginUserFolder));
     EXPECT_TRUE(PatchRelativePath(yaml, groups::kPlugins,
                                   vars::kPluginsExecution, vars::kPluginRetry,
-                                  cma::cfg::vars::kPluginUserFolder))
+                                  cfg::vars::kPluginUserFolder))
         << "invalid subkey is allowed";
 
     ASSERT_TRUE(PatchRelativePath(yaml, groups::kPlugins,
                                   vars::kPluginsExecution, vars::kPluginPattern,
-                                  cma::cfg::vars::kPluginUserFolder));
+                                  cfg::vars::kPluginUserFolder));
     auto seq = yaml[groups::kPlugins][vars::kPluginsExecution];
     ASSERT_TRUE(seq.IsSequence());
     ASSERT_EQ(seq.size(), 4);
 
     EXPECT_EQ(seq[0][vars::kPluginPattern].as<std::string>(),
-              std::string(cma::cfg::vars::kPluginUserFolder) + "\\test1");
+              std::string(cfg::vars::kPluginUserFolder) + "\\test1");
     EXPECT_EQ(seq[1][vars::kPluginPattern].as<std::string>(),
-              std::string(cma::cfg::vars::kPluginUserFolder) + "\\a\\test2");
+              std::string(cfg::vars::kPluginUserFolder) + "\\a\\test2");
     EXPECT_EQ(seq[2][vars::kPluginPattern].as<std::string>(), "\\test2");
     EXPECT_EQ(seq[3][vars::kPluginPattern].as<std::string>(), "/test3");
 
     ASSERT_TRUE(PatchRelativePath(yaml, groups::kPlugins,
                                   vars::kPluginsExecution, vars::kPluginPattern,
-                                  cma::cfg::vars::kPluginUserFolder));
+                                  cfg::vars::kPluginUserFolder));
     seq = yaml[groups::kPlugins][vars::kPluginsExecution];
     ASSERT_TRUE(seq.IsSequence());
     ASSERT_EQ(seq.size(), 4);
 
     EXPECT_EQ(seq[0][vars::kPluginPattern].as<std::string>(),
-              std::string(cma::cfg::vars::kPluginUserFolder) + "\\test1");
+              std::string(cfg::vars::kPluginUserFolder) + "\\test1");
     EXPECT_EQ(seq[1][vars::kPluginPattern].as<std::string>(),
-              std::string(cma::cfg::vars::kPluginUserFolder) + "\\a\\test2");
+              std::string(cfg::vars::kPluginUserFolder) + "\\a\\test2");
     EXPECT_EQ(seq[2][vars::kPluginPattern].as<std::string>(), "\\test2");
     EXPECT_EQ(seq[3][vars::kPluginPattern].as<std::string>(), "/test3");
 }
@@ -354,7 +351,7 @@ std::filesystem::path ConstructUserYmlPath(std::filesystem::path pd_dir) {
 }
 
 TEST(UpgradeTest, LoggingSupport) {
-    cma::OnStartTest();
+    OnStartTest();
     auto temp_fs{tst::TempCfgFs::Create()};
 
     fs::path install_yml{fs::path(dirs::kFileInstallDir) /
@@ -386,18 +383,17 @@ TEST(UpgradeTest, LoggingSupport) {
         EXPECT_TRUE(yaml.IsMap());
         auto yml_global = yaml[groups::kGlobal];
         ASSERT_TRUE(yml_global.IsMap());
-        auto logging = cma::cfg::GetNode(yml_global, vars::kLogging);
+        auto logging = cfg::GetNode(yml_global, vars::kLogging);
         ASSERT_TRUE(logging.IsMap());
 
-        auto debug =
-            cma::cfg::GetVal(logging, vars::kLogDebug, std::string(""));
+        auto debug = cfg::GetVal(logging, vars::kLogDebug, std::string(""));
 
         EXPECT_EQ(logging[vars::kLogDebug].as<std::string>(), "all");
     }
 }
 
 TEST(UpgradeTest, UserIniPackagedAgent) {
-    cma::OnStartTest();
+    OnStartTest();
     auto temp_fs{tst::TempCfgFs::Create()};
 
     fs::path install_yml{fs::path(dirs::kFileInstallDir) /
@@ -634,7 +630,7 @@ TEST(UpgradeTest, UserIniWatoAgent) {
 }
 
 TEST(UpgradeTest, LoadIni) {
-    cma::OnStartTest();
+    OnStartTest();
 
     auto temp_fs{tst::TempCfgFs::Create()};
     fs::path install_yml{fs::path(dirs::kFileInstallDir) /
@@ -644,7 +640,7 @@ TEST(UpgradeTest, LoadIni) {
     ASSERT_TRUE(temp_fs->createRootFile(
         install_yml, "# Packaged\nglobal:\n  enabled: yes\n  install: no"));
 
-    fs::path temp_dir = cma::cfg::GetTempDir();
+    fs::path temp_dir = cfg::GetTempDir();
 
     auto normal_dir =
         temp_dir.wstring().find(L"\\tmp", 0) != std::wstring::npos;
@@ -660,7 +656,7 @@ TEST(UpgradeTest, LoadIni) {
         auto a1 = MakeComments("[a]", true);
         EXPECT_TRUE(a1.find("WATO", 0) != std::string::npos);
         EXPECT_TRUE(a1.find("[a]", 0) != std::string::npos);
-        auto table = cma::tools::SplitString(a1, "\n");
+        auto table = tools::SplitString(a1, "\n");
         EXPECT_EQ(table.size(), 3);
         EXPECT_TRUE(table[0][0] == '#' && table[1][0] == '#');
         EXPECT_TRUE(table[2].size() == 0);
@@ -669,7 +665,7 @@ TEST(UpgradeTest, LoadIni) {
         auto a2 = MakeComments("[b]", false);
         EXPECT_TRUE(a2.find("WATO", 0) == std::string::npos);
         EXPECT_TRUE(a2.find("[b]", 0) != std::string::npos);
-        auto table = cma::tools::SplitString(a2, "\n");
+        auto table = tools::SplitString(a2, "\n");
         EXPECT_EQ(table.size(), 3);
         EXPECT_TRUE(table[0][0] == '#' && table[1][0] == '#');
         EXPECT_TRUE(table[2].size() == 0);
@@ -733,8 +729,6 @@ TEST(UpgradeTest, LoadIni) {
 }
 
 TEST(UpgradeTest, CopyFoldersApi) {
-    namespace fs = std::filesystem;
-
     EXPECT_TRUE(IsFileNonCompatible("Cmk-updatE-Agent.exe"));
     EXPECT_TRUE(IsFileNonCompatible("c:\\Cmk-updatE-Agent.exe"));
     EXPECT_FALSE(IsFileNonCompatible("cmk_update_agent.exe"));
@@ -748,7 +742,7 @@ TEST(UpgradeTest, CopyFoldersApi) {
     EXPECT_FALSE(IsPathProgramData("Check\\mkAgent"));
     EXPECT_FALSE(IsPathProgramData("c:\\Check\\mkAgent"));
 
-    fs::path base = cma::cfg::GetTempDir();
+    fs::path base = cfg::GetTempDir();
     tst::SafeCleanTempDir();
     ON_OUT_OF_SCOPE(tst::SafeCleanTempDir(););
 
@@ -787,14 +781,12 @@ TEST(UpgradeTest, CopyFoldersApi) {
     }
 }
 
-static auto a1 =
+static const char *const a1 =
     "AlignmentFixupsPersec|Caption|ContextSwitchesPersec|Description|ExceptionDispatchesPersec|FileControlBytesPersec|FileControlOperationsPersec|FileDataOperationsPersec|FileReadBytesPersec|FileReadOperationsPersec|FileWriteBytesPersec|FileWriteOperationsPersec|FloatingEmulationsPersec|Frequency_Object|Frequency_PerfTime|Frequency_Sys100NS|Name|PercentRegistryQuotaInUse|PercentRegistryQuotaInUse_Base|Processes|ProcessorQueueLength|SystemCallsPersec|SystemUpTime|Threads|Timestamp_Object|Timestamp_PerfTime|Timestamp_Sys100NS|WMIStatus";
-static auto a2 =
+static const char *const a2 =
     "8753143349248||8757138597559||8753154542256|1668537305287|952521535002|951235405633|25314498833504|950257251850|3054676197176|950165926199|949187772416|10000000|2435538|10000000||949554799728|951335256063|949187772535|949187772416|952503978051|132104050924847952|949187774233|132134863734478619|7504388659458|132134935734470000|OK";
 
 TEST(UpgradeTest, CopyFolders) {
-    namespace fs = std::filesystem;
-
     auto temp_fs{tst::TempCfgFs::Create()};
     auto [lwa_path, tgt] = tst::CreateInOut();
     fs::create_directory(lwa_path / "config");
@@ -802,8 +794,8 @@ TEST(UpgradeTest, CopyFolders) {
     fs::create_directory(lwa_path / "bin");
     tst::CreateWorkFile(lwa_path / "config" / "1.txt", "1");
     tst::CreateWorkFile(lwa_path / "plugins" / "2.txt", "2");
-    auto good_path = fs::path{cma::cfg::GetTempDir()} /
-                     cma::cfg::kAppDataCompanyName / kAppDataAppName;
+    auto good_path = fs::path{cfg::GetTempDir()} / cfg::kAppDataCompanyName /
+                     kAppDataAppName;
     fs::create_directories(good_path);
 
     auto source_file = lwa_path / "marker.tmpx";
@@ -814,13 +806,13 @@ TEST(UpgradeTest, CopyFolders) {
                          << "error " << GetLastError() << "\n";
         ofs << "@marker\n";
     }
-    auto count_root = CopyRootFolder(lwa_path, cma::cfg::GetTempDir());
+    auto count_root = CopyRootFolder(lwa_path, cfg::GetTempDir());
     EXPECT_GE(count_root, 1);
 
-    count_root = CopyRootFolder(lwa_path, cma::cfg::GetTempDir());
+    count_root = CopyRootFolder(lwa_path, cfg::GetTempDir());
     EXPECT_GE(count_root, 0);
 
-    fs::path target_file = cma::cfg::GetTempDir();
+    fs::path target_file = cfg::GetTempDir();
     target_file /= "marker.tmpx";
     std::error_code ec;
     EXPECT_TRUE(fs::exists(target_file, ec));
@@ -830,8 +822,8 @@ TEST(UpgradeTest, CopyFolders) {
     ASSERT_TRUE(count == 0)
         << "CopyAllFolders works only for ProgramData due to safety reasons";
 
-    count = CopyAllFolders(lwa_path, cma::cfg::GetTempDir(),
-                           CopyFolderMode::remove_old);
+    count =
+        CopyAllFolders(lwa_path, cfg::GetTempDir(), CopyFolderMode::remove_old);
 
     EXPECT_EQ(count, 0);
     count = CopyAllFolders(lwa_path, good_path, CopyFolderMode::remove_old);
@@ -842,7 +834,6 @@ TEST(UpgradeTest, CopyFolders) {
 }
 
 TEST(UpgradeTest, CopyFiles) {
-    namespace fs = std::filesystem;
     auto temp_fs{tst::TempCfgFs::Create()};
     auto [lwa_path, tgt] = tst::CreateInOut();
     fs::create_directory(lwa_path / "config");
@@ -852,24 +843,24 @@ TEST(UpgradeTest, CopyFiles) {
     tst::CreateWorkFile(lwa_path / "plugins" / "2.txt", "2");
     tst::CreateWorkFile(lwa_path / "bin" / "3.txt", "3");
     tst::CreateWorkFile(lwa_path / "bin" / "4.txt", "4");
-    auto good_path = fs::path{cma::cfg::GetTempDir()} /
-                     cma::cfg::kAppDataCompanyName / kAppDataAppName;
+    auto good_path = fs::path{cfg::GetTempDir()} / cfg::kAppDataCompanyName /
+                     kAppDataAppName;
     fs::create_directories(good_path);
 
     auto count = CopyFolderRecursive(
-        lwa_path, cma::cfg::GetTempDir(), fs::copy_options::overwrite_existing,
+        lwa_path, cfg::GetTempDir(), fs::copy_options::overwrite_existing,
         [lwa_path](fs::path P) {
             XLOG::l.i("Copy '{}' to '{}'", fs::relative(P, lwa_path),
-                      wtools::ToUtf8(cma::cfg::GetTempDir()));
+                      wtools::ToUtf8(cfg::GetTempDir()));
             return true;
         });
     EXPECT_EQ(count, 4);
 
     count = CopyFolderRecursive(
-        lwa_path, cma::cfg::GetTempDir(), fs::copy_options::skip_existing,
+        lwa_path, cfg::GetTempDir(), fs::copy_options::skip_existing,
         [lwa_path](fs::path path) {
             XLOG::l.i("Copy '{}' to '{}'", fs::relative(path, lwa_path),
-                      wtools::ToUtf8(cma::cfg::GetTempDir()));
+                      wtools::ToUtf8(cfg::GetTempDir()));
             return true;
         });
     EXPECT_TRUE(count == 0);
@@ -893,7 +884,7 @@ TEST(UpgradeTest, IgnoreApi) {
 }
 
 TEST(UpgradeTest, TopLevelApi_Long) {
-    if (!cma::tools::win::IsElevated()) {
+    if (!tools::win::IsElevated()) {
         XLOG::l(XLOG::kStdio)
             .w("Program is not elevated, testing is not possible");
         return;
@@ -923,7 +914,7 @@ TEST(UpgradeTest, StopStartStopOhmIntegration) {
             << "Legacy Agent is absent. Either install it or simulate it";
     }
 
-    if (!cma::tools::win::IsElevated()) {
+    if (!tools::win::IsElevated()) {
         XLOG::l(XLOG::kStdio)
             .w("Program is not elevated, testing is not possible");
         return;
@@ -964,17 +955,17 @@ TEST(UpgradeTest, StopStartStopOhmIntegration) {
 }
 
 TEST(UpgradeTest, FindLwa_Long) {
-    namespace fs = std::filesystem;
-    if (!cma::tools::win::IsElevated()) {
+    if (!tools::win::IsElevated()) {
         XLOG::l(XLOG::kStdio)
             .w("The Program is not elevated, testing is not possible");
         return;
     }
 
     auto lwa_path = FindLegacyAgent();
-    if (!lwa_path.empty()) {
+    if (lwa_path.empty()) {
         GTEST_SKIP()
             << "Legacy Agent is absent. Either install it or simulate it";
+        return;
     }
 
     EXPECT_TRUE(ActivateLegacyAgent());
@@ -996,7 +987,7 @@ TEST(UpgradeTest, FindLwa_Long) {
             if (status == SERVICE_RUNNING) break;
             XLOG::l.i("RETRY wait for 'running' status, current is [{}]",
                       status);
-            cma::tools::sleep(1000);
+            tools::sleep(1000);
         }
 
         // stop service
@@ -1021,7 +1012,7 @@ TEST(UpgradeTest, FindLwa_Long) {
 
     // start
     RunDetachedProcess(ohm.wstring());
-    cma::tools::sleep(1000);
+    tools::sleep(1000);
     auto status = WaitForStatus(GetServiceStatusByName, L"WinRing0_1_2_0",
                                 SERVICE_RUNNING, 5000);
     EXPECT_EQ(status, SERVICE_RUNNING);
@@ -1031,7 +1022,7 @@ TEST(UpgradeTest, FindLwa_Long) {
         status = GetServiceStatusByName(L"check_mk_agent");
         if (status == SERVICE_RUNNING) break;
         XLOG::l.i("RETRY wait for 'running' status, current is [{}]", status);
-        cma::tools::sleep(1000);
+        tools::sleep(1000);
     }
 
     EXPECT_EQ(status, SERVICE_RUNNING);

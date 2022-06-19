@@ -35,9 +35,9 @@ constexpr std::wstring_view kResetCommand =
 class OhmProvider : public Wmi {
 public:
     OhmProvider(std::string_view name, char separator) : Wmi(name, separator) {}
-    virtual void loadConfig();
+    void loadConfig() override;
 
-    virtual void updateSectionStatus();
+    void updateSectionStatus() override;
 
 protected:
     std::string makeBody() override;

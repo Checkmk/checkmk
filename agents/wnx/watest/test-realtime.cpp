@@ -13,16 +13,13 @@
 #include "tools/_misc.h"
 
 namespace tst {
-void DisableSectionsNode(std::string_view Str) {
+void DisableSectionsNode(std::string_view str) {
     using namespace cma::cfg;
     YAML::Node config = GetLoadedConfig();
     auto disabled_string = cma::cfg::GetVal(
         groups::kGlobal, vars::kSectionsDisabled, std::string(""));
-    {
-        disabled_string += " ";
-
-        disabled_string += std::string(Str);
-    }
+    disabled_string += " ";
+    disabled_string += std::string(str);
     config[groups::kGlobal][vars::kSectionsDisabled] = disabled_string;
 }
 }  // namespace tst
@@ -76,7 +73,7 @@ void StartTestServer(asio::io_context *IoContext, int Port) {
 TEST(RealtimeTest, LowLevel) {
     // stub
     Device dev;
-    auto ret = dev.start();
+    dev.start();
     ASSERT_TRUE(dev.started());
     EXPECT_FALSE(dev.use_df_);
     EXPECT_FALSE(dev.use_mem_);
@@ -112,7 +109,6 @@ TEST(RealtimeTest, LowLevel) {
 }
 
 TEST(RealtimeTest, StaticCheck) {
-    // prtects again occasional consats change
     EXPECT_EQ(kEncryptedHeader, "00");
     EXPECT_EQ(kPlainHeader, "99");
     EXPECT_EQ(kHeaderSize, 2);
@@ -175,7 +171,7 @@ TEST(RealtimeTest, PackData) {
 }
 
 template <typename T, typename B>
-void WaitFor(std::function<bool()> predicat,
+void WaitFor(const std::function<bool()> &predicat,
              std::chrono::duration<T, B> max_dur) noexcept {
     using namespace std::chrono;
     auto end = steady_clock::now() + max_dur;

@@ -534,7 +534,9 @@ std::wstring FindLegacyAgent() {
 
 bool IsLegacyAgentActive() {
     auto path = FindLegacyAgent();
-    if (path.empty()) return false;
+    if (path.empty()) {
+        return false;
+    }
 
     namespace fs = std::filesystem;
     auto service_type = wtools::GetRegistryValue(

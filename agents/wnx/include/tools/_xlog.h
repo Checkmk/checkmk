@@ -389,9 +389,11 @@ namespace xlog {
         }
 
         // print on screen
-        [[maybe_unused]] const TextInfo &print() const { return print(true); }
+        [[maybe_unused]] const TextInfo &print() const {
+            return print(true);
+        }  // NOLINT
 
-        [[maybe_unused]] const TextInfo &print(bool enable) const {
+        [[maybe_unused]] const TextInfo &print(bool enable) const {  // NOLINT
             if (enable) {
                 internal_PrintStringStdio(text());
             }
@@ -545,7 +547,7 @@ namespace xlog {
         }
 
         len--;
-        while (len != 0u) {
+        while (len != 0U) {
             if (buf[len] == L'\n') {
                 buf[len] = 0;
                 len--;
@@ -566,7 +568,7 @@ namespace xlog {
         }
 
         len--;
-        while (len != 0u) {
+        while (len != 0U) {
             if (buf[len] == '\n') {
                 buf[len] = 0;
                 len--;

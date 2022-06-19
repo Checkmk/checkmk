@@ -18,7 +18,7 @@ namespace cma::provider {
 
 namespace ps {
 constexpr std::wstring_view kSepString = L",";
-}
+}  // namespace ps
 
 time_t ConvertWmiTimeToHumanTime(const std::string &creation_date);
 
@@ -33,8 +33,8 @@ public:
 
 private:
     std::string makeBody() override;
-    bool use_wmi_;
-    bool full_path_;
+    bool use_wmi_{true};
+    bool full_path_{false};
 };
 std::string ProducePsWmi(bool use_full_path);
 std::wstring GetProcessListFromWmi(std::wstring_view separator);

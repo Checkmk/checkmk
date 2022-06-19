@@ -14,9 +14,7 @@
 #include "providers/internal.h"
 #include "section_header.h"
 
-namespace cma {
-
-namespace provider {
+namespace cma::provider {
 constexpr char kDfSeparator = section::kTabSeparator;
 constexpr auto kDfSeparatorString = section::kTabSeparatorString;
 
@@ -39,8 +37,6 @@ std::vector<std::string> GetDriveVector();
 uint64_t CalcUsage(uint64_t avail, uint64_t total);
 }  // namespace df
 
-}  // namespace provider
-
-};  // namespace cma
+};  // namespace cma::provider
 
 #endif  // df_h__

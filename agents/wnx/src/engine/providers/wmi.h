@@ -59,7 +59,9 @@ public:
     }
     virtual ~SubSection() {}
 
-    std::string getUniqName() const noexcept { return uniq_name_; }
+    [[nodiscard]] std::string getUniqName() const noexcept {
+        return uniq_name_;
+    }
 
     std::string generateContent(Mode mode);
 

@@ -15,9 +15,7 @@
 #include "providers/internal.h"
 #include "section_header.h"
 
-namespace cma {
-
-namespace provider {
+namespace cma::provider {
 
 class PerfCpuLoad : public Synchronous {
 public:
@@ -33,8 +31,6 @@ constexpr std::wstring_view kProcessorQueueLength{
     L"\\System\\Processor Queue Length"};
 bool CheckSingleCounter(std::wstring_view path);
 
-}  // namespace provider
-
-};  // namespace cma
+};  // namespace cma::provider
 
 #endif  // perf_cpuload_h__

@@ -39,7 +39,7 @@ public:
     using DataBlock = std::vector<uint8_t>;
     enum class Order { random, plugins_last };
     AsyncAnswer()
-        : timeout_(5), awaited_segments_(0), tp_id_(GenerateAnswerId()) {}
+        : tp_id_(GenerateAnswerId()), awaited_segments_(0), timeout_(5) {}
 
     bool isAnswerOlder(std::chrono::milliseconds period) const;
 
@@ -81,7 +81,9 @@ public:
     }
     void newTimeout(int timeout) {
         std::lock_guard lk(lock_);
-        if (timeout > timeout_) timeout_ = timeout;
+        if (timeout > timeout_) {
+            timeout_ = timeout;
+        }
     }
     int timeout() const {
         std::lock_guard lk(lock_);

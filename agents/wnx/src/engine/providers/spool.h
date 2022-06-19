@@ -29,7 +29,10 @@ public:
     void updateSectionStatus() override;
 
     // empty header
-    std::string makeHeader(const std::string_view) const override { return {}; }
+    std::string makeHeader(
+        const std::string_view /*section_name*/) const override {
+        return {};
+    }
 
 protected:
     std::string makeBody() override;

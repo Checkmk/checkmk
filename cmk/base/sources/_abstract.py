@@ -22,7 +22,7 @@ from cmk.utils.type_defs import HostAddress, HostName, result, SourceType
 from cmk.snmplib.type_defs import TRawData
 
 import cmk.core_helpers.cache as file_cache
-from cmk.core_helpers import Fetcher, Parser, Summarizer
+from cmk.core_helpers import Fetcher, get_raw_data, Parser, Summarizer
 from cmk.core_helpers.cache import FileCache
 from cmk.core_helpers.controller import FetcherType
 from cmk.core_helpers.host_sections import HostSections, TRawDataSection
@@ -96,13 +96,7 @@ class Source(Generic[TRawData, TRawDataSection], abc.ABC):
 
     @final
     def fetch(self, mode: Mode) -> result.Result[TRawData, Exception]:
-        try:
-            with self._make_fetcher() as fetcher:
-                return fetcher.fetch(mode)
-        except Exception as exc:
-            if cmk.utils.debug.enabled():
-                raise
-            return result.Error(exc)
+        return get_raw_data(self._make_file_cache(), self._make_fetcher(), mode)
 
     @final
     def parse(

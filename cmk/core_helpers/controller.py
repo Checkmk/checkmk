@@ -19,10 +19,10 @@ from cmk.utils.config_path import ConfigPath, VersionedConfigPath
 from cmk.utils.cpu_tracking import CPUTracker, Snapshot
 from cmk.utils.observer import ABCResourceObserver
 from cmk.utils.timeout import MKTimeout, Timeout
-from cmk.utils.type_defs import HostName, result
+from cmk.utils.type_defs import HostName
 from cmk.utils.type_defs.protocol import Serializer
 
-from . import Fetcher, FetcherType, protocol
+from . import Fetcher, FetcherType, get_raw_data, protocol
 from .cache import MaxAge
 from .crash_reporting import create_fetcher_crash_dump
 from .snmp import SNMPFetcher, SNMPPluginStore
@@ -166,11 +166,7 @@ def _run_fetcher(fetcher: Fetcher, mode: Mode) -> protocol.FetcherMessage:
     """Entrypoint to obtain data from fetcher objects."""
     logger.debug("Fetch from %s", fetcher)
     with CPUTracker() as tracker:
-        try:
-            with fetcher:
-                raw_data = fetcher.fetch(mode)
-        except Exception as exc:
-            raw_data = result.Error(exc)
+        raw_data = get_raw_data(fetcher.file_cache, fetcher, mode)
 
     return protocol.FetcherMessage.from_raw_data(
         raw_data,

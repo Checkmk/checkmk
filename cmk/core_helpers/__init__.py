@@ -42,7 +42,7 @@ from typing import Any, Mapping, Type, Union
 from cmk.utils import version
 
 from . import cache
-from ._base import Fetcher, FileCache, Parser, Summarizer, verify_ipaddress
+from ._base import Fetcher, FileCache, get_raw_data, Parser, Summarizer, verify_ipaddress
 from .ipmi import IPMIFetcher
 from .piggyback import PiggybackFetcher
 from .program import ProgramFetcher

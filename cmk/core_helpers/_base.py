@@ -6,6 +6,7 @@
 
 import abc
 import logging
+from functools import partial
 from typing import Any, final, Final, Generic, Literal, Mapping, Optional, Sequence, Type, TypeVar
 
 from cmk.utils.check_utils import ActiveCheckResult
@@ -26,7 +27,7 @@ from .cache import FileCache
 from .host_sections import HostSections, TRawDataSection
 from .type_defs import Mode, SectionNameCollection
 
-__all__ = ["Fetcher", "verify_ipaddress"]
+__all__ = ["Fetcher", "verify_ipaddress", "get_raw_data"]
 
 TFetcher = TypeVar("TFetcher", bound="Fetcher")
 
@@ -64,13 +65,10 @@ class Fetcher(Generic[TRawData], abc.ABC):
         return self
 
     @final
-    def __exit__(self, *exc_info: object) -> Literal[False]:
-        """Destroy the data source. Only needed if simulation mode is
-        disabled"""
-        if self.file_cache.simulation:
-            return False
+    def __exit__(self, *exc_info: object) -> Literal[True]:
+        """Close the data source."""
         self.close()
-        return False
+        return True
 
     @abc.abstractmethod
     def open(self) -> None:
@@ -89,10 +87,6 @@ class Fetcher(Generic[TRawData], abc.ABC):
             return result.Error(exc)
 
     def _fetch(self, mode: Mode) -> TRawData:
-        raw_data = self.file_cache.read(mode)
-        if raw_data is not None:
-            return raw_data
-
         self._logger.log(VERBOSE, "[%s] Execute data source", self.__class__.__name__)
 
         try:
@@ -103,13 +97,35 @@ class Fetcher(Generic[TRawData], abc.ABC):
         except Exception as exc:
             raise MKFetcherError(repr(exc) if any(exc.args) else type(exc).__name__) from exc
 
-        self.file_cache.write(raw_data, mode)
         return raw_data
 
     @abc.abstractmethod
     def _fetch_from_io(self, mode: Mode) -> TRawData:
         """Override this method to contact the source and return the raw data."""
         raise NotImplementedError()
+
+
+def get_raw_data(
+    file_cache: FileCache[TRawData], fetcher: Fetcher[TRawData], mode: Mode
+) -> result.Result[TRawData, Exception]:
+    try:
+        cached = file_cache.read(mode)
+        if cached is not None:
+            return result.OK(cached)
+
+        if file_cache.simulation:
+            raise MKFetcherError(f"{fetcher}: data unavailable in simulation mode")
+
+        fetched: result.Result[TRawData, Exception] = result.Error(
+            MKFetcherError(f"{fetcher}: unknown error")
+        )
+        with fetcher:
+            fetched = fetcher.fetch(mode)
+        fetched.map(partial(file_cache.write, mode=mode))
+        return fetched
+
+    except Exception as exc:
+        return result.Error(exc)
 
 
 class Parser(Generic[TRawData, TRawDataSection], abc.ABC):

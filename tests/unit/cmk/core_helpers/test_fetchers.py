@@ -32,7 +32,7 @@ from cmk.snmplib.type_defs import (
     SNMPTable,
 )
 
-from cmk.core_helpers import Fetcher, FetcherType
+from cmk.core_helpers import Fetcher, FetcherType, get_raw_data
 from cmk.core_helpers import (
     PushAgentFetcher as FallbackPushAgentFetcher,  # We must test the FetcherType factory agains the fallback class, because during import we are not a CPE. Patching this during the test will make no difference...
 )
@@ -230,9 +230,7 @@ class TestIPMIFetcher:
             username="",
             password="",
         ) as fetcher:
-            fetched = fetcher.fetch(Mode.CHECKING)
-
-        assert fetched.is_ok()
+            assert get_raw_data(file_cache, fetcher, Mode.CHECKING).is_ok()
 
     def test_command_raises_IpmiException_handling(
         self, file_cache: AgentFileCache, monkeypatch: MonkeyPatch
@@ -248,9 +246,9 @@ class TestIPMIFetcher:
             username="",
             password="",
         ) as fetcher:
-            fetched = fetcher.fetch(Mode.CHECKING)
+            raw_data = get_raw_data(file_cache, fetcher, Mode.CHECKING)
 
-        assert isinstance(fetched.error, MKFetcherError)
+        assert isinstance(raw_data.error, MKFetcherError)
 
     def test_parse_sensor_reading_standard_case(self, fetcher: IPMIFetcher) -> None:
         reading = SensorReading(  #
@@ -589,15 +587,22 @@ class TestSNMPFetcherFetch(ABCTestSNMPFetcher):
             },
         )
 
-        assert fetcher.fetch(Mode.INVENTORY) == result.OK({})  # 'pim' is not an inventory section
-        assert fetcher.fetch(Mode.CHECKING) == result.OK({section_name: [table]})
+        file_cache = fetcher.file_cache
+        assert get_raw_data(file_cache, fetcher, Mode.INVENTORY) == result.OK(
+            {}
+        )  # 'pim' is not an inventory section
+        assert get_raw_data(file_cache, fetcher, Mode.CHECKING) == result.OK(
+            {section_name: [table]}
+        )
 
         monkeypatch.setattr(
             snmp,
             "gather_available_raw_section_names",
             lambda *_, **__: {SectionName("pim")},
         )
-        assert fetcher.fetch(Mode.DISCOVERY) == result.OK({section_name: [table]})
+        assert get_raw_data(file_cache, fetcher, Mode.DISCOVERY) == result.OK(
+            {section_name: [table]}
+        )
 
     def test_fetch_from_io_partially_empty(
         self, monkeypatch: MonkeyPatch, fetcher: SNMPFetcher
@@ -623,7 +628,10 @@ class TestSNMPFetcherFetch(ABCTestSNMPFetcher):
             if tree.base == fetcher.plugin_store[section_name].trees[0].base
             else [],
         )
-        assert fetcher.fetch(Mode.CHECKING) == result.OK({section_name: [table, []]})
+        file_cache = fetcher.file_cache
+        assert get_raw_data(file_cache, fetcher, Mode.CHECKING) == result.OK(
+            {section_name: [table, []]}
+        )
 
     def test_fetch_from_io_empty(self, monkeypatch: MonkeyPatch, fetcher: SNMPFetcher) -> None:
         monkeypatch.setattr(
@@ -636,7 +644,10 @@ class TestSNMPFetcherFetch(ABCTestSNMPFetcher):
             "gather_available_raw_section_names",
             lambda *_, **__: {SectionName("pam")},
         )
-        assert fetcher.fetch(Mode.DISCOVERY) == result.OK({SectionName("pam"): [[]]})
+        file_cache = fetcher.file_cache
+        assert get_raw_data(file_cache, fetcher, Mode.DISCOVERY) == result.OK(
+            {SectionName("pam"): [[]]}
+        )
 
     @pytest.fixture(name="set_sections")
     def _set_sections(self, monkeypatch: MonkeyPatch) -> List[List[str]]:
@@ -662,7 +673,10 @@ class TestSNMPFetcherFetch(ABCTestSNMPFetcher):
             "gather_available_raw_section_names",
             lambda *_, **__: fetcher._get_detected_sections(Mode.INVENTORY),
         )
-        assert fetcher.fetch(Mode.INVENTORY) == result.OK({SectionName("pim"): [table]})
+        file_cache = fetcher.file_cache
+        assert get_raw_data(file_cache, fetcher, Mode.INVENTORY) == result.OK(
+            {SectionName("pim"): [table]}
+        )
 
     def test_mode_inventory_not_do_status_data_inventory(
         self, set_sections: List[List[str]], monkeypatch: MonkeyPatch, fetcher: SNMPFetcher
@@ -674,7 +688,10 @@ class TestSNMPFetcherFetch(ABCTestSNMPFetcher):
             "gather_available_raw_section_names",
             lambda *_, **__: fetcher._get_detected_sections(Mode.INVENTORY),
         )
-        assert fetcher.fetch(Mode.INVENTORY) == result.OK({SectionName("pim"): [table]})
+        file_cache = fetcher.file_cache
+        assert get_raw_data(file_cache, fetcher, Mode.INVENTORY) == result.OK(
+            {SectionName("pim"): [table]}
+        )
 
     def test_mode_checking_do_status_data_inventory(
         self, set_sections: List[List[str]], monkeypatch: MonkeyPatch, fetcher: SNMPFetcher
@@ -686,7 +703,10 @@ class TestSNMPFetcherFetch(ABCTestSNMPFetcher):
             "gather_available_raw_section_names",
             lambda *_, **__: fetcher._get_detected_sections(Mode.CHECKING),
         )
-        assert fetcher.fetch(Mode.CHECKING) == result.OK({SectionName("pim"): [table]})
+        file_cache = fetcher.file_cache
+        assert get_raw_data(file_cache, fetcher, Mode.CHECKING) == result.OK(
+            {SectionName("pim"): [table]}
+        )
 
     def test_mode_checking_not_do_status_data_inventory(
         self, monkeypatch: MonkeyPatch, fetcher: SNMPFetcher
@@ -697,7 +717,8 @@ class TestSNMPFetcherFetch(ABCTestSNMPFetcher):
             "gather_available_raw_section_names",
             lambda *_, **__: fetcher._get_detected_sections(Mode.CHECKING),
         )
-        assert fetcher.fetch(Mode.CHECKING) == result.OK({})
+        file_cache = fetcher.file_cache
+        assert get_raw_data(file_cache, fetcher, Mode.CHECKING) == result.OK({})
 
 
 class TestSNMPFetcherFetchCache(ABCTestSNMPFetcher):
@@ -724,8 +745,9 @@ class TestSNMPFetcherFetchCache(ABCTestSNMPFetcher):
 
     def test_fetch_reading_cache_in_discovery_mode(self, fetcher: SNMPFetcher) -> None:
         assert isinstance(fetcher.file_cache, StubFileCache)  # For mypy
-        assert fetcher.file_cache.cache == b"cached_section"
-        assert fetcher.fetch(Mode.DISCOVERY) == result.OK(b"cached_section")
+        file_cache = fetcher.file_cache
+        assert file_cache.cache == b"cached_section"
+        assert get_raw_data(file_cache, fetcher, Mode.DISCOVERY) == result.OK(b"cached_section")
 
 
 class TestSNMPSectionMeta:
@@ -804,9 +826,7 @@ class TestTCPFetcher:
             timeout=0.1,
             encryption_settings={"use_regular": "allow"},
         ) as fetcher:
-            fetched = fetcher.fetch(Mode.CHECKING)
-
-        assert fetched.is_ok()
+            assert get_raw_data(file_cache, fetcher, Mode.CHECKING).is_ok()
 
     def test_fetching_without_cache_raises_in_non_checking_mode(self) -> None:
         with TCPFetcher(
@@ -825,15 +845,14 @@ class TestTCPFetcher:
             timeout=0.1,
             encryption_settings={"use_regular": "allow"},
         ) as fetcher:
+            file_cache = fetcher.file_cache
             for mode in Mode:
                 if mode is Mode.CHECKING:
                     continue
-                fetched = fetcher.fetch(mode)
-                assert isinstance(fetched.error, MKFetcherError)
+                raw_data = get_raw_data(file_cache, fetcher, mode)
+                assert isinstance(raw_data.error, MKFetcherError)
 
-    def test_open_exception_becomes_fetcher_rerror(
-        self, file_cache: AgentFileCache, monkeypatch: MonkeyPatch
-    ) -> None:
+    def test_open_exception_becomes_fetcher_rerror(self, file_cache: AgentFileCache) -> None:
         with TCPFetcher(
             file_cache,
             family=socket.AF_INET,
@@ -842,9 +861,9 @@ class TestTCPFetcher:
             timeout=0.1,
             encryption_settings={"use_regular": "allow"},
         ) as fetcher:
-            fetched = fetcher.fetch(Mode.CHECKING)
+            raw_data = get_raw_data(file_cache, fetcher, Mode.CHECKING)
 
-        assert isinstance(fetched.error, MKFetcherError)
+        assert isinstance(raw_data.error, MKFetcherError)
 
     def test_decrypt_plaintext_is_noop(self, file_cache: AgentFileCache) -> None:
         settings = {"use_regular": "allow"}
@@ -1013,16 +1032,18 @@ class TestFetcherCaching:
     # We are in fact testing a generic feature of the Fetcher and use the TCPFetcher for this
     def test_fetch_reading_cache_in_discovery_mode(self, fetcher: TCPFetcher) -> None:
         assert isinstance(fetcher.file_cache, StubFileCache)  # for mypy
-        assert fetcher.file_cache.cache == b"cached_section"
-        assert fetcher.fetch(Mode.DISCOVERY) == result.OK(b"cached_section")
-        assert fetcher.file_cache.cache == b"cached_section"
+        file_cache = fetcher.file_cache
+        assert file_cache.cache == b"cached_section"
+        assert get_raw_data(file_cache, fetcher, Mode.DISCOVERY) == result.OK(b"cached_section")
+        assert file_cache.cache == b"cached_section"
 
     # We are in fact testing a generic feature of the Fetcher and use the TCPFetcher for this
     def test_fetch_reading_cache_in_inventory_mode(self, fetcher: TCPFetcher) -> None:
         assert isinstance(fetcher.file_cache, StubFileCache)  # for mypy
-        assert fetcher.file_cache.cache == b"cached_section"
-        assert fetcher.fetch(Mode.INVENTORY) == result.OK(b"cached_section")
-        assert fetcher.file_cache.cache == b"cached_section"
+        file_cache = fetcher.file_cache
+        assert file_cache.cache == b"cached_section"
+        assert get_raw_data(file_cache, fetcher, Mode.INVENTORY) == result.OK(b"cached_section")
+        assert file_cache.cache == b"cached_section"
 
 
 _FACTORIES_CLASSES = (

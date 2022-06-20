@@ -44,7 +44,13 @@ import shlex
 import shutil
 import socket
 import time
-from typing import Dict
+
+try:
+    from typing import Dict
+except ImportError:
+    # We need typing only for testing
+    pass
+
 
 # For Python 3 sys.stdout creates \r\n as newline for Windows.
 # Checkmk can't handle this therefore we rewrite sys.stdout to a new_stdout function.

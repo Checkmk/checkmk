@@ -5,7 +5,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 # pylint: disable=protected-access,redefined-outer-name
 
-from typing import Dict
+# Continue if typing cannot be imported, e.g. for running unit tests
+try:
+    from typing import Dict
+except ImportError:
+    pass
 
 import pytest
 

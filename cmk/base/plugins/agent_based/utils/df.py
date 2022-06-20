@@ -242,21 +242,6 @@ def get_filesystem_levels(  # pylint: disable=too-many-branches
     if inodes_levels:
         if isinstance(levels["inodes_levels"], tuple):
             warn, crit = levels["inodes_levels"]
-        else:
-            # A list of inode levels. Choose the correct one depending on the
-            # size of the current filesystem. We do not make the first
-            # rule match, but that with the largest size_gb. That way
-            # the order of the entries is not important.
-            found = False
-            found_size = 0
-            # Type-ingore: levels["levels"] was overridden by params and should be list of tuples
-            for to_size, this_levels in levels["inodes_levels"]:  # type: ignore[attr-defined]
-                if size_gb * giga > to_size >= found_size:
-                    warn, crit = this_levels
-                    found_size = to_size
-                    found = True
-            if not found:
-                warn, crit = 100.0, 100.0  # entry not found in list
         levels["inodes_levels"] = warn, crit
     else:
         levels["inodes_levels"] = (None, None)

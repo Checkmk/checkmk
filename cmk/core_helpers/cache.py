@@ -431,7 +431,12 @@ class FileCache(Generic[TRawData], abc.ABC):
 
         # TODO: Use some generic store file read function to generalize error handling,
         # but there is currently no function that simply reads data from the file
-        cache_file = path.read_bytes()
+        try:
+            cache_file = path.read_bytes()
+        except FileNotFoundError:
+            self._logger.debug("Not using cache (Does not exist)")
+            return None
+
         if not cache_file:
             self._logger.debug("Not using cache (Empty)")
             return None

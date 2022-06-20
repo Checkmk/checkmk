@@ -3,7 +3,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Any, List, Mapping, MutableMapping, NamedTuple, Optional, Tuple
+from typing import Any, List, Mapping, MutableMapping, NamedTuple, Optional, Sequence, Tuple
 
 from ..agent_based_api.v1 import (
     check_levels,
@@ -120,7 +120,7 @@ def check_cpu_util(
     *,
     util: float,
     params: Mapping[str, Any],
-    cores: Optional[List[Tuple[str, float]]] = None,
+    cores: Sequence[Tuple[str, float]] = (),
     perf_max: Optional[float] = 100,
     value_store: MutableMapping[str, Any],
     this_time: float,

@@ -9,10 +9,8 @@ Level: 1
 Version: 2.2.0i1
 
 There are two options for rendering a raw value in bytes as a human-readable number:
-LI: SI unit prefixes, where the base factor is 1,000 and the unit prefixes are
-k, M, G, etc. For example, 1,500 B would be rendered as 1.5 kB.
-LI: IEC unit prefixes, where the base factor is 1,024 and the unit prefixes are
-Ki, Mi, Gi, etc. For example, 1,500 B would be rendered as 1.46 KiB.
+LI: SI unit prefixes, where the base factor is 1,000 and the unit prefixes are k, M, G, etc. For example, 1,500 B would be rendered as 1.5 kB.
+LI: IEC unit prefixes, where the base factor is 1,024 and the unit prefixes are Ki, Mi, Gi, etc. For example, 1,500 B would be rendered as 1.46 KiB.
 
 Before this werk, Checkmk mixed up these two systems when rendering graphs and
 dashboard elements by using a base factor of 1,024 in combination with SI unit

@@ -92,7 +92,10 @@ PERMISSIONS = permissions.AllPerm(
     ),
 )
 def activate_changes(params: Mapping[str, Any]) -> Response:
-    """Activate pending changes"""
+    """Activate pending changes
+
+    If redirect is set to True a link to the wait-for-completion resource for the activation job is included.
+    """
     user.need_permission("wato.activate")
     body = params["body"]
     sites = body["sites"]
@@ -187,7 +190,10 @@ def activate_changes_wait_for_completion(params: Mapping[str, Any]) -> Response:
     response_schema=response_schemas.DomainObject,
 )
 def show_activation(params: Mapping[str, Any]) -> Response:
-    """Show the activation status"""
+    """Show the activation status
+
+    If the activation is still running a link to the wait-for-completion resource for the activation job is included.
+    """
     user.need_permission("wato.activate")
     activation_id = params["activation_id"]
     manager = ActivateChangesManager()

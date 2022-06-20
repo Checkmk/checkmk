@@ -106,6 +106,30 @@ def _adjust_levels(
     return warn_scaled, crit_scaled
 
 
+def _check_summary_text(
+    warn: float | int, crit: float | int, warn_scaled: float, crit_scaled: float
+) -> str:
+    if isinstance(warn, float):
+        if warn_scaled < 0 and crit_scaled < 0:
+            label = "warn/crit at free space below"
+            warn_scaled *= -1
+            crit_scaled *= -1
+        else:
+            label = "warn/crit at"
+        return f"({label} {render.percent(warn_scaled)}/{render.percent(crit_scaled)})"
+    warn *= 1024 * 1024
+    crit *= 1024 * 1024
+    if warn < 0 and crit < 0:
+        label = "warn/crit at free space below"
+        warn *= -1
+        crit *= -1
+    else:
+        label = "warn/crit at"
+    warn_hr = render.bytes(warn)
+    crit_hr = render.bytes(crit)
+    return f"({label} {warn_hr}/{crit_hr})"
+
+
 def savefloat(raw: Any) -> float:
     try:
         return float(raw)
@@ -211,26 +235,8 @@ def get_filesystem_levels(  # pylint: disable=too-many-branches
     warn_mb = savefloat(size_mb * warn_scaled / 100)
     crit_mb = savefloat(size_mb * crit_scaled / 100)
     levels["levels_mb"] = (warn_mb, crit_mb)
-    if isinstance(warn, float):
-        if warn_scaled < 0 and crit_scaled < 0:
-            label = "warn/crit at free space below"
-            warn_scaled *= -1
-            crit_scaled *= -1
-        else:
-            label = "warn/crit at"
-        levels["levels_text"] = (
-            f"({label} " f"{render.percent(warn_scaled)}/{render.percent(crit_scaled)})"
-        )
-    else:
-        if warn * mega < 0 and crit * mega < 0:
-            label = "warn/crit at free space below"
-            warn *= -1
-            crit *= -1
-        else:
-            label = "warn/crit at"
-        warn_hr = render.bytes(warn * mega)
-        crit_hr = render.bytes(crit * mega)
-        levels["levels_text"] = f"({label} {warn_hr}/{crit_hr})"
+
+    levels["levels_text"] = _check_summary_text(warn, crit, warn_scaled, crit_scaled)
 
     inodes_levels = params.get("inodes_levels")
     if inodes_levels:

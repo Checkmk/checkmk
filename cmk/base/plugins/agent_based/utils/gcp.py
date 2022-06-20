@@ -47,6 +47,7 @@ PiggyBackSection = Sequence[GCPResult]
 @dataclass(frozen=True)
 class AssetSection:
     project: str
+    config: Sequence[str]
     assets: Sequence[GCPAsset]
 
     def __iter__(self) -> Iterator[GCPAsset]:
@@ -71,8 +72,9 @@ def parse_piggyback(string_table: StringTable) -> PiggyBackSection:
 def parse_assets(string_table: StringTable) -> AssetSection:
     info = json.loads(string_table[0][0])
     project = info["project"]
+    config: Sequence[str] = info["config"]
     assets = [GCPAsset.deserialize(row[0]) for row in string_table[1:]]
-    return AssetSection(project, assets)
+    return AssetSection(project, config=config, assets=assets)
 
 
 @dataclass(frozen=True)

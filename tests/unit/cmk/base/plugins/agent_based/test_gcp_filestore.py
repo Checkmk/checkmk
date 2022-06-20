@@ -23,7 +23,7 @@ from cmk.special_agents.agent_gcp import FILESTORE
 from .gcp_test_util import DiscoverTester, generate_timeseries, ParsingTester, Plugin
 
 ASSET_TABLE = [
-    ['{"project":"backup-255820"}'],
+    ['{"project":"backup-255820", "config": ["filestore"]}'],
     [
         '{"name": "//file.googleapis.com/projects/tribe29-check-development/locations/us-central1-a/instances/test", "asset_type": "file.googleapis.com/Instance", "resource": {"version": "v1", "discovery_document_uri": "https://file.googleapis.com/$discovery/rest", "discovery_name": "Instance", "parent": "//cloudresourcemanager.googleapis.com/projects/1074106860578", "data": {"fileShares":[{"capacityGb": "1024", "name": "test"}], "name": "projects/tribe29-check-development/locations/us-central1-a/instances/test", "createTime": "2022-03-21T08:14:23.899938334Z", "tier": "BASIC_HDD", "labels": {"foo": "bar"}, "state": "READY", "networks": [{"modes": ["MODE_IPV4"], "network": "default", "reservedIpRange": "10.212.4.208/29", "ipAddresses": ["10.212.4.210"], "connectMode": "DIRECT_PEERING"}]}, "location": "us-central1-a", "resource_url": ""}, "ancestors": ["projects/1074106860578", "folders/1022571519427", "organizations/668598212003"], "update_time": "2022-03-21T08:18:19.508418Z", "org_policy": []}'
     ],
@@ -63,7 +63,7 @@ class TestDiscover(DiscoverTester):
 
 def test_discover_labels_labels_without_user_labels() -> None:
     asset_table = [
-        ['{"project":"backup-255820"}'],
+        ['{"project":"backup-255820", "config": ["filestore"]}'],
         [
             '{"name": "//file.googleapis.com/projects/tribe29-check-development/locations/us-central1-a/instances/test", "asset_type": "file.googleapis.com/Instance", "resource": {"version": "v1", "discovery_document_uri": "https://file.googleapis.com/$discovery/rest", "discovery_name": "Instance", "parent": "//cloudresourcemanager.googleapis.com/projects/1074106860578", "data": {"fileShares":[{"capacityGb": "1024", "name": "test"}], "name": "projects/tribe29-check-development/locations/us-central1-a/instances/test", "createTime": "2022-03-21T08:14:23.899938334Z", "tier": "BASIC_HDD", "labels": {}, "state": "READY", "networks": [{"modes": ["MODE_IPV4"], "network": "default", "reservedIpRange": "10.212.4.208/29", "ipAddresses": ["10.212.4.210"], "connectMode": "DIRECT_PEERING"}]}, "location": "us-central1-a", "resource_url": ""}, "ancestors": ["projects/1074106860578", "folders/1022571519427", "organizations/668598212003"], "update_time": "2022-03-21T08:18:19.508418Z", "org_policy": []}'
         ],

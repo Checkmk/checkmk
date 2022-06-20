@@ -21,7 +21,7 @@ service_namer = gcp.service_name_factory("Redis")
 def discover(
     section_gcp_service_redis: Optional[gcp.Section], section_gcp_assets: Optional[gcp.AssetSection]
 ) -> DiscoveryResult:
-    if section_gcp_assets is None:
+    if section_gcp_assets is None or "redis" not in section_gcp_assets.config:
         return
     asset_type = "redis.googleapis.com/Instance"
     instances = [a for a in section_gcp_assets if a.asset.asset_type == asset_type]

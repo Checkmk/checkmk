@@ -32,7 +32,7 @@ from cmk.special_agents.agent_gcp import REDIS
 from .gcp_test_util import DiscoverTester, generate_timeseries, ParsingTester, Plugin
 
 ASSET_TABLE = [
-    ['{"project":"backup-255820"}'],
+    ['{"project":"backup-255820", "config": ["redis"]}'],
     [
         '{"name": "//redis.googleapis.com/projects/tribe29-check-development/locations/europe-west6/instances/red", "asset_type": "redis.googleapis.com/Instance", "resource": {"version": "v1", "discovery_document_uri":"https://redis.googleapis.com/$discovery/rest", "discovery_name": "Instance", "parent": "//cloudresourcemanager.googleapis.com/projects/1074106860578", "data": {"persistenceIamIdentity": "serviceAccount:136208174824-compute@developer.gserviceaccount.com", "currentLocationId": "europe-west6-b", "reservedIpRange": "10.33.170.64/29", "authorizedNetwork": "projects/tribe29-check-development/global/networks/default", "displayName": "red2", "host": "10.33.170.67", "port": 6379.0, "locationId": "europe-west6-b", "state": "READY", "redisVersion": "REDIS_6_X", "transitEncryptionMode": "DISABLED", "createTime": "2022-03-28T11:04:35.40073338Z", "persistenceConfig": {"persistenceMode": "DISABLED"}, "tier": "BASIC", "name": "projects/tribe29-check-development/locations/europe-west6/instances/red", "memorySizeGb": 1.0, "connectMode": "DIRECT_PEERING", "nodes": [{"id": "node-0", "zone": "europe-west6-b"}], "readReplicasMode": "READ_REPLICAS_DISABLED"}, "location": "europe-west6", "resource_url": ""}, "ancestors": ["projects/1074106860578", "folders/1022571519427", "organizations/668598212003"], "update_time": "2022-03-28T11:08:19.425454Z", "org_policy": []}'
     ],

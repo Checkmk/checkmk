@@ -22,7 +22,7 @@ register.agent_section(name="gcp_service_gcs", parse_function=parse_gcp_gcs)
 def discover(
     section_gcp_service_gcs: Optional[gcp.Section], section_gcp_assets: Optional[gcp.AssetSection]
 ) -> DiscoveryResult:
-    if section_gcp_assets is None:
+    if section_gcp_assets is None or "gcs" not in section_gcp_assets.config:
         return
     bucket_type = "storage.googleapis.com/Bucket"
     buckets = [a for a in section_gcp_assets if a.asset.asset_type == bucket_type]

@@ -24,7 +24,7 @@ def discover(
     section_gcp_service_cloud_functions: Optional[gcp.Section],
     section_gcp_assets: Optional[gcp.AssetSection],
 ) -> DiscoveryResult:
-    if section_gcp_assets is None:
+    if section_gcp_assets is None or "cloud_functions" not in section_gcp_assets.config:
         return
     asset_type = "cloudfunctions.googleapis.com/CloudFunction"
     functions = [a for a in section_gcp_assets if a.asset.asset_type == asset_type]

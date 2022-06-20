@@ -1955,6 +1955,28 @@ def test_services_split(services, blacklist, expected):
             },
             id="[ can also be used by systemd",
         ),
+        pytest.param(
+            [
+                "[list-unit-files]",
+                "[status]",
+                "● rpcbind.socket - RPCbind Server Activation Socket",
+                "Loaded: loaded (/lib/systemd/system/rpcbind.socket; enabled; vendor preset: enabled)",
+                "Active: active (running) since Mon 2022-04-18 22:03:32 CEST; 15h ago",
+                "Triggers: ● rpcbind.service",
+                "Listen: /run/rpcbind.sock (Stream)",
+                "0.0.0.0:111 (Stream)",
+                "0.0.0.0:111 (Datagram)",
+                "[::]:111 (Stream)",
+                "[::]:111 (Datagram)",
+                "Tasks: 0 (limit: 38101)",
+                "x Memory: 16.0K",
+                "CPU: 1ms",
+                "[all]",
+                "UNIT LOAD ACTIVE SUB JOB DESCRIPTION",
+            ],
+            None,
+            id="parse status with misleading status symbol (x)",
+        ),
     ],
 )
 def test_parse_systemd_units(string_table: StringTable, section: Section) -> None:

@@ -323,12 +323,12 @@ filter_tests = [
     FilterTest(
         ident="host_state_type",
         request_vars=[("is_host_state_type", "0")],
-        expected_filters="Filter: state_type = 0\n",
+        expected_filters="Filter: state_type = SOFT\n",
     ),
     FilterTest(
         ident="host_state_type",
         request_vars=[("is_host_state_type", "1")],
-        expected_filters="Filter: state_type = 1\n",
+        expected_filters="Filter: state_type = HARD\n",
     ),
     FilterTest(
         ident="host_state_type",

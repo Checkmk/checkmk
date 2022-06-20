@@ -17,7 +17,7 @@ From the user perspective the GUI is separated in two component:
   The monitoring is also providing access to historic status information in the
   form of events and metrics.
 
-* *Configuration* (aka Setup, WATO): It is the GUI component to manage the
+* *Setup* (aka Configuration, WATO): It is the GUI component to manage the
   configuration of all Checkmk components. The Setup is responsible for
   providing privileged Checkmk users capabilities to update and activate the
   configuration of Checkmk.
@@ -90,10 +90,10 @@ The main configuration file of the GUI is `$OMD_ROOT/etc/check_mk/multisite.mk`.
 Initially this was the only configuration file of the GUI. However, these days
 the configuration of the GUI is located in `$OMD_ROOT/etc/check_mk/multisite.d`.
 All `.mk` files are read as configuration files recursively. Below this
-directory there are files controlled by the *Configuration* or by the user.
+directory there are files controlled by *Setup* or by the user.
 
 This is the standard configuration layout of the Checkmk components that are
-configurable through the *Configuration*. Other components, like the
+configurable through *Setup*. Other components, like the
 :doc:`arch-comp-checkengine`, Event Console, :doc:`arch-comp-liveproxyd`,
 `Notification spooler` and so on are also using this scheme.
 
@@ -102,7 +102,7 @@ The configuration is loaded during processing of each HTTP request by the
 configuration loaded by this mechanic instead of using some other `load`
 function.
 
-The only exception is the *Configuration* component (`watolib`). This component
+The only exception is *Setup* component (`watolib`). This component
 is allowed to read and write specific configuration files that are defined to be
 under the control of WATO.
 

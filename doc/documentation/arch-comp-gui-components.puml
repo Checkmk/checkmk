@@ -22,7 +22,7 @@ package Monitoring {
     component robotmk
     component werks
 }
-package Configuration {
+package Setup {
     component wato
     component watolib
 }

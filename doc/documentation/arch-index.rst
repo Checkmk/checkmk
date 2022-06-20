@@ -33,6 +33,7 @@ Components
    arch-comp-liveproxyd.rst
    arch-comp-mknotifyd.rst
    arch-comp-dcd.rst
+   arch-comp-distributed.rst
    arch-comp-livestatus.rst
    arch-comp-livestatus-client.rst
    arch-comp-rrd-backend.rst

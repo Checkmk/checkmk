@@ -1,0 +1,55 @@
+@startuml
+scale 0.6
+
+package users {
+    actor "Operator" as operator
+    actor "Admin" as admin
+}
+
+package "[[../arch-comp-omd.html Central site]]" as central {
+    package "[[../arch-comp-gui.html GUI]]" as gui {
+        component "Monitoring" as monitoring
+        component "Setup" as setup
+        component "[[../arch-comp-livestatus-client.html Livestatus client]]" as apache_livestatus_client
+    }
+    interface Livestatus as apache_livestatus
+
+    component "[[../arch-comp-core.html Monitoring Core]]" as cmc {
+        component "Notification engine" as cmc_notify
+    }
+
+    component "[[../arch-comp-liveproxyd.html liveproxyd]]" as liveproxyd
+    component "[[../arch-comp-livestatus-client.html Livestatus client]]" as liveproxyd_livestatus_client
+
+    component "[[../arch-comp-mknotifyd.html mknotifyd]]" as mknotifyd
+    interface Notification as mknotifyd_notification
+}
+
+package "[[../arch-comp-distributed.html Remote site]]" as remote_site {
+    component "[[../arch-comp-gui.html GUI: Setup]]" as setup_remote_site
+    component "[[../arch-comp-core.html Monitoring Core]]" as cmc_remote_site
+    component "[[../arch-comp-mknotifyd.html mknotifyd]]" as mknotifyd_remote_site
+}
+interface "Livestatus" as livestatus_remote_site
+interface "HTTP automation calls" as setup_http
+interface "mknotifyd protocol" as mknotifyd_protocol
+
+users -d- gui
+
+monitoring -d- apache_livestatus_client
+setup -d- apache_livestatus_client
+apache_livestatus_client -d- apache_livestatus
+apache_livestatus -d- liveproxyd
+
+setup -----d- setup_http
+setup_http -d- setup_remote_site
+
+liveproxyd -d- liveproxyd_livestatus_client
+liveproxyd_livestatus_client -d- livestatus_remote_site
+livestatus_remote_site -d- cmc_remote_site
+
+cmc_notify -d- mknotifyd_notification
+mknotifyd_notification -d- mknotifyd
+mknotifyd ---d- mknotifyd_protocol
+mknotifyd_protocol -d- mknotifyd_remote_site
+@enduml

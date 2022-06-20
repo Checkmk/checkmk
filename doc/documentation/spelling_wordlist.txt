@@ -36,3 +36,5 @@ init
 mknotifyd
 stunnel
 Spooler
+Livedump
+gapped

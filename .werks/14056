@@ -1,0 +1,14 @@
+Title: aws: Missing regions added
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1655712457
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p27
+
+Regions Africa (Cape Town), Asia Pacific (Hong Kong), Asia Pacific (Jakarta),
+Middle East (Bahrain) and EU (Milan) have been added to Amazon Web Services (AWS)
+configuration rule.

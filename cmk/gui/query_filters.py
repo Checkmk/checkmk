@@ -167,7 +167,8 @@ class TristateQuery(SingleOptionQuery):
 
 
 def state_type(on: bool) -> FilterHeader:
-    return "Filter: state_type = %d\n" % int(on)
+    filter_value: str = "HARD" if on else "SOFT"
+    return "Filter: state_type = %s\n" % filter_value
 
 
 def service_perfdata_toggle(on: bool) -> FilterHeader:

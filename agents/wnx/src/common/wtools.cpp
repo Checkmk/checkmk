@@ -2858,8 +2858,9 @@ ACL *CombineSidsIntoACl(SidStore &first, SidStore &second) {
         ::AddAccessAllowedAce(acl, ACL_REVISION, FILE_ALL_ACCESS,
                               first.sid()) == TRUE &&
         ::AddAccessAllowedAce(acl, ACL_REVISION, FILE_ALL_ACCESS,
-                              second.sid()) == TRUE)
+                              second.sid()) == TRUE) {
         return acl;
+    }
     XLOG::l("Failed ACL creation");
     ProcessHeapFree(acl);
     return nullptr;

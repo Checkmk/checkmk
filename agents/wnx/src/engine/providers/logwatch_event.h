@@ -64,16 +64,6 @@ using StateVector = std::vector<State>;
 // loaded normally from the yaml
 struct LogWatchEntry {
 public:
-    LogWatchEntry() = default;
-
-    LogWatchEntry(const LogWatchEntry &Rhs) = default;
-
-    LogWatchEntry &operator=(const LogWatchEntry &rhs) = default;
-
-    LogWatchEntry(LogWatchEntry &&rhs) = default;
-    LogWatchEntry &operator=(LogWatchEntry &&rhs) = default;
-    ~LogWatchEntry() = default;
-
     bool loadFromMapNode(const YAML::Node &node);
     bool loadFrom(std::string_view line);
     void init(std::string_view name, std::string_view level_value,

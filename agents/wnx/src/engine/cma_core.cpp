@@ -291,7 +291,7 @@ const PluginEntry *GetEntrySafe(const PluginMap &plugin_map,
                                 const std::string &key) {
     try {
         return &plugin_map.at(key);
-    } catch (...) {
+    } catch (const std::out_of_range &) {
         return nullptr;
     }
 }
@@ -299,7 +299,7 @@ const PluginEntry *GetEntrySafe(const PluginMap &plugin_map,
 PluginEntry *GetEntrySafe(PluginMap &plugin_map, const std::string &key) {
     try {
         return &plugin_map.at(key);
-    } catch (...) {
+    } catch (const std::out_of_range &) {
         return nullptr;
     }
 }
@@ -324,7 +324,7 @@ cma::cfg::Plugins::ExeUnit *GetEntrySafe(UnitMap &unit_map,
                                          const std::string &key) {
     try {
         return &unit_map.at(key);
-    } catch (...) {
+    } catch (const std::out_of_range &) {
         return nullptr;
     }
 }
@@ -621,24 +621,18 @@ bool HackDataWithCacheInfo(std::vector<char> &out,
         }
 
         // check for piggyback
-        auto piggyback_name = GetPiggyBackName(t);
-        if (piggyback_name) {
-            if (piggyback_name->empty()) {
-                XLOG::t.i("piggyback input ended");
-                hack_allowed = true;
-            } else {
-                XLOG::t.i("piggyback input '{}' started", *piggyback_name);
-                hack_allowed = false;
-            }
+        if (auto piggyback_name = GetPiggyBackName(t); piggyback_name) {
+            hack_allowed = piggyback_name->empty();
+            XLOG::t.i("piggyback input {}",
+                      hack_allowed
+                          ? "ended"
+                          : fmt::format("'{}' started", *piggyback_name));
             continue;
         }
 
         // hack code if not piggyback and we have something to patch
-        if (hack_allowed) {
-            auto patched = TryToHackStringWithCachedInfo(t, patch);
-            if (patched) {
-                data_count += patch.size();
-            }
+        if (hack_allowed && TryToHackStringWithCachedInfo(t, patch)) {
+            data_count += patch.size();
         }
     }
 
@@ -841,8 +835,8 @@ bool TheMiniBox::waitForEnd(std::chrono::milliseconds timeout) {
         auto grane = grane_long;
         auto ready = checkProcessExit(pi.waiting_processes) ||  // process exit?
                      srv::IsGlobalStopSignaled();  // agent is exiting?
-        auto buf = wtools::ReadFromHandle(read_handle);
-        if (!buf.empty()) {
+
+        if (auto buf = wtools::ReadFromHandle(read_handle); !buf.empty()) {
             pi.added += buf.size();
             pi.blocks++;
             appendResult(read_handle, buf);
@@ -1041,8 +1035,7 @@ void PluginEntry::threadCore(const std::wstring &Id) {
         return;
     }
 
-    auto started = minibox_.startEx(Id, exec, mode, iu_);
-    if (!started) {
+    if (!minibox_.startEx(Id, exec, mode, iu_)) {
         XLOG::l("Failed to start minibox thread {}", wtools::ToUtf8(Id));
         return;
     }
@@ -1065,7 +1058,7 @@ void PluginEntry::threadCore(const std::wstring &Id) {
                 std::lock_guard l(data_lock_);
                 storeData(pid, accu);
             }
-            if (cma::cfg::LogPluginOutput()) {
+            if (cfg::LogPluginOutput()) {
                 XLOG::t("Process [{}]\t Pid [{}]\t Code [{}]\n---\n{}\n---\n",
                         wtools::ToUtf8(cmd_line), pid, code, data.data());
             }
@@ -1200,6 +1193,15 @@ std::vector<char> PluginEntry::getResultsAsync(bool StartProcessNow) {
     return data_;
 }
 
+std::optional<std::string> PluginEntry::startProcessName() {
+    std::lock_guard l(data_lock_);
+    if (getDataAge() <= std::chrono::seconds{cacheAge()}) {
+        return {};
+    }
+    data_time_ = std::chrono::steady_clock::now();  // update time of start
+    return wtools::ToUtf8(path().wstring());
+}
+
 void PluginEntry::restartIfRequired() {
     // check is valid parameters
     if (cacheAge() < cma::cfg::kMinimumCacheAge) {
@@ -1209,26 +1211,16 @@ void PluginEntry::restartIfRequired() {
         return;
     }
     // check data are ready and new enough
-    std::chrono::seconds allowed_age{cacheAge()};
-    auto data_age = getDataAge();
-
-    std::lock_guard l(data_lock_);
-    {
-        if (data_age <= allowed_age) {
-            return;
-        }
-        data_time_ = std::chrono::steady_clock::now();  // update time
-                                                        // of start
+    auto filename = startProcessName();
+    if (!filename) {
+        return;
     }
-    auto filename = wtools::ToUtf8(path().wstring());
-    // execution phase
-    XLOG::d.t("Starting '{}'", filename);
-    auto result = tools::RunDetachedCommand(filename);
-    if (result) {
-        XLOG::d.i("Starting '{}' OK!", filename);
+    XLOG::d.t("Starting '{}'", *filename);
+    if (tools::RunDetachedCommand(*filename)) {
+        XLOG::d.i("Starting '{}' OK!", *filename);
     } else {
-        XLOG::l("Starting '{}' FAILED with error [{}]", filename,
-                GetLastError());
+        XLOG::l("Starting '{}' FAILED with error [{}]", *filename,
+                ::GetLastError());
     }
 }
 

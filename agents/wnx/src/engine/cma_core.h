@@ -542,6 +542,7 @@ public:
     const wtools::InternalUser &getUser() const { return iu_; }
 
 protected:
+    std::optional<std::string> startProcessName();
     void fillInternalUser();
     void resetData() {
         std::lock_guard lk(data_lock_);

@@ -16,9 +16,6 @@ echo "TARGET: $ROOT/share/check_mk/checks"
 # would screw up our include caching mechanism!
 sudo rsync -rlpgoD --delete-after ../../checks/ "$ROOT/share/check_mk/checks/"
 
-echo "TARGET: $ROOT/share/check_mk/inventory"
-sudo rsync -ar --delete-after ../../inventory/ "$ROOT/share/check_mk/inventory/"
-
 (
     cd ..
     bash .f12

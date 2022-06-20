@@ -20,16 +20,16 @@
 #include "providers/wmi.h"
 #include "tools/_raii.h"
 #include "tools/_win.h"
+namespace rs = std::ranges;
 
 namespace cma::provider {
 
 // Process Line Formatter
-// not static to be fully tested by unit tests
 std::string OutputProcessLine(ULONGLONG virtual_size,
                               ULONGLONG working_set_size,
-                              long long pagefile_usage, ULONGLONG uptime,
-                              long long usermode_time,
-                              long long kernelmode_time, long long process_id,
+                              long long pagefile_usage, uint64_t uptime,
+                              uint64_t usermode_time, uint64_t kernelmode_time,
+                              long long process_id,
                               long long process_handle_count,
                               long long thread_count, const std::string &user,
                               const std::string &exe_file) {
@@ -67,7 +67,7 @@ std::string OutputProcessLine(ULONGLONG virtual_size,
 std::wstring GetProcessListFromWmi(std::wstring_view separator) {
     wtools::WmiWrapper wmi;
 
-    if (!wmi.open() || !wmi.connect(cma::provider::kWmiPathStd)) {
+    if (!wmi.open() || !wmi.connect(provider::kWmiPathStd)) {
         XLOG::l(XLOG_FUNC + "cant access WMI");
         return {};
     }
@@ -106,7 +106,8 @@ std::string ExtractProcessOwner(HANDLE process) {
 
     // Allocate buffer for user information in the token.
     std::vector<unsigned char> user_token(process_info, 0);
-    auto *user_token_data = reinterpret_cast<PTOKEN_USER>(user_token.data());
+    auto *user_token_data =
+        static_cast<PTOKEN_USER>(static_cast<void *>(user_token.data()));
     // Now get user information in the allocated buffer
     if (::GetTokenInformation(raw_handle, TokenUser, user_token_data,
                               process_info, &process_info) == FALSE) {
@@ -116,14 +117,17 @@ std::string ExtractProcessOwner(HANDLE process) {
 
     // Some vars that we may need
     SID_NAME_USE snu_sid_name_use{SidTypeUser};
-    WCHAR user_name[MAX_PATH] = {0};
-    DWORD user_name_length = MAX_PATH;
-    WCHAR domain_name[MAX_PATH] = {0};
-    DWORD domain_name_length = MAX_PATH;
+    DWORD user_name_length{MAX_PATH * 2};
+    DWORD domain_name_length{MAX_PATH * 2};
+    std::wstring user_name;
+    user_name.resize(user_name_length);
+    std::wstring domain_name;
+    domain_name.resize(domain_name_length);
 
     // Retrieve user name and domain name based on user's SID.
-    if (::LookupAccountSidW(nullptr, user_token_data->User.Sid, user_name,
-                            &user_name_length, domain_name, &domain_name_length,
+    if (::LookupAccountSidW(nullptr, user_token_data->User.Sid,
+                            user_name.data(), &user_name_length,
+                            domain_name.data(), &domain_name_length,
                             &snu_sid_name_use) == TRUE) {
         std::string out = "\\\\" + wtools::ToUtf8(domain_name) + "\\" +
                           wtools::ToUtf8(user_name);
@@ -139,11 +143,8 @@ std::wstring GetFullPath(IWbemClassObject *wbem_object) {
     auto executable_path =
         wtools::WmiTryGetString(wbem_object, L"ExecutablePath");
 
-    if (executable_path.has_value()) {
-        process_name = *executable_path;
-    } else {
-        process_name = wtools::WmiStringFromObject(wbem_object, L"Caption");
-    }
+    process_name = executable_path.value_or(
+        wtools::WmiStringFromObject(wbem_object, L"Caption"));
 
     auto cmd_line = wtools::WmiTryGetString(wbem_object, L"CommandLine");
     if (!cmd_line) {
@@ -313,12 +314,10 @@ uint64_t GetWstringAsUint64(IWbemClassObject *wmi_object,
 }
 
 std::string ProducePsWmi(bool use_full_path) {
-    namespace rs = std::ranges;
-    // auto processes = GetProcessListFromWmi();
     wtools::WmiWrapper wmi;
 
-    if (!wmi.open() || !wmi.connect(cma::provider::kWmiPathStd)) {
-        XLOG::l("PS is failed to conect to WMI");
+    if (!wmi.open() || !wmi.connect(provider::kWmiPathStd)) {
+        XLOG::l("PS is failed to connect to WMI");
         return {};
     }
 
@@ -343,9 +342,7 @@ std::string ProducePsWmi(bool use_full_path) {
         ON_OUT_OF_SCOPE(object->Release());
 
         auto process_id = GetUint32AsInt64(object, L"ProcessId");
-
         auto process_owner = GetProcessOwner(process_id);
-
         auto process_name = BuildProcessName(object, use_full_path);
 
         // some process name includes trash output which includes carriage

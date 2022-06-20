@@ -158,9 +158,9 @@ const std::string exe_file = "exe_file";
 // Decision: "Test internal API explicit"
 std::string OutputProcessLine(ULONGLONG virtual_size,
                               ULONGLONG working_set_size,
-                              long long pagefile_usage, ULONGLONG uptime,
-                              long long usermode_time,
-                              long long kernelmode_time, long long process_id,
+                              long long pagefile_usage, uint64_t uptime,
+                              uint64_t usermode_time, uint64_t kernelmode_time,
+                              long long process_id,
                               long long process_handle_count,
                               long long thread_count, const std::string &user,
                               const std::string &exe_file);

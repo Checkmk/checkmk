@@ -190,7 +190,7 @@ def test_asset_serialization(agent_output: Sequence[agent_gcp.Section], capsys) 
     captured = capsys.readouterr()
     lines = captured.out.rstrip().split("\n")
     assert lines[0] == "<<<gcp_assets:sep(0)>>>"
-    assert json.loads(lines[1]) == {"project": "test"}
+    assert json.loads(lines[1]) == {"project": "test", "config": list(agent_gcp.SERVICES)}
     for line in lines[2:]:
         agent_gcp.Asset.deserialize(line)
 

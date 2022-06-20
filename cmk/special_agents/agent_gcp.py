@@ -179,6 +179,7 @@ class AssetSection:
     name: str
     assets: Sequence[Asset]
     project: str
+    config: Sequence[str]
 
 
 @dataclass(frozen=True)
@@ -204,7 +205,7 @@ Section = Union[AssetSection, ResultSection, PiggyBackSection]
 
 def _asset_serializer(section: AssetSection):
     with SectionWriter("gcp_assets") as w:
-        w.append(json.dumps(dict(project=section.project)))
+        w.append(json.dumps(dict(project=section.project, config=section.config)))
         for a in section.assets:
             w.append(Asset.serialize(a))
 
@@ -293,8 +294,8 @@ def gather_assets(client: ClientProtocol) -> Sequence[Asset]:
     return [Asset(a) for a in all_assets]
 
 
-def run_assets(client: ClientProtocol) -> AssetSection:
-    return AssetSection("asset", gather_assets(client), client.project)
+def run_assets(client: ClientProtocol, config: Sequence[str]) -> AssetSection:
+    return AssetSection("asset", gather_assets(client), client.project, config)
 
 
 ##############
@@ -336,7 +337,7 @@ def run(
     piggy_back_services: Sequence[PiggyBackService],
     serializer: Callable[[Union[Iterable[Section], Iterable[PiggyBackSection]]], None],
 ) -> None:
-    assets = run_assets(client)
+    assets = run_assets(client, [s.name for s in services])
     serializer([assets])
     serializer(run_metrics(client, services))
     serializer(run_piggy_back(client, piggy_back_services, assets.assets))

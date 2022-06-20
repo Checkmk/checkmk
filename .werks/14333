@@ -1,0 +1,13 @@
+Title: Fix "Service state type" filter
+Knowledge: doc
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p30
+Date: 1655714833
+
+If "HARD" or "SOFT" option was used in filter "Service state type", no matching
+entries were found.

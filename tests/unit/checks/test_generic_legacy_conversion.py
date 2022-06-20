@@ -2077,7 +2077,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy) -> None:
         "netapp_cpu",
         "netapp_fcpio",
         "netapp_vfiler",
-        "netapp_volumes",
         "netctr.combined",
         "netextreme_cpu_util",
         "netextreme_fan",

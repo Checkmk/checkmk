@@ -64,8 +64,8 @@
 import dataclasses
 from typing import Mapping
 
-from .agent_based_api.v1 import all_of, register, SNMPTree, startswith
-from .agent_based_api.v1.type_defs import StringTable
+from .agent_based_api.v1 import all_of, register, Result, Service, SNMPTree, startswith, State
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 
 @dataclasses.dataclass(frozen=True)
@@ -117,4 +117,52 @@ register.snmp_section(
             "6",  # volStatus
         ],
     ),
+)
+
+
+def discover(section: Section) -> DiscoveryResult:
+    for volume_name, volume in section.items():
+        if volume.owner == "local":
+            yield Service(item=volume_name)
+
+
+_VOLUME_STATUS_TO_MONITORING_STATUS = {
+    "reconstructing": State.WARN,
+    "normal": State.OK,
+    "raid_dp": State.OK,
+    "raid0": State.OK,
+    "raid0, mirrored": State.OK,
+    "raid4": State.OK,
+    "mixed_raid_type": State.OK,
+}
+
+
+def check(
+    item: str,
+    section: Section,
+) -> CheckResult:
+
+    if (volume := section.get(item, None)) is None:
+        return
+    yield Result(
+        state=State.OK,
+        summary=f"FSID: {volume.fsid}, Owner: {volume.owner}",
+    )
+    yield Result(
+        state=State.WARN if volume.state == "offline" else State.OK,
+        summary=f"State: {volume.state}",
+    )
+    yield Result(
+        state=_VOLUME_STATUS_TO_MONITORING_STATUS.get(
+            volume.status.split(",", maxsplit=1)[0], State.CRIT
+        ),
+        summary=f"Status: {volume.status}",
+    )
+
+
+register.check_plugin(
+    name="netapp_volumes",
+    service_name="NetApp Vol %s",
+    discovery_function=discover,
+    check_function=check,
 )

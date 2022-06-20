@@ -7,13 +7,8 @@ from typing import Sequence
 
 import pytest
 
-from tests.unit.conftest import FixRegister
-
-from cmk.utils.type_defs import CheckPluginName
-
-from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
-from cmk.base.plugins.agent_based.netapp_volumes import parse_netapp_volumes
+from cmk.base.plugins.agent_based.netapp_volumes import check, discover, parse_netapp_volumes
 
 STRING_TABLE_FILER_NETAPP_8_1_1 = [
     ["vol0", "23465813", "1", "online", "raid_dp, 64-bit, rlw_on"],
@@ -25,21 +20,8 @@ STRING_TABLE_FILER_NETAPP_8_1_1 = [
 ]
 
 
-@pytest.fixture(name="netapp_volumes_plugin")
-def fixture_netapp_volumes_plugin(fix_register: FixRegister) -> CheckPlugin:
-    return fix_register.check_plugins[CheckPluginName("netapp_volumes")]
-
-
-def test_inventory(
-    netapp_volumes_plugin: CheckPlugin,
-) -> None:
-    assert (
-        list(
-            netapp_volumes_plugin.discovery_function(
-                section=parse_netapp_volumes(STRING_TABLE_FILER_NETAPP_8_1_1),
-            )
-        )
-    ) == [
+def test_discover() -> None:
+    assert list(discover(section=parse_netapp_volumes(STRING_TABLE_FILER_NETAPP_8_1_1),)) == [
         Service(item="vol0"),
         Service(item="lun_29Aug2012_162910_vol"),
         Service(item="a2_esx_zit_g7_00"),
@@ -78,7 +60,7 @@ def test_inventory(
             [
                 Result(state=State.OK, summary="FSID: 1597710601, Owner: local"),
                 Result(state=State.OK, summary="State: online"),
-                Result(state=State.CRIT, summary="Status:"),
+                Result(state=State.CRIT, summary="Status: "),
             ],
             id="status empty - crit",
         ),
@@ -90,15 +72,13 @@ def test_inventory(
     ],
 )
 def test_check(
-    netapp_volumes_plugin: CheckPlugin,
     item: str,
     expected_result: Sequence[Result],
 ) -> None:
     assert (
         list(
-            netapp_volumes_plugin.check_function(
+            check(
                 item=item,
-                params={},
                 section=parse_netapp_volumes(STRING_TABLE_FILER_NETAPP_8_1_1),
             )
         )

@@ -7,7 +7,7 @@
 # yapf: disable
 
 import copy
-from typing import Any, Dict
+from typing import Any, Dict, Tuple
 
 import pytest
 
@@ -19,7 +19,7 @@ import cmk.gui.views
 from cmk.gui.config import active_config
 from cmk.gui.htmllib.html import html
 from cmk.gui.logged_in import user
-from cmk.gui.plugins.views.utils import transform_painter_spec
+from cmk.gui.plugins.views.utils import Cell, Painter, transform_painter_spec
 from cmk.gui.plugins.visuals.utils import Filter
 from cmk.gui.type_defs import PainterSpec
 from cmk.gui.valuespec import ValueSpec
@@ -673,6 +673,24 @@ def test_registered_datasources() -> None:
         assert ds.keys == spec["keys"]
         assert ds.id_keys == spec["idkeys"]
         assert ds.infos == spec["infos"]
+
+def test_painter_export_title(monkeypatch) -> None:
+    painters: list[Painter] = [painter_class() for painter_class in cmk.gui.plugins.views.utils.painter_registry.values()]
+    painters_and_cells: list[Tuple[Painter, Cell]] = [
+                                                      (
+                                                       painter,
+                                                       cmk.gui.plugins.views.utils.Cell(cmk.gui.views.View("", {}, {}),PainterSpec(painter.ident))
+                                                      )
+                                                      for painter in painters
+                                                     ]
+
+    dummy_ident: str = "einszwo"
+    for painter, cell in painters_and_cells:
+        cell._painter_params = {"ident": dummy_ident} # pylint: disable=protected-access
+        expected_title: str = painter.ident
+        if painter.ident in ["host_custom_variable", "service_custom_variable"]:
+            expected_title += "_%s" % dummy_ident
+        assert painter.export_title(cell) == expected_title
 
 
 def test_legacy_register_painter(monkeypatch) -> None:

@@ -3,10 +3,9 @@
 # Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-import json
 from dataclasses import dataclass
 from enum import IntEnum, unique
-from typing import Any, Callable, Iterator, Mapping, Optional, Sequence
+from typing import Any, Callable, Mapping, Optional, Sequence
 
 from google.cloud.asset_v1 import Asset
 from google.cloud.monitoring_v3.types import TimeSeries
@@ -40,18 +39,22 @@ class SectionItem:
 
 
 Section = Mapping[str, SectionItem]
-
 PiggyBackSection = Sequence[GCPResult]
+AssetType = str
+Item = str
+Project = str
+Config = Sequence[str]
+AssetTypeSection = Mapping[Item, GCPAsset]
 
 
 @dataclass(frozen=True)
 class AssetSection:
-    project: str
-    config: Sequence[str]
-    assets: Sequence[GCPAsset]
+    project: Project
+    config: Config
+    _assets: Mapping[AssetType, AssetTypeSection]
 
-    def __iter__(self) -> Iterator[GCPAsset]:
-        return iter(self.assets)
+    def __getitem__(self, key: AssetType) -> AssetTypeSection:
+        return self._assets[key]
 
 
 def parse_gcp(
@@ -67,14 +70,6 @@ def parse_gcp(
 
 def parse_piggyback(string_table: StringTable) -> PiggyBackSection:
     return [GCPResult.deserialize(row[0]) for row in string_table]
-
-
-def parse_assets(string_table: StringTable) -> AssetSection:
-    info = json.loads(string_table[0][0])
-    project = info["project"]
-    config: Sequence[str] = info["config"]
-    assets = [GCPAsset.deserialize(row[0]) for row in string_table[1:]]
-    return AssetSection(project, config=config, assets=assets)
 
 
 @dataclass(frozen=True)

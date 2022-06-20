@@ -14,21 +14,22 @@ def parse_gcp_gcs(string_table: StringTable) -> gcp.Section:
     return gcp.parse_gcp(string_table, "bucket_name")
 
 
-service_namer = gcp.service_name_factory("GCS")
-
 register.agent_section(name="gcp_service_gcs", parse_function=parse_gcp_gcs)
 
 
+service_namer = gcp.service_name_factory("GCS")
+SECTIONS = ["gcp_service_gcs", "gcp_assets"]
+
+
 def discover(
-    section_gcp_service_gcs: Optional[gcp.Section], section_gcp_assets: Optional[gcp.AssetSection]
+    section_gcp_service_gcs: Optional[gcp.Section],
+    section_gcp_assets: Optional[gcp.AssetSection],
 ) -> DiscoveryResult:
     if section_gcp_assets is None or "gcs" not in section_gcp_assets.config:
         return
-    bucket_type = "storage.googleapis.com/Bucket"
-    buckets = [a for a in section_gcp_assets if a.asset.asset_type == bucket_type]
-    for bucket in buckets:
+    asset_type = "storage.googleapis.com/Bucket"
+    for item, bucket in section_gcp_assets[asset_type].items():
         data = bucket.asset.resource.data
-        item = data["id"]
         labels = [ServiceLabel(f"gcp/labels/{k}", v) for k, v in data["labels"].items()]
         labels.append(ServiceLabel("gcp/location", data["location"]))
         labels.append(ServiceLabel("gcp/bucket/storageClass", data["storageClass"]))
@@ -51,7 +52,7 @@ def check_gcp_gcs_requests(
 
 register.check_plugin(
     name="gcp_gcs_requests",
-    sections=["gcp_service_gcs", "gcp_assets"],
+    sections=SECTIONS,
     service_name=service_namer("requests"),
     check_ruleset_name="gcp_gcs_requests",
     discovery_function=discover,
@@ -79,7 +80,7 @@ def check_gcp_gcs_network(
 
 register.check_plugin(
     name="gcp_gcs_network",
-    sections=["gcp_service_gcs", "gcp_assets"],
+    sections=SECTIONS,
     service_name=service_namer("networks"),
     check_ruleset_name="gcp_gcs_network",
     discovery_function=discover,
@@ -107,7 +108,7 @@ def check_gcp_gcs_object(
 
 register.check_plugin(
     name="gcp_gcs_objects",
-    sections=["gcp_service_gcs", "gcp_assets"],
+    sections=SECTIONS,
     service_name=service_namer("objects"),
     check_ruleset_name="gcp_gcs_objects",
     discovery_function=discover,

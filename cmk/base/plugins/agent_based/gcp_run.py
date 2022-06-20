@@ -27,10 +27,7 @@ def discover(
     if section_gcp_assets is None or "cloud_run" not in section_gcp_assets.config:
         return
     asset_type = "run.googleapis.com/Service"
-    services = [a for a in section_gcp_assets if a.asset.asset_type == asset_type]
-    for service in services:
-        data = service.asset.resource.data
-        item = data["metadata"]["name"]
+    for item, service in section_gcp_assets[asset_type].items():
         labels = [
             ServiceLabel("gcp/location", service.asset.resource.location),
             ServiceLabel("gcp/run/name", item),

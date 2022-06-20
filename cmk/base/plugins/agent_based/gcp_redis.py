@@ -24,11 +24,9 @@ def discover(
     if section_gcp_assets is None or "redis" not in section_gcp_assets.config:
         return
     asset_type = "redis.googleapis.com/Instance"
-    instances = [a for a in section_gcp_assets if a.asset.asset_type == asset_type]
-    for instance in instances:
+    instances = section_gcp_assets[asset_type]
+    for item, instance in instances.items():
         data = instance.asset.resource.data
-        # so this is long string because display name and UID are not the same.
-        item = data["name"]
         labels = []
         labels.append(ServiceLabel("gcp/location", data["locationId"]))
         labels.append(ServiceLabel("gcp/projectId", section_gcp_assets.project))

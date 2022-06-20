@@ -19,6 +19,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     DiscoveryResult,
     StringTable,
 )
+from cmk.base.plugins.agent_based.gcp_assets import parse_assets
 from cmk.base.plugins.agent_based.utils import gcp
 
 from cmk.special_agents import agent_gcp
@@ -67,7 +68,7 @@ class DiscoverTester(ABC):
 
     @pytest.fixture(name="asset_section")
     def fixture_asset_section(self) -> gcp.AssetSection:
-        return gcp.parse_assets(self._assets)
+        return parse_assets(self._assets)
 
     @pytest.fixture(name="services")
     def fixture_services(self, asset_section):
@@ -89,6 +90,12 @@ class DiscoverTester(ABC):
 
     def test_discover_all_services_labels(self, services: Sequence[Service]) -> None:
         assert set(services[0].labels) == self.expected_labels
+
+    def test_discover_nothing_without_service_configured(self) -> None:
+        string_table = [
+            ['{"project":"backup-255820", "config":["none"]}'],
+        ]
+        assert len(list(self.discover(parse_assets(string_table)))) == 0
 
 
 def generate_timeseries(item: str, value: float, service_desc: agent_gcp.Service) -> StringTable:

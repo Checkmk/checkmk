@@ -34,10 +34,8 @@ def discover(
     if section_gcp_assets is None or "cloud_sql" not in section_gcp_assets.config:
         return
     asset_type = "sqladmin.googleapis.com/Instance"
-    services = [a for a in section_gcp_assets if a.asset.asset_type == asset_type]
-    for service in services:
+    for item, service in section_gcp_assets[asset_type].items():
         data = service.asset.resource.data
-        item = data["name"]
         labels = (
             [ServiceLabel(f"gcp/labels/{k}", v) for k, v in data["settings"]["userLabels"].items()]
             if "userLabels" in data["settings"]

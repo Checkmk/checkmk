@@ -27,10 +27,8 @@ def discover(
     if section_gcp_assets is None or "cloud_functions" not in section_gcp_assets.config:
         return
     asset_type = "cloudfunctions.googleapis.com/CloudFunction"
-    functions = [a for a in section_gcp_assets if a.asset.asset_type == asset_type]
-    for function in functions:
-        data = function.asset.resource.data
-        item = data["name"].split("/")[-1]
+    functions = section_gcp_assets[asset_type]
+    for item, function in functions.items():
         labels = [
             ServiceLabel("gcp/location", function.asset.resource.location),
             ServiceLabel("gcp/function/name", item),

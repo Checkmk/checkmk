@@ -27,10 +27,9 @@ def discover(
     if section_gcp_assets is None or "filestore" not in section_gcp_assets.config:
         return
     asset_type = "file.googleapis.com/Instance"
-    shares = [a for a in section_gcp_assets if a.asset.asset_type == asset_type]
-    for share in shares:
+    shares = section_gcp_assets[asset_type]
+    for item, share in shares.items():
         data = share.asset.resource.data
-        item = data["name"].split("/")[-1]
         labels = [
             ServiceLabel("gcp/location", share.asset.resource.location),
             ServiceLabel("gcp/filestore/name", item),

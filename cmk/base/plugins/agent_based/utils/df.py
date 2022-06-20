@@ -84,6 +84,28 @@ def _determine_levels_for_filesystem(levels: list, filesystem_size: Bytes) -> Tu
     return warn, crit
 
 
+def _adjust_levels(
+    warn: float,
+    crit: float,
+    factor: float,
+    filesystem_size: Bytes,
+    reference_size: Bytes,
+    minimum_levels: Tuple[float, float],
+) -> Tuple[float, float]:
+    hgb_size = filesystem_size / reference_size
+    felt_size = hgb_size**factor
+    scale = felt_size / hgb_size
+    warn_scaled = 100 - ((100 - warn) * scale)
+    crit_scaled = 100 - ((100 - crit) * scale)
+
+    # Make sure, levels do never get too low due to magic factor
+    lowest_warning_level, lowest_critical_level = minimum_levels
+    warn_scaled = max(warn_scaled, lowest_warning_level)
+    crit_scaled = max(crit_scaled, lowest_critical_level)
+
+    return warn_scaled, crit_scaled
+
+
 def savefloat(raw: Any) -> float:
     try:
         return float(raw)
@@ -165,17 +187,14 @@ def get_filesystem_levels(  # pylint: disable=too-many-branches
         if not isinstance(crit, float):
             crit = savefloat(crit * mega / float(size_gb * giga)) * 100
 
-        normsize = levels["magic_normsize"]
-        hgb_size = size_gb / float(normsize)
-        felt_size = hgb_size**magic
-        scale = felt_size / hgb_size
-        warn_scaled = 100 - ((100 - warn) * scale)
-        crit_scaled = 100 - ((100 - crit) * scale)
-
-        # Make sure, levels do never get too low due to magic factor
-        lowest_warning_level, lowest_critical_level = levels["levels_low"]
-        warn_scaled = max(warn_scaled, lowest_warning_level)
-        crit_scaled = max(crit_scaled, lowest_critical_level)
+        warn_scaled, crit_scaled = _adjust_levels(
+            warn=warn,
+            crit=crit,
+            factor=magic,
+            filesystem_size=filesystem_size,
+            reference_size=Bytes(levels["magic_normsize"] * giga),
+            minimum_levels=levels["levels_low"],
+        )
 
     else:
         if not isinstance(warn, float):

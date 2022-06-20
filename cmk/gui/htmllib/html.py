@@ -82,9 +82,6 @@ class HTMLGenerator(HTMLWriter):
         """Enabling the screenshot mode omits the fancy background and makes it white instead."""
         return bool(self.request.var("screenshotmode", "1" if active_config.screenshotmode else ""))
 
-    def is_api_call(self) -> bool:
-        return self.output_format != "html"
-
     def set_focus(self, varname: str) -> None:
         self.final_javascript(
             "cmk.utils.set_focus_by_name(%s, %s)"

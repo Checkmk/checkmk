@@ -22,6 +22,7 @@ from cmk.gui.plugins.views.utils import (
     ABCDataSource,
     Cell,
     CellSpec,
+    CSVExportError,
     data_source_registry,
     Painter,
     painter_option_registry,
@@ -575,9 +576,6 @@ class PainterOptionAggrWrap(PainterOption):
 def paint_aggregated_tree_state(
     row: Row, force_renderer_cls: Optional[Type[bi.ABCFoldableTreeRenderer]] = None
 ) -> CellSpec:
-    if html.is_api_call():
-        return bi.render_tree_json(row)
-
     painter_options = PainterOptions.get_instance()
     treetype = painter_options.get("aggr_treetype")
     expansion_level = int(painter_options.get("aggr_expand"))
@@ -631,6 +629,12 @@ class PainterAggrTreestate(Painter):
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_aggregated_tree_state(row)
 
+    def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
+        raise CSVExportError()
+
+    def export_for_json(self, row: Row, cell: Cell) -> dict:
+        return bi.render_tree_json(row)
+
 
 @painter_registry.register
 class PainterAggrTreestateBoxed(Painter):
@@ -650,3 +654,9 @@ class PainterAggrTreestateBoxed(Painter):
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_aggregated_tree_state(row, force_renderer_cls=bi.FoldableTreeRendererBoxes)
+
+    def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
+        raise CSVExportError()
+
+    def export_for_json(self, row: Row, cell: Cell) -> dict:
+        return bi.render_tree_json(row)

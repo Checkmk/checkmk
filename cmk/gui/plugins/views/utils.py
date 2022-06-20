@@ -925,6 +925,14 @@ def query_livestatus(
     return data
 
 
+class CSVExportError(Exception):
+    pass
+
+
+class JSONExportError(Exception):
+    pass
+
+
 # TODO: Return value of render() could be cleaned up e.g. to a named tuple with an
 # optional CSS class. A lot of painters don't specify CSS classes.
 # TODO: Since we have the reporting also working with the painters it could be useful
@@ -990,23 +998,6 @@ class Painter(abc.ABC):
             query. As they might be required to find them again within the
             data."""
 
-    @abc.abstractmethod
-    def render(self, row: Row, cell: "Cell") -> CellSpec:
-        """Renders the painter for the given row
-        The paint function gets one argument: A data row, which is a python
-        dictionary representing one data object (host, service, ...). Its
-        keys are the column names, its values the actual values from livestatus
-        (typed: numbers are float or int, not string)
-
-        The paint function must return a pair of two strings:
-            - A CSS class for the TD of the column and
-            - a Text string or HTML code for painting the column
-
-        That class is optional and set to "" in most cases. Currently CSS
-        styles are not modular and all defined in check_mk.css. This will
-        change in future."""
-        raise NotImplementedError()
-
     def short_title(self, cell: "Cell") -> str:
         """Used as display string for the painter e.g. as table header
         Falls back to the full title if no short title is given"""
@@ -1064,6 +1055,55 @@ class Painter(abc.ABC):
         """Whether or not to load the HW/SW inventory for this column"""
         return False
 
+    # TODO At the moment we use render as fallback but in the future every
+    # painter should implement explicit
+    #   - _compute_data
+    #   - render
+    #   - export methods
+    # As soon as this is done all four methods will be abstract.
+
+    # See first implementations: PainterInventoryTree, PainterHostLabels, ...
+
+    # TODO For PDF or Python output format we implement additional methods.
+
+    def _compute_data(self, row: Row, cell: "Cell") -> object:
+        return self.render(row, cell)[1]
+
+    @abc.abstractmethod
+    def render(self, row: Row, cell: "Cell") -> CellSpec:
+        """Renders the painter for the given row
+        The paint function gets one argument: A data row, which is a python
+        dictionary representing one data object (host, service, ...). Its
+        keys are the column names, its values the actual values from livestatus
+        (typed: numbers are float or int, not string)
+
+        The paint function must return a pair of two strings:
+            - A CSS class for the TD of the column and
+            - a Text string or HTML code for painting the column
+
+        That class is optional and set to "" in most cases. Currently CSS
+        styles are not modular and all defined in check_mk.css. This will
+        change in future."""
+        raise NotImplementedError()
+
+    def export_for_csv(self, row: Row, cell: "Cell") -> str | HTML:
+        """Render the content of the painter for CSV export based on the given row.
+
+        If the data of a painter can not be exported as CSV (like trees), then this method
+        raises a 'CSVExportError'.
+        """
+        if isinstance(data := self._compute_data(row, cell), (str, HTML)):
+            return data
+        raise ValueError("Data must be of type 'str' or 'HTML' but is %r" % type(data))
+
+    def export_for_json(self, row: Row, cell: "Cell") -> object:
+        """Render the content of the painter for JSON export based on the given row.
+
+        If the data of a painter can not be exported as JSON, then this method
+        raises a 'JSONExportError'.
+        """
+        return self._compute_data(row, cell)
+
 
 class PainterRegistry(cmk.utils.plugin_registry.Registry[Type[Painter]]):
     def plugin_name(self, instance: Type[Painter]) -> str:
@@ -1076,6 +1116,7 @@ painter_registry = PainterRegistry()
 # Kept for pre 1.6 compatibility. But also the inventory.py uses this to
 # register some painters dynamically
 def register_painter(ident: str, spec: Dict[str, Any]) -> None:
+    paint_function = spec["paint"]
     cls = type(
         "LegacyPainter%s" % ident.title(),
         (Painter,),
@@ -1086,7 +1127,17 @@ def register_painter(ident: str, spec: Dict[str, Any]) -> None:
             "title": lambda s, cell: s._spec["title"],
             "short_title": lambda s, cell: s._spec.get("short", s.title),
             "columns": property(lambda s: s._spec["columns"]),
-            "render": lambda self, row, cell: spec["paint"](row),
+            "render": lambda self, row, cell: paint_function(row),
+            "export_for_csv": (
+                lambda self, row, cell: spec["export_for_csv"](row, cell)
+                if "export_for_csv" in spec
+                else paint_function(row)[1]
+            ),
+            "export_for_json": (
+                lambda self, row, cell: spec["export_for_json"](row, cell)
+                if "export_for_json" in spec
+                else paint_function(row)[1]
+            ),
             "group_by": lambda self, row, cell: self._spec.get("groupby"),
             "parameters": property(lambda s: s._spec.get("params")),
             "painter_options": property(lambda s: s._spec.get("options", [])),
@@ -2280,27 +2331,51 @@ class Cell:
                 'Failed to paint "%s": %s' % (self.painter_name(), traceback.format_exc())
             )
 
-    # TODO: We really should have some intermediate "data" layer that would make it possible to
-    # extract the data for the export in a cleaner way.
-    def render_for_export(self, row: Row) -> ExportCellContent:
-        rendered_txt = self.render_content(row)[1]
-        if rendered_txt is None:
+    # TODO render_for_python_export/as PDF
+
+    def render_for_csv_export(self, row: Row) -> str | HTML:
+        if request.var("output_format") not in ["csv", "csv_export"]:
+            return "NOT_CSV_EXPORTABLE"
+
+        if not row:
             return ""
 
-        # The aggr_treestate painters are returning a dictionary data structure
-        # (see paint_aggregated_tree_state()) in case the output_format is not
-        # HTML. Hand over the whole data structure to the caller. It will be
-        # converted to str during rendering.
-        if isinstance(rendered_txt, dict):
-            return rendered_txt
+        try:
+            content = self.painter().export_for_csv(row, self)
+        except CSVExportError:
+            return "NOT_CSV_EXPORTABLE"
 
-        txt: str = str(rendered_txt).strip()
+        return self._render_html_content(content)
+
+    def render_for_json_export(self, row: Row) -> object:
+        if request.var("output_format") not in ["json", "json_export"]:
+            return "NOT_JSON_EXPORTABLE"
+
+        if not row:
+            return ""
+
+        try:
+            content = self.painter().export_for_json(row, self)
+        except JSONExportError:
+            return "NOT_JSON_EXPORTABLE"
+
+        if isinstance(content, (str, HTML)):
+            # TODO At the moment we have to keep this str/HTML handling because export_for_json
+            # falls back to render. As soon as all painters have explicit export_for_* methods,
+            # we can remove this...
+            return self._render_html_content(content)
+
+        return content
+
+    def _render_html_content(self, content: str | HTML) -> str:
+        txt: str = str(content).strip()
 
         # Similar to the PDF rendering hack above, but this time we extract the title from our icons
         # and add them to the CSV export instead of stripping the whole HTML tag.
         # Current limitation: *one* image
         if txt.lower().startswith("<img"):
             txt = re.sub(".*title=[\"']([^'\"]*)[\"'].*", "\\1", str(txt))
+
         return txt
 
     def render_content(self, row: Row) -> CellSpec:
@@ -2308,32 +2383,7 @@ class Cell:
             return "", ""  # nothing to paint
 
         painter = self.painter()
-        result = painter.render(row, self)
-        if (
-            not isinstance(result, tuple)
-            or len(result) != 2
-            or not isinstance(result[1], (str, HTML))
-        ):
-            output_formats: List[str] = [
-                "csv_export",
-                "csv",
-                "json_export",
-                "json",
-            ]
-            if (
-                request.var("output_format") in output_formats
-                and isinstance(
-                    painter,
-                    (
-                        cmk.gui.plugins.views.painters.PainterHostLabels,
-                        cmk.gui.plugins.views.painters.PainterServiceLabels,
-                    ),
-                )
-                and isinstance(result[1], dict)
-            ):
-                return result
-            raise Exception(_("Painter %r returned invalid result: %r") % (painter.ident, result))
-        return result
+        return painter.render(row, self)
 
     def paint(self, row: Row, colspan: Optional[int] = None) -> bool:
         tdclass, content = self.render(row)

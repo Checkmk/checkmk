@@ -15,7 +15,9 @@ from cmk.gui.plugins.metrics import html_render
 from cmk.gui.plugins.metrics.valuespecs import vs_graph_render_options
 from cmk.gui.plugins.views.utils import (
     Cell,
+    CSVExportError,
     get_graph_timerange_from_painter_options,
+    JSONExportError,
     multisite_builtin_views,
     Painter,
     painter_option_registry,
@@ -24,6 +26,7 @@ from cmk.gui.plugins.views.utils import (
     PainterOptions,
 )
 from cmk.gui.type_defs import ColumnName, Row, TemplateGraphSpec
+from cmk.gui.utils.html import HTML
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import Dictionary, DropdownChoice, Transform, ValueSpec
@@ -249,6 +252,12 @@ class PainterServiceGraphs(Painter):
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_cmk_graphs_with_timeranges(row, cell)
 
+    def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
+        raise CSVExportError()
+
+    def export_for_json(self, row: Row, cell: Cell) -> object:
+        raise JSONExportError()
+
 
 @painter_registry.register
 class PainterHostGraphs(Painter):
@@ -277,6 +286,12 @@ class PainterHostGraphs(Painter):
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_cmk_graphs_with_timeranges(row, cell)
+
+    def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
+        raise CSVExportError()
+
+    def export_for_json(self, row: Row, cell: Cell) -> object:
+        raise JSONExportError()
 
 
 @painter_option_registry.register

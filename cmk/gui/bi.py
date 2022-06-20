@@ -297,7 +297,7 @@ def ajax_render_tree():
     html.write_html(renderer.render())
 
 
-def render_tree_json(row) -> tuple[str, dict[str, Any]]:
+def render_tree_json(row) -> dict[str, Any]:
     expansion_level = request.get_integer_input_mandatory("expansion_level", 999)
 
     treestate = user.get_tree_states("bi")
@@ -361,7 +361,7 @@ def render_tree_json(row) -> tuple[str, dict[str, Any]]:
     root_node = row["aggr_treestate"]
     affected_hosts = row["aggr_hosts"]
 
-    return "", render_subtree_json(root_node, [root_node[2]["title"]], len(affected_hosts) > 1)
+    return render_subtree_json(root_node, [root_node[2]["title"]], len(affected_hosts) > 1)
 
 
 def compute_output_message(effective_state, rule):

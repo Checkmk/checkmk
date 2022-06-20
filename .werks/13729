@@ -1,0 +1,21 @@
+Title: FIX CSV/JSON exports for some view columns
+Class: fix
+Compatible: incomp
+Component: multisite
+Date: 1655790773
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+Views may contain columns which are not CSV exportable, ie.:
+LI: Graphs
+LI: BI tree
+LI: Host/service labels
+LI: Inventory trees
+
+Some of these are also not JSON exportable, ie.:
+LI: Graphs
+
+These columns are now exported with the constant strings "NOT_CSV_EXPORTABLE"
+and "NOT_JSON_EXPORTABLE".

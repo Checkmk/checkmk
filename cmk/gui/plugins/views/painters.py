@@ -15,7 +15,7 @@ import cmk.utils.paths
 import cmk.utils.version as cmk_version
 from cmk.utils.defines import short_host_state_name, short_service_state_name
 from cmk.utils.render import approx_age
-from cmk.utils.type_defs import Timestamp
+from cmk.utils.type_defs import Labels, Timestamp
 
 import cmk.gui.metrics as metrics
 import cmk.gui.sites as sites
@@ -37,11 +37,13 @@ from cmk.gui.plugins.views.icons.utils import (
 )
 from cmk.gui.plugins.views.utils import (
     Cell,
+    CSVExportError,
     format_plugin_output,
     get_label_sources,
     get_perfdata_nth_value,
     get_tag_groups,
     is_stale,
+    JSONExportError,
     paint_age,
     paint_host_list,
     paint_nagiosflag,
@@ -1431,6 +1433,12 @@ class PainterSvcPnpgraph(Painter):
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_time_graph_cmk(row, cell)
 
+    def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
+        raise CSVExportError()
+
+    def export_for_json(self, row: Row, cell: Cell) -> object:
+        raise JSONExportError()
+
 
 @painter_registry.register
 class PainterCheckManpage(Painter):
@@ -2400,6 +2408,12 @@ class PainterHostPnpgraph(Painter):
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_time_graph_cmk(row, cell)
+
+    def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
+        raise CSVExportError()
+
+    def export_for_json(self, row: Row, cell: Cell) -> object:
+        raise JSONExportError()
 
 
 @painter_registry.register
@@ -5104,16 +5118,22 @@ class PainterHostLabels(Painter):
     def sorter(self) -> SorterName:
         return "host_labels"
 
-    def render(self, row: Row, cell: Cell) -> CellSpec:
-        if html.is_api_call():
-            return "", get_labels(row, "host")
+    def _compute_data(self, row: Row, cell: Cell) -> Labels:
+        return get_labels(row, "host")
 
+    def render(self, row: Row, cell: Cell) -> CellSpec:
         return "", render_labels(
-            get_labels(row, "host"),
+            self._compute_data(row, cell),
             "host",
             with_links=True,
             label_sources=get_label_sources(row, "host"),
         )
+
+    def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
+        raise CSVExportError()
+
+    def export_for_json(self, row: Row, cell: Cell) -> Labels:
+        return self._compute_data(row, cell)
 
 
 @painter_registry.register
@@ -5136,16 +5156,22 @@ class PainterServiceLabels(Painter):
     def sorter(self) -> SorterName:
         return "service_labels"
 
-    def render(self, row: Row, cell: Cell) -> CellSpec:
-        if html.is_api_call():
-            return "", get_labels(row, "service")
+    def _compute_data(self, row: Row, cell: Cell) -> Labels:
+        return get_labels(row, "service")
 
+    def render(self, row: Row, cell: Cell) -> CellSpec:
         return "", render_labels(
-            get_labels(row, "service"),
+            self._compute_data(row, cell),
             "service",
             with_links=True,
             label_sources=get_label_sources(row, "service"),
         )
+
+    def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
+        raise CSVExportError()
+
+    def export_for_json(self, row: Row, cell: Cell) -> Labels:
+        return self._compute_data(row, cell)
 
 
 @painter_registry.register

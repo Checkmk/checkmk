@@ -59,6 +59,7 @@ from cmk.gui.plugins.views.utils import (
     ABCDataSource,
     Cell,
     cmp_simple_number,
+    CSVExportError,
     data_source_registry,
     declare_1to1_sorter,
     display_options,
@@ -212,13 +213,16 @@ class PainterInventoryTree(Painter):
     def load_inv(self):
         return True
 
-    def render(self, row: Row, cell: Cell) -> CellSpec:
+    def _compute_data(self, row: Row, cell: Cell) -> Optional[StructuredDataNode]:
         try:
             _validate_inventory_tree_uniqueness(row)
         except MultipleInventoryTreesError:
-            return "", ""
+            return None
 
-        if not isinstance(tree := row.get("host_inventory"), StructuredDataNode):
+        return row.get("host_inventory")
+
+    def render(self, row: Row, cell: Cell) -> CellSpec:
+        if not isinstance(tree := self._compute_data(row, cell), StructuredDataNode):
             return "", ""
 
         painter_options = PainterOptions.get_instance()
@@ -233,6 +237,16 @@ class PainterInventoryTree(Painter):
             code = HTML(output_funnel.drain())
 
         return "invtree", code
+
+    def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
+        raise CSVExportError()
+
+    def export_for_json(self, row: Row, cell: Cell) -> dict:
+        return (
+            tree.serialize()
+            if isinstance(tree := self._compute_data(row, cell), StructuredDataNode)
+            else {}
+        )
 
 
 class ABCRowTable(RowTable):
@@ -1066,24 +1080,32 @@ def _register_node_painter(
             # not look good for the HW/SW inventory tree
             "printable": False,
             "load_inv": True,
-            "paint": lambda row: _paint_host_inventory_tree(row, inventory_path, hints),
             "sorter": name,
+            "paint": lambda row: _paint_host_inventory_tree(row, inventory_path, hints),
+            "export_for_csv": lambda row, cell: _export_node_for_csv(),
+            "export_for_json": lambda row, cell: _export_node_as_json(row, inventory_path),
         },
     )
+
+
+def _compute_node_painter_data(
+    row: Row, inventory_path: inventory.InventoryPath
+) -> Optional[StructuredDataNode]:
+    try:
+        _validate_inventory_tree_uniqueness(row)
+    except MultipleInventoryTreesError:
+        return None
+
+    if not isinstance(tree := row.get("host_inventory"), StructuredDataNode):
+        return None
+
+    return tree.get_node(inventory_path.path)
 
 
 def _paint_host_inventory_tree(
     row: Row, inventory_path: inventory.InventoryPath, hints: DisplayHints
 ) -> CellSpec:
-    try:
-        _validate_inventory_tree_uniqueness(row)
-    except MultipleInventoryTreesError:
-        return "", ""
-
-    if not isinstance(tree := row.get("host_inventory"), StructuredDataNode):
-        return "", ""
-
-    if (node := tree.get_node(inventory_path.path)) is None:
+    if not (node := _compute_node_painter_data(row, inventory_path)):
         return "", ""
 
     painter_options = PainterOptions.get_instance()
@@ -1098,6 +1120,14 @@ def _paint_host_inventory_tree(
         code = HTML(output_funnel.drain())
 
     return "invtree", code
+
+
+def _export_node_for_csv() -> str | HTML:
+    raise CSVExportError()
+
+
+def _export_node_as_json(row: Row, inventory_path: inventory.InventoryPath) -> dict:
+    return node.serialize() if (node := _compute_node_painter_data(row, inventory_path)) else {}
 
 
 def _declare_inv_column(
@@ -1135,8 +1165,10 @@ def _declare_inv_column(
             ),
             "printable": True,
             "load_inv": True,
-            "paint": lambda row: _paint_host_inventory_attribute(row, inventory_path, hint),
             "sorter": name,
+            "paint": lambda row: _paint_host_inventory_attribute(row, inventory_path, hint),
+            "export_for_csv": lambda row, cell: _export_attribute_for_csv(row, inventory_path),
+            "export_for_json": lambda row, cell: _export_attribute_as_json(row, inventory_path),
         },
     )
 
@@ -1156,28 +1188,30 @@ def _declare_inv_column(
     filter_registry.register(hint.make_filter(name, inventory_path))
 
 
-def _cmp_inventory_node(
-    a: Dict[str, StructuredDataNode],
-    b: Dict[str, StructuredDataNode],
-    inventory_path: inventory.InventoryPath,
-) -> int:
-    val_a = inventory.get_attribute(a["host_inventory"], inventory_path)
-    val_b = inventory.get_attribute(b["host_inventory"], inventory_path)
-    return _decorate_sort_func(_cmp_inv_generic)(val_a, val_b)
+def _compute_attribute_painter_data(
+    row: Row, inventory_path: inventory.InventoryPath
+) -> None | str | int | float:
+    try:
+        _validate_inventory_tree_uniqueness(row)
+    except MultipleInventoryTreesError:
+        return None
+
+    if not isinstance(tree := row.get("host_inventory"), StructuredDataNode):
+        return None
+
+    if (node := tree.get_node(inventory_path.path)) is None:
+        return None
+
+    if inventory_path.key in node.attributes.pairs:
+        return node.attributes.pairs[inventory_path.key]
+
+    return None
 
 
 def _paint_host_inventory_attribute(
     row: Row, inventory_path: inventory.InventoryPath, hint: AttributeDisplayHint
 ) -> CellSpec:
-    try:
-        _validate_inventory_tree_uniqueness(row)
-    except MultipleInventoryTreesError:
-        return "", ""
-
-    if not isinstance(tree := row.get("host_inventory"), StructuredDataNode):
-        return "", ""
-
-    if (node := tree.get_node(inventory_path.path)) is None:
+    if (attribute_data := _compute_attribute_painter_data(row, inventory_path)) is None:
         return "", ""
 
     painter_options = PainterOptions.get_instance()
@@ -1188,15 +1222,32 @@ def _paint_host_inventory_attribute(
     )
 
     with output_funnel.plugged():
-        if inventory_path.key in node.attributes.pairs:
-            tree_renderer.show_attribute(
-                node.attributes.pairs[inventory_path.key],
-                hint,
-            )
-
+        tree_renderer.show_attribute(attribute_data, hint)
         code = HTML(output_funnel.drain())
 
     return "", code
+
+
+def _export_attribute_for_csv(row: Row, inventory_path: inventory.InventoryPath) -> str | HTML:
+    return (
+        "" if (data := _compute_attribute_painter_data(row, inventory_path)) is None else str(data)
+    )
+
+
+def _export_attribute_as_json(
+    row: Row, inventory_path: inventory.InventoryPath
+) -> None | str | int | float:
+    return _compute_attribute_painter_data(row, inventory_path)
+
+
+def _cmp_inventory_node(
+    a: Dict[str, StructuredDataNode],
+    b: Dict[str, StructuredDataNode],
+    inventory_path: inventory.InventoryPath,
+) -> int:
+    val_a = inventory.get_attribute(a["host_inventory"], inventory_path)
+    val_b = inventory.get_attribute(b["host_inventory"], inventory_path)
+    return _decorate_sort_func(_cmp_inv_generic)(val_a, val_b)
 
 
 # .
@@ -2043,13 +2094,16 @@ class PainterInvhistDelta(Painter):
     def columns(self) -> Sequence[ColumnName]:
         return ["invhist_delta", "invhist_time"]
 
-    def render(self, row: Row, cell: Cell) -> CellSpec:
+    def _compute_data(self, row: Row, cell: Cell) -> Optional[StructuredDataNode]:
         try:
             _validate_inventory_tree_uniqueness(row)
         except MultipleInventoryTreesError:
-            return "", ""
+            return None
 
-        if not isinstance(tree := row.get("invhist_delta"), StructuredDataNode):
+        return row.get("invhist_delta")
+
+    def render(self, row: Row, cell: Cell) -> CellSpec:
+        if not isinstance(tree := self._compute_data(row, cell), StructuredDataNode):
             return "", ""
 
         tree_renderer = DeltaNodeRenderer(
@@ -2063,6 +2117,16 @@ class PainterInvhistDelta(Painter):
             code = HTML(output_funnel.drain())
 
         return "invtree", code
+
+    def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
+        raise CSVExportError()
+
+    def export_for_json(self, row: Row, cell: Cell) -> dict:
+        return (
+            tree.serialize()
+            if isinstance(tree := self._compute_data(row, cell), StructuredDataNode)
+            else {}
+        )
 
 
 def _paint_invhist_count(row: Row, what: str) -> CellSpec:

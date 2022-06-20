@@ -170,7 +170,7 @@ def get_filesystem_levels(  # pylint: disable=too-many-branches
      'trend_perfdata': True,
      'trend_range': 24}
     >>> pp(get_filesystem_levels(123, {"levels": (10,20)}))
-    {'inodes_levels': (None, None),
+    {'inodes_levels': (10.0, 5.0),
      'levels': (10, 20),
      'levels_low': (50.0, 60.0),
      'levels_mb': (9.999999999999998, 19.999999999999996),
@@ -238,13 +238,8 @@ def get_filesystem_levels(  # pylint: disable=too-many-branches
 
     levels["levels_text"] = _check_summary_text(warn, crit, warn_scaled, crit_scaled)
 
-    inodes_levels = params.get("inodes_levels")
-    if inodes_levels:
-        if isinstance(levels["inodes_levels"], tuple):
-            warn, crit = levels["inodes_levels"]
-        levels["inodes_levels"] = warn, crit
-    else:
-        levels["inodes_levels"] = (None, None)
+    if levels["inodes_levels"] is None:
+        levels["inodes_levels"] = None, None
 
     return levels
 

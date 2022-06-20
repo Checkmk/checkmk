@@ -330,8 +330,11 @@ def test_get_item_names(qtree: Qtree, expected_result) -> None:
                 Result(state=State.OK, summary="trend per 1 day 0 hours: +0 B"),
                 Result(state=State.OK, summary="trend per 1 day 0 hours: +0%"),
                 Metric("trend", 0.0, boundaries=(0.0, 0.000244140625)),
-                Metric("inodes_used", 99.0, boundaries=(0.0, 100.0)),
-                Result(state=State.OK, summary="Inodes used: 99, Inodes available: 1 (1.00%)"),
+                Metric("inodes_used", 99.0, levels=(90.0, 95.0), boundaries=(0.0, 100.0)),
+                Result(
+                    state=State.CRIT,
+                    summary="Inodes used: 99.00% (warn/crit at 90.00%/95.00%), Inodes available: 1 (1.00%)",
+                ),
             ],
             id="qtree_with_inodes",
         ),

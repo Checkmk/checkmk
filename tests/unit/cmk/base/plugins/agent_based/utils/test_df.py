@@ -651,11 +651,9 @@ def test_get_filesystem_levels_magic_factor(
         pytest.param(
             {},
             {
-                "inodes_levels": (None, None),
+                "inodes_levels": (10.0, 5.0),
             },
-            id=(
-                "Levels for inodes are not configured: levels have a None value. TODO: this is a bug: defaults should be used."
-            ),
+            id=("Levels for inodes are not configured: defaults are used."),
         ),
     ],
 )

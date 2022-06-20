@@ -198,7 +198,7 @@ def value_store_fixture(monkeypatch):
                 ),
                 Result(
                     state=state.CRIT,
-                    summary="26.47% used (84.7 of 320 MiB, warn/crit at 10.00%/15.00%)",
+                    summary="26.47% used (84.7 of 320 MiB, warn/crit at 10.00%/15.00% used)",
                 ),
                 Metric("growth", -4470.553049074118),
                 Result(

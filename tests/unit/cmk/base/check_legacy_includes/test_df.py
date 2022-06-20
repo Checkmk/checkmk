@@ -44,7 +44,7 @@ from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_LEVELS
             [
                 (
                     0,
-                    "42.71% used (42.8 of 100 GiB)",
+                    "Used: 42.71% - 42.8 GiB of 100 GiB",
                     [
                         ("fs_used", 43841, 82124.0, 92389.5, 0, 102655),
                         ("fs_size", 102655),
@@ -73,7 +73,7 @@ from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_LEVELS
             [
                 (
                     0,
-                    "42.71% used (42.8 of 100 GiB)",
+                    "Used: 42.71% - 42.8 GiB of 100 GiB",
                     [
                         ("fs_used", 43841, 82124.0, 92389.5, 0, 102655),
                         ("fs_size", 102655),
@@ -108,7 +108,7 @@ from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_LEVELS
             [
                 (
                     0,
-                    "42.71% used (42.8 of 100 GiB)",
+                    "Used: 42.71% - 42.8 GiB of 100 GiB",
                     [
                         ("fs_used", 43841, 82124.0, 92389.5, 0, 102655),
                         ("fs_size", 102655),

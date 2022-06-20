@@ -462,7 +462,7 @@ def make_test_df_params():
             [
                 (
                     0,
-                    "75.79% used (104 of 137 GiB)",
+                    "Used: 75.79% - 104 GiB of 137 GiB",
                     [
                         (
                             "fs_used",
@@ -492,7 +492,7 @@ def make_test_df_params():
             [
                 (
                     0,
-                    "75.79% used (104 of 137 GiB)",
+                    "Used: 75.79% - 104 GiB of 137 GiB",
                     [
                         (
                             "fs_used",
@@ -522,7 +522,7 @@ def make_test_df_params():
             [
                 (
                     0,
-                    "1.82% used (182 MiB of 9.77 GiB)",
+                    "Used: 1.82% - 182 MiB of 9.77 GiB",
                     [
                         ("fs_used", 181.890625, 8000.621875, 9000.699609375, 0, 10000.77734375),
                         ("fs_size", 10000.77734375),
@@ -538,7 +538,7 @@ def make_test_df_params():
             [
                 (
                     0,
-                    "1.82% used (182 MiB of 9.77 GiB)",
+                    "Used: 1.82% - 182 MiB of 9.77 GiB",
                     [
                         ("fs_used", 181.890625, 8000.621875, 9000.699609375, 0, 10000.77734375),
                         ("fs_size", 10000.77734375, None, None, None, None),
@@ -554,7 +554,7 @@ def make_test_df_params():
             [
                 (
                     0,
-                    "21.13% used (4.23 of 20.0 GiB)",
+                    "Used: 21.13% - 4.23 GiB of 20.0 GiB",
                     [
                         ("fs_used", 4327.29296875, 16383.2, 18431.1, 0, 20479.0),
                         ("fs_size", 20479.0, None, None, None, None),
@@ -577,7 +577,7 @@ def make_test_df_params():
                 (0, "[/dev/sda1]"),
                 (
                     0,
-                    "21.13% used (4.23 of 20.0 GiB)",
+                    "Used: 21.13% - 4.23 GiB of 20.0 GiB",
                     [
                         ("fs_used", 4327.29296875, 16383.2, 18431.1, 0, 20479.0),
                         ("fs_size", 20479.0, None, None, None, None),
@@ -593,7 +593,7 @@ def make_test_df_params():
             [
                 (
                     0,
-                    "21.13% used (4.23 of 20.0 GiB)",
+                    "Used: 21.13% - 4.23 GiB of 20.0 GiB",
                     [
                         ("fs_used", 4327.29296875, 16383.2, 18431.1, 0, 20479.0),
                         ("fs_size", 20479.0, None, None, None, None),
@@ -612,7 +612,7 @@ def make_test_df_params():
             [
                 (
                     0,
-                    "21.13% used (4.23 of 20.0 GiB)",
+                    "Used: 21.13% - 4.23 GiB of 20.0 GiB",
                     [
                         ("fs_used", 4327.29296875, 16383.2, 18431.1, 0, 20479.0),
                         ("fs_size", 20479.0, None, None, None, None),
@@ -1053,7 +1053,7 @@ def test_df_discovery_groups_with_parse(
             [
                 (
                     2,
-                    "90.00% used (189 of 210 KiB, warn/crit at 80.00%/90.00%)",
+                    "Used: 90.00% - 189 KiB of 210 KiB (warn/crit at 80.00%/90.00% used)",
                     [
                         ("fs_used", 0.1845703125, 0.1640625, 0.1845703125, 0, 0.205078125),
                         ("fs_size", 0.205078125, None, None, None, None),
@@ -1072,7 +1072,7 @@ def test_df_discovery_groups_with_parse(
             [
                 (
                     2,
-                    "90.00% used (189 of 210 KiB, warn/crit at 80.00%/90.00%)",
+                    "Used: 90.00% - 189 KiB of 210 KiB (warn/crit at 80.00%/90.00% used)",
                     [
                         ("fs_used", 0.1845703125, 0.1640625, 0.1845703125, 0, 0.205078125),
                         ("fs_size", 0.205078125, None, None, None, None),
@@ -1091,7 +1091,7 @@ def test_df_discovery_groups_with_parse(
             [
                 (
                     2,
-                    "90.00% used (189 of 210 KiB, warn/crit at 80.00%/90.00%)",
+                    "Used: 90.00% - 189 KiB of 210 KiB (warn/crit at 80.00%/90.00% used)",
                     [
                         ("fs_used", 0.1845703125, 0.1640625, 0.1845703125, 0, 0.205078125),
                         ("fs_size", 0.205078125, None, None, None, None),
@@ -1132,7 +1132,7 @@ def test_df_discovery_groups_with_parse(
             [
                 (
                     2,
-                    "90.00% used (207 of 230 KiB, warn/crit at 80.00%/90.00%)",
+                    "Used: 90.00% - 207 KiB of 230 KiB (warn/crit at 80.00%/90.00% used)",
                     [
                         ("fs_used", 0.2021484375, 0.1796875, 0.2021484375, 0, 0.224609375),
                         ("fs_size", 0.224609375, None, None, None, None),
@@ -1154,7 +1154,7 @@ def test_df_discovery_groups_with_parse(
             [
                 (
                     2,
-                    "90.00% used (207 of 230 KiB, warn/crit at 80.00%/90.00%)",
+                    "Used: 90.00% - 207 KiB of 230 KiB (warn/crit at 80.00%/90.00% used)",
                     [
                         ("fs_used", 0.2021484375, 0.1796875, 0.2021484375, 0, 0.224609375),
                         ("fs_size", 0.224609375, None, None, None, None),

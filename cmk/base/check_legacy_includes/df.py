@@ -229,14 +229,7 @@ def df_check_filesystem_single_coroutine(
     used_max_hr = get_bytes_human_readable(used_max * 1024**2)
     used_perc_hr = get_percent_human_readable(100.0 * used_mb / used_max)
 
-    # If both numbers end with the same unit, then drop the first one
-    if (unit_used_hr := used_hr.split(" ", maxsplit=1,)[-1]) == used_max_hr.split(
-        " ",
-        maxsplit=1,
-    )[-1]:
-        used_hr = used_hr[: used_hr.find(unit_used_hr)].rstrip()
-
-    infotext = ["%s used (%s of %s)" % (used_perc_hr, used_hr, used_max_hr)]
+    infotext = ["Used: %s - %s of %s" % (used_perc_hr, used_hr, used_max_hr)]
 
     if warn_mb < 0.0:
         # Negative levels, so user configured thresholds based on space left. Calculate the
@@ -274,7 +267,7 @@ def df_check_filesystem_single_coroutine(
     if subtract_reserved or show_reserved:
         perfdata.append(("reserved", reserved_mb))
 
-    yield status, ", ".join(infotext).replace("), (", ", "), perfdata
+    yield status, ", ".join(infotext).replace(", (", " ("), perfdata
 
     if levels.get("trend_range"):
         trend_state, trend_text, trend_perf = size_trend(

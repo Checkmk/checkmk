@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import fnmatch
+from enum import Enum
 from typing import (
     Any,
     Callable,
@@ -49,6 +50,32 @@ FSBlocks = Sequence[FSBlock]
 BlocksSubsection = Sequence[DfBlock]
 InodesSubsection = Sequence[DfInode]
 Bytes = NewType("Bytes", int)
+Percent = NewType("Percent", float)
+
+
+class RenderOptions(Enum):
+    bytes_ = "bytes"
+    percent = "percent"
+
+
+class LevelsFreeSpace(NamedTuple):
+    warn_percent: Percent
+    crit_percent: Percent
+    warn_absolute: Bytes
+    crit_absolute: Bytes
+    render_as: RenderOptions
+
+
+class LevelsUsedSpace(NamedTuple):
+    warn_percent: Percent
+    crit_percent: Percent
+    warn_absolute: Bytes
+    crit_absolute: Bytes
+    render_as: RenderOptions
+
+
+FilesystemLevels = LevelsFreeSpace | LevelsUsedSpace
+
 
 DfSection = tuple[BlocksSubsection, InodesSubsection]
 
@@ -85,49 +112,141 @@ def _determine_levels_for_filesystem(levels: list, filesystem_size: Bytes) -> Tu
 
 
 def _adjust_levels(
-    warn: float,
-    crit: float,
+    levels: FilesystemLevels,
     factor: float,
     filesystem_size: Bytes,
     reference_size: Bytes,
     minimum_levels: Tuple[float, float],
-) -> Tuple[float, float]:
+) -> FilesystemLevels:
     hgb_size = filesystem_size / reference_size
     felt_size = hgb_size**factor
     scale = felt_size / hgb_size
-    warn_scaled = 100 - ((100 - warn) * scale)
-    crit_scaled = 100 - ((100 - crit) * scale)
+    warn_scaled = 100 - ((100 - levels.warn_percent) * scale)
+    crit_scaled = 100 - ((100 - levels.crit_percent) * scale)
 
     # Make sure, levels do never get too low due to magic factor
     lowest_warning_level, lowest_critical_level = minimum_levels
-    warn_scaled = max(warn_scaled, lowest_warning_level)
-    crit_scaled = max(crit_scaled, lowest_critical_level)
+    warn_scaled = Percent(max(warn_scaled, lowest_warning_level))
+    crit_scaled = Percent(max(crit_scaled, lowest_critical_level))
 
-    return warn_scaled, crit_scaled
+    warn_scaled_absolute = _to_absolute(warn_scaled, filesystem_size)
+    crit_scaled_absolute = _to_absolute(crit_scaled, filesystem_size)
+
+    if isinstance(levels, LevelsFreeSpace):
+        return LevelsFreeSpace(
+            warn_percent=warn_scaled,
+            crit_percent=crit_scaled,
+            warn_absolute=warn_scaled_absolute,
+            crit_absolute=crit_scaled_absolute,
+            render_as=levels.render_as,
+        )
+
+    return LevelsUsedSpace(
+        warn_percent=warn_scaled,
+        crit_percent=crit_scaled,
+        warn_absolute=warn_scaled_absolute,
+        crit_absolute=crit_scaled_absolute,
+        render_as=levels.render_as,
+    )
 
 
-def _check_summary_text(
-    warn: float | int, crit: float | int, warn_scaled: float, crit_scaled: float
-) -> str:
-    if isinstance(warn, float):
-        if warn_scaled < 0 and crit_scaled < 0:
-            label = "warn/crit at free space below"
-            warn_scaled *= -1
-            crit_scaled *= -1
-        else:
-            label = "warn/crit at"
-        return f"({label} {render.percent(warn_scaled)}/{render.percent(crit_scaled)})"
-    warn *= 1024 * 1024
-    crit *= 1024 * 1024
-    if warn < 0 and crit < 0:
-        label = "warn/crit at free space below"
-        warn *= -1
-        crit *= -1
+def _check_summary_text(levels: FilesystemLevels) -> str:
+    # TODO: this is the same as the functionality provided in memory.py!
+
+    if levels.render_as is RenderOptions.percent:
+        applied_levels = (
+            f"{render.percent(abs(levels.warn_percent))}/{render.percent(abs(levels.crit_percent))}"
+        )
+    elif levels.render_as is RenderOptions.bytes_:
+        applied_levels = (
+            f"{render.bytes(abs(levels.warn_absolute))}/{render.bytes(abs(levels.crit_absolute))}"
+        )
     else:
-        label = "warn/crit at"
-    warn_hr = render.bytes(warn)
-    crit_hr = render.bytes(crit)
-    return f"({label} {warn_hr}/{crit_hr})"
+        raise TypeError(f"Unsupported render type: {repr(levels.render_as)}")
+
+    if isinstance(levels, LevelsFreeSpace):
+        return f"(warn/crit below {applied_levels} free)"
+
+    return f"(warn/crit at {applied_levels} used)"
+
+
+def _is_free_space_level(warn: int | float, crit: int | float) -> bool:
+    """
+    >>> _is_free_space_level(-1, -1)
+    True
+    >>> _is_free_space_level(0, 0)
+    False
+    >>> _is_free_space_level(1, 1)
+    False
+    """
+    if warn < 0 and crit < 0:
+        return True
+    if warn >= 0 and crit >= 0:
+        return False
+    raise TypeError(
+        f"Unable to determine whether levels are for used or free space, got {repr((warn, crit))}"
+    )
+
+
+def _to_absolute(level: Percent, size: Bytes) -> Bytes:
+    """
+    >>> _to_absolute(80.0, 200)
+    160
+    """
+    return Bytes(int(size * (level / 100)))
+
+
+def _to_percent(level: Bytes, size: Bytes) -> Percent:
+    """
+    >>> _to_percent(160, 200)
+    80.0
+    """
+    return Percent((level / size) * 100.0)
+
+
+def _parse_free_used_levels(levels: tuple, filesystem_size: Bytes) -> FilesystemLevels:
+    warn, crit = levels
+    if isinstance(warn, int) and isinstance(crit, int):
+        warn_absolute = Bytes(warn * 1024 * 1024)
+        crit_absolute = Bytes(crit * 1024 * 1024)
+        warn_percent = _to_percent(warn_absolute, filesystem_size)
+        crit_percent = _to_percent(crit_absolute, filesystem_size)
+        render_as = RenderOptions.bytes_
+    elif isinstance(warn, float) and isinstance(crit, float):
+        warn_percent = Percent(warn)
+        crit_percent = Percent(crit)
+        warn_absolute = _to_absolute(warn_percent, filesystem_size)
+        crit_absolute = _to_absolute(crit_percent, filesystem_size)
+        render_as = RenderOptions.percent
+    else:
+        raise TypeError(
+            "Expected tuple of int or tuple of float for filesystem levels, got {type(warn).__name__}/{type(crit).__name__}"
+        )
+
+    if _is_free_space_level(warn, crit):
+        return LevelsFreeSpace(
+            warn_percent=warn_percent,
+            crit_percent=crit_percent,
+            warn_absolute=warn_absolute,
+            crit_absolute=crit_absolute,
+            render_as=render_as,
+        )
+    return LevelsUsedSpace(
+        warn_percent=warn_percent,
+        crit_percent=crit_percent,
+        warn_absolute=warn_absolute,
+        crit_absolute=crit_absolute,
+        render_as=render_as,
+    )
+
+
+def _parse_filesystem_levels(levels: object, filesystem_size: Bytes) -> FilesystemLevels:
+    if isinstance(levels, tuple):
+        return _parse_free_used_levels(levels, filesystem_size)
+    if isinstance(levels, list):
+        actual_levels = _determine_levels_for_filesystem(levels, filesystem_size)
+        return _parse_free_used_levels(actual_levels, filesystem_size)
+    raise TypeError(f"Expected list or tuple for filesystem levels, got {type(levels).__name__}")
 
 
 def savefloat(raw: Any) -> float:
@@ -162,7 +281,7 @@ def get_filesystem_levels(  # pylint: disable=too-many-branches
      'levels': (80.0, 90.0),
      'levels_low': (50.0, 60.0),
      'levels_mb': (1010892.8, 1137254.4),
-     'levels_text': '(warn/crit at 80.00%/90.00%)',
+     'levels_text': '(warn/crit at 80.00%/90.00% used)',
      'magic_normsize': 20,
      'show_inodes': 'onlow',
      'show_levels': 'onmagic',
@@ -174,7 +293,7 @@ def get_filesystem_levels(  # pylint: disable=too-many-branches
      'levels': (10, 20),
      'levels_low': (50.0, 60.0),
      'levels_mb': (9.999999999999998, 19.999999999999996),
-     'levels_text': '(warn/crit at 10.0 MiB/20.0 MiB)',
+     'levels_text': '(warn/crit at 10.0 MiB/20.0 MiB used)',
      'magic_normsize': 20,
      'show_inodes': 'onlow',
      'show_levels': 'onmagic',
@@ -189,11 +308,7 @@ def get_filesystem_levels(  # pylint: disable=too-many-branches
     # Override default levels with params
     levels: Dict[str, Any] = {**FILESYSTEM_DEFAULT_LEVELS, **params}
 
-    # Determine real warn, crit levels
-    if isinstance(levels["levels"], tuple):
-        warn, crit = levels["levels"]
-    else:
-        warn, crit = _determine_levels_for_filesystem(levels["levels"], filesystem_size)
+    filesystem_levels = _parse_filesystem_levels(levels["levels"], filesystem_size)
 
     # Take into account magic scaling factor (third optional argument
     # in check params). A factor of 1.0 changes nothing. Factor should
@@ -205,38 +320,20 @@ def get_filesystem_levels(  # pylint: disable=too-many-branches
     # We need a way to disable the magic factor so check
     # if magic not 1.0
     if magic and magic != 1.0:
-        # convert warn/crit to percentage
-        if not isinstance(warn, float):
-            warn = savefloat(warn * mega / float(size_gb * giga)) * 100
-        if not isinstance(crit, float):
-            crit = savefloat(crit * mega / float(size_gb * giga)) * 100
-
-        warn_scaled, crit_scaled = _adjust_levels(
-            warn=warn,
-            crit=crit,
+        filesystem_levels = _adjust_levels(
+            filesystem_levels,
             factor=magic,
             filesystem_size=filesystem_size,
             reference_size=Bytes(levels["magic_normsize"] * giga),
             minimum_levels=levels["levels_low"],
         )
 
-    else:
-        if not isinstance(warn, float):
-            warn_scaled = savefloat(warn * mega / float(size_gb * giga)) * 100
-        else:
-            warn_scaled = warn
-
-        if not isinstance(crit, float):
-            crit_scaled = savefloat(crit * mega / float(size_gb * giga)) * 100
-        else:
-            crit_scaled = crit
-
     size_mb = size_gb * 1024
-    warn_mb = savefloat(size_mb * warn_scaled / 100)
-    crit_mb = savefloat(size_mb * crit_scaled / 100)
+    warn_mb = savefloat(size_mb * filesystem_levels.warn_percent / 100)
+    crit_mb = savefloat(size_mb * filesystem_levels.crit_percent / 100)
     levels["levels_mb"] = (warn_mb, crit_mb)
 
-    levels["levels_text"] = _check_summary_text(warn, crit, warn_scaled, crit_scaled)
+    levels["levels_text"] = _check_summary_text(filesystem_levels)
 
     if levels["inodes_levels"] is None:
         levels["inodes_levels"] = None, None

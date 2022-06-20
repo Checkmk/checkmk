@@ -345,7 +345,7 @@ def test_mountpoints_in_group(mplist, patterns_include, patterns_exclude, expect
             {
                 "levels": (80.0, 90.0),
                 "levels_mb": (8 * 1024, 9 * 1024),
-                "levels_text": "(warn/crit at 80.00%/90.00%)",
+                "levels_text": "(warn/crit at 80.00%/90.00% used)",
             },
             id="Levels expressed in percent (float) of used space",
         ),
@@ -357,7 +357,7 @@ def test_mountpoints_in_group(mplist, patterns_include, patterns_exclude, expect
             {
                 "levels": (-20.0, -10.0),
                 "levels_mb": ((-2) * 1024, (-1) * 1024),
-                "levels_text": "(warn/crit at free space below 20.00%/10.00%)",
+                "levels_text": "(warn/crit below 20.00%/10.00% free)",
             },
             id="Levels expressed in percent (float) of free space",
         ),
@@ -369,7 +369,7 @@ def test_mountpoints_in_group(mplist, patterns_include, patterns_exclude, expect
             {
                 "levels": (8 * 1024, 9 * 1024),
                 "levels_mb": (8 * 1024, 9 * 1024),
-                "levels_text": "(warn/crit at 8.00 GiB/9.00 GiB)",
+                "levels_text": "(warn/crit at 8.00 GiB/9.00 GiB used)",
             },
             id="Levels expressed in MB (int) of used space",
         ),
@@ -381,7 +381,7 @@ def test_mountpoints_in_group(mplist, patterns_include, patterns_exclude, expect
             {
                 "levels": ((-2) * 1024, (-1) * 1024),
                 "levels_mb": ((-2) * 1024, (-1) * 1024),
-                "levels_text": "(warn/crit at free space below 2.00 GiB/1.00 GiB)",
+                "levels_text": "(warn/crit below 2.00 GiB/1.00 GiB free)",
             },
             id="Levels expressed in MB (int) of free space",
         ),
@@ -399,7 +399,7 @@ def test_mountpoints_in_group(mplist, patterns_include, patterns_exclude, expect
                     (15.0 * 1024**3, (60.0, 70.0)),
                 ],
                 "levels_mb": (4 * 1024, 5 * 1024),
-                "levels_text": "(warn/crit at 4.00 GiB/5.00 GiB)",
+                "levels_text": "(warn/crit at 4.00 GiB/5.00 GiB used)",
             },
             id=(
                 "Different levels for different sizes of filesystems. "
@@ -423,7 +423,7 @@ def test_mountpoints_in_group(mplist, patterns_include, patterns_exclude, expect
                     (5.0 * 1024**3, (4 * 1024, 5 * 1024)),
                 ],
                 "levels_mb": (4 * 1024, 5 * 1024),
-                "levels_text": "(warn/crit at 4.00 GiB/5.00 GiB)",
+                "levels_text": "(warn/crit at 4.00 GiB/5.00 GiB used)",
             },
             id=("The order of filesystem sizes in the list of levels does not matter."),
         ),
@@ -441,7 +441,7 @@ def test_mountpoints_in_group(mplist, patterns_include, patterns_exclude, expect
                     (10.0 * 1024**3, (60.0, 70.0)),
                 ],
                 "levels_mb": (4 * 1024, 5 * 1024),
-                "levels_text": "(warn/crit at 4.00 GiB/5.00 GiB)",
+                "levels_text": "(warn/crit at 4.00 GiB/5.00 GiB used)",
             },
             id=(
                 "The levels of the filesystem size 10GB are not applied to "
@@ -464,7 +464,7 @@ def test_mountpoints_in_group(mplist, patterns_include, patterns_exclude, expect
                     (10.0 * 1024**3, (60.0, 70.0)),
                 ],
                 "levels_mb": (1 * 1024, 1 * 1024),
-                "levels_text": "(warn/crit at 100.00%/100.00%)",
+                "levels_text": "(warn/crit at 100.00%/100.00% used)",
             },
             id=(
                 "If the filesystem size cannot be determined, levels revert to 100% "
@@ -502,7 +502,7 @@ def test_get_filesystem_levels(
                     80.0 * 1024,
                     90.0 * 1024,
                 ),
-                "levels_text": "(warn/crit at 80.00%/90.00%)",
+                "levels_text": "(warn/crit at 80.00%/90.00% used)",
             },
             id=(
                 "Provided levels are applied without adjustment when reference size (aka 'magic normsize') is the same as filesystem size."
@@ -522,7 +522,7 @@ def test_get_filesystem_levels(
                     80.0 * 1024,
                     90.0 * 1024,
                 ),
-                "levels_text": "(warn/crit at 80.00%/90.00%)",
+                "levels_text": "(warn/crit at 80.00%/90.00% used)",
             },
             id=("Provided levels are applied without adjustment when MF is exactly equal 1."),
         ),
@@ -540,7 +540,7 @@ def test_get_filesystem_levels(
                     85.0 * 1024,
                     93.0 * 1024,
                 ),
-                "levels_text": "(warn/crit at 85.50%/92.75%)",
+                "levels_text": "(warn/crit at 85.50%/92.75% used)",
             },
             id=("Magic factor adjusts levels."),
         ),
@@ -561,7 +561,7 @@ def test_get_filesystem_levels(
                     85 * 1024,
                     93 * 1024,
                 ),
-                "levels_text": "(warn/crit at 85.50%/92.75%)",
+                "levels_text": "(warn/crit at 85.5 GiB/92.8 GiB used)",
             },
             id=("Magic factor adjusts absolute levels."),
         ),
@@ -579,7 +579,7 @@ def test_get_filesystem_levels(
                     60 * 1024,
                     70 * 1024,
                 ),
-                "levels_text": "(warn/crit at 60.00%/70.00%)",
+                "levels_text": "(warn/crit at 60.00%/70.00% used)",
             },
             id=("Magic factor does not adjust levels below minimum levels (aka 'levels low')."),
         ),
@@ -597,7 +597,7 @@ def test_get_filesystem_levels(
                     10 * 1024,
                     20 * 1024,
                 ),
-                "levels_text": "(warn/crit at 10.00%/20.00%)",
+                "levels_text": "(warn/crit below 10.00%/20.00% free)",
             },
             id=(
                 "Minimum levels (aka 'levels low') do not make sense when levels are specified as free space. They are "

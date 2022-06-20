@@ -93,7 +93,9 @@ class FetcherType(enum.Enum):
 
     def make(self) -> Type[Fetcher]:
         """The fetcher factory."""
-        # This typing error is a false positive.  There are tests to demonstrate that.
+        # The typing error comes from the use of `Fetcher[Any]`.
+        # but we have tests to show that it still does what it
+        # is supposed to do.
         return {  # type: ignore[return-value]
             FetcherType.IPMI: IPMIFetcher,
             FetcherType.PUSH_AGENT: PushAgentFetcher,
@@ -102,18 +104,6 @@ class FetcherType(enum.Enum):
             FetcherType.SNMP: SNMPFetcher,
             FetcherType.TCP: TCPFetcher,
         }[self]
-
-    @staticmethod
-    def from_fetcher(fetcher: Union[Fetcher, Type[Fetcher]]) -> "FetcherType":
-        cls = type(fetcher) if isinstance(fetcher, Fetcher) else fetcher
-        return {
-            IPMIFetcher: FetcherType.IPMI,
-            PushAgentFetcher: FetcherType.PUSH_AGENT,
-            PiggybackFetcher: FetcherType.PIGGYBACK,
-            ProgramFetcher: FetcherType.PROGRAM,
-            SNMPFetcher: FetcherType.SNMP,
-            TCPFetcher: FetcherType.TCP,
-        }[cls]
 
     def from_json(self, serialized: Mapping[str, Any]) -> Fetcher:
         """Instantiate the fetcher from serialized data."""

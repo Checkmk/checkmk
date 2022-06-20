@@ -10,7 +10,7 @@ import socket
 from abc import ABC, abstractmethod
 from itertools import product as cartesian_product
 from pathlib import Path
-from typing import Any, List, NamedTuple, Optional, Sequence, Type, Union
+from typing import Any, List, NamedTuple, Optional, Sequence, Union
 from zlib import compress
 
 import pytest
@@ -32,7 +32,7 @@ from cmk.snmplib.type_defs import (
     SNMPTable,
 )
 
-from cmk.core_helpers import Fetcher, FetcherType, get_raw_data
+from cmk.core_helpers import FetcherType, get_raw_data
 from cmk.core_helpers import (
     PushAgentFetcher as FallbackPushAgentFetcher,  # We must test the FetcherType factory agains the fallback class, because during import we are not a CPE. Patching this during the test will make no difference...
 )
@@ -1060,8 +1060,3 @@ class TestFetcherType:
     def test_all_fetchers_tested(self) -> None:
         tested_fetcher_types = {factory for factory, cls in _FACTORIES_CLASSES}
         assert set(FetcherType) - tested_fetcher_types == {FetcherType.NONE}
-
-    @pytest.mark.parametrize("factory, cls", _FACTORIES_CLASSES)
-    def test_factory(self, factory: FetcherType, cls: Type[Fetcher]) -> None:
-        assert factory.make() is cls
-        assert factory.from_fetcher(cls) is factory

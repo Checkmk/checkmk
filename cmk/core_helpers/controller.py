@@ -163,22 +163,20 @@ def load_global_config(path: Path) -> GlobalConfig:
         )
 
 
-def _run_fetcher(fetcher: Fetcher, file_cache: FileCache, mode: Mode) -> protocol.FetcherMessage:
+def _run_fetcher(
+    fetcher_type: FetcherType, fetcher: Fetcher, file_cache: FileCache, mode: Mode
+) -> protocol.FetcherMessage:
     """Entrypoint to obtain data from fetcher objects."""
     logger.debug("Fetch from %s", fetcher)
     with CPUTracker() as tracker:
         raw_data = get_raw_data(file_cache, fetcher, mode)
 
-    return protocol.FetcherMessage.from_raw_data(
-        raw_data,
-        tracker.duration,
-        FetcherType.from_fetcher(fetcher),
-    )
+    return protocol.FetcherMessage.from_raw_data(raw_data, tracker.duration, fetcher_type)
 
 
 def _parse_config(
     config_path: ConfigPath, host_name: HostName
-) -> Iterator[Tuple[Fetcher, FileCache]]:
+) -> Iterator[Tuple[FetcherType, Fetcher, FileCache]]:
     with make_local_config_path(config_path, host_name).open() as f:
         data = json.load(f)
 
@@ -190,7 +188,9 @@ def _parse_config(
         raise LookupError("invalid config")
 
 
-def _parse_fetcher_config(data: Mapping[str, Any]) -> Iterator[Tuple[Fetcher, FileCache]]:
+def _parse_fetcher_config(
+    data: Mapping[str, Any]
+) -> Iterator[Tuple[FetcherType, Fetcher, FileCache]]:
     # Hard crash on parser errors: The interface is versioned and internal.
     # Crashing on error really *is* the best way to catch bonehead mistakes.
     for entry in data["fetchers"]:
@@ -206,21 +206,21 @@ def _parse_fetcher_config(data: Mapping[str, Any]) -> Iterator[Tuple[Fetcher, Fi
         else:
             file_cache = AgentFileCache.from_json(entry["file_cache_params"])
 
-        yield fetcher, file_cache
+        yield fetcher_type, fetcher, file_cache
 
 
 def _parse_cluster_config(
     data: Mapping[str, Any], config_path: ConfigPath
-) -> Iterator[Tuple[Fetcher, FileCache]]:
+) -> Iterator[Tuple[FetcherType, Fetcher, FileCache]]:
     global_config = load_global_config(make_global_config_path(config_path))
     for host_name in data["clusters"]["nodes"]:
-        for fetcher, file_cache in _parse_config(config_path, host_name):
+        for fetcher_type, fetcher, file_cache in _parse_config(config_path, host_name):
             file_cache.max_age = MaxAge(
                 checking=global_config.cluster_max_cachefile_age,
                 discovery=global_config.cluster_max_cachefile_age,
                 inventory=2 * global_config.cluster_max_cachefile_age,
             )
-            yield fetcher, file_cache
+            yield fetcher_type, fetcher, file_cache
 
 
 def _run_fetchers_from_file(
@@ -245,17 +245,17 @@ def _run_fetchers_from_file(
         fetchers = tuple(_parse_config(config_path, host_name))
         try:
             # fill as many messages as possible before timeout exception raised
-            for fetcher, file_cache in fetchers:
-                messages.append(_run_fetcher(fetcher, file_cache, mode))
+            for fetcher_type, fetcher, file_cache in fetchers:
+                messages.append(_run_fetcher(fetcher_type, fetcher, file_cache, mode))
         except MKTimeout as exc:
             # fill missing entries with timeout errors
             messages.extend(
                 protocol.FetcherMessage.timeout(
-                    FetcherType.from_fetcher(fetcher),
+                    fetcher_type,
                     exc,
                     Snapshot.null(),
                 )
-                for fetcher, _ in fetchers[len(messages) :]
+                for fetcher_type, _, _ in fetchers[len(messages) :]
             )
 
     if timeout_manager.signaled:

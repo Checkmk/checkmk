@@ -48,6 +48,7 @@ def fetchers(host_config: HostConfig) -> Dict[str, Any]:
             {
                 "fetcher_type": c.fetcher_type.name,
                 "fetcher_params": _fixup_caching_info(c).fetcher_configuration,
+                "file_cache_params": _fixup_caching_info(c).file_cache_configuration,
             }
             for c in make_non_cluster_sources(host_config, ipaddress)
         ]

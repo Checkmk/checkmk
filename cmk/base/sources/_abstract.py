@@ -94,6 +94,10 @@ class Source(Generic[TRawData, TRawDataSection], abc.ABC):
     def fetcher_configuration(self):
         return self._make_fetcher().to_json()
 
+    @property
+    def file_cache_configuration(self):
+        return self._make_file_cache().to_json()
+
     @final
     def fetch(self, mode: Mode) -> result.Result[TRawData, Exception]:
         return get_raw_data(self._make_file_cache(), self._make_fetcher(), mode)

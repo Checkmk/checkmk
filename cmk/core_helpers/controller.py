@@ -12,7 +12,7 @@ import sys
 import traceback
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Iterable, Iterator, List, Mapping, NamedTuple, Optional
+from typing import Any, Iterable, Iterator, List, Mapping, NamedTuple, Optional, Tuple
 
 import cmk.utils.cleanup
 from cmk.utils.config_path import ConfigPath, VersionedConfigPath
@@ -23,9 +23,10 @@ from cmk.utils.type_defs import HostName
 from cmk.utils.type_defs.protocol import Serializer
 
 from . import Fetcher, FetcherType, get_raw_data, protocol
-from .cache import MaxAge
+from .agent import AgentFileCache
+from .cache import FileCache, MaxAge
 from .crash_reporting import create_fetcher_crash_dump
-from .snmp import SNMPFetcher, SNMPPluginStore
+from .snmp import SNMPFetcher, SNMPFileCache, SNMPPluginStore
 from .type_defs import Mode
 
 logger = logging.getLogger("cmk.helper")
@@ -162,11 +163,11 @@ def load_global_config(path: Path) -> GlobalConfig:
         )
 
 
-def _run_fetcher(fetcher: Fetcher, mode: Mode) -> protocol.FetcherMessage:
+def _run_fetcher(fetcher: Fetcher, file_cache: FileCache, mode: Mode) -> protocol.FetcherMessage:
     """Entrypoint to obtain data from fetcher objects."""
     logger.debug("Fetch from %s", fetcher)
     with CPUTracker() as tracker:
-        raw_data = get_raw_data(fetcher.file_cache, fetcher, mode)
+        raw_data = get_raw_data(file_cache, fetcher, mode)
 
     return protocol.FetcherMessage.from_raw_data(
         raw_data,
@@ -175,7 +176,9 @@ def _run_fetcher(fetcher: Fetcher, mode: Mode) -> protocol.FetcherMessage:
     )
 
 
-def _parse_config(config_path: ConfigPath, host_name: HostName) -> Iterator[Fetcher]:
+def _parse_config(
+    config_path: ConfigPath, host_name: HostName
+) -> Iterator[Tuple[Fetcher, FileCache]]:
     with make_local_config_path(config_path, host_name).open() as f:
         data = json.load(f)
 
@@ -187,31 +190,37 @@ def _parse_config(config_path: ConfigPath, host_name: HostName) -> Iterator[Fetc
         raise LookupError("invalid config")
 
 
-def _parse_fetcher_config(data: Mapping[str, Any]) -> Iterator[Fetcher]:
+def _parse_fetcher_config(data: Mapping[str, Any]) -> Iterator[Tuple[Fetcher, FileCache]]:
     # Hard crash on parser errors: The interface is versioned and internal.
     # Crashing on error really *is* the best way to catch bonehead mistakes.
     for entry in data["fetchers"]:
-        fetcher = FetcherType[entry["fetcher_type"]].from_json(entry["fetcher_params"])
-        if isinstance(fetcher, SNMPFetcher):
-            fetcher.file_cache.max_age = MaxAge(
+        fetcher_type = FetcherType[entry["fetcher_type"]]
+        fetcher = fetcher_type.from_json(entry["fetcher_params"])
+        if fetcher_type is FetcherType.SNMP:
+            file_cache: FileCache = SNMPFileCache.from_json(entry["file_cache_params"])
+            file_cache.max_age = MaxAge(
                 checking=fetcher.file_cache.max_age.checking,
                 discovery=0,
                 inventory=fetcher.file_cache.max_age.inventory,
             )
+        else:
+            file_cache = AgentFileCache.from_json(entry["file_cache_params"])
 
-        yield fetcher
+        yield fetcher, file_cache
 
 
-def _parse_cluster_config(data: Mapping[str, Any], config_path: ConfigPath) -> Iterator[Fetcher]:
+def _parse_cluster_config(
+    data: Mapping[str, Any], config_path: ConfigPath
+) -> Iterator[Tuple[Fetcher, FileCache]]:
     global_config = load_global_config(make_global_config_path(config_path))
     for host_name in data["clusters"]["nodes"]:
-        for fetcher in _parse_config(config_path, host_name):
-            fetcher.file_cache.max_age = MaxAge(
+        for fetcher, file_cache in _parse_config(config_path, host_name):
+            file_cache.max_age = MaxAge(
                 checking=global_config.cluster_max_cachefile_age,
                 discovery=global_config.cluster_max_cachefile_age,
                 inventory=2 * global_config.cluster_max_cachefile_age,
             )
-            yield fetcher
+            yield fetcher, file_cache
 
 
 def _run_fetchers_from_file(
@@ -236,8 +245,8 @@ def _run_fetchers_from_file(
         fetchers = tuple(_parse_config(config_path, host_name))
         try:
             # fill as many messages as possible before timeout exception raised
-            for fetcher in fetchers:
-                messages.append(_run_fetcher(fetcher, mode))
+            for fetcher, file_cache in fetchers:
+                messages.append(_run_fetcher(fetcher, file_cache, mode))
         except MKTimeout as exc:
             # fill missing entries with timeout errors
             messages.extend(
@@ -246,7 +255,7 @@ def _run_fetchers_from_file(
                     exc,
                     Snapshot.null(),
                 )
-                for fetcher in fetchers[len(messages) :]
+                for fetcher, _ in fetchers[len(messages) :]
             )
 
     if timeout_manager.signaled:

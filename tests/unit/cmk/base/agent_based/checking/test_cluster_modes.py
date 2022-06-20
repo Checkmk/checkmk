@@ -83,7 +83,6 @@ def test_get_cluster_check_function_native_missing(vsm: ValueStoreManager) -> No
         clusterization_parameters={},
         service_id=TEST_SERVICE_ID,
         plugin=plugin,
-        persist_value_store_changes=False,
         value_store_manager=vsm,
     )
 
@@ -99,7 +98,6 @@ def test_get_cluster_check_function_native_ok(vsm: ValueStoreManager) -> None:
         clusterization_parameters={},
         service_id=TEST_SERVICE_ID,
         plugin=plugin,
-        persist_value_store_changes=False,
         value_store_manager=vsm,
     )
 
@@ -120,7 +118,6 @@ def _get_cluster_check_function(
         clusterization_parameters=clusterization_parameters or {},
         service_id=TEST_SERVICE_ID,
         plugin=plugin,
-        persist_value_store_changes=False,
         value_store_manager=vsm,
     )
 

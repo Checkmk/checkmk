@@ -1332,7 +1332,6 @@ def _check_preview_table_row(
         service,
         plugin,
         value_store_manager=value_store_manager,
-        persist_value_store_changes=False,  # never during discovery
     ).result
 
     return _make_check_preview_entry(

@@ -323,7 +323,6 @@ def check_host_services(
                     service,
                     agent_based_register.get_check_plugin(service.check_plugin_name),
                     value_store_manager=value_store_manager,
-                    persist_value_store_changes=not dry_run,
                 )
                 for service in _filter_services_to_check(
                     services=services,
@@ -411,7 +410,6 @@ def get_aggregated_result(
     plugin: Optional[checking_classes.CheckPlugin],
     *,
     value_store_manager: value_store.ValueStoreManager,
-    persist_value_store_changes: bool,
 ) -> _AggregatedResult:
     """Run the check function and aggregate the subresults
 
@@ -435,7 +433,6 @@ def get_aggregated_result(
             ),
             plugin=plugin,
             service_id=service.id(),
-            persist_value_store_changes=persist_value_store_changes,
             value_store_manager=value_store_manager,
         )
         if host_config.is_cluster

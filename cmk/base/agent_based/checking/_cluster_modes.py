@@ -67,7 +67,6 @@ def get_cluster_check_function(
     *,
     service_id: ServiceID,
     plugin: CheckPlugin,
-    persist_value_store_changes: bool,
     value_store_manager: ValueStoreManager,
 ) -> CheckFunction:
     if mode == "native":
@@ -75,7 +74,6 @@ def get_cluster_check_function(
 
     executor = NodeCheckExecutor(
         service_id=service_id,
-        persist_value_store_changes=persist_value_store_changes,
         value_store_manager=value_store_manager,
     )
 
@@ -257,11 +255,9 @@ class NodeCheckExecutor:
         self,
         *,
         service_id: ServiceID,
-        persist_value_store_changes: bool,
         value_store_manager: ValueStoreManager,
     ) -> None:
         self._service_id = service_id
-        self._persist_value_store_changes = persist_value_store_changes
         self._value_store_manager = value_store_manager
 
     def __call__(

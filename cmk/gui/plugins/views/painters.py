@@ -1622,6 +1622,9 @@ class ABCPainterCustomVariable(Painter, metaclass=abc.ABCMeta):
     def short_title(self, cell: Cell) -> str:
         return self._dynamic_title(cell.painter_parameters())
 
+    def export_title(self, cell: Cell) -> str:
+        return "%s_%s" % (self.ident, cell.painter_parameters()["ident"])
+
     def _dynamic_title(self, params: Optional[Dict[str, Any]] = None) -> str:
         if params is None:
             # Happens in view editor when adding a painter

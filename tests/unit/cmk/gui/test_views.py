@@ -8,7 +8,7 @@
 
 from cmk.gui.plugins.visuals.utils import Filter
 import copy
-from typing import Any, Dict
+from typing import Any, Dict, Tuple
 
 import pytest  # type: ignore[import]
 
@@ -24,6 +24,7 @@ import cmk.gui.plugins.views
 from cmk.gui.plugins.views.utils import transform_painter_spec
 from cmk.gui.type_defs import PainterSpec
 import cmk.gui.views
+from cmk.gui.plugins.views import Cell, Painter
 
 
 @pytest.fixture(name="view")
@@ -4021,6 +4022,25 @@ def test_registered_painters():
         assert painter.painter_options == spec.get("options", [])
         assert painter.printable == spec.get("printable", True)
         assert painter.load_inv == spec.get("load_inv", False)
+
+def test_painter_export_title(monkeypatch) -> None:
+    painters: list[Painter] = [painter_class() for painter_class in cmk.gui.plugins.views.painter_registry.values()]
+    painters_and_cells: list[Tuple[Painter, Cell]] = [
+                                                      (
+                                                       painter,
+                                                       cmk.gui.plugins.views.utils.Cell(cmk.gui.views.View("", {}, {}),PainterSpec(painter.ident))
+                                                      )
+                                                      for painter in painters
+                                                     ]
+
+    dummy_ident: str = "einszwo"
+    for painter, cell in painters_and_cells:
+        cell._painter_params = {"ident": dummy_ident} # pylint: disable=protected-access
+        expected_title: str = painter.ident
+        if painter.ident in ["host_custom_variable", "service_custom_variable"]:
+            expected_title += "_%s" % dummy_ident
+        assert painter.export_title(cell) == expected_title
+
 
 
 def test_legacy_register_painter(monkeypatch):

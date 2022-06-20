@@ -1,0 +1,15 @@
+Title: Add ID to title of host custom attributes on exports
+Class: fix
+Compatible: incomp
+Component: multisite
+Date: 1655719898
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p26
+
+If views with multiple columns "Host custom attribute" were exported, e.g. as
+JSON or CSV, the title for each attribute was "host_custom_variable". This was
+now changed to "host_custom_variable_ID" to make it easier to distinguish.
+
+Maybe an adjustment of an automated export is needed.

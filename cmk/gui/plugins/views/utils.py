@@ -906,6 +906,10 @@ class Painter(metaclass=abc.ABCMeta):
         Falls back to the full title if no short title is given"""
         return self.title(cell)
 
+    def export_title(self, cell: 'Cell') -> str:
+        """Used for exporting views in JSON/CSV/python format"""
+        return self.ident
+
     def list_title(self, cell: 'Cell') -> str:
         """Override this to define a custom title for the painter in the view editor
         Falls back to the full title if no short title is given"""
@@ -1882,7 +1886,7 @@ class Cell:
     def export_title(self) -> str:
         if self._custom_title:
             return re.sub(r"[^\w]", "_", self._custom_title.lower())
-        return self.painter_name()
+        return self.painter().export_title(self)
 
     def painter_options(self) -> List[str]:
         return self.painter().painter_options

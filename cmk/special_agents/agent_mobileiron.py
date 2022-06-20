@@ -12,7 +12,7 @@ api call url parameters: "https://" + $tenantURL + "/api/v1/device?q=&rows=" + $
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING
+from typing import Any, Dict, Iterator, List, Mapping, Optional, Sequence, Tuple, Union
 from urllib.parse import quote, urljoin
 
 import requests
@@ -25,12 +25,7 @@ from cmk.special_agents.utils.agent_common import (
     SectionWriter,
     special_agent_main,
 )
-from cmk.special_agents.utils.argument_parsing import create_default_argument_parser
-
-if TYPE_CHECKING:
-    from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple, Union
-
-    from cmk.special_agents.utils.argument_parsing import Args
+from cmk.special_agents.utils.argument_parsing import Args, create_default_argument_parser
 
 LOGGER = logging.getLogger("agent_mobileiron")
 
@@ -109,10 +104,10 @@ class MobileironAPI:
         if proxies:
             self._session.proxies.update({"https": proxies})
 
-    def __enter__(self) -> "MobileironAPI":
+    def __enter__(self) -> MobileironAPI:
         return self
 
-    def __exit__(self, *exc_info) -> None:
+    def __exit__(self, *exc_info: Tuple) -> None:
         if self._session:
             self._session.close()
 
@@ -130,88 +125,87 @@ class MobileironAPI:
             }
         )
 
+    def _get_one_page(self, params: Dict[str, Union[int, str]]) -> Mapping[str, Any]:
+        """Yield one page from the API with params."""
+
+        try:
+            response = self._session.get(self._api_url, params=params, timeout=50)
+        except requests.Timeout:
+            LOGGER.exception("The request timed out: %s, %s", self._api_url, params)
+            raise
+        except requests.exceptions.SSLError:
+            LOGGER.exception(
+                "Certificate verify failed. Please add the ssl certificate to the Trusted certificate authorities for SSL storage. Or disable certificate check. %s, %s.",
+                self._api_url,
+                params,
+            )
+            raise
+
+        try:
+            response.raise_for_status()
+        except requests.exceptions.HTTPError as e:
+            LOGGER.exception(
+                "HTTPError %s occurred: %s, %s.",
+                e,
+                self._api_url,
+                params,
+            )
+            raise
+
+        try:
+            response_json = response.json()
+        except requests.exceptions.JSONDecodeError:
+            LOGGER.exception(
+                "No json in reply to: %s, %s. Got this instead %s",
+                self._api_url,
+                params,
+                response.text,
+            )
+            raise
+
+        return response_json
+
+    def _get_all_pages(self, partition: str) -> Iterator[Mapping[str, Any]]:
+        """Yield one or more pages of json depending on the total_count and _devices_per_request"""
+
+        first_page_json = self._get_one_page(
+            params={
+                "rows": self._devices_per_request,
+                "start": 0,
+                "dmPartitionId": partition,
+            }
+        )
+        total_count = first_page_json["result"]["totalCount"]
+        self._all_devices.update(
+            {
+                self.api_host: {
+                    "total_count": total_count,
+                    "queryTime": first_page_json["result"]["queryTime"],
+                }
+            }
+        )
+        yield first_page_json
+
+        if total_count > self._devices_per_request:
+            # start is 0 based range with _devices_per_request step
+            for start in range(self._devices_per_request, total_count, self._devices_per_request):
+                yield self._get_one_page(
+                    params={
+                        "rows": self._devices_per_request,
+                        "start": start,
+                        "dmPartitionId": partition,
+                    }
+                )
+
     def get_all_devices(
         self,
         partitions: List[str],
     ) -> Mapping[str, Any]:
         """Returns all devices in all partitions without duplicates."""
 
-        params: Dict[str, Union[int, str]] = {}
-
-        # TODO consider using a ThreadPoolExecutor which can create concurrent.futures for asyncio:
-        # https://docs.python.org/3/library/concurrent.futures.html#concurrent.futures.ThreadPoolExecutor
         for partition in partitions:
-            # always get first devices
-            params = {"rows": self._devices_per_request, "start": 0, "dmPartitionId": partition}
-            try:
-                response = self._session.get(self._api_url, params=params, timeout=50)
-                response.raise_for_status()
-                response_json = response.json()
-            except requests.Timeout:
-                LOGGER.exception("The request timed out: %s, %s", self._api_url, params)
-                raise
-            except requests.JSONDecodeError:
-                LOGGER.exception(
-                    "No json in reply to: %s, %s. Got this instead %s",
-                    self._api_url,
-                    params,
-                    response.text,
-                )
-                raise
-            except requests.exceptions.SSLError:
-                LOGGER.exception(
-                    "Certificate verify failed. Please add the ssl certificate to the Trusted certificate authorities for SSL storage. Or disable certificate check. %s, %s.",
-                    self._api_url,
-                    params,
-                )
-                raise
-
-            self._get_devices(response_json["result"]["searchResults"])
-            total_count = response_json["result"]["totalCount"]
-            self._all_devices.update(
-                {
-                    self.api_host: {
-                        "total_count": total_count,
-                        "queryTime": response_json["result"]["queryTime"],
-                    }
-                }
-            )
-
-            # if the first get() was enough, continue, else get all devices in a cycle
-            # until total_count is exhausted
-            if total_count > self._devices_per_request:
-                # start is 0 based range with _devices_per_request step
-                for start in range(
-                    self._devices_per_request, total_count, self._devices_per_request
-                ):
-                    params = {
-                        "rows": self._devices_per_request,
-                        "start": start,
-                        "dmPartitionId": partition,
-                    }
-                    try:
-                        response = self._session.get(self._api_url, params=params, timeout=50)
-                        response.raise_for_status()
-                        response_json = response.json()
-                    except requests.Timeout:
-                        LOGGER.exception("The request timed out: %s, %s", self._api_url, params)
-                        raise
-                    except requests.JSONDecodeError:
-                        LOGGER.exception(
-                            "No json in reply to: %s, %s. Got this instead %s",
-                            self._api_url,
-                            params,
-                            response.text,
-                        )
-                        raise
-                    except requests.exceptions.SSLError:
-                        LOGGER.exception(
-                            "Certificate verify failed. Please add the ssl certificate to the Trusted certificate authorities for SSL storage. Or disable certificate check. %s, %s.",
-                            self._api_url,
-                            params,
-                        )
-                        raise
-                    self._get_devices(response_json["result"]["searchResults"])
+            for page in self._get_all_pages(partition=partition):
+                self._get_devices(page["result"]["searchResults"])
 
         return self._all_devices
 

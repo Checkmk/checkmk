@@ -6,6 +6,8 @@ import argparse
 import json
 from pathlib import Path
 
+import pytest
+import requests
 import responses
 
 from cmk.special_agents.agent_mobileiron import agent_mobileiron_main
@@ -28,7 +30,7 @@ test_device3 = Path(
 
 
 @responses.activate
-def test_agent_output_2_partitions(capsys) -> None:
+def test_agent_output_2_partitions(capsys: pytest.CaptureFixture[str]) -> None:
     """Agent output contains piggyback data and sections from both partitions in args
     and from the second page of the first URL (in case total number of devices is more than 200)"""
     # standard request to the first partition but with more than 300 devices in reply
@@ -89,3 +91,35 @@ def test_agent_output_2_partitions(capsys) -> None:
     # make sure the latest registration is chosen
     assert "1636109710590" in captured.out
     assert "1634816307049" not in captured.out
+
+
+@pytest.mark.parametrize(
+    "exception",
+    [
+        pytest.param(requests.exceptions.HTTPError),
+        pytest.param(requests.exceptions.SSLError),
+        pytest.param(requests.exceptions.JSONDecodeError),
+    ],
+)
+@responses.activate
+def test_agent_raises_exceptions(exception) -> None:
+    args = argparse.Namespace(
+        hostname="does_not_exist",
+        port="443",
+        username="",
+        password="",
+        partition=[103881],
+        no_cert_check=False,
+        proxy_host=None,
+        proxy_port=None,
+        proxy_user=None,
+        proxy_password=None,
+        debug=False,
+    )
+    responses.get(
+        f"https://{args.hostname}:{args.port}/api/v1/device?rows=200&start=0&dmPartitionId={args.partition[0]}",
+        body=exception(),
+    )
+
+    with pytest.raises(exception):
+        agent_mobileiron_main(args)

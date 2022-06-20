@@ -29,17 +29,17 @@ monitoring_core -> cmk_notify: Notification data via stdin
 cmk_notify -> cmk_notify: Create raw notification context\nfrom Notification data
 cmk_notify -> cmk_notify: Complete raw notification context
 cmk_notify -> origin_spool_directory: Store raw notification context
-monitoring_core <- cmk_notify: Ready for new data 
+monitoring_core <- cmk_notify: Ready for new data
 
 == Forward to destination site ==
 
 origin_spool_directory <- origin_mknotifyd_spool_handler: Read raw notification context
 origin_mknotifyd_spool_handler -> origin_mknotifyd_connection: Forward raw notification context
-monitoring_core <- origin_mknotifyd_spool_handler: Log progress (spooled) to monitoring history
+monitoring_core <- origin_mknotifyd_spool_handler: Log progress (spooled to remote site) to monitoring history
 origin_mknotifyd_connection -> destination_mknotifyd_connection: Send and receive raw notification context
 destination_mknotifyd_connection -> destination_spool_directory: Store raw notification context
 origin_mknotifyd_connection <- destination_mknotifyd_connection: Acknowledge submission
-monitoring_core <- origin_mknotifyd_connection: Log progress (forwarded) to monitoring history
+monitoring_core <- origin_mknotifyd_connection: Log progress (received by remote site) to monitoring history
 origin_spool_directory <- origin_mknotifyd_connection: Remove raw notification context spool file
 
 == Process on destination site ==

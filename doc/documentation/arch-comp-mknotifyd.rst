@@ -96,13 +96,13 @@ Use case 2: Forward to destination site for central delivery
 
 .. uml:: arch-comp-mknotifyd-uc2-mknotifyd-remote.puml
 
-Bulk notificiations
--------------------
+Bulk notifications
+------------------
 
-Besides handling of single notifications the notification system also suppots
-`bulk notifications <https://docs.checkmk.com/latest/en/notifications.html#bulk>`.
+Besides handling of single notifications the notification system also supports
+`bulk notifications <https://docs.checkmk.com/latest/en/notifications.html#bulk>`_.
 These are handled quiet differently during processing and also need to be
-supported by the `notification plugins <https://docs.checkmk.com/latest/en/notifications.html#_bulk_notifications>`.
+supported by the `notification plugins <https://docs.checkmk.com/latest/en/notifications.html#_bulk_notifications>`_.
 
 TODO: Visualize processing of single vs. bulk notifications
 

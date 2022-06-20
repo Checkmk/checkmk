@@ -28,8 +28,12 @@ export function register() {
                 method: "POST",
                 headers: {"Content-Type": "application/cbor"},
                 body: CBOR.encode({
-                    attestationObject: new Uint8Array(attestationPkcResponse.attestationObject),
-                    clientDataJSON: new Uint8Array(attestationPkcResponse.clientDataJSON),
+                    attestationObject: new Uint8Array(
+                        attestationPkcResponse.attestationObject
+                    ),
+                    clientDataJSON: new Uint8Array(
+                        attestationPkcResponse.clientDataJSON
+                    ),
                 }),
             });
         })
@@ -114,8 +118,12 @@ export function login() {
                 headers: {"Content-Type": "application/cbor"},
                 body: CBOR.encode({
                     credentialId: new Uint8Array(assertionPkc.rawId),
-                    authenticatorData: new Uint8Array(assertionResponse.authenticatorData),
-                    clientDataJSON: new Uint8Array(assertionResponse.clientDataJSON),
+                    authenticatorData: new Uint8Array(
+                        assertionResponse.authenticatorData
+                    ),
+                    clientDataJSON: new Uint8Array(
+                        assertionResponse.clientDataJSON
+                    ),
                     signature: new Uint8Array(assertionResponse.signature),
                 }),
             });

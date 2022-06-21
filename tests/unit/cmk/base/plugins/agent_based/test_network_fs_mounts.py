@@ -200,14 +200,23 @@ def test_network_fs_mounts_check(
 ):
     section = network_fs_mounts.parse_network_fs_mounts(string_table)
     with on_time(*NOW_SIMULATED):
-        assert (
-            list(
-                network_fs_mounts.check_network_fs_mount(
-                    item, {**FILESYSTEM_DEFAULT_LEVELS, **{"has_perfdata": True}}, section
-                )
+        actual_check_results = list(
+            network_fs_mounts.check_network_fs_mount(
+                item, {**FILESYSTEM_DEFAULT_LEVELS, **{"has_perfdata": True}}, section
             )
-            == check_result
         )
+    assert [r for r in actual_check_results if isinstance(r, Result)] == [
+        r for r in check_result if isinstance(r, Result)
+    ]
+    for actual_metric, expected_metric in zip(
+        [m for m in actual_check_results if isinstance(m, Metric)],
+        [m for m in check_result if isinstance(m, Metric)],
+    ):
+        assert actual_metric.name == expected_metric.name
+        assert actual_metric.value == expected_metric.value
+        if hasattr(actual_metric, "levels"):
+            assert actual_metric.levels[0] == pytest.approx(expected_metric.levels[0])
+            assert actual_metric.levels[1] == pytest.approx(expected_metric.levels[1])
 
 
 @pytest.mark.parametrize(

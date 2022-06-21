@@ -366,7 +366,20 @@ def test_check_netapp_api_qtree_quota(
 ) -> None:
     check_plugin = fix_register.check_plugins[CheckPluginName("netapp_api_qtree_quota")]
     result = list(check_plugin.check_function(item=item, params={}, section=parsed))
-    assert result == expected_result
+
+    assert [r for r in result if isinstance(r, Result)] == [
+        r for r in expected_result if isinstance(r, Result)
+    ]
+
+    expected_metrics: Sequence[Metric] = [m for m in expected_result if isinstance(m, Metric)]
+    for actual_metric, expected_metric in zip(
+        [m for m in result if isinstance(m, Metric)], expected_metrics
+    ):
+        assert actual_metric.name == expected_metric.name
+        assert actual_metric.value == expected_metric.value
+        if hasattr(actual_metric, "levels"):
+            assert actual_metric.levels[0] == pytest.approx(expected_metric.levels[0], 0.01)
+            assert actual_metric.levels[1] == pytest.approx(expected_metric.levels[1], 0.01)
 
 
 def test_discover_netapp_api_qtree_quota_duplicate_item_names(fix_register: FixRegister) -> None:

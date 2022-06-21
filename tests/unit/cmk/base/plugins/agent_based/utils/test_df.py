@@ -451,6 +451,27 @@ def test_mountpoints_in_group(mplist, patterns_include, patterns_exclude, expect
             ),
         ),
         pytest.param(
+            20.0,
+            {
+                "levels": [
+                    (5.0 * 1024**3, (4 * 1024, 5 * 1024)),
+                    (10.0 * 1024**3, (60.0, 70.0)),
+                ],
+            },
+            {
+                "levels": [
+                    (5.0 * 1024**3, (4 * 1024, 5 * 1024)),
+                    (10.0 * 1024**3, (60.0, 70.0)),
+                ],
+                "levels_mb": ((20.0 * 1024) * 0.6, (20 * 1024) * 0.7),
+                "levels_text": "(warn/crit at 60.00%/70.00% used)",
+            },
+            id=(
+                "The levels for the greatest filesystem size in the list are "
+                "applied regardless of how large the filesystem is."
+            ),
+        ),
+        pytest.param(
             1.0,
             {
                 "levels": [

@@ -94,21 +94,39 @@ FILESYSTEM_DEFAULT_LEVELS = {
 
 
 def _determine_levels_for_filesystem(levels: list, filesystem_size: Bytes) -> Tuple[Any, Any]:
-    # A list of levels. Choose the correct one depending on the
-    # size of the current filesystem. We do not make the first
-    # rule match, but that with the largest size_gb. That way
-    # the order of the entries is not important.
-    found = False
-    found_size = 0
-    # Type-ingore: levels["levels"] was overridden by params and should be list of tuples
-    for to_size, this_levels in levels:  # type: ignore[attr-defined]
-        if filesystem_size > to_size >= found_size:
-            warn, crit = this_levels
-            found_size = to_size
-            found = True
-        if not found:
-            warn, crit = 100.0, 100.0  # entry not found in list
-    return warn, crit
+    """Determine levels based on the given filesystem size from a list of
+    levels configured by the user.
+
+    The list consists of a tuple of filesystem size (GB) and another tuple of
+    levels (warn/crit). The levels are only selected for the filesystem if it
+    is greater than the filesystem size in the list. If levels cannot be
+    determined, a default of 100% for warn and crit is used.
+
+    Examples:
+
+    >>> _determine_levels_for_filesystem([(20, (1, 2)), (30, (3, 4)), (50, (5, 6))], 20)
+    (100.0, 100.0)
+
+    >>> _determine_levels_for_filesystem([(20, (1, 2)), (30, (3, 4)), (50, (5, 6))], 30)
+    (1, 2)
+
+    >>> _determine_levels_for_filesystem([(20, (1, 2)), (30, (3, 4)), (50, (5, 6))], 40)
+    (3, 4)
+
+    >>> _determine_levels_for_filesystem([(20, (1, 2)), (30, (3, 4)), (50, (5, 6))], 100)
+    (5, 6)
+    """
+
+    for size, actual_levels in sorted(levels, reverse=True):
+        if filesystem_size > size:
+            return actual_levels
+
+    # TODO: if the levels are not found, the defaults should be used
+    return 100.0, 100.0
+
+
+def _adjust_level(level: Percent, factor: float) -> Percent:
+    return Percent(100 - ((100 - level) * factor))
 
 
 def _adjust_levels(
@@ -118,34 +136,59 @@ def _adjust_levels(
     reference_size: Bytes,
     minimum_levels: Tuple[float, float],
 ) -> FilesystemLevels:
-    hgb_size = filesystem_size / reference_size
-    felt_size = hgb_size**factor
-    scale = felt_size / hgb_size
-    warn_scaled = 100 - ((100 - levels.warn_percent) * scale)
-    crit_scaled = 100 - ((100 - levels.crit_percent) * scale)
+    """The magic factor adjusts thresholds set for free or used filesystem
+    space based on a factor (aka "magic factor") and relative to a
+    reference size (aka "magic normsize").
 
-    # Make sure, levels do never get too low due to magic factor
-    lowest_warning_level, lowest_critical_level = minimum_levels
-    warn_scaled = Percent(max(warn_scaled, lowest_warning_level))
-    crit_scaled = Percent(max(crit_scaled, lowest_critical_level))
+    The reasoning is that it does not make sense to apply the same
+    thresholds to all filesystems, regardless of their size. For example,
+    20% of space on a 50TB filesytem could be considered sufficiently free
+    space, while 20% on a 1GB filesystem could indicate that it needs to be
+    expanded/freed.
 
-    warn_scaled_absolute = _to_absolute(warn_scaled, filesystem_size)
-    crit_scaled_absolute = _to_absolute(crit_scaled, filesystem_size)
+    The reference size is the size at which we "start adjusting". The
+    thresholds for filesystems larger than the reference size become more
+    lenient (i.e. higher), while the thresholds for filesystems smaller
+    than the reference size become more strict (i.e. lower).
+
+    The magic factor should be a number between 0 and 1, and is the
+    magnitude of adjustment. The closer this number is to 1, the smaller is
+    this magnitude. A factor of 1 does not adjust the thresholds.
+
+    Example:
+
+    reference size: 20GB
+    threshold: 80%
+
+    Filesystem size    MF 1    MF 0.9    MF 0.5
+    10GB               80%     79%       72%
+    20GB               80%     80%       80%
+    50GB               80%     82%       87%
+
+
+    Please run df_magic_factor.py for more examples.
+    """
+
+    relative_size = filesystem_size / reference_size
+    true_factor = (relative_size**factor) / relative_size
+
+    warn_percent = Percent(max(_adjust_level(levels.warn_percent, true_factor), minimum_levels[0]))
+    crit_percent = Percent(max(_adjust_level(levels.crit_percent, true_factor), minimum_levels[1]))
 
     if isinstance(levels, LevelsFreeSpace):
         return LevelsFreeSpace(
-            warn_percent=warn_scaled,
-            crit_percent=crit_scaled,
-            warn_absolute=warn_scaled_absolute,
-            crit_absolute=crit_scaled_absolute,
+            warn_percent=warn_percent,
+            crit_percent=crit_percent,
+            warn_absolute=_to_absolute(warn_percent, filesystem_size),
+            crit_absolute=_to_absolute(crit_percent, filesystem_size),
             render_as=levels.render_as,
         )
 
     return LevelsUsedSpace(
-        warn_percent=warn_scaled,
-        crit_percent=crit_scaled,
-        warn_absolute=warn_scaled_absolute,
-        crit_absolute=crit_scaled_absolute,
+        warn_percent=warn_percent,
+        crit_percent=crit_percent,
+        warn_absolute=_to_absolute(warn_percent, filesystem_size),
+        crit_absolute=_to_absolute(crit_percent, filesystem_size),
         render_as=levels.render_as,
     )
 
@@ -249,13 +292,6 @@ def _parse_filesystem_levels(levels: object, filesystem_size: Bytes) -> Filesyst
     raise TypeError(f"Expected list or tuple for filesystem levels, got {type(levels).__name__}")
 
 
-def savefloat(raw: Any) -> float:
-    try:
-        return float(raw)
-    except (TypeError, ValueError):
-        return 0.0
-
-
 def _ungrouped_mountpoints_and_groups(
     mount_points: Dict[str, Dict],
     group_patterns: Mapping[str, Tuple[Sequence[str], Sequence[str]]],
@@ -271,7 +307,7 @@ def _ungrouped_mountpoints_and_groups(
 
 
 def get_filesystem_levels(  # pylint: disable=too-many-branches
-    size_gb: float,
+    filesystem_size_gb: float,
     params: Mapping[str, Any],
 ) -> Dict[str, Any]:
     """
@@ -280,7 +316,7 @@ def get_filesystem_levels(  # pylint: disable=too-many-branches
     {'inodes_levels': (10.0, 5.0),
      'levels': (80.0, 90.0),
      'levels_low': (50.0, 60.0),
-     'levels_mb': (1010892.8, 1137254.4),
+     'levels_mb': (1010892.7999992371, 1137254.3999996185),
      'levels_text': '(warn/crit at 80.00%/90.00% used)',
      'magic_normsize': 20,
      'show_inodes': 'onlow',
@@ -292,7 +328,7 @@ def get_filesystem_levels(  # pylint: disable=too-many-branches
     {'inodes_levels': (10.0, 5.0),
      'levels': (10, 20),
      'levels_low': (50.0, 60.0),
-     'levels_mb': (9.999999999999998, 19.999999999999996),
+     'levels_mb': (10.0, 20.0),
      'levels_text': '(warn/crit at 10.0 MiB/20.0 MiB used)',
      'magic_normsize': 20,
      'show_inodes': 'onlow',
@@ -301,37 +337,26 @@ def get_filesystem_levels(  # pylint: disable=too-many-branches
      'trend_perfdata': True,
      'trend_range': 24}
     """
-    mega = 1024 * 1024
-    giga = mega * 1024
-    filesystem_size = Bytes(int(size_gb * giga))
+    filesystem_size = Bytes(int(filesystem_size_gb * 1024 * 1024 * 1024))
 
     # Override default levels with params
     levels: Dict[str, Any] = {**FILESYSTEM_DEFAULT_LEVELS, **params}
 
     filesystem_levels = _parse_filesystem_levels(levels["levels"], filesystem_size)
 
-    # Take into account magic scaling factor (third optional argument
-    # in check params). A factor of 1.0 changes nothing. Factor should
-    # be > 0 and <= 1. A smaller factor raises levels for big file systems
-    # bigger than 100 GB and lowers it for file systems smaller than 100 GB.
-    # Please run df_magic_factor.py to understand how it works.
-
-    magic = levels.get("magic")
-    # We need a way to disable the magic factor so check
-    # if magic not 1.0
-    if magic and magic != 1.0:
+    if (magic_factor := levels.get("magic")) is not None:
         filesystem_levels = _adjust_levels(
             filesystem_levels,
-            factor=magic,
+            factor=magic_factor,
             filesystem_size=filesystem_size,
-            reference_size=Bytes(levels["magic_normsize"] * giga),
+            reference_size=Bytes(levels["magic_normsize"] * 1024 * 1024 * 1024),
             minimum_levels=levels["levels_low"],
         )
 
-    size_mb = size_gb * 1024
-    warn_mb = savefloat(size_mb * filesystem_levels.warn_percent / 100)
-    crit_mb = savefloat(size_mb * filesystem_levels.crit_percent / 100)
-    levels["levels_mb"] = (warn_mb, crit_mb)
+    levels["levels_mb"] = (
+        filesystem_levels.warn_absolute / (1024 * 1024),
+        filesystem_levels.crit_absolute / (1024 * 1024),
+    )
 
     levels["levels_text"] = _check_summary_text(filesystem_levels)
 

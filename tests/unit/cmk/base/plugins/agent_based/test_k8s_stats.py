@@ -318,7 +318,18 @@ def test__check_k8s_stats_fs(section, expected_results) -> None:
         )
 
     print("\n", "\n".join(str(r) for r in results))
-    assert results == expected_results
+    assert [r for r in results if isinstance(r, Result)] == [
+        r for r in expected_results if isinstance(r, Result)
+    ]
+    for actual_metric, expected_metric in zip(
+        [m for m in results if isinstance(m, Metric)],
+        [m for m in expected_results if isinstance(m, Metric)],
+    ):
+        assert actual_metric.name == expected_metric.name
+        assert actual_metric.value == expected_metric.value
+        if hasattr(actual_metric, "levels"):
+            assert actual_metric.levels[0] == pytest.approx(expected_metric.levels[0])
+            assert actual_metric.levels[1] == pytest.approx(expected_metric.levels[1])
 
 
 @pytest.mark.parametrize(

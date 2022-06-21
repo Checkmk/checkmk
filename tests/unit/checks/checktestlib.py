@@ -95,8 +95,14 @@ def assertPerfValuesEqual(actual, expected):
         expected,
         actual.value,
     )
-    assert expected.warn == actual.warn, "expected %r, but warn is %r" % (expected, actual.warn)
-    assert expected.crit == actual.crit, "expected %r, but crit is %r" % (expected, actual.crit)
+    assert pytest.approx(expected.warn) == actual.warn, "expected %r, but warn is %r" % (
+        expected,
+        actual.warn,
+    )
+    assert pytest.approx(expected.crit) == actual.crit, "expected %r, but crit is %r" % (
+        expected,
+        actual.crit,
+    )
     assert expected.minimum == actual.minimum, "expected %r, but minimum is %r" % (
         expected,
         actual.minimum,

@@ -4,8 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import re
 from datetime import datetime
-from typing import Dict, Mapping, NewType
+from typing import Dict, Iterator, Mapping, NewType, Tuple
+
+from marshmallow import ValidationError
 
 import cmk.utils.store as store
 
@@ -15,6 +18,7 @@ import cmk.gui.userdb as userdb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
+from cmk.gui.permissions import permission_registry
 from cmk.gui.type_defs import UserRole, Users
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.watolib.utils import multisite_dir
@@ -112,3 +116,57 @@ def rename_user_role(role_id: RoleID, new_role_id: RoleID | None) -> None:
             if new_role_id:
                 user["roles"].append(new_role_id)
     userdb.save_users(users, datetime.now())
+
+
+def validate_new_alias(old_alias: str, new_alias: str) -> None:
+    if old_alias != new_alias:
+        existing_aliases = {role.alias: role_id for role_id, role in get_all_roles().items()}
+        if role_id := existing_aliases.get(new_alias):
+            raise ValidationError(_("This alias is already used in the role %s.") % role_id)
+
+
+def validate_new_roleid(old_roleid: str, new_roleid: str) -> None:
+    existing_role: UserRole = get_role(RoleID(old_roleid))
+    if existing_role.builtin:
+        raise ValidationError(_("The ID of a builtin user role cannot be changed"))
+
+    if not new_roleid:
+        raise ValidationError(_("You have to provide a role ID."))
+
+    if old_roleid != new_roleid:
+        if new_roleid in get_all_roles():
+            raise ValidationError(_("The ID is already used by another role"))
+
+        if not re.match("^[-a-z0-9A-Z_]*$", new_roleid):
+            raise ValidationError(
+                _("Invalid role ID. Only the characters a-z, A-Z, 0-9, _ and - are allowed.")
+            )
+
+
+def update_permissions(role: UserRole, new_permissions: Iterator[Tuple[str, str]] | None) -> None:
+    if new_permissions is None:
+        return
+
+    for var_name, value in new_permissions:
+        var_name = var_name.replace("perm_", "")
+        try:
+            perm = permission_registry[var_name]
+        except KeyError:
+            continue
+
+        if value == "yes":
+            role.permissions[perm.name] = True
+        elif value == "no":
+            role.permissions[perm.name] = False
+        elif value == "default":
+            try:
+                del role.permissions[perm.name]
+            except KeyError:
+                pass  # Already at defaults
+
+
+def save_updated_role(role: UserRole, old_roleid: RoleID) -> None:
+    all_roles: Dict[RoleID, UserRole] = get_all_roles()
+    del all_roles[old_roleid]
+    all_roles[RoleID(role.name)] = role
+    save_all_roles(all_roles)

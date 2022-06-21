@@ -19,15 +19,14 @@ roles.  This modes manages the creation of custom roles and the permissions
 configuration of all roles.
 """
 
-import re
-from typing import Collection, Dict, Optional, Type
+from typing import Collection, Optional, Type
+
+from marshmallow import ValidationError
 
 import cmk.gui.forms as forms
 import cmk.gui.userdb as userdb
 import cmk.gui.watolib.changes as _changes
-import cmk.gui.watolib.groups as groups
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.config import builtin_role_ids
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
@@ -218,66 +217,33 @@ class ModeEditRole(WatoMode):
         menu.inpage_search = PageMenuSearch()
         return menu
 
-    def action(self) -> ActionResult:  # pylint: disable=too-many-branches
+    def action(self) -> ActionResult:
         if html.form_submitted("search"):
             return None
 
-        # alias
-        alias = request.get_str_input_mandatory("alias")
-        unique, info = groups.is_alias_used("roles", self._role_id, alias)
-        if not unique:
-            assert info is not None
-            raise MKUserError("alias", info)
+        new_alias: str = request.get_str_input_mandatory("alias")
+        try:
+            userroles.validate_new_alias(self._role.alias, new_alias)
+        except ValidationError as exc:
+            raise MKUserError("alias", str(exc))
 
-        # id
-        new_id = RoleID(request.get_ascii_input_mandatory("id"))
-        if not new_id:
-            raise MKUserError("id", "You have to provide a ID.")
-        if not re.match("^[-a-z0-9A-Z_]*$", new_id):
-            raise MKUserError(
-                "id", _("Invalid role ID. Only the characters a-z, A-Z, 0-9, _ and - are allowed.")
-            )
-        if new_id != self._role_id:
-            if userroles.role_exists(new_id):
-                raise MKUserError("id", _("The ID is already used by another role"))
+        self._role.alias = new_alias
 
-        self._role.name = new_id
-        self._role.alias = alias
-
-        # based on
         if not self._role.builtin:
             basedon = request.get_ascii_input_mandatory("basedon")
-            if basedon not in builtin_role_ids:
-                raise MKUserError(
-                    "basedon", _("Invalid value for based on. Must be id of builtin rule.")
-                )
             self._role.basedon = basedon
 
-        # Permissions
-        for var_name, value in request.itervars(prefix="perm_"):
-            try:
-                perm = permission_registry[var_name[5:]]
-            except KeyError:
-                continue
+        new_id = request.get_ascii_input_mandatory("id")
+        try:
+            userroles.validate_new_roleid(self._role_id, new_id)
+        except ValidationError as exc:
+            raise MKUserError("id", str(exc))
 
-            if value == "yes":
-                self._role.permissions[perm.name] = True
-            elif value == "no":
-                self._role.permissions[perm.name] = False
-            elif value == "default":
-                try:
-                    del self._role.permissions[perm.name]
-                except KeyError:
-                    pass  # Already at defaults
+        self._role.name = new_id
 
-        all_roles: Dict[RoleID, UserRole] = userroles.get_all_roles()
-        del all_roles[self._role_id]
-        self._role_id = RoleID(self._role.name)
-        all_roles[self._role_id] = self._role
-
-        if not self._role.builtin:
-            userroles.rename_user_role(self._role_id, new_id)
-        userroles.save_all_roles(all_roles)
+        userroles.update_permissions(self._role, request.itervars(prefix="perm_"))
+        userroles.save_updated_role(self._role, self._role_id)
+        self._role_id = RoleID(new_id)
 
         _changes.add_change(
             "edit-roles", _("Modified user role '%s'") % new_id, sites=get_login_sites()

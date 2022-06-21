@@ -991,7 +991,7 @@ public:
         std::vector<int> timeouts_;
     };
 
-    Plugins() : async_start_(true), max_wait_(kDefaultPluginTimeout) {}
+    Plugins() = default;
 
     // API:
     void loadFromMainConfig(std::string_view group_name);
@@ -1041,15 +1041,15 @@ public:
     bool isLocal() const { return local_; }
 
 private:
-    bool local_;
+    bool local_{false};
     // Data
     mutable std::mutex lock_;
     // node from the config file
     std::vector<ExeUnit> units_;
     std::vector<std::wstring> folders_;
     std::string exe_name_;
-    bool async_start_;
-    int max_wait_;
+    bool async_start_{true};
+    int max_wait_{kDefaultPluginTimeout};
 };
 
 void LoadExeUnitsFromYaml(std::vector<Plugins::ExeUnit> &exe_unit,

@@ -334,8 +334,8 @@ static bool TryStopService(SC_HANDLE handle, const std::string &name_to_log,
                            DWORD current_status) noexcept {
     auto status = current_status;
     auto delay = CalcDelay(handle);
-    constexpr DWORD timeout = 30000;  // 30-second time-out
-    DWORD start_time = GetTickCount();
+    constexpr uint64_t timeout = 30'000;  // 30-second time-out
+    auto start_time = GetTickCount64();
     // If a stop is pending, wait for it.
     if (status == SERVICE_STOP_PENDING) {
         XLOG::l.i("Service stop pending...");
@@ -345,14 +345,16 @@ static bool TryStopService(SC_HANDLE handle, const std::string &name_to_log,
 
             status = GetServiceStatus(handle);
 
-            if (status == -1) return false;
+            if (status == -1) {
+                return false;
+            }
 
             if (status == SERVICE_STOPPED) {
                 XLOG::l.i("Service '{}' stopped successfully.", name_to_log);
                 return true;
             }
 
-            if (GetTickCount() - start_time > timeout) {
+            if (GetTickCount64() - start_time > timeout) {
                 XLOG::l("Service stop timed out during pending");
                 return false;
             }
@@ -372,7 +374,7 @@ static bool TryStopService(SC_HANDLE handle, const std::string &name_to_log,
         status = GetServiceStatus(handle);
         if (status == -1) return false;
 
-        if (GetTickCount() - start_time > timeout) {
+        if (GetTickCount64() - start_time > timeout) {
             XLOG::l("Wait timed out for '{}'", name_to_log);
             return false;
         }

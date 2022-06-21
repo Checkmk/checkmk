@@ -118,69 +118,24 @@ sections_mk_inventory() {
 
     section_lnx_distro
 
-    # CPU Information. We need just the first one
-    if [ -e /proc/cpuinfo ]; then
-        echo "<<<lnx_cpuinfo:sep(58)>>>"
-        sed 's/[[:space:]]*:[[:space:]]*/:/' </proc/cpuinfo
-    fi
+    section_lnx_cpuinfo
 
-    # Information about main board, memory, etc.
-    if inpath dmidecode; then
-        echo "<<<dmidecode:sep(58)>>>"
-        dmidecode -q | sed 's/\t/:/g'
-    fi
+    section_dmidecode
 
-    # Information about kernel architecture
-    if inpath uname; then
-        echo "<<<lnx_uname>>>"
-        uname -m
-        uname -r
-    fi
+    section_lnx_uname
 
-    # Collect VGAs if they are present
-    vgas="$(lspci | grep VGA | cut -d" " -f 1)"
-    if [ -n "$vgas" ]; then
-        echo "<<<lnx_video:sep(58)>>>"
-        lspci -v -s "$vgas"
-    fi
+    section_lnx_video
 
-    # Some networking information
-    if inpath ip; then
-        echo "<<<lnx_ip_r>>>"
-        ip r
-        ip -6 r
-    fi
+    section_lnx_ip_r
 
-    # Kernel configuration
-    if inpath sysctl; then
-        echo "<<<lnx_sysctl>>>"
-        sysctl -ae
-    fi
+    section_lnx_sysctl
 
-    # Block devices
-    (# This subshell is for scoping UEVENT_FILE and DEVICE_DIR
-        # use sep=0 rather than 124 in order to be more flexible in the parse function
-        echo "<<<lnx_block_devices:sep(0)>>>"
-        find "/sys/block/" -maxdepth 1 -type f -o -type l | while read -r DEVICE; do
-            UEVENT_FILE="$(realpath "${DEVICE}")/uevent"
-            DEVICE_DIR="$(dirname "${UEVENT_FILE}")"
-
-            grep "DEVTYPE=disk" -q "${UEVENT_FILE}" || continue
-            [ "${UEVENT_FILE#*"devices/virtual/"}" = "${UEVENT_FILE}" ] || continue
-
-            # use pipe as delimiter - also to mark begin of lines for consitency check
-            echo "|device|${DEVICE_DIR}|"
-
-            _data_items | while read -r item; do
-                [ -f "$DEVICE_DIR/${item}" ] && echo "|${item}|$(cat "$DEVICE_DIR/${item}")|"
-            done
-        done 2>/dev/null
-    )
+    section_lnx_block_devices
 }
 
 section_lnx_packages() {
+    # List of DEB packages
     if inpath dpkg-query; then
-        # List of DEB packages
         echo "<<<lnx_packages:sep(124)>>>"
         dpkg-query --show --showformat='${Package}|${Version}|${Architecture}|deb|-|${Summary}|${Status}\n'
     fi
@@ -207,6 +162,73 @@ section_lnx_distro() {
         tr \\n \| <"$f" | sed 's/|$//'
         echo
     done
+}
+
+section_lnx_cpuinfo() {
+    # CPU Information. We need just the first one
+    [ -e /proc/cpuinfo ] || return
+    echo "<<<lnx_cpuinfo:sep(58)>>>"
+    sed 's/[[:space:]]*:[[:space:]]*/:/' </proc/cpuinfo
+}
+
+section_dmidecode() {
+    # Information about main board, memory, etc.
+    inpath dmidecode || return
+    echo "<<<dmidecode:sep(58)>>>"
+    dmidecode -q | sed 's/\t/:/g'
+}
+
+section_lnx_uname() {
+    # Information about kernel architecture
+    inpath uname || return
+    echo "<<<lnx_uname>>>"
+    uname -m
+    uname -r
+}
+
+section_lnx_video() {
+    # Collect VGAs if they are present
+    vgas="$(lspci | grep VGA | cut -d" " -f 1)"
+    [ -n "$vgas" ] || return
+    echo "<<<lnx_video:sep(58)>>>"
+    lspci -v -s "$vgas"
+}
+
+section_lnx_ip_r() {
+    # Some networking information
+    inpath ip || return
+    echo "<<<lnx_ip_r>>>"
+    ip r
+    ip -6 r
+}
+
+section_lnx_sysctl() {
+    # Kernel configuration
+    inpath sysctl || return
+    echo "<<<lnx_sysctl>>>"
+    sysctl -ae
+}
+
+section_lnx_block_devices() {
+    # Block devices
+    (# This subshell is for scoping UEVENT_FILE and DEVICE_DIR
+        # use sep=0 rather than 124 in order to be more flexible in the parse function
+        echo "<<<lnx_block_devices:sep(0)>>>"
+        find "/sys/block/" -maxdepth 1 -type f -o -type l | while read -r DEVICE; do
+            UEVENT_FILE="$(realpath "${DEVICE}")/uevent"
+            DEVICE_DIR="$(dirname "${UEVENT_FILE}")"
+
+            grep "DEVTYPE=disk" -q "${UEVENT_FILE}" || continue
+            [ "${UEVENT_FILE#*"devices/virtual/"}" = "${UEVENT_FILE}" ] || continue
+
+            # use pipe as delimiter - also to mark begin of lines for consitency check
+            echo "|device|${DEVICE_DIR}|"
+
+            _data_items | while read -r item; do
+                [ -f "$DEVICE_DIR/${item}" ] && echo "|${item}|$(cat "$DEVICE_DIR/${item}")|"
+            done
+        done 2>/dev/null
+    )
 }
 
 #

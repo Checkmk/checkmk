@@ -1,0 +1,14 @@
+Title: KUBE: API timeouts are configured for the /api/v1/resourcequotas endpoint
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1655802082
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p4
+
+When calling the /api/v1/resourcequotas endpoint, the Kubernetes special agent would send a HTTP
+request, which ignored the TCP timeout options specified in the Kubernetes rule. This could lead to
+hanging connections. With this werk, this is fixed.

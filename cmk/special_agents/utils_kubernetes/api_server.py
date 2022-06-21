@@ -66,7 +66,9 @@ class CoreAPI:
         return self.connection.list_pod_for_all_namespaces(_request_timeout=self.timeout).items
 
     def _query_raw_resource_quotas(self) -> Sequence[client.V1ResourceQuota]:
-        return self.connection.list_resource_quota_for_all_namespaces().items
+        return self.connection.list_resource_quota_for_all_namespaces(
+            _request_timeout=self.timeout
+        ).items
 
     def _query_raw_namespaces(self):
         return self.connection.list_namespace(_request_timeout=self.timeout).items

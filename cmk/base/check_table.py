@@ -10,10 +10,10 @@ from contextlib import suppress
 from typing import Iterable, Iterator, Mapping, Set
 
 from cmk.utils.parameters import TimespecificParameters
-from cmk.utils.type_defs import CheckPluginName, HostName
+from cmk.utils.type_defs import CheckPluginName, HostName, ServiceID
 
 import cmk.base.config as config
-from cmk.base.check_utils import ConfiguredService, ServiceID
+from cmk.base.check_utils import ConfiguredService
 
 
 class FilterMode(enum.Enum):

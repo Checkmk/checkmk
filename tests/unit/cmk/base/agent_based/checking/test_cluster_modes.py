@@ -11,7 +11,7 @@ from typing import Any, Iterable, Literal, Mapping, Optional, Union
 
 import pytest
 
-from cmk.utils.type_defs import CheckPluginName
+from cmk.utils.type_defs import CheckPluginName, ServiceID
 
 from cmk.base.agent_based.checking import _cluster_modes as cluster_modes
 from cmk.base.api.agent_based.checking_classes import (
@@ -24,7 +24,7 @@ from cmk.base.api.agent_based.checking_classes import (
     Result,
     State,
 )
-from cmk.base.api.agent_based.value_store._utils import ServiceID, ValueStoreManager
+from cmk.base.api.agent_based.value_store._utils import ValueStoreManager
 
 TEST_SERVICE_ID = ServiceID(CheckPluginName("unit_test_plugin"), "unit_test_item")
 

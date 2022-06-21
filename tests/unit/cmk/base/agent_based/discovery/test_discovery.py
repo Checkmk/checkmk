@@ -23,6 +23,7 @@ from cmk.utils.type_defs import (
     HostKey,
     HostName,
     SectionName,
+    ServiceID,
     SourceType,
 )
 
@@ -39,7 +40,6 @@ from cmk.base.agent_based.data_provider import (
     SectionsParser,
 )
 from cmk.base.agent_based.discovery import _discovered_services
-from cmk.base.check_utils import ServiceID
 from cmk.base.discovered_labels import HostLabel
 from cmk.base.sources.agent import AgentRawDataSection
 from cmk.base.sources.snmp import SNMPRawDataSection

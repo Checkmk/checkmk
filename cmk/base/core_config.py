@@ -47,6 +47,7 @@ from cmk.utils.type_defs import (
     Item,
     Labels,
     LabelSources,
+    ServiceID,
     ServiceName,
 )
 
@@ -54,7 +55,7 @@ import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.obsolete_output as out
-from cmk.base.check_utils import ConfiguredService, ServiceID
+from cmk.base.check_utils import ConfiguredService
 from cmk.base.config import (
     ConfigCache,
     HostCheckCommand,

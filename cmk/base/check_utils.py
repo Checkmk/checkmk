@@ -7,9 +7,8 @@
 from typing import Mapping, NamedTuple, Optional
 
 from cmk.utils.parameters import TimespecificParameters
-from cmk.utils.type_defs import CheckPluginName, Item, LegacyCheckParameters, ServiceName
+from cmk.utils.type_defs import CheckPluginName, Item, LegacyCheckParameters, ServiceID, ServiceName
 
-from cmk.base.api.agent_based.value_store._utils import ServiceID
 from cmk.base.discovered_labels import ServiceLabel
 
 

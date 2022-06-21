@@ -22,7 +22,7 @@ from typing import (
     Union,
 )
 
-from cmk.utils.type_defs import ClusterMode, state_markers
+from cmk.utils.type_defs import ClusterMode, ServiceID, state_markers
 
 from cmk.base.api.agent_based.checking_classes import (
     CheckFunction,
@@ -35,7 +35,6 @@ from cmk.base.api.agent_based.checking_classes import (
     State,
 )
 from cmk.base.api.agent_based.value_store import ValueStoreManager
-from cmk.base.check_utils import ServiceID
 
 _Kwargs = Mapping[str, Any]
 

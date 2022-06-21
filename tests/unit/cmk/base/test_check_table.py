@@ -15,14 +15,20 @@ from _pytest.monkeypatch import MonkeyPatch
 from tests.testlib.base import Scenario
 
 from cmk.utils.parameters import TimespecificParameters, TimespecificParameterSet
-from cmk.utils.type_defs import CheckPluginName, HostName, LegacyCheckParameters, RuleSetName
+from cmk.utils.type_defs import (
+    CheckPluginName,
+    HostName,
+    LegacyCheckParameters,
+    RuleSetName,
+    ServiceID,
+)
 
 import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base import check_table, config
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.autochecks import AutocheckEntry
 from cmk.base.check_table import HostCheckTable
-from cmk.base.check_utils import ConfiguredService, ServiceID
+from cmk.base.check_utils import ConfiguredService
 
 
 @pytest.fixture(autouse=True, scope="module")

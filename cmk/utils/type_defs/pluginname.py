@@ -6,7 +6,9 @@
 
 import abc
 import string
-from typing import Any, Final, Set
+from typing import Any, Final, NamedTuple, Set
+
+from ._misc import Item
 
 __all__ = [
     "ABCName",
@@ -15,6 +17,7 @@ __all__ = [
     "RuleSetName",
     "CheckPluginName",
     "InventoryPluginName",
+    "ServiceID",
 ]
 
 
@@ -152,3 +155,8 @@ class InventoryPluginName(ABCName):
     @classmethod
     def _legacy_naming_exceptions(cls) -> Set[str]:
         return set()
+
+
+class ServiceID(NamedTuple):
+    name: CheckPluginName
+    item: Item

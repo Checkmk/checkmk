@@ -45,6 +45,7 @@ from cmk.utils.type_defs import (
     HostKey,
     HostName,
     RulesetName,
+    ServiceID,
     ServiceName,
 )
 
@@ -67,7 +68,7 @@ import cmk.base.section as section
 from cmk.base.agent_based.data_provider import make_broker, ParsedSectionsBroker
 from cmk.base.agent_based.utils import check_parsing_errors, check_sources
 from cmk.base.api.agent_based.value_store import load_host_value_store, ValueStoreManager
-from cmk.base.check_utils import ConfiguredService, LegacyCheckParameters, ServiceID
+from cmk.base.check_utils import ConfiguredService, LegacyCheckParameters
 from cmk.base.core_config import (
     get_active_check_descriptions,
     get_host_attributes,

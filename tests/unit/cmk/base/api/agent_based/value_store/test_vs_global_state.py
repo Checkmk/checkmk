@@ -7,13 +7,12 @@
 # pylint: disable=protected-access
 
 import cmk.utils.store as store
-from cmk.utils.type_defs import CheckPluginName
+from cmk.utils.type_defs import CheckPluginName, ServiceID
 
 from cmk.base.api.agent_based.value_store._global_state import (
     get_value_store,
     load_host_value_store,
 )
-from cmk.base.api.agent_based.value_store._utils import ServiceID
 
 _TEST_KEY = ("check", "item", "user-key")
 

@@ -564,6 +564,10 @@ img.icon {
     filter: sepia(100%);
     -webkit-filter: sepia(100%);
   }
+
+  &.colorless {
+    filter: grayscale(100%);
+  }
 }
 
 img.iconbutton:hover {

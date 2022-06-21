@@ -1648,18 +1648,25 @@ def page_edit_dashboards() -> None:
 
 def _render_dashboard_buttons(dashboard_name: DashboardName, dashboard: DashboardConfig) -> None:
     if dashboard["owner"] == user.id:
-        html.icon_button(
-            makeuri_contextless(
-                request,
-                [
-                    ("name", dashboard_name),
-                    ("edit", "1"),
-                ],
-                "dashboard.py",
-            ),
-            title=_("Edit dashboard"),
-            icon="dashboard",
-        )
+        if dashboard.get("show_title"):
+            html.icon_button(
+                makeuri_contextless(
+                    request,
+                    [
+                        ("name", dashboard_name),
+                        ("edit", "1"),
+                    ],
+                    "dashboard.py",
+                ),
+                title=_("Edit layout"),
+                icon="dashboard",
+            )
+        else:
+            html.icon(
+                icon="dashboard",
+                title=_("Edit layout only available if header is enabled"),
+                cssclass="colorless",
+            )
 
 
 # .

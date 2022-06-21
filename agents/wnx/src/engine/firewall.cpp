@@ -57,8 +57,12 @@ Policy::Policy() {
 }
 
 Policy::~Policy() {
-    if (rules_) rules_->Release();
-    if (policy_) policy_->Release();
+    if (rules_ != nullptr) {
+        rules_->Release();
+    }
+    if (policy_ != nullptr) {
+        policy_->Release();
+    }
 }
 
 long Policy::getCurrentProfileTypes() {
@@ -128,7 +132,7 @@ INetFwRule *ScanAllRules(
     ON_OUT_OF_SCOPE(policies->Release());
 
     ULONG cFetched = 0;
-    VARIANT var;
+    VARIANT var{0};
     ::VariantClear(&var);
 
     while (true) {

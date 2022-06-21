@@ -9,7 +9,7 @@ import typing
 import pytest
 
 from cmk.base.plugins.agent_based.utils.docker import (
-    _cleanup_oci_error_message,
+    cleanup_oci_error_message,
     MemorySection,
     parse,
     parse_multiline,
@@ -101,7 +101,7 @@ def test_parse_multiline() -> None:
     ],
 )
 def test_parse_remove_error_message(data_in, data_out) -> None:
-    cleaned_up = _cleanup_oci_error_message(data_in)
+    cleaned_up = cleanup_oci_error_message(data_in)
     assert cleaned_up == data_out
 
 

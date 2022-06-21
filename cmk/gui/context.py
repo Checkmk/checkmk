@@ -113,7 +113,7 @@ class RequestContext:
         user: LoggedInUser,  # pylint: disable=redefined-outer-name
         html_obj: Optional[HTMLGenerator] = None,
         timeout_manager: Optional[TimeoutManager] = None,  # pylint: disable=redefined-outer-name
-        theme: Optional[Theme] = None,  # pylint: disable=redefined-outer-name
+        theme: Theme = Theme(),  # pylint: disable=redefined-outer-name
         display_options: Optional[DisplayOptions] = None,  # pylint: disable=redefined-outer-name
         prefix_logs_with_url: bool = True,
         endpoint: Optional[Endpoint] = None,  # pylint: disable=redefined-outer-name

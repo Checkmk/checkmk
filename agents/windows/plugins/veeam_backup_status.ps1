@@ -1,9 +1,5 @@
-<<<<<<< HEAD
-$CMK_VERSION = "2.1.0p3"
-=======
 param ([switch] $Debug)
-$CMK_VERSION = "2.0.0p26"
->>>>>>> 1f71c3bc81 (14350 FIX Fix veeam agent plugin poluting output when veeam software not found)
+$CMK_VERSION = "2.1.0p3"
 ## VEEAM Backups
 ## This powershell script needs to be run with the 64bit powershell
 ## and thus from a 64bit check_mk agent
@@ -200,4 +196,3 @@ $errItem = $_.Exception.ItemName
 Write-Error "Totally unexpected and unhandled error occured:`n Item: $errItem`n Error Message: $errMsg"
 Break
 }
-

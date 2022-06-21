@@ -7984,6 +7984,10 @@ msgstr "Cancelar notificações anteriores"
 msgid "Canceled"
 msgstr "Cancelado"
 
+msgid ""
+"Cannot activate changes: The license usage history is older than five days."
+msgstr ""
+
 #, python-format
 msgid ""
 "Cannot aquire cookie from ntop server '%s' for user '%s'. Please check your "
@@ -19965,6 +19969,10 @@ msgstr "Cordão genérico"
 
 msgid "Get file from SFTP server"
 msgstr "Obter ficheiro a partir do servidor SFTP"
+
+#, fuzzy
+msgid "GiB"
+msgstr "GB"
 
 msgid ""
 "Give FPGA utilization levels in percent. The possible range is from 0% to "
@@ -48084,6 +48092,11 @@ msgid ""
 msgstr ""
 "Os níveis de custos serão considerados como estando na moeda correspondente "
 "aos dados reportados."
+
+msgid ""
+"The license usage history was updated at least three days ago.<br>Note: If "
+"it cannot be updated within five days activate changes will be blocked."
+msgstr ""
 
 msgid "The limit for the transport lag in <tt>v$dataguard_stats</tt>"
 msgstr "O limite para o atraso do transporte em <tt>v$dataguard_stats</tt>"

@@ -7600,6 +7600,10 @@ msgstr "以前の通知をキャンセルする"
 msgid "Canceled"
 msgstr "キャンセル"
 
+msgid ""
+"Cannot activate changes: The license usage history is older than five days."
+msgstr ""
+
 #, python-format
 msgid ""
 "Cannot aquire cookie from ntop server '%s' for user '%s'. Please check your "
@@ -19059,6 +19063,10 @@ msgstr "一般的な文字列"
 
 msgid "Get file from SFTP server"
 msgstr "SFTPサーバーからファイルを取得する"
+
+#, fuzzy
+msgid "GiB"
+msgstr "GB"
 
 msgid ""
 "Give FPGA utilization levels in percent. The possible range is from 0% to "
@@ -45599,6 +45607,11 @@ msgid ""
 "The levels on costs will be considered to be in the currency corresponding "
 "to the reported data."
 msgstr "コストのレベルは、報告されたデータに対応する通貨であると見なされます。"
+
+msgid ""
+"The license usage history was updated at least three days ago.<br>Note: If "
+"it cannot be updated within five days activate changes will be blocked."
+msgstr ""
 
 msgid "The limit for the transport lag in <tt>v$dataguard_stats</tt>"
 msgstr "<tt>v$dataguard_stats </tt>でのトランスポートラグの制限"

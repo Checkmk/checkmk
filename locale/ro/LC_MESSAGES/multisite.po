@@ -7507,6 +7507,10 @@ msgstr ""
 msgid "Canceled"
 msgstr ""
 
+msgid ""
+"Cannot activate changes: The license usage history is older than five days."
+msgstr ""
+
 #, python-format
 msgid ""
 "Cannot aquire cookie from ntop server '%s' for user '%s'. Please check your "
@@ -19326,6 +19330,9 @@ msgid "Generic string"
 msgstr ""
 
 msgid "Get file from SFTP server"
+msgstr ""
+
+msgid "GiB"
 msgstr ""
 
 msgid ""
@@ -45899,6 +45906,11 @@ msgstr ""
 msgid ""
 "The levels on costs will be considered to be in the currency corresponding "
 "to the reported data."
+msgstr ""
+
+msgid ""
+"The license usage history was updated at least three days ago.<br>Note: If "
+"it cannot be updated within five days activate changes will be blocked."
 msgstr ""
 
 msgid "The limit for the transport lag in <tt>v$dataguard_stats</tt>"

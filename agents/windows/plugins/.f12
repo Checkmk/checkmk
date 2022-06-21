@@ -12,4 +12,4 @@ else cd ..; fi; done)}"
 SITE="${SITE:-$(omd sites --bare | head -n 1)}"
 ROOT="/omd/sites/$SITE"
 
-sudo install -m 755 ./*.* "$ROOT/share/check_mk/agents/windows/plugins"
+sudo rsync -r --delete --chmod 755 . "$ROOT/share/check_mk/agents/windows/plugins"

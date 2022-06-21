@@ -3035,22 +3035,26 @@ class HostConfig:
         matched = []
         for checkgroup_name, ruleset in static_checks.items():
             for entry in self._config_cache.host_extra_conf(self.hostname, ruleset):
-                if len(entry) == 2:
-                    checktype, item = entry
-                    params = None
-                else:
-                    checktype, item, params = entry
-
                 matched.append(
                     (
                         RulesetName(checkgroup_name),
-                        CheckPluginName(maincheckify(checktype)),
-                        None if item is None else str(item),
-                        TimespecificParameterSet.from_parameters(params),
+                        *self._sanitize_enforced_entry(*entry),
                     )
                 )
 
         return matched
+
+    @staticmethod
+    def _sanitize_enforced_entry(
+        raw_name: object,
+        raw_item: object,
+        raw_params: Any | None = None,  # Can be any value spec supplied type :-(
+    ) -> tuple[CheckPluginName, Item, TimespecificParameterSet]:
+        return (
+            CheckPluginName(maincheckify(str(raw_name))),
+            None if raw_item is None else str(raw_item),
+            TimespecificParameterSet.from_parameters({} if raw_params is None else raw_params),
+        )
 
     @property
     def hostgroups(self) -> List[HostgroupName]:

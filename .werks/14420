@@ -1,0 +1,35 @@
+Title: Docker container piggyback hosts: Go CRIT in case of multiple parent hosts
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1655994127
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p4
+
+Docker containers are usually monitored as piggyback hosts in Checkmk. If a container with
+the same name runs on multiple Docker hosts, the piggyback host representing this container
+will receive data from all parent hosts (of course, this only happens if the Docker agent plugin
+is configured to use container names as piggyback host names).
+
+Since containers with the same name on different parent hosts are completely separate entities,
+there is no sensible way of merging the data from different parent hosts. In Checkmk 2.0, the
+container-related services simply used the data from the first parent host. In Checkmk 2.1
+however, most container-related services will refuse to process data from multiple parent hosts.
+Instead, they will go stale and show up as vanished services in the discovery page. Furthermore,
+the Check_MK Discovery will show errors such as
+C+:
+Parsing of section docker_container_... failed
+C-:
+
+This behaviour is intended, since, as stated above, there is no sensible way of merging data from
+multiple parent hosts. To explicitly make the user aware of this situation, the service "Docker
+container status" will now additionally go CRIT and report
+"Found data from multiple Docker nodes - see service details for more information".
+To resolve this situation, users have multiple options:
+
+LI: Reconfigure the Docker agent plugin to use container IDs as piggyback host names.
+LI: Rename the containers on the parent hosts.
+LI: Use the ruleset "Hostname translation for piggybacked hosts" to make the host names in Checkmk unique.

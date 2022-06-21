@@ -32,10 +32,26 @@ if sys.version_info < (2, 6):
     sys.exit(1)
 
 if sys.version_info[0] == 2:
-    from urllib2 import HTTPError, Request, URLError, urlopen  # pylint: disable=import-error
+    from urllib2 import HTTPError, Request, URLError  # pylint: disable=import-error
+    from urllib2 import urlopen as _urlopen  # pylint: disable=import-error
+
+    def urltype(request):
+        return request.get_type()
+
 else:
     from urllib.error import HTTPError, URLError  # pylint: disable=import-error,no-name-in-module
-    from urllib.request import Request, urlopen  # pylint: disable=import-error,no-name-in-module
+    from urllib.request import Request  # pylint: disable=import-error,no-name-in-module
+    from urllib.request import urlopen as _urlopen  # pylint: disable=import-error,no-name-in-module
+
+    def urltype(request):
+        return request.type
+
+
+def urlopen(request, timeout=5, cafile=None, context=None):
+    scheme = urltype(request)
+    if scheme not in ["http", "https"]:
+        raise ValueError("Scheme '%s' is not allowed" % scheme)
+    return _urlopen(request, timeout=timeout, cafile=cafile, context=context)  # nosec - B310
 
 
 def get_config():
@@ -109,7 +125,7 @@ def try_detect_servers(ssl_ports):
         server_port = int(_server_port)
 
         # Use localhost when listening globally
-        if server_address == "0.0.0.0":
+        if server_address == "0.0.0.0":  # nosec - B104
             server_address = "127.0.0.1"
         elif server_address == "::":
             server_address = "[::1]"

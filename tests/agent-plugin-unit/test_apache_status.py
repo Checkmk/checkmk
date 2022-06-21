@@ -65,6 +65,7 @@ def test_https_cfg_versions(cfg) -> None:
         [(("http", None), "127.0.0.1", None, "")],
         [("http", "127.0.0.1", None, "")],
         [("http", "127.0.0.1", None)],
+        [("https", "127.0.0.1", None)],
     ],
 )
 def test_agent(cfg, response, monkeypatch, capsys) -> None:
@@ -77,3 +78,22 @@ def test_agent(cfg, response, monkeypatch, capsys) -> None:
         + "\n".join(("127.0.0.1|None||%s" % line for line in RESPONSE.split("\n")))
         + "\n"
     )
+
+
+@pytest.mark.parametrize(
+    "scheme",
+    ["fax", "file", "ftp", "jar", "snmp", "ssh"],
+)
+def test_urlopen_illegal_urls(scheme) -> None:
+    with pytest.raises(ValueError, match="Scheme '%s' is not allowed" % scheme):
+        apache_status.get_response_body(scheme, None, "127.0.0.1", "8080", "index.html")
+
+
+@pytest.mark.parametrize(
+    "scheme",
+    ["http", "https"],
+)
+def test_urlopen_legal_urls(scheme, mocker) -> None:
+    mocked_urlopen = mocker.patch("agents.plugins.apache_status._urlopen")
+    apache_status.get_response_body(scheme, None, "127.0.0.1", "8080", "index.html")
+    assert mocked_urlopen.call_count == 1  # no assert_called_once() in python < 3.6

@@ -19,6 +19,8 @@
 #include "tools/_raii.h"
 #include "tools/_xlog.h"
 
+namespace rs = std::ranges;
+
 namespace cma::provider {
 
 std::vector<std::string> TokenizeString(const std::string &val, int sub_match) {
@@ -120,9 +122,9 @@ void MrpeEntry::loadFromString(const std::string &value) {
         exe_full_path = cfg::GetUserDir() / exe_full_path;
     }
 
-    full_path_name_ = exe_full_path.u8string();
+    full_path_name_ = wtools::ToUtf8(exe_full_path.wstring());
 
-    exe_name_ = exe_full_path.filename().u8string();
+    exe_name_ = wtools::ToUtf8(exe_full_path.filename().wstring());
 
     command_line_ = full_path_name_;
     if (!argv.empty()) {
@@ -139,20 +141,14 @@ void MrpeProvider::addParsedConfig() {
     addParsedIncludes();
 
     if constexpr (kMrpeRemoveAbsentFiles) {
-        auto end = std::remove_if(
-            entries_.begin(),             // from
-            entries_.end(),               // to
-            [](const MrpeEntry &entry) {  // lambda to delete
-                auto ok = cma::tools::IsValidRegularFile(entry.full_path_name_);
-                if (!ok) {
-                    XLOG::d("The file '{}' is no valid", entry.full_path_name_);
-                }
-                return !ok;
-            }  //
-        );
-
-        // actual remove
-        entries_.erase(end, entries_.end());
+        auto [a, b] = rs::remove_if(entries_, [](const MrpeEntry &entry) {
+            auto ok = tools::IsValidRegularFile(entry.full_path_name_);
+            if (!ok) {
+                XLOG::d("The file '{}' is no valid", entry.full_path_name_);
+            }
+            return !ok;
+        });
+        entries_.erase(a, b);
     }
 }
 
@@ -227,15 +223,14 @@ void AddCfgFileToEntries(const std::string &user,
 void MrpeProvider::addParsedIncludes() {
     for (const auto &entry : includes_) {
         auto [user, path] = ParseIncludeEntry(entry);
-
-        if (path.empty()) continue;
-
+        if (path.empty()) {
+            continue;
+        }
         if (!tools::IsValidRegularFile(path)) {
             XLOG::d("File '{}' is not valid or missing for entry '{}'",
                     path.u8string(), entry);
             continue;
         }
-
         AddCfgFileToEntries(user, path, entries_);
     }
 }
@@ -251,7 +246,7 @@ bool MrpeProvider::parseAndLoadEntry(const std::string &entry) {
     // include entry determined when type is 'include'
     // the type
     auto type = table[0];
-    std::ranges::transform(type, type.begin(), tolower);
+    rs::transform(type, type.begin(), tolower);
     // include user = file   <-- src
     //        "user = file"  <-- value
     auto pos = type.find("include", 0);
@@ -272,7 +267,7 @@ bool MrpeProvider::parseAndLoadEntry(const std::string &entry) {
 
     // check entry determined when type is 'check'
     tools::AllTrim(type);
-    std::ranges::transform(type, type.begin(), tolower);
+    rs::transform(type, type.begin(), tolower);
     if (type == "check") {
         // check = anything   <-- src
         //        "anything"  <-- value
@@ -315,9 +310,13 @@ void MrpeProvider::loadConfig() {
 }
 
 void FixCrCnForMrpe(std::string &str) {
-    std::ranges::transform(str, str.begin(), [](char ch) {
-        if (ch == '\n') return '\1';
-        if (ch == '\r') return ' ';
+    rs::transform(str, str.begin(), [](char ch) {
+        if (ch == '\n') {
+            return '\1';
+        }
+        if (ch == '\r') {
+            return ' ';
+        }
 
         return ch;
     });
@@ -329,8 +328,7 @@ std::string ExecMrpeEntry(const MrpeEntry &entry,
     XLOG::d.i("Run mrpe entry '{}'", result);
 
     TheMiniBox minibox;
-    auto started = minibox.startBlind(entry.command_line_, entry.run_as_user_);
-    if (!started) {
+    if (!minibox.startBlind(entry.command_line_, entry.run_as_user_)) {
         XLOG::d("Failed to start minibox sync {}", entry.command_line_);
 
         // string is form the legacy agent

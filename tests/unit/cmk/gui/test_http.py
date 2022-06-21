@@ -275,12 +275,16 @@ def test_request_processing(request_context: RequestContextFixture) -> None:
     # html.parse_field_storage(["field1", "field2"], handle_uploads_as_file_obj = False)
 
 
+# Needs to be equal
+COOKIE_PATH = "/NO_SITE/"
+
+
 def test_response_set_http_cookie(request_context: RequestContextFixture) -> None:
     response.set_http_cookie("auth_SITE", "user:123456:abcdefg", secure=False)
 
     assert (
         response.headers.getlist("Set-Cookie")[-1]
-        == "auth_SITE=user:123456:abcdefg; HttpOnly; Path=/; SameSite=Lax"
+        == f"auth_SITE=user:123456:abcdefg; HttpOnly; Path={COOKIE_PATH}; SameSite=Lax"
     )
 
 
@@ -291,7 +295,7 @@ def test_response_set_http_cookie_secure(
 
     assert (
         response.headers.getlist("Set-Cookie")[-1]
-        == "auth_SITE=user:123456:abcdefg; Secure; HttpOnly; Path=/; SameSite=Lax"
+        == f"auth_SITE=user:123456:abcdefg; Secure; HttpOnly; Path={COOKIE_PATH}; SameSite=Lax"
     )
 
 
@@ -300,11 +304,11 @@ def test_response_del_cookie(
 ) -> None:
     monkeypatch.setattr(time, "time", lambda: 0)
 
-    response.delete_cookie("auth_SITE")
+    response.unset_http_cookie("auth_SITE")
 
     assert (
         response.headers.getlist("Set-Cookie")[-1]
-        == "auth_SITE=; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Max-Age=0; Path=/"
+        == f"auth_SITE=; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Max-Age=0; Path={COOKIE_PATH}"
     )
 
 

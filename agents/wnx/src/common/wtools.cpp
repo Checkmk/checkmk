@@ -95,9 +95,8 @@ std::pair<uint32_t, uint32_t> GetProcessExitCode(uint32_t pid) {
     }
 
     ON_OUT_OF_SCOPE(::CloseHandle(h));
-    DWORD exit_code = 0;
-    auto success = ::GetExitCodeProcess(h, &exit_code);
-    if (FALSE == success) {
+    DWORD exit_code{0};
+    if (::GetExitCodeProcess(h, &exit_code) == FALSE) {
         return {-1, ::GetLastError()};
     }
 
@@ -2220,19 +2219,45 @@ fs::path GetCurrentExePath() {
     return {};
 }
 
-size_t GetOwnVirtualSize() noexcept {
-#if defined(_WIN32)
-    PROCESS_MEMORY_COUNTERS_EX pmcx = {};
-    pmcx.cb = sizeof(pmcx);
-    ::GetProcessMemoryInfo(GetCurrentProcess(),
-                           reinterpret_cast<PROCESS_MEMORY_COUNTERS *>(&pmcx),
-                           pmcx.cb);
+namespace {
+std::optional<PROCESS_MEMORY_COUNTERS_EX> GetProcessMemoryCounters(
+    HANDLE process) {
+    PROCESS_MEMORY_COUNTERS_EX counters = {0};
+    counters.cb = sizeof(counters);
+    if (::GetProcessMemoryInfo(process,
+                               static_cast<PROCESS_MEMORY_COUNTERS *>(
+                                   static_cast<void *>(&counters)),
+                               counters.cb) == 0) {
+        XLOG::l("Can't read process memory, error [{}]", ::GetLastError());
+        return {};
+    }
+    return counters;
+}
+}  // namespace
 
-    return pmcx.WorkingSetSize;
-#else
-#error "Not implemented"
-    return 0;
-#endif
+/// See:
+/// https://en.wikipedia.org/wiki/Commit_charge
+/// commit charge may be defined as 'virtual memory size', i.e. size of process
+/// which backed up by physical memory and/or pagefile
+/// https://docs.microsoft.com/en-us/windows/win32/api/psapi/ns-psapi-process_memory_counters_ex
+/// PrivateUsage(PageFileUsage for newer OS) means Commit Charge
+size_t GetCommitCharge(uint32_t pid) noexcept {
+    UniqueHandle h{
+        ::OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, pid)};
+
+    if (!h) {
+        XLOG::l("Can't open process with pid [{}], error [{}]", pid,
+                ::GetLastError());
+        return 0;
+    }
+
+    auto counters = GetProcessMemoryCounters(h.get());
+    return counters ? counters->PrivateUsage : 0;
+}
+
+size_t GetOwnVirtualSize() noexcept {
+    auto counters = GetProcessMemoryCounters(GetCurrentProcess());
+    return counters ? counters->WorkingSetSize : 0;
 }
 
 namespace monitor {
@@ -2838,7 +2863,7 @@ private:
         return true;
     }
 
-    char buf_[32];
+    char buf_[32]{0};
     SID *sid_{reinterpret_cast<SID *>(buf_)};
     size_t count_{0};
 };

@@ -283,17 +283,21 @@ bool readConfigFile(std::istream &is, const std::string &hostname,
     }
 
     CSimpleIniA ini(false, true);  // No UTF-8, multikey support
-    auto res = ini.LoadData(is);
 
-    if (res < 0) {
+    if (auto res = ini.LoadData(is); res < 0) {
         switch (res) {
             case SI_Error::SI_FAIL:
                 XLOG::l("Generic error");
+                break;
             case SI_Error::SI_NOMEM:
                 XLOG::l("Out of memory");
+                break;
             case SI_Error::SI_FILE:
-                XLOG::l("generic_error().what()");
-            default:;
+                XLOG::l("file error");
+                break;
+            default:
+                XLOG::l("unknown error {}", res);
+                break;
         }
         return false;
     }

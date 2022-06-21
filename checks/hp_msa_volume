@@ -212,7 +212,7 @@ def check_hp_msa_volume_df(item, params, parsed):
         yield df_check_filesystem_single(item, size_mb, avail_mb, 0, None, None, params)
 
 
-factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_LEVELS
+factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS
 
 
 check_info["hp_msa_volume.df"] = {

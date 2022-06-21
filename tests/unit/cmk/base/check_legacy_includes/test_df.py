@@ -10,7 +10,7 @@ import pytest
 from pytest_mock import MockerFixture
 
 from cmk.base.check_legacy_includes.df import df_check_filesystem_single_coroutine
-from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_LEVELS
+from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
 
 
 @pytest.mark.parametrize(
@@ -149,7 +149,7 @@ def test_df_check_filesystem_single_coroutine(
             df_check_filesystem_single_coroutine(
                 "/fake",
                 *data,
-                FILESYSTEM_DEFAULT_LEVELS,
+                FILESYSTEM_DEFAULT_PARAMS,
                 this_time=123,
             )
         )

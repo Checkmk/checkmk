@@ -9,18 +9,24 @@ import time
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from cmk.base.plugins.agent_based.utils.df import df_discovery
 from cmk.base.plugins.agent_based.utils.df import (
-    FILESYSTEM_DEFAULT_LEVELS as _FILESYSTEM_DEFAULT_LEVELS,
+    df_discovery,
+    FILESYSTEM_DEFAULT_LEVELS,
+    INODES_DEFAULT_PARAMS,
+    MAGIC_FACTOR_DEFAULT_PARAMS,
+    mountpoints_in_group,
+    TREND_DEFAULT_PARAMS,
 )
-from cmk.base.plugins.agent_based.utils.df import mountpoints_in_group
 
 # <<<netapp_api_volumes:sep(9)>>>
 # volume vol0 size-available 556613632    state online    files-total 25876   files-used 8646 size-total 848203776    fcp_write_data 0    fcp_read_data 0cifs_write_data 0    iscsi_read_latency 0    iscsi_write_data 0  read_data 201265528798  nfs_write_latency 977623886 san_write_latency 0 san_write_data 0read_latency 1529821621 cifs_read_latency 0 fcp_write_latency 0 fcp_read_latency 0  iscsi_write_latency 0   nfs_read_latency 1491050012 iscsi_read_data 0   instance_name vol0  cifs_read_data 0    nfs_read_data 197072260981  write_latency 1528780977    san_read_data 0 san_read_latency 0  write_data 13926719804  nfs_write_data 2789744628   cifs_write_latency 0
 
 
 factory_settings["netapp_api_volumes_default_levels"] = {
-    k: v for k, v in _FILESYSTEM_DEFAULT_LEVELS.items() if k not in ("show_levels", "show_reserved")
+    **FILESYSTEM_DEFAULT_LEVELS,
+    **MAGIC_FACTOR_DEFAULT_PARAMS,
+    **INODES_DEFAULT_PARAMS,
+    **TREND_DEFAULT_PARAMS,
 }
 
 

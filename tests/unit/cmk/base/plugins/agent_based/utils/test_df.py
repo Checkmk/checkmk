@@ -277,7 +277,7 @@ def test_df_check_filesystem_single(
                 },
                 "/fake",
                 *data,
-                df.FILESYSTEM_DEFAULT_LEVELS,
+                df.FILESYSTEM_DEFAULT_PARAMS,
                 this_time=123,
             )
         )
@@ -499,7 +499,9 @@ def test_get_filesystem_levels(
     filesystem_params: Mapping[str, Any],
     parsed_params: Mapping[str, Any],
 ) -> None:
-    actual_parsed_params = df.get_filesystem_levels(filesystem_size_gb, filesystem_params)
+    actual_parsed_params = df.get_filesystem_levels(
+        filesystem_size_gb, {**df.FILESYSTEM_DEFAULT_PARAMS, **filesystem_params}
+    )
 
     assert actual_parsed_params["levels"] == parsed_params["levels"]
     assert actual_parsed_params["levels_mb"] == parsed_params["levels_mb"]
@@ -632,7 +634,9 @@ def test_get_filesystem_levels_magic_factor(
     filesystem_params: Mapping[str, Any],
     parsed_params: Mapping[str, Any],
 ) -> None:
-    actual_parsed_params = df.get_filesystem_levels(filesystem_size_gb, filesystem_params)
+    actual_parsed_params = df.get_filesystem_levels(
+        filesystem_size_gb, {**df.FILESYSTEM_DEFAULT_PARAMS, **filesystem_params}
+    )
 
     assert actual_parsed_params["levels"] == parsed_params["levels"]
     assert actual_parsed_params["levels_mb"] == pytest.approx(parsed_params["levels_mb"], rel=0.01)
@@ -682,6 +686,8 @@ def test_get_filesystem_levels_inodes(
     filesystem_params: Mapping[str, Any],
     parsed_params: Mapping[str, Any],
 ) -> None:
-    actual_parsed_params = df.get_filesystem_levels(10.0, filesystem_params)
+    actual_parsed_params = df.get_filesystem_levels(
+        10.0, {**df.FILESYSTEM_DEFAULT_PARAMS, **filesystem_params}
+    )
 
     assert actual_parsed_params["inodes_levels"] == parsed_params["inodes_levels"]

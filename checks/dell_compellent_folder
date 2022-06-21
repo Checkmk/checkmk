@@ -11,6 +11,8 @@ from cmk.base.check_legacy_includes import dell_compellent
 from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
+factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS
+
 
 def inventory_dell_compellent_folder(info):
     for line in info:
@@ -41,4 +43,5 @@ check_info["dell_compellent_folder"] = {
     ),
     "snmp_scan_function": dell_compellent.scan,
     "group": "filesystem",
+    "default_levels_variable": "filesystem_default_levels",
 }

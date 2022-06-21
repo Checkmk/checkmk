@@ -23,6 +23,8 @@ from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildc
 # }
 from cmk.base.plugins.agent_based.utils.df import df_discovery
 
+factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS
+
 
 def inventory_emc_isilon_quota(info):
     mount_points = []
@@ -114,5 +116,5 @@ check_info["emc_isilon_quota"] = {
     ),
     "snmp_scan_function": lambda oid: "isilon" in oid(".1.3.6.1.2.1.1.1.0").lower(),
     "group": "filesystem",
-    "default_levels_variable": "emc_isilon_quota",
+    "default_levels_variable": "filesystem_default_levels",
 }

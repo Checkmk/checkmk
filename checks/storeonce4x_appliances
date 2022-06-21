@@ -17,6 +17,8 @@ from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildc
 # problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.storeonce import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
+factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS
+
 
 def parse_storeonce4x_appliances(info):
 
@@ -128,6 +130,7 @@ check_info["storeonce4x_appliances.storage"] = {
     "service_description": "Appliance %s Storage",
     "group": "filesystem",
     "has_perfdata": True,
+    "default_levels_variable": "filesystem_default_levels",
 }
 
 

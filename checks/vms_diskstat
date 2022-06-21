@@ -23,7 +23,7 @@ from cmk.base.plugins.agent_based.utils.df import df_discovery
 # $1$DGA1125: DATA_01 1171743836 202431184 0.20
 
 
-factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_LEVELS
+factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS
 
 
 def inventory_vms_diskstat_fs(info):

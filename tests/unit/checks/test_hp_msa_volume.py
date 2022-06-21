@@ -11,6 +11,8 @@ import pytest
 
 from tests.testlib import Check
 
+from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
+
 from .checktestlib import assertCheckResultsEqual, CheckResult, mock_item_state
 
 # all tests in this file are hp_msa_volume check related
@@ -93,7 +95,10 @@ def test_df_discovery_yields_volume_name_as_item() -> None:
 
 def test_df_check() -> None:
     item_1st = "VMFS_01"
-    params = {"flex_levels": "irrelevant"}
+    params = {
+        **FILESYSTEM_DEFAULT_PARAMS,  # type: ignore
+        "flex_levels": "irrelevant",
+    }
     check = Check("hp_msa_volume.df")
     parsed = {
         "VMFS_01": {

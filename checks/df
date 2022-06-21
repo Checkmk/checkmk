@@ -9,14 +9,14 @@ from typing import Any, Iterable, Iterator, Mapping, NamedTuple, Sequence
 
 from cmk.base.check_legacy_includes.df import (
     df_check_filesystem_list_coroutine,
-    FILESYSTEM_DEFAULT_LEVELS,
+    FILESYSTEM_DEFAULT_PARAMS,
     filesystem_groups,
     inventory_df_exclude_mountpoints,
 )
 from cmk.base.plugins.agent_based.agent_based_api.v1 import regex
 from cmk.base.plugins.agent_based.utils.df import df_discovery, DfBlock, DfInode, DfSection
 
-factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_LEVELS
+factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS
 
 
 inventory_df_rules = []

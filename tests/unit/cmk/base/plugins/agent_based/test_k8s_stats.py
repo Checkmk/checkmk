@@ -18,6 +18,7 @@ from cmk.base.plugins.agent_based.k8s_stats_network import (
     discover_k8s_stats_network,
 )
 from cmk.base.plugins.agent_based.k8s_stats_section import parse_k8s
+from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
 
 discovery = {
     "": [],
@@ -312,7 +313,7 @@ def test__check_k8s_stats_fs(section, expected_results) -> None:
             _check__k8s_stats_fs__core(
                 vs,
                 "/dev/sda1",
-                {},
+                FILESYSTEM_DEFAULT_PARAMS,
                 section,
             )
         )

@@ -22,7 +22,7 @@ from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildc
 # url /vmfs/volumes/513df1e9-12fd7366-ac5a-e41f13e69eaa
 
 
-factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_LEVELS
+factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS
 
 
 def parse_esx_vsphere_datastores(info):

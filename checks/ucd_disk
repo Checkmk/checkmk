@@ -21,7 +21,7 @@ from cmk.base.check_legacy_includes.ucd_hr import *  # pylint: disable=wildcard-
 # .1.3.6.1.4.1.2021.9.1.7.1 55330132  --> UCD-SNMP-MIB::dskAvail.1
 
 
-factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_LEVELS
+factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS
 
 
 def inventory_ucd_disk(info):

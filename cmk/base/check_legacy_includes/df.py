@@ -11,9 +11,17 @@ from typing import Any, Dict, List
 from cmk.base.api.agent_based.checking_classes import Metric, Result
 from cmk.base.check_api import get_bytes_human_readable, get_percent_human_readable
 from cmk.base.config import Ruleset
-from cmk.base.plugins.agent_based.utils.df import _check_inodes, FILESYSTEM_DEFAULT_LEVELS
+from cmk.base.plugins.agent_based.utils.df import (
+    _check_inodes,
+    FILESYSTEM_DEFAULT_LEVELS,
+    FILESYSTEM_DEFAULT_PARAMS,
+)
 from cmk.base.plugins.agent_based.utils.df import get_filesystem_levels as _get_filesystem_levels
-from cmk.base.plugins.agent_based.utils.df import mountpoints_in_group
+from cmk.base.plugins.agent_based.utils.df import (
+    INODES_DEFAULT_PARAMS,
+    mountpoints_in_group,
+    TREND_DEFAULT_PARAMS,
+)
 
 from .size_trend import size_trend  # type: ignore[attr-defined]
 

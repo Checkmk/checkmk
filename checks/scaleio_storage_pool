@@ -20,6 +20,8 @@ from cmk.base.check_legacy_includes.scaleio import *  # pylint: disable=wildcard
 # problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
+factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS
+
 # <<<scaleio_storage_pool>>>
 # STORAGE_POOL 59c7748300000000:
 #        ID                                                 59c7748300000000
@@ -65,6 +67,7 @@ check_info["scaleio_storage_pool"] = {
     "service_description": "ScaleIO SP capacity %s",
     "has_perfdata": True,
     "group": "filesystem",
+    "default_levels_variable": "filesystem_default_levels",
 }
 
 

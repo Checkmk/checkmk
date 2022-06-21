@@ -9,7 +9,7 @@ from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 from .utils.df import (
     df_check_filesystem_list,
     df_discovery,
-    FILESYSTEM_DEFAULT_LEVELS,
+    FILESYSTEM_DEFAULT_PARAMS,
     mountpoints_in_group,
 )
 from .utils.hitachi_hnas import DETECT, parse_physical_volumes, parse_virtual_volumes
@@ -159,7 +159,7 @@ register.check_plugin(
     discovery_ruleset_type=register.RuleSetType.ALL,
     check_function=check_hitachi_hnas_volume,
     check_ruleset_name="filesystem",
-    check_default_parameters=FILESYSTEM_DEFAULT_LEVELS,
+    check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,
 )
 
 # .
@@ -237,5 +237,5 @@ register.check_plugin(
     discovery_ruleset_type=register.RuleSetType.ALL,
     check_function=check_hitachi_hnas_virtual_volume,
     check_ruleset_name="filesystem",
-    check_default_parameters=FILESYSTEM_DEFAULT_LEVELS,
+    check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,
 )

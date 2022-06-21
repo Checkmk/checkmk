@@ -80,16 +80,38 @@ FilesystemLevels = LevelsFreeSpace | LevelsUsedSpace
 DfSection = tuple[BlocksSubsection, InodesSubsection]
 
 
-FILESYSTEM_DEFAULT_LEVELS = {
+FILESYSTEM_DEFAULT_LEVELS: Mapping[str, Any] = {
     "levels": (80.0, 90.0),  # warn/crit in percent
-    "magic_normsize": 20,  # Standard size if 20 GB
-    "levels_low": (50.0, 60.0),  # Never move warn level below 50% due to magic factor
+}
+
+TREND_DEFAULT_PARAMS: Mapping[str, Any] = {
     "trend_range": 24,
     "trend_perfdata": True,  # do send performance data for trends
+}
+
+MAGIC_FACTOR_DEFAULT_PARAMS: Mapping[str, Any] = {
+    "magic_normsize": 20,  # Standard size if 20 GB
+    "levels_low": (50.0, 60.0),  # Never move warn level below 50% due to magic factor
+}
+
+
+SHOW_LEVELS_DEFAULT: Mapping[str, Any] = {
     "show_levels": "onmagic",
+}
+
+INODES_DEFAULT_PARAMS: Mapping[str, Any] = {
     "inodes_levels": (10.0, 5.0),
     "show_inodes": "onlow",
+}
+
+
+FILESYSTEM_DEFAULT_PARAMS: Mapping[str, Any] = {
+    **FILESYSTEM_DEFAULT_LEVELS,
+    **MAGIC_FACTOR_DEFAULT_PARAMS,
+    **SHOW_LEVELS_DEFAULT,
+    **INODES_DEFAULT_PARAMS,
     "show_reserved": False,
+    **TREND_DEFAULT_PARAMS,
 }
 
 
@@ -312,7 +334,7 @@ def get_filesystem_levels(  # pylint: disable=too-many-branches
 ) -> Dict[str, Any]:
     """
     >>> from pprint import pprint as pp
-    >>> pp(get_filesystem_levels(1234, FILESYSTEM_DEFAULT_LEVELS))
+    >>> pp(get_filesystem_levels(1234, FILESYSTEM_DEFAULT_PARAMS))
     {'inodes_levels': (10.0, 5.0),
      'levels': (80.0, 90.0),
      'levels_low': (50.0, 60.0),
@@ -324,7 +346,7 @@ def get_filesystem_levels(  # pylint: disable=too-many-branches
      'show_reserved': False,
      'trend_perfdata': True,
      'trend_range': 24}
-    >>> pp(get_filesystem_levels(123, {"levels": (10,20)}))
+    >>> pp(get_filesystem_levels(123, {**FILESYSTEM_DEFAULT_PARAMS, **{"levels": (10,20)}}))
     {'inodes_levels': (10.0, 5.0),
      'levels': (10, 20),
      'levels_low': (50.0, 60.0),
@@ -339,8 +361,7 @@ def get_filesystem_levels(  # pylint: disable=too-many-branches
     """
     filesystem_size = Bytes(int(filesystem_size_gb * 1024 * 1024 * 1024))
 
-    # Override default levels with params
-    levels: Dict[str, Any] = {**FILESYSTEM_DEFAULT_LEVELS, **params}
+    levels = dict(params.items())
 
     filesystem_levels = _parse_filesystem_levels(levels["levels"], filesystem_size)
 
@@ -360,7 +381,8 @@ def get_filesystem_levels(  # pylint: disable=too-many-branches
 
     levels["levels_text"] = _check_summary_text(filesystem_levels)
 
-    if levels["inodes_levels"] is None:
+    if levels.get("inodes_levels") is None:
+        # inodes_levels is set as default for every check except network_fs_mounts
         levels["inodes_levels"] = None, None
 
     return levels
@@ -551,7 +573,7 @@ def df_check_filesystem_single(
         show_levels == "always"
         or (show_levels == "onproblem" and status is not State.OK)  #
         or (  #
-            show_levels == "onmagic" and (status is not State.OK or levels.get("magic", 1.0) != 1.0)
+            show_levels == "onmagic" and (status is not State.OK or params.get("magic", 1.0) != 1.0)
         )
     ):
         infotext.append(levels["levels_text"])

@@ -7,6 +7,7 @@
 # yapf: disable
 # type: ignore
 from cmk.base.plugins.agent_based.df_section import parse_df
+from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
 
 checkname = 'df'
 
@@ -181,6 +182,7 @@ checks = {
         (
             'group1',
             {
+                **FILESYSTEM_DEFAULT_PARAMS,
                 'patterns': (['/opt/omd/sites/*'], []),
                 'grouping_behaviour': 'mountpoint',
                 "item_appearance": "mountpoint",
@@ -195,6 +197,7 @@ checks = {
             ],
         ),
         ('group2', {
+            **FILESYSTEM_DEFAULT_PARAMS,
             'patterns': (['/opt/omd/sites/site[12]/*', '/opt/omd/sites/site[3]/*'], []),
             'grouping_behaviour': 'mountpoint',
             "item_appearance": "mountpoint",
@@ -207,6 +210,7 @@ checks = {
             (0, '3 filesystems', []),
         ]),
         ('group3', {
+            **FILESYSTEM_DEFAULT_PARAMS,
             'patterns': (['*'], []),
             'grouping_behaviour': 'mountpoint',
             "item_appearance": "mountpoint",
@@ -217,6 +221,7 @@ checks = {
             (0, '', [('inodes_used', 1280583, 37681319.7, 39774726.35, 0.0, 41868133.0)]),
             (0, '16 filesystems', [])]),
         ('group4', {
+            **FILESYSTEM_DEFAULT_PARAMS,
             'patterns': (['/opt/omd/sites/*'], ['/opt/omd/sites/site[2,4]/*']),
             'grouping_behaviour': 'mountpoint',
             "item_appearance": "mountpoint",
@@ -227,6 +232,7 @@ checks = {
             (0, '', [('inodes_used', 9237, 10937165.4, 11544785.7, 0.0, 12152406.0)]),
             (0, '6 filesystems', [])]),
         ('group5', {
+            **FILESYSTEM_DEFAULT_PARAMS,
             'patterns': (['/opt/omd/sites/site1*', ''], ['/opt/omd/sites/site10/*', '']),
             'grouping_behaviour': 'mountpoint',
             "item_appearance": "mountpoint",

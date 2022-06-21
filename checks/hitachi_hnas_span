@@ -11,7 +11,7 @@ from cmk.base.check_legacy_includes.hitachi_hnas import *  # pylint: disable=wil
 from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from cmk.base.plugins.agent_based.utils.df import df_discovery
 
-factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_LEVELS
+factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS
 
 
 def inventory_hitachi_hnas_span(info):

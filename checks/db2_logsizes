@@ -25,7 +25,7 @@ from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildc
 # logsecond 100
 
 factory_settings["db2_logsizes_default_levels"] = {
-    "levels": (-20.0, -10.0)  # Interpreted as free space in df_check_filesystem_single
+    "levels": (-20.0, -10.0),  # Interpreted as free space in df_check_filesystem_single
 }
 
 

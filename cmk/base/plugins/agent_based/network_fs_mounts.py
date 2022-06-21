@@ -9,17 +9,20 @@ from typing import Any, Final, Mapping, NamedTuple, Optional, Union
 
 from .agent_based_api.v1 import get_value_store, Metric, register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.df import df_check_filesystem_single
+from .utils.df import (
+    df_check_filesystem_single,
+    FILESYSTEM_DEFAULT_LEVELS,
+    MAGIC_FACTOR_DEFAULT_PARAMS,
+    SHOW_LEVELS_DEFAULT,
+    TREND_DEFAULT_PARAMS,
+)
 
 DEFAULT_NETWORK_FS_MOUNT_PARAMETERS: Final = {
-    # adapted from FILESYSTEM_DEFAULT_LEVELS:
-    "levels": (80.0, 90.0),
-    "magic_normsize": 20,
-    "levels_low": (50.0, 60.0),
-    "trend_range": 24,
-    "trend_perfdata": True,
+    **FILESYSTEM_DEFAULT_LEVELS,
+    **MAGIC_FACTOR_DEFAULT_PARAMS,
+    **TREND_DEFAULT_PARAMS,
+    **SHOW_LEVELS_DEFAULT,
     "has_perfdata": False,
-    "show_levels": "onmagic",
 }
 
 

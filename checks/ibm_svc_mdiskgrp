@@ -157,7 +157,7 @@ def check_ibm_svc_mdiskgrp(item, params, data):
     ]
 
 
-factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_LEVELS
+factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS
 
 
 check_info["ibm_svc_mdiskgrp"] = {

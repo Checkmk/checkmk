@@ -6,6 +6,12 @@
 
 # yapf: disable
 # type: ignore
+from cmk.base.plugins.agent_based.utils.df import (
+    FILESYSTEM_DEFAULT_LEVELS,
+    INODES_DEFAULT_PARAMS,
+    MAGIC_FACTOR_DEFAULT_PARAMS,
+    TREND_DEFAULT_PARAMS,
+)
 
 checkname = "netapp_api_volumes"
 
@@ -274,7 +280,12 @@ checks = {
     "": [
         (
             "euedcnas1011.vol_1011_root",
-            {},
+            {
+                **FILESYSTEM_DEFAULT_LEVELS,
+                **MAGIC_FACTOR_DEFAULT_PARAMS,
+                **INODES_DEFAULT_PARAMS,
+                **TREND_DEFAULT_PARAMS,
+            },
             [
                 (
                     0,
@@ -533,6 +544,10 @@ checks = {
         (
             "group1",
             {
+                **FILESYSTEM_DEFAULT_LEVELS,
+                **MAGIC_FACTOR_DEFAULT_PARAMS,
+                **INODES_DEFAULT_PARAMS,
+                **TREND_DEFAULT_PARAMS,
                 'patterns': (['vol0'], []),
             },
             [
@@ -566,6 +581,10 @@ checks = {
         (
             "group2",
             {
+                **FILESYSTEM_DEFAULT_LEVELS,
+                **MAGIC_FACTOR_DEFAULT_PARAMS,
+                **INODES_DEFAULT_PARAMS,
+                **TREND_DEFAULT_PARAMS,
                 'patterns': (['vol_bronze1*'], ['vol_bronze1_cifs']),
             },
             [

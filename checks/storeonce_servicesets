@@ -62,6 +62,8 @@ from cmk.base.check_legacy_includes.storeonce import *  # pylint: disable=wildca
 # combinedFreeBytes   85220347674624
 # combinedUserBytes   265622218292968
 
+factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS
+
 
 def _get_item(data):
     return data["ServiceSet ID"]
@@ -119,4 +121,5 @@ check_info["storeonce_servicesets.capacity"] = {
     "service_description": "ServiceSet %s Capacity",
     "has_perfdata": True,
     "group": "filesystem",
+    "default_levels_variable": "filesystem_default_levels",
 }

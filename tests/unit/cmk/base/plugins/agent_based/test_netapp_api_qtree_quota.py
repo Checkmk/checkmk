@@ -16,6 +16,7 @@ import cmk.base.plugins.agent_based.netapp_api_qtree_quota as qtree_quota
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 from cmk.base.plugins.agent_based.netapp_api_qtree_quota import get_item_names, Qtree
+from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
 
 
 @pytest.fixture(name="value_store_patch")
@@ -365,7 +366,9 @@ def test_check_netapp_api_qtree_quota(
     expected_result: Sequence[CheckResult],
 ) -> None:
     check_plugin = fix_register.check_plugins[CheckPluginName("netapp_api_qtree_quota")]
-    result = list(check_plugin.check_function(item=item, params={}, section=parsed))
+    result = list(
+        check_plugin.check_function(item=item, params=FILESYSTEM_DEFAULT_PARAMS, section=parsed)
+    )
 
     assert [r for r in result if isinstance(r, Result)] == [
         r for r in expected_result if isinstance(r, Result)

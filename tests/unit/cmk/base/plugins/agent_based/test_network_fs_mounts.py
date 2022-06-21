@@ -16,7 +16,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     DiscoveryResult,
     StringTable,
 )
-from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_LEVELS
+from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
 
 NOW_SIMULATED = 581792400, "UTC"
 
@@ -202,7 +202,7 @@ def test_network_fs_mounts_check(
     with on_time(*NOW_SIMULATED):
         actual_check_results = list(
             network_fs_mounts.check_network_fs_mount(
-                item, {**FILESYSTEM_DEFAULT_LEVELS, **{"has_perfdata": True}}, section
+                item, {**FILESYSTEM_DEFAULT_PARAMS, **{"has_perfdata": True}}, section
             )
         )
     assert [r for r in actual_check_results if isinstance(r, Result)] == [
@@ -249,6 +249,6 @@ def test_nfsmount_v2_check(
     section = network_fs_mounts.parse_nfsmounts_v2(string_table)
     with on_time(*NOW_SIMULATED):
         assert (
-            list(network_fs_mounts.check_network_fs_mount(item, FILESYSTEM_DEFAULT_LEVELS, section))
+            list(network_fs_mounts.check_network_fs_mount(item, FILESYSTEM_DEFAULT_PARAMS, section))
             == check_result
         )

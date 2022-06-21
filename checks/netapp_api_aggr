@@ -23,7 +23,7 @@ from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildc
 # aggregation aggr1_n2    size-available 2936561664       size-total 9437184000
 
 
-factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_LEVELS
+factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS
 
 
 def inventory_netapp_api_aggr(parsed):

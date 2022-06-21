@@ -47,6 +47,9 @@ from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildc
 #
 
 
+factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS
+
+
 def inventory_scaleio_sds(parsed):
     for entry in parsed:
         yield entry, {}
@@ -73,6 +76,7 @@ check_info["scaleio_sds"] = {
     "service_description": "ScaleIO SDS capacity %s",
     "group": "filesystem",
     "has_perfdata": True,
+    "default_levels_variable": "filesystem_default_levels",
 }
 
 

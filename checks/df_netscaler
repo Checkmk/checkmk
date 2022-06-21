@@ -23,7 +23,7 @@ from cmk.base.plugins.agent_based.utils.df import df_discovery
 # .1.3.6.1.4.1.5951.4.1.1.41.8.1.3.6.47.102.108.97.115.104  7256
 
 
-factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_LEVELS
+factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS
 
 
 def inventory_df_netscaler(info):

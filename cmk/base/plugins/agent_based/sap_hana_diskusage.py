@@ -94,5 +94,5 @@ register.check_plugin(
     discovery_function=discovery_sap_hana_diskusage,
     check_function=check_sap_hana_diskusage,
     check_ruleset_name="filesystem",
-    check_default_parameters=df.FILESYSTEM_DEFAULT_LEVELS,
+    check_default_parameters=df.FILESYSTEM_DEFAULT_PARAMS,
 )

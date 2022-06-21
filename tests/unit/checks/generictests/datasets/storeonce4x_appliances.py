@@ -6,6 +6,9 @@
 
 # yapf: disable
 # type: ignore
+
+from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_LEVELS
+
 checkname = 'storeonce4x_appliances'
 
 info = [
@@ -38,7 +41,7 @@ checks = {
     ],
     'storage': [
         (
-            'myhostname', {}, [
+            'myhostname', FILESYSTEM_DEFAULT_LEVELS, [
                 (
                     0, 'Used: 28.03% - 91.7 TiB of 327 TiB', [
                         (

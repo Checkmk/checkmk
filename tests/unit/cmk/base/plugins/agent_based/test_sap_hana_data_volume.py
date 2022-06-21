@@ -143,7 +143,7 @@ def value_store_fixture(monkeypatch):
     [
         (
             "H62 10 - DATA 20",
-            df.FILESYSTEM_DEFAULT_LEVELS,
+            df.FILESYSTEM_DEFAULT_PARAMS,
             [
                 Metric(
                     "fs_used",

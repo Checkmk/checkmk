@@ -14,6 +14,8 @@ from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildc
 
 # example output
 
+factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS
+
 
 def inventory_nimble_volumes(info):
     for line in info:
@@ -51,4 +53,5 @@ check_info["nimble_volumes"] = {
     ),
     "has_perfdata": True,
     "group": "filesystem",
+    "default_levels_variable": "filesystem_default_levels",
 }

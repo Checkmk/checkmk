@@ -126,5 +126,5 @@ register.check_plugin(
     discovery_default_parameters={"exclude_volume": False},
     check_function=check_netapp_api_qtree_quota,
     check_ruleset_name="filesystem",
-    check_default_parameters=df.FILESYSTEM_DEFAULT_LEVELS,
+    check_default_parameters=df.FILESYSTEM_DEFAULT_PARAMS,
 )

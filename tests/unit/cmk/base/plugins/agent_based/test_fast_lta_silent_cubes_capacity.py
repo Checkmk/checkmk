@@ -7,6 +7,7 @@ import pytest
 from cmk.utils.type_defs import CheckPluginName
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
 
 info = [["8001591181312", "3875508482048"]]
 check_name = "fast_lta_silent_cubes_capacity"
@@ -35,7 +36,9 @@ def test_discovery_fast_lta_silent_cube_capacity(discover_fast_lta_silent_cubes_
 
 def test_check_fast_lta_silent_cube_capacity(check_fast_lta_silent_cubes_capacity) -> None:
 
-    actual_check_results = list(check_fast_lta_silent_cubes_capacity(None, {}, info))
+    actual_check_results = list(
+        check_fast_lta_silent_cubes_capacity(None, FILESYSTEM_DEFAULT_PARAMS, info)
+    )
     expected_check_results = [
         Result(state=State.OK, summary="Used: 48.43% - 3.52 TiB of 7.28 TiB"),
         Metric(

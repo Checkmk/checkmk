@@ -6,6 +6,8 @@
 
 # yapf: disable
 # type: ignore
+from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
+
 checkname = 'esx_vsphere_datastores'
 
 info = [
@@ -69,6 +71,7 @@ checks = {
         ),
         (
             'WIN-0108-MCC35-U-L008-SSD-EXC2', {
+                **FILESYSTEM_DEFAULT_PARAMS,
                 'provisioning_levels': (70.0, 80.0)
             }, [
                 (

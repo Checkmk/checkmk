@@ -11,7 +11,7 @@ import cmk.base.plugins.agent_based.esx_vsphere_counters as esx_vsphere_counters
 from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from cmk.base.check_legacy_includes.diskstat import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from cmk.base.check_legacy_includes.uptime import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from cmk.base.plugins.agent_based.utils.df import df_discovery, FILESYSTEM_DEFAULT_LEVELS
+from cmk.base.plugins.agent_based.utils.df import df_discovery, FILESYSTEM_DEFAULT_PARAMS
 
 # Example output:
 # <<<esx_vsphere_counters:sep(124)>>>
@@ -213,7 +213,7 @@ def check_esx_vsphere_counters_ramdisk(item, params, parsed):
     return df_check_filesystem_list(item, params, ramdisks)
 
 
-factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_LEVELS
+factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS
 
 
 check_info["esx_vsphere_counters.ramdisk"] = {

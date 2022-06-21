@@ -6,6 +6,8 @@
 
 # yapf: disable
 # type: ignore
+from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_LEVELS
+
 checkname = 'emc_isilon_quota'
 
 info = [
@@ -17,12 +19,12 @@ discovery = {'': [('/ifs/data/pacs', {})]}
 checks = {
     '': [
         (
-            '/ifs/data/pacs', {}, [
+            '/ifs/data/pacs', FILESYSTEM_DEFAULT_LEVELS, [
                 (
                     0, 'Used: 1.75% - 3.50 TiB of 200 TiB', [
                         (
                             'fs_used', 3666504.428902626, 167772160.0,
-                            209715200.0, 0, 209715200.0
+                            188743680.0, 0, 209715200.0
                         ), ('fs_size', 209715200.0, None, None, None, None),
                         (
                             'fs_used_percent', 1.7483255524171, None, None,

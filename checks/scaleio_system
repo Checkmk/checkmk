@@ -19,6 +19,7 @@ from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildc
 #        MAX_CAPACITY_IN_KB                                 65.5 TB (67059 GB)
 #        UNUSED_CAPACITY_IN_KB                              17.2 TB (17635 GB)
 #
+factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS
 
 
 def inventory_scaleio_system(parsed):
@@ -49,4 +50,5 @@ check_info["scaleio_system"] = {
     "service_description": "ScaleIO System %s",
     "group": "filesystem",
     "has_perfdata": True,
+    "default_levels_variable": "filesystem_default_levels",
 }

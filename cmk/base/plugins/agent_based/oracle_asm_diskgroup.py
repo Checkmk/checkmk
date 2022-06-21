@@ -8,7 +8,12 @@ from typing import Any, Dict, List, Mapping, NamedTuple, Optional
 from .agent_based_api.v1 import get_value_store, IgnoreResults, register, render, Result, Service
 from .agent_based_api.v1 import State as state
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.df import df_check_filesystem_single
+from .utils.df import (
+    df_check_filesystem_single,
+    FILESYSTEM_DEFAULT_PARAMS,
+    MAGIC_FACTOR_DEFAULT_PARAMS,
+    TREND_DEFAULT_PARAMS,
+)
 
 # future todos in checkcode
 # - RAC: 1 of 3 nodes has a DISMOUNTED DG. This is not a CRIT!
@@ -35,11 +40,9 @@ from .utils.df import df_check_filesystem_single
 # MOUNTED|NORMAL|DATA|4096|4194304|102396|614376|476280|NS2|N|REGULAR|0|8640000|3
 
 ASM_DISKGROUP_DEFAULT_LEVELS = {
-    "levels": (80.0, 90.0),  # warn/crit in percent
-    "magic_normsize": 20,  # Standard size if 20 GB
-    "levels_low": (50.0, 60.0),  # Never move warn level below 50% due to magic factor
-    "trend_range": 24,
-    "trend_perfdata": True,  # do send performance data for trends
+    **FILESYSTEM_DEFAULT_PARAMS,
+    **TREND_DEFAULT_PARAMS,
+    **MAGIC_FACTOR_DEFAULT_PARAMS,
     "req_mir_free": False,  # Ignore Requirre mirror free space in DG
 }
 

@@ -14,9 +14,8 @@ from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildc
 # lun /vol/iscsi_crm_dblogs/crm_dblogs_lu01   read-only false size 644286182400   vserver ISCSI_CRM   size-used 538924421120  online true volume iscsi_crm_dblogs
 
 factory_settings["netapp_api_luns_default_levels"] = {
-    "levels": (80.0, 90.0),  # warn/crit in percent
-    "trend_range": 24,
-    "trend_perfdata": True,  # do send performance data for trends
+    **FILESYSTEM_DEFAULT_LEVELS,
+    **TREND_DEFAULT_PARAMS,
     "read_only": False,
 }
 

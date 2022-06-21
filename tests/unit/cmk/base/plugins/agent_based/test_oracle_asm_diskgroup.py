@@ -341,7 +341,10 @@ def test_discovery(section, expected) -> None:
         (
             SECTION_WITH_FG,
             {
-                "req_mir_free": True,  # Ignore Requirre mirror free space in DG
+                **asm.ASM_DISKGROUP_DEFAULT_LEVELS,
+                **{
+                    "req_mir_free": True,
+                },  # Ignore Requirre mirror free space in DG
             },
             [
                 Metric(

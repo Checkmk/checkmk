@@ -9,7 +9,7 @@ from typing import Any, Mapping, MutableMapping
 
 from .agent_based_api.v1 import get_value_store, GetRateError, register, Service
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
-from .utils.df import df_check_filesystem_single, FILESYSTEM_DEFAULT_LEVELS
+from .utils.df import df_check_filesystem_single, FILESYSTEM_DEFAULT_PARAMS
 from .utils.k8s import Section, to_filesystem
 
 ###########################################################################
@@ -87,7 +87,7 @@ register.check_plugin(
     sections=["k8s_stats"],
     service_name="Filesystem %s",
     discovery_function=discover_k8s_stats_fs,
-    check_default_parameters=FILESYSTEM_DEFAULT_LEVELS,
+    check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,
     check_ruleset_name="filesystem",
     check_function=check_k8s_stats_fs,
 )

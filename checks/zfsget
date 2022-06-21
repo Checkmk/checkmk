@@ -221,7 +221,7 @@ def check_zfsget(item, params, parsed):
     return df_check_filesystem_list(item, params, fslist)
 
 
-factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_LEVELS
+factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS
 
 
 check_info["zfsget"] = {

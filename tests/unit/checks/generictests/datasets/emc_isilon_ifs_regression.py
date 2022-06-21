@@ -6,6 +6,8 @@
 
 # yapf: disable
 # type: ignore
+from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_LEVELS
+
 checkname = 'emc_isilon_ifs'
 
 info = [['615553001652224', '599743491129344']]
@@ -15,7 +17,7 @@ discovery = {'': [('Cluster', None)]}
 checks = {
     '': [
         (
-            'Cluster', {}, [
+            'Cluster', FILESYSTEM_DEFAULT_LEVELS, [
                 (
                     0, 'Used: 2.57% - 14.4 TiB of 560 TiB', [
                         (

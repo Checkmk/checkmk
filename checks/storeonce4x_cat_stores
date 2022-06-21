@@ -5,7 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import json
 
-from cmk.base.check_legacy_includes.df import df_check_filesystem_list_coroutine
+from cmk.base.check_legacy_includes.df import (
+    df_check_filesystem_list_coroutine,
+    FILESYSTEM_DEFAULT_PARAMS,
+)
+
+factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS
 
 
 def parse_storeonce4x_cat_stores(info):
@@ -53,4 +58,5 @@ check_info["storeonce4x_cat_stores"] = {
     "service_description": "Catalyst Stores %s",
     "group": "filesystem",
     "has_perfdata": True,
+    "default_levels_variable": "filesystem_default_levels",
 }

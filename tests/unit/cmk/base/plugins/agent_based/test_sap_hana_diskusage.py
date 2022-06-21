@@ -19,6 +19,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     Service,
     State,
 )
+from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
 
 NOW_SIMULATED = "1988-06-08 17:00:00.000000"
 LAST_TIME_EPOCH = (
@@ -195,7 +196,7 @@ def test_check_sap_hana_diskusage(
 ) -> None:
     section = fix_register.agent_sections[SectionName("sap_hana_diskusage")].parse_function(info)
     plugin = fix_register.check_plugins[CheckPluginName("sap_hana_diskusage")]
-    check_results = list(plugin.check_function(item, {}, section))
+    check_results = list(plugin.check_function(item, FILESYSTEM_DEFAULT_PARAMS, section))
 
     assert [r for r in check_results if isinstance(r, Result)] == [
         r for r in expected_result if isinstance(r, Result)

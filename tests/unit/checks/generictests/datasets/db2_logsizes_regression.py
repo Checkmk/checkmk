@@ -19,7 +19,7 @@ discovery = {'': [('db2mpss:ASMPROD', {})]}
 checks = {
     '': [
         (
-            'db2mpss:ASMPROD', {}, [
+            'db2mpss:ASMPROD', {"levels": (-20.0, -10.0)}, [
                 (
                     0, 'Used: 1.03% - 2.00 MiB of 195 MiB', [
                         ('fs_used', 2, 156.0, 175.5, 0, 195),

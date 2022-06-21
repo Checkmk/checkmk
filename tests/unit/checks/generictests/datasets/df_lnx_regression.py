@@ -7,6 +7,7 @@
 # yapf: disable
 # type: ignore
 from cmk.base.plugins.agent_based.df_section import parse_df
+from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
 
 checkname = 'df'
 
@@ -228,6 +229,7 @@ checks = {
         (
             '/',
             {
+                **FILESYSTEM_DEFAULT_PARAMS,
                 'show_inodes': 'onlow',
                 'inodes_levels': (90.0, 5.0)
             },
@@ -255,6 +257,7 @@ checks = {
         (
             '/',
             {
+                **FILESYSTEM_DEFAULT_PARAMS,
                 'show_inodes': 'onlow',
                 'inodes_levels': (8542272, 8142272)
             },
@@ -281,6 +284,7 @@ checks = {
         (
             'all',
             {
+                **FILESYSTEM_DEFAULT_PARAMS,
                 'patterns': (['*'], []),
             },
             [
@@ -311,6 +315,7 @@ checks = {
         (
             'parts',
             {
+                **FILESYSTEM_DEFAULT_PARAMS,
                 'patterns': (['*oot', '/'], []),
             },
             [

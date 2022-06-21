@@ -21,6 +21,8 @@ from cmk.base.plugins.agent_based.utils.df import df_discovery
 # NAME        SIZE   USED  AVAIL    CAP  HEALTH  ALTROOT
 # sth_ds      278G   127G   151G    45%  ONLINE  -
 
+factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS
+
 
 def parse_zpool(info):
     def canonize_header_entry(entry):
@@ -72,4 +74,5 @@ check_info["zpool"] = {
     "service_description": "Storage Pool %s",
     "has_perfdata": True,
     "group": "filesystem",
+    "default_levels_variable": "filesystem_default_levels",
 }

@@ -571,7 +571,7 @@ def make_test_df_params():
         ),
         (
             "btrfs /dev/sda1",
-            {"show_volume_name": True},
+            {**make_test_df_params(), "show_volume_name": True},
             info_df_btrfs,
             [
                 (0, "[/dev/sda1]"),
@@ -588,7 +588,7 @@ def make_test_df_params():
         ),
         (
             "btrfs /dev/sda1",
-            {},
+            make_test_df_params(),
             info_df_btrfs,
             [
                 (
@@ -606,6 +606,7 @@ def make_test_df_params():
         (
             "btrfs 12345678-9012-3456-7890-123456789012",
             {
+                **make_test_df_params(),
                 "mountpoint_for_block_devices": "uuid",
             },
             info_df_btrfs,

@@ -13,7 +13,7 @@ from cmk.base.plugins.agent_based.diskstat import check_diskstat
 from cmk.base.plugins.agent_based.docker_container_diskstat_cgroupv2 import (
     parse_docker_container_diskstat_cgroupv2,
 )
-from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_LEVELS
+from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
 
 AGENT_OUTPUT = """[time]
 1614786439
@@ -104,7 +104,7 @@ def test_docker_container_diskstat_cgroupv2() -> None:
         _ = list(
             check_diskstat(
                 "nvme0n1",
-                FILESYSTEM_DEFAULT_LEVELS,
+                FILESYSTEM_DEFAULT_PARAMS,
                 parse_docker_container_diskstat_cgroupv2(_split(AGENT_OUTPUT_0_SEC)),
                 None,
             )
@@ -112,7 +112,7 @@ def test_docker_container_diskstat_cgroupv2() -> None:
     result = list(
         check_diskstat(
             "nvme0n1",
-            FILESYSTEM_DEFAULT_LEVELS,
+            FILESYSTEM_DEFAULT_PARAMS,
             parse_docker_container_diskstat_cgroupv2(_split(AGENT_OUTPUT_59_SEC)),
             None,
         )

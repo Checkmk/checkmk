@@ -1,21 +1,22 @@
-.. Checkmk documentation master file, created by
-   sphinx-quickstart on Fri Mar 12 07:44:49 2021.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+Checkmk - Developer documentation
+=================================
 
-Welcome to Checkmk's developer documentation
-============================================
+Architecture
+------------
 
 .. toctree::
    :maxdepth: 1
-   :caption: Contents:
 
    arch-index.rst
-   api-index.rst
    arch-build-chain.rst
 
-Indices and tables
-==================
+APIs
+----
+
+.. toctree::
+   :maxdepth: 2
+
+   api-index.rst
 
 * :ref:`genindex`
 * :ref:`modindex`

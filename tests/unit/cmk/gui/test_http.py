@@ -279,7 +279,7 @@ def test_response_set_http_cookie(request_context: RequestContextFixture) -> Non
 
     assert (
         response.headers.getlist("Set-Cookie")[-1]
-        == "auth_SITE=user:123456:abcdefg; HttpOnly; Path=/; SameSite=Lax"
+        == "auth_SITE=user:123456:abcdefg; HttpOnly; Path=/NO_SITE/; SameSite=Lax"
     )
 
 
@@ -290,7 +290,7 @@ def test_response_set_http_cookie_secure(
 
     assert (
         response.headers.getlist("Set-Cookie")[-1]
-        == "auth_SITE=user:123456:abcdefg; Secure; HttpOnly; Path=/; SameSite=Lax"
+        == "auth_SITE=user:123456:abcdefg; Secure; HttpOnly; Path=/NO_SITE/; SameSite=Lax"
     )
 
 

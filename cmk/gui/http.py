@@ -15,6 +15,8 @@ import werkzeug
 from six import ensure_str
 from werkzeug.utils import get_content_type
 
+from cmk.utils.site import url_prefix
+
 import cmk.gui.utils as utils
 from cmk.gui.ctx_stack import request_local_attr
 from cmk.gui.exceptions import MKGeneralException, MKUserError
@@ -456,7 +458,9 @@ class Response(werkzeug.Response):
     default_mimetype = "text/html"
 
     def set_http_cookie(self, key: str, value: str, *, secure: bool) -> None:
-        super().set_cookie(key, value, secure=secure, httponly=True, samesite="Lax")
+        super().set_cookie(
+            key, value, path=url_prefix(), secure=secure, httponly=True, samesite="Lax"
+        )
 
     def set_content_type(self, mime_type: str) -> None:
         self.headers["Content-type"] = get_content_type(mime_type, self.charset)

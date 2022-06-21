@@ -1,0 +1,14 @@
+Title: fritz_wan_if: Fix interface status for non DSL devices
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1655850164
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p4
+
+Modern Fritz boxes (non DSL) don't use or don't have the "NewLinkStatus" value.
+Instead we use "NewPhysicalLinkStatus" for those.
+

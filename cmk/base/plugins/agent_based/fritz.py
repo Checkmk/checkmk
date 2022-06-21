@@ -25,6 +25,7 @@ register.agent_section(
 _WAN_IF_KEYS = {
     "NewLayer1DownstreamMaxBitRate",
     "NewLinkStatus",
+    "NewPhysicalLinkStatus",
     "NewTotalBytesReceived",
     "NewTotalBytesSent",
 }
@@ -46,7 +47,7 @@ def _section_to_interface(section: Section) -> interfaces.Section:
             type="6",
             speed=int(section.get("NewLayer1DownstreamMaxBitRate", 0)),
             oper_status=_LINK_STATUS_MAP.get(
-                section.get("NewLinkStatus"),
+                section.get("NewLinkStatus") or section.get("NewPhysicalLinkStatus"),
                 "2",
             ),
             in_octets=int(section.get("NewTotalBytesReceived", 0)),

@@ -908,12 +908,13 @@ bool TheMiniProcess::stop() {
 
     process_id_ = 0;
     process_name_.clear();
-    ::CloseHandle(handle);
+    ON_OUT_OF_SCOPE(::CloseHandle(handle));
     process_handle_ = wtools::InvalidHandle();
 
     // check status and kill process if required
-    DWORD exit_code = STILL_ACTIVE;
-    if (::GetExitCodeProcess(handle, &exit_code) == FALSE ||  // no access
+
+    if (auto exit_code = STILL_ACTIVE;
+        ::GetExitCodeProcess(handle, &exit_code) == FALSE ||  // no access
         exit_code == STILL_ACTIVE) {                          // running
         lk.unlock();
 

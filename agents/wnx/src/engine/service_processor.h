@@ -349,7 +349,7 @@ private:
     void updateMaxWaitTime(int timeout_seconds) noexcept;
     void checkMaxWaitTime() noexcept;
     std::mutex max_wait_time_lock_;
-    int max_wait_time_;  // this is waiting time for all section to run
+    int max_wait_time_{0};  // this is waiting time for all section to run
 
     template <typename T>
     bool isAllowed(const T &engine) {

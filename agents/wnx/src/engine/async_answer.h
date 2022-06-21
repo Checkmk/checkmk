@@ -38,8 +38,7 @@ class AsyncAnswer {
 public:
     using DataBlock = std::vector<uint8_t>;
     enum class Order { random, plugins_last };
-    AsyncAnswer()
-        : tp_id_(GenerateAnswerId()), awaited_segments_(0), timeout_(5) {}
+    AsyncAnswer() { tp_id_ = GenerateAnswerId(); }
 
     bool isAnswerOlder(std::chrono::milliseconds period) const;
 
@@ -120,10 +119,10 @@ private:
                                // for plugins and providers too late or too lazy
     DataBlock data_;           // our pretty data
 
-    uint32_t awaited_segments_;   // how many sections are awaited
-    uint32_t received_segments_;  // how many sections are received
+    uint32_t awaited_segments_{0U};   // how many sections are awaited
+    uint32_t received_segments_{0U};  // how many sections are received
 
-    int timeout_;  // seconds
+    int timeout_{5};  // seconds
 
     std::vector<SegmentInfo> segments_;
 

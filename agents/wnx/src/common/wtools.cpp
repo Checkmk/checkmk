@@ -1329,7 +1329,7 @@ bool WmiObjectContains(IWbemClassObject *object, const std::wstring &name) {
         return false;
     }
 
-    VARIANT value;
+    VARIANT value{0};
     HRESULT res = object->Get(name.c_str(), 0, &value, nullptr, nullptr);
     if (FAILED(res)) {
         return false;
@@ -1420,9 +1420,8 @@ std::wstring WmiStringFromObject(IWbemClassObject *object,
 // optimized versions
 std::wstring WmiStringFromObject(IWbemClassObject *object,
                                  const std::wstring &name) {
-    VARIANT value;
-    auto hres = object->Get(name.c_str(), 0, &value, nullptr, nullptr);
-    if (FAILED(hres)) {
+    VARIANT value{0};
+    if (FAILED(object->Get(name.c_str(), 0, &value, nullptr, nullptr))) {
         return {};
     }
 
@@ -1433,9 +1432,8 @@ std::wstring WmiStringFromObject(IWbemClassObject *object,
 // optimized version
 std::optional<std::wstring> WmiTryGetString(IWbemClassObject *object,
                                             const std::wstring &name) {
-    VARIANT value;
-    auto hres = object->Get(name.c_str(), 0, &value, nullptr, nullptr);
-    if (FAILED(hres)) {
+    VARIANT value{0};
+    if (FAILED(object->Get(name.c_str(), 0, &value, nullptr, nullptr))) {
         return {};
     }
 
@@ -1448,9 +1446,8 @@ std::optional<std::wstring> WmiTryGetString(IWbemClassObject *object,
 
 uint64_t WmiUint64FromObject(IWbemClassObject *object,
                              const std::wstring &name) {
-    VARIANT value;
-    auto hres = object->Get(name.c_str(), 0, &value, nullptr, nullptr);
-    if (FAILED(hres)) {
+    VARIANT value{0};
+    if (FAILED(object->Get(name.c_str(), 0, &value, nullptr, nullptr))) {
         return 0;
     }
 
@@ -1489,7 +1486,7 @@ std::vector<std::wstring> WmiGetNamesFromObject(IWbemClassObject *WmiObject) {
     }
 
     std::vector<std::wstring> result;
-    result.reserve(end - start + 1);
+    result.reserve(static_cast<size_t>(end - start) + 1);
 
     for (auto i = start; i <= end; ++i) {
         BSTR property_name = nullptr;
@@ -2401,7 +2398,10 @@ HRESULT ACLInfo::query() noexcept {
 }
 
 HRESULT ACLInfo::addAceToList(ACE_HEADER *ace) noexcept {
-    auto *new_ace = static_cast<AceList *>(malloc(sizeof(AceList)));  // NOLINT
+    auto *new_ace = static_cast<AceList *>(malloc(sizeof(AceList)));
+    if (new_ace == nullptr) {
+        return S_FALSE;
+    }
     switch (ace->AceType) {
         case ACCESS_ALLOWED_ACE_TYPE: {
             new_ace->allowed = TRUE;

@@ -45,7 +45,9 @@ LocalResource<SERVICE_FAILURE_ACTIONS> WinService::GetServiceFailureActions() {
     SERVICE_FAILURE_ACTIONS *actions = nullptr;
 
     std::lock_guard lk(lock_);
-    if (!IsGoodHandle(handle_)) return nullptr;
+    if (!IsGoodHandle(handle_)) {
+        return nullptr;
+    }
 
     DWORD bytes_needed = 0;
 

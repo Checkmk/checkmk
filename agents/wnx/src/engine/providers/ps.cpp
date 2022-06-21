@@ -267,7 +267,7 @@ unsigned long long CalculateUptime(IWbemClassObject *wbem_object) {
 // idiotic functions required for idiotic method we are using in legacy software
 int64_t GetUint32AsInt64(IWbemClassObject *wbem_object,
                          const std::wstring &name) {
-    VARIANT value;
+    VARIANT value{0};
     auto hres = wbem_object->Get(name.c_str(), 0, &value, nullptr, nullptr);
     if (SUCCEEDED(hres)) {
         ON_OUT_OF_SCOPE(::VariantClear(&value));

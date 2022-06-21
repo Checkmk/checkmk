@@ -104,7 +104,7 @@ private:
     asio::ip::tcp::socket socket_;
 
     constexpr static size_t kMaxLength{1024};
-    char data_[kMaxLength];
+    char data_[kMaxLength] = {0};
     std::optional<size_t> received_;
     std::condition_variable cv_ready_;
     mutable std::mutex data_lock_;
@@ -262,7 +262,7 @@ protected:
     bool shutdown_thread_{false};
     bool io_started_{false};
 
-    asio::io_context *context_;  // NOT OWNED, should not be locked
+    asio::io_context *context_{nullptr};  // NOT OWNED, should not be locked
 
     // asio sessions queue data
     mutable std::mutex queue_lock_;

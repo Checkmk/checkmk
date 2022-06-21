@@ -120,7 +120,7 @@ public:
     }
 
 private:
-    GroupFunction _function;
+    GroupFunction _function{nullptr};
     typename ContainerT::iterator _insert_pos;
 };
 }  // namespace AddMode

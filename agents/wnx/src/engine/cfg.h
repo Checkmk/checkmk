@@ -542,10 +542,6 @@ public:
         return logfile_as_string_;
     }
 
-    std::vector<std::string> onlyFrom() const noexcept {
-        std::lock_guard lk(lock_);
-        return only_from_;
-    }
     std::vector<std::string> enabledSections() const noexcept {
         std::lock_guard lk(lock_);
         return enabled_sections_;
@@ -849,7 +845,7 @@ private:
     std::vector<Counter> counters_;
     std::string exe_name_;
     std::string prefix_;
-    int timeout_;
+    int timeout_{cfg::kDefaultWinPerfTimeout};
     bool fork_{true};
     bool trace_{false};
 };
@@ -874,7 +870,7 @@ public:
         : defined_(true)
         , async_(age.has_value())
         , timeout_(the_timeout)
-        , cache_age_(age.has_value() ? *age : 0)
+        , cache_age_(age.value_or(0))
         , retry_(retry) {
         // validation
     }

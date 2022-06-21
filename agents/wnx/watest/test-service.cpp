@@ -37,7 +37,6 @@ public:
 int TestProcessor::s_counter = 0;
 
 TEST(ServiceControllerTest, CreateDelete) {
-    using namespace std::chrono;
     {
         wtools::ServiceController controller(std::make_unique<TestProcessor>());
         EXPECT_EQ(TestProcessor::s_counter, 1);

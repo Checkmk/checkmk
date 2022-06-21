@@ -55,18 +55,18 @@ static void InitVariantFolderIetms(VARIANT &var, FolderItems *fi) {
 }
 
 static HRESULT UnzipExec(Folder *to, FolderItems *fi) {
-    VARIANT options;
+    VARIANT options{0};
     InitVariantZipOptions(options);
 
-    VARIANT items;
+    VARIANT items{0};
     InitVariantFolderIetms(items, fi);
 
     return to->CopyHere(items, options);
 }
 
 static ReleasedResource<Folder> CreateFolder(IShellDispatch *dispatch,
-                                             wtools::Bstr &bstr) {
-    VARIANT variantDir;
+                                             const wtools::Bstr &bstr) {
+    VARIANT variantDir{0};
     InitVariant(variantDir, bstr.bstr());
     Folder *folder = nullptr;
     auto hResult = dispatch->NameSpace(variantDir, &folder);

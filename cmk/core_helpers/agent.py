@@ -4,11 +4,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from __future__ import annotations
+
 import abc
+import copy
 import logging
 import time
 from pathlib import Path
 from typing import (
+    Any,
     final,
     Final,
     Iterator,
@@ -28,7 +32,7 @@ from cmk.utils.check_utils import ActiveCheckResult
 from cmk.utils.translations import TranslationOptions
 from cmk.utils.type_defs import AgentRawData, HostName, SectionName
 
-from ._base import Parser, Summarizer
+from ._base import Fetcher, Parser, Summarizer
 from ._markers import PiggybackMarker, SectionMarker
 from .cache import FileCache, FileCacheFactory, FileCacheMode, MaxAge, SectionStore
 from .host_sections import HostSections
@@ -61,6 +65,29 @@ class AgentFileCacheFactory(FileCacheFactory[AgentRawData]):
             use_only_cache=self.use_only_cache,
             file_cache_mode=FileCacheMode.DISABLED if self.disabled else FileCacheMode.READ_WRITE,
         )
+
+
+class NoFetcher(Fetcher[AgentRawData]):
+    def __init__(self, file_cache: FileCache[AgentRawData]) -> None:
+        super().__init__(file_cache, logging.getLogger("cmk.helper.noop"))
+
+    @classmethod
+    def _from_json(cls, serialized: Mapping[str, Any]) -> NoFetcher:
+        return NoFetcher(
+            AgentFileCache.from_json(copy.deepcopy(dict(serialized)).pop("file_cache"))
+        )
+
+    def to_json(self) -> Mapping[str, Any]:
+        return {"file_cache": self.file_cache.to_json()}
+
+    def open(self) -> None:
+        pass
+
+    def close(self) -> None:
+        pass
+
+    def _fetch_from_io(self, mode: Mode):
+        raise TypeError(self)
 
 
 class NoCacheFactory(FileCacheFactory[AgentRawData]):

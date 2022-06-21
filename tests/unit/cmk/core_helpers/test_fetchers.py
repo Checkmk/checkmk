@@ -32,12 +32,8 @@ from cmk.snmplib.type_defs import (
     SNMPTable,
 )
 
-from cmk.core_helpers import FetcherType, get_raw_data
-from cmk.core_helpers import (
-    PushAgentFetcher as FallbackPushAgentFetcher,  # We must test the FetcherType factory agains the fallback class, because during import we are not a CPE. Patching this during the test will make no difference...
-)
-from cmk.core_helpers import snmp
-from cmk.core_helpers.agent import AgentFileCache
+from cmk.core_helpers import FetcherType, get_raw_data, snmp
+from cmk.core_helpers.agent import AgentFileCache, NoFetcher
 from cmk.core_helpers.cache import FileCache, FileCacheMode, MaxAge
 from cmk.core_helpers.ipmi import IPMIFetcher
 from cmk.core_helpers.piggyback import PiggybackFetcher
@@ -1049,10 +1045,10 @@ class TestFetcherCaching:
 _FACTORIES_CLASSES = (
     (FetcherType.IPMI, IPMIFetcher),
     (FetcherType.PIGGYBACK, PiggybackFetcher),
+    (FetcherType.PUSH_AGENT, NoFetcher),
     (FetcherType.PROGRAM, ProgramFetcher),
     (FetcherType.SNMP, SNMPFetcher),
     (FetcherType.TCP, TCPFetcher),
-    (FetcherType.PUSH_AGENT, FallbackPushAgentFetcher),
 )
 
 

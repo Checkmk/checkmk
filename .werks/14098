@@ -27,3 +27,5 @@ To make sure the files have not been tampered with, you can check out the expect
 
 To get an idea of what the files should look like in the 2.1.0 version, you can also look at the checked in versions of the master branch <a href="https://github.com/tribe29/checkmk/tree/master/agents/debian/control">here</a>.
 Note that smaller deviations are no cause for concern.
+
+This Werk fixes the CVE: CVE-2022-33912

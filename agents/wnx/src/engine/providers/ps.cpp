@@ -360,7 +360,8 @@ std::string ProducePsWmi(bool use_full_path) {
         auto pagefile_use = GetUint32AsInt64(object, L"PagefileUsage");
 
         // strings with numbers:
-        auto virtual_size = GetWstringAsUint64(object, L"VirtualSize");
+        auto virtual_size =
+            wtools::GetCommitCharge(static_cast<uint32_t>(process_id));
         auto working_set = GetWstringAsUint64(object, L"WorkingSetSize");
         auto user_time = GetWstringAsUint64(object, L"UserModeTime");
         auto kernel_time = GetWstringAsUint64(object, L"KernelModeTime");

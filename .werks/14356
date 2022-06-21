@@ -1,0 +1,24 @@
+Title: Windows agent reports Virtual Size correctly
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1655826651
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p4
+
+
+Previously, to report the Virtual size of a process Windows 
+agent used metric 'VirtualSize' from WMI counter 'Win32_Process'.
+Unfortunately, in Windows this metric means not the Virtual 
+size of process but the size of the process virtual address space, 
+usually 2TB for 32-bit application. As a result monitoring 
+information related to the process Virtial size was useless.
+
+Since this release, Windows agent uses 'Commit Charge' Win32 metric 
+to correctly report the Virtual size of a process, thus solving 
+the problem. 'Commit Charge' is the total amount of virtual memory 
+of a process that must be backed by either physical memory or the 
+page file.

@@ -7,8 +7,7 @@
 import datetime
 from typing import Any, Dict, Mapping, Optional
 
-from .agent_based_api.v1 import HostLabel, IgnoreResults, register, Result, Service
-from .agent_based_api.v1 import State as state
+from .agent_based_api.v1 import HostLabel, IgnoreResults, register, Result, Service, State
 from .agent_based_api.v1.type_defs import (
     CheckResult,
     DiscoveryResult,
@@ -20,9 +19,9 @@ from .utils import docker, uptime
 RESTART_POLICIES_TO_DISCOVER = ("always",)
 
 HEALTH_STATUS_MAP = {
-    "healthy": state.OK,
-    "starting": state.WARN,
-    "unhealthy": state.CRIT,
+    "healthy": State.OK,
+    "starting": State.WARN,
+    "unhealthy": State.CRIT,
 }
 
 
@@ -148,7 +147,7 @@ def check_docker_container_status_health(section: Dict[str, Any]) -> CheckResult
     health = section.get("Health", {})
 
     health_status = health.get("Status", "unknown")
-    cur_state = HEALTH_STATUS_MAP.get(health_status, state.UNKNOWN)
+    cur_state = HEALTH_STATUS_MAP.get(health_status, State.UNKNOWN)
     yield Result(state=cur_state, summary="Health status: %s" % health_status.title())
 
     last_log = health.get("Log", [{}])[-1]
@@ -157,13 +156,13 @@ def check_docker_container_status_health(section: Dict[str, Any]) -> CheckResult
     health_report = last_log.get("Output", "no output").strip().replace("\n", ", ")
     if health_report:
         yield Result(
-            state=state(int(last_log.get("ExitCode") != 0)),
+            state=State(int(last_log.get("ExitCode") != 0)),
             summary="Last health report: %s" % health_report,
         )
 
-    if cur_state == state.CRIT:
+    if cur_state == State.CRIT:
         failing_streak = section.get("Health", {}).get("FailingStreak", "not found")
-        yield Result(state=state.CRIT, summary="Failing streak: %s" % failing_streak)
+        yield Result(state=State.CRIT, summary="Failing streak: %s" % failing_streak)
 
     health_test = section.get("Healthcheck", {}).get("Test")
     if health_test:
@@ -182,7 +181,7 @@ def _health_test_result(health_test: str) -> Result:
     'Health test: CMD-SHELL #!/bin/bash\\n\\nexit 0\\n'
     """
     return Result(
-        state=state.OK,
+        state=State.OK,
         summary=health_test.split("\n", 1)[0].split("#!", 1)[0].strip(),
         details=health_test,
     )
@@ -215,7 +214,7 @@ def discover_docker_container_status(section: Dict[str, Any]):
 
 def check_docker_container_status(section: Dict[str, Any]) -> CheckResult:
     status = section.get("Status", "unknown")
-    cur_state = {"running": state.OK, "unknown": state.UNKNOWN}.get(status, state.CRIT)
+    cur_state = {"running": State.OK, "unknown": State.UNKNOWN}.get(status, State.CRIT)
 
     # Please adjust PainterHostDockerNode if info is changed here
     # 5019 node = output.split()[-1]
@@ -227,7 +226,7 @@ def check_docker_container_status(section: Dict[str, Any]) -> CheckResult:
     yield Result(state=cur_state, summary=info)
 
     if section.get("Error"):
-        yield Result(state=state.CRIT, summary="Error: %s" % section["Error"])
+        yield Result(state=State.CRIT, summary="Error: %s" % section["Error"])
 
 
 register.check_plugin(
@@ -288,7 +287,7 @@ def check_docker_container_status_uptime(
         yield from uptime.check(params, uptime.Section(int(uptime_sec), None))
     else:
         yield from uptime.check(params, uptime.Section(0, None))
-        yield Result(state=state.OK, summary="Operation State: %s" % op_status)
+        yield Result(state=State.OK, summary="Operation State: %s" % op_status)
 
 
 register.check_plugin(

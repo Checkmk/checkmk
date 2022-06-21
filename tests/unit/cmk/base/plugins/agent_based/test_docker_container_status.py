@@ -9,8 +9,13 @@ import pytest
 from tests.testlib import on_time
 
 import cmk.base.plugins.agent_based.docker_container_status as docker
-from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResults, Metric, Result, Service
-from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    IgnoreResults,
+    Metric,
+    Result,
+    Service,
+    State,
+)
 from cmk.base.plugins.agent_based.utils import uptime
 from cmk.base.plugins.agent_based.utils.docker import AgentOutputMalformatted
 
@@ -117,8 +122,8 @@ def test_discovery_docker_container_status():
     )
 
 
-def test_check_docker_container_status():
-    expected_results = [Result(state=state.OK, summary="Container running")]
+def test_check_docker_container_status() -> None:
+    expected_results = [Result(state=State.OK, summary="Container running")]
     assert list(docker.check_docker_container_status(PARSED)) == expected_results
 
 
@@ -151,25 +156,25 @@ def test_discovery_docker_container_status_uptime(section_uptime, expected_servi
         (
             {},
             [
-                Result(state=state.OK, summary="Up since Jun 05 2019 08:58:07"),
-                Result(state=state.OK, summary="Uptime: 1 hour 1 minute"),
+                Result(state=State.OK, summary="Up since Jun 05 2019 08:58:07"),
+                Result(state=State.OK, summary="Uptime: 1 hour 1 minute"),
                 Metric("uptime", 3713.0),
             ],
         ),
         (
             {"min": (1000, 2000)},
             [
-                Result(state=state.OK, summary="Up since Jun 05 2019 08:58:07"),
-                Result(state=state.OK, summary="Uptime: 1 hour 1 minute"),
+                Result(state=State.OK, summary="Up since Jun 05 2019 08:58:07"),
+                Result(state=State.OK, summary="Uptime: 1 hour 1 minute"),
                 Metric("uptime", 3713.0),
             ],
         ),
         (
             {"max": (1000, 2000)},
             [
-                Result(state=state.OK, summary="Up since Jun 05 2019 08:58:07"),
+                Result(state=State.OK, summary="Up since Jun 05 2019 08:58:07"),
                 Result(
-                    state=state.CRIT,
+                    state=State.CRIT,
                     summary="Uptime: 1 hour 1 minute (warn/crit at 16 minutes 40 seconds/33 minutes 20 seconds)",
                 ),
                 Metric("uptime", 3713.0, levels=(1000.0, 2000.0)),
@@ -198,16 +203,16 @@ def test_discover_docker_container_status_health():
             PARSED,
             [
                 Result(
-                    state=state.CRIT,
+                    state=State.CRIT,
                     summary="Health status: Unhealthy",
                 ),
                 Result(
-                    state=state.OK,
+                    state=State.OK,
                     summary="Last health report: mysqld is alive",
                 ),
-                Result(state=state.CRIT, summary="Failing streak: 0"),
+                Result(state=State.CRIT, summary="Failing streak: 0"),
                 Result(
-                    state=state.OK,
+                    state=State.OK,
                     summary="Health test: CMD-SHELL /healthcheck.sh",
                 ),
             ],
@@ -226,10 +231,10 @@ def test_discover_docker_container_status_health():
                 "Status": "running",
             },
             [
-                Result(state=state.OK, summary="Health status: Healthy"),
-                Result(state=state.WARN, summary="Last health report: no output"),
+                Result(state=State.OK, summary="Health status: Healthy"),
+                Result(state=State.WARN, summary="Last health report: no output"),
                 Result(
-                    state=state.OK,
+                    state=State.OK,
                     summary="Health test: CMD-SHELL",
                     details="Health test: CMD-SHELL #!/bin/bash\n\nexit $(my_healthcheck)\n",
                 ),

@@ -67,37 +67,26 @@ def inventory_netapp_volumes(section):
     )
 
 
+_VOLUME_STATUS_TO_MONITORING_STATUS = {
+    "reconstructing": 1,
+    "normal": 0,
+    "raid_dp": 0,
+    "raid0": 0,
+    "raid0, mirrored": 0,
+    "raid4": 0,
+    "mixed_raid_type": 0,
+}
+
+
 def check_netapp_volumes(item, _not_used, section):
     if (volume := section.get(item, None)) is None:
-        return None
+        return
 
-    output = "FSID: %s, Owner: %s, " % (
-        volume.fsid,
-        volume.owner,
-    )
-
-    ret_state = 0
-    output += "State: %s" % volume.state
-    if volume.state == "offline":
-        ret_state = 1
-        output += "(!)"
-
-    output += ", Status: %s" % volume.status
-    if volume.status == "reconstructing":
-        ret_state = 1
-        output += "(!)"
-    elif volume.status.split(",")[0] not in [
-        "normal",
-        "raid_dp",
-        "raid0",
-        "raid0, mirrored",
-        "raid4",
-        "mixed_raid_type",
-    ]:
-        ret_state = 2
-        output += "(!!)"
-
-    return (ret_state, output)
+    yield 0, f"FSID: {volume.fsid}, Owner: {volume.owner}"
+    yield 1 if volume.state == "offline" else 0, f"State: {volume.state}"
+    yield _VOLUME_STATUS_TO_MONITORING_STATUS.get(
+        volume.status.split(",", maxsplit=1)[0], 2
+    ), f"Status: {volume.status}"
 
 
 check_info["netapp_volumes"] = {

@@ -57,28 +57,28 @@ def test_inventory(
             [
                 Result(
                     state=State.OK,
-                    summary="FSID: 23465813, Owner: local, State: online, Status: raid_dp, 64-bit, rlw_on",
+                    summary="FSID: 23465813, Owner: local",
                 ),
+                Result(state=State.OK, summary="State: online"),
+                Result(state=State.OK, summary="Status: raid_dp, 64-bit, rlw_on"),
             ],
             id="everything ok",
         ),
         pytest.param(
             "lun_29Aug2012_162910_vol",
             [
-                Result(
-                    state=State.WARN,
-                    summary="FSID: 1885979353, Owner: local, State: offline(!), Status: raid_dp, 64-bit, rlw_on",
-                ),
+                Result(state=State.OK, summary="FSID: 1885979353, Owner: local"),
+                Result(state=State.WARN, summary="State: offline"),
+                Result(state=State.OK, summary="Status: raid_dp, 64-bit, rlw_on"),
             ],
             id="state offline - warn",
         ),
         pytest.param(
             "a2_esx_zit_g7_00",
             [
-                Result(
-                    state=State.CRIT,
-                    summary="FSID: 1597710601, Owner: local, State: online, Status: (!!)",
-                ),
+                Result(state=State.OK, summary="FSID: 1597710601, Owner: local"),
+                Result(state=State.OK, summary="State: online"),
+                Result(state=State.CRIT, summary="Status:"),
             ],
             id="status empty - crit",
         ),

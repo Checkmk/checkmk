@@ -64,3 +64,41 @@ def test_post_userrole_endpoint(
     assert resp.json["extensions"].keys() == {"alias", "permissions", "builtin", "basedon"}
     assert resp.json["id"] == "adminx"
     assert {link["method"] for link in resp.json["links"]} == {"GET", "PUT", "DELETE"}
+
+
+def test_delete_userrole_endpoint(
+    collection_base: str, object_base: str, aut_user_auth_wsgi_app: WebTestAppForCMK
+) -> None:
+    aut_user_auth_wsgi_app.post(
+        collection_base,
+        status=200,
+        params=json.dumps({"role_id": "admin"}),
+        headers={"Accept": "application/json"},
+        content_type="application/json",
+    )
+
+    aut_user_auth_wsgi_app.delete(
+        object_base + "adminx",
+        status=204,
+        headers={"Accept": "application/json"},
+    )
+
+
+def test_delete_non_existing_userrole_endpoint(
+    object_base: str, aut_user_auth_wsgi_app: WebTestAppForCMK
+) -> None:
+    aut_user_auth_wsgi_app.delete(
+        object_base + "non-existing-user-role",
+        status=404,
+        headers={"Accept": "application/json"},
+    )
+
+
+def test_delete_builtin_userrole(
+    object_base: str, aut_user_auth_wsgi_app: WebTestAppForCMK
+) -> None:
+    aut_user_auth_wsgi_app.delete(
+        object_base + "admin",
+        status=404,
+        headers={"Accept": "application/json"},
+    )

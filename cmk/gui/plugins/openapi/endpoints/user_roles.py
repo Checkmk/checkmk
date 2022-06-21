@@ -136,3 +136,31 @@ def create_userrole(params: Mapping[str, Any]) -> Response:
         new_alias=body.get("new_alias"),
     )
     return constructors.serve_json(serialize_user_role(cloned_user_role))
+
+
+@Endpoint(
+    constructors.object_href("user_role", "{role_id}"),
+    ".../delete",
+    method="delete",
+    tag_group="Setup",
+    path_params=[
+        {
+            "role_id": request_schemas.UserRoleID(
+                required=True,
+                description="An existing custom user role that you want to delete.",
+                example="userx",
+                presence="should_exist",
+                userrole_type="should_be_custom",
+            )
+        }
+    ],
+    output_empty=True,
+    permissions_required=RW_PERMISSIONS,
+)
+def delete_userrole(params: Mapping[str, Any]) -> Response:
+    """Delete a user role"""
+    user.need_permission("wato.users")
+    user.need_permission("wato.edit")
+    role_id = RoleID(params["role_id"])
+    userroles.delete_role(RoleID(role_id))
+    return Response(status=204)

@@ -1,0 +1,18 @@
+Title: Fix edit of dashboards without header
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1655807360
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p4
+
+If a dashboard was configured with option "Show the header of the dashboard
+with the configured title" disabled, the "Edit dashboard" link only showed the
+dashboard.
+
+The option to edit the dashboard is now disabled for such dashboards and will
+show a hint, that the header must be enabled to use the edit mode.
+

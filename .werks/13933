@@ -1,0 +1,17 @@
+Title: missing Theme in REST API
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1655823455
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p4
+
+Some Rulesets regarding themes and icons could crash in the REST API due
+to a missing reference to a default Theme. The theme was previously omitted
+in the REST API which led to this error.
+
+This has now been fixed and a default theme is now available in the REST API
+for Ruleset validation logic to access, even though it has no effect for the user.

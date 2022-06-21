@@ -865,7 +865,7 @@ TEST(PluginTest, GeneratePluginEntry) {
         EXPECT_EQ(pm.size(), pv_main.size());
         ApplyEverythingToPluginMap(pm, exe_units_base, pv_main, true);
         {
-            int indexes[] = {0, 3, 5};
+            std::array<int, 3> indexes{0, 3, 5};
             for (auto i : indexes) {
                 auto e_5 = GetEntrySafe(pm, pv_main[i]);
                 ASSERT_NE(nullptr, e_5) << "bad at index " << i << "\n";
@@ -876,7 +876,7 @@ TEST(PluginTest, GeneratePluginEntry) {
         }
         {
             // bad files
-            int indexes[] = {1, 2, 4};
+            std::array<int, 3> indexes{1, 2, 4};
             for (auto i : indexes) {
                 auto e_5 = GetEntrySafe(pm, pv_main[i]);
                 ASSERT_NE(nullptr, e_5) << "bad at index " << i << "\n";
@@ -1203,7 +1203,6 @@ TEST(PluginTest, DuplicatedUnitsRemove) {
     EXPECT_TRUE(um.size() == 8);
     RemoveDuplicatedEntriesByName(um, true);
     EXPECT_EQ(um.size(), 3);
-    int count = 0;
     EXPECT_FALSE(um[paths[0]].pattern().empty());
     EXPECT_FALSE(um[paths[1]].pattern().empty());
     EXPECT_FALSE(um[paths[6]].pattern().empty());
@@ -1251,10 +1250,7 @@ TEST(PluginTest, SyncStartSimulationFuture_Integration) {
     int requested_count = 0;
 
     // sync part
-    for (auto &entry_pair : pm) {
-        auto &entry_name = entry_pair.first;
-        auto &entry = entry_pair.second;
-
+    for (auto &[entry_name, entry] : pm) {
         // C++ async black magic
         results.emplace_back(std::async(
             std::launch::async,  // first param
@@ -1465,9 +1461,7 @@ TEST(PluginTest, AsyncStartSimulation_Integration) {
     UpdatePluginMap(pm, false, as_vp, exe_units_async_0, false);
 
     // async to sync part
-    for (auto &entry_pair : pm) {
-        auto &entry_name = entry_pair.first;
-        auto &entry = entry_pair.second;
+    for (auto &[entry_name, entry] : pm) {
         EXPECT_EQ(entry.failures(), 0);
         EXPECT_EQ(entry.failed(), 0);
 
@@ -1563,9 +1557,7 @@ TEST(PluginTest, AsyncStartSimulation_Long) {
     UpdatePluginMap(pm, false, as_vp, exe_units_async_121, false);
 
     // async part
-    for (auto &entry_pair : pm) {
-        auto &entry_name = entry_pair.first;
-        auto &entry = entry_pair.second;
+    for (auto &[entry_name, entry] : pm) {
         EXPECT_EQ(entry.failures(), 0);
         EXPECT_EQ(entry.failed(), 0);
 
@@ -1756,7 +1748,7 @@ TEST(PluginTest, AsyncStartSimulation_Long) {
             << "headers of local plugins shouldn't be patched";
     }
 }
-
+namespace {
 struct TestDateTime {
     bool invalid() const { return hour == 99; }
     uint32_t hour = 99;
@@ -1769,7 +1761,9 @@ TestDateTime StringToTime(const std::string &text) {
     TestDateTime tdt;
 
     auto table = cma::tools::SplitString(text, ":");
-    if (table.size() != 3) return tdt;
+    if (table.size() != 3) {
+        return tdt;
+    }
 
     auto sec_table = cma::tools::SplitString(table[2], ".");
     if (sec_table.size() != 2) {
@@ -1786,34 +1780,30 @@ TestDateTime StringToTime(const std::string &text) {
 
     return tdt;
 }
-
+}  // namespace
 TEST(PluginTest, StringToTime) {
-    {
-        auto tdt = StringToTime("");
-        EXPECT_TRUE(tdt.invalid());
-    }
-    {
-        auto tdt = StringToTime("21:3:3.45");
-        ASSERT_FALSE(tdt.invalid());
-        EXPECT_EQ(tdt.hour, 21);
-        EXPECT_EQ(tdt.min, 3);
-        EXPECT_EQ(tdt.sec, 3);
-        EXPECT_EQ(tdt.msec, 45);
-    }
+    EXPECT_TRUE(StringToTime("").invalid());
+
+    auto tdt = StringToTime("21:3:3.45");
+    ASSERT_FALSE(tdt.invalid());
+    EXPECT_EQ(tdt.hour, 21);
+    EXPECT_EQ(tdt.min, 3);
+    EXPECT_EQ(tdt.sec, 3);
+    EXPECT_EQ(tdt.msec, 45);
 }
 
 // waiter for the result. In fact polling with grane 500ms
 template <typename T, typename B>
 bool WaitForSuccess(std::chrono::duration<T, B> allowed_wait,
-                    std::function<bool()> func) {
-    using namespace std::chrono;
-
+                    const std::function<bool()> &func) {
     constexpr auto grane = 50ms;
     auto wait_time = allowed_wait;
 
     while (wait_time >= 0ms) {
         auto success = func();
-        if (success) return true;
+        if (success) {
+            return true;
+        }
 
         cma::tools::sleep(grane);
         wait_time -= grane;

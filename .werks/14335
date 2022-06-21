@@ -1,0 +1,14 @@
+Title: Fix crash if no icon and an emblem was configured
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1655795870
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p4
+
+If you configured e.g. a view with Icon "empty" and an emblem, the GUI crashed,
+showing the error "TypeError: argument of type 'NoneType' is not iterable" in
+~/var/log/web.log.

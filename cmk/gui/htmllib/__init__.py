@@ -2047,6 +2047,8 @@ class html(ABCHTMLGenerator):
             classes.append(class_)
 
         icon_name = icon["icon"] if isinstance(icon, dict) else icon
+        if icon_name is None:
+            icon_name = "empty"
         src = icon_name if "/" in icon_name else theme.detect_icon_path(icon_name, prefix="icon_")
         if src.endswith(".png"):
             classes.append("png")

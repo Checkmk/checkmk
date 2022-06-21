@@ -25,6 +25,18 @@ class Mode(enum.Enum):
     FORCE_SECTIONS = enum.auto()
 
 
+class FetcherType(enum.Enum):
+    """Map short name to fetcher class."""
+
+    NONE = enum.auto()
+    PUSH_AGENT = enum.auto()
+    IPMI = enum.auto()
+    PIGGYBACK = enum.auto()
+    PROGRAM = enum.auto()
+    SNMP = enum.auto()
+    TCP = enum.auto()
+
+
 # Note that the inner Sequence[str] to AgentRawDataSection
 # is only **artificially** different from AgentRawData and
 # obtained approximatively with `raw_data.decode("utf-8").split()`!

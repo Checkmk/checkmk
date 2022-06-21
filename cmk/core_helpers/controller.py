@@ -22,12 +22,12 @@ from cmk.utils.timeout import MKTimeout, Timeout
 from cmk.utils.type_defs import HostName
 from cmk.utils.type_defs.protocol import Serializer
 
-from . import Fetcher, FetcherFactory, FetcherType, get_raw_data, protocol
+from . import Fetcher, FetcherFactory, get_raw_data, protocol
 from .agent import AgentFileCache
 from .cache import FileCache, MaxAge
 from .crash_reporting import create_fetcher_crash_dump
 from .snmp import SNMPFetcher, SNMPFileCache, SNMPPluginStore
-from .type_defs import Mode
+from .type_defs import FetcherType, Mode
 
 logger = logging.getLogger("cmk.helper")
 

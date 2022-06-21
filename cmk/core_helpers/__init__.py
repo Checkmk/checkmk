@@ -36,7 +36,6 @@ Todo:
 
 """
 
-import enum
 from typing import Any, Mapping, Type
 
 from cmk.utils import version
@@ -49,6 +48,7 @@ from .piggyback import PiggybackFetcher
 from .program import ProgramFetcher
 from .snmp import SNMPFetcher, SNMPFileCache
 from .tcp import TCPFetcher
+from .type_defs import FetcherType
 
 __all__ = [
     "Fetcher",
@@ -64,18 +64,6 @@ __all__ = [
     "Summarizer",
     "TCPFetcher",
 ]
-
-
-class FetcherType(enum.Enum):
-    """Map short name to fetcher class."""
-
-    NONE = enum.auto()
-    PUSH_AGENT = enum.auto()
-    IPMI = enum.auto()
-    PIGGYBACK = enum.auto()
-    PROGRAM = enum.auto()
-    SNMP = enum.auto()
-    TCP = enum.auto()
 
 
 class FetcherFactory:

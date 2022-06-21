@@ -71,7 +71,7 @@ from cmk.utils.type_defs.protocol import Deserializer, Serializer
 
 from cmk.snmplib.type_defs import SNMPRawData, TRawData
 
-from . import FetcherType
+from .type_defs import FetcherType
 
 __all__ = [
     "CMCHeader",

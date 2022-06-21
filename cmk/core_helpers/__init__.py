@@ -52,6 +52,8 @@ from .tcp import TCPFetcher
 
 __all__ = [
     "Fetcher",
+    "FetcherFactory",
+    "FetcherType",
     "FileCache",
     "IPMIFetcher",
     "NoFetcher",
@@ -61,16 +63,11 @@ __all__ = [
     "SNMPFetcher",
     "Summarizer",
     "TCPFetcher",
-    "FetcherType",
 ]
 
 
 class FetcherType(enum.Enum):
-    """Map short name to fetcher class.
-
-    The enum works as a fetcher factory.
-
-    """
+    """Map short name to fetcher class."""
 
     NONE = enum.auto()
     PUSH_AGENT = enum.auto()
@@ -80,7 +77,10 @@ class FetcherType(enum.Enum):
     SNMP = enum.auto()
     TCP = enum.auto()
 
-    def make(self) -> Type[Fetcher]:
+
+class FetcherFactory:
+    @staticmethod
+    def make(fetcher_type: FetcherType) -> Type[Fetcher]:
         """The fetcher factory."""
         # The typing error comes from the use of `Fetcher[Any]`.
         # but we have tests to show that it still does what it
@@ -92,8 +92,9 @@ class FetcherType(enum.Enum):
             FetcherType.PROGRAM: ProgramFetcher,
             FetcherType.SNMP: SNMPFetcher,
             FetcherType.TCP: TCPFetcher,
-        }[self]
+        }[fetcher_type]
 
-    def from_json(self, serialized: Mapping[str, Any]) -> Fetcher:
+    @staticmethod
+    def from_json(fetcher_type: FetcherType, serialized: Mapping[str, Any]) -> Fetcher:
         """Instantiate the fetcher from serialized data."""
-        return self.make().from_json(serialized)
+        return FetcherFactory.make(fetcher_type).from_json(serialized)

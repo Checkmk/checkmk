@@ -22,7 +22,7 @@ from cmk.utils.timeout import MKTimeout, Timeout
 from cmk.utils.type_defs import HostName
 from cmk.utils.type_defs.protocol import Serializer
 
-from . import Fetcher, FetcherType, get_raw_data, protocol
+from . import Fetcher, FetcherFactory, FetcherType, get_raw_data, protocol
 from .agent import AgentFileCache
 from .cache import FileCache, MaxAge
 from .crash_reporting import create_fetcher_crash_dump
@@ -195,7 +195,7 @@ def _parse_fetcher_config(
     # Crashing on error really *is* the best way to catch bonehead mistakes.
     for entry in data["fetchers"]:
         fetcher_type = FetcherType[entry["fetcher_type"]]
-        fetcher = fetcher_type.from_json(entry["fetcher_params"])
+        fetcher = FetcherFactory.from_json(fetcher_type, entry["fetcher_params"])
         if fetcher_type is FetcherType.SNMP:
             file_cache: FileCache = SNMPFileCache.from_json(entry["file_cache_params"])
             file_cache.max_age = MaxAge(

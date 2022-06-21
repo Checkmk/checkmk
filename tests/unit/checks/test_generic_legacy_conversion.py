@@ -659,7 +659,6 @@ def test_all_check_variables_present(fix_plugin_legacy) -> None:
         "netapp_api_snapshots_default_levels",
         "netapp_cpu_default_levels",
         "netapp_fcpio_default_levels",
-        "netapp_volumes_owner",
         "netctr_counter_indices",
         "netctr_counters",
         "netctr_default_params",

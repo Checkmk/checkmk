@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+
 # .1.3.6.1.4.1.789.1.5.8.1.1.1 = INTEGER: 1
 # .1.3.6.1.4.1.789.1.5.8.1.1.2 = INTEGER: 2
 # .1.3.6.1.4.1.789.1.5.8.1.1.3 = INTEGER: 3
@@ -60,48 +61,60 @@
 # .1.3.6.1.4.1.789.1.5.8.1.13.3 = ""
 
 
-def inventory_netapp_volumes(section):
-    # Only inventorize local volumes
-    yield from (
-        (volume_name, None) for volume_name, volume in section.items() if volume.owner == "local"
-    )
+import dataclasses
+from typing import Mapping
+
+from .agent_based_api.v1 import all_of, register, SNMPTree, startswith
+from .agent_based_api.v1.type_defs import StringTable
 
 
-def check_netapp_volumes(item, _not_used, section):
-    if (volume := section.get(item, None)) is None:
-        return None
-
-    output = "FSID: %s, Owner: %s, " % (
-        volume.fsid,
-        volume.owner,
-    )
-
-    ret_state = 0
-    output += "State: %s" % volume.state
-    if volume.state == "offline":
-        ret_state = 1
-        output += "(!)"
-
-    output += ", Status: %s" % volume.status
-    if volume.status == "reconstructing":
-        ret_state = 1
-        output += "(!)"
-    elif volume.status.split(",")[0] not in [
-        "normal",
-        "raid_dp",
-        "raid0",
-        "raid0, mirrored",
-        "raid4",
-        "mixed_raid_type",
-    ]:
-        ret_state = 2
-        output += "(!!)"
-
-    return (ret_state, output)
+@dataclasses.dataclass(frozen=True)
+class NetappVolume:
+    fsid: str
+    owner: str
+    state: str
+    status: str
 
 
-check_info["netapp_volumes"] = {
-    "check_function": check_netapp_volumes,
-    "inventory_function": inventory_netapp_volumes,
-    "service_description": "NetApp Vol %s",
+Section = Mapping[str, NetappVolume]
+
+_NETAPP_VOLUMES_OWNER = {
+    "1": "local",
+    "2": "partner",
 }
+
+
+def parse_netapp_volumes(string_table: StringTable) -> Section:
+    """
+    >>> parse_netapp_volumes([["vol0", "23465813", "1", "online", "raid_dp, 64-bit, rlw_on"]])
+    {'vol0': NetappVolume(fsid='23465813', owner='local', state='online', status='raid_dp, 64-bit, rlw_on')}
+    """
+    return {
+        line[0]: NetappVolume(
+            fsid=line[1],
+            owner=_NETAPP_VOLUMES_OWNER.get(line[2], "UNKNOWN"),
+            state=line[3],
+            status=line[4],
+        )
+        for line in string_table
+    }
+
+
+register.snmp_section(
+    name="netapp_volumes",
+    parse_function=parse_netapp_volumes,
+    detect=all_of(
+        startswith(".1.3.6.1.2.1.1.1.0", "NetApp Release"),
+        startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.789"),
+    ),
+    fetch=SNMPTree(
+        ".1.3.6.1.4.1.789.1.5.8.1",
+        [
+            "2",  # volName
+            "3",  # volFSID
+            "4",  # volOwningHost
+            "5",  # volState
+            "6",  # volStatus
+        ],
+    ),
+)

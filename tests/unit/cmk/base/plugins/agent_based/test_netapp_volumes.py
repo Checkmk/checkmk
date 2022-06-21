@@ -13,6 +13,7 @@ from cmk.utils.type_defs import CheckPluginName
 
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
+from cmk.base.plugins.agent_based.netapp_volumes import parse_netapp_volumes
 
 STRING_TABLE_FILER_NETAPP_8_1_1 = [
     ["vol0", "23465813", "1", "online", "raid_dp, 64-bit, rlw_on"],
@@ -32,9 +33,11 @@ def fixture_netapp_volumes_plugin(fix_register: FixRegister) -> CheckPlugin:
 def test_inventory(
     netapp_volumes_plugin: CheckPlugin,
 ) -> None:
-    assert list(
-        netapp_volumes_plugin.discovery_function(
-            section=STRING_TABLE_FILER_NETAPP_8_1_1,
+    assert (
+        list(
+            netapp_volumes_plugin.discovery_function(
+                section=parse_netapp_volumes(STRING_TABLE_FILER_NETAPP_8_1_1),
+            )
         )
     ) == [
         Service(item="vol0"),
@@ -81,12 +84,7 @@ def test_inventory(
         ),
         pytest.param(
             "I_am_not_a_real_volume",
-            [
-                Result(
-                    state=State.UNKNOWN,
-                    summary="Volume not found",
-                ),
-            ],
+            [],
             id="unknown volume",
         ),
     ],
@@ -101,7 +99,7 @@ def test_check(
             netapp_volumes_plugin.check_function(
                 item=item,
                 params={},
-                section=STRING_TABLE_FILER_NETAPP_8_1_1,
+                section=parse_netapp_volumes(STRING_TABLE_FILER_NETAPP_8_1_1),
             )
         )
         == expected_result

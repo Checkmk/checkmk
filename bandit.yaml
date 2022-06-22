@@ -43,9 +43,8 @@
 # B319 : xml_bad_pulldom
 # B320 : xml_bad_etree
 # B321 : ftplib
-# B322 : input
 # B323 : unverified_context
-# B324 : hashlib_new_insecure_functions
+# B324 : hashlib_insecure_functions
 # B325 : tempnam
 # B401 : import_telnetlib
 # B402 : import_ftplib
@@ -60,7 +59,7 @@
 # B411 : import_xmlrpclib
 # B412 : import_httpoxy
 # B413 : import_pycrypto
-# B414 : import_pycryptodome
+# B415 : import_pyghmi
 # B501 : request_with_no_cert_validation
 # B502 : ssl_with_bad_version
 # B503 : ssl_with_bad_defaults
@@ -68,6 +67,8 @@
 # B505 : weak_cryptographic_key
 # B506 : yaml_load
 # B507 : ssh_no_host_key_verification
+# B508 : snmp_insecure_version
+# B509 : snmp_weak_cryptography
 # B601 : paramiko_calls
 # B602 : subprocess_popen_with_shell_equals_true
 # B603 : subprocess_without_shell_equals_true
@@ -88,14 +89,21 @@ tests:
 
 # (optional) list skipped test IDs here, eg '[B101, B406]':
 skips:
-  # NOTE: We have to work around a highly obscure effect: If you add any of
-  # those test below (md5, ciphers, import_pycryptodome), Bandit's runtime goes
-  # up by a factor of 15! Strangely enough, using the tests separately is no
-  # problem at all, so there must be some unlucky interaction between some
-  # tests. :-/ We should investigate this further at some point...
-  - B303
-  - B304
   - B415  # pyghmi is needed by our core
+# medium severity tests excluded for now; enable step-by-step
+  - B102  # exec_used
+  - B103  # set_bad_file_permissions
+  - B104  # hardcoded_bind_all_interfaces
+  - B108  # hardcoded_tmp_directory
+  - B301  # pickle
+  - B302  # marshal
+  - B307  # eval
+  - B310  # urllib_urlopen
+  - B314  # xml_bad_ElementTree
+  - B318  # xml_bad_minidom
+  - B323  # unverified_context
+  - B601  # paramiko_calls
+  - B608  # hardcoded_sql_expressions
 
 ### (optional) plugin settings - some test plugins require configuration data
 ### that may be given here, per-plugin. All bandit test plugins have a built in
@@ -141,6 +149,8 @@ any_other_function_with_shell_equals_true:
   - subprocess.check_call
   - subprocess.check_output
   - subprocess.run
+assert_used:
+  skips: []
 hardcoded_tmp_directory:
   tmp_dirs:
   - /tmp

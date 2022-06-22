@@ -310,6 +310,255 @@ class ABCRowTable(RowTable):
 
 
 # .
+#   .--API-----------------------------------------------------------------.
+#   |                             _    ____ ___                            |
+#   |                            / \  |  _ \_ _|                           |
+#   |                           / _ \ | |_) | |                            |
+#   |                          / ___ \|  __/| |                            |
+#   |                         /_/   \_\_|  |___|                           |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+
+# Just for compatibility
+def render_inv_dicttable(*args) -> None:
+    pass
+
+
+def declare_inventory_columns() -> None:
+    # create painters for node with a display hint
+    for hints in DISPLAY_HINTS:
+        if "*" in hints.abc_path:
+            continue
+
+        ident = ("inv",) + hints.abc_path
+
+        _register_node_painter(
+            inventory.InventoryPath(path=hints.abc_path, source=inventory.TreeSource.node),
+            "_".join(ident),
+            hints,
+        )
+
+        for key, attr_hint in hints.attribute_hints.items():
+            _register_attribute_column(
+                inventory.InventoryPath(
+                    path=hints.abc_path, source=inventory.TreeSource.attributes, key=key
+                ),
+                "_".join(ident + (key,)),
+                attr_hint,
+            )
+
+
+# One master function that does all
+def declare_invtable_view(
+    table_view_name: str,
+    raw_path: SDRawPath,
+    title_singular: str,
+    title_plural: str,
+    icon: Optional[Icon] = None,
+) -> None:
+    _register_table_view(
+        table_view_name,
+        inventory.InventoryPath.parse(raw_path),
+        title_singular,
+        title_plural,
+        icon,
+    )
+
+
+def declare_invtable_views() -> None:
+    """Declare views for a couple of embedded tables"""
+    declare_invtable_view(
+        "invswpac",
+        ".software.packages:",
+        _("Software package"),
+        _("Software packages"),
+    )
+    declare_invtable_view(
+        "invinterface",
+        ".networking.interfaces:",
+        _("Network interface"),
+        _("Network interfaces"),
+        "networking",
+    )
+
+    declare_invtable_view(
+        "invdockerimages",
+        ".software.applications.docker.images:",
+        _("Docker images"),
+        _("Docker images"),
+    )
+    declare_invtable_view(
+        "invdockercontainers",
+        ".software.applications.docker.containers:",
+        _("Docker containers"),
+        _("Docker containers"),
+    )
+
+    declare_invtable_view(
+        "invother",
+        ".hardware.components.others:",
+        _("Other entity"),
+        _("Other entities"),
+    )
+    declare_invtable_view(
+        "invunknown",
+        ".hardware.components.unknowns:",
+        _("Unknown entity"),
+        _("Unknown entities"),
+    )
+    declare_invtable_view(
+        "invchassis",
+        ".hardware.components.chassis:",
+        _("Chassis"),
+        _("Chassis"),
+    )
+    declare_invtable_view(
+        "invbackplane",
+        ".hardware.components.backplanes:",
+        _("Backplane"),
+        _("Backplanes"),
+    )
+    declare_invtable_view(
+        "invcmksites",
+        ".software.applications.check_mk.sites:",
+        _("Checkmk site"),
+        _("Checkmk sites"),
+        "checkmk",
+    )
+    declare_invtable_view(
+        "invcmkversions",
+        ".software.applications.check_mk.versions:",
+        _("Checkmk version"),
+        _("Checkmk versions"),
+        "checkmk",
+    )
+    declare_invtable_view(
+        "invcontainer",
+        ".hardware.components.containers:",
+        _("HW container"),
+        _("HW containers"),
+    )
+    declare_invtable_view(
+        "invpsu",
+        ".hardware.components.psus:",
+        _("Power supply"),
+        _("Power supplies"),
+    )
+    declare_invtable_view(
+        "invfan",
+        ".hardware.components.fans:",
+        _("Fan"),
+        _("Fans"),
+    )
+    declare_invtable_view(
+        "invsensor",
+        ".hardware.components.sensors:",
+        _("Sensor"),
+        _("Sensors"),
+    )
+    declare_invtable_view(
+        "invmodule",
+        ".hardware.components.modules:",
+        _("Module"),
+        _("Modules"),
+    )
+    declare_invtable_view(
+        "invstack",
+        ".hardware.components.stacks:",
+        _("Stack"),
+        _("Stacks"),
+    )
+
+    declare_invtable_view(
+        "invorainstance",
+        ".software.applications.oracle.instance:",
+        _("Oracle instance"),
+        _("Oracle instances"),
+    )
+    declare_invtable_view(
+        "invorarecoveryarea",
+        ".software.applications.oracle.recovery_area:",
+        _("Oracle recovery area"),
+        _("Oracle recovery areas"),
+    )
+    declare_invtable_view(
+        "invoradataguardstats",
+        ".software.applications.oracle.dataguard_stats:",
+        _("Oracle dataguard statistic"),
+        _("Oracle dataguard statistics"),
+    )
+    declare_invtable_view(
+        "invoratablespace",
+        ".software.applications.oracle.tablespaces:",
+        _("Oracle tablespace"),
+        _("Oracle tablespaces"),
+    )
+    declare_invtable_view(
+        "invorasga",
+        ".software.applications.oracle.sga:",
+        _("Oracle SGA performance"),
+        _("Oracle SGA performance"),
+    )
+    declare_invtable_view(
+        "invorapga",
+        ".software.applications.oracle.pga:",
+        _("Oracle PGA performance"),
+        _("Oracle PGA performance"),
+    )
+    declare_invtable_view(
+        "invorasystemparameter",
+        ".software.applications.oracle.systemparameter:",
+        _("Oracle system parameter"),
+        _("Oracle system parameters"),
+    )
+    declare_invtable_view(
+        "invibmmqmanagers",
+        ".software.applications.ibm_mq.managers:",
+        _("Manager"),
+        _("IBM MQ Managers"),
+    )
+    declare_invtable_view(
+        "invibmmqchannels",
+        ".software.applications.ibm_mq.channels:",
+        _("Channel"),
+        _("IBM MQ Channels"),
+    )
+    declare_invtable_view(
+        "invibmmqqueues", ".software.applications.ibm_mq.queues:", _("Queue"), _("IBM MQ Queues")
+    )
+    declare_invtable_view(
+        "invtunnels", ".networking.tunnels:", _("Networking Tunnels"), _("Networking Tunnels")
+    )
+    declare_invtable_view(
+        "invkernelconfig",
+        ".software.kernel_config:",
+        _("Kernel configuration (sysctl)"),
+        _("Kernel configurations (sysctl)"),
+    )
+
+
+# This would also be possible. But we muss a couple of display and filter hints.
+# declare_invtable_view("invdisks",       ".hardware.storage.disks:",  _("Hard Disk"),          _("Hard Disks"))
+
+
+def declare_joined_inventory_table_view(
+    table_view_name: str,
+    title_singular: str,
+    title_plural: str,
+    tables: Sequence[str],
+    match_by: Sequence[str],
+) -> None:
+    _register_multi_table_view(
+        table_view_name,
+        title_singular,
+        title_plural,
+        tables,
+        match_by,
+    )
+
+
+# .
 #   .--paint helper--------------------------------------------------------.
 #   |                   _       _     _          _                         |
 #   |       _ __   __ _(_)_ __ | |_  | |__   ___| |_ __   ___ _ __         |
@@ -999,13 +1248,7 @@ def transform_legacy_display_hints():
 
 
 # .
-#   .--inventory columns---------------------------------------------------.
-#   |             _                      _                                 |
-#   |            (_)_ ____   _____ _ __ | |_ ___  _ __ _   _               |
-#   |            | | '_ \ \ / / _ \ '_ \| __/ _ \| '__| | | |              |
-#   |            | | | | \ V /  __/ | | | || (_) | |  | |_| |              |
-#   |            |_|_| |_|\_/ \___|_| |_|\__\___/|_|   \__, |              |
-#   |                                                  |___/               |
+#   .--columns-------------------------------------------------------------.
 #   |                          _                                           |
 #   |                 ___ ___ | |_   _ _ __ ___  _ __  ___                 |
 #   |                / __/ _ \| | | | | '_ ` _ \| '_ \/ __|                |
@@ -1013,30 +1256,6 @@ def transform_legacy_display_hints():
 #   |                \___\___/|_|\__,_|_| |_| |_|_| |_|___/                |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
-
-
-def declare_inventory_columns() -> None:
-    # create painters for node with a display hint
-    for hints in DISPLAY_HINTS:
-        if "*" in hints.abc_path:
-            continue
-
-        ident = ("inv",) + hints.abc_path
-
-        _register_node_painter(
-            inventory.InventoryPath(path=hints.abc_path, source=inventory.TreeSource.node),
-            "_".join(ident),
-            hints,
-        )
-
-        for key, attr_hint in hints.attribute_hints.items():
-            _register_attribute_column(
-                inventory.InventoryPath(
-                    path=hints.abc_path, source=inventory.TreeSource.attributes, key=key
-                ),
-                "_".join(ident + (key,)),
-                attr_hint,
-            )
 
 
 def _register_node_painter(
@@ -1236,25 +1455,6 @@ def _export_attribute_as_json(
     return _compute_attribute_painter_data(row, inventory_path)
 
 
-# .
-#   .--Datasources---------------------------------------------------------.
-#   |       ____        _                                                  |
-#   |      |  _ \  __ _| |_ __ _ ___  ___  _   _ _ __ ___ ___  ___         |
-#   |      | | | |/ _` | __/ _` / __|/ _ \| | | | '__/ __/ _ \/ __|        |
-#   |      | |_| | (_| | || (_| \__ \ (_) | |_| | | | (_|  __/\__ \        |
-#   |      |____/ \__,_|\__\__,_|___/\___/ \__,_|_|  \___\___||___/        |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   |  Basic functions for creating datasources for for table-like infor-  |
-#   |  mation like software packages or network interfaces. That way the   |
-#   |  user can access inventory data just like normal Livestatus tables.  |
-#   |  This is needed for inventory data that is organized in tables.      |
-#   |  Data where there is one fixed path per host for an item (like the   |
-#   |  number of CPU cores) no datasource is being needed. These are just  |
-#   |  painters that are available in the hosts info.                      |
-#   '----------------------------------------------------------------------'
-
-
 def _inv_find_subtable_columns(
     inventory_path: inventory.InventoryPath,
 ) -> Sequence[Tuple[str, ColumnDisplayHint]]:
@@ -1358,16 +1558,13 @@ class ABCDataSourceInventory(ABCDataSource):
         raise NotImplementedError()
 
 
-# One master function that does all
-def declare_invtable_view(
+def _register_table_view(
     table_view_name: str,
-    raw_path: SDRawPath,
+    inventory_path: inventory.InventoryPath,
     title_singular: str,
     title_plural: str,
     icon: Optional[Icon] = None,
 ) -> None:
-    inventory_path = inventory.InventoryPath.parse(raw_path)
-
     _register_info_class(table_view_name, title_singular, title_plural)
 
     # Create the datasource (like a database view)
@@ -1458,14 +1655,13 @@ class RowMultiTableInventory(ABCRowTable):
             user_errors.add(MKUserError("declare_invtable_view", ", ".join(self._errors)))
 
 
-def declare_joined_inventory_table_view(
+def _register_multi_table_view(
     table_view_name: str,
     title_singular: str,
     title_plural: str,
-    tables: List[str],
-    match_by: List[str],
+    tables: Sequence[str],
+    match_by: Sequence[str],
 ) -> None:
-
     _register_info_class(table_view_name, title_singular, title_plural)
 
     info_names: List[str] = []
@@ -1642,191 +1838,14 @@ def _register_views(
     multisite_builtin_views[_make_table_view_name_of_host(table_view_name)].update(view_spec)
 
 
-def declare_invtable_views() -> None:
-    """Declare views for a couple of embedded tables"""
-    declare_invtable_view(
-        "invswpac",
-        ".software.packages:",
-        _("Software package"),
-        _("Software packages"),
-    )
-    declare_invtable_view(
-        "invinterface",
-        ".networking.interfaces:",
-        _("Network interface"),
-        _("Network interfaces"),
-        "networking",
-    )
-
-    declare_invtable_view(
-        "invdockerimages",
-        ".software.applications.docker.images:",
-        _("Docker images"),
-        _("Docker images"),
-    )
-    declare_invtable_view(
-        "invdockercontainers",
-        ".software.applications.docker.containers:",
-        _("Docker containers"),
-        _("Docker containers"),
-    )
-
-    declare_invtable_view(
-        "invother",
-        ".hardware.components.others:",
-        _("Other entity"),
-        _("Other entities"),
-    )
-    declare_invtable_view(
-        "invunknown",
-        ".hardware.components.unknowns:",
-        _("Unknown entity"),
-        _("Unknown entities"),
-    )
-    declare_invtable_view(
-        "invchassis",
-        ".hardware.components.chassis:",
-        _("Chassis"),
-        _("Chassis"),
-    )
-    declare_invtable_view(
-        "invbackplane",
-        ".hardware.components.backplanes:",
-        _("Backplane"),
-        _("Backplanes"),
-    )
-    declare_invtable_view(
-        "invcmksites",
-        ".software.applications.check_mk.sites:",
-        _("Checkmk site"),
-        _("Checkmk sites"),
-        "checkmk",
-    )
-    declare_invtable_view(
-        "invcmkversions",
-        ".software.applications.check_mk.versions:",
-        _("Checkmk version"),
-        _("Checkmk versions"),
-        "checkmk",
-    )
-    declare_invtable_view(
-        "invcontainer",
-        ".hardware.components.containers:",
-        _("HW container"),
-        _("HW containers"),
-    )
-    declare_invtable_view(
-        "invpsu",
-        ".hardware.components.psus:",
-        _("Power supply"),
-        _("Power supplies"),
-    )
-    declare_invtable_view(
-        "invfan",
-        ".hardware.components.fans:",
-        _("Fan"),
-        _("Fans"),
-    )
-    declare_invtable_view(
-        "invsensor",
-        ".hardware.components.sensors:",
-        _("Sensor"),
-        _("Sensors"),
-    )
-    declare_invtable_view(
-        "invmodule",
-        ".hardware.components.modules:",
-        _("Module"),
-        _("Modules"),
-    )
-    declare_invtable_view(
-        "invstack",
-        ".hardware.components.stacks:",
-        _("Stack"),
-        _("Stacks"),
-    )
-
-    declare_invtable_view(
-        "invorainstance",
-        ".software.applications.oracle.instance:",
-        _("Oracle instance"),
-        _("Oracle instances"),
-    )
-    declare_invtable_view(
-        "invorarecoveryarea",
-        ".software.applications.oracle.recovery_area:",
-        _("Oracle recovery area"),
-        _("Oracle recovery areas"),
-    )
-    declare_invtable_view(
-        "invoradataguardstats",
-        ".software.applications.oracle.dataguard_stats:",
-        _("Oracle dataguard statistic"),
-        _("Oracle dataguard statistics"),
-    )
-    declare_invtable_view(
-        "invoratablespace",
-        ".software.applications.oracle.tablespaces:",
-        _("Oracle tablespace"),
-        _("Oracle tablespaces"),
-    )
-    declare_invtable_view(
-        "invorasga",
-        ".software.applications.oracle.sga:",
-        _("Oracle SGA performance"),
-        _("Oracle SGA performance"),
-    )
-    declare_invtable_view(
-        "invorapga",
-        ".software.applications.oracle.pga:",
-        _("Oracle PGA performance"),
-        _("Oracle PGA performance"),
-    )
-    declare_invtable_view(
-        "invorasystemparameter",
-        ".software.applications.oracle.systemparameter:",
-        _("Oracle system parameter"),
-        _("Oracle system parameters"),
-    )
-    declare_invtable_view(
-        "invibmmqmanagers",
-        ".software.applications.ibm_mq.managers:",
-        _("Manager"),
-        _("IBM MQ Managers"),
-    )
-    declare_invtable_view(
-        "invibmmqchannels",
-        ".software.applications.ibm_mq.channels:",
-        _("Channel"),
-        _("IBM MQ Channels"),
-    )
-    declare_invtable_view(
-        "invibmmqqueues", ".software.applications.ibm_mq.queues:", _("Queue"), _("IBM MQ Queues")
-    )
-    declare_invtable_view(
-        "invtunnels", ".networking.tunnels:", _("Networking Tunnels"), _("Networking Tunnels")
-    )
-    declare_invtable_view(
-        "invkernelconfig",
-        ".software.kernel_config:",
-        _("Kernel configuration (sysctl)"),
-        _("Kernel configurations (sysctl)"),
-    )
-
-
-# This would also be possible. But we muss a couple of display and filter hints.
-# declare_invtable_view("invdisks",       ".hardware.storage.disks:",  _("Hard Disk"),          _("Hard Disks"))
-
 # .
-#   .--Views---------------------------------------------------------------.
-#   |                    __     ___                                        |
-#   |                    \ \   / (_) _____      _____                      |
-#   |                     \ \ / /| |/ _ \ \ /\ / / __|                     |
-#   |                      \ V / | |  __/\ V  V /\__ \                     |
-#   |                       \_/  |_|\___| \_/\_/ |___/                     |
+#   .--views---------------------------------------------------------------.
+#   |                            _                                         |
+#   |                     __   _(_) _____      _____                       |
+#   |                     \ \ / / |/ _ \ \ /\ / / __|                      |
+#   |                      \ V /| |  __/\ V  V /\__ \                      |
+#   |                       \_/ |_|\___| \_/\_/ |___/                      |
 #   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   |  Special Multisite table views for software, ports, etc.             |
 #   '----------------------------------------------------------------------'
 
 # View for Inventory tree of one host
@@ -1957,15 +1976,13 @@ multisite_builtin_views["inv_hosts_ports"] = {
 }
 
 # .
-#   .--History-------------------------------------------------------------.
-#   |                   _   _ _     _                                      |
-#   |                  | | | (_)___| |_ ___  _ __ _   _                    |
-#   |                  | |_| | / __| __/ _ \| '__| | | |                   |
-#   |                  |  _  | \__ \ || (_) | |  | |_| |                   |
+#   .--history-------------------------------------------------------------.
+#   |                   _     _     _                                      |
+#   |                  | |__ (_)___| |_ ___  _ __ _   _                    |
+#   |                  | '_ \| / __| __/ _ \| '__| | | |                   |
+#   |                  | | | | \__ \ || (_) | |  | |_| |                   |
 #   |                  |_| |_|_|___/\__\___/|_|   \__, |                   |
 #   |                                             |___/                    |
-#   +----------------------------------------------------------------------+
-#   |  Code for history view of inventory                                  |
 #   '----------------------------------------------------------------------'
 
 
@@ -2221,19 +2238,14 @@ multisite_builtin_views["inv_host_history"] = {
 }
 
 # .
-#   .--Node Renderer-------------------------------------------------------.
-#   |  _   _           _        ____                _                      |
-#   | | \ | | ___   __| | ___  |  _ \ ___ _ __   __| | ___ _ __ ___ _ __   |
-#   | |  \| |/ _ \ / _` |/ _ \ | |_) / _ \ '_ \ / _` |/ _ \ '__/ _ \ '__|  |
-#   | | |\  | (_) | (_| |  __/ |  _ <  __/ | | | (_| |  __/ | |  __/ |     |
-#   | |_| \_|\___/ \__,_|\___| |_| \_\___|_| |_|\__,_|\___|_|  \___|_|     |
+#   .--renderers-----------------------------------------------------------.
+#   |                                _                                     |
+#   |             _ __ ___ _ __   __| | ___ _ __ ___ _ __ ___              |
+#   |            | '__/ _ \ '_ \ / _` |/ _ \ '__/ _ \ '__/ __|             |
+#   |            | | |  __/ | | | (_| |  __/ | |  __/ |  \__ \             |
+#   |            |_|  \___|_| |_|\__,_|\___|_|  \___|_|  |___/             |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
-
-
-# Just for compatibility
-def render_inv_dicttable(*args) -> None:  # type:ignore[no-untyped-def]
-    pass
 
 
 class ABCNodeRenderer(abc.ABC):

@@ -10,6 +10,10 @@ def build(Map args) {
         download_artifacts("${FOLDER_ID}/windows-agent-build", ARTIFACTS_DIR)
     }
 
+    if (args.TARGET == "test_integration") {
+        download_artifacts("${FOLDER_ID}/Windows-Python-Build", ARTIFACTS_DIR)
+    }
+
     stage("Windows ${args.TARGET} build") {
         // Windows integration test is the longest running test with kust under 3 min
         // No job should exceed 3*5 = 15 minutes

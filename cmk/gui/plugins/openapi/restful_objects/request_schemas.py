@@ -2106,3 +2106,24 @@ class CreateUserRole(BaseSchema):
         description="A new alias that you want to give to the newly created user role.",
         example="user_a",
     )
+
+
+class EditUserRole(BaseSchema):
+    new_role_id = UserRoleID(
+        required=False,
+        description="New role_id for the userrole that must be unique.",
+        example="new_userrole_id",
+        presence="should_not_exist",
+    )
+    new_alias = fields.String(
+        required=False,
+        description="New alias for the userrole that must be unique.",
+        example="new_userrole_alias",
+    )
+    new_basedon = UserRoleID(
+        required=False,
+        description="A builtin user role that you want the user role to be based on.",
+        example="guest",
+        presence="should_exist",
+        userrole_type="should_be_builtin",
+    )

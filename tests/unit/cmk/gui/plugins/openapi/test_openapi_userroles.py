@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
+from functools import partial
 
 import pytest
 
@@ -102,3 +103,89 @@ def test_delete_builtin_userrole(
         status=404,
         headers={"Accept": "application/json"},
     )
+
+
+def test_edit_cloned_userrole_with_valid_data(
+    collection_base: str, object_base: str, aut_user_auth_wsgi_app: WebTestAppForCMK
+) -> None:
+    aut_user_auth_wsgi_app.post(
+        collection_base,
+        status=200,
+        params=json.dumps({"role_id": "admin"}),
+        headers={"Accept": "application/json"},
+        content_type="application/json",
+    )
+
+    resp = aut_user_auth_wsgi_app.put(
+        object_base + "adminx",
+        status=200,
+        params=json.dumps(
+            {
+                "new_role_id": "sam",
+                "new_basedon": "user",
+                "new_alias": "yonsemite sam",
+            }
+        ),
+        headers={"Accept": "application/json"},
+        content_type="application/json",
+    )
+
+    # Verify the id has changed
+    assert resp.json["id"] == "sam"
+
+    # Verify basedon has changed
+    assert resp.json["extensions"]["basedon"] == "user"
+
+    # Verify alias has changed
+    assert resp.json["extensions"]["alias"] == "yonsemite sam"
+
+
+def test_edit_cloned_userrole_with_invalid_data(
+    collection_base: str, object_base: str, aut_user_auth_wsgi_app: WebTestAppForCMK
+) -> None:
+    aut_user_auth_wsgi_app.post(
+        collection_base,
+        status=200,
+        params=json.dumps({"role_id": "admin"}),
+        headers={"Accept": "application/json"},
+        content_type="application/json",
+    )
+
+    put = partial(
+        aut_user_auth_wsgi_app.put,
+        object_base + "adminx",
+        status=400,
+        headers={"Accept": "application/json"},
+        content_type="application/json",
+    )
+
+    # admin id already exists
+    put(params=json.dumps({"new_role_id": "admin"}))
+
+    # invalid basedon - has to be a builtin role
+    put(params=json.dumps({"new_basedon": "sam"}))
+
+    # alias already exists
+    put(params=json.dumps({"new_alias": "Administrator"}))
+
+
+def test_edit_builtin_userrole(object_base: str, aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
+    put = partial(
+        aut_user_auth_wsgi_app.put,
+        object_base + "admin",
+        status=400,
+        headers={"Accept": "application/json"},
+        content_type="application/json",
+    )
+
+    # builtin role ids can't be edited
+    put(params=json.dumps({"new_role_id": "edited_admin"}))
+
+    # builtin basedon can't be edited
+    put(params=json.dumps({"new_basedon": "something_else"}))
+
+    # builtin alias can be edited
+    resp = put(params=json.dumps({"new_alias": "something_else"}), status=200)
+
+    # Verify alias has changed
+    assert resp.json["extensions"]["alias"] == "something_else"

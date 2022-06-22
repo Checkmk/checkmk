@@ -34,6 +34,8 @@ For example, useful for public status monitors hanging on a wall.
 
 from typing import Any, Mapping
 
+from marshmallow import ValidationError
+
 from cmk.gui.http import Response
 from cmk.gui.logged_in import user
 from cmk.gui.plugins.openapi.restful_objects import (
@@ -44,6 +46,7 @@ from cmk.gui.plugins.openapi.restful_objects import (
     response_schemas,
 )
 from cmk.gui.plugins.openapi.restful_objects.type_defs import DomainObject
+from cmk.gui.plugins.openapi.utils import problem
 from cmk.gui.type_defs import UserRole
 from cmk.gui.watolib import userroles
 from cmk.gui.watolib.userroles import RoleID
@@ -164,3 +167,57 @@ def delete_userrole(params: Mapping[str, Any]) -> Response:
     role_id = RoleID(params["role_id"])
     userroles.delete_role(RoleID(role_id))
     return Response(status=204)
+
+
+@Endpoint(
+    constructors.object_href("user_role", "{role_id}"),
+    ".../update",
+    method="put",
+    tag_group="Setup",
+    request_schema=request_schemas.EditUserRole,
+    response_schema=response_schemas.UserRoleObject,
+    path_params=[
+        {
+            "role_id": request_schemas.UserRoleID(
+                required=True,
+                description="An existing user role.",
+                example="userx",
+                presence="should_exist",
+            )
+        }
+    ],
+    permissions_required=RW_PERMISSIONS,
+)
+def edit_userrole(params: Mapping[str, Any]) -> Response:
+    """Edit a user role"""
+    user.need_permission("wato.users")
+    user.need_permission("wato.edit")
+    existing_roleid = params["role_id"]
+    body = params["body"]
+    userrole_to_edit: UserRole = userroles.get_role(RoleID(existing_roleid))
+
+    if new_alias := body.get("new_alias", userrole_to_edit.alias):
+        try:
+            userroles.validate_new_alias(userrole_to_edit.alias, new_alias)
+        except ValidationError as exc:
+            return problem(status=400, title="Invalid alias", detail=str(exc))
+        userrole_to_edit.alias = new_alias
+
+    if new_roleid := body.get("new_role_id"):
+        try:
+            userroles.validate_new_roleid(userrole_to_edit.name, new_roleid)
+        except ValidationError as exc:
+            return problem(status=400, title="Invalid role id", detail=str(exc))
+        userrole_to_edit.name = new_roleid
+
+    if basedon := body.get("new_basedon"):
+        if userrole_to_edit.builtin:
+            return problem(
+                status=400,
+                title="Builtin role",
+                detail="You can't edit the basedon value of a builtin role.",
+            )
+        userrole_to_edit.basedon = basedon
+
+    userroles.save_updated_role(userrole_to_edit, existing_roleid)
+    return constructors.serve_json(data=serialize_user_role(userrole_to_edit))

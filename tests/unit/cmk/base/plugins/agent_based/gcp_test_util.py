@@ -3,14 +3,20 @@
 # Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import datetime
+import json
 from abc import ABC, abstractmethod
 from typing import Optional, Sequence
 
 import pytest
+from google.cloud import monitoring_v3
+from google.cloud.monitoring_v3.types import TimeSeries
 
 from cmk.base.api.agent_based.checking_classes import Service, ServiceLabel
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import DiscoveryResult, StringTable
 from cmk.base.plugins.agent_based.utils import gcp
+
+from cmk.special_agents import agent_gcp
 
 
 class ParsingTester(ABC):
@@ -78,3 +84,27 @@ class DiscoverTester(ABC):
 
     def test_discover_all_services_labels(self, services: Sequence[Service]) -> None:
         assert set(services[0].labels) == self.expected_labels
+
+
+def generate_timeseries(item: str, value: float, service_desc: agent_gcp.Service) -> StringTable:
+    start_time = datetime.datetime(2016, 4, 6, 22, 5, 0, 42)
+    end_time = datetime.datetime(2016, 4, 6, 22, 5, 1, 42)
+    interval = monitoring_v3.TimeInterval(end_time=end_time, start_time=start_time)
+    point = monitoring_v3.Point({"interval": interval, "value": {"double_value": value}})
+
+    time_series = []
+    for metric in service_desc.metrics:
+        metric_type = metric.name
+        resource_labels = {"project": "test", service_desc.default_groupby.split(".", 1)[-1]: item}
+        ts = monitoring_v3.TimeSeries(
+            {
+                "metric": {"type": metric_type, "labels": {}},
+                "resource": {"type": "does_not_matter_i_think", "labels": resource_labels},
+                "metric_kind": 1,
+                "value_type": 3,
+                "points": [point],
+            }
+        )
+        time_series.append(ts)
+
+    return [[json.dumps(TimeSeries.to_dict(ts))] for ts in time_series]

@@ -25,25 +25,9 @@ from cmk.base.plugins.agent_based.gcp_function import (
 )
 from cmk.base.plugins.agent_based.utils import gcp
 
-from .gcp_test_util import DiscoverTester, ParsingTester
+from cmk.special_agents.agent_gcp import FUNCTIONS
 
-SECTION_TABLE = [
-    [
-        '{"metric":{"type":"cloudfunctions.googleapis.com/function/execution_count","labels":{}},"resource":{"type":"cloud_function","labels":{"project_id":"backup-255820","function_name":"function-2"}},"metricKind":1,"valueType":3,"points":[{"interval":{"startTime":"2022-02-23T12:27:27.205842Z","endTime":"2022-02-23T12:27:27.205842Z"},"value":{"doubleValue":0.016666666666666666}},{"interval":{"startTime":"2022-02-23T12:26:27.205842Z","endTime":"2022-02-23T12:26:27.205842Z"},"value":{"doubleValue":0.06666666666666667}}],"unit":""}'
-    ],
-    [
-        '{"metric":{"type":"cloudfunctions.googleapis.com/function/user_memory_bytes","labels":{}},"resource":{"type":"cloud_function","labels":{"project_id":"backup-255820","function_name":"function-2"}},"metricKind":1,"valueType":3,"points":[{"interval":{"startTime":"2022-02-23T12:27:27.205842Z","endTime":"2022-02-23T12:27:27.205842Z"},"value":{"doubleValue":63722624.968750365}}],"unit":""}'
-    ],
-    [
-        '{"metric":{"type":"cloudfunctions.googleapis.com/function/execution_times","labels":{}},"resource":{"type":"cloud_function","labels":{"project_id":"backup-255820","function_name":"function-2"}},"metricKind":1,"valueType":3,"points":[{"interval":{"startTime":"2022-02-23T12:26:27.205842Z","endTime":"2022-02-23T12:26:27.205842Z"},"value":{"doubleValue":77468035.78821974}}],"unit":""}'
-    ],
-    [
-        '{"metric":{"type":"cloudfunctions.googleapis.com/function/active_instances","labels":{}},"resource":{"type":"cloud_function","labels":{"project_id":"backup-255820","function_name":"function-2"}},"metricKind":1,"valueType":2,"points":[{"interval":{"startTime":"2022-02-23T12:27:27.205842Z","endTime":"2022-02-23T12:27:27.205842Z"},"value":{"int64Value":"3"}}],"unit":""}'
-    ],
-    [
-        '{"metric":{"type":"cloudfunctions.googleapis.com/function/active_instances","labels":{}},"resource":{"type":"cloud_function","labels":{"project_id":"backup-255820","function_name":"function-3"}},"metricKind":1,"valueType":2,"points":[{"interval":{"startTime":"2022-02-23T12:27:27.205842Z","endTime":"2022-02-23T12:27:27.205842Z"},"value":{"int64Value":"3"}}],"unit":""}'
-    ],
-]
+from .gcp_test_util import DiscoverTester, generate_timeseries, ParsingTester
 
 ASSET_TABLE = [
     ['{"project":"backup-255820"}'],
@@ -86,7 +70,7 @@ class TestParsing(ParsingTester):
 
     @property
     def section_table(self) -> StringTable:
-        return SECTION_TABLE
+        return generate_timeseries("Mario", 42.0, FUNCTIONS)
 
 
 @dataclass(frozen=True)
@@ -119,7 +103,7 @@ ITEM = "function-3"
 
 @pytest.fixture(name="section")
 def fixture_section():
-    return parse_gcp_function(SECTION_TABLE)
+    return parse_gcp_function(generate_timeseries(ITEM, 42.0, FUNCTIONS))
 
 
 @pytest.fixture(params=PLUGINS, name="checkplugin")
@@ -138,7 +122,7 @@ def fixture_params(request):
 def fixture_results(checkplugin, section, params, mocker: MockerFixture):
     params = {k: params for k in checkplugin.metrics}
     mocker.patch(
-        "cmk.base.check_api._prediction.get_levels", return_value=(None, (3.2, 5.2, None, None))
+        "cmk.base.check_api._prediction.get_levels", return_value=(None, (300.2, 500.2, None, None))
     )
 
     with current_host("unittest"), current_service(

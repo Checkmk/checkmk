@@ -78,7 +78,7 @@ class NothingExpression(QueryExpression):
 class UnaryExpression(abc.ABC):
     """Base class of all concrete single parts of BinaryExpression."""
 
-    def __init__(self, value) -> None:
+    def __init__(self, value) -> None:  # type:ignore[no-untyped-def]
         self.value = value
 
     def op(self, operator: str, other: Any) -> "BinaryExpression":

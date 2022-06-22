@@ -54,7 +54,9 @@ KNOWN_NON_BUILTIN_LABEL_PRODUCERS: Final = {
 }
 
 
-def test_all_sections_have_host_labels_documented(fix_register) -> None:
+def test_all_sections_have_host_labels_documented(  # type:ignore[no-untyped-def]
+    fix_register,
+) -> None:
     """Test that all sections have documented their host labels"""
     sections = itertools.chain(
         fix_register.agent_sections.values(),

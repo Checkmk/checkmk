@@ -40,7 +40,7 @@ class FjdaryeItem(NamedTuple):
 SectionFjdaryeItem = Mapping[str, FjdaryeItem]
 
 
-def parse_fjdarye_item(info) -> SectionFjdaryeItem:
+def parse_fjdarye_item(info) -> SectionFjdaryeItem:  # type:ignore[no-untyped-def]
     fjdarye_items: MutableMapping[str, FjdaryeItem] = {}
     for item_index, status in info:
         fjdarye_items.setdefault(item_index, FjdaryeItem(item_index=item_index, status=status))
@@ -48,14 +48,16 @@ def parse_fjdarye_item(info) -> SectionFjdaryeItem:
 
 
 # generic inventory item - status other than 'invalid' is ok for inventory
-def discover_fjdarye_item(section: SectionFjdaryeItem):
+def discover_fjdarye_item(section: SectionFjdaryeItem):  # type:ignore[no-untyped-def]
     for item in section.values():
         if item.status != "4":
             yield item.item_index, {}
 
 
 # generic check_function returning the nagios-code and the status text
-def check_fjdarye_item(item: str, _no_param, section: SectionFjdaryeItem):
+def check_fjdarye_item(  # type:ignore[no-untyped-def]
+    item: str, _no_param, section: SectionFjdaryeItem
+):
     if fjdarye_item := section.get(item):
         yield fjdarye_item_status[fjdarye_item.status]
 
@@ -99,7 +101,7 @@ fjdarye_disks_status = {
 }
 
 
-def parse_fjdarye_disks(info) -> SectionFjdaryeDisk:
+def parse_fjdarye_disks(info) -> SectionFjdaryeDisk:  # type:ignore[no-untyped-def]
     fjdarye_disks: MutableMapping[str, FjdaryeDisk] = {}
 
     for disk_index, disk_state in info:
@@ -119,13 +121,15 @@ def parse_fjdarye_disks(info) -> SectionFjdaryeDisk:
     return fjdarye_disks
 
 
-def discover_fjdarye_disks(section: SectionFjdaryeDisk):
+def discover_fjdarye_disks(section: SectionFjdaryeDisk):  # type:ignore[no-untyped-def]
     for disk in section.values():
         if disk.state_disk != "3":
             yield disk.disk_index, disk.state_description
 
 
-def check_fjdarye_disks(item: str, params: Mapping[str, Any] | str, section: SectionFjdaryeDisk):
+def check_fjdarye_disks(  # type:ignore[no-untyped-def]
+    item: str, params: Mapping[str, Any] | str, section: SectionFjdaryeDisk
+):
 
     if (fjdarye_disk := section.get(item)) is None:
         return

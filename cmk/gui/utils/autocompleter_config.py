@@ -73,7 +73,7 @@ class ContextAutocompleterConfig(AutocompleterConfig):
     metric can only be chosen if both host and service is chosen).
     """
 
-    def __init__(
+    def __init__(  # type:ignore[no-untyped-def]
         self,
         *,
         ident: str,

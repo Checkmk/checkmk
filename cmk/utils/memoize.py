@@ -55,7 +55,7 @@ class _HashedSeq(list):
 
     __slots__ = ["hashvalue"]
 
-    def __init__(self, tup, hash=hash) -> None:
+    def __init__(self, tup, hash=hash) -> None:  # type:ignore[no-untyped-def]
         super().__init__()
         self[:] = tup
         self.hashvalue = hash(tup)

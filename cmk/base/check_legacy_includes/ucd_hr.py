@@ -8,14 +8,14 @@
 # We must keep the functions here for the moment, to keep the auto migration working.
 
 
-def is_ucd(oid) -> bool:
+def is_ucd(oid) -> bool:  # type:ignore[no-untyped-def]
     raise NotImplementedError("already migrated")
 
 
 #   ---general ucd/hr-------------------------------------------------------
 
 
-def is_hr(oid) -> bool:
+def is_hr(oid) -> bool:  # type:ignore[no-untyped-def]
     raise NotImplementedError("already migrated")
 
 
@@ -26,11 +26,11 @@ def prefer_hr_else_ucd(oid):
 #   ---memory---------------------------------------------------------------
 
 
-def is_ucd_mem(oid) -> bool:
+def is_ucd_mem(oid) -> bool:  # type:ignore[no-untyped-def]
     raise NotImplementedError("already migrated")
 
 
-def is_hr_mem(oid) -> bool:
+def is_hr_mem(oid) -> bool:  # type:ignore[no-untyped-def]
     raise NotImplementedError("already migrated")
 
 
@@ -40,11 +40,11 @@ def is_hr_mem(oid) -> bool:
 # in order to expand this list of devices easily.
 
 
-def _is_ucd(oid) -> bool:
+def _is_ucd(oid) -> bool:  # type:ignore[no-untyped-def]
     raise NotImplementedError("already migrated")
 
 
-def _is_ucd_mem(oid) -> bool:
+def _is_ucd_mem(oid) -> bool:  # type:ignore[no-untyped-def]
     raise NotImplementedError("already migrated")
 
 

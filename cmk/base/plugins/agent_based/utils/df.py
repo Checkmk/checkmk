@@ -215,7 +215,7 @@ def _adjust_levels(
     )
 
 
-def _check_summary_text(levels: FilesystemLevels) -> str:
+def check_summary_text(levels: FilesystemLevels) -> str:
     # TODO: this is the same as the functionality provided in memory.py!
 
     if levels.render_as is RenderOptions.percent:
@@ -328,64 +328,25 @@ def _ungrouped_mountpoints_and_groups(
     return ungrouped_mountpoints, groups
 
 
-def get_filesystem_levels(  # pylint: disable=too-many-branches
+def get_filesystem_levels(
     filesystem_size_gb: float,
     params: Mapping[str, Any],
-) -> Dict[str, Any]:
-    """
-    >>> from pprint import pprint as pp
-    >>> pp(get_filesystem_levels(1234, FILESYSTEM_DEFAULT_PARAMS))
-    {'inodes_levels': (10.0, 5.0),
-     'levels': (80.0, 90.0),
-     'levels_low': (50.0, 60.0),
-     'levels_mb': (1010892.7999992371, 1137254.3999996185),
-     'levels_text': '(warn/crit at 80.00%/90.00% used)',
-     'magic_normsize': 20,
-     'show_inodes': 'onlow',
-     'show_levels': 'onmagic',
-     'show_reserved': False,
-     'trend_perfdata': True,
-     'trend_range': 24}
-    >>> pp(get_filesystem_levels(123, {**FILESYSTEM_DEFAULT_PARAMS, **{"levels": (10,20)}}))
-    {'inodes_levels': (10.0, 5.0),
-     'levels': (10, 20),
-     'levels_low': (50.0, 60.0),
-     'levels_mb': (10.0, 20.0),
-     'levels_text': '(warn/crit at 10.0 MiB/20.0 MiB used)',
-     'magic_normsize': 20,
-     'show_inodes': 'onlow',
-     'show_levels': 'onmagic',
-     'show_reserved': False,
-     'trend_perfdata': True,
-     'trend_range': 24}
-    """
+) -> FilesystemLevels:
+
     filesystem_size = Bytes(int(filesystem_size_gb * 1024 * 1024 * 1024))
 
-    levels = dict(params.items())
+    filesystem_levels = _parse_filesystem_levels(params["levels"], filesystem_size)
 
-    filesystem_levels = _parse_filesystem_levels(levels["levels"], filesystem_size)
-
-    if (magic_factor := levels.get("magic")) is not None:
+    if (magic_factor := params.get("magic")) is not None:
         filesystem_levels = _adjust_levels(
             filesystem_levels,
             factor=magic_factor,
             filesystem_size=filesystem_size,
-            reference_size=Bytes(levels["magic_normsize"] * 1024 * 1024 * 1024),
-            minimum_levels=levels["levels_low"],
+            reference_size=Bytes(params["magic_normsize"] * 1024 * 1024 * 1024),
+            minimum_levels=params["levels_low"],
         )
 
-    levels["levels_mb"] = (
-        filesystem_levels.warn_absolute / (1024 * 1024),
-        filesystem_levels.crit_absolute / (1024 * 1024),
-    )
-
-    levels["levels_text"] = _check_summary_text(filesystem_levels)
-
-    if levels.get("inodes_levels") is None:
-        # inodes_levels is set as default for every check except network_fs_mounts
-        levels["inodes_levels"] = None, None
-
-    return levels
+    return filesystem_levels
 
 
 def mountpoints_in_group(
@@ -413,8 +374,8 @@ def _render_integer(number: float) -> str:
     return render.filesize(number).strip(" B")
 
 
-def _check_inodes(
-    levels: Dict[str, Any],
+def check_inodes(
+    levels: Mapping[str, Any],
     inodes_total: float,
     inodes_avail: float,
 ) -> Generator[Union[Metric, Result], None, None]:
@@ -423,32 +384,37 @@ def _check_inodes(
     ...     "inodes_levels": (10, 5),
     ...     "show_inodes": "onproblem",
     ... }
-    >>> for r in _check_inodes(levels, 80, 60): print(r)
+    >>> for r in check_inodes(levels, 80, 60): print(r)
     Metric('inodes_used', 20.0, levels=(70.0, 75.0), boundaries=(0.0, 80.0))
     Result(state=<State.OK: 0>, notice='Inodes used: 20, Inodes available: 60 (75.00%)')
 
     >>> levels["show_inodes"] = "always"
-    >>> for r in _check_inodes(levels, 80, 20): print(r)
+    >>> for r in check_inodes(levels, 80, 20): print(r)
     Metric('inodes_used', 60.0, levels=(70.0, 75.0), boundaries=(0.0, 80.0))
     Result(state=<State.OK: 0>, summary='Inodes used: 60, Inodes available: 20 (25.00%)')
 
     >>> levels["show_inodes"]="onlow"
     >>> levels["inodes_levels"]= (40, 35)
-    >>> for r in _check_inodes(levels, 80, 20): print(r)
+    >>> for r in check_inodes(levels, 80, 20): print(r)
     Metric('inodes_used', 60.0, levels=(40.0, 45.0), boundaries=(0.0, 80.0))
     Result(state=<State.CRIT: 2>, summary='Inodes used: 60 (warn/crit at 40/45), Inodes available: 20 (25.00%)')
     """
-    inodes_warn_variant, inodes_crit_variant = levels["inodes_levels"]
+    if (inodes_levels := levels.get("inodes_levels")) is None:
+        # inodes_levels is set as default for every check except network_fs_mounts
+        # this parameter could also be None if it's set to "ignore" by the user
+        inodes_warn_variant, inodes_crit_variant = None, None
+    else:
+        inodes_warn_variant, inodes_crit_variant = inodes_levels
 
     inodes_abs: Optional[Tuple[float, float]] = None
     human_readable_func: Callable[[float], str] = _render_integer
-    if isinstance(inodes_warn_variant, int):
+    if isinstance(inodes_warn_variant, int) and isinstance(inodes_crit_variant, int):
         # Levels in absolute numbers
         inodes_abs = (
             inodes_total - inodes_warn_variant,
             inodes_total - inodes_crit_variant,
         )
-    elif isinstance(inodes_warn_variant, float):
+    elif isinstance(inodes_warn_variant, float) and isinstance(inodes_crit_variant, float):
         # Levels in percent
         inodes_abs = (
             (100 - inodes_warn_variant) / 100.0 * inodes_total,
@@ -457,6 +423,11 @@ def _check_inodes(
 
         def human_readable_func(x: float) -> str:
             return render.percent(100.0 * x / inodes_total)
+
+    else:
+        raise TypeError(
+            "Expected tuple of int or tuple of float for inodes levels, got {type(inodes_warn_variant).__name__}/{type(inodes_crit_variant).__name__}"
+        )
 
     inode_result, inode_metric = check_levels(
         value=inodes_total - inodes_avail,
@@ -540,8 +511,11 @@ def df_check_filesystem_single(
         used_max -= reserved_mb
 
     # Get warning and critical levels already with 'magic factor' applied
-    levels = get_filesystem_levels(size_mb / 1024.0, params)
-    warn_mb, crit_mb = levels["levels_mb"]
+    filesystem_levels = get_filesystem_levels(size_mb / 1024.0, params)
+    warn_mb, crit_mb = (
+        filesystem_levels.warn_absolute / 1024**2,
+        filesystem_levels.crit_absolute / 1024**2,
+    )
 
     used_hr = render.bytes(used_mb * 1024**2)
     used_max_hr = render.bytes(used_max * 1024**2)
@@ -554,8 +528,8 @@ def df_check_filesystem_single(
     if warn_mb < 0.0:
         # Negative levels, so user configured thresholds based on space left. Calculate the
         # upper thresholds based on the size of the filesystem
-        crit_mb = used_max + crit_mb
-        warn_mb = used_max + warn_mb
+        crit_mb = int(used_max + crit_mb)
+        warn_mb = int(used_max + warn_mb)
 
     status = State.CRIT if used_mb >= crit_mb else State.WARN if used_mb >= warn_mb else State.OK
     yield Metric("fs_used", used_mb, levels=(warn_mb, crit_mb), boundaries=(0, size_mb))
@@ -576,7 +550,7 @@ def df_check_filesystem_single(
             show_levels == "onmagic" and (status is not State.OK or params.get("magic", 1.0) != 1.0)
         )
     ):
-        infotext.append(levels["levels_text"])
+        infotext.append(check_summary_text(filesystem_levels))
     yield Result(state=status, summary=", ".join(infotext).replace("), (", ", "))
 
     if show_reserved:
@@ -599,14 +573,14 @@ def df_check_filesystem_single(
         value_store=value_store,
         value_store_key=mountpoint,
         resource="disk",
-        levels=levels,
+        levels=params,
         used_mb=used_mb,
         size_mb=size_mb,
         timestamp=this_time,
     )
 
     if inodes_total and inodes_avail is not None:
-        yield from _check_inodes(levels, inodes_total, inodes_avail)
+        yield from check_inodes(params, inodes_total, inodes_avail)
 
 
 def df_check_filesystem_list(

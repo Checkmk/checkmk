@@ -12,7 +12,8 @@ from cmk.base.api.agent_based.checking_classes import Metric, Result
 from cmk.base.check_api import get_bytes_human_readable, get_percent_human_readable
 from cmk.base.config import Ruleset
 from cmk.base.plugins.agent_based.utils.df import (
-    _check_inodes,
+    check_inodes,
+    check_summary_text,
     FILESYSTEM_DEFAULT_LEVELS,
     FILESYSTEM_DEFAULT_PARAMS,
 )
@@ -231,7 +232,7 @@ def df_check_filesystem_single_coroutine(
 
     # Get warning and critical levels already with 'magic factor' applied
     levels = get_filesystem_levels(mountpoint, size_mb / 1024.0, params)
-    warn_mb, crit_mb = levels["levels_mb"]
+    warn_mb, crit_mb = levels.warn_absolute / (1024 * 1024), levels.crit_absolute / (1024 * 1024)
 
     used_hr = get_bytes_human_readable(used_mb * 1024**2)
     used_max_hr = get_bytes_human_readable(used_max * 1024**2)
@@ -256,9 +257,9 @@ def df_check_filesystem_single_coroutine(
     if (
         show_levels == "always"
         or (show_levels == "onproblem" and status > 0)  #
-        or (show_levels == "onmagic" and (status > 0 or levels.get("magic", 1.0) != 1.0))  #
+        or (show_levels == "onmagic" and (status > 0 or params.get("magic", 1.0) != 1.0))  #
     ):
-        infotext.append(levels["levels_text"])
+        infotext.append(check_summary_text(levels))
 
     if show_reserved:
         reserved_perc_hr = get_percent_human_readable(100.0 * reserved_mb / size_mb)
@@ -277,12 +278,12 @@ def df_check_filesystem_single_coroutine(
 
     yield status, ", ".join(infotext).replace(", (", " ("), perfdata
 
-    if levels.get("trend_range"):
+    if params.get("trend_range"):
         trend_state, trend_text, trend_perf = size_trend(
             "df",
             mountpoint,
             "disk",
-            levels,
+            params,
             used_mb,
             size_mb,
             this_time,
@@ -295,7 +296,7 @@ def df_check_filesystem_single_coroutine(
     if not inodes_total or inodes_avail is None:
         return
 
-    metric, result = _check_inodes(levels, inodes_total, inodes_avail)
+    metric, result = check_inodes(params, inodes_total, inodes_avail)
     assert isinstance(metric, Metric)
     assert isinstance(result, Result)
     yield int(result.state), result.summary, [

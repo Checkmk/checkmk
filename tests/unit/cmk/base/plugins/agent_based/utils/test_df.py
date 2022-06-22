@@ -342,11 +342,13 @@ def test_mountpoints_in_group(mplist, patterns_include, patterns_exclude, expect
             {
                 "levels": (80.0, 90.0),
             },
-            {
-                "levels": (80.0, 90.0),
-                "levels_mb": (8 * 1024, 9 * 1024),
-                "levels_text": "(warn/crit at 80.00%/90.00% used)",
-            },
+            df.LevelsUsedSpace(
+                warn_percent=df.Percent(80.0),
+                crit_percent=df.Percent(90.0),
+                warn_absolute=df.Bytes(8 * 1024**3),
+                crit_absolute=df.Bytes(9 * 1024**3),
+                render_as=df.RenderOptions.percent,
+            ),
             id="Levels expressed in percent (float) of used space",
         ),
         pytest.param(
@@ -354,11 +356,13 @@ def test_mountpoints_in_group(mplist, patterns_include, patterns_exclude, expect
             {
                 "levels": (-20.0, -10.0),
             },
-            {
-                "levels": (-20.0, -10.0),
-                "levels_mb": ((-2) * 1024, (-1) * 1024),
-                "levels_text": "(warn/crit below 20.00%/10.00% free)",
-            },
+            df.LevelsFreeSpace(
+                warn_percent=df.Percent(-20.0),
+                crit_percent=df.Percent(-10.0),
+                warn_absolute=df.Bytes((-2) * 1024**3),
+                crit_absolute=df.Bytes((-1) * 1024**3),
+                render_as=df.RenderOptions.percent,
+            ),
             id="Levels expressed in percent (float) of free space",
         ),
         pytest.param(
@@ -366,11 +370,13 @@ def test_mountpoints_in_group(mplist, patterns_include, patterns_exclude, expect
             {
                 "levels": (8 * 1024, 9 * 1024),
             },
-            {
-                "levels": (8 * 1024, 9 * 1024),
-                "levels_mb": (8 * 1024, 9 * 1024),
-                "levels_text": "(warn/crit at 8.00 GiB/9.00 GiB used)",
-            },
+            df.LevelsUsedSpace(
+                warn_percent=df.Percent(80.0),
+                crit_percent=df.Percent(90.0),
+                warn_absolute=df.Bytes(8 * 1024**3),
+                crit_absolute=df.Bytes(9 * 1024**3),
+                render_as=df.RenderOptions.bytes_,
+            ),
             id="Levels expressed in MB (int) of used space",
         ),
         pytest.param(
@@ -378,11 +384,13 @@ def test_mountpoints_in_group(mplist, patterns_include, patterns_exclude, expect
             {
                 "levels": ((-2) * 1024, (-1) * 1024),
             },
-            {
-                "levels": ((-2) * 1024, (-1) * 1024),
-                "levels_mb": ((-2) * 1024, (-1) * 1024),
-                "levels_text": "(warn/crit below 2.00 GiB/1.00 GiB free)",
-            },
+            df.LevelsFreeSpace(
+                warn_percent=df.Percent(-20.0),
+                crit_percent=df.Percent(-10.0),
+                warn_absolute=df.Bytes((-2) * 1024**3),
+                crit_absolute=df.Bytes((-1) * 1024**3),
+                render_as=df.RenderOptions.bytes_,
+            ),
             id="Levels expressed in MB (int) of free space",
         ),
         pytest.param(
@@ -393,14 +401,13 @@ def test_mountpoints_in_group(mplist, patterns_include, patterns_exclude, expect
                     (15.0 * 1024**3, (60.0, 70.0)),
                 ],
             },
-            {
-                "levels": [
-                    (5.0 * 1024**3, (4 * 1024, 5 * 1024)),
-                    (15.0 * 1024**3, (60.0, 70.0)),
-                ],
-                "levels_mb": (4 * 1024, 5 * 1024),
-                "levels_text": "(warn/crit at 4.00 GiB/5.00 GiB used)",
-            },
+            df.LevelsUsedSpace(
+                warn_percent=df.Percent(40.0),
+                crit_percent=df.Percent(50.0),
+                warn_absolute=df.Bytes(4 * 1024**3),
+                crit_absolute=df.Bytes(5 * 1024**3),
+                render_as=df.RenderOptions.bytes_,
+            ),
             id=(
                 "Different levels for different sizes of filesystems. "
                 "For a filesystem in the range of two filesystem size "
@@ -417,14 +424,13 @@ def test_mountpoints_in_group(mplist, patterns_include, patterns_exclude, expect
                     (5.0 * 1024**3, (4 * 1024, 5 * 1024)),
                 ],
             },
-            {
-                "levels": [
-                    (15.0 * 1024**3, (60.0, 70.0)),
-                    (5.0 * 1024**3, (4 * 1024, 5 * 1024)),
-                ],
-                "levels_mb": (4 * 1024, 5 * 1024),
-                "levels_text": "(warn/crit at 4.00 GiB/5.00 GiB used)",
-            },
+            df.LevelsUsedSpace(
+                warn_percent=df.Percent(40.0),
+                crit_percent=df.Percent(50.0),
+                warn_absolute=df.Bytes(4 * 1024**3),
+                crit_absolute=df.Bytes(5 * 1024**3),
+                render_as=df.RenderOptions.bytes_,
+            ),
             id=("The order of filesystem sizes in the list of levels does not matter."),
         ),
         pytest.param(
@@ -435,14 +441,13 @@ def test_mountpoints_in_group(mplist, patterns_include, patterns_exclude, expect
                     (10.0 * 1024**3, (60.0, 70.0)),
                 ],
             },
-            {
-                "levels": [
-                    (5.0 * 1024**3, (4 * 1024, 5 * 1024)),
-                    (10.0 * 1024**3, (60.0, 70.0)),
-                ],
-                "levels_mb": (4 * 1024, 5 * 1024),
-                "levels_text": "(warn/crit at 4.00 GiB/5.00 GiB used)",
-            },
+            df.LevelsUsedSpace(
+                warn_percent=df.Percent(40.0),
+                crit_percent=df.Percent(50.0),
+                warn_absolute=df.Bytes(4 * 1024**3),
+                crit_absolute=df.Bytes(5 * 1024**3),
+                render_as=df.RenderOptions.bytes_,
+            ),
             id=(
                 "The levels of the filesystem size 10GB are not applied to "
                 "filesystems that are exactly 10GB in size, as the configuration "
@@ -458,14 +463,13 @@ def test_mountpoints_in_group(mplist, patterns_include, patterns_exclude, expect
                     (10.0 * 1024**3, (60.0, 70.0)),
                 ],
             },
-            {
-                "levels": [
-                    (5.0 * 1024**3, (4 * 1024, 5 * 1024)),
-                    (10.0 * 1024**3, (60.0, 70.0)),
-                ],
-                "levels_mb": ((20.0 * 1024) * 0.6, (20 * 1024) * 0.7),
-                "levels_text": "(warn/crit at 60.00%/70.00% used)",
-            },
+            df.LevelsUsedSpace(
+                warn_percent=df.Percent(60.0),
+                crit_percent=df.Percent(70.0),
+                warn_absolute=df.Bytes(int((20.0 * 1024**3) * 0.6)),
+                crit_absolute=df.Bytes(int((20 * 1024**3) * 0.7)),
+                render_as=df.RenderOptions.percent,
+            ),
             id=(
                 "The levels for the greatest filesystem size in the list are "
                 "applied regardless of how large the filesystem is."
@@ -479,14 +483,13 @@ def test_mountpoints_in_group(mplist, patterns_include, patterns_exclude, expect
                     (10.0 * 1024**3, (60.0, 70.0)),
                 ],
             },
-            {
-                "levels": [
-                    (5.0 * 1024**3, (4 * 1024, 5 * 1024)),
-                    (10.0 * 1024**3, (60.0, 70.0)),
-                ],
-                "levels_mb": (1 * 1024, 1 * 1024),
-                "levels_text": "(warn/crit at 100.00%/100.00% used)",
-            },
+            df.LevelsUsedSpace(
+                warn_percent=df.Percent(100.0),
+                crit_percent=df.Percent(100.0),
+                warn_absolute=df.Bytes(1 * 1024**3),
+                crit_absolute=df.Bytes(1 * 1024**3),
+                render_as=df.RenderOptions.percent,
+            ),
             id=(
                 "If the filesystem size cannot be determined, levels revert to 100% "
                 "for WARN/CRIT. TODO: defaults should be used instead."
@@ -497,15 +500,13 @@ def test_mountpoints_in_group(mplist, patterns_include, patterns_exclude, expect
 def test_get_filesystem_levels(
     filesystem_size_gb: float,
     filesystem_params: Mapping[str, Any],
-    parsed_params: Mapping[str, Any],
+    parsed_params: df.FilesystemLevels,
 ) -> None:
     actual_parsed_params = df.get_filesystem_levels(
         filesystem_size_gb, {**df.FILESYSTEM_DEFAULT_PARAMS, **filesystem_params}
     )
 
-    assert actual_parsed_params["levels"] == parsed_params["levels"]
-    assert actual_parsed_params["levels_mb"] == parsed_params["levels_mb"]
-    assert actual_parsed_params["levels_text"] == parsed_params["levels_text"]
+    assert actual_parsed_params == parsed_params
 
 
 @pytest.mark.parametrize(
@@ -519,14 +520,13 @@ def test_get_filesystem_levels(
                 "levels_low": (60.0, 70.0),
                 "magic_normsize": 100.0,
             },
-            {
-                "levels": (80.0, 90.0),
-                "levels_mb": (
-                    80.0 * 1024,
-                    90.0 * 1024,
-                ),
-                "levels_text": "(warn/crit at 80.00%/90.00% used)",
-            },
+            df.LevelsUsedSpace(
+                warn_percent=df.Percent(80.0),
+                crit_percent=df.Percent(90.0),
+                warn_absolute=df.Bytes(80 * 1024**3),
+                crit_absolute=df.Bytes(90 * 1024**3),
+                render_as=df.RenderOptions.percent,
+            ),
             id=(
                 "Provided levels are applied without adjustment when reference size (aka 'magic normsize') is the same as filesystem size."
             ),
@@ -539,14 +539,13 @@ def test_get_filesystem_levels(
                 "levels_low": (60.0, 70.0),
                 "magic_normsize": 20.0,
             },
-            {
-                "levels": (80.0, 90.0),
-                "levels_mb": (
-                    80.0 * 1024,
-                    90.0 * 1024,
-                ),
-                "levels_text": "(warn/crit at 80.00%/90.00% used)",
-            },
+            df.LevelsUsedSpace(
+                warn_percent=df.Percent(80.0),
+                crit_percent=df.Percent(90.0),
+                warn_absolute=df.Bytes(80 * 1024**3),
+                crit_absolute=df.Bytes(90 * 1024**3),
+                render_as=df.RenderOptions.percent,
+            ),
             id=("Provided levels are applied without adjustment when MF is exactly equal 1."),
         ),
         pytest.param(
@@ -557,14 +556,13 @@ def test_get_filesystem_levels(
                 "levels_low": (60.0, 70.0),
                 "magic_normsize": 20.0,
             },
-            {
-                "levels": (80.0, 90.0),
-                "levels_mb": (
-                    85.0 * 1024,
-                    93.0 * 1024,
-                ),
-                "levels_text": "(warn/crit at 85.50%/92.75% used)",
-            },
+            df.LevelsUsedSpace(
+                warn_percent=df.Percent(85.0),
+                crit_percent=df.Percent(93.0),
+                warn_absolute=df.Bytes(85 * 1024**3),
+                crit_absolute=df.Bytes(93 * 1024**3),
+                render_as=df.RenderOptions.percent,
+            ),
             id=("Magic factor adjusts levels."),
         ),
         pytest.param(
@@ -575,17 +573,13 @@ def test_get_filesystem_levels(
                 "levels_low": (60.0, 70.0),
                 "magic_normsize": 20.0,
             },
-            {
-                "levels": (
-                    80 * 1024,
-                    90 * 1024,
-                ),
-                "levels_mb": (
-                    85 * 1024,
-                    93 * 1024,
-                ),
-                "levels_text": "(warn/crit at 85.5 GiB/92.8 GiB used)",
-            },
+            df.LevelsUsedSpace(
+                warn_percent=df.Percent(85.0),
+                crit_percent=df.Percent(93.0),
+                warn_absolute=df.Bytes(85 * 1024**3),
+                crit_absolute=df.Bytes(93 * 1024**3),
+                render_as=df.RenderOptions.bytes_,
+            ),
             id=("Magic factor adjusts absolute levels."),
         ),
         pytest.param(
@@ -596,14 +590,13 @@ def test_get_filesystem_levels(
                 "levels_low": (60.0, 70.0),
                 "magic_normsize": 1000.0,
             },
-            {
-                "levels": (80.0, 90.0),
-                "levels_mb": (
-                    60 * 1024,
-                    70 * 1024,
-                ),
-                "levels_text": "(warn/crit at 60.00%/70.00% used)",
-            },
+            df.LevelsUsedSpace(
+                warn_percent=df.Percent(60.0),
+                crit_percent=df.Percent(70.0),
+                warn_absolute=df.Bytes(60 * 1024**3),
+                crit_absolute=df.Bytes(70 * 1024**3),
+                render_as=df.RenderOptions.percent,
+            ),
             id=("Magic factor does not adjust levels below minimum levels (aka 'levels low')."),
         ),
         pytest.param(
@@ -614,14 +607,13 @@ def test_get_filesystem_levels(
                 "levels_low": (10.0, 20.0),
                 "magic_normsize": 100.0,
             },
-            {
-                "levels": (-40.0, -30.0),
-                "levels_mb": (
-                    10 * 1024,
-                    20 * 1024,
-                ),
-                "levels_text": "(warn/crit below 10.00%/20.00% free)",
-            },
+            df.LevelsFreeSpace(
+                warn_percent=df.Percent(10.0),
+                crit_percent=df.Percent(20.0),
+                warn_absolute=df.Bytes(10 * 1024**3),
+                crit_absolute=df.Bytes(20 * 1024**3),
+                render_as=df.RenderOptions.percent,
+            ),
             id=(
                 "Minimum levels (aka 'levels low') do not make sense when levels are specified as free space. They are "
                 "assumed to be relating to used space. TODO: fix this behaviour..."
@@ -632,62 +624,71 @@ def test_get_filesystem_levels(
 def test_get_filesystem_levels_magic_factor(
     filesystem_size_gb: float,
     filesystem_params: Mapping[str, Any],
-    parsed_params: Mapping[str, Any],
+    parsed_params: df.FilesystemLevels,
 ) -> None:
     actual_parsed_params = df.get_filesystem_levels(
         filesystem_size_gb, {**df.FILESYSTEM_DEFAULT_PARAMS, **filesystem_params}
     )
 
-    assert actual_parsed_params["levels"] == parsed_params["levels"]
-    assert actual_parsed_params["levels_mb"] == pytest.approx(parsed_params["levels_mb"], rel=0.01)
-    assert actual_parsed_params["levels_text"] == parsed_params["levels_text"]
+    assert actual_parsed_params.warn_percent == pytest.approx(parsed_params.warn_percent, abs=1)
+    assert actual_parsed_params.crit_percent == pytest.approx(parsed_params.crit_percent, abs=1)
+    assert actual_parsed_params.warn_absolute == pytest.approx(
+        parsed_params.warn_absolute, rel=0.01
+    )
+    assert actual_parsed_params.crit_absolute == pytest.approx(
+        parsed_params.crit_absolute, rel=0.01
+    )
+    assert actual_parsed_params.render_as == parsed_params.render_as
 
 
 @pytest.mark.parametrize(
-    "filesystem_params, parsed_params",
+    "filesystem_levels, summary",
     [
         pytest.param(
-            {
-                "inodes_levels": (80.0, 90.0),
-            },
-            {
-                "inodes_levels": (80.0, 90.0),
-            },
-            id="Levels expressed in percent (float) of free inodes",
+            df.LevelsUsedSpace(
+                warn_percent=df.Percent(80.0),
+                crit_percent=df.Percent(90.0),
+                warn_absolute=df.Bytes(800),
+                crit_absolute=df.Bytes(900),
+                render_as=df.RenderOptions.percent,
+            ),
+            "(warn/crit at 80.00%/90.00% used)",
+            id="Levels configured as percent of used space",
         ),
         pytest.param(
-            {
-                "inodes_levels": (50, 100),
-            },
-            {
-                "inodes_levels": (50, 100),
-            },
-            id="Levels expressed in count (int) of free inodes",
+            df.LevelsFreeSpace(
+                warn_percent=df.Percent(10.0),
+                crit_percent=df.Percent(20.0),
+                warn_absolute=df.Bytes(100),
+                crit_absolute=df.Bytes(200),
+                render_as=df.RenderOptions.percent,
+            ),
+            "(warn/crit below 10.00%/20.00% free)",
+            id="Levels configured as percent of free space",
         ),
         pytest.param(
-            {
-                "inodes_levels": None,
-            },
-            {
-                "inodes_levels": (None, None),
-            },
-            id="Levels set to 'ignore' have a None value",
+            df.LevelsUsedSpace(
+                warn_percent=df.Percent(80.0),
+                crit_percent=df.Percent(90.0),
+                warn_absolute=df.Bytes(800),
+                crit_absolute=df.Bytes(900),
+                render_as=df.RenderOptions.bytes_,
+            ),
+            "(warn/crit at 800 B/900 B used)",
+            id="Levels configured as bytes of used space",
         ),
         pytest.param(
-            {},
-            {
-                "inodes_levels": (10.0, 5.0),
-            },
-            id=("Levels for inodes are not configured: defaults are used."),
+            df.LevelsFreeSpace(
+                warn_percent=df.Percent(10.0),
+                crit_percent=df.Percent(20.0),
+                warn_absolute=df.Bytes(100),
+                crit_absolute=df.Bytes(200),
+                render_as=df.RenderOptions.bytes_,
+            ),
+            "(warn/crit below 100 B/200 B free)",
+            id="Levels configured as bytes of free space",
         ),
     ],
 )
-def test_get_filesystem_levels_inodes(
-    filesystem_params: Mapping[str, Any],
-    parsed_params: Mapping[str, Any],
-) -> None:
-    actual_parsed_params = df.get_filesystem_levels(
-        10.0, {**df.FILESYSTEM_DEFAULT_PARAMS, **filesystem_params}
-    )
-
-    assert actual_parsed_params["inodes_levels"] == parsed_params["inodes_levels"]
+def test_check_summary_text(filesystem_levels: df.FilesystemLevels, summary: str) -> None:
+    assert df.check_summary_text(filesystem_levels) == summary

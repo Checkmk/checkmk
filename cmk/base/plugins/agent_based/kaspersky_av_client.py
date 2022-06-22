@@ -5,10 +5,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import Dict, Generator, Tuple, TypedDict
+from typing import Literal, Mapping, TypedDict
 
 from .agent_based_api.v1 import check_levels, register, render, Result, Service, State
-from .agent_based_api.v1.type_defs import StringTable
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 
 class Section(TypedDict, total=False):
@@ -62,39 +62,45 @@ register.agent_section(
 )
 
 
-def discover_kaspersky_av_client(section: Section) -> Generator[Service, None, None]:
+def discover_kaspersky_av_client(section: Section) -> DiscoveryResult:
     if section:
         yield Service()
 
 
 def check_kaspersky_av_client(
-    params: Dict[str, Tuple[float, float]], section: Section
-) -> Generator[Result, None, None]:
+    params: Mapping[str, tuple[float, float]], section: Section
+) -> CheckResult:
     """
     >>> test_params = dict(signature_age=(2, 3), fullscan_age=(2, 3))
-    >>> test_section = dict(fullscan_age=1, signature_age=1)
+    >>> test_section = dict(fullscan_age=1.123, signature_age=1.123)
     >>> for result in check_kaspersky_av_client(test_params, test_section):
     ...     result
     Result(state=<State.OK: 0>, summary='Last update of signatures: 1 second ago')
     Result(state=<State.OK: 0>, summary='Last fullscan: 1 second ago')
     """
-    for key, what in [
-        ("signature_age", "Last update of signatures"),
-        ("fullscan_age", "Last fullscan"),
-    ]:
-        age = section.get(key)
-        if age is None:
-            yield Result(state=State.UNKNOWN, summary=f"{what} unkown")
-        elif isinstance(age, int):  # needed to make mypy happy
-            yield from check_levels(
-                value=age,
-                levels_upper=params[key],
-                label=what,
-                render_func=lambda v: f"{render.timespan(v)} ago",
-            )
+    yield from _check_age(section, params, "signature_age")
+    yield from _check_age(section, params, "fullscan_age")
 
     if section.get("fullscan_failed"):
         yield Result(state=State.CRIT, summary="Last fullscan failed")
+
+
+def _check_age(
+    section: Section,
+    params: Mapping[str, tuple[float, float]],
+    key: Literal["signature_age", "fullscan_age"],
+) -> CheckResult:
+    label = "Last update of signatures" if key == "signature_age" else "Last fullscan"
+    if (age := section.get(key)) is None:
+        yield Result(state=State.UNKNOWN, summary=f"{label} unkown")
+        return
+
+    yield from check_levels(
+        value=age,
+        levels_upper=params[key],
+        label=label,
+        render_func=lambda v: f"{render.timespan(v)} ago",
+    )
 
 
 register.check_plugin(

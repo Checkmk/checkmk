@@ -1030,7 +1030,7 @@ def declare_inventory_columns() -> None:
         )
 
         for key, attr_hint in hints.attribute_hints.items():
-            _declare_inv_column(
+            _register_attribute_column(
                 inventory.InventoryPath(
                     path=hints.abc_path, source=inventory.TreeSource.attributes, key=key
                 ),
@@ -1126,7 +1126,7 @@ def _export_node_as_json(row: Row, inventory_path: inventory.InventoryPath) -> d
     return node.serialize() if (node := _compute_node_painter_data(row, inventory_path)) else {}
 
 
-def _declare_inv_column(
+def _register_attribute_column(
     inventory_path: inventory.InventoryPath,
     name: str,
     hint: AttributeDisplayHint,
@@ -1180,7 +1180,7 @@ def _declare_inv_column(
         },
     )
 
-    # Declare filter. Sync this with _declare_invtable_column()
+    # Declare filter. Sync this with _register_table_column()
     filter_registry.register(hint.make_filter(name, inventory_path))
 
 
@@ -1279,14 +1279,14 @@ def _inv_find_subtable_columns(
     return sorted(columns.items(), key=lambda t: (order.get(t[0], 999), t[0]))
 
 
-def _declare_invtable_column(
+def _register_table_column(
     infoname: str,
     topic: str,
     column: str,
     hint: ColumnDisplayHint,
 ) -> None:
     # TODO
-    # - Sync this with _declare_inv_column()
+    # - Sync this with _register_attribute_column()
     filter_registry.register(hint.make_filter(infoname, column, topic))
 
     register_painter(
@@ -1371,24 +1371,25 @@ def declare_invtable_view(
     _register_info_class(infoname, title_singular, title_plural)
 
     # Create the datasource (like a database view)
-    ds_class = type(
-        "DataSourceInventory%s" % infoname.title(),
-        (ABCDataSourceInventory,),
-        {
-            "_ident": infoname,
-            "_inventory_path": inventory_path,
-            "_title": "%s: %s" % (_("Inventory"), title_plural),
-            "_infos": ["host", infoname],
-            "ident": property(lambda s: s._ident),
-            "title": property(lambda s: s._title),
-            "table": property(lambda s: RowTableInventory(s._ident, s._inventory_path)),
-            "infos": property(lambda s: s._infos),
-            "keys": property(lambda s: []),
-            "id_keys": property(lambda s: []),
-            "inventory_path": property(lambda s: s._inventory_path),
-        },
+    data_source_registry.register(
+        type(
+            "DataSourceInventory%s" % infoname.title(),
+            (ABCDataSourceInventory,),
+            {
+                "_ident": infoname,
+                "_inventory_path": inventory_path,
+                "_title": "%s: %s" % (_("Inventory"), title_plural),
+                "_infos": ["host", infoname],
+                "ident": property(lambda s: s._ident),
+                "title": property(lambda s: s._title),
+                "table": property(lambda s: RowTableInventory(s._ident, s._inventory_path)),
+                "infos": property(lambda s: s._infos),
+                "keys": property(lambda s: []),
+                "id_keys": property(lambda s: []),
+                "inventory_path": property(lambda s: s._inventory_path),
+            },
+        )
     )
-    data_source_registry.register(ds_class)
 
     painters: List[Tuple[str, str, str]] = []
     filters = []
@@ -1396,7 +1397,7 @@ def declare_invtable_view(
         column = infoname + "_" + name
 
         # Declare a painter, sorter and filters for each path with display hint
-        _declare_invtable_column(
+        _register_table_column(
             infoname,
             title_singular,
             column,
@@ -1406,7 +1407,7 @@ def declare_invtable_view(
         painters.append((column, "", ""))
         filters.append(column)
 
-    _declare_views(infoname, title_plural, painters, filters, [inventory_path], icon)
+    _register_views(infoname, title_plural, painters, filters, [inventory_path], icon)
 
 
 class RowMultiTableInventory(ABCRowTable):
@@ -1485,25 +1486,28 @@ def declare_joined_inventory_table_view(
         titles.append(visual_info_class().title)
 
     # Create the datasource (like a database view)
-    ds_class = type(
-        "DataSourceInventory%s" % tablename.title(),
-        (ABCDataSource,),
-        {
-            "_ident": tablename,
-            "_sources": list(zip(info_names, inventory_paths)),
-            "_match_by": match_by,
-            "_errors": errors,
-            "_title": "%s: %s" % (_("Inventory"), title_plural),
-            "_infos": ["host"] + info_names,
-            "ident": property(lambda s: s._ident),
-            "title": property(lambda s: s._title),
-            "table": property(lambda s: RowMultiTableInventory(s._sources, s._match_by, s._errors)),
-            "infos": property(lambda s: s._infos),
-            "keys": property(lambda s: []),
-            "id_keys": property(lambda s: []),
-        },
+    data_source_registry.register(
+        type(
+            "DataSourceInventory%s" % tablename.title(),
+            (ABCDataSource,),
+            {
+                "_ident": tablename,
+                "_sources": list(zip(info_names, inventory_paths)),
+                "_match_by": match_by,
+                "_errors": errors,
+                "_title": "%s: %s" % (_("Inventory"), title_plural),
+                "_infos": ["host"] + info_names,
+                "ident": property(lambda s: s._ident),
+                "title": property(lambda s: s._title),
+                "table": property(
+                    lambda s: RowMultiTableInventory(s._sources, s._match_by, s._errors)
+                ),
+                "infos": property(lambda s: s._infos),
+                "keys": property(lambda s: []),
+                "id_keys": property(lambda s: []),
+            },
+        )
     )
-    data_source_registry.register(ds_class)
 
     known_common_columns = set()
     painters: List[Tuple[str, str, str]] = []
@@ -1519,7 +1523,7 @@ def declare_joined_inventory_table_view(
             column = this_infoname + "_" + name
 
             # Declare a painter, sorter and filters for each path with display hint
-            _declare_invtable_column(
+            _register_table_column(
                 this_infoname,
                 this_title,
                 column,
@@ -1529,28 +1533,29 @@ def declare_joined_inventory_table_view(
             painters.append((column, "", ""))
             filters.append(column)
 
-    _declare_views(tablename, title_plural, painters, filters, inventory_paths)
+    _register_views(tablename, title_plural, painters, filters, inventory_paths)
 
 
 def _register_info_class(infoname: str, title_singular: str, title_plural: str) -> None:
     # Declare the "info" (like a database table)
-    info_class = type(
-        "VisualInfo%s" % infoname.title(),
-        (VisualInfo,),
-        {
-            "_ident": infoname,
-            "ident": property(lambda self: self._ident),
-            "_title": title_singular,
-            "title": property(lambda self: self._title),
-            "_title_plural": title_plural,
-            "title_plural": property(lambda self: self._title_plural),
-            "single_spec": property(lambda self: []),
-        },
+    visual_info_registry.register(
+        type(
+            "VisualInfo%s" % infoname.title(),
+            (VisualInfo,),
+            {
+                "_ident": infoname,
+                "ident": property(lambda self: self._ident),
+                "_title": title_singular,
+                "title": property(lambda self: self._title),
+                "_title_plural": title_plural,
+                "title_plural": property(lambda self: self._title_plural),
+                "single_spec": property(lambda self: []),
+            },
+        )
     )
-    visual_info_registry.register(info_class)
 
 
-def _declare_views(
+def _register_views(
     infoname: str,
     title_plural: str,
     painters: List[Tuple[str, str, str]],

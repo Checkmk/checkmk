@@ -18,6 +18,7 @@ from utils import (
     create_protocol_file,
     get_path_from_env,
     INTEGRATION_PORT,
+    PYTHON_CAB_NAME,
     YamlDict,
 )
 
@@ -60,6 +61,11 @@ def data_dir_fixture(main_dir: Path) -> Path:
     return main_dir / "test" / "data"
 
 
+@pytest.fixture(name="module_dir", scope="session")
+def module_dir_fixture(data_dir: Path) -> Path:
+    return data_dir / "modules" / "python-3"
+
+
 @pytest.fixture(name="root_dir", scope="session")
 def root_dir_fixture(main_dir: Path) -> Path:
     return main_dir / "test" / "root"
@@ -87,7 +93,8 @@ def setup_all(
     os.makedirs(data_dir, exist_ok=True)
     os.makedirs(data_dir / "bin", exist_ok=True)
     os.makedirs(data_dir / "log", exist_ok=True)
-    for f in [_FACTORY_YAML_CONFIG, AGENT_EXE_NAME, _CTL_EXE_NAME]:
+    os.makedirs(data_dir / "modules" / "python-3", exist_ok=True)
+    for f in [_FACTORY_YAML_CONFIG, AGENT_EXE_NAME, _CTL_EXE_NAME, PYTHON_CAB_NAME]:
         shutil.copy(artifacts_dir / f, root_dir)
     create_protocol_file(data_dir)
     create_legacy_pull_file(data_dir)

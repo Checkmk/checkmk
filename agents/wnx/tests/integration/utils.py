@@ -24,6 +24,7 @@ USER_YAML_CONFIG: Final = "check_mk.user.yml"
 SECTION_COUNT: Final = 18
 ONLY_FROM_LINE: Final = 17
 CTL_STATUS_LINE: Final = 19
+PYTHON_CAB_NAME: Final = "python-3.cab"
 
 
 class ExeOutput(NamedTuple):
@@ -149,3 +150,55 @@ def run_agent(
             )
 
     return ExeOutput(ret_code, stdout=stdout.decode(), stderr=stderr.decode())
+
+
+def unpack_modules(root_dir: Path, *, module_dir: Path) -> int:
+    # subprocess.call(f"expand {root_dir / PYTHON_CAB_NAME } -F:* {data_dir / 'modules'/ 'python-3'}")
+    with (
+        subprocess.Popen(
+            [
+                "expand.exe",
+                f"{root_dir / PYTHON_CAB_NAME }",
+                "-F:*",
+                f"{module_dir}",
+            ],
+            stdout=subprocess.PIPE,
+            stdin=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        ) as p,
+    ):
+        _, __ = p.communicate(timeout=30)
+        return p.returncode
+
+
+@contextmanager
+def _change_dir(to_dir: Path) -> Iterator[None]:
+    p = os.getcwd()
+    os.chdir(to_dir)
+    yield
+    os.chdir(p)
+
+
+def postinstall_module(module_dir: Path) -> int:
+    with (
+        _change_dir(module_dir),
+        subprocess.Popen(
+            [
+                "postinstall.cmd",
+            ],
+            stdout=subprocess.PIPE,
+            stdin=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        ) as p,
+    ):
+        _, __ = p.communicate(timeout=30)
+        return p.returncode
+
+
+def patch_venv_config(module_dir: Path) -> None:
+    pyvenv_cfg = module_dir / ".venv" / "pyvenv.cfg"
+    with open(pyvenv_cfg, "r+") as in_file:
+        text = in_file.read()
+        text = text.replace(r"C:\ProgramData\checkmk\agent\modules\python-3", f"{module_dir}")
+    with open(pyvenv_cfg, "w") as out_file:
+        out_file.write(text)

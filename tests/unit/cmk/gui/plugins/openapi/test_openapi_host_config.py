@@ -3,7 +3,7 @@
 # Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
+import contextlib
 import json
 from typing import Sequence
 from unittest.mock import MagicMock
@@ -706,17 +706,23 @@ def test_openapi_bulk_with_failed(
 
 @pytest.fixture(name="custom_host_attribute")
 def _custom_host_attribute():
+    attr: CustomAttr = {
+        "name": "foo",
+        "title": "bar",
+        "help": "foo",
+        "topic": "topic",
+        "type": "TextAscii",
+        "add_custom_macro": False,
+        "show_in_table": False,
+    }
+    with custom_host_attribute_ctx({"host": [attr]}):
+        yield
+
+
+@contextlib.contextmanager
+def custom_host_attribute_ctx(attrs: dict[str, list[CustomAttr]]):
     try:
-        attr: CustomAttr = {
-            "name": "foo",
-            "title": "bar",
-            "help": "foo",
-            "topic": "topic",
-            "type": "TextAscii",
-            "add_custom_macro": False,
-            "show_in_table": False,
-        }
-        save_custom_attrs_to_mk_file({"host": [attr]})
+        save_custom_attrs_to_mk_file(attrs)
         yield
     finally:
         save_custom_attrs_to_mk_file({})
@@ -768,6 +774,50 @@ def test_openapi_host_created_timestamp(
 
 
 @pytest.mark.usefixtures("with_host")
+def test_openapi_host_has_deleted_custom_attributes(
+    base: str,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    with_host,
+    custom_host_attribute,
+):
+    # Known custom attribute
+    resp = aut_user_auth_wsgi_app.call_method(
+        "get",
+        base + "/objects/host_config/example.com",
+        status=200,
+        headers={
+            "Accept": "application/json",
+        },
+    )
+
+    # Set the attribute on the host
+    aut_user_auth_wsgi_app.call_method(
+        "put",
+        base + "/objects/host_config/example.com",
+        status=200,
+        params='{"attributes": {"foo": "bar"}}',
+        headers={
+            "If-Match": resp.headers["ETag"],
+            "Accept": "application/json",
+        },
+        content_type="application/json",
+    )
+
+    # Try to get it with the attribute already deleted
+    with custom_host_attribute_ctx({}):
+        resp = aut_user_auth_wsgi_app.call_method(
+            "get",
+            base + "/objects/host_config/example.com",
+            status=200,
+            headers={
+                "Accept": "application/json",
+            },
+        )
+        # foo will still show up in the response, even though it is deleted.
+        assert "foo" in resp.json["extensions"]["attributes"]
+
+
+@pytest.mark.usefixtures("with_host")
 def test_openapi_host_custom_attributes(
     base: str,
     aut_user_auth_wsgi_app: WebTestAppForCMK,
@@ -810,7 +860,6 @@ def test_openapi_host_custom_attributes(
     )
 
     # Unknown custom attribute
-
     resp = aut_user_auth_wsgi_app.call_method(
         "get",
         base + "/objects/host_config/example.com",

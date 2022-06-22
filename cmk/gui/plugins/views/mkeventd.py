@@ -41,7 +41,7 @@ from cmk.gui.plugins.views.utils import (
     RowTableLivestatus,
 )
 from cmk.gui.type_defs import HTTPVariables, Row, ViewSpec
-from cmk.gui.utils.urls import makeactionuri, urlencode_vars
+from cmk.gui.utils.urls import makeactionuri, makeuri_contextless, urlencode_vars
 from cmk.gui.valuespec import MonitoringState
 
 #   .--Datasources---------------------------------------------------------.
@@ -446,10 +446,24 @@ class PainterEventHost(Painter):
     def columns(self):
         return ["event_host", "host_name"]
 
+    @property
+    def use_painter_link(self) -> bool:
+        return False
+
     def render(self, row, cell):
-        if row["host_name"]:
-            return "", row["host_name"]
-        return "", row["event_host"]
+        host_name = row.get("host_name", row["event_host"])
+        # See SUP-10272 for a detailed explanation, hacks of view.py do not
+        # work for SNMP traps
+        link = makeuri_contextless(
+            html.request,
+            [
+                ("view_name", cell._link_spec[1]),
+                ("host", host_name),
+                ("event_host", row["event_host"]),
+            ],
+        )
+
+        return "", HTML(html.render_a(host_name, link))
 
 
 @painter_registry.register

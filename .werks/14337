@@ -1,0 +1,17 @@
+Title: Fix painter "Event Console Events/Hosts: Hostname"
+Class: fix
+Compatible: compat
+Component: ec
+Date: 1655890136
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p4
+
+The painter used in e.g. the view "ec_events" points to the view "ec_events_of_host".
+This view should than show host specific events.
+
+In case of SNMP traps, the results were always empty if the host was known to
+Checkmk because the livestatus query searched for the host name instead of the
+IP.

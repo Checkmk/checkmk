@@ -21,6 +21,7 @@ from cmk.gui.i18n import _, _l, ungettext
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
 
+from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.plugins.dashboard.utils import DashletConfig
 from cmk.gui.plugins.views import (
     get_permitted_views,
@@ -441,10 +442,21 @@ class PainterEventHost(Painter):
     def columns(self):
         return ['event_host', 'host_name']
 
+    @property
+    def use_painter_link(self) -> bool:
+        return False
+
     def render(self, row, cell):
-        if row["host_name"]:
-            return "", escaping.escape_attribute(row["host_name"])
-        return "", escaping.escape_attribute(row["event_host"])
+        host_name = row.get("host_name", row["event_host"])
+        # See SUP-10272 for a detailed explanation, hacks of view.py do not
+        # work for SNMP traps
+        link = makeuri_contextless(html.request, [
+            ("view_name", cell._link_spec[1]),
+            ("host", host_name),
+            ("event_host", row["event_host"]),
+        ])
+
+        return "", HTML(html.render_a(host_name, link))
 
 
 @painter_registry.register

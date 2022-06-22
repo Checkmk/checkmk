@@ -1,0 +1,12 @@
+Title: kaspersky_av_client: missing information
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1655848550
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p4
+
+The check plugin did not report the time since the last signature update or full scan.

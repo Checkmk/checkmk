@@ -1280,14 +1280,14 @@ def _inv_find_subtable_columns(
 
 
 def _register_table_column(
-    infoname: str,
+    table_view_name: str,
     topic: str,
     column: str,
     hint: ColumnDisplayHint,
 ) -> None:
     # TODO
     # - Sync this with _register_attribute_column()
-    filter_registry.register(hint.make_filter(infoname, column, topic))
+    filter_registry.register(hint.make_filter(table_view_name, column, topic))
 
     register_painter(
         column,
@@ -1360,7 +1360,7 @@ class ABCDataSourceInventory(ABCDataSource):
 
 # One master function that does all
 def declare_invtable_view(
-    infoname: str,
+    table_view_name: str,
     raw_path: SDRawPath,
     title_singular: str,
     title_plural: str,
@@ -1368,18 +1368,18 @@ def declare_invtable_view(
 ) -> None:
     inventory_path = inventory.InventoryPath.parse(raw_path)
 
-    _register_info_class(infoname, title_singular, title_plural)
+    _register_info_class(table_view_name, title_singular, title_plural)
 
     # Create the datasource (like a database view)
     data_source_registry.register(
         type(
-            "DataSourceInventory%s" % infoname.title(),
+            "DataSourceInventory%s" % table_view_name.title(),
             (ABCDataSourceInventory,),
             {
-                "_ident": infoname,
+                "_ident": table_view_name,
                 "_inventory_path": inventory_path,
                 "_title": "%s: %s" % (_("Inventory"), title_plural),
-                "_infos": ["host", infoname],
+                "_infos": ["host", table_view_name],
                 "ident": property(lambda s: s._ident),
                 "title": property(lambda s: s._title),
                 "table": property(lambda s: RowTableInventory(s._ident, s._inventory_path)),
@@ -1394,11 +1394,11 @@ def declare_invtable_view(
     painters: List[Tuple[str, str, str]] = []
     filters = []
     for name, col_hint in _inv_find_subtable_columns(inventory_path):
-        column = infoname + "_" + name
+        column = table_view_name + "_" + name
 
         # Declare a painter, sorter and filters for each path with display hint
         _register_table_column(
-            infoname,
+            table_view_name,
             title_singular,
             column,
             col_hint,
@@ -1407,7 +1407,7 @@ def declare_invtable_view(
         painters.append((column, "", ""))
         filters.append(column)
 
-    _register_views(infoname, title_plural, painters, filters, [inventory_path], icon)
+    _register_views(table_view_name, title_plural, painters, filters, [inventory_path], icon)
 
 
 class RowMultiTableInventory(ABCRowTable):
@@ -1417,7 +1417,9 @@ class RowMultiTableInventory(ABCRowTable):
         match_by: List[str],
         errors: List[str],
     ) -> None:
-        super().__init__([infoname for infoname, _path in sources], ["host_structured_status"])
+        super().__init__(
+            [table_view_name for table_view_name, _path in sources], ["host_structured_status"]
+        )
         self._sources = sources
         self._match_by = match_by
         self._errors = errors
@@ -1457,25 +1459,25 @@ class RowMultiTableInventory(ABCRowTable):
 
 
 def declare_joined_inventory_table_view(
-    tablename: str,
+    table_view_name: str,
     title_singular: str,
     title_plural: str,
     tables: List[str],
     match_by: List[str],
 ) -> None:
 
-    _register_info_class(tablename, title_singular, title_plural)
+    _register_info_class(table_view_name, title_singular, title_plural)
 
     info_names: List[str] = []
     inventory_paths: List[inventory.InventoryPath] = []
     titles: List[str] = []
     errors = []
-    for this_tablename in tables:
-        visual_info_class = visual_info_registry.get(this_tablename)
-        data_source_class = data_source_registry.get(this_tablename)
+    for this_table_view_name in tables:
+        visual_info_class = visual_info_registry.get(this_table_view_name)
+        data_source_class = data_source_registry.get(this_table_view_name)
         if data_source_class is None or visual_info_class is None:
             errors.append(
-                "Missing declare_invtable_view for inventory table view '%s'" % this_tablename
+                "Missing declare_invtable_view for inventory table view '%s'" % this_table_view_name
             )
             continue
 
@@ -1488,10 +1490,10 @@ def declare_joined_inventory_table_view(
     # Create the datasource (like a database view)
     data_source_registry.register(
         type(
-            "DataSourceInventory%s" % tablename.title(),
+            "DataSourceInventory%s" % table_view_name.title(),
             (ABCDataSource,),
             {
-                "_ident": tablename,
+                "_ident": table_view_name,
                 "_sources": list(zip(info_names, inventory_paths)),
                 "_match_by": match_by,
                 "_errors": errors,
@@ -1512,7 +1514,9 @@ def declare_joined_inventory_table_view(
     known_common_columns = set()
     painters: List[Tuple[str, str, str]] = []
     filters = []
-    for this_inventory_path, this_infoname, this_title in zip(inventory_paths, info_names, titles):
+    for this_inventory_path, this_table_view_name, this_title in zip(
+        inventory_paths, info_names, titles
+    ):
         for name, col_hint in _inv_find_subtable_columns(this_inventory_path):
             if name in match_by:
                 # Filter out duplicate common columns which are used to join tables
@@ -1520,11 +1524,11 @@ def declare_joined_inventory_table_view(
                     continue
                 known_common_columns.add(name)
 
-            column = this_infoname + "_" + name
+            column = this_table_view_name + "_" + name
 
             # Declare a painter, sorter and filters for each path with display hint
             _register_table_column(
-                this_infoname,
+                this_table_view_name,
                 this_title,
                 column,
                 col_hint,
@@ -1533,17 +1537,17 @@ def declare_joined_inventory_table_view(
             painters.append((column, "", ""))
             filters.append(column)
 
-    _register_views(tablename, title_plural, painters, filters, inventory_paths)
+    _register_views(table_view_name, title_plural, painters, filters, inventory_paths)
 
 
-def _register_info_class(infoname: str, title_singular: str, title_plural: str) -> None:
+def _register_info_class(table_view_name: str, title_singular: str, title_plural: str) -> None:
     # Declare the "info" (like a database table)
     visual_info_registry.register(
         type(
-            "VisualInfo%s" % infoname.title(),
+            "VisualInfo%s" % table_view_name.title(),
             (VisualInfo,),
             {
-                "_ident": infoname,
+                "_ident": table_view_name,
                 "ident": property(lambda self: self._ident),
                 "_title": title_singular,
                 "title": property(lambda self: self._title),
@@ -1556,7 +1560,7 @@ def _register_info_class(infoname: str, title_singular: str, title_plural: str) 
 
 
 def _register_views(
-    infoname: str,
+    table_view_name: str,
     title_plural: str,
     painters: List[Tuple[str, str, str]],
     filters: List[FilterName],
@@ -1570,7 +1574,7 @@ def _register_views(
     # Declare two views: one for searching globally. And one
     # for the items of one host.
     view_spec = {
-        "datasource": infoname,
+        "datasource": table_view_name,
         "topic": "inventory",
         "sort_index": 30,
         "public": True,
@@ -1588,7 +1592,7 @@ def _register_views(
     }
 
     # View for searching for items
-    multisite_builtin_views[infoname + "_search"] = {
+    multisite_builtin_views[table_view_name + "_search"] = {
         # General options
         "title": _("Search %s") % title_plural,
         "description": _("A view for searching in the inventory data for %s") % title_plural,
@@ -1613,10 +1617,10 @@ def _register_views(
         "hard_filters": [],
         "hard_filtervars": [],
     }
-    multisite_builtin_views[infoname + "_search"].update(view_spec)
+    multisite_builtin_views[table_view_name + "_search"].update(view_spec)
 
     # View for the items of one host
-    multisite_builtin_views[_make_table_view_name_of_host(infoname)] = {
+    multisite_builtin_views[_make_table_view_name_of_host(table_view_name)] = {
         # General options
         "title": title_plural,
         "description": _("A view for the %s of one host") % title_plural,
@@ -1624,7 +1628,7 @@ def _register_views(
         "mustsearch": False,
         "link_from": {
             "single_infos": ["host"],
-            "has_inventory_tree": [ip.path for ip in inventory_paths],
+            "has_inventory_tree": [inventory_path.path for inventory_path in inventory_paths],
         },
         # Columns
         "painters": painters,
@@ -1635,7 +1639,7 @@ def _register_views(
         "hide_filters": ["host"],
         "icon": icon,
     }
-    multisite_builtin_views[_make_table_view_name_of_host(infoname)].update(view_spec)
+    multisite_builtin_views[_make_table_view_name_of_host(table_view_name)].update(view_spec)
 
 
 def declare_invtable_views() -> None:

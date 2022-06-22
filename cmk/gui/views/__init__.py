@@ -208,12 +208,7 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.view_utils import get_labels, render_labels, render_tag_groups
 from cmk.gui.views.builtin_views import builtin_views
-from cmk.gui.views.inventory import (
-    declare_inventory_columns,
-    declare_invtable_views,
-    transform_legacy_display_hints,
-    update_paint_functions,
-)
+from cmk.gui.views.inventory import register_table_views_and_columns, update_paint_functions
 from cmk.gui.watolib.activate_changes import (
     ActivateChanges,
     get_pending_changes_tooltip,
@@ -1257,7 +1252,6 @@ def load_plugins() -> None:
     _register_pre_21_plugin_api()
     utils.load_web_plugins("views", globals())
     update_paint_functions(globals())
-    transform_legacy_display_hints()
 
     utils.load_web_plugins("icons", globals())
     utils.load_web_plugins("perfometer", globals())
@@ -1289,8 +1283,7 @@ def load_plugins() -> None:
     multisite_builtin_views.update(builtin_views)
 
     # Needs to be executed after all plugins (builtin and local) are loaded
-    declare_inventory_columns()
-    declare_invtable_views()
+    register_table_views_and_columns()
 
     # TODO: Kept for compatibility with pre 1.6 plugins
     for ident, spec in multisite_painters.items():

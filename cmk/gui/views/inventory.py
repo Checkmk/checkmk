@@ -320,228 +320,6 @@ class ABCRowTable(RowTable):
 #   '----------------------------------------------------------------------'
 
 
-# Just for compatibility
-def render_inv_dicttable(*args) -> None:
-    pass
-
-
-def declare_inventory_columns() -> None:
-    # create painters for node with a display hint
-    for hints in DISPLAY_HINTS:
-        if "*" in hints.abc_path:
-            continue
-
-        ident = ("inv",) + hints.abc_path
-
-        _register_node_painter(
-            inventory.InventoryPath(path=hints.abc_path, source=inventory.TreeSource.node),
-            "_".join(ident),
-            hints,
-        )
-
-        for key, attr_hint in hints.attribute_hints.items():
-            _register_attribute_column(
-                inventory.InventoryPath(
-                    path=hints.abc_path, source=inventory.TreeSource.attributes, key=key
-                ),
-                "_".join(ident + (key,)),
-                attr_hint,
-            )
-
-
-# One master function that does all
-def declare_invtable_view(
-    table_view_name: str,
-    raw_path: SDRawPath,
-    title_singular: str,
-    title_plural: str,
-    icon: Optional[Icon] = None,
-) -> None:
-    _register_table_view(
-        table_view_name,
-        inventory.InventoryPath.parse(raw_path),
-        title_singular,
-        title_plural,
-        icon,
-    )
-
-
-def declare_invtable_views() -> None:
-    """Declare views for a couple of embedded tables"""
-    declare_invtable_view(
-        "invswpac",
-        ".software.packages:",
-        _("Software package"),
-        _("Software packages"),
-    )
-    declare_invtable_view(
-        "invinterface",
-        ".networking.interfaces:",
-        _("Network interface"),
-        _("Network interfaces"),
-        "networking",
-    )
-
-    declare_invtable_view(
-        "invdockerimages",
-        ".software.applications.docker.images:",
-        _("Docker images"),
-        _("Docker images"),
-    )
-    declare_invtable_view(
-        "invdockercontainers",
-        ".software.applications.docker.containers:",
-        _("Docker containers"),
-        _("Docker containers"),
-    )
-
-    declare_invtable_view(
-        "invother",
-        ".hardware.components.others:",
-        _("Other entity"),
-        _("Other entities"),
-    )
-    declare_invtable_view(
-        "invunknown",
-        ".hardware.components.unknowns:",
-        _("Unknown entity"),
-        _("Unknown entities"),
-    )
-    declare_invtable_view(
-        "invchassis",
-        ".hardware.components.chassis:",
-        _("Chassis"),
-        _("Chassis"),
-    )
-    declare_invtable_view(
-        "invbackplane",
-        ".hardware.components.backplanes:",
-        _("Backplane"),
-        _("Backplanes"),
-    )
-    declare_invtable_view(
-        "invcmksites",
-        ".software.applications.check_mk.sites:",
-        _("Checkmk site"),
-        _("Checkmk sites"),
-        "checkmk",
-    )
-    declare_invtable_view(
-        "invcmkversions",
-        ".software.applications.check_mk.versions:",
-        _("Checkmk version"),
-        _("Checkmk versions"),
-        "checkmk",
-    )
-    declare_invtable_view(
-        "invcontainer",
-        ".hardware.components.containers:",
-        _("HW container"),
-        _("HW containers"),
-    )
-    declare_invtable_view(
-        "invpsu",
-        ".hardware.components.psus:",
-        _("Power supply"),
-        _("Power supplies"),
-    )
-    declare_invtable_view(
-        "invfan",
-        ".hardware.components.fans:",
-        _("Fan"),
-        _("Fans"),
-    )
-    declare_invtable_view(
-        "invsensor",
-        ".hardware.components.sensors:",
-        _("Sensor"),
-        _("Sensors"),
-    )
-    declare_invtable_view(
-        "invmodule",
-        ".hardware.components.modules:",
-        _("Module"),
-        _("Modules"),
-    )
-    declare_invtable_view(
-        "invstack",
-        ".hardware.components.stacks:",
-        _("Stack"),
-        _("Stacks"),
-    )
-
-    declare_invtable_view(
-        "invorainstance",
-        ".software.applications.oracle.instance:",
-        _("Oracle instance"),
-        _("Oracle instances"),
-    )
-    declare_invtable_view(
-        "invorarecoveryarea",
-        ".software.applications.oracle.recovery_area:",
-        _("Oracle recovery area"),
-        _("Oracle recovery areas"),
-    )
-    declare_invtable_view(
-        "invoradataguardstats",
-        ".software.applications.oracle.dataguard_stats:",
-        _("Oracle dataguard statistic"),
-        _("Oracle dataguard statistics"),
-    )
-    declare_invtable_view(
-        "invoratablespace",
-        ".software.applications.oracle.tablespaces:",
-        _("Oracle tablespace"),
-        _("Oracle tablespaces"),
-    )
-    declare_invtable_view(
-        "invorasga",
-        ".software.applications.oracle.sga:",
-        _("Oracle SGA performance"),
-        _("Oracle SGA performance"),
-    )
-    declare_invtable_view(
-        "invorapga",
-        ".software.applications.oracle.pga:",
-        _("Oracle PGA performance"),
-        _("Oracle PGA performance"),
-    )
-    declare_invtable_view(
-        "invorasystemparameter",
-        ".software.applications.oracle.systemparameter:",
-        _("Oracle system parameter"),
-        _("Oracle system parameters"),
-    )
-    declare_invtable_view(
-        "invibmmqmanagers",
-        ".software.applications.ibm_mq.managers:",
-        _("Manager"),
-        _("IBM MQ Managers"),
-    )
-    declare_invtable_view(
-        "invibmmqchannels",
-        ".software.applications.ibm_mq.channels:",
-        _("Channel"),
-        _("IBM MQ Channels"),
-    )
-    declare_invtable_view(
-        "invibmmqqueues", ".software.applications.ibm_mq.queues:", _("Queue"), _("IBM MQ Queues")
-    )
-    declare_invtable_view(
-        "invtunnels", ".networking.tunnels:", _("Networking Tunnels"), _("Networking Tunnels")
-    )
-    declare_invtable_view(
-        "invkernelconfig",
-        ".software.kernel_config:",
-        _("Kernel configuration (sysctl)"),
-        _("Kernel configurations (sysctl)"),
-    )
-
-
-# This would also be possible. But we muss a couple of display and filter hints.
-# declare_invtable_view("invdisks",       ".hardware.storage.disks:",  _("Hard Disk"),          _("Hard Disks"))
-
-
 def declare_joined_inventory_table_view(
     table_view_name: str,
     title_singular: str,
@@ -874,21 +652,26 @@ class NodeDisplayHint:
 
 
 @dataclass(frozen=True)
+class TableViewSpec:
+    view_name: str
+    title: str
+    icon: Optional[str]
+
+
+@dataclass(frozen=True)
 class TableDisplayHint:
     key_order: Sequence[str]
     is_show_more: bool
-    view_name: Optional[str]
+    view_spec: Optional[TableViewSpec]
 
     @classmethod
-    def make_from_hint(cls, raw_hint: InventoryHintSpec) -> TableDisplayHint:
+    def make_from_hint(
+        cls, raw_hint: InventoryHintSpec, table_view_spec: Optional[TableViewSpec]
+    ) -> TableDisplayHint:
         return cls(
             key_order=raw_hint.get("keyorder", []),
             is_show_more=raw_hint.get("is_show_more", True),
-            view_name=(
-                raw_view[:-8]
-                if (raw_view := raw_hint.get("view", "")).endswith("_of_host")
-                else None
-            ),
+            view_spec=table_view_spec,
         )
 
 
@@ -1089,7 +872,7 @@ class DisplayHints:
         return DisplayHints(
             path=path,
             node_hint=NodeDisplayHint.make_from_hint(path, {"title": _l("Inventory")}),
-            table_hint=TableDisplayHint.make_from_hint({}),
+            table_hint=TableDisplayHint.make_from_hint({}, None),
             column_hints={},
             attributes_hint=AttributesDisplayHint.make_from_hint({}),
             attribute_hints={},
@@ -1100,7 +883,7 @@ class DisplayHints:
         return DisplayHints(
             path=path,
             node_hint=NodeDisplayHint.make_from_hint(path, {}),
-            table_hint=TableDisplayHint.make_from_hint({}),
+            table_hint=TableDisplayHint.make_from_hint({}, None),
             column_hints={},
             attributes_hint=AttributesDisplayHint.make_from_hint({}),
             attribute_hints={},
@@ -1124,7 +907,14 @@ class DisplayHints:
                         path,
                         {**related_raw_hints.for_node, **related_raw_hints.for_table},
                     ),
-                    table_hint=TableDisplayHint.make_from_hint(related_raw_hints.for_table),
+                    table_hint=TableDisplayHint.make_from_hint(
+                        related_raw_hints.for_table,
+                        self._get_table_view_spec(
+                            path,
+                            related_raw_hints.for_node,
+                            related_raw_hints.for_table,
+                        ),
+                    ),
                     column_hints={
                         key: ColumnDisplayHint.make_from_hint(path, key, raw_hint)
                         for key, raw_hint in related_raw_hints.by_columns.items()
@@ -1178,6 +968,29 @@ class DisplayHints:
                 node = node.nodes.setdefault(node_name, DisplayHints.default(path))
 
         return node
+
+    def _get_table_view_spec(
+        self, path: SDPath, raw_node_hint: InventoryHintSpec, raw_table_hint: InventoryHintSpec
+    ) -> Optional[TableViewSpec]:
+        def _get_table_view_name(path: SDPath, raw_table_hint: InventoryHintSpec) -> Optional[str]:
+            if "view" not in raw_table_hint:
+                return None
+            if (view_name := raw_table_hint["view"]).endswith("_of_host"):
+                return view_name[:-8]
+            return view_name
+
+        if "*" in path:
+            # See DYNAMIC-PATHS
+            return None
+
+        if view_name := _get_table_view_name(path, raw_table_hint):
+            return TableViewSpec(
+                view_name=view_name,
+                title=raw_table_hint.get("title", raw_node_hint.get("title", "")),
+                icon=raw_table_hint.get("icon", raw_node_hint.get("icon")),
+            )
+
+        return None
 
     def __iter__(self) -> Iterator[DisplayHints]:
         yield from self._make_inventory_paths_or_hints([])
@@ -1243,8 +1056,50 @@ class DisplayHints:
 DISPLAY_HINTS = DisplayHints.root()
 
 
-def transform_legacy_display_hints():
+def register_table_views_and_columns() -> None:
+    # Parse legacy display hints
     DISPLAY_HINTS.parse(inventory_displayhints)
+
+    # Now register table views or columns (which need new display hints)
+    _register_table_views_and_columns()
+
+
+def _register_table_views_and_columns() -> None:
+    # create painters for node with a display hint
+    for hints in DISPLAY_HINTS:
+        if "*" in hints.abc_path:
+            # FIXME DYNAMIC-PATHS
+            # For now we have to exclude these kind of paths due to the following reason:
+            # During registration of table views only these 'abc' paths are available which are
+            # used to create view names, eg: 'invfoo*bar'.
+            # But in tree views of a host we have concrete paths and therefore view names like
+            #   'invfooNAME1bar', 'invfooNAME2bar', ...
+            # Moreover we would use the 'abc' path in order to find the node/table with these views.
+            # Have a look at the related data sources, eg.
+            #   'DataSourceInventory' uses 'RowTableInventory'
+            continue
+
+        ident = ("inv",) + hints.abc_path
+
+        _register_node_painter(
+            inventory.InventoryPath(path=hints.abc_path, source=inventory.TreeSource.node),
+            "_".join(ident),
+            hints,
+        )
+
+        for key, attr_hint in hints.attribute_hints.items():
+            _register_attribute_column(
+                inventory.InventoryPath(
+                    path=hints.abc_path, source=inventory.TreeSource.attributes, key=key
+                ),
+                "_".join(ident + (key,)),
+                attr_hint,
+            )
+
+        _register_table_view(
+            inventory.InventoryPath(path=hints.abc_path, source=inventory.TreeSource.table),
+            hints,
+        )
 
 
 # .
@@ -1455,16 +1310,12 @@ def _export_attribute_as_json(
     return _compute_attribute_painter_data(row, inventory_path)
 
 
-def _inv_find_subtable_columns(
-    inventory_path: inventory.InventoryPath,
-) -> Sequence[Tuple[str, ColumnDisplayHint]]:
+def _inv_find_subtable_columns(hints: DisplayHints) -> Sequence[Tuple[str, ColumnDisplayHint]]:
     """Find the name of all columns of an embedded table that have a display
     hint. Respects the order of the columns if one is specified in the
     display hint.
 
     Also use the names found in keyorder to get even more of the available columns."""
-    hints = DISPLAY_HINTS.get_hints(inventory_path.path)
-
     # Create dict from column name to its order number in the list
     with_numbers = enumerate(hints.table_hint.key_order)
     swapped = [(t[1], t[0]) for t in with_numbers]
@@ -1559,24 +1410,28 @@ class ABCDataSourceInventory(ABCDataSource):
 
 
 def _register_table_view(
-    table_view_name: str,
     inventory_path: inventory.InventoryPath,
-    title_singular: str,
-    title_plural: str,
-    icon: Optional[Icon] = None,
+    hints: DisplayHints,
 ) -> None:
-    _register_info_class(table_view_name, title_singular, title_plural)
+    if (table_view_spec := hints.table_hint.view_spec) is None:
+        return
+
+    _register_info_class(
+        table_view_spec.view_name,
+        table_view_spec.title,
+        table_view_spec.title,
+    )
 
     # Create the datasource (like a database view)
     data_source_registry.register(
         type(
-            "DataSourceInventory%s" % table_view_name.title(),
+            "DataSourceInventory%s" % table_view_spec.view_name.title(),
             (ABCDataSourceInventory,),
             {
-                "_ident": table_view_name,
+                "_ident": table_view_spec.view_name,
                 "_inventory_path": inventory_path,
-                "_title": "%s: %s" % (_("Inventory"), title_plural),
-                "_infos": ["host", table_view_name],
+                "_title": "%s: %s" % (_("Inventory"), table_view_spec.title),
+                "_infos": ["host", table_view_spec.view_name],
                 "ident": property(lambda s: s._ident),
                 "title": property(lambda s: s._title),
                 "table": property(lambda s: RowTableInventory(s._ident, s._inventory_path)),
@@ -1590,13 +1445,13 @@ def _register_table_view(
 
     painters: List[Tuple[str, str, str]] = []
     filters = []
-    for name, col_hint in _inv_find_subtable_columns(inventory_path):
-        column = table_view_name + "_" + name
+    for name, col_hint in _inv_find_subtable_columns(hints):
+        column = table_view_spec.view_name + "_" + name
 
         # Declare a painter, sorter and filters for each path with display hint
         _register_table_column(
-            table_view_name,
-            title_singular,
+            table_view_spec.view_name,
+            table_view_spec.title,
             column,
             col_hint,
         )
@@ -1604,7 +1459,14 @@ def _register_table_view(
         painters.append((column, "", ""))
         filters.append(column)
 
-    _register_views(table_view_name, title_plural, painters, filters, [inventory_path], icon)
+    _register_views(
+        table_view_spec.view_name,
+        table_view_spec.title,
+        painters,
+        filters,
+        [inventory_path],
+        table_view_spec.icon,
+    )
 
 
 class RowMultiTableInventory(ABCRowTable):
@@ -1713,7 +1575,9 @@ def _register_multi_table_view(
     for this_inventory_path, this_table_view_name, this_title in zip(
         inventory_paths, info_names, titles
     ):
-        for name, col_hint in _inv_find_subtable_columns(this_inventory_path):
+        for name, col_hint in _inv_find_subtable_columns(
+            DISPLAY_HINTS.get_hints(this_inventory_path.path)
+        ):
             if name in match_by:
                 # Filter out duplicate common columns which are used to join tables
                 if name in known_common_columns:
@@ -2306,7 +2170,7 @@ class ABCNodeRenderer(abc.ABC):
     #   ---table----------------------------------------------------------------
 
     def _show_table(self, table: Table, hints: DisplayHints) -> None:
-        if hints.table_hint.view_name:
+        if hints.table_hint.view_spec:
             # Link to Multisite view with exactly this table
             html.div(
                 HTMLWriter.render_a(
@@ -2316,7 +2180,7 @@ class ABCNodeRenderer(abc.ABC):
                         [
                             (
                                 "view_name",
-                                _make_table_view_name_of_host(hints.table_hint.view_name),
+                                _make_table_view_name_of_host(hints.table_hint.view_spec.view_name),
                             ),
                             ("host", self._hostname),
                         ],

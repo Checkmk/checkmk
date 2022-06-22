@@ -1,0 +1,60 @@
+Title: HW/SW Inventory: Remove 'declare_invtable_view' for registration of table views
+Class: feature
+Compatible: incomp
+Component: inv
+Date: 1659424745
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1
+
+Previously a table in the HW/SW inventory tree could be opened as an own view
+if
+<ul>
+<li>the view name was added to the related display hint (with suffix
+{{_of_host}}) and</li>
+<li>the view was declared with {{declare_invtable_view}}.</li>
+</ul>
+
+The view declaration function {{declare_invtable_view}} was removed. Thus you
+also have to remove this function from your modules in order to avoid import
+errors.
+
+Moreover the view name does not have to end with {{_of_host}}.
+
+Example:
+
+C+:
+inventory_displayhints.update({
+    ...
+    ".software.packages:": {
+        "title": _l("Software packages"),
+        "icon": "packages",
+        "view": "invswpac_of_host",
+        "keyorder": ["name", "version", "arch", "package_type", "summary"],
+    },
+    ...
+}
+
+declare_invtable_view(
+    "invswpac",             # view name
+    ".software.packages:",  # legacy path
+    _("Software package"),  # title singular
+    _("Software packages"), # title plural
+)
+C-:
+
+Now only the view name in the related display hint has to be stated.
+
+C+:
+inventory_displayhints.update({
+    ...
+    ".software.packages:": {
+        "title": _l("Software packages"),
+        "icon": "packages",
+        "view": "invswpac",
+        "keyorder": ["name", "version", "arch", "package_type", "summary"],
+    },
+    ...
+}
+C-:

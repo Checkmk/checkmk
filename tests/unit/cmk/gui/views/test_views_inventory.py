@@ -37,6 +37,7 @@ from cmk.gui.views.inventory import (
     RowTableInventory,
     RowTableInventoryHistory,
     TableDisplayHint,
+    TableViewSpec,
 )
 
 RAW_ROWS = [("this_site", "this_hostname")]
@@ -303,7 +304,7 @@ def test__cmp_inventory_node(  # type:ignore[no-untyped-def]
             TableDisplayHint(
                 key_order=[],
                 is_show_more=True,
-                view_name=None,
+                view_spec=None,
             ),
         ),
         (
@@ -320,7 +321,7 @@ def test__cmp_inventory_node(  # type:ignore[no-untyped-def]
             TableDisplayHint(
                 key_order=[],
                 is_show_more=True,
-                view_name=None,
+                view_spec=None,
             ),
         ),
         (
@@ -349,16 +350,16 @@ def test__cmp_inventory_node(  # type:ignore[no-untyped-def]
             TableDisplayHint(
                 key_order=[],
                 is_show_more=True,
-                view_name=None,
+                view_spec=None,
             ),
         ),
         (
             ("software", "applications", "docker", "images"),
             NodeDisplayHint(
                 icon=None,
-                title="Images",
-                short_title="Images",
-                _long_title_function=lambda: "Docker ➤ Images",
+                title="Docker images",
+                short_title="Docker images",
+                _long_title_function=lambda: "Docker ➤ Docker images",
             ),
             AttributesDisplayHint(
                 key_order=[],
@@ -374,7 +375,11 @@ def test__cmp_inventory_node(  # type:ignore[no-untyped-def]
                     "repodigests",
                 ],
                 is_show_more=False,
-                view_name="invdockerimages",
+                view_spec=TableViewSpec(
+                    view_name="invdockerimages",
+                    title="Docker images",
+                    icon=None,
+                ),
             ),
         ),
         (
@@ -391,7 +396,7 @@ def test__cmp_inventory_node(  # type:ignore[no-untyped-def]
             TableDisplayHint(
                 key_order=[],
                 is_show_more=True,
-                view_name=None,
+                view_spec=None,
             ),
         ),
     ],
@@ -413,7 +418,7 @@ def test_make_node_displayhint(
 
     assert hints.table_hint.key_order == expected_table_hint.key_order
     assert hints.table_hint.is_show_more == expected_table_hint.is_show_more
-    assert hints.table_hint.view_name == expected_table_hint.view_name
+    assert hints.table_hint.view_spec == expected_table_hint.view_spec
 
 
 @pytest.mark.parametrize(
@@ -433,7 +438,7 @@ def test_make_node_displayhint(
             TableDisplayHint(
                 key_order=[],
                 is_show_more=True,
-                view_name=None,
+                view_spec=None,
             ),
         ),
         (
@@ -450,7 +455,7 @@ def test_make_node_displayhint(
             TableDisplayHint(
                 key_order=[],
                 is_show_more=True,
-                view_name=None,
+                view_spec=None,
             ),
         ),
         (
@@ -467,16 +472,16 @@ def test_make_node_displayhint(
             TableDisplayHint(
                 key_order=[],
                 is_show_more=True,
-                view_name=None,
+                view_spec=None,
             ),
         ),
         (
             ".software.applications.docker.containers:",
             NodeDisplayHint(
                 icon=None,
-                title="Containers",
-                short_title="Containers",
-                _long_title_function=lambda: "Docker ➤ Containers",
+                title="Docker containers",
+                short_title="Docker containers",
+                _long_title_function=lambda: "Docker ➤ Docker containers",
             ),
             AttributesDisplayHint(
                 key_order=[],
@@ -484,7 +489,11 @@ def test_make_node_displayhint(
             TableDisplayHint(
                 key_order=["id", "creation", "name", "labels", "status", "image"],
                 is_show_more=False,
-                view_name="invdockercontainers",
+                view_spec=TableViewSpec(
+                    view_name="invdockercontainers",
+                    title="Docker containers",
+                    icon=None,
+                ),
             ),
         ),
     ],
@@ -506,7 +515,7 @@ def test_make_node_displayhint_from_hint(
 
     assert hints.table_hint.key_order == expected_table_hint.key_order
     assert hints.table_hint.is_show_more == expected_table_hint.is_show_more
-    assert hints.table_hint.view_name == expected_table_hint.view_name
+    assert hints.table_hint.view_spec == expected_table_hint.view_spec
 
 
 @pytest.mark.parametrize(

@@ -4,18 +4,21 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from dataclasses import dataclass
-from typing import Callable, Optional, Sequence
+from typing import Optional
 
 import pytest
 from pytest_mock import MockerFixture
 
-from cmk.utils.type_defs import CheckPluginName
+from cmk.utils.type_defs.pluginname import CheckPluginName
 
 from cmk.base.api.agent_based.checking_classes import ServiceLabel
 from cmk.base.plugin_contexts import current_host, current_service
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import DiscoveryResult, StringTable
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    DiscoveryResult,
+    StringTable,
+)
 from cmk.base.plugins.agent_based.gcp_function import (
     check_gcp_function_execution,
     check_gcp_function_instances,
@@ -27,7 +30,7 @@ from cmk.base.plugins.agent_based.utils import gcp
 
 from cmk.special_agents.agent_gcp import FUNCTIONS
 
-from .gcp_test_util import DiscoverTester, generate_timeseries, ParsingTester
+from .gcp_test_util import DiscoverTester, generate_timeseries, ParsingTester, Plugin
 
 ASSET_TABLE = [
     ['{"project":"backup-255820"}'],
@@ -73,78 +76,42 @@ class TestParsing(ParsingTester):
         return generate_timeseries("Mario", 42.0, FUNCTIONS)
 
 
-@dataclass(frozen=True)
-class Plugin:
-    metrics: Sequence[str]
-    function: Callable
-
-
-PLUGINS = [
-    Plugin(
-        function=check_gcp_function_network,
-        metrics=[
-            "net_data_sent",
-        ],
-    ),
-    Plugin(
-        function=check_gcp_function_execution,
-        metrics=["faas_execution_count", "aws_lambda_memory_size_absolute", "faas_execution_times"],
-    ),
-    Plugin(
-        function=check_gcp_function_instances,
-        metrics=[
-            "faas_total_instance_count",
-            "faas_active_instance_count",
-        ],
-    ),
-]
-ITEM = "function-3"
-
-
-@pytest.fixture(name="section")
-def fixture_section():
-    return parse_gcp_function(generate_timeseries(ITEM, 42.0, FUNCTIONS))
-
-
-@pytest.fixture(params=PLUGINS, name="checkplugin")
-def fixture_checkplugin(request):
-    return request.param
-
-
-@pytest.fixture(
-    params=[None, {"levels_upper": (0, 1), "horizon": 1, "period": "day"}], name="params"
-)
-def fixture_params(request):
-    return request.param
-
-
-@pytest.fixture(name="results")
-def fixture_results(checkplugin, section, params, mocker: MockerFixture):
-    params = {k: params for k in checkplugin.metrics}
-    mocker.patch(
-        "cmk.base.check_api._prediction.get_levels", return_value=(None, (300.2, 500.2, None, None))
-    )
-
-    with current_host("unittest"), current_service(
-        CheckPluginName("test_check"), "unittest-service-description"
-    ):
-        results = list(
-            checkplugin.function(
-                item=ITEM,
-                params=params,
-                section_gcp_service_cloud_functions=section,
-                section_gcp_assets=None,
-            )
+def test_zero_default_if_metric_does_not_exist() -> None:
+    item = "some_function"
+    metrics = (
+        el
+        for el in check_gcp_function_network(
+            item=item,
+            params={"net_data_sent": None},
+            section_gcp_service_cloud_functions={item: gcp.SectionItem(rows=[])},
+            section_gcp_assets=None,
         )
-    return results, checkplugin
+        if isinstance(el, Metric)
+    )
+    for metric in metrics:
+        assert metric.value == 0.0
 
 
-def test_no_function_section_yields_no_metric_data(checkplugin) -> None:
-    params = {k: None for k in checkplugin.metrics}
+def test_zero_default_if_item_does_not_exist() -> None:
+    metrics = (
+        el
+        for el in check_gcp_function_network(
+            item="does_not_exist",
+            params={"net_data_sent": None},
+            section_gcp_service_cloud_functions={},
+            section_gcp_assets=None,
+        )
+        if isinstance(el, Metric)
+    )
+    for metric in metrics:
+        assert metric.value == 0.0
+
+
+def test_no_function_section_yields_no_metric_data() -> None:
     results = list(
-        checkplugin.function(
-            item=ITEM,
-            params=params,
+        check_gcp_function_network(
+            item="no_data_anyway",
+            params={"net_data_sent": None},
             section_gcp_service_cloud_functions=None,
             section_gcp_assets=None,
         )
@@ -152,50 +119,117 @@ def test_no_function_section_yields_no_metric_data(checkplugin) -> None:
     assert len(results) == 0
 
 
-def test_yield_metrics_as_specified(results) -> None:
-    results, checkplugin = results
-    res = {r.name: r for r in results if isinstance(r, Metric)}
-    assert len(res) == len(checkplugin.metrics)
-    assert set(res.keys()) == set(checkplugin.metrics)
+def test_warn_settings_in_check() -> None:
+    item = "item"
+    section = parse_gcp_function(generate_timeseries(item, 42.0, FUNCTIONS))
+    results = [
+        r
+        for r in check_gcp_function_network(
+            item=item,
+            params={"net_data_sent": (20, 50)},
+            section_gcp_service_cloud_functions=section,
+            section_gcp_assets=None,
+        )
+        if isinstance(r, Result)
+    ]
+    for r in results:
+        assert r.state == State.WARN
 
 
-def test_yield_results_as_specified(results) -> None:
-    results, checkplugin = results
+def test_crit_settings_in_check() -> None:
+    item = "item"
+    section = parse_gcp_function(generate_timeseries(item, 42.0, FUNCTIONS))
+    results = [
+        r
+        for r in check_gcp_function_network(
+            item=item,
+            params={"net_data_sent": (20, 40)},
+            section_gcp_service_cloud_functions=section,
+            section_gcp_assets=None,
+        )
+        if isinstance(r, Result)
+    ]
+    for r in results:
+        assert r.state == State.CRIT
+
+
+def test_predictive_checks(mocker: MockerFixture) -> None:
+    item = "item"
+    section = parse_gcp_function(generate_timeseries(item, 42.0, FUNCTIONS))
+    mocker.patch(
+        "cmk.base.check_api._prediction.get_levels", return_value=(None, (20, 50, None, None))
+    )
+    with current_host("unittest"), current_service(CheckPluginName("test"), item):
+        results = list(
+            check_gcp_function_network(
+                item=item,
+                params={"net_data_sent": {"levels_upper": (0, 1), "horizon": 1, "period": "day"}},
+                section_gcp_service_cloud_functions=section,
+                section_gcp_assets=None,
+            )
+        )
     res = [r for r in results if isinstance(r, Result)]
-    assert len(res) == len(checkplugin.metrics)
     for r in res:
-        assert r.state == State.OK
+        assert r.state == State.WARN
 
 
-class TestDefaultMetricValues:
-    # requests does not contain example data
-    @pytest.mark.xfail(reason="all metrics available need to filter before passing to check plugin")
-    def test_zero_default_if_metric_does_not_exist(self, section) -> None:
-        params = {k: None for k in ["faas_total_instance_count", "faas_active_instance_count"]}
-        results = (
-            el
-            for el in check_gcp_function_instances(
-                item=ITEM,
-                params=params,
-                section_gcp_service_cloud_functions=section,
-                section_gcp_assets=None,
-            )
-            if isinstance(el, Metric)
-        )
-        for result in results:
-            assert result.value == 0.0
+PLUGINS = [
+    pytest.param(
+        Plugin(
+            function=check_gcp_function_network,
+            metrics=["net_data_sent"],
+            results=[Result(state=State.OK, summary="Out: 336 Bit/s")],
+        ),
+        id="network",
+    ),
+    pytest.param(
+        Plugin(
+            function=check_gcp_function_execution,
+            metrics=[
+                "faas_execution_count",
+                "aws_lambda_memory_size_absolute",
+                "faas_execution_times",
+            ],
+            results=[
+                Result(state=State.OK, summary="Executions count: 42.0"),
+                Result(state=State.OK, summary="Memory: 42 B"),
+                Result(state=State.OK, summary="Execution times: 42 nanoseconds"),
+            ],
+        ),
+        id="execution",
+    ),
+    pytest.param(
+        Plugin(
+            function=check_gcp_function_instances,
+            metrics=["faas_total_instance_count", "faas_active_instance_count"],
+            results=[
+                Result(state=State.OK, summary="Instances: 42.0"),
+                Result(state=State.OK, summary="Active instances: 42.0"),
+            ],
+        ),
+        id="instances",
+    ),
+]
 
-    def test_zero_default_if_item_does_not_exist(self, section, checkplugin: Plugin) -> None:
-        params = {k: None for k in checkplugin.metrics}
-        results = (
-            el
-            for el in checkplugin.function(
-                item="no I do not exist",
-                params=params,
-                section_gcp_service_cloud_functions=section,
-                section_gcp_assets=None,
-            )
-            if isinstance(el, Metric)
-        )
-        for result in results:
-            assert result.value == 0.0
+
+def generate_results(plugin: Plugin) -> CheckResult:
+    item = "item"
+    section = parse_gcp_function(generate_timeseries(item, 42.0, FUNCTIONS))
+    yield from plugin.function(
+        item=item,
+        params={k: None for k in plugin.metrics},
+        section_gcp_service_cloud_functions=section,
+        section_gcp_assets=None,
+    )
+
+
+@pytest.mark.parametrize("plugin", PLUGINS)
+def test_yield_results_as_specified(plugin) -> None:
+    results = {r for r in generate_results(plugin) if isinstance(r, Result)}
+    assert results == set(plugin.results)
+
+
+@pytest.mark.parametrize("plugin", PLUGINS)
+def test_yield_metrics_as_specified(plugin) -> None:
+    results = {r.name for r in generate_results(plugin) if isinstance(r, Metric)}
+    assert results == set(plugin.metrics)

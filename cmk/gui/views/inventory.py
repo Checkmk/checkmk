@@ -165,18 +165,6 @@ def _get_sites_with_same_named_hosts_cache() -> Mapping[HostName, Sequence[SiteI
     return cache
 
 
-def _cmp_inv_generic(val_a: object, val_b: object) -> int:
-    if isinstance(val_a, (float, int)) and isinstance(val_b, (float, int)):
-        return (val_a > val_b) - (val_a < val_b)
-
-    if isinstance(val_a, str) and isinstance(val_b, str):
-        return (val_a > val_b) - (val_a < val_b)
-
-    raise TypeError(
-        "Unsupported operand types for > and < (%s and %s)" % (type(val_a), type(val_b))
-    )
-
-
 @painter_option_registry.register
 class PainterOptionShowInternalTreePaths(PainterOption):
     @property
@@ -610,6 +598,10 @@ def _make_long_title_function(title: str, parent_path: SDPath) -> Callable[[], s
     )
 
 
+def _make_table_view_name_of_host(view_name: str) -> str:
+    return f"{view_name}_of_host"
+
+
 @dataclass(frozen=True)
 class NodeDisplayHint:
     icon: Optional[str]
@@ -643,7 +635,11 @@ class TableDisplayHint:
         return cls(
             key_order=raw_hint.get("keyorder", []),
             is_show_more=raw_hint.get("is_show_more", True),
-            view_name=raw_hint.get("view"),
+            view_name=(
+                raw_view[:-8]
+                if (raw_view := raw_hint.get("view", "")).endswith("_of_host")
+                else None
+            ),
         )
 
 
@@ -1240,16 +1236,6 @@ def _export_attribute_as_json(
     return _compute_attribute_painter_data(row, inventory_path)
 
 
-def _cmp_inventory_node(
-    a: Dict[str, StructuredDataNode],
-    b: Dict[str, StructuredDataNode],
-    inventory_path: inventory.InventoryPath,
-) -> int:
-    val_a = inventory.get_attribute(a["host_inventory"], inventory_path)
-    val_b = inventory.get_attribute(b["host_inventory"], inventory_path)
-    return _decorate_sort_func(_cmp_inv_generic)(val_a, val_b)
-
-
 # .
 #   .--Datasources---------------------------------------------------------.
 #   |       ____        _                                                  |
@@ -1293,19 +1279,6 @@ def _inv_find_subtable_columns(
     return sorted(columns.items(), key=lambda t: (order.get(t[0], 999), t[0]))
 
 
-def _decorate_sort_func(f):
-    def wrapper(val_a, val_b):
-        if val_a is None:
-            return 0 if val_b is None else -1
-
-        if val_b is None:
-            return 0 if val_a is None else 1
-
-        return f(val_a, val_b)
-
-    return wrapper
-
-
 def _declare_invtable_column(
     infoname: str,
     topic: str,
@@ -1336,17 +1309,6 @@ def _declare_invtable_column(
                 a.get(column), b.get(column)
             ),
         },
-    )
-
-
-def _get_table_rows(
-    tree: StructuredDataNode, inventory_path: inventory.InventoryPath
-) -> Sequence[SDRow]:
-    return (
-        []
-        if inventory_path.source != inventory.TreeSource.table
-        or (table := tree.get_table(inventory_path.path)) is None
-        else table.rows
     )
 
 
@@ -1649,7 +1611,7 @@ def _declare_views(
     multisite_builtin_views[infoname + "_search"].update(view_spec)
 
     # View for the items of one host
-    multisite_builtin_views[infoname + "_of_host"] = {
+    multisite_builtin_views[_make_table_view_name_of_host(infoname)] = {
         # General options
         "title": title_plural,
         "description": _("A view for the %s of one host") % title_plural,
@@ -1668,7 +1630,7 @@ def _declare_views(
         "hide_filters": ["host"],
         "icon": icon,
     }
-    multisite_builtin_views[infoname + "_of_host"].update(view_spec)
+    multisite_builtin_views[_make_table_view_name_of_host(infoname)].update(view_spec)
 
 
 def declare_invtable_views() -> None:
@@ -1971,7 +1933,7 @@ multisite_builtin_views["inv_hosts_ports"] = {
     # Columns
     "group_painters": [],
     "painters": [
-        ("host", "invinterface_of_host", ""),
+        ("host", _make_table_view_name_of_host("invinterface"), ""),
         ("inv_hardware_system_product", None, ""),
         ("inv_networking_total_interfaces", None, ""),
         ("inv_networking_total_ethernet_ports", None, ""),
@@ -2331,7 +2293,10 @@ class ABCNodeRenderer(abc.ABC):
                     href=makeuri_contextless(
                         request,
                         [
-                            ("view_name", hints.table_hint.view_name),
+                            (
+                                "view_name",
+                                _make_table_view_name_of_host(hints.table_hint.view_name),
+                            ),
                             ("host", self._hostname),
                         ],
                         filename="view.py",
@@ -2590,3 +2555,60 @@ def ajax_inv_render_tree() -> None:
         return
 
     tree_renderer.show(node, DISPLAY_HINTS.get_hints(node.path))
+
+
+# .
+#   .--helper--------------------------------------------------------------.
+#   |                    _          _                                      |
+#   |                   | |__   ___| |_ __   ___ _ __                      |
+#   |                   | '_ \ / _ \ | '_ \ / _ \ '__|                     |
+#   |                   | | | |  __/ | |_) |  __/ |                        |
+#   |                   |_| |_|\___|_| .__/ \___|_|                        |
+#   |                                |_|                                   |
+#   '----------------------------------------------------------------------'
+
+
+def _cmp_inventory_node(
+    a: Dict[str, StructuredDataNode],
+    b: Dict[str, StructuredDataNode],
+    inventory_path: inventory.InventoryPath,
+) -> int:
+    val_a = inventory.get_attribute(a["host_inventory"], inventory_path)
+    val_b = inventory.get_attribute(b["host_inventory"], inventory_path)
+    return _decorate_sort_func(_cmp_inv_generic)(val_a, val_b)
+
+
+def _cmp_inv_generic(val_a: object, val_b: object) -> int:
+    if isinstance(val_a, (float, int)) and isinstance(val_b, (float, int)):
+        return (val_a > val_b) - (val_a < val_b)
+
+    if isinstance(val_a, str) and isinstance(val_b, str):
+        return (val_a > val_b) - (val_a < val_b)
+
+    raise TypeError(
+        "Unsupported operand types for > and < (%s and %s)" % (type(val_a), type(val_b))
+    )
+
+
+def _decorate_sort_func(f):
+    def wrapper(val_a, val_b):
+        if val_a is None:
+            return 0 if val_b is None else -1
+
+        if val_b is None:
+            return 0 if val_a is None else 1
+
+        return f(val_a, val_b)
+
+    return wrapper
+
+
+def _get_table_rows(
+    tree: StructuredDataNode, inventory_path: inventory.InventoryPath
+) -> Sequence[SDRow]:
+    return (
+        []
+        if inventory_path.source != inventory.TreeSource.table
+        or (table := tree.get_table(inventory_path.path)) is None
+        else table.rows
+    )

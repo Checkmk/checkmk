@@ -374,7 +374,7 @@ def test__cmp_inventory_node(  # type:ignore[no-untyped-def]
                     "repodigests",
                 ],
                 is_show_more=False,
-                view_name="invdockerimages_of_host",
+                view_name="invdockerimages",
             ),
         ),
         (
@@ -484,7 +484,7 @@ def test_make_node_displayhint(
             TableDisplayHint(
                 key_order=["id", "creation", "name", "labels", "status", "image"],
                 is_show_more=False,
-                view_name="invdockercontainers_of_host",
+                view_name="invdockercontainers",
             ),
         ),
     ],

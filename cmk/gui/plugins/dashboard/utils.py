@@ -1234,7 +1234,7 @@ def dashboard_breadcrumb(name: str, board: DashboardConfig, title: str) -> Bread
     breadcrumb = make_topic_breadcrumb(
         mega_menu_registry.menu_monitoring(), PagetypeTopics.get_topic(board["topic"])
     )
-    breadcrumb.append(BreadcrumbItem(title, makeuri_contextless(request, [("name", name)])))
+    breadcrumb.append(BreadcrumbItem(title, makeuri(request, [("name", name)])))
     return breadcrumb
 
 

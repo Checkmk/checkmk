@@ -35,13 +35,8 @@ TFetcher = TypeVar("TFetcher", bound="Fetcher")
 class Fetcher(Generic[TRawData], abc.ABC):
     """Interface to the data fetchers."""
 
-    def __init__(
-        self,
-        file_cache: FileCache[TRawData],
-        logger: logging.Logger,
-    ) -> None:
+    def __init__(self, logger: logging.Logger) -> None:
         super().__init__()
-        self.file_cache: Final = file_cache
         self._logger = logger
 
     @final

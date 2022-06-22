@@ -11,8 +11,6 @@ from tests.testlib.base import Scenario
 
 from cmk.utils.type_defs import HostName
 
-from cmk.core_helpers.cache import FileCacheMode, MaxAge
-
 from cmk.base.sources.tcp import TCPSource
 
 
@@ -27,15 +25,6 @@ def test_attribute_defaults(monkeypatch) -> None:
     source = TCPSource(hostname, ipaddress)
     monkeypatch.setattr(source, "file_cache_base_path", Path("/my/path/"))
     assert source.fetcher_configuration == {
-        "file_cache": {
-            "hostname": "testhost",
-            "max_age": MaxAge.none(),
-            "base_path": "/my/path",
-            "simulation": False,
-            "use_outdated": False,
-            "use_only_cache": False,
-            "file_cache_mode": FileCacheMode.READ_WRITE.value,
-        },
         "family": socket.AF_INET,
         "address": (ipaddress, 6556),
         "host_name": str(hostname),

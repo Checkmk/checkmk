@@ -89,7 +89,6 @@ class ProgramSource(AgentSource):
 
     def _make_fetcher(self) -> ProgramFetcher:
         return ProgramFetcher(
-            self._make_file_cache(),
             cmdline=self.cmdline,
             stdin=self.stdin,
             is_cmc=config.is_cmc(),

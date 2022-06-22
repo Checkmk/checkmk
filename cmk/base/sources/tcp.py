@@ -56,7 +56,6 @@ class TCPSource(AgentSource):
 
     def _make_fetcher(self) -> TCPFetcher:
         return TCPFetcher(
-            self._make_file_cache(),
             family=socket.AF_INET6 if self.host_config.is_ipv6_primary else socket.AF_INET,
             address=(self.ipaddress, self.port or self.host_config.agent_port),
             host_name=self.host_name,

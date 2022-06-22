@@ -199,9 +199,9 @@ def _parse_fetcher_config(
         if fetcher_type is FetcherType.SNMP:
             file_cache: FileCache = SNMPFileCache.from_json(entry["file_cache_params"])
             file_cache.max_age = MaxAge(
-                checking=fetcher.file_cache.max_age.checking,
+                checking=file_cache.max_age.checking,
                 discovery=0,
-                inventory=fetcher.file_cache.max_age.inventory,
+                inventory=file_cache.max_age.inventory,
             )
         else:
             file_cache = AgentFileCache.from_json(entry["file_cache_params"])

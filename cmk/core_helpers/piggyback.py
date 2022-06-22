@@ -15,24 +15,18 @@ from cmk.utils.piggyback import get_piggyback_raw_data, PiggybackRawDataInfo, Pi
 from cmk.utils.type_defs import AgentRawData, ExitSpec, HostAddress, HostName
 
 from ._base import Fetcher, Summarizer
-from .agent import AgentFileCache
-from .cache import FileCache
 from .type_defs import Mode
 
 
 class PiggybackFetcher(Fetcher[AgentRawData]):
     def __init__(
         self,
-        file_cache: FileCache[AgentRawData],
         *,
         hostname: HostName,
         address: Optional[HostAddress],
         time_settings: List[Tuple[Optional[str], str, int]],
     ) -> None:
-        super().__init__(
-            file_cache,
-            logging.getLogger("cmk.helper.piggyback"),
-        )
+        super().__init__(logging.getLogger("cmk.helper.piggyback"))
         self.hostname: Final = hostname
         self.address: Final = address
         self.time_settings: Final = time_settings
@@ -43,7 +37,6 @@ class PiggybackFetcher(Fetcher[AgentRawData]):
             f"{type(self).__name__}("
             + ", ".join(
                 (
-                    f"{type(self.file_cache).__name__}",
                     f"hostname={self.hostname!r}",
                     f"address={self.address!r}",
                     f"time_settings={self.time_settings!r}",
@@ -54,15 +47,10 @@ class PiggybackFetcher(Fetcher[AgentRawData]):
 
     @classmethod
     def _from_json(cls, serialized: Mapping[str, Any]) -> "PiggybackFetcher":
-        serialized_ = copy.deepcopy(dict(serialized))
-        return cls(
-            AgentFileCache.from_json(serialized_.pop("file_cache")),
-            **serialized_,
-        )
+        return cls(**copy.deepcopy(dict(serialized)))
 
     def to_json(self) -> Mapping[str, Any]:
         return {
-            "file_cache": self.file_cache.to_json(),
             "hostname": self.hostname,
             "address": self.address,
             "time_settings": self.time_settings,

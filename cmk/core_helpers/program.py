@@ -18,24 +18,18 @@ from cmk.utils.exceptions import MKFetcherError
 from cmk.utils.type_defs import AgentRawData
 
 from ._base import Fetcher
-from .agent import AgentFileCache
-from .cache import FileCache
 from .type_defs import Mode
 
 
 class ProgramFetcher(Fetcher[AgentRawData]):
     def __init__(
         self,
-        file_cache: FileCache[AgentRawData],
         *,
         cmdline: Union[bytes, str],
         stdin: Optional[str],
         is_cmc: bool,
     ) -> None:
-        super().__init__(
-            file_cache,
-            logging.getLogger("cmk.helper.program"),
-        )
+        super().__init__(logging.getLogger("cmk.helper.program"))
         self.cmdline: Final = cmdline
         self.stdin: Final = stdin
         self.is_cmc: Final = is_cmc
@@ -46,7 +40,6 @@ class ProgramFetcher(Fetcher[AgentRawData]):
             f"{type(self).__name__}("
             + ", ".join(
                 (
-                    f"{type(self.file_cache).__name__}",
                     f"cmdline={self.cmdline!r}",
                     f"stdin={self.stdin!r}",
                     f"is_cmc={self.is_cmc!r}",
@@ -57,15 +50,10 @@ class ProgramFetcher(Fetcher[AgentRawData]):
 
     @classmethod
     def _from_json(cls, serialized: Mapping[str, Any]) -> "ProgramFetcher":
-        serialized_ = copy.deepcopy(dict(serialized))
-        return cls(
-            AgentFileCache.from_json(serialized_.pop("file_cache")),
-            **serialized_,
-        )
+        return cls(**copy.deepcopy(dict(serialized)))
 
     def to_json(self) -> Mapping[str, Any]:
         return {
-            "file_cache": self.file_cache.to_json(),
             "cmdline": self.cmdline,
             "stdin": self.stdin,
             "is_cmc": self.is_cmc,

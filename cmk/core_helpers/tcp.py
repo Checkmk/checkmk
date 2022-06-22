@@ -19,8 +19,6 @@ from cmk.utils.exceptions import MKFetcherError
 from cmk.utils.type_defs import AgentRawData, HostAddress, HostName
 
 from ._base import Fetcher, verify_ipaddress
-from .agent import AgentFileCache
-from .cache import FileCache
 from .tcp_agent_ctl import AgentCtlMessage
 from .type_defs import Mode
 
@@ -28,7 +26,6 @@ from .type_defs import Mode
 class TCPFetcher(Fetcher[AgentRawData]):
     def __init__(
         self,
-        file_cache: FileCache[AgentRawData],
         *,
         family: socket.AddressFamily,
         address: Tuple[Optional[HostAddress], int],
@@ -36,7 +33,7 @@ class TCPFetcher(Fetcher[AgentRawData]):
         host_name: HostName,
         encryption_settings: Mapping[str, str],
     ) -> None:
-        super().__init__(file_cache, logging.getLogger("cmk.helper.tcp"))
+        super().__init__(logging.getLogger("cmk.helper.tcp"))
         self.family: Final = socket.AddressFamily(family)
         # json has no builtin tuple, we have to convert
         self.address: Final[Tuple[Optional[HostAddress], int]] = (address[0], address[1])
@@ -56,7 +53,6 @@ class TCPFetcher(Fetcher[AgentRawData]):
             f"{type(self).__name__}("
             + ", ".join(
                 (
-                    f"{type(self.file_cache).__name__}",
                     f"family={self.family!r}",
                     f"timeout={self.timeout!r}",
                     f"host_name={self.host_name!r}",
@@ -71,16 +67,10 @@ class TCPFetcher(Fetcher[AgentRawData]):
         serialized_ = copy.deepcopy(dict(serialized))
         address: Tuple[Optional[HostAddress], int] = serialized_.pop("address")
         host_name = HostName(serialized_.pop("host_name"))
-        return cls(
-            AgentFileCache.from_json(serialized_.pop("file_cache")),
-            address=address,
-            host_name=host_name,
-            **serialized_,
-        )
+        return cls(address=address, host_name=host_name, **serialized_)
 
     def to_json(self) -> Mapping[str, Any]:
         return {
-            "file_cache": self.file_cache.to_json(),
             "family": self.family,
             "address": self.address,
             "timeout": self.timeout,

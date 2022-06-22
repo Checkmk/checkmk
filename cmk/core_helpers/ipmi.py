@@ -26,8 +26,6 @@ from cmk.utils.log import VERBOSE
 from cmk.utils.type_defs import AgentRawData, HostAddress
 
 from ._base import Fetcher, Summarizer
-from .agent import AgentFileCache
-from .cache import FileCache
 from .type_defs import Mode
 
 
@@ -44,13 +42,12 @@ class IPMIFetcher(Fetcher[AgentRawData]):
 
     def __init__(
         self,
-        file_cache: FileCache[AgentRawData],
         *,
         address: HostAddress,  # Could actually be HostName as well.
         username: Optional[str],
         password: Optional[str],
     ) -> None:
-        super().__init__(file_cache, logging.getLogger("cmk.helper.ipmi"))
+        super().__init__(logging.getLogger("cmk.helper.ipmi"))
         self.address: Final = address
         self.username: Final = username
         self.password: Final = password
@@ -61,7 +58,6 @@ class IPMIFetcher(Fetcher[AgentRawData]):
             f"{type(self).__name__}("
             + ", ".join(
                 (
-                    f"{type(self.file_cache).__name__}",
                     f"address={self.address!r}",
                     f"username={self.username!r}",
                     f"password={self.password!r}",
@@ -72,15 +68,10 @@ class IPMIFetcher(Fetcher[AgentRawData]):
 
     @classmethod
     def _from_json(cls, serialized: Mapping[str, Any]) -> IPMIFetcher:
-        serialized_ = copy.deepcopy(dict(serialized))
-        return cls(
-            AgentFileCache.from_json(serialized_.pop("file_cache")),
-            **serialized_,
-        )
+        return cls(**copy.deepcopy(dict(serialized)))
 
     def to_json(self) -> Mapping[str, Any]:
         return {
-            "file_cache": self.file_cache.to_json(),
             "address": self.address,
             "username": self.username,
             "password": self.password,

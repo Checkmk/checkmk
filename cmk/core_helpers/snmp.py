@@ -181,7 +181,6 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
 
     def __init__(
         self,
-        file_cache: FileCache[SNMPRawData],
         *,
         sections: Mapping[SectionName, SectionMeta],
         on_error: OnError,
@@ -190,7 +189,7 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
         section_store_path: Union[Path, str],
         snmp_config: SNMPHostConfig,
     ) -> None:
-        super().__init__(file_cache, logging.getLogger("cmk.helper.snmp"))
+        super().__init__(logging.getLogger("cmk.helper.snmp"))
         self.sections: Final = sections
         self.on_error: Final = on_error
         self.missing_sys_description: Final = missing_sys_description
@@ -223,7 +222,6 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
             f"{type(self).__name__}("
             + ", ".join(
                 (
-                    f"{type(self.file_cache).__name__}",
                     f"sections={self.sections!r}",
                     f"on_error={self.on_error!r}",
                     f"missing_sys_description={self.missing_sys_description!r}",
@@ -248,7 +246,6 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
             )
 
         return cls(
-            file_cache=SNMPFileCache.from_json(serialized_.pop("file_cache")),
             sections={
                 SectionName(s): SectionMeta.deserialize(m)
                 for s, m in serialized_["sections"].items()
@@ -262,7 +259,6 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
 
     def to_json(self) -> Mapping[str, Any]:
         return {
-            "file_cache": self.file_cache.to_json(),
             "sections": {str(s): m.serialize() for s, m in self.sections.items()},
             "on_error": self.on_error.value,
             "missing_sys_description": self.missing_sys_description,

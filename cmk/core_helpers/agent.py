@@ -7,7 +7,6 @@
 from __future__ import annotations
 
 import abc
-import copy
 import logging
 import time
 from pathlib import Path
@@ -68,17 +67,15 @@ class AgentFileCacheFactory(FileCacheFactory[AgentRawData]):
 
 
 class NoFetcher(Fetcher[AgentRawData]):
-    def __init__(self, file_cache: FileCache[AgentRawData]) -> None:
-        super().__init__(file_cache, logging.getLogger("cmk.helper.noop"))
+    def __init__(self) -> None:
+        super().__init__(logging.getLogger("cmk.helper.noop"))
 
     @classmethod
-    def _from_json(cls, serialized: Mapping[str, Any]) -> NoFetcher:
-        return NoFetcher(
-            AgentFileCache.from_json(copy.deepcopy(dict(serialized)).pop("file_cache"))
-        )
+    def _from_json(cls, serialized: object) -> NoFetcher:
+        return NoFetcher()
 
     def to_json(self) -> Mapping[str, Any]:
-        return {"file_cache": self.file_cache.to_json()}
+        return {}
 
     def open(self) -> None:
         pass

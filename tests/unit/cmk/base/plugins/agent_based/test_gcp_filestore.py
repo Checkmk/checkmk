@@ -4,34 +4,23 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from dataclasses import dataclass
-from typing import Callable, Optional, Sequence
+from typing import Optional
 
 import pytest
-from pytest_mock import MockerFixture
-
-from cmk.utils.type_defs import CheckPluginName
 
 from cmk.base.api.agent_based.checking_classes import ServiceLabel
-from cmk.base.plugin_contexts import current_host, current_service
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import DiscoveryResult, StringTable
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    DiscoveryResult,
+    StringTable,
+)
 from cmk.base.plugins.agent_based.gcp_filestore import check, discover, parse
 from cmk.base.plugins.agent_based.utils import gcp
 
-from .gcp_test_util import DiscoverTester, ParsingTester
+from cmk.special_agents.agent_gcp import FILESTORE
 
-SECTION_TABLE = [
-    [
-        '{"metric": {"type": "file.googleapis.com/nfs/server/used_bytes_percent", "labels": {}}, "resource": {"type": "filestore_instance", "labels": {"project_id": "tribe29-check-development", "instance_name": "test"}}, "metric_kind": 1, "value_type": 3, "points": [{"interval": {"start_time": "2022-03-21T09:01:53.311694Z", "end_time": "2022-03-21T09:01:53.311694Z"}, "value": {"double_value": 2.6521106519794557e-06}}, {"interval": {"start_time": "2022-03-21T09:00:53.311694Z", "end_time": "2022-03-21T09:00:53.311694Z"}, "value": {"double_value": 2.6521106519794557e-06}}, {"interval": {"start_time": "2022-03-21T08:59:53.311694Z", "end_time": "2022-03-21T08:59:53.311694Z"}, "value": {"double_value": 2.6521106519794557e-06}}, {"interval": {"start_time": "2022-03-21T08:58:53.311694Z", "end_time": "2022-03-21T08:58:53.311694Z"}, "value": {"double_value": 2.6521106519794557e-06}}, {"interval": {"start_time": "2022-03-21T08:57:53.311694Z", "end_time": "2022-03-21T08:57:53.311694Z"}, "value": {"double_value": 2.6521106519794557e-06}}, {"interval": {"start_time": "2022-03-21T08:56:53.311694Z", "end_time": "2022-03-21T08:56:53.311694Z"}, "value": {"double_value": 2.6521106519794557e-06}}, {"interval": {"start_time": "2022-03-21T08:55:53.311694Z", "end_time": "2022-03-21T08:55:53.311694Z"}, "value": {"double_value": 2.6521106519794557e-06}}, {"interval": {"start_time": "2022-03-21T08:54:53.311694Z", "end_time": "2022-03-21T08:54:53.311694Z"}, "value": {"double_value": 2.6521106519794557e-06}}, {"interval": {"start_time": "2022-03-21T08:53:53.311694Z", "end_time": "2022-03-21T08:53:53.311694Z"}, "value": {"double_value": 2.6521106519794557e-06}}, {"interval": {"start_time": "2022-03-21T08:52:53.311694Z", "end_time": "2022-03-21T08:52:53.311694Z"}, "value": {"double_value": 2.6521106519794557e-06}}, {"interval": {"start_time": "2022-03-21T08:51:53.311694Z", "end_time": "2022-03-21T08:51:53.311694Z"}, "value":{"double_value": 2.6521106519794557e-06}}, {"interval": {"start_time": "2022-03-21T08:50:53.311694Z", "end_time": "2022-03-21T08:50:53.311694Z"}, "value": {"double_value": 2.6521106519794557e-06}}, {"interval": {"start_time": "2022-03-21T08:49:53.311694Z", "end_time": "2022-03-21T08:49:53.311694Z"}, "value": {"double_value": 2.6521106519794557e-06}}, {"interval": {"start_time": "2022-03-21T08:48:53.311694Z", "end_time": "2022-03-21T08:48:53.311694Z"}, "value": {"double_value": 2.6521106519794557e-06}}, {"interval": {"start_time": "2022-03-21T08:47:53.311694Z", "end_time": "2022-03-21T08:47:53.311694Z"}, "value": {"double_value": 2.6521106519794557e-06}}, {"interval": {"start_time": "2022-03-21T08:46:53.311694Z", "end_time": "2022-03-21T08:46:53.311694Z"}, "value": {"double_value": 2.6521106519794557e-06}}, {"interval": {"start_time": "2022-03-21T08:45:53.311694Z", "end_time": "2022-03-21T08:45:53.311694Z"}, "value": {"double_value": 2.6521106519794557e-06}}, {"interval": {"start_time": "2022-03-21T08:44:53.311694Z", "end_time": "2022-03-21T08:44:53.311694Z"}, "value": {"double_value": 2.6521106519794557e-06}}, {"interval": {"start_time": "2022-03-21T08:43:53.311694Z", "end_time": "2022-03-21T08:43:53.311694Z"}, "value": {"double_value": 2.6521106519794557e-06}}], "unit": ""}'
-    ],
-    [
-        '{"metric": {"type": "file.googleapis.com/nfs/server/write_ops_count", "labels": {}}, "resource": {"type": "filestore_instance", "labels": {"instance_name": "test", "project_id": "tribe29-check-development"}}, "metric_kind": 1, "value_type": 3, "points": [{"interval": {"start_time": "2022-03-21T09:01:53.311694Z", "end_time": "2022-03-21T09:01:53.311694Z"}, "value": {"double_value":0.1}}, {"interval": {"start_time": "2022-03-21T09:00:53.311694Z", "end_time": "2022-03-21T09:00:53.311694Z"}, "value": {"double_value": 0.1}}, {"interval": {"start_time": "2022-03-21T08:59:53.311694Z", "end_time": "2022-03-21T08:59:53.311694Z"}, "value": {"double_value": 0.1}}, {"interval": {"start_time": "2022-03-21T08:58:53.311694Z", "end_time": "2022-03-21T08:58:53.311694Z"}, "value": {"double_value": 0.1}}, {"interval": {"start_time": "2022-03-21T08:57:53.311694Z", "end_time": "2022-03-21T08:57:53.311694Z"}, "value": {"double_value": 0.1}}, {"interval": {"start_time": "2022-03-21T08:56:53.311694Z", "end_time": "2022-03-21T08:56:53.311694Z"}, "value": {"double_value": 0.1}}, {"interval": {"start_time": "2022-03-21T08:55:53.311694Z", "end_time": "2022-03-21T08:55:53.311694Z"}, "value": {"double_value": 0.1}}, {"interval": {"start_time": "2022-03-21T08:54:53.311694Z", "end_time": "2022-03-21T08:54:53.311694Z"}, "value": {"double_value": 0.1}}, {"interval": {"start_time": "2022-03-21T08:53:53.311694Z", "end_time": "2022-03-21T08:53:53.311694Z"}, "value": {"double_value": 0.1}}, {"interval": {"start_time": "2022-03-21T08:52:53.311694Z", "end_time": "2022-03-21T08:52:53.311694Z"}, "value": {"double_value": 0.1}}, {"interval": {"start_time": "2022-03-21T08:51:53.311694Z", "end_time": "2022-03-21T08:51:53.311694Z"}, "value": {"double_value": 0.1}}, {"interval": {"start_time": "2022-03-21T08:50:53.311694Z", "end_time": "2022-03-21T08:50:53.311694Z"}, "value": {"double_value": 0.1}}, {"interval": {"start_time": "2022-03-21T08:49:53.311694Z", "end_time": "2022-03-21T08:49:53.311694Z"}, "value": {"double_value": 0.1}}, {"interval": {"start_time": "2022-03-21T08:48:53.311694Z", "end_time": "2022-03-21T08:48:53.311694Z"}, "value": {"double_value": 0.1}}, {"interval": {"start_time": "2022-03-21T08:47:53.311694Z", "end_time": "2022-03-21T08:47:53.311694Z"}, "value": {"double_value": 0.1}}, {"interval": {"start_time": "2022-03-21T08:46:53.311694Z", "end_time": "2022-03-21T08:46:53.311694Z"}, "value": {"double_value": 0.1}}, {"interval": {"start_time": "2022-03-21T08:45:53.311694Z", "end_time": "2022-03-21T08:45:53.311694Z"}, "value": {"double_value": 0.1}}, {"interval": {"start_time": "2022-03-21T08:44:53.311694Z", "end_time": "2022-03-21T08:44:53.311694Z"}, "value": {"double_value": 0.1}}, {"interval": {"start_time": "2022-03-21T08:43:53.311694Z", "end_time": "2022-03-21T08:43:53.311694Z"}, "value": {"double_value": 0.1}}], "unit": ""}'
-    ],
-    [
-        '{"metric": {"type": "file.googleapis.com/nfs/server/read_ops_count", "labels": {}}, "resource": {"type": "filestore_instance", "labels": {"instance_name": "test", "project_id": "tribe29-check-development"}}, "metric_kind": 1, "value_type": 3, "points": [{"interval": {"start_time": "2022-03-21T09:01:53.311694Z", "end_time": "2022-03-21T09:01:53.311694Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-03-21T09:00:53.311694Z", "end_time": "2022-03-21T09:00:53.311694Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-03-21T08:59:53.311694Z", "end_time": "2022-03-21T08:59:53.311694Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-03-21T08:58:53.311694Z", "end_time": "2022-03-21T08:58:53.311694Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-03-21T08:57:53.311694Z", "end_time": "2022-03-21T08:57:53.311694Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-03-21T08:56:53.311694Z", "end_time": "2022-03-21T08:56:53.311694Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-03-21T08:55:53.311694Z", "end_time": "2022-03-21T08:55:53.311694Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-03-21T08:54:53.311694Z", "end_time": "2022-03-21T08:54:53.311694Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-03-21T08:53:53.311694Z", "end_time": "2022-03-21T08:53:53.311694Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-03-21T08:52:53.311694Z", "end_time": "2022-03-21T08:52:53.311694Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-03-21T08:51:53.311694Z", "end_time": "2022-03-21T08:51:53.311694Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-03-21T08:50:53.311694Z", "end_time": "2022-03-21T08:50:53.311694Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-03-21T08:49:53.311694Z", "end_time": "2022-03-21T08:49:53.311694Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-03-21T08:48:53.311694Z", "end_time": "2022-03-21T08:48:53.311694Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-03-21T08:47:53.311694Z", "end_time": "2022-03-21T08:47:53.311694Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-03-21T08:46:53.311694Z", "end_time": "2022-03-21T08:46:53.311694Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-03-21T08:45:53.311694Z", "end_time": "2022-03-21T08:45:53.311694Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-03-21T08:44:53.311694Z", "end_time": "2022-03-21T08:44:53.311694Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-03-21T08:43:53.311694Z", "end_time": "2022-03-21T08:43:53.311694Z"}, "value": {"double_value": 0.0}}], "unit": ""}'
-    ],
-]
+from .gcp_test_util import DiscoverTester, generate_timeseries, ParsingTester, Plugin
 
 ASSET_TABLE = [
     ['{"project":"backup-255820"}'],
@@ -47,7 +36,7 @@ class TestParsing(ParsingTester):
 
     @property
     def section_table(self) -> StringTable:
-        return SECTION_TABLE
+        return generate_timeseries("item", 42.0, FILESTORE)
 
 
 class TestDiscover(DiscoverTester):
@@ -89,82 +78,37 @@ def test_discover_labels_labels_without_user_labels() -> None:
     }
 
 
-@dataclass(frozen=True)
-class Plugin:
-    metrics: Sequence[str]
-    function: Callable
-
-
 PLUGINS = [
     Plugin(
         function=check,
         metrics=["fs_used_percent", "disk_read_ios", "disk_write_ios"],
+        results=[
+            Result(state=State.OK, summary="Read operations: 42.0"),
+            Result(state=State.OK, summary="Usage: 4200.00%"),
+            Result(state=State.OK, summary="Write operations: 42.0"),
+        ],
     ),
 ]
-ITEM = "test"
 
 
-@pytest.fixture(name="section")
-def fixture_section():
-    return parse(SECTION_TABLE)
-
-
-@pytest.fixture(params=PLUGINS, name="checkplugin")
-def fixture_checkplugin(request):
-    return request.param
-
-
-@pytest.fixture(
-    params=[None, {"levels_upper": (0, 1), "horizon": 1, "period": "day"}], name="params"
-)
-def fixture_params(request):
-    return request.param
-
-
-@pytest.fixture(name="results")
-def fixture_results(checkplugin, section, params, mocker: MockerFixture):
-    params = {k: params for k in checkplugin.metrics}
-    mocker.patch(
-        "cmk.base.check_api._prediction.get_levels", return_value=(None, (2.2, 4.2, None, None))
+def generate_results(plugin: Plugin) -> CheckResult:
+    item = "item"
+    section = parse(generate_timeseries(item, 42.0, FILESTORE))
+    yield from plugin.function(
+        item=item,
+        params={k: None for k in plugin.metrics},
+        section_gcp_service_filestore=section,
+        section_gcp_assets=None,
     )
 
-    with current_host("unittest"), current_service(
-        CheckPluginName("test_check"), "unittest-service-description"
-    ):
-        results = list(
-            checkplugin.function(
-                item=ITEM,
-                params=params,
-                section_gcp_service_filestore=section,
-                section_gcp_assets=None,
-            )
-        )
-    return results, checkplugin
+
+@pytest.mark.parametrize("plugin", PLUGINS)
+def test_yield_results_as_specified(plugin) -> None:
+    results = {r for r in generate_results(plugin) if isinstance(r, Result)}
+    assert results == set(plugin.results)
 
 
-def test_no_function_section_yields_no_metric_data(checkplugin) -> None:
-    params = {k: None for k in checkplugin.metrics}
-    results = list(
-        checkplugin.function(
-            item=ITEM,
-            params=params,
-            section_gcp_service_filestore=None,
-            section_gcp_assets=None,
-        )
-    )
-    assert len(results) == 0
-
-
-def test_yield_metrics_as_specified(results) -> None:
-    results, checkplugin = results
-    res = {r.name: r for r in results if isinstance(r, Metric)}
-    assert len(res) == len(checkplugin.metrics)
-    assert set(res.keys()) == set(checkplugin.metrics)
-
-
-def test_yield_results_as_specified(results) -> None:
-    results, checkplugin = results
-    res = [r for r in results if isinstance(r, Result)]
-    assert len(res) == len(checkplugin.metrics)
-    for r in res:
-        assert r.state == State.OK
+@pytest.mark.parametrize("plugin", PLUGINS)
+def test_yield_metrics_as_specified(plugin) -> None:
+    results = {r.name for r in generate_results(plugin) if isinstance(r, Metric)}
+    assert results == set(plugin.metrics)

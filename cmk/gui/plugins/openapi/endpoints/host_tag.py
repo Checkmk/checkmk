@@ -15,7 +15,7 @@ You can find an introduction to hosts including host tags and host tag groups in
 """
 
 import json
-from typing import Any, Dict
+from typing import Any, Dict, Mapping
 
 from cmk.utils.tags import BuiltinTagConfig, TagGroup, TaggroupSpec
 
@@ -96,7 +96,7 @@ HOST_TAG_GROUP_NAME = {
     response_schema=response_schemas.DomainObject,
     permissions_required=RW_PERMISSIONS,
 )
-def create_host_tag_group(params):
+def create_host_tag_group(params: Mapping[str, Any]) -> Response:
     """Create a host tag group"""
     user.need_permission("wato.edit")
     host_tag_group_details = params["body"]
@@ -113,7 +113,7 @@ def create_host_tag_group(params):
     response_schema=response_schemas.ConcreteHostTagGroup,
     permissions_required=PERMISSIONS,
 )
-def show_host_tag_group(params):
+def show_host_tag_group(params: Mapping[str, Any]) -> Response:
     """Show a host tag group"""
     ident = params["name"]
     user.need_permission("wato.hosttags")
@@ -128,7 +128,7 @@ def show_host_tag_group(params):
     response_schema=response_schemas.DomainObjectCollection,
     permissions_required=PERMISSIONS,
 )
-def list_host_tag_groups(params):
+def list_host_tag_groups(params: Mapping[str, Any]) -> Response:
     """Show all host tag groups"""
     user.need_permission("wato.hosttags")
     tag_config = load_tag_config()
@@ -160,7 +160,7 @@ def list_host_tag_groups(params):
     permissions_required=RW_PERMISSIONS,
     response_schema=response_schemas.ConcreteHostTagGroup,
 )
-def update_host_tag_group(params):
+def update_host_tag_group(params: Mapping[str, Any]) -> Response:
     """Update a host tag group"""
     # TODO: ident verification mechanism with ParamDict replacement
     user.need_permission("wato.edit")
@@ -204,7 +204,7 @@ def update_host_tag_group(params):
     permissions_required=RW_PERMISSIONS,
     output_empty=True,
 )
-def delete_host_tag_group(params):
+def delete_host_tag_group(params: Mapping[str, Any]) -> Response:
     """Delete a host tag group"""
     user.need_permission("wato.edit")
     ident = params["name"]

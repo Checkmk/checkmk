@@ -32,7 +32,7 @@ Downtime object can have the following relations:
 
 import datetime as dt
 import json
-from typing import Literal
+from typing import Any, Literal, Mapping
 
 from cmk.utils.livestatus_helpers.expressions import And, Or
 from cmk.utils.livestatus_helpers.queries import detailed_connection, Query
@@ -114,7 +114,7 @@ class DowntimeParameter(BaseSchema):
     permissions_required=RW_PERMISSIONS,
     update_config_generation=False,
 )
-def create_host_related_downtime(params):
+def create_host_related_downtime(params: Mapping[str, Any]) -> Response:
     """Create a host related scheduled downtime"""
     body = params["body"]
     live = sites.live()
@@ -184,7 +184,7 @@ def create_host_related_downtime(params):
     permissions_required=RW_PERMISSIONS,
     update_config_generation=False,
 )
-def create_service_related_downtime(params):
+def create_service_related_downtime(params: Mapping[str, Any]) -> Response:
     """Create a service related scheduled downtime"""
     body = params["body"]
     live = sites.live()
@@ -317,7 +317,7 @@ def show_downtimes(param):
     response_schema=response_schemas.DomainObject,
     permissions_required=PERMISSIONS,
 )
-def show_downtime(params):
+def show_downtime(params: Mapping[str, Any]) -> Response:
     """Show downtime"""
     live = sites.live()
     downtime_id = params["downtime_id"]
@@ -365,7 +365,7 @@ def _serve_downtime(downtime_details):
     permissions_required=RW_PERMISSIONS,
     update_config_generation=False,
 )
-def delete_downtime(params):
+def delete_downtime(params: Mapping[str, Any]) -> Response:
     """Delete a scheduled downtime"""
     body = params["body"]
     live = sites.live()

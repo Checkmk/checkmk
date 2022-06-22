@@ -15,6 +15,8 @@ You can find more about the agent bakery and automatic agent updates of checkmk 
 in [Agent Deployment](https://docs.checkmk.com/latest/en/agent_deployment.html).
 """
 
+from typing import Any, Mapping
+
 from cmk.gui.http import Response
 from cmk.gui.plugins.openapi.restful_objects import constructors, Endpoint
 from cmk.gui.utils import agent
@@ -43,9 +45,9 @@ OS_TYPE_RAW = {
     content_type="application/octet-stream",
     query_params=[OS_TYPE_RAW],
 )
-def download_agent(params):
+def download_agent(params: Mapping[str, Any]) -> Response:
     """Download agents shipped with Checkmk"""
-    os_type: str = params.get("os_type")
+    os_type = params.get("os_type")
 
     if os_type == "windows_msi":
         agent_path = agent.packed_agent_path_windows_msi()

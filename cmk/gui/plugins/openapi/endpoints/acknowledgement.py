@@ -13,6 +13,7 @@ You can find an introduction to the acknowledgement of problems in the
 [Checkmk guide](https://docs.checkmk.com/latest/en/basics_ackn.html).
 """
 # TODO: List acknowledgments
+from typing import Any, Mapping
 from urllib.parse import unquote
 
 from cmk.utils.livestatus_helpers.expressions import And
@@ -20,6 +21,7 @@ from cmk.utils.livestatus_helpers.queries import Query
 from cmk.utils.livestatus_helpers.tables import Hosts, Services
 
 from cmk.gui import http, sites
+from cmk.gui.http import Response
 from cmk.gui.livestatus_utils.commands.acknowledgments import (
     acknowledge_host_problem,
     acknowledge_hostgroup_problem,
@@ -75,7 +77,7 @@ RW_PERMISSIONS = permissions.AllPerm(
     permissions_required=RW_PERMISSIONS,
     update_config_generation=False,
 )
-def set_acknowledgement_on_hosts(params):
+def set_acknowledgement_on_hosts(params: Mapping[str, Any]) -> Response:
     """Set acknowledgement on related hosts"""
     body = params["body"]
     live = sites.live()
@@ -165,7 +167,7 @@ def set_acknowledgement_on_hosts(params):
     permissions_required=RW_PERMISSIONS,
     update_config_generation=False,
 )
-def set_acknowledgement_on_services(params):
+def set_acknowledgement_on_services(params: Mapping[str, Any]) -> Response:
     """Set acknowledgement on related services"""
     body = params["body"]
     live = sites.live()

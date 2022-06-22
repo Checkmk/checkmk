@@ -11,7 +11,7 @@ entering the password.
 """
 
 import json
-from typing import cast
+from typing import Any, cast, Mapping
 
 from cmk.utils import version
 
@@ -61,7 +61,7 @@ RW_PERMISSIONS = permissions.AllPerm(
     response_schema=response_schemas.PasswordObject,
     permissions_required=RW_PERMISSIONS,
 )
-def create_password(params):
+def create_password(params: Mapping[str, Any]) -> Response:
     """Create a password"""
     user.need_permission("wato.edit")
     user.need_permission("wato.passwords")
@@ -97,7 +97,7 @@ def create_password(params):
     response_schema=response_schemas.PasswordObject,
     permissions_required=RW_PERMISSIONS,
 )
-def update_password(params):
+def update_password(params: Mapping[str, Any]) -> Response:
     """Update a password"""
     user.need_permission("wato.edit")
     user.need_permission("wato.passwords")
@@ -124,7 +124,7 @@ def update_password(params):
     output_empty=True,
     permissions_required=RW_PERMISSIONS,
 )
-def delete_password(params):
+def delete_password(params: Mapping[str, Any]) -> Response:
     """Delete a password"""
     user.need_permission("wato.edit")
     user.need_permission("wato.passwords")
@@ -147,7 +147,7 @@ def delete_password(params):
     response_schema=response_schemas.PasswordObject,
     permissions_required=PERMISSIONS,
 )
-def show_password(params):
+def show_password(params: Mapping[str, Any]) -> Response:
     """Show a password"""
     user.need_permission("wato.passwords")
     ident = params["name"]
@@ -169,7 +169,7 @@ def show_password(params):
     response_schema=response_schemas.DomainObjectCollection,
     permissions_required=PERMISSIONS,
 )
-def list_passwords(params):
+def list_passwords(params: Mapping[str, Any]) -> Response:
     """Show all passwords"""
     user.need_permission("wato.passwords")
     password_collection = {

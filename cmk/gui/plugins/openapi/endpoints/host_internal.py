@@ -8,7 +8,7 @@
 WARNING: Use at your own risk, not supported.
 """
 
-from typing import Literal
+from typing import Any, Literal, Mapping
 from uuid import UUID
 
 from cmk.utils.agent_registration import get_uuid_link_manager
@@ -80,7 +80,7 @@ def _link_with_uuid(
     ),
     output_empty=True,
 )
-def link_with_uuid(params) -> Response:
+def link_with_uuid(params: Mapping[str, Any]) -> Response:
     """Link a host to a UUID"""
     _link_with_uuid(
         host_name := params["host_name"],
@@ -109,7 +109,7 @@ def link_with_uuid(params) -> Response:
     response_schema=response_schemas.HostConfigSchemaInternal,
     permissions_required=permissions.Optional(permissions.Perm("wato.see_all_folders")),
 )
-def show_host(params) -> Response:
+def show_host(params: Mapping[str, Any]) -> Response:
     """Show a host"""
     host = _check_host_access_permissions(
         params["host_name"],

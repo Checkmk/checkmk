@@ -18,6 +18,8 @@ A service group object can have the following relations present in `links`:
  * `urn:org.restfulobject/rels:update` - An endpoint to change this service group.
  * `urn:org.restfulobject/rels:delete` - An endpoint to delete this service group.
 """
+from typing import Any, Mapping
+
 from cmk.utils import version
 
 import cmk.gui.watolib.groups as groups
@@ -63,7 +65,7 @@ RW_PERMISSIONS = permissions.AllPerm(
     response_schema=response_schemas.DomainObject,
     permissions_required=RW_PERMISSIONS,
 )
-def create(params):
+def create(params: Mapping[str, Any]) -> Response:
     """Create a service group"""
     user.need_permission("wato.edit")
     body = params["body"]
@@ -84,7 +86,7 @@ def create(params):
     response_schema=response_schemas.DomainObjectCollection,
     permissions_required=RW_PERMISSIONS,
 )
-def bulk_create(params):
+def bulk_create(params: Mapping[str, Any]) -> Response:
     """Bulk create service groups"""
     user.need_permission("wato.edit")
     body = params["body"]
@@ -107,7 +109,7 @@ def bulk_create(params):
     response_schema=response_schemas.LinkedValueDomainObjectCollection,
     permissions_required=PERMISSIONS,
 )
-def list_groups(params):
+def list_groups(params: Mapping[str, Any]) -> Response:
     """Show all service groups"""
     user.need_permission("wato.groups")
     collection = [
@@ -125,7 +127,7 @@ def list_groups(params):
     path_params=[NAME_FIELD],
     permissions_required=PERMISSIONS,
 )
-def show_group(params):
+def show_group(params: Mapping[str, Any]) -> Response:
     """Show a service group"""
     user.need_permission("wato.groups")
     name = params["name"]
@@ -141,7 +143,7 @@ def show_group(params):
     output_empty=True,
     permissions_required=RW_PERMISSIONS,
 )
-def delete(params):
+def delete(params: Mapping[str, Any]) -> Response:
     """Delete a service group"""
     user.need_permission("wato.edit")
     name = params["name"]
@@ -157,7 +159,7 @@ def delete(params):
     output_empty=True,
     permissions_required=RW_PERMISSIONS,
 )
-def bulk_delete(params):
+def bulk_delete(params: Mapping[str, Any]) -> Response:
     """Bulk delete service groups"""
     user.need_permission("wato.edit")
     body = params["body"]
@@ -181,7 +183,7 @@ def bulk_delete(params):
     request_schema=request_schemas.UpdateGroup,
     permissions_required=RW_PERMISSIONS,
 )
-def update(params):
+def update(params: Mapping[str, Any]) -> Response:
     """Update a service group"""
     user.need_permission("wato.edit")
     name = params["name"]
@@ -200,7 +202,7 @@ def update(params):
     response_schema=response_schemas.DomainObjectCollection,
     permissions_required=RW_PERMISSIONS,
 )
-def bulk_update(params):
+def bulk_update(params: Mapping[str, Any]) -> Response:
     """Bulk update service groups
 
     Please be aware that when doing bulk updates, it is not possible to prevent the

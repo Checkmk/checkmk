@@ -15,7 +15,7 @@ You can find an introduction to time periods in the
 import datetime as dt
 import http.client
 import json
-from typing import Any, Dict, List, Tuple, Union
+from typing import Any, Dict, List, Mapping, Tuple, Union
 
 from marshmallow.utils import from_iso_time
 
@@ -61,7 +61,7 @@ RW_PERMISSIONS = permissions.AllPerm(
     response_schema=response_schemas.DomainObject,
     permissions_required=RW_PERMISSIONS,
 )
-def create_timeperiod(params):
+def create_timeperiod(params: Mapping[str, Any]) -> Response:
     """Create a time period"""
     user.need_permission("wato.edit")
     user.need_permission("wato.timeperiods")
@@ -86,7 +86,7 @@ def create_timeperiod(params):
     output_empty=True,
     permissions_required=RW_PERMISSIONS,
 )
-def update_timeperiod(params):
+def update_timeperiod(params: Mapping[str, Any]) -> Response:
     """Update a time period"""
     user.need_permission("wato.edit")
     user.need_permission("wato.timeperiods")
@@ -125,7 +125,7 @@ def update_timeperiod(params):
     output_empty=True,
     permissions_required=RW_PERMISSIONS,
 )
-def delete(params):
+def delete(params: Mapping[str, Any]) -> Response:
     """Delete a time period"""
     user.need_permission("wato.edit")
     user.need_permission("wato.timeperiods")
@@ -146,7 +146,7 @@ def delete(params):
     response_schema=response_schemas.ConcreteTimePeriod,
     permissions_required=PERMISSIONS,
 )
-def show_time_period(params):
+def show_time_period(params: Mapping[str, Any]) -> Response:
     """Show a time period"""
     user.need_permission("wato.timeperiods")
     name = params["name"]
@@ -164,7 +164,7 @@ def show_time_period(params):
     response_schema=response_schemas.DomainObjectCollection,
     permissions_required=PERMISSIONS,
 )
-def list_time_periods(params):
+def list_time_periods(params: Mapping[str, Any]) -> Response:
     """Show all time periods"""
     user.need_permission("wato.timeperiods")
     time_periods = []

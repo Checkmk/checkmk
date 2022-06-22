@@ -12,7 +12,7 @@ You can find an introduction to services including service discovery in the
 [Checkmk guide](https://docs.checkmk.com/latest/en/wato_services.html).
 """
 import json
-from typing import List, Optional, Sequence
+from typing import Any, List, Mapping, Optional, Sequence
 
 from cmk.automations.results import CheckPreviewEntry
 
@@ -103,7 +103,7 @@ DISCOVERY_ACTION = {
         }
     ],
 )
-def show_services(params) -> Response:
+def show_services(params: Mapping[str, Any]) -> Response:
     """Show all services of specific phase"""
     host = Host.load_host(params["host_name"])
     discovery_request = StartDiscoveryRequest(
@@ -179,7 +179,7 @@ class UpdateDiscoveryPhase(BaseSchema):
         ]
     ),
 )
-def update_service_phase(params) -> Response:
+def update_service_phase(params: Mapping[str, Any]) -> Response:
     """Update the phase of a service"""
     body = params["body"]
     host = Host.load_host(params["host_name"])
@@ -252,7 +252,7 @@ class DiscoverServices(BaseSchema):
     request_schema=DiscoverServices,
     response_schema=response_schemas.DomainObject,
 )
-def execute(params) -> Response:
+def execute(params: Mapping[str, Any]) -> Response:
     """Execute a service discovery on a host"""
     host = Host.load_host(params["host_name"])
     body = params["body"]
@@ -440,7 +440,7 @@ class BulkDiscovery(BaseSchema):
     request_schema=BulkDiscovery,
     response_schema=response_schemas.DiscoveryBackgroundJobStatusObject,
 )
-def execute_bulk_discovery(params) -> Response:
+def execute_bulk_discovery(params: Mapping[str, Any]) -> Response:
     """Start a bulk discovery job"""
     body = params["body"]
     job = BulkDiscoveryBackgroundJob()
@@ -470,7 +470,7 @@ def execute_bulk_discovery(params) -> Response:
     },
     response_schema=response_schemas.DiscoveryBackgroundJobStatusObject,
 )
-def show_bulk_discovery_status(params) -> Response:
+def show_bulk_discovery_status(params: Mapping[str, Any]) -> Response:
     """Show the status of a bulk discovery job"""
 
     job_id = params["job_id"]

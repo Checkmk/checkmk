@@ -16,6 +16,8 @@ You can find an introduction to the configuration of Checkmk including activatio
 [Checkmk guide](https://docs.checkmk.com/latest/en/wato.html).
 """
 
+from typing import Any, Mapping
+
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.http import request, Response
 from cmk.gui.logged_in import user
@@ -89,7 +91,7 @@ PERMISSIONS = permissions.AllPerm(
         ]
     ),
 )
-def activate_changes(params):
+def activate_changes(params: Mapping[str, Any]) -> Response:
     """Activate pending changes"""
     user.need_permission("wato.activate")
     body = params["body"]
@@ -151,7 +153,7 @@ def _serve_activation_run(activation_id: str, is_running: bool = False) -> Respo
     permissions_required=PERMISSIONS,
     output_empty=True,
 )
-def activate_changes_wait_for_completion(params):
+def activate_changes_wait_for_completion(params: Mapping[str, Any]) -> Response:
     """Wait for activation completion
 
     This endpoint will periodically redirect on itself to prevent timeouts.
@@ -184,7 +186,7 @@ def activate_changes_wait_for_completion(params):
     permissions_required=PERMISSIONS,
     response_schema=response_schemas.DomainObject,
 )
-def show_activation(params):
+def show_activation(params: Mapping[str, Any]) -> Response:
     """Show the activation status"""
     user.need_permission("wato.activate")
     activation_id = params["activation_id"]
@@ -207,7 +209,7 @@ def show_activation(params):
     permissions_required=RO_PERMISSIONS,
     response_schema=response_schemas.DomainObjectCollection,
 )
-def list_activations(params):
+def list_activations(params: Mapping[str, Any]) -> Response:
     """Show all currently running activations"""
     manager = ActivateChangesManager()
     activations = []

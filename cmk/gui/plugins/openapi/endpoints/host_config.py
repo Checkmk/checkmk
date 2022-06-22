@@ -41,7 +41,7 @@ A host_config object can have the following relations present in `links`:
 import itertools
 import json
 import operator
-from typing import Any, Dict, Iterable, List, Sequence
+from typing import Any, Dict, Iterable, List, Mapping, Sequence
 from urllib.parse import urlencode
 
 import cmk.utils.version as cmk_version
@@ -114,7 +114,7 @@ UPDATE_PERMISSIONS = permissions.AllPerm(
     query_params=[BAKE_AGENT_PARAM],
     permissions_required=PERMISSIONS,
 )
-def create_host(params):
+def create_host(params: Mapping[str, Any]) -> Response:
     """Create a host"""
     user.need_permission("wato.edit")
     body = params["body"]
@@ -140,7 +140,7 @@ def create_host(params):
     permissions_required=PERMISSIONS,
     query_params=[BAKE_AGENT_PARAM],
 )
-def create_cluster_host(params):
+def create_cluster_host(params: Mapping[str, Any]) -> Response:
     """Create a cluster host
 
     A cluster host groups many hosts (called nodes in this context) into a conceptual cluster.
@@ -189,7 +189,7 @@ class BulkHostActionWithFailedHosts(response_schemas.ApiError):
     permissions_required=PERMISSIONS,
     query_params=[BAKE_AGENT_PARAM],
 )
-def bulk_create_hosts(params):
+def bulk_create_hosts(params: Mapping[str, Any]) -> Response:
     """Bulk create hosts"""
     user.need_permission("wato.edit")
     body = params["body"]
@@ -283,7 +283,7 @@ def _host_collection(hosts: Iterable[CREHost]) -> dict[str, Any]:
     response_schema=response_schemas.ObjectProperty,
     permissions_required=UPDATE_PERMISSIONS,
 )
-def update_nodes(params):
+def update_nodes(params: Mapping[str, Any]) -> Response:
     """Update the nodes of a cluster host"""
     user.need_permission("wato.edit")
     user.need_permission("wato.edit_hosts")
@@ -314,7 +314,7 @@ def update_nodes(params):
     response_schema=response_schemas.HostConfigSchema,
     permissions_required=UPDATE_PERMISSIONS,
 )
-def update_host(params):
+def update_host(params: Mapping[str, Any]) -> Response:
     """Update a host"""
     user.need_permission("wato.edit")
     user.need_permission("wato.edit_hosts")
@@ -363,7 +363,7 @@ def update_host(params):
     },
     permissions_required=UPDATE_PERMISSIONS,
 )
-def bulk_update_hosts(params):
+def bulk_update_hosts(params: Mapping[str, Any]) -> Response:
     """Bulk update hosts
 
     Please be aware that when doing bulk updates, it is not possible to prevent the
@@ -428,7 +428,7 @@ def bulk_update_hosts(params):
         ]
     ),
 )
-def rename_host(params):
+def rename_host(params: Mapping[str, Any]) -> Response:
     """Rename a host"""
     user.need_permission("wato.edit")
     user.need_permission("wato.rename_hosts")
@@ -468,7 +468,7 @@ def rename_host(params):
         ]
     ),
 )
-def move(params):
+def move(params: Mapping[str, Any]) -> Response:
     """Move a host to another folder"""
     user.need_permission("wato.edit")
     user.need_permission("wato.move_hosts")
@@ -503,7 +503,7 @@ def move(params):
     output_empty=True,
     permissions_required=PERMISSIONS,
 )
-def delete(params):
+def delete(params: Mapping[str, Any]) -> Response:
     """Delete a host"""
     user.need_permission("wato.edit")
     host_name = params["host_name"]
@@ -522,7 +522,7 @@ def delete(params):
     permissions_required=PERMISSIONS,
     output_empty=True,
 )
-def bulk_delete(params):
+def bulk_delete(params: Mapping[str, Any]) -> Response:
     """Bulk delete hosts"""
     user.need_permission("wato.edit")
     body = params["body"]
@@ -555,7 +555,7 @@ def bulk_delete(params):
     response_schema=response_schemas.HostConfigSchema,
     permissions_required=permissions.Optional(permissions.Perm("wato.see_all_folders")),
 )
-def show_host(params):
+def show_host(params: Mapping[str, Any]) -> Response:
     """Show a host"""
     host_name = params["host_name"]
     host: CREHost = Host.load_host(host_name)

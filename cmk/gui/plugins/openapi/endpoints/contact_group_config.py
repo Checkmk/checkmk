@@ -20,6 +20,8 @@ A contact group object can have the following relations present in `links`:
  * `urn:org.restfulobject/rels:delete` - An endpoint to delete this contact group.
 
 """
+from typing import Any, Mapping
+
 from cmk.utils import version
 
 from cmk.gui.http import Response
@@ -71,7 +73,7 @@ RW_PERMISSIONS = permissions.AllPerm(
     response_schema=response_schemas.DomainObject,
     permissions_required=RW_PERMISSIONS,
 )
-def create(params):
+def create(params: Mapping[str, Any]) -> Response:
     """Create a contact group"""
     user.need_permission("wato.edit")
     body = params["body"]
@@ -92,7 +94,7 @@ def create(params):
     response_schema=response_schemas.DomainObjectCollection,
     permissions_required=RW_PERMISSIONS,
 )
-def bulk_create(params):
+def bulk_create(params: Mapping[str, Any]) -> Response:
     """Bulk create host groups"""
     user.need_permission("wato.edit")
     body = params["body"]
@@ -115,7 +117,7 @@ def bulk_create(params):
     response_schema=response_schemas.LinkedValueDomainObjectCollection,
     permissions_required=PERMISSIONS,
 )
-def list_group(params):
+def list_group(params: Mapping[str, Any]) -> Response:
     """Show all contact groups"""
     user.need_permission("wato.users")
     collection = [
@@ -135,7 +137,7 @@ def list_group(params):
     path_params=[NAME_FIELD],
     permissions_required=PERMISSIONS,
 )
-def show(params):
+def show(params: Mapping[str, Any]) -> Response:
     """Show a contact group"""
     name = params["name"]
     group = fetch_group(name, "contact")
@@ -150,7 +152,7 @@ def show(params):
     output_empty=True,
     permissions_required=RW_PERMISSIONS,
 )
-def delete(params):
+def delete(params: Mapping[str, Any]) -> Response:
     """Delete a contact group"""
     user.need_permission("wato.edit")
     name = params["name"]
@@ -169,7 +171,7 @@ def delete(params):
     output_empty=True,
     permissions_required=PERMISSIONS,
 )
-def bulk_delete(params):
+def bulk_delete(params: Mapping[str, Any]) -> Response:
     """Bulk delete contact groups"""
     body = params["body"]
     entries = body["entries"]
@@ -198,7 +200,7 @@ def bulk_delete(params):
     request_schema=request_schemas.UpdateGroup,
     permissions_required=RW_PERMISSIONS,
 )
-def update(params):
+def update(params: Mapping[str, Any]) -> Response:
     """Update a contact group"""
     user.need_permission("wato.edit")
     name = params["name"]
@@ -217,7 +219,7 @@ def update(params):
     response_schema=response_schemas.DomainObjectCollection,
     permissions_required=PERMISSIONS,
 )
-def bulk_update(params):
+def bulk_update(params: Mapping[str, Any]) -> Response:
     """Bulk update contact groups
 
     Please be aware that when doing bulk updates, it is not possible to prevent the

@@ -33,7 +33,7 @@ A folder_config object can have the following relations present in `links`:
 
 
 """
-from typing import List
+from typing import Any, List, Mapping
 
 from werkzeug.datastructures import ETags
 
@@ -95,7 +95,7 @@ UPDATE_PERMISSIONS = permissions.AllPerm(
     request_schema=request_schemas.CreateFolder,
     permissions_required=RW_PERMISSIONS,
 )
-def create(params):
+def create(params: Mapping[str, Any]) -> Response:
     """Create a folder"""
     user.need_permission("wato.edit")
     put_body = params["body"]
@@ -124,7 +124,7 @@ def create(params):
     response_schema=response_schemas.HostConfigCollection,
     permissions_required=permissions.Optional(permissions.Perm("wato.see_all_folders")),
 )
-def hosts_of_folder(params):
+def hosts_of_folder(params: Mapping[str, Any]) -> Response:
     """Show all hosts in a folder"""
     folder: CREFolder = params["folder"]
     folder.need_permission("read")
@@ -141,7 +141,7 @@ def hosts_of_folder(params):
     request_schema=request_schemas.UpdateFolder,
     permissions_required=UPDATE_PERMISSIONS,
 )
-def update(params):
+def update(params: Mapping[str, Any]) -> Response:
     """Update a folder"""
     user.need_permission("wato.edit")
     user.need_permission("wato.edit_folders")
@@ -193,7 +193,7 @@ def update(params):
     request_schema=request_schemas.BulkUpdateFolder,
     permissions_required=UPDATE_PERMISSIONS,
 )
-def bulk_update(params):
+def bulk_update(params: Mapping[str, Any]) -> Response:
     """Bulk update folders
 
     Please be aware that when doing bulk updates, it is not possible to prevent the
@@ -256,7 +256,7 @@ def bulk_update(params):
     output_empty=True,
     permissions_required=RW_PERMISSIONS,
 )
-def delete(params):
+def delete(params: Mapping[str, Any]) -> Response:
     """Delete a folder"""
     user.need_permission("wato.edit")
     folder = params["folder"]
@@ -275,7 +275,7 @@ def delete(params):
     etag="both",
     permissions_required=RW_PERMISSIONS,
 )
-def move(params):
+def move(params: Mapping[str, Any]) -> Response:
     """Move a folder"""
     user.need_permission("wato.edit")
     folder: CREFolder = params["folder"]
@@ -327,7 +327,7 @@ def move(params):
     response_schema=response_schemas.FolderCollection,
     permissions_required=permissions.Optional(permissions.Perm("wato.see_all_folders")),
 )
-def list_folders(params):
+def list_folders(params: Mapping[str, Any]) -> Response:
     """Show all folders"""
     parent: CREFolder = params["parent"]
     if params["recursive"]:
@@ -400,7 +400,7 @@ def _folders_collection(
     path_params=[PATH_FOLDER_FIELD],
     permissions_required=permissions.Optional(permissions.Perm("wato.see_all_folders")),
 )
-def show_folder(params):
+def show_folder(params: Mapping[str, Any]) -> Response:
     """Show a folder"""
     folder: CREFolder = params["folder"]
     folder.need_permission("read")

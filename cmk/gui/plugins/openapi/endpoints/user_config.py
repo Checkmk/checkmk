@@ -67,7 +67,7 @@ RW_PERMISSIONS = permissions.AllPerm(
     response_schema=response_schemas.UserObject,
     permissions_required=PERMISSIONS,
 )
-def show_user(params):
+def show_user(params: Mapping[str, Any]) -> Response:
     """Show a user"""
     user.need_permission("wato.users")
     username = params["username"]
@@ -88,7 +88,7 @@ def show_user(params):
     response_schema=response_schemas.UserCollection,
     permissions_required=PERMISSIONS,
 )
-def list_users(params):
+def list_users(params: Mapping[str, Any]) -> Response:
     """Show all users"""
     user.need_permission("wato.users")
     users = []
@@ -115,7 +115,7 @@ def list_users(params):
         ]
     ),
 )
-def create_user(params):
+def create_user(params: Mapping[str, Any]) -> Response:
     """Create a user"""
     api_attrs = params["body"]
     username = api_attrs["username"]
@@ -146,7 +146,7 @@ def create_user(params):
     output_empty=True,
     permissions_required=RW_PERMISSIONS,
 )
-def delete_user(params):
+def delete_user(params: Mapping[str, Any]) -> Response:
     """Delete a user"""
     username = params["username"]
     try:
@@ -170,7 +170,7 @@ def delete_user(params):
     response_schema=response_schemas.UserObject,
     permissions_required=RW_PERMISSIONS,
 )
-def edit_user(params):
+def edit_user(params: Mapping[str, Any]) -> Response:
     """Edit a user"""
     # last_pw_change & serial must be changed manually if edit happens
     username = params["username"]

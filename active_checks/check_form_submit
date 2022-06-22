@@ -165,7 +165,7 @@ def init_http(validate_server_cert: bool) -> urllib.request.OpenerDirector:
     )
 
 
-def open_url(
+def open_url(  # type:ignore[no-untyped-def]
     *,
     client: urllib.request.OpenerDirector,
     url: str,
@@ -261,7 +261,7 @@ class FormParser(html.parser.HTMLParser):
 # One form found and no form_name given, use that one
 # Loop all forms for the given form_name, use the matching one
 # otherwise raise an exception
-def parse_form(content: str, form_name: str):
+def parse_form(content: str, form_name: str):  # type:ignore[no-untyped-def]
     parser = FormParser()
     parser.feed(content)
     forms = parser.forms
@@ -298,7 +298,7 @@ def parse_form(content: str, form_name: str):
     return form
 
 
-def update_form_vars(form_elem, params: Mapping[str, str]):
+def update_form_vars(form_elem, params: Mapping[str, str]):  # type:ignore[no-untyped-def]
     v = form_elem["elements"].copy()
     v.update(params)
     return v
@@ -356,7 +356,7 @@ def raise_host_state(
         new_state(0, "Form has been submitted")
 
 
-def check_host_states(
+def check_host_states(  # type:ignore[no-untyped-def]
     states,
     levels: Optional[tuple[int, int]],
 ) -> tuple[int, str]:

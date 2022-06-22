@@ -303,7 +303,7 @@ program_start num_hosts num_services core_pid'
                 self._connections[site_name] = MockSingleSiteConnection(site_name, self)
         return self._connections
 
-    def create_socket(self, family, site_name: Optional[SiteName]):
+    def create_socket(self, family, site_name: Optional[SiteName]):  # type:ignore[no-untyped-def]
         if site_name is None:  # plain SingleConnection instantiated by hand
             site_name = self.sites[0]
         return self.connections[site_name].socket
@@ -328,11 +328,15 @@ program_start num_hosts num_services core_pid'
 
         return result, output_format
 
-    def enabled_and_disabled_sites(self, user_id) -> Tuple[dict, dict]:
+    def enabled_and_disabled_sites(  # type:ignore[no-untyped-def]
+        self, user_id
+    ) -> Tuple[dict, dict]:
         """This method is used to inject the currently configured sites into livestatus.py"""
         return {site_name: {"socket": "unix:"} for site_name in self.sites}, {}
 
-    def __call__(self, expect_status_query=True) -> MockLiveStatusConnection:
+    def __call__(  # type:ignore[no-untyped-def]
+        self, expect_status_query=True
+    ) -> MockLiveStatusConnection:
         self._expect_status_query = expect_status_query
         return self
 
@@ -594,7 +598,7 @@ def remove_headers(query: str, headers: List[str]) -> str:
 
 
 class MockSingleSiteConnection:
-    def __init__(self, site_name, multisite_connection) -> None:
+    def __init__(self, site_name, multisite_connection) -> None:  # type:ignore[no-untyped-def]
         self._site_name = site_name
         self._multisite = multisite_connection
         self._last_response: Optional[io.StringIO] = None

@@ -1053,7 +1053,9 @@ class MultiSiteConnection(Helpers):
                 return True
         return False
 
-    def set_output_format(self, output_format: LivestatusOutputFormat):
+    def set_output_format(  # type:ignore[no-untyped-def]
+        self, output_format: LivestatusOutputFormat
+    ):
         for connected_site in self.connections:
             connected_site.connection.set_output_format(output_format)
 
@@ -1267,7 +1269,7 @@ class LocalConnection(SingleSiteConnection):
         super().__init__("unix:" + omd_root + "/tmp/run/live", SiteId("local"), *args, **kwargs)
 
 
-def _combine_query(query: str, headers: Union[str, List[str]]):
+def _combine_query(query: str, headers: Union[str, List[str]]):  # type:ignore[no-untyped-def]
     """Combine a query with additional headers
 
     Examples:

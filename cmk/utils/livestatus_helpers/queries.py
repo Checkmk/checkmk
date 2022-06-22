@@ -231,7 +231,7 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
     def __str__(self) -> str:
         return self.compile()
 
-    def first(self, sites) -> Optional[ResultRow]:
+    def first(self, sites) -> Optional[ResultRow]:  # type:ignore[no-untyped-def]
         """Fetch the first row of the result.
 
         If the result is empty, `None` will be returned.
@@ -246,7 +246,7 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
         """
         return next(self.iterate(sites), None)
 
-    def first_value(self, sites) -> Optional[Any]:
+    def first_value(self, sites) -> Optional[Any]:  # type:ignore[no-untyped-def]
         """Fetch one cell from the result.
 
         If no result could be found, None is returned.
@@ -290,10 +290,10 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
             return list(entry.values())[0]
         return None
 
-    def fetchall(self, sites) -> List[ResultRow]:
+    def fetchall(self, sites) -> List[ResultRow]:  # type:ignore[no-untyped-def]
         return list(self.iterate(sites))
 
-    def fetchone(self, sites) -> ResultRow:
+    def fetchone(self, sites) -> ResultRow:  # type:ignore[no-untyped-def]
         """Fetch one row of the result.
 
         If the result from livestatus is more or less than exactly one row long it
@@ -341,7 +341,7 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
             raise ValueError(f"Expected one row, got {len(result)} row(s).")
         return result[0]
 
-    def value(self, sites) -> Any:
+    def value(self, sites) -> Any:  # type:ignore[no-untyped-def]
         """Fetch one cell from the result.
 
         For this to work, the result must be exactly one row long and this row needs to have
@@ -380,7 +380,7 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
             raise ValueError("Number of columns need to be exactly 1 to give a value.")
         return list(self.fetchone(sites).values())[0]
 
-    def fetch_values(self, sites) -> List[List[Any]]:
+    def fetch_values(self, sites) -> List[List[Any]]:  # type:ignore[no-untyped-def]
         """Return the result coming from LiveStatus.
 
         This returns a list with each row being a list of len(number of columns requested).
@@ -394,7 +394,7 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
         """
         return sites.query(self.compile())
 
-    def iterate(self, sites) -> Generator[ResultRow, None, None]:
+    def iterate(self, sites) -> Generator[ResultRow, None, None]:  # type:ignore[no-untyped-def]
         """Return a generator of the result.
 
         Args:
@@ -436,7 +436,7 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
             # This is Dict[str, Any], just with Attribute based access. Can't do much about this.
             yield ResultRow(list(zip(names, entry)))
 
-    def to_dict(self, sites) -> Dict[Any, Any]:
+    def to_dict(self, sites) -> Dict[Any, Any]:  # type:ignore[no-untyped-def]
         """Return a dict from the result set.
 
         The first column will be the mapping key, the second one the value.

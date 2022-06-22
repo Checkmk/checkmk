@@ -1,0 +1,13 @@
+Title: Fix service level filter
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1655925799
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p4
+
+The filter "Host service level" and "Service service level" returned wrong
+results.

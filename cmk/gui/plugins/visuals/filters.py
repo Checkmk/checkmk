@@ -12,7 +12,6 @@ from typing import Any, Callable, Dict, Iterable, List, Literal, Optional, Tuple
 import livestatus
 
 import cmk.utils.version as cmk_version
-from cmk.utils.prediction import lq_logic
 
 import cmk.gui.bi as bi
 import cmk.gui.mkeventd as mkeventd
@@ -1741,35 +1740,48 @@ class FilterECServiceLevelRange(Filter):
         )
         html.close_div()
 
-    def filter(self, value: FilterHTTPVariables) -> FilterHeader:
-        lower_bound = value.get(self.lower_bound_varname)
-        upper_bound = value.get(self.upper_bound_varname)
+    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         # NOTE: We need this special case only because our construction of the
         # disjunction is broken. We should really have a Livestatus Query DSL...
-        if not lower_bound and not upper_bound:
+        bounds: FilterHTTPVariables = context.get(self.ident, {})
+        if not any(bounds):
+            return rows
+
+        lower_bound: Optional[str] = bounds.get(self.lower_bound_varname)
+        upper_bound: Optional[str] = bounds.get(self.upper_bound_varname)
+        # If user only chooses "From" or "To", use same value from the choosen
+        # field for the empty field and update filter form with that value
+        if not lower_bound:
+            lower_bound = upper_bound
+            assert upper_bound is not None
+            html.request.set_var(self.lower_bound_varname, upper_bound)
+        if not upper_bound:
+            upper_bound = lower_bound
+            assert lower_bound is not None
+            html.request.set_var(self.upper_bound_varname, lower_bound)
+
+        filtered_rows: Rows = []
+        assert lower_bound is not None
+        assert upper_bound is not None
+        for row in rows:
+            # Example lq output (99 = service level):
+            # host: [,4,127.0.0.1,/wato/hosts.mk,99,,,/wato/ auto-piggyback checkmk-agent ...]
+            # service: [custom_2, custom_1, 99]
+            service_level = (
+                int(row["%s_custom_variable_values" % self.info][4])
+                if self.info == "host"
+                else int(row["%s_custom_variable_values" % self.info][-1])
+            )
+            if int(lower_bound) <= service_level <= int(upper_bound):
+                filtered_rows.append(row)
+
+        return filtered_rows
+
+    def filter(self, value: FilterHTTPVariables) -> FilterHeader:
+        if not value.get(self.lower_bound_varname) and not value.get(self.upper_bound_varname):
             return ""
 
-        if lower_bound:
-            match_lower = lambda val, lo=int(lower_bound): lo <= val
-        else:
-            match_lower = lambda val, lo=0: True
-
-        if upper_bound:
-            match_upper = lambda val, hi=int(upper_bound): val <= hi
-        else:
-            match_upper = lambda val, hi=0: True
-
-        filterline = "Filter: %s_custom_variable_names >= EC_SL\n" % self.info
-
-        filterline_values = [
-            str(val)
-            for val, _readable in config.mkeventd_service_levels
-            if match_lower(val) and match_upper(val)
-        ]
-
-        return filterline + lq_logic(
-            "Filter: %s_custom_variable_values >=" % self.info, filterline_values, "Or"
-        )
+        return "Filter: %s_custom_variable_names >= EC_SL\n" % self.info
 
 
 filter_registry.register(

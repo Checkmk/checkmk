@@ -357,7 +357,9 @@ def parse_node_resources(node: client.V1Node) -> Dict[str, api.NodeResources]:
     return node_resources(capacity, allocatable)
 
 
-def node_resources(capacity, allocatable) -> Dict[str, api.NodeResources]:
+def node_resources(  # type:ignore[no-untyped-def]
+    capacity, allocatable
+) -> Dict[str, api.NodeResources]:
     resources = {
         "capacity": api.NodeResources(),
         "allocatable": api.NodeResources(),
@@ -483,7 +485,7 @@ def parse_deployment_spec(deployment_spec: client.V1DeploymentSpec) -> api.Deplo
     raise ValueError(f"Unknown strategy type: {deployment_spec.strategy.type}")
 
 
-def deployment_from_client(
+def deployment_from_client(  # type:ignore[no-untyped-def]
     deployment: client.V1Deployment, pod_uids=Sequence[api.PodUID]
 ) -> api.Deployment:
     return api.Deployment(
@@ -542,7 +544,7 @@ def parse_daemonset_spec(daemonset_spec: client.V1DaemonSetSpec) -> api.DaemonSe
     raise ValueError(f"Unknown strategy type: {daemonset_spec.update_strategy.type}")
 
 
-def daemonset_from_client(
+def daemonset_from_client(  # type:ignore[no-untyped-def]
     daemonset: client.V1DaemonSet, pod_uids=Sequence[api.PodUID]
 ) -> api.DaemonSet:
     return api.DaemonSet(
@@ -581,7 +583,7 @@ def parse_statefulset_spec(statefulset_spec: client.V1StatefulSetSpec) -> api.St
     raise ValueError(f"Unknown strategy type: {statefulset_spec.update_strategy.type}")
 
 
-def statefulset_from_client(
+def statefulset_from_client(  # type:ignore[no-untyped-def]
     statefulset: client.V1StatefulSet, pod_uids=Sequence[api.PodUID]
 ) -> api.StatefulSet:
     return api.StatefulSet(
@@ -622,7 +624,9 @@ def parse_resource_quota_spec(
     )
 
 
-def parse_resource_requirement(resource: Literal["memory", "cpu"], hard: Mapping[str, str]):
+def parse_resource_requirement(  # type:ignore[no-untyped-def]
+    resource: Literal["memory", "cpu"], hard: Mapping[str, str]
+):
     # request & limit are only defined once for each requirement. It is possible to double
     # define them in the yaml file but only one value is taken into account.
     requirements = {}

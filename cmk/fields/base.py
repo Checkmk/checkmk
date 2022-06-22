@@ -11,7 +11,7 @@ from marshmallow import fields, ValidationError
 
 
 class OpenAPIAttributes:
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args, **kwargs) -> None:  # type:ignore[no-untyped-def]
         metadata = kwargs.setdefault("metadata", {})
         for key in [
             "description",
@@ -200,7 +200,7 @@ class Integer(OpenAPIAttributes, fields.Integer):
         return value
 
 
-def _freeze(obj: Any, partial: Optional[Tuple[str, ...]] = None):
+def _freeze(obj: Any, partial: Optional[Tuple[str, ...]] = None):  # type:ignore[no-untyped-def]
     """Freeze all the things, so we can put them in a set.
 
     Examples:
@@ -252,7 +252,9 @@ class UniqueFields:
         ),
     }
 
-    def _verify_unique_schema_entries(self: HasMakeError, value, _fields):
+    def _verify_unique_schema_entries(  # type:ignore[no-untyped-def]
+        self: HasMakeError, value, _fields
+    ):
         required_fields = tuple(name for name, field in _fields.items() if field.required)
         seen = set()
         for idx, entry in enumerate(value, start=1):
@@ -280,7 +282,7 @@ class UniqueFields:
 
             seen.add(entry_hash)
 
-    def _verify_unique_scalar_entries(self: HasMakeError, value):
+    def _verify_unique_scalar_entries(self: HasMakeError, value):  # type:ignore[no-untyped-def]
         # FIXME: Pretty sure that List(List(List(...))) will break this.
         #        I have yet to see this use-case though.
         seen = set()

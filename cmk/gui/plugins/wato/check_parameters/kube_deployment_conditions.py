@@ -26,12 +26,15 @@ def _parameter_valuespec():
         elements=[
             (
                 "progressing",
-                age_levels_dropdown(_("Time until alert, if deployment not in progressing")),
+                age_levels_dropdown(_("Time until alert, if PROGRESSING condition is false")),
             ),
-            ("available", age_levels_dropdown(_("Time until alert, if deployment not available"))),
+            (
+                "available",
+                age_levels_dropdown(_("Time until alert, if AVAILABLE condition is false")),
+            ),
             (
                 "replicafailure",
-                age_levels_dropdown(_("Time until alert, if deployment in replica failure")),
+                age_levels_dropdown(_("Time until alert, if REPLICAFAILURE condition is true")),
             ),
         ],
         optional_keys=["progressing", "available", "replicafailure"],

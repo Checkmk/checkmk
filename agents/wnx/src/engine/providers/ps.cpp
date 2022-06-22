@@ -117,20 +117,18 @@ std::string ExtractProcessOwner(HANDLE process) {
 
     // Some vars that we may need
     SID_NAME_USE snu_sid_name_use{SidTypeUser};
-    DWORD user_name_length{MAX_PATH * 2};
-    DWORD domain_name_length{MAX_PATH * 2};
-    std::wstring user_name;
-    user_name.resize(user_name_length);
-    std::wstring domain_name;
-    domain_name.resize(domain_name_length);
+    DWORD user_name_length{MAX_PATH};
+    std::vector<wchar_t> user_name(user_name_length, 0);
+    DWORD domain_name_length{MAX_PATH};
+    std::vector<wchar_t> domain_name(domain_name_length, 0);
 
     // Retrieve user name and domain name based on user's SID.
     if (::LookupAccountSidW(nullptr, user_token_data->User.Sid,
                             user_name.data(), &user_name_length,
                             domain_name.data(), &domain_name_length,
                             &snu_sid_name_use) == TRUE) {
-        std::string out = "\\\\" + wtools::ToUtf8(domain_name) + "\\" +
-                          wtools::ToUtf8(user_name);
+        std::string out = "\\\\" + wtools::ToUtf8(domain_name.data()) + "\\" +
+                          wtools::ToUtf8(user_name.data());
         return out;
     }
 
@@ -281,7 +279,7 @@ int64_t GetUint32AsInt64(IWbemClassObject *wbem_object,
     return 0;
 };
 
-std::string GetProcessOwner(int64_t pid) {
+std::string GetProcessOwner(uint64_t pid) {
     auto process_id = static_cast<DWORD>(pid);
     auto *process_handle = ::OpenProcess(
         PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, process_id);

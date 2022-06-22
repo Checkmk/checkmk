@@ -48,6 +48,7 @@ TEST(PsTest, Integration) {
                   out.find("svchost.exe\t-k") != std::string::npos);
         auto all = tools::SplitString(out, "\n");
         for (const auto &in : all) {
+            EXPECT_LE(in.length(), 512U) << in;
             auto by_tab = tools::SplitString(in, "\t");
             EXPECT_TRUE(all.size() > 10);
             SCOPED_TRACE(fmt::format("'{}'", in));
@@ -198,6 +199,21 @@ TEST(PsTest, GetProcessListFromWmi) {
     auto table = tools::SplitString(processes, L"\n");
     EXPECT_TRUE(!processes.empty());
     EXPECT_GT(table.size(), 10UL);
+}
+
+bool IsAccountExist(const std::string &account) {
+    SID_NAME_USE snu;
+    SID sid{0};
+    auto sz = static_cast<DWORD>(sizeof(sid));
+    DWORD rd_size{0};
+    char *rd{nullptr};
+    auto succ = ::LookupAccountNameA(nullptr, account.c_str(), &sid, &sz, rd,
+                                     &rd_size, &snu);
+    return succ || ::GetLastError() != ERROR_INSUFFICIENT_BUFFER;
+}
+TEST(PsTest, GetProcessOwner) {
+    auto name = GetProcessOwner(GetCurrentProcessId());
+    ASSERT_TRUE(IsAccountExist(name));
 }
 
 }  // namespace cma::provider

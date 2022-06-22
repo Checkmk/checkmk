@@ -189,9 +189,9 @@ def check_network_fs_mount(
         df_check_filesystem_single(
             value_store=get_value_store(),
             mountpoint=item,
-            size_mb=size_mb,
-            avail_mb=free_mb,
-            reserved_mb=0,
+            filesystem_size=size_mb,
+            free_space=free_mb,
+            reserved_space=0,
             inodes_total=None,
             inodes_avail=None,
             params=params,

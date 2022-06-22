@@ -481,45 +481,45 @@ def df_discovery(params, mplist):
 def df_check_filesystem_single(
     value_store: MutableMapping[str, Any],
     mountpoint: str,
-    size_mb: Optional[float],
-    avail_mb: Optional[float],
-    reserved_mb: Optional[float],
+    filesystem_size: Optional[float],
+    free_space: Optional[float],
+    reserved_space: Optional[float],
     inodes_total: Optional[float],
     inodes_avail: Optional[float],
     params: Mapping[str, Any],
     this_time=None,
 ) -> CheckResult:
-    if size_mb == 0:
+    if filesystem_size == 0:
         yield Result(state=State.WARN, summary="Size of filesystem is 0 B")
         return
 
-    if (size_mb is None) or (avail_mb is None) or (reserved_mb is None):
+    if (filesystem_size is None) or (free_space is None) or (reserved_space is None):
         yield Result(state=State.OK, summary="no filesystem size information")
         return
 
     # params might still be a tuple
     show_levels, subtract_reserved, show_reserved = (
         params.get("show_levels", False),
-        params.get("subtract_reserved", False) and reserved_mb > 0,
-        params.get("show_reserved") and reserved_mb > 0,
+        params.get("subtract_reserved", False) and reserved_space > 0,
+        params.get("show_reserved") and reserved_space > 0,
     )
 
-    used_mb = size_mb - avail_mb
-    used_max = size_mb
+    used_space = filesystem_size - free_space
+    allocatable_filesystem_size = filesystem_size
     if subtract_reserved:
-        used_mb -= reserved_mb
-        used_max -= reserved_mb
+        used_space -= reserved_space
+        allocatable_filesystem_size -= reserved_space
 
     # Get warning and critical levels already with 'magic factor' applied
-    filesystem_levels = get_filesystem_levels(size_mb / 1024.0, params)
+    filesystem_levels = get_filesystem_levels(filesystem_size / 1024.0, params)
     warn_mb, crit_mb = (
         filesystem_levels.warn_absolute / 1024**2,
         filesystem_levels.crit_absolute / 1024**2,
     )
 
-    used_hr = render.bytes(used_mb * 1024**2)
-    used_max_hr = render.bytes(used_max * 1024**2)
-    used_perc_hr = render.percent(100.0 * used_mb / used_max)
+    used_hr = render.bytes(used_space * 1024**2)
+    used_max_hr = render.bytes(allocatable_filesystem_size * 1024**2)
+    used_perc_hr = render.percent(100.0 * used_space / allocatable_filesystem_size)
 
     # If both strings end with the same unit, then drop the first one
     if used_hr.split()[1] == used_max_hr.split()[1]:
@@ -528,16 +528,18 @@ def df_check_filesystem_single(
     if warn_mb < 0.0:
         # Negative levels, so user configured thresholds based on space left. Calculate the
         # upper thresholds based on the size of the filesystem
-        crit_mb = int(used_max + crit_mb)
-        warn_mb = int(used_max + warn_mb)
+        crit_mb = int(allocatable_filesystem_size + crit_mb)
+        warn_mb = int(allocatable_filesystem_size + warn_mb)
 
-    status = State.CRIT if used_mb >= crit_mb else State.WARN if used_mb >= warn_mb else State.OK
-    yield Metric("fs_used", used_mb, levels=(warn_mb, crit_mb), boundaries=(0, size_mb))
-    yield Metric("fs_size", size_mb, boundaries=(0, None))
+    status = (
+        State.CRIT if used_space >= crit_mb else State.WARN if used_space >= warn_mb else State.OK
+    )
+    yield Metric("fs_used", used_space, levels=(warn_mb, crit_mb), boundaries=(0, filesystem_size))
+    yield Metric("fs_size", filesystem_size, boundaries=(0, None))
     yield Metric(
         "fs_used_percent",
-        100.0 * used_mb / size_mb,
-        levels=(_mb_to_perc(warn_mb, size_mb), _mb_to_perc(crit_mb, size_mb)),
+        100.0 * used_space / filesystem_size,
+        levels=(_mb_to_perc(warn_mb, filesystem_size), _mb_to_perc(crit_mb, filesystem_size)),
         boundaries=(0.0, 100.0),
     )
 
@@ -554,8 +556,8 @@ def df_check_filesystem_single(
     yield Result(state=status, summary=", ".join(infotext).replace("), (", ", "))
 
     if show_reserved:
-        reserved_perc_hr = render.percent(100.0 * reserved_mb / size_mb)
-        reserved_hr = render.bytes(reserved_mb * 1024**2)
+        reserved_perc_hr = render.percent(100.0 * reserved_space / filesystem_size)
+        reserved_hr = render.bytes(reserved_space * 1024**2)
         yield Result(
             state=status,
             summary="additionally reserved for root: %s" % reserved_hr  #
@@ -564,18 +566,18 @@ def df_check_filesystem_single(
         )
 
     if subtract_reserved:
-        yield Metric("fs_free", avail_mb, boundaries=(0, size_mb))
+        yield Metric("fs_free", free_space, boundaries=(0, filesystem_size))
 
     if subtract_reserved or show_reserved:
-        yield Metric("reserved", reserved_mb)
+        yield Metric("reserved", reserved_space)
 
     yield from size_trend(
         value_store=value_store,
         value_store_key=mountpoint,
         resource="disk",
         levels=params,
-        used_mb=used_mb,
-        size_mb=size_mb,
+        used_mb=used_space,
+        size_mb=filesystem_size,
         timestamp=this_time,
     )
 

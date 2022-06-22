@@ -127,9 +127,9 @@ def check_vnx_quotas(item: str, params: Mapping[str, Any], section: Section) -> 
     for element in df_check_filesystem_single(
         value_store=get_value_store(),
         mountpoint=item,
-        size_mb=size_mb,
-        avail_mb=available_mb,
-        reserved_mb=0.0,
+        filesystem_size=size_mb,
+        free_space=available_mb,
+        reserved_space=0.0,
         inodes_total=None,
         inodes_avail=None,
         params=params,

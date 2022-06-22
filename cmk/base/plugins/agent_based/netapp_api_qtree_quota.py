@@ -107,9 +107,9 @@ def check_netapp_api_qtree_quota(
     yield from df.df_check_filesystem_single(
         value_store=get_value_store(),
         mountpoint=item,
-        size_mb=size_total,
-        avail_mb=size_avail,
-        reserved_mb=0,
+        filesystem_size=size_total,
+        free_space=size_avail,
+        reserved_space=0,
         inodes_total=inodes_total,
         inodes_avail=inodes_avail,
         params=params,

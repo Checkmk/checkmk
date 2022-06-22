@@ -41,9 +41,9 @@ def check_fortisandbox_disk(
     yield from df_check_filesystem_single(
         value_store=get_value_store(),
         mountpoint=item,
-        size_mb=section["cap"],
-        avail_mb=section["cap"] - section["disk_used"],
-        reserved_mb=0,
+        filesystem_size=section["cap"],
+        free_space=section["cap"] - section["disk_used"],
+        reserved_space=0,
         inodes_total=None,
         inodes_avail=None,
         params=params,

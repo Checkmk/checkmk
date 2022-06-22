@@ -222,7 +222,7 @@ http --json {{ request_method | upper }} "$API_URL{{ request_endpoint | fill_out
 {%- endif %}
 {%- if request_schema %}
  {%- for key, field in request_schema.declared_fields.items() %}
-    {{ key }}{% if field | field_str %}={% else %}:={% endif %}'{{ field | field_value }}' {% if not loop.last %} \\ {% endif %} 
+    {{ key }}{% if field | field_str %}={% else %}:={% endif %}'{{ field | field_value }}' {% if not loop.last %} \\ {% endif %}
  {%- endfor %}
 {%- endif %}
 
@@ -602,7 +602,7 @@ def to_param_dict(params: List[OpenAPIParameter]) -> Dict[str, OpenAPIParameter]
     return res
 
 
-@jinja2.contextfilter
+@jinja2.pass_context
 def fill_out_parameters(ctx: Dict[str, Any], val) -> str:
     """Fill out path parameters, either using the global parameter or the endpoint defined ones.
 

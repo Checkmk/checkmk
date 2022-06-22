@@ -29,37 +29,31 @@ test_device3 = Path(
 ).read_text()
 
 
+url_responses = list(zip((URL1, URL2, URL3), (test_device1, test_device2, test_device3)))
+
+
 @responses.activate
 def test_agent_output_2_partitions(capsys: pytest.CaptureFixture[str]) -> None:
     """Agent output contains piggyback data and sections from both partitions in args
     and from the second page of the first URL (in case total number of devices is more than 200)"""
     # standard request to the first partition but with more than 300 devices in reply
     # this triggers the URL3 request
-    responses.add(
-        responses.GET,
-        URL1,
-        json=json.loads(test_device1),
-        status=200,
-    )
 
-    # standard request to the second partition
-    responses.add(
-        responses.GET,
-        URL2,
-        json=json.loads(test_device2),
-        status=200,
-    )
+    for u, r in url_responses:
+        responses.add(
+            responses.GET,
+            u,
+            json=json.loads(r),
+            status=200,
+        )
 
-    # additional request to the first partition with the &start=200 param
-    responses.add(
-        responses.GET,
-        URL3,
-        json=json.loads(test_device3),
-        status=200,
-    )
     args = argparse.Namespace(
         hostname="example.com",
         port="443",
+        key_fields=("entityName",),
+        android_regex=[".*"],
+        ios_regex=["foo"],
+        others_regex=["foo"],
         username="",
         password="",
         partition=[103881, 103882],
@@ -88,9 +82,53 @@ def test_agent_output_2_partitions(capsys: pytest.CaptureFixture[str]) -> None:
         """<<<<overflowdevice1>>>>\n<<<mobileiron_section:sep(0)>>>\n{""" in captured.out
     ), "piggyback header is not correct"
 
-    # make sure the latest registration is chosen
     assert "1636109710590" in captured.out
-    assert "1634816307049" not in captured.out
+    assert "device_duplication" in captured.out
+    assert "device_duplication_2" in captured.out
+
+
+@responses.activate
+def test_agent_output_regexes(capsys: pytest.CaptureFixture[str]) -> None:
+    """Agent output contains piggyback data and sections from both partitions in args
+    and from the second page of the first URL (in case total number of devices is more than 200)"""
+
+    for u, r in url_responses:
+        responses.add(
+            responses.GET,
+            u,
+            json=json.loads(r),
+            status=200,
+        )
+
+    args = argparse.Namespace(
+        hostname="example.com",
+        port="443",
+        key_fields=("entityName",),
+        android_regex=[r"device[0-9]{1}"],
+        ios_regex=["foo"],
+        others_regex=["foo"],
+        username="",
+        password="",
+        partition=[103881, 103882],
+        no_cert_check=False,
+        proxy_host=None,
+        proxy_port=None,
+        proxy_user=None,
+        proxy_password=None,
+        debug=False,
+    )
+    agent_mobileiron_main(args)
+
+    captured = capsys.readouterr()
+
+    # fits the regex
+    assert "device1" in captured.out
+
+    # fits the regex but has wrong platform type
+    assert "device2" not in captured.out
+
+    # does not fit the regex
+    assert "device_duplication" not in captured.out
 
 
 @pytest.mark.parametrize(
@@ -106,6 +144,10 @@ def test_agent_raises_exceptions(exception) -> None:
     args = argparse.Namespace(
         hostname="does_not_exist",
         port="443",
+        key_fields=("entityName",),
+        android_regex=["foo"],
+        ios_regex=["foo"],
+        others_regex=["foo"],
         username="",
         password="",
         partition=[103881],

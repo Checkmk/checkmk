@@ -6,6 +6,7 @@
             {
                 "id": 0,
                 "platformVersion": "10",
+                "platformType": "ANDROID",
                 "clientVersion": "79.0.0.29",
                 "osBuildVersion": "210705.QD01.178",
                 "complianceState": false,
@@ -21,6 +22,7 @@
             {
                 "id": 1,
                 "platformVersion": "14.7.1",
+                "platformType": "IOS",
                 "osBuildVersion": "18G82",
                 "clientVersion": "79.0.0.29",
                 "complianceState": false,

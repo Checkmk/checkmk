@@ -6,6 +6,7 @@
             {
                 "id": 0,
                 "platformVersion": "10",
+                "platformType": "ANDROID",
                 "clientVersion": "79.0.0.29",
                 "osBuildVersion": "210705.QD01.178",
                 "complianceState": false,
@@ -21,6 +22,7 @@
             {
                 "id": 1,
                 "platformVersion": "14.7.1",
+                "platformType": "IOS",
                 "osBuildVersion": "18G82",
                 "clientVersion": "79.0.0.29",
                 "complianceState": false,
@@ -36,6 +38,7 @@
             {
                 "id": 2,
                 "platformVersion": "14.7.1",
+                "platformType": "IOS",
                 "osBuildVersion": "18G82",
                 "clientVersion": "79.0.0",
                 "complianceState": false,
@@ -51,6 +54,7 @@
             {
                 "id": 3,
                 "platformVersion": "10",
+                "platformType": "ANDROID",
                 "osBuildVersion": "210705.QD01.166",
                 "clientVersion": "80.0.0.14",
                 "complianceState": false,
@@ -66,6 +70,7 @@
             {
                 "id": 4,
                 "platformVersion": "10",
+                "platformType": "ANDROID",
                 "osBuildVersion": "210705.QD01.178",
                 "clientVersion": "80.0.0.14",
                 "complianceState": false,
@@ -81,6 +86,7 @@
             {
                 "id": 5,
                 "platformVersion": "10",
+                "platformType": "ANDROID",
                 "osBuildVersion": "210705.QD01.178",
                 "clientVersion": "80.0.0.14",
                 "complianceState": false,
@@ -96,6 +102,7 @@
             {
                 "id": 6,
                 "platformVersion": "14.7.1",
+                "platformType": "IOS",
                 "osBuildVersion": "18G82",
                 "clientVersion": "79.0.0.29",
                 "complianceState": false,
@@ -111,6 +118,7 @@
             {
                 "id": 7,
                 "platformVersion": "15.0",
+                "platformType": "IOS",
                 "osBuildVersion": "19A346",
                 "clientVersion": "79.0.0.29",
                 "complianceState": true,
@@ -126,6 +134,7 @@
             {
                 "id": 8,
                 "platformVersion": "10",
+                "platformType": "ANDROID",
                 "osBuildVersion": "210305.QD01.125",
                 "clientVersion": "79.0.0.20",
                 "complianceState": false,
@@ -141,6 +150,7 @@
             {
                 "id": 9,
                 "platformVersion": "10",
+                "platformType": "ANDROID",
                 "osBuildVersion": "00WW_4_16H",
                 "clientVersion": "80.0.0.14",
                 "complianceState": false,

@@ -41,6 +41,16 @@ def agent_mobileiron_arguments(
     ]
     if "proxy_details" in params:
         args += _get_proxy_args_and_secrets(params["proxy_details"])
+
+    for regex_platform_type in ("android-regex", "ios-regex", "others-regex"):
+        if regex_platform_type in params:
+            for regex in params[regex_platform_type]:
+                args.append(f"--{regex_platform_type}={regex}")
+
+    for key_field in params["key-fields"]:
+        args.append("--key-fields")
+        args.append(key_field)
+
     return args
 
 

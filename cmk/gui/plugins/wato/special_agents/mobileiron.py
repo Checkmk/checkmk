@@ -7,11 +7,25 @@
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.special_agents.common import RulespecGroupDatasourceProgramsApps
 from cmk.gui.plugins.wato.utils import HostRulespec, IndividualOrStoredPassword, rulespec_registry
-from cmk.gui.valuespec import Dictionary, FixedValue, Integer, ListOfStrings, NetworkPort, TextInput
+from cmk.gui.valuespec import (
+    Dictionary,
+    DropdownChoice,
+    FixedValue,
+    Integer,
+    ListOf,
+    ListOfStrings,
+    NetworkPort,
+    RegExp,
+    TextInput,
+)
 
 
 def _valuespec_special_agents_mobileiron():
+
     return Dictionary(
+        help=_(
+            "Requests data from Mobileiron API and outputs a piggyback host per returned device."
+        ),
         elements=[
             ("username", TextInput(title=_("Username"), allow_empty=False)),
             ("password", IndividualOrStoredPassword(title=_("Password"), allow_empty=False)),
@@ -55,6 +69,84 @@ def _valuespec_special_agents_mobileiron():
                         ("proxy_password", IndividualOrStoredPassword(title=_("Password"))),
                     ],
                     optional_keys=["proxy_port", "proxy_user", "proxy_password"],
+                ),
+            ),
+            (
+                "key-fields",
+                DropdownChoice(
+                    title=_("Field(s) to use as a hostname key"),
+                    choices=[
+                        (("serialNumber",), "serialNumber"),
+                        (("emailAddress",), "emailAddress"),
+                        (("emailAddress", "serialNumber"), "emailAddress and serialNumber"),
+                        (("deviceModel", "serialNumber"), "deviceModel and serialNumber"),
+                        (("uid",), "uid"),
+                        (("uid", "serialNumber"), "uid and serialNumber"),
+                        (("guid",), "guid"),
+                    ],
+                    help=_("Compound fields will be joined with a '-' symbol."),
+                    default_value=("deviceModel", "serialNumber"),
+                ),
+            ),
+            (
+                "android-regex",
+                ListOf(
+                    valuespec=RegExp(
+                        mode=RegExp.infix, title=_("Pattern"), allow_empty=False, default_value=".*"
+                    ),
+                    title=_("Add android hostnames matching"),
+                    add_label=_("Add new pattern"),
+                    allow_empty=False,
+                    default_value=[".*"],
+                    help=_(
+                        "You can specify a list of regex patterns for android hostnames. "
+                        "Several patterns can be provided. "
+                        "If hostname contains '@' it will be removed with all following characters. "
+                        "And only then the regex matching will happen. "
+                        "Only those that match any of the patterns will be monitored. "
+                        "By default all hostnames are accepted"
+                    ),
+                ),
+            ),
+            (
+                "ios-regex",
+                ListOf(
+                    valuespec=RegExp(
+                        mode=RegExp.infix, title=_("Pattern"), allow_empty=False, default_value=".*"
+                    ),
+                    title=_("Add iOS hostnames matching"),
+                    add_label=_("Add new pattern"),
+                    allow_empty=False,
+                    default_value=[".*"],
+                    help=_(
+                        "You can specify a list of regex patterns for iOS hostnames. "
+                        "Several patterns can be provided. "
+                        "If hostname contains '@' it will be removed with all following characters. "
+                        "And only then the regex matching will happen. "
+                        "Only those that match any of the patterns will be monitored. "
+                        "By default all hostnames are accepted"
+                    ),
+                ),
+            ),
+            (
+                "others-regex",
+                ListOf(
+                    valuespec=RegExp(
+                        mode=RegExp.infix, title=_("Pattern"), allow_empty=False, default_value=".*"
+                    ),
+                    title=_("Add other (not android and not iOS) hostnames matching"),
+                    add_label=_("Add new pattern"),
+                    allow_empty=False,
+                    default_value=[".*"],
+                    help=_(
+                        "You can specify a list of regex patterns for other hostnames "
+                        "which are not android and not iOS. "
+                        "Several patterns can be provided. "
+                        "If hostname contains '@' it will be removed with all following characters. "
+                        "And only then the regex matching will happen. "
+                        "Only those that match any of the patterns will be monitored. "
+                        "By default all hostnames are accepted"
+                    ),
                 ),
             ),
         ],

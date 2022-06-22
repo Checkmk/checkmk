@@ -116,10 +116,6 @@ def check_gcp_sql_memory(
     section_gcp_service_cloud_sql: Optional[gcp.Section],
     section_gcp_assets: Optional[gcp.AssetSection],
 ) -> CheckResult:
-    if section_gcp_service_cloud_sql is None:
-        return
-    if item not in section_gcp_service_cloud_sql:
-        return
     metrics = {
         # percent render expects numbers range 0 to 100 and not fractions.
         "memory_util": gcp.MetricSpec(
@@ -129,8 +125,7 @@ def check_gcp_sql_memory(
             scale=1e2,
         ),
     }
-    timeseries = section_gcp_service_cloud_sql[item].rows
-    yield from gcp.generic_check(metrics, timeseries, params)
+    yield from gcp.check(metrics, item, params, section_gcp_service_cloud_sql)
 
 
 register.check_plugin(
@@ -150,17 +145,12 @@ def check_gcp_sql_cpu(
     section_gcp_service_cloud_sql: Optional[gcp.Section],
     section_gcp_assets: Optional[gcp.AssetSection],
 ) -> CheckResult:
-    if section_gcp_service_cloud_sql is None:
-        return
-    if item not in section_gcp_service_cloud_sql:
-        return
     metrics = {
         "util": gcp.MetricSpec(
             "cloudsql.googleapis.com/database/cpu/utilization", "CPU", render.percent, scale=1e2
         ),
     }
-    timeseries = section_gcp_service_cloud_sql[item].rows
-    yield from gcp.generic_check(metrics, timeseries, params)
+    yield from gcp.check(metrics, item, params, section_gcp_service_cloud_sql)
 
 
 register.check_plugin(
@@ -180,10 +170,6 @@ def check_gcp_sql_network(
     section_gcp_service_cloud_sql: Optional[gcp.Section],
     section_gcp_assets: Optional[gcp.AssetSection],
 ) -> CheckResult:
-    if section_gcp_service_cloud_sql is None:
-        return
-    if item not in section_gcp_service_cloud_sql:
-        return
     metrics = {
         "net_data_recv": gcp.MetricSpec(
             "cloudsql.googleapis.com/database/network/received_bytes_count",
@@ -196,8 +182,7 @@ def check_gcp_sql_network(
             render.networkbandwidth,
         ),
     }
-    timeseries = section_gcp_service_cloud_sql[item].rows
-    yield from gcp.generic_check(metrics, timeseries, params)
+    yield from gcp.check(metrics, item, params, section_gcp_service_cloud_sql)
 
 
 register.check_plugin(
@@ -217,10 +202,6 @@ def check_gcp_sql_disk(
     section_gcp_service_cloud_sql: Optional[gcp.Section],
     section_gcp_assets: Optional[gcp.AssetSection],
 ) -> CheckResult:
-    if section_gcp_service_cloud_sql is None:
-        return
-    if item not in section_gcp_service_cloud_sql:
-        return
     metrics = {
         "fs_used_percent": gcp.MetricSpec(
             "cloudsql.googleapis.com/database/disk/utilization",
@@ -235,8 +216,7 @@ def check_gcp_sql_disk(
             "cloudsql.googleapis.com/database/disk/read_ops_count", "Read operations", str
         ),
     }
-    timeseries = section_gcp_service_cloud_sql[item].rows
-    yield from gcp.generic_check(metrics, timeseries, params)
+    yield from gcp.check(metrics, item, params, section_gcp_service_cloud_sql)
 
 
 register.check_plugin(

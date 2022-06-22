@@ -45,9 +45,6 @@ def check_gcp_function_instances(
     section_gcp_service_cloud_functions: Optional[gcp.Section],
     section_gcp_assets: Optional[gcp.AssetSection],
 ) -> CheckResult:
-    if section_gcp_service_cloud_functions is None:
-        return
-    section = section_gcp_service_cloud_functions
     metrics = {
         "faas_total_instance_count": gcp.MetricSpec(
             "cloudfunctions.googleapis.com/function/instance_count", "Instances", str
@@ -56,8 +53,7 @@ def check_gcp_function_instances(
             "cloudfunctions.googleapis.com/function/active_instances", "Active instances", str
         ),
     }
-    timeseries = section.get(item, gcp.SectionItem(rows=[])).rows
-    yield from gcp.generic_check(metrics, timeseries, params)
+    yield from gcp.check(metrics, item, params, section_gcp_service_cloud_functions)
 
 
 register.check_plugin(
@@ -80,9 +76,6 @@ def check_gcp_function_execution(
     section_gcp_service_cloud_functions: Optional[gcp.Section],
     section_gcp_assets: Optional[gcp.AssetSection],
 ) -> CheckResult:
-    if section_gcp_service_cloud_functions is None:
-        return
-    section = section_gcp_service_cloud_functions
     metrics = {
         # TODO: this is the total. Separate by state
         "faas_execution_count": gcp.MetricSpec(
@@ -99,8 +92,7 @@ def check_gcp_function_execution(
             scale=1e-9,
         ),
     }
-    timeseries = section.get(item, gcp.SectionItem(rows=[])).rows
-    yield from gcp.generic_check(metrics, timeseries, params)
+    yield from gcp.check(metrics, item, params, section_gcp_service_cloud_functions)
 
 
 register.check_plugin(
@@ -124,16 +116,12 @@ def check_gcp_function_network(
     section_gcp_service_cloud_functions: Optional[gcp.Section],
     section_gcp_assets: Optional[gcp.AssetSection],
 ) -> CheckResult:
-    if section_gcp_service_cloud_functions is None:
-        return
-    section = section_gcp_service_cloud_functions
     metrics = {
         "net_data_sent": gcp.MetricSpec(
             "cloudfunctions.googleapis.com/function/network_egress", "Out", render.networkbandwidth
         ),
     }
-    timeseries = section.get(item, gcp.SectionItem(rows=[])).rows
-    yield from gcp.generic_check(metrics, timeseries, params)
+    yield from gcp.check(metrics, item, params, section_gcp_service_cloud_functions)
 
 
 register.check_plugin(

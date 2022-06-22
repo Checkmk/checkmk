@@ -152,6 +152,18 @@ def generic_check(
             )
 
 
+def check(
+    spec: Mapping[str, MetricSpec],
+    item: str,
+    params: Mapping[str, Any],
+    section: Optional[Section],
+) -> CheckResult:
+    if section is None:
+        return
+    timeseries = section.get(item, SectionItem(rows=[])).rows
+    yield from generic_check(spec, timeseries, params)
+
+
 def service_name_factory(gcp_service: str) -> Callable[[str], str]:
     def f(name: str) -> str:
         return f"{gcp_service} - %s - {name}"

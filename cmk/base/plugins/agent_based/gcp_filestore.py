@@ -46,9 +46,6 @@ def check(
     section_gcp_service_filestore: Optional[gcp.Section],
     section_gcp_assets: Optional[gcp.AssetSection],
 ) -> CheckResult:
-    if section_gcp_service_filestore is None:
-        return
-    section = section_gcp_service_filestore
     metrics = {
         "fs_used_percent": gcp.MetricSpec(
             "file.googleapis.com/nfs/server/used_bytes_percent", "Usage", render.percent, scale=1e2
@@ -60,8 +57,7 @@ def check(
             "file.googleapis.com/nfs/server/write_ops_count", "Write operations", str
         ),
     }
-    timeseries = section[item].rows
-    yield from gcp.generic_check(metrics, timeseries, params)
+    yield from gcp.check(metrics, item, params, section_gcp_service_filestore)
 
 
 register.check_plugin(

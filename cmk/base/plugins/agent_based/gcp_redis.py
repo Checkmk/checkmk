@@ -49,15 +49,12 @@ def check_cpu_util(
     section_gcp_service_redis: Optional[gcp.Section],
     section_gcp_assets: Optional[gcp.AssetSection],
 ) -> CheckResult:
-    if section_gcp_service_redis is None:
-        return
     metrics = {
         "util": gcp.MetricSpec(
             "redis.googleapis.com/stats/cpu_utilization", "Utilization", render.percent, scale=1e2
         )
     }
-    timeseries = section_gcp_service_redis.get(item, gcp.SectionItem(rows=[])).rows
-    yield from gcp.generic_check(metrics, timeseries, params)
+    yield from gcp.check(metrics, item, params, section_gcp_service_redis)
 
 
 register.check_plugin(
@@ -77,8 +74,6 @@ def check_memory_util(
     section_gcp_service_redis: Optional[gcp.Section],
     section_gcp_assets: Optional[gcp.AssetSection],
 ) -> CheckResult:
-    if section_gcp_service_redis is None:
-        return
     metrics = {
         "memory_util": gcp.MetricSpec(
             "redis.googleapis.com/stats/memory/usage_ratio",
@@ -93,8 +88,7 @@ def check_memory_util(
             scale=1e2,
         ),
     }
-    timeseries = section_gcp_service_redis.get(item, gcp.SectionItem(rows=[])).rows
-    yield from gcp.generic_check(metrics, timeseries, params)
+    yield from gcp.check(metrics, item, params, section_gcp_service_redis)
 
 
 register.check_plugin(

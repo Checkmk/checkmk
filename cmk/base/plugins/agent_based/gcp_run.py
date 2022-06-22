@@ -45,8 +45,6 @@ def check_gcp_run_network(
     section_gcp_service_cloud_run: Optional[gcp.Section],
     section_gcp_assets: Optional[gcp.AssetSection],
 ) -> CheckResult:
-    if section_gcp_service_cloud_run is None:
-        return
     metrics = {
         "net_data_recv": gcp.MetricSpec(
             "run.googleapis.com/container/network/received_bytes_count",
@@ -57,8 +55,7 @@ def check_gcp_run_network(
             "run.googleapis.com/container/network/sent_bytes_count", "In", render.networkbandwidth
         ),
     }
-    timeseries = section_gcp_service_cloud_run.get(item, gcp.SectionItem(rows=[])).rows
-    yield from gcp.generic_check(metrics, timeseries, params)
+    yield from gcp.check(metrics, item, params, section_gcp_service_cloud_run)
 
 
 register.check_plugin(
@@ -78,16 +75,13 @@ def check_gcp_run_memory(
     section_gcp_service_cloud_run: Optional[gcp.Section],
     section_gcp_assets: Optional[gcp.AssetSection],
 ) -> CheckResult:
-    if section_gcp_service_cloud_run is None:
-        return
     metrics = {
         # percent render expects numbers range 0 to 100 and not fractions.
         "memory_util": gcp.MetricSpec(
             "run.googleapis.com/container/memory/utilizations", "Memory", render.percent, scale=1e2
         ),
     }
-    timeseries = section_gcp_service_cloud_run.get(item, gcp.SectionItem(rows=[])).rows
-    yield from gcp.generic_check(metrics, timeseries, params)
+    yield from gcp.check(metrics, item, params, section_gcp_service_cloud_run)
 
 
 register.check_plugin(
@@ -107,15 +101,12 @@ def check_gcp_run_cpu(
     section_gcp_service_cloud_run: Optional[gcp.Section],
     section_gcp_assets: Optional[gcp.AssetSection],
 ) -> CheckResult:
-    if section_gcp_service_cloud_run is None:
-        return
     metrics = {
         "util": gcp.MetricSpec(
             "run.googleapis.com/container/cpu/utilizations", "CPU", render.percent, scale=1e2
         ),
     }
-    timeseries = section_gcp_service_cloud_run.get(item, gcp.SectionItem(rows=[])).rows
-    yield from gcp.generic_check(metrics, timeseries, params)
+    yield from gcp.check(metrics, item, params, section_gcp_service_cloud_run)
 
 
 register.check_plugin(
@@ -135,8 +126,6 @@ def check_gcp_run_requests(
     section_gcp_service_cloud_run: Optional[gcp.Section],
     section_gcp_assets: Optional[gcp.AssetSection],
 ) -> CheckResult:
-    if section_gcp_service_cloud_run is None:
-        return
     metrics = {
         "faas_total_instance_count": gcp.MetricSpec(
             "run.googleapis.com/container/instance_count",
@@ -185,8 +174,7 @@ def check_gcp_run_requests(
             scale=1e3,
         ),
     }
-    timeseries = section_gcp_service_cloud_run.get(item, gcp.SectionItem(rows=[])).rows
-    yield from gcp.generic_check(metrics, timeseries, params)
+    yield from gcp.check(metrics, item, params, section_gcp_service_cloud_run)
 
 
 register.check_plugin(

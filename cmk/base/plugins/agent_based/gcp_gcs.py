@@ -43,13 +43,10 @@ def check_gcp_gcs_requests(
     section_gcp_service_gcs: Optional[gcp.Section],
     section_gcp_assets: Optional[gcp.AssetSection],
 ) -> CheckResult:
-    if section_gcp_service_gcs is None:
-        return
     metrics = {
         "requests": gcp.MetricSpec("storage.googleapis.com/api/request_count", "requests", str)
     }
-    timeseries = section_gcp_service_gcs.get(item, gcp.SectionItem(rows=[])).rows
-    yield from gcp.generic_check(metrics, timeseries, params)
+    yield from gcp.check(metrics, item, params, section_gcp_service_gcs)
 
 
 register.check_plugin(
@@ -69,8 +66,6 @@ def check_gcp_gcs_network(
     section_gcp_service_gcs: Optional[gcp.Section],
     section_gcp_assets: Optional[gcp.AssetSection],
 ) -> CheckResult:
-    if section_gcp_service_gcs is None:
-        return
     metrics = {
         "net_data_sent": gcp.MetricSpec(
             "storage.googleapis.com/network/sent_bytes_count", "Out", render.networkbandwidth
@@ -79,8 +74,7 @@ def check_gcp_gcs_network(
             "storage.googleapis.com/network/received_bytes_count", "In", render.networkbandwidth
         ),
     }
-    timeseries = section_gcp_service_gcs.get(item, gcp.SectionItem(rows=[])).rows
-    yield from gcp.generic_check(metrics, timeseries, params)
+    yield from gcp.check(metrics, item, params, section_gcp_service_gcs)
 
 
 register.check_plugin(
@@ -100,8 +94,6 @@ def check_gcp_gcs_object(
     section_gcp_service_gcs: Optional[gcp.Section],
     section_gcp_assets: Optional[gcp.AssetSection],
 ) -> CheckResult:
-    if section_gcp_service_gcs is None:
-        return
     metrics = {
         "aws_bucket_size": gcp.MetricSpec(
             "storage.googleapis.com/storage/total_bytes", "Bucket size", render.bytes
@@ -110,8 +102,7 @@ def check_gcp_gcs_object(
             "storage.googleapis.com/storage/object_count", "Objects", str
         ),
     }
-    timeseries = section_gcp_service_gcs.get(item, gcp.SectionItem(rows=[])).rows
-    yield from gcp.generic_check(metrics, timeseries, params)
+    yield from gcp.check(metrics, item, params, section_gcp_service_gcs)
 
 
 register.check_plugin(

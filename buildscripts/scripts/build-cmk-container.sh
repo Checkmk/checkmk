@@ -24,13 +24,13 @@ docker_tag() {
     FOLDER=$2
 
     log "Erstelle \"${VERSION}\" tag..."
-    docker tag "checkmk/check-mk-${EDITION}${DEMO}:${VERSION}" "$REGISTRY$FOLDER/check-mk-${EDITION}${DEMO}:${VERSION}"
+    docker tag "checkmk/check-mk-${EDITION}:${VERSION}" "$REGISTRY$FOLDER/check-mk-${EDITION}:${VERSION}"
 
     log "Erstelle \"{$BRANCH}-latest\" tag..."
-    docker tag "checkmk/check-mk-${EDITION}${DEMO}:${VERSION}" "$REGISTRY$FOLDER/check-mk-${EDITION}${DEMO}:${BRANCH}-latest"
+    docker tag "checkmk/check-mk-${EDITION}:${VERSION}" "$REGISTRY$FOLDER/check-mk-${EDITION}:${BRANCH}-latest"
 
     log "Erstelle \"latest\" tag..."
-    docker tag "checkmk/check-mk-${EDITION}${DEMO}:${VERSION}" "$REGISTRY$FOLDER/check-mk-${EDITION}${DEMO}:latest"
+    docker tag "checkmk/check-mk-${EDITION}:${VERSION}" "$REGISTRY$FOLDER/check-mk-${EDITION}:latest"
 
 }
 
@@ -41,16 +41,16 @@ docker_push() {
 
     log "Lade zu ($REGISTRY) hoch..."
     docker login "${REGISTRY}" -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSPHRASE}"
-    DOCKERCLOUD_NAMESPACE=checkmk docker push "$REGISTRY$FOLDER/check-mk-${EDITION}${DEMO}:${VERSION}"
-    DOCKERCLOUD_NAMESPACE=checkmk docker push "$REGISTRY$FOLDER/check-mk-${EDITION}${DEMO}:${BRANCH}-latest"
+    DOCKERCLOUD_NAMESPACE=checkmk docker push "$REGISTRY$FOLDER/check-mk-${EDITION}:${VERSION}"
+    DOCKERCLOUD_NAMESPACE=checkmk docker push "$REGISTRY$FOLDER/check-mk-${EDITION}:${BRANCH}-latest"
     if [ "$SET_LATEST_TAG" = "yes" ]; then
-        DOCKERCLOUD_NAMESPACE=checkmk docker push "$REGISTRY$FOLDER/check-mk-${EDITION}${DEMO}:latest"
+        DOCKERCLOUD_NAMESPACE=checkmk docker push "$REGISTRY$FOLDER/check-mk-${EDITION}:latest"
     fi
 }
 
 build_image() {
     log "Unpack source tar to $TMP_PATH"
-    tar -xz -C "$TMP_PATH" -f "$PACKAGE_PATH/${VERSION}/check-mk-${EDITION}-${VERSION}${SUFFIX}${DEMO}.tar.gz"
+    tar -xz -C "$TMP_PATH" -f "$PACKAGE_PATH/${VERSION}/check-mk-${EDITION}-${VERSION}${SUFFIX}.tar.gz"
 
     log "Copy debian package..."
     cp "$PACKAGE_PATH/${VERSION}/${PKG_FILE}" "$DOCKER_PATH/"
@@ -106,9 +106,9 @@ BASE_PATH=$(pwd)/tmp
 mkdir -p "$BASE_PATH"
 TMP_PATH=$(mktemp --directory -p "$BASE_PATH" --suffix=.cmk-docker)
 PACKAGE_PATH=$(pwd)/download
-DOCKER_PATH="$TMP_PATH/check-mk-${EDITION}-${VERSION}${SUFFIX}${DEMO}/docker"
-DOCKER_IMAGE_ARCHIVE="check-mk-${EDITION}-docker-${VERSION}${DEMO}.tar.gz"
-PKG_NAME="check-mk-${EDITION}-${VERSION}${DEMO}"
+DOCKER_PATH="$TMP_PATH/check-mk-${EDITION}-${VERSION}${SUFFIX}/docker"
+DOCKER_IMAGE_ARCHIVE="check-mk-${EDITION}-docker-${VERSION}.tar.gz"
+PKG_NAME="check-mk-${EDITION}-${VERSION}"
 PKG_FILE="${PKG_NAME}_0.buster_$(dpkg --print-architecture).deb"
 
 if [ -n "$NEXUS_USERNAME" ]; then

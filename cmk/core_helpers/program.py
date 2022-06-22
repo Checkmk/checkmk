@@ -19,13 +19,14 @@ from cmk.utils.type_defs import AgentRawData
 
 from ._base import Fetcher
 from .agent import AgentFileCache
+from .cache import FileCache
 from .type_defs import Mode
 
 
 class ProgramFetcher(Fetcher[AgentRawData]):
     def __init__(
         self,
-        file_cache: AgentFileCache,
+        file_cache: FileCache[AgentRawData],
         *,
         cmdline: Union[bytes, str],
         stdin: Optional[str],

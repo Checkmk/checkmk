@@ -160,7 +160,7 @@ class SNMPFileCache(FileCache[SNMPRawData]):
 
 
 class SNMPFileCacheFactory(FileCacheFactory[SNMPRawData]):
-    def make(self, *, force_cache_refresh: bool = False) -> SNMPFileCache:
+    def make(self, *, force_cache_refresh: bool = False) -> FileCache[SNMPRawData]:
         return SNMPFileCache(
             self.hostname,
             base_path=self.base_path,
@@ -181,7 +181,7 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
 
     def __init__(
         self,
-        file_cache: SNMPFileCache,
+        file_cache: FileCache[SNMPRawData],
         *,
         sections: Mapping[SectionName, SectionMeta],
         on_error: OnError,

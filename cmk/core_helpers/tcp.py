@@ -20,6 +20,7 @@ from cmk.utils.type_defs import AgentRawData, HostAddress, HostName
 
 from ._base import Fetcher, verify_ipaddress
 from .agent import AgentFileCache
+from .cache import FileCache
 from .tcp_agent_ctl import AgentCtlMessage
 from .type_defs import Mode
 
@@ -27,7 +28,7 @@ from .type_defs import Mode
 class TCPFetcher(Fetcher[AgentRawData]):
     def __init__(
         self,
-        file_cache: AgentFileCache,
+        file_cache: FileCache[AgentRawData],
         *,
         family: socket.AddressFamily,
         address: Tuple[Optional[HostAddress], int],

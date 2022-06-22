@@ -16,13 +16,14 @@ from cmk.utils.type_defs import AgentRawData, ExitSpec, HostAddress, HostName
 
 from ._base import Fetcher, Summarizer
 from .agent import AgentFileCache
+from .cache import FileCache
 from .type_defs import Mode
 
 
 class PiggybackFetcher(Fetcher[AgentRawData]):
     def __init__(
         self,
-        file_cache: AgentFileCache,
+        file_cache: FileCache[AgentRawData],
         *,
         hostname: HostName,
         address: Optional[HostAddress],

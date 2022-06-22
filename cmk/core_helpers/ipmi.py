@@ -27,6 +27,7 @@ from cmk.utils.type_defs import AgentRawData, HostAddress
 
 from ._base import Fetcher, Summarizer
 from .agent import AgentFileCache
+from .cache import FileCache
 from .type_defs import Mode
 
 
@@ -43,7 +44,7 @@ class IPMIFetcher(Fetcher[AgentRawData]):
 
     def __init__(
         self,
-        file_cache: AgentFileCache,
+        file_cache: FileCache[AgentRawData],
         *,
         address: HostAddress,  # Could actually be HostName as well.
         username: Optional[str],

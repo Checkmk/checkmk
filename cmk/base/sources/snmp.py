@@ -13,11 +13,10 @@ from cmk.utils.type_defs import HostAddress, HostName, SectionName, SourceType
 from cmk.snmplib.type_defs import BackendSNMPTree, SNMPDetectSpec, SNMPRawData, SNMPRawDataSection
 
 from cmk.core_helpers import FetcherType, SNMPFetcher
-from cmk.core_helpers.cache import SectionStore
+from cmk.core_helpers.cache import FileCache, SectionStore
 from cmk.core_helpers.host_sections import HostSections
 from cmk.core_helpers.snmp import (
     SectionMeta,
-    SNMPFileCache,
     SNMPFileCacheFactory,
     SNMPParser,
     SNMPPluginStore,
@@ -139,7 +138,7 @@ class SNMPSource(Source[SNMPRawData, SNMPRawDataSection]):
             force_cache_refresh=force_cache_refresh,
         )
 
-    def _make_file_cache(self) -> SNMPFileCache:
+    def _make_file_cache(self) -> FileCache[SNMPRawData]:
         return SNMPFileCacheFactory(
             self.hostname,
             base_path=self.file_cache_base_path,

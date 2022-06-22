@@ -6701,9 +6701,6 @@ msgstr ""
 msgid "Bulk up to"
 msgstr ""
 
-msgid "Bulk walk: Hosts using bulk walk (enforces SNMP v2c)"
-msgstr ""
-
 msgid "Bulk walk: Limit SNMP OID ranges"
 msgstr ""
 
@@ -8513,6 +8510,16 @@ msgstr "Nivelurile maxime pentru voltaj"
 #, fuzzy
 msgid "Checkmk config filename"
 msgstr "Activare Configurare"
+
+msgid ""
+"Checkmk defaults to SNMPv1 in order to support as many devices as possible. "
+"In practice, most SNMP devices also support SNMPv2c, which has two "
+"advantages: it supports 64 bit counters and bulk walk, which saves CPU and "
+"network resources and is more performant. Use this rule to configure SNMPv2c "
+"for as many devices as possible. However, please be aware that some devices "
+"that support SNMPv2c may be buggy. In such cases, you may want to try "
+"disabling bulk walk using the ruleset \"Disable bulk walks on SNMPv2c/v3\"."
+msgstr ""
 
 #, fuzzy, python-format
 msgid ""
@@ -13695,6 +13702,9 @@ msgstr ""
 msgid "Disable automatic user synchronization (use master site users)"
 msgstr ""
 
+msgid "Disable bulk walks on SNMPv2c/v3"
+msgstr ""
+
 #, fuzzy
 msgid "Disable certificate validation"
 msgstr "Dezactiveaza Notificarile"
@@ -15675,10 +15685,6 @@ msgid "Edit customer %s"
 msgstr ""
 
 #, fuzzy
-msgid "Edit dashboard"
-msgstr "Adaugă element"
-
-#, fuzzy
 msgid "Edit element"
 msgstr "Adaugă element"
 
@@ -15715,6 +15721,13 @@ msgid "Edit host attribute"
 msgstr "Atribute personalizate"
 
 msgid "Edit host group"
+msgstr ""
+
+#, fuzzy
+msgid "Edit layout"
+msgstr "Matrice"
+
+msgid "Edit layout only available if header is enabled"
 msgstr ""
 
 #, fuzzy
@@ -16131,6 +16144,12 @@ msgid "Enable Livestatus access via network (TCP)"
 msgstr ""
 
 msgid "Enable SMTP AUTH (LOGIN)"
+msgstr ""
+
+msgid "Enable SNMPv2c and bulk walk for hosts"
+msgstr ""
+
+msgid "Enable SNMPv2c and bulk walk for management boards"
 msgstr ""
 
 #, fuzzy
@@ -25322,9 +25341,6 @@ msgstr ""
 msgid "Legacy GUI extensions"
 msgstr "Dezactiveaza Notificarile"
 
-msgid "Legacy SNMP devices using SNMP v2c"
-msgstr ""
-
 #, fuzzy
 msgid "Legacy agent management"
 msgstr "Numele Elementului"
@@ -26877,6 +26893,9 @@ msgstr "Numarul maxim de mesaje"
 msgid "Longest output list upper level"
 msgstr "Numarul maxim de mesaje"
 
+msgid "Look for keys"
+msgstr ""
+
 msgid "Looking back"
 msgstr ""
 
@@ -27546,9 +27565,6 @@ msgstr ""
 #, fuzzy
 msgid "Management board"
 msgstr "(fără parametri)"
-
-msgid "Management board SNMP using bulk walk (enforces SNMP v2c)"
-msgstr ""
 
 msgid "Management board config"
 msgstr ""
@@ -29588,18 +29604,6 @@ msgstr ""
 
 #, python-format
 msgid "More than %d results"
-msgstr ""
-
-msgid ""
-"Most SNMP hosts support SNMP version 2c. However, Check_MK defaults to "
-"version 1, in order to support as many devices as possible. Please use this "
-"ruleset in order to configure SNMP v2c for as many hosts as possible. That "
-"version has two advantages: it supports 64 bit counters, which avoids "
-"problems with wrapping counters at too much traffic. And it supports bulk "
-"walk, which saves much CPU and network resources. Please be aware, however, "
-"that there are some broken devices out there, that support bulk walk but "
-"behave very bad when it is used. When you want to enable v2c while not using "
-"bulk walk, please use the rule set snmpv2c_hosts instead."
 msgstr ""
 
 msgid ""
@@ -33545,10 +33549,6 @@ msgstr ""
 #, fuzzy
 msgid "Pages per second"
 msgstr " secunde "
-
-#, python-format
-msgid "Painter %r returned invalid result: %r"
-msgstr ""
 
 msgid "Pair manually"
 msgstr ""
@@ -38404,13 +38404,6 @@ msgstr ""
 msgid "SNMP interface check with 64 bit counters (using v2c)"
 msgstr ""
 
-msgid ""
-"SNMP monitoring of management boards defaults to SNMPv2 for all hosts by "
-"default. In case some of your management boards don't support SNMPv2 or bulk "
-"walks, you can use this ruleset to enforce Checkmk to contact these "
-"management boards using SNMPv1."
-msgstr ""
-
 msgid "SNMP rules"
 msgstr ""
 
@@ -38762,6 +38755,9 @@ msgstr ""
 #, fuzzy
 msgid "Search for disabled rules"
 msgstr "Arata regulile de utilizator"
+
+msgid "Search for discoverable keys in the '~/.ssh' directory"
+msgstr ""
 
 #, fuzzy
 msgid "Search for effective rules"
@@ -41328,6 +41324,13 @@ msgid ""
 "Some Printers (eg. Konica for Drum Cartdiges) returning the available fuel "
 "instead of what is left. In this case it's possible to upturn the levels to "
 "handle this behavior"
+msgstr ""
+
+msgid ""
+"Some SNMPv2c/v3 capable devices are buggy when being queried using bulk "
+"walks. In such cases, you can disable bulk walks with this ruleset. Please "
+"be aware that you should only do this if no other approach is feasible (e.g. "
+"limiting the bulk size), as bulk walks are much more performant."
 msgstr ""
 
 msgid ""
@@ -47502,15 +47505,6 @@ msgid ""
 "these changes."
 msgstr ""
 
-msgid ""
-"There exist a few devices out there that behave very badly when using SNMP "
-"v2c and bulk walk. If you want to use SNMP v2c on those devices, "
-"nevertheless, you need to configure this device as legacy snmp device and "
-"upgrade it to SNMP v2c (without bulk walk) with this rule set. One reason is "
-"enabling 64 bit counters. Note: This rule won't apply if the device is "
-"already configured as SNMP v2c device."
-msgstr ""
-
 #, python-format
 msgid ""
 "There is a cycle in your rules. This rule calls itself - either directly or "
@@ -50926,7 +50920,10 @@ msgstr ""
 msgid "Total Data in relation to RAM"
 msgstr ""
 
-msgid "Total General Purpose SSD space"
+msgid "Total General Purpose SSD (gp2) space"
+msgstr ""
+
+msgid "Total General Purpose SSD (gp3) space"
 msgstr ""
 
 msgid "Total IO operations per second"
@@ -50949,11 +50946,20 @@ msgid "Total Pending Mails"
 msgstr ""
 
 #, fuzzy
-msgid "Total Provisioned IOPS SSD IO operations per seconds"
+msgid "Total Provisioned IOPS SSD (io1) IO operations per seconds"
 msgstr "Optiuni tabel"
 
-msgid "Total Provisioned IOPS SSD space"
-msgstr ""
+#, fuzzy
+msgid "Total Provisioned IOPS SSD (io1) space"
+msgstr "Optiuni tabel"
+
+#, fuzzy
+msgid "Total Provisioned IOPS SSD (io2) IO operations per seconds"
+msgstr "Optiuni tabel"
+
+#, fuzzy
+msgid "Total Provisioned IOPS SSD (io2) space"
+msgstr "Optiuni tabel"
 
 msgid "Total RAM + Swap installed"
 msgstr ""
@@ -59752,6 +59758,10 @@ msgstr "z/OS"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr ""
+
+#, fuzzy
+#~ msgid "Edit dashboard"
+#~ msgstr "Adaugă element"
 
 #, fuzzy
 #~ msgid "Top alerters"

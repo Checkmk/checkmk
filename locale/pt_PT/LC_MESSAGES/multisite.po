@@ -6965,10 +6965,6 @@ msgstr "Renomeação em massa dos anfitriões"
 msgid "Bulk up to"
 msgstr "A granel até"
 
-msgid "Bulk walk: Hosts using bulk walk (enforces SNMP v2c)"
-msgstr ""
-"Passeio a granel: Anfitriões que usam o passeio a granel (aplica o SNMP v2c)"
-
 msgid "Bulk walk: Limit SNMP OID ranges"
 msgstr "Passeio a granel: Limite das gamas SNMP OID"
 
@@ -9049,6 +9045,16 @@ msgstr "Uso do Checkmk Checker"
 
 msgid "Checkmk config filename"
 msgstr "Checkmk config nome de arquivo"
+
+msgid ""
+"Checkmk defaults to SNMPv1 in order to support as many devices as possible. "
+"In practice, most SNMP devices also support SNMPv2c, which has two "
+"advantages: it supports 64 bit counters and bulk walk, which saves CPU and "
+"network resources and is more performant. Use this rule to configure SNMPv2c "
+"for as many devices as possible. However, please be aware that some devices "
+"that support SNMPv2c may be buggy. In such cases, you may want to try "
+"disabling bulk walk using the ruleset \"Disable bulk walks on SNMPv2c/v3\"."
+msgstr ""
 
 #, fuzzy, python-format
 msgid ""
@@ -14303,6 +14309,9 @@ msgstr ""
 "Desactivar a sincronização automática de utilizadores (utilizar utilizadores "
 "do site principal)"
 
+msgid "Disable bulk walks on SNMPv2c/v3"
+msgstr ""
+
 #, fuzzy
 msgid "Disable certificate validation"
 msgstr "Desactivar a validação do certificado SSL"
@@ -16280,9 +16289,6 @@ msgstr "Editar gráfico personalizado"
 msgid "Edit customer %s"
 msgstr "Editar %s de clientes"
 
-msgid "Edit dashboard"
-msgstr "Editar painel de instrumentos"
-
 msgid "Edit element"
 msgstr "Elemento de edição"
 
@@ -16314,6 +16320,13 @@ msgstr "Editar atributo do anfitrião"
 
 msgid "Edit host group"
 msgstr "Editar grupo anfitrião"
+
+#, fuzzy
+msgid "Edit layout"
+msgstr "Disposição radial"
+
+msgid "Edit layout only available if header is enabled"
+msgstr ""
 
 msgid "Edit metric"
 msgstr "Editar métrica"
@@ -16717,6 +16730,12 @@ msgstr "Habilitar o acesso ao Livestatus via rede (TCP)"
 
 msgid "Enable SMTP AUTH (LOGIN)"
 msgstr "Activar SMTP AUTH (LOGIN)"
+
+msgid "Enable SNMPv2c and bulk walk for hosts"
+msgstr ""
+
+msgid "Enable SNMPv2c and bulk walk for management boards"
+msgstr ""
 
 #, fuzzy
 msgid "Enable TLS"
@@ -26904,9 +26923,6 @@ msgstr ""
 msgid "Legacy GUI extensions"
 msgstr "Extensões GUI"
 
-msgid "Legacy SNMP devices using SNMP v2c"
-msgstr "Dispositivos SNMP legados usando SNMP v2c"
-
 msgid "Legacy agent management"
 msgstr "Gestão de agentes legados"
 
@@ -28398,6 +28414,9 @@ msgstr "Lista de saída mais longa nível inferior"
 msgid "Longest output list upper level"
 msgstr "Lista de saída mais longa nível superior"
 
+msgid "Look for keys"
+msgstr ""
+
 msgid "Looking back"
 msgstr "Olhando para trás"
 
@@ -29050,9 +29069,6 @@ msgstr "Objetos Gerenciados"
 
 msgid "Management board"
 msgstr "Conselho de Administração"
-
-msgid "Management board SNMP using bulk walk (enforces SNMP v2c)"
-msgstr "Quadro de gestão SNMP usando o passeio a granel (reforça SNMP v2c)"
 
 msgid "Management board config"
 msgstr "Configuração do conselho de administração"
@@ -30987,29 +31003,6 @@ msgstr "Mais informações podem ser encontradas em ~/var/log/web.log"
 #, python-format
 msgid "More than %d results"
 msgstr "Mais de %d de resultados"
-
-msgid ""
-"Most SNMP hosts support SNMP version 2c. However, Check_MK defaults to "
-"version 1, in order to support as many devices as possible. Please use this "
-"ruleset in order to configure SNMP v2c for as many hosts as possible. That "
-"version has two advantages: it supports 64 bit counters, which avoids "
-"problems with wrapping counters at too much traffic. And it supports bulk "
-"walk, which saves much CPU and network resources. Please be aware, however, "
-"that there are some broken devices out there, that support bulk walk but "
-"behave very bad when it is used. When you want to enable v2c while not using "
-"bulk walk, please use the rule set snmpv2c_hosts instead."
-msgstr ""
-"A maioria dos hosts SNMP suporta a versão 2c do SNMP. No entanto, o Check_MK "
-"é padrão para a versão 1, a fim de suportar o maior número possível de "
-"dispositivos. Por favor use este conjunto de regras para configurar o SNMP "
-"v2c para o maior número de hosts possível. Essa versão tem duas vantagens: "
-"suporta contadores de 64 bits, o que evita problemas com o embrulho de "
-"contadores com muito tráfego. E suporta o andar em massa, o que poupa muitos "
-"recursos de CPU e de rede. Por favor, esteja ciente, entretanto, que existem "
-"alguns dispositivos quebrados por aí, que suportam bulk walk, mas se "
-"comportam muito mal quando são usados. Quando você quiser ativar a v2c "
-"enquanto não estiver usando o bulk walk, por favor use o conjunto de regras "
-"snmpv2c_hosts."
 
 msgid ""
 "Most elements have a hard coded static title and some are aware of their "
@@ -34925,10 +34918,6 @@ msgstr "Páginas"
 
 msgid "Pages per second"
 msgstr "Páginas por segundo"
-
-#, python-format
-msgid "Painter %r returned invalid result: %r"
-msgstr "Pintor %r devolvido resultado inválido: %r"
 
 #, fuzzy
 msgid "Pair manually"
@@ -39850,17 +39839,6 @@ msgstr "Verificação da interface SNMP com contadores de 32 bits (v1)"
 msgid "SNMP interface check with 64 bit counters (using v2c)"
 msgstr "Verificação da interface SNMP com contadores de 64 bits (usando a v2c)"
 
-msgid ""
-"SNMP monitoring of management boards defaults to SNMPv2 for all hosts by "
-"default. In case some of your management boards don't support SNMPv2 or bulk "
-"walks, you can use this ruleset to enforce Checkmk to contact these "
-"management boards using SNMPv1."
-msgstr ""
-"SNMP monitoramento de placas de gerenciamento por padrão para SNMPv2 para "
-"todos os hosts. No caso de alguns dos seus quadros de gestão não suportarem "
-"o SNMPv2 ou os walks em massa, você pode usar este conjunto de regras para "
-"reforçar a Checkmk para contactar estes quadros de gestão usando o SNMPv1."
-
 msgid "SNMP rules"
 msgstr "regras do SNMP"
 
@@ -40194,6 +40172,9 @@ msgstr "Procura de conjuntos de regras obsoletas"
 
 msgid "Search for disabled rules"
 msgstr "Procura de regras para deficientes"
+
+msgid "Search for discoverable keys in the '~/.ssh' directory"
+msgstr ""
 
 msgid "Search for effective rules"
 msgstr "Procura de regras eficazes"
@@ -42774,6 +42755,13 @@ msgstr ""
 "Algumas impressoras (por exemplo, Konica for Drum Cartdiges) devolvem o "
 "combustível disponível em vez do que resta. Neste caso, é possível aumentar "
 "os níveis para lidar com este comportamento."
+
+msgid ""
+"Some SNMPv2c/v3 capable devices are buggy when being queried using bulk "
+"walks. In such cases, you can disable bulk walks with this ruleset. Please "
+"be aware that you should only do this if no other approach is feasible (e.g. "
+"limiting the bulk size), as bulk walks are much more performant."
+msgstr ""
 
 msgid ""
 "Some agent commands or plugins may follow the environment variable TMPDIR "
@@ -50102,22 +50090,6 @@ msgstr ""
 "prosseguir. Você precisa ativar a caixa de seleção acima para confirmar a "
 "ativação dessas alterações."
 
-msgid ""
-"There exist a few devices out there that behave very badly when using SNMP "
-"v2c and bulk walk. If you want to use SNMP v2c on those devices, "
-"nevertheless, you need to configure this device as legacy snmp device and "
-"upgrade it to SNMP v2c (without bulk walk) with this rule set. One reason is "
-"enabling 64 bit counters. Note: This rule won't apply if the device is "
-"already configured as SNMP v2c device."
-msgstr ""
-"Existem alguns dispositivos lá fora que se comportam muito mal quando se usa "
-"SNMP v2c e andam a granel. Se você quiser usar o SNMP v2c nesses "
-"dispositivos, no entanto, você precisa configurar esse dispositivo como "
-"dispositivo snmp antigo e atualizá-lo para o SNMP v2c (sem o bulk walk) com "
-"essa regra definida. Uma razão é permitir contadores de 64 bits. Nota: Esta "
-"regra não se aplicará se o dispositivo já estiver configurado como "
-"dispositivo SNMP v2c."
-
 #, python-format
 msgid ""
 "There is a cycle in your rules. This rule calls itself - either directly or "
@@ -54780,7 +54752,11 @@ msgid "Total Data in relation to RAM"
 msgstr "Dados totais em relação à RAM"
 
 #, fuzzy
-msgid "Total General Purpose SSD space"
+msgid "Total General Purpose SSD (gp2) space"
+msgstr "Espaço SSD de uso geral"
+
+#, fuzzy
+msgid "Total General Purpose SSD (gp3) space"
 msgstr "Espaço SSD de uso geral"
 
 msgid "Total IO operations per second"
@@ -54803,11 +54779,19 @@ msgid "Total Pending Mails"
 msgstr "Total de Correios Pendentes"
 
 #, fuzzy
-msgid "Total Provisioned IOPS SSD IO operations per seconds"
+msgid "Total Provisioned IOPS SSD (io1) IO operations per seconds"
 msgstr "Operações IOPS SSD IO provisionadas por segundo"
 
 #, fuzzy
-msgid "Total Provisioned IOPS SSD space"
+msgid "Total Provisioned IOPS SSD (io1) space"
+msgstr "Espaço SSD IOPS provisionado"
+
+#, fuzzy
+msgid "Total Provisioned IOPS SSD (io2) IO operations per seconds"
+msgstr "Operações IOPS SSD IO provisionadas por segundo"
+
+#, fuzzy
+msgid "Total Provisioned IOPS SSD (io2) space"
 msgstr "Espaço SSD IOPS provisionado"
 
 msgid "Total RAM + Swap installed"
@@ -64496,6 +64480,76 @@ msgstr "z/OS"
 #, fuzzy, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Todos os direitos reservados."
+
+#~ msgid "Bulk walk: Hosts using bulk walk (enforces SNMP v2c)"
+#~ msgstr ""
+#~ "Passeio a granel: Anfitriões que usam o passeio a granel (aplica o SNMP "
+#~ "v2c)"
+
+#~ msgid "Edit dashboard"
+#~ msgstr "Editar painel de instrumentos"
+
+#~ msgid "Legacy SNMP devices using SNMP v2c"
+#~ msgstr "Dispositivos SNMP legados usando SNMP v2c"
+
+#~ msgid "Management board SNMP using bulk walk (enforces SNMP v2c)"
+#~ msgstr "Quadro de gestão SNMP usando o passeio a granel (reforça SNMP v2c)"
+
+#~ msgid ""
+#~ "Most SNMP hosts support SNMP version 2c. However, Check_MK defaults to "
+#~ "version 1, in order to support as many devices as possible. Please use "
+#~ "this ruleset in order to configure SNMP v2c for as many hosts as "
+#~ "possible. That version has two advantages: it supports 64 bit counters, "
+#~ "which avoids problems with wrapping counters at too much traffic. And it "
+#~ "supports bulk walk, which saves much CPU and network resources. Please be "
+#~ "aware, however, that there are some broken devices out there, that "
+#~ "support bulk walk but behave very bad when it is used. When you want to "
+#~ "enable v2c while not using bulk walk, please use the rule set "
+#~ "snmpv2c_hosts instead."
+#~ msgstr ""
+#~ "A maioria dos hosts SNMP suporta a versão 2c do SNMP. No entanto, o "
+#~ "Check_MK é padrão para a versão 1, a fim de suportar o maior número "
+#~ "possível de dispositivos. Por favor use este conjunto de regras para "
+#~ "configurar o SNMP v2c para o maior número de hosts possível. Essa versão "
+#~ "tem duas vantagens: suporta contadores de 64 bits, o que evita problemas "
+#~ "com o embrulho de contadores com muito tráfego. E suporta o andar em "
+#~ "massa, o que poupa muitos recursos de CPU e de rede. Por favor, esteja "
+#~ "ciente, entretanto, que existem alguns dispositivos quebrados por aí, que "
+#~ "suportam bulk walk, mas se comportam muito mal quando são usados. Quando "
+#~ "você quiser ativar a v2c enquanto não estiver usando o bulk walk, por "
+#~ "favor use o conjunto de regras snmpv2c_hosts."
+
+#, python-format
+#~ msgid "Painter %r returned invalid result: %r"
+#~ msgstr "Pintor %r devolvido resultado inválido: %r"
+
+#~ msgid ""
+#~ "SNMP monitoring of management boards defaults to SNMPv2 for all hosts by "
+#~ "default. In case some of your management boards don't support SNMPv2 or "
+#~ "bulk walks, you can use this ruleset to enforce Checkmk to contact these "
+#~ "management boards using SNMPv1."
+#~ msgstr ""
+#~ "SNMP monitoramento de placas de gerenciamento por padrão para SNMPv2 para "
+#~ "todos os hosts. No caso de alguns dos seus quadros de gestão não "
+#~ "suportarem o SNMPv2 ou os walks em massa, você pode usar este conjunto de "
+#~ "regras para reforçar a Checkmk para contactar estes quadros de gestão "
+#~ "usando o SNMPv1."
+
+#~ msgid ""
+#~ "There exist a few devices out there that behave very badly when using "
+#~ "SNMP v2c and bulk walk. If you want to use SNMP v2c on those devices, "
+#~ "nevertheless, you need to configure this device as legacy snmp device and "
+#~ "upgrade it to SNMP v2c (without bulk walk) with this rule set. One reason "
+#~ "is enabling 64 bit counters. Note: This rule won't apply if the device is "
+#~ "already configured as SNMP v2c device."
+#~ msgstr ""
+#~ "Existem alguns dispositivos lá fora que se comportam muito mal quando se "
+#~ "usa SNMP v2c e andam a granel. Se você quiser usar o SNMP v2c nesses "
+#~ "dispositivos, no entanto, você precisa configurar esse dispositivo como "
+#~ "dispositivo snmp antigo e atualizá-lo para o SNMP v2c (sem o bulk walk) "
+#~ "com essa regra definida. Uma razão é permitir contadores de 64 bits. "
+#~ "Nota: Esta regra não se aplicará se o dispositivo já estiver configurado "
+#~ "como dispositivo SNMP v2c."
 
 #~ msgid "Top alerters"
 #~ msgstr "Top alerters"

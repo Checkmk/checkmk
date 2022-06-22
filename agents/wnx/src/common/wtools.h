@@ -259,8 +259,8 @@ private:
         // NOW THIS IS BY DESIGN of Check MK
         // https://docs.microsoft.com/de-at/windows/desktop/SecAuthZ/creating-a-security-descriptor-for-a-new-object-in-c--
         // ******************************************************
-        ret = ::SetSecurityDescriptorDacl(&sd_, true, nullptr, false);
-        if (!ret) {
+        ret = ::SetSecurityDescriptorDacl(&sd_, 1, nullptr, 0);  // NOLINT
+        if (ret == 0) {
             xlog::l(XLOG_FLINE + "Not so stupid fail %d", GetLastError())
                 .print();
             return false;
@@ -510,15 +510,15 @@ private:
 
     // The singleton service instance.
     std::unique_ptr<BaseServiceProcessor> processor_;
-    const wchar_t *log_name_ = wtools::kWToolsLogName;
+    const wchar_t *log_name_{wtools::kWToolsLogName};
 
     std::unique_ptr<wchar_t[]> name_;
-    bool can_stop_;
-    bool can_shutdown_;
-    bool can_pause_continue_;
+    bool can_stop_{false};
+    bool can_shutdown_{false};
+    bool can_pause_continue_{false};
 
-    SERVICE_STATUS status_;
-    SERVICE_STATUS_HANDLE status_handle_;
+    SERVICE_STATUS status_{0};
+    SERVICE_STATUS_HANDLE status_handle_{nullptr};
 #if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
     friend class ServiceControllerTest;
     FRIEND_TEST(ServiceControllerTest, CreateDelete);
@@ -989,6 +989,7 @@ std::wstring GetRegistryValue(std::wstring_view path,
                               std::wstring_view value_name,
                               std::wstring_view dflt) noexcept;
 std::wstring GetArgv(uint32_t index) noexcept;
+size_t GetCommitCharge(uint32_t pid) noexcept;
 size_t GetOwnVirtualSize() noexcept;
 
 namespace monitor {

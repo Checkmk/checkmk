@@ -177,8 +177,6 @@ protected:
                     names.end());
     }
 
-    void TearDown() override {}
-
     uint32_t startProcessTree() {
         auto exe_a = temp_dir() / "a.cmd";
         auto exe_b = temp_dir() / "b.cmd";
@@ -191,7 +189,7 @@ protected:
         return cma::tools::RunStdCommand(exe_a.wstring(), false);
     }
 
-    bool findProcessByPid(uint32_t pid) {
+    bool findProcessByPid(uint32_t pid) const {
         bool found = false;
         wtools::ScanProcessList(
             [&found, pid ](const PROCESSENTRY32 &entry) -> auto {
@@ -205,7 +203,7 @@ protected:
         return found;
     }
 
-    bool findProcessByParentPid(uint32_t pid) {
+    bool findProcessByParentPid(uint32_t pid) const {
         bool found = false;
         wtools::ScanProcessList(
             [&found, pid ](const PROCESSENTRY32 &entry) -> auto {
@@ -234,7 +232,7 @@ protected:
     }
 
     tst::TempCfgFs::ptr temp_fs;
-    std::filesystem::path temp_dir() { return temp_fs->data(); };
+    std::filesystem::path temp_dir() const { return temp_fs->data(); };
 };
 
 TEST_F(WtoolsKillProcessTreeFixture, Integration) {
@@ -514,9 +512,14 @@ TEST(Wtools, GetArgv) {
     EXPECT_TRUE(GetArgv(10).empty());
 }
 
-TEST(Wtools, MemSize) {
-    auto sz = GetOwnVirtualSize();
-    EXPECT_TRUE(sz > static_cast<size_t>(400'000));
+TEST(Wtools, GetOwnVirtualSize) {
+    constexpr size_t min_size{400'000U};
+    EXPECT_GT(GetOwnVirtualSize(), min_size);
+}
+
+TEST(Wtools, GetCommitCharge) {
+    constexpr size_t min_size{400'000U};
+    EXPECT_GT(GetCommitCharge(GetCurrentProcessId()), min_size);
 }
 
 TEST(Wtools, KillTree) {

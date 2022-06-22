@@ -18,19 +18,28 @@ def _parameter_valuespec():
     return Dictionary(
         help=_(
             (
-                "A pod's status depends on an array of conditions through which the"
+                "A Pod's status depends on an array of conditions through which the"
                 " Pod has or has not yet passed. You can set a time for how long a condition"
                 " is allowed to be in a failed state before the check alerts."
             )
         ),
         elements=[
-            ("scheduled", age_levels_dropdown(_("Time until alert, if pod not scheduled"))),
-            ("initialized", age_levels_dropdown(_("Time until alert, if pod not initialized"))),
+            (
+                "scheduled",
+                age_levels_dropdown(_("Time until alert, if PODSCHEDULED condition is false")),
+            ),
+            (
+                "initialized",
+                age_levels_dropdown(_("Time until alert, if INITIALIZED condition is false")),
+            ),
             (
                 "containersready",
-                age_levels_dropdown(_("Time until alert, if pod's containers not ready")),
+                age_levels_dropdown(_("Time until alert, if CONTAINERSREADY condition is false")),
             ),
-            ("ready", age_levels_dropdown(_("Time until alert, if pod not ready"))),
+            (
+                "ready",
+                age_levels_dropdown(_("Time until alert, if READY condition is false")),
+            ),
         ],
         optional_keys=["initialized", "scheduled", "containersready", "ready"],
     )

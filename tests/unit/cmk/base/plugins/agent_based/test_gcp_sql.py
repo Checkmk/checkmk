@@ -3,14 +3,17 @@
 # Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from dataclasses import dataclass
-from typing import Callable, Optional, Sequence, Tuple, Union
+from typing import Optional
 
 import pytest
 
 from cmk.base.api.agent_based.checking_classes import ServiceLabel
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import DiscoveryResult, StringTable
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    DiscoveryResult,
+    StringTable,
+)
 from cmk.base.plugins.agent_based.gcp_sql import (
     check_gcp_sql_cpu,
     check_gcp_sql_disk,
@@ -23,37 +26,9 @@ from cmk.base.plugins.agent_based.gcp_sql import (
 from cmk.base.plugins.agent_based.utils import gcp
 from cmk.base.plugins.agent_based.utils.gcp import Section, SectionItem
 
-from .gcp_test_util import DiscoverTester, ParsingTester
+from cmk.special_agents.agent_gcp import CLOUDSQL
 
-SECTION_TABLE = [
-    [
-        '{"metric": {"type": "cloudsql.googleapis.com/database/up", "labels": {}}, "resource": {"type": "cloudsql_database", "labels": {"project_id": "tribe29-check-development", "database_id": "tribe29-check-development:checktest"}}, "metric_kind": 1, "value_type": 2, "points": [{"interval": {"start_time": "2022-03-15T12:10:45.186892Z", "end_time": "2022-03-15T12:10:45.186892Z"}, "value": {"int64_value": "1"}}, {"interval": {"start_time": "2022-03-15T12:09:45.186892Z", "end_time": "2022-03-15T12:09:45.186892Z"}, "value": {"int64_value": "1"}}, {"interval": {"start_time": "2022-03-15T12:08:45.186892Z", "end_time": "2022-03-15T12:08:45.186892Z"}, "value": {"int64_value": "1"}}, {"interval": {"start_time": "2022-03-15T12:07:45.186892Z", "end_time": "2022-03-15T12:07:45.186892Z"}, "value": {"int64_value": "1"}}, {"interval": {"start_time": "2022-03-15T12:06:45.186892Z", "end_time": "2022-03-15T12:06:45.186892Z"}, "value": {"int64_value": "1"}}, {"interval": {"start_time": "2022-03-15T12:05:45.186892Z", "end_time": "2022-03-15T12:05:45.186892Z"}, "value": {"int64_value": "1"}}, {"interval": {"start_time": "2022-03-15T12:04:45.186892Z", "end_time": "2022-03-15T12:04:45.186892Z"}, "value": {"int64_value": "1"}}, {"interval": {"start_time": "2022-03-15T12:03:45.186892Z", "end_time": "2022-03-15T12:03:45.186892Z"}, "value": {"int64_value": "1"}}, {"interval": {"start_time": "2022-03-15T12:02:45.186892Z", "end_time": "2022-03-15T12:02:45.186892Z"}, "value": {"int64_value": "1"}}, {"interval": {"start_time": "2022-03-15T12:01:45.186892Z", "end_time": "2022-03-15T12:01:45.186892Z"}, "value": {"int64_value": "1"}}, {"interval": {"start_time": "2022-03-15T12:00:45.186892Z", "end_time": "2022-03-15T12:00:45.186892Z"}, "value": {"int64_value": "1"}}, {"interval": {"start_time": "2022-03-15T11:59:45.186892Z", "end_time": "2022-03-15T11:59:45.186892Z"}, "value": {"int64_value": "1"}}, {"interval": {"start_time": "2022-03-15T11:58:45.186892Z", "end_time": "2022-03-15T11:58:45.186892Z"}, "value": {"int64_value": "1"}}, {"interval": {"start_time": "2022-03-15T11:57:45.186892Z", "end_time": "2022-03-15T11:57:45.186892Z"},"value": {"int64_value": "1"}}, {"interval": {"start_time": "2022-03-15T11:56:45.186892Z", "end_time": "2022-03-15T11:56:45.186892Z"}, "value": {"int64_value": "1"}}, {"interval": {"start_time": "2022-03-15T11:55:45.186892Z", "end_time": "2022-03-15T11:55:45.186892Z"}, "value": {"int64_value": "1"}}, {"interval": {"start_time": "2022-03-15T11:54:45.186892Z", "end_time": "2022-03-15T11:54:45.186892Z"}, "value": {"int64_value": "1"}}, {"interval": {"start_time": "2022-03-15T11:53:45.186892Z", "end_time": "2022-03-15T11:53:45.186892Z"}, "value": {"int64_value": "1"}}], "unit": ""}'
-    ],
-    [
-        '{"metric": {"type": "cloudsql.googleapis.com/database/network/received_bytes_count", "labels": {}}, "resource": {"type": "cloudsql_database", "labels": {"database_id": "tribe29-check-development:checktest", "project_id": "tribe29-check-development"}}, "metric_kind": 1, "value_type": 3, "points": [{"interval": {"start_time": "2022-03-15T12:11:45.186892Z", "end_time": "2022-03-15T12:11:45.186892Z"}, "value": {"double_value": 5176.966666666666}}, {"interval": {"start_time": "2022-03-15T12:10:45.186892Z", "end_time": "2022-03-15T12:10:45.186892Z"}, "value": {"double_value": 5238.016666666666}}, {"interval": {"start_time": "2022-03-15T12:09:45.186892Z", "end_time": "2022-03-15T12:09:45.186892Z"}, "value": {"double_value": 5199.233333333334}}, {"interval": {"start_time": "2022-03-15T12:08:45.186892Z", "end_time": "2022-03-15T12:08:45.186892Z"}, "value": {"double_value": 5457.9}}, {"interval": {"start_time": "2022-03-15T12:07:45.186892Z", "end_time": "2022-03-15T12:07:45.186892Z"}, "value": {"double_value": 8960.933333333332}}, {"interval": {"start_time":"2022-03-15T12:06:45.186892Z", "end_time": "2022-03-15T12:06:45.186892Z"}, "value": {"double_value": 5237.05}}, {"interval": {"start_time": "2022-03-15T12:05:45.186892Z", "end_time": "2022-03-15T12:05:45.186892Z"}, "value": {"double_value": 5242.65}}, {"interval": {"start_time": "2022-03-15T12:04:45.186892Z", "end_time": "2022-03-15T12:04:45.186892Z"}, "value": {"double_value": 5483.3}}, {"interval": {"start_time": "2022-03-15T12:03:45.186892Z", "end_time": "2022-03-15T12:03:45.186892Z"}, "value": {"double_value": 5191.05}}, {"interval": {"start_time": "2022-03-15T12:02:45.186892Z", "end_time": "2022-03-15T12:02:45.186892Z"}, "value": {"double_value": 5195.483333333334}}, {"interval": {"start_time": "2022-03-15T12:01:45.186892Z", "end_time": "2022-03-15T12:01:45.186892Z"}, "value": {"double_value": 5349.633333333333}}, {"interval": {"start_time": "2022-03-15T12:00:45.186892Z", "end_time": "2022-03-15T12:00:45.186892Z"}, "value": {"double_value": 5405.733333333334}}, {"interval": {"start_time": "2022-03-15T11:59:45.186892Z", "end_time": "2022-03-15T11:59:45.186892Z"}, "value": {"double_value": 5239.333333333333}}, {"interval": {"start_time": "2022-03-15T11:58:45.186892Z", "end_time": "2022-03-15T11:58:45.186892Z"}, "value": {"double_value": 5211.6}}, {"interval": {"start_time": "2022-03-15T11:57:45.186892Z", "end_time": "2022-03-15T11:57:45.186892Z"}, "value": {"double_value": 5263.566666666667}}, {"interval": {"start_time": "2022-03-15T11:56:45.186892Z", "end_time":"2022-03-15T11:56:45.186892Z"}, "value": {"double_value": 5477.433333333333}}, {"interval": {"start_time": "2022-03-15T11:55:45.186892Z", "end_time": "2022-03-15T11:55:45.186892Z"}, "value": {"double_value": 5290.6}}, {"interval": {"start_time": "2022-03-15T11:54:45.186892Z", "end_time": "2022-03-15T11:54:45.186892Z"}, "value": {"double_value": 5397.183333333333}}, {"interval": {"start_time": "2022-03-15T11:53:45.186892Z", "end_time": "2022-03-15T11:53:45.186892Z"}, "value": {"double_value": 5359.733333333334}}], "unit": ""}'
-    ],
-    [
-        '{"metric": {"type": "cloudsql.googleapis.com/database/network/sent_bytes_count", "labels": {}}, "resource": {"type": "cloudsql_database", "labels": {"project_id": "tribe29-check-development", "database_id": "tribe29-check-development:checktest"}}, "metric_kind": 1, "value_type": 3, "points": [{"interval": {"start_time": "2022-03-15T12:11:45.186892Z", "end_time": "2022-03-15T12:11:45.186892Z"}, "value": {"double_value": 17443.083333333332}}, {"interval": {"start_time": "2022-03-15T12:10:45.186892Z", "end_time": "2022-03-15T12:10:45.186892Z"}, "value": {"double_value": 16112.366666666667}}, {"interval": {"start_time": "2022-03-15T12:09:45.186892Z", "end_time": "2022-03-15T12:09:45.186892Z"}, "value": {"double_value": 17166.633333333335}}, {"interval": {"start_time": "2022-03-15T12:08:45.186892Z", "end_time": "2022-03-15T12:08:45.186892Z"}, "value": {"double_value": 16234.283333333333}}, {"interval": {"start_time": "2022-03-15T12:07:45.186892Z", "end_time": "2022-03-15T12:07:45.186892Z"}, "value": {"double_value": 20479.316666666666}}, {"interval": {"start_time": "2022-03-15T12:06:45.186892Z", "end_time": "2022-03-15T12:06:45.186892Z"}, "value": {"double_value": 17990.483333333334}}, {"interval": {"start_time": "2022-03-15T12:05:45.186892Z", "end_time": "2022-03-15T12:05:45.186892Z"}, "value": {"double_value": 16119.55}}, {"interval": {"start_time": "2022-03-15T12:04:45.186892Z", "end_time": "2022-03-15T12:04:45.186892Z"}, "value": {"double_value": 17360.483333333334}}, {"interval": {"start_time": "2022-03-15T12:03:45.186892Z", "end_time": "2022-03-15T12:03:45.186892Z"}, "value": {"double_value": 16119.2}}, {"interval": {"start_time": "2022-03-15T12:02:45.186892Z", "end_time": "2022-03-15T12:02:45.186892Z"}, "value": {"double_value": 16953.266666666666}}, {"interval": {"start_time": "2022-03-15T12:01:45.186892Z", "end_time": "2022-03-15T12:01:45.186892Z"}, "value": {"double_value": 17651.633333333335}}, {"interval": {"start_time": "2022-03-15T12:00:45.186892Z", "end_time": "2022-03-15T12:00:45.186892Z"}, "value": {"double_value": 16584.75}}, {"interval": {"start_time": "2022-03-15T11:59:45.186892Z", "end_time": "2022-03-15T11:59:45.186892Z"}, "value": {"double_value": 16632.0}}, {"interval": {"start_time": "2022-03-15T11:58:45.186892Z", "end_time": "2022-03-15T11:58:45.186892Z"}, "value": {"double_value": 16681.166666666668}}, {"interval": {"start_time": "2022-03-15T11:57:45.186892Z", "end_time": "2022-03-15T11:57:45.186892Z"}, "value": {"double_value": 17043.283333333333}}, {"interval": {"start_time": "2022-03-15T11:56:45.186892Z", "end_time": "2022-03-15T11:56:45.186892Z"}, "value": {"double_value": 17707.433333333334}}, {"interval": {"start_time": "2022-03-15T11:55:45.186892Z", "end_time": "2022-03-15T11:55:45.186892Z"}, "value": {"double_value": 16710.4}}, {"interval": {"start_time": "2022-03-15T11:54:45.186892Z", "end_time": "2022-03-15T11:54:45.186892Z"}, "value": {"double_value": 16489.916666666668}}, {"interval": {"start_time": "2022-03-15T11:53:45.186892Z", "end_time": "2022-03-15T11:53:45.186892Z"}, "value": {"double_value": 16583.05}}], "unit": ""}'
-    ],
-    [
-        '{"metric": {"type": "cloudsql.googleapis.com/database/memory/utilization", "labels": {}}, "resource": {"type": "cloudsql_database", "labels": {"project_id": "tribe29-check-development", "database_id": "tribe29-check-development:checktest"}}, "metric_kind": 1, "value_type": 3, "points": [{"interval": {"start_time": "2022-03-15T12:10:45.186892Z", "end_time": "2022-03-15T12:10:45.186892Z"}, "value": {"double_value": 0.09334965707848912}}, {"interval": {"start_time": "2022-03-15T12:09:45.186892Z", "end_time": "2022-03-15T12:09:45.186892Z"}, "value": {"double_value": 0.09338921284327736}}, {"interval": {"start_time": "2022-03-15T12:08:45.186892Z", "end_time": "2022-03-15T12:08:45.186892Z"}, "value": {"double_value": 0.09339385764899114}}, {"interval": {"start_time": "2022-03-15T12:07:45.186892Z", "end_time": "2022-03-15T12:07:45.186892Z"}, "value": {"double_value": 0.09334905774871961}}, {"interval": {"start_time": "2022-03-15T12:06:45.186892Z", "end_time": "2022-03-15T12:06:45.186892Z"}, "value": {"double_value": 0.09335804769526239}}, {"interval": {"start_time": "2022-03-15T12:05:45.186892Z", "end_time": "2022-03-15T12:05:45.186892Z"}, "value": {"double_value": 0.09337977339940744}}, {"interval": {"start_time": "2022-03-15T12:04:45.186892Z", "end_time": "2022-03-15T12:04:45.186892Z"}, "value": {"double_value": 0.0934118375420767}}, {"interval": {"start_time": "2022-03-15T12:03:45.186892Z", "end_time": "2022-03-15T12:03:45.186892Z"}, "value": {"double_value": 0.09336449049028471}}, {"interval": {"start_time": "2022-03-15T12:02:45.186892Z", "end_time": "2022-03-15T12:02:45.186892Z"}, "value": {"double_value": 0.09334216545637014}}, {"interval": {"start_time": "2022-03-15T12:01:45.186892Z", "end_time": "2022-03-15T12:01:45.186892Z"}, "value": {"double_value": 0.09335325305710623}}, {"interval": {"start_time": "2022-03-15T12:00:45.186892Z", "end_time": "2022-03-15T12:00:45.186892Z"}, "value": {"double_value": 0.0933659888147085}}, {"interval": {"start_time": "2022-03-15T11:59:45.186892Z", "end_time": "2022-03-15T11:59:45.186892Z"}, "value": {"double_value": 0.0933853171997755}}, {"interval": {"start_time": "2022-03-15T11:58:45.186892Z", "end_time": "2022-03-15T11:58:45.186892Z"}, "value": {"double_value": 0.09335969585212857}}, {"interval": {"start_time": "2022-03-15T11:57:45.186892Z", "end_time": "2022-03-15T11:57:45.186892Z"}, "value": {"double_value": 0.09334231528881252}}, {"interval": {"start_time": "2022-03-15T11:56:45.186892Z", "end_time": "2022-03-15T11:56:45.186892Z"}, "value": {"double_value": 0.09336254266853378}}, {"interval": {"start_time": "2022-03-15T11:55:45.186892Z", "end_time": "2022-03-15T11:55:45.186892Z"}, "value": {"double_value": 0.09336523965249661}}, {"interval": {"start_time": "2022-03-15T11:54:45.186892Z", "end_time": "2022-03-15T11:54:45.186892Z"}, "value": {"double_value": 0.09336404099295757}}, {"interval": {"start_time": "2022-03-15T11:53:45.186892Z", "end_time": "2022-03-15T11:53:45.186892Z"}, "value": {"double_value": 0.09337602758834795}}], "unit": ""}'
-    ],
-    [
-        '{"metric": {"type": "cloudsql.googleapis.com/database/cpu/utilization", "labels": {}}, "resource": {"type": "cloudsql_database", "labels": {"project_id": "tribe29-check-development", "database_id": "tribe29-check-development:checktest"}}, "metric_kind": 1, "value_type": 3, "points": [{"interval": {"start_time": "2022-03-15T12:10:45.186892Z", "end_time": "2022-03-15T12:10:45.186892Z"}, "value": {"double_value": 0.013087989967803774}}, {"interval": {"start_time": "2022-03-15T12:09:45.186892Z", "end_time": "2022-03-15T12:09:45.186892Z"}, "value": {"double_value": 0.012672818401661345}}, {"interval": {"start_time": "2022-03-15T12:08:45.186892Z", "end_time": "2022-03-15T12:08:45.186892Z"}, "value": {"double_value": 0.013488882986159467}}, {"interval": {"start_time": "2022-03-15T12:07:45.186892Z", "end_time": "2022-03-15T12:07:45.186892Z"}, "value": {"double_value": 0.014496929856982869}}, {"interval": {"start_time": "2022-03-15T12:06:45.186892Z", "end_time": "2022-03-15T12:06:45.186892Z"}, "value": {"double_value": 0.013904319665215088}}, {"interval": {"start_time": "2022-03-15T12:05:45.186892Z", "end_time": "2022-03-15T12:05:45.186892Z"}, "value": {"double_value": 0.01338267950601401}}, {"interval": {"start_time": "2022-03-15T12:04:45.186892Z", "end_time": "2022-03-15T12:04:45.186892Z"}, "value": {"double_value": 0.012998424167034747}}, {"interval": {"start_time": "2022-03-15T12:03:45.186892Z", "end_time": "2022-03-15T12:03:45.186892Z"}, "value": {"double_value": 0.013400508641464151}}, {"interval": {"start_time": "2022-03-15T12:02:45.186892Z", "end_time": "2022-03-15T12:02:45.186892Z"}, "value": {"double_value": 0.014177463508075286}}, {"interval": {"start_time": "2022-03-15T12:01:45.186892Z", "end_time": "2022-03-15T12:01:45.186892Z"}, "value": {"double_value": 0.013153952654619161}}, {"interval": {"start_time": "2022-03-15T12:00:45.186892Z", "end_time": "2022-03-15T12:00:45.186892Z"},"value": {"double_value": 0.012025448297467278}}, {"interval": {"start_time": "2022-03-15T11:59:45.186892Z", "end_time": "2022-03-15T11:59:45.186892Z"}, "value": {"double_value": 0.011814011703310949}}, {"interval": {"start_time": "2022-03-15T11:58:45.186892Z", "end_time": "2022-03-15T11:58:45.186892Z"}, "value": {"double_value": 0.012254220290575308}}, {"interval": {"start_time": "2022-03-15T11:57:45.186892Z", "end_time": "2022-03-15T11:57:45.186892Z"}, "value": {"double_value": 0.012846020411788336}}, {"interval": {"start_time": "2022-03-15T11:56:45.186892Z", "end_time": "2022-03-15T11:56:45.186892Z"}, "value": {"double_value": 0.012598779307621537}}, {"interval": {"start_time": "2022-03-15T11:55:45.186892Z", "end_time": "2022-03-15T11:55:45.186892Z"}, "value": {"double_value": 0.01285304995199136}}, {"interval": {"start_time": "2022-03-15T11:54:45.186892Z", "end_time": "2022-03-15T11:54:45.186892Z"}, "value": {"double_value": 0.012780085063349845}}, {"interval": {"start_time": "2022-03-15T11:53:45.186892Z", "end_time": "2022-03-15T11:53:45.186892Z"}, "value": {"double_value": 0.013482351061049986}}], "unit": ""}'
-    ],
-    [
-        '{"metric": {"type": "cloudsql.googleapis.com/database/state", "labels": {}}, "resource": {"type": "cloudsql_database", "labels": {"region": "us-central", "project_id": "tribe29-check-development", "database_id": "tribe29-check-development:checktest"}}, "metric_kind": 1, "value_type": 4, "points": [{"interval": {"start_time": "2022-03-15T12:10:45.186892Z", "end_time": "2022-03-15T12:10:45.186892Z"}, "value": {"string_value": "RUNNING"}}, {"interval": {"start_time": "2022-03-15T12:09:45.186892Z", "end_time": "2022-03-15T12:09:45.186892Z"}, "value": {"string_value": "RUNNING"}}, {"interval": {"start_time": "2022-03-15T12:08:45.186892Z", "end_time": "2022-03-15T12:08:45.186892Z"}, "value": {"string_value": "RUNNING"}}, {"interval": {"start_time": "2022-03-15T12:07:45.186892Z", "end_time": "2022-03-15T12:07:45.186892Z"}, "value": {"string_value": "RUNNING"}}, {"interval": {"start_time": "2022-03-15T12:06:45.186892Z", "end_time": "2022-03-15T12:06:45.186892Z"}, "value": {"string_value": "RUNNING"}}, {"interval": {"start_time": "2022-03-15T12:05:45.186892Z", "end_time": "2022-03-15T12:05:45.186892Z"}, "value": {"string_value": "RUNNING"}}, {"interval": {"start_time": "2022-03-15T12:04:45.186892Z", "end_time": "2022-03-15T12:04:45.186892Z"}, "value": {"string_value": "RUNNING"}}, {"interval": {"start_time": "2022-03-15T12:03:45.186892Z", "end_time": "2022-03-15T12:03:45.186892Z"}, "value": {"string_value": "RUNNING"}}, {"interval": {"start_time": "2022-03-15T12:02:45.186892Z", "end_time": "2022-03-15T12:02:45.186892Z"}, "value": {"string_value": "RUNNING"}}, {"interval": {"start_time": "2022-03-15T12:01:45.186892Z", "end_time": "2022-03-15T12:01:45.186892Z"}, "value": {"string_value": "RUNNING"}}, {"interval": {"start_time": "2022-03-15T12:00:45.186892Z", "end_time": "2022-03-15T12:00:45.186892Z"}, "value": {"string_value": "RUNNING"}}, {"interval": {"start_time": "2022-03-15T11:59:45.186892Z", "end_time": "2022-03-15T11:59:45.186892Z"}, "value": {"string_value": "RUNNING"}}, {"interval": {"start_time": "2022-03-15T11:58:45.186892Z", "end_time": "2022-03-15T11:58:45.186892Z"}, "value": {"string_value": "RUNNING"}}, {"interval": {"start_time": "2022-03-15T11:57:45.186892Z", "end_time": "2022-03-15T11:57:45.186892Z"}, "value": {"string_value": "RUNNING"}}, {"interval": {"start_time": "2022-03-15T11:56:45.186892Z", "end_time": "2022-03-15T11:56:45.186892Z"}, "value": {"string_value": "RUNNING"}}, {"interval": {"start_time": "2022-03-15T11:55:45.186892Z", "end_time": "2022-03-15T11:55:45.186892Z"}, "value": {"string_value": "RUNNING"}}, {"interval": {"start_time": "2022-03-15T11:54:45.186892Z", "end_time": "2022-03-15T11:54:45.186892Z"}, "value": {"string_value": "RUNNING"}}, {"interval": {"start_time": "2022-03-15T11:53:45.186892Z", "end_time": "2022-03-15T11:53:45.186892Z"}, "value": {"string_value": "RUNNING"}}], "unit": ""}'
-    ],
-    [
-        '{"metric": {"type": "cloudsql.googleapis.com/database/disk/write_ops_count", "labels": {}}, "resource": {"type": "cloudsql_database", "labels": {"project_id": "tribe29-check-development", "database_id": "tribe29-check-development:checktest"}}, "metric_kind": 1, "value_type": 3, "points": [{"interval": {"start_time": "2022-03-15T12:10:45.186892Z", "end_time": "2022-03-15T12:10:45.186892Z"}, "value": {"double_value": 541.0}}, {"interval": {"start_time": "2022-03-15T12:09:45.186892Z", "end_time": "2022-03-15T12:09:45.186892Z"}, "value": {"double_value": 569.0}}, {"interval": {"start_time": "2022-03-15T12:08:45.186892Z", "end_time": "2022-03-15T12:08:45.186892Z"}, "value": {"double_value": 531.0}}, {"interval": {"start_time": "2022-03-15T12:07:45.186892Z", "end_time": "2022-03-15T12:07:45.186892Z"}, "value": {"double_value": 571.0}}, {"interval": {"start_time": "2022-03-15T12:06:45.186892Z", "end_time": "2022-03-15T12:06:45.186892Z"}, "value": {"double_value": 563.0}}, {"interval": {"start_time": "2022-03-15T12:05:45.186892Z", "end_time": "2022-03-15T12:05:45.186892Z"}, "value": {"double_value": 529.0}}, {"interval": {"start_time": "2022-03-15T12:04:45.186892Z", "end_time": "2022-03-15T12:04:45.186892Z"}, "value": {"double_value": 495.0}}, {"interval": {"start_time": "2022-03-15T12:03:45.186892Z", "end_time": "2022-03-15T12:03:45.186892Z"}, "value": {"double_value": 518.0}}, {"interval": {"start_time": "2022-03-15T12:02:45.186892Z", "end_time": "2022-03-15T12:02:45.186892Z"}, "value": {"double_value": 508.0}}, {"interval": {"start_time": "2022-03-15T12:01:45.186892Z", "end_time": "2022-03-15T12:01:45.186892Z"}, "value": {"double_value": 559.0}}, {"interval": {"start_time": "2022-03-15T12:00:45.186892Z", "end_time": "2022-03-15T12:00:45.186892Z"}, "value": {"double_value": 542.0}}, {"interval": {"start_time": "2022-03-15T11:59:45.186892Z", "end_time": "2022-03-15T11:59:45.186892Z"}, "value": {"double_value": 542.0}}, {"interval": {"start_time": "2022-03-15T11:58:45.186892Z", "end_time": "2022-03-15T11:58:45.186892Z"}, "value": {"double_value": 565.0}}, {"interval": {"start_time": "2022-03-15T11:57:45.186892Z", "end_time": "2022-03-15T11:57:45.186892Z"}, "value": {"double_value": 532.0}}, {"interval": {"start_time": "2022-03-15T11:56:45.186892Z", "end_time": "2022-03-15T11:56:45.186892Z"}, "value": {"double_value": 536.0}}, {"interval": {"start_time": "2022-03-15T11:55:45.186892Z", "end_time": "2022-03-15T11:55:45.186892Z"}, "value": {"double_value": 560.0}}, {"interval": {"start_time": "2022-03-15T11:54:45.186892Z", "end_time": "2022-03-15T11:54:45.186892Z"}, "value": {"double_value": 515.0}}, {"interval": {"start_time": "2022-03-15T11:53:45.186892Z", "end_time": "2022-03-15T11:53:45.186892Z"}, "value": {"double_value": 496.0}}], "unit": ""}'
-    ],
-    [
-        '{"metric": {"type": "cloudsql.googleapis.com/database/disk/read_ops_count", "labels": {}}, "resource": {"type": "cloudsql_database", "labels": {"project_id": "tribe29-check-development", "database_id": "tribe29-check-development:checktest"}}, "metric_kind": 1, "value_type": 3, "points": [{"interval": {"start_time": "2022-03-15T12:11:45.186892Z", "end_time": "2022-03-15T12:11:45.186892Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-03-15T12:10:45.186892Z", "end_time": "2022-03-15T12:10:45.186892Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-03-15T12:09:45.186892Z", "end_time": "2022-03-15T12:09:45.186892Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-03-15T12:08:45.186892Z", "end_time": "2022-03-15T12:08:45.186892Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-03-15T12:07:45.186892Z", "end_time": "2022-03-15T12:07:45.186892Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-03-15T12:06:45.186892Z", "end_time": "2022-03-15T12:06:45.186892Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-03-15T12:05:45.186892Z", "end_time": "2022-03-15T12:05:45.186892Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-03-15T12:04:45.186892Z", "end_time": "2022-03-15T12:04:45.186892Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-03-15T12:03:45.186892Z", "end_time": "2022-03-15T12:03:45.186892Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-03-15T12:02:45.186892Z", "end_time": "2022-03-15T12:02:45.186892Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-03-15T12:01:45.186892Z", "end_time": "2022-03-15T12:01:45.186892Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-03-15T12:00:45.186892Z", "end_time": "2022-03-15T12:00:45.186892Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-03-15T11:59:45.186892Z", "end_time": "2022-03-15T11:59:45.186892Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-03-15T11:58:45.186892Z", "end_time": "2022-03-15T11:58:45.186892Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-03-15T11:57:45.186892Z", "end_time": "2022-03-15T11:57:45.186892Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-03-15T11:56:45.186892Z", "end_time": "2022-03-15T11:56:45.186892Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-03-15T11:55:45.186892Z", "end_time": "2022-03-15T11:55:45.186892Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-03-15T11:54:45.186892Z", "end_time": "2022-03-15T11:54:45.186892Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-03-15T11:53:45.186892Z", "end_time": "2022-03-15T11:53:45.186892Z"}, "value": {"double_value": 0.0}}], "unit": ""}'
-    ],
-    [
-        '{"metric": {"type": "cloudsql.googleapis.com/database/disk/utilization", "labels": {}}, "resource": {"type": "cloudsql_database", "labels": {"project_id": "tribe29-check-development", "database_id": "tribe29-check-development:checktest"}}, "metric_kind": 1, "value_type": 3, "points": [{"interval": {"start_time": "2022-03-15T12:11:45.186892Z", "end_time": "2022-03-15T12:11:45.186892Z"}, "value": {"double_value": 0.05669390630118181}}, {"interval": {"start_time": "2022-03-15T12:10:45.186892Z", "end_time": "2022-03-15T12:10:45.186892Z"}, "value": {"double_value": 0.05669390630118181}}, {"interval": {"start_time": "2022-03-15T12:09:45.186892Z", "end_time": "2022-03-15T12:09:45.186892Z"}, "value": {"double_value": 0.05669390630118181}}, {"interval": {"start_time": "2022-03-15T12:08:45.186892Z", "end_time": "2022-03-15T12:08:45.186892Z"}, "value": {"double_value": 0.05669390630118181}}, {"interval": {"start_time": "2022-03-15T12:07:45.186892Z", "end_time": "2022-03-15T12:07:45.186892Z"}, "value": {"double_value": 0.05669390630118181}}, {"interval": {"start_time": "2022-03-15T12:06:45.186892Z", "end_time": "2022-03-15T12:06:45.186892Z"}, "value": {"double_value": 0.05669390630118181}}, {"interval": {"start_time": "2022-03-15T12:05:45.186892Z", "end_time": "2022-03-15T12:05:45.186892Z"}, "value": {"double_value": 0.05669390630118181}}, {"interval": {"start_time": "2022-03-15T12:04:45.186892Z", "end_time": "2022-03-15T12:04:45.186892Z"}, "value": {"double_value": 0.05669390630118181}}, {"interval": {"start_time": "2022-03-15T12:03:45.186892Z", "end_time": "2022-03-15T12:03:45.186892Z"}, "value": {"double_value": 0.05669390630118181}}, {"interval": {"start_time": "2022-03-15T12:02:45.186892Z", "end_time": "2022-03-15T12:02:45.186892Z"}, "value": {"double_value": 0.05669390630118181}}, {"interval": {"start_time": "2022-03-15T12:01:45.186892Z", "end_time": "2022-03-15T12:01:45.186892Z"}, "value": {"double_value": 0.05669390630118181}}, {"interval": {"start_time": "2022-03-15T12:00:45.186892Z", "end_time": "2022-03-15T12:00:45.186892Z"}, "value": {"double_value": 0.05669390630118181}}, {"interval": {"start_time": "2022-03-15T11:59:45.186892Z", "end_time": "2022-03-15T11:59:45.186892Z"}, "value": {"double_value": 0.05669390630118181}}, {"interval": {"start_time": "2022-03-15T11:58:45.186892Z", "end_time": "2022-03-15T11:58:45.186892Z"}, "value": {"double_value": 0.05669390630118181}}, {"interval": {"start_time": "2022-03-15T11:57:45.186892Z", "end_time": "2022-03-15T11:57:45.186892Z"}, "value": {"double_value": 0.05669390630118181}}, {"interval": {"start_time": "2022-03-15T11:56:45.186892Z", "end_time": "2022-03-15T11:56:45.186892Z"}, "value": {"double_value": 0.05669390630118181}}, {"interval": {"start_time": "2022-03-15T11:55:45.186892Z", "end_time": "2022-03-15T11:55:45.186892Z"}, "value": {"double_value": 0.05669390630118181}}, {"interval": {"start_time": "2022-03-15T11:54:45.186892Z", "end_time": "2022-03-15T11:54:45.186892Z"}, "value":{"double_value": 0.05669390630118181}}, {"interval": {"start_time": "2022-03-15T11:53:45.186892Z", "end_time": "2022-03-15T11:53:45.186892Z"}, "value": {"double_value": 0.05669390630118181}}], "unit": ""}'
-    ],
-]
+from .gcp_test_util import DiscoverTester, generate_timeseries, ParsingTester, Plugin
 
 ASSET_TABLE = [
     ['{"project":"backup-255820"}'],
@@ -96,7 +71,7 @@ class TestParsing(ParsingTester):
 
     @property
     def section_table(self) -> StringTable:
-        return SECTION_TABLE
+        return generate_timeseries("item", 42, CLOUDSQL)
 
 
 def test_discover_labels_labels_without_user_labels() -> None:
@@ -118,7 +93,17 @@ def test_discover_labels_labels_without_user_labels() -> None:
     }
 
 
+# test the status check. This check does not follow the standard checks for gcp and has to be tested separetely.
+
 ITEM = "checktest"
+SECTION_TABLE = [
+    [
+        '{"metric": {"type": "cloudsql.googleapis.com/database/up", "labels": {}}, "resource": {"type": "cloudsql_database", "labels": {"project_id": "tribe29-check-development", "database_id": "tribe29-check-development:checktest"}}, "metric_kind": 1, "value_type": 2, "points": [{"interval": {"start_time": "2022-03-15T12:10:45.186892Z", "end_time": "2022-03-15T12:10:45.186892Z"}, "value": {"int64_value": "1"}}, {"interval": {"start_time": "2022-03-15T12:09:45.186892Z", "end_time": "2022-03-15T12:09:45.186892Z"}, "value": {"int64_value": "1"}}, {"interval": {"start_time": "2022-03-15T12:08:45.186892Z", "end_time": "2022-03-15T12:08:45.186892Z"}, "value": {"int64_value": "1"}}, {"interval": {"start_time": "2022-03-15T12:07:45.186892Z", "end_time": "2022-03-15T12:07:45.186892Z"}, "value": {"int64_value": "1"}}, {"interval": {"start_time": "2022-03-15T12:06:45.186892Z", "end_time": "2022-03-15T12:06:45.186892Z"}, "value": {"int64_value": "1"}}, {"interval": {"start_time": "2022-03-15T12:05:45.186892Z", "end_time": "2022-03-15T12:05:45.186892Z"}, "value": {"int64_value": "1"}}, {"interval": {"start_time": "2022-03-15T12:04:45.186892Z", "end_time": "2022-03-15T12:04:45.186892Z"}, "value": {"int64_value": "1"}}, {"interval": {"start_time": "2022-03-15T12:03:45.186892Z", "end_time": "2022-03-15T12:03:45.186892Z"}, "value": {"int64_value": "1"}}, {"interval": {"start_time": "2022-03-15T12:02:45.186892Z", "end_time": "2022-03-15T12:02:45.186892Z"}, "value": {"int64_value": "1"}}, {"interval": {"start_time": "2022-03-15T12:01:45.186892Z", "end_time": "2022-03-15T12:01:45.186892Z"}, "value": {"int64_value": "1"}}, {"interval": {"start_time": "2022-03-15T12:00:45.186892Z", "end_time": "2022-03-15T12:00:45.186892Z"}, "value": {"int64_value": "1"}}, {"interval": {"start_time": "2022-03-15T11:59:45.186892Z", "end_time": "2022-03-15T11:59:45.186892Z"}, "value": {"int64_value": "1"}}, {"interval": {"start_time": "2022-03-15T11:58:45.186892Z", "end_time": "2022-03-15T11:58:45.186892Z"}, "value": {"int64_value": "1"}}, {"interval": {"start_time": "2022-03-15T11:57:45.186892Z", "end_time": "2022-03-15T11:57:45.186892Z"},"value": {"int64_value": "1"}}, {"interval": {"start_time": "2022-03-15T11:56:45.186892Z", "end_time": "2022-03-15T11:56:45.186892Z"}, "value": {"int64_value": "1"}}, {"interval": {"start_time": "2022-03-15T11:55:45.186892Z", "end_time": "2022-03-15T11:55:45.186892Z"}, "value": {"int64_value": "1"}}, {"interval": {"start_time": "2022-03-15T11:54:45.186892Z", "end_time": "2022-03-15T11:54:45.186892Z"}, "value": {"int64_value": "1"}}, {"interval": {"start_time": "2022-03-15T11:53:45.186892Z", "end_time": "2022-03-15T11:53:45.186892Z"}, "value": {"int64_value": "1"}}], "unit": ""}'
+    ],
+    [
+        '{"metric": {"type": "cloudsql.googleapis.com/database/state", "labels": {}}, "resource": {"type": "cloudsql_database", "labels": {"region": "us-central", "project_id": "tribe29-check-development", "database_id": "tribe29-check-development:checktest"}}, "metric_kind": 1, "value_type": 4, "points": [{"interval": {"start_time": "2022-03-15T12:10:45.186892Z", "end_time": "2022-03-15T12:10:45.186892Z"}, "value": {"string_value": "RUNNING"}}, {"interval": {"start_time": "2022-03-15T12:09:45.186892Z", "end_time": "2022-03-15T12:09:45.186892Z"}, "value": {"string_value": "RUNNING"}}, {"interval": {"start_time": "2022-03-15T12:08:45.186892Z", "end_time": "2022-03-15T12:08:45.186892Z"}, "value": {"string_value": "RUNNING"}}, {"interval": {"start_time": "2022-03-15T12:07:45.186892Z", "end_time": "2022-03-15T12:07:45.186892Z"}, "value": {"string_value": "RUNNING"}}, {"interval": {"start_time": "2022-03-15T12:06:45.186892Z", "end_time": "2022-03-15T12:06:45.186892Z"}, "value": {"string_value": "RUNNING"}}, {"interval": {"start_time": "2022-03-15T12:05:45.186892Z", "end_time": "2022-03-15T12:05:45.186892Z"}, "value": {"string_value": "RUNNING"}}, {"interval": {"start_time": "2022-03-15T12:04:45.186892Z", "end_time": "2022-03-15T12:04:45.186892Z"}, "value": {"string_value": "RUNNING"}}, {"interval": {"start_time": "2022-03-15T12:03:45.186892Z", "end_time": "2022-03-15T12:03:45.186892Z"}, "value": {"string_value": "RUNNING"}}, {"interval": {"start_time": "2022-03-15T12:02:45.186892Z", "end_time": "2022-03-15T12:02:45.186892Z"}, "value": {"string_value": "RUNNING"}}, {"interval": {"start_time": "2022-03-15T12:01:45.186892Z", "end_time": "2022-03-15T12:01:45.186892Z"}, "value": {"string_value": "RUNNING"}}, {"interval": {"start_time": "2022-03-15T12:00:45.186892Z", "end_time": "2022-03-15T12:00:45.186892Z"}, "value": {"string_value": "RUNNING"}}, {"interval": {"start_time": "2022-03-15T11:59:45.186892Z", "end_time": "2022-03-15T11:59:45.186892Z"}, "value": {"string_value": "RUNNING"}}, {"interval": {"start_time": "2022-03-15T11:58:45.186892Z", "end_time": "2022-03-15T11:58:45.186892Z"}, "value": {"string_value": "RUNNING"}}, {"interval": {"start_time": "2022-03-15T11:57:45.186892Z", "end_time": "2022-03-15T11:57:45.186892Z"}, "value": {"string_value": "RUNNING"}}, {"interval": {"start_time": "2022-03-15T11:56:45.186892Z", "end_time": "2022-03-15T11:56:45.186892Z"}, "value": {"string_value": "RUNNING"}}, {"interval": {"start_time": "2022-03-15T11:55:45.186892Z", "end_time": "2022-03-15T11:55:45.186892Z"}, "value": {"string_value": "RUNNING"}}, {"interval": {"start_time": "2022-03-15T11:54:45.186892Z", "end_time": "2022-03-15T11:54:45.186892Z"}, "value": {"string_value": "RUNNING"}}, {"interval": {"start_time": "2022-03-15T11:53:45.186892Z", "end_time": "2022-03-15T11:53:45.186892Z"}, "value": {"string_value": "RUNNING"}}], "unit": ""}'
+    ],
+]
 
 
 @pytest.fixture(name="section")
@@ -198,88 +183,72 @@ def test_gcp_sql_status_no_results_if_item_not_found(section: gcp.Section) -> No
     assert list(results) == []
 
 
-@dataclass(frozen=True)
-class Plugin:
-    metrics: Sequence[str]
-    function: Callable
-
+# Test the standard checks
 
 PLUGINS = [
-    Plugin(
-        function=check_gcp_sql_cpu,
-        metrics=[
-            "util",
-        ],
+    pytest.param(
+        Plugin(
+            function=check_gcp_sql_cpu,
+            metrics=["util"],
+            results=[Result(state=State.OK, summary="CPU: 42.00%")],
+        ),
+        id="cpu",
     ),
-    Plugin(
-        function=check_gcp_sql_memory,
-        metrics=[
-            "memory_util",
-        ],
+    pytest.param(
+        Plugin(
+            function=check_gcp_sql_memory,
+            metrics=["memory_util"],
+            results=[Result(state=State.OK, summary="Memory: 42.00%")],
+        ),
+        id="memory",
     ),
-    Plugin(
-        function=check_gcp_sql_network,
-        metrics=[
-            "net_data_sent",
-            "net_data_recv",
-        ],
+    pytest.param(
+        Plugin(
+            function=check_gcp_sql_network,
+            metrics=["net_data_sent", "net_data_recv"],
+            results=[
+                Result(state=State.OK, summary="In: 3.36 Bit/s"),
+                Result(state=State.OK, summary="Out: 3.36 Bit/s"),
+            ],
+        ),
+        id="network",
     ),
-    Plugin(
-        function=check_gcp_sql_disk,
-        metrics=[
-            "fs_used_percent",
-            "disk_write_ios",
-            "disk_read_ios",
-        ],
+    pytest.param(
+        Plugin(
+            function=check_gcp_sql_disk,
+            metrics=["fs_used_percent", "disk_write_ios", "disk_read_ios"],
+            results=[
+                Result(state=State.OK, summary="Disk utilization: 42.00%"),
+                Result(state=State.OK, summary="Read operations: 0.42"),
+                Result(state=State.OK, summary="Write operations: 0.42"),
+            ],
+        ),
+        id="disk",
     ),
 ]
 
 
-@pytest.fixture(params=PLUGINS, name="checkplugin")
-def fixture_checkplugin(request) -> Plugin:
-    return request.param
-
-
-Results = Tuple[Sequence[Union[Metric, Result]], Plugin]
-
-
-@pytest.fixture(name="results_and_plugin")
-def fixture_results(checkplugin: Plugin, section: Section) -> Results:
-    params = {k: None for k in checkplugin.metrics}
-    results = list(
-        checkplugin.function(
-            item=ITEM, params=params, section_gcp_service_cloud_sql=section, section_gcp_assets=None
-        )
+def generate_results(plugin: Plugin) -> CheckResult:
+    item = "item"
+    section = parse(generate_timeseries(item, 0.42, CLOUDSQL))
+    yield from plugin.function(
+        item=item,
+        params={k: None for k in plugin.metrics},
+        section_gcp_service_cloud_sql=section,
+        section_gcp_assets=None,
     )
-    return results, checkplugin
 
 
-def test_no_sql_section_yields_no_metric_data(checkplugin) -> None:
-    params = {k: None for k in checkplugin.metrics}
-    results = list(
-        checkplugin.function(
-            item=ITEM,
-            params=params,
-            section_gcp_service_cloud_sql=None,
-            section_gcp_assets=None,
-        )
-    )
-    assert len(results) == 0
+@pytest.mark.parametrize("plugin", PLUGINS)
+def test_yield_results_as_specified(plugin) -> None:
+    results = {r for r in generate_results(plugin) if isinstance(r, Result)}
+    assert results == set(plugin.results)
 
 
-def test_yield_metrics_as_specified(results_and_plugin: Results) -> None:
-    results, checkplugin = results_and_plugin
-    res = {r.name: r for r in results if isinstance(r, Metric)}
-    assert len(res) == len(checkplugin.metrics)
-    assert set(res.keys()) == set(checkplugin.metrics)
-
-
-def test_yield_results_as_specified(results_and_plugin: Results) -> None:
-    results, checkplugin = results_and_plugin
-    res = [r for r in results if isinstance(r, Result)]
-    assert len(res) == len(checkplugin.metrics)
-    for r in res:
-        assert r.state == State.OK
+@pytest.mark.parametrize("plugin", PLUGINS)
+def test_yield_metrics_as_specified(plugin) -> None:
+    results = {r.name for r in generate_results(plugin) if isinstance(r, Metric)}
+    assert results == set(plugin.metrics)
 
 
 @pytest.mark.xfail(

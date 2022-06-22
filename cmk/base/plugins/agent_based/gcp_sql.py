@@ -206,7 +206,7 @@ def check_gcp_sql_disk(
         "fs_used_percent": gcp.MetricSpec(
             "cloudsql.googleapis.com/database/disk/utilization",
             "Disk utilization",
-            lambda x: f"usage: {render.percent(x)}",
+            render.percent,
             scale=1e2,
         ),
         "disk_write_ios": gcp.MetricSpec(

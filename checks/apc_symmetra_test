@@ -31,7 +31,31 @@
 #         ::= { upsAdvTest 4 }
 #
 
+import datetime
+
 ups_test_default = (0, 0)
+
+
+def _days_difference(date: str, today: datetime.date) -> int:
+    """Counts the number of days date happend after today.
+
+    >>> today = datetime.date(2020, month = 1, day = 1)
+    >>> _days_difference("01/01/20", today)
+    0
+    >>> _days_difference("1/1/20", today)
+    0
+    >>> _days_difference("31/12/2019", today)
+    1
+    >>> _days_difference("01/01/2021", today)
+    -366
+    """
+    month, day, year = (int(i) for i in date.split("/"))
+    if year < 100:
+        year += 2000
+    return (today - datetime.date(year, month, day)).days
+
+
+# TODO: check this for common code with ups_test
 
 
 def check_apc_test(item, params, info):
@@ -41,12 +65,13 @@ def check_apc_test(item, params, info):
     last_result = int(info[0][0])
     last_date = info[0][1]
 
-    if last_date == "Unknown" or len(last_date) not in [8, 10]:
+    try:
+        # I don't have any SNMP walk to confirm this, but in some cases
+        # last_date has the value 'Unknown' according to the previous source
+        # code.
+        days_diff = _days_difference(last_date, datetime.date.today())
+    except ValueError:
         return 3, "Date of last self test is unknown"
-
-    year_format = "%y" if len(last_date) == 8 else "%Y"
-    last_ts = time.mktime(time.strptime(last_date, "%m/%d/" + year_format))
-    days_diff = (time.time() - last_ts) / 86400.0
 
     diagnostic_status_text = {1: "OK", 2: "failed", 3: "invalid", 4: "in progress"}
 

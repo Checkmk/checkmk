@@ -2213,34 +2213,42 @@ class FilterECServiceLevelRange(Filter):
         html.dropdown(self.upper_bound_varname, selection)
         html.close_div()
 
-    def filter(self, infoname):
-        lower_bound = html.request.var(self.lower_bound_varname)
-        upper_bound = html.request.var(self.upper_bound_varname)
+    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         # NOTE: We need this special case only because our construction of the
         # disjunction is broken. We should really have a Livestatus Query DSL...
-        if not lower_bound and not upper_bound:
+        bounds: Dict[str, str] = self.value()
+        if not any(bounds.values()):
+            return rows
+
+        lower_bound: Optional[str] = bounds.get(self.lower_bound_varname)
+        upper_bound: Optional[str] = bounds.get(self.upper_bound_varname)
+        # If user only chooses "From" or "To", use same value from the choosen
+        # field for the empty field and update filter form with that value
+        if not lower_bound:
+            lower_bound = upper_bound
+            assert upper_bound is not None
+            html.request.set_var(self.lower_bound_varname, upper_bound)
+        if not upper_bound:
+            upper_bound = lower_bound
+            assert lower_bound is not None
+            html.request.set_var(self.upper_bound_varname, lower_bound)
+
+        filtered_rows: Rows = []
+        assert lower_bound is not None
+        assert upper_bound is not None
+        for row in rows:
+            service_level = int(row['%s_custom_variable_values' % self.info][-1])
+            if int(lower_bound) <= service_level <= int(upper_bound):
+                filtered_rows.append(row)
+
+        return filtered_rows
+
+    def filter(self, infoname):
+        if not html.request.var(self.lower_bound_varname) and not html.request.var(
+                self.upper_bound_varname):
             return ""
 
-        if lower_bound:
-            match_lower = lambda val, lo=int(lower_bound): lo <= val
-        else:
-            match_lower = lambda val, lo=0: True
-
-        if upper_bound:
-            match_upper = lambda val, hi=int(upper_bound): val <= hi
-        else:
-            match_upper = lambda val, hi=0: True
-
-        filterline = u"Filter: %s_custom_variable_names >= EC_SL\n" % self.info
-
-        filterline_values = [
-            str(value)
-            for value, _readable in config.mkeventd_service_levels
-            if match_lower(value) and match_upper(value)
-        ]
-
-        return filterline + lq_logic("Filter: %s_custom_variable_values >=" % self.info,
-                                     filterline_values, "Or")
+        return "Filter: %s_custom_variable_names >= EC_SL\n" % self.info
 
 
 filter_registry.register(

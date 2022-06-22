@@ -425,9 +425,6 @@ filter_tests = [
         ],
         expected_filters=(
             "Filter: host_custom_variable_names >= EC_SL\n"
-            "Filter: host_custom_variable_values >= 10\n"
-            "Filter: host_custom_variable_values >= 20\n"
-            "Or: 2\n"
         ),
     ),
     FilterTest(
@@ -1022,6 +1019,47 @@ filter_table_tests = [
         ],
         expected_rows=[
             {"invinterface_last_change": 1523811000-(60*60*24*4)},
+        ],
+    ),
+    # FilterECServiceLevelRange
+    FilterTableTest(
+        ident="svc_service_level",
+        request_vars=[('svc_service_level_lower', "1"), ('svc_service_level_upper', "3")],
+        rows=[
+            {"service_custom_variable_values": ["","","127.0.0.1","/wato/ auto-piggyback cmk-agent","/wato/hosts.mk","0"]},
+            {"service_custom_variable_values": ["","","127.0.0.1","/wato/ auto-piggyback cmk-agent","/wato/hosts.mk","1"]},
+            {"service_custom_variable_values": ["","","127.0.0.1","/wato/ auto-piggyback cmk-agent","/wato/hosts.mk","2"]},
+            {"service_custom_variable_values": ["","","127.0.0.1","/wato/ auto-piggyback cmk-agent","/wato/hosts.mk","3"]},
+            {"service_custom_variable_values": ["","","127.0.0.1","/wato/ auto-piggyback cmk-agent","/wato/hosts.mk","4"]},
+        ],
+        expected_rows=[
+            {"service_custom_variable_values": ["","","127.0.0.1","/wato/ auto-piggyback cmk-agent","/wato/hosts.mk","1"]},
+            {"service_custom_variable_values": ["","","127.0.0.1","/wato/ auto-piggyback cmk-agent","/wato/hosts.mk","2"]},
+            {"service_custom_variable_values": ["","","127.0.0.1","/wato/ auto-piggyback cmk-agent","/wato/hosts.mk","3"]},
+        ],
+    ),
+    FilterTableTest(
+        ident="hst_service_level",
+        request_vars=[('hst_service_level_lower', "1")],
+        rows=[
+            {"host_custom_variable_values": ["","","127.0.0.1","/wato/ auto-piggyback cmk-agent","/wato/hosts.mk","0"]},
+            {"host_custom_variable_values": ["","","127.0.0.1","/wato/ auto-piggyback cmk-agent","/wato/hosts.mk","1"]},
+            {"host_custom_variable_values": ["","","127.0.0.1","/wato/ auto-piggyback cmk-agent","/wato/hosts.mk","2"]},
+        ],
+        expected_rows=[
+            {"host_custom_variable_values": ["","","127.0.0.1","/wato/ auto-piggyback cmk-agent","/wato/hosts.mk","1"]},
+        ],
+    ),
+    FilterTableTest(
+        ident="hst_service_level",
+        request_vars=[('hst_service_level_upper', "2")],
+        rows=[
+            {"host_custom_variable_values": ["","","127.0.0.1","/wato/ auto-piggyback cmk-agent","/wato/hosts.mk","0"]},
+            {"host_custom_variable_values": ["","","127.0.0.1","/wato/ auto-piggyback cmk-agent","/wato/hosts.mk","1"]},
+            {"host_custom_variable_values": ["","","127.0.0.1","/wato/ auto-piggyback cmk-agent","/wato/hosts.mk","2"]},
+        ],
+        expected_rows=[
+            {"host_custom_variable_values": ["","","127.0.0.1","/wato/ auto-piggyback cmk-agent","/wato/hosts.mk","2"]},
         ],
     ),
     # TODO: Testing base class FilterHistoric

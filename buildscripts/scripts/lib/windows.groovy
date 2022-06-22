@@ -11,7 +11,7 @@ def build(Map args) {
     }
 
     if (args.TARGET == "test_integration") {
-        download_artifacts("${FOLDER_ID}/Windows-Python-Build", ARTIFACTS_DIR)
+        download_python_artifacts("${FOLDER_ID}/Windows-Python-Build", ARTIFACTS_DIR)
     }
 
     stage("Windows ${args.TARGET} build") {
@@ -76,6 +76,18 @@ def download_artifacts(PROJECT_NAME, DIR) {
             script {
                 step ([$class: 'CopyArtifact',
                 projectName: "${FOLDER_ID}/windows-agent-build",
+            ]);
+            }
+        }
+    }
+}
+
+def download_python_artifacts(PROJECT_NAME, DIR) {
+    stage('download python artifacts') {
+        dir(DIR) {
+            script {
+                step ([$class: 'CopyArtifact',
+                projectName: "${PROJECT_NAME}",
             ]);
             }
         }

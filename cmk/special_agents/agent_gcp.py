@@ -463,9 +463,9 @@ RUN = Service(
             ),
         ),
         Metric(
-            name="run.googleapis.com/container/cpu/allocation_time",
+            name="run.googleapis.com/container/cpu/utilizations",
             aggregation=Aggregation(
-                per_series_aligner=Aligner.ALIGN_MAX,
+                per_series_aligner=Aligner.ALIGN_PERCENTILE_99,
             ),
         ),
         Metric(

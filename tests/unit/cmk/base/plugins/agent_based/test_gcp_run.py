@@ -4,14 +4,21 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from dataclasses import dataclass
-from typing import Callable, Optional, Sequence, Tuple, Union
+import datetime
+import json
+from typing import Optional
 
 import pytest
+from google.cloud import monitoring_v3
+from google.cloud.monitoring_v3.types import TimeSeries
 
 from cmk.base.api.agent_based.checking_classes import ServiceLabel
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import DiscoveryResult, StringTable
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    DiscoveryResult,
+    StringTable,
+)
 from cmk.base.plugins.agent_based.gcp_run import (
     check_gcp_run_cpu,
     check_gcp_run_memory,
@@ -21,36 +28,10 @@ from cmk.base.plugins.agent_based.gcp_run import (
     parse_gcp_run,
 )
 from cmk.base.plugins.agent_based.utils import gcp
-from cmk.base.plugins.agent_based.utils.gcp import Section
 
-from .gcp_test_util import DiscoverTester, ParsingTester
+from cmk.special_agents import agent_gcp
 
-SECTION_TABLE = [
-    [
-        '{"metric": {"type": "run.googleapis.com/container/network/received_bytes_count", "labels": {}}, "resource": {"type": "cloud_run_revision", "labels": {"service_name": "aaaa", "project_id": "backup-255820"}}, "metric_kind": 1, "value_type": 3, "points": [{"interval": {"start_time": "2022-02-26T09:50:18.962995Z", "end_time": "2022-02-26T09:50:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:49:18.962995Z", "end_time": "2022-02-26T09:49:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:48:18.962995Z", "end_time": "2022-02-26T09:48:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:47:18.962995Z", "end_time": "2022-02-26T09:47:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:46:18.962995Z", "end_time": "2022-02-26T09:46:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:45:18.962995Z", "end_time": "2022-02-26T09:45:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:44:18.962995Z", "end_time": "2022-02-26T09:44:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:43:18.962995Z", "end_time": "2022-02-26T09:43:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:42:18.962995Z", "end_time": "2022-02-26T09:42:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:41:18.962995Z", "end_time": "2022-02-26T09:41:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:40:18.962995Z", "end_time": "2022-02-26T09:40:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:39:18.962995Z", "end_time": "2022-02-26T09:39:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:38:18.962995Z", "end_time": "2022-02-26T09:38:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:37:18.962995Z", "end_time": "2022-02-26T09:37:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:36:18.962995Z", "end_time": "2022-02-26T09:36:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:35:18.962995Z", "end_time": "2022-02-26T09:35:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:34:18.962995Z", "end_time": "2022-02-26T09:34:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:33:18.962995Z", "end_time": "2022-02-26T09:33:18.962995Z"}, "value": {"double_value": 0.0}}], "unit": ""}'
-    ],
-    [
-        '{"metric": {"type": "run.googleapis.com/container/network/sent_bytes_count", "labels": {}}, "resource": {"type": "cloud_run_revision", "labels": {"service_name": "aaaa", "project_id": "backup-255820"}}, "metric_kind": 1, "value_type": 3, "points": [{"interval": {"start_time": "2022-02-26T09:50:18.962995Z", "end_time": "2022-02-26T09:50:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:49:18.962995Z", "end_time": "2022-02-26T09:49:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:48:18.962995Z", "end_time": "2022-02-26T09:48:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:47:18.962995Z", "end_time": "2022-02-26T09:47:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:46:18.962995Z", "end_time": "2022-02-26T09:46:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:45:18.962995Z", "end_time": "2022-02-26T09:45:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:44:18.962995Z", "end_time": "2022-02-26T09:44:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:43:18.962995Z", "end_time": "2022-02-26T09:43:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:42:18.962995Z", "end_time": "2022-02-26T09:42:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:41:18.962995Z", "end_time": "2022-02-26T09:41:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:40:18.962995Z", "end_time": "2022-02-26T09:40:18.962995Z"}, "value": {"double_value": 79.78333333333333}}, {"interval": {"start_time": "2022-02-26T09:39:18.962995Z", "end_time": "2022-02-26T09:39:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:38:18.962995Z", "end_time": "2022-02-26T09:38:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:37:18.962995Z", "end_time": "2022-02-26T09:37:18.962995Z"}, "value": {"double_value": 797.8333333333334}}, {"interval": {"start_time": "2022-02-26T09:36:18.962995Z", "end_time": "2022-02-26T09:36:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:35:18.962995Z", "end_time": "2022-02-26T09:35:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:34:18.962995Z", "end_time": "2022-02-26T09:34:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:33:18.962995Z", "end_time": "2022-02-26T09:33:18.962995Z"}, "value": {"double_value": 0.0}}], "unit": ""}'
-    ],
-    [
-        '{"metric": {"labels": {"response_code_class": "2xx"}, "type": "run.googleapis.com/request_count"}, "resource": {"type": "cloud_run_revision", "labels": {"service_name": "aaaa", "project_id": "tribe29-check-development"}}, "metric_kind": 1, "value_type": 3, "points": [{"interval": {"start_time": "2022-05-25T10:55:01.012609Z", "end_time": "2022-05-25T10:55:01.012609Z"}, "value": {"double_value": 0.16666666666666666}}], "unit": ""}'
-    ],
-    [
-        '{"metric": {"labels": {"response_code_class": "4xx"}, "type": "run.googleapis.com/request_count"}, "resource": {"type": "cloud_run_revision", "labels": {"service_name": "aaaa", "project_id": "tribe29-check-development"}}, "metric_kind": 1, "value_type": 3, "points": [{"interval": {"start_time": "2022-05-25T10:55:01.012609Z", "end_time": "2022-05-25T10:55:01.012609Z"}, "value": {"double_value": 0.32}}], "unit": ""}'
-    ],
-    [
-        '{"metric": {"type": "run.googleapis.com/container/cpu/allocation_time", "labels": {}}, "resource": {"type": "cloud_run_revision", "labels": {"service_name": "aaaa", "project_id": "backup-255820"}}, "metric_kind": 1, "value_type": 3, "points": [{"interval": {"start_time": "2022-02-26T09:50:18.962995Z", "end_time": "2022-02-26T09:50:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:49:18.962995Z", "end_time": "2022-02-26T09:49:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:48:18.962995Z", "end_time": "2022-02-26T09:48:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:47:18.962995Z", "end_time": "2022-02-26T09:47:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:46:18.962995Z", "end_time": "2022-02-26T09:46:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:45:18.962995Z", "end_time": "2022-02-26T09:45:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:44:18.962995Z", "end_time": "2022-02-26T09:44:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:43:18.962995Z", "end_time": "2022-02-26T09:43:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:42:18.962995Z", "end_time": "2022-02-26T09:42:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:41:18.962995Z", "end_time": "2022-02-26T09:41:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:40:18.962995Z", "end_time": "2022-02-26T09:40:18.962995Z"}, "value": {"double_value": 0.10000000000000009}}, {"interval": {"start_time": "2022-02-26T09:39:18.962995Z", "end_time": "2022-02-26T09:39:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:38:18.962995Z", "end_time": "2022-02-26T09:38:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:37:18.962995Z", "end_time": "2022-02-26T09:37:18.962995Z"}, "value": {"double_value": 1.0}}, {"interval": {"start_time": "2022-02-26T09:36:18.962995Z", "end_time": "2022-02-26T09:36:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:35:18.962995Z", "end_time": "2022-02-26T09:35:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:34:18.962995Z", "end_time": "2022-02-26T09:34:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:33:18.962995Z", "end_time": "2022-02-26T09:33:18.962995Z"}, "value": {"double_value": 0.0}}], "unit": ""}'
-    ],
-    [
-        '{"metric": {"type": "run.googleapis.com/container/billable_instance_time", "labels": {}}, "resource": {"type": "cloud_run_revision", "labels": {"service_name": "aaaa", "project_id": "backup-255820"}}, "metric_kind": 1, "value_type": 3, "points": [{"interval": {"start_time": "2022-02-26T09:50:18.962995Z", "end_time": "2022-02-26T09:50:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:49:18.962995Z", "end_time": "2022-02-26T09:49:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:48:18.962995Z", "end_time": "2022-02-26T09:48:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:47:18.962995Z", "end_time": "2022-02-26T09:47:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:46:18.962995Z", "end_time": "2022-02-26T09:46:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:45:18.962995Z", "end_time": "2022-02-26T09:45:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:44:18.962995Z", "end_time": "2022-02-26T09:44:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:43:18.962995Z", "end_time": "2022-02-26T09:43:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:42:18.962995Z", "end_time": "2022-02-26T09:42:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:41:18.962995Z", "end_time": "2022-02-26T09:41:18.962995Z"}, "value": {"double_value": 0.001666666666666668}}, {"interval": {"start_time": "2022-02-26T09:40:18.962995Z", "end_time": "2022-02-26T09:40:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:39:18.962995Z", "end_time": "2022-02-26T09:39:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:38:18.962995Z", "end_time": "2022-02-26T09:38:18.962995Z"}, "value": {"double_value": 0.016666666666666666}}, {"interval": {"start_time": "2022-02-26T09:37:18.962995Z", "end_time": "2022-02-26T09:37:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:36:18.962995Z", "end_time": "2022-02-26T09:36:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:35:18.962995Z", "end_time": "2022-02-26T09:35:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:34:18.962995Z", "end_time": "2022-02-26T09:34:18.962995Z"}, "value": {"double_value": 0.0}}, {"interval": {"start_time": "2022-02-26T09:33:18.962995Z", "end_time": "2022-02-26T09:33:18.962995Z"}, "value": {"double_value": 0.0}}], "unit": ""}'
-    ],
-    [
-        '{"metric": {"type": "run.googleapis.com/container/instance_count", "labels": {}}, "resource": {"type": "cloud_run_revision", "labels": {"project_id": "backup-255820", "service_name": "aaaa"}}, "metric_kind": 1, "value_type": 2, "points": [{"interval": {"start_time": "2022-02-26T09:50:18.962995Z", "end_time": "2022-02-26T09:50:18.962995Z"}, "value": {"int64_value": "2"}}, {"interval": {"start_time": "2022-02-26T09:49:18.962995Z", "end_time": "2022-02-26T09:49:18.962995Z"}, "value": {"int64_value": "2"}}, {"interval": {"start_time": "2022-02-26T09:48:18.962995Z", "end_time": "2022-02-26T09:48:18.962995Z"}, "value": {"int64_value": "2"}}, {"interval": {"start_time": "2022-02-26T09:47:18.962995Z", "end_time": "2022-02-26T09:47:18.962995Z"}, "value": {"int64_value": "2"}}, {"interval": {"start_time": "2022-02-26T09:46:18.962995Z", "end_time": "2022-02-26T09:46:18.962995Z"}, "value": {"int64_value": "2"}}, {"interval": {"start_time": "2022-02-26T09:45:18.962995Z", "end_time": "2022-02-26T09:45:18.962995Z"}, "value": {"int64_value": "2"}}, {"interval": {"start_time": "2022-02-26T09:44:18.962995Z", "end_time": "2022-02-26T09:44:18.962995Z"}, "value": {"int64_value": "2"}}, {"interval": {"start_time": "2022-02-26T09:43:18.962995Z", "end_time": "2022-02-26T09:43:18.962995Z"}, "value": {"int64_value": "2"}}, {"interval": {"start_time": "2022-02-26T09:42:18.962995Z", "end_time": "2022-02-26T09:42:18.962995Z"}, "value": {"int64_value": "2"}}, {"interval": {"start_time": "2022-02-26T09:41:18.962995Z", "end_time": "2022-02-26T09:41:18.962995Z"}, "value": {"int64_value": "2"}}, {"interval": {"start_time": "2022-02-26T09:40:18.962995Z", "end_time": "2022-02-26T09:40:18.962995Z"}, "value": {"int64_value": "2"}}, {"interval": {"start_time": "2022-02-26T09:39:18.962995Z", "end_time": "2022-02-26T09:39:18.962995Z"}, "value": {"int64_value": "2"}}, {"interval": {"start_time": "2022-02-26T09:38:18.962995Z", "end_time": "2022-02-26T09:38:18.962995Z"}, "value": {"int64_value": "2"}}, {"interval": {"start_time": "2022-02-26T09:37:18.962995Z", "end_time": "2022-02-26T09:37:18.962995Z"}, "value": {"int64_value": "2"}}, {"interval": {"start_time": "2022-02-26T09:36:18.962995Z", "end_time": "2022-02-26T09:36:18.962995Z"}, "value": {"int64_value": "2"}}, {"interval": {"start_time": "2022-02-26T09:35:18.962995Z", "end_time": "2022-02-26T09:35:18.962995Z"}, "value": {"int64_value": "2"}}, {"interval": {"start_time": "2022-02-26T09:34:18.962995Z", "end_time": "2022-02-26T09:34:18.962995Z"}, "value": {"int64_value": "2"}}, {"interval": {"start_time": "2022-02-26T09:33:18.962995Z", "end_time": "2022-02-26T09:33:18.962995Z"}, "value": {"int64_value": "2"}}], "unit": ""}'
-    ],
-    [
-        '{"metric": {"type": "run.googleapis.com/request_latencies", "labels": {}}, "resource": {"type": "cloud_run_revision", "labels": {"project_id": "backup-255820", "service_name": "aaaa"}}, "metric_kind": 1, "value_type": 3, "points": [{"interval": {"start_time": "2022-02-26T09:40:18.962995Z", "end_time": "2022-02-26T09:40:18.962995Z"}, "value": {"double_value": 1.99}}, {"interval": {"start_time": "2022-02-26T09:37:18.962995Z", "end_time": "2022-02-26T09:37:18.962995Z"}, "value": {"double_value": 7.719999999999999}}, {"interval": {"start_time": "2022-02-26T09:36:18.962995Z", "end_time": "2022-02-26T09:36:18.962995Z"}, "value": {"double_value": 3.97}}], "unit": ""}'
-    ],
-]
+from .gcp_test_util import DiscoverTester, ParsingTester, Plugin
 
 ASSET_TABLE = [
     ['{"project":"backup-255820"}'],
@@ -83,174 +64,131 @@ class TestDiscover(DiscoverTester):
         yield from discover(section_gcp_service_cloud_run=None, section_gcp_assets=assets)
 
 
+def generate_timeseries(item: str, value: float) -> StringTable:
+    start_time = datetime.datetime(2016, 4, 6, 22, 5, 0, 42)
+    end_time = datetime.datetime(2016, 4, 6, 22, 5, 1, 42)
+    interval = monitoring_v3.TimeInterval(end_time=end_time, start_time=start_time)
+    point = monitoring_v3.Point({"interval": interval, "value": {"double_value": value}})
+    metric_labels = ["2xx", "3xx", "4xx", "5xx"]
+
+    time_series = []
+    for metric in agent_gcp.RUN.metrics:
+        metric_type = metric.name
+        resource_labels = {"project": "test", agent_gcp.RUN.default_groupby.split(".", 1)[-1]: item}
+        if metric.aggregation.group_by_fields:
+            for label_value in metric_labels:
+                metric_label = {
+                    metric.aggregation.group_by_fields[0].split(".", 1)[-1]: label_value
+                }
+                ts = monitoring_v3.TimeSeries(
+                    {
+                        "metric": {"type": metric_type, "labels": metric_label},
+                        "resource": {"type": "does_not_matter_i_think", "labels": resource_labels},
+                        "metric_kind": 1,
+                        "value_type": 3,
+                        "points": [point],
+                    }
+                )
+                time_series.append(ts)
+        else:
+            ts = monitoring_v3.TimeSeries(
+                {
+                    "metric": {"type": metric_type, "labels": {}},
+                    "resource": {"type": "does_not_matter_i_think", "labels": resource_labels},
+                    "metric_kind": 1,
+                    "value_type": 3,
+                    "points": [point],
+                }
+            )
+            time_series.append(ts)
+
+    return [[json.dumps(TimeSeries.to_dict(ts))] for ts in time_series]
+
+
 class TestParsing(ParsingTester):
     def parse(self, string_table):
         return parse_gcp_run(string_table)
 
     @property
     def section_table(self) -> StringTable:
-        return SECTION_TABLE
-
-
-@dataclass(frozen=True)
-class Plugin:
-    metrics: Sequence[str]
-    function: Callable
+        return generate_timeseries("item", 42.0)
 
 
 PLUGINS = [
-    Plugin(
-        function=check_gcp_run_cpu,
-        metrics=[
-            "util",
-        ],
+    pytest.param(
+        Plugin(
+            function=check_gcp_run_cpu,
+            metrics=["util"],
+            results=[Result(state=State.OK, summary="CPU: 4200.00%")],
+        ),
+        id="cpu",
     ),
-    Plugin(
-        function=check_gcp_run_memory,
-        metrics=[
-            "memory_util",
-        ],
+    pytest.param(
+        Plugin(
+            function=check_gcp_run_memory,
+            metrics=["memory_util"],
+            results=[Result(state=State.OK, summary="Memory: 4200.00%")],
+        ),
+        id="memory",
     ),
-    Plugin(
-        function=check_gcp_run_network,
-        metrics=[
-            "net_data_sent",
-            "net_data_recv",
-        ],
+    pytest.param(
+        Plugin(
+            function=check_gcp_run_network,
+            metrics=["net_data_sent", "net_data_recv"],
+            results=[
+                Result(state=State.OK, summary="In: 336 Bit/s"),
+                Result(state=State.OK, summary="Out: 336 Bit/s"),
+            ],
+        ),
+        id="network",
     ),
-    Plugin(
-        function=check_gcp_run_requests,
-        metrics=[
-            "faas_total_instance_count",
-            "faas_execution_count",
-            "faas_execution_count_2xx",
-            "faas_execution_count_3xx",
-            "faas_execution_count_4xx",
-            "faas_execution_count_5xx",
-            "faas_execution_times",
-            "gcp_billable_time",
-        ],
+    pytest.param(
+        Plugin(
+            function=check_gcp_run_requests,
+            metrics=[
+                "faas_total_instance_count",
+                "faas_execution_count",
+                "faas_execution_count_2xx",
+                "faas_execution_count_3xx",
+                "faas_execution_count_4xx",
+                "faas_execution_count_5xx",
+                "faas_execution_times",
+                "gcp_billable_time",
+            ],
+            results=[
+                Result(state=State.OK, summary="Billable time: 42.00 s/s"),
+                Result(state=State.OK, summary="Instances: 42.0"),
+                Result(state=State.OK, summary="Latencies: 42 milliseconds"),
+                Result(state=State.OK, summary="Requests 2xx (sucess): 42.0"),
+                Result(state=State.OK, summary="Requests 3xx (redirection): 42.0"),
+                Result(state=State.OK, summary="Requests 4xx (client error): 42.0"),
+                Result(state=State.OK, summary="Requests 5xx (server error): 42.0"),
+                Result(state=State.OK, summary="Requests: 168.0"),
+            ],
+        ),
+        id="requests",
     ),
 ]
-ITEM = "aaaa"
 
 
-@pytest.fixture(name="section")
-def fixture_section() -> Section:
-    return parse_gcp_run(SECTION_TABLE)
-
-
-@pytest.fixture(params=PLUGINS, name="checkplugin")
-def fixture_checkplugin(request) -> Plugin:
-    return request.param
-
-
-Results = Tuple[Sequence[Union[Metric, Result]], Plugin]
-
-
-@pytest.fixture(name="results_and_plugin")
-def fixture_results(checkplugin: Plugin, section: Section) -> Results:
-    params = {k: None for k in checkplugin.metrics}
-    results = list(
-        checkplugin.function(
-            item=ITEM, params=params, section_gcp_service_cloud_run=section, section_gcp_assets=None
-        )
+def generate_results(plugin: Plugin) -> CheckResult:
+    item = "item"
+    section = parse_gcp_run(generate_timeseries(item, 42))
+    yield from plugin.function(
+        item=item,
+        params={k: None for k in plugin.metrics},
+        section_gcp_service_cloud_run=section,
+        section_gcp_assets=None,
     )
-    return results, checkplugin
 
 
-def test_no_run_section_yields_no_metric_data(checkplugin) -> None:
-    params = {k: None for k in checkplugin.metrics}
-    results = list(
-        checkplugin.function(
-            item=ITEM,
-            params=params,
-            section_gcp_service_cloud_run=None,
-            section_gcp_assets=None,
-        )
-    )
-    assert len(results) == 0
+@pytest.mark.parametrize("plugin", PLUGINS)
+def test_yield_results_as_specified(plugin) -> None:
+    results = {r for r in generate_results(plugin) if isinstance(r, Result)}
+    assert results == set(plugin.results)
 
 
-def test_yield_metrics_as_specified(results_and_plugin: Results) -> None:
-    results, checkplugin = results_and_plugin
-    res = {r.name: r for r in results if isinstance(r, Metric)}
-    assert len(res) == len(checkplugin.metrics)
-    assert set(res.keys()) == set(checkplugin.metrics)
-
-
-def test_yield_results_as_specified(results_and_plugin: Results) -> None:
-    results, checkplugin = results_and_plugin
-    res = [r for r in results if isinstance(r, Result)]
-    assert len(res) == len(checkplugin.metrics)
-    for r in res:
-        assert r.state == State.OK
-
-
-class TestConfiguredNotificationLevels:
-    # In the example sections we do not have data for all metrics. To be able to test all check plugins
-    # use 0, the default value, to check notification levels.
-    def test_warn_levels(self, checkplugin: Plugin, section: Section) -> None:
-        params = {k: (0, None) for k in checkplugin.metrics}
-        results = list(
-            checkplugin.function(
-                item=ITEM,
-                params=params,
-                section_gcp_service_cloud_run=section,
-                section_gcp_assets=None,
-            )
-        )
-        results = [r for r in results if isinstance(r, Result)]
-        for r in results:
-            assert r.state == State.WARN
-
-    def test_crit_levels(self, checkplugin: Plugin, section: Section) -> None:
-        params = {k: (None, 0) for k in checkplugin.metrics}
-        results = list(
-            checkplugin.function(
-                item=ITEM,
-                params=params,
-                section_gcp_service_cloud_run=section,
-                section_gcp_assets=None,
-            )
-        )
-        results = [r for r in results if isinstance(r, Result)]
-        for r in results:
-            assert r.state == State.CRIT
-
-
-def test_multiple_groupby_requests(section: Section) -> None:
-    item = "aaaa"
-    params = {
-        "faas_total_instance_count": None,
-        "faas_execution_count": None,
-        "faas_execution_count_2xx": None,
-        "faas_execution_count_3xx": None,
-        "faas_execution_count_4xx": None,
-        "faas_execution_count_5xx": None,
-        "gcp_billable_time": None,
-        "faas_execution_times": None,
-    }
-    results = list(
-        check_gcp_run_requests(
-            item, params, section_gcp_service_cloud_run=section, section_gcp_assets=None
-        )
-    )
-    assert results == [
-        Result(state=State.OK, summary="Instances: 2.0"),
-        Metric("faas_total_instance_count", 2.0),
-        Result(state=State.OK, summary="Requests: 0.4866666666666667"),
-        Metric("faas_execution_count", 0.16666666666666666 + 0.32),
-        Result(state=State.OK, summary="Requests 2xx (sucess): 0.16666666666666666"),
-        Metric("faas_execution_count_2xx", 0.16666666666666666),
-        Result(state=State.OK, summary="Requests 3xx (redirection): 0"),
-        Metric("faas_execution_count_3xx", 0),
-        Result(state=State.OK, summary="Requests 4xx (client error): 0.32"),
-        Metric("faas_execution_count_4xx", 0.32),
-        Result(state=State.OK, summary="Requests 5xx (server error): 0"),
-        Metric("faas_execution_count_5xx", 0),
-        Result(state=State.OK, summary="Billable time: 0.00 s/s"),
-        Metric("gcp_billable_time", 0),
-        Result(state=State.OK, summary="Latencies: 0 seconds"),
-        Metric("faas_execution_times", 0),
-    ]
+@pytest.mark.parametrize("plugin", PLUGINS)
+def test_yield_metrics_as_specified(plugin) -> None:
+    results = {r.name for r in generate_results(plugin) if isinstance(r, Metric)}
+    assert results == set(plugin.metrics)

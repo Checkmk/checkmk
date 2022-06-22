@@ -168,10 +168,10 @@ def check_gcp_run_requests(
         ),
         # timespan renderer expects seconds not milliseconds
         "faas_execution_times": gcp.MetricSpec(
-            "run.googleapis.com/container/request_latencies",
+            "run.googleapis.com/request_latencies",
             "Latencies",
             render.timespan,
-            scale=1e3,
+            scale=1e-3,
         ),
     }
     yield from gcp.check(metrics, item, params, section_gcp_service_cloud_run)

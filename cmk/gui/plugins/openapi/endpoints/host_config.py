@@ -573,7 +573,7 @@ def _serve_host(host, effective_attributes=False):
 
 def serialize_host(host: CREHost, effective_attributes: bool):
     extensions = {
-        "folder": host.folder().path(),
+        "folder": "/" + host.folder().path(),
         "attributes": host.attributes(),
         "effective_attributes": host.effective_attributes() if effective_attributes else None,
         "is_cluster": host.is_cluster(),

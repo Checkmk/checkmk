@@ -54,6 +54,7 @@ def test_http_request_allowed_vars() -> None:
             content_type="application/x-www-form-urlencoded",
             input_stream=io.BytesIO(b"asd=x&_Y21rYWRtaW4%3D=aaa&foo%3ABAR_BAZ=abc"),
         ),
+        REQUEST_URI="",
     )
     req = http.Request(environ)
     assert req.var("asd") == "x"

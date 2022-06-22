@@ -12,7 +12,7 @@ import telnetlib  # nosec
 import time
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, Dict, Final, Iterator, List
+from typing import Any, Dict, Final, Iterator, List, NamedTuple
 
 import yaml
 
@@ -24,6 +24,12 @@ USER_YAML_CONFIG: Final = "check_mk.user.yml"
 SECTION_COUNT: Final = 18
 ONLY_FROM_LINE: Final = 17
 CTL_STATUS_LINE: Final = 19
+
+
+class ExeOutput(NamedTuple):
+    ret_code: int
+    stdout: str
+    stderr: str
 
 
 def create_protocol_file(directory: Path) -> None:
@@ -114,3 +120,32 @@ def obtain_agent_data(
             )
 
     return result
+
+
+def run_agent(
+    work_config: YamlDict,
+    *,
+    param: str,
+    main_exe: Path,
+    data_dir: Path,
+) -> ExeOutput:
+    with (
+        _write_config(work_config, data_dir),
+        subprocess.Popen(
+            [main_exe, param],
+            stdout=subprocess.PIPE,
+            stdin=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        ) as p,
+    ):
+        try:
+            stdout, stderr = p.communicate(timeout=10)
+            ret_code = p.returncode
+        finally:
+            # NOTE. we MUST kill both processes (as a _tree_!): we do not need it.
+            # Any graceful killing may require a lot of time and gives nothing to testing.
+            subprocess.call(
+                f'taskkill /F /T /FI "pid eq {p.pid}" /FI "IMAGENAME eq {AGENT_EXE_NAME}"'
+            )
+
+    return ExeOutput(ret_code, stdout=stdout.decode(), stderr=stderr.decode())

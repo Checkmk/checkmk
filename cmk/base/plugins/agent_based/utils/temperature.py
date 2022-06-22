@@ -251,8 +251,8 @@ def check_temperature(
     reading: float,
     params: TempParamType,
     *,
-    unique_name: str,
-    value_store: MutableMapping[str, Any],
+    unique_name: Optional[str] = None,
+    value_store: Optional[MutableMapping[str, Any]] = None,
     dev_unit: Optional[str] = "c",
     dev_levels: Optional[Tuple[float, float]] = None,
     dev_levels_lower: Optional[Tuple[float, float]] = None,
@@ -298,6 +298,12 @@ def check_temperature(
          - cmk/gui/plugins/wato/check_parameters/temperature.py
 
     """
+    if (unique_name is None) ^ (value_store is None):
+        raise ValueError(
+            "Cannot compute trend. Either specify both variables 'unique_name' and 'value_store'"
+            " or none."
+        )
+
     # Convert legacy tuple params into new dict
     params = _migrate_params(params)
 
@@ -337,7 +343,11 @@ def check_temperature(
 
     usr_results = [usr_result]
     dev_results = [dev_result]
-    if params.get("trend_compute") is not None:
+    if (
+        unique_name is not None
+        and value_store is not None
+        and params.get("trend_compute") is not None
+    ):
         usr_results.extend(
             result
             for result in _check_trend(

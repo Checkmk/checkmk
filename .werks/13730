@@ -1,0 +1,17 @@
+Title: check_temperature: Make 'unique_name' and 'value_store' optional, but both are needed for trend computation
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1655892205
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p4
+
+Since Checkmk version 2.1.0 the check_temperature function required
+{{unique_name}} and {{value_store}}. Both are only needed for trend
+computation.
+
+Now {{unique_name}} and {{value_store}} are optional again. The check engine
+raises a ValueError if only one of both are set.

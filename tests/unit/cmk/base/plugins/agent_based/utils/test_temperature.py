@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import contextlib
-from typing import Any, MutableMapping
+from typing import Any, MutableMapping, Optional
 
 import freezegun
 import pytest
@@ -947,3 +947,24 @@ def test_check_temperature_ignores_trend_computation():
             notice="Configuration: prefer user levels over device levels (no levels found)",
         ),
     ]
+
+
+@pytest.mark.parametrize(
+    "unique_name, value_store",
+    [
+        (None, mock_value_store()),
+        ("unique_name", None),
+    ],
+)
+def test_check_temperature_either_unique_name_or_value_store(
+    unique_name: Optional[str], value_store: Optional[MutableMapping[str, Any]]
+) -> None:
+    with pytest.raises(ValueError):
+        list(
+            temperature.check_temperature(
+                20.0,
+                {},
+                unique_name=unique_name,
+                value_store=value_store,
+            )
+        )

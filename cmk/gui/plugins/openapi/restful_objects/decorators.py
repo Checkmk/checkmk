@@ -18,6 +18,7 @@ import http.client
 import json
 import logging
 import typing
+import warnings
 from types import FunctionType
 from typing import (
     Any,
@@ -421,6 +422,14 @@ class Endpoint:
                     f"{self.content_type}. [{self.method} {self.path}]"
                 )
             self._expected_status_codes.append(200)  # ok
+
+        if self.method == "delete" and self.request_schema:
+            warnings.warn(
+                f"Endpoint {self} uses a body in a DELETE request. Even though the RFC does not "
+                "disallow or discourage it, many HTTP clients have problems with DELETE requests "
+                "containing bodies. Consider using the POST method instead.",
+                UserWarning,
+            )
 
         if self.output_empty:
             self._expected_status_codes.append(204)  # no content

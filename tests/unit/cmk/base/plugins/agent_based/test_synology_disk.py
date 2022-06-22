@@ -1,7 +1,5 @@
 import pytest
 
-from tests.unit.cmk.base.plugins.agent_based.test_gcp_gcs import SECTION_TABLE
-
 from cmk.base.plugins.agent_based import synology_disks
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
 

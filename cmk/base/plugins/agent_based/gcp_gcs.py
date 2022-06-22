@@ -44,7 +44,7 @@ def check_gcp_gcs_requests(
     section_gcp_assets: Optional[gcp.AssetSection],
 ) -> CheckResult:
     metrics = {
-        "requests": gcp.MetricSpec("storage.googleapis.com/api/request_count", "requests", str)
+        "requests": gcp.MetricSpec("storage.googleapis.com/api/request_count", "Requests", str)
     }
     yield from gcp.check(metrics, item, params, section_gcp_service_gcs)
 

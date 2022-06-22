@@ -4,14 +4,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from dataclasses import dataclass
-from typing import Callable, Optional, Sequence
+from typing import Optional
 
 import pytest
 
 from cmk.base.api.agent_based.checking_classes import ServiceLabel
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import DiscoveryResult, StringTable
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    DiscoveryResult,
+    StringTable,
+)
 from cmk.base.plugins.agent_based.gcp_gcs import (
     check_gcp_gcs_network,
     check_gcp_gcs_object,
@@ -21,34 +24,9 @@ from cmk.base.plugins.agent_based.gcp_gcs import (
 )
 from cmk.base.plugins.agent_based.utils import gcp
 
-from .gcp_test_util import DiscoverTester, ParsingTester
+from cmk.special_agents.agent_gcp import GCS
 
-SECTION_TABLE = [
-    [
-        '{"metric":{"type":"storage.googleapis.com/storage/total_bytes","labels":{}},"resource":{"type":"gcs_bucket","labels":{"bucket_name":"backup-home-ml-free","project_id":"backup-255820"}},"metricKind":1,"valueType":3,"points":[{"interval":{"startTime":"2022-02-23T12:20:54.726496Z","endTime":"2022-02-23T12:20:54.726496Z"},"value":{"doubleValue":3298633360.0}},{"interval":{"startTime":"2022-02-23T12:15:54.726496Z","endTime":"2022-02-23T12:15:54.726496Z"},"value":{"doubleValue":3298633360.0}},{"interval":{"startTime":"2022-02-23T12:10:54.726496Z","endTime":"2022-02-23T12:10:54.726496Z"},"value":{"doubleValue":3298633360.0}}],"unit":""}'
-    ],
-    [
-        '{"metric":{"type":"storage.googleapis.com/storage/total_bytes","labels":{}},"resource":{"type":"gcs_bucket","labels":{"bucket_name":"gcf-sources-360989076580-us-central1","project_id":"backup-255820"}},"metricKind":1,"valueType":3,"points":[{"interval":{"startTime":"2022-02-23T12:20:54.726496Z","endTime":"2022-02-23T12:20:54.726496Z"},"value":{"doubleValue":2075.0}},{"interval":{"startTime":"2022-02-23T12:15:54.726496Z","endTime":"2022-02-23T12:15:54.726496Z"},"value":{"doubleValue":2075.0}},{"interval":{"startTime":"2022-02-23T12:10:54.726496Z","endTime":"2022-02-23T12:10:54.726496Z"},"value":{"doubleValue":2075.0}}],"unit":""}'
-    ],
-    [
-        '{"metric":{"type":"storage.googleapis.com/storage/total_bytes","labels":{}},"resource":{"type":"gcs_bucket","labels":{"bucket_name":"lakjsdklasjd","project_id":"backup-255820"}},"metricKind":1,"valueType":3,"points":[{"interval":{"startTime":"2022-02-23T12:20:54.726496Z","endTime":"2022-02-23T12:20:54.726496Z"},"value":{"doubleValue":2635285452.0}},{"interval":{"startTime":"2022-02-23T12:15:54.726496Z","endTime":"2022-02-23T12:15:54.726496Z"},"value":{"doubleValue":2635285452.0}},{"interval":{"startTime":"2022-02-23T12:10:54.726496Z","endTime":"2022-02-23T12:10:54.726496Z"},"value":{"doubleValue":2635285452.0}}],"unit":""}'
-    ],
-    [
-        '{"metric":{"type":"storage.googleapis.com/storage/total_bytes","labels":{}},"resource":{"type":"gcs_bucket","labels":{"project_id":"backup-255820","bucket_name":"us.artifacts.backup-255820.appspot.com"}},"metricKind":1,"valueType":3,"points":[{"interval":{"startTime":"2022-02-23T12:20:54.726496Z","endTime":"2022-02-23T12:20:54.726496Z"},"value":{"doubleValue":1138733197.0}},{"interval":{"startTime":"2022-02-23T12:15:54.726496Z","endTime":"2022-02-23T12:15:54.726496Z"},"value":{"doubleValue":1138733197.0}},{"interval":{"startTime":"2022-02-23T12:10:54.726496Z","endTime":"2022-02-23T12:10:54.726496Z"},"value":{"doubleValue":1138733197.0}}],"unit":""}'
-    ],
-    [
-        '{"metric":{"type":"storage.googleapis.com/storage/object_count","labels":{}},"resource":{"type":"gcs_bucket","labels":{"bucket_name":"backup-home-ml-free","project_id":"backup-255820"}},"metricKind":1,"valueType":3,"points":[{"interval":{"startTime":"2022-02-23T12:20:54.726496Z","endTime":"2022-02-23T12:20:54.726496Z"},"value":{"doubleValue":4.0}},{"interval":{"startTime":"2022-02-23T12:15:54.726496Z","endTime":"2022-02-23T12:15:54.726496Z"},"value":{"doubleValue":4.0}},{"interval":{"startTime":"2022-02-23T12:10:54.726496Z","endTime":"2022-02-23T12:10:54.726496Z"},"value":{"doubleValue":4.0}}],"unit":""}'
-    ],
-    [
-        '{"metric":{"type":"storage.googleapis.com/storage/object_count","labels":{}},"resource":{"type":"gcs_bucket","labels":{"bucket_name":"gcf-sources-360989076580-us-central1","project_id":"backup-255820"}},"metricKind":1,"valueType":3,"points":[{"interval":{"startTime":"2022-02-23T12:20:54.726496Z","endTime":"2022-02-23T12:20:54.726496Z"},"value":{"doubleValue":4.0}},{"interval":{"startTime":"2022-02-23T12:15:54.726496Z","endTime":"2022-02-23T12:15:54.726496Z"},"value":{"doubleValue":4.0}},{"interval":{"startTime":"2022-02-23T12:10:54.726496Z","endTime":"2022-02-23T12:10:54.726496Z"},"value":{"doubleValue":4.0}}],"unit":""}'
-    ],
-    [
-        '{"metric":{"type":"storage.googleapis.com/storage/object_count","labels":{}},"resource":{"type":"gcs_bucket","labels":{"bucket_name":"lakjsdklasjd","project_id":"backup-255820"}},"metricKind":1,"valueType":3,"points":[{"interval":{"startTime":"2022-02-23T12:20:54.726496Z","endTime":"2022-02-23T12:20:54.726496Z"},"value":{"doubleValue":2.0}},{"interval":{"startTime":"2022-02-23T12:15:54.726496Z","endTime":"2022-02-23T12:15:54.726496Z"},"value":{"doubleValue":2.0}},{"interval":{"startTime":"2022-02-23T12:10:54.726496Z","endTime":"2022-02-23T12:10:54.726496Z"},"value":{"doubleValue":2.0}}],"unit":""}'
-    ],
-    [
-        '{"metric":{"type":"storage.googleapis.com/storage/object_count","labels":{}},"resource":{"type":"gcs_bucket","labels":{"project_id":"backup-255820","bucket_name":"us.artifacts.backup-255820.appspot.com"}},"metricKind":1,"valueType":3,"points":[{"interval":{"startTime":"2022-02-23T12:20:54.726496Z","endTime":"2022-02-23T12:20:54.726496Z"},"value":{"doubleValue":88.0}},{"interval":{"startTime":"2022-02-23T12:15:54.726496Z","endTime":"2022-02-23T12:15:54.726496Z"},"value":{"doubleValue":88.0}},{"interval":{"startTime":"2022-02-23T12:10:54.726496Z","endTime":"2022-02-23T12:10:54.726496Z"},"value":{"doubleValue":88.0}}],"unit":""}'
-    ],
-]
+from .gcp_test_util import DiscoverTester, generate_timeseries, ParsingTester, Plugin
 
 ASSET_TABLE = [
     ['{"project":"backup-255820"}'],
@@ -73,7 +51,7 @@ class TestGCSParsing(ParsingTester):
 
     @property
     def section_table(self) -> StringTable:
-        return SECTION_TABLE
+        return generate_timeseries("item", 42.0, GCS)
 
 
 class TestGCSDiscover(DiscoverTester):
@@ -122,114 +100,58 @@ def test_discover_bucket_labels_without_user_labels() -> None:
     }
 
 
-@pytest.fixture(name="gcs_section")
-def fixture_section():
-    return parse_gcp_gcs(SECTION_TABLE)
-
-
-@dataclass(frozen=True)
-class Plugin:
-    metrics: Sequence[str]
-    function: Callable
-
-
 PLUGINS = [
-    Plugin(function=check_gcp_gcs_requests, metrics=["requests"]),
-    Plugin(function=check_gcp_gcs_network, metrics=["net_data_recv", "net_data_sent"]),
-    Plugin(function=check_gcp_gcs_object, metrics=["aws_bucket_size", "aws_num_objects"]),
+    pytest.param(
+        Plugin(
+            function=check_gcp_gcs_requests,
+            metrics=["requests"],
+            results=[Result(state=State.OK, summary="Requests: 42.0")],
+        ),
+        id="requetss",
+    ),
+    pytest.param(
+        Plugin(
+            function=check_gcp_gcs_network,
+            metrics=["net_data_recv", "net_data_sent"],
+            results=[
+                Result(state=State.OK, summary="In: 336 Bit/s"),
+                Result(state=State.OK, summary="Out: 336 Bit/s"),
+            ],
+        ),
+        id="network",
+    ),
+    pytest.param(
+        Plugin(
+            function=check_gcp_gcs_object,
+            metrics=["aws_bucket_size", "aws_num_objects"],
+            results=[
+                Result(state=State.OK, summary="Bucket size: 42 B"),
+                Result(state=State.OK, summary="Objects: 42.0"),
+            ],
+        ),
+        id="objects",
+    ),
 ]
-ITEM = "backup-home-ml-free"
 
 
-@pytest.fixture(params=PLUGINS, name="checkplugin")
-def fixture_checkplugin(request):
-    return request.param
-
-
-@pytest.fixture(name="results")
-def fixture_results(checkplugin, gcs_section):
-    # TODO make library function using inspect?
-    params = {k: None for k in checkplugin.metrics}
-    results = list(
-        checkplugin.function(
-            item=ITEM, params=params, section_gcp_service_gcs=gcs_section, section_gcp_assets=None
-        )
+def generate_results(plugin: Plugin) -> CheckResult:
+    item = "item"
+    section = parse_gcp_gcs(generate_timeseries(item, 42.0, GCS))
+    yield from plugin.function(
+        item=item,
+        params={k: None for k in plugin.metrics},
+        section_gcp_service_gcs=section,
+        section_gcp_assets=None,
     )
-    return results, checkplugin
 
 
-def test_no_gcs_section_yields_no_metric_data(checkplugin) -> None:
-    # TODO make library function using inspect?
-    params = {k: None for k in checkplugin.metrics}
-    results = list(
-        checkplugin.function(
-            item=ITEM, params=params, section_gcp_service_gcs=None, section_gcp_assets=None
-        )
-    )
-    assert len(results) == 0
+@pytest.mark.parametrize("plugin", PLUGINS)
+def test_yield_results_as_specified(plugin) -> None:
+    results = {r for r in generate_results(plugin) if isinstance(r, Result)}
+    assert results == set(plugin.results)
 
 
-def test_yield_metrics_as_specified(results) -> None:
-    # TODO use common assert from a new test utility
-    results, checkplugin = results
-    res = {r.name: r for r in results if isinstance(r, Metric)}
-    assert set(res.keys()) == set(checkplugin.metrics)
-
-
-def test_yield_results_as_specified(results) -> None:
-    # TODO use common assert from a new test utility
-    results, checkplugin = results
-    res = [r for r in results if isinstance(r, Result)]
-    assert len(res) == len(checkplugin.metrics)
-    for r in res:
-        assert r.state == State.OK
-
-
-class TestDefaultMetricValues:
-    # requests does not contain example data
-    def test_zero_default_if_metric_does_not_exist(self, gcs_section) -> None:
-        params = {k: None for k in ["requests"]}
-        results = (
-            el
-            for el in check_gcp_gcs_requests(
-                item=ITEM,
-                params=params,
-                section_gcp_service_gcs=gcs_section,
-                section_gcp_assets=None,
-            )
-            if isinstance(el, Metric)
-        )
-        for result in results:
-            assert result.value == 0.0
-
-    # objects does contain example data
-    def test_non_zero_if_metric_exist(self, gcs_section) -> None:
-        params = {k: None for k in ["aws_bucket_size", "aws_num_objects"]}
-        results = (
-            el
-            for el in check_gcp_gcs_object(
-                item=ITEM,
-                params=params,
-                section_gcp_service_gcs=gcs_section,
-                section_gcp_assets=None,
-            )
-            if isinstance(el, Metric)
-        )
-        for result in results:
-            assert result.value != 0.0
-
-    def test_zero_default_if_item_does_not_exist(self, gcs_section, checkplugin: Plugin) -> None:
-        # TODO: generalize using inspect
-        params = {k: None for k in checkplugin.metrics}
-        results = (
-            el
-            for el in checkplugin.function(
-                item="no I do not exist",
-                params=params,
-                section_gcp_service_gcs=gcs_section,
-                section_gcp_assets=None,
-            )
-            if isinstance(el, Metric)
-        )
-        for result in results:
-            assert result.value == 0.0
+@pytest.mark.parametrize("plugin", PLUGINS)
+def test_yield_metrics_as_specified(plugin) -> None:
+    results = {r.name for r in generate_results(plugin) if isinstance(r, Metric)}
+    assert results == set(plugin.metrics)

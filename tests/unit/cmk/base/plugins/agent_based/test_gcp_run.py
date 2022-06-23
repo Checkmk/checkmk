@@ -32,7 +32,7 @@ from cmk.base.plugins.agent_based.utils import gcp
 
 from cmk.special_agents import agent_gcp
 
-from .gcp_test_util import DiscoverTester, ParsingTester, Plugin
+from .gcp_test_util import DiscoverTester, Plugin
 
 ASSET_TABLE = [
     ['{"project":"backup-255820", "config":["cloud_run"]}'],
@@ -104,15 +104,6 @@ def generate_timeseries(item: str, value: float) -> StringTable:
             time_series.append(ts)
 
     return [[json.dumps(TimeSeries.to_dict(ts))] for ts in time_series]
-
-
-class TestParsing(ParsingTester):
-    def parse(self, string_table):
-        return parse_gcp_run(string_table)
-
-    @property
-    def section_table(self) -> StringTable:
-        return generate_timeseries("item", 42.0)
 
 
 PLUGINS = [

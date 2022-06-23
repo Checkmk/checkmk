@@ -31,7 +31,7 @@ from cmk.base.plugins.agent_based.utils import gcp
 
 from cmk.special_agents.agent_gcp import FUNCTIONS
 
-from .gcp_test_util import DiscoverTester, generate_timeseries, ParsingTester, Plugin
+from .gcp_test_util import DiscoverTester, generate_timeseries, Plugin
 
 ASSET_TABLE = [
     ['{"project":"backup-255820", "config": ["cloud_functions"]}'],
@@ -66,15 +66,6 @@ class TestDiscover(DiscoverTester):
 
     def discover(self, assets: Optional[gcp.AssetSection]) -> DiscoveryResult:
         yield from discover(section_gcp_service_cloud_functions=None, section_gcp_assets=assets)
-
-
-class TestParsing(ParsingTester):
-    def parse(self, string_table):
-        return parse_gcp_function(string_table)
-
-    @property
-    def section_table(self) -> StringTable:
-        return generate_timeseries("Mario", 42.0, FUNCTIONS)
 
 
 def test_zero_default_if_metric_does_not_exist() -> None:

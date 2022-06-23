@@ -27,7 +27,7 @@ from cmk.base.plugins.agent_based.utils import gcp
 
 from cmk.special_agents.agent_gcp import GCS
 
-from .gcp_test_util import DiscoverTester, generate_timeseries, ParsingTester, Plugin
+from .gcp_test_util import DiscoverTester, generate_timeseries, Plugin
 
 ASSET_TABLE = [
     [f'{{"project":"backup-255820", "config":["{GCS.name}"]}}'],
@@ -44,15 +44,6 @@ ASSET_TABLE = [
         '{"name": "//storage.googleapis.com/us.artifacts.backup-255820.appspot.com", "asset_type": "storage.googleapis.com/Bucket", "resource": {"version": "v1", "discovery_document_uri": "https://www.googleapis.com/discovery/v1/apis/storage/v1/rest", "discovery_name": "Bucket", "parent": "//cloudresourcemanager.googleapis.com/projects/360989076580", "data": {"labels": {}, "acl": [], "versioning": {}, "id": "us.artifacts.backup-255820.appspot.com", "retentionPolicy": {}, "iamConfiguration": {"publicAccessPrevention": "inherited", "bucketPolicyOnly": {"enabled": false}, "uniformBucketLevelAccess": {"enabled": false}}, "autoclass": {}, "owner": {}, "location": "US", "name": "us.artifacts.backup-255820.appspot.com", "locationType": "multi-region", "metageneration": 1.0, "timeCreated": "2022-02-07T20:36:32.368Z", "kind": "storage#bucket", "etag": "CAE=", "website": {}, "projectNumber": 360989076580.0, "logging": {}, "defaultObjectAcl": [], "updated": "2022-02-07T20:36:32.368Z", "storageClass": "STANDARD", "selfLink": "https://www.googleapis.com/storage/v1/b/us.artifacts.backup-255820.appspot.com", "billing": {}, "encryption": {}, "lifecycle": {"rule": []}, "cors": []}, "location": "us", "resource_url": ""}, "ancestors": ["projects/360989076580"], "update_time": "2022-02-07T20:36:32.368Z", "org_policy": []}'
     ],
 ]
-
-
-class TestGCSParsing(ParsingTester):
-    def parse(self, string_table):
-        return parse_gcp_gcs(string_table)
-
-    @property
-    def section_table(self) -> StringTable:
-        return generate_timeseries("item", 42.0, GCS)
 
 
 class TestGCSDiscover(DiscoverTester):

@@ -25,23 +25,6 @@ from cmk.base.plugins.agent_based.utils import gcp
 from cmk.special_agents import agent_gcp
 
 
-class ParsingTester(ABC):
-    @abstractmethod
-    def parse(self, string_table: StringTable) -> gcp.Section:
-        pass
-
-    @property
-    @abstractmethod
-    def section_table(self) -> StringTable:
-        raise NotImplementedError
-
-    def test_parse(self) -> None:
-        section = self.parse(self.section_table)
-        n_rows = sum(len(i.rows) for i in section.values())
-        # first row contains general section information and no metrics
-        assert n_rows == len(self.section_table)
-
-
 class DiscoverTester(ABC):
     @property
     @abstractmethod

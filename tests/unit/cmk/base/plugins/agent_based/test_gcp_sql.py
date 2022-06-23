@@ -29,7 +29,7 @@ from cmk.base.plugins.agent_based.utils.gcp import Section, SectionItem
 
 from cmk.special_agents.agent_gcp import CLOUDSQL
 
-from .gcp_test_util import DiscoverTester, generate_timeseries, ParsingTester, Plugin
+from .gcp_test_util import DiscoverTester, generate_timeseries, Plugin
 
 ASSET_TABLE = [
     ['{"project":"backup-255820", "config": ["cloud_sql"]}'],
@@ -64,15 +64,6 @@ class TestDiscover(DiscoverTester):
 
     def discover(self, assets: Optional[gcp.AssetSection]) -> DiscoveryResult:
         yield from discover(section_gcp_service_cloud_sql=None, section_gcp_assets=assets)
-
-
-class TestParsing(ParsingTester):
-    def parse(self, string_table):
-        return parse(string_table)
-
-    @property
-    def section_table(self) -> StringTable:
-        return generate_timeseries("item", 42, CLOUDSQL)
 
 
 def test_discover_labels_labels_without_user_labels() -> None:

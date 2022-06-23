@@ -48,7 +48,7 @@ TEST(PsTest, Integration) {
                   out.find("svchost.exe\t-k") != std::string::npos);
         auto all = tools::SplitString(out, "\n");
         for (const auto &in : all) {
-            EXPECT_LE(in.length(), 512U) << in;
+            EXPECT_LE(in.length(), 1512U) << in;  // due to pascom crash handler
             auto by_tab = tools::SplitString(in, "\t");
             EXPECT_TRUE(all.size() > 10);
             SCOPED_TRACE(fmt::format("'{}'", in));

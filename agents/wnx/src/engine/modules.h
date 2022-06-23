@@ -109,7 +109,7 @@ public:
     void InstallDefault(InstallMode mode) noexcept;
     void readConfig(YAML::Node &node);
 
-    static bool IsQuickReinstallAllowed();
+    static bool IsQuickReinstallAllowed() noexcept;
 
     void prepareToWork();
     bool isModuleScript(std::string_view filename);

@@ -71,10 +71,10 @@ void ServiceProcessor::startServiceAsLegacyTest() {
 
 namespace {
 void KillProcessesInUserFolder() {
-    std::filesystem::path user_dir{cfg::GetUserDir()};
+    fs::path user_dir{cfg::GetUserDir()};
     std::error_code ec;
     if (user_dir.empty() ||
-        std::filesystem::exists(user_dir / cfg::dirs::kUserPlugins, ec)) {
+        fs::exists(user_dir / cfg::dirs::kUserPlugins, ec)) {
         auto killed_processes_count = wtools::KillProcessesByDir(user_dir);
         XLOG::d.i("Killed [{}] processes from the user folder",
                   killed_processes_count);
@@ -96,7 +96,7 @@ void TryCleanOnExit() {
 
     fw::RemoveRule(srv::kSrvFirewallRuleName);
 
-    auto mode = details::GetCleanDataFolderMode();  // read config
+    const auto mode = details::GetCleanDataFolderMode();  // read config
     XLOG::l.i(
         "Clean on exit was requested, trying to remove what we have, mode is [{}]",
         static_cast<int>(mode));
@@ -117,9 +117,15 @@ void ServiceProcessor::stopService() {
     }
 
     // #TODO (sk): use std::array<std::reference_wrapper<std::thread>, 3> t{};
-    if (thread_.joinable()) thread_.join();
-    if (process_thread_.joinable()) thread_.join();
-    if (rm_lwa_thread_.joinable()) rm_lwa_thread_.join();
+    if (thread_.joinable()) {
+        thread_.join();
+    }
+    if (process_thread_.joinable()) {
+        thread_.join();
+    }
+    if (rm_lwa_thread_.joinable()) {
+        rm_lwa_thread_.join();
+    }
 }
 
 void ServiceProcessor::cleanupOnStop() {
@@ -165,7 +171,6 @@ std::string FindWinPerfExe() {
 
     if (tools::IsEqual(exe_name, "agent")) {
         XLOG::t.i("Looking for default agent");
-        namespace fs = std::filesystem;
         const fs::path f{cfg::GetRootDir()};
         std::vector<fs::path> names{
             f / cfg::kDefaultAppFileName  // on install
@@ -197,8 +202,7 @@ std::string FindWinPerfExe() {
 
 std::wstring GetWinPerfLogFile() {
     return cfg::groups::winperf.isTrace()
-               ? (std::filesystem::path{cfg::GetLogDir()} / "winperf.log")
-                     .wstring()
+               ? (fs::path{cfg::GetLogDir()} / "winperf.log").wstring()
                : L"";
 }
 }  // namespace
@@ -214,7 +218,7 @@ void ServiceProcessor::kickWinPerf(AnswerId answer_id,
     }
 
     auto exe_name = wtools::ConvertToUTF16(FindWinPerfExe());
-    auto timeout = winperf.timeout();
+    const auto timeout = winperf.timeout();
     auto prefix = wtools::ConvertToUTF16(winperf.prefix());
 
     if (winperf.isFork() && !exe_name.empty()) {
@@ -259,13 +263,15 @@ void ServiceProcessor::informDevice(rt::Device &rt_device,
     }
 
     auto sections = cfg::groups::global.realtimeSections();
-    if (sections.empty()) return;
+    if (sections.empty()) {
+        return;
+    }
 
     auto s_view = tools::ToView(sections);
 
-    auto rt_port = cfg::groups::global.realtimePort();
+    const auto rt_port = cfg::groups::global.realtimePort();
     auto password = cfg::groups::global.realtimePassword();
-    auto rt_timeout = cfg::groups::global.realtimeTimeout();
+    const auto rt_timeout = cfg::groups::global.realtimeTimeout();
 
     rt_device.connectFrom(ip_addr, rt_port, s_view, password, rt_timeout);
 }
@@ -374,7 +380,7 @@ bool ServiceProcessor::conditionallyStartOhm() noexcept {
         XLOG::l(
             "Too many errors [{}] on the OHM, stopping, cleaning and starting",
             error_count);
-        auto stopped = stopRunningOhmProcess();
+        const auto stopped = stopRunningOhmProcess();
         resetOhm();
         ohm_engine.resetError();
         if (!stopped) {
@@ -411,7 +417,7 @@ int ServiceProcessor::startProviders(AnswerId answer_id,
     max_wait_time_ = 0;
 
     // call of sensible to CPU-load sections
-    auto started_sync =
+    const auto started_sync =
         use_perf_cpuload
             ? tryToDirectCall(perf_cpuload_provider_, answer_id, ip_addr)
             : tryToDirectCall(wmi_cpuload_provider_, answer_id, ip_addr);
@@ -498,13 +504,12 @@ ByteVector ServiceProcessor::generateAnswer(const std::string &ip_from) {
 namespace {
 bool FindProcessByPid(uint32_t pid) {
     bool found = false;
-    wtools::ScanProcessList(
-        [&found, pid ](const PROCESSENTRY32 &entry) -> auto {
-            if (entry.th32ProcessID == pid) {
-                found = true;
-            }
-            return true;
-        });
+    wtools::ScanProcessList([&found, pid](const PROCESSENTRY32 &entry) {
+        if (entry.th32ProcessID == pid) {
+            found = true;
+        }
+        return true;
+    });
     return found;
 }
 
@@ -529,8 +534,8 @@ ServiceProcessor::Signal ServiceProcessor::mainWaitLoop(
     std::optional<ControllerParam> &controller_param) {
     XLOG::l.i("main Wait Loop");
     // memorize vars to check for changes in loop below
-    auto ipv6 = cfg::groups::global.ipv6();
-    auto port = cfg::groups::global.port();
+    const auto ipv6 = cfg::groups::global.ipv6();
+    const auto port = cfg::groups::global.port();
     auto uniq_cfg_id = cfg::GetCfg().uniqId();
     if (GetModus() == Modus::service) {
         ProcessServiceConfiguration(kServiceName);
@@ -668,7 +673,7 @@ void OpenFirewall(bool controller) {
 /// Periodically checks if the service is stopping.
 void ServiceProcessor::mainThread(world::ExternalPort *ex_port,
                                   bool cap_installed) noexcept {
-    auto is_service = GetModus() == Modus::service;
+    const auto is_service = GetModus() == Modus::service;
     if (is_service) {
         auto wait_period =
             cfg::GetVal(cfg::groups::kSystem, cfg::vars::kWaitNetwork,
@@ -714,7 +719,7 @@ void ServiceProcessor::mainThread(world::ExternalPort *ex_port,
 
         // Main Processing Loop
         while (true) {
-            uint16_t use_port =
+            const uint16_t use_port =
                 controller_params
                     ? controller_params->port
                     : cfg::GetVal(cfg::groups::kGlobal, cfg::vars::kPort,

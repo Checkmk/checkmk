@@ -94,7 +94,11 @@ using LocalResource = std::unique_ptr<T, LocalAllocDeleter<T>>;
 
 struct HandleDeleter {
     using pointer = HANDLE;  // trick to use HANDLE as STL pointer
-    void operator()(HANDLE h) const { ::CloseHandle(h); }
+    void operator()(HANDLE h) const noexcept {
+        if (h != nullptr) {
+            ::CloseHandle(h);
+        }
+    }
 };
 
 /// Unique ptr for Windows HANDLE
@@ -194,11 +198,8 @@ public:
             return true;
         }
 
-        if (!sa_initialized_) {
-            auto ret = initDescriptorsWithFullAccess();
-            if (!ret) {
-                return false;  // really, something weird
-            }
+        if (!sa_initialized_ && !initDescriptorsWithFullAccess()) {
+            return false;  // really, something weird
         }
 
         if (::CreatePipe(&read_, &write_, &sa_, 0) == 0) {
@@ -222,7 +223,7 @@ public:
         return true;
     }
 
-    void shutdown() {
+    void shutdown() noexcept {
         std::lock_guard lk(lock_);
         if (read_ != nullptr) {
             ::CloseHandle(read_);

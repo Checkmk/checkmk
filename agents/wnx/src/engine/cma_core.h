@@ -413,7 +413,7 @@ public:
     void restartIfRequired();
 
     // stop with asyncing
-    void breakAsync();
+    void breakAsync() noexcept;
 
     bool local() const {
         std::lock_guard lk(lock_);
@@ -559,7 +559,7 @@ protected:
         return current_time - data_time_;
     }
 
-    void joinAndReleaseMainThread();
+    void joinAndReleaseMainThread() noexcept;
     void threadCore(const std::wstring &Id);
     bool registerProcess(uint32_t Id);
     // this is not normal situation

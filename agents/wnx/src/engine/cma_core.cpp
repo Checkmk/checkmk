@@ -717,12 +717,12 @@ std::vector<char> PluginEntry::getResultsSync(const std::wstring &id,
 
 void PluginEntry::setCmdLine(std::wstring_view name) { cmd_line_ = name; }
 
-void PluginEntry::breakAsync() {
+void PluginEntry::breakAsync() noexcept {
     XLOG::t("breakAsync {}", path());
     joinAndReleaseMainThread();
 }
 
-void PluginEntry::joinAndReleaseMainThread() {
+void PluginEntry::joinAndReleaseMainThread() noexcept {
     std::unique_lock lk(lock_);
     auto t = std::move(main_thread_);
     lk.unlock();

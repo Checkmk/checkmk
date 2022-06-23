@@ -15,6 +15,20 @@
 #include "tools/_raii.h"
 
 namespace cma::tools {
+
+namespace {
+void ClosePi(PROCESS_INFORMATION &pi) noexcept {
+    if (pi.hProcess != nullptr) {
+        ::CloseHandle(pi.hProcess);
+        pi.hProcess = nullptr;
+    }
+    if (pi.hThread != nullptr) {
+        ::CloseHandle(pi.hThread);
+        pi.hThread = nullptr;
+    }
+}
+}  // namespace
+
 inline bool RunCommandAndWait(const std::wstring &command,
                               const std::wstring_view work_dir) {
     STARTUPINFOW si{0};
@@ -37,10 +51,11 @@ inline bool RunCommandAndWait(const std::wstring &command,
                          0,               // Creation Flags
                          nullptr,         // environment
                          working_folder,  // current directory
-                         &si, &pi)) {
-        ::WaitForSingleObject(pi.hProcess, INFINITE);
-        ::CloseHandle(pi.hProcess);
-        ::CloseHandle(pi.hThread);
+                         &si, &pi) == TRUE) {
+        if (pi.hProcess != nullptr) {
+            ::WaitForSingleObject(pi.hProcess, INFINITE);
+        }
+        ClosePi(pi);
         return true;
     }
     return false;
@@ -68,9 +83,8 @@ inline bool RunDetachedCommand(const std::string &command) {
                          0,         // Creation Flags
                          nullptr,   // environment
                          nullptr,   // current directory
-                         &si, &pi)) {
-        CloseHandle(pi.hProcess);
-        CloseHandle(pi.hThread);
+                         &si, &pi) == TRUE) {
+        ClosePi(pi);
         return true;
     }
     return false;
@@ -110,13 +124,12 @@ inline uint32_t RunStdCommand(
                          creation_flags,  // Creation Flags
                          nullptr,         // environment
                          nullptr,         // current directory
-                         &si, &pi)) {
-        auto process_id = pi.dwProcessId;
-        if (wait_for_end) {
+                         &si, &pi) == TRUE) {
+        const auto process_id = pi.dwProcessId;
+        if (wait_for_end && pi.hProcess != nullptr) {
             WaitForSingleObject(pi.hProcess, INFINITE);
         }
-        CloseHandle(pi.hProcess);
-        CloseHandle(pi.hThread);
+        ClosePi(pi);
         return process_id;
     }
     return 0;
@@ -173,9 +186,14 @@ inline std::tuple<DWORD, HANDLE, HANDLE> RunStdCommandAsJob(
     }
 
     auto process_id = pi.dwProcessId;
-    AssignProcessToJobObject(job_handle, pi.hProcess);
+    if (pi.hProcess != nullptr) {
+        AssignProcessToJobObject(job_handle, pi.hProcess);
+    }
 
-    CloseHandle(pi.hThread);
+    if (pi.hThread != nullptr) {
+        ::CloseHandle(pi.hThread);
+        pi.hThread = nullptr;
+    }
     return {process_id, job_handle, pi.hProcess};
 }
 
@@ -189,7 +207,8 @@ inline std::tuple<DWORD, HANDLE, HANDLE> RunStdCommandAsJob(
 namespace win {
 inline bool IsElevated() {
     HANDLE token = nullptr;
-    if (::OpenProcessToken(::GetCurrentProcess(), TOKEN_QUERY, &token) == 0) {
+    if (::OpenProcessToken(::GetCurrentProcess(), TOKEN_QUERY, &token) == 0 ||
+        token == nullptr) {
         return false;
     }
     ON_OUT_OF_SCOPE(if (token)::CloseHandle(token););
@@ -218,7 +237,7 @@ inline std::wstring GetSomeSystemFolder(const KNOWNFOLDERID &rfid) noexcept {
     return path;
 }
 
-inline std::wstring GetSystem32Folder() {
+inline std::wstring GetSystem32Folder() noexcept {
     return GetSomeSystemFolder(FOLDERID_System);
 }
 

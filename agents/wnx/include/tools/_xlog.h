@@ -122,8 +122,8 @@ void somefoo_about_video()
 
 namespace xlog {
     inline size_t ConvertChar2Wchar(wchar_t * output, size_t len,
-                                    const char *input) {
-        if (input == nullptr || len <= 0) {
+                                    const char *input) noexcept {
+        if (input == nullptr || len == 0 || output == nullptr) {
             return 0;
         }
         ::swprintf_s(output, len, L"%S", input);
@@ -132,7 +132,7 @@ namespace xlog {
 
     inline size_t ConvertWchar2Char(char *output, size_t len,
                                     const wchar_t *input) {
-        if (input == nullptr) {
+        if (input == nullptr || len == 0 || output == nullptr) {
             return 0;
         }
 
@@ -141,6 +141,9 @@ namespace xlog {
     }
 
     inline size_t ConvertInt2Char(char *output, size_t len, int value) {
+        if (len == 0 || output == nullptr) {
+            return 0;
+        }
         ::sprintf_s(output, len, "%d", value);
         return ::strlen(output);
     }
@@ -281,13 +284,13 @@ namespace xlog {
 
     inline std::string CurrentTime() {
         using std::chrono::system_clock;
-        auto cur_time = system_clock::now();
-        auto in_time_t = system_clock::to_time_t(cur_time);
-        auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(
-                      cur_time.time_since_epoch()) %
-                  1000;
-        auto *loc_time = std::localtime(&in_time_t);
-        auto p_time = std::put_time(loc_time, "%Y-%m-%d %T");
+        const auto cur_time = system_clock::now();
+        const auto in_time_t = system_clock::to_time_t(cur_time);
+        const auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+                            cur_time.time_since_epoch()) %
+                        1000;
+        const auto *loc_time = std::localtime(&in_time_t);
+        const auto p_time = std::put_time(loc_time, "%Y-%m-%d %T");
 
         std::stringstream sss;
         sss << p_time << "." << std::setfill('0') << std::setw(3) << ms.count()
@@ -331,16 +334,16 @@ namespace xlog {
         std::fclose(file_ptr);
     }
 
-    inline void internal_PrintStringDebugger(const wchar_t *txt) {
+    inline void internal_PrintStringDebugger(const wchar_t *txt) noexcept {
         OutputDebugStringW(txt);
     };
-    inline void internal_PrintStringDebugger(const char *txt) {
+    inline void internal_PrintStringDebugger(const char *txt) noexcept {
         OutputDebugStringA(txt);
     };
-    inline void internal_PrintStringStdio(const wchar_t *txt) {
+    inline void internal_PrintStringStdio(const wchar_t *txt) noexcept {
         printf("%ls", txt);
     };
-    inline void internal_PrintStringStdio(const char *txt) {
+    inline void internal_PrintStringStdio(const char *txt) noexcept {
         printf("%s", txt);
     };
 
@@ -417,7 +420,7 @@ namespace xlog {
         std::basic_string<T> text_;
     };
 
-    inline std::wstring_view GetPrefix() {
+    inline std::wstring_view GetPrefix() noexcept {
 #if defined(DBG_NAME_DYNAMIC)
         static wchar_t prefix[256] = L"";
         ConvertChar2Wchar(prefix, 128, DBG_NAME_DYNAMIC);
@@ -448,7 +451,7 @@ namespace xlog {
         LogParam() : LogParam(nullptr) {}
 
         [[nodiscard]] const char *filename() const { return file_name_out_; }
-        void setFileName(const char *fname) {
+        void setFileName(const char *fname) noexcept {
             if (fname == nullptr) {
                 file_name_out_[0] = 0;
             } else {
@@ -469,22 +472,24 @@ namespace xlog {
         char file_name_out_[kFileNameLength];
 
     public:
-        [[nodiscard]] auto prefix() const { return prefix_; }
-        [[nodiscard]] auto prefixAscii() const { return prefix_ascii_; }
+        [[nodiscard]] auto prefix() const noexcept { return prefix_; }
+        [[nodiscard]] auto prefixAscii() const noexcept {
+            return prefix_ascii_;
+        }
 
         void initPrefix(const wchar_t *prefix_text) {
             const auto *const prefix =
                 prefix_text != nullptr ? prefix_text : GetPrefix().data();
 
             // safe ASCIIZ copy
-            auto len = static_cast<int>(::wcslen(prefix));
+            const auto len = static_cast<int>(::wcslen(prefix));
             auto to_copy = std::min(len, kFileNameLength - 1);
             memcpy(prefix_, prefix, to_copy * sizeof(wchar_t));
             prefix_[to_copy] = 0;
 
             // "safe" UTF16 to UTF8 conversion, for prefix enough
             for (int i = 0;; ++i) {
-                auto ch = prefix_[i];
+                const auto ch = prefix_[i];
                 prefix_ascii_[i] = static_cast<char>(ch);
                 if (ch == 0) {
                     break;
@@ -529,7 +534,7 @@ namespace xlog {
     };
 
     template <typename T>
-    size_t calc_len(const T *buf) {
+    size_t calc_len(const T *buf) noexcept {
         if constexpr (sizeof(T) == 1) {
             return ::strlen((const char *)buf);
         } else {

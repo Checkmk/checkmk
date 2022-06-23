@@ -225,7 +225,9 @@ public:
 
     void cleanupOnStop() override;
 
-    const wchar_t *getMainLogName() const override { return kMainLogName; }
+    const wchar_t *getMainLogName() const noexcept override {
+        return kMainLogName;
+    }
 
     std::string getInternalPort() const noexcept { return internal_port_; }
 

@@ -1,5 +1,5 @@
 import * as d3 from "d3";
-import * as crossfilter from "crossfilter2";
+import crossfilter from "crossfilter2";
 import * as utils from "../utils";
 
 interface ElementSize {
@@ -255,8 +255,7 @@ export class FigureBase {
     _post_url: string;
     _post_body: string;
     _data;
-    // @ts-ignore
-    _crossfilter: crossfilter;
+    _crossfilter;
     scheduler: Scheduler;
     figure_size;
     plot_size;
@@ -303,8 +302,7 @@ export class FigureBase {
 
         // Current data of this figure
         this._data = {data: [], plot_definitions: []};
-        // @ts-ignore
-        this._crossfilter = new crossfilter.default();
+        this._crossfilter = crossfilter();
         this.scheduler = new Scheduler(
             () => this._fetch_data(),
             this.get_update_interval()

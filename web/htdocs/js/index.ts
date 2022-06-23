@@ -8,7 +8,7 @@ import "canvas-5-polyfill"; // needed for IE11
 import $ from "jquery";
 import * as d3 from "d3";
 import * as d3Sankey from "d3-sankey";
-import * as crossfilter from "crossfilter2";
+import crossfilter from "crossfilter2";
 import * as dc from "dc";
 import * as forms from "forms";
 import * as ajax from "ajax";
@@ -119,7 +119,7 @@ $(() => {
 });
 
 export const cmk_export = {
-    crossfilter: crossfilter.default,
+    crossfilter: crossfilter,
     d3: d3,
     dc: dc,
     d3Sankey: d3Sankey,

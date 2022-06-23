@@ -8,11 +8,11 @@ import pytest
 
 from tests.unit.conftest import FixRegister
 
-from cmk.utils.type_defs import CheckPluginName, SectionName
+from cmk.utils.type_defs import CheckPluginName
 
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
-from cmk.base.api.agent_based.type_defs import AgentSectionPlugin
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.aws_ebs_limits import parse_aws_ebs_limits
 
 _AWS_REGION = "eu-central-1"
 _DEFAULT_PARAMS = {
@@ -122,27 +122,18 @@ _STRING_TABLE = [
 ]
 
 
-@pytest.fixture(name="ebs_limits_section")
-def fixture_ebs_limits_section(fix_register: FixRegister) -> AgentSectionPlugin:
-    return fix_register.agent_sections[SectionName("aws_ebs_limits")]
-
-
 @pytest.fixture(name="ebs_limits_check")
 def fixture_ebs_limits_check(fix_register: FixRegister) -> CheckPlugin:
     return fix_register.check_plugins[CheckPluginName("aws_ebs_limits")]
 
 
-def test_discover_ebs_limits(
-    ebs_limits_section: AgentSectionPlugin, ebs_limits_check: CheckPlugin
-) -> None:
-    parsed_section = ebs_limits_section.parse_function(_STRING_TABLE)
+def test_discover_ebs_limits(ebs_limits_check: CheckPlugin) -> None:
+    parsed_section = parse_aws_ebs_limits(_STRING_TABLE)
     assert list(ebs_limits_check.discovery_function(parsed_section)) == [Service(item=_AWS_REGION)]
 
 
-def test_check_ebs_limits(
-    ebs_limits_section: AgentSectionPlugin, ebs_limits_check: CheckPlugin
-) -> None:
-    parsed_section = ebs_limits_section.parse_function(_STRING_TABLE)
+def test_check_ebs_limits(ebs_limits_check: CheckPlugin) -> None:
+    parsed_section = parse_aws_ebs_limits(_STRING_TABLE)
     assert list(
         ebs_limits_check.check_function(
             item=_AWS_REGION, params=_DEFAULT_PARAMS, section=parsed_section

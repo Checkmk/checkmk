@@ -22,43 +22,12 @@ factory_settings["aws_ebs_limits_default_levels"] = {
 }
 
 
-def parse_aws_ebs_limits(info):
-    limits_by_region: AWSLimitsByRegion = {}
-    for line in parse_aws(info):
-        resource_key, resource_title, limit, amount, region = line
-
-        if resource_key in [
-            "block_store_space_standard",
-            "block_store_space_io1",
-            "block_store_space_io2",
-            "block_store_space_gp2",
-            "block_store_space_gp3",
-            "block_store_space_sc1",
-            "block_store_space_st1",
-        ]:
-            # Limit has unit TiB, amount is measured in GiB
-            limit *= 1024**4
-            amount *= 1024**3
-            human_readable_func = get_bytes_human_readable
-        elif resource_key in {"block_store_iops_io1", "block_store_iops_io2"}:
-            human_readable_func = lambda x: (  # pylint: disable=unnecessary-lambda-assignment
-                "%s/s" % x
-            )
-        else:
-            human_readable_func = int
-        limits_by_region.setdefault(region, []).append(
-            [resource_key, resource_title, limit, amount, human_readable_func]
-        )
-    return limits_by_region
-
-
 @get_parsed_item_data
 def check_aws_ebs_limits(item, params, parsed):
     return check_aws_limits("ebs", params, parsed)
 
 
 check_info["aws_ebs_limits"] = {
-    "parse_function": parse_aws_ebs_limits,
     "inventory_function": discover(),
     "check_function": check_aws_ebs_limits,
     "service_description": "AWS/EBS Limits %s",

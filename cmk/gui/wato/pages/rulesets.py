@@ -945,7 +945,7 @@ class ModeEditRuleset(WatoMode):
 
         folder = mandatory_parameter("folder", request.var("folder"))
 
-        rule_folder = Folder.folder(request.var("_folder", folder))
+        rule_folder = Folder.folder(request.get_str_input_mandatory("_folder", folder))
         rule_folder.need_permission("write")
         rulesets = FolderRulesets(rule_folder)
         rulesets.load()

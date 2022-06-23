@@ -2957,7 +2957,7 @@ class SearchFolder(WithPermissions, WithAttributes, BaseFolder):
     @staticmethod
     def current_search_folder():
         if request.has_var("host_search"):
-            base_folder = Folder.folder(request.var("folder", ""))
+            base_folder = Folder.folder(request.get_str_input_mandatory("folder", ""))
             search_criteria = SearchFolder.criteria_from_html_vars()
             folder = SearchFolder(base_folder, search_criteria)
             Folder.set_current(folder)

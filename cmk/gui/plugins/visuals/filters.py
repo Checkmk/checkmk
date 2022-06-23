@@ -1444,6 +1444,7 @@ class TagFilter(Filter):
             html.dropdown(
                 prefix + "_op",
                 operators,
+                deflt=value.get(prefix + "_op", ""),
                 style="width:36px",
                 ordered=True,
                 class_="op",

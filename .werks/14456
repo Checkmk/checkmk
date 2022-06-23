@@ -1,0 +1,12 @@
+Title: Fix operators in filter popup
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1655987651
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p4
+
+If a view used filter with operators like "=" or "≠" (e.g. the "Host Tags"
+filter), the value of the operator was empty when opening the filter popup.

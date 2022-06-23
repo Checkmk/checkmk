@@ -178,11 +178,11 @@ YAML::Node LoadAndCheckYamlFile(const std::wstring &file_name);
 template <typename T>
 T GetVal(std::string_view section_name, std::string_view key, T dflt) noexcept {
     auto yaml = GetLoadedConfig();
-    if (yaml.size() == 0) {
-        return dflt;
-    }
-
     try {
+        if (yaml.size() == 0) {
+            return dflt;
+        }
+
         auto section = yaml[section_name];
         auto val = section[key];
         if (val.IsScalar()) return val.as<T>();
@@ -279,7 +279,7 @@ std::vector<T> ConvertNode2Sequence(const YAML::Node &val) noexcept {
             return {};
         }
 
-        auto sz = val.size();
+        const auto sz = val.size();
         std::vector<T> arr;
         arr.reserve(sz);
         for (const auto &v : val) {
@@ -938,8 +938,6 @@ public:
         }
 
         auto pattern() const noexcept { return pattern_; }
-        auto group() const noexcept { return group_; }
-        auto user() const noexcept { return user_; }
         auto run() const noexcept { return run_; }
         void assign(const YAML::Node &node);
         void assignGroup(std::string_view group);
@@ -948,7 +946,7 @@ public:
         YAML::Node source() const noexcept { return source_; }
         std::string sourceText() const noexcept { return source_text_; }
 
-        void resetConfig() {
+        void resetConfig() noexcept {
             async_ = false;
             timeout_ = kDefaultPluginTimeout;
             cache_age_ = 0;
@@ -972,8 +970,6 @@ public:
 
         std::string pattern_;
         std::string source_text_;
-        std::string group_;
-        std::string user_;
         bool run_ = true;
         YAML::Node source_;
 #if defined(GTEST_INCLUDE_GTEST_GTEST_H_)

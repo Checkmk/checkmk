@@ -305,7 +305,19 @@ expected_attributes = {
         'show_in_table': False,
         'show_inherited_value': True,
         'topic': u'Custom attributes'
-    }
+    },
+    "inventory_failed": {
+        "depends_on_roles": [],
+        "depends_on_tags": [],
+        "editable": False,
+        "from_config": False,
+        "show_in_folder": False,
+        "show_in_form": False,
+        "show_in_host_search": False,
+        "show_in_table": False,
+        "show_inherited_value": False,
+        "topic": "Creation / Locking",
+    },
 }
 
 
@@ -495,9 +507,10 @@ def test_host_attributes(for_what, new):
             'management_ipmi_credentials',
         ],
         "meta_data": [
-            'meta_data',
-            'locked_by',
-            'locked_attributes',
+            "meta_data",
+            "locked_by",
+            "locked_attributes",
+            "inventory_failed",
         ],
         'custom_attributes': ['labels',],
     }

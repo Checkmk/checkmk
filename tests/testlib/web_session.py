@@ -24,7 +24,7 @@ logger = logging.getLogger()
 
 
 class CMKWebSession:
-    def __init__(self, site) -> None:
+    def __init__(self, site) -> None:  # type:ignore[no-untyped-def]
         super().__init__()
         self.transids: list = []
         # Resources are only fetched and verified once per session

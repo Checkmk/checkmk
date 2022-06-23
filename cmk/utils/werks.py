@@ -154,7 +154,7 @@ _OPTIONAL_WERK_FIELDS = {
 _ALLOWED_WERK_FIELDS = _REQUIRED_WERK_FIELDS | _OPTIONAL_WERK_FIELDS
 
 
-def _load_werk(path) -> dict[str, Any]:
+def _load_werk(path) -> dict[str, Any]:  # type:ignore[no-untyped-def]
     werk: dict[str, Any] = {
         "body": [],
         "compatible": "compat",

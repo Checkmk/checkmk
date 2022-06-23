@@ -82,5 +82,5 @@ class BINodeVisLayoutStyleSchema(OneOfSchema):
         "force": BINodeVisForceStyleSchema,
     }
 
-    def get_obj_type(self, obj) -> str:
+    def get_obj_type(self, obj) -> str:  # type:ignore[no-untyped-def]
         return obj["type"]

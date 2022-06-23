@@ -33,7 +33,7 @@ _reversed_bi_criticality_level = {v: k for k, v in _bi_criticality_level.items()
 
 
 def mapped_states(func):
-    def wrap(self, states: List[int]) -> int:
+    def wrap(self, states: List[int]) -> int:  # type:ignore[no-untyped-def]
         new_states = sorted(map(lambda x: _bi_criticality_level[x], states))
         return _reversed_bi_criticality_level.get(func(self, new_states), BIStates.UNKNOWN)
 

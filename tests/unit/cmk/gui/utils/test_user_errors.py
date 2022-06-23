@@ -8,7 +8,9 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.utils.user_errors import user_errors, UserErrors
 
 
-def test_user_errors_request_context_integration(request_context) -> None:
+def test_user_errors_request_context_integration(  # type:ignore[no-untyped-def]
+    request_context,
+) -> None:
     assert not user_errors
     user_errors.add(MKUserError(None, "abc"))
     assert user_errors[None] == "abc"

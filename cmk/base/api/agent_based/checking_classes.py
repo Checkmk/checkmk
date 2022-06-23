@@ -360,7 +360,7 @@ class Result(
     ) -> "Result":
         pass
 
-    def __new__(
+    def __new__(  # type:ignore[no-untyped-def]
         cls,
         **kwargs,
     ) -> "Result":
@@ -464,7 +464,7 @@ class IgnoreResults:
     def __str__(self) -> str:
         return self._value if isinstance(self._value, str) else repr(self._value)
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other) -> bool:  # type:ignore[no-untyped-def]
         return other.__class__ == self.__class__ and self._value == other._value
 
 

@@ -10,7 +10,7 @@ import cmk.utils.version as cmk_version
 
 # Would move this to unit tests, but it would not work, because the
 # unit tests monkeypatch the cmk_version.omd_version() function
-def test_omd_version(tmp_path, monkeypatch) -> None:
+def test_omd_version(tmp_path, monkeypatch) -> None:  # type:ignore[no-untyped-def]
     link_path = tmp_path / "version"
 
     monkeypatch.setattr(cmk.utils.paths, "omd_root", link_path.parent)

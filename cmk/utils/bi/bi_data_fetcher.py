@@ -94,7 +94,7 @@ class BIStructureFetcher:
 
         self._read_cached_data(required_program_starts)
 
-    def _fetch_missing_data(self, missing_program_starts) -> None:
+    def _fetch_missing_data(self, missing_program_starts) -> None:  # type:ignore[no-untyped-def]
         only_sites = {kv[0]: kv[1] for kv in missing_program_starts}
 
         # Start two queries: GET hosts / GET services
@@ -203,10 +203,10 @@ class BIStructureFetcher:
     def _service_structure_columns(cls) -> List[str]:
         return ["host_name", "description", "tags", "labels"]
 
-    def _site_data_filename(self, site_id, timestamp) -> str:
+    def _site_data_filename(self, site_id, timestamp) -> str:  # type:ignore[no-untyped-def]
         return "%s.%s.%d" % (self._site_cache_prefix, site_id, timestamp)
 
-    def add_site_data(self, site_id, hosts) -> None:
+    def add_site_data(self, site_id, hosts) -> None:  # type:ignore[no-untyped-def]
         # BIHostData
         # ("site_id", str),
         # ("tags", Set[Tuple[TaggroupID, TagID]]),
@@ -266,12 +266,12 @@ class BIStructureFetcher:
             data_files.append((path_object, (SiteId(site_id), int(timestamp))))
         return data_files
 
-    def _marshal_save_data(self, filepath, data) -> None:
+    def _marshal_save_data(self, filepath, data) -> None:  # type:ignore[no-untyped-def]
         with open(filepath, "wb") as f:
             marshal.dump(data, f)
             os.fsync(f.fileno())
 
-    def _marshal_load_data(self, filepath) -> Dict:
+    def _marshal_load_data(self, filepath) -> Dict:  # type:ignore[no-untyped-def]
         with open(filepath, "rb") as f:
             return marshal.load(f)
 
@@ -287,7 +287,7 @@ class BIStructureFetcher:
 
 
 class BIStatusFetcher(ABCBIStatusFetcher):
-    def set_assumed_states(self, assumed_states) -> None:
+    def set_assumed_states(self, assumed_states) -> None:  # type:ignore[no-untyped-def]
         # Streamline format to site, host, service (may be None)
         self.assumed_states = {}
         for key, state in assumed_states.items():
@@ -299,7 +299,7 @@ class BIStatusFetcher(ABCBIStatusFetcher):
     def update_states(self, required_elements: Set[RequiredBIElement]) -> None:
         self.states = self._get_status_info(required_elements)
 
-    def update_states_filtered(self, *args) -> None:
+    def update_states_filtered(self, *args) -> None:  # type:ignore[no-untyped-def]
         self.states = self._get_status_info_filtered(*args)
 
     def cleanup(self) -> None:
@@ -307,7 +307,7 @@ class BIStatusFetcher(ABCBIStatusFetcher):
         self.assumed_states.clear()
 
     # Get all status information for the required_hosts
-    def _get_status_info(self, required_elements) -> BIStatusInfo:
+    def _get_status_info(self, required_elements) -> BIStatusInfo:  # type:ignore[no-untyped-def]
         # Query each site only for hosts that that site provides
         req_hosts: Set[HostName] = set()
         req_sites: Set[SiteId] = set()
@@ -334,7 +334,7 @@ class BIStatusFetcher(ABCBIStatusFetcher):
     # This variant of the function is configured not with a list of
     # hosts but with a livestatus filter header and a list of columns
     # that need to be fetched in any case
-    def _get_status_info_filtered(
+    def _get_status_info_filtered(  # type:ignore[no-untyped-def]
         self, filter_header, only_sites, limit, host_columns, bygroup, required_aggregations
     ) -> BIStatusInfo:
         columns = self.get_status_columns() + host_columns

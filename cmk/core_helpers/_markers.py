@@ -83,7 +83,7 @@ class SectionMarker(NamedTuple):
         )
 
     @classmethod
-    def default(cls, name: SectionName):
+    def default(cls, name: SectionName):  # type:ignore[no-untyped-def]
         return cls(name, None, "ascii", True, None, None)
 
     @classmethod

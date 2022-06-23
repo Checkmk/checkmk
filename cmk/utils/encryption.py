@@ -306,7 +306,7 @@ class Encrypter:
         return hashlib.scrypt(passphrase, salt=salt, n=2**14, r=8, p=1, dklen=32)
 
     @staticmethod
-    def _cipher(key: bytes, nonce: bytes):
+    def _cipher(key: bytes, nonce: bytes):  # type:ignore[no-untyped-def]
         return AES.new(key, AES.MODE_GCM, nonce=nonce)
 
     @staticmethod

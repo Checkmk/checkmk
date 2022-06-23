@@ -157,13 +157,13 @@ class ABCHostsStorage(Generic[THostsReadData]):
     def __init__(self, storage_format: StorageFormat) -> None:
         self._storage_format = storage_format
 
-    def exists(self, file_path_without_extension: Path):
+    def exists(self, file_path_without_extension: Path):  # type:ignore[no-untyped-def]
         return self.add_file_extension(file_path_without_extension).exists()
 
-    def remove(self, file_path_without_extension: Path):
+    def remove(self, file_path_without_extension: Path):  # type:ignore[no-untyped-def]
         Path(self.add_file_extension(file_path_without_extension)).unlink(missing_ok=True)
 
-    def add_file_extension(self, file_path: Path):
+    def add_file_extension(self, file_path: Path):  # type:ignore[no-untyped-def]
         return file_path.with_suffix(self._storage_format.extension())
 
     def write(

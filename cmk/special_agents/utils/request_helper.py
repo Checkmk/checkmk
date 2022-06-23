@@ -171,7 +171,7 @@ class ApiSession(Session):
         return super().request(method, url, verify=self.ssl_verify, **kwargs)
 
 
-def parse_api_url(
+def parse_api_url(  # type:ignore[no-untyped-def]
     server_address,
     api_path,
     protocol="http",

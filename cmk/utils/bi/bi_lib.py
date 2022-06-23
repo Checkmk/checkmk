@@ -191,7 +191,7 @@ def create_nested_schema_for_class(
     return create_nested_schema(class_schema, default_schema, example_config)
 
 
-def create_nested_schema(
+def create_nested_schema(  # type:ignore[no-untyped-def]
     base_schema,
     default_schema: Optional[Type[Schema]] = None,
     example_config: Optional[Union[list, Dict[str, Any]]] = None,
@@ -224,7 +224,9 @@ def create_nested_schema(
     )
 
 
-def get_schema_default_config(schema: Type[Schema], params=None) -> Dict[str, Any]:
+def get_schema_default_config(  # type:ignore[no-untyped-def]
+    schema: Type[Schema], params=None
+) -> Dict[str, Any]:
     """
 
     >>> from marshmallow import fields
@@ -428,7 +430,7 @@ class ABCBICompiledNode(abc.ABC):
     def type(cls) -> str:
         raise NotImplementedError()
 
-    def __lt__(self, other: "ABCBICompiledNode"):
+    def __lt__(self, other: "ABCBICompiledNode"):  # type:ignore[no-untyped-def]
         return self._get_comparable_name() < other._get_comparable_name()
 
     @abc.abstractmethod
@@ -449,7 +451,7 @@ class ABCBICompiledNode(abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def compute(
+    def compute(  # type:ignore[no-untyped-def]
         self,
         computation_options: BIAggregationComputationOptions,
         bi_status_fetcher: ABCBIStatusFetcher,
@@ -499,7 +501,7 @@ class ABCBIAction(abc.ABC):
     ) -> ActionArguments:
         raise NotImplementedError()
 
-    def execute_search_results(
+    def execute_search_results(  # type:ignore[no-untyped-def]
         self, search_results, macros: MacroMapping, bi_searcher
     ) -> Iterable[ABCBICompiledNode]:
         action_arguments = self._generate_action_arguments(search_results, macros)

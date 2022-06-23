@@ -4,11 +4,24 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Callable
+from typing import Any, Callable, Mapping
 
-from .agent_based_api.v1 import register, render
-from .agent_based_api.v1.type_defs import StringTable
-from .utils.aws import AWSLimitsByRegion, parse_aws
+from .agent_based_api.v1 import register, render, Service
+from .agent_based_api.v1.type_defs import DiscoveryResult, StringTable
+from .utils.aws import AWSLimitsByRegion, check_aws_limits, parse_aws
+
+AWS_EBS_LIMITS_DEFAULT_PARAMS = {
+    "block_store_snapshots": (None, 80.0, 90.0),
+    "block_store_space_standard": (None, 80.0, 90.0),
+    "block_store_space_io1": (None, 80.0, 90.0),
+    "block_store_iops_io1": (None, 80.0, 90.0),
+    "block_store_space_io2": (None, 80.0, 90.0),
+    "block_store_iops_io2": (None, 80.0, 90.0),
+    "block_store_space_gp2": (None, 80.0, 90.0),
+    "block_store_space_gp3": (None, 80.0, 90.0),
+    "block_store_space_sc1": (None, 80.0, 90.0),
+    "block_store_space_st1": (None, 80.0, 90.0),
+}
 
 
 def _render_per_second_unit(value: object) -> str:
@@ -46,4 +59,23 @@ def parse_aws_ebs_limits(string_table: StringTable) -> AWSLimitsByRegion:
 register.agent_section(
     name="aws_ebs_limits",
     parse_function=parse_aws_ebs_limits,
+)
+
+
+def discover_aws_ebs_limits(section: AWSLimitsByRegion) -> DiscoveryResult:
+    yield from (Service(item=region) for region in section)
+
+
+def check_aws_ebs_limits(item: str, params: Mapping[str, Any], section: AWSLimitsByRegion):
+    if (region_limits := section.get(item)) is not None:
+        yield from check_aws_limits("ebs", params, region_limits)
+
+
+register.check_plugin(
+    name="aws_ebs_limits",
+    service_name="AWS/EBS Limits %s",
+    discovery_function=discover_aws_ebs_limits,
+    check_ruleset_name="aws_ebs_limits",
+    check_default_parameters=AWS_EBS_LIMITS_DEFAULT_PARAMS,
+    check_function=check_aws_ebs_limits,
 )

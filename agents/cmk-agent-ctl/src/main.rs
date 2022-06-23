@@ -11,6 +11,11 @@ fn main() {
         }
     };
 
+    #[cfg(windows)]
+    cmk_agent_ctl::validate_elevation(|| {
+        error!("Agent controller is not elevated, the functionality is limited");
+    });
+
     info!("starting");
     let result = cmk_agent_ctl::run_requested_mode(args, paths);
 

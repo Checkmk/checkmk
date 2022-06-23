@@ -43,6 +43,7 @@ socket2 = { version = "0.4" }
 
 [target.'cfg(windows)'.dependencies]
 mail_slot = { version = "0.1" }  # windows mailslot api
+is_elevated = { version = "0.1" }
 
 [patch.crates-io]
 wepoll-ffi = { path = "./patch/wepoll-ffi-0.1.2" }

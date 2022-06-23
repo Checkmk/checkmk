@@ -2,6 +2,9 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
+#[cfg(windows)]
+use is_elevated::is_elevated;
+
 use anyhow::Error as AnyhowError;
 
 pub fn anyhow_error_to_human_redable(err: &AnyhowError) -> String {
@@ -9,6 +12,16 @@ pub fn anyhow_error_to_human_redable(err: &AnyhowError) -> String {
         .map(|e| e.to_string())
         .collect::<Vec<String>>()
         .join("\n")
+}
+
+#[cfg(windows)]
+pub fn validate_elevation<F>(mut on_error: F)
+where
+    F: FnMut(),
+{
+    if !is_elevated() {
+        on_error();
+    }
 }
 
 #[cfg(test)]

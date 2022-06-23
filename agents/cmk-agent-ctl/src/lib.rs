@@ -28,6 +28,8 @@ use modes::push::handle_push_cycle as push;
 use modes::registration::{proxy_register, register};
 use modes::status::status;
 
+#[cfg(windows)]
+pub use misc::validate_elevation;
 pub use setup::init;
 
 pub fn run_requested_mode(args: cli::Args, paths: setup::PathResolver) -> AnyhowResult<()> {

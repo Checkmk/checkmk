@@ -11,8 +11,26 @@
 #include <fmt/format.h>
 
 #include <chrono>
+#include <exception>
 #include <filesystem>
 #include <optional>
+
+template <>
+struct fmt::formatter<std::exception> {
+    static constexpr auto parse(format_parse_context &ctx) {
+        // Return an iterator past the end of the parsed range:
+        return ctx.end();
+    }
+
+    template <typename FormatContext>
+    auto format(const std::exception &e, FormatContext &ctx) {
+        try {
+            return format_to(ctx.out(), "{}", e.what());
+        } catch (const std::exception & /* ups*/) {
+            return format_to(ctx.out(), "exception in what");
+        }
+    }
+};
 
 template <>
 struct fmt::formatter<std::filesystem::path> {

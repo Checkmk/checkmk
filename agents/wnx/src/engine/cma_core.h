@@ -554,8 +554,8 @@ protected:
         std::lock_guard lk(lock_);
         data_is_going_old_ = true;
     }
-    auto getDataAge() const {
-        auto current_time = std::chrono::steady_clock::now();
+    auto getDataAge() const noexcept {
+        const auto current_time = std::chrono::steady_clock::now();
         return current_time - data_time_;
     }
 

@@ -17,6 +17,7 @@
 #include "cfg.h"
 #include "cma_core.h"
 #include "common/cfg_info.h"
+#include "common/fmt_ext.h"
 #include "common/wtools.h"
 #include "logger.h"
 #include "tools/_misc.h"
@@ -24,6 +25,7 @@
 
 using namespace std::literals;
 namespace fs = std::filesystem;
+namespace rs = std::ranges;
 
 namespace cma::cfg::modules {
 
@@ -36,12 +38,11 @@ void Module::reset() noexcept {
     bin_.clear();
 }
 
-void Module::runPostInstall() {
+void Module::runPostInstall() const {
     fs::path work_dir = cfg::GetUserDir();
     work_dir /= dir();
     auto script_path = work_dir / post_install_script_name;
-    std::error_code ec;
-    if (fs::exists(script_path, ec)) {
+    if (std::error_code ec; fs::exists(script_path, ec)) {
         auto success =
             tools::RunCommandAndWait(script_path.wstring(), work_dir.wstring());
         XLOG::l.i("The command '{}' is {}", script_path,
@@ -50,12 +51,12 @@ void Module::runPostInstall() {
 }
 
 fs::path Module::findPackage(const fs::path &backup_dir) const noexcept {
-    namespace fs = std::filesystem;
     try {
         auto file = backup_dir / (name() + std::string{kExtension});
         if (fs::exists(file) && fs::is_regular_file(file) &&
-            fs::file_size(file) > 0)
+            fs::file_size(file) > 0) {
             return file;
+        }
 
         XLOG::d.i("Module '{}' has no package installed, this is normal",
                   name());
@@ -63,16 +64,14 @@ fs::path Module::findPackage(const fs::path &backup_dir) const noexcept {
     } catch (const std::exception &e) {
         XLOG::d.i(
             "Module '{}' has no package installed, this is normal, exception '{}'",
-            name(), e.what());
+            name(), e);
     }
     return {};
 }
 
 fs::path Module::findBin(const fs::path &modules_dir) const noexcept {
-    namespace fs = std::filesystem;
-    fs::path actual_dir = modules_dir.parent_path() / dir();
-
     try {
+        fs::path actual_dir = modules_dir.parent_path() / dir();
         fs::path default_dir = modules_dir / name();
 
         // default must exist
@@ -88,7 +87,7 @@ fs::path Module::findBin(const fs::path &modules_dir) const noexcept {
             // check symbolic link, actual is not the same as default
             XLOG::d("Module '{}' has predefined work folder", name());
         }
-        auto table = cma::tools::SplitString(exec(), L" ");
+        auto table = tools::SplitString(exec(), L" ");
 
         auto bin = actual_dir / table[0];
         if (!fs::exists(bin) || !fs::is_regular_file(bin)) {
@@ -99,7 +98,7 @@ fs::path Module::findBin(const fs::path &modules_dir) const noexcept {
         return bin;
     } catch (const std::exception &e) {
         XLOG::d("Module '{}' has no work folder, this is bad, exception '{}'",
-                name(), e.what());
+                name(), e);
     }
 
     return {};
@@ -113,7 +112,6 @@ bool ModuleCommander::IsQuickReinstallAllowed() noexcept {
 
 bool Module::prepareToWork(const fs::path &backup_dir,
                            const fs::path &modules_dir) {
-    // Find Zip
     package_ = findPackage(backup_dir);
     if (package_.empty()) {
         XLOG::d("Module '{}' has no package in backup dir '{}'", name(),
@@ -127,11 +125,8 @@ bool Module::prepareToWork(const fs::path &backup_dir,
                 modules_dir);
         return false;
     }
-
     runPostInstall();
-
-    XLOG::l.i("Module '{}' is prepared to work with bin '{}'", name(),
-              bin_.u8string());
+    XLOG::l.i("Module '{}' is prepared to work with bin '{}'", name(), bin_);
     return true;
 }
 
@@ -144,33 +139,32 @@ std::string ExtractExtension(const fs::path &script) {
 
     fs::path s{script};
     s.replace_extension("");
-    return std::string{s.extension().u8string() +
-                       script.extension().u8string()};
+    return wtools::ToUtf8(s.extension().wstring() +
+                          script.extension().wstring());
 }
 }  // namespace
 
 bool Module::isMyScript(const fs::path &script) const noexcept {
-    using cma::tools::IsEqual;
-    namespace rs = std::ranges;
-
     try {
         fs::path double_extension{ExtractExtension(script)};
 
-        auto short_extension{double_extension.extension().u8string()};
-        if (rs::any_of(exts_, [short_extension](const std::string &ext) {
-                return IsEqual(short_extension, ext);
+        auto short_extension{
+            wtools::ToUtf8(double_extension.extension().wstring())};
+        if (rs::any_of(exts_, [&short_extension](const std::string &ext) {
+                return tools::IsEqual(short_extension, ext);
             })) {
             return true;
         }
 
-        if (rs::any_of(exts_, [double_extension](const std::string &ext) {
-                return IsEqual(double_extension.u8string(), ext);
+        if (rs::any_of(exts_, [&double_extension](const std::string &ext) {
+                return tools::IsEqual(
+                    wtools::ToUtf8(double_extension.wstring()), ext);
             })) {
             return true;
         }
 
     } catch (const std::exception &e) {
-        XLOG::l(XLOG_FUNC + ": Exception '{}'", e.what());
+        XLOG::l(XLOG_FUNC + ": Exception '{}'", e);
     }
 
     return false;
@@ -178,48 +172,45 @@ bool Module::isMyScript(const fs::path &script) const noexcept {
 
 // To remove owned extension if usage of the module is forbidden in config
 void Module::removeExtension(std::string_view ext) {
-    auto end = std::remove_if(
-        exts_.begin(), exts_.end(),
-        [ext](const std::string &cur_ext) { return cur_ext == ext; });
+    auto [a, b] = rs::remove_if(
+        exts_, [ext](const std::string &cur_ext) { return cur_ext == ext; });
 
-    exts_.erase(end, exts_.end());
+    exts_.erase(a, b);
 }
 
 std::wstring Module::buildCommandLineForced(
     const fs::path &script) const noexcept {
     try {
-        if (bin().empty()) return {};
+        if (bin().empty()) {
+            return {};
+        }
         auto actual_dir = fs::path{GetUserDir()} / dir();
-        auto result =
-            fmt::format((actual_dir / exec()).wstring(), script.wstring());
-        return result;
+        return fmt::format((actual_dir / exec()).wstring(), script.wstring());
     } catch (const std::exception &e) {
         XLOG::d("can't build valid command line for '{}', exception is '{}'",
-                name(), e.what());
+                name(), e);
     }
 
     return {};
 }
 
 std::wstring Module::buildCommandLine(const fs::path &script) const noexcept {
-    if (!isMyScript(script)) return {};
-
-    return buildCommandLineForced(script);
+    return isMyScript(script) ? buildCommandLineForced(script) : std::wstring{};
 }
 
 [[nodiscard]] bool Module::isModuleZip(const fs::path &file) const noexcept {
     try {
         return tools::IsEqual(name() + std::string(kExtension),
-                              file.u8string());
+                              wtools::ToUtf8(file.wstring()));
     } catch (const std::exception &e) {
-        XLOG::l("Failed something in isModuleFile '{}'", e.what());
+        XLOG::l("Failed something in isModuleFile '{}'", e);
         return false;
     }
 }
 
 // Table to keep logic pairs of 'system tool' and its file extension
 static const std::vector<StringViewPair> g_system_extensions = {
-    {cma::cfg::vars::kModulesPython, ".py"sv}};
+    {cfg::vars::kModulesPython, ".py"sv}};
 
 // API
 [[nodiscard]] std::vector<StringViewPair>
@@ -229,15 +220,15 @@ ModuleCommander::GetSystemExtensions() {
 
 [[nodiscard]] std::vector<Module> LoadFromConfig(const YAML::Node &yaml) {
     try {
-        auto m = yaml[groups::kModules];
-
-        // check enable
-        auto enabled = GetVal(m, vars::kEnabled, true);
-        if (!enabled) return {};
+        auto module_yaml = yaml[groups::kModules];
+        if (!GetVal(module_yaml, vars::kEnabled, true)) {
+            return {};
+        }
 
         // gather all modules in the table
         std::vector<Module> vec;
-        auto module_array = GetArray<YAML::Node>(m, vars::kModulesTable);
+        auto module_array =
+            GetArray<YAML::Node>(module_yaml, vars::kModulesTable);
         int index = 0;
         for (const auto &module_node : module_array) {
             Module m;
@@ -247,10 +238,9 @@ ModuleCommander::GetSystemExtensions() {
                 continue;
             }
 
-            if (std::any_of(std::begin(vec), std::end(vec),
-                            [m](const Module &vec_m) {
-                                return vec_m.name() == m.name();
-                            })) {
+            if (rs::any_of(vec, [&m](const Module &vec_m) {
+                    return vec_m.name() == m.name();
+                })) {
                 XLOG::l.w("Skip module {} with duplicated name '{}'", index - 1,
                           m.name());
                 continue;
@@ -263,8 +253,7 @@ ModuleCommander::GetSystemExtensions() {
         return vec;
 
     } catch (const std::exception &e) {
-        XLOG::l("Failed processing modules '{}'", e.what());
-        return {};
+        XLOG::l("Failed processing modules '{}'", e);
     }
 
     return {};
@@ -278,14 +267,16 @@ ModuleCommander::GetSystemExtensions() {
         exts_ = GetArray<std::string>(node[vars::kModulesExts]);
 
         // dir is optional
-        auto dir = cma::cfg::GetVal(node, vars::kModulesDir,
-                                    std::string{defaults::kModulesDir});
-        if (dir.empty()) dir = std::string{defaults::kModulesDir};
+        auto dir = cfg::GetVal(node, vars::kModulesDir,
+                               std::string{defaults::kModulesDir});
+        if (dir.empty()) {
+            dir = std::string{defaults::kModulesDir};
+        }
 
         dir_ = fmt::format(dir, name());
 
     } catch (const std::exception &e) {
-        XLOG::l("failed loading module '{}'", e.what());
+        XLOG::l("failed loading module '{}'", e);
         reset();
         return false;
     }
@@ -305,18 +296,17 @@ void ModuleCommander::removeSystemExtensions(YAML::Node &node) {
     try {
         auto m = node[groups::kModules];
 
-        for (const auto &sys_ex : ModuleCommander::GetSystemExtensions()) {
+        for (const auto &[name, ext] : ModuleCommander::GetSystemExtensions()) {
             auto system =
-                GetVal(m, sys_ex.first,
-                       std::string(defaults::kModuleUsageDefaultMode));
+                GetVal(m, name, std::string(defaults::kModuleUsageDefaultMode));
             if (system == values::kModuleUsageSystem) {
                 for (auto &module_node : modules_) {
-                    module_node.removeExtension(sys_ex.second);
+                    module_node.removeExtension(ext);
                 }
             }
         }
     } catch (const std::exception &e) {
-        XLOG::l("Not possible to find modules.*** '{}'", e.what());
+        XLOG::l("Not possible to find modules.*** '{}'", e);
     }
 }
 
@@ -326,17 +316,15 @@ void ModuleCommander::readConfig(YAML::Node &node) {
 }
 
 int ModuleCommander::findModuleFiles(const fs::path &root) {
-    namespace fs = std::filesystem;
     files_.clear();
     auto src_root = root / dirs::kFileInstallDir;
-    for (auto &m : modules_) {
+    for (const auto &m : modules_) {
         auto name = m.name();
         name += kExtension;
         std::error_code ec;
         if (fs::exists(src_root / name, ec)) {
             files_.emplace_back(src_root / name);
-            XLOG::l.i("Module '{}' is added to the list",
-                      files_.back().u8string());
+            XLOG::l.i("Module '{}' is added to the list", files_.back());
         }
     }
 
@@ -344,17 +332,16 @@ int ModuleCommander::findModuleFiles(const fs::path &root) {
 }
 
 bool CreateDir(const fs::path &mod) noexcept {
-    namespace fs = std::filesystem;
     try {
         std::error_code ec;
         fs::create_directories(mod, ec);
         if (!fs::exists(mod, ec) || !fs::is_directory(mod, ec)) {
-            XLOG::l("Failed to create folder '{}' error is '{}'",
-                    mod.u8string(), ec.message());
+            XLOG::l("Failed to create folder '{}' error is '{}'", mod,
+                    ec.message());
             return false;
         }
     } catch (std::exception &e) {
-        XLOG::l("Failed to create folders to install modules '{}'", e.what());
+        XLOG::l("Failed to create folders to install modules '{}'", e);
         return false;
     }
 
@@ -362,16 +349,14 @@ bool CreateDir(const fs::path &mod) noexcept {
 }
 
 PathVector ModuleCommander::ScanDir(const fs::path &dir) noexcept {
-    namespace fs = std::filesystem;
     PathVector vec;
     for (const auto &p : fs::directory_iterator(dir)) {
         std::error_code ec;
         auto const &path = p.path();
-        if (fs::is_directory(path, ec)) continue;
-        if (!fs::is_regular_file(path, ec)) continue;
-
-        auto path_string = path.wstring();
-        if (path_string.empty()) continue;
+        if (fs::is_directory(path, ec) || !fs::is_regular_file(path, ec) ||
+            path.wstring().empty()) {
+            continue;
+        }
 
         vec.emplace_back(path);
     }
@@ -381,16 +366,15 @@ PathVector ModuleCommander::ScanDir(const fs::path &dir) noexcept {
 
 // check that name of the file is found among module names
 bool ModuleCommander::isBelongsToModules(const fs::path &file) const noexcept {
-    return std::any_of(
-        std::begin(modules_), std::end(modules_), [file](const Module &m) {
-            try {
-                return tools::IsEqual(m.name() + std::string(kExtension),
-                                      file.filename().u8string());
-            } catch (const std::exception &e) {
-                XLOG::l("Exception '{}' at ModuleCommander", e.what());
-                return false;
-            }
-        });
+    return rs::any_of(modules_, [file](const Module &m) {
+        try {
+            return tools::IsEqual(m.name() + std::string(kExtension),
+                                  wtools::ToUtf8(file.filename().wstring()));
+        } catch (const std::exception &e) {
+            XLOG::l("Exception '{}' at ModuleCommander", e);
+            return false;
+        }
+    });
 }
 
 bool ModuleCommander::UninstallModuleZip(const fs::path &file,
@@ -435,24 +419,22 @@ bool ModuleCommander::UninstallModuleZip(const fs::path &file,
 }
 
 void ModuleCommander::CreateBackupFolder(const fs::path &user) {
-    namespace fs = std::filesystem;
     auto mod_backup = ModuleCommander::GetModBackup(user);
     std::error_code ec;
-    if (fs::exists(mod_backup, ec)) return;
-
-    XLOG::d.i("creating backup folder for modules installing '{}'",
-              mod_backup.u8string());
-
+    if (fs::exists(mod_backup, ec)) {
+        return;
+    }
+    XLOG::d.i("creating backup folder for modules installing '{}'", mod_backup);
     fs::create_directories(ModuleCommander::GetModBackup(user), ec);
 }
 
 bool ModuleCommander::BackupModule(const fs::path &module_file,
                                    const fs::path &backup_file) {
-    namespace fs = std::filesystem;
     std::error_code ec;
-    auto ret = fs::copy_file(module_file, backup_file,
-                             fs::copy_options::overwrite_existing, ec);
-    if (ret) return true;
+    if (fs::copy_file(module_file, backup_file,
+                      fs::copy_options::overwrite_existing, ec)) {
+        return true;
+    }
 
     XLOG::l.crit("Error [{}] '{}' installing new mod", ec.value(),
                  ec.message());
@@ -460,11 +442,9 @@ bool ModuleCommander::BackupModule(const fs::path &module_file,
 }
 
 bool ModuleCommander::PrepareCleanTargetDir(const fs::path &mod_dir) {
-    namespace fs = std::filesystem;
-
     if (mod_dir.u8string().size() < kResonableDirLengthMin) {
         XLOG::l("target_dir '{}'is too short when installing new module '{}'",
-                mod_dir.u8string());
+                mod_dir);
         return false;
     }
     std::error_code ec;
@@ -484,7 +464,6 @@ std::vector<std::string> ModuleCommander::getExtensions() const {
 
     return result;
 }
-
 namespace {
 std::vector<char> ReadFileBeginning(const fs::path &name, size_t count) {
     std::ifstream f;
@@ -608,7 +587,7 @@ bool ModuleCommander::InstallModule(const Module &mod, const fs::path &root,
         XLOG::l.i(
             "Installation of the module '{}' is not required, module file '{}'is "
             "absent or too short. Backup will be uninstalled",
-            mod.name(), module_file.u8string());
+            mod.name(), module_file);
         return false;
     }
 
@@ -616,7 +595,7 @@ bool ModuleCommander::InstallModule(const Module &mod, const fs::path &root,
         mode == InstallMode::normal) {
         XLOG::l.i(
             "Installation of the module '{}' is not required, module file '{}'is same",
-            mod.name(), module_file.u8string());
+            mod.name(), module_file);
         return false;
     }
 
@@ -642,8 +621,7 @@ bool ModuleCommander::InstallModule(const Module &mod, const fs::path &root,
         return false;
     }
 
-    auto ret = tools::zip::Extract(backup_file.wstring(), actual_dir.wstring());
-    if (ret) {
+    if (tools::zip::Extract(backup_file.wstring(), actual_dir.wstring())) {
         fs::path postinstall{actual_dir};
         postinstall /= post_install_script_name;
 
@@ -671,14 +649,15 @@ void ModuleCommander::installModules(const fs::path &root, const fs::path &user,
                                      InstallMode mode) const {
     auto mod_root = GetModInstall(user);
     auto mod_backup = GetModBackup(user);
-    if (!CreateDir(mod_root)) return;
-    if (!CreateDir(mod_backup)) return;
+    if (!CreateDir(mod_root) || !CreateDir(mod_backup)) {
+        return;
+    }
 
     auto installed = ScanDir(mod_backup);
 
     // cleanup suspicious trash in modules dir, may left when we
     // changing modules names
-    for (auto &dir : installed) {
+    for (const auto &dir : installed) {
         if (!isBelongsToModules(dir)) {
             UninstallModuleZip(dir, mod_root);
         }
@@ -695,7 +674,7 @@ void ModuleCommander::moveModulesToStore(const fs::path &user) {
 
     auto installed = ScanDir(mod_backup);
 
-    for (auto &dir : installed) {
+    for (const auto &dir : installed) {
         UninstallModuleZip(dir, mod_root);
     }
 }
@@ -714,7 +693,7 @@ void ModuleCommander::InstallDefault(InstallMode mode) noexcept {
         installModules(root, user, mode);
         prepareToWork();
     } catch (const std::exception &e) {
-        XLOG::l("Exception installing modules '{}'", e.what());
+        XLOG::l("Exception installing modules '{}'", e);
     }
 }
 void ModuleCommander::LoadDefault() noexcept {
@@ -724,28 +703,26 @@ void ModuleCommander::LoadDefault() noexcept {
         readConfig(yaml);
         prepareToWork();
     } catch (const std::exception &e) {
-        XLOG::l("Exception loading modules config '{}'", e.what());
+        XLOG::l("Exception loading modules config '{}'", e);
     }
 }
 
 void ModuleCommander::prepareToWork() {
-    auto mod_backup = GetModBackup(cma::cfg::GetUserDir());
-    auto mod_root = GetModInstall(cma::cfg::GetUserDir());
+    auto mod_backup = GetModBackup(cfg::GetUserDir());
+    auto mod_root = GetModInstall(cfg::GetUserDir());
 
-    for (auto &m : modules_) {
-        m.prepareToWork(mod_backup, mod_root);
-    }
+    rs::for_each(modules_,
+                 [&](auto &m) { m.prepareToWork(mod_backup, mod_root); });
 }
 
 bool ModuleCommander::isModuleScript(std::string_view filename) {
-    for (auto &m : modules_) {
-        if (m.isMyScript(filename)) return true;
-    }
-    return false;
+    return rs::any_of(modules_,
+                      [&](const auto &m) { return m.isMyScript(filename); });
 }
 
-std::wstring ModuleCommander::buildCommandLine(std::string_view filename) {
-    for (auto &m : modules_) {
+std::wstring ModuleCommander::buildCommandLine(
+    std::string_view filename) const {
+    for (const auto &m : modules_) {
         if (m.isMyScript(filename)) {
             return m.buildCommandLine(fs::path{filename});
         }

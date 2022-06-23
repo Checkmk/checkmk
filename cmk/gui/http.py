@@ -462,6 +462,9 @@ class Response(werkzeug.Response):
             key, value, path=url_prefix(), secure=secure, httponly=True, samesite="Lax"
         )
 
+    def unset_http_cookie(self, key: str) -> None:
+        super().delete_cookie(key, path=url_prefix())
+
     def set_content_type(self, mime_type: str) -> None:
         self.headers["Content-type"] = get_content_type(mime_type, self.charset)
 

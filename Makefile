@@ -75,6 +75,10 @@ OPENAPI_SPEC       := web/htdocs/openapi/checkmk.yaml
 
 LOCK_FD := 200
 LOCK_PATH := .venv.lock
+PY_PATH := .venv/bin/python
+ifneq ("$(wildcard $(PY_PATH))","")
+  PY_VIRT_MAJ_MIN := $(shell "${PY_PATH}" -c "from sys import version_info as v; print(f'{v.major}.{v.minor}')")
+endif
 
 .PHONY: all analyze build check check-binaries check-permissions check-version \
         clean compile-neb-cmc compile-neb-cmc-docker dist documentation \
@@ -668,6 +672,11 @@ Pipfile.lock: Pipfile
 	@( \
 	    echo "Creating .venv..." ; \
 	    flock $(LOCK_FD); \
+	    if [ "$(CI)" == "true" ] || [ "$(PY_VIRT_MAJ_MIN)" != "$(PYTHON_VERSION_MAJOR).$(PYTHON_VERSION_MINOR)" ]; then \
+	      echo "CI is $(CI), Python version of .venv is $(PY_VIRT_MAJ_MIN), Target python version is $(PYTHON_VERSION_MAJOR).$(PYTHON_VERSION_MINOR)"; \
+	      echo "Cleaning up .venv before sync..."; \
+	      $(RM) -r .venv; \
+    	    fi; \
 	    ( PIPENV_COLORBLIND=1 SKIP_MAKEFILE_CALL=1 VIRTUAL_ENV="" $(PIPENV) sync --dev && touch .venv ) || ( $(RM) -r .venv ; exit 1 ) \
 	) $(LOCK_FD)>$(LOCK_PATH)
 

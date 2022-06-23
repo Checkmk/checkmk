@@ -465,7 +465,7 @@ class PainterEventHost(Painter):
         link = makeuri_contextless(
             html.request,
             [
-                ("view_name", cell._link_spec[1]),
+                ("view_name", "ec_events_of_host"),
                 ("host", host_name),
                 ("event_host", row["event_host"]),
             ],
@@ -969,7 +969,7 @@ class PainterHistoryWhatExplained(Painter):
     def ident(self) -> str:
         return "history_what_explained"
 
-    def title(self, cell):
+    def title(self, cell: Cell) -> str:
         return _("Explanation for event action")
 
     @property

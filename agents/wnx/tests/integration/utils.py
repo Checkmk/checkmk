@@ -25,6 +25,8 @@ SECTION_COUNT: Final = 18
 ONLY_FROM_LINE: Final = 17
 CTL_STATUS_LINE: Final = 19
 PYTHON_CAB_NAME: Final = "python-3.cab"
+CMK_UPDATER_PY: Final = "cmk_update_agent.py"
+CMK_UPDATER_CHECKMK_PY: Final = "cmk_update_agent.checkmk.py"
 
 
 class ExeOutput(NamedTuple):

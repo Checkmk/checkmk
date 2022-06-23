@@ -15,6 +15,7 @@ set WNX_INTEGRATION_BASE_DIR=%temp%\test_wnx_%random%
 set DEBUG_HOME_DIR=%WNX_INTEGRATION_BASE_DIR%\test\data
 set WNX_TEST_ROOT=%WNX_INTEGRATION_BASE_DIR%\test\root
 set arte=%cur_dir%\..\..\artefacts
+set CHECKMK_GIT_DIR=%cur_dir%\..\..\
 set results=integration_tests_results.zip
 
 powershell Write-Host "Windows agent Integration Tests are starting in %WNX_INTEGRATION_BASE_DIR%" -Foreground Cyan

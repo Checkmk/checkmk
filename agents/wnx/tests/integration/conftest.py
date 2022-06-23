@@ -39,6 +39,7 @@ global:
 """
 
 _TEST_ENV_VAR: Final = "WNX_INTEGRATION_BASE_DIR"  # supplied by script
+_CHECKMK_GIT_ENV_VAR: Final = "CHECKMK_GIT_DIR"  # supplied by script
 _ARTIFACTS_ENV_VAR: Final = "arte"  # supplied by script
 _FACTORY_YAML_CONFIG: Final = "check_mk.yml"
 _CTL_EXE_NAME: Final = "cmk-agent-ctl.exe"
@@ -54,6 +55,11 @@ def artifacts_dir_fixture() -> Path:
 @pytest.fixture(name="main_dir", scope="session")
 def main_dir_fixture() -> Path:
     return get_path_from_env(_TEST_ENV_VAR)
+
+
+@pytest.fixture(name="git_dir", scope="session")
+def git_dir_fixture(main_dir: Path) -> Path:
+    return get_path_from_env(_CHECKMK_GIT_ENV_VAR)
 
 
 @pytest.fixture(name="data_dir", scope="session")
@@ -94,8 +100,11 @@ def setup_all(
     os.makedirs(data_dir / "bin", exist_ok=True)
     os.makedirs(data_dir / "log", exist_ok=True)
     os.makedirs(data_dir / "modules" / "python-3", exist_ok=True)
+    os.makedirs(data_dir / "plugins", exist_ok=True)
+    os.makedirs(data_dir / "install" / "modules", exist_ok=True)
     for f in [_FACTORY_YAML_CONFIG, AGENT_EXE_NAME, _CTL_EXE_NAME, PYTHON_CAB_NAME]:
         shutil.copy(artifacts_dir / f, root_dir)
+    shutil.copy(root_dir / PYTHON_CAB_NAME, data_dir / "install" / "modules")
     create_protocol_file(data_dir)
     create_legacy_pull_file(data_dir)
     yield

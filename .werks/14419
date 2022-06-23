@@ -1,0 +1,16 @@
+Title: <tt>cisco_cpu_multiitem</tt>, <tt>cisco_fru_module_status</tt>: Fix crash in raw data parsing
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1655467160
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p27
+
+For some devices, the check plugins <tt>cisco_cpu_multiitem</tt> and <tt>cisco_fru_module_status</tt>
+did not discover any services due to a crash in the parsing of the raw data. Instead, the Check_MK
+Discovery service reported:
+LI: Parsing of section cisco_cpu_multiitem failed
+LI: Parsing of section cisco_fru_module_status failed

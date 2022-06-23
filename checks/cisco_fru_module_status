@@ -86,8 +86,8 @@ def parse_cisco_fru_module_status(info):
         "27": (2, "firmware download failure"),
     }
     collected_entities = {}
-    for oid, _hardware_descr, hardware_type, hardware_name in info[0]:
-        if PhysicalClasses(hardware_type) is PhysicalClasses.module:
+    for oid, hardware_type, hardware_name in info[0]:
+        if PhysicalClasses.parse_cisco(hardware_type) is PhysicalClasses.module:
             collected_entities.setdefault(oid, hardware_name)
 
     parsed = {}
@@ -123,7 +123,6 @@ check_info['cisco_fru_module_status'] = {
     'service_description' : 'FRU Module Status %s',
     'snmp_info'           : [(".1.3.6.1.2.1.47.1.1.1.1", [
                                   OID_END,
-                                  CACHED_OID(2),  # entPhysicalDescription
                                   "5",    # entPhysicalClass
                                   CACHED_OID(7), # entPhysicalName
                              ]),

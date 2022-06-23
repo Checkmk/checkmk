@@ -27,19 +27,14 @@ def fixture_check_plugin() -> CheckPlugin:
 def test_parse(section_plugin: SNMPSectionPlugin) -> None:
     assert section_plugin.parse_function([
         [
-            ["32", "Fabric card module", "9", "Fabric card module"],
-            [
-                "149",
-                "Nexus7700 C7706 (6 Slot) Chassis",
-                "3",
-                "Nexus7700 C7706 (6 Slot) Chassis",
-            ],
-            ["214", "LinecardSlot-1", "5", "LinecardSlot-1"],
-            ["406", "Backplane", "4", "Backplane"],
-            ["470", "N77-AC-3KW PS-1", "6", "PowerSupply-1"],
-            ["534", "Fan Module-1", "7", "Fan Module-1"],
-            ["598", "module-1 processor-1", "1", "module-1 processor-1"],
-            ["4950", "Linecard-1 Port-1", "10", "Linecard-1 Port-1"],
+            ["32", "9", "Fabric card module"],
+            ["149", "3", "Nexus7700 C7706 (6 Slot) Chassis"],
+            ["214", "5", "LinecardSlot-1"],
+            ["406", "4", "Backplane"],
+            ["470", "6", "PowerSupply-1"],
+            ["534", "7", "Fan Module-1"],
+            ["598", "1", "module-1 processor-1"],
+            ["4950", "10", "Linecard-1 Port-1"],
         ],
         [
             ["32", "2"],
@@ -50,6 +45,32 @@ def test_parse(section_plugin: SNMPSectionPlugin) -> None:
             "state": (0, "OK")
         },
     }
+
+
+@pytest.mark.usefixtures("config_load_all_checks")
+def test_parse_invalid_phyiscal_class(section_plugin: SNMPSectionPlugin) -> None:
+    assert not section_plugin.parse_function([
+        [
+            ["9", "3", "CHASSIS-1"],
+            ["10", "0", ""],
+            ["11", "7", "FAN-1"],
+            ["12", "0", ""],
+            ["13", "0", ""],
+            ["14", "0", ""],
+            ["15", "6", "PSU-1"],
+            ["16", "0", ""],
+            ["17", "1", "MEMORY-1"],
+            ["18", "0", ""],
+            ["19", "0", ""],
+            ["20", "0", ""],
+            ["21", "1", "SSD-1"],
+            ["22", "0", ""],
+            ["23", "12", "CPU-1"],
+            ["24", "0", ""],
+            ["25", "0", ""],
+        ],
+        [],
+    ])
 
 
 @pytest.mark.usefixtures("config_load_all_checks")

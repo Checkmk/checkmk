@@ -511,8 +511,16 @@ def is_daily_build_of_master(version: str) -> bool:
     True
     >>> f("2.1.0")
     False
+    >>> f("2.1.0-2022.06.23")
+    False
+
+    Is not directly built from master, but a sandbox branch which is based on the master branch.
+    Treat it same as a master branch.
+
+    >>> f("2022.06.23-sandbox-lm-2.2-omd-apache")
+    True
     """
-    return re.match(r"\d{4}.\d{2}.\d{2}$", version) is not None
+    return re.match(r"\d{4}.\d{2}.\d{2}(?:-sandbox.+)?$", version) is not None
 
 
 def is_same_major_version(this_version: str, other_version: str) -> bool:

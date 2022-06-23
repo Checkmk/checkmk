@@ -2803,6 +2803,8 @@ def _is_version_update_allowed(from_version: str, to_version: str) -> bool:
     True
     >>> c("2022.01.01", "2021.12.13")
     True
+    >>> c("2.1.0-2022.06.23", "2022.06.23-sandbox-lm-2.2-omd-apache")
+    True
 
     Nightly branch builds e.g. 2.0.0-2022.01.01 are treated as 2.0.0.
 

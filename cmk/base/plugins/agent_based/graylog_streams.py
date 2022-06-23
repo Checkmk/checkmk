@@ -5,12 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
+from typing import Mapping
 
-# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables needed for accessing discovery rulesets.
-from cmk.base.check_legacy_includes.graylog import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from .agent_based_api.v1 import check_levels, register, Result, Service, State
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
-# <<<graylog_streams>>>
+# <<<graylog_streams:sep(0)>>>
 # {"total": 5, "streams": [{"remove_matches_from_default_stream": false,
 # "is_default": false, "index_set_id": "5da58758e2847e0602771f2a",
 # "description": "logins", "alert_conditions": [], "rules": [], "outputs": [],
@@ -48,13 +48,15 @@ from cmk.base.check_legacy_includes.graylog import *  # pylint: disable=wildcard
 # "alert_receivers": {"emails": [], "users": []}, "id":
 # "000000000000000000000003"}]}
 
+Section = Mapping
 
-def parse_graylog_streams(info):
-    parsed = {}
 
-    for line in info:
+def parse_graylog_streams(string_table: StringTable) -> Section:
+    section: dict = {}
 
-        streams = json.loads(line[0])
+    for (word,) in string_table:
+
+        streams = json.loads(word)
 
         stream_data = streams.get("streams")
         if stream_data is None:
@@ -66,7 +68,7 @@ def parse_graylog_streams(info):
             if stream_title is None:
                 continue
 
-            parsed.setdefault(
+            section.setdefault(
                 stream_title,
                 {
                     "disabled": stream.get("disabled", False),
@@ -74,64 +76,53 @@ def parse_graylog_streams(info):
                 },
             )
 
-    return parsed
+    return section
 
 
-def inventory_graylog_streams(parsed):
-    return [(None, {})]
+def discovery_graylog_streams(section: Section) -> DiscoveryResult:
+    yield Service()
 
 
-factory_settings["graylog_streams_default_levels"] = {
-    "stream_disabled": 1,
-}
-
-
-def check_graylog_streams(_no_item, params, parsed):
-    if not parsed:
-        yield 1, "Number of streams: 0"
+def check_graylog_streams(params: Mapping, section: Section) -> CheckResult:
+    if not section:
+        yield Result(state=State.WARN, summary="Number of streams: 0")
         return
 
-    stream_count = len(parsed)
-    stream_nr_levels = params.get("stream_count_upper", (None, None))
-    stream_nr_levels_lower = params.get("stream_count_lower", (None, None))
-
-    yield check_levels(
-        stream_count,
-        "num_streams",
-        stream_nr_levels + stream_nr_levels_lower,
-        human_readable_func=int,
-        infoname="Number of streams",
+    yield from check_levels(
+        len(section),
+        metric_name="num_streams",
+        levels_lower=params.get("stream_count_lower"),
+        levels_upper=params.get("stream_count_upper"),
+        render_func=str,
+        label="Number of streams",
     )
 
-    long_output = []
-    for stream, values in parsed.items():
-        long_output_str = "%s" % stream
+    for stream, values in sorted(section.items()):
 
         if values["is_default"]:
-            yield 0, "Default stream: %s" % stream
-            long_output_str += " (default)"
-
-        stream_state = 0
-        if values["disabled"]:
-            stream_state = params.get("stream_disabled")
-            long_output_str += ", Is disabled"
-
-        long_output.append((stream_state, long_output_str))
-
-    if long_output:
-        max_state = max(state for state, _infotext in long_output)
-
-        yield max_state, "see long output for more details"
-
-        for state, line in sorted(long_output, key=lambda x: x[1]):
-            yield state, "\n%s" % line
+            yield Result(state=State.OK, summary=f"Stream: {stream} (default)")
+        elif values["disabled"]:
+            yield Result(
+                state=State(params["stream_disabled"]),
+                notice=f"Stream: {stream} (disabled)",
+            )
+        else:
+            yield Result(state=State.OK, notice=f"Stream: {stream}")
 
 
-check_info["graylog_streams"] = {
-    "parse_function": parse_graylog_streams,
-    "check_function": check_graylog_streams,
-    "inventory_function": inventory_graylog_streams,
-    "default_levels_variable": "graylog_streams_default_levels",
-    "service_description": "Graylog Streams",
-    "group": "graylog_streams",
-}
+register.agent_section(
+    name="graylog_streams",
+    parse_function=parse_graylog_streams,
+)
+
+
+register.check_plugin(
+    name="graylog_streams",
+    service_name="Graylog Streams",
+    discovery_function=discovery_graylog_streams,
+    check_function=check_graylog_streams,
+    check_default_parameters={
+        "stream_disabled": 1,
+    },
+    check_ruleset_name="graylog_streams",
+)

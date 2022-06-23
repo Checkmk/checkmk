@@ -16,7 +16,6 @@ import omdlib
 import omdlib.main
 import omdlib.utils
 from omdlib.type_defs import CommandOptions
-from omdlib.version_info import VersionInfo
 
 from cmk.utils import version
 
@@ -44,17 +43,7 @@ def test_initialize_site_ca(
     assert (ca_path / "sites" / ("%s.pem" % site_id)).exists()
 
 
-@pytest.fixture(autouse=True)
-def omd_base_path(monkeypatch, tmp_path):
-    monkeypatch.setattr(omdlib.utils, "omd_base_path", lambda: str(tmp_path))
-
-
-@pytest.fixture()
-def version_info():
-    return VersionInfo(omdlib.__version__)
-
-
-def test_hostname():
+def test_hostname() -> None:
     assert omdlib.main.hostname() == os.popen("hostname").read().strip()
 
 

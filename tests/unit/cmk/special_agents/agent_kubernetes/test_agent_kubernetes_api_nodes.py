@@ -75,7 +75,7 @@ class TestAPINode:
         metadata = parse_metadata(metadata_obj)
         assert metadata.creation_timestamp == now.timestamp()
 
-    def test_parse_node_info(self, dummy_host, core_client) -> None:
+    def test_parse_node_info(self, dummy_host, core_client) -> None:  # type:ignore[no-untyped-def]
         node_list_with_info = {
             "items": [
                 {
@@ -109,7 +109,7 @@ class TestAPINode:
         assert parsed_node_info.kernel_version == "5.4.0-88-generic"
         assert parsed_node_info.os_image == "Ubuntu 20.04.3 LTS"
 
-    def test_parse_conditions(self, core_client, dummy_host) -> None:
+    def test_parse_conditions(self, core_client, dummy_host) -> None:  # type:ignore[no-untyped-def]
         node_with_conditions = {
             "items": [
                 {
@@ -176,7 +176,9 @@ class TestAPINode:
             api.NodeConditionStatus.TRUE
         ]
 
-    def test_parse_conditions_no_status(self, core_client, dummy_host) -> None:
+    def test_parse_conditions_no_status(  # type:ignore[no-untyped-def]
+        self, core_client, dummy_host
+    ) -> None:
         node_with_conditions = {"items": [{"status": {}}]}  # type: ignore
         Entry.single_register(
             Entry.GET,
@@ -188,7 +190,9 @@ class TestAPINode:
             node = list(core_client.list_node().items)[0]
         assert node_conditions(node.status) is None
 
-    def test_parse_conditions_no_conditions(self, core_client, dummy_host) -> None:
+    def test_parse_conditions_no_conditions(  # type:ignore[no-untyped-def]
+        self, core_client, dummy_host
+    ) -> None:
         node_with_conditions = {"items": [{"status": {"conditions": []}}]}  # type: ignore
         Entry.single_register(
             Entry.GET,

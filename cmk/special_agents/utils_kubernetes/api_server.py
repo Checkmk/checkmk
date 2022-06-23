@@ -53,7 +53,9 @@ SUPPORTED_VERSIONS_DISPLAY = ", ".join(f"v{major}.{minor}" for major, minor in S
 
 
 class BatchAPI:
-    def __init__(self, api_client: client.ApiClient, timeout) -> None:
+    def __init__(  # type:ignore[no-untyped-def]
+        self, api_client: client.ApiClient, timeout
+    ) -> None:
         self.connection = client.BatchV1Api(api_client)
         self.timeout = timeout
 
@@ -69,7 +71,9 @@ class CoreAPI:
     Wrapper around CoreV1Api; Implementation detail of APIServer
     """
 
-    def __init__(self, api_client: client.ApiClient, timeout) -> None:
+    def __init__(  # type:ignore[no-untyped-def]
+        self, api_client: client.ApiClient, timeout
+    ) -> None:
         self.connection = client.CoreV1Api(api_client)
         self.timeout = timeout
 
@@ -93,7 +97,9 @@ class AppsAPI:
     Wrapper around ExternalV1APi; Implementation detail of APIServer
     """
 
-    def __init__(self, api_client: client.ApiClient, timeout) -> None:
+    def __init__(  # type:ignore[no-untyped-def]
+        self, api_client: client.ApiClient, timeout
+    ) -> None:
         self.connection = client.AppsV1Api(api_client)
         self.timeout = timeout
 
@@ -130,7 +136,9 @@ class RawAPI:
     readyz and livez is not part of the OpenAPI doc, so we have to query it directly.
     """
 
-    def __init__(self, api_client: client.ApiClient, timeout) -> None:
+    def __init__(  # type:ignore[no-untyped-def]
+        self, api_client: client.ApiClient, timeout
+    ) -> None:
         self.timeout = timeout
         self._api_client = api_client
 
@@ -154,8 +162,8 @@ class RawAPI:
             response=response.data.decode("utf-8"), status_code=status_code, headers=headers
         )
 
-    def _get_healthz(self, url) -> api.HealthZ:
-        def get_health(query_params=None) -> Tuple[int, str]:
+    def _get_healthz(self, url) -> api.HealthZ:  # type:ignore[no-untyped-def]
+        def get_health(query_params=None) -> Tuple[int, str]:  # type:ignore[no-untyped-def]
             # https://kubernetes.io/docs/reference/using-api/health-checks/
             try:
                 response = self._request("GET", url, query_params=query_params)
@@ -181,7 +189,7 @@ class RawAPI:
     def query_api_health(self) -> api.APIHealth:
         return api.APIHealth(ready=self._get_healthz("/readyz"), live=self._get_healthz("/livez"))
 
-    def query_kubelet_health(self, node_name) -> api.HealthZ:
+    def query_kubelet_health(self, node_name) -> api.HealthZ:  # type:ignore[no-untyped-def]
         return self._get_healthz(f"/api/v1/nodes/{node_name}/proxy/healthz")
 
     def query_raw_statefulsets(self) -> JSONStatefulSetList:

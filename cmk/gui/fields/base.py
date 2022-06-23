@@ -101,7 +101,7 @@ class ValueTypedDictSchema(BaseSchema):
             result[key] = schema_func(value)
         return result
 
-    def _serialize_field(self, data, field: fields.Field):
+    def _serialize_field(self, data, field: fields.Field):  # type:ignore[no-untyped-def]
         result = {}
         for key, value in data.items():
             field._validate(value)
@@ -111,7 +111,7 @@ class ValueTypedDictSchema(BaseSchema):
                 raise ValidationError(str(exc), field_name=key)
         return result
 
-    def _deserialize_field(self, data, field: fields.Field):
+    def _deserialize_field(self, data, field: fields.Field):  # type:ignore[no-untyped-def]
         result = {}
         for key, value in data.items():
             field._validate(value)
@@ -150,7 +150,7 @@ class ValueTypedDictSchema(BaseSchema):
 
         return result
 
-    def dump(self, obj: typing.Any, *, many=None):
+    def dump(self, obj: typing.Any, *, many=None):  # type:ignore[no-untyped-def]
         if self._has_processors(PRE_DUMP):
             obj = self._invoke_dump_processors(PRE_DUMP, obj, many=many, original_data=obj)
 
@@ -395,7 +395,7 @@ Keys 'optional1', 'required1' occur more than once.
 
     Result = dict[str, typing.Any]
 
-    def __init__(
+    def __init__(  # type:ignore[no-untyped-def]
         self,
         nested: typing.Sequence[typing.Union[typing.Type[fields.SchemaABC], fields.SchemaABC]],
         mode: typing.Literal["anyOf", "allOf"] = "anyOf",
@@ -534,7 +534,7 @@ Keys 'optional1', 'required1' occur more than once.
 
         return rv
 
-    def _serialize(
+    def _serialize(  # type:ignore[no-untyped-def]
         self,
         value: typing.Any,
         attr: str,
@@ -568,14 +568,14 @@ Keys 'optional1', 'required1' occur more than once.
 
         return result
 
-    def _make_type_error(self, value) -> ValidationError:
+    def _make_type_error(self, value) -> ValidationError:  # type:ignore[no-untyped-def]
         return self.make_error(
             "type",
             input=value,
             type=value.__class__.__name__,
         )
 
-    def _load_schemas(self, scalar: Result, partial=None) -> Result:
+    def _load_schemas(self, scalar: Result, partial=None) -> Result:  # type:ignore[no-untyped-def]
         rv = {}
         error_store = ErrorStore()
         value = dict(scalar)
@@ -642,7 +642,7 @@ Keys 'optional1', 'required1' occur more than once.
                 del error_store.errors[key]
         return result
 
-    def _deserialize(
+    def _deserialize(  # type:ignore[no-untyped-def]
         self,
         value: typing.Union[Result, list[Result]],
         attr: typing.Optional[str],

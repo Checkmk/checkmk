@@ -36,7 +36,7 @@ class PluginSuppliedLabel(
     code from internal representations.
     """
 
-    def __init__(self, name, value) -> None:
+    def __init__(self, name, value) -> None:  # type:ignore[no-untyped-def]
         super().__init__()
         if not isinstance(name, str):
             raise TypeError(f"Invalid label name given: Expected string (got {name!r})")
@@ -64,7 +64,7 @@ ParametersTypeAlias = Mapping[str, Any]  # Modification may result in an incompa
 class Parameters(ParametersTypeAlias):
     """Parameter objects are used to pass parameters to plugin functions"""
 
-    def __init__(self, data) -> None:
+    def __init__(self, data) -> None:  # type:ignore[no-untyped-def]
         if not isinstance(data, dict):
             self._data = data  # error handling will try to repr(self).
             raise TypeError("Parameters expected dict, got %r" % (data,))
@@ -90,7 +90,7 @@ class OIDSpecTuple(NamedTuple):
     save_to_cache: bool
 
     # we create a deepcopy in our unit tests, so support it.
-    def __deepcopy__(self, _memo) -> "OIDSpecTuple":
+    def __deepcopy__(self, _memo) -> "OIDSpecTuple":  # type:ignore[no-untyped-def]
         return self
 
 

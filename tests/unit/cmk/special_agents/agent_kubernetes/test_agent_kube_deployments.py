@@ -15,7 +15,7 @@ from cmk.special_agents.utils_kubernetes.transform import deployment_conditions,
 
 
 class TestAPIDeployments:
-    def test_parse_metadata(self, apps_client, dummy_host) -> None:
+    def test_parse_metadata(self, apps_client, dummy_host) -> None:  # type:ignore[no-untyped-def]
         mocked_deployments = {
             "items": [
                 {
@@ -51,7 +51,9 @@ class TestAPIDeployments:
         assert metadata.labels == {"app": api.Label(name="app", value="cluster-collector")}
         assert metadata.annotations == {"deployment.kubernetes.io/revision": "2"}
 
-    def test_parse_metadata_missing_annotations_and_labels(self, apps_client, dummy_host) -> None:
+    def test_parse_metadata_missing_annotations_and_labels(  # type:ignore[no-untyped-def]
+        self, apps_client, dummy_host
+    ) -> None:
         mocked_deployments = {
             "items": [
                 {
@@ -82,7 +84,7 @@ class TestAPIDeployments:
         assert metadata.labels == {}
         assert metadata.annotations == {}
 
-    def test_parse_conditions(self, apps_client, dummy_host) -> None:
+    def test_parse_conditions(self, apps_client, dummy_host) -> None:  # type:ignore[no-untyped-def]
         deployment_with_conditions = {
             "items": [
                 {
@@ -127,7 +129,9 @@ class TestAPIDeployments:
             condition.status == api.ConditionStatus.TRUE for _, condition in conditions.items()
         )
 
-    def test_parse_conditions_no_conditions(self, apps_client, dummy_host) -> None:
+    def test_parse_conditions_no_conditions(  # type:ignore[no-untyped-def]
+        self, apps_client, dummy_host
+    ) -> None:
         """Deployment with empty status.
 
         Sometimes a Deployment has an empty status. This occurs during start-up

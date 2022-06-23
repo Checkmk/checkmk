@@ -252,7 +252,7 @@ def fmt_number_with_precision(
 #   '----------------------------------------------------------------------'
 
 
-def fmt_bytes(
+def fmt_bytes(  # type:ignore[no-untyped-def]
     b: int,
     *,
     unit_prefix_type: Type[_ABCUnitPrefixes] = IECUnitPrefixes,

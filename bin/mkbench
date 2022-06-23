@@ -267,14 +267,14 @@ class Test:
         return Path(omd_root(), "var/mkbench")
 
     @classmethod
-    def test_dir(cls, id_) -> Path:
+    def test_dir(cls, id_) -> Path:  # type:ignore[no-untyped-def]
         return cls.data_dir() / id_
 
     @classmethod
-    def exists(cls, id_) -> bool:
+    def exists(cls, id_) -> bool:  # type:ignore[no-untyped-def]
         return cls.test_dir(id_).exists()
 
-    def __init__(self, id_=None) -> None:
+    def __init__(self, id_=None) -> None:  # type:ignore[no-untyped-def]
         self._log: list = []
         self._log_to_stdout = False
         self.version = __version__
@@ -437,7 +437,7 @@ class TestRunner(threading.Thread):
         20000,
     ]
 
-    def __init__(self, num_hosts=100, num_helpers=20) -> None:
+    def __init__(self, num_hosts=100, num_helpers=20) -> None:  # type:ignore[no-untyped-def]
         super().__init__()
         self.name = "test-runner"
         self._stop = threading.Event()
@@ -745,7 +745,7 @@ class TestRunner(threading.Thread):
 
 
 class Analyzer(threading.Thread):
-    def __init__(self, runner) -> None:
+    def __init__(self, runner) -> None:  # type:ignore[no-untyped-def]
         self._runner = runner
         super().__init__()
 
@@ -789,7 +789,7 @@ class Start:
 
 
 class Wait:
-    def __init__(self, duration) -> None:
+    def __init__(self, duration) -> None:  # type:ignore[no-untyped-def]
         self.until = time.time() + duration
 
 
@@ -941,7 +941,7 @@ class Measurement:
 
         return average
 
-    def __init__(self, runner=None) -> None:
+    def __init__(self, runner=None) -> None:  # type:ignore[no-untyped-def]
         super().__init__()
         self._runner = runner
 
@@ -1022,7 +1022,7 @@ class Measurement:
 
         setattr(self, k, val)
 
-    def _get_disk_io(self, last) -> None:
+    def _get_disk_io(self, last) -> None:  # type:ignore[no-untyped-def]
         self.disk_counters = self._get_disk_counters()
         assert self.disk_counters is not None
 
@@ -1089,7 +1089,7 @@ class Measurement:
 
 
 class AgentListener(multiprocessing.Process):
-    def __init__(self, host_ids, *args, **kwargs) -> None:
+    def __init__(self, host_ids, *args, **kwargs) -> None:  # type:ignore[no-untyped-def]
         self._hosts = host_ids
         self._sockets: list = []
         self._socket_map: dict = {}
@@ -2511,7 +2511,9 @@ class TestAgentBasedStandardHosts(TestCase):
 
     host_name_template = "std-agent-host-%05d"
 
-    def __init__(self, runner=None, num_hosts=None, planned_duration=None) -> None:
+    def __init__(  # type:ignore[no-untyped-def]
+        self, runner=None, num_hosts=None, planned_duration=None
+    ) -> None:
         super().__init__()
         self._runner = runner
         self._test = runner.test if runner else None
@@ -3030,7 +3032,7 @@ class Window(npyscreen.FormBaseNew):  # pylint: disable=too-many-ancestors
 
 
 class GeneralInformation(npyscreen.BoxTitle):
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args, **kwargs) -> None:  # type:ignore[no-untyped-def]
         super().__init__(*args, **kwargs)
         self.name = "General Information"
         self.editable = False
@@ -3061,7 +3063,7 @@ class GeneralInformation(npyscreen.BoxTitle):
 
 
 class SiteInformation(npyscreen.BoxTitle):
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args, **kwargs) -> None:  # type:ignore[no-untyped-def]
         super().__init__(*args, **kwargs)
         self.name = "Site"
         self.editable = False
@@ -3110,7 +3112,7 @@ class SiteInformation(npyscreen.BoxTitle):
 class Log(npyscreen.BoxTitle):
     _contained_widget = npyscreen.BufferPager
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args, **kwargs) -> None:  # type:ignore[no-untyped-def]
         kwargs["contained_widget_arguments"] = {
             "autowrap": True,
         }
@@ -3138,13 +3140,13 @@ class Log(npyscreen.BoxTitle):
 
 
 class HelpText(npyscreen.FixedText):
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args, **kwargs) -> None:  # type:ignore[no-untyped-def]
         super().__init__(*args, **kwargs)
         self.value = "^C: quit"
 
 
 class ConsoleRenderer(npyscreen.NPSApp):
-    def __init__(self, runner) -> None:
+    def __init__(self, runner) -> None:  # type:ignore[no-untyped-def]
         super().__init__()
 
         self._runner = runner

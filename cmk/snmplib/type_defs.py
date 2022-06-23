@@ -215,7 +215,7 @@ class SNMPBackend(abc.ABC):
         return self.config.port
 
     @port.setter
-    def port(self, new_port: int):
+    def port(self, new_port: int):  # type:ignore[no-untyped-def]
         self.config = self.config._replace(port=new_port)
 
     @abc.abstractmethod

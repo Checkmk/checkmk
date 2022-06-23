@@ -16,5 +16,10 @@ test_set_up_path_extended() {
     assertEquals "/foo:/bar:/usr/local/bin" "$(set_up_path "/foo:/bar")"
 }
 
+test_set_up_path_extended_optional_cmk_bin() {
+    export MK_BIN="/opt/cmk/bin"
+    assertEquals "/usr/local/bin:/opt/cmk/bin" "$(set_up_path "/usr/local/bin")"
+}
+
 # shellcheck disable=SC1090
 . "$UNIT_SH_SHUNIT2"

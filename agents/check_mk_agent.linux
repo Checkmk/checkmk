@@ -96,18 +96,20 @@ set_variable_defaults() {
     [ "${MK_RUN_SYNC_PARTS}" = "false" ] || MK_RUN_SYNC_PARTS=true
     [ "${MK_RUN_ASYNC_PARTS}" = "false" ] || MK_RUN_ASYNC_PARTS=true
 
-    # WATCH OUT: These 4 lines are searched for and replaced by the
+    # WATCH OUT: These 5 lines are searched for and replaced by the
     # agent bakery!
     # TODO: CMK-8339 (proper configuration)
     : "${MK_LIBDIR:="/usr/lib/check_mk_agent"}"
     : "${MK_CONFDIR:="/etc/check_mk"}"
     : "${MK_VARDIR:="/var/lib/check_mk_agent"}"
     : "${MK_LOGDIR:="/var/log/check_mk_agent"}"
+    : "${MK_BIN:="/usr/bin"}"
 
     export MK_LIBDIR
     export MK_CONFDIR
     export MK_VARDIR
     export MK_LOGDIR
+    export MK_BIN
 
     # Optionally set a tempdir for all subsequent calls
     #export TMPDIR=
@@ -133,6 +135,7 @@ set_up_path() {
     # Only add binaries if they are not already in the path! If you append to path in a loop the process will
     # eventually each the 128k size limit for the environment and become a zombie process. See execve manpage.
     [ "${_PATH#*"/usr/local/bin"}" != "${_PATH}" ] || _PATH="${_PATH}:/usr/local/bin"
+    [ -n "${MK_BIN}" ] && { [ "${_PATH#*"${MK_BIN}"}" != "${_PATH}" ] || _PATH="${_PATH}:${MK_BIN}"; }
     [ -d "/var/qmail/bin" ] && { [ "${_PATH#*"/var/qmail/bin"}" != "${_PATH}" ] || _PATH="${_PATH}:/var/qmail/bin"; }
     echo "${_PATH}"
     unset _PATH

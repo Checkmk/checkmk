@@ -10,7 +10,13 @@ import pytest  # type: ignore[import]
 import omdlib.main
 
 
-def test_root_context():
+# Explicitly don't patch the base path here
+@pytest.fixture(autouse=True)
+def omd_base_path() -> None:
+    pass
+
+
+def test_root_context() -> None:
     site = omdlib.main.RootContext()
     assert site.name is None
     assert site.dir == "/"

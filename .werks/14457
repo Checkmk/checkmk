@@ -1,0 +1,12 @@
+Title: Fix crash on "Event history of host" view
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1655988677
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p4
+
+The view created an error like "Exception: Painter 'history_what_explained'
+returned invalid result".

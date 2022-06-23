@@ -22,6 +22,7 @@ from cmk.gui.permissions import Permission, permission_registry
 from cmk.gui.plugins.dashboard.utils import DashletConfig
 from cmk.gui.plugins.views.utils import (
     ABCDataSource,
+    Cell,
     cmp_num_split,
     cmp_simple_number,
     cmp_simple_string,
@@ -40,9 +41,10 @@ from cmk.gui.plugins.views.utils import (
     row_id,
     RowTableLivestatus,
 )
-from cmk.gui.type_defs import HTTPVariables, Row, ViewSpec
+from cmk.gui.type_defs import ColumnName, HTTPVariables, Row, ViewSpec
 from cmk.gui.utils.urls import makeactionuri, makeuri_contextless, urlencode_vars
 from cmk.gui.valuespec import MonitoringState
+from cmk.gui.view_utils import CellSpec
 
 #   .--Datasources---------------------------------------------------------.
 #   |       ____        _                                                  |
@@ -457,7 +459,7 @@ class PainterEventHost(Painter):
         link = makeuri_contextless(
             html.request,
             [
-                ("view_name", cell._link_spec[1]),
+                ("view_name", "ec_events_of_host"),
                 ("host", host_name),
                 ("event_host", row["event_host"]),
             ],
@@ -958,18 +960,18 @@ class PainterHistoryWhat(Painter):
 @painter_registry.register
 class PainterHistoryWhatExplained(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "history_what_explained"
 
-    def title(self, cell):
+    def title(self, cell: Cell) -> str:
         return _("Explanation for event action")
 
     @property
-    def columns(self):
+    def columns(self) -> list[ColumnName]:
         return ["history_what"]
 
-    def render(self, row, cell):
-        return ("", mkeventd.action_whats[row["history_what"]])
+    def render(self, row: Row, cell: Cell) -> CellSpec:
+        return ("", str(mkeventd.action_whats[row["history_what"]]))
 
 
 @painter_registry.register

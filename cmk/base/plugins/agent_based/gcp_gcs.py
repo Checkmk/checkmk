@@ -19,6 +19,7 @@ register.agent_section(name="gcp_service_gcs", parse_function=parse_gcp_gcs)
 
 service_namer = gcp.service_name_factory("GCS")
 SECTIONS = ["gcp_service_gcs", "gcp_assets"]
+ASSET_TYPE = "storage.googleapis.com/Bucket"
 
 
 def discover(
@@ -27,8 +28,7 @@ def discover(
 ) -> DiscoveryResult:
     if section_gcp_assets is None or "gcs" not in section_gcp_assets.config:
         return
-    asset_type = "storage.googleapis.com/Bucket"
-    for item, bucket in section_gcp_assets[asset_type].items():
+    for item, bucket in section_gcp_assets[ASSET_TYPE].items():
         data = bucket.asset.resource.data
         labels = [ServiceLabel(f"gcp/labels/{k}", v) for k, v in data["labels"].items()]
         labels.append(ServiceLabel("gcp/location", data["location"]))
@@ -47,7 +47,9 @@ def check_gcp_gcs_requests(
     metrics = {
         "requests": gcp.MetricSpec("storage.googleapis.com/api/request_count", "Requests", str)
     }
-    yield from gcp.check(metrics, item, params, section_gcp_service_gcs)
+    yield from gcp.check(
+        metrics, item, params, section_gcp_service_gcs, ASSET_TYPE, section_gcp_assets
+    )
 
 
 register.check_plugin(
@@ -75,7 +77,9 @@ def check_gcp_gcs_network(
             "storage.googleapis.com/network/received_bytes_count", "In", render.networkbandwidth
         ),
     }
-    yield from gcp.check(metrics, item, params, section_gcp_service_gcs)
+    yield from gcp.check(
+        metrics, item, params, section_gcp_service_gcs, ASSET_TYPE, section_gcp_assets
+    )
 
 
 register.check_plugin(
@@ -103,7 +107,9 @@ def check_gcp_gcs_object(
             "storage.googleapis.com/storage/object_count", "Objects", str
         ),
     }
-    yield from gcp.check(metrics, item, params, section_gcp_service_gcs)
+    yield from gcp.check(
+        metrics, item, params, section_gcp_service_gcs, ASSET_TYPE, section_gcp_assets
+    )
 
 
 register.check_plugin(

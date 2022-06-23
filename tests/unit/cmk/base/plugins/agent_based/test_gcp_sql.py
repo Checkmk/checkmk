@@ -117,7 +117,10 @@ def test_gcp_sql_status_params(section, state) -> None:
     params = {"RUNNING": state}
     results = list(
         check_gcp_sql_status(
-            item=ITEM, params=params, section_gcp_service_cloud_sql=section, section_gcp_assets=None
+            item=ITEM,
+            params=params,
+            section_gcp_service_cloud_sql=section,
+            section_gcp_assets=parse_assets(ASSET_TABLE),
         )
     )
     assert len(results) == 3
@@ -133,7 +136,7 @@ def test_gcp_sql_status_metric(section) -> None:
             item=ITEM,
             params=params,
             section_gcp_service_cloud_sql=section,
-            section_gcp_assets=None,
+            section_gcp_assets=parse_assets(ASSET_TABLE),
         )
     )
     assert len(results) == 3
@@ -149,7 +152,7 @@ def test_gcp_sql_status_no_state_metric_in_available_metrics() -> None:
             item=ITEM,
             params=params,
             section_gcp_service_cloud_sql={"checktest": SectionItem(rows=[])},
-            section_gcp_assets=None,
+            section_gcp_assets=parse_assets(ASSET_TABLE),
         )
     )
     assert len(results) == 3
@@ -164,24 +167,20 @@ def test_gcp_sql_status_no_agent_data_is_no_result() -> None:
             item=ITEM,
             params={},
             section_gcp_service_cloud_sql=None,
-            section_gcp_assets=None,
+            section_gcp_assets=parse_assets(ASSET_TABLE),
         )
     )
 
 
 def test_gcp_sql_status_no_results_if_item_not_found(section: gcp.Section) -> None:
     params = {k: None for k in ["requests"]}
-    results = (
-        el
-        for el in check_gcp_sql_status(
-            item="I do not exist",
-            params=params,
-            section_gcp_service_cloud_sql=section,
-            section_gcp_assets=None,
-        )
-        if isinstance(el, Metric)
+    results = check_gcp_sql_status(
+        item="I do not exist",
+        params=params,
+        section_gcp_service_cloud_sql=section,
+        section_gcp_assets=parse_assets(ASSET_TABLE),
     )
-    assert list(results) == []
+    assert len(list(results)) == 0
 
 
 # Test the standard checks
@@ -231,12 +230,18 @@ PLUGINS = [
 
 def generate_results(plugin: Plugin) -> CheckResult:
     item = "item"
+    asset_table = [
+        ['{"project":"backup-255820", "config": ["cloud_sql"]}'],
+        [
+            f'{{"name": "//cloudsql.googleapis.com/projects/tribe29-check-development/instances/checktest", "asset_type": "sqladmin.googleapis.com/Instance", "resource": {{"version": "v1beta4", "discovery_document_uri": "https://www.googleapis.com/discovery/v1/apis/sqladmin/v1beta4/rest", "discovery_name": "DatabaseInstance", "parent": "//cloudresourcemanager.googleapis.com/projects/1074106860578", "data": {{"serviceAccountEmailAddress": "p1074106860578-yhxe0q@gcp-sa-cloud-sql.iam.gserviceaccount.com", "instanceType": "CLOUDSQL_INSTANCE", "settings": {{"dataDiskSizeGb": "20", "kind": "sql#settings", "storageAutoResize": true, "availabilityType": "ZONAL", "settingsVersion": "1", "backupConfiguration": {{"kind": "sql#backupConfiguration", "backupRetentionSettings": {{"retainedBackups": 7.0, "retentionUnit": "COUNT"}}, "startTime": "01:00", "enabled": true, "transactionLogRetentionDays": 7.0, "binaryLogEnabled": false, "location": "us"}}, "userLabels": {{"reason": "check-development", "team": "dev"}}, "activationPolicy": "ALWAYS", "replicationType": "SYNCHRONOUS", "pricingPlan": "PER_USE", "locationPreference": {{"kind": "sql#locationPreference", "zone": "us-central1-f"}}, "storageAutoResizeLimit": "0", "dataDiskType": "PD_HDD", "ipConfiguration": {{"ipv4Enabled": true}}, "tier": "db-custom-4-26624", "maintenanceWindow": {{"hour": 0.0, "day": 0.0, "kind": "sql#maintenanceWindow"}}}}, "ipAddresses": [{{"ipAddress": "34.121.172.190", "type": "PRIMARY"}}], "selfLink": "https://sqladmin.googleapis.com/sql/v1beta4/projects/tribe29-check-development/instances/checktest", "region": "us-central1", "backendType": "SECOND_GEN", "databaseInstalledVersion": "MYSQL_5_7_36", "createTime": "2022-03-15T08:48:13.998Z", "connectionName": "tribe29-check-development:us-central1:checktest", "kind": "sql#instance", "serverCaCert": {{"expirationTime": "2032-03-12T08:51:12.19Z", "kind": "sql#sslCert", "certSerialNumber": "0", "instance": "checktest", "sha1Fingerprint": "05e6c602375a78bd86ca46d9b80709d9bb43a0f2", "createTime": "2022-03-15T08:50:12.19Z", "commonName": "C=US,O=Google\\\\, Inc,CN=Google Cloud SQL Server CA,dnQualifier=8c6bc987-8655-4ff1-aebc-01d408409866"}}, "databaseVersion": "MYSQL_5_7", "gceZone": "us-central1-f", "project": "tribe29-check-development", "state": "RUNNABLE", "name": "{item}"}}, "location": "us-central1", "resource_url": ""}}, "ancestors": ["projects/1074106860578", "folders/1022571519427", "organizations/668598212003"], "update_time": "2022-03-15T08:53:30.997492Z", "org_policy": []}}'
+        ],
+    ]
     section = parse(generate_timeseries(item, 0.42, CLOUDSQL))
     yield from plugin.function(
         item=item,
         params={k: None for k in plugin.metrics},
         section_gcp_service_cloud_sql=section,
-        section_gcp_assets=None,
+        section_gcp_assets=parse_assets(asset_table),
     )
 
 
@@ -250,21 +255,3 @@ def test_yield_results_as_specified(plugin) -> None:
 def test_yield_metrics_as_specified(plugin) -> None:
     results = {r.name for r in generate_results(plugin) if isinstance(r, Metric)}
     assert results == set(plugin.metrics)
-
-
-@pytest.mark.xfail(
-    reason="not implemented in generic check yet. Will wait for rewrite of assets parsing"
-)
-def test_no_results_if_item_not_found(section: gcp.Section, checkplugin: Plugin) -> None:
-    params = {k: None for k in checkplugin.metrics}
-    results = (
-        el
-        for el in checkplugin.function(
-            item="I do not exist",
-            params=params,
-            section_gcp_service_cloud_sql=section,
-            section_gcp_assets=None,
-        )
-        if isinstance(el, Metric)
-    )
-    assert list(results) == []

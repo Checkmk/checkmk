@@ -23,8 +23,8 @@ def parse(string_table: StringTable) -> gcp.Section:
 
 
 register.agent_section(name="gcp_service_cloud_sql", parse_function=parse)
-
 service_namer = gcp.service_name_factory("Cloud SQL")
+ASSET_TYPE = "sqladmin.googleapis.com/Instance"
 
 
 def discover(
@@ -33,8 +33,7 @@ def discover(
 ) -> DiscoveryResult:
     if section_gcp_assets is None or "cloud_sql" not in section_gcp_assets.config:
         return
-    asset_type = "sqladmin.googleapis.com/Instance"
-    for item, service in section_gcp_assets[asset_type].items():
+    for item, service in section_gcp_assets[ASSET_TYPE].items():
         data = service.asset.resource.data
         labels = (
             [ServiceLabel(f"gcp/labels/{k}", v) for k, v in data["settings"]["userLabels"].items()]
@@ -67,7 +66,7 @@ def check_gcp_sql_status(
 ) -> CheckResult:
     if section_gcp_service_cloud_sql is None:
         return
-    if item not in section_gcp_service_cloud_sql:
+    if section_gcp_assets is None or item not in section_gcp_assets[ASSET_TYPE]:
         return
     metrics = {
         "up": gcp.MetricSpec(
@@ -123,7 +122,9 @@ def check_gcp_sql_memory(
             scale=1e2,
         ),
     }
-    yield from gcp.check(metrics, item, params, section_gcp_service_cloud_sql)
+    yield from gcp.check(
+        metrics, item, params, section_gcp_service_cloud_sql, ASSET_TYPE, section_gcp_assets
+    )
 
 
 register.check_plugin(
@@ -148,7 +149,9 @@ def check_gcp_sql_cpu(
             "cloudsql.googleapis.com/database/cpu/utilization", "CPU", render.percent, scale=1e2
         ),
     }
-    yield from gcp.check(metrics, item, params, section_gcp_service_cloud_sql)
+    yield from gcp.check(
+        metrics, item, params, section_gcp_service_cloud_sql, ASSET_TYPE, section_gcp_assets
+    )
 
 
 register.check_plugin(
@@ -180,7 +183,9 @@ def check_gcp_sql_network(
             render.networkbandwidth,
         ),
     }
-    yield from gcp.check(metrics, item, params, section_gcp_service_cloud_sql)
+    yield from gcp.check(
+        metrics, item, params, section_gcp_service_cloud_sql, ASSET_TYPE, section_gcp_assets
+    )
 
 
 register.check_plugin(
@@ -214,7 +219,9 @@ def check_gcp_sql_disk(
             "cloudsql.googleapis.com/database/disk/read_ops_count", "Read operations", str
         ),
     }
-    yield from gcp.check(metrics, item, params, section_gcp_service_cloud_sql)
+    yield from gcp.check(
+        metrics, item, params, section_gcp_service_cloud_sql, ASSET_TYPE, section_gcp_assets
+    )
 
 
 register.check_plugin(

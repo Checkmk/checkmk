@@ -154,8 +154,12 @@ def check(
     item: str,
     params: Mapping[str, Any],
     section: Optional[Section],
+    asset_type: AssetType,
+    assets: Optional[AssetSection],
 ) -> CheckResult:
     if section is None:
+        return
+    if assets is None or item not in assets[asset_type]:
         return
     timeseries = section.get(item, SectionItem(rows=[])).rows
     yield from generic_check(spec, timeseries, params)

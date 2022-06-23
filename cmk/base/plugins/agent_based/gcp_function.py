@@ -18,6 +18,7 @@ def parse_gcp_function(string_table: StringTable) -> gcp.Section:
 register.agent_section(name="gcp_service_cloud_functions", parse_function=parse_gcp_function)
 
 service_namer = gcp.service_name_factory("Function")
+ASSET_TYPE = "cloudfunctions.googleapis.com/CloudFunction"
 
 
 def discover(
@@ -26,8 +27,7 @@ def discover(
 ) -> DiscoveryResult:
     if section_gcp_assets is None or "cloud_functions" not in section_gcp_assets.config:
         return
-    asset_type = "cloudfunctions.googleapis.com/CloudFunction"
-    functions = section_gcp_assets[asset_type]
+    functions = section_gcp_assets[ASSET_TYPE]
     for item, function in functions.items():
         labels = [
             ServiceLabel("gcp/location", function.asset.resource.location),
@@ -51,7 +51,9 @@ def check_gcp_function_instances(
             "cloudfunctions.googleapis.com/function/active_instances", "Active instances", str
         ),
     }
-    yield from gcp.check(metrics, item, params, section_gcp_service_cloud_functions)
+    yield from gcp.check(
+        metrics, item, params, section_gcp_service_cloud_functions, ASSET_TYPE, section_gcp_assets
+    )
 
 
 register.check_plugin(
@@ -90,7 +92,9 @@ def check_gcp_function_execution(
             scale=1e-9,
         ),
     }
-    yield from gcp.check(metrics, item, params, section_gcp_service_cloud_functions)
+    yield from gcp.check(
+        metrics, item, params, section_gcp_service_cloud_functions, ASSET_TYPE, section_gcp_assets
+    )
 
 
 register.check_plugin(
@@ -119,7 +123,9 @@ def check_gcp_function_network(
             "cloudfunctions.googleapis.com/function/network_egress", "Out", render.networkbandwidth
         ),
     }
-    yield from gcp.check(metrics, item, params, section_gcp_service_cloud_functions)
+    yield from gcp.check(
+        metrics, item, params, section_gcp_service_cloud_functions, ASSET_TYPE, section_gcp_assets
+    )
 
 
 register.check_plugin(

@@ -18,6 +18,7 @@ def parse(string_table: StringTable) -> gcp.Section:
 register.agent_section(name="gcp_service_filestore", parse_function=parse)
 
 service_namer = gcp.service_name_factory("Filestore")
+ASSET_TYPE = "file.googleapis.com/Instance"
 
 
 def discover(
@@ -26,8 +27,7 @@ def discover(
 ) -> DiscoveryResult:
     if section_gcp_assets is None or "filestore" not in section_gcp_assets.config:
         return
-    asset_type = "file.googleapis.com/Instance"
-    shares = section_gcp_assets[asset_type]
+    shares = section_gcp_assets[ASSET_TYPE]
     for item, share in shares.items():
         data = share.asset.resource.data
         labels = [
@@ -56,7 +56,9 @@ def check(
             "file.googleapis.com/nfs/server/write_ops_count", "Write operations", str
         ),
     }
-    yield from gcp.check(metrics, item, params, section_gcp_service_filestore)
+    yield from gcp.check(
+        metrics, item, params, section_gcp_service_filestore, ASSET_TYPE, section_gcp_assets
+    )
 
 
 register.check_plugin(

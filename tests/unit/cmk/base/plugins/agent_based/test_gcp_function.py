@@ -19,6 +19,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     DiscoveryResult,
     StringTable,
 )
+from cmk.base.plugins.agent_based.gcp_assets import parse_assets
 from cmk.base.plugins.agent_based.gcp_function import (
     check_gcp_function_execution,
     check_gcp_function_instances,
@@ -153,6 +154,27 @@ def test_crit_settings_in_check() -> None:
         assert r.state == State.CRIT
 
 
+def test_missing_item() -> None:
+    item = "item"
+    section = parse_gcp_function(generate_timeseries(item, 42.0, FUNCTIONS))
+    results = list(
+        check_gcp_function_network(
+            item=item,
+            params={"net_data_sent": (20, 40)},
+            section_gcp_service_cloud_functions=section,
+            section_gcp_assets=parse_assets(
+                [
+                    ['{"project":"backup-255820", "config": ["cloud_functions"]}'],
+                    [
+                        '{"name": "//cloudfunctions.googleapis.com/projects/backup-255820/locations/us-central1/functions/function-1", "asset_type": "cloudfunctions.googleapis.com/CloudFunction", "resource": {"version": "v1", "discovery_document_uri": "https://cloudfunctions.googleapis.com/$discovery/rest", "discovery_name": "CloudFunction", "parent": "//cloudresourcemanager.googleapis.com/projects/360989076580", "data": {"dockerRegistry": "CONTAINER_REGISTRY", "timeout": "60s", "updateTime": "2022-02-07T20:37:20.735Z", "serviceAccountEmail": "backup-255820@appspot.gserviceaccount.com", "name": "projects/backup-255820/locations/us-central1/functions/function-1", "buildId": "bbbb3f80-54e4-4460-b10d-d7b912cd6b57", "status": "ACTIVE", "availableMemoryMb": 256.0, "entryPoint": "hello_world", "httpsTrigger": {"url": "https://us-central1-backup-255820.cloudfunctions.net/function-1", "securityLevel": "SECURE_ALWAYS"}, "versionId": "1", "ingressSettings": "ALLOW_ALL", "runtime": "python37", "buildName": "projects/360989076580/locations/us-central1/builds/bbbb3f80-54e4-4460-b10d-d7b912cd6b57", "maxInstances": 3000.0, "labels": {"deployment-tool": "console-cloud"}, "sourceUploadUrl": "https://storage.googleapis.com/gcf-upload-us-central1-bab35793-a665-4418-b5e0-d1e9495d23d7/a9c82954-5087-4655-9656-04c7cdb2410e.zip?GoogleAccessId=service-360989076580@gcf-admin-robot.iam.gserviceaccount.com&Expires=1644267947&Signature=z4UoLtkcqj3Y3Vo3cMgL0IZIJowhg5NrSsyS2O2wuLT%2BkjXRFxj%2BFWyeovp3YWG%2Fw3TbB1nS1Aq3uyIRjtlB4aVI%2FgfLxDeHwuoH7gx2EiULukSxT8YztuqNQmdlw67mWG%2FUbcxVpHSFrv%2FPqX6QJLd9IpqnAvs9wu5IiBriWJnImBqAQNJF9Lw%2FEz4QutK7fDUWNwiRSjnvEEByRTPLu14d%2FZxSG3wbikDdCmGibHFEMCd6KKjl%2FxLPkLH68SQczKwePwtx9nrRaaXEBwKNt4S0Omk8tjfaJSljbVrRmsfENpDUpvMUoGXa3SCXYujQOXPccWZLCLTPumf6vcSszw%3D%3D"}, "location": "us-central1", "resource_url": ""}, "ancestors": ["projects/360989076580"], "update_time": "2022-02-08T00:40:50.926703Z", "org_policy": []}'
+                    ],
+                ]
+            ),
+        )
+    )
+    assert len(results) == 0
+
+
 def test_predictive_checks(mocker: MockerFixture) -> None:
     item = "item"
     section = parse_gcp_function(generate_timeseries(item, 42.0, FUNCTIONS))
@@ -214,12 +236,18 @@ PLUGINS = [
 
 def generate_results(plugin: Plugin) -> CheckResult:
     item = "item"
+    asset_table = [
+        ['{"project":"backup-255820", "config": ["cloud_functions"]}'],
+        [
+            f'{{"name": "//cloudfunctions.googleapis.com/projects/backup-255820/locations/us-central1/functions/function-1", "asset_type": "cloudfunctions.googleapis.com/CloudFunction", "resource": {{"version": "v1", "discovery_document_uri": "https://cloudfunctions.googleapis.com/$discovery/rest", "discovery_name": "CloudFunction", "parent": "//cloudresourcemanager.googleapis.com/projects/360989076580", "data": {{"dockerRegistry": "CONTAINER_REGISTRY", "timeout": "60s", "updateTime": "2022-02-07T20:37:20.735Z", "serviceAccountEmail": "backup-255820@appspot.gserviceaccount.com", "name": "projects/backup-255820/locations/us-central1/functions/{item}", "buildId": "bbbb3f80-54e4-4460-b10d-d7b912cd6b57", "status": "ACTIVE", "availableMemoryMb": 256.0, "entryPoint": "hello_world", "httpsTrigger": {{"url": "https://us-central1-backup-255820.cloudfunctions.net/function-1", "securityLevel": "SECURE_ALWAYS"}}, "versionId": "1", "ingressSettings": "ALLOW_ALL", "runtime": "python37", "buildName": "projects/360989076580/locations/us-central1/builds/bbbb3f80-54e4-4460-b10d-d7b912cd6b57", "maxInstances": 3000.0, "labels": {{"deployment-tool": "console-cloud"}}, "sourceUploadUrl": "https://storage.googleapis.com/gcf-upload-us-central1-bab35793-a665-4418-b5e0-d1e9495d23d7/a9c82954-5087-4655-9656-04c7cdb2410e.zip?GoogleAccessId=service-360989076580@gcf-admin-robot.iam.gserviceaccount.com&Expires=1644267947&Signature=z4UoLtkcqj3Y3Vo3cMgL0IZIJowhg5NrSsyS2O2wuLT%2BkjXRFxj%2BFWyeovp3YWG%2Fw3TbB1nS1Aq3uyIRjtlB4aVI%2FgfLxDeHwuoH7gx2EiULukSxT8YztuqNQmdlw67mWG%2FUbcxVpHSFrv%2FPqX6QJLd9IpqnAvs9wu5IiBriWJnImBqAQNJF9Lw%2FEz4QutK7fDUWNwiRSjnvEEByRTPLu14d%2FZxSG3wbikDdCmGibHFEMCd6KKjl%2FxLPkLH68SQczKwePwtx9nrRaaXEBwKNt4S0Omk8tjfaJSljbVrRmsfENpDUpvMUoGXa3SCXYujQOXPccWZLCLTPumf6vcSszw%3D%3D"}}, "location": "us-central1", "resource_url": ""}}, "ancestors": ["projects/360989076580"], "update_time": "2022-02-08T00:40:50.926703Z", "org_policy": []}}'
+        ],
+    ]
     section = parse_gcp_function(generate_timeseries(item, 42.0, FUNCTIONS))
     yield from plugin.function(
         item=item,
         params={k: None for k in plugin.metrics},
         section_gcp_service_cloud_functions=section,
-        section_gcp_assets=None,
+        section_gcp_assets=parse_assets(asset_table),
     )
 
 

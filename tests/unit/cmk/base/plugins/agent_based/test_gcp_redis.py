@@ -18,6 +18,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     DiscoveryResult,
     StringTable,
 )
+from cmk.base.plugins.agent_based.gcp_assets import parse_assets
 from cmk.base.plugins.agent_based.gcp_redis import (
     check_cpu_util,
     check_hitratio,
@@ -102,12 +103,18 @@ PLUGINS = [
 
 def generate_results(plugin: Plugin) -> CheckResult:
     item = "item"
+    asset_table = [
+        ['{"project":"backup-255820", "config": ["redis"]}'],
+        [
+            f'{{"name": "//redis.googleapis.com/projects/tribe29-check-development/locations/europe-west6/instances/red", "asset_type": "redis.googleapis.com/Instance", "resource": {{"version": "v1", "discovery_document_uri":"https://redis.googleapis.com/$discovery/rest", "discovery_name": "Instance", "parent": "//cloudresourcemanager.googleapis.com/projects/1074106860578", "data": {{"persistenceIamIdentity": "serviceAccount:136208174824-compute@developer.gserviceaccount.com", "currentLocationId": "europe-west6-b", "reservedIpRange": "10.33.170.64/29", "authorizedNetwork": "projects/tribe29-check-development/global/networks/default", "displayName": "red2", "host": "10.33.170.67", "port": 6379.0, "locationId": "europe-west6-b", "state": "READY", "redisVersion": "REDIS_6_X", "transitEncryptionMode": "DISABLED", "createTime": "2022-03-28T11:04:35.40073338Z", "persistenceConfig": {{"persistenceMode": "DISABLED"}}, "tier": "BASIC", "name": "{item}", "memorySizeGb": 1.0, "connectMode": "DIRECT_PEERING", "nodes": [{{"id": "node-0", "zone": "europe-west6-b"}}], "readReplicasMode": "READ_REPLICAS_DISABLED"}}, "location": "europe-west6", "resource_url": ""}}, "ancestors": ["projects/1074106860578", "folders/1022571519427", "organizations/668598212003"], "update_time": "2022-03-28T11:08:19.425454Z", "org_policy": []}}'
+        ],
+    ]
     section = parse(generate_timeseries(item, 0.42, REDIS))
     yield from plugin.function(
         item=item,
         params={k: None for k in plugin.metrics},
         section_gcp_service_redis=section,
-        section_gcp_assets=None,
+        section_gcp_assets=parse_assets(asset_table),
     )
 
 
@@ -193,10 +200,17 @@ class TestRedisGCP(ABCTestRedisChecks):
     def check() -> CheckFunction:
         return check_hitratio
 
-    def _section_kwargs(self, section: gcp.Section) -> dict[str, Optional[gcp.Section]]:
+    def _section_kwargs(self, section: gcp.Section) -> dict[str, gcp.Section | gcp.AssetSection]:
+        asset_table = [
+            ['{"project":"backup-255820", "config": ["redis"]}'],
+            [
+                f'{{"name": "//redis.googleapis.com/projects/tribe29-check-development/locations/europe-west6/instances/red", "asset_type": "redis.googleapis.com/Instance", "resource": {{"version": "v1", "discovery_document_uri":"https://redis.googleapis.com/$discovery/rest", "discovery_name": "Instance", "parent": "//cloudresourcemanager.googleapis.com/projects/1074106860578", "data": {{"persistenceIamIdentity": "serviceAccount:136208174824-compute@developer.gserviceaccount.com", "currentLocationId": "europe-west6-b", "reservedIpRange": "10.33.170.64/29", "authorizedNetwork": "projects/tribe29-check-development/global/networks/default", "displayName": "red2", "host": "10.33.170.67", "port": 6379.0, "locationId": "europe-west6-b", "state": "READY", "redisVersion": "REDIS_6_X", "transitEncryptionMode": "DISABLED", "createTime": "2022-03-28T11:04:35.40073338Z", "persistenceConfig": {{"persistenceMode": "DISABLED"}}, "tier": "BASIC", "name": "{self.ITEM}", "memorySizeGb": 1.0, "connectMode": "DIRECT_PEERING", "nodes": [{{"id": "node-0", "zone": "europe-west6-b"}}], "readReplicasMode": "READ_REPLICAS_DISABLED"}}, "location": "europe-west6", "resource_url": ""}}, "ancestors": ["projects/1074106860578", "folders/1022571519427", "organizations/668598212003"], "update_time": "2022-03-28T11:08:19.425454Z", "org_policy": []}}'
+            ],
+        ]
+        assets = parse_assets(asset_table)
         return {
             "section_gcp_service_redis": section,
-            "section_gcp_assets": None,
+            "section_gcp_assets": assets,
         }
 
     def _section(self, hitratio: float, item: str) -> gcp.Section:
@@ -206,3 +220,15 @@ class TestRedisGCP(ABCTestRedisChecks):
 def test_hitratio_return_when_section_is_empty():
     results = list(check_hitratio("item", {}, None, None))
     assert len(results) == 0
+
+
+def test_hitratio_no_results_if_item_not_found() -> None:
+    params = {"levels_upper_hitratio": None, "levels_lower_hitratio": None}
+    section = parse(generate_timeseries("item", 42, REDIS))
+    results = check_hitratio(
+        item="I do not exist",
+        params=params,
+        section_gcp_service_redis=section,
+        section_gcp_assets=parse_assets(ASSET_TABLE),
+    )
+    assert len(list(results)) == 0

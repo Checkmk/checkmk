@@ -18,6 +18,7 @@ def parse_gcp_run(string_table: StringTable) -> gcp.Section:
 register.agent_section(name="gcp_service_cloud_run", parse_function=parse_gcp_run)
 
 service_namer = gcp.service_name_factory("Cloud Run")
+ASSET_TYPE = "run.googleapis.com/Service"
 
 
 def discover(
@@ -26,8 +27,7 @@ def discover(
 ) -> DiscoveryResult:
     if section_gcp_assets is None or "cloud_run" not in section_gcp_assets.config:
         return
-    asset_type = "run.googleapis.com/Service"
-    for item, service in section_gcp_assets[asset_type].items():
+    for item, service in section_gcp_assets[ASSET_TYPE].items():
         labels = [
             ServiceLabel("gcp/location", service.asset.resource.location),
             ServiceLabel("gcp/run/name", item),
@@ -52,7 +52,9 @@ def check_gcp_run_network(
             "run.googleapis.com/container/network/sent_bytes_count", "In", render.networkbandwidth
         ),
     }
-    yield from gcp.check(metrics, item, params, section_gcp_service_cloud_run)
+    yield from gcp.check(
+        metrics, item, params, section_gcp_service_cloud_run, ASSET_TYPE, section_gcp_assets
+    )
 
 
 register.check_plugin(
@@ -78,7 +80,9 @@ def check_gcp_run_memory(
             "run.googleapis.com/container/memory/utilizations", "Memory", render.percent, scale=1e2
         ),
     }
-    yield from gcp.check(metrics, item, params, section_gcp_service_cloud_run)
+    yield from gcp.check(
+        metrics, item, params, section_gcp_service_cloud_run, ASSET_TYPE, section_gcp_assets
+    )
 
 
 register.check_plugin(
@@ -103,7 +107,9 @@ def check_gcp_run_cpu(
             "run.googleapis.com/container/cpu/utilizations", "CPU", render.percent, scale=1e2
         ),
     }
-    yield from gcp.check(metrics, item, params, section_gcp_service_cloud_run)
+    yield from gcp.check(
+        metrics, item, params, section_gcp_service_cloud_run, ASSET_TYPE, section_gcp_assets
+    )
 
 
 register.check_plugin(
@@ -171,7 +177,9 @@ def check_gcp_run_requests(
             scale=1e-3,
         ),
     }
-    yield from gcp.check(metrics, item, params, section_gcp_service_cloud_run)
+    yield from gcp.check(
+        metrics, item, params, section_gcp_service_cloud_run, ASSET_TYPE, section_gcp_assets
+    )
 
 
 register.check_plugin(

@@ -7,7 +7,11 @@ import http.client
 import json
 from typing import Any, Dict, List, Literal, Optional, Sequence, Tuple, Type, Union
 
+from livestatus import MultiSiteConnection, SiteId
+
 from cmk.utils import version
+from cmk.utils.livestatus_helpers.queries import detailed_connection, Query
+from cmk.utils.livestatus_helpers.tables.hosts import Hosts
 from cmk.utils.version import is_managed_edition
 
 from cmk.gui.exceptions import MKHTTPException
@@ -283,3 +287,8 @@ def folder_slug(folder: CREFolder) -> str:
 
     """
     return "~" + folder.path().rstrip("/").replace("/", "~")
+
+
+def get_site_id_for_host(connection: MultiSiteConnection, host_name: str) -> SiteId:
+    with detailed_connection(connection) as conn:
+        return Query(columns=[Hosts.name], filter_expr=Hosts.name.op("=", host_name)).value(conn)

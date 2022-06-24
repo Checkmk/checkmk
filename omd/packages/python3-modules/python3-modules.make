@@ -6,7 +6,7 @@ PYTHON3_MODULES_DIR := $(PYTHON3_MODULES)-$(PYTHON3_MODULES_VERS)
 # Note: Because the versions of the individual modules is not reflected in PYTHON3_MODULES_VERS,
 #       like it is done in other OMD packages, we'll have to increase the BUILD_ID on every package
 #       change.
-PYTHON3_MODULES_BUILD_ID := 6
+PYTHON3_MODULES_BUILD_ID := 10
 
 PYTHON3_MODULES_UNPACK:= $(BUILD_HELPER_DIR)/$(PYTHON3_MODULES_DIR)-unpack
 PYTHON3_MODULES_PATCHING := $(BUILD_HELPER_DIR)/$(PYTHON3_MODULES_DIR)-patching
@@ -62,21 +62,21 @@ PYTHON3_MODULES_LIST += requests-2.26.0.tar.gz # needed by DCD
 PYTHON3_MODULES_LIST += charset-normalizer-2.0.6.tar.gz # needed by requests
 PYTHON3_MODULES_LIST += pykerberos-1.2.1.tar.gz # needed by check_bi_aggr
 PYTHON3_MODULES_LIST += requests-kerberos-0.12.0.tar.gz # needed by check_bi_aggr
-PYTHON3_MODULES_LIST += MarkupSafe-1.1.1.tar.gz # needed by Jinja2
-PYTHON3_MODULES_LIST += itsdangerous-1.1.0.tar.gz # needed by Flask
-PYTHON3_MODULES_LIST += Jinja2-2.11.3.tar.gz # needed by Flask
+PYTHON3_MODULES_LIST += MarkupSafe-2.1.1.tar.gz # needed by Jinja2
+PYTHON3_MODULES_LIST += itsdangerous-2.1.2.tar.gz # needed by Flask
+PYTHON3_MODULES_LIST += Jinja2-3.1.2.tar.gz # needed by Flask
 PYTHON3_MODULES_LIST += more-itertools-8.0.2.tar.gz # needed by zipp
 PYTHON3_MODULES_LIST += zipp-0.6.0.tar.gz # needed by importlib_metadata
 PYTHON3_MODULES_LIST += attrs-20.2.0.tar.gz # needed by jsonschema
-PYTHON3_MODULES_LIST += importlib_metadata-1.2.0.tar.gz # needed by jsonschema
+PYTHON3_MODULES_LIST += importlib_metadata-4.10.1.tar.gz # needed by jsonschema
 PYTHON3_MODULES_LIST += pyrsistent-0.15.6.tar.gz # needed by jsonschema
-PYTHON3_MODULES_LIST += click-7.1.2.tar.gz # needed by Flask
-PYTHON3_MODULES_LIST += Werkzeug-2.0.2.tar.gz # Needed by Flask
+PYTHON3_MODULES_LIST += click-8.1.3.tar.gz # needed by Flask
+PYTHON3_MODULES_LIST += Werkzeug-2.1.2.tar.gz # Needed by Flask
 PYTHON3_MODULES_LIST += jsonschema-3.2.0.tar.gz # needed by openapi-spec-validator
-PYTHON3_MODULES_LIST += Flask-1.1.1.tar.gz # direct dependency
+PYTHON3_MODULES_LIST += Flask-2.1.2.tar.gz # direct dependency
 PYTHON3_MODULES_LIST += pytz-2020.1.tar.gz # needed by Flask-Babel
 PYTHON3_MODULES_LIST += Babel-2.8.0.tar.gz # needed by Flask-Babel
-PYTHON3_MODULES_LIST += Flask-Babel-1.0.0.tar.gz # needed by GUI for i18n support (lazy gettext)
+PYTHON3_MODULES_LIST += Flask-Babel-2.0.0.tar.gz # needed by GUI for i18n support (lazy gettext)
 PYTHON3_MODULES_LIST += openapi-spec-validator-0.2.9.tar.gz # direct dependency
 
 PYTHON3_MODULES_LIST += psutil-5.6.7.tar.gz # needed for omdlib
@@ -92,11 +92,11 @@ PYTHON3_MODULES_LIST += jira-2.0.0.tar.gz # needed for jira
 
 PYTHON3_MODULES_LIST += adal-1.2.0.tar.gz # needed for agent_azure
 
-PYTHON3_MODULES_LIST += Pillow-8.3.2.tar.gz # needed by GUI, reportlab
+PYTHON3_MODULES_LIST += Pillow-9.1.1.tar.gz # needed by GUI, reportlab
 PYTHON3_MODULES_LIST += python-ldap-3.3.1.tar.gz # needed by GUI (User sync), python-active-directory
 PYTHON3_MODULES_LIST += dicttoxml-1.7.4.tar.gz # needed by GUI (API XML format)
-PYTHON3_MODULES_LIST += Cython-0.29.19.tar.gz # needed by numpy
-PYTHON3_MODULES_LIST += numpy-1.18.4.tar.gz # needed by GUI (forecast graphs)
+PYTHON3_MODULES_LIST += Cython-0.29.30.tar.gz # needed by numpy
+PYTHON3_MODULES_LIST += numpy-1.22.4.zip # needed by GUI (forecast graphs)
 PYTHON3_MODULES_LIST += reportlab-3.5.34.tar.gz # needed by GUI (reporting)
 PYTHON3_MODULES_LIST += PyPDF2-1.26.0.tar.gz # needed by GUI (reporting)
 PYTHON3_MODULES_LIST += roman-3.2.tar.gz # needed by reporting frontmatter

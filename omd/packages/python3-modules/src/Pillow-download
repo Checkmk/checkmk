@@ -3,7 +3,7 @@
 # components (Tests/) which are not needed for our use cases.
 set -e
 
-VERSION=8.3.2
+VERSION=9.1.1
 DIR=Pillow-$VERSION
 ARCHIVE=${DIR}.tar.gz
 ARCHIVE_UNCOMPRESSED=${DIR}.tar

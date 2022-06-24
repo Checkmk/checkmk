@@ -21,7 +21,7 @@ from cmk.utils.log import console
 from cmk.utils.timeout import Timeout
 from cmk.utils.type_defs import HostName, KeepaliveAPI, ServiceDetails, ServiceName, ServiceState
 
-_CacheInfo = Optional[tuple[int, int]]  # TODO: we need this often. Move to utils!
+_CacheInfo = Optional[tuple[int, int]]
 
 
 def _sanitize_perftext(

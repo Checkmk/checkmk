@@ -11,11 +11,13 @@ use openssl::ssl::{SslConnector, SslMethod, SslVerifyMode};
 use openssl::x509::{X509Name, X509Req};
 use reqwest::blocking::{Client, ClientBuilder};
 use rustls::{
-    Certificate, Certificate as RustlsCertificate, Error as RusttlsError,
+    client::ServerCertVerified, client::ServerCertVerifier, client::ServerName,
+    client::WebPkiVerifier, Certificate, Certificate as RustlsCertificate, Error as RusttlsError,
     PrivateKey as RustlsPrivateKey, RootCertStore,
 };
 use rustls_pemfile::Item;
 use std::net::TcpStream;
+use std::sync::Arc;
 use x509_parser::traits::FromDer;
 
 pub fn make_csr(cn: &str) -> AnyhowResult<(String, String)> {
@@ -102,9 +104,75 @@ impl std::convert::TryFrom<&Certificate> for CNCheckerUUID {
     }
 }
 
+struct CnIsNoUuidAcceptAnyHostname {
+    verifier: Box<dyn ServerCertVerifier>,
+}
+
+impl CnIsNoUuidAcceptAnyHostname {
+    pub fn from_roots(roots: RootCertStore) -> Arc<dyn ServerCertVerifier> {
+        Arc::new(Self {
+            verifier: Box::new(WebPkiVerifier::new(roots, None)),
+        })
+    }
+}
+
+impl ServerCertVerifier for CnIsNoUuidAcceptAnyHostname {
+    fn verify_server_cert(
+        &self,
+        end_entity: &Certificate,
+        intermediates: &[Certificate],
+        _server_name: &ServerName,
+        scts: &mut dyn Iterator<Item = &[u8]>,
+        ocsp_response: &[u8],
+        now: std::time::SystemTime,
+    ) -> Result<ServerCertVerified, RusttlsError> {
+        let cn_checker = CNCheckerUUID::try_from(end_entity)?;
+        if cn_checker.cn_is_uuid() {
+            return Err(RusttlsError::General(format!(
+                "CN in server certificate is a valid UUID: {}",
+                cn_checker.cn()
+            )));
+        }
+        self.verifier.verify_server_cert(
+            end_entity,
+            intermediates,
+            // emulate reqwest::ClientBuilder::danger_accept_invalid_hostnames
+            &match ServerName::try_from(cn_checker.cn()) {
+                Ok(server_name) => server_name,
+                Err(err) => {
+                    return Err(RusttlsError::General(format!(
+                        "CN in server certificate cannot be used as server name: {}",
+                        err
+                    )));
+                }
+            },
+            scts,
+            ocsp_response,
+            now,
+        )
+    }
+}
+
+pub struct TLSIdentity {
+    pub cert_chain: Vec<rustls::Certificate>,
+    pub key_der: rustls::PrivateKey,
+}
+
 pub struct HandshakeCredentials<'a> {
     pub server_root_cert: &'a str,
-    pub client_identity: Option<reqwest::tls::Identity>,
+    pub client_identity: Option<TLSIdentity>,
+}
+
+fn tls_config(handshake_credentials: HandshakeCredentials) -> AnyhowResult<rustls::ClientConfig> {
+    let builder = rustls::ClientConfig::builder()
+        .with_safe_defaults()
+        .with_custom_certificate_verifier(CnIsNoUuidAcceptAnyHostname::from_roots(
+            root_cert_store([handshake_credentials.server_root_cert].into_iter())?,
+        ));
+    Ok(match handshake_credentials.client_identity {
+        Some(identity) => builder.with_single_cert(identity.cert_chain, identity.key_der)?,
+        None => builder.with_no_client_auth(),
+    })
 }
 
 pub fn client(
@@ -114,16 +182,7 @@ pub fn client(
     let mut client_builder = ClientBuilder::new();
 
     client_builder = if let Some(handshake_credentials) = handshake_credentials {
-        client_builder = client_builder
-            .add_root_certificate(reqwest::Certificate::from_pem(
-                handshake_credentials.server_root_cert.as_bytes(),
-            )?)
-            .danger_accept_invalid_hostnames(true);
-        if let Some(identity) = handshake_credentials.client_identity {
-            client_builder.identity(identity)
-        } else {
-            client_builder
-        }
+        client_builder.use_preconfigured_tls(tls_config(handshake_credentials)?)
     } else {
         client_builder.danger_accept_invalid_certs(true)
     };
@@ -221,5 +280,60 @@ mod test_cn_no_uuid {
             CNCheckerUUID::try_from(&rustls_certificate(constants::TEST_CERT_CN_UUID).unwrap())
                 .unwrap();
         assert!(cn_checker.cn_is_uuid());
+    }
+
+    fn verifier() -> Arc<dyn ServerCertVerifier> {
+        CnIsNoUuidAcceptAnyHostname::from_roots(
+            root_cert_store([constants::TEST_ROOT_CERT].into_iter()).unwrap(),
+        )
+    }
+
+    #[test]
+    fn test_verify_server_cert_ok() {
+        assert!(verifier()
+            .verify_server_cert(
+                &rustls_certificate(constants::TEST_CERT_OK).unwrap(),
+                &[],
+                &ServerName::try_from("lsdafhgldfhg").unwrap(),
+                &mut [].into_iter(),
+                &[],
+                std::time::SystemTime::now(),
+            )
+            .is_ok());
+    }
+
+    #[test]
+    fn test_verify_server_cert_cn_is_uuid() {
+        assert_eq!(
+            match verifier()
+                .verify_server_cert(
+                    &rustls_certificate(constants::TEST_CERT_CN_UUID).unwrap(),
+                    &[],
+                    &ServerName::try_from("lsdafhgldfhg").unwrap(),
+                    &mut [].into_iter(),
+                    &[],
+                    std::time::SystemTime::now(),
+                )
+                .unwrap_err()
+            {
+                rustls::Error::General(s) => s,
+                _ => panic!("Wrong error type"),
+            },
+            "CN in server certificate is a valid UUID: cf771eeb-b666-4673-95c9-683960fb2939"
+        )
+    }
+
+    #[test]
+    fn test_verify_server_cert_invalid_signature() {
+        assert!(verifier()
+            .verify_server_cert(
+                &rustls_certificate(constants::TEST_CERT_INVALID_SIGNATURE).unwrap(),
+                &[],
+                &ServerName::try_from("lsdafhgldfhg").unwrap(),
+                &mut [].into_iter(),
+                &[],
+                std::time::SystemTime::now(),
+            )
+            .is_err());
     }
 }

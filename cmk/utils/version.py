@@ -447,6 +447,9 @@ def parse_check_mk_version(v: str) -> int:
     >>> p("1.5.0p13") > p("1.5.0p12")
     True
 
+    >>> p("2022.06.23-sandbox-az-sles-15sp3")
+    2022062300000
+
     """
     parts = v.split(".", 2)
 
@@ -474,11 +477,11 @@ def parse_check_mk_version(v: str) -> int:
     major, minor, rest = parts
     _, sub, rest = _extract_rest(rest)
 
-    if len(major) == 4:
-        rest = v[-3:]
-
     if rest.startswith("-sandbox"):
         return int("%02d%02d%02d%05d" % (int(major), int(minor), sub, 0))
+
+    if len(major) == 4:
+        rest = v[-3:]
 
     # Only add the base once, else we could do it in the loop.
     var_type, num, rest = _extract_rest(rest)

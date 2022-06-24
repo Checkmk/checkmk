@@ -412,19 +412,19 @@ class BulkDiscovery(BaseSchema):
     do_full_scan = fields.Boolean(
         required=False,
         description="The option whether to perform a full scan or not.",
-        example=False,
+        example=True,
         load_default=True,
     )
     bulk_size = fields.Integer(
         required=False,
         description="The number of hosts to be handled at once.",
-        example=False,
+        example=10,
         load_default=10,
     )
     ignore_errors = fields.Boolean(
         required=False,
         description="The option whether to ignore errors in single check plugins.",
-        example=False,
+        example=True,
         load_default=True,
     )
 

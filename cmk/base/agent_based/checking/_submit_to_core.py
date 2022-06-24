@@ -11,7 +11,7 @@ import errno
 import os
 import time
 from random import Random
-from typing import IO, Iterable, Literal, Optional, Tuple, Union
+from typing import IO, Iterable, Literal, Optional, Tuple
 
 import cmk.utils.paths
 import cmk.utils.tty as tty
@@ -149,61 +149,49 @@ class KeepaliveSubmitter(Submitter):
 
 
 class PipeSubmitter(Submitter):
-    def _submit(self, formatted_submittees: Iterable[_FormattedSubmittee]) -> None:
-        for s in formatted_submittees:
-            _submit_via_command_pipe(*s)
 
+    # Filedescriptor to open nagios command pipe.
+    _nagios_command_pipe: Literal[False] | IO[bytes] | None = None
 
-# Filedescriptor to open nagios command pipe.
-_nagios_command_pipe: Union[Literal[False], IO[bytes], None] = None
+    @classmethod
+    def _open_command_pipe(cls) -> Literal[False] | IO[bytes]:
+        if cls._nagios_command_pipe is not None:
+            return cls._nagios_command_pipe
 
-
-def _open_command_pipe() -> None:
-    global _nagios_command_pipe
-    if _nagios_command_pipe is not None:
-        return
-
-    if not os.path.exists(cmk.utils.paths.nagios_command_pipe_path):
-        _nagios_command_pipe = False  # False means: tried but failed to open
-        raise MKGeneralException(
-            "Missing core command pipe '%s'" % cmk.utils.paths.nagios_command_pipe_path
-        )
-
-    try:
-        with Timeout(3, message="Timeout after 3 seconds"):
-            _nagios_command_pipe = open(  # pylint:disable=consider-using-with
-                cmk.utils.paths.nagios_command_pipe_path, "wb"
+        if not os.path.exists(cmk.utils.paths.nagios_command_pipe_path):
+            cls._nagios_command_pipe = False  # False means: tried but failed to open
+            raise MKGeneralException(
+                "Missing core command pipe '%s'" % cmk.utils.paths.nagios_command_pipe_path
             )
-    except Exception as exc:
-        _nagios_command_pipe = False
-        raise MKGeneralException(f"Error opening command pipe: {exc!r}") from exc
 
+        try:
+            with Timeout(3, message="Timeout after 3 seconds"):
+                cls._nagios_command_pipe = open(  # pylint:disable=consider-using-with
+                    cmk.utils.paths.nagios_command_pipe_path, "wb"
+                )
+        except Exception as exc:
+            cls._nagios_command_pipe = False
+            raise MKGeneralException(f"Error opening command pipe: {exc!r}") from exc
 
-def _submit_via_command_pipe(
-    host: HostName,
-    service: ServiceName,
-    state: ServiceState,
-    output: ServiceDetails,
-    cache_info: Optional[tuple[int, int]],
-) -> None:
-    """In case of CMC this is used when running "cmk" manually"""
-    output = output.replace("\n", "\\n")
-    _open_command_pipe()
-    if not _nagios_command_pipe:
-        return
+        return cls._nagios_command_pipe
 
-    # [<timestamp>] PROCESS_SERVICE_CHECK_RESULT;<host_name>;<svc_description>;<return_code>;<plugin_output>
-    msg = "[%d] PROCESS_SERVICE_CHECK_RESULT;%s;%s;%d;%s\n" % (
-        time.time(),
-        host,
-        service,
-        state,
-        output,
-    )
-    _nagios_command_pipe.write(msg.encode())
-    # Important: Nagios needs the complete command in one single write() block!
-    # Python buffers and sends chunks of 4096 bytes, if we do not flush.
-    _nagios_command_pipe.flush()
+    def _submit(self, formatted_submittees: Iterable[_FormattedSubmittee]) -> None:
+        if not (pipe := PipeSubmitter._open_command_pipe()):
+            return
+
+        for host, service, state, output, _cache_info in formatted_submittees:
+
+            msg = "[%d] PROCESS_SERVICE_CHECK_RESULT;%s;%s;%d;%s\n" % (
+                time.time(),
+                host,
+                service,
+                state,
+                output.replace("\n", "\\n"),
+            )
+            pipe.write(msg.encode())
+            # Important: Nagios needs the complete command in one single write() block!
+            # Python buffers and sends chunks of 4096 bytes, if we do not flush.
+            pipe.flush()
 
 
 _name_sequence: "Optional[_RandomNameSequence]" = None

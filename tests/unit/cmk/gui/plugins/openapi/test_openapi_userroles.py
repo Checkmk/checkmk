@@ -6,6 +6,7 @@
 
 import json
 from functools import partial
+from typing import Callable
 
 import pytest
 
@@ -22,128 +23,147 @@ def user_role_collection_base(base: str) -> str:
     return f"{base}/domain-types/user_role/collections/all"
 
 
-def test_get_userrole_endpoint(object_base: str, aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
-    resp = aut_user_auth_wsgi_app.get(
-        object_base + "admin",
+@pytest.fixture(name="get_userrole")
+def partial_get(aut_user_auth_wsgi_app: WebTestAppForCMK, object_base: str) -> Callable:
+    return partial(
+        aut_user_auth_wsgi_app.get,
+        url=object_base + "adminx",
         status=200,
         headers={"Accept": "application/json"},
     )
 
-    assert resp.json["extensions"].keys() == {"alias", "permissions", "builtin"}
-    assert {link["method"] for link in resp.json["links"]} == {"GET", "PUT"}
 
-
-def test_get_userroles_endpoint(
-    collection_base: str, aut_user_auth_wsgi_app: WebTestAppForCMK
-) -> None:
-    resp = aut_user_auth_wsgi_app.get(
-        collection_base,
+@pytest.fixture(name="get_userroles")
+def partial_list(
+    aut_user_auth_wsgi_app: WebTestAppForCMK, collection_base: str, get_userrole: Callable
+) -> Callable:
+    return partial(
+        aut_user_auth_wsgi_app.get,
+        url=collection_base,
         status=200,
         headers={"Accept": "application/json"},
     )
 
-    assert {user_role["id"] for user_role in resp.json["value"]} == {"user", "admin", "guest"}
 
-
-def test_post_userrole_endpoint(
-    collection_base: str, object_base: str, aut_user_auth_wsgi_app: WebTestAppForCMK
-) -> None:
-    aut_user_auth_wsgi_app.post(
-        collection_base,
-        status=200,
-        params=json.dumps({"role_id": "admin"}),
-        headers={"Accept": "application/json"},
-        content_type="application/json",
-    )
-
-    resp = aut_user_auth_wsgi_app.get(
-        object_base + "adminx",
-        status=200,
-        headers={"Accept": "application/json"},
-    )
-
-    assert resp.json["extensions"].keys() == {"alias", "permissions", "builtin", "basedon"}
-    assert resp.json["id"] == "adminx"
-    assert {link["method"] for link in resp.json["links"]} == {"GET", "PUT", "DELETE"}
-
-
-def test_delete_userrole_endpoint(
-    collection_base: str, object_base: str, aut_user_auth_wsgi_app: WebTestAppForCMK
-) -> None:
-    aut_user_auth_wsgi_app.post(
-        collection_base,
+@pytest.fixture(name="clone_userrole")
+def partial_post(aut_user_auth_wsgi_app: WebTestAppForCMK, collection_base: str) -> Callable:
+    return partial(
+        aut_user_auth_wsgi_app.post,
+        url=collection_base,
         status=200,
         params=json.dumps({"role_id": "admin"}),
         headers={"Accept": "application/json"},
         content_type="application/json",
     )
 
-    aut_user_auth_wsgi_app.delete(
-        object_base + "adminx",
+
+@pytest.fixture(name="delete_userrole")
+def partial_delete(aut_user_auth_wsgi_app: WebTestAppForCMK, object_base: str) -> Callable:
+    return partial(
+        aut_user_auth_wsgi_app.delete,
+        url=object_base + "adminx",
         status=204,
         headers={"Accept": "application/json"},
     )
 
 
-def test_delete_non_existing_userrole_endpoint(
-    object_base: str, aut_user_auth_wsgi_app: WebTestAppForCMK
-) -> None:
-    aut_user_auth_wsgi_app.delete(
-        object_base + "non-existing-user-role",
-        status=404,
-        headers={"Accept": "application/json"},
-    )
-
-
-def test_delete_builtin_userrole(
-    object_base: str, aut_user_auth_wsgi_app: WebTestAppForCMK
-) -> None:
-    aut_user_auth_wsgi_app.delete(
-        object_base + "admin",
-        status=404,
-        headers={"Accept": "application/json"},
-    )
-
-
-def test_edit_cloned_userrole_with_valid_data(
-    collection_base: str, object_base: str, aut_user_auth_wsgi_app: WebTestAppForCMK
-) -> None:
-    aut_user_auth_wsgi_app.post(
-        collection_base,
-        status=200,
-        params=json.dumps({"role_id": "admin"}),
-        headers={"Accept": "application/json"},
-        content_type="application/json",
-    )
-
-    put = partial(
+@pytest.fixture(name="edit_userrole")
+def partial_put(aut_user_auth_wsgi_app: WebTestAppForCMK, object_base: str) -> Callable:
+    return partial(
         aut_user_auth_wsgi_app.put,
-        object_base + "adminx",
+        url=object_base + "adminx",
         status=200,
         headers={"Accept": "application/json"},
         content_type="application/json",
     )
 
-    # Verify basedon can be changed
-    resp = put(params=json.dumps({"new_basedon": "user"}))
+
+def test_get_userrole_endpoint(object_base: str, get_userrole: Callable) -> None:
+    resp = get_userrole(url=object_base + "admin")
+    assert resp.json["extensions"].keys() == {"alias", "permissions", "builtin"}
+    assert {link["method"] for link in resp.json["links"]} == {"GET", "PUT"}
+
+
+def test_get_userroles_endpoint(get_userroles: Callable) -> None:
+    resp = get_userroles()
+    assert {user_role["id"] for user_role in resp.json["value"]} == {"user", "admin", "guest"}
+
+
+def test_post_userrole_endpoint(clone_userrole: Callable, get_userrole: Callable) -> None:
+    clone_userrole()
+    resp = get_userrole()
+    assert resp.json["extensions"].keys() == {"alias", "permissions", "builtin", "basedon"}
+    assert resp.json["id"] == "adminx"
+    assert {link["method"] for link in resp.json["links"]} == {"GET", "PUT", "DELETE"}
+
+
+def test_post_clone_userrole_new_id(
+    object_base: str, clone_userrole: Callable, get_userrole: Callable
+) -> None:
+    clone_userrole(params=json.dumps({"role_id": "admin", "new_role_id": "megatron"}))
+    get_userrole(url=object_base + "megatron")
+
+
+def test_post_clone_userrole_new_alias(
+    object_base: str, clone_userrole: Callable, get_userrole: Callable
+) -> None:
+    clone_userrole(params=json.dumps({"role_id": "admin", "new_alias": "mr_silly"}))
+    resp = get_userrole()
+    assert resp.json["extensions"]["alias"] == "mr_silly"
+
+
+def test_delete_cloned_userrole(clone_userrole: Callable, delete_userrole: Callable) -> None:
+    clone_userrole()
+    delete_userrole()
+
+
+def test_delete_non_existing_userrole_endpoint(object_base: str, delete_userrole: Callable) -> None:
+    resp = delete_userrole(url=object_base + "non-existing-user-role", status=404)
+    assert (
+        "The role should exist but it doesn't: 'non-existing-user-role'"
+        in resp.json["fields"]["role_id"]
+    )
+
+
+def test_delete_builtin_userrole(object_base: str, delete_userrole: Callable) -> None:
+    resp = delete_userrole(url=object_base + "admin", status=404)
+    assert (
+        "The role should be a custom role but it's not: 'admin'" in resp.json["fields"]["role_id"]
+    )
+
+
+def test_edit_cloned_userrole_basedon(clone_userrole: Callable, edit_userrole: Callable) -> None:
+    clone_userrole()
+    resp = edit_userrole(params=json.dumps({"new_basedon": "user"}))
     assert resp.json["extensions"]["basedon"] == "user"
 
-    # Verify alias can be changed
-    resp = put(params=json.dumps({"new_alias": "yonsemite sam"}))
+
+def test_edit_cloned_userrole_alias(clone_userrole: Callable, edit_userrole: Callable) -> None:
+    clone_userrole()
+    resp = edit_userrole(params=json.dumps({"new_alias": "yonsemite sam"}))
     assert resp.json["extensions"]["alias"] == "yonsemite sam"
 
-    # Verify permissions can be changed - Change to opposite
-    resp = put(
+
+def test_edit_cloned_userrole_id(clone_userrole: Callable, edit_userrole: Callable) -> None:
+    clone_userrole()
+    resp = edit_userrole(params=json.dumps({"new_role_id": "sam"}))
+    assert resp.json["id"] == "sam"
+
+
+def test_edit_cloned_userrole_permissions(
+    clone_userrole: Callable, edit_userrole: Callable
+) -> None:
+    clone_userrole()
+    resp = edit_userrole(
         params=json.dumps(
-            {"new_permissions": {"general.server_side_requests": "yes", "general.use": "no"}}
+            {"new_permissions": {"general.server_side_requests": "no", "general.use": "no"}}
         )
     )
 
-    assert "general.server_side_requests" in resp.json["extensions"]["permissions"]
+    assert "general.server_side_requests" not in resp.json["extensions"]["permissions"]
     assert "general.use" not in resp.json["extensions"]["permissions"]
 
-    # Verify permissions can be changed to default
-    resp = put(
+    resp = edit_userrole(
         params=json.dumps(
             {
                 "new_permissions": {
@@ -154,104 +174,92 @@ def test_edit_cloned_userrole_with_valid_data(
         )
     )
 
-    assert "general.server_side_requests" not in resp.json["extensions"]["permissions"]
+    assert "general.server_side_requests" in resp.json["extensions"]["permissions"]
     assert "general.use" in resp.json["extensions"]["permissions"]
 
-    # Verify the id can be changed
-    resp = put(params=json.dumps({"new_role_id": "sam"}))
-    assert resp.json["id"] == "sam"
+
+def test_userrole_invalid_permission_value(object_base: str, edit_userrole: Callable) -> None:
+    edit_userrole(
+        url=object_base + "admin",
+        status=400,
+        params=json.dumps({"new_permissions": {"general.server_side_requests": "abc"}}),
+    )
 
 
-def test_edit_cloned_userrole_with_invalid_data(
-    collection_base: str, object_base: str, aut_user_auth_wsgi_app: WebTestAppForCMK
+def test_userrole_invalid_permission_name(object_base: str, edit_userrole: Callable) -> None:
+    edit_userrole(
+        url=object_base + "admin",
+        status=400,
+        params=json.dumps({"new_permissions": {"general.made_up_permission": "yes"}}),
+    )
+
+
+def test_edit_cloned_userrole_invalid_roleid(
+    clone_userrole: Callable, edit_userrole: Callable
 ) -> None:
-    aut_user_auth_wsgi_app.post(
-        collection_base,
-        status=200,
-        params=json.dumps({"role_id": "admin"}),
-        headers={"Accept": "application/json"},
-        content_type="application/json",
-    )
+    clone_userrole()
+    edit_userrole(status=400, params=json.dumps({"new_role_id": "admin"}))
 
-    put = partial(
-        aut_user_auth_wsgi_app.put,
-        object_base + "adminx",
+
+def test_edit_cloned_userrole_invalid_basedon(
+    clone_userrole: Callable, edit_userrole: Callable
+) -> None:
+    clone_userrole()
+    edit_userrole(status=400, params=json.dumps({"new_basedon": "sam"}))
+
+
+def test_edit_cloned_userrole_invalid_alias(
+    clone_userrole: Callable, edit_userrole: Callable
+) -> None:
+    clone_userrole()
+    edit_userrole(status=400, params=json.dumps({"new_alias": "Administrator"}))
+
+
+def test_edit_cloned_userrole_invalid_permissions(
+    clone_userrole: Callable, edit_userrole: Callable
+) -> None:
+    clone_userrole()
+    edit_userrole(
         status=400,
-        headers={"Accept": "application/json"},
-        content_type="application/json",
+        params=json.dumps({"new_permissions": {"permission_a": "default", "permission_b": "yes"}}),
     )
 
-    # admin id already exists
-    put(params=json.dumps({"new_role_id": "admin"}))
 
-    # invalid basedon - has to be a builtin role
-    put(params=json.dumps({"new_basedon": "sam"}))
-
-    # alias already exists
-    put(params=json.dumps({"new_alias": "Administrator"}))
-
-    # permissions don't exist
-    put(params=json.dumps({"new_permissions": ["permission_a", "permission_b"]}))
-
-
-def test_edit_builtin_userrole(object_base: str, aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
-    put = partial(
-        aut_user_auth_wsgi_app.put,
-        object_base + "admin",
-        status=400,
-        headers={"Accept": "application/json"},
-        content_type="application/json",
+def test_edit_builtin_role_id(object_base: str, edit_userrole: Callable) -> None:
+    edit_userrole(
+        url=object_base + "admin", status=400, params=json.dumps({"new_role_id": "edited_admin"})
     )
 
-    # builtin role ids can't be edited
-    put(params=json.dumps({"new_role_id": "edited_admin"}))
 
-    # builtin basedon can't be edited
-    put(params=json.dumps({"new_basedon": "something_else"}))
+def test_edit_builtin_basedon(object_base: str, edit_userrole: Callable) -> None:
+    edit_userrole(
+        url=object_base + "admin", status=400, params=json.dumps({"new_basedon": "something_else"})
+    )
 
-    # builtin alias can be edited
-    resp = put(params=json.dumps({"new_alias": "something_else"}), status=200)
 
-    # Verify alias has changed
+def test_edit_builtin_alias(object_base: str, edit_userrole: Callable) -> None:
+    resp = edit_userrole(
+        url=object_base + "admin", params=json.dumps({"new_alias": "something_else"})
+    )
     assert resp.json["extensions"]["alias"] == "something_else"
 
 
 def test_permission_change_when_builtin_changes(
-    object_base: str, collection_base: str, aut_user_auth_wsgi_app: WebTestAppForCMK
+    get_userrole: Callable, clone_userrole: Callable, edit_userrole: Callable, object_base: str
 ) -> None:
-    get = partial(
-        aut_user_auth_wsgi_app.get,
-        status=200,
-        headers={"Accept": "application/json"},
-    )
 
-    admin_permissions = set(get(url=object_base + "admin").json["extensions"]["permissions"])
-    guest_permissions = set(get(url=object_base + "guest").json["extensions"]["permissions"])
-    user_permissions = set(get(url=object_base + "user").json["extensions"]["permissions"])
+    admin_permissions = get_userrole(url=object_base + "admin").json["extensions"]["permissions"]
+    guest_permissions = get_userrole(url=object_base + "guest").json["extensions"]["permissions"]
+    user_permissions = get_userrole(url=object_base + "user").json["extensions"]["permissions"]
 
-    resp = aut_user_auth_wsgi_app.post(
-        collection_base,
-        status=200,
-        params=json.dumps({"role_id": "admin"}),
-        headers={"Accept": "application/json"},
-        content_type="application/json",
-    )
-
-    # Cloned user should have admin permissions.
-    assert set(resp.json["extensions"]["permissions"]) == admin_permissions
-
-    put = partial(
-        aut_user_auth_wsgi_app.put,
-        object_base + "adminx",
-        status=200,
-        headers={"Accept": "application/json"},
-        content_type="application/json",
-    )
+    # Clone admin and check the clone has admin permissions.
+    resp = clone_userrole()
+    assert set(resp.json["extensions"]["permissions"]) == set(admin_permissions)
 
     # Change basedon to guest and check permissions match a guest's permissions
-    resp = put(params=json.dumps({"new_basedon": "guest"}))
-    assert set(resp.json["extensions"]["permissions"]) == guest_permissions
+    resp = edit_userrole(params=json.dumps({"new_basedon": "guest"}))
+    assert set(resp.json["extensions"]["permissions"]) == set(guest_permissions)
 
     # Change basedon to user and check permissions match a user's permissions
-    resp = put(params=json.dumps({"new_basedon": "user"}))
-    assert set(resp.json["extensions"]["permissions"]) == user_permissions
+    resp = edit_userrole(params=json.dumps({"new_basedon": "user"}))
+    assert set(resp.json["extensions"]["permissions"]) == set(user_permissions)

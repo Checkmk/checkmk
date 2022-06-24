@@ -332,7 +332,8 @@ def check_host_services(
                 )
             ]
 
-    _submit_aggregated_results(submittables, host_config.hostname, dry_run, show_perfdata)
+    if submittables:
+        _submit_aggregated_results(submittables, host_config.hostname, dry_run, show_perfdata)
 
     return submittables
 

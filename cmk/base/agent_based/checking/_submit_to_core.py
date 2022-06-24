@@ -234,6 +234,7 @@ class _RandomNameSequence:
 
 class FileSubmitter(Submitter):
     def _submit(self, formatted_submittees: Iterable[_FormattedSubmittee]) -> None:
+        _open_checkresult_file()
         for s in formatted_submittees:
             _submit_via_check_result_file(*s)
         finalize()
@@ -303,7 +304,6 @@ def _submit_via_check_result_file(
     cache_info: Optional[tuple[int, int]],
 ) -> None:
     output = output.replace("\n", "\\n")
-    _open_checkresult_file()
     if not _checkresult_file_fd:
         return
 

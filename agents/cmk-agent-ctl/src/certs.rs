@@ -36,19 +36,28 @@ pub fn make_csr(cn: &str) -> AnyhowResult<(String, String)> {
     ))
 }
 
+pub struct HandshakeCredentials<'a> {
+    pub server_root_cert: &'a str,
+    pub client_identity: Option<reqwest::tls::Identity>,
+}
+
 pub fn client(
-    root_cert: Option<&str>,
-    identity: Option<reqwest::tls::Identity>,
+    handshake_credentials: Option<HandshakeCredentials>,
     use_proxy: bool,
 ) -> AnyhowResult<Client> {
     let mut client_builder = ClientBuilder::new();
 
-    if let Some(ident) = identity {
-        client_builder = client_builder.identity(ident);
-    }
-
-    let mut client_builder = if let Some(cert) = root_cert {
-        client_builder.add_root_certificate(Certificate::from_pem(cert.as_bytes())?)
+    client_builder = if let Some(handshake_credentials) = handshake_credentials {
+        client_builder = client_builder
+            .add_root_certificate(Certificate::from_pem(
+                handshake_credentials.server_root_cert.as_bytes(),
+            )?)
+            .danger_accept_invalid_hostnames(true);
+        if let Some(identity) = handshake_credentials.client_identity {
+            client_builder.identity(identity)
+        } else {
+            client_builder
+        }
     } else {
         client_builder.danger_accept_invalid_certs(true)
     };
@@ -57,9 +66,7 @@ pub fn client(
         client_builder = client_builder.no_proxy()
     };
 
-    Ok(client_builder
-        .danger_accept_invalid_hostnames(true)
-        .build()?)
+    Ok(client_builder.build()?)
 }
 
 pub fn fetch_server_cert_pem(server: &str, port: &u16) -> AnyhowResult<String> {

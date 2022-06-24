@@ -1,0 +1,15 @@
+Title: parsing zpool status when pool contains special vdev
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1656055489
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+In version 0.8.x a special top level vdev was introduced [1]. A zpool status check would crash
+with an IndexError. This has beeen fixed now. No user interaction requried.
+
+
+[1]: https://github.com/openzfs/zfs/pull/5182

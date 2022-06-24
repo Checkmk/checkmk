@@ -2237,7 +2237,12 @@ class FilterECServiceLevelRange(Filter):
         assert lower_bound is not None
         assert upper_bound is not None
         for row in rows:
-            service_level = int(row['%s_custom_variable_values' % self.info][-1])
+            # Example lq output (99 = service level)
+            # host = [,,4,127.0.0.1,,/wato/ auto-piggyback cmk-agent ...,/wato/hosts.mk,99]
+            # service = [99, custom_1, custom_2]
+            service_level = int(row['%s_custom_variable_values' %
+                                    self.info][-1]) if self.info == "host" else int(
+                                        row['%s_custom_variable_values' % self.info][0])
             if int(lower_bound) <= service_level <= int(upper_bound):
                 filtered_rows.append(row)
 

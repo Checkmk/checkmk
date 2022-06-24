@@ -4,12 +4,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from __future__ import annotations
+
+import abc
 import errno
 import os
 import time
-from functools import partial
 from random import Random
-from typing import Callable, IO, Literal, Optional, Tuple, Union
+from typing import IO, Iterable, Literal, Optional, Tuple, Union
 
 import cmk.utils.paths
 import cmk.utils.tty as tty
@@ -19,16 +21,7 @@ from cmk.utils.log import console
 from cmk.utils.timeout import Timeout
 from cmk.utils.type_defs import HostName, KeepaliveAPI, ServiceDetails, ServiceName, ServiceState
 
-Submitter = Callable[
-    [
-        HostName,
-        ServiceName,
-        ServiceState,
-        ServiceDetails,
-        Optional[Tuple[int, int]],
-    ],
-    None,
-]
+_CacheInfo = Optional[tuple[int, int]]  # TODO: we need this often. Move to utils!
 
 
 def _sanitize_perftext(
@@ -80,34 +73,6 @@ def _extract_check_command(infotext: str) -> Optional[str]:
     return infotext.split(marker, 1)[1].split("\n")[0] if marker in infotext else None
 
 
-def check_result(
-    *,
-    host_name: HostName,
-    service_name: ServiceName,
-    result: ServiceCheckResult,
-    cache_info: Optional[Tuple[int, int]],
-    show_perfdata: bool,
-    perfdata_format: Literal["pnp", "standard"],
-    submitter: Submitter,
-) -> None:
-    output = "%s|%s" % (
-        # The vertical bar indicates end of service output and start of metrics.
-        # Replace the ones in the output by a Uniocode "Light vertical bar"
-        result.output.replace("|", "\u2758"),
-        _sanitize_perftext(result, perfdata_format),
-    )
-
-    _output_check_result(service_name, result.state, output, show_perfdata=show_perfdata)
-
-    submitter(
-        host_name,
-        service_name,
-        result.state,
-        output,
-        cache_info,
-    )
-
-
 def get_submitter(
     check_submission: str,
     monitoring_core: str,
@@ -115,40 +80,78 @@ def get_submitter(
     keepalive: KeepaliveAPI,
 ) -> Submitter:
     if dry_run:
-        return _submit_noop
+        return NoOpSubmitter()
 
     if keepalive.enabled():
-        return partial(_submit_via_keepalive, keepalive)
+        return KeepaliveSubmitter(keepalive)
 
     if check_submission == "pipe" or monitoring_core == "cmc":
-        return _submit_via_command_pipe
+        return PipeSubmitter()
 
     if check_submission == "file":
-        return _submit_via_check_result_file
+        return FileSubmitter()
 
     raise MKGeneralException(f"Invalid setting {check_submission=} (expected 'pipe' or 'file')")
 
 
-def _submit_noop(
-    host: HostName,
-    service: ServiceName,
-    state: ServiceState,
-    output: ServiceDetails,
-    cache_info: Optional[tuple[int, int]],
-) -> None:
-    pass
+_Submittee = tuple[HostName, ServiceName, ServiceCheckResult, _CacheInfo]
+
+_FormattedSubmittee = tuple[HostName, ServiceName, ServiceState, ServiceDetails, _CacheInfo]
 
 
-def _submit_via_keepalive(
-    keepalive: KeepaliveAPI,
-    host: HostName,
-    service: ServiceName,
-    state: ServiceState,
-    output: ServiceDetails,
-    cache_info: Optional[tuple[int, int]],
-) -> None:
-    """Regular case for the CMC - check helpers are running in keepalive mode"""
-    return keepalive.add_check_result(host, service, state, output, cache_info)
+class Submitter(abc.ABC):
+    def submit(
+        self,
+        submittees: Iterable[_Submittee],
+        perfdata_format: Literal["pnp", "standard"],
+        show_perfdata: bool,
+    ) -> None:
+        formatted_submittees = [
+            (
+                host_name,
+                service_name,
+                result.state,
+                "%s|%s"
+                % (
+                    # The vertical bar indicates end of service output and start of metrics.
+                    # Replace the ones in the output by a Uniocode "Light vertical bar"
+                    result.output.replace("|", "\u2758"),
+                    _sanitize_perftext(result, perfdata_format),
+                ),
+                cache_info,
+            )
+            for host_name, service_name, result, cache_info in submittees
+        ]
+
+        for _hn, description, state, output, _ci in formatted_submittees:
+            _output_check_result(description, state, output, show_perfdata=show_perfdata)
+
+        self._submit(formatted_submittees)
+
+    @abc.abstractmethod
+    def _submit(self, formatted_submittees: Iterable[_FormattedSubmittee]) -> None:
+        ...
+
+
+class NoOpSubmitter(Submitter):
+    def _submit(self, formatted_submittees: Iterable[_FormattedSubmittee]) -> None:
+        pass
+
+
+class KeepaliveSubmitter(Submitter):
+    def __init__(self, keepalive: KeepaliveAPI) -> None:
+        self._keepalive = keepalive
+
+    def _submit(self, formatted_submittees: Iterable[_FormattedSubmittee]) -> None:
+        """Regular case for the CMC - check helpers are running in keepalive mode"""
+        for s in formatted_submittees:
+            self._keepalive.add_check_result(*s)
+
+
+class PipeSubmitter(Submitter):
+    def _submit(self, formatted_submittees: Iterable[_FormattedSubmittee]) -> None:
+        for s in formatted_submittees:
+            _submit_via_command_pipe(*s)
 
 
 # Filedescriptor to open nagios command pipe.
@@ -239,6 +242,13 @@ class _RandomNameSequence:
         choose = self.rng.choice
         letters = [choose(c) for dummy in range(6)]
         return "".join(letters)
+
+
+class FileSubmitter(Submitter):
+    def _submit(self, formatted_submittees: Iterable[_FormattedSubmittee]) -> None:
+        for s in formatted_submittees:
+            _submit_via_check_result_file(*s)
+        finalize()
 
 
 # global variables used to cache temporary values that do not need

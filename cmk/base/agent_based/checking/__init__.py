@@ -375,32 +375,29 @@ def _submit_aggregated_results(
     dry_run: bool,
     show_perfdata: bool,
 ) -> None:
-    submitter = _submit_to_core.get_submitter(
+    for submittable in submittables:
+        if not submittable.submit:
+            # There'll be more logging down the callstack, for the results that *are* submitted.
+            # Surely we can consolidate this?
+            console.verbose(
+                f"{submittable.service.description:20} PEND - {submittable.result.output}\n"
+            )
+            continue
+
+    _submit_to_core.get_submitter(
         check_submission=config.check_submission,
         monitoring_core=config.monitoring_core,
         dry_run=dry_run,
         keepalive=get_keepalive(cmk_version.edition()),
+    ).submit(
+        submittees=[
+            (host_name, s.service.description, s.result, s.cache_info)
+            for s in submittables
+            if s.submit
+        ],
+        perfdata_format="pnp" if config.perfdata_format == "pnp" else "standard",
+        show_perfdata=show_perfdata,
     )
-
-    try:
-        for submittable in submittables:
-            if not submittable.submit:
-                console.verbose(
-                    f"{submittable.service.description:20} PEND - {submittable.result.output}\n"
-                )
-                continue
-
-            _submit_to_core.check_result(
-                host_name=host_name,
-                service_name=submittable.service.description,
-                result=submittable.result,
-                submitter=submitter,
-                cache_info=submittable.cache_info,
-                show_perfdata=show_perfdata,
-                perfdata_format="pnp" if config.perfdata_format == "pnp" else "standard",
-            )
-    finally:
-        _submit_to_core.finalize()
 
 
 def get_aggregated_result(

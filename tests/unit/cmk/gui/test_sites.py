@@ -5,11 +5,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest
-from pytest_mock.plugin import MockerFixture
 
-from livestatus import SiteConfiguration, SiteId
-
-from cmk.utils.type_defs import UserId
+from livestatus import SiteId
 
 import cmk.gui.sites as sites
 import cmk.gui.user_sites as user_sites
@@ -29,26 +26,17 @@ from cmk.gui.logged_in import user
         ),
         ({"socket": ("unix", {"path": "/a/b/c"}), "proxy": None}, "unix:/a/b/c"),
         (
-            {
-                "socket": ("tcp", {"address": ("127.0.0.1", 1234), "tls": ("plain_text", {})}),
-                "proxy": None,
-            },
+            {"socket": ("tcp", {"address": ("127.0.0.1", 1234)}), "proxy": None},
             "tcp:127.0.0.1:1234",
         ),
-        (
-            {
-                "socket": ("tcp6", {"address": ("::1", 1234), "tls": ("plain_text", {})}),
-                "proxy": None,
-            },
-            "tcp6:::1:1234",
-        ),
+        ({"socket": ("tcp6", {"address": ("::1", 1234)}), "proxy": None}, "tcp6:::1:1234"),
         (
             {"socket": ("unix", {"path": "/a/b/c"}), "proxy": {"params": None}},
             "unix:tmp/run/liveproxy/mysite",
         ),
     ],
 )
-def test_encode_socket_for_livestatus(site_spec: SiteConfiguration, result: str) -> None:
+def test_encode_socket_for_livestatus(site_spec, result) -> None:
     assert sites.encode_socket_for_livestatus(SiteId("mysite"), site_spec) == result
 
 
@@ -71,11 +59,11 @@ def test_encode_socket_for_livestatus(site_spec: SiteConfiguration, result: str)
         ),
     ],
 )
-def test_site_config_for_livestatus_tcp_tls(site_spec: SiteConfiguration, result: dict) -> None:
+def test_site_config_for_livestatus_tcp_tls(site_spec, result) -> None:
     assert sites._site_config_for_livestatus(SiteId("mysite"), site_spec) == result
 
 
-def test_sorted_sites(with_user_login: UserId, mocker: MockerFixture) -> None:
+def test_sorted_sites(with_user_login, mocker) -> None:
     mocker.patch.object(
         user,
         "authorized_sites",

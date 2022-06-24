@@ -13,6 +13,8 @@ import pytest
 
 from tests.testlib import is_enterprise_repo, is_managed_repo
 
+from livestatus import SiteConfigurations, SiteId
+
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
 
@@ -906,6 +908,199 @@ def test_permission_sorting(do_sort, result) -> None:
 
     sorted_perms = [p.name for p in perms.get_sorted_permissions(Sec1())]
     assert sorted_perms == result
+
+
+@pytest.mark.parametrize(
+    "site,result",
+    [
+        # Possible formats pre 1.6:
+        (
+            {},
+            {
+                "socket": ("local", None),
+                "proxy": None,
+                "replication": None,
+                "url_prefix": "/mysite/",
+            },
+        ),
+        (
+            {
+                "socket": None,
+            },
+            {
+                "socket": ("local", None),
+                "proxy": None,
+                "replication": None,
+                "url_prefix": "/mysite/",
+            },
+        ),
+        (
+            {"socket": "disabled"},
+            {
+                "socket": ("local", None),
+                "disabled": True,
+                "proxy": None,
+                "replication": None,
+                "url_prefix": "/mysite/",
+            },
+        ),
+        (
+            {"socket": "unix:/ab:c/xyz"},
+            {
+                "socket": ("unix", {"path": "/ab:c/xyz"}),
+                "proxy": None,
+                "replication": None,
+                "url_prefix": "/mysite/",
+            },
+        ),
+        (
+            {"socket": "tcp:127.0.0.1:1234"},
+            {
+                "socket": (
+                    "tcp",
+                    {
+                        "address": ("127.0.0.1", 1234),
+                        "tls": ("plain_text", {}),
+                    },
+                ),
+                "proxy": None,
+                "replication": None,
+                "url_prefix": "/mysite/",
+            },
+        ),
+        (
+            {"socket": "tcp6:::1:1234"},
+            {
+                "socket": (
+                    "tcp6",
+                    {
+                        "address": ("::1", 1234),
+                        "tls": ("plain_text", {}),
+                    },
+                ),
+                "proxy": None,
+                "replication": None,
+                "url_prefix": "/mysite/",
+            },
+        ),
+        (
+            {
+                "socket": (
+                    "proxy",
+                    {
+                        "socket": None,
+                    },
+                )
+            },
+            {
+                "socket": ("local", None),
+                "proxy": {},
+                "replication": None,
+                "url_prefix": "/mysite/",
+            },
+        ),
+        (
+            {
+                "socket": (
+                    "proxy",
+                    {
+                        "socket": ("127.0.0.1", 6790),
+                    },
+                )
+            },
+            {
+                "socket": (
+                    "tcp",
+                    {
+                        "address": ("127.0.0.1", 6790),
+                        "tls": ("plain_text", {}),
+                    },
+                ),
+                "proxy": {},
+                "replication": None,
+                "url_prefix": "/mysite/",
+            },
+        ),
+        # Is allowed in 1.6 and should not be converted
+        (
+            {"proxy": {}, "socket": ("unix", {"path": "/a/b/c"})},
+            {
+                "socket": ("unix", {"path": "/a/b/c"}),
+                "proxy": {},
+                "replication": None,
+                "url_prefix": "/mysite/",
+            },
+        ),
+        (
+            {
+                "socket": (
+                    "tcp",
+                    {
+                        "address": ("127.0.0.1", 1234),
+                        "tls": ("plain_text", {}),
+                    },
+                )
+            },
+            {
+                "socket": (
+                    "tcp",
+                    {
+                        "address": ("127.0.0.1", 1234),
+                        "tls": ("plain_text", {}),
+                    },
+                ),
+                "proxy": None,
+                "replication": None,
+                "url_prefix": "/mysite/",
+            },
+        ),
+        (
+            {
+                "socket": (
+                    "tcp6",
+                    {
+                        "address": ("::1", 1234),
+                        "tls": ("plain_text", {}),
+                    },
+                ),
+            },
+            {
+                "socket": (
+                    "tcp6",
+                    {
+                        "address": ("::1", 1234),
+                        "tls": ("plain_text", {}),
+                    },
+                ),
+                "proxy": None,
+                "replication": None,
+                "url_prefix": "/mysite/",
+            },
+        ),
+        (
+            {"socket": ("local", None)},
+            {
+                "socket": ("local", None),
+                "proxy": None,
+                "replication": None,
+                "url_prefix": "/mysite/",
+            },
+        ),
+        (
+            {"socket": ("unix", {"path": "/a/b/c"})},
+            {
+                "socket": ("unix", {"path": "/a/b/c"}),
+                "proxy": None,
+                "replication": None,
+                "url_prefix": "/mysite/",
+            },
+        ),
+    ],
+)
+def test_migrate_old_site_config(site, result) -> None:
+    assert cmk.gui.config.prepare_raw_site_config(SiteConfigurations({SiteId("mysite"): site})) == {
+        "mysite": result
+    }
 
 
 @pytest.mark.usefixtures("load_config")

@@ -39,7 +39,7 @@ def site_choices(site_configs: SiteConfigurations) -> List[Tuple[SiteId, str]]:
     """Compute the choices to be used e.g. in dropdowns from a SiteConfigurations collection"""
     choices = []
     for site_id, site_spec in site_configs.items():
-        title: str = site_id
+        title = site_id
         if site_spec.get("alias"):
             title += " - " + site_spec["alias"]
 

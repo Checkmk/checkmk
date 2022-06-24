@@ -12,7 +12,6 @@ import traceback
 from multiprocessing import JoinableQueue, Process
 from typing import (
     Any,
-    cast,
     Collection,
     Dict,
     Iterable,
@@ -25,7 +24,7 @@ from typing import (
 from typing import Tuple as _Tuple
 from typing import Type, Union
 
-from livestatus import NetworkSocketDetails, SiteConfiguration, SiteId
+from livestatus import SiteConfiguration, SiteId
 
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
@@ -170,15 +169,15 @@ class ModeEditSite(WatoMode):
                     "replicate_ec": True,
                     "socket": (
                         "tcp",
-                        NetworkSocketDetails(
-                            address=("", 6557),
-                            tls=(
+                        {
+                            "address": ("", 6557),
+                            "tls": (
                                 "encrypted",
                                 {
                                     "verify": True,
                                 },
                             ),
-                        ),
+                        },
                     ),
                     "timeout": 5,
                     "disable_wato": True,
@@ -1125,9 +1124,6 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
         if not varname:
             return None
 
-        if varname not in config_variable_registry:
-            return None
-
         config_variable = config_variable_registry[varname]()
         def_value = self._global_settings.get(varname, self._default_values[varname])
 
@@ -1340,12 +1336,7 @@ class ModeSiteLivestatusEncryption(WatoMode):
             )
             return
 
-        assert (
-            isinstance(self._site["socket"], tuple)
-            and self._site["socket"][1] is not None
-            and "tls" in self._site["socket"][1]
-        )
-        if cast(NetworkSocketDetails, self._site["socket"][1])["tls"][1]["verify"] is False:
+        if self._site["socket"][1]["tls"][1]["verify"] is False:
             html.show_warning(
                 _(
                     "Encrypted connections to this site are made without "
@@ -1427,15 +1418,14 @@ class ModeSiteLivestatusEncryption(WatoMode):
 
     def _fetch_certificate_details(self) -> Iterable[CertificateDetails]:
         user.need_permission("general.server_side_requests")
-        assert isinstance(self._site["socket"], tuple) and self._site["socket"][1] is not None
         family_spec, address_spec = self._site["socket"]
         address_family = socket.AF_INET if family_spec == "tcp" else socket.AF_INET6
-        address = cast(NetworkSocketDetails, address_spec)["address"]
+        address = address_spec["address"]
         return fetch_certificate_details(cmk.utils.paths.trusted_ca_file, address_family, address)
 
 
 def _page_menu_dropdown_site_details(
-    site_id: str, site: SiteConfiguration, current_mode: str
+    site_id: str, site: Dict, current_mode: str
 ) -> PageMenuDropdown:
     return PageMenuDropdown(
         name="connections",
@@ -1450,7 +1440,7 @@ def _page_menu_dropdown_site_details(
 
 
 def _page_menu_entries_site_details(
-    site_id: str, site: SiteConfiguration, current_mode: str
+    site_id: str, site: Dict, current_mode: str
 ) -> Iterator[PageMenuEntry]:
     if current_mode != "edit_site_globals" and site_globals_editable(site_id, site):
         yield PageMenuEntry(

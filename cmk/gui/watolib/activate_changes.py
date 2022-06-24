@@ -2229,13 +2229,15 @@ def _create_distributed_wato_file_for_dcd(base_dir: Path, is_remote: bool) -> No
     store.save_text_to_file(base_dir.joinpath("etc/check_mk/dcd.d/wato/distributed.mk"), output)
 
 
-def create_site_globals_file(site_id: SiteId, tmp_dir: str, site_globals: dict[str, Any]) -> None:
+def create_site_globals_file(
+    site_id: SiteId, tmp_dir: str, site_globals: SiteConfiguration
+) -> None:
     site_globals_dir = os.path.join(tmp_dir, "site_globals")
     store.makedirs(site_globals_dir)
     store.save_object_to_file(os.path.join(site_globals_dir, "sitespecific.mk"), site_globals)
 
 
-def get_site_globals(site_id: SiteId, site_config: SiteConfiguration) -> dict[str, Any]:
+def get_site_globals(site_id: SiteId, site_config: SiteConfiguration) -> SiteConfiguration:
     site_globals = site_config.get("globals", {}).copy()
     site_globals.update(
         {

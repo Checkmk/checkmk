@@ -54525,28 +54525,31 @@ msgstr ""
 "valore predefinito di ADO."
 
 #, fuzzy
-msgid "Time until alert, if deployment in replica failure"
+msgid "Time until alert, if AVAILABLE condition is false"
 msgstr "Definire un periodo di tempo tollerante per l'attivazione dei servizi"
 
 #, fuzzy
-msgid "Time until alert, if deployment not available"
+msgid "Time until alert, if CONTAINERSREADY condition is false"
 msgstr "Definire un periodo di tempo tollerante per l'attivazione dei servizi"
 
 #, fuzzy
-msgid "Time until alert, if deployment not in progressing"
+msgid "Time until alert, if INITIALIZED condition is false"
 msgstr "Definire un periodo di tempo tollerante per l'attivazione dei servizi"
 
-msgid "Time until alert, if pod not initialized"
-msgstr ""
-
-msgid "Time until alert, if pod not ready"
-msgstr ""
-
-msgid "Time until alert, if pod not scheduled"
-msgstr ""
+#, fuzzy
+msgid "Time until alert, if PODSCHEDULED condition is false"
+msgstr "Definire un periodo di tempo tollerante per l'attivazione dei servizi"
 
 #, fuzzy
-msgid "Time until alert, if pod's containers not ready"
+msgid "Time until alert, if PROGRESSING condition is false"
+msgstr "Definire un periodo di tempo tollerante per l'attivazione dei servizi"
+
+#, fuzzy
+msgid "Time until alert, if READY condition is false"
+msgstr "Definire un periodo di tempo tollerante per l'attivazione dei servizi"
+
+#, fuzzy
+msgid "Time until alert, if REPLICAFAILURE condition is true"
 msgstr "Definire un periodo di tempo tollerante per l'attivazione dei servizi"
 
 msgid "Time until license expiration"
@@ -64670,6 +64673,18 @@ msgstr "z/OS"
 #, fuzzy, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Tutti i diritti riservati."
+
+#, fuzzy
+#~| msgid "Define a tolerating time period for activating services"
+#~ msgid "Time until alert, if deployment not available"
+#~ msgstr ""
+#~ "Definire un periodo di tempo tollerante per l'attivazione dei servizi"
+
+#, fuzzy
+#~| msgid "Define a tolerating time period for activating services"
+#~ msgid "Time until alert, if deployment not in progressing"
+#~ msgstr ""
+#~ "Definire un periodo di tempo tollerante per l'attivazione dei servizi"
 
 #~ msgid "Bulk walk: Hosts using bulk walk (enforces SNMP v2c)"
 #~ msgstr "Camminata in blocco: Host che usano il bulk walk (applica SNMP v2c)"

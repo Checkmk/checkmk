@@ -51253,25 +51253,32 @@ msgstr ""
 "次のインスタンスに進む前に、インスタンスへの接続が開くのを待つ時間。設定され"
 "ていない場合、ADOのデフォルト値が使用されます。"
 
-msgid "Time until alert, if deployment in replica failure"
-msgstr "レプリカに障害が発生した場合、アラートが出るまでの時間"
-
-msgid "Time until alert, if deployment not available"
-msgstr "配備ができない場合、アラートが出るまでの時間"
-
-msgid "Time until alert, if deployment not in progressing"
-msgstr "デプロイが進行中でない場合、アラートが出るまでの時間"
-
-msgid "Time until alert, if pod not initialized"
+#, fuzzy
+msgid "Time until alert, if AVAILABLE condition is false"
 msgstr "Podが初期化されていない場合の、警告までの許容期間"
 
-msgid "Time until alert, if pod not ready"
-msgstr "Podの準備ができていない場合の、警告までの許容期間"
+#, fuzzy
+msgid "Time until alert, if CONTAINERSREADY condition is false"
+msgstr "Podが初期化されていない場合の、警告までの許容期間"
 
-msgid "Time until alert, if pod not scheduled"
-msgstr "Podがスケジュールされていない場合の、警告までの許容期間"
+#, fuzzy
+msgid "Time until alert, if INITIALIZED condition is false"
+msgstr "Podが初期化されていない場合の、警告までの許容期間"
 
-msgid "Time until alert, if pod's containers not ready"
+#, fuzzy
+msgid "Time until alert, if PODSCHEDULED condition is false"
+msgstr "Podが初期化されていない場合の、警告までの許容期間"
+
+#, fuzzy
+msgid "Time until alert, if PROGRESSING condition is false"
+msgstr "Podが初期化されていない場合の、警告までの許容期間"
+
+#, fuzzy
+msgid "Time until alert, if READY condition is false"
+msgstr "Podが初期化されていない場合の、警告までの許容期間"
+
+#, fuzzy
+msgid "Time until alert, if REPLICAFAILURE condition is true"
 msgstr "Podコンテナの準備ができていない場合、警告が出るまでの時間"
 
 msgid "Time until license expiration"
@@ -60746,6 +60753,21 @@ msgstr "z/OS"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. All Rights Reserved."
+
+#~ msgid "Time until alert, if deployment in replica failure"
+#~ msgstr "レプリカに障害が発生した場合、アラートが出るまでの時間"
+
+#~ msgid "Time until alert, if deployment not available"
+#~ msgstr "配備ができない場合、アラートが出るまでの時間"
+
+#~ msgid "Time until alert, if deployment not in progressing"
+#~ msgstr "デプロイが進行中でない場合、アラートが出るまでの時間"
+
+#~ msgid "Time until alert, if pod not ready"
+#~ msgstr "Podの準備ができていない場合の、警告までの許容期間"
+
+#~ msgid "Time until alert, if pod not scheduled"
+#~ msgstr "Podがスケジュールされていない場合の、警告までの許容期間"
 
 #~ msgid "Bulk walk: Hosts using bulk walk (enforces SNMP v2c)"
 #~ msgstr "バルクウォーク: バルクウォークを使用するホスト(SNMP v2cを適用)"

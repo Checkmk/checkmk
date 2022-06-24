@@ -50561,25 +50561,25 @@ msgid ""
 "the next instance. If unset, the default value from ADO is used."
 msgstr ""
 
-msgid "Time until alert, if deployment in replica failure"
+msgid "Time until alert, if AVAILABLE condition is false"
 msgstr ""
 
-msgid "Time until alert, if deployment not available"
+msgid "Time until alert, if CONTAINERSREADY condition is false"
 msgstr ""
 
-msgid "Time until alert, if deployment not in progressing"
+msgid "Time until alert, if INITIALIZED condition is false"
 msgstr ""
 
-msgid "Time until alert, if pod not initialized"
+msgid "Time until alert, if PODSCHEDULED condition is false"
 msgstr ""
 
-msgid "Time until alert, if pod not ready"
+msgid "Time until alert, if PROGRESSING condition is false"
 msgstr ""
 
-msgid "Time until alert, if pod not scheduled"
+msgid "Time until alert, if READY condition is false"
 msgstr ""
 
-msgid "Time until alert, if pod's containers not ready"
+msgid "Time until alert, if REPLICAFAILURE condition is true"
 msgstr ""
 
 msgid "Time until license expiration"

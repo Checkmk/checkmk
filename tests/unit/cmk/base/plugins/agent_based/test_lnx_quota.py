@@ -7,12 +7,8 @@ from typing import Any, Mapping, Sequence
 
 import pytest
 
-from tests.unit.conftest import FixRegister
-
-from cmk.utils.type_defs import CheckPluginName, SectionName
-
-from cmk.base.api.agent_based.checking_classes import CheckPlugin
-from cmk.base.api.agent_based.type_defs import AgentSectionPlugin, StringTable
+from cmk.base.api.agent_based.type_defs import StringTable
+from cmk.base.plugins.agent_based import lnx_quota
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 
@@ -51,18 +47,8 @@ _STRING_TABLE = [
 ]
 
 
-@pytest.fixture(name="lnx_quota_plugin")
-def fixture_lnx_quota_plugin(fix_register: FixRegister) -> CheckPlugin:
-    return fix_register.check_plugins[CheckPluginName("lnx_quota")]
-
-
-@pytest.fixture(name="lnx_quota_section")
-def fixture_lnx_quota_section(fix_register: FixRegister) -> AgentSectionPlugin:
-    return fix_register.agent_sections[SectionName("lnx_quota")]
-
-
-def test_parse(lnx_quota_section: AgentSectionPlugin) -> None:
-    assert lnx_quota_section.parse_function(_STRING_TABLE) == {
+def test_parse() -> None:
+    assert lnx_quota.parse(_STRING_TABLE) == {
         "/": {"usr": {"root": [6147506176, 0, 0, 0, 167394, 0, 0, 0]}},
         "/nussecke": {
             "grp": {
@@ -74,13 +60,8 @@ def test_parse(lnx_quota_section: AgentSectionPlugin) -> None:
     }
 
 
-def test_inventory(
-    lnx_quota_plugin: CheckPlugin,
-    lnx_quota_section: AgentSectionPlugin,
-) -> None:
-    assert list(
-        lnx_quota_plugin.discovery_function(lnx_quota_section.parse_function(_STRING_TABLE))
-    ) == [
+def test_discover() -> None:
+    assert list(lnx_quota.discover(lnx_quota.parse(_STRING_TABLE))) == [
         Service(item="/", parameters={"user": True, "group": False}),
         Service(item="/quarktasche", parameters={"user": True, "group": False}),
         Service(item="/nussecke", parameters={"user": False, "group": True}),
@@ -92,14 +73,14 @@ def test_inventory(
     [
         pytest.param(
             "/",
-            {},
+            lnx_quota._DEFAULT_PARAMETERS,
             _STRING_TABLE,
             [Result(state=State.OK, summary="All users within quota limits")],
             id="everything ok",
         ),
         pytest.param(
             "/",
-            {},
+            lnx_quota._DEFAULT_PARAMETERS,
             [
                 ["[[[/]]]"],
                 [
@@ -147,18 +128,12 @@ def test_inventory(
     ],
 )
 def test_check(
-    lnx_quota_plugin: CheckPlugin,
-    lnx_quota_section: AgentSectionPlugin,
     item: str,
     params: Mapping[str, Any],
     string_table: StringTable,
     expected: Sequence[CheckResult],
 ) -> None:
     assert (
-        list(
-            lnx_quota_plugin.check_function(
-                item=item, params=params, section=lnx_quota_section.parse_function(string_table)
-            )
-        )
+        list(lnx_quota.check(item=item, params=params, section=lnx_quota.parse(string_table)))
         == expected
     )

@@ -25,12 +25,23 @@
 # mysql     --  7915856       0       0      0     173     0     0      0
 
 
-def parse_lnx_quota(info):
-    parsed = {}
+import time
+from typing import Dict, Mapping, Sequence, Tuple
+
+from .agent_based_api.v1 import register, render, Result, Service, State
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+
+_SECTION = Mapping[str, Mapping[str, Mapping[str, Sequence[int]]]]
+
+_DEFAULT_PARAMETERS = {"user": True}
+
+
+def parse(string_table: StringTable) -> _SECTION:
+    parsed: Dict = {}
     mode = None
     filesys = None
 
-    for line in info:
+    for line in string_table:
         if line[0].startswith("[[["):
             # new filesystem detected
             parts = line[0][3:-3].split(":")
@@ -57,9 +68,22 @@ def parse_lnx_quota(info):
     return parsed
 
 
-def lnx_quota_limit_check(mode, what, user, used, soft, hard, grace):
+register.agent_section(
+    name="lnx_quota",
+    parse_function=parse,
+)
+
+
+def discover(section: _SECTION) -> DiscoveryResult:
+    for item, data in section.items():
+        yield Service(item=item, parameters={"user": "usr" in data, "group": "grp" in data})
+
+
+def lnx_quota_limit_check(
+    mode: str, what: str, user: str, used: int, soft: int, hard: int, grace: int
+) -> Tuple[int, str]:
     def fmt(value: float, what: str) -> str:
-        return "%d" % value if what == "files" else get_bytes_human_readable(value)
+        return "%d" % value if what == "files" else render.bytes(value)
 
     if mode == "usr":
         txt = "User %s" % user
@@ -97,19 +121,9 @@ def lnx_quota_limit_check(mode, what, user, used, soft, hard, grace):
     return state, txt
 
 
-def inventory_lnx_quota(parsed):
-    for item, data in parsed.items():
-        yield item, {"user": "usr" in data, "group": "grp" in data}
-
-
-@get_parsed_item_data
-def check_lnx_quota(_item, params, data):
-
-    if not params:
-        # old discovery until version 1.2.6
-        # params were empty dictionary and enabled by standard user checking
-        params = {"user": True}
-
+def check(item: str, params: Mapping[str, bool], section: _SECTION) -> CheckResult:
+    if not (data := section.get(item)):
+        return
     for param_key, mode, name in [("user", "usr", "users"), ("group", "grp", "groups")]:
         if params.get(param_key) is True:
             at_least_one_problematic = False
@@ -127,20 +141,20 @@ def check_lnx_quota(_item, params, data):
                     if txt:
                         at_least_one_problematic = True
                     if state != 0 or txt:
-                        yield state, txt or ""
+                        yield Result(state=State(state), summary=txt)
 
             if not at_least_one_problematic:
-                yield 0, "All %s within quota limits" % name
+                yield Result(state=State.OK, summary="All %s within quota limits" % name)
 
     if params.get("user") is False and params.get("group") is False:
-        yield 0, "Disabled quota checking"
+        yield Result(state=State.OK, summary="Disabled quota checking")
 
 
-check_info["lnx_quota"] = {
-    "parse_function": parse_lnx_quota,
-    "check_function": check_lnx_quota,
-    "inventory_function": inventory_lnx_quota,
-    "service_description": "Quota %s",
-    "has_perfdata": False,
-    "group": "lnx_quota",
-}
+register.check_plugin(
+    name="lnx_quota",
+    service_name="Quota: %s",
+    check_function=check,
+    discovery_function=discover,
+    check_default_parameters=_DEFAULT_PARAMETERS,
+    check_ruleset_name="lnx_quota",
+)

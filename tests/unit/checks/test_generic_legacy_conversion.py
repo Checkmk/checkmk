@@ -1925,7 +1925,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy) -> None:
         "liebert_system_events",
         "liebert_temp_fluid",
         "liebert_temp_general",
-        "lnx_quota",
         "logins",
         "lparstat_aix",
         "lparstat_aix.cpu_util",

@@ -254,10 +254,16 @@ def time_series(
     now = time.time()
     seconds = int(now)
     nanos = int((now - seconds) * 10**9)
+    # request data up to 4.5 minutes in the past. Typical sampling interval for metrics we use is 60 seconds. However, it can take up to
+    # 3.5 min (210s) for data to be available. Given the standard agent update time of 1 minute, this setting ensures we see any given value at
+    # least once. A downside of this approach is that a stale value would still be used by cmk for up to 4 minutes 40 seconds. A value is considered
+    # stale if no data point is stored in GCP in the last sampling interval.
+    # See GCP docs for definitions of metric data availability
+    # https://cloud.google.com/monitoring/api/metrics_gcp
     interval = monitoring_v3.TimeInterval(
         {
             "end_time": {"seconds": seconds, "nanos": nanos},
-            "start_time": {"seconds": (seconds - 1200), "nanos": nanos},
+            "start_time": {"seconds": (seconds - 280), "nanos": nanos},
         }
     )
     for metric in service.metrics:

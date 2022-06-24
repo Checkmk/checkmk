@@ -235,8 +235,28 @@ class _RandomNameSequence:
 class FileSubmitter(Submitter):
     def _submit(self, formatted_submittees: Iterable[_FormattedSubmittee]) -> None:
         _open_checkresult_file()
-        for s in formatted_submittees:
-            _submit_via_check_result_file(*s)
+        if not _checkresult_file_fd:
+            return
+
+        now = time.time()
+        for host, service, state, output, _cache_info in formatted_submittees:
+            output = output.replace("\n", "\\n")
+            os.write(
+                _checkresult_file_fd,
+                (
+                    f"host_name={host}\n"
+                    f"service_description={service}\n"
+                    "check_type=1\n"
+                    "check_options=0\n"
+                    "reschedule_check\n"
+                    "latency=0.0\n"
+                    f"start_time={now:.1f}\n"
+                    f"finish_time={now:.1f}\n"
+                    f"return_code={state}\n"
+                    f"output={output}\n"
+                    "\n"
+                ).encode(),
+            )
         finalize()
 
 
@@ -294,36 +314,6 @@ def finalize() -> None:
 
     with open(_checkresult_file_path + ".ok", "w"):
         pass
-
-
-def _submit_via_check_result_file(
-    host: HostName,
-    service: ServiceName,
-    state: ServiceState,
-    output: ServiceDetails,
-    cache_info: Optional[tuple[int, int]],
-) -> None:
-    output = output.replace("\n", "\\n")
-    if not _checkresult_file_fd:
-        return
-
-    now = time.time()
-    os.write(
-        _checkresult_file_fd,
-        (
-            f"host_name={host}\n"
-            f"service_description={service}\n"
-            "check_type=1\n"
-            "check_options=0\n"
-            "reschedule_check\n"
-            "latency=0.0\n"
-            f"start_time={now:.1f}\n"
-            f"finish_time={now:.1f}\n"
-            f"return_code={state}\n"
-            f"output={output}\n"
-            "\n"
-        ).encode(),
-    )
 
 
 def _output_check_result(

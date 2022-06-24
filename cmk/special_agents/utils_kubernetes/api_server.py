@@ -67,10 +67,6 @@ class BatchAPI:
 
 
 class CoreAPI:
-    """
-    Wrapper around CoreV1Api; Implementation detail of APIServer
-    """
-
     def __init__(  # type:ignore[no-untyped-def]
         self, api_client: client.ApiClient, timeout
     ) -> None:
@@ -93,10 +89,6 @@ class CoreAPI:
 
 
 class AppsAPI:
-    """
-    Wrapper around ExternalV1APi; Implementation detail of APIServer
-    """
-
     def __init__(  # type:ignore[no-untyped-def]
         self, api_client: client.ApiClient, timeout
     ) -> None:

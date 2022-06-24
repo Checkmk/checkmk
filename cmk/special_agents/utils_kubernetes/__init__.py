@@ -19,7 +19,7 @@ objects will chagne. In order to make this changes more easy we added
 kubernetes versions. The idea is that we only have to adapt the layer between
 kubernetes.client and .schemata.api when kubernetes changes data structures.
 
-The wrapper around the kubernetes library is api_server.APIServer
+The wrapper around the kubernetes library is api_server.from_kubernetes
 
 The function used to transform from kubernetes specific objects to our own data
 structures life in .transform

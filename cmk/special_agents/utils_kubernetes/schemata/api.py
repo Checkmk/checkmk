@@ -14,7 +14,7 @@ except the python standard library or pydantic.
 """
 
 import enum
-from typing import Dict, List, Literal, Mapping, NewType, Optional, Protocol, Sequence, Union
+from typing import Dict, List, Literal, Mapping, NewType, Optional, Sequence, Union
 
 from pydantic import BaseModel
 from pydantic.class_validators import validator
@@ -643,26 +643,3 @@ Example 2: The Pod is additionaly owned by a ReplicaSet with uid abc, then we ob
 Example 3: A Node is owned by no object, then we obtain
 `[]`, but empty fields are omitted and we obtain `None`
 """
-
-
-class API(Protocol):
-    def cron_jobs(self) -> Sequence[CronJob]:
-        ...
-
-    def nodes(self) -> Sequence[Node]:
-        ...
-
-    def pods(self) -> Sequence[Pod]:
-        ...
-
-    def deployments(self):
-        ...
-
-    def daemon_sets(self):
-        ...
-
-    def statefulsets(self):
-        ...
-
-    def cluster_details(self) -> ClusterDetails:
-        ...

@@ -48,6 +48,7 @@ from cmk.gui.plugins.openapi.restful_objects import (
 from cmk.gui.plugins.openapi.restful_objects.type_defs import DomainObject
 from cmk.gui.plugins.openapi.utils import problem
 from cmk.gui.type_defs import UserRole
+from cmk.gui.utils.roles import get_role_permissions
 from cmk.gui.watolib import userroles
 from cmk.gui.watolib.userroles import RoleID
 
@@ -62,11 +63,19 @@ RW_PERMISSIONS = permissions.AllPerm(
 
 
 def serialize_user_role(user_role: UserRole) -> DomainObject:
+    extns = {
+        "alias": user_role.alias,
+        "builtin": user_role.builtin,
+        "permissions": get_role_permissions().get(user_role.name),
+    }
+    if not user_role.builtin:
+        extns["basedon"] = user_role.basedon
+
     return constructors.domain_object(
         domain_type="user_role",
         identifier=user_role.name,
         title=user_role.alias,
-        extensions=user_role.to_dict(),
+        extensions=extns,
         editable=True,
         deletable=not (user_role.builtin),
     )
@@ -218,6 +227,9 @@ def edit_userrole(params: Mapping[str, Any]) -> Response:
                 detail="You can't edit the basedon value of a builtin role.",
             )
         userrole_to_edit.basedon = basedon
+
+    if new_permissions := body.get("new_permissions"):
+        userroles.update_permissions(userrole_to_edit, new_permissions.items())
 
     userroles.save_updated_role(userrole_to_edit, existing_roleid)
     return constructors.serve_json(data=serialize_user_role(userrole_to_edit))

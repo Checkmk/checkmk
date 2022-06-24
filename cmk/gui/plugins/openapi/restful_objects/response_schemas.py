@@ -751,9 +751,10 @@ class UserCollection(DomainObjectCollection):
 
 class UserRoleAttributes(BaseSchema):
     alias = fields.String(required=True, description="The alias of the user role.")
-    permissions = fields.Dict(
+    permissions = fields.List(
+        fields.String(),
         required=True,
-        description="A dictionary of permissions for the user role. ",
+        description="A list of permissions for the user role. ",
     )
     builtin = fields.Boolean(
         required=True,

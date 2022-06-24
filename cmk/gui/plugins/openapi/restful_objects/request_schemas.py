@@ -25,6 +25,7 @@ from cmk.gui.livestatus_utils.commands.downtimes import (
     schedule_service_downtime,
     schedule_servicegroup_service_downtime,
 )
+from cmk.gui.permissions import permission_registry
 from cmk.gui.plugins.openapi.utils import param_description
 from cmk.gui.userdb import load_users
 from cmk.gui.watolib import userroles
@@ -2117,6 +2118,26 @@ class CreateUserRole(BaseSchema):
     )
 
 
+class PermissionField(fields.String):
+    default_error_messages = {
+        "invalid_permission": "The specified permission name doesn't exist: {value!r}",
+    }
+
+    def __init__(self, required=True, validate=None, **kwargs) -> None:
+        super().__init__(
+            example="general.edit_profile",
+            description="The name of a permission",
+            required=required,
+            validate=validate,
+            **kwargs,
+        )
+
+    def _validate(self, value) -> None:
+        super()._validate(value)
+        if value not in permission_registry:
+            raise self.make_error("invalid_permission", value=value)
+
+
 class EditUserRole(BaseSchema):
     new_role_id = UserRoleID(
         required=False,
@@ -2135,4 +2156,14 @@ class EditUserRole(BaseSchema):
         example="guest",
         presence="should_exist",
         userrole_type="should_be_builtin",
+    )
+    new_permissions = fields.Dict(
+        keys=PermissionField(),
+        values=fields.String(required=True, enum=["yes", "no", "default"]),
+        required=False,
+        example={"general.edit_profile": "yes", "general.message": "no"},
+        description="A map of permission names to their state.  The following values can be set: "
+        "'yes' - the permission is active for this role."
+        "'no' - the permission is deactivated for this role, even if it was active in the role it was based on."
+        "'default' - takes the activation state from the role this role was based on. ",
     )

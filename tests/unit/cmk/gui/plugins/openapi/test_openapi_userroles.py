@@ -116,28 +116,50 @@ def test_edit_cloned_userrole_with_valid_data(
         content_type="application/json",
     )
 
-    resp = aut_user_auth_wsgi_app.put(
+    put = partial(
+        aut_user_auth_wsgi_app.put,
         object_base + "adminx",
         status=200,
-        params=json.dumps(
-            {
-                "new_role_id": "sam",
-                "new_basedon": "user",
-                "new_alias": "yonsemite sam",
-            }
-        ),
         headers={"Accept": "application/json"},
         content_type="application/json",
     )
 
-    # Verify the id has changed
-    assert resp.json["id"] == "sam"
-
-    # Verify basedon has changed
+    # Verify basedon can be changed
+    resp = put(params=json.dumps({"new_basedon": "user"}))
     assert resp.json["extensions"]["basedon"] == "user"
 
-    # Verify alias has changed
+    # Verify alias can be changed
+    resp = put(params=json.dumps({"new_alias": "yonsemite sam"}))
     assert resp.json["extensions"]["alias"] == "yonsemite sam"
+
+    # Verify permissions can be changed - Change to opposite
+    resp = put(
+        params=json.dumps(
+            {"new_permissions": {"general.server_side_requests": "yes", "general.use": "no"}}
+        )
+    )
+
+    assert "general.server_side_requests" in resp.json["extensions"]["permissions"]
+    assert "general.use" not in resp.json["extensions"]["permissions"]
+
+    # Verify permissions can be changed to default
+    resp = put(
+        params=json.dumps(
+            {
+                "new_permissions": {
+                    "general.server_side_requests": "default",
+                    "general.use": "default",
+                }
+            }
+        )
+    )
+
+    assert "general.server_side_requests" not in resp.json["extensions"]["permissions"]
+    assert "general.use" in resp.json["extensions"]["permissions"]
+
+    # Verify the id can be changed
+    resp = put(params=json.dumps({"new_role_id": "sam"}))
+    assert resp.json["id"] == "sam"
 
 
 def test_edit_cloned_userrole_with_invalid_data(
@@ -168,6 +190,9 @@ def test_edit_cloned_userrole_with_invalid_data(
     # alias already exists
     put(params=json.dumps({"new_alias": "Administrator"}))
 
+    # permissions don't exist
+    put(params=json.dumps({"new_permissions": ["permission_a", "permission_b"]}))
+
 
 def test_edit_builtin_userrole(object_base: str, aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     put = partial(
@@ -189,3 +214,44 @@ def test_edit_builtin_userrole(object_base: str, aut_user_auth_wsgi_app: WebTest
 
     # Verify alias has changed
     assert resp.json["extensions"]["alias"] == "something_else"
+
+
+def test_permission_change_when_builtin_changes(
+    object_base: str, collection_base: str, aut_user_auth_wsgi_app: WebTestAppForCMK
+) -> None:
+    get = partial(
+        aut_user_auth_wsgi_app.get,
+        status=200,
+        headers={"Accept": "application/json"},
+    )
+
+    admin_permissions = set(get(url=object_base + "admin").json["extensions"]["permissions"])
+    guest_permissions = set(get(url=object_base + "guest").json["extensions"]["permissions"])
+    user_permissions = set(get(url=object_base + "user").json["extensions"]["permissions"])
+
+    resp = aut_user_auth_wsgi_app.post(
+        collection_base,
+        status=200,
+        params=json.dumps({"role_id": "admin"}),
+        headers={"Accept": "application/json"},
+        content_type="application/json",
+    )
+
+    # Cloned user should have admin permissions.
+    assert set(resp.json["extensions"]["permissions"]) == admin_permissions
+
+    put = partial(
+        aut_user_auth_wsgi_app.put,
+        object_base + "adminx",
+        status=200,
+        headers={"Accept": "application/json"},
+        content_type="application/json",
+    )
+
+    # Change basedon to guest and check permissions match a guest's permissions
+    resp = put(params=json.dumps({"new_basedon": "guest"}))
+    assert set(resp.json["extensions"]["permissions"]) == guest_permissions
+
+    # Change basedon to user and check permissions match a user's permissions
+    resp = put(params=json.dumps({"new_basedon": "user"}))
+    assert set(resp.json["extensions"]["permissions"]) == user_permissions

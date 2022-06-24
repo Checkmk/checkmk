@@ -41,11 +41,19 @@ function bi_update_tree(container) {
 
     // First find enclosding <div class=bi_tree_container>
     var bi_container = container;
-    while (bi_container && !utils.has_class(bi_container, "bi_tree_container")) {
+    while (
+        bi_container &&
+        !utils.has_class(bi_container, "bi_tree_container")
+    ) {
         bi_container = bi_container.parentNode;
     }
 
-    ajax.post_url("bi_render_tree.py", bi_container.id, bi_update_tree_response, bi_container);
+    ajax.post_url(
+        "bi_render_tree.py",
+        bi_container.id,
+        bi_update_tree_response,
+        bi_container
+    );
 }
 
 function bi_update_tree_response(bi_container, code) {
@@ -123,30 +131,43 @@ export function toggle_assumption(link, site, host, service) {
 }
 
 export function update_argument_hints() {
-    d3.selectAll("select[onchange='cmk.bi.update_argument_hints();']").each((d, idx, nodes) => {
-        let node = d3.select(nodes[idx]);
-        let rule_arguments = window["bi_rule_argument_lookup"][node.property("value")];
-        let rule_body = node.select(function () {
-            return this.closest("tbody");
-        });
-        let required_inputs = rule_arguments.length;
+    d3.selectAll("select[onchange='cmk.bi.update_argument_hints();']").each(
+        (d, idx, nodes) => {
+            let node = d3.select(nodes[idx]);
+            let rule_arguments =
+                window["bi_rule_argument_lookup"][node.property("value")];
+            let rule_body = node.select(function () {
+                return this.closest("tbody");
+            });
+            let required_inputs = rule_arguments.length;
 
-        // Create nodes
-        nodes = rule_body.selectAll("div.listofstrings").selectAll("input.text").nodes();
-        while (required_inputs >= nodes.length) {
-            valuespecs.list_of_strings_add_new_field(nodes[nodes.length - 1]);
-            nodes = rule_body.selectAll("div.listofstrings").selectAll("input.text").nodes();
+            // Create nodes
+            nodes = rule_body
+                .selectAll("div.listofstrings")
+                .selectAll("input.text")
+                .nodes();
+            while (required_inputs >= nodes.length) {
+                valuespecs.list_of_strings_add_new_field(
+                    nodes[nodes.length - 1]
+                );
+                nodes = rule_body
+                    .selectAll("div.listofstrings")
+                    .selectAll("input.text")
+                    .nodes();
+            }
+
+            // Update placeholder
+            let input_nodes = rule_body
+                .selectAll("div.listofstrings")
+                .selectAll("input.text");
+            input_nodes.attr("placeholder", "");
+            input_nodes.each((d, idx, nodes) => {
+                if (idx >= rule_arguments.length) return;
+                let argument_input = d3.select(nodes[idx]);
+                argument_input.attr("placeholder", rule_arguments[idx]);
+            });
         }
-
-        // Update placeholder
-        let input_nodes = rule_body.selectAll("div.listofstrings").selectAll("input.text");
-        input_nodes.attr("placeholder", "");
-        input_nodes.each((d, idx, nodes) => {
-            if (idx >= rule_arguments.length) return;
-            let argument_input = d3.select(nodes[idx]);
-            argument_input.attr("placeholder", rule_arguments[idx]);
-        });
-    });
+    );
 }
 
 export class BIPreview {
@@ -167,12 +188,9 @@ export class BIPreview {
         setInterval(() => this._check_update(), this._update_interval);
     }
 
-    _create_search_preview() {
-    }
+    _create_search_preview() {}
 
-
-    _check_update() {
-    }
+    _check_update() {}
 
     _get_update_url() {
         return encodeURI("ajax_bi_node_preview.py");
@@ -234,7 +252,10 @@ export class BIPreview {
             .selectAll("th")
             .data(d => d)
             .join(enter =>
-                enter.append("th").classed("search_preview", true).style("text-align", "left")
+                enter
+                    .append("th")
+                    .classed("search_preview", true)
+                    .style("text-align", "left")
             )
             .text(d => d);
 
@@ -248,7 +269,12 @@ export class BIPreview {
                 });
                 return cells;
             })
-            .join(enter => enter.append("td").style("padding", "5px").style("text-align", "left"))
+            .join(enter =>
+                enter
+                    .append("td")
+                    .style("padding", "5px")
+                    .style("text-align", "left")
+            )
             .text(d => d);
     }
 
@@ -284,7 +310,9 @@ export class BIRulePreview extends BIPreview {
         }
 
         let params = this._determine_params();
-        params["example_arguments"] = JSON.stringify(this._get_example_arguments());
+        params["example_arguments"] = JSON.stringify(
+            this._get_example_arguments()
+        );
         this._trigger_update_if_required(params);
     }
 
@@ -305,7 +333,9 @@ export class BIRulePreview extends BIPreview {
 
     _update_previews(json_data) {
         this._update_simulated_parameters(json_data.result.params);
-        let nodes = d3.selectAll("#rule_p_nodes_container > tr").data(json_data.result.data);
+        let nodes = d3
+            .selectAll("#rule_p_nodes_container > tr")
+            .data(json_data.result.data);
         nodes
             .selectAll("td.search_preview")
             .data(d => [d])
@@ -318,13 +348,19 @@ export class BIRulePreview extends BIPreview {
             )
 
             .each((rows, idx, nodes) => {
-                this._update_preview(rows, json_data.result.title, d3.select(nodes[idx]));
+                this._update_preview(
+                    rows,
+                    json_data.result.title,
+                    d3.select(nodes[idx])
+                );
             });
         BIPreview.prototype._update_previews.call(this, json_data);
     }
 
     _update_simulated_parameters(params) {
-        let example_arguments = this._root_node.select("form > table:nth-child(2n) tbody tr td");
+        let example_arguments = this._root_node.select(
+            "form > table:nth-child(2n) tbody tr td"
+        );
         example_arguments.style("text-align", "right");
         example_arguments
             .select("span.title")
@@ -341,7 +377,9 @@ export class BIRulePreview extends BIPreview {
     }
 
     _create_search_preview() {
-        let example_arguments = this._root_node.select("form > table:nth-child(2n) tbody tr td");
+        let example_arguments = this._root_node.select(
+            "form > table:nth-child(2n) tbody tr td"
+        );
         example_arguments.style("text-align", "right");
         example_arguments
             .selectAll("span")
@@ -360,7 +398,10 @@ export class BIRulePreview extends BIPreview {
                     .attr("value", "Toggle Search Preview")
                     .on("click", (d, idx, nodes) => {
                         this._preview_active = !this._preview_active;
-                        d3.select(nodes[idx]).classed("active", this._preview_active);
+                        d3.select(nodes[idx]).classed(
+                            "active",
+                            this._preview_active
+                        );
                         d3.selectAll("div.preview").style(
                             "display",
                             this._preview_active ? "block" : "none"
@@ -389,7 +430,11 @@ export class BIAggregationPreview extends BIPreview {
     }
 
     _update_previews(json_data) {
-        this._update_preview(json_data.result.data[0], json_data.result.title, this._preview_box);
+        this._update_preview(
+            json_data.result.data[0],
+            json_data.result.title,
+            this._preview_box
+        );
         BIPreview.prototype._update_previews.call(this, json_data);
     }
 
@@ -400,7 +445,9 @@ export class BIAggregationPreview extends BIPreview {
             .selectAll("td.search_preview")
             .data([null])
             .join("td");
-        this._preview_box.style("text-align", "right").style("vertical-align", "top");
+        this._preview_box
+            .style("text-align", "right")
+            .style("vertical-align", "top");
         this._preview_box
             .selectAll("span")
             .data(["button"])
@@ -418,7 +465,10 @@ export class BIAggregationPreview extends BIPreview {
                     .attr("value", "Toggle Search Preview")
                     .on("click", (d, idx, nodes) => {
                         this._preview_active = !this._preview_active;
-                        d3.select(nodes[idx]).classed("active", this._preview_active);
+                        d3.select(nodes[idx]).classed(
+                            "active",
+                            this._preview_active
+                        );
                         d3.selectAll("div.preview").style(
                             "display",
                             this._preview_active ? "block" : "none"

@@ -163,6 +163,10 @@ REMOVED_CHECK_PLUGIN_MAP = {
     CheckPluginName("ovs_bonding"): CheckPluginName("bonding"),
     CheckPluginName("lnx_bonding"): CheckPluginName("bonding"),
     CheckPluginName("windows_os_bonding"): CheckPluginName("bonding"),
+    CheckPluginName("fjdarye100_cadaps"): CheckPluginName("fjdarye_channel_adapters"),
+    CheckPluginName("fjdarye101_cadaps"): CheckPluginName("fjdarye_channel_adapters"),
+    CheckPluginName("fjdarye500_cadaps"): CheckPluginName("fjdarye_channel_adapters"),
+    CheckPluginName("fjdarye60_cadaps"): CheckPluginName("fjdarye_channel_adapters"),
 }
 
 # List[(old_config_name, new_config_name, replacement_dict{old: new})]

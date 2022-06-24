@@ -171,11 +171,17 @@ impl Pairing for Api {
         csr: String,
         credentials: &types::Credentials,
     ) -> AnyhowResult<PairingResponse> {
-        let response = certs::client(root_cert, None, self.use_proxy)?
-            .post(Self::endpoint_url(base_url, &["pairing"])?)
-            .basic_auth(&credentials.username, Some(&credentials.password))
-            .json(&PairingBody { csr })
-            .send()?;
+        let response = certs::client(
+            root_cert.map(|r| certs::HandshakeCredentials {
+                server_root_cert: r,
+                client_identity: None,
+            }),
+            self.use_proxy,
+        )?
+        .post(Self::endpoint_url(base_url, &["pairing"])?)
+        .basic_auth(&credentials.username, Some(&credentials.password))
+        .json(&PairingBody { csr })
+        .send()?;
         let status = response.status();
 
         if status == StatusCode::OK {
@@ -201,14 +207,20 @@ impl Registration for Api {
         host_name: &str,
     ) -> AnyhowResult<()> {
         Api::check_response_204(
-            certs::client(Some(root_cert), None, self.use_proxy)?
-                .post(Self::endpoint_url(base_url, &["register_with_hostname"])?)
-                .basic_auth(&credentials.username, Some(&credentials.password))
-                .json(&RegistrationWithHNBody {
-                    uuid: uuid.to_owned(),
-                    host_name: String::from(host_name),
-                })
-                .send()?,
+            certs::client(
+                Some(certs::HandshakeCredentials {
+                    server_root_cert: root_cert,
+                    client_identity: None,
+                }),
+                self.use_proxy,
+            )?
+            .post(Self::endpoint_url(base_url, &["register_with_hostname"])?)
+            .basic_auth(&credentials.username, Some(&credentials.password))
+            .json(&RegistrationWithHNBody {
+                uuid: uuid.to_owned(),
+                host_name: String::from(host_name),
+            })
+            .send()?,
         )
     }
 
@@ -221,14 +233,20 @@ impl Registration for Api {
         agent_labels: &types::AgentLabels,
     ) -> AnyhowResult<()> {
         Api::check_response_204(
-            certs::client(Some(root_cert), None, self.use_proxy)?
-                .post(Self::endpoint_url(base_url, &["register_with_labels"])?)
-                .basic_auth(&credentials.username, Some(&credentials.password))
-                .json(&RegistrationWithALBody {
-                    uuid: uuid.to_owned(),
-                    agent_labels: agent_labels.clone(),
-                })
-                .send()?,
+            certs::client(
+                Some(certs::HandshakeCredentials {
+                    server_root_cert: root_cert,
+                    client_identity: None,
+                }),
+                self.use_proxy,
+            )?
+            .post(Self::endpoint_url(base_url, &["register_with_labels"])?)
+            .basic_auth(&credentials.username, Some(&credentials.password))
+            .json(&RegistrationWithALBody {
+                uuid: uuid.to_owned(),
+                agent_labels: agent_labels.clone(),
+            })
+            .send()?,
         )
     }
 }
@@ -243,8 +261,7 @@ impl AgentData for Api {
     ) -> AnyhowResult<()> {
         Api::check_response_204(
             certs::client(
-                Some(&connection.root_cert),
-                Some(connection.identity()?),
+                Some(connection.tls_handshake_credentials()?),
                 self.use_proxy,
             )?
             .post(Self::endpoint_url(
@@ -272,16 +289,15 @@ impl Status for Api {
         base_url: &reqwest::Url,
         connection: &config::Connection,
     ) -> AnyhowResult<StatusResponse> {
-        let identity = match connection.identity() {
-            Ok(ident) => ident,
-            _ => bail!("Error loading client certificate"),
-        };
-        let response = certs::client(Some(&connection.root_cert), Some(identity), self.use_proxy)?
-            .get(Self::endpoint_url(
-                base_url,
-                &["registration_status", &connection.uuid.to_string()],
-            )?)
-            .send()?;
+        let response = certs::client(
+            Some(connection.tls_handshake_credentials()?),
+            self.use_proxy,
+        )?
+        .get(Self::endpoint_url(
+            base_url,
+            &["registration_status", &connection.uuid.to_string()],
+        )?)
+        .send()?;
 
         match response.status() {
             StatusCode::OK => {

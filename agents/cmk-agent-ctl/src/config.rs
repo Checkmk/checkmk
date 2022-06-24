@@ -2,7 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use super::{cli, constants, setup, site_spec, types};
+use super::{certs, cli, constants, setup, site_spec, types};
 use anyhow::{anyhow, Context, Result as AnyhowResult};
 use serde::de::DeserializeOwned;
 use serde::Deserialize;
@@ -286,7 +286,14 @@ impl std::borrow::Borrow<uuid::Uuid> for Connection {
 }
 
 impl Connection {
-    pub fn identity(&self) -> AnyhowResult<reqwest::tls::Identity> {
+    pub fn tls_handshake_credentials(&self) -> AnyhowResult<certs::HandshakeCredentials> {
+        Ok(certs::HandshakeCredentials {
+            server_root_cert: &self.root_cert,
+            client_identity: Some(self.identity()?),
+        })
+    }
+
+    fn identity(&self) -> AnyhowResult<reqwest::tls::Identity> {
         let private_key = openssl::pkey::PKey::private_key_from_pem(self.private_key.as_bytes())?;
         let client_certificate = openssl::x509::X509::from_pem(self.certificate.as_bytes())?;
 

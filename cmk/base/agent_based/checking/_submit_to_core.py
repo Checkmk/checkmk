@@ -7,11 +7,10 @@
 from __future__ import annotations
 
 import abc
-import errno
 import os
 import time
 from random import Random
-from typing import IO, Iterable, Literal, Optional, Tuple
+from typing import IO, Iterable, Literal, Optional
 
 import cmk.utils.paths
 import cmk.utils.tty as tty
@@ -267,40 +266,37 @@ _checkresult_file_path = None
 
 
 def _open_checkresult_file() -> None:
-    global _checkresult_file_fd
-    global _checkresult_file_path
-    if _checkresult_file_fd is None:
-        try:
-            _checkresult_file_fd, _checkresult_file_path = _create_nagios_check_result_file()
-        except Exception as e:
-            raise MKGeneralException(
-                "Cannot create check result file in %s: %s" % (cmk.utils.paths.check_result_path, e)
-            )
-
-
-def _create_nagios_check_result_file() -> Tuple[int, str]:
     """Create some temporary file for storing the checkresults.
     Nagios expects a seven character long file starting with "c". Since Python3 we can not
     use tempfile.mkstemp anymore since it produces file names with 9 characters length.
 
     Logic is similar to tempfile.mkstemp, but simplified. No prefix/suffix/thread-safety
     """
+    global _checkresult_file_fd
+    global _checkresult_file_path
+    if _checkresult_file_fd is not None:
+        return
 
     base_dir = cmk.utils.paths.check_result_path
 
     flags = os.O_RDWR | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW
 
     names = _get_candidate_names()
-    for _seq in range(os.TMP_MAX):
-        name = next(names)
+    for name, _seq in zip(names, range(os.TMP_MAX)):
         filepath = os.path.join(base_dir, "c" + name)
         try:
-            fd = os.open(filepath, flags, 0o600)
+            _checkresult_file_fd = os.open(filepath, flags, 0o600)
         except FileExistsError:
             continue  # try again
-        return (fd, os.path.abspath(filepath))
+        except Exception as e:
+            raise MKGeneralException(f"Cannot create check result file in {base_dir}: {e!r}")
 
-    raise FileExistsError(errno.EEXIST, "No usable temporary file name found")
+        _checkresult_file_path = os.path.abspath(filepath)
+        return
+
+    raise MKGeneralException(
+        f"Cannot create check result file in {base_dir}: No usable temporary file name found"
+    )
 
 
 # TODO: existence of this means the submit-functions ought to be ctxt-mngr.

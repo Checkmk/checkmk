@@ -6,6 +6,7 @@
 
 import json
 
+from kubernetes import client  # type: ignore[import]
 from mocket import Mocketizer  # type: ignore[import]
 from mocket.mockhttp import Entry  # type: ignore[import]
 
@@ -14,7 +15,7 @@ from cmk.special_agents.utils_kubernetes.transform import parse_daemonset_status
 
 
 class TestAPIDaemonSets:
-    def test_parse_metadata(self, apps_client, dummy_host) -> None:  # type:ignore[no-untyped-def]
+    def test_parse_metadata(self, apps_client: client.AppsV1Api, dummy_host: str) -> None:
         daemon_sets_metadata = {
             "items": [
                 {
@@ -50,8 +51,8 @@ class TestAPIDaemonSets:
         assert metadata.labels
         assert metadata.annotations == {"deprecated.daemonset.template.generation": "1"}
 
-    def test_parse_metadata_missing_annotations_and_labels(  # type:ignore[no-untyped-def]
-        self, apps_client, dummy_host
+    def test_parse_metadata_missing_annotations_and_labels(
+        self, apps_client: client.AppsV1Api, dummy_host: str
     ) -> None:
         daemon_sets_metadata = {
             "items": [
@@ -80,8 +81,8 @@ class TestAPIDaemonSets:
         assert metadata.labels == {}
         assert metadata.annotations == {}
 
-    def test_parse_status_failed_creation(  # type:ignore[no-untyped-def]
-        self, apps_client, dummy_host
+    def test_parse_status_failed_creation(
+        self, apps_client: client.AppsV1Api, dummy_host: str
     ) -> None:
         daemon_sets_data = {
             "items": [
@@ -113,8 +114,8 @@ class TestAPIDaemonSets:
         assert status.desired_number_scheduled == 2
         assert status.updated_number_scheduled == 1
 
-    def test_parse_status_no_matching_node(  # type:ignore[no-untyped-def]
-        self, apps_client, dummy_host
+    def test_parse_status_no_matching_node(
+        self, apps_client: client.AppsV1Api, dummy_host: str
     ) -> None:
         """
 

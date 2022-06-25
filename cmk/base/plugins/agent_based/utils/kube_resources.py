@@ -253,7 +253,7 @@ def check_resource_quota_resource(
     hard_requirement: Optional[HardResourceRequirement],
     resource_type: ResourceType,
     render_func: Callable[[float], str],
-):
+) -> CheckResult:
     """Check result for resource quota usage & requirement
 
     While the general picture is similar to check_resource, there is one key difference:

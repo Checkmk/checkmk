@@ -32,6 +32,7 @@ from typing import (
     Collection,
     DefaultDict,
     Dict,
+    Iterable,
     Iterator,
     List,
     Literal,
@@ -398,7 +399,7 @@ class Pod:
     def lifecycle_phase(self) -> section.PodLifeCycle:
         return section.PodLifeCycle(phase=self.phase)
 
-    def name(self, prepend_namespace=False) -> str:
+    def name(self, prepend_namespace: bool = False) -> str:
         if not prepend_namespace:
             return self.metadata.name
 
@@ -943,7 +944,9 @@ class Cluster:
         _pod_owners_mapping: Dict[str, List[PodOwner]] = {}
         _nodes: Dict[api.NodeName, Node] = {}
 
-        def _register_owner_for_pods(pod_controller: PodOwner, pod_uids: Sequence[api.PodUID]):
+        def _register_owner_for_pods(
+            pod_controller: PodOwner, pod_uids: Sequence[api.PodUID]
+        ) -> None:
             for pod_uid in pod_uids:
                 _pod_owners_mapping.setdefault(pod_uid, []).append(pod_controller)
 
@@ -1201,7 +1204,7 @@ def namespace_info(
     namespace: api.Namespace,
     cluster_name: str,
     annotation_key_pattern: AnnotationOption,
-):
+) -> section.NamespaceInfo:
     return section.NamespaceInfo(
         name=namespace_name(namespace),
         creation_timestamp=namespace.metadata.creation_timestamp,
@@ -1466,7 +1469,7 @@ def write_namespaces_api_sections(
     api_resource_quotas: Sequence[api.ResourceQuota],
     api_pods: Sequence[api.Pod],
     piggyback_formatter: ObjectSpecificPBFormatter,
-):
+) -> None:
     def output_namespace_sections(
         namespace: api.Namespace, namespaced_api_pods: Sequence[api.Pod]
     ) -> None:
@@ -1654,7 +1657,7 @@ def pod_api_based_checkmk_sections(
     cluster_name: str,
     annotation_key_pattern: AnnotationOption,
     pod: Pod,
-):
+) -> Iterable[tuple[str, BaseModel | None]]:  # TODO: improve this type
     sections = (
         ("kube_pod_conditions_v1", pod.conditions),
         ("kube_pod_containers_v1", pod.container_statuses),
@@ -1710,7 +1713,7 @@ def filter_outdated_and_non_monitored_pods(
     return current_pods
 
 
-def _write_object_sections(containers: Collection[PerformanceContainer]):
+def _write_object_sections(containers: Collection[PerformanceContainer]) -> None:
     # Memory section
     with SectionWriter("kube_performance_memory_v1") as writer:
         section_json = section.PerformanceUsage(
@@ -1763,7 +1766,7 @@ def write_kube_object_performance_section(
     kube_obj: Union[Node, Deployment, DaemonSet, StatefulSet],
     performance_pods: Mapping[PodLookupName, PerformancePod],
     piggyback_name: str,
-):
+) -> None:
     """Write Node, Deployment, DaemonSet, StatefulSet sections based on collected performance metrics"""
 
     if not (pods := kube_obj.pods(phase=api.Phase.RUNNING)):
@@ -1855,7 +1858,7 @@ def resource_quota_performance_sections(
 
 def write_kube_object_performance_section_cluster(
     cluster: Cluster, performance_pods: Mapping[PodLookupName, PerformancePod]
-):
+) -> None:
     """Write Cluster sections based on collected performance metrics"""
 
     if not (
@@ -2055,7 +2058,8 @@ def determine_rate_metrics(
 
 
 def container_available_rate_metrics(
-    counter_metrics, old_counter_metrics
+    counter_metrics: Mapping[MetricName, CounterMetric],
+    old_counter_metrics: Mapping[MetricName, CounterMetric],
 ) -> Mapping[MetricName, RateMetric]:
     rate_metrics = {}
     for counter_metric in counter_metrics.values():
@@ -2326,7 +2330,7 @@ def write_sections_based_on_performance_pods(
     monitored_namespaces: Set[api.NamespaceName],
     piggyback_formatter: PBFormatter,
     piggyback_formatter_node: ObjectSpecificPBFormatter,
-):
+) -> None:
     # Write performance sections
     if MonitoredObject.pods in monitored_objects:
         LOGGER.info("Write pod sections based on performance data")
@@ -2400,7 +2404,7 @@ def write_sections_based_on_performance_pods(
 
 def _identify_unsupported_node_collector_components(
     nodes: Sequence[section.NodeMetadata], supported_max_major_version: int
-):
+) -> Sequence[str]:
     invalid_nodes = []
     for node in nodes:
         unsupported_components = [
@@ -2443,7 +2447,7 @@ def write_cluster_collector_info_section(
     processing_log: section.CollectorHandlerLog,
     cluster_collector: Optional[section.ClusterCollectorMetadata] = None,
     node_collectors_metadata: Optional[Sequence[section.NodeMetadata]] = None,
-):
+) -> None:
     with SectionWriter("kube_collector_metadata_v1") as writer:
         writer.append(
             section.CollectorComponentsMetadata(
@@ -2466,7 +2470,9 @@ class CollectorHandlingException(Exception):
 
 
 @contextlib.contextmanager
-def collector_exception_handler(logs: List[section.CollectorHandlerLog], debug: bool = False):
+def collector_exception_handler(
+    logs: List[section.CollectorHandlerLog], debug: bool = False
+) -> Iterator:
     try:
         yield
     except CollectorHandlingException as e:

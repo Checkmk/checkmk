@@ -24,7 +24,7 @@ class TestAPICronJob:
         assert metadata.name == "cronjob"
         assert metadata.namespace is not None
 
-    def test_parse_cron_job_spec(self, dummy_host, batch_client) -> None:
+    def test_parse_cron_job_spec(self, dummy_host: str, batch_client: client.BatchV1Api) -> None:
         cron_job_list_with_info = {
             "items": [
                 {

@@ -7,6 +7,7 @@
 import json
 from typing import Mapping
 
+from kubernetes import client  # type: ignore[import]
 from mocket import Mocketizer  # type: ignore[import]
 from mocket.mockhttp import Entry  # type: ignore[import]
 
@@ -15,7 +16,7 @@ from cmk.special_agents.utils_kubernetes.transform import deployment_conditions,
 
 
 class TestAPIDeployments:
-    def test_parse_metadata(self, apps_client, dummy_host) -> None:  # type:ignore[no-untyped-def]
+    def test_parse_metadata(self, apps_client: client.AppsV1Api, dummy_host: str) -> None:
         mocked_deployments = {
             "items": [
                 {
@@ -51,8 +52,8 @@ class TestAPIDeployments:
         assert metadata.labels == {"app": api.Label(name="app", value="cluster-collector")}
         assert metadata.annotations == {"deployment.kubernetes.io/revision": "2"}
 
-    def test_parse_metadata_missing_annotations_and_labels(  # type:ignore[no-untyped-def]
-        self, apps_client, dummy_host
+    def test_parse_metadata_missing_annotations_and_labels(
+        self, apps_client: client.AppsV1Api, dummy_host: str
     ) -> None:
         mocked_deployments = {
             "items": [
@@ -84,7 +85,7 @@ class TestAPIDeployments:
         assert metadata.labels == {}
         assert metadata.annotations == {}
 
-    def test_parse_conditions(self, apps_client, dummy_host) -> None:  # type:ignore[no-untyped-def]
+    def test_parse_conditions(self, apps_client: client.AppsV1Api, dummy_host: str) -> None:
         deployment_with_conditions = {
             "items": [
                 {
@@ -129,8 +130,8 @@ class TestAPIDeployments:
             condition.status == api.ConditionStatus.TRUE for _, condition in conditions.items()
         )
 
-    def test_parse_conditions_no_conditions(  # type:ignore[no-untyped-def]
-        self, apps_client, dummy_host
+    def test_parse_conditions_no_conditions(
+        self, apps_client: client.AppsV1Api, dummy_host: str
     ) -> None:
         """Deployment with empty status.
 

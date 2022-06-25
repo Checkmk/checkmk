@@ -698,7 +698,6 @@ def test_all_check_variables_present(fix_plugin_legacy) -> None:
         "oracle_recovery_area_defaults",
         "oracle_sessions_default_levels",
         "oracle_undostat_defaults",
-        "oxyreduct_tag_map",
         "palo_alto_sessions",
         "pandacom_temp_default_levels",
         "papouch_th2e_sensors_humidity_default_levels",

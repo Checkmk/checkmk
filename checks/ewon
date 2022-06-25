@@ -4,6 +4,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+
+from typing import Any, Final, Iterable, Mapping
+
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+
+CheckResult = Iterable[tuple[int, str]]
+DiscoveryResult = Iterable[tuple[str, Mapping[str, Any]]]
+
+Section = Mapping[str, Mapping[int, float]]
+
 #
 # The ewon2005cd is a vpn that can also be used to expose data from a
 # secondary device via snmp. Unfortunately there is no way to reliably
@@ -23,7 +33,7 @@ ewon_discovery_rules = []
 #    "+" - add the flag to the infotext if it is set but don't derive a state from it
 # Also, we provide the names of flags for proper info texts.
 
-_O2_MINIMUM = {
+_O2_MINIMUM: Final = {
     "name": "O2 minimum",
     "levels": (16, 17, 14, 13),
     "scale": 0.01,
@@ -32,7 +42,7 @@ _O2_MINIMUM = {
     "condition_flag": (1, 15),
 }
 
-_FLAGS_7_9 = {
+_FLAGS_7_9: Final = {
     "flags": "?????000??00000*",
     "flag_names": [
         "",
@@ -54,7 +64,7 @@ _FLAGS_7_9 = {
     ],
 }
 
-oxyreduct_tag_map = {
+_OXYREDUCT_TAG_MAP: Final[Mapping[int, Mapping[str, Any]]] = {
     1: {"name": "alarms", "levels": (1, 2, -1, -1)},
     2: {"name": "incidents", "levels": (1, 2, -1, -1)},
     3: {"name": "shutdown messages", "levels": (1, 2, -1, -1)},
@@ -182,8 +192,8 @@ oxyreduct_tag_map = {
 }
 
 
-def _inventory_oxyreduct_names(parsed):
-    for name, area_info in parsed.items():
+def _discovery_oxyreduct_names(section: Section) -> Iterable[str]:
+    for name, area_info in section.items():
         tagids = area_info
         if min(tagids) < 10:
             yield name
@@ -194,16 +204,17 @@ def _inventory_oxyreduct_names(parsed):
                 yield name
 
 
-def _check_oxyreduct(params, data):
-    def to_binary(number):
-        return "".join(str(1 & int(number) >> i) for i in reversed(range(16)))
+def _to_binary(number: float) -> str:
+    return "".join(str(1 & int(number) >> i) for i in reversed(range(16)))
 
+
+def _check_oxyreduct(params: Mapping[str, Any], data: Mapping[int, float]) -> CheckResult:
     for tagid, value in data.items():
         ref_tagid = tagid
         if ref_tagid > 17:
             ref_tagid = ((ref_tagid - 18) % 8) + 10
 
-        tag_params = oxyreduct_tag_map.get(ref_tagid)
+        tag_params = _OXYREDUCT_TAG_MAP[ref_tagid]
 
         # if it's a measure, check levels
         if "name" in tag_params:
@@ -212,9 +223,12 @@ def _check_oxyreduct(params, data):
                 if not int(data[condition_tagid]) & tag_params["condition_flag"][1]:
                     continue
 
-            value = int(value) * float(tag_params.get("scale", 1.0))
-            levels_name = tag_params.get("levels_name")
-            levels = params[levels_name] if levels_name in params else tag_params.get("levels")
+            value = value * float(tag_params.get("scale", 1.0))
+            try:
+                levels = params[tag_params["levels_name"]]
+            except KeyError:
+                levels = tag_params.get("levels")
+
             yield check_levels(
                 value,
                 tag_params.get("perfvar"),
@@ -225,7 +239,9 @@ def _check_oxyreduct(params, data):
 
         # if it's a bitmask, try to determine if they are good flags
         flags = tag_params.get("flags", [])
-        for name, flag, value_bin in zip(tag_params.get("flag_names", []), flags, to_binary(value)):
+        for name, flag, value_bin in zip(
+            tag_params.get("flag_names", []), flags, _to_binary(value)
+        ):
             state = "active" if value_bin == "1" else "inactive"
 
             if flag in ("1", "0") and flag != value_bin:
@@ -236,50 +252,49 @@ def _check_oxyreduct(params, data):
                 yield 0, "%s" % name
 
 
-def parse_ewon(info):
-    result = {}
-    for tagid, value, name in info:
-        result.setdefault(name, {})[int(tagid)] = value
+def parse_ewon(string_table: StringTable) -> Section:
+    result: dict[str, dict[int, float]] = {}
+    for tagid, value, name in string_table:
+        result.setdefault(name, {})[int(tagid)] = float(value)
     return result
 
 
-def inventory_ewon(parsed):
+def discovery_ewon(section: Section) -> DiscoveryResult:
     params = host_extra_conf_merged(host_name(), ewon_discovery_rules)
     device_name = params.get("device")
-    discovery_params = {"device": device_name}
 
-    yield "eWON Status", discovery_params.copy()
+    yield "eWON Status", {"device": device_name}
 
     if device_name == "oxyreduct":
-        for item in _inventory_oxyreduct_names(parsed):
-            yield item, discovery_params.copy()
+        for item in _discovery_oxyreduct_names(section):
+            yield item, {"device": device_name}
 
 
-def check_ewon(item, params, parsed):
+def check_ewon(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
+    device_name = params["device"]
     if item == "eWON Status":
-        if params["device"] is None:
+        if device_name is None:
             yield 1, "This device requires configuration. Please pick the device type."
         else:
-            yield 0, "Configured for %s" % params["device"]
+            yield 0, f"Configured for {device_name}"
         return
 
-    device_name = params["device"]
     if device_name != "oxyreduct":
         return
 
-    data = parsed.get(item)
-    dev_results = list(_check_oxyreduct(params.get(device_name, {}), data)) if data else []
-    if not dev_results:
-        yield 0, "no messages"
+    data = section.get(item)
+
+    dev_results = list(_check_oxyreduct(params.get(device_name, {}), data)) if data else ()
+    if dev_results:
+        yield from dev_results
         return
 
-    for dev_result in dev_results:
-        yield dev_result
+    yield 0, "No messages"
 
 
 check_info["ewon"] = {
     "check_function": check_ewon,
-    "inventory_function": inventory_ewon,
+    "inventory_function": discovery_ewon,
     "parse_function": parse_ewon,
     "service_description": "%s",
     "has_perfdata": True,

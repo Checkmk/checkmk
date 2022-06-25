@@ -108,7 +108,9 @@ public:
         return data_ / dirs::kPluginConfig;
     }
 
-    [[nodiscard]] inline std::filesystem::path getLog() const { return data_ / dirs::kLog; }
+    [[nodiscard]] inline std::filesystem::path getLog() const {
+        return data_ / dirs::kLog;
+    }
 
     [[nodiscard]] inline std::filesystem::path getBackup() const {
         return data_ / dirs::kBackup;
@@ -122,7 +124,9 @@ public:
         return data_ / dirs::kUpdate;
     }
 
-    [[nodiscard]] inline std::filesystem::path getPublicLogs() const { return public_logs_; }
+    [[nodiscard]] inline std::filesystem::path getPublicLogs() const {
+        return public_logs_;
+    }
     [[nodiscard]] inline std::filesystem::path getPrivateLogs() const {
         return private_logs_;
     }
@@ -171,7 +175,7 @@ class ConfigInfo {
 public:
     struct YamlData {
         YamlData(std::filesystem::path Path,
-                 std::filesystem::file_time_type  /*Timestamp*/) noexcept
+                 std::filesystem::file_time_type /*Timestamp*/) noexcept
             : path_(std::move(Path)) {}
 
         void loadFile() {
@@ -193,7 +197,9 @@ public:
 
         [[nodiscard]] bool exists() const { return exists_; }
         [[nodiscard]] bool bad() const { return bad_; }
-        [[nodiscard]] bool changed() const { return last_loaded_time_ != timestamp_; }
+        [[nodiscard]] bool changed() const {
+            return last_loaded_time_ != timestamp_;
+        }
         [[nodiscard]] const std::string &data() const { return data_; }
         [[nodiscard]] auto timestamp() const { return timestamp_; }
 
@@ -210,7 +216,7 @@ public:
                 timestamp_ = fs::last_write_time(path_, ec);
             } else {
                 timestamp_ = std::filesystem::file_time_type::min();
-}
+            }
         }
 
         // try to load data as yaml
@@ -266,13 +272,14 @@ public:
     // not so heavy operation, use free
     YAML::Node getConfig() const noexcept {
         std::lock_guard lk(lock_);
-        if (ok_) { return yaml_;
-}
+        if (ok_) {
+            return yaml_;
+        }
 
         return {};
     }
 
-    void setConfig(const YAML::Node& yaml) {
+    void setConfig(const YAML::Node &yaml) {
         std::lock_guard lk(lock_);
         if (yaml_.IsDefined()) {
             yaml_ = yaml;
@@ -483,7 +490,7 @@ std::filesystem::path GetDefaultLogPath();
 std::wstring FindMsiExec();
 std::string FindHostName();
 }  // namespace details
-details::ConfigInfo &GetCfg();
+details::ConfigInfo &GetCfg() noexcept;
 }  // namespace cma::cfg
 
 namespace cma::cfg {

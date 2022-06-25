@@ -219,27 +219,30 @@ TEST(WmiProviderTest, WmiConfiguration) {
     }
 }
 
-const std::string_view exch_names[] = {kMsExchActiveSync,     //
-                                       kMsExchAvailability,   //
-                                       kMsExchOwa,            //
-                                       kMsExchAutoDiscovery,  //
-                                       kMsExchIsClientType,   //
-                                       kMsExchIsStore,        //
-                                       kMsExchRpcClientAccess};
+constexpr size_t exch_count{7U};
+constexpr std::array<std::string_view, exch_count> exch_names = {
+    kMsExchActiveSync,     //
+    kMsExchAvailability,   //
+    kMsExchOwa,            //
+    kMsExchAutoDiscovery,  //
+    kMsExchIsClientType,   //
+    kMsExchIsStore,        //
+    kMsExchRpcClientAccess};
+
 TEST(WmiProviderTest, WmiSubSection_Integration) {
     for (auto n : exch_names) {
         SubSection ss(n, SubSection::Type::full);
         auto ret = ss.generateContent(SubSection::Mode::standard);
         EXPECT_TRUE(ret.empty()) << "expected we do not have ms exchange";
-        ret = ss.generateContent(SubSection::Mode::debug_forced);
+        ret = ss.generateContent(SubSection::Mode::forced);
         EXPECT_FALSE(ret.empty());
         EXPECT_NE(ret.find(":sep(124)"), std::string::npos)
             << "bad situation with " << n << "\n";
     }
 
     SubSection ss(kSubSectionSystemPerf, SubSection::Type::sub);
-    auto ret = ss.generateContent(SubSection::Mode::debug_forced);
-    ret = ss.generateContent(SubSection::Mode::debug_forced);
+    auto ret = ss.generateContent(SubSection::Mode::forced);
+    ret = ss.generateContent(SubSection::Mode::forced);
     auto table = cma::tools::SplitString(ret, "\n");
     ASSERT_EQ(table.size(), 3);
     EXPECT_FALSE(table[0].empty());
@@ -259,36 +262,50 @@ TEST(WmiProviderTest, WmiSubSection_Integration) {
               std::string{"["} + std::string{kSubSectionSystemPerf} + "]");
 }
 
-TEST(WmiProviderTest, SubSectionSimulateExchange_Integration) {
-    Wmi msexch(kMsExch, wmi::kSepChar);
-    msexch.generateContent(kMsExch, true);
-    auto ret = msexch.generateContent(kMsExch, true);
-    EXPECT_TRUE(ret.empty()) << "expected we do not have ms exchange";
-    msexch.subsection_mode_ = SubSection::Mode::debug_forced;
-    ret = msexch.generateContent(kMsExch, true);
-    EXPECT_FALSE(ret.empty());
-    auto table = cma::tools::SplitString(ret, "\n");
-    EXPECT_EQ(table.size(), 7);
-    const int count = 7;
-    for (int k = 0; k < count; ++k) {
-        auto expected = fmt::format("<<<{}:sep({})>>>", exch_names[k],
-                                    static_cast<uint32_t>(wmi::kSepChar));
+TEST(WmiProviderTest, SubSectionMsExchIntegration) {
+    auto temp_fs = tst::TempCfgFs::CreateNoIo();
+    EXPECT_TRUE(
+        temp_fs->loadContent("global:\n"
+                             "  enabled: yes\n"
+                             "  sections:\n"
+                             "  - msexch\n"));
+    Wmi msexch_production(kMsExch, wmi::kSepChar);
+    EXPECT_TRUE(msexch_production.generateContent(kMsExch, true).empty())
+        << "expected we do not have ms exchange";
+
+    Wmi msexch_forced(kMsExch, wmi::kSepChar, SubSection::Mode::forced);
+    const auto ret = msexch_forced.generateContent(kMsExch, true);
+    const auto table = tools::SplitString(ret, "\n");
+    EXPECT_EQ(table.size(), exch_count);
+    for (size_t k = 0; k < exch_count; ++k) {
+        const auto expected = fmt::format("<<<{}:sep({})>>>", exch_names[k],
+                                          static_cast<uint32_t>(wmi::kSepChar));
         EXPECT_EQ(table[k], expected);
     }
 }
 
 TEST(WmiProviderTest, SimulationIntegration) {
-    std::wstring sep(wmi::kSepString);
-    std::string sep_ascii = wtools::ToUtf8(sep);
+    auto temp_fs = tst::TempCfgFs::CreateNoIo();
+    EXPECT_TRUE(
+        temp_fs->loadContent("global:\n"
+                             "  enabled: yes\n"
+                             "  sections:\n"
+                             "  - msexch\n"
+                             "  - dotnet_clrmemory\n"
+                             "  - wmi_webservices\n"
+                             "  - wmi_cpuload\n"
+                             "  - bad_wmi"));
+    constexpr std::wstring_view sep(wmi::kSepString);
+    const std::string sep_ascii{wtools::ToUtf8(sep)};
     {
-        auto [r, status] =
+        const auto &[r, status] =
             GenerateWmiTable(kWmiPathStd, L"Win32_ComputerSystem", {}, sep);
         EXPECT_EQ(status, wtools::WmiStatus::ok);
         EXPECT_TRUE(!r.empty());
     }
 
     {
-        auto [r, status] =
+        const auto &[r, status] =
             GenerateWmiTable(L"", L"Win32_ComputerSystemZ", {}, sep);
         EXPECT_EQ(status, wtools::WmiStatus::bad_param)
             << "should be ok, invalid name means NOTHING";
@@ -296,7 +313,7 @@ TEST(WmiProviderTest, SimulationIntegration) {
     }
 
     {
-        auto [r, status] =
+        const auto &[r, status] =
             GenerateWmiTable(kWmiPathStd, L"Win32_ComputerSystemZ", {}, sep);
         EXPECT_EQ(status, wtools::WmiStatus::error)
             << "should be ok, invalid name means NOTHING";
@@ -304,27 +321,27 @@ TEST(WmiProviderTest, SimulationIntegration) {
     }
 
     {
-        auto [r, status] = GenerateWmiTable(std::wstring(kWmiPathStd) + L"A",
-                                            L"Win32_ComputerSystem", {}, sep);
+        const auto &[r, status] = GenerateWmiTable(
+            std::wstring(kWmiPathStd) + L"A", L"Win32_ComputerSystem", {}, sep);
         EXPECT_EQ(status, wtools::WmiStatus::fail_connect);
         EXPECT_TRUE(r.empty());
     }
 
     {
         Wmi dotnet_clr(kDotNetClrMemory, wmi::kSepChar);
-        EXPECT_EQ(dotnet_clr.subsection_mode_, SubSection::Mode::standard);
-        EXPECT_EQ(dotnet_clr.delay_on_fail_, cma::cfg::G_DefaultDelayOnFail);
+        EXPECT_EQ(dotnet_clr.subsectionMode(), SubSection::Mode::standard);
+        EXPECT_EQ(dotnet_clr.delayOnFail(), cma::cfg::G_DefaultDelayOnFail);
         EXPECT_EQ(dotnet_clr.object(),
                   L"Win32_PerfRawData_NETFramework_NETCLRMemory");
         EXPECT_TRUE(dotnet_clr.isAllowedByCurrentConfig());
         EXPECT_TRUE(dotnet_clr.isAllowedByTime());
-        EXPECT_EQ(dotnet_clr.delay_on_fail_, 3600s);
+        EXPECT_EQ(dotnet_clr.delayOnFail(), 3600s);
 
         EXPECT_EQ(dotnet_clr.nameSpace(), L"Root\\Cimv2");
         std::string body;
         bool damned_windows = true;
         for (int i = 0; i < 5; i++) {
-            body = dotnet_clr.makeBody();
+            body = dotnet_clr.generateContent();
             if (!body.empty()) {
                 damned_windows = false;
                 break;
@@ -334,6 +351,7 @@ TEST(WmiProviderTest, SimulationIntegration) {
             << "please, run start_wmi.cmd\n 1 bad output from wmi:\n"
             << body << "\n";  // more than 1 line should be present;
         auto table = cma::tools::SplitString(body, "\n");
+        table.erase(table.begin());
         ASSERT_GT(table.size(), (size_t)(1))
             << "2 bad output from wmi:\n"
             << body << "\n";  // more than 1 line should be present
@@ -348,25 +366,25 @@ TEST(WmiProviderTest, SimulationIntegration) {
     }
 
     {
-        using namespace std::chrono;
         Wmi bad_wmi(kBadWmi, wmi::kSepChar);
         EXPECT_EQ(bad_wmi.object(), L"BadSensor");
         EXPECT_EQ(bad_wmi.nameSpace(), L"Root\\BadWmiPath");
 
-        auto body = bad_wmi.makeBody();
-        auto tp_expected = steady_clock::now() + cma::cfg::G_DefaultDelayOnFail;
+        auto body = bad_wmi.generateContent();
+        auto tp_expected =
+            std::chrono::steady_clock::now() + cma::cfg::G_DefaultDelayOnFail;
         EXPECT_FALSE(bad_wmi.isAllowedByTime())
             << "bad wmi must failed and wait";
-        auto tp_low = bad_wmi.allowed_from_time_ - 50s;
-        auto tp_high = bad_wmi.allowed_from_time_ + 50s;
+        auto tp_low = bad_wmi.isAllowedFromTime() - 50s;
+        auto tp_high = bad_wmi.isAllowedFromTime() + 50s;
         EXPECT_TRUE(tp_expected > tp_low && tp_expected < tp_high);
     }
 
     {
         Wmi cpu(kWmiCpuLoad, wmi::kSepChar);
-        EXPECT_EQ(cpu.subsection_mode_, SubSection::Mode::standard);
-        ASSERT_FALSE(cpu.headerless_);
-        EXPECT_EQ(cpu.delay_on_fail_, cma::cfg::G_DefaultDelayOnFail);
+        EXPECT_EQ(cpu.subsectionMode(), SubSection::Mode::standard);
+        ASSERT_FALSE(cpu.headerless());
+        EXPECT_EQ(cpu.delayOnFail(), cma::cfg::G_DefaultDelayOnFail);
 
         // this is empty section
         EXPECT_EQ(cpu.object(), L"");
@@ -374,25 +392,25 @@ TEST(WmiProviderTest, SimulationIntegration) {
         EXPECT_EQ(cpu.columns().size(), 0);
 
         // sub section count
-        EXPECT_EQ(cpu.sub_objects_.size(), 2);
-        EXPECT_EQ(cpu.sub_objects_[0].getUniqName(), kSubSectionSystemPerf);
-        EXPECT_EQ(cpu.sub_objects_[1].getUniqName(), kSubSectionComputerSystem);
+        EXPECT_EQ(cpu.subObjects().size(), 2);
+        EXPECT_EQ(cpu.subObjects()[0].getUniqName(), kSubSectionSystemPerf);
+        EXPECT_EQ(cpu.subObjects()[1].getUniqName(), kSubSectionComputerSystem);
 
-        EXPECT_FALSE(cpu.sub_objects_[0].name_space_.empty());
-        EXPECT_FALSE(cpu.sub_objects_[0].object_.empty());
-        EXPECT_FALSE(cpu.sub_objects_[1].name_space_.empty());
-        EXPECT_FALSE(cpu.sub_objects_[1].object_.empty());
+        EXPECT_FALSE(cpu.subObjects()[0].nameSpace().empty());
+        EXPECT_FALSE(cpu.subObjects()[0].object().empty());
+        EXPECT_FALSE(cpu.subObjects()[1].nameSpace().empty());
+        EXPECT_FALSE(cpu.subObjects()[1].object().empty());
 
         // other:
         EXPECT_TRUE(cpu.isAllowedByCurrentConfig());
         EXPECT_TRUE(cpu.isAllowedByTime());
-        EXPECT_EQ(cpu.delay_on_fail_, 3600s);
+        EXPECT_EQ(cpu.delayOnFail(), 3600s);
     }
     {
         Wmi msexch(kMsExch, wmi::kSepChar);
-        ASSERT_TRUE(msexch.headerless_);
-        EXPECT_EQ(msexch.subsection_mode_, SubSection::Mode::standard);
-        EXPECT_EQ(msexch.delay_on_fail_, cma::cfg::G_DefaultDelayOnFail);
+        ASSERT_TRUE(msexch.headerless());
+        EXPECT_EQ(msexch.subsectionMode(), SubSection::Mode::standard);
+        EXPECT_EQ(msexch.delayOnFail(), cma::cfg::G_DefaultDelayOnFail);
         // this is empty section
         EXPECT_EQ(msexch.object(), L"");
         EXPECT_EQ(msexch.nameSpace(), L"");
@@ -400,21 +418,21 @@ TEST(WmiProviderTest, SimulationIntegration) {
 
         // sub section count
         const int count = 7;
-        auto &subs = msexch.sub_objects_;
+        auto &subs = msexch.subObjects();
         EXPECT_EQ(subs.size(), count);
         for (int k = 0; k < count; ++k)
             EXPECT_EQ(subs[k].getUniqName(), exch_names[k]);
 
         for (auto &sub : subs) {
-            EXPECT_TRUE(!sub.name_space_.empty());
-            EXPECT_TRUE(!sub.object_.empty());
+            EXPECT_TRUE(!sub.nameSpace().empty());
+            EXPECT_TRUE(!sub.object().empty());
         }
 
         // other:
         EXPECT_TRUE(msexch.isAllowedByCurrentConfig());
         EXPECT_TRUE(msexch.isAllowedByTime());
 
-        EXPECT_EQ(msexch.delay_on_fail_, 3600s);
+        EXPECT_EQ(msexch.delayOnFail(), 3600s);
     }
 }
 
@@ -489,50 +507,67 @@ TEST(WmiProviderTest, WmiDotnet_Integration) {
     fs::remove(f);
 }
 
-TEST(WmiProviderTest, BasicWmi) {
-    {
-        Wmi b("a", ',');
-        auto old_time = b.allowed_from_time_;
-        b.delay_on_fail_ = 900s;
-        b.disableSectionTemporary();
-        auto new_time = b.allowed_from_time_;
-        auto delta = new_time - old_time;
-        EXPECT_TRUE(delta >= 900s);
-        b.setupDelayOnFail();
-        EXPECT_EQ(b.delay_on_fail_, 0s);
-    }
+namespace {
+auto MeasureTimeOnGenerate(Wmi &wmi) {
+    const auto old_time = wmi.isAllowedFromTime();
+    wmi.generateContent();
+    return wmi.isAllowedFromTime() - old_time;
+}
+}  // namespace
 
-    for (auto name :
+TEST(WmiProviderTest, BasicWmi) {
+    Wmi b("a", ',');
+    EXPECT_EQ(MeasureTimeOnGenerate(b), 0s);
+    EXPECT_EQ(b.delayOnFail(), 0s);
+}
+
+TEST(WmiProviderTest, DelayOnFailDefault) {
+    for (const auto name :
          {kOhm, kWmiCpuLoad, kWmiWebservices, kDotNetClrMemory, kMsExch}) {
         Wmi b(name, ',');
-        EXPECT_EQ(b.delay_on_fail_, cma::cfg::G_DefaultDelayOnFail)
+        EXPECT_EQ(b.delayOnFail(), 3600s)
             << "bad delay for section by default " << name;
-        b.delay_on_fail_ = 1s;
-        b.setupDelayOnFail();
-        EXPECT_EQ(b.delay_on_fail_, cma::cfg::G_DefaultDelayOnFail)
-            << "bad delay for section in func call " << name;
     }
 }
 
-TEST(WmiProviderTest, BasicWmiDefaultsAndError) {
-    Wmi tst("check", '|');
+TEST(WmiProviderTest, DelayOnFailShift) {
+    auto temp_fs = tst::TempCfgFs::CreateNoIo();
+    EXPECT_TRUE(
+        temp_fs->loadContent("global:\n"
+                             "  enabled: yes\n"
+                             "  sections:\n"
+                             "  - OhmBad\n"
+                             "  - msexch\n"));
+    Wmi ms_exch(kMsExch, ',');  // must be absent
+    EXPECT_GE(MeasureTimeOnGenerate(ms_exch), 0s);
 
-    EXPECT_EQ(tst.delay_on_fail_, 0s);
-    EXPECT_EQ(tst.timeout_, 0);
-    EXPECT_TRUE(tst.enabled_);
-    EXPECT_FALSE(tst.headerless_);
+    Wmi ohm("OhmBad", ',');  // must be absent
+    EXPECT_GE(MeasureTimeOnGenerate(ohm), 1500s);
+}
 
-    EXPECT_EQ(tst.separator_, '|');
-    EXPECT_EQ(tst.error_count_, 0);
+TEST(WmiProviderTest, BasicWmiDefaults) {
+    Wmi tst(kOhm, ',');
+
+    EXPECT_EQ(tst.delayOnFail(), 3600s);
+    EXPECT_EQ(tst.timeout(), 0);
+    EXPECT_TRUE(tst.enabled());
+    EXPECT_FALSE(tst.headerless());
+    EXPECT_EQ(tst.separator(), ',');
     EXPECT_EQ(tst.errorCount(), 0);
-    tst.registerError();
-    EXPECT_EQ(tst.error_count_, 1);
+}
+
+TEST(WmiProviderTest, RegisterAndResetError) {
+    auto temp_fs = tst::TempCfgFs::CreateNoIo();
+    EXPECT_TRUE(
+        temp_fs->loadContent("global:\n"
+                             "  enabled: yes\n"
+                             "  sections:\n"
+                             "  - openhardwaremonitor\n"));
+    OhmProvider tst(kOhm, ',');
+
+    tst.generateContent();
     EXPECT_EQ(tst.errorCount(), 1);
-    tst.registerError();
-    EXPECT_EQ(tst.error_count_, 2);
-    EXPECT_EQ(tst.errorCount(), 2);
     tst.resetError();
-    EXPECT_EQ(tst.error_count_, 0);
     EXPECT_EQ(tst.errorCount(), 0);
 }
 

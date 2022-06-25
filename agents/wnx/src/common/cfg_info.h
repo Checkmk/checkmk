@@ -29,7 +29,7 @@ enum class Modus {
 Modus GetModus();
 namespace details {
 void SetModus(Modus m);
-} // namespace details
+}  // namespace details
 }  // namespace cma
 
 namespace XLOG {
@@ -117,7 +117,8 @@ constexpr const KNOWNFOLDERID &kWindowsFolderId = FOLDERID_Windows;
 
 std::string GetCurrentLogFileName();
 int GetCurrentDebugLevel();
-XLOG::EventLevel GetCurrentEventLevel();  // fixed at the moment on Critical
+XLOG::EventLevel
+GetCurrentEventLevel() noexcept;  // fixed at the moment on Critical
 bool GetCurrentWinDbg();
 bool GetCurrentEventLog();
 

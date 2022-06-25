@@ -19,19 +19,16 @@
 #include "logger.h"
 #include "tools/_raii.h"
 #include "tools/_xlog.h"
+namespace fs = std::filesystem;
 
 namespace cma::provider {
 
 // makes OHM binary filename
-std::filesystem::path GetOhmCliPath() noexcept {
-    return GetOhmCliPath(cma::cfg::GetUserDir());
-}
+fs::path GetOhmCliPath() noexcept { return GetOhmCliPath(cfg::GetUserDir()); }
 
-std::filesystem::path GetOhmCliPath(const std::filesystem::path &dir) noexcept {
-    namespace fs = std::filesystem;
-
+fs::path GetOhmCliPath(const fs::path &dir) noexcept {
     fs::path ohm_exe = dir;
-    ohm_exe /= cma::cfg::dirs::kUserBin;
+    ohm_exe /= cfg::dirs::kUserBin;
     ohm_exe /= ohm::kExeModule;
 
     return ohm_exe;
@@ -51,17 +48,13 @@ void OhmProvider::updateSectionStatus() {
 }
 
 std::string OhmProvider::makeBody() {
-    using namespace cma::cfg;
     auto result = Wmi::makeBody();
-    // probably we do not need this function
-    // during loading config
     if (result.empty()) {
-        auto error_count = registerError();
-        XLOG::d.t("No data for OHM, error number [{}]", error_count + 1);
-    } else {
-        if (resetError()) {
-            XLOG::d.t("OHM is available again ");
-        }
+        XLOG::d.t("No data for OHM, error number [{}]", registerError() + 1);
+        return {};
+    }
+    if (resetError()) {
+        XLOG::d.t("OHM is available again ");
     }
 
     return result;

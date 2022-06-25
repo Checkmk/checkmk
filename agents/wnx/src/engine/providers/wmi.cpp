@@ -30,7 +30,9 @@ namespace cma::provider {
 std::string WmiCachedDataHelper(std::string &cache_data,
                                 const std::string &wmi_data, char separator) {
     // for very old servers
-    if (!g_add_wmi_status_column) return wmi_data;
+    if (!g_add_wmi_status_column) {
+        return wmi_data;
+    }
 
     if (!wmi_data.empty()) {
         // return original data with added OK in right column
@@ -40,9 +42,10 @@ std::string WmiCachedDataHelper(std::string &cache_data,
     }
 
     // we try to return cache with added "timeout" in last column
-    if (!cache_data.empty())
+    if (!cache_data.empty()) {
         return wtools::WmiPostProcess(cache_data, wtools::StatusColumn::timeout,
                                       separator);
+    }
 
     XLOG::d.t(XLOG_FUNC + " no data to provide, cache is also empty");
     return {};
@@ -66,7 +69,7 @@ using NamedWmiSources = std::unordered_map<std::string, WmiSource>;
 // we configure our provider using static table with strings
 // NOTHING MORE. ZERO OF PROGRAMMING
 
-NamedWmiSources g_section_objects = {
+const NamedWmiSources g_section_objects = {
     // start
 
     //
@@ -81,10 +84,11 @@ NamedWmiSources g_section_objects = {
     {std::string{kOhm},  //
      {kWmiPathOhm.data(), L"Sensor"}},
 
-    {std::string{kBadWmi},  // used for a testing or may be used as a
-                            // template for other WMI
-                            // calls
+    {std::string{kBadWmi},  // used for a testing
      {L"Root\\BadWmiPath", L"BadSensor"}},
+
+    {"OhmBad",  // used for a testing
+     {kWmiPathOhm.data(), L"BadSensor"}},
 
     // WMI CPULOAD group
     {"system_perf"s,  //
@@ -125,14 +129,14 @@ NamedWmiSources g_section_objects = {
 };
 
 // Columns
-NamedWideStringVector g_section_columns = {
+const NamedWideStringVector g_section_columns = {
     // start
     {kOhm.data(),  //
      {L"Index", L"Name", L"Parent", L"SensorType", L"Value"}}
     // end
 };
 
-NamedStringVector g_section_subs = {
+const NamedStringVector g_section_subs = {
     // start
     {std::string{kWmiCpuLoad},  //
      {kSubSectionSystemPerf.data(), kSubSectionComputerSystem.data()}},
@@ -155,17 +159,12 @@ bool IsHeaderless(std::string_view name) noexcept { return name == kMsExch; }
 
 void Wmi::setupByName() {
     try {
-        auto &x = g_section_objects[uniq_name_];
-        name_space_ = x.first;
-        object_ = x.second;
-    } catch (const std::exception &e) {
-        // section not described in data
-        XLOG::l.crit(
-            "Invalid Name of the section provider '{}'. Exception: '{}'",
-            uniq_name_, e.what());
+        std::tie(name_space_, object_) = g_section_objects.at(uniq_name_);
+    } catch (const std::out_of_range &e) {
+        XLOG::t.i("Section provider '{}' has no won WMI paths", uniq_name_,
+                  e.what());
         object_ = L"";
         name_space_ = L"";
-        return;
     }
 
     if (IsHeaderless(uniq_name_)) {
@@ -173,22 +172,19 @@ void Wmi::setupByName() {
     }
 
     try {
-        auto &x = g_section_columns[uniq_name_];
-        columns_ = x;
-    } catch (const std::exception &) {
-        // ignoring this exception fully:
-        // we do not care when object not found in the map
+        columns_ = g_section_columns.at(uniq_name_);
+    } catch (const std::out_of_range &) {
+        XLOG::t.i("Column {} not found", uniq_name_);
     }
 
     try {
-        auto &subs = g_section_subs[uniq_name_];
-        auto type = GetSubSectionType(uniq_name_);
+        const auto &subs = g_section_subs.at(uniq_name_);
+        const auto type = GetSubSectionType(uniq_name_);
         for (auto &sub : subs) {
-            sub_objects_.emplace_back(SubSection(sub, type));
+            sub_objects_.emplace_back(sub, type);
         }
-    } catch (const std::exception &) {
-        // ignoring this exception fully:
-        // we do not care when object not found in the map
+    } catch (const std::out_of_range &) {
+        XLOG::t.i("Section {} not found", uniq_name_);
     }
 
     setupDelayOnFail();
@@ -210,11 +206,10 @@ std::pair<std::string, wtools::WmiStatus> GenerateWmiTable(
         return {"", WmiStatus::bad_param};
     }
 
-    auto object_name = wtools::ToUtf8(wmi_object);
-    cma::tools::TimeLog tl(object_name);  // start measure
-    auto id = [ wmi_namespace, object_name ]() -> auto {
-        return fmt::formatv(R"("{}\{}")",                   //
-                            wtools::ToUtf8(wmi_namespace),  //
+    const auto object_name = wtools::ToUtf8(wmi_object);
+    tools::TimeLog tl(object_name);  // start measure
+    const auto id = [&]() {
+        return fmt::formatv(R"("{}\{}")", wtools::ToUtf8(wmi_namespace),
                             object_name);
     };
 
@@ -232,7 +227,7 @@ std::pair<std::string, wtools::WmiStatus> GenerateWmiTable(
     if (!wrapper.impersonate()) {
         XLOG::l.e("WMI can't impersonate '{}'", id());
     }
-    auto [ret, status] =
+    const auto &[ret, status] =
         wrapper.queryTable(columns_table, wmi_object, separator,
                            cfg::groups::global.getWmiTimeout());
 
@@ -264,8 +259,9 @@ std::string Wmi::makeBody() {
 
     XLOG::t.i("WMI main section '{}'", getUniqName());
 
-    auto sep = CharToWideString(separator());
-    auto [data, status] = GenerateWmiTable(name_space_, object_, columns_, sep);
+    const auto sep = CharToWideString(separator());
+    const auto &[data, status] =
+        GenerateWmiTable(name_space_, object_, columns_, sep);
 
     // on timeout: reuse cache and ignore data, even if partially filled
     if (status == wtools::WmiStatus::timeout) {
@@ -293,12 +289,10 @@ std::string Wmi::makeBody() {
     return {};
 }
 
-// [+] gtest
 bool Wmi::isAllowedByCurrentConfig() const {
-    auto name = getUniqName();
+    const auto name = getUniqName();
 
-    auto allowed = cfg::groups::global.allowedSection(name);
-    if (!allowed) {
+    if (!cfg::groups::global.allowedSection(name)) {
         XLOG::t("'{}' is skipped by config", name);
         return false;
     }
@@ -312,9 +306,7 @@ bool Wmi::isAllowedByCurrentConfig() const {
     // 2. with sub_section, check situation when parent
     // is allowed, but all sub  DISABLED DIRECTLY
     for (const auto &sub : sub_objects_) {
-        auto sub_name = sub.getUniqName();
-
-        if (!cfg::groups::global.isSectionDisabled(sub_name)) {
+        if (!cfg::groups::global.isSectionDisabled(sub.getUniqName())) {
             return true;
         }
     }
@@ -329,20 +321,17 @@ bool Wmi::isAllowedByCurrentConfig() const {
 
 void SubSection::setupByName() {
     try {
-        auto &x = g_section_objects[uniq_name_];
-        name_space_ = x.first;
-        object_ = x.second;
-    } catch (const std::exception &e) {
-        XLOG::l.crit("Invalid Name of the sub section '{}'. Exception: '{}'",
-                     uniq_name_, e.what());
+        std::tie(name_space_, object_) = g_section_objects.at(uniq_name_);
+    } catch (const std::out_of_range &e) {
+        XLOG::l("Invalid Name of the sub section '{}'. Exception: '{}'",
+                uniq_name_, e.what());
         object_ = L"";
         name_space_ = L"";
-        return;
     }
 }
 
 std::string SubSection::makeBody() {
-    auto [data, status] =
+    const auto &[data, status] =
         GenerateWmiTable(name_space_, object_, {}, wmi::kSepString);
 
     // subsections ignore returned timeout
@@ -362,12 +351,11 @@ std::string SubSection::makeBody() {
     // all other cases are rather not possible, still we want
     // to get information about error, caching is not allowed in
     // this case
-    {
-        // this is ok if no wmi in the registry
-        XLOG::d("Sub Section '{}' has no data to provide, status = [{}]",
-                uniq_name_, static_cast<int>(status));
-        return {};
-    }
+
+    // this is ok if no wmi in the registry
+    XLOG::d("Sub Section '{}' has no data to provide, status = [{}]",
+            uniq_name_, static_cast<int>(status));
+    return {};
 }
 
 std::string SubSection::generateContent(Mode mode) {

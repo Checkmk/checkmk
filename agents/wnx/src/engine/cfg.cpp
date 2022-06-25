@@ -803,7 +803,7 @@ fs::path Folders::makeDefaultDataFolder(std::wstring_view data_folder,
                                         Protection protection) {
     if (data_folder.empty()) {
         using cma::tools::win::GetSomeSystemFolder;
-        auto draw_folder = [](std::wstring_view DataFolder) -> auto {
+        auto draw_folder = [](std::wstring_view DataFolder) -> auto{
             fs::path app_data = DataFolder;
             app_data /= cma::cfg::kAppDataCompanyName;
             app_data /= cma::cfg::kAppDataAppName;
@@ -965,7 +965,9 @@ int GetCurrentDebugLevel() {
     return kDefaultLogLevel;
 }
 
-XLOG::EventLevel GetCurrentEventLevel() { return XLOG::EventLevel::critical; }
+XLOG::EventLevel GetCurrentEventLevel() noexcept {
+    return XLOG::EventLevel::critical;
+}
 
 bool GetCurrentWinDbg() {
     if (ConfigLoaded()) {
@@ -1160,8 +1162,8 @@ void SetupPluginEnvironment() {
                    {envs::kMkModulesDirName, GetUserModulesDir()},
                    {envs::kMkMsiPathName, GetUpdateDir()}}};
 
-    for (const auto &d : env_pairs) {
-        cma::tools::win::SetEnv(std::string{d.first}, wtools::ToUtf8(d.second));
+    for (const auto &[name, val] : env_pairs) {
+        tools::win::SetEnv(std::string{name}, wtools::ToUtf8(val));
     }
 }
 
@@ -1221,7 +1223,7 @@ void ConfigInfo::fillExePaths(const fs::path &root) {
     constexpr std::array<std::wstring_view, 3> dir_tails{
         dirs::kAgentPlugins, dirs::kAgentProviders, dirs::kAgentUtils};
 
-    for (const auto &d : dir_tails) {
+    for (auto d : dir_tails) {
         exe_command_paths_.emplace_back(root / d);
     }
 
@@ -1806,7 +1808,7 @@ bool ConfigInfo::loadDirect(const fs::path &file) {
                 ec.message());
         return false;
     }
-    auto ftime = fs::last_write_time(fpath, ec);
+    const auto ftime = fs::last_write_time(fpath, ec);
 
     // we will load when error happens, or time changed or name changed
     bool load_required =
@@ -1859,14 +1861,14 @@ namespace cma::cfg {
 // generates standard agent time string
 std::string ConstructTimeString() {
     constexpr uint32_t k1000 = 1000;
-    auto cur_time = std::chrono::system_clock::now();
-    auto in_time_t = std::chrono::system_clock::to_time_t(cur_time);
+    const auto cur_time = std::chrono::system_clock::now();
+    const auto in_time_t = std::chrono::system_clock::to_time_t(cur_time);
     std::stringstream sss;
-    auto ms =
+    const auto ms =
         duration_cast<std::chrono::milliseconds>(cur_time.time_since_epoch()) %
         k1000;
     auto *loc_time = std::localtime(&in_time_t);
-    auto p_time = std::put_time(loc_time, "%Y-%m-%d %T");
+    const auto p_time = std::put_time(loc_time, "%Y-%m-%d %T");
     sss << p_time << "." << std::setfill('0') << std::setw(3) << ms.count()
         << std::ends;
 
@@ -1886,15 +1888,11 @@ fs::path ConstructInstallFileName(const fs::path &dir) {
     return protocol_file;
 }
 
-bool IsNodeNameValid(std::string_view name) {
-    if (name.empty()) {
-        return true;
-    }
-    return name[0] != '_';
+bool IsNodeNameValid(std::string_view name) noexcept {
+    return name.empty() || name[0] != '_';
 }
 
 int RemoveInvalidNodes(YAML::Node node) {
-    //
     if (!node.IsDefined() || !node.IsMap()) {
         return 0;
     }
@@ -1910,7 +1908,7 @@ int RemoveInvalidNodes(YAML::Node node) {
             continue;
         }
 
-        int sub_count = RemoveInvalidNodes(node[key]);
+        const int sub_count = RemoveInvalidNodes(node[key]);
         counter += sub_count;
     }
     for (auto &r : to_remove) {
@@ -2054,7 +2052,7 @@ bool UninstallProduct(std::string_view name) {
     return true;
 }
 
-details::ConfigInfo &GetCfg() { return details::g_config_info; }
+details::ConfigInfo &GetCfg() noexcept { return details::g_config_info; }
 std::atomic<uint64_t> details::ConfigInfo::g_uniq_id = 1;
 
 }  // namespace cma::cfg

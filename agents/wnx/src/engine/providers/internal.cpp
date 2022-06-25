@@ -13,7 +13,8 @@
 #include "cfg.h"
 #include "common/mailslot_transport.h"
 #include "tools/_raii.h"
-#include "tools/_xlog.h"
+
+using namespace std::chrono_literals;
 
 namespace cma::provider {
 
@@ -27,6 +28,7 @@ std::unordered_map<std::string_view, std::chrono::seconds> g_delays_on_fail = {
 
     // end of the real sections
     {kBadWmi, cma::cfg::G_DefaultDelayOnFail},  // used to testing
+    {"OhmBad", 1500s},                          // used to testing
 };
 
 namespace {
@@ -34,7 +36,7 @@ namespace {
 // "word left over" => ["word", "left over"]
 std::pair<std::string, std::string> SplitStringBySpace(
     const std::string &line) {
-    auto end = line.find_first_of(' ');
+    const auto end = line.find_first_of(' ');
     if (end == std::string::npos) {
         return {line, {}};
     }
@@ -125,9 +127,9 @@ void Basic::registerCommandLine(const std::string &command_line) {
 void Basic::setupDelayOnFail() noexcept {
     // setup delay on fail
     try {
-        const auto &delay_in_seconds = g_delays_on_fail[uniq_name_];
+        const auto &delay_in_seconds = g_delays_on_fail.at(uniq_name_);
         delay_on_fail_ = delay_in_seconds;
-    } catch (const std::exception &) {
+    } catch (const std::out_of_range &) {
         // do nothing here
     }
 }
@@ -135,32 +137,31 @@ void Basic::setupDelayOnFail() noexcept {
 // if section fails then we may set time point in the future to avoid
 // calling section too soon
 void Basic::disableSectionTemporary() {
-    if (delay_on_fail_.count() == 0) return;
+    if (delay_on_fail_.count() == 0) {
+        return;
+    }
 
     allowed_from_time_ = std::chrono::steady_clock::now();
     allowed_from_time_ += delay_on_fail_;
 
-    {
-        // System clock is not Steady Clock
-        auto sys_clock = std::chrono::system_clock::now() + delay_on_fail_;
-        XLOG::l.w(
-            "Resetting time for earliest start of the section '{}' at '{}'",
-            getUniqName(), cma::tools::TimeToString(sys_clock));
-    }
+    // System clock is not Steady Clock
+    auto sys_clock = std::chrono::system_clock::now() + delay_on_fail_;
+    XLOG::d.w("Resetting time for earliest start of the section '{}' at '{}'",
+              getUniqName(), tools::TimeToString(sys_clock));
 }
 
 // returns true when data exist.
 bool Basic::sendGatheredData(const std::string &command_line) {
     // command line parser
-    auto [marker, section_name, leftover] = ParseCommandLine(command_line);
+    const auto &[marker, section_name, leftover] =
+        ParseCommandLine(command_line);
 
     auto section = generateContent(section_name);
 
-    // send data
     if (!section.empty()) {
-        if (section.back() == '\0')
+        if (section.back() == '\0' || section.back() == '\n') {
             section.pop_back();  // some plugins may add zero. remove it
-        if (section.back() == '\n') section.pop_back();
+        }
         carrier_.sendData(uniq_name_, marker, section.c_str(), section.size());
         return true;
     }

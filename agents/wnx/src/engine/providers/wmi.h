@@ -15,9 +15,7 @@
 #include "providers/internal.h"
 #include "section_header.h"
 
-namespace cma {
-
-namespace provider {
+namespace cma::provider {
 
 namespace wmi {
 constexpr char kSepChar = cma::section::kPipeSeparator;
@@ -50,20 +48,22 @@ public:
     };
 
     enum class Mode {
-        standard,     // in production
-        debug_forced  // for testing we could generate only headers
+        standard,  // production
+        forced     // testing or feature: headers are in output
     };
     SubSection(std::string_view name, Type type)
         : uniq_name_(name), type_(type) {
         setupByName();
     }
-    virtual ~SubSection() {}
+    virtual ~SubSection() = default;
 
     [[nodiscard]] std::string getUniqName() const noexcept {
         return uniq_name_;
     }
 
     std::string generateContent(Mode mode);
+    auto object() const noexcept { return object_; }
+    auto nameSpace() const noexcept { return name_space_; }
 
 protected:
     // *internal* function which correctly sets
@@ -77,11 +77,6 @@ private:
     const std::string uniq_name_;  // unique id of SUB section provider
     std::string cache_;            // used to store WMI data to later reuse
     Type type_;
-
-#if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
-    friend class WmiProviderTest;
-    FRIEND_TEST(WmiProviderTest, SimulationIntegration);
-#endif
 };
 
 // configuration
@@ -90,20 +85,27 @@ bool IsHeaderless(std::string_view name) noexcept;
 
 class Wmi : public Asynchronous {
 public:
-    Wmi(std::string_view name, char separator) : Asynchronous(name, separator) {
+    Wmi(std::string_view name, char separator)
+        : Wmi(name, separator, SubSection::Mode::standard) {}
+
+    Wmi(std::string_view name, char separator, SubSection::Mode mode)
+        : Asynchronous(name, separator), subsection_mode_{mode} {
         setupByName();
     }
 
     // accessors, mostly for a testing
-    const auto object() const { return object_; }
-    const auto nameSpace() const { return name_space_; }
-    const auto &columns() const { return columns_; }
+    auto object() const noexcept { return object_; }
+    auto nameSpace() const noexcept { return name_space_; }
+    const auto &columns() const noexcept { return columns_; }
 
-    virtual bool isAllowedByCurrentConfig() const;
+    bool isAllowedByCurrentConfig() const override;
+
+    auto subsectionMode() const noexcept { return subsection_mode_; }
+    auto delayOnFail() const noexcept { return delay_on_fail_; }
+
+    const auto &subObjects() const noexcept { return sub_objects_; }
 
 protected:
-    // *internal* function which correctly sets
-    // all parameters
     void setupByName();
     std::string makeBody() override;
 
@@ -117,13 +119,7 @@ private:
     std::vector<SubSection>
         sub_objects_;  // Windows WMI Object name for the case when we have
 
-    SubSection::Mode subsection_mode_ = SubSection::Mode::standard;
-
-#if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
-    friend class WmiProviderTest;
-    FRIEND_TEST(WmiProviderTest, SimulationIntegration);
-    FRIEND_TEST(WmiProviderTest, SubSectionSimulateExchange_Integration);
-#endif
+    SubSection::Mode subsection_mode_{SubSection::Mode::standard};
 };
 
 // this is proposed API
@@ -134,8 +130,6 @@ std::pair<std::string, wtools::WmiStatus> GenerateWmiTable(
 
 std::string WmiCachedDataHelper(std::string &cache_data,
                                 const std::string &wmi_data, char separator);
-}  // namespace provider
-
-};  // namespace cma
+};  // namespace cma::provider
 
 #endif  // wmi_h__

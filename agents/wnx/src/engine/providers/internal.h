@@ -93,6 +93,7 @@ public:
 
     virtual bool isAllowedByCurrentConfig() const;
     bool isAllowedByTime() const;
+    auto isAllowedFromTime() const noexcept { return allowed_from_time_; }
 
     // called in kick. NO AUTOMATION HERE.
     void loadStandardConfig();
@@ -110,6 +111,9 @@ public:
 
     void stopWatchStart() { sw_.start(); }
     uint64_t stopWatchStop() { return sw_.stop(); }
+
+    bool headerless() const noexcept { return headerless_; }
+    bool enabled() const noexcept { return enabled_; }
 
 protected:
     wtools::StopWatch sw_;
@@ -134,7 +138,7 @@ protected:
 
     const std::string uniq_name_;  // unique identification of section provider
 
-    cma::carrier::CoreCarrier carrier_;  // transport
+    carrier::CoreCarrier carrier_;  // transport
     std::chrono::time_point<std::chrono::steady_clock> allowed_from_time_;
     std::chrono::seconds
         delay_on_fail_;  // this value may be set when we have problems with
@@ -147,21 +151,14 @@ protected:
     // optional API to store info about errors used, for example by OHM
     uint64_t registerError() { return error_count_.fetch_add(1); }
 
-    cma::srv::ServiceProcessor *getHostSp() const noexcept { return host_sp_; }
+    srv::ServiceProcessor *getHostSp() const noexcept { return host_sp_; }
 
 private:
     bool headerless_;  // if true no makeHeader called during content generation
     std::string ip_;
     char separator_;
     std::atomic<uint64_t> error_count_ = 0;
-    cma::srv::ServiceProcessor *host_sp_ = nullptr;
-
-#if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
-    friend class WmiProviderTest;
-    FRIEND_TEST(WmiProviderTest, SimulationIntegration);
-    FRIEND_TEST(WmiProviderTest, BasicWmi);
-    FRIEND_TEST(WmiProviderTest, BasicWmiDefaultsAndError);
-#endif
+    srv::ServiceProcessor *host_sp_ = nullptr;
 };
 
 // Reference *SYNC* Class for internal Sections
@@ -203,6 +200,7 @@ protected:
                     const std::string &command_line,
                     std::chrono::milliseconds period);
 
+private:
     // thread
     std::thread thread_;
 

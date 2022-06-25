@@ -376,15 +376,6 @@ def _submit_aggregated_results(
     dry_run: bool,
     show_perfdata: bool,
 ) -> None:
-    for submittable in submittables:
-        if not submittable.submit:
-            # There'll be more logging down the callstack, for the results that *are* submitted.
-            # Surely we can consolidate this?
-            console.verbose(
-                f"{submittable.service.description:20} PEND - {submittable.result.output}\n"
-            )
-            continue
-
     _submit_to_core.get_submitter(
         check_submission=config.check_submission,
         monitoring_core=config.monitoring_core,
@@ -393,7 +384,8 @@ def _submit_aggregated_results(
         keepalive=get_keepalive(cmk_version.edition()),
     ).submit(
         submittees=[
-            (s.service.description, s.result, s.cache_info) for s in submittables if s.submit
+            _submit_to_core.Submittee(s.service.description, s.result, s.cache_info, s.submit)
+            for s in submittables
         ],
         perfdata_format="pnp" if config.perfdata_format == "pnp" else "standard",
         show_perfdata=show_perfdata,

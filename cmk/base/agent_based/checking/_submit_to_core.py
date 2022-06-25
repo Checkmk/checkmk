@@ -11,7 +11,7 @@ import os
 import time
 from contextlib import contextmanager
 from random import Random
-from typing import IO, Iterable, Iterator, Literal, Optional
+from typing import IO, Iterable, Iterator, Literal, NamedTuple, Optional
 
 import cmk.utils.paths
 import cmk.utils.tty as tty
@@ -95,38 +95,50 @@ def get_submitter(
     raise MKGeneralException(f"Invalid setting {check_submission=} (expected 'pipe' or 'file')")
 
 
-_Submittee = tuple[ServiceName, ServiceCheckResult, _CacheInfo]
+class Submittee(NamedTuple):
+    name: ServiceName
+    result: ServiceCheckResult
+    cache_info: _CacheInfo
+    pending: bool
 
-_FormattedSubmittee = tuple[ServiceName, ServiceState, ServiceDetails, _CacheInfo]
+
+class _FormattedSubmittee(NamedTuple):
+    name: ServiceName
+    state: ServiceState
+    details: ServiceDetails
+    cache_info: _CacheInfo
 
 
 class Submitter(abc.ABC):
     def submit(
         self,
-        submittees: Iterable[_Submittee],
+        submittees: Iterable[Submittee],
         perfdata_format: Literal["pnp", "standard"],
         show_perfdata: bool,
     ) -> None:
         formatted_submittees = [
             (
-                service_name,
-                result.state,
-                "%s|%s"
-                % (
-                    # The vertical bar indicates end of service output and start of metrics.
-                    # Replace the ones in the output by a Uniocode "Light vertical bar"
-                    result.output.replace("|", "\u2758"),
-                    _sanitize_perftext(result, perfdata_format),
+                _FormattedSubmittee(
+                    name=s.name,
+                    state=s.result.state,
+                    details="%s|%s"
+                    % (
+                        # The vertical bar indicates end of service output and start of metrics.
+                        # Replace the ones in the output by a Uniocode "Light vertical bar"
+                        s.result.output.replace("|", "\u2758"),
+                        _sanitize_perftext(s.result, perfdata_format),
+                    ),
+                    cache_info=s.cache_info,
                 ),
-                cache_info,
+                s.pending,
             )
-            for service_name, result, cache_info in submittees
+            for s in submittees
         ]
 
-        for description, state, output, _ci in formatted_submittees:
-            _output_check_result(description, state, output, show_perfdata=show_perfdata)
+        for submittee, pending in formatted_submittees:
+            _output_check_result(submittee, show_perfdata=show_perfdata, pending=pending)
 
-        self._submit(formatted_submittees)
+        self._submit((submittee for submittee, pending in formatted_submittees if not pending))
 
     @abc.abstractmethod
     def _submit(self, formatted_submittees: Iterable[_FormattedSubmittee]) -> None:
@@ -293,18 +305,18 @@ class FileSubmitter(Submitter):
 
 
 def _output_check_result(
-    servicedesc: ServiceName,
-    state: ServiceState,
-    infotext: ServiceDetails,
+    submittee: _FormattedSubmittee,
     *,
     show_perfdata: bool,
+    pending: bool,
 ) -> None:
+    weight, state_txt = ("", "PEND ") if pending else (tty.bold, tty.states[submittee.state])
     console.verbose(
         "%-20s %s%s%s%s%s\n",
-        servicedesc,
-        tty.bold,
-        tty.states[state],
-        infotext.split("|", 1)[0].split("\n", 1)[0],
+        submittee.name,
+        weight,
+        state_txt,
+        submittee.details.split("|", 1)[0].split("\n", 1)[0],
         tty.normal,
-        f" ({infotext.split('|', 1)[1]})" if show_perfdata else "",
+        f" ({submittee.details.split('|', 1)[1]})" if show_perfdata else "",
     )

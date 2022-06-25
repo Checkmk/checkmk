@@ -9,8 +9,9 @@ from __future__ import annotations
 import abc
 import os
 import time
+from contextlib import contextmanager
 from random import Random
-from typing import IO, Iterable, Literal, Optional
+from typing import IO, Iterable, Iterator, Literal, Optional
 
 import cmk.utils.paths
 import cmk.utils.tty as tty
@@ -233,83 +234,63 @@ class _RandomNameSequence:
 
 class FileSubmitter(Submitter):
     def _submit(self, formatted_submittees: Iterable[_FormattedSubmittee]) -> None:
-        _open_checkresult_file()
-        if not _checkresult_file_fd:
-            return
 
         now = time.time()
-        for host, service, state, output, _cache_info in formatted_submittees:
-            output = output.replace("\n", "\\n")
-            os.write(
-                _checkresult_file_fd,
-                (
-                    f"host_name={host}\n"
-                    f"service_description={service}\n"
-                    "check_type=1\n"
-                    "check_options=0\n"
-                    "reschedule_check\n"
-                    "latency=0.0\n"
-                    f"start_time={now:.1f}\n"
-                    f"finish_time={now:.1f}\n"
-                    f"return_code={state}\n"
-                    f"output={output}\n"
-                    "\n"
-                ).encode(),
-            )
-        finalize()
 
+        with self._open_checkresult_file() as fd:
+            for host, service, state, output, _cache_info in formatted_submittees:
+                output = output.replace("\n", "\\n")
+                os.write(
+                    fd,
+                    (
+                        f"host_name={host}\n"
+                        f"service_description={service}\n"
+                        "check_type=1\n"
+                        "check_options=0\n"
+                        "reschedule_check\n"
+                        "latency=0.0\n"
+                        f"start_time={now:.1f}\n"
+                        f"finish_time={now:.1f}\n"
+                        f"return_code={state}\n"
+                        f"output={output}\n"
+                        "\n"
+                    ).encode(),
+                )
 
-# global variables used to cache temporary values that do not need
-# to be reset after a configuration change.
-_checkresult_file_fd = None
-_checkresult_file_path = None
+    @contextmanager
+    @staticmethod
+    def _open_checkresult_file() -> Iterator[int]:
+        """Create some temporary file for storing the checkresults.
+        Nagios expects a seven character long file starting with "c". Since Python3 we can not
+        use tempfile.mkstemp anymore since it produces file names with 9 characters length.
 
+        Logic is similar to tempfile.mkstemp, but simplified. No prefix/suffix/thread-safety
+        """
+        base_dir = cmk.utils.paths.check_result_path
 
-def _open_checkresult_file() -> None:
-    """Create some temporary file for storing the checkresults.
-    Nagios expects a seven character long file starting with "c". Since Python3 we can not
-    use tempfile.mkstemp anymore since it produces file names with 9 characters length.
+        flags = os.O_RDWR | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW
 
-    Logic is similar to tempfile.mkstemp, but simplified. No prefix/suffix/thread-safety
-    """
-    global _checkresult_file_fd
-    global _checkresult_file_path
-    if _checkresult_file_fd is not None:
-        return
+        names = _get_candidate_names()
+        for name, _seq in zip(names, range(os.TMP_MAX)):
+            filepath = os.path.join(base_dir, "c" + name)
+            try:
+                checkresult_file_fd = os.open(filepath, flags, 0o600)
+            except FileExistsError:
+                continue  # try again
+            except Exception as e:
+                raise MKGeneralException(f"Cannot create check result file in {base_dir}: {e!r}")
 
-    base_dir = cmk.utils.paths.check_result_path
+            yield checkresult_file_fd
 
-    flags = os.O_RDWR | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW
+            os.close(checkresult_file_fd)
+            with open(filepath + ".ok", "w"):
+                pass
 
-    names = _get_candidate_names()
-    for name, _seq in zip(names, range(os.TMP_MAX)):
-        filepath = os.path.join(base_dir, "c" + name)
-        try:
-            _checkresult_file_fd = os.open(filepath, flags, 0o600)
-        except FileExistsError:
-            continue  # try again
-        except Exception as e:
-            raise MKGeneralException(f"Cannot create check result file in {base_dir}: {e!r}")
+            return
 
-        _checkresult_file_path = os.path.abspath(filepath)
-        return
-
-    raise MKGeneralException(
-        f"Cannot create check result file in {base_dir}: No usable temporary file name found"
-    )
-
-
-# TODO: existence of this means the submit-functions ought to be ctxt-mngr.
-def finalize() -> None:
-    global _checkresult_file_fd
-    if _checkresult_file_fd is None or _checkresult_file_path is None:
-        return
-
-    os.close(_checkresult_file_fd)
-    _checkresult_file_fd = None
-
-    with open(_checkresult_file_path + ".ok", "w"):
-        pass
+        raise MKGeneralException(
+            f"Cannot create check result file in {base_dir}: No usable temporary file name found"
+        )
 
 
 def _output_check_result(

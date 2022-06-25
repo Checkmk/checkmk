@@ -41,10 +41,10 @@ def _sanitize_perftext(
 def _serialize_metric(
     name: str,
     value: float,
-    warn: Optional[float],
-    crit: Optional[float],
-    min_: Optional[float],
-    max_: Optional[float],
+    warn: float | None,
+    crit: float | None,
+    min_: float | None,
+    max_: float | None,
 ) -> str:
     """
     >>> _serialize_metric("hot_chocolate", 2.3, None, 42.0, 0.0, None)
@@ -57,7 +57,7 @@ def _serialize_metric(
     )
 
 
-def _serialize_value(x: Optional[float]) -> str:
+def _serialize_value(x: float | None) -> str:
     return "" if x is None else ("%.6f" % x).rstrip("0").rstrip(".")
 
 
@@ -74,23 +74,23 @@ def _extract_check_command(infotext: str) -> Optional[str]:
 
 
 def get_submitter(
-    check_submission: str,
-    monitoring_core: str,
+    check_submission: Literal["pipe", "file"],
+    monitoring_core: Literal["nagios", "cmc"],
     dry_run: bool,
     host_name: HostName,
     keepalive: KeepaliveAPI,
 ) -> Submitter:
     if dry_run:
-        return NoOpSubmitter()
+        return _NoOpSubmitter()
 
     if keepalive.enabled():
-        return KeepaliveSubmitter(host_name, keepalive)
+        return _KeepaliveSubmitter(host_name, keepalive)
 
     if check_submission == "pipe" or monitoring_core == "cmc":
-        return PipeSubmitter(host_name)
+        return _PipeSubmitter(host_name)
 
     if check_submission == "file":
-        return FileSubmitter(host_name)
+        return _FileSubmitter(host_name)
 
     raise MKGeneralException(f"Invalid setting {check_submission=} (expected 'pipe' or 'file')")
 
@@ -145,12 +145,12 @@ class Submitter(abc.ABC):
         ...
 
 
-class NoOpSubmitter(Submitter):
+class _NoOpSubmitter(Submitter):
     def _submit(self, formatted_submittees: Iterable[_FormattedSubmittee]) -> None:
         pass
 
 
-class KeepaliveSubmitter(Submitter):
+class _KeepaliveSubmitter(Submitter):
     def __init__(self, host_name: HostName, keepalive: KeepaliveAPI) -> None:
         self._keepalive = keepalive
         self._host_name = host_name
@@ -161,7 +161,7 @@ class KeepaliveSubmitter(Submitter):
             self._keepalive.add_check_result(self._host_name, *s)
 
 
-class PipeSubmitter(Submitter):
+class _PipeSubmitter(Submitter):
 
     # Filedescriptor to open nagios command pipe.
     _nagios_command_pipe: Literal[False] | IO[bytes] | None = None
@@ -192,7 +192,7 @@ class PipeSubmitter(Submitter):
         return cls._nagios_command_pipe
 
     def _submit(self, formatted_submittees: Iterable[_FormattedSubmittee]) -> None:
-        if not (pipe := PipeSubmitter._open_command_pipe()):
+        if not (pipe := _PipeSubmitter._open_command_pipe()):
             return
 
         for service, state, output, _cache_info in formatted_submittees:
@@ -238,7 +238,7 @@ class _RandomNameSequence:
         return "".join(letters)
 
 
-class FileSubmitter(Submitter):
+class _FileSubmitter(Submitter):
 
     _names = _RandomNameSequence()
 

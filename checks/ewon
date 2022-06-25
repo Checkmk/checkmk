@@ -244,8 +244,8 @@ def parse_ewon(info):
 
 
 def inventory_ewon(parsed):
-    settings = host_extra_conf(host_name(), ewon_discovery_rules)
-    device_name = settings[0] if settings else None
+    params = host_extra_conf_merged(host_name(), ewon_discovery_rules)
+    device_name = params.get("device")
     discovery_params = {"device": device_name}
 
     yield "eWON Status", discovery_params.copy()

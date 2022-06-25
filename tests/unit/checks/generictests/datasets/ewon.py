@@ -33,7 +33,7 @@ info = [
 ]
 
 
-mock_host_conf = {'': ['oxyreduct']}
+mock_host_conf_merged = {'': {'device': 'oxyreduct'}}
 
 
 discovery = {

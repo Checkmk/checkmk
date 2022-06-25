@@ -12,23 +12,34 @@ from cmk.gui.plugins.wato.utils import (
     RulespecGroupCheckParametersDiscovery,
     RulespecGroupCheckParametersEnvironment,
 )
-from cmk.gui.valuespec import Dictionary, DropdownChoice, Percentage, TextInput, Tuple
+from cmk.gui.valuespec import Dictionary, DropdownChoice, Percentage, TextInput, Transform, Tuple
 
 
 def _valuespec_ewon_discovery_rules():
-    return DropdownChoice(
-        title=_("eWON discovery"),
-        help=_(
-            "The ewon vpn routers can rely data from a secondary device via snmp. "
-            "It doesn't however allow discovery of the device type relayed this way. "
-            "To allow interpretation of the data you need to pick the device manually."
+    return Transform(
+        Dictionary(
+            title=_("eWON discovery"),
+            elements=[
+                (
+                    "device",
+                    DropdownChoice(
+                        help=_(
+                            "The ewon vpn routers can rely data from a secondary device via snmp. "
+                            "It doesn't however allow discovery of the device type relayed this way. "
+                            "To allow interpretation of the data you need to pick the device manually."
+                        ),
+                        label=_("Select device type"),
+                        choices=[
+                            (None, _("None selected")),
+                            ("oxyreduct", _("Wagner OxyReduct")),
+                        ],
+                        default_value=None,
+                    ),
+                ),
+            ],
+            optional_keys=[],
         ),
-        label=_("Select device type"),
-        choices=[
-            (None, _("None selected")),
-            ("oxyreduct", _("Wagner OxyReduct")),
-        ],
-        default_value=None,
+        forth=lambda x: x if isinstance(x, dict) else {"device": x},
     )
 
 
@@ -37,6 +48,7 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersDiscovery,
         name="ewon_discovery_rules",
         valuespec=_valuespec_ewon_discovery_rules,
+        match_type="dict",
     )
 )
 

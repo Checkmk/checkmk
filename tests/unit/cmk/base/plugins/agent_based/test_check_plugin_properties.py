@@ -60,6 +60,7 @@ def test_check_plugins_do_not_discover_upon_empty_snmp_input(monkeypatch, fix_re
     Scenario().apply(monkeypatch)  # host_extra_conf needs the ruleset_matcher
 
     plugins_expected_to_discover_upon_empty = {
+        "ewon",
         "printer_alerts",
         "liebert_system_events",
         "apc_inrow_system_events",

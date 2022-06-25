@@ -5,12 +5,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from typing import Any, Final, Iterable, Mapping
+from typing import Any, Final, Iterable, Literal, Mapping
 
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
-
-CheckResult = Iterable[tuple[int, str]]
-DiscoveryResult = Iterable[tuple[str, Mapping[str, Any]]]
+from .agent_based_api.v1 import check_levels, equals, register, Result, Service, SNMPTree, State
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 Section = Mapping[str, Mapping[int, float]]
 
@@ -19,8 +17,6 @@ Section = Mapping[str, Mapping[int, float]]
 # secondary device via snmp. Unfortunately there is no way to reliably
 # identify that secondary device
 #
-
-ewon_discovery_rules = []
 
 # configuration for the tags used in Wagner OxyReduct devices
 # for analog measures, "levels" is provided as upper and lower bounds (warn and crit each)
@@ -199,18 +195,19 @@ def parse_ewon(string_table: StringTable) -> Section:
     return result
 
 
-check_info["ewon"] = {
-    "parse_function": parse_ewon,
-    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.8284.2.1",
-    "snmp_info": (
-        ".1.3.6.1.4.1.8284.2.1.3.1.11.1",
-        [
-            2,  # tagCfgId
-            4,  # tagValue
-            16,  # undocumented name field
+register.snmp_section(
+    name="ewon",
+    parse_function=parse_ewon,
+    detect=equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.8284.2.1"),
+    fetch=SNMPTree(
+        base=".1.3.6.1.4.1.8284.2.1.3.1.11.1",
+        oids=[
+            "2",  # tagCfgId
+            "4",  # tagValue
+            "16",  # undocumented name field
         ],
     ),
-}
+)
 
 
 def _discovery_oxyreduct_names(section: Section) -> Iterable[str]:
@@ -250,12 +247,14 @@ def _check_oxyreduct(params: Mapping[str, Any], data: Mapping[int, float]) -> Ch
             except KeyError:
                 levels = tag_params.get("levels")
 
-            yield check_levels(
+            template = f"%.2f {tag_params.get('unit', '')}".strip()
+            yield from check_levels(
                 value,
-                tag_params.get("perfvar"),
-                levels,
-                unit=tag_params.get("unit", ""),
-                infoname=tag_params["name"],
+                metric_name=tag_params.get("perfvar"),
+                levels_lower=levels[2:],
+                levels_upper=levels[:2],
+                label=tag_params["name"],
+                render_func=lambda v: template % v,  # pylint: disable=cell-var-from-loop
             )
 
         # if it's a bitmask, try to determine if they are good flags
@@ -266,31 +265,36 @@ def _check_oxyreduct(params: Mapping[str, Any], data: Mapping[int, float]) -> Ch
             state = "active" if value_bin == "1" else "inactive"
 
             if flag in ("1", "0") and flag != value_bin:
-                yield 2, "%s %s" % (name, state)
+                yield Result(state=State.CRIT, summary=f"{name} {state}")
             elif flag == "*":
-                yield 0, "%s %s" % (name, state)
+                yield Result(state=State.OK, summary=f"{name} {state}")
             elif flag == "+" and value_bin == "1":
-                yield 0, "%s" % name
+                yield Result(state=State.OK, summary=f"{name}")
 
 
-def discovery_ewon(section: Section) -> DiscoveryResult:
-    params = host_extra_conf_merged(host_name(), ewon_discovery_rules)
-    device_name = params.get("device")
+def discovery_ewon(params: Mapping[Literal["device"], Any], section: Section) -> DiscoveryResult:
+    device_name = params["device"]
 
-    yield "eWON Status", {"device": device_name}
+    yield Service(item="eWON Status", parameters={"device": device_name})
 
     if device_name == "oxyreduct":
         for item in _discovery_oxyreduct_names(section):
-            yield item, {"device": device_name}
+            yield Service(item=item, parameters={"device": device_name})
 
 
 def check_ewon(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
     device_name = params["device"]
     if item == "eWON Status":
         if device_name is None:
-            yield 1, "This device requires configuration. Please pick the device type."
+            yield Result(
+                state=State.WARN,
+                summary="This device requires configuration. Please pick the device type.",
+            )
         else:
-            yield 0, f"Configured for {device_name}"
+            yield Result(
+                state=State.OK,
+                summary=f"Configured for {device_name}",
+            )
         return
 
     if device_name != "oxyreduct":
@@ -303,15 +307,18 @@ def check_ewon(item: str, params: Mapping[str, Any], section: Section) -> CheckR
         yield from dev_results
         return
 
-    yield 0, "No messages"
+    yield Result(state=State.OK, summary="No messages")
 
 
-check_info["ewon"].update(
-    {
-        "check_function": check_ewon,
-        "inventory_function": discovery_ewon,
-        "service_description": "%s",
-        "has_perfdata": True,
-        "group": "ewon",
-    }
+register.check_plugin(
+    name="ewon",
+    service_name="%s",
+    discovery_function=discovery_ewon,
+    discovery_default_parameters={
+        "device": None,
+    },
+    discovery_ruleset_name="ewon_discovery_rules",
+    check_function=check_ewon,
+    check_default_parameters={},
+    check_ruleset_name="ewon",
 )

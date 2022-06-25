@@ -269,7 +269,6 @@ class ErrorReporter:
         ("discovery", "discovery_netapp_api_ports_ignored"),
         ("discovery", "discovery_netapp_api_psu_rules"),
         ("discovery", "discovery_win_dhcp_pools"),
-        ("discovery", "ewon_discovery_rules"),
         ("discovery", "inventory_df_rules"),
         ("discovery", "inventory_fujitsu_ca_ports"),
         ("discovery", "inventory_sap_values"),

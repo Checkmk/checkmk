@@ -194,16 +194,6 @@ class PipeSubmitter(Submitter):
             pipe.flush()
 
 
-_name_sequence: "Optional[_RandomNameSequence]" = None
-
-
-def _get_candidate_names() -> "_RandomNameSequence":
-    global _name_sequence
-    if _name_sequence is None:
-        _name_sequence = _RandomNameSequence()
-    return _name_sequence
-
-
 class _RandomNameSequence:
     """An instance of _RandomNameSequence generates an endless
     sequence of unpredictable strings which can safely be incorporated
@@ -233,6 +223,9 @@ class _RandomNameSequence:
 
 
 class FileSubmitter(Submitter):
+
+    _names = _RandomNameSequence()
+
     def _submit(self, formatted_submittees: Iterable[_FormattedSubmittee]) -> None:
 
         now = time.time()
@@ -258,8 +251,8 @@ class FileSubmitter(Submitter):
                 )
 
     @contextmanager
-    @staticmethod
-    def _open_checkresult_file() -> Iterator[int]:
+    @classmethod
+    def _open_checkresult_file(cls) -> Iterator[int]:
         """Create some temporary file for storing the checkresults.
         Nagios expects a seven character long file starting with "c". Since Python3 we can not
         use tempfile.mkstemp anymore since it produces file names with 9 characters length.
@@ -270,8 +263,7 @@ class FileSubmitter(Submitter):
 
         flags = os.O_RDWR | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW
 
-        names = _get_candidate_names()
-        for name, _seq in zip(names, range(os.TMP_MAX)):
+        for name, _seq in zip(cls._names, range(os.TMP_MAX)):
             filepath = os.path.join(base_dir, "c" + name)
             try:
                 checkresult_file_fd = os.open(filepath, flags, 0o600)

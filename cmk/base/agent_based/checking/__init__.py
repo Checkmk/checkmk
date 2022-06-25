@@ -389,12 +389,11 @@ def _submit_aggregated_results(
         check_submission=config.check_submission,
         monitoring_core=config.monitoring_core,
         dry_run=dry_run,
+        host_name=host_name,
         keepalive=get_keepalive(cmk_version.edition()),
     ).submit(
         submittees=[
-            (host_name, s.service.description, s.result, s.cache_info)
-            for s in submittables
-            if s.submit
+            (s.service.description, s.result, s.cache_info) for s in submittables if s.submit
         ],
         perfdata_format="pnp" if config.perfdata_format == "pnp" else "standard",
         show_perfdata=show_perfdata,

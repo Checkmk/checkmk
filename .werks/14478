@@ -1,0 +1,11 @@
+Title: Restrict path param in cookies
+Class: security
+Compatible: compat
+Component: wato
+Date: 1656316769
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+The Path parameter of the cookies used to be set to '/'. Now it is restricted to the site URL prefix '/[SITE_ID]'.

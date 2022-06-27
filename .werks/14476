@@ -1,0 +1,12 @@
+Title: Update python-ldap
+Class: security
+Compatible: compat
+Component: wato
+Date: 1656065231
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p6
+
+Update python-ldap to version 3.4.0 which has a fix for CVE-2021-46823.

@@ -104,6 +104,15 @@ PERMISSIONS = permissions.AllPerm(
         permissions.Perm("wato.edit"),
         permissions.Perm("wato.manage_hosts"),
         permissions.Optional(permissions.Perm("wato.all_folders")),
+        permissions.Ignore(
+            permissions.AnyPerm(
+                [
+                    permissions.Perm("bi.see_all"),
+                    permissions.Perm("general.see_all"),
+                    permissions.Perm("mkeventd.seeall"),
+                ]
+            )
+        ),
     ]
 )
 

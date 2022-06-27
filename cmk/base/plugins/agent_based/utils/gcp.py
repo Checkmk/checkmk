@@ -38,12 +38,19 @@ class SectionItem:
     rows: Sequence[GCPResult]
 
 
+@dataclass(frozen=True)
+class Config:
+    services: Sequence[str]
+
+    def is_enabled(self, service: str) -> bool:
+        return service in self.services
+
+
 Section = Mapping[str, SectionItem]
 PiggyBackSection = Sequence[GCPResult]
 AssetType = str
 Item = str
 Project = str
-Config = Sequence[str]
 AssetTypeSection = Mapping[Item, GCPAsset]
 
 

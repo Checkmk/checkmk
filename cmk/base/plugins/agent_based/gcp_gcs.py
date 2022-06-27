@@ -26,7 +26,7 @@ def discover(
     section_gcp_service_gcs: Optional[gcp.Section],
     section_gcp_assets: Optional[gcp.AssetSection],
 ) -> DiscoveryResult:
-    if section_gcp_assets is None or "gcs" not in section_gcp_assets.config:
+    if section_gcp_assets is None or not section_gcp_assets.config.is_enabled("gcs"):
         return
     for item, bucket in section_gcp_assets[ASSET_TYPE].items():
         data = bucket.asset.resource.data

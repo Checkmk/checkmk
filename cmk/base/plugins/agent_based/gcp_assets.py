@@ -15,7 +15,7 @@ from .utils.gcp import AssetSection, AssetType, AssetTypeSection, Config, GCPAss
 def parse_assets(string_table: StringTable) -> AssetSection:
     info = json.loads(string_table[0][0])
     project = info["project"]
-    config: Config = info["config"]
+    config = Config(info["config"])
 
     assets = [GCPAsset.deserialize(row[0]) for row in string_table[1:]]
     sorted_assets: dict[AssetType, list[GCPAsset]] = defaultdict(list)

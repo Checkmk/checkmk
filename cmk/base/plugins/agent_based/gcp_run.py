@@ -25,7 +25,7 @@ def discover(
     section_gcp_service_cloud_run: Optional[gcp.Section],
     section_gcp_assets: Optional[gcp.AssetSection],
 ) -> DiscoveryResult:
-    if section_gcp_assets is None or "cloud_run" not in section_gcp_assets.config:
+    if section_gcp_assets is None or not section_gcp_assets.config.is_enabled("cloud_run"):
         return
     for item, service in section_gcp_assets[ASSET_TYPE].items():
         labels = [

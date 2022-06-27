@@ -25,7 +25,7 @@ def discover(
     section_gcp_service_filestore: Optional[gcp.Section],
     section_gcp_assets: Optional[gcp.AssetSection],
 ) -> DiscoveryResult:
-    if section_gcp_assets is None or "filestore" not in section_gcp_assets.config:
+    if section_gcp_assets is None or not section_gcp_assets.config.is_enabled("filestore"):
         return
     shares = section_gcp_assets[ASSET_TYPE]
     for item, share in shares.items():

@@ -22,7 +22,7 @@ ASSET_TYPE = "redis.googleapis.com/Instance"
 def discover(
     section_gcp_service_redis: Optional[gcp.Section], section_gcp_assets: Optional[gcp.AssetSection]
 ) -> DiscoveryResult:
-    if section_gcp_assets is None or "redis" not in section_gcp_assets.config:
+    if section_gcp_assets is None or not section_gcp_assets.config.is_enabled("redis"):
         return
     instances = section_gcp_assets[ASSET_TYPE]
     for item, instance in instances.items():

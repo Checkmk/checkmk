@@ -5,12 +5,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from dataclasses import dataclass
-from typing import Iterable, Mapping
+from typing import Mapping
 
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    DiscoveryResult,
+    StringTable,
+)
 
-DiscoveryResult = Iterable
-CheckResult = Iterable
+from .agent_based_api.v1 import any_of, register, Result, Service, SNMPTree, startswith, State
 
 
 @dataclass(frozen=True)
@@ -54,27 +57,28 @@ def parse_cisco_stack(string_table: StringTable) -> Section:
     }
 
 
-check_info["cisco_stack"] = {
-    "parse_function": parse_cisco_stack,
-    "snmp_info": (
-        ".1.3.6.1.4.1.9.9.500.1.2.1.1",
-        [
+register.snmp_section(
+    name="cisco_stack",
+    parse_function=parse_cisco_stack,
+    fetch=SNMPTree(
+        base=".1.3.6.1.4.1.9.9.500.1.2.1.1",
+        oids=[
             "1",  # cswSwitchNumCurrent
             "3",  # cswSwitchRole
             "6",  # cswSwitchState
         ],
     ),
-    "snmp_scan_function": lambda oid: (
-        oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.9.1.1208")
-        or oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.9.1.1745")
-        or oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.9.1.516")
+    detect=any_of(
+        startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.1208"),
+        startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.1745"),
+        startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.516"),
     ),
-}
+)
 
 
 def discovery_cisco_stack(section: Section) -> DiscoveryResult:
     for item in section:
-        yield item, {}
+        yield Service(item=item)
 
 
 def check_cisco_stack(item: str, params: Mapping[str, int], section: Section) -> CheckResult:
@@ -96,34 +100,30 @@ def check_cisco_stack(item: str, params: Mapping[str, int], section: Section) ->
     if (switch := section.get(item)) is None:
         return
 
-    yield (
-        params.get(switch.state, 3),
-        f"Switch state: {switch_state_descriptions.get(switch.state, 'Unknown')} {switch.state}",
+    yield Result(
+        state=State(params.get(switch.state, 3)),
+        summary=f"Switch state: {switch_state_descriptions.get(switch.state, 'Unknown')} {switch.state}",
     )
-    yield 0, f"Switch role: {switch.role}"
+    yield Result(state=State.OK, summary=f"Switch role: {switch.role}")
 
 
-check_info["cisco_stack"].update(
-    {
-        "default_levels_variable": "cisco_stack",
-        "inventory_function": discovery_cisco_stack,
-        "check_function": check_cisco_stack,
-        "service_description": "Switch stack status %s",
-        "group": "cisco_stack",
-    }
+register.check_plugin(
+    name="cisco_stack",
+    service_name="Switch stack status %s",
+    discovery_function=discovery_cisco_stack,
+    check_function=check_cisco_stack,
+    check_default_parameters={
+        "waiting": 0,
+        "progressing": 0,
+        "added": 0,
+        "ready": 0,
+        "sdmMismatch": 1,
+        "verMismatch": 1,
+        "featureMismatch": 1,
+        "newMasterInit": 0,
+        "provisioned": 0,
+        "invalid": 2,
+        "removed": 2,
+    },
+    check_ruleset_name="cisco_stack",
 )
-
-
-factory_settings["cisco_stack"] = {
-    "waiting": 0,
-    "progressing": 0,
-    "added": 0,
-    "ready": 0,
-    "sdmMismatch": 1,
-    "verMismatch": 1,
-    "featureMismatch": 1,
-    "newMasterInit": 0,
-    "provisioned": 0,
-    "invalid": 2,
-    "removed": 2,
-}

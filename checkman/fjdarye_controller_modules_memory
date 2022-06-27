@@ -1,0 +1,21 @@
+title: Fujitsu Storage Systems: Memory of Controller Modules
+agents: snmp
+catalog: hw/storagehw/fujitsu
+license: GPLv2
+distribution: none
+description:
+ This check monitors the reported status of the memory of all installed controller
+ modules in storage systems from Fujitsu.
+ Supported devices:
+ ETERNUS DX60
+ ETERNUS DX80
+ ETERNUS DX80 S2
+ ETERNUS DX500 S3
+
+item:
+ The index of the controller module memory in the SNMP table. It is of type
+ integer. The first module has an index of {0}.
+
+discovery:
+ One service is created for the memory of each controller module
+ if the state is not {invalid} (4).

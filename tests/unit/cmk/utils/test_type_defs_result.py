@@ -17,11 +17,11 @@ class TestOk:
     def result(self, value):
         return OK(value)
 
-    def test_bad_nesting(self, result) -> None:
+    def test_bad_nesting(self, result) -> None:  # type:ignore[no-untyped-def]
         with pytest.raises(TypeError):
             Error(result)
 
-    def test_eq(self, result, value) -> None:
+    def test_eq(self, result, value) -> None:  # type:ignore[no-untyped-def]
         assert (result == value) is False
         assert (value == result) is False
         assert (result != value) is True
@@ -39,20 +39,20 @@ class TestOk:
         assert (result != err) is True
         assert (err != result) is True
 
-    def test_ok_accessor(self, result, value) -> None:
+    def test_ok_accessor(self, result, value) -> None:  # type:ignore[no-untyped-def]
         assert result.ok == value
 
-    def test_error_accessor(self, result) -> None:
+    def test_error_accessor(self, result) -> None:  # type:ignore[no-untyped-def]
         with pytest.raises(ValueError):
             _err = result.error
 
-    def test_is_ok_is_true(self, result) -> None:
+    def test_is_ok_is_true(self, result) -> None:  # type:ignore[no-untyped-def]
         assert result.is_ok() is True
 
-    def test_is_error_is_false(self, result) -> None:
+    def test_is_error_is_false(self, result) -> None:  # type:ignore[no-untyped-def]
         assert result.is_error() is False
 
-    def test_cmp_ok(self, result) -> None:
+    def test_cmp_ok(self, result) -> None:  # type:ignore[no-untyped-def]
         other: Result[int, int] = OK(1)
         assert result.ok < other.ok
 
@@ -66,7 +66,7 @@ class TestOk:
         assert other >= result
         assert other >= OK(other.ok)
 
-    def test_cmp_err(self, result, value) -> None:
+    def test_cmp_err(self, result, value) -> None:  # type:ignore[no-untyped-def]
         other: Result[int, int] = Error(value)
         assert result.ok == other.error
 
@@ -78,30 +78,30 @@ class TestOk:
         assert other > result
         assert other >= result
 
-    def test_iter(self, result, value) -> None:
+    def test_iter(self, result, value) -> None:  # type:ignore[no-untyped-def]
         assert list(result) == [value]
 
-    def test_iter_error(self, result) -> None:
+    def test_iter_error(self, result) -> None:  # type:ignore[no-untyped-def]
         assert list(result.iter_error()) == []
 
-    def test_as_optional(self, result) -> None:
+    def test_as_optional(self, result) -> None:  # type:ignore[no-untyped-def]
         assert result.as_optional() == result.ok
 
-    def test_flatten1(self, result) -> None:
+    def test_flatten1(self, result) -> None:  # type:ignore[no-untyped-def]
         nested: Result[Result, Result] = OK(result)
         assert nested != result
         assert nested.flatten() == result
         assert nested.flatten() == result.flatten()
         assert nested.flatten() == nested.join()
 
-    def test_flatten2(self, result) -> None:
+    def test_flatten2(self, result) -> None:  # type:ignore[no-untyped-def]
         nested: Result[Result, Result] = OK(OK(result))
         assert nested != result
         assert nested.flatten() == result
         assert nested.flatten() == result.flatten()
         assert nested.flatten() == nested.join()
 
-    def test_bind_ok(self, result) -> None:
+    def test_bind_ok(self, result) -> None:  # type:ignore[no-untyped-def]
         ok: Result[str, str] = OK("ok")
         assert result.ok != ok.ok
 
@@ -109,14 +109,14 @@ class TestOk:
         assert other != result
         assert other == ok
 
-    def test_bind_error(self, result) -> None:
+    def test_bind_error(self, result) -> None:  # type:ignore[no-untyped-def]
         error: Result[str, str] = Error("error")
 
         other = result.bind(lambda v: error)
         assert other != result
         assert other == error
 
-    def test_map(self, result) -> None:
+    def test_map(self, result) -> None:  # type:ignore[no-untyped-def]
         ok = "ok"
         assert not isinstance(result.ok, type(ok))
 
@@ -124,11 +124,11 @@ class TestOk:
         assert other != result
         assert other == OK(ok)
 
-    def test_map_error(self, result) -> None:
+    def test_map_error(self, result) -> None:  # type:ignore[no-untyped-def]
         error = "error"
         assert result.map_error(lambda v: error) == result
 
-    def test_fold(self, result) -> None:
+    def test_fold(self, result) -> None:  # type:ignore[no-untyped-def]
         assert result.fold(ok=lambda ok_: "ok", error=lambda err_: "error") == "ok"
 
 
@@ -141,11 +141,11 @@ class TestError:
     def result(self, value):
         return Error(value)
 
-    def test_bad_nesting(self, result) -> None:
+    def test_bad_nesting(self, result) -> None:  # type:ignore[no-untyped-def]
         with pytest.raises(TypeError):
             OK(result)
 
-    def test_eq(self, result, value) -> None:
+    def test_eq(self, result, value) -> None:  # type:ignore[no-untyped-def]
         assert (result == value) is False
         assert (value == result) is False
         assert (result != value) is True
@@ -163,20 +163,20 @@ class TestError:
         assert (result != err) is False
         assert (err != result) is False
 
-    def test_ok_accessor(self, result) -> None:
+    def test_ok_accessor(self, result) -> None:  # type:ignore[no-untyped-def]
         with pytest.raises(ValueError):
             _ok = result.ok
 
-    def test_error_accessor(self, result, value) -> None:
+    def test_error_accessor(self, result, value) -> None:  # type:ignore[no-untyped-def]
         assert result.error == value
 
-    def test_is_ok_is_false(self, result) -> None:
+    def test_is_ok_is_false(self, result) -> None:  # type:ignore[no-untyped-def]
         assert result.is_ok() is False
 
-    def test_is_error_is_true(self, result) -> None:
+    def test_is_error_is_true(self, result) -> None:  # type:ignore[no-untyped-def]
         assert result.is_error() is True
 
-    def test_cmp_err(self, result) -> None:
+    def test_cmp_err(self, result) -> None:  # type:ignore[no-untyped-def]
         other: Result[int, int] = Error(1)
         assert result.error < other.error
 
@@ -190,7 +190,7 @@ class TestError:
         assert other >= result
         assert other >= Error(other.error)
 
-    def test_cmp_ok(self, result, value) -> None:
+    def test_cmp_ok(self, result, value) -> None:  # type:ignore[no-untyped-def]
         other: Result[int, int] = OK(value)
         assert result.error == other.ok
 
@@ -202,37 +202,37 @@ class TestError:
         assert other < result
         assert other <= result
 
-    def test_iter(self, result) -> None:
+    def test_iter(self, result) -> None:  # type:ignore[no-untyped-def]
         assert list(result) == []
 
-    def test_iter_error(self, result, value) -> None:
+    def test_iter_error(self, result, value) -> None:  # type:ignore[no-untyped-def]
         assert list(result.iter_error()) == [value]
 
-    def test_as_optional(self, result) -> None:
+    def test_as_optional(self, result) -> None:  # type:ignore[no-untyped-def]
         assert result.as_optional() is None
 
-    def test_flatten1(self, result) -> None:
+    def test_flatten1(self, result) -> None:  # type:ignore[no-untyped-def]
         nested: Result[Result, Result] = Error(result)
         assert nested != result
         assert nested.flatten() == result
         assert nested.flatten() == result.flatten()
         assert nested.flatten() == nested.join()
 
-    def test_flatten2(self, result) -> None:
+    def test_flatten2(self, result) -> None:  # type:ignore[no-untyped-def]
         nested: Result[Result, Result] = Error(Error(result))
         assert nested != result
         assert nested.flatten() == result
         assert nested.flatten() == result.flatten()
         assert nested.flatten() == nested.join()
 
-    def test_bind_ok(self, result) -> None:
+    def test_bind_ok(self, result) -> None:  # type:ignore[no-untyped-def]
         ok: Result[str, str] = OK("ok")
 
         other = result.bind(lambda v: ok)
         assert other != ok
         assert other == result
 
-    def test_bind_error(self, result) -> None:
+    def test_bind_error(self, result) -> None:  # type:ignore[no-untyped-def]
         error: Result[str, str] = Error("error")
         assert result.error != error.error
 
@@ -240,11 +240,11 @@ class TestError:
         assert other != error
         assert other == result
 
-    def test_map(self, result) -> None:
+    def test_map(self, result) -> None:  # type:ignore[no-untyped-def]
         ok = "ok"
         assert result.map(lambda v: ok) == result
 
-    def test_map_error(self, result) -> None:
+    def test_map_error(self, result) -> None:  # type:ignore[no-untyped-def]
         error = "error"
         assert not isinstance(result.error, type(error))
 
@@ -252,5 +252,5 @@ class TestError:
         assert other != result
         assert other.error == error
 
-    def test_fold(self, result) -> None:
+    def test_fold(self, result) -> None:  # type:ignore[no-untyped-def]
         assert result.fold(ok=lambda ok_: "ok", error=lambda err_: "error") == "error"

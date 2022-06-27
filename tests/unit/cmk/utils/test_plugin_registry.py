@@ -54,12 +54,12 @@ def test_method_registration() -> None:
     assert registry.get("MethodRegisteredPlugin") == MethodRegisteredPlugin
 
 
-def test_contains(basic_registry) -> None:
+def test_contains(basic_registry) -> None:  # type:ignore[no-untyped-def]
     assert "bla" not in basic_registry
     assert "Plugin" in basic_registry
 
 
-def test_delitem(basic_registry) -> None:
+def test_delitem(basic_registry) -> None:  # type:ignore[no-untyped-def]
     with pytest.raises(KeyError):
         basic_registry.unregister("bla")
 
@@ -70,26 +70,26 @@ def test_delitem(basic_registry) -> None:
     basic_registry.unregister("DelPlugin")
 
 
-def test_getitem(basic_registry) -> None:
+def test_getitem(basic_registry) -> None:  # type:ignore[no-untyped-def]
     with pytest.raises(KeyError):
         _unused = basic_registry["bla"]  # noqa: F841
 
     assert basic_registry["Plugin"] == Plugin
 
 
-def test_values(basic_registry) -> None:
+def test_values(basic_registry) -> None:  # type:ignore[no-untyped-def]
     assert list(basic_registry.values()) == [Plugin]
 
 
-def test_items(basic_registry) -> None:
+def test_items(basic_registry) -> None:  # type:ignore[no-untyped-def]
     assert list(basic_registry.items()) == [("Plugin", Plugin)]
 
 
-def test_keys(basic_registry) -> None:
+def test_keys(basic_registry) -> None:  # type:ignore[no-untyped-def]
     assert list(basic_registry.keys()) == ["Plugin"]
 
 
-def test_get(basic_registry) -> None:
+def test_get(basic_registry) -> None:  # type:ignore[no-untyped-def]
     assert basic_registry.get("bla") is None
     assert basic_registry.get("bla", "blub") == "blub"
 

@@ -69,7 +69,9 @@ class BISearcher(ABCBISearcher):
 
         raise NotImplementedError("Invalid condition type %r" % condition["type"])
 
-    def _host_match_groups(self, hosts: List[BIHostData], match="name"):
+    def _host_match_groups(  # type:ignore[no-untyped-def]
+        self, hosts: List[BIHostData], match="name"
+    ):
         return {host.name: (getattr(host, match),) for host in hosts}
 
     def get_host_name_matches(
@@ -191,14 +193,16 @@ class BISearcher(ABCBISearcher):
             )
         )
 
-    def filter_host_labels(
+    def filter_host_labels(  # type:ignore[no-untyped-def]
         self, hosts: Iterable[BIHostData], required_labels
     ) -> Iterable[BIHostData]:
         if not required_labels:
             return hosts
         return (x for x in hosts if matches_labels(x.labels, required_labels))
 
-    def filter_service_labels(self, services: List[BIServiceSearchMatch], required_labels):
+    def filter_service_labels(  # type:ignore[no-untyped-def]
+        self, services: List[BIServiceSearchMatch], required_labels
+    ):
         if not required_labels:
             return services
 

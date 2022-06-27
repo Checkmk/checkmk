@@ -23,7 +23,7 @@ def add_tmp_path_to_sys_path(tmp_path: Path) -> Iterator[Path]:
 
 
 @pytest.fixture(name="package_type", params=["package", "namespace"])
-def fixture_package_type(request) -> str:
+def fixture_package_type(request) -> str:  # type:ignore[no-untyped-def]
     return request.param
 
 

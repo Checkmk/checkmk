@@ -22,13 +22,13 @@ def fixture_tmp_fstab(tmp_path, monkeypatch):
 
 
 @pytest.mark.usefixtures("site_context")
-def test_add_to_fstab_not_existing(tmp_fstab, site_context) -> None:
+def test_add_to_fstab_not_existing(tmp_fstab, site_context) -> None:  # type:ignore[no-untyped-def]
     assert not tmp_fstab.exists()
     add_to_fstab(site_context)
     assert not tmp_fstab.exists()
 
 
-def test_add_to_fstab(tmp_path, tmp_fstab, site_context) -> None:
+def test_add_to_fstab(tmp_path, tmp_fstab, site_context) -> None:  # type:ignore[no-untyped-def]
     tmp_fstab.open("w", encoding="utf-8").write("# system fstab bla\n")
     add_to_fstab(site_context)
     assert tmp_fstab.open().read() == (
@@ -38,7 +38,9 @@ def test_add_to_fstab(tmp_path, tmp_fstab, site_context) -> None:
     )
 
 
-def test_add_to_fstab_with_size(tmp_path, tmp_fstab, site_context) -> None:
+def test_add_to_fstab_with_size(  # type:ignore[no-untyped-def]
+    tmp_path, tmp_fstab, site_context
+) -> None:
     tmp_fstab.open("w", encoding="utf-8").write("# system fstab bla\n")
     add_to_fstab(site_context, tmpfs_size="1G")
     assert tmp_fstab.open().read() == (
@@ -48,7 +50,9 @@ def test_add_to_fstab_with_size(tmp_path, tmp_fstab, site_context) -> None:
     )
 
 
-def test_add_to_fstab_no_newline_at_end(tmp_path, tmp_fstab, site_context) -> None:
+def test_add_to_fstab_no_newline_at_end(  # type:ignore[no-untyped-def]
+    tmp_path, tmp_fstab, site_context
+) -> None:
     tmp_fstab.open("w", encoding="utf-8").write("# system fstab bla")
     add_to_fstab(site_context)
     assert tmp_fstab.open().read() == (
@@ -58,7 +62,9 @@ def test_add_to_fstab_no_newline_at_end(tmp_path, tmp_fstab, site_context) -> No
     )
 
 
-def test_add_to_fstab_empty(tmp_path, tmp_fstab, site_context) -> None:
+def test_add_to_fstab_empty(  # type:ignore[no-untyped-def]
+    tmp_path, tmp_fstab, site_context
+) -> None:
     tmp_fstab.open("w", encoding="utf-8").write("")
     add_to_fstab(site_context)
     assert tmp_fstab.open().read() == (
@@ -101,7 +107,9 @@ def _prepare_tmpfs(site_context):
     return files
 
 
-def test_tmpfs_restore_no_tmpfs(site_context, monkeypatch, not_restored_file) -> None:
+def test_tmpfs_restore_no_tmpfs(  # type:ignore[no-untyped-def]
+    site_context, monkeypatch, not_restored_file
+) -> None:
     # Use rm logic in unmount_tmpfs instead of unmount
     monkeypatch.setattr(omdlib.tmpfs, "tmpfs_mounted", lambda x: False)
 
@@ -151,7 +159,9 @@ def fixture_mock_umount(monkeypatch):
 
 
 @pytest.mark.usefixtures("mock_umount")
-def test_tmpfs_restore_with_tmpfs(site_context, monkeypatch, not_restored_file) -> None:
+def test_tmpfs_restore_with_tmpfs(  # type:ignore[no-untyped-def]
+    site_context, monkeypatch, not_restored_file
+) -> None:
     tmp_files = _prepare_tmpfs(site_context)
 
     # Now perform unmount call and test result
@@ -169,7 +179,7 @@ def test_tmpfs_restore_with_tmpfs(site_context, monkeypatch, not_restored_file) 
     assert not not_restored_file.exists()
 
 
-def test_tmpfs_mount_no_dump(site_context, monkeypatch) -> None:
+def test_tmpfs_mount_no_dump(site_context, monkeypatch) -> None:  # type:ignore[no-untyped-def]
     tmp_dir = Path(site_context.tmp_dir)
     tmp_dir.mkdir(parents=True, exist_ok=True)
 

@@ -37,7 +37,7 @@ import cmk.utils.translations as translations
         ),
     ],
 )
-def test_translate_hostname(hostname, translation, result) -> None:
+def test_translate_hostname(hostname, translation, result) -> None:  # type:ignore[no-untyped-def]
     assert translations.translate_hostname(translation, hostname) == result
 
 
@@ -228,5 +228,7 @@ def test_translate_hostname(hostname, translation, result) -> None:
         ),
     ],
 )
-def test_translate_service_description(service_description, translation, result) -> None:
+def test_translate_service_description(  # type:ignore[no-untyped-def]
+    service_description, translation, result
+) -> None:
     assert translations.translate_service_description(translation, service_description) == result

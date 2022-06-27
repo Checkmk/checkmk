@@ -24,7 +24,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 class AggregationData:
-    def __init__(self, bi_rawdata, config, error) -> None:
+    def __init__(self, bi_rawdata, config, error) -> None:  # type:ignore[no-untyped-def]
         super().__init__()
         self._bi_rawdata = bi_rawdata
         self._error = error
@@ -197,7 +197,7 @@ class AggregationRawdataGenerator:
 
 
 class AggregationOutputRenderer:
-    def render(self, aggregation_data_results) -> None:
+    def render(self, aggregation_data_results) -> None:  # type:ignore[no-untyped-def]
         connection_info_fields = ["missing_sites", "missing_aggr", "generic_errors"]
         connection_info: Dict[str, Set[str]] = {field: set() for field in connection_info_fields}  #
 

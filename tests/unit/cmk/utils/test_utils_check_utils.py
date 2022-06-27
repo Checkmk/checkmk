@@ -22,7 +22,7 @@ from cmk.utils.check_utils import (
         {"levels": (1, 2)},
     ],
 )
-def test_un_wrap_parameters(params) -> None:
+def test_un_wrap_parameters(params) -> None:  # type:ignore[no-untyped-def]
     wrapped = wrap_parameters(params)
     assert isinstance(wrapped, dict)
     assert unwrap_parameters(wrapped) == params

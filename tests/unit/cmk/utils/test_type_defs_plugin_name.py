@@ -15,7 +15,7 @@ from cmk.utils.type_defs import CheckPluginName, SectionName
 @pytest.mark.parametrize(
     "str_name", ["", 23] + list("\"'^°!²³§$½¬%&/{([])}=?ß\\'`*+~#-.:,;ÜÖÄüöä<>|")
 )
-def test_invalid_plugin_name(str_name) -> None:
+def test_invalid_plugin_name(str_name) -> None:  # type:ignore[no-untyped-def]
     with pytest.raises((TypeError, ValueError)):
         CheckPluginName(str_name)
 

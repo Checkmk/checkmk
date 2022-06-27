@@ -2846,7 +2846,7 @@ def _is_version_update_allowed(from_version: str, to_version: str) -> bool:
     return True
 
 
-def _update_cmk_core_config(site: SiteContext):
+def _update_cmk_core_config(site: SiteContext):  # type:ignore[no-untyped-def]
     if site.conf["CORE"] == "none":
         return  # No core config is needed in this case
 
@@ -3170,7 +3170,7 @@ def main_su(
         bail_out("Cannot open a shell for user %s" % site.name)
 
 
-def _try_backup_site_to_tarfile(
+def _try_backup_site_to_tarfile(  # type:ignore[no-untyped-def]
     fh: Union[io.BufferedWriter, BinaryIO],
     tar_mode: str,
     options: CommandOptions,

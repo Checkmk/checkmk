@@ -4,8 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import dataclasses
 from contextlib import suppress
-from typing import Any, Dict, List, Literal, Mapping, Optional, Tuple, TypedDict
+from typing import Any, Dict, Iterable, List, Literal, Mapping, Optional, Tuple, TypedDict
 
 from cmk.base.plugins.agent_based.utils.df import BlocksSubsection, InodesSubsection
 
@@ -90,6 +91,13 @@ register.agent_section(
 )
 
 
+@dataclasses.dataclass(frozen=True)
+class DatafileUsage:
+    used: float
+    allocated: float
+    max: float
+
+
 def _format_item_mssql_datafiles(
     inst: Optional[str],
     database: str,
@@ -104,9 +112,7 @@ def _format_item_mssql_datafiles(
 
 def _mssql_datafiles_process_sizes(
     params: Mapping[str, Any],
-    used_size: float,
-    allocated_size: float,
-    max_size: float,
+    datafile_usage: DatafileUsage,
 ) -> CheckResult:
     def calculate_levels(
         levels: Tuple[float, float],
@@ -127,15 +133,33 @@ def _mssql_datafiles_process_sizes(
         return None
 
     for param_key, name, perf_key, value, reference_value in [
-        ("used_levels", "Used", "data_size", used_size, max_size),
-        ("allocated_used_levels", "Allocated used", None, used_size, allocated_size),
-        ("allocated_levels", "Allocated", "allocated_size", allocated_size, max_size),
+        (
+            "used_levels",
+            "Used",
+            "data_size",
+            datafile_usage.used,
+            datafile_usage.max,
+        ),
+        (
+            "allocated_used_levels",
+            "Allocated used",
+            None,
+            datafile_usage.used,
+            datafile_usage.allocated,
+        ),
+        (
+            "allocated_levels",
+            "Allocated",
+            "allocated_size",
+            datafile_usage.allocated,
+            datafile_usage.max,
+        ),
     ]:
         raw_levels = params.get(param_key, (None, None))
         if isinstance(raw_levels, list):
             levels = None
             for level_set in raw_levels:
-                if max_size > level_set[0]:
+                if datafile_usage.max > level_set[0]:
                     levels = calculate_levels(level_set[1], reference_value)
                     break
         else:
@@ -152,7 +176,7 @@ def _mssql_datafiles_process_sizes(
 
     yield Result(
         state=State.OK,
-        summary=f"Maximum size: {render.bytes(max_size)}",
+        summary=f"Maximum size: {render.bytes(datafile_usage.max)}",
     )
 
 
@@ -193,49 +217,74 @@ def discover_mssql_transactionlogs(
     yield from discover_mssql_common("transactionlogs", params, section_mssql_transactionlogs)
 
 
+def _datafile_usage(
+    instances: Iterable[MSSQLInstanceData],
+    available_bytes: Mapping[str, float],
+) -> Optional[DatafileUsage]:
+    max_size_sum = 0.0
+    allocated_size_sum = 0.0
+    used_size_sum = 0.0
+    unlimited = False
+    instances_found = False
+
+    for instance in instances:
+        instances_found = True
+        max_size = instance["max_size"]
+        filesystem_free_size = available_bytes.get(instance["mountpoint"], max_size)
+        unlimited = unlimited or instance["unlimited"]
+        if (max_size or 0) > (filesystem_free_size or 0) or unlimited:
+            max_size = filesystem_free_size
+        allocated_size = instance["allocated_size"]
+        used_size = instance["used_size"]
+        if max_size:
+            max_size_sum += max_size
+        if allocated_size:
+            allocated_size_sum += allocated_size
+        if used_size:
+            used_size_sum += used_size
+
+    return (
+        DatafileUsage(
+            used=used_size_sum,
+            allocated=allocated_size_sum,
+            max=max_size_sum,
+        )
+        if instances_found
+        else None
+    )
+
+
 def check_mssql_common(
     item: str,
     params: Mapping[str, Any],
     section: SectionDatafiles,
     section_df: Optional[Tuple[BlocksSubsection, InodesSubsection]],
 ) -> CheckResult:
-    max_size_sum = 0.0
-    allocated_size_sum = 0.0
-    used_size_sum = 0.0
-    unlimited = False
-
-    available_bytes = {}
-    if section_df:
-        available_bytes = {f.mountpoint[0]: f.avail_mb * 1024 * 1024 for f in section_df[0]}
-
-    found = False
-    for (inst, database, file_name), values in section.items():
+    instances_for_item = (
+        values
+        for (inst, database, file_name), values in section.items()
         if (
             _format_item_mssql_datafiles(inst, database, file_name) == item
             or _format_item_mssql_datafiles(inst, database, None) == item
-        ):
-            found = True
-            max_size = values["max_size"]
-            filesystem_free_size = available_bytes.get(values["mountpoint"], max_size)
-            unlimited = unlimited or values["unlimited"]
-            if (max_size or 0) > (filesystem_free_size or 0) or unlimited:
-                max_size = filesystem_free_size
-            allocated_size = values["allocated_size"]
-            used_size = values["used_size"]
-            if max_size:
-                max_size_sum += max_size
-            if allocated_size:
-                allocated_size_sum += allocated_size
-            if used_size:
-                used_size_sum += used_size
+        )
+    )
+    available_bytes = (
+        {f.mountpoint[0]: f.avail_mb * 1024 * 1024 for f in section_df[0]} if section_df else {}
+    )
 
-    if not found:
+    if not (
+        datafile_usage := _datafile_usage(
+            instances_for_item,
+            available_bytes,
+        )
+    ):
         # Assume general connection problem to the database, which is reported
         # by the "X Instance" service and skip this check.
         raise IgnoreResultsError("Failed to connect to database")
 
     yield from _mssql_datafiles_process_sizes(
-        params, used_size_sum, allocated_size_sum, max_size_sum
+        params,
+        datafile_usage,
     )
 
 

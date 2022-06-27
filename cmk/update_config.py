@@ -183,7 +183,12 @@ REMOVED_CHECK_PLUGIN_MAP = {
     CheckPluginName("fjdarye101_devencs"): CheckPluginName("fjdarye_device_enclosures"),
     CheckPluginName("fjdarye500_devencs"): CheckPluginName("fjdarye_device_enclosures"),
     CheckPluginName("fjdarye60_devencs"): CheckPluginName("fjdarye_device_enclosures"),
+    CheckPluginName("fjdarye100_syscaps"): CheckPluginName("fjdarye_system_capacitors"),
+    CheckPluginName("fjdarye101_syscaps"): CheckPluginName("fjdarye_system_capacitors"),
+    CheckPluginName("fjdarye500_syscaps"): CheckPluginName("fjdarye_system_capacitors"),
+    CheckPluginName("fjdarye60_syscaps"): CheckPluginName("fjdarye_system_capacitors"),
 }
+
 
 # List[(old_config_name, new_config_name, replacement_dict{old: new})]
 REMOVED_GLOBALS_MAP: List[Tuple[str, str, Dict]] = [

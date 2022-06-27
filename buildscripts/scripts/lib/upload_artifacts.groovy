@@ -1,6 +1,8 @@
 // library for uploading packages
 package lib
 
+versioning = load 'buildscripts/scripts/lib/versioning.groovy'
+
 def upload(Map args) {
     // needed args + desc:
     // NAME: Name of the artifact to display
@@ -12,7 +14,7 @@ def upload(Map args) {
     stage(args.NAME + ' upload package') {
         def FILE_BASE = get_file_base(args.FILE_PATH)
         def ARCHIVE_BASE = get_archive_base(FILE_BASE)
-        
+
         via_rsync(ARCHIVE_BASE, args.CMK_VERS, args.FILE_NAME, args.UPLOAD_DEST, args.PORT)
     }
 }
@@ -28,7 +30,7 @@ def download_source_tar(DOWNLOAD_SOURCE, PORT, CMK_VERSION, DOWNLOAD_DEST, EDITI
 }
 
 def download_docker_tar(DOWNLOAD_SOURCE, PORT, CMK_VERSION, DOWNLOAD_DEST, EDITION) {
-    def FILE_PATTERN = "check-mk-${EDITION}-docker-${CMK_VERSION}.tar.gz"
+    def FILE_PATTERN = versioning.get_docker_artifact_name(EDITION, CMK_VERSION)
     download_version_dir(DOWNLOAD_SOURCE, PORT, CMK_VERSION, DOWNLOAD_DEST, FILE_PATTERN, 'docker tar')
 }
 

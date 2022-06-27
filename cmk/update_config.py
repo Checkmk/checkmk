@@ -175,6 +175,10 @@ REMOVED_CHECK_PLUGIN_MAP = {
     CheckPluginName("fjdarye101_cmods_mem"): CheckPluginName("fjdarye_controller_modules_memory"),
     CheckPluginName("fjdarye500_cmods_mem"): CheckPluginName("fjdarye_controller_modules_memory"),
     CheckPluginName("fjdarye60_cmods_mem"): CheckPluginName("fjdarye_controller_modules_memory"),
+    CheckPluginName("fjdarye100_conencs"): CheckPluginName("fjdarye_controller_enclosures"),
+    CheckPluginName("fjdarye101_conencs"): CheckPluginName("fjdarye_controller_enclosures"),
+    CheckPluginName("fjdarye500_conencs"): CheckPluginName("fjdarye_controller_enclosures"),
+    CheckPluginName("fjdarye60_conencs"): CheckPluginName("fjdarye_controller_enclosures"),
 }
 
 # List[(old_config_name, new_config_name, replacement_dict{old: new})]

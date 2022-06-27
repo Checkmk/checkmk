@@ -5,8 +5,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-# pylint: disable=no-else-return
-
 # check_mk plugin to monitor Fujitsu storage systems supporting FJDARY-E60.MIB or FJDARY-E100.MIB
 # Copyright (c) 2012 FuH Entwicklungsgesellschaft mbH, Umkirch, Germany. All rights reserved.
 # Author: Philipp Hoefflin, 2012, hoefflin+cmk@fuh-e.de

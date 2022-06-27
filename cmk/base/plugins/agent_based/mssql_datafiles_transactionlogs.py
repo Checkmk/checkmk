@@ -229,19 +229,16 @@ def _datafile_usage(
 
     for instance in instances:
         instances_found = True
-        max_size = instance["max_size"]
-        filesystem_free_size = available_bytes.get(instance["mountpoint"], max_size)
-        unlimited = unlimited or instance["unlimited"]
-        if (max_size or 0) > (filesystem_free_size or 0) or unlimited:
+        unlimited |= instance["unlimited"]
+        allocated_size_sum += instance["allocated_size"] or 0
+        used_size_sum += instance["used_size"] or 0
+
+        max_size = instance["max_size"] or 0
+        filesystem_free_size = available_bytes.get(instance["mountpoint"])
+        if filesystem_free_size is not None and ((max_size > filesystem_free_size) or unlimited):
             max_size = filesystem_free_size
-        allocated_size = instance["allocated_size"]
-        used_size = instance["used_size"]
-        if max_size:
-            max_size_sum += max_size
-        if allocated_size:
-            allocated_size_sum += allocated_size
-        if used_size:
-            used_size_sum += used_size
+
+        max_size_sum += max_size
 
     return (
         DatafileUsage(

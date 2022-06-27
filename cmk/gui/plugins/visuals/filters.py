@@ -1094,8 +1094,7 @@ class FilterStateType(FilterTristate):
         html.end_radio_group()
 
     def filter_code(self, infoname: str, positive: bool):
-        filter_value: str = "HARD" if positive else "SOFT"
-        return "Filter: state_type = %s\n" % filter_value
+        return "Filter: state_type = %d\n" % int(positive)
 
 
 filter_registry.register(

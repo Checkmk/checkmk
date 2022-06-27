@@ -1,0 +1,17 @@
+Title: Fix regression in host and service type filter
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1655998509
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p27
+
+Werk #14333 should fix the functionality of host and service type filter in
+views wth datasource "log" but broke it for host and service views.
+
+This werk restores the behaviour of the filter before 2.0.0p26.
+
+For views with datasource "log", please use the filter "Log: state information".

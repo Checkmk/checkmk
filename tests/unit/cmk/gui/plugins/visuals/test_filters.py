@@ -285,13 +285,13 @@ filter_tests = [
     # Testing base class FmilterStateType, FilterTriState
     FilterTest(
         ident="host_state_type",
-        request_vars=[('is_host_state_type', '0')],
-        expected_filters="Filter: state_type = SOFT\n",
+        request_vars=[("is_host_state_type", "0")],
+        expected_filters="Filter: state_type = 0\n",
     ),
     FilterTest(
         ident="host_state_type",
-        request_vars=[('is_host_state_type', '1')],
-        expected_filters="Filter: state_type = HARD\n",
+        request_vars=[("is_host_state_type", "1")],
+        expected_filters="Filter: state_type = 1\n",
     ),
     FilterTest(
         ident="host_state_type",

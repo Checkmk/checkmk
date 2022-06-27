@@ -1,0 +1,17 @@
+Title: Fix "Move this host to another folder" option
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1656315360
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p4
+
+The option should show the possible folders the host could be moved to but
+ended up in perpetual loading and an entry like "AttributeError: 'list' object
+has no attribute 'split'" in ~/var/log/web.log, e.g. for normal monitoring
+users.
+
+Moving the host via checkbox and option "Hosts" - "Move to other folder" was
+still possible.

@@ -353,7 +353,7 @@ class _RedisHelper:
             # Remove folders without permission
             for check_path in list(path_to_title.keys()):
                 if permitted_groups := self._folder_metadata[check_path].permitted_groups:
-                    if not user_cgs.intersection(set(permitted_groups.split(","))):
+                    if not user_cgs.intersection(set(permitted_groups)):
                         del path_to_title[check_path]
 
         return [(key.rstrip("/"), value) for key, value in path_to_title.items()]

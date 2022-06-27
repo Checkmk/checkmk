@@ -9,6 +9,7 @@ import pytest
 import cmk.base.plugins.agent_based.mssql_datafiles_transactionlogs as msdt
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 from cmk.base.plugins.agent_based.df_section import parse_df
+from cmk.base.plugins.agent_based.utils.df import DfBlock
 
 SECTION_MSSQL = msdt.parse_mssql_datafiles(
     [
@@ -233,3 +234,48 @@ def test_check_mssql_transactionlogs(item, section_mssql, section_df, check_resu
         )
         == check_results
     )
+
+
+def test_check_mssql_common_unlimited() -> None:
+    assert list(
+        msdt.check_mssql_common(
+            "SQLEXPRESS.GIS_extern.GIS_extern_dat",
+            {"used_levels": (80.0, 90.0)},
+            {
+                ("SQLEXPRESS", "GIS_extern", "GIS_extern_dat"): {
+                    "unlimited": True,
+                    "max_size": 0.0,
+                    "allocated_size": 44844449792.0,
+                    "used_size": 40787509248.0,
+                    "mountpoint": "F",
+                },
+            },
+            (
+                (
+                    DfBlock(
+                        device="DATA",
+                        fs_type="NTFS",
+                        size_mb=133101.99609375,
+                        avail_mb=23038.49609375,
+                        reserved_mb=0.0,
+                        mountpoint="F:/",
+                        uuid=None,
+                    ),
+                ),
+                (),
+            ),
+        )
+    ) == [
+        # wrong, will be fixed in the following commits
+        Result(state=State.CRIT, summary="Used: 38.0 GiB (warn/crit at 18.0 GiB/20.2 GiB)"),
+        Metric(
+            "data_size",
+            40787509248.0,
+            levels=(19326091264.0, 21741852672.0),
+            boundaries=(0.0, 24157614080.0),
+        ),
+        Result(state=State.OK, summary="Allocated used: 38.0 GiB"),
+        Result(state=State.OK, summary="Allocated: 41.8 GiB"),
+        Metric("allocated_size", 44844449792.0, boundaries=(0.0, 24157614080.0)),
+        Result(state=State.OK, summary="Maximum size: 22.5 GiB"),
+    ]

@@ -1,0 +1,14 @@
+Title: tsm_scratch: add support for Linux agent plugin
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1656337896
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1
+
+The dataset required for the check plugin
+<i>IBM Tivoli Storage Manager (TSM): Number of Tapes in Scratch Pool</i>
+(<tt>tsm_scratch</tt>) is now also created by the Linux agent plugin.
+Previously this section has been created by the Windows plugin only.

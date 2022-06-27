@@ -186,6 +186,22 @@ from cmk.gui.wato.pages.rulesets import _is_var_to_delete
             ],
             id="search_hosttags",
         ),
+        pytest.param(
+            [
+                ("search_p_ruleset_group_USE", "ON"),
+                (
+                    "search_p_ruleset_group",
+                    "8314def34678f3c2ab8fcb0f207f69fec2113942e2ac995e19b145497e629bf1",
+                ),
+                ("search_p_rule_hosttags_tagvalue_piggyback", "auto-piggyback"),
+                ("search_p_rule_hosttags_auxtag_ip-v4", "ignore"),
+            ],
+            [
+                "search_p_rule_hosttags_tagvalue_piggyback",
+                "search_p_rule_hosttags_auxtag_ip-v4",
+            ],
+            id="search_group",
+        ),
     ],
 )
 def test_vars_to_delete(
@@ -197,7 +213,7 @@ def test_vars_to_delete(
         html.request.set_var(var, val)
 
     remove_unused_vars(form_prefix, _is_var_to_delete)
-    for varname, _value in html.request.itervars(form_prefix):
+    for varname, _value in request_vars:
         if varname in expected_removed:
             assert not html.request.var(varname)
         else:

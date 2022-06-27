@@ -414,6 +414,12 @@ def _is_var_to_delete(form_prefix: str, varname: str, value: str) -> bool:
     if "_folder_" in varname:
         return False
 
+    # We could be more specific here but that would mean that we have to
+    # exclude the other ~ 14 options with "if x not in varname". So let's just
+    # exclude all that are not explicit handled above and hope the tests secure that.
+    if "_auxtag_" not in varname and "_hosttags_tag_" not in varname and "_hosttags_tagvalue_" not in varname:
+        return False
+
     return True
 
 

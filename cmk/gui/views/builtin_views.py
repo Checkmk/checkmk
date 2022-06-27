@@ -4354,7 +4354,7 @@ builtin_views["cmk_servers"] = {
                     ]
                 },
             ),
-            ("dashboards", "checkmk_host"),
+            "host",
             "host_addresses",
         ),
         (("inv_software_os_name", {"use_short": True}), None, None),

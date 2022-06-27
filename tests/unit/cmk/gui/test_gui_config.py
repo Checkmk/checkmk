@@ -301,7 +301,6 @@ def test_registered_permissions() -> None:
         "dashboard.main",
         "dashboard.simple_problems",
         "dashboard.checkmk",
-        "dashboard.checkmk_host",
         "general.acknowledge_werks",
         "general.act",
         "general.agent_pairing",

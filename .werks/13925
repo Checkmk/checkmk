@@ -1,0 +1,10 @@
+Title: Drop dashboard "Checkmk server"
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 2.2.0i1
+Date: 1656322106
+Class: feature
+
+The "Checkmk server" dashboard is dropped. More informational overviews for Checkmk servers are available with the "Checkmk dashboard", as well as the linux specific dashboards "Linux hosts" and "Single Linux host".

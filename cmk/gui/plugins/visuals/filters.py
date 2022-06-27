@@ -1093,8 +1093,9 @@ class FilterStateType(FilterTristate):
             html.radiobutton(self.varname, value, checked, text + " &nbsp; ")
         html.end_radio_group()
 
-    def filter_code(self, infoname, positive):
-        return "Filter: state_type = %d\n" % int(positive)
+    def filter_code(self, infoname: str, positive: bool):
+        filter_value: str = "HARD" if positive else "SOFT"
+        return "Filter: state_type = %s\n" % filter_value
 
 
 filter_registry.register(

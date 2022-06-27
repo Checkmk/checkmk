@@ -109,10 +109,11 @@ timeout(time: 12, unit: 'HOURS') {
                         }
                     }
 
+                    def filename = versioning.get_docker_artifact_name(EDITION, CMK_VERS)
                     upload.upload(
-                        NAME: "check-mk-${EDITION}-docker-${CMK_VERS}.tar.gz",
+                        NAME: filename,
                         FILE_PATH: "${PACKAGE_DIR}/download/${CMK_VERS}",
-                        FILE_NAME: "check-mk-${EDITION}-docker-${CMK_VERS}.tar.gz",
+                        FILE_NAME: filename,
                         CMK_VERS: CMK_VERS,
                         UPLOAD_DEST: INTERNAL_DEPLOY_DEST,
                         PORT: INTERNAL_DEPLOY_PORT,

@@ -144,18 +144,43 @@ STAGES:
       TEXT_ON_SKIP: 'No Python files changed'
       RESULT_CHECK_FILE_PATTERN: "results/python3-unit-junit.xml"
 
-    - NAME: 'Python Code Quality Test'
-      ONLY_WHEN_NOT_EMPTY: CHANGED_PYTHON_FILES,CHANGED_PIPFILE,CHANGED_FILES_ABS,CHANGED_WERK_FILES
+    - NAME: 'Python License Headers Test'
+      ONLY_WHEN_NOT_EMPTY: CHANGED_PYTHON_FILES
       DIR: 'tests'
       ENV_VARS:
-        PYTEST_ADDOPTS: "--junitxml=${RESULTS}/python3-code-quality-junit.xml --color=no"
+        PYTEST_ADDOPTS: "--junitxml=${RESULTS}/python3-license-headers-junit.xml --color=no"
         PYTHON_FILES: "${CHANGED_PYTHON_FILES}"
-        IS_PIPFILE_CHANGED: "${CHANGED_PIPFILE}"
-        CHANGED_FILES: "${CHANGED_FILES_ABS}"
-        IS_WERK_CHANGED: "${CHANGED_WERK_FILES}"
-      COMMAND: "make test-code-quality-docker"
+      COMMAND: "make test-license-headers-docker"
       TEXT_ON_SKIP: 'No Python files changed'
-      RESULT_CHECK_FILE_PATTERN: "results/python3-code-quality-junit.xml"
+      RESULT_CHECK_FILE_PATTERN: "results/python3-license-headers-junit.xml"
+
+    - NAME: 'Python Pipfile Test'
+      ONLY_WHEN_NOT_EMPTY: CHANGED_PIPFILE
+      DIR: 'tests'
+      ENV_VARS:
+        PYTEST_ADDOPTS: "--junitxml=${RESULTS}/python3-pipfile-junit.xml --color=no"
+      COMMAND: "make test-pipfile-docker"
+      TEXT_ON_SKIP: 'Pipfile and Pipfile.lock files not changed'
+      RESULT_CHECK_FILE_PATTERN: "results/python3-pipfile-junit.xml"
+
+    - NAME: 'Python File Content Test'
+      ONLY_WHEN_NOT_EMPTY: CHANGED_FILES_ABS
+      DIR: 'tests'
+      ENV_VARS:
+        PYTEST_ADDOPTS: "--junitxml=${RESULTS}/python3-file-content-junit.xml --color=no"
+        CHANGED_FILES: "${CHANGED_FILES_ABS}"
+      COMMAND: "make test-file-content-docker"
+      TEXT_ON_SKIP: 'No files changed'
+      RESULT_CHECK_FILE_PATTERN: "results/python3-file-content-junit.xml"
+
+    - NAME: 'Python Werks Test'
+      ONLY_WHEN_NOT_EMPTY: CHANGED_WERK_FILES
+      DIR: 'tests'
+      ENV_VARS:
+        PYTEST_ADDOPTS: "--junitxml=${RESULTS}/python3-werks-junit.xml --color=no"
+      COMMAND: "make test-werks-docker"
+      TEXT_ON_SKIP: 'No Werk files changed'
+      RESULT_CHECK_FILE_PATTERN: "results/python3-werks-junit.xml"
 
     - NAME: 'Python Linting'
       ONLY_WHEN_NOT_EMPTY: CHANGED_PYLINT_RC_FILE,CHANGED_PYTHON_FILES,CHANGED_PIPFILE,CHANGED_PYTEST_INI_FILE,CHANGED_TESTS_MAKEFILE,CHANGED_RUN_PIPENV_SCRIPT

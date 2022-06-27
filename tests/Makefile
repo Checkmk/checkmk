@@ -275,17 +275,34 @@ test-gui-e2e-docker:
 test-integration-docker:
 	$(PIPENV) run scripts/run-dockerized.py "test-integration"
 
-test-code-quality:
-	if test -z "$$PYTHON_FILES" && test -z "$$CI"; then $(FIND_PYTHON_FILES); else echo "$$PYTHON_FILES"; fi | \
+test-license-headers:
+	if test -z "$$PYTHON_FILES"; then $(FIND_PYTHON_FILES); else echo "$$PYTHON_FILES"; fi | \
 	xargs -n 1500 --no-run-if-empty $(PYTEST) -T code_quality --log-cli-level=INFO $(realpath code_quality/test_license_headers.py) \
 	--python-files;
-	if test -n "$$IS_PIPFILE_CHANGED" || test -z "$$CI"; then $(PYTEST) -T code_quality \
-	--log-cli-level=INFO $(realpath code_quality/test_pipfile.py); fi;
-	if test -n "$$CHANGED_FILES"; then echo "--changed-files $$CHANGED_FILES"; elif test -z "$$CI"; then echo "--test-all-files"; \
-	else echo ""; fi | xargs -n 1500 --no-run-if-empty $(PYTEST) -T code_quality --log-cli-level=INFO $(realpath code_quality/file_content);
-	if test -n "$$IS_WERK_CHANGED" || test -z "$$CI"; then $(PYTEST) -T code_quality \
-	--log-cli-level=INFO $(realpath code_quality/test_werks.py); fi;
-	exit $${PIPESTATUS[1]}
+
+test-license-headers-docker:
+	../scripts/run-in-docker.sh make --quiet test-license-headers
+
+test-pipfile:
+	$(PYTEST) -T code_quality --log-cli-level=INFO $(realpath code_quality/test_pipfile.py);
+
+test-pipfile-docker:
+	../scripts/run-in-docker.sh make --quiet test-pipfile
+
+test-file-content:
+	if test -n "$$CHANGED_FILES"; then echo "--changed-files $$CHANGED_FILES"; else echo "--test-all-files"; fi | \
+	xargs -n 1500 --no-run-if-empty $(PYTEST) -T code_quality --log-cli-level=INFO $(realpath code_quality/file_content);
+
+test-file-content-docker:
+	../scripts/run-in-docker.sh make --quiet test-file-content
+
+test-werks:
+	$(PYTEST) -T code_quality --log-cli-level=INFO $(realpath code_quality/test_werks.py);
+
+test-werks-docker:
+	../scripts/run-in-docker.sh make --quiet test-werks
+
+test-code-quality: test-license-headers test-pipfile test-file-content test-werks
 
 test-code-quality-docker:
 	../scripts/run-in-docker.sh make --quiet test-code-quality

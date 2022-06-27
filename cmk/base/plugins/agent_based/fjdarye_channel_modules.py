@@ -21,29 +21,29 @@
 from .agent_based_api.v1 import any_of, equals, register, SNMPTree
 from .utils.fjdarye import check_fjdarye_item, discover_fjdarye_item, parse_fjdarye_item
 
-FJDARYE_CHANNEL_ADAPTERS = {
-    ".1.3.6.1.4.1.211.1.21.1.60": ".2.2.2.1",  # fjdarye60
-    ".1.3.6.1.4.1.211.1.21.1.100": ".2.3.2.1",  # fjdarye100
-    ".1.3.6.1.4.1.211.1.21.1.101": ".2.3.2.1",  # fjdarye101
-    ".1.3.6.1.4.1.211.1.21.1.150": ".2.3.2.1",  # fjdarye500
-}
+FJDARYE_SUPPORTED_DEVICES = [
+    ".1.3.6.1.4.1.211.1.21.1.60",  # fjdarye60
+    ".1.3.6.1.4.1.211.1.21.1.100",  # fjdarye100
+    ".1.3.6.1.4.1.211.1.21.1.101",  # fjdarye101
+    ".1.3.6.1.4.1.211.1.21.1.150",  # fjdarye500
+]
 
 
 register.snmp_section(
-    name="fjdarye_channel_adapters",
+    name="fjdarye_channel_modules",
     parse_function=parse_fjdarye_item,
     fetch=[
-        SNMPTree(base=f"{device_oid}{channel_adapter_oid}", oids=["1", "3"])
-        for device_oid, channel_adapter_oid in FJDARYE_CHANNEL_ADAPTERS.items()
+        SNMPTree(base=f"{device_oid}.2.1.2.1", oids=["1", "3"])
+        for device_oid in FJDARYE_SUPPORTED_DEVICES
     ],
     detect=any_of(
-        *[equals(".1.3.6.1.2.1.1.2.0", device_oid) for device_oid in FJDARYE_CHANNEL_ADAPTERS]
+        *[equals(".1.3.6.1.2.1.1.2.0", device_oid) for device_oid in FJDARYE_SUPPORTED_DEVICES]
     ),
 )
 
 register.check_plugin(
-    name="fjdarye_channel_adapters",
-    service_name="Channel Adapter %s",
+    name="fjdarye_channel_modules",
+    service_name="Controller Module %s",
     discovery_function=discover_fjdarye_item,
     check_function=check_fjdarye_item,
 )

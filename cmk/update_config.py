@@ -167,6 +167,10 @@ REMOVED_CHECK_PLUGIN_MAP = {
     CheckPluginName("fjdarye101_cadaps"): CheckPluginName("fjdarye_channel_adapters"),
     CheckPluginName("fjdarye500_cadaps"): CheckPluginName("fjdarye_channel_adapters"),
     CheckPluginName("fjdarye60_cadaps"): CheckPluginName("fjdarye_channel_adapters"),
+    CheckPluginName("fjdarye100_cmods"): CheckPluginName("fjdarye_channel_modules"),
+    CheckPluginName("fjdarye101_cmods"): CheckPluginName("fjdarye_channel_modules"),
+    CheckPluginName("fjdarye500_cmods"): CheckPluginName("fjdarye_channel_modules"),
+    CheckPluginName("fjdarye60_cmods"): CheckPluginName("fjdarye_channel_modules"),
 }
 
 # List[(old_config_name, new_config_name, replacement_dict{old: new})]

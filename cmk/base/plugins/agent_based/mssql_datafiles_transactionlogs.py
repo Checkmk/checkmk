@@ -106,7 +106,7 @@ def _mssql_datafiles_process_sizes(
     params: Mapping[str, Any],
     used_size: float,
     allocated_size: float,
-    max_size: Optional[float],
+    max_size: float,
 ) -> CheckResult:
     def calculate_levels(
         levels: Tuple[float, float],
@@ -152,7 +152,7 @@ def _mssql_datafiles_process_sizes(
 
     yield Result(
         state=State.OK,
-        summary="Maximum size: %s" % ("unlimited" if max_size is None else render.bytes(max_size)),
+        summary=f"Maximum size: {render.bytes(max_size)}",
     )
 
 
